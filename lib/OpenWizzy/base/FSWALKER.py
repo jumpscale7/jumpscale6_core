@@ -1,5 +1,8 @@
 from OpenWizzy import o
-from REGEXTOOL import *
+try:
+    from REGEXTOOL import *
+except:
+    pass
 from FS import *
 
 class FSWalker():

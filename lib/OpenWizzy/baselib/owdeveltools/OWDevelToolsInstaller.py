@@ -9,9 +9,6 @@ class OWDevelToolsInstaller:
         o.system.platform.ubuntu.check()
         self.login=""
         self.passwd=""
-        self.login="openwizzy"
-        self.passwd="Kds007"
-
 
     def getCredentialsOpenWizzyRepo(self):
         login=raw_input("Pylabs Repo Login, if unknown press enter:")
@@ -97,4 +94,10 @@ class OWDevelToolsInstaller:
         self.deployOpenWizzyLibs()
         self.deployOpenWizzyGrid()
         self.deployOpenWizzyPortal()
+
+    def updateAll(self):
+        for item in [item for item in o.system.fs.listDirsInDir(o.dirs.codeDir),dirNameOnly=True) if item[0]<>"_"]:
+            from IPython import embed
+            print "DEBUG NOW kkk"
+            embed()
 
