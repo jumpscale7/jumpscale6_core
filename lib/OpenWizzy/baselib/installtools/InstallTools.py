@@ -285,7 +285,7 @@ class InstallTools():
     def delete(self,path):
         if self.debug:
             print "delete: %s" % path
-        if os.path.exists(path):
+        if os.path.exists(path) or os.path.islink(path):
             if os.path.isdir(path):
                 #print "delete dir %s" % path           
                 if os.path.islink(path):
@@ -315,7 +315,7 @@ class InstallTools():
     def createdir(self,path):
         if self.debug:
             print "createdir: %s" % path
-        if not os.path.exists(path):
+        if not os.path.exists(path) and not os.path.islink(path):
             os.makedirs(path)
 
     def installBaseMinimal(self):
@@ -359,13 +359,14 @@ class InstallTools():
         dest is where the link will be created pointing to src
         """
         if self.debug:
-            print "symlink: %s %s" % (src,dest)
+            print "symlink: src:%s dest:%s" % (src,dest)
         
         #if os.path.exists(dest):
         #try:
         #    os.remove(dest)    
         #except:        
         #    pass
+        self.createdir(dest)
         if self.TYPE=="WIN":
             self.removesymlink(dest)
             self.delete(dest)
