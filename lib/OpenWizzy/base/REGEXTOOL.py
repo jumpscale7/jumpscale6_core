@@ -1,6 +1,9 @@
 from OpenWizzy import o
 
-import regex
+try:
+    import regex
+except:
+    pass
 
 class REGEXTOOL():
 
