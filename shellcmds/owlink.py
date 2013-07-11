@@ -1,5 +1,8 @@
 from OpenWizzy import o
 
+o.application.shellconfig.interactive=True
+
+
 import OpenWizzy.baselib.platforms #gets access to ubuntu code
 import OpenWizzy.baselib.owdeveltools
 
