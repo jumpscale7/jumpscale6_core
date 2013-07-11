@@ -95,9 +95,33 @@ class OWDevelToolsInstaller:
         self.deployOpenWizzyGrid()
         self.deployOpenWizzyPortal()
 
-    def updateAll(self):
-        for item in [item for item in o.system.fs.listDirsInDir(o.dirs.codeDir),dirNameOnly=True) if item[0]<>"_"]:
-            from IPython import embed
-            print "DEBUG NOW kkk"
-            embed()
+    def link2code(self):
+
+        pythpath="/usr/lib/python2.7/"
+        if not o.system.fs.exists(pythpath):
+            raise RuntimeError("Could not find python 2.7 env on %s"%pythpath)
+
+        owdir="%s/OpenWizzy"%pythpath
+        self._do.createdir(owdir)
+
+        libDir="/opt/code/openwizzy/openwizzy6_core/lib/OpenWizzy"
+
+        self._do.copydeletefirst("%s/__init__.py"%libDir,"%s/__init__.py"%owdir)
+        srcdir=libDir
+        for item in ["base","baselib","core"]:
+            self._do.symlink("%s/%s"%(srcdir,item),"%s/%s"%(owdir,item))  
+
+        self._do.createdir("%s/%s"%(o.dirs.baseDir,"apps"))
+
+        src="%s/../../shellcmds"%libDir
+        dest="%s/shellcmds"%o.dirs.baseDir
+        self._do.symlink(src,dest)  
+
+        for item in o.system.fs.listFilesInDir(dest,filter="*.py"):
+            C="python %s/%s $@"%(dest,o.system.fs.getBaseName(item))
+            path="/usr/bin/%s"%o.system.fs.getBaseName(item).replace(".py","")
+            o.system.fs.writeFile(path,C)
+            cmd='chmod 777 %s'%path
+            o.system.process.execute(cmd)
+
 
