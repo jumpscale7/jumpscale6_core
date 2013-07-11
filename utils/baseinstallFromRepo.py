@@ -7,7 +7,7 @@ import OpenWizzy.baselib.platforms #gets access to ubuntu code
 
 do=o.system.installtools
 
-o.application.start("owfs",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
+o.application.start("owinstaller",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
 
 if o.system.platformtype.isLinux():
     o.system.platform.ubuntu.check()
@@ -25,7 +25,7 @@ if o.system.platformtype.isLinux():
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)
 
-    # installpackages()
+    installpackages()
 
     pythpath="/usr/lib/python2.7/"
     if not o.system.fs.exists(pythpath):

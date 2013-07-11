@@ -1,7 +1,9 @@
 '''Utility methods to work with hg repositories'''
-
 from OpenWizzy import o
+import sys
+sys.path.append(o.system.fs.joinPaths(o.dirs.getLibPath(),"baselib","mercurial"))
 import hglib
+
 import os
         
 class HgLibClient:    

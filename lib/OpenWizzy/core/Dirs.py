@@ -175,6 +175,15 @@ class Dirs(object):
         self.__initialized = True
         return True
 
+    def getLibPath(self):
+        self.libDir=inspect.getfile(o.application.getMemoryUsage).replace("Application.py","")
+        self.libDir=os.path.abspath(self.libDir).rstrip("/").rstrip("core")
+        return self.libDir
+
+
+    def getPathOfRunningFunction(self,function):
+        return inspect.getfile(function)
+
     def checkInProtectedDir(self,path):
         path=o.system.fs.pathNormalize(path)
         for item in self.protectedDirs :
