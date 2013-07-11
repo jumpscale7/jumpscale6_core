@@ -1,0 +1,5 @@
+
+apt-get install -y python-dev python-pip 'g++' libzmq-dev libevent-dev python-snappy msgpack-python
+pip install --upgrade distribute
+pip install Cython gevent pyzmq==13.0.2 blosc
+
