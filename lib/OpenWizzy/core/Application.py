@@ -1,0 +1,224 @@
+from OpenWizzy import o
+import os
+import atexit
+import struct
+from OpenWizzy.core.enumerators import AppStatusType
+
+#@todo Need much more protection: cannot change much of the state (e.g. dirs) once the app is running!
+#@todo Need to think through - when do we update the qpidfile (e.g. only when app is started ?)
+#@todo can we make this a singleton? Then need to change __init__ to avoid clearing the content
+#@todo need to implement QApplication.getVar()
+
+
+class Application:
+
+    def __init__(self):
+        self.state = AppStatusType.UNKNOWN
+        # self.state = None
+        self.appname = 'starting'
+        self.agentid = "starting"
+        self._calledexit = False
+        self.skipTraceback = False
+
+        self.whoAmIBytestr = "AABBCC"  # is 2 bytes for grid id, 2 bytes for nodeid, 2 bytes for pid
+
+        self.config = None
+
+    def initWhoAmI(self,grid=False):
+        """
+        when in grid:
+            is gid,bid,nid,pid
+        """
+
+        self.loadConfig()
+
+        if self.config != None:
+            nodeid = self.config.getInt("node.id")
+            gridid = self.config.getInt("grid.id")
+            o.logger.log("gridid:%s,nodeid:%s"%(gridid, nodeid), level=3, category="application.startup")
+        else:
+            gridid = 0
+            nodeid = 0
+
+        if grid:
+            self.whoAmI = [o.core.grid.processobject.gid,o.core.grid.processobject.bid,\
+                o.core.grid.processobject.nid,o.core.grid.processobject.id]
+            self.whoAmIBytestr = struct.pack("<hhhh", self.whoAmI[3],self.whoAmI[2], self.whoAmI[1], self.whoAmI[0])
+        else:
+            self.whoAmI = [gridid, nodeid, os.getpid()]
+            self.whoAmIBytestr = struct.pack("<hhh", self.whoAmI[2], self.whoAmI[1], self.whoAmI[0])
+
+    def getWhoAmiStr(self):
+        return "_".join([str(item) for item in self.whoAmI])
+
+    def loadConfig(self):
+        path = o.system.fs.joinPaths(o.dirs.cfgDir, "grid", "node.hrd")
+        if o.system.fs.exists(path=path):
+            self.config = o.core.hrd.getHRDTree(path=o.system.fs.joinPaths(o.dirs.cfgDir, "grid"))
+
+
+    def start(self,name="unknown",basedir="/opt/openwizzy",appdir="."):
+        '''Start the application
+
+        You can only stop the application with return code 0 by calling
+        o.Application.stop(). Don't call sys.exit yourself, don't try to run
+        to end-of-script, I will find you anyway!
+        '''
+        if self.state == AppStatusType.RUNNING:
+            raise RuntimeError("Application %s already started" % self.appname)
+
+        # Register exit handler for sys.exit and for script termination
+        atexit.register(self._exithandler)
+
+
+        o.dirs.appDir=appdir
+        o.dirs.baseDir=basedir
+
+        o.dirs.init(reinit=True)
+
+        # Set state
+        self.state = AppStatusType.RUNNING
+
+        self.initWhoAmI()
+
+        o.logger.log("Application %s started" % self.appname, level=8, category="openwizzy.app")
+
+    def stop(self, exitcode=0):
+
+        '''Stop the application cleanly using a given exitcode
+
+        @param exitcode: Exit code to use
+        @type exitcode: number
+        '''
+        import sys
+
+        #@todo should we check the status (e.g. if application wasnt started, we shouldnt call this method)
+        if self.state == AppStatusType.UNKNOWN:
+            # Consider this a normal exit
+            self.state = AppStatusType.HALTED
+            o.logger.close()
+            sys.exit(exitcode)
+
+        # Since we call os._exit, the exithandler of IPython is not called.
+        # We need it to save command history, and to clean up temp files used by
+        # IPython itself.
+        o.logger.log("Stopping Application %s" % self.appname, 8)
+        try:
+            __IPYTHON__.atexit_operations()
+        except:
+            pass
+
+        # Write exitcode
+        if self.writeExitcodeOnExit:
+            exitcodefilename = o.system.fs.joinPaths(o.dirs.tmpDir, 'qapplication.%d.exitcode'%os.getpid())
+            o.logger.log("Writing exitcode to %s" % exitcodefilename, 5)
+            o.system.fs.writeFile(exitcodefilename, str(exitcode))
+
+        # Closing the LogTargets
+        o.logger.close()
+
+        # was probably done like this so we dont end up in the _exithandler
+        # os._exit(exitcode) Exit to the system with status n, without calling cleanup handlers, flushing stdio buffers, etc. Availability: Unix, Windows.
+
+        self._calledexit = True  # exit will raise an exception, this will bring us to _exithandler
+                              # to remember that this is correct behaviour we set this flag
+        sys.exit(exitcode)
+
+    def _exithandler(self):
+        # Abnormal exit
+        # You can only come here if an application has been started, and if
+        # an abnormal exit happened, i.e. somebody called sys.exit or the end of script was reached
+        # Both are wrong! One should call o.application.stop(<exitcode>)
+        #@todo can we get the line of code which called sys.exit here?
+        
+        #o.logger.log("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED o.application.stop()", 4)
+        o.logger.close()
+        if not self._calledexit:
+            self.stop(1)
+
+    def getCPUUsage(self):
+        """
+        try to get cpu usage, if it doesn't work will return 0
+        By default 0 for windows
+        """
+        try:
+            pid = os.getpid()
+            if o.system.platformtype.isWindows():
+                return 0
+            if o.system.platformtype.isLinux():
+                command = "ps -o pcpu %d | grep -E --regex=\"[0.9]\""%pid
+                o.logger.log("getCPUusage on linux with: %s" % command, 8)
+                exitcode, output = o.system.process.execute(command, True, False)
+                return output
+            elif o.system.platformtype.isSolaris():
+                command = 'ps -efo pcpu,pid |grep %d'%pid
+                o.logger.log("getCPUusage on linux with: %s" % command, 8)
+                exitcode, output = o.system.process.execute(command, True, False)
+                cpuUsage = output.split(' ')[1]
+                return cpuUsage
+        except Exception:
+            pass
+        return 0
+
+    def getMemoryUsage(self):
+        """
+        try to get memory usage, if it doesn't work will return 0i
+        By default 0 for windows
+        """
+        try:
+            pid = os.getpid()
+            if o.system.platformtype.isWindows():
+                # Not supported on windows
+                return "0 K"
+            elif o.system.platformtype.isLinux():
+                command = "ps -o pmem %d | grep -E --regex=\"[0.9]\""%pid
+                o.logger.log("getMemoryUsage on linux with: %s" % command, 8)
+                exitcode, output = o.system.process.execute(command, True, False)
+                return output
+            elif o.system.platformtype.isSolaris():
+                command = "ps -efo pcpu,pid |grep %d"%pid
+                o.logger.log("getMemoryUsage on linux with: %s" % command, 8)
+                exitcode, output = o.system.process.execute(command, True, False)
+                memUsage = output.split(' ')[1]
+                return memUsage
+        except Exception:
+            pass
+        return 0
+
+    def getUniqueMachineId(self):
+        """
+        will look for network interface and return a hash calculated from lowest mac address from all physical nics
+        """
+        nics = o.system.net.getNics()
+
+        if o.system.platformtype.isWindows():
+            order = ["local area", "wifi"]
+            for item in order:
+                for nic in nics:
+                    if nic.lower().find(item) != -1:
+                        return o.system.net.getMacAddress(nic)
+        macaddr = []
+        for nic in nics:
+            if nic.find("lo") == -1:
+                nicmac = o.system.net.getMacAddress(nic)
+                macaddr.append(nicmac.replace(":", ""))
+        macaddr.sort()
+        if len(macaddr) < 1:
+            raise RuntimeError("Cannot find macaddress of nics in machine.")
+        return macaddr[0]
+
+    def _setWriteExitcodeOnExit(self, value):
+        if not o.basetype.boolean.check(value):
+            raise TypeError
+        o.logger.log("Setting o.application.writeExitcodeOnExit = %s"%str(value), 5)
+        exitcodefilename = o.system.fs.joinPaths(o.dirs.tmpDir, 'qapplication.%d.exitcode'%os.getpid())
+        if value and o.system.fs.exists(exitcodefilename):
+            o.system.fs.remove(exitcodefilename)
+        self._writeExitcodeOnExit = value
+
+    def _getWriteExitcodeOnExit(self):
+        if not hasattr(self, '_writeExitcodeOnExit'):
+            return False
+        return self._writeExitcodeOnExit
+
+    writeExitcodeOnExit = property(fset=_setWriteExitcodeOnExit, fget=_getWriteExitcodeOnExit, doc="Gets / sets if the exitcode has to be persisted on disk")
