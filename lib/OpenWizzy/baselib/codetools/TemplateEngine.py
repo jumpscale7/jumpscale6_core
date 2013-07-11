@@ -1,4 +1,4 @@
-from OpenWizzy.core.System import System
+# from OpenWizzy.core.System import System
 from OpenWizzy import o
 import urllib
 
