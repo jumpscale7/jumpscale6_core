@@ -18,9 +18,11 @@ if o.system.platformtype.isLinux():
         do.execute("apt-get update")
         # do.execute("apt-get upgrade -y")
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
-                        'byobu', 'python-apt','ipython','python-urllib3') 
+                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests') 
 
-        #'python-pip', 'python-dev', 'python-imaging','python-requests'
+        #'python-pip', 'python-dev', 
+
+        do.execute("easy_install urllib3")
 
         for name in debpackages:
             print "check install %s"%name
