@@ -1,0 +1,15 @@
+h1. Login
+
+Macro used to login to wiki system.
+
+
+h2. Wiki
+
+{{code:
+{{login}}
+}}
+
+h2. Output
+
+{{login}}
+

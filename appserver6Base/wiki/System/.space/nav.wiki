@@ -1,0 +1,11 @@
+
+Rest:/system/rest
+SystemMacros:/system/systemmacros
+Users:/system/userlist
+Groups:/system/groups
+Actors:/system/actors
+Spaces:/system/spaces
+Stats:/system/stats
+Logs:/system/logs
+AccessOverview:/system/overviewaccess
+

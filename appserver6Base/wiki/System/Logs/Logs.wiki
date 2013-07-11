@@ -1,0 +1,4 @@
+h5. [System Logs|/system/SystemLogs]
+h5. [Space Access Logs|/system/ShowSpaceAccessLog?space=system]
+h5. [Reset Logs|/system/ResetAccessLog?space=system]
+h5. [ElasticSearch Management|/system/Logs/Eshead]

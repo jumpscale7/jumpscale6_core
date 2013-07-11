@@ -1,0 +1,34 @@
+@usedefault
+
+h2. tags wich can be used in actorspec
+
+h3. on actor level
+
+
+{{include:DbTags}}
+
+h4. tasklets
+
+if we use tasklets or not
+&#64;tasklets
+
+
+h4. noremote
+
+if the actor is remotely accessible or not, if noremote then no rest webservices or other remoting
+&#64;noremote
+
+h4. nomodel
+
+models will not be connected to actor even if specified
+&#64;nomodel
+
+
+
+h3. on method level
+
+ @noauth || means there will be authentication required
+ @returnformat || how will we transform the output of the method tasklet possibilities: raw  (std is json, so not to be specified)
+ 
+
+

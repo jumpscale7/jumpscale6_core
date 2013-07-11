@@ -1,0 +1,34 @@
+h2. Macros
+
+The wiki system support three categories of macros.
+
+h3. Page Macros
+
+These macros extend the wiki syntax
+The tasklet of these macros should set params.result as a page
+
+{{children: bullets page:Page}}
+
+
+h3. Wiki Macros
+
+These macros are part of the core wiki system
+The tasklet of these macros should set params.result as tuple first item being the output of this macro the second one beingg the document
+{{children: bullets page:Wiki}}
+
+
+h3. Preprocessor Macros
+
+These macros do not generate HTML output but return WIKI which in its turn will be parsed again
+The tasklet of these macros should set params.result as tuple first item being the output of this macro the second one beingg the document
+
+{{children: bullets page:Preprocess}}
+
+{{cssstyle
+.span9 ul { -moz-column-count:3;
+            -webkit-column-count:3;
+            column-count:3;
+}
+}}
+
+

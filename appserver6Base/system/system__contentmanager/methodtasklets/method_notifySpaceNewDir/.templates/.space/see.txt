@@ -1,0 +1,1 @@
+see for templates lib\pylabsextensions\core\appserver6loaders\templates\.space\

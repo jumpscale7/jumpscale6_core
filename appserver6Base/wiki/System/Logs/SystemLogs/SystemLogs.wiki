@@ -1,0 +1,15 @@
+{{cssstyle
+.span2 {display:none !important;}
+}}
+
+{{cssstyle
+.span3 {width: 17% !important;}
+}}
+
+{{cssstyle
+.span9 {width: 80% !important;}
+}}
+
+h2. System Logs
+
+{{systemlogs}}

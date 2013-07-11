@@ -1,0 +1,85 @@
+h2. User Management
+
+The system users & groups come from the config dir
+
+users.cfg
+and optionally
+groups.cfg
+
+This links to a file of structure
+
+{{code:
+[admin]
+passwd=1234
+groups=admin
+reset=1
+emails= 
+secret=
+
+[anotheruser]
+passwd=123456
+emails=
+
+}}
+
+If groups is not filled in then user will be part of the group guests.
+When reset=1 then the user info will be overwritten when appserver loads, everything in DB for that user will be overwritten.
+If reset 0 then the user will only be created if the user does not exist yet.
+When reset=1 the secret needs to be empty or filled in, same for groups.
+
+This file has priority on users.cfg files specified on space, bucket or actor level.
+
+Emails is comma separated list of email addresses, when not filled in it is not used.
+
+Secret is the authkey used to get a special url which does automatic login of the user
+Rhe url looks as follows:
+http://$addr/$space?authkey=$secret
+e.g.
+http://192.198.93.21/generic_funding_info_453?authkey=dwfasdfasdf157
+
+If not filled in will be filled in automatically
+When secret is empty then will not be generated (recommend this for admin users, do not make secret keys !!!!)
+
+
+h3. remarks
+
+users as defined in spaces, buckets & actors can never be put in admin group
+The reset param is only used in the main usersfile, cannot not be used in spaces,buckets & actor usercfg files.
+
+
+h3. Allow guest access
+
+It is possible to allow guest access to certain spaces.
+Todo the following has to be configured.
+
+* Create a guest user in users.cfg
+* Define a acl for the guest user.
+
+Example content of users.cfg
+
+{{code:
+[guest]
+reset = 1
+id = guest
+passwd = 
+secret = c812013bd
+emails = 
+groups = guest
+system = 
+}}
+
+Example content of .space/acl.cfg 
+
+
+{{code:
+#rights:
+##R: read
+##W: write/modify
+##S: sync to e.g. local PC
+##A: admin rights
+##*: means all rights
+guest=R
+admin=*
+}}
+
+

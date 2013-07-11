@@ -1,0 +1,17 @@
+h1. Logo
+
+Main branding logo of the wiki should be used in the default.wiki page
+
+h2. Wiki
+
+{{code:
+{{logo:/static/images/companylogo.png}}
+}}
+
+h2. Output
+
+Output can not be rendered as this only works from inside the default.wiki
+
+#this servces purely to execute the macro dont expect results
+{{logo:/static/images/companylogo.png}}
+

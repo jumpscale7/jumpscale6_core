@@ -1,0 +1,3 @@
+h2. Group List
+
+{{datatables_edit: app:system actor:usermanager model:group}}

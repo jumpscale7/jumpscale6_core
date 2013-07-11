@@ -1,0 +1,29 @@
+
+{{title:QWiki}}
+
+{{projectname:Documentation}}
+
+{{find}}
+
+{{menu:
+System:/System
+}}
+
+{{menuadmin}}
+
+
+@block
+@row
+
+@col 3
+{{navigation}}
+@divend
+
+@col 9
+
+{content}
+
+@divend
+@divend
+
+

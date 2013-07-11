@@ -1,0 +1,51 @@
+h2. children
+
+{{children: bullets}}
+
+h2. query as json
+
+{{code:
+http://localhost:9999/rest/myapp/testactor/get?key=1234&format=json
+}}
+
+if no error:
+{{code:
+{"result": ["test"]}
+}}
+
+if error:
+{{code:
+{
+    "category": "", 
+    "applicationName": "appserver6_test", 
+    "guid": "290ac4b1-1212-44f2-95e1-d2ea77d2b043", 
+    "errormessagePub": "", 
+    "level": 1, 
+    "backtrace": "Traceback (most recent call last):\n~   File \"c:\\qb6\\apps\\CloudDesktopAgent\\pylabsextensions\\core\\geventWebserver\\GeventWebserver.py\", line 583, in processor_rest\n    result=self.routes[path][0](ctx,self)\n~   File \"C:\\Users\\test\\QBASEVAR\\code\\actormethodgreenlet_myapp_actor_testactor_testactor.py\", line 69, in wscall\n    params=q.core.codegenerator.taskletengines[\"myapp_testactor_get\"].execute(params,tags=None)\n~   File \"c:\\qb6\\apps\\CloudDesktopAgent\\pylabsextensions\\core\\taskletengine\\TaskletEngine.py\", line 197, in execute\n    params = tasklet.checkExecute(q, i , params, service, tags)\n~   File \"c:\\qb6\\apps\\CloudDesktopAgent\\pylabsextensions\\core\\taskletengine\\TaskletEngine.py\", line 54, in checkExecute\n    params = self.main(q, i, params, service, tags)\n~   File \"c:\\qb6\\apps\\CloudDesktopAgent\\pylabsextensions\\core\\taskletengine\\TaskletEngine.py\", line 43, in main\n    params=self.module.main(q,i,params,service,tags,self)\n~   File \"code\\myapp\\testactor\\method_get\\5_main.py\", line 4, in main\n    sparams.test=\"d\"\n~ NameError: global name 'sparams' is not defined\n", 
+    "id": 0, 
+    "errormessage": "Execute method myapp_testactor_get failed.\nquerystr was:key=1234&format=json", 
+    "pid": 0, 
+    "funclinenr": 0, 
+    "funcname": "", 
+    "code": "", 
+    "params": {}, 
+    "caller": "127.0.0.1", 
+    "time": 1344162981, 
+    "nid": 3, 
+    "gid": 10, 
+    "jobid": 0, 
+    "type": 0, 
+    "funcfilename": "c:\\qb6\\apps\\CloudDesktopAgent\\pylabsextensions\\core\\geventWebserver\\GeventWebserver.py", 
+    "tags": ""
+}
+}}
+
+how to know if appropriate result
+result is always a dict
+check on key "result" if not there is an errorcondition object with props as shown above
+
+
+h2. if no format str -> text readable
+
+very difficult to parse but ideal to play around with on webserver
+

@@ -1,0 +1,11 @@
+
+h4. Welcome On The System Home Page
+
+@show error<>""
+
+h5. The following error brought you here:
+
+$$error
+
+@end
+
