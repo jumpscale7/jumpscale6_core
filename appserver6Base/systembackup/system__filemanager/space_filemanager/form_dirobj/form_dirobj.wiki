@@ -1,6 +1,0 @@
-
-    h2. dirobj
-
-    {{form_filemanager_dirobj}}
-
-    
