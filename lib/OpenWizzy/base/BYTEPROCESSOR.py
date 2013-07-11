@@ -1,8 +1,17 @@
 from OpenWizzy import o
 
-import hashlib
-import blosc
-import mhash
+try:
+    import hashlib
+except:
+    pass
+try:
+    import blosc
+except:
+    pass
+try:
+    import mhash
+except:
+    pass
 
 class DispersedBlock:
     def __init__(self):
