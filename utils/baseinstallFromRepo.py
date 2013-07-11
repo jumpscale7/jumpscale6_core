@@ -22,11 +22,11 @@ if o.system.platformtype.isLinux():
 
         #'python-pip', 'python-dev', 
 
-        do.execute("easy_install urllib3")
-
         for name in debpackages:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)
+
+        do.execute("easy_install urllib3")
 
     installpackages()
 
