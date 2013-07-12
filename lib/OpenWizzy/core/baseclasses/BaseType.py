@@ -19,10 +19,6 @@ def generate_init_properties(cls, attrs):
     def __init_properties__(self):
         '''Initialize all properties with their default value'''
 
-        o.logger.log('Initialize all properties with their default '
-                              'value for instance of %s' % \
-                              self.__class__.__name__, 7)
-
         # Call superclass __init_properties__, if any. No-op otherwise
         base = super(cls, self)
         if hasattr(base, '__init_properties__'):
@@ -32,8 +28,6 @@ def generate_init_properties(cls, attrs):
                             if isinstance(p[1], TypeBaseType)):
             value = attr.get_default(self)
             setattr(self, attr.attribute_name, value)
-            o.logger.log('Set attr %s to %r' % \
-                                  (attr.attribute_name, value), 9)
 
     return __init_properties__
 
@@ -86,10 +80,8 @@ class BaseType(object):
         otherwise the property values would be overwritten when e.g. restoring
         an object from the cmdb.        
         """
-
-        o.logger.log('Checking if properties need to be initialized '
-                              'for %s instance' % self.__class__.__name__, 7)
         
         if not hasattr(self, '_pm__initialized'):
             self.__init_properties__()
         self._pm__initialized = True
+        

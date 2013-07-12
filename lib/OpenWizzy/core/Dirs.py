@@ -22,13 +22,13 @@ def pathToUnicode(path):
 class Dirs(object):
     """Utility class to configure and store all relevant directory paths"""
 
-    appDir = None ##string
+    appDir = "/opt/openwizzy6/apps/exampleapp" ##string
     '''Application installation base folder (basedir/apps)
 
     @type: string
     '''
     
-    baseDir = None ##string
+    baseDir = "/opt/openwizzy6" ##string
     '''openwizzy sandbox base folder
 
     @type: string

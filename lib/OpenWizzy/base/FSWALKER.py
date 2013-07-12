@@ -5,6 +5,8 @@ except:
     pass
 from FS import *
 
+import OpenWizzy.dfs_io
+
 class FSWalker():
 
     # def _checkDepth(path,depths,root=""):
@@ -38,7 +40,8 @@ class FSWalker():
     def _findhelper(self,arg,path):
         arg.append(path)
     
-    def find(self,root, includeFolders=False,includeLinks=False, pathRegexIncludes=[],pathRegexExcludes=[], contentRegexIncludes=[], contentRegexExcludes=[],followlinks=False):
+    def find(self,root, includeFolders=False,includeLinks=False, pathRegexIncludes=[],pathRegexExcludes=[], contentRegexIncludes=[], \
+        contentRegexExcludes=[],followlinks=False,dirObjectProcess=False):
         """
         @return {files:[],dirs:[],links:[]}
         """
@@ -80,7 +83,7 @@ class FSWalker():
                     return REGEXTOOL.matchPath(path,pathRegexIncludes,pathRegexExcludes)
         
         self.walk(root,callbackFunctionFile=processfile, callbackFunctionDir=processdir,callbackFunctionLink=processlink,args={}, \
-            callbackForMatchFile=matchfile,callbackForMatchDir=matchdir,callbackForMatchLink=matchlink,matchargs={},followlinks=followlinks)
+            callbackForMatchFile=matchfile,callbackForMatchDir=matchdir,callbackForMatchLink=matchlink,matchargs={},followlinks=followlinks,dirObjectProcess=dirObjectProcess)
 
         listfiles={}
         listfiles["files"]=files
@@ -89,7 +92,8 @@ class FSWalker():
 
         return listfiles
           
-    def walk(self,root,callbackFunctionFile=None, callbackFunctionDir=None,callbackFunctionLink=None,args={},callbackForMatchFile=None,callbackForMatchDir=None,callbackForMatchLink=None,matchargs={},followlinks=False):
+    def walk(self,root,callbackFunctionFile=None, callbackFunctionDir=None,callbackFunctionLink=None,args={},\
+        callbackForMatchFile=None,callbackForMatchDir=None,callbackForMatchLink=None,matchargs={},followlinks=False,dirObjectProcess=False):
         '''Walk through filesystem and execute a method per file and dirname
 
         Walk through all files and folders starting at C{root}, recursive by
@@ -129,12 +133,14 @@ class FSWalker():
         
         # print "ROOT OF WALKER:%s"%root
 
-        self._walkFunctional(root,callbackFunctionFile, callbackFunctionDir,callbackFunctionLink,args, callbackForMatchFile,callbackForMatchDir,callbackForMatchLink,matchargs,followlinks=followlinks)
+        self._walkFunctional(root,callbackFunctionFile, callbackFunctionDir,callbackFunctionLink,args, callbackForMatchFile,callbackForMatchDir,callbackForMatchLink,\
+            matchargs,followlinks=followlinks,dirObjectProcess=dirObjectProcess)
 
-    def _walkFunctional(self,path,callbackFunctionFile=None, callbackFunctionDir=None,callbackFunctionLink=None,args={}, callbackForMatchFile=None,callbackForMatchDir=None,callbackForMatchLink=None,matchargs={},\
+    def _walkFunctional(self,path,callbackFunctionFile=None, callbackFunctionDir=None,callbackFunctionLink=None,args={}, callbackForMatchFile=None,\
+            callbackForMatchDir=None,callbackForMatchLink=None,matchargs={},\
             followlinks=False,dirObjectProcess=True):
         if dirObjectProcess:
-            do=o.base.fsobjects.getOWFSDir(path,parent="parent")
+            do=o.dfsio.mdobjects.getOWFSDir(path,parent="parent")
         else:
             do=None
 
@@ -153,26 +159,26 @@ class FSWalker():
                     continue
             elif o.base.fs.isDir(path2, followlinks):
                 # self.log("walker dirpath:%s"% path2)
-                if callbackForMatchDir==None or callbackForMatchDir(path2,**matchargs):
+                if callbackForMatchDir==False:
+                    continue                        
+                elif callbackForMatchDir==None or callbackForMatchDir(path2,**matchargs):
                     if do<>None:
                         do.registerDir(path2,self)
                     #recurse
                     # print "walker matchdir:%s"% path2
                     if callbackFunctionDir<>None:
-                        callbackFunctionDir(path2,**args)
-                elif callbackForMatchDir==False:
-                    continue                        
+                        callbackFunctionDir(path2,**args)                
                 self._walkFunctional(path2,callbackFunctionFile, callbackFunctionDir,callbackFunctionLink,args, callbackForMatchFile,callbackForMatchDir,callbackForMatchLink)
             elif o.base.fs.isLink(path2):
                 # self.log( "walker link:%s"% path2)
-                if callbackForMatchLink==None or callbackForMatchLink(path2,**matchargs):
+                if callbackForMatchLink==False:
+                    continue
+                elif callbackForMatchLink==None or callbackForMatchLink(path2,**matchargs):
                     if do<>None:
                         do.registerLink(path2,self)
-                if callbackFunctionLink<>None:
+                elif callbackFunctionLink<>None:
                     #execute 
                     callbackFunctionLink(path2,**args)
-                elif callbackFunctionLink==False:
-                    continue
         
 
 class FSWalkerFactory():

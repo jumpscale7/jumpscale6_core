@@ -210,7 +210,6 @@ del _setup_stacktrace_hook
 from Application import Application
 
 import logging
-import errorhandling
 
 import system
 
@@ -219,6 +218,19 @@ o.system.installtools=o.base.fs.installtools
 import enumerators
 
 o.application=Application()
+import base
+import baseclasses
+from OpenWizzy.core.baseclasses.BaseEnumeration import enumerations
+o.enumerators=enumerations
+import pmtypes
+pmtypes.register_types()
+o.basetype=pmtypes.register_types()
+
+
+
+
+
+import errorhandling
 
 from Dirs import Dirs
 o.dirs=Dirs()

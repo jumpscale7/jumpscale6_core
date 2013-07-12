@@ -28,13 +28,17 @@ class ByteProcessor:
         impl = hashlib.new(s)
         return impl.hexdigest()
 
+    @staticmethod
     def hashTiger160(s):
         if isinstance(s, unicode):
             s = s.encode('utf-8')
-        mhash.keygen(mhash.MHASH_TIGER160,s,key_size=160)
+        h=mhash.MHASH(mhash.MHASH_TIGER160,s)
+        return h.hexdigest()
 
+    @staticmethod
     def hashTiger192(s):
-        mhash.keygen(mhash.MHASH_TIGER192,s,key_size=192)
+        h=mhash.MHASH(mhash.MHASH_TIGER,s)
+        return h.hexdigest()
 
     @staticmethod
     def compress(s):
@@ -61,8 +65,6 @@ class ByteProcessor:
     def undisperse(dispersedBlockObject,uncompress=True):
         dispersedBlockObject.restore
 
-    @staticmethod
-    def decompress(s):
-        return blosc.decompress(s, typesize=8)
 
-o.byteprocessor=ByteProcessor
+
+o.base.byteprocessor=ByteProcessor
