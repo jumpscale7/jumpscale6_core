@@ -1,5 +1,5 @@
 from OpenWizzy import o
-
+import OpenWizzy.grid
 # import zmq
 import gevent
 import gevent.monkey
@@ -7,7 +7,7 @@ import zmq.green as zmq
 import time
 from GeventLoop import GeventLoop
 from gevent import queue as queue
-
+import OpenWizzy.baselib.serializers
 
 class ZDaemonCMDS():
     def __init__(self, daemon):
@@ -34,7 +34,7 @@ class Dummy():
 
 class ZDaemon(GeventLoop):
 
-    def __init__(self, port=4444,name=""):
+    def __init__(self, port=4444,name="",nrCmdGreenlets=50):
         gevent.monkey.patch_socket()
         
         GeventLoop.__init__(self)
@@ -52,12 +52,14 @@ class ZDaemon(GeventLoop):
 
         self.now=0
 
+        self.nrCmdGreenlets=nrCmdGreenlets
+
 
     def addCMDsInterface(self, cmdInterfaceClass):
         self.cmdsInterfaces.append(cmdInterfaceClass(self))
 
     def processRPC(self, data):
-        print "process rpc:\n%s"%data
+        # print "process rpc:\n%s"%data
         cmd = o.db.serializers.ujson.loads(data)  # list with item 0=cmd, item 1=args            
         cmd2 = {}
         if cmd[0] in self.cmds:
@@ -92,16 +94,13 @@ class ZDaemon(GeventLoop):
         cmd2["result"] = result
         return cmd2
 
-    def repServer(self):
+    def repCmdServer(self):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
-        cmdsocket.connect("tcp://localhost:5560")
+        cmdsocket.connect("inproc://cmdworkers")
         while True:
             data = cmdsocket.recv()
 
-            if data == "ping":
-                cmdsocket.send("pong")
-                continue
-            elif data[0] == "1":
+            if data[0] == "1":
                 self.logQueue.put(data[1:])
                 cmdsocket.send("OK")
             else:
@@ -119,7 +118,7 @@ class ZDaemon(GeventLoop):
         backend = self.cmdcontext.socket(zmq.DEALER)
 
         frontend.bind("tcp://*:%s" % self.port)
-        backend.bind("tcp://*:5560")
+        backend.bind("inproc://cmdworkers")
 
         # Initialize poll set
         poller = zmq.Poller()
@@ -128,8 +127,8 @@ class ZDaemon(GeventLoop):
 
         workers = []
 
-        for i in range(100):
-            workers.append(gevent.spawn(self.repServer))
+        for i in range(self.nrCmdGreenlets):
+            workers.append(gevent.spawn(self.repCmdServer))
 
 
         o.logger.log("init cmd channel on port:%s for daemon:%s"%(self.port,self.name), level=5, category="zdaemon.init") 
@@ -154,13 +153,16 @@ class ZDaemon(GeventLoop):
                     frontend.send(message)
 
 
-    def start(self):
+    def start(self,mainloop=None):
         self.schedule("cmdGreenlet", self.cmdGreenlet)
         self.startClock()
 
         print "start"
-        while True:
-            gevent.sleep(100)
+        if mainloop<>None:
+            mainloop()
+        else:
+            while True:
+                gevent.sleep(100)
 
     ##UNFINISHED CODE FOR DATACHANNEL (still duplicate code inside) ################################
 
@@ -193,7 +195,7 @@ class ZDaemon(GeventLoop):
         """
         while True:
             self.socket.send(str(self.counter))
-            print "send"
+            #print "send"
             gevent.sleep(5)
 
     def getfreeportAndSchedule(self, name, method, **args):

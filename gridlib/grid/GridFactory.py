@@ -231,14 +231,14 @@ class GridFactory():
     def getZLoggerClient(self,ipaddr="localhost", port=4444):
         return ZLoggerClient(ipaddr=ipaddr,port=port)
 
-    def getZDaemon(self, port=4444,name=""):
+    def getZDaemon(self, port=4444,name="",nrCmdGreenlets=50):
         """
 
         is a generic usable zmq daemon which has a data & cmd channel (data channel not completely implemented for now)
         4444 is the std port for the clientdaemon (DO NOT USE FOR YOUR CUSTOM APPS!!!)
         you can add commands to the deam as follows:
 
-        zd=o.core.grid.getZDaemon(port=5555)
+        zd=o.core.grid.getZDaemon(port=5555,nrCmdGreenlets=50)
 
         class MyCommands():
             def __init__(self,daemon):
@@ -264,7 +264,7 @@ class GridFactory():
 
         """
 
-        return ZDaemon(port=port,name=name)
+        return ZDaemon(port=port,name=name,nrCmdGreenlets=nrCmdGreenlets)
 
     def getZDaemonClientClass(self):
         """
