@@ -2,6 +2,7 @@ connector_key*
 .pyc$
 .swp$
 .rej$
+.log$
 .orig$
 ~$
 ^.pydevproject
