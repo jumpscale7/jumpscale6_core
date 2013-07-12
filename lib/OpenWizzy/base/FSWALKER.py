@@ -5,7 +5,10 @@ except:
     pass
 from FS import *
 
-import OpenWizzy.dfs_io
+try:
+    import OpenWizzy.dfs_io
+except:
+    pass
 
 class FSWalker():
 
