@@ -5,7 +5,7 @@ from OpenWizzy import o
 
 class RedisKeyValueStore(KeyValueStoreBase):
 
-    def __init__(self,namespace="",host='localhost',port=6379,db=0,key='', serializers=[o.db.serializers.pickle]):
+    def __init__(self,namespace="",host='localhost',port=6379,db=0,key='', serializers=[]):
 
         self.redisclient=o.clients.redis.get(host, port, db=db, key=key)
         self.db = self.redisclient.redis

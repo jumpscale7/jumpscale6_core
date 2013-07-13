@@ -2,6 +2,7 @@ from arakoon_store import ArakoonKeyValueStore
 from file_system_store import FileSystemKeyValueStore
 from memory_store import MemoryKeyValueStore
 from redis_store import RedisKeyValueStore
+from leveldb_store import LevelDBKeyValueStore
 from OpenWizzy import o
 
 
@@ -14,7 +15,7 @@ class KeyValueStoreFactory(object):
     def __init__(self):
         self._cache = dict()
 
-    def getArakoonStore(self, namespace='',serializers=[o.db.serializers.pickle]):
+    def getArakoonStore(self, namespace='',serializers=[]):
         '''
         Gets an Arakoon key value store.
 
@@ -27,6 +28,8 @@ class KeyValueStoreFactory(object):
         @return: key value store
         @rtype: ArakoonKeyValueStore
         '''
+        if serializers==[]:
+            serializers=[o.db.serializers.ujson]
         key = '%s_%s' % ("arakoon", namespace)
         if key not in self._cache:
             if namespace=="":
@@ -34,7 +37,7 @@ class KeyValueStoreFactory(object):
             self._cache[key] = ArakoonKeyValueStore(namespace,serializers=serializers)
         return self._cache[key]
 
-    def getFileSystemStore(self, namespace='', baseDir=None,serializers=[o.db.serializers.pickle]):
+    def getFileSystemStore(self, namespace='', baseDir=None,serializers=[]):
         '''
         Gets a file system key value store.
 
@@ -50,6 +53,8 @@ class KeyValueStoreFactory(object):
         @return: key value store
         @rtype: FileSystemKeyValueStore
         '''
+        if serializers==[]:
+            serializers=[o.db.serializers.ujson]
 
         key = '%s_%s' % ("fs", namespace)
         if key not in self._cache:
@@ -83,5 +88,22 @@ class KeyValueStoreFactory(object):
         key = '%s_%s_%s' % ("redis", port, namespace)
         if key not in self._cache:
             self._cache[key] = RedisKeyValueStore(namespace=namespace,host=host,port=port,db=db,key=key,serializers=serializers)
+        return self._cache[key]
+
+    def getLevelDBStore(self, namespace='',basedir=None,serializers=[]):
+        '''
+        Gets a leveldb key value store.
+
+        @param name: name of the store
+        @type name: String
+
+        @param namespace: namespace of the store, defaults to ''
+        @type namespace: String
+
+        @return: key value store
+        '''
+        key = '%s_%s' % ("leveldb", namespace)
+        if key not in self._cache:
+            self._cache[key] = LevelDBKeyValueStore(namespace=namespace,basedir=basedir,serializers=serializers)
         return self._cache[key]
 

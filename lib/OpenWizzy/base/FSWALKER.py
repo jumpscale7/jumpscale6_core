@@ -1,131 +1,226 @@
 from OpenWizzy import o
+
 try:
     from REGEXTOOL import *
 except:
     pass
+
 from FS import *
 
-try:
-    import OpenWizzy.dfs_io
-except:
-    pass
+class FSWalkerStats():
+    def __init__(self):
+        self.start=o.base.time.getTimeEpoch()
+        self.stop=0
+        self.sizeUncompressed={}
+
+        self.sizeCompressed={}
+        self.nr={}
+        self.duplicate={}
+
+        for i in ["D","F","L"]:
+            self.registerType(i)
+            
+        self.sizeUncompressedTotal=0
+        self.sizeCompressedTotal=0
+        self.nrTotal=0
+        self.duplicateTotal=0
+
+    def registerType(self,ttype):
+        if not self.sizeUncompressed.has_key(ttype):
+            self.sizeUncompressed[ttype]=0
+        if not self.sizeCompressed.has_key(ttype):
+            self.sizeCompressed[ttype]=0
+        if not self.nr.has_key(ttype):
+            self.nr[ttype]=0
+        if not self.duplicate.has_key(ttype):
+            self.duplicate[ttype]=0
+
+
+    def callstop(self):
+        self.stop=o.base.time.getTimeEpoch()
+        self._getTotals()
+
+    def _getTotals(self):
+        sizeUncompressed=0
+        for key in self.sizeUncompressed.keys():
+            sizeUncompressed+=self.sizeUncompressed[key]
+        self.sizeUncompressedTotal=sizeUncompressed
+        
+        sizeCompressed=0
+        for key in self.sizeCompressed.keys():
+            sizeCompressed+=self.sizeCompressed[key]
+        self.sizeCompressedTotal=sizeCompressed
+        
+        nr=0
+        for key in self.nr.keys():
+            nr+=self.nr[key]
+        self.nrTotal=nr
+
+        duplicate=0
+        for key in self.duplicate.keys():
+            duplicate+=self.duplicate[key]
+        self.duplicateTotal=duplicate
+
+    def add2stat(self,ttype="F",sizeUncompressed=0,sizeCompressed=0,duplicate=False):
+        self.sizeUncompressed[ttype]+=sizeUncompressed
+        self.sizeCompressed[ttype]+=sizeCompressed
+        self.nr[ttype]+=1
+        if duplicate:
+            self.duplicate[ttype]+=1
+
+    def __repr__(self):
+        self.callstop()
+        duration=self.stop-self.start
+        out="nrsecs:%s"%duration
+        out="nrfiles:%s\n"%self.nrTotal
+        out+="nrfilesDuplicate:%s\n"%self.duplicateTotal
+        sizeUncompressedTotal=(float(self.sizeUncompressedTotal)/1024/1024)
+        out+="size uncompressed:%s\n"%sizeUncompressedTotal
+        sizeCompressedTotal=(float(self.sizeCompressedTotal)/1024/1024)
+        out+="size compressed:%s\n"%sizeCompressedTotal
+        out+="uncompressed send per sec in MB/sec: %s"% round(sizeUncompressedTotal/duration,2)
+        out+="compressed send per sec in MB/sec: %s"% round(sizeCompressedTotal/duration,2)
+
+    __str__=__repr__
 
 class FSWalker():
 
-    # def _checkDepth(path,depths,root=""):
-    #     if depths==[]:
-    #         return True
-    #     #path=o.system.fs.pathclean(path)
-    #     path=self.pathRemoveDirPart(path,root)
-    #     for depth in depths:
-    #         dname=os.path.dirname(path)
-    #         split=dname.split(os.sep)
-    #         split = [ item for item in split if item<>""]
-    #         #print split
-    #         if depth==len(split):
-    #             return True
-    #     else:
-    #         return False
+    def __init__(self,mdserverclient=None):
+        self.stats=None
+        self.statsStart()
+        self.statsNr=0
+        self.statsSize=0
+        self.lastPath=""
+        self.mdserverclient=mdserverclient
 
-    def __init__(self):
-        self.dos=[]
+    def registerChange(self,ttype,status,name,stat=None):
+        pass
 
     def log(self,msg):
         print msg
 
-    def registerChange(self,do,ttype,status,name):
-        # print "CHANGE: %s %s %s" %(name,ttype,status)
-        if len(self.dos)==0:
-            self.dos.append(do)
-        elif self.dos[-1]<>do:
-            self.dos.append(do)
+    def statsStart(self):
+        self.stats=FSWalkerStats()
+
+    def statsPrint(self): 
+        print "lastpath:%s"%self.lastPath       
+        print self.stats
+
+    def statsAdd(self,path="",ttype="F",sizeUncompressed=0,sizeCompressed=0,duplicate=False):
+        self.stats.add2stat(ttype=ttype,sizeUncompressed=sizeUncompressed,sizeCompressed=sizeCompressed,duplicate=duplicate)
+        self.statsNr+=1
+        self.statsSize+=sizeUncompressed
+        self.lastPath=path
+        if self.statsNr>2000 or self.statsSize>100000000:
+            self.statsPrint()
+            self.statsNr=0
+            self.statsSize=0
     
     def _findhelper(self,arg,path):
         arg.append(path)
     
-    def find(self,root, includeFolders=False,includeLinks=False, pathRegexIncludes=[],pathRegexExcludes=[], contentRegexIncludes=[], \
-        contentRegexExcludes=[],followlinks=False,dirObjectProcess=False):
+    def find(self,root, includeFolders=False,includeLinks=False, pathRegexIncludes={},pathRegexExcludes={},followlinks=False,\
+        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],registerToMDServer=False):
         """
-        @return {files:[],dirs:[],links:[]}
+        @return {files:[],dirs:[],links:[],...$othertypes}
         """
 
-        files=[]
-        dirs=[]
-        links=[]
+        result={}
+        result["F"]=[]
+        result["D"]=[]
+        result["L"]=[]
 
-        def processfile(path):
-            files.append(path)    
+        def processfile(path,stat):
+            result["F"].append([path,stat])    
 
-        def processdir(path):
-            dirs.append(path)    
+        def processdir(path,stat):
+            result["D"].append([path,stat])    
 
-        def processlink(path):
-            links.append(path)   
+        def processlink(src,dest):
+            result["L"].append([src,dest])   
 
-        matchfile=None
+        def processother(path,stat,type):
+            if result.has_key(type):
+                result[type]=[]
+            result[type].append([path,stat])  
 
-        if pathRegexIncludes<>[] or pathRegexExcludes<>[]:
-            if contentRegexIncludes==[] and contentRegexExcludes==[]:
-                def matchfile(path):
-                    return REGEXTOOL.matchPath(path,pathRegexIncludes,pathRegexExcludes)
-            else:
-                def matchfile(path):
-                    return REGEXTOOL.matchPath(path,pathRegexIncludes,pathRegexExcludes) and REGEXTOOL.matchContent(path,contentRegexIncludes,contentRegexExcludes)
+        callbackFunctions={}
+        callbackFunctions["F"]=processfile
+        callbackFunctions["D"]=processdir
+        callbackFunctions["L"]=processlink
+        callbackFunctions["O"]=processother  #type O is a generic callback which matches all not specified (will not match F,D,L)
 
-        matchdir=None
-        matchlink=None
+        callbackMatchFunctions=self.getCallBackMatchFunctions(pathRegexIncludes,pathRegexExcludes,includeFolders=includeFolders,includeLinks=includeLinks)
 
+        self.walk(root,callbackFunctions,arg={},callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes,\
+            registerToMDServer=registerToMDServer,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
+
+        return result
+
+    def getCallBackMatchFunctions(self,pathRegexIncludes={},pathRegexExcludes={},includeFolders=True,includeLinks=True):
+
+        C="""        
+if pathRegexIncludes.has_key("$type") and not pathRegexExcludes.has_key("$type"):
+    def matchobj$type(path,arg,pathRegexIncludes,pathRegexExcludes):
+        return REGEXTOOL.matchPath(path,pathRegexIncludes["$type"],[])
+elif not pathRegexIncludes.has_key("$type") and pathRegexExcludes.has_key("$type"):
+    def matchobj$type(path,arg,pathRegexIncludes,pathRegexExcludes):
+        return REGEXTOOL.matchPath(path,[],pathRegexExcludes["$type"])
+elif pathRegexIncludes.has_key("$type") and pathRegexExcludes.has_key("$type"):
+    def matchobj$type(path,arg,pathRegexIncludes,pathRegexExcludes):
+        return REGEXTOOL.matchPath(path,pathRegexIncludes["$type"],pathRegexExcludes["$type"])
+else:
+    matchobj$type=None
+"""       
+        for ttype in ["F","D","L"]:
+            C2=C.replace("$type",ttype)
+            print C2
+            exec(C2)
+
+        callbackMatchFunctions={}
+        if matchobjF<>None and (pathRegexIncludes.has_key("F") or pathRegexExcludes.has_key("F")):
+            callbackMatchFunctions["F"]=matchobjF
         if includeFolders:
-            if pathRegexIncludes<>[] or pathRegexExcludes<>[]:
-                def matchdir(path):
-                    return REGEXTOOL.matchPath(path,pathRegexIncludes,pathRegexExcludes)
-
+            if matchobjD<>None and (pathRegexIncludes.has_key("D") or pathRegexExcludes.has_key("D")):
+                callbackMatchFunctions["D"]=matchobjL
         if includeLinks:
-            if pathRegexIncludes<>[] or pathRegexExcludes<>[]:
-                def matchlink(path):
-                    return REGEXTOOL.matchPath(path,pathRegexIncludes,pathRegexExcludes)
-        
-        self.walk(root,callbackFunctionFile=processfile, callbackFunctionDir=processdir,callbackFunctionLink=processlink,args={}, \
-            callbackForMatchFile=matchfile,callbackForMatchDir=matchdir,callbackForMatchLink=matchlink,matchargs={},followlinks=followlinks,dirObjectProcess=dirObjectProcess)
+            if matchobjL<>None and (pathRegexIncludes.has_key("L") or pathRegexExcludes.has_key("L")):
+                callbackMatchFunctions["L"]=matchobjD
+        if pathRegexIncludes.has_key("O") or pathRegexExcludes.has_key("O"):
+            callbackMatchFunctions["O"]=matchobjO
 
-        listfiles={}
-        listfiles["files"]=files
-        listfiles["dirs"]=dirs
-        listfiles["links"]=links
-
-        return listfiles
+        return callbackMatchFunctions
           
-    def walk(self,root,callbackFunctionFile=None, callbackFunctionDir=None,callbackFunctionLink=None,args={},\
-        callbackForMatchFile=None,callbackForMatchDir=None,callbackForMatchLink=None,matchargs={},followlinks=False,dirObjectProcess=False):
-        '''Walk through filesystem and execute a method per file and dirname
+    def walk(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,registerToMDServer=False,\
+        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],pathRegexIncludes={},pathRegexExcludes={}):
+        '''
 
-        Walk through all files and folders starting at C{root}, recursive by
-        default, calling a given callback with a provided argument and file
+        Walk through filesystem and execute a method per file and dirname if the match function selected the item
+
+        Walk through all files and folders and other objects starting at root, 
+        recursive by default, calling a given callback with a provided argument and file
         path for every file & dir we could find.
 
-        To match the function use the callbackForMatch function which are separate for dir or file
+        To match the function use the callbackMatchFunctions  which are separate for all types of objects (Dir=D, File=F, Link=L)
         when it returns True the path will be further processed
-        when None (function not given match will not be done)
 
         Examples
         ========
         >>> def my_print(path,arg):
-        ...     print arg, path
-        ...
-        #if return False for callbackFunctionDir then recurse will not happen for that dir
-
-        >>> def matchDirOrFile(path,arg):
-        ...     return True #means will match all
+        ...     print arg+path
         ...
 
-        >>> self.walkFunctional('/foo', my_print,my_print, 'test:',matchDirOrFile,matchDirOrFile)
+        >>> def match(path,arg):
+        ...     return True #means will process the object e.g. file which means call my_print in this example
+        ...
+
+        >>> self.walk('/foo', my_print,arg="Test: ", callbackMatchFunctions=match)
         test: /foo/file1
         test: /foo/file2
         test: /foo/file3
         test: /foo/bar/file4
 
         @param root: Filesystem root to crawl (string)
-        #@todo complete
         
         '''
         #We want to work with full paths, even if a non-absolute path is provided
@@ -135,58 +230,53 @@ class FSWalker():
             raise ValueError('Root path for walk should be a folder')
         
         # print "ROOT OF WALKER:%s"%root
-
-        self._walkFunctional(root,callbackFunctionFile, callbackFunctionDir,callbackFunctionLink,args, callbackForMatchFile,callbackForMatchDir,callbackForMatchLink,\
-            matchargs,followlinks=followlinks,dirObjectProcess=dirObjectProcess)
-
-    def _walkFunctional(self,path,callbackFunctionFile=None, callbackFunctionDir=None,callbackFunctionLink=None,args={}, callbackForMatchFile=None,\
-            callbackForMatchDir=None,callbackForMatchLink=None,matchargs={},\
-            followlinks=False,dirObjectProcess=True):
-        if dirObjectProcess:
-            do=o.dfsio.mdobjects.getOWFSDir(path,parent="parent")
+        if self.mdserverclient==None:
+            self._walkFunctional(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,registerToMDServer,\
+                childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
         else:
-            do=None
+            self._walkFunctionalMDS(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,registerToMDServer,\
+                childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
 
-        paths=FS.list(path)
+    def _walkFunctional(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
+        registerToMDServer=False,childrenRegexExcludes=[],pathRegexIncludes={},pathRegexExcludes={}):
+        if registerToMDServer:
+            from IPython import embed
+            print "DEBUG NOW get diro"
+            embed()
+        paths=o.base.fs.list(root)
         for path2 in paths:
-            # self.log("walker path:%s"% path2)
-            if o.base.fs.isFile(path2,False):
-                # self.log("walker filepath:%s"% path2)
-                if callbackForMatchFile==None or callbackForMatchFile(path2,**matchargs):
-                    if do<>None:
-                        do.registerFile(path2,self)
-                    #execute 
-                    if callbackFunctionFile<>None:
-                        callbackFunctionFile(path2,**args)
-                elif callbackForMatchFile==False:                    
-                    continue
-            elif o.base.fs.isDir(path2, followlinks):
-                # self.log("walker dirpath:%s"% path2)
-                if callbackForMatchDir==False:
-                    continue                        
-                elif callbackForMatchDir==None or callbackForMatchDir(path2,**matchargs):
-                    if do<>None:
-                        do.registerDir(path2,self)
-                    #recurse
-                    # print "walker matchdir:%s"% path2
-                    if callbackFunctionDir<>None:
-                        callbackFunctionDir(path2,**args)                
-                self._walkFunctional(path2,callbackFunctionFile, callbackFunctionDir,callbackFunctionLink,args, callbackForMatchFile,callbackForMatchDir,callbackForMatchLink)
+            self.log("walker path:%s"% path2)
+            if o.base.fs.isFile(path2,followlinks):
+                ttype="F"
+            elif o.base.fs.isDir(path2,followlinks):
+                ttype="D"
             elif o.base.fs.isLink(path2):
-                # self.log( "walker link:%s"% path2)
-                if callbackForMatchLink==False:
-                    continue
-                elif callbackForMatchLink==None or callbackForMatchLink(path2,**matchargs):
-                    if do<>None:
-                        do.registerLink(path2,self)
-                elif callbackFunctionLink<>None:
-                    #execute 
-                    callbackFunctionLink(path2,**args)
+                ttype="L"
+            else:
+                raise RuntimeError("Can only detect files, dirs, links")
+
+            
+            if not callbackMatchFunctions.has_key(ttype) or (callbackMatchFunctions.has_key(ttype) and callbackMatchFunctions[ttype](path2,arg,pathRegexIncludes,pathRegexExcludes)):
+                self.log("walker filepath:%s"% path2)                
+                if not registerToMDServer:
+                    self.statsAdd(path=path2,ttype=ttype,sizeUncompressed=0,sizeCompressed=0,duplicate=False)
+                else:
+                    from IPython import embed
+                    print "DEBUG NOW get dir object"
+                    embed()
+
+                if callbackFunctions.has_key(ttype):
+                    callbackFunctions[ttype](path2,arg)
+
+            if ttype=="D":
+                if REGEXTOOL.matchPath(path2,[],childrenRegexExcludes):
+                    self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,registerToMDServer,\
+                        childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
         
 
 class FSWalkerFactory():
-    def get(self):
-        return FSWalker()
+    def get(self,mdserverclient=None):
+        return FSWalker(mdserverclient=mdserverclient)
 
 o.base.fswalker=FSWalkerFactory()
 

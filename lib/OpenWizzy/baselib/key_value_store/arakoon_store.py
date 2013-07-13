@@ -1,6 +1,8 @@
 from store import KeyValueStoreBase
 from OpenWizzy import o
 
+import OpenWizzy.baselib.serializers
+
 class ArakoonKeyValueStore(KeyValueStoreBase):
 
     def __init__(self, namespace=None, serializers=None):
