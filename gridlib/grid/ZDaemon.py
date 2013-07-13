@@ -103,10 +103,19 @@ class ZDaemon(GeventLoop):
             if data[0] == "1":
                 self.logQueue.put(data[1:])
                 cmdsocket.send("OK")
-            else:
+            elif data[0] == "3":
+                data = data[1:]
+                result = self.processRPC(data[1:])
+                if result["state"]=="ok":
+                    cmdsocket.send(result["result"])
+                else:
+                    cmdsocket.send("ERROR:%s"%o.db.serializers.ujson.dumps(result))
+            elif data[0] == "4":
                 data = data[1:]
                 result = self.processRPC(data)
                 cmdsocket.send(o.db.serializers.ujson.dumps(result))
+            else:
+                q.errorconditionhandler.raiseBug(message="Could not find supported message on cmd server",category="grid.cmdserver.valueerror")
 
 
     def cmdGreenlet(self):

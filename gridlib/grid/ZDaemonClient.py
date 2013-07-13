@@ -19,7 +19,6 @@ class ZDaemonClient():
         self.blocksize=8*1024*1024
 
     def init(self):
-
         o.logger.log("check if %s is reachable on %s on port %s" % (self.servername,self.ipaddr,self.port), level=4, category='zdaemon.client.init')
         res=o.system.net.waitConnectionTest(self.ipaddr,self.port,20)
         if res==False:
@@ -167,20 +166,10 @@ class ZDaemonClient():
             o.system.fs.writeFile(path, bytestr, append=True)
 
     def sendbinary(self,bindata):
-        self.sendMsgOverCMDChannel("0%s"%bindata)
+        return self.sendMsgOverCMDChannel("0%s"%bindata)
 
-
-    def sendbinary(self,bindata):
-        self.sendMsgOverCMDChannel("0%s"%bindata)
-
-    def sendcmd(self, cmd, **args):
-        data = "4%s"%ujson.dumps([cmd, args])
-        result = self.sendMsgOverCMDChannel(data)
-        result = ujson.loads(result)
-        print result
-        if result["state"] == "ok":
-            return result["result"]
-        elif result["state"] == "nomethod":
+    def _raiseError(self,result):
+        if result["state"] == "nomethod":
             msg="execution error on server:%s on %s:%s.\n Could not find method:%s\n"%(self.servername,self.ipaddr,self.port,cmd)
             o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
         else:
@@ -189,6 +178,25 @@ class ZDaemonClient():
             o.errorconditionhandler.raiseOperationalCritical(msgpub="",message=msg,category="rpc.exec",die=True,tags="ecoguid:%s"%eco.guid)            
             # raise RuntimeError("error in send cmd (error on server):%s, %s"%(cmd, result["result"]))
 
+
+    def sendcmd(self, cmd, rawreturn=False,**args):
+        if rawreturn: #means the server will no return a json encoded result dict but the raw output of the method on the server
+            data = "3%s"%ujson.dumps([cmd, args])
+            data=self.sendMsgOverCMDChannel("3%s"%data)
+            if data[0:7]=="ERROR:":
+                self._raiseError(ujson.loads(data[7:]))
+            else:
+                return data
+        else:
+            data = "4%s"%ujson.dumps([cmd, args])
+            result = self.sendMsgOverCMDChannel(data)
+            result = ujson.loads(result)
+            print result
+            if result["state"] == "ok":
+                return result["result"]
+            else:
+                self._raiseError(result)
+            
     # def sendcmdData(self, cmd, **args):
     #     data = "4%s"%ujson.dumps([cmd, args])
     #     self.datachannel.send(data)
