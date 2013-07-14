@@ -1,11 +1,11 @@
 import os
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     out=""
 
-    spaces = q.core.appserver6.runningAppserver.webserver.spacesloader.spaces
+    spaces = o.core.portal.runningPortal.webserver.spacesloader.spaces
 
     for spacename in sorted(spaces.keys()):
         model=spaces[spacename].model   #@todo security breach
@@ -20,6 +20,6 @@ def main(q,args,params,tags,tasklet):
 
     return params
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

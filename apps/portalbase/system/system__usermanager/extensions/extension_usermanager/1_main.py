@@ -1,11 +1,11 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
 
     doc=params.doc
 
     e=params.requestContext.env
 
-    addr=q.core.appserver6.runningAppserver.ipaddr
+    addr=o.core.portal.runningPortal.ipaddr
 
     querystr=e["QUERY_STRING"]
     querystr=querystr.replace("&format=text","")
@@ -13,7 +13,7 @@ def main(q,args,params,tags,tasklet):
     querystr=querystr.replace("&key=","")
     querystr=querystr.replace("key=,","")
     querystr=querystr.replace("key=","")
-    querystr+="key=%s"%q.apps.system.usermanager.extensions.usermanager.getUserFromCTX(params.requestContext).secret
+    querystr+="key=%s"%o.apps.system.usermanager.extensions.usermanager.getUserFromCTX(params.requestContext).secret
 
     if params.has_key("machine"):        
         url= "http://"+addr+\
@@ -29,6 +29,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

@@ -1,14 +1,14 @@
 
-def main(q, arg, params,  tags, tasklet):
+def main(o, arg, params,  tags, tasklet):
     params.merge(arg)
     doc=params.doc
     space = params.paramsExtra['space']
     out=""
 
     
-    spaces = q.core.appserver6.runningAppserver.webserver.getSpaces()
+    spaces = o.core.portal.runningPortal.webserver.getSpaces()
     if space in spaces:
-        sp = q.core.appserver6.runningAppserver.webserver.getSpace(space)
+        sp = o.core.portal.runningPortal.webserver.getSpace(space)
     else:
         params.result = out, doc
         return params
@@ -24,6 +24,6 @@ def main(q, arg, params,  tags, tasklet):
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True
 

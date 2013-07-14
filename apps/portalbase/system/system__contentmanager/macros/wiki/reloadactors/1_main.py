@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     out=""
@@ -7,7 +7,7 @@ def main(q,args,params,tags,tasklet):
     print "DEBUG NOW reload actors macro"
     ipshell()
     
-    spaces=q.core.appserver6.runningAppserver.webserver.spacesloader.spaces    
+    spaces=o.core.portal.runningPortal.webserver.spacesloader.spaces    
     for spacename in spaces.keys():
         model=spaces[spacename].model  
         out+="* [%s|/system/ReloadApplication/?name=%s]\n" % (item,item.lower().strip("/"))
@@ -17,6 +17,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

@@ -1,18 +1,18 @@
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
 
     page = args.page
     pars = args.expandParamsAsDict()
     hostname = pars.get('hostname', '')
     contentpage = pars.get('contentpage', '')
     divid = pars.get('divid', '')
-    q.tools.docgenerator.getConfluence2htmlConvertor()
+    o.tools.docgenerator.getConfluence2htmlConvertor()
    
     scriptcontent = """
         (typeof(tocheck) == "undefined")? tocheck = [] : tocheck=tocheck;
         tocheck.push({"hostname":"%s", "divid":"%s"});""" % (hostname, divid)
         
     page.addJS(jsContent=scriptcontent)
-    space = q.core.appserver6.runningAppserver.webserver.spacesloader.spaces[args.doc.getSpaceName()]
+    space = o.core.portal.runningPortal.webserver.spacesloader.spaces[args.doc.getSpaceName()]
     if space.docprocessor.docExists(contentpage):
         doc = space.docprocessor.docGet(contentpage)
         htmlcontent = doc.getHtmlBody()
@@ -25,5 +25,5 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True

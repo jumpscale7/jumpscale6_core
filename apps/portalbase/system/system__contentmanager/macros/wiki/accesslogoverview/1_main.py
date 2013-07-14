@@ -1,4 +1,4 @@
-def main(q,args, params, tags, tasklet):
+def main(o,args, params, tags, tasklet):
     print 'hello world'
     import time
     params.merge(args)
@@ -6,33 +6,33 @@ def main(q,args, params, tags, tasklet):
     tags=params.tags.getDict()
     spacename = params.paramsExtra['space']
     out=""
-    logdir = q.core.appserver6.runningAppserver.webserver.logdir
+    logdir = o.core.portal.runningPortal.webserver.logdir
     backupdir = q.system.fs.joinPaths(logdir, 'backup')
     if 'filename' in tags.keys():
         filen = tags['filename']
-        if not q.system.fs.exists(backupdir):
-            q.system.fs.createDir(backupdir)
-        originalfile = q.system.fs.joinPaths(logdir, filen)
-        destfile = q.system.fs.joinPaths(backupdir, "%s_%s" % (time.ctime(), filen))
-        q.system.fs.copyFile(originalfile,destfile)
-        q.system.fs.writeFile(originalfile, "")
+        if not o.system.fs.exists(backupdir):
+            o.system.fs.createDir(backupdir)
+        originalfile = o.system.fs.joinPaths(logdir, filen)
+        destfile = o.system.fs.joinPaths(backupdir, "%s_%s" % (time.ctime(), filen))
+        o.system.fs.copyFile(originalfile,destfile)
+        o.system.fs.writeFile(originalfile, "")
 
-    spaces = q.core.appserver6.runningAppserver.webserver.getSpaces()
+    spaces = o.core.portal.runningPortal.webserver.getSpaces()
     if spacename in spaces:
-        sp = q.core.appserver6.runningAppserver.webserver.getSpace(spacename)
+        sp = o.core.portal.runningPortal.webserver.getSpace(spacename)
     else:
         params.result = (out, params.doc)
         return params
     if spacename == 'system':
-        logfiles = q.system.fs.listFilesInDir(logdir)
+        logfiles = o.system.fs.listFilesInDir(logdir)
     else:
-        logfiles =  q.system.fs.joinPaths(logdir, 'space_%s.log') % spacename
+        logfiles =  o.system.fs.joinPaths(logdir, 'space_%s.log') % spacename
     for lfile in logfiles:
-        baselfile = q.system.fs.getBaseName(lfile)
+        baselfile = o.system.fs.getBaseName(lfile)
         out +="|%s | [Reset | /system/ResetAccessLog?filename=%s] | [Show | system/ShowSpaceAccessLog?filename=%s]|\n" % (baselfile,baselfile, baselfile)
 
     params.result = (out, params.doc)
     return params
 
-def match(q, args, params,  tags, tasklet):
+def match(o, args, params,  tags, tasklet):
     return True

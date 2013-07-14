@@ -1,6 +1,6 @@
 import os
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     
     page = args.page
     params.result = page
@@ -14,14 +14,14 @@ def main(q,args,params,tags,tasklet):
     
     """
     This is code for using buckets can be extented later.
-    buckets = q.core.appserver6.runningAppserver.webserver.bucketsloader.buckets
+    buckets = o.core.portal.runningPortal.webserver.bucketsloader.buckets
     if pars.has_key('picturebucket') and pars['picturebucket'] in buckets:
         bucket = buckets[pars['picturebucket']]
         files = q.system.fs.listFilesInDir(bucket.model.path)
     else:
         files = []
     """
-    space = q.core.appserver6.runningAppserver.webserver.spacesloader.spaces[args.doc.getSpaceName()]
+    space = o.core.portal.runningPortal.webserver.spacesloader.spaces[args.doc.getSpaceName()]
     imagedir = q.system.fs.joinPaths(space.model.path,'.files','img')
     if not pars.has_key('title'):
         title =""
@@ -35,14 +35,14 @@ def main(q,args,params,tags,tasklet):
         localpath = args.doc.path
         fullimagepath = q.system.fs.getDirName(localpath)
     
-    allfiles = q.system.fs.listFilesInDir(fullimagepath, filter="*.jpg", case_sensitivity='insensitive')
-    allfiles+=(q.system.fs.listFilesInDir(fullimagepath, filter="*.png", case_sensitivity='insensitive'))
-    allfiles+=(q.system.fs.listFilesInDir(fullimagepath, filter="*.bmp", case_sensitivity='insensitive'))
-    allfiles+=(q.system.fs.listFilesInDir(fullimagepath, filter="*.jpeg", case_sensitivity='insensitive'))
-    allfiles+=(q.system.fs.listFilesInDir(fullimagepath, filter="*.gif", case_sensitivity='insensitive'))
+    allfiles = o.system.fs.listFilesInDir(fullimagepath, filter="*.jpg", case_sensitivity='insensitive')
+    allfiles+=(o.system.fs.listFilesInDir(fullimagepath, filter="*.png", case_sensitivity='insensitive'))
+    allfiles+=(o.system.fs.listFilesInDir(fullimagepath, filter="*.bmp", case_sensitivity='insensitive'))
+    allfiles+=(o.system.fs.listFilesInDir(fullimagepath, filter="*.jpeg", case_sensitivity='insensitive'))
+    allfiles+=(o.system.fs.listFilesInDir(fullimagepath, filter="*.gif", case_sensitivity='insensitive'))
 
     
-    smallfiles = q.system.fs.listFilesInDir(fullimagepath, filter="s_*.*")
+    smallfiles = o.system.fs.listFilesInDir(fullimagepath, filter="s_*.*")
     bigfiles = [x for x in allfiles if x not in smallfiles]
 
     thumb_size = pars.get('thumb_size', args.doc.docparams.get('thumb_size', '150x100'))
@@ -50,7 +50,7 @@ def main(q,args,params,tags,tasklet):
     thumb_size = [int(x) for x in thumb_size.split('x')]
 
     for i in bigfiles:
-        basefile = q.system.fs.getBaseName(i)
+        basefile = o.system.fs.getBaseName(i)
         bigpath = "/%s/%s" % (baseurlpath, basefile)
         
         smallpath = "/%s/s_%sx%s_%s" % (baseurlpath, thumb_size[0], thumb_size[1], basefile)

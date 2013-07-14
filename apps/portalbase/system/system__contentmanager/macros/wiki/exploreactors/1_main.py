@@ -1,11 +1,11 @@
 import os
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     out=""
 
-    actors=q.core.appserver6.runningAppserver.actorsloader.actors
+    actors=o.core.portal.runningPortal.actorsloader.actors
 
     for ttype in ["specs","methodtasklets","extensions","wikimacros"]:
 
@@ -14,7 +14,7 @@ def main(q,args,params,tags,tasklet):
         for actorname in actors.keys():
             model=actors[actorname].model   #@todo security breach
             path=os.path.abspath(model.path)
-            q.system.fs.createDir(path) 
+            o.system.fs.createDir(path) 
             path=path.replace(":","___").replace("/","\\")+"\\%s\\"%ttype
             # out+="|[%s | /system/Explorer/?path=%s] |[reload | /system/reloadactor/?name=%s]|\n" % (model.id,path,model.id)
             out+="|[%s | /system/Explorer/?path=%s] |\n" % (model.id,path)
@@ -25,6 +25,6 @@ def main(q,args,params,tags,tasklet):
 
     return params
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

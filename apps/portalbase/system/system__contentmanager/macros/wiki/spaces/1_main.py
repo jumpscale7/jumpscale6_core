@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     doc = params.doc
@@ -8,7 +8,7 @@ def main(q,args,params,tags,tasklet):
 
     bullets=params.tags.labelExists("bullets")
     table=params.tags.labelExists("table")
-    spaces = sorted(q.core.appserver6.runningAppserver.webserver.getSpaces())
+    spaces = sorted(o.core.portal.runningPortal.webserver.getSpaces())
     
     if table:
         for item in spaces:
@@ -28,6 +28,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

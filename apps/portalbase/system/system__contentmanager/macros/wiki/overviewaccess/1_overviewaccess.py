@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     doc=params.doc
@@ -15,7 +15,7 @@ def main(q,args,params,tags,tasklet):
         out+='h2. Access Overview of Space "%s"\n\n' % spaces[0]
         singlespace = True
     else:
-        spaces=q.core.appserver6.runningAppserver.webserver.spacesloader.spaces.keys()
+        spaces=o.core.portal.runningPortal.webserver.spacesloader.spaces.keys()
         out+="h2. Acess Overview of Spaces\n\n"
     
     if spaces:
@@ -24,14 +24,14 @@ def main(q,args,params,tags,tasklet):
         out += "||Name||Right||Emails||Groups||Secret url||\n" 
     for spacename in sorted(spaces):
         try:
-            space=q.core.appserver6.runningAppserver.webserver.spacesloader.getSpaceFromId(spacename)
+            space=o.core.portal.runningPortal.webserver.spacesloader.getSpaceFromId(spacename)
         except:
             params.result="ERROR: Could not find space %s"% spacename
             return params 
         
         memberace={}
         for groupname in space.model.acl.keys():
-            group=q.apps.system.usermanager.extensions.usermanager.groupGet(groupname)
+            group=o.apps.system.usermanager.extensions.usermanager.groupGet(groupname)
             if group<>None:
                 for membername in group.members:
                     if not memberace.has_key(membername):
@@ -44,8 +44,8 @@ def main(q,args,params,tags,tasklet):
         msorted.sort()
         for name in msorted:
             right=",".join(memberace[name])
-            user=q.apps.system.usermanager.extensions.usermanager.userGet(name)
-            secreturl="http://%s/%s?authkey=%s" % (q.core.appserver6.runningAppserver.ipaddr,spacename,user.secret)
+            user=o.apps.system.usermanager.extensions.usermanager.userGet(name)
+            secreturl="http://%s/%s?authkey=%s" % (o.core.portal.runningPortal.ipaddr,spacename,user.secret)
             if not singlespace:
                 out += "|%s" % spacename
             out+="|%s|%s|%s|%s|[secretlink|%s]|\n" % (name,right,",".join(user.emails),",".join(user.groups),secreturl)

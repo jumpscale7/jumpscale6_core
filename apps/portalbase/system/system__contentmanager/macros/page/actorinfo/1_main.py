@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     page = args.page
 
 
@@ -13,7 +13,7 @@ def main(q,args,params,tags,tasklet):
     else:
         appname=""
 
-    page2= q.core.appserver6.runningAppserver.webserver.getServicesInfo(appname=appname,actor=actorname)
+    page2= o.core.portal.runningPortal.webserver.getServicesInfo(appname=appname,actor=actorname)
 
     page.addBootstrap()
     page.addMessage(page2.body)

@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     name=params.tags.tagGet("name")
@@ -14,13 +14,13 @@ def main(q,args,params,tags,tasklet):
 
     
     try:
-        space=q.core.appserver6.runningAppserver.webserver.loadSpace(name)
+        space=o.core.portal.runningPortal.webserver.loadSpace(name)
         
     except Exception,e:
         error=e
         out="ERROR: could not reload the docs for space %s, please check event log." % params.tags.tagGet("name")
-        eco=q.errorconditionhandler.parsePythonErrorObject(e)
-        q.errorconditionhandler.processErrorConditionObject(eco)
+        eco=o.errorconditionhandler.parsePythonErrorObject(e)
+        o.errorconditionhandler.processErrorConditionObject(eco)
         print eco
 
 
@@ -30,6 +30,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     doc=params.doc
@@ -7,15 +7,15 @@ def main(q,args,params,tags,tasklet):
 
     out=""
     cmdstr=params.macrostr.split(":",1)[1].replace("}}","").strip()
-    md5=q.tools.hash.md5_string(cmdstr)
-    q.system.fs.createDir(q.system.fs.joinPaths(q.core.appserver6.runningAppserver.webserver.filesroot,"dot"))
-    path=q.system.fs.joinPaths(q.core.appserver6.runningAppserver.webserver.filesroot,"dot",md5)
-    if not q.system.fs.exists(path+".png"):
-        q.system.fs.writeFile(path+".dot",cmdstr)
+    md5=o.tools.hash.md5_string(cmdstr)
+    q.system.fs.createDir(q.system.fs.joinPaths(o.core.portal.runningPortal.webserver.filesroot,"dot"))
+    path=q.system.fs.joinPaths(o.core.portal.runningPortal.webserver.filesroot,"dot",md5)
+    if not o.system.fs.exists(path+".png"):
+        o.system.fs.writeFile(path+".dot",cmdstr)
         cmd="dot -Tpng %s.dot -o %s.png" %(path,path)
         
         # for i in range(5):
-        rescode,result=q.system.process.execute(cmd)
+        rescode,result=o.system.process.execute(cmd)
             # if result.find("warning")==011:
 
         if result.find("warning")<>-1:

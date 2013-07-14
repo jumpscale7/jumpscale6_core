@@ -1,14 +1,14 @@
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     #temporary hack to get the application name
-    name = q.system.fs.getParentDirName(q.system.fs.getParent(q.core.appserver6.runningAppserver.webserver.cfgdir))
-    q.core.appserver6.runningAppserver.restartInProcess(name)
+    name = o.system.fs.getParentDirName(q.system.fs.getParent(o.core.portal.runningPortal.webserver.cfgdir))
+    o.core.portal.runningPortal.restartInProcess(name)
 
     params.result=("",params.doc)
 
  
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

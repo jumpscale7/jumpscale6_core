@@ -11,7 +11,7 @@ import os
 
 DEFAULT_THUMB_SIZE = '150x100'
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     page = args.page
 
     try:
@@ -21,7 +21,7 @@ def main(q,args,params,tags,tasklet):
         from PIL import Image
 
     space_name = args.doc.getSpaceName()
-    space_path = q.core.appserver6.runningAppserver.webserver.getSpace(space_name).model.path
+    space_path = o.core.portal.runningPortal.webserver.getSpace(space_name).model.path
     
     macro_params = args.cmdstr.split(' ')
     img_url = macro_params[0]
@@ -59,5 +59,5 @@ def main(q,args,params,tags,tasklet):
     params.result = page
     return params
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True

@@ -37,7 +37,7 @@ class DocgeneratorFactory:
         #return page
         
     def pageNewHTML(self,pagename,htmllibPath=None):
-        from core.docgenerator.PageHTML import PageHTML
+        from OpenWizzy.portal.docgenerator.PageHTML import PageHTML
         page=PageHTML(pagename,htmllibPath=htmllibPath)
         return page
 

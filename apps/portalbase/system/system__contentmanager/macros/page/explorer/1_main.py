@@ -1,15 +1,15 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     import os
     page = args.page
     params.result = page
 
     if args.tags.tagExists("path"):
         path=args.tags.tagGet("path").replace("+",":").replace("___",":").replace("\\","/")
-        if not q.system.fs.exists(path):
+        if not o.system.fs.exists(path):
             page.addMessage("ERROR:could not find file %s"%path)
 
-        apppath = q.core.appserver6.runningAppserver.cfgdir.rpartition('/')[0]
+        apppath = o.core.portal.runningPortal.cfgdir.rpartition('/')[0]
         codepath = os.getcwd()
         if path.startswith('/') and not (path.startswith(apppath) or path.startswith(codepath)):
             path=''
@@ -20,10 +20,10 @@ def main(q,args,params,tags,tasklet):
     if  args.tags.tagExists("bucket"):
         bucket=args.tags.tagGet("bucket").lower()
 
-        if not q.core.appserver6.runningAppserver.webserver.bucketsloader.buckets.has_key(bucket):
+        if not o.core.portal.runningPortal.webserver.bucketsloader.buckets.has_key(bucket):
             page.addMessage("Could not find bucket %s" % bucket)
             return params
-        bucket=q.core.appserver6.runningAppserver.webserver.bucketsloader.buckets[bucket]
+        bucket=o.core.portal.runningPortal.webserver.bucketsloader.buckets[bucket]
         path=bucket.model.path.replace("\\","/")
 
     if  args.tags.tagExists("height"):
@@ -43,7 +43,7 @@ def main(q,args,params,tags,tasklet):
     else:
         readonly=False
 
-    if q.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(args.requestContext):
+    if o.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(args.requestContext):
         readonly=False
 
     if  args.tags.tagExists("tree") or args.tags.labelExists("tree"):

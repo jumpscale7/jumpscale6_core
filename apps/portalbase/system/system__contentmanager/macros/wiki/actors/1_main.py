@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     
     doc=args.doc
     tags=args.tags
@@ -12,13 +12,13 @@ def main(q,args,params,tags,tasklet):
     if table:
         rows=[]
 
-        for item in q.core.appserver6.runningAppserver.webserver.getActors():
+        for item in o.core.portal.runningPortal.webserver.getActors():
             app,actor=item.split("__")
             out+="|[%s|/rest/%s/%s]|\n" % (item,app.lower().strip("/"),actor.lower().strip("/"))
     
     else:
 
-        for item in q.core.appserver6.runningAppserver.webserver.getActors():
+        for item in o.core.portal.runningPortal.webserver.getActors():
             if item[0]<>"_" and item.strip()<>"":
                 app,actor=item.split("__")
                 if bullets:
@@ -31,6 +31,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 
