@@ -226,10 +226,6 @@ import pmtypes
 pmtypes.register_types()
 o.basetype=pmtypes.register_types()
 
-
-
-
-
 import errorhandling
 
 from Dirs import Dirs

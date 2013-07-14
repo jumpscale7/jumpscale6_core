@@ -35,7 +35,6 @@ class FSWalkerStats():
         if not self.duplicate.has_key(ttype):
             self.duplicate[ttype]=0
 
-
     def callstop(self):
         self.stop=o.base.time.getTimeEpoch()
         self._getTotals()
@@ -149,7 +148,8 @@ class FSWalker():
 
         callbackMatchFunctions=self.getCallBackMatchFunctions(pathRegexIncludes,pathRegexExcludes,includeFolders=includeFolders,includeLinks=includeLinks)
 
-        self.walk(root,callbackFunctions,arg={},callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes,\
+        root = os.path.abspath(root)
+        self._walk(root,callbackFunctions,arg={},callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes,\
             pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,mdserverclient=mdserverclient)
 
         return result
@@ -188,7 +188,7 @@ else:
         return callbackMatchFunctions
           
     def walk(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
-        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],pathRegexIncludes={},pathRegexExcludes={},mdserverclient=None):
+        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],mdserverclient=None):
         '''
 
         Walk through filesystem and execute a method per file and dirname if the match function selected the item
