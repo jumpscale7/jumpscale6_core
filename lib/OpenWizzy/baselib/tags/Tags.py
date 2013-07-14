@@ -36,7 +36,7 @@ class Tags():
         if tagstring.find("'")<>-1:
             #special more complex processing required
             # r=openwizzy.o.codetools.regex.replace("'[\w\-_=? !]*'","","-_-",tagstring,nonRegexSubsetToReplace=" ")
-            tagstring=openwizzy.o.codetools.regex.replace("'[\w\-_=? !]*'"," ","-|-",tagstring)
+            tagstring=o.codetools.regex.replace("'[\w\-_=? !]*'"," ","-|-",tagstring)
             tagstring=tagstring.replace("'","")
 
         tags = tagstring.split()

@@ -4,7 +4,7 @@ from OpenWizzy import o
 from Tags import Tags
 
 
-class TagsFactory(openwizzy.baseclasses.BaseType):
+class TagsFactory(object):
     """
     Factory Class of dealing with TAGS     
     """

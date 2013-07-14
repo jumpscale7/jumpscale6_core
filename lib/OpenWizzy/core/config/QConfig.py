@@ -1,6 +1,6 @@
 
 from OpenWizzy import o
-from OpenWizzy.core.inifile.IniFile import IniFile
+from OpenWizzy.baselib.inifile.IniFile import IniFile
 
 class QConfig():
     """

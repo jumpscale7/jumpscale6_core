@@ -4,7 +4,7 @@ from store import KeyValueStoreBase
 try:
     import plyvel
 except:
-    o.base.fs.installtools.execute('apt-get install libleveldb1 libleveldb-dev')
+    o.base.fs.installtools.execute('apt-get install libleveldb1 libleveldb-dev -y')
     o.base.fs.installtools.execute('pip install plyvel')
 
 
