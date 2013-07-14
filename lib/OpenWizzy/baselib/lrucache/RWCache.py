@@ -1,5 +1,11 @@
+from __future__ import generators
+import time
+from heapq import heappush, heappop, heapify
+
 from OpenWizzy import o
 from LRUCache import LRUCache
+
+from operator import itemgetter, attrgetter
 
 class RWCache():
     def __init__(self,nrItemsReadCache,maxNrItemsWriteCache=50,maxTimeWriteCache=2000,writermethod=None):
@@ -7,18 +13,34 @@ class RWCache():
         self.cacheW=WCache(maxNrItemsWriteCache,writermethod,maxTimeWriteCache)
 
     def set(self,key,obj):
-        self.cacheR[key]=obj
         self.cacheW[key]=obj
+        self.cacheR[key]=obj
 
     def flush(self):
-        from IPython import embed
-        print "DEBUG NOW flush"
-        embed()
+        self.cacheW.flush()
+
 
 #based on LRUCache but modified for different purpose (write through cache)
-class WCache(LRUCache):    
+class WCache(object):    
+    class __Node(object):
+        """Record of a cached value. Not for public consumption."""
+        
+        def __init__(self, key, obj, timestamp):
+            object.__init__(self)
+            self.key = key
+            self.obj = obj
+            self.wtime = timestamp
+        
+        def __cmp__(self, other):
+            return cmp(self.atime, other.atime)
 
-    def __init__(self, size=5000,writermethod=None,maxtime=2000):
+        def __repr__(self):
+            return "<%s %s => %s (%s)>" % \
+                   (self.__class__, self.key, self.obj, \
+                    time.asctime(time.localtime(self.wtime)))
+
+
+    def __init__(self, size=5000,writermethod=None,maxtime=1):
         """
         @param writermethod if given then this method will be called with max size reached or when flush called for objects older than specified maxtime
         """
@@ -28,33 +50,108 @@ class WCache(LRUCache):
         elif type(size) is not type(0):
             raise TypeError, size
         object.__init__(self)
-        self.__heap = []
         self.__dict = {}
         self.size = size
+        self.flushsize=round(float(size)*1.2)
         self.maxtime=maxtime
         self.writermethod=writermethod
         
+        
+    def flush(self):
+        if len(self.__dict.keys()) >= self.size and self.writermethod==None:
+            raise RuntimeError("Write cache full.")
+
+        now=time.time()
+
+        todelete=[]
+        for key in self:
+            item=self.__dict[key]
+            if now>item.wtime+self.maxtime:
+                self.writermethod(self.__dict[key])
+                todelete.append(key)
+
+        for key2 in todelete:
+            del self.__dict[key2]
+
+        if len(self.__dict.keys()) < self.size:
+            return
+        #not enough objects flushed, sort follow latest mdate
+        tosort=[]
+        for key in self.__dict.keys():
+            tosort.append([key,self.__dict[key].wtime])
+        sortedItems=sorted(tosort,key=itemgetter(1))
+        counter=0
+        while len(self.__dict.keys()) >= self.size:
+            key=sortedItems[counter][0]
+            counter+=1
+            self.writermethod(self.__dict[key])
+            del self.__dict[key]
+
+
+                
+
+
     def __setitem__(self, key, obj):
         if self.__dict.has_key(key):
             node = self.__dict[key]
             node.obj = obj
-            node.atime = time.time()
             node.mtime = node.atime
-            heapify(self.__heap)
         else:
             # size may have been reset, so we loop
-            while len(self.__heap) >= self.size:
-                lru = heappop(self.__heap)
-                if self.writermethod<>None:
-                    from IPython import embed
-                    print "DEBUG NOW write through"
-                    embed()
-                    self.writermethod(self.__dict[lru.key])
-                    del self.__dict[lru.key]
-                else:
-                    raise RuntimeError("write queue full")
             node = self.__Node(key, obj, time.time())
             self.__dict[key] = node
-            heappush(self.__heap, node)
+            if len(self.__dict.keys()) >= self.flushsize:
+                self.flush()
+
+    def __len__(self):
+        return len(self.__heap)
     
+    def __contains__(self, key):
+        return self.__dict.has_key(key)
+        
+    def __getitem__(self, key):
+        if not self.__dict.has_key(key):
+            raise CacheKeyError(key)
+        else:
+            node = self.__dict[key]
+            return node.obj
     
+    def __delitem__(self, key):
+        if not self.__dict.has_key(key):
+            raise CacheKeyError(key)
+        else:
+            node = self.__dict[key]
+            del self.__dict[key]
+            return node.obj
+
+    def __iter__(self):
+        for key in self.__dict.keys():
+            yield key
+
+    # def __iter__(self):
+    #     tosort=[]
+    #     for key in self.__dict.keys():
+    #         tosort.append([key,self[key].atime])
+    #     for item in sorted(data,key=itemgetter(1)):
+    #         yield key
+
+    # def __setattr__(self, name, value):
+    #     object.__setattr__(self, name, value)
+    #     # automagically shrink heap on resize
+    #     if name == 'size':
+    #         while len(self.__heap) > value:
+    #             lru = heappop(self.__heap)
+    #             del self.__dict[lru.key]
+        
+    def __repr__(self):
+        return "<%s (%d elements)>" % (str(self.__class__), len(self.__dict.keys()))
+
+    def mtime(self, key):
+        """Return the last modification time for the cache record with key.
+        May be useful for cache instances where the stored values can get
+        'stale', such as caching file or network resource contents."""
+        if not self.__dict.has_key(key):
+            raise CacheKeyError(key)
+        else:
+            node = self.__dict[key]
+            return node.wtime

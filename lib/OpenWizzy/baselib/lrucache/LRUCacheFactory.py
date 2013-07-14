@@ -2,8 +2,8 @@ from LRUCache import LRUCache
 from RWCache import RWCache
 
 class LRUCacheFactory():
-    def getRWCache(self,nrItemsReadCache,nrItemsWriteCache=50,maxTimeWriteCache=2000):
-        return RWCache(nrItemsReadCache,nrItemsWriteCache,maxTimeWriteCache)
+    def getRWCache(self,nrItemsReadCache,nrItemsWriteCache=50,maxTimeWriteCache=2000,writermethod=None):
+        return RWCache(nrItemsReadCache,nrItemsWriteCache,maxTimeWriteCache,writermethod=writermethod)
 
     def getRCache(self,nritems):
         """
