@@ -1,5 +1,5 @@
 
-from pylabs import q
+from OpenWizzy import o
 import copy
 
 class Master():
@@ -10,14 +10,14 @@ class Master():
 
     def _init(self):
         if self.inited==False:
-            self.model=q.apps.system.master.models.gridmap
+            self.model=o.apps.system.master.models.gridmap
             if not self.model.exists(1):
                 self.gridmap=self.model.new()
                 self.model.set(self.gridmap)
             else:
                 self.gridmap=self.model.get(1)
             self.gridmapPrevious=copy.copy(self.gridmap)
-            q.core.appserver6.runningAppserver.gridmap=self.gridmap
+            o.core.portal.runningPortal.gridmap=self.gridmap
             self.inited=True
 
     def gridMapGetRedisClusterFromIp(self,ip,port):
@@ -63,8 +63,8 @@ class Master():
             appserver=self.gridmap.new_appserver()
         else:
             appserver=self.gridMapGetAppserver(ipaddr, port)
-        appserver.lastnotified=q.base.time.getTimeEpoch()
-        appserver.start=q.base.time.getTimeEpoch()
+        appserver.lastnotified=o.base.time.getTimeEpoch()
+        appserver.start=o.base.time.getTimeEpoch()
         appserver.secret=secret
         appserver.host="%s:%s" % (ipaddr,port)
         if ismaster:
@@ -85,7 +85,7 @@ class Master():
         r=self.gridMapGetRedisClusterFromIp(rip,rport)
         actor.redisclusterid=r.id
 
-        actor.start=q.base.time.getTimeEpoch()
+        actor.start=o.base.time.getTimeEpoch()
 
         if ismaster:
             self.gridmap.master="%s:%s" % (ipaddr,port)

@@ -1,3 +1,4 @@
+from OpenWizzy import o
 from BootStrapForm import *
 from GridDataTables import *
 
@@ -19,3 +20,6 @@ class HtmlFactory:
         """
         return HTMLGalleria(page)
 
+    def getHtmllibDir(self):
+        dirname = o.system.fs.getDirName(__file__)
+        return o.system.fs.joinPaths(dirname, 'htmllib')

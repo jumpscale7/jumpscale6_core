@@ -1,13 +1,14 @@
 from OpenWizzy import o
+import OpenWizzy.baselib.inifile
 import os
-from Appserver6Process import Appserver6Process
+from PortalProcess import PortalProcess
 
 class Group():
     pass
 
-class Appserver6Manage():
+class PortalManage():
     """
-    management class for appserver6
+    management class for appserver
     """
 
     def startprocess(self,processNr=1,reset=False):
@@ -15,11 +16,11 @@ class Appserver6Manage():
         """
         o.apps=Group()
         o.db.keyvaluestore
-        self._initAppserver()
-        o.core.appserver6.runningAppserver.start(reset=reset)
+        self._initPortal()
+        o.core.portal.runningPortal.start(reset=reset)
 
 
-    def _initAppserver(self,processNr=1):
+    def _initPortal(self,processNr=1):
 
         ini=o.tools.inifile.open(os.path.abspath("cfg/appserver.cfg"))
         appdir=ini.getValue("main", "appdir")
@@ -49,27 +50,27 @@ class Appserver6Manage():
             ip = ",".join(ips)
             ini.setParam('main',"ipaddr",ip)
 
-        Appserver6Process(processNr=processNr,cfgdir=cfgdir,startdir=curdir)
+        PortalProcess(processNr=processNr,cfgdir=cfgdir,startdir=curdir)
 
 
 
-        ##happens in appserver6process  in the addactorfromspecs
+        ##happens in appserverprocess  in the addactorfromspecs
         #for app,actor2,instance in toload:
-            #o.core.appserver6.runningAppserver.addActorFromSpecs(app,actor2,instance)
+            #o.core.portal.runningPortal.addActorFromSpecs(app,actor2,instance)
             #key3="%s_%s" % (app,actor2)  #load the models
             #if o.core.specparser.modelnames.has_key(key3):
                 #for modelname in o.core.specparser.modelnames[key3]:
                     #actor3="%s_model_%s" % (actor2,modelname)
-                    #o.core.appserver6.runningAppserver.addActorFromSpecs(app,actor3,instance)
+                    #o.core.portal.runningPortal.addActorFromSpecs(app,actor3,instance)
 
 
 
     #def start(self,secret,nrworkers=1,nrservers=0,extraScreens=[],console=False,qshell=False,isMessageServer=False,dbtype="fs"):
         #"""
-        #return an Appserver 6 local env, this will start
-        #- appserver6 master process (wich is also the local messagehandler)
+        #return an Portal  local env, this will start
+        #- appserver master process (wich is also the local messagehandler)
         #- X qworker processes
-        #- Y appserver6 processes
+        #- Y appserver processes
 
         #@param nrworkers is the amount of workers we want to startup
         #@param nrservers is the amount of appservers we want to startup
@@ -83,7 +84,7 @@ class Appserver6Manage():
 
 
 
-        #extpath=o.core.appserver6.pm_extensionpath
+        #extpath=o.core.portal.pm_extensionpath
 
         #if o.system.platformtype.isWindows:
 
@@ -97,7 +98,7 @@ class Appserver6Manage():
                 #screens.append("worker%s"%str(nr+1))
             #for nr in range(nrservers):
                 #screens.append("server%s"%str(nr+1))
-            #screens.append("appserver6")
+            #screens.append("appserver")
             #if console:
                 #screens.append("console")
             #if qshell:

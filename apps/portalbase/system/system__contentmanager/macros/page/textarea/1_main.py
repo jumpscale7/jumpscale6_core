@@ -1,4 +1,4 @@
-from pylabs.macros import div_base
+from OpenWizzy.portal.macrolib import div_base
 
 
 def main(q, args, params, *other_args):

@@ -1,6 +1,6 @@
 from system_emailsender_osis import system_emailsender_osis
 import smtplib
-from pylabs import q
+from OpenWizzy import o
 from email.mime.text import MIMEText
 
 
@@ -10,7 +10,7 @@ class system_emailsender(system_emailsender_osis):
     """
     # Maybe we can add this later
     output_format_mapping = {
-        'json': q.db.serializers.ujson.dumps
+        'json': o.db.serializers.ujson.dumps
     }
 
     def __init__(self):
@@ -56,9 +56,9 @@ class system_emailsender(system_emailsender_osis):
         # This is the same email pattern used in `contact_form` macro
         # TODO: abstract it in one place
         email_pattern = r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$"
-        if not q.codetools.regex.match(email_pattern, receiver_email):
+        if not o.codetools.regex.match(email_pattern, receiver_email):
             return 'Error: receiver email is not formatted well.'
-        if not q.codetools.regex.match(email_pattern, sender_email):
+        if not o.codetools.regex.match(email_pattern, sender_email):
             return 'Error: your email is not formatted well.'
 
         receivers = [receiver_email]

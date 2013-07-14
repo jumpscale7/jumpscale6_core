@@ -1,5 +1,5 @@
-from pylabs import q
-from system_usermanager_osis import *
+from OpenWizzy import o
+from system_usermanager_osis import system_usermanager_osis
 
 class system_usermanager(system_usermanager_osis):
     """
@@ -21,14 +21,14 @@ class system_usermanager(system_usermanager_osis):
         result str 
         
         """
-        usermanager=q.apps.system.usermanager
+        usermanager=o.apps.system.usermanager
         user=usermanager.extensions.usermanager.userGet(name, usecache=False)
 
         if user==None:
             return False
         if user.passwd.strip()==str(secret).strip():
             return True
-        if q.tools.hash.md5_string(user.passwd.strip())==str(secret).strip():
+        if o.tools.hash.md5_string(user.passwd.strip())==str(secret).strip():
             return True
         result=False
         return result
@@ -41,7 +41,7 @@ class system_usermanager(system_usermanager_osis):
         result list(str) 
         
         """
-        usermanager=q.apps.system.usermanager
+        usermanager=o.apps.system.usermanager
         user=usermanager.extensions.usermanager.userGet(user)
 
         if user==None:
@@ -111,7 +111,7 @@ class system_usermanager(system_usermanager_osis):
             userid=None
         else:
             userid=userid
-        result=q.apps.system.usermanager.extensions.usermanager.usercreate(name=name,passwd=passwd, groups=groups, emails=emails,userid=userid)
+        result=o.apps.system.usermanager.extensions.usermanager.usercreate(name=name,passwd=passwd, groups=groups, emails=emails,userid=userid)
         return result
     
 
@@ -121,7 +121,7 @@ class system_usermanager(system_usermanager_osis):
         result bool 
         
         """
-        usermanager=q.apps.system.usermanager
+        usermanager=o.apps.system.usermanager
         user=usermanager.extensions.usermanager.userGet(name)
         if user==None:
             return False
@@ -134,8 +134,7 @@ class system_usermanager(system_usermanager_osis):
         result bool 
         
         """
-        usermanager=q.apps.system.usermanager
-        result= not (q.apps.system.usermanager_model_user.get(userid,"")==False)
+        result= not (o.apps.system.usermanager_model_user.get(userid,"")==False)
         return result
     
 

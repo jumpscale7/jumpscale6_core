@@ -7,7 +7,7 @@ class LoaderBaseObject():
         # self._osis=None
 
     def _createDefaults(self,path,items):
-        base=o.system.fs.joinPaths(o.core.appserver6loader.pm_extensionpath,"templates",".%s"%self.type)
+        base=o.system.fs.joinPaths(o.core.portalloader.getTemplatesPath(),".%s"%self.type)
         items+=["main.cfg","acl.cfg"]
         for item in items:
             dest=o.system.fs.joinPaths(path,".%s"%self.type,item)
@@ -85,7 +85,7 @@ class LoaderBaseObject():
         objs=o.apps.system.usermanager.models.user.ini2objects(cfgfile,overwriteInDB=False,ignoreWhenNotExist=True,manipulator=iniManipulator,manipulatorargs=args,writeIni=False)
         for obj in objs:
             print "ACL User Found:%s with secret:%s and groups:%s" % (obj.id,obj.secret,",".join(obj.groups))
-            o.core.appserver6.runningAppserver.webserver.userKeyToName[obj.secret]=obj.id
+            o.core.portal.runningPortal.webserver.userKeyToName[obj.secret]=obj.id
 
         #populate groups
         for obj in objs:
@@ -158,7 +158,7 @@ class LoaderBase():
 
     def _getSystemLoaderForUsersGroups(self):
         lba=LoaderBaseObject("")
-        userspath = o.system.fs.joinPaths(o.core.appserver6.runningAppserver.cfgdir, 'users')
+        userspath = o.system.fs.joinPaths(o.core.portal.runningPortal.cfgdir, 'users')
         if not o.system.fs.exists(userspath):
             ini = o.config.getInifile(userspath)
             ini.addSection('admin')
@@ -170,7 +170,7 @@ class LoaderBase():
             ini.addParam('guest', 'groups', 'guests')
             ini.addParam('guest', 'reset', '1')
 
-        lba.processUsers(o.core.appserver6.runningAppserver.cfgdir)
+        lba.processUsers(o.core.portal.runningPortal.cfgdir)
 
     def scan(self,path,reset=False):
 

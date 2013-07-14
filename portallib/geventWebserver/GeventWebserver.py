@@ -167,7 +167,7 @@ class GeventWebserver:
         self.epoch = 0
         self.contentdirs = {}
         self.cfgdir = cfgdir
-        self.libpath = o.system.fs.joinPaths(q.html.pm_extensionpath, "htmllib")
+        self.libpath = o.html.getHtmllibDir()
         self.logdir = o.system.fs.joinPaths(o.dirs.varDir, "qwiki", "logs")
         o.system.fs.createDir(self.logdir)
         # o.errorconditionhandler.setExceptHook()
@@ -200,8 +200,8 @@ class GeventWebserver:
         self.pageKey2doc = {}
         self.routes = {}
         self.routesext = {}
-        self.bucketsloader = o.core.appserver6loader.getBucketsLoader()
-        self.spacesloader = o.core.appserver6loader.getSpacesLoader()
+        self.bucketsloader = o.core.portalloader.getBucketsLoader()
+        self.spacesloader = o.core.portalloader.getSpacesLoader()
 
         macroPathsPreprocessor = ["system/system__contentmanager/macros/preprocess"]
         macroPathsWiki = ["system/system__contentmanager/macros/wiki"]
@@ -828,9 +828,9 @@ class GeventWebserver:
         """
         used for during error show info about all services
         """
-        actorsloader = o.core.appserver6.runningAppserver.actorsloader
+        actorsloader = o.core.portal.runningPortal.actorsloader
         if appname != "" and actor != "":
-            result = o.core.appserver6.runningAppserver.activateActor(appname, actor)
+            result = o.core.portal.runningPortal.activateActor(appname, actor)
             if result == False:
                 # actor was not there
                 page = self.getpage()
@@ -1406,7 +1406,7 @@ class GeventWebserver:
         if self.basepath not in paths:
             paths.append(self.basepath)
 
-        appdir = o.core.appserver6.runningAppserver.appdir
+        appdir = o.core.portal.runningPortal.appdir
         paths.append(o.system.fs.joinPaths(appdir, "wiki"))
 
         for path in paths:
@@ -1420,8 +1420,8 @@ class GeventWebserver:
 
     def loadSpaces(self, reset=False):
         if reset:
-            self.bucketsloader = o.core.appserver6loader.getBucketsLoader()
-            self.spacesloader = o.core.appserver6loader.getSpacesLoader()
+            self.bucketsloader = o.core.portalloader.getBucketsLoader()
+            self.spacesloader = o.core.portalloader.getSpacesLoader()
             o.core.codegenerator.resetMemNonSystem()
             o.core.specparser.resetMemNonSystem()
             # self.actorsloader=ActorsLoader()
@@ -1435,8 +1435,8 @@ class GeventWebserver:
 
         self.spacesloader.spaces["system"].loadDocProcessor()
 
-        for actorid in o.core.appserver6.runningAppserver.actorsloader.id2object.keys():
-            actorloader = o.core.appserver6.runningAppserver.actorsloader.id2object[actorid]
+        for actorid in o.core.portal.runningPortal.actorsloader.id2object.keys():
+            actorloader = o.core.portal.runningPortal.actorsloader.id2object[actorid]
             actorloader.loadSpace()
 
     def getSpaces(self):
@@ -1446,7 +1446,7 @@ class GeventWebserver:
         return self.bucketsloader.id2object.keys()
 
     def getActors(self):
-        return o.core.appserver6.runningAppserver.actorsloader.id2object.keys()
+        return o.core.portal.runningPortal.actorsloader.id2object.keys()
 
     def getSpace(self, name):
         name = name.lower()

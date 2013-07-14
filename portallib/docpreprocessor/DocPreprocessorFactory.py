@@ -130,3 +130,6 @@ class DocPreprocessorFactory():
 
         return preprocessor
 
+    def getMacroPath(self):
+        dirname = o.system.fs.getDirName(__file__)
+        return o.system.fs.joinPaths(dirname, 'macros')

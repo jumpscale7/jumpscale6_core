@@ -1,5 +1,5 @@
-from pylabs import q
-from system_master_osis import *
+from OpenWizzy import o
+from system_master_osis import system_master_osis
 
 class system_master(system_master_osis):
     """
@@ -30,12 +30,12 @@ class system_master(system_master_osis):
         
         """
         if int(model)==1:
-            result= q.core.specparser.app_actornames
+            result= o.core.specparser.app_actornames
         else:
             result={}
-            for app in q.core.specparser.app_actornames.keys():
+            for app in o.core.specparser.app_actornames.keys():
                 result[app]=[]
-                actors=q.core.specparser.app_actornames[app]
+                actors=o.core.specparser.app_actornames[app]
                 for actor in actors:
                     if actor.find("_model_")==-1:
                         result[app].append(actor)

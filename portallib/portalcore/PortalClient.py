@@ -1,11 +1,11 @@
 
 #from ActorLoaderRemote import ActorLoaderRemote
-#from Appserver6Process import Appserver6Process
+#from Portal6Process import Portal6Process
 
 
 from OpenWizzy import o
 
-class AppserverProcess():
+class PortalProcess():
     pass
 
 class ModelsClass():
@@ -15,22 +15,22 @@ class AppsClass():
     pass
 
 
-class Appserver6Client():
+class PortalClient():
     """
     client to appserver 6 running out of process
     """
 
     def __init__(self,ip,port,secret):
         """
-        connect to Appserver6
+        connect to Portal6
         """
         self.wsclient=o.web.geventws.getClient(ip,port,secret)
         self.ip=ip
         self.port=port
         self.secret=secret
 
-        apsp=AppserverProcess()
-        o.core.appserver6.runningAppserver = apsp
+        apsp=PortalProcess()
+        o.core.portal.runningPortal = apsp
         apsp.actors={}
 
     def getActor(self,appname,actorname,instance=0,redis=False,refresh=False):
@@ -38,10 +38,9 @@ class Appserver6Client():
             raise RuntimeError("Cannot open actor connection to system actor, use directly the wsclient with callwebservice method.")
 
         key="%s_%s" % (appname.lower(),actorname.lower())
-        if refresh==False and o.core.appserver6.runningAppserver.actors.has_key(key):
-            return o.core.appserver6.runningAppserver.actors[key]
+        if refresh==False and o.core.portal.runningPortal.actors.has_key(key):
+            return o.core.portal.runningPortal.actors[key]
 
-        apsp=o.core.appserver6.runningAppserver
 
         result=self.wsclient.callWebService("system","contentmanager","prepareActorSpecs",app=appname,actor=actorname)
         if result[1]["result"]<>None and result[1]["result"].has_key("error"):
@@ -88,7 +87,7 @@ class Appserver6Client():
         if not o.apps.__dict__[appname].__dict__.has_key(actorname):
             o.apps.__dict__[appname].__dict__[actorname]=actorobject
 
-        o.core.appserver6.runningAppserver.actors[key]=actorobject
+        o.core.portal.runningPortal.actors[key]=actorobject
 
         return actorobject
 

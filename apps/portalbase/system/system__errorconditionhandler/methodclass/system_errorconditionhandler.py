@@ -1,4 +1,4 @@
-from pylabs import q
+from OpenWizzy import o
 from system_errorconditionhandler_osis import system_errorconditionhandler_osis
 
 class system_errorconditionhandler(system_errorconditionhandler_osis):
@@ -37,7 +37,7 @@ class system_errorconditionhandler(system_errorconditionhandler_osis):
         key=eco.actorname+str(eco.level)+eco.appname+\
             eco.category+eco.description+eco.tags+\
             eco.descriptionpub
-        key=q.tools.hash.md5_string(key)
+        key=o.base.byteprocessor.hashMd5(key)
         print "ecokey:%s"%key
         return key
 
@@ -50,7 +50,7 @@ class system_errorconditionhandler(system_errorconditionhandler_osis):
         key=self.getEcoKey(eco)
         if self.dbmem.cacheExists(key):
             #previous item found
-            if eco.lasttime<q.base.time.getTimeEpoch()-3600:
+            if eco.lasttime<o.base.time.getTimeEpoch()-3600:
                 self.dbmem.cacheDelete(key)
             else:
                 #we found a duplicate and it is not expired

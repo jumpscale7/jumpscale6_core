@@ -1,5 +1,4 @@
-
-from pylabs import q
+from OpenWizzy import o
 
 class DataTables():
     def __init__(self):
@@ -9,7 +8,7 @@ class DataTables():
 
     def getActorModel(self,appname,actorname,modelname):
         try:
-            actor=q.core.appserver6.runningAppserver.actorsloader.getActor(appname,actorname)
+            actor=o.core.appserver6.runningAppserver.actorsloader.getActor(appname,actorname)
             model=actor.models.__dict__[modelname]
         except Exception,e:
             # self.page.addMessage()
@@ -65,7 +64,7 @@ class DataTables():
         cacheinfo["fieldids"]=fieldids
         cacheinfo["fieldnames"]=fieldnames
 
-        key=q.base.idgenerator.generateGUID()        
+        key=o.base.idgenerator.generateGUID()        
         actor.dbmem.cacheSet(key,cacheinfo)
 
         print "key:%s"%key
@@ -76,8 +75,8 @@ class DataTables():
     def processLink(self,line):
         if line.find("[")<>-1:
             r="\[[-:@|_.?\w\s\\=/]*\]"
-            if q.codetools.regex.match(r,line): #find links
-                for match in q.codetools.regex.yieldRegexMatches(r,line):
+            if o.codetools.regex.match(r,line): #find links
+                for match in o.codetools.regex.yieldRegexMatches(r,line):
                     # print "link: %s" % match.founditem
                     match2=match.founditem.replace("[","").replace("]","")
                     if match2.find("|")<>-1:
@@ -99,7 +98,7 @@ class DataTables():
     def executeMacro(self,row,field):
 
         try:
-            for match in q.codetools.regex.getRegexMatches("\$\d*",field).matches:
+            for match in o.codetools.regex.getRegexMatches("\$\d*",field).matches:
                 nr=int(match.founditem.replace("$",""))
                 field=field.replace(match.founditem,row[nr])
         except:
@@ -107,7 +106,7 @@ class DataTables():
 
         field=self.processLink(field)
         if field.find("{{")<>-1:
-            field=q.core.appserver6.runningAppserver.webserver.macroexecutorPage.processMacrosInWikiContent(field)
+            field=o.core.portal.runningPortal.webserver.macroexecutorPage.processMacrosInWikiContent(field)
 
         return field 
         
@@ -129,9 +128,9 @@ class DataTables():
         for row in inn:
             r=[]
             for field in fields:
-                if q.basetype.integer.check(field):
+                if o.basetype.integer.check(field):
                     r.append(row[field])
-                elif q.basetype.string.check(field):
+                elif o.basetype.string.check(field):
                     r.append(self.executeMacro(row,field))
                 else:
                     #is function

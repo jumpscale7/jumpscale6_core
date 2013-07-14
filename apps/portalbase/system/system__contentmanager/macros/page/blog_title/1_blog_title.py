@@ -1,4 +1,4 @@
-from pylabs.blog import BlogPost
+from OpenWizzy.portal.macrolib.blog import BlogPost
 
 
 def main(q, args, params, *other_args):

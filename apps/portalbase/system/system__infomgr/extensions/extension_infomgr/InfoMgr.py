@@ -1,11 +1,11 @@
 
-from pylabs import q
+from OpenWizzy import o
 
 class InfoMgr():
     def __init__(self):
         
         self.inited=False
-        self.models=q.apps.system.infomgr.models
+        self.models=o.apps.system.infomgr.models
         self._infotableobj=self.models.infotable.get(guid="infotable",createIfNeeded=True)
         self.infotable=self._infotableobj.infotable
         self.infotableLastSave=self.now()
@@ -15,8 +15,8 @@ class InfoMgr():
         self._hourseconds=float(60*60)
         self._dayseconds=float(24*60*60)
         self._monthseconds=float(31*self._dayseconds)
-        q.core.appserver6.runningAppserver.webserver.addSchedule1MinPeriod("saveInfomgr",self.save)
-        q.core.appserver6.runningAppserver.webserver.addSchedule15MinPeriod("cleanCacheInfoMgr",self.cleanCache)        
+        o.core.portal.runningPortal.webserver.addSchedule1MinPeriod("saveInfomgr",self.save)
+        o.core.portal.runningPortal.webserver.addSchedule15MinPeriod("cleanCacheInfoMgr",self.cleanCache)        
 
         #per hour we keep: nritems,maxitem,minitem,total  (so out of this we can calc average)
 
@@ -46,8 +46,8 @@ class InfoMgr():
 
     def save(self,force=False):
         ttime=self.now()
-        now5min=q.core.appserver6.runningAppserver.webserver.fiveMinuteId
-        nowh=q.core.appserver6.runningAppserver.webserver.hourId        
+        now5min=o.core.portal.runningPortal.webserver.fiveMinuteId
+        nowh=o.core.portal.runningPortal.webserver.hourId        
         #walk over history obj and save if needed            
         for key in self.historyObjs.keys():     
             if force or ttime>(self.historyObjsLastSave[key]+900):
@@ -100,13 +100,13 @@ class InfoMgr():
                     self.historyObjsLastSave.pop(key)
                     self.historyObjsMod.pop(key)
         except Exception,e:
-            from pylabs.Shell import ipshellDebug,ipshell
+            from IPython import embed
             print "DEBUG NOW error in clean cache for infomgr"
-            ipshell()
+            embed()
             
 
     def now(self):
-        return q.core.appserver6.runningAppserver.webserver.epoch
+        return o.core.portal.runningPortal.webserver.epoch
 
     def getHistoryObject(self,id):
         if self.historyObjs.has_key(id):
@@ -117,7 +117,7 @@ class InfoMgr():
         # if obj.month_5min=={}:
         #     for i in range(8928):
         #         nrsecondsago=i*5*60 #(every 5 min)
-        #         key=q.base.time.get5MinuteId(now-nrsecondsago)
+        #         key=o.base.time.get5MinuteId(now-nrsecondsago)
         #         obj.month_5min[key]=0
         self.historyObjs[id]=obj
         self.historyObjsLastSave[id]=self.now()
@@ -126,14 +126,14 @@ class InfoMgr():
 
     def _getKey5min(self,epoch):
         # nrsecondsago=5*60
-        return q.base.time.get5MinuteId(epoch)
+        return o.base.time.get5MinuteId(epoch)
 
     def addInfoLine2HistoryObj(self,id,value,epoch=None):
         if epoch==None:
             epoch=self.now()
         obj=self.getHistoryObject(id)
-        key=q.base.time.get5MinuteId(epoch)
-        key2=q.base.time.getHourId(epoch)
+        key=o.base.time.get5MinuteId(epoch)
+        key2=o.base.time.getHourId(epoch)
 
         #store 5min value
         obj.month_5min[key]=value
@@ -182,7 +182,7 @@ class InfoMgr():
                 id,value=splitted
                 epoch=now
             else:
-                q.errorconditionhandler.raiseMonitoringError("Line '%s' not well constructed, cannot process monitoring stat info",id)
+                o.errorconditionhandler.raiseMonitoringError("Line '%s' not well constructed, cannot process monitoring stat info",id)
                 continue
             id=str(id.lower())
             if value.find(".")<>-1:
@@ -242,8 +242,8 @@ class InfoMgr():
     def getHeaders(self,start,stop):        
         start = self.getTimeStamp(start)
         stop = self.getTimeStamp(stop)
-        start2=q.base.time.get5MinuteId(start)
-        stop2=q.base.time.get5MinuteId(stop)-start2
+        start2=o.base.time.get5MinuteId(start)
+        stop2=o.base.time.get5MinuteId(stop)-start2
         start2=0                        
         hoursecs=60*60/5
         r=[]
@@ -264,7 +264,7 @@ class InfoMgr():
 
     def getTimeStamp(self, timestamp):
         if isinstance(timestamp, basestring):
-            timestamp = q.base.time.getEpochAgo(timestamp)
+            timestamp = o.base.time.getEpochAgo(timestamp)
         return timestamp
 
 
@@ -279,8 +279,8 @@ class InfoMgr():
         
         """
         obj=self.getHistoryObject(id)
-        start2=q.base.time.get5MinuteId(self.getTimeStamp(start))
-        stop2=q.base.time.get5MinuteId(self.getTimeStamp(stop))
+        start2=o.base.time.get5MinuteId(self.getTimeStamp(start))
+        stop2=o.base.time.get5MinuteId(self.getTimeStamp(stop))
         r=[]
         for i in range(start2,stop2+1):
             if obj.month_5min.has_key(i):
@@ -322,15 +322,15 @@ class InfoMgr():
         if start==0:
             start2=min(obj.month_5min.keys())
         else:
-            start2=q.base.time.get5MinuteId(start)
+            start2=o.base.time.get5MinuteId(start)
         if stop==0:
             stop2=max(obj.month_5min.keys())
         else:
-            stop2=q.base.time.get5MinuteId(stop)
+            stop2=o.base.time.get5MinuteId(stop)
         for key in range(stop2,start2,-1):
-            epoch=q.base.time.fiveMinuteIdToEpoch(key)
+            epoch=o.base.time.fiveMinuteIdToEpoch(key)
             if epoch2human:
-                epoch=q.base.time.epoch2HRDateTime(epoch)
+                epoch=o.base.time.epoch2HRDateTime(epoch)
             result.append([epoch,obj.month_5min[key]])
         return result
         

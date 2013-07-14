@@ -1,5 +1,5 @@
 
-from pylabs import q
+from OpenWizzy import o
 
 class Example_extension():
     def __init__(self):

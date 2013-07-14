@@ -1,5 +1,4 @@
 from OpenWizzy import o
-from OpenWizzy.core.Shell import ipshellDebug,ipshell
 import traceback
  
 class MacroExecutorBase():
@@ -58,11 +57,10 @@ class MacroExecutorBase():
 
 class MacroExecutorPreprocess(MacroExecutorBase):
     def __init__(self,macrodirs=[]):
-        self.taskletsgroup=o.core.taskletengine.getGroup(o.system.fs.joinPaths(o.tools.docpreprocessor.pm_extensionpath,"macros"))
+        self.taskletsgroup=o.core.taskletengine.getGroup(o.tools.docpreprocessor.getMacroPath())
         self.priority={}
         for macrodir in macrodirs:
             self.taskletsgroup.addTasklets(macrodir)
-            macrodir2=o.system.fs.getDirName(macrodir)
 
             macrosprocessed={}
 
@@ -115,7 +113,7 @@ class MacroExecutorPreprocess(MacroExecutorBase):
                     macros[macro]=[]
                 #check which macro's are params
                 if paramsExtra.has_key(macro):
-                    doc.content=doc.content.replace(macrostr,params[macro])
+                    doc.content=doc.content.replace(macrostr,paramsExtra[macro])
                     continue
                 if doc.preprocessor.params.has_key(macro):
                     doc.content=doc.content.replace(macrostr,self.params[macro])
@@ -144,7 +142,7 @@ class MacroExecutorPreprocess(MacroExecutorBase):
 
 class MacroExecutorPage(MacroExecutorBase):
     def __init__(self,macrodirs=[]):
-        self.taskletsgroup=o.core.taskletengine.getGroup(o.system.fs.joinPaths(o.tools.docgenerator.pm_extensionpath,"macros"))
+        self.taskletsgroup=o.core.taskletengine.getGroup(o.tools.docgenerator.getMacroPath())
         for macrodir in macrodirs:
             self.taskletsgroup.addTasklets(macrodir)
         self.taskletsgroup2=None
@@ -159,7 +157,7 @@ class MacroExecutorPage(MacroExecutorBase):
         """     
 
         if not str(type(page))=="<type 'instance'>" or not page.__dict__.has_key("body"):            
-            raise "Page was no page object. Was for macro:%s on doc:%s"%(macro,doc.name)
+            raise RuntimeError("Page was no page object. Was for macro:%s on doc:%s"%(macrostr,doc.name))
 
         macro,tags,cmdstr=self.parseMacroStr(macrostr)
 
@@ -195,9 +193,9 @@ class MacroExecutorPage(MacroExecutorBase):
 
     def  processMacrosInWikiContent(self,content):
         for macrostr,macrocmd in self.findMacros(content):
-            from OpenWizzy.core.Shell import ipshellDebug,ipshell
             print "DEBUG NOW macro in wiki  content (e.g. for table)"
-            ipshell()
+            from IPython import embed
+            embed()
         return content
             
 

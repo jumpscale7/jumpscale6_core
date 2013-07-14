@@ -1,8 +1,6 @@
 from OpenWizzy import o
 import re
-from MacroExecutor import *
-import copy
-import os, re
+import os
 
 class HeaderTools():
     @staticmethod
@@ -363,9 +361,9 @@ class DocPreprocessor():
 
         """
         self.varsPath=varsPath
-        self.macroexecutorPreprocessor=o.core.appserver6.runningAppserver.webserver.macroexecutorPreprocessor
-        self.macroexecutorPage=o.core.appserver6.runningAppserver.webserver.macroexecutorPage
-        self.macroexecutorWiki=o.core.appserver6.runningAppserver.webserver.macroexecutorWiki
+        self.macroexecutorPreprocessor=o.core.portal.runningPortal.webserver.macroexecutorPreprocessor
+        self.macroexecutorPage=o.core.portal.runningPortal.webserver.macroexecutorPage
+        self.macroexecutorWiki=o.core.portal.runningPortal.webserver.macroexecutorWiki
         self.spaceMacroexecutorPreprocessor=spaceMacroexecutorPreprocessor
         self.spaceMacroexecutorPage=spaceMacroexecutorPage
         self.spaceMacroexecutorWiki=spaceMacroexecutorWiki

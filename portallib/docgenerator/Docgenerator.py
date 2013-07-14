@@ -45,7 +45,9 @@ class DocgeneratorFactory:
         from core.docgenerator.PageGroup import PageGroup	
         return PageGroup(pages)
     
-    
+    def getMacroPath(self):
+        dirname = o.system.fs.getDirName(__file__)
+        return o.system.fs.joinPaths(dirname, 'macros')
     #def convertConfluenceFileToPage(self,confluenceFilePath,pageOut,dirPathOut=""):
         #"""
         #@param confluenceFilePath is path of confluence file, the files required by that file need to be in same dir

@@ -1,4 +1,4 @@
-from pylabs import q
+from OpenWizzy import o
 from system_infomgr_osis import *
 
 class system_infomgr(system_infomgr_osis):
@@ -23,7 +23,7 @@ class system_infomgr(system_infomgr_osis):
         result bool 
         
         """
-        return q.apps.system.infomgr.extensions.infomgr.addInfo(info)
+        return o.apps.system.infomgr.extensions.infomgr.addInfo(info)
     
 
     def getInfo1h(self,id,start,stop,**args):
@@ -87,7 +87,7 @@ class system_infomgr(system_infomgr_osis):
         result list(list) 
         
         """
-        result=q.apps.system.infomgr.extensions.infomgr.getInfoWithHeaders(maxvalues=100,id=id,start=start,stop=stop)
+        result=o.apps.system.infomgr.extensions.infomgr.getInfoWithHeaders(maxvalues=100,id=id,start=start,stop=stop)
 
         return result
     
@@ -98,6 +98,6 @@ class system_infomgr(system_infomgr_osis):
         result bool 
         
         """
-        q.apps.system.infomgr.extensions.infomgr.reset()
+        o.apps.system.infomgr.extensions.infomgr.reset()
         return "RESET DONE"
     

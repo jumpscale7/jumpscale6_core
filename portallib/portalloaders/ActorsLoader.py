@@ -3,6 +3,7 @@ from LoaderBase import LoaderBase, LoaderBaseObject
 
 from OpenWizzy.core.extensions.PMExtensionsGroup import PMExtensionsGroup
 from OpenWizzy.core.extensions.PMExtensions import PMExtensions
+import OpenWizzy.baselib.tags
 
 class ActorExtensionsGroup(PMExtensionsGroup):
     """
@@ -43,7 +44,7 @@ class ActorLoader(LoaderBaseObject):
 
     def createDefaults(self,path):
         self._createDefaults(path,["users.cfg"])
-        base=o.system.fs.joinPaths(o.core.appserver6loader.pm_extensionpath,"templates",".%s"%self.type,"dirstructure")
+        base=o.system.fs.joinPaths(o.core.portalloader.getTemplatesPath(),".%s"%self.type,"dirstructure")
         o.system.fs.copyDirTree(base,path,overwriteFiles=False)
 
     def raiseError(self,msg,path=None):
@@ -69,15 +70,15 @@ class ActorLoader(LoaderBaseObject):
         print "remove actor %s from memory" % self.model.id
         o.core.specparser.removeSpecsForActor(self.model.application,self.model.actor)
         o.core.codegenerator.removeFromMem(self.model.application,self.model.actor)
-        o.core.appserver6.runningAppserver.webserver.unloadActorFromRoutes(self.model.application,self.model.actor)
+        o.core.portal.runningPortal.webserver.unloadActorFromRoutes(self.model.application,self.model.actor)
         key="%s_%s" % (self.model.application.lower(),self.model.actor.lower())
-        if o.core.appserver6.runningAppserver.actors.has_key(key):
-            o.core.appserver6.runningAppserver.actors.pop(key)
+        if o.core.portal.runningPortal.actors.has_key(key):
+            o.core.portal.runningPortal.actors.pop(key)
 
     def reset(self):
         self._removeFromMem()
         self.loadFromDisk(self.model.path,reset=True)        
-        o.core.appserver6.runningAppserver.actorsloader.getActor(self.model.application,self.model.actor)
+        o.core.portal.runningPortal.actorsloader.getActor(self.model.application,self.model.actor)
 
     def activate(self):
         print "activate actor: %s %s" % (self.model.application,self.model.actor)
@@ -87,7 +88,7 @@ class ActorLoader(LoaderBaseObject):
     def loadSpace(self):
         #LOAD SPACES FOR ACTOR
         #check if we need to load space for actor
-        sloader=o.core.appserver6.runningAppserver.webserver.spacesloader
+        sloader=o.core.portal.runningPortal.webserver.spacesloader
 
         
         key="space_%s__%s"%(self.model.application,self.model.actor)
@@ -118,7 +119,7 @@ class ActorsLoader(LoaderBase):
         o.core.specparser.roles={}
         o.core.specparser.specs={}
         o.core.codegenerator.classes={}
-        #o.core.appserver6.runningAppserver._init()
+        #o.core.portal.runningPortal._init()
 
     def getApps(self):
         result={}
@@ -141,8 +142,8 @@ class ActorsLoader(LoaderBase):
 
         key="%s_%s" % (appname.lower(),actorname.lower())
 
-        if o.core.appserver6.runningAppserver.actors.has_key(key):
-            return o.core.appserver6.runningAppserver.actors[key]
+        if o.core.portal.runningPortal.actors.has_key(key):
+            return o.core.portal.runningPortal.actors[key]
 
         print "get actor cache miss for %s %s"%(appname,actorname)
 
@@ -151,8 +152,8 @@ class ActorsLoader(LoaderBase):
         if self.actorIdToActorLoader.has_key(key):
             loader=self.actorIdToActorLoader[key]
             aobj=loader.activate()
-            o.core.appserver6.runningAppserver.actors[key]=aobj
-            return o.core.appserver6.runningAppserver.actors[key]
+            o.core.portal.runningPortal.actors[key]=aobj
+            return o.core.portal.runningPortal.actors[key]
         else:
             raise RuntimeError("Cannot find actor from app %s with name %s"%(appname,actorname))
 
@@ -162,7 +163,7 @@ class ActorsLoader(LoaderBase):
 
     def existsActor(self,appname,actorname):
         key="%s__%s" % (appname.lower(),actorname.lower())
-        return o.core.appserver6.runningAppserver.actors.has_key(key)
+        return o.core.portal.runningPortal.actors.has_key(key)
 
     def _descrTo1Line(self,descr):        
         if descr=="":
@@ -282,6 +283,7 @@ h3. home page for space $$space
                     else:
                         actorobject.models.__dict__[modelName]  = o.core.osismodel.getRemoteOsisDB(appname, actorname, modelName, classs)
                 except Exception,e:
+                    raise
                     msg="Could not get osis model for %s_%s_%s.Error was %s."%(appname,actorname,modelName,e)
                     raise RuntimeError(msg)
         #add routes to webserver
@@ -306,7 +308,7 @@ def match(q, args, params, actor, tags, tasklet):
                     o.system.fs.writeFile(methodtasklet, taskletContent)
                 actorobject._te[methodspec.name]=o.core.taskletengine.get(taskletpath)
 
-            if o.core.appserver6.__dict__.has_key("runningAppserver"):
+            if o.core.portal.__dict__.has_key("runningPortal"):
 
                 paramvalidation={}
                 for var in methodspec.vars:
@@ -335,11 +337,11 @@ def match(q, args, params, actor, tags, tasklet):
                 
                 auth=not tags.labelExists("noauth")
                 methodcall = getattr(actorobject, methodspec.name)
-                o.core.appserver6.runningAppserver.webserver.addRoute(methodcall,appname,actorname,methodspec.name,\
+                o.core.portal.runningPortal.webserver.addRoute(methodcall,appname,actorname,methodspec.name,\
                     paramvalidation=paramvalidation,paramdescription=paramdescription,paramoptional=paramoptional,\
                     description=methodspec.description,auth=auth,returnformat=returnformat)
                 actorobjects = modelNames
-                o.core.appserver6.runningAppserver.webserver.addExtRoute(methodcall,appname,actorname,methodspec.name,
+                o.core.portal.runningPortal.webserver.addExtRoute(methodcall,appname,actorname,methodspec.name,
                         actorobjects,
                         paramvalidation=paramvalidation,paramdescription=paramdescription,paramoptional=paramoptional,description=methodspec.description,auth=auth,returnformat=returnformat)
 
@@ -366,9 +368,9 @@ def match(q, args, params, actor, tags, tasklet):
         if not o.apps.__dict__[appname].__dict__.has_key(actorname):
             o.apps.__dict__[appname].__dict__[actorname]=actorobject
 
-        if o.core.appserver6.__dict__.has_key("runningAppserver"):
+        if o.core.portal.__dict__.has_key("runningAppserver"):
             key="%s_%s" % (spec.appname.lower(),spec.actorname.lower())
-            o.core.appserver6.runningAppserver.actors[key]=actorobject
+            o.core.portal.runningPortal.actors[key]=actorobject
 
         #load extensions
         actorobject.__dict__['extensions'] = ActorExtensionsGroup(o.system.fs.joinPaths(actorpath,"extensions"))
@@ -377,11 +379,11 @@ def match(q, args, params, actor, tags, tasklet):
         macropath=o.system.fs.joinPaths(actorpath,"macros")
         if o.system.fs.exists(macropath):
             macropath2=o.system.fs.joinPaths(macropath,"preprocess")
-            o.core.appserver6.runningAppserver.webserver.macroexecutorPreprocessor.taskletsgroup.addTasklets(macropath2)
+            o.core.portal.runningPortal.webserver.macroexecutorPreprocessor.taskletsgroup.addTasklets(macropath2)
             macropath2=o.system.fs.joinPaths(macropath,"page")
-            o.core.appserver6.runningAppserver.webserver.macroexecutorPage.taskletsgroup.addTasklets(macropath2)
+            o.core.portal.runningPortal.webserver.macroexecutorPage.taskletsgroup.addTasklets(macropath2)
             macropath2=o.system.fs.joinPaths(macropath,"wiki")
-            o.core.appserver6.runningAppserver.webserver.macroexecutorWiki.taskletsgroup.addTasklets(macropath2)
+            o.core.portal.runningPortal.webserver.macroexecutorWiki.taskletsgroup.addTasklets(macropath2)
 
         return actorobject
 

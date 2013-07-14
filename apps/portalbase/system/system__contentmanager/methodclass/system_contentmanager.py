@@ -1,4 +1,4 @@
-from pylabs import q
+from OpenWizzy import o
 from system_contentmanager_osis import system_contentmanager_osis
 
 class system_contentmanager(system_contentmanager_osis):
@@ -19,7 +19,7 @@ class system_contentmanager(system_contentmanager_osis):
         result list(str) 
         
         """
-        return q.core.appserver6.runningAppserver.webserver.actorsloader._objects.keys()    
+        return o.core.portal.runningPortal.webserver.actorsloader._objects.keys()    
 
     def getActorsWithPaths(self,**args):
         """
@@ -27,8 +27,8 @@ class system_contentmanager(system_contentmanager_osis):
         
         """
         actors=[]
-        for actor in q.core.appserver6.runningAppserver.actorsloader.id2object.keys():
-            actor=q.core.appserver6.runningAppserver.actorsloader.id2object[actor]
+        for actor in o.core.portal.runningPortal.actorsloader.id2object.keys():
+            actor=o.core.portal.runningPortal.actorsloader.id2object[actor]
             actors.append([actor.model.id,actor.model.path])
         return actors
     
@@ -38,7 +38,7 @@ class system_contentmanager(system_contentmanager_osis):
         result list(str) 
         
         """
-        return q.core.appserver6.runningAppserver.webserver.bucketsloader._objects.keys()
+        return o.core.portal.runningPortal.webserver.bucketsloader._objects.keys()
 
     def getBucketsWithPaths(self,**args):
         """
@@ -46,8 +46,8 @@ class system_contentmanager(system_contentmanager_osis):
         
         """
         buckets=[]
-        for bucket in q.core.appserver6.runningAppserver.webserver.bucketsloader.id2object.keys():
-            bucket=q.core.appserver6.runningAppserver.webserver.bucketsloader.id2object[bucket]
+        for bucket in o.core.portal.runningPortal.webserver.bucketsloader.id2object.keys():
+            bucket=o.core.portal.runningPortal.webserver.bucketsloader.id2object[bucket]
             buckets.append([bucket.model.id,bucket.model.path])
         return buckets
 
@@ -58,8 +58,8 @@ class system_contentmanager(system_contentmanager_osis):
         
         """
         objects=[]
-        for objectname in q.core.appserver6.runningAppserver.webserver.contentdirs.keys():
-            objectpath=q.core.appserver6.runningAppserver.webserver.contentdirs[objectname]
+        for objectname in o.core.portal.runningPortal.webserver.contentdirs.keys():
+            objectpath=o.core.portal.runningPortal.webserver.contentdirs[objectname]
             objects.append([objectname,objectpath])
         return objects
     
@@ -69,7 +69,7 @@ class system_contentmanager(system_contentmanager_osis):
         result list(str) 
         
         """
-        return q.core.appserver6.runningAppserver.webserver.spacesloader.spaces.keys()
+        return o.core.portal.runningPortal.webserver.spacesloader.spaces.keys()
     
 
     def getSpacesWithPaths(self,**args):
@@ -78,8 +78,8 @@ class system_contentmanager(system_contentmanager_osis):
         
         """
         spaces=[]
-        for space in q.core.appserver6.runningAppserver.webserver.spacesloader.spaces.keys():
-            space=q.core.appserver6.runningAppserver.webserver.spacesloader.spaces[space]
+        for space in o.core.portal.runningPortal.webserver.spacesloader.spaces.keys():
+            space=o.core.portal.runningPortal.webserver.spacesloader.spaces[space]
             spaces.append([space.model.id,space.model.path])
         return spaces
     
@@ -92,7 +92,7 @@ class system_contentmanager(system_contentmanager_osis):
         param:modelname 
         param:key         
         """
-        actor=q.core.appserver6.runningAppserver.actorsloader.getActor(appname,actorname)     
+        actor=o.core.portal.runningPortal.actorsloader.getActor(appname,actorname)     
         cache=actor.dbmem.cacheGet(key)
         
         dtext=q.apps.system.contentmanager.extensions.datatables
@@ -141,20 +141,20 @@ class system_contentmanager(system_contentmanager_osis):
         mc = q.clients.mercurial.getClient(path)
         mc.pullupdate()
         if spacename != 'None':
-            q.core.appserver6.runningAppserver.webserver.loadSpace(spacename)
+            o.core.portal.runningPortal.webserver.loadSpace(spacename)
         else:
-            q.core.appserver6.runningAppserver.webserver.loadSpace(self.appname)
+            o.core.portal.runningPortal.webserver.loadSpace(self.appname)
         return []
 
     def reloadAll(self,id):
         def reloadApp():
             print "RELOAD APP FOR ACTORS Delete"
-            q.core.appserver6.runningAppserver.reset()
+            o.core.portal.runningPortal.reset()
 
-        q.core.appserver6.runningAppserver.actorsloader.id2object.pop(id)
+        o.core.portal.runningPortal.actorsloader.id2object.pop(id)
 
-        q.core.appserver6.runningAppserver.scheduler.scheduleFromNow(2,9,reloadApp)
-        q.core.appserver6.runningAppserver.scheduler.scheduleFromNow(10,9,reloadApp)
+        o.core.portal.runningPortal.scheduler.scheduleFromNow(2,9,reloadApp)
+        o.core.portal.runningPortal.scheduler.scheduleFromNow(10,9,reloadApp)
     
 
     def notifyActorModification(self,id,**args):
@@ -163,7 +163,7 @@ class system_contentmanager(system_contentmanager_osis):
         result bool 
         
         """
-        loaders=q.core.appserver6.runningAppserver.actorsloader
+        loaders=o.core.portal.runningPortal.actorsloader
         loader=loaders.getLoaderFromId(params.id)
         loader.reset()
     
@@ -183,18 +183,18 @@ class system_contentmanager(system_contentmanager_osis):
         appname,actorname=name.split("__")
         path=path
 
-        if not q.core.appserver6.runningAppserver.actorsloader.actors.has_key(key):
+        if not o.core.portal.runningPortal.actorsloader.actors.has_key(key):
             #actor does not exist yet, create required dirs in basedir
             if path=="":
-                path=q.system.fs.joinPaths(q.core.appserver6.runningAppserver.webserver.basepath,"actors",key)
-                q.system.fs.createDir(path)
-                q.system.fs.createDir(q.system.fs.joinPaths(path,".actor"))
+                path=o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"actors",key)
+                o.system.fs.createDir(path)
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".actor"))
             else:
-                q.system.fs.createDir(path)
-                q.system.fs.createDir(q.system.fs.joinPaths(path,".actor"))
+                o.system.fs.createDir(path)
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".actor"))
                 
             print "scan path:%s"%path
-            q.core.appserver6.runningAppserver.actorsloader.scan(path)
+            o.core.portal.runningPortal.actorsloader.scan(path)
             result=True
         else:
             result=False  
@@ -220,15 +220,15 @@ class system_contentmanager(system_contentmanager_osis):
         result=None
 
         #immediate remove
-        loaders=q.core.appserver6.runningAppserver.webserver.bucketsloader
+        loaders=o.core.portal.runningPortal.webserver.bucketsloader
         loaders.removeLoader(id)
         
         def reloadApp(id=None):        
-            q.core.appserver6.runningAppserver.webserver.loadSpaces(reset=True)
+            o.core.portal.runningPortal.webserver.loadSpaces(reset=True)
 
         #loader.pop(id)
-        # q.core.appserver6.runningAppserver.scheduler.scheduleFromNow(1,9,reloadApp,id=id)
-        q.core.appserver6.runningAppserver.scheduler.scheduleFromNow(10,9,reloadApp,id=id)
+        # o.core.portal.runningPortal.scheduler.scheduleFromNow(1,9,reloadApp,id=id)
+        o.core.portal.runningPortal.scheduler.scheduleFromNow(10,9,reloadApp,id=id)
         return result
         
 
@@ -238,7 +238,7 @@ class system_contentmanager(system_contentmanager_osis):
         result bool 
         
         """
-        loaders=q.core.appserver6.runningAppserver.webserver.bucketsloader
+        loaders=o.core.portal.runningPortal.webserver.bucketsloader
         loader=loaders.getLoaderFromId(id)
         loader.reset()
 
@@ -256,17 +256,17 @@ class system_contentmanager(system_contentmanager_osis):
         key=name.strip().lower()
         path=path
 
-        loader=q.core.appserver6.runningAppserver.webserver.bucketsloader
+        loader=o.core.portal.runningPortal.webserver.bucketsloader
 
         if not loader.id2object.has_key(key):
             #does not exist yet, create required dirs in basedir
             if path=="":
-                path=q.system.fs.joinPaths(q.core.appserver6.runningAppserver.webserver.basepath,"buckets",key)
-                q.system.fs.createDir(path)
-                q.system.fs.createDir(q.system.fs.joinPaths(path,".bucket"))
+                path=o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"buckets",key)
+                o.system.fs.createDir(path)
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".bucket"))
             else:
-                q.system.fs.createDir(path)
-                q.system.fs.createDir(q.system.fs.joinPaths(path,".bucket"))
+                o.system.fs.createDir(path)
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".bucket"))
                 
             loader.scan(path)
             result=True
@@ -294,17 +294,17 @@ class system_contentmanager(system_contentmanager_osis):
         """
 
         #immediate remove
-        loaders=q.core.appserver6.runningAppserver.webserver.spacesloader
+        loaders=o.core.portal.runningPortal.webserver.spacesloader
         loaders.removeLoader(id)
         
         def reloadApp():
             print "RELOAD APP SPACE DELETE"
-            q.core.appserver6.runningAppserver.webserver.loadSpaces(reset=True)
+            o.core.portal.runningPortal.webserver.loadSpaces(reset=True)
 
-        # loader=q.core.appserver6.runningAppserver.webserver.spacesloader.id2object
+        # loader=o.core.portal.runningPortal.webserver.spacesloader.id2object
         # loader.pop(id)
 
-        q.core.appserver6.runningAppserver.scheduler.scheduleFromNow(10,9,reloadApp)
+        o.core.portal.runningPortal.scheduler.scheduleFromNow(10,9,reloadApp)
 
     
 
@@ -315,7 +315,7 @@ class system_contentmanager(system_contentmanager_osis):
         
         """
 
-        loaders=q.core.appserver6.runningAppserver.webserver.spacesloader
+        loaders=o.core.portal.runningPortal.webserver.spacesloader
         loader=loaders.getLoaderFromId(id)
         loader.reset()
     
@@ -334,22 +334,22 @@ class system_contentmanager(system_contentmanager_osis):
 
         path=path
 
-        loader=q.core.appserver6.runningAppserver.webserver.spacesloader
+        loader=o.core.portal.runningPortal.webserver.spacesloader
 
         if not loader.id2object.has_key(key):
             #does not exist yet, create required dirs in basedir
             if path=="":
-                path=q.system.fs.joinPaths(q.core.appserver6.runningAppserver.webserver.basepath,"spaces",name)            
+                path=o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"spaces",name)            
             else:
-                q.system.fs.createDir(path)
+                o.system.fs.createDir(path)
                 
             #create default content
-            mddir=q.system.fs.joinPaths(path,".space")
-            dest=q.system.fs.joinPaths(path,"%s.wiki"%name)
-            q.system.fs.createDir(mddir)                
+            mddir=o.system.fs.joinPaths(path,".space")
+            dest=o.system.fs.joinPaths(path,"%s.wiki"%name)
+            o.system.fs.createDir(mddir)                
             loader.scan(path)
-            source=q.system.fs.joinPaths(mddir,"template.wiki")
-            q.system.fs.copyFile(source,dest)
+            source=o.system.fs.joinPaths(mddir,"template.wiki")
+            o.system.fs.copyFile(source,dest)
             result=True
         else:
             result=False
@@ -383,20 +383,20 @@ class system_contentmanager(system_contentmanager_osis):
         actorname= actor
         appname= app
 
-        filesroot=q.core.appserver6.runningAppserver.filesroot
+        filesroot=o.core.portal.runningPortal.filesroot
 
-        actorloader=q.core.appserver6.runningAppserver.actorsloader.id2object["%s__%s" % (appname,actorname)]
+        actorloader=o.core.portal.runningPortal.actorsloader.id2object["%s__%s" % (appname,actorname)]
 
-        path=q.system.fs.joinPaths(actorloader.model.path,"specs")
+        path=o.system.fs.joinPaths(actorloader.model.path,"specs")
 
-        pathdest=q.system.fs.joinPaths(filesroot,"specs","%s_%s.tgz"%(appname,actorname))
-        q.system.fs.remove(pathdest)
-        #q.system.fs.createDir(q.system.fs.joinPaths("files","specs"))
+        pathdest=o.system.fs.joinPaths(filesroot,"specs","%s_%s.tgz"%(appname,actorname))
+        o.system.fs.remove(pathdest)
+        #o.system.fs.createDir(o.system.fs.joinPaths("files","specs"))
 
-        if not q.system.fs.exists(path):
+        if not o.system.fs.exists(path):
             return {"error":"could not find spec path for app %s actor %s" % (appname,actorname)}
         else:
-            q.system.fs.targzCompress(path,pathdest)
+            o.system.fs.targzCompress(path,pathdest)
 
         return result
     
@@ -408,9 +408,9 @@ class system_contentmanager(system_contentmanager_osis):
         result bool 
         
         """
-        contents = q.apps.system.contentmanager.dbmem.cacheGet(authkey)
-        q.system.fs.writeFile(contents['path'],text)
-        q.core.appserver6.runningAppserver.webserver.loadSpace(contents['space'])
+        contents = o.apps.system.contentmanager.dbmem.cacheGet(authkey)
+        o.system.fs.writeFile(contents['path'],text)
+        o.core.portal.runningPortal.webserver.loadSpace(contents['space'])
         returnpath = "/%s/%s" % (contents['space'], contents['page'])
         returncontent = "<script>window.open('%s', '_self', '');</script>" % returnpath
 

@@ -1,6 +1,6 @@
 #from ActorsLoaderRemote import ActorsLoaderRemote
-from Appserver6Process import Appserver6Process
-from Appserver6Client import *
+from PortalProcess import PortalProcess
+from PortalClient import *
 #from ActorLoaderLocal import *
 
 from OpenWizzy import o
@@ -24,7 +24,7 @@ class GridMap():
         """
         key=self._getKey(appName,actorName,instance)
         self.data[key]=[ipaddr,port,secret]
-        if not o.core.appserver6.runningAppserver.ismaster:
+        if not o.core.portal.runningPortal.ismaster:
             raise RuntimeError("Can only be used local to master appserver")
 
     def get(self,appName,actorName,instance):
@@ -53,13 +53,13 @@ class GridMapLocal():
         @param ipaddr=list of ip addr []
         """
         key=self._getKey(appName,actorName,instance)
-        if o.core.appserver6.runningAppserver==None:
+        if o.core.portal.runningPortal==None:
             raise RuntimeError("can only set to gridmap when appserver is known & operational")
-        ipaddr=o.core.appserver6.runningAppserver.ipaddr
+        ipaddr=o.core.portal.runningPortal.ipaddr
         if ipaddr=="localhost":
             ipaddr="127.0.0.1"
-        port=o.core.appserver6.runningAppserver.port
-        secret=o.core.appserver6.runningAppserver.secret
+        port=o.core.portal.runningPortal.port
+        secret=o.core.portal.runningPortal.secret
         if not self.data.has_key(key):
             self.data[key]=[ipaddr,port,secret]
             self.datalist.append([appName,actorName,instance,ipaddr,port,secret])
@@ -77,11 +77,11 @@ class GridMapLocal():
 
 
 
-class Appserver6ClientFactory():
+class PortalClientFactory():
 
     def __init__(self):
         self._inited=False
-        self.runningAppserver = None
+        self.runningPortal = None
         self.inprocess=False
         self._appserverclients={}
 
@@ -98,7 +98,7 @@ class Appserver6ClientFactory():
         cfgdir=o.system.fs.joinPaths(o.system.fs.getcwd(),"cfg")
         curdir=o.system.fs.getcwd()
         o.system.fs.changeDir(appdir)
-        server=Appserver6Process(processNr=processNr,cfgdir=cfgdir,startdir=curdir)
+        server=PortalProcess(processNr=processNr,cfgdir=cfgdir,startdir=curdir)
 
         # for actor in server.actorsloader.actors.keys():
         #     appname,actorname=actor.split("__",1)
@@ -114,18 +114,18 @@ class Appserver6ClientFactory():
         #this only works when we are not in appserver
         #will make sure all actor clients are recreated #now brute force, can do more intelligent @todo
         #"""
-        #if o.core.appserver6.runningAppserver==None:
+        #if o.core.portal.runningPortal==None:
             #if self.inprocess:
-                #o.core.appserver6.gridmap.data=GridMap()
+                #o.core.portal.gridmap.data=GridMap()
             #else:
                 #result=self.masterClient.wsclient.callWebService("system","manage","getgridmap")
                 #gridmap=result[1]["result"]
-                #o.core.appserver6.gridmap.data=gridmap
+                #o.core.portal.gridmap.data=gridmap
             #self._appserverclients={}
             #self._actorClients={}
 
 
-    def getAppserverClient(self, ip="localhost", port=9999, secret=None):
+    def getPortalClient(self, ip="localhost", port=9999, secret=None):
         """
         return client to manipulate & access a running application server (out of process)
         caching is done so can call this as many times as required
@@ -139,13 +139,13 @@ class Appserver6ClientFactory():
         if self._appserverclients.has_key(key):
             return self._appserverclients[key]
         else:
-            cl=Appserver6Client(ip, port, secret)
+            cl=PortalClient(ip, port, secret)
             self._appserverclients[key]=cl
             return cl
 
     # def getActor(self,appName,actorName,instance=0,authKey=""):
     #     """
-    #     get actor (works in process as well as out of process running appserver6)
+    #     get actor (works in process as well as out of process running appserver)
     #     """
     #     self._init()
     #     dbtype=o.enumerators.KeyValueStoreType.FILE_SYSTEM
@@ -167,10 +167,10 @@ class Appserver6ClientFactory():
     #             #raise RuntimeError("cannot find actor %s in %s" % (actorName,path2))
 
     #         else:
-    #             master = o.application.shellconfig.appserver6.getParam("grid", "master")
-    #             secret = o.application.shellconfig.appserver6.getParam("grid", "secret")
-    #             #ip=o.application.shellconfig.appserver6.getParam("grid","ip")
-    #             ws = self.getAppserverClient(master, 9000, secret)
+    #             master = o.application.shellconfig.appserver.getParam("grid", "master")
+    #             secret = o.application.shellconfig.appserver.getParam("grid", "secret")
+    #             #ip=o.application.shellconfig.appserver.getParam("grid","ip")
+    #             ws = self.getPortalClient(master, 9000, secret)
     #             code, result = ws.wsclient.callWebService("core", "gridmaster",\
     #                                                       "actorMetadataGet", app=appName, actor=actorName)
     #             loader = ActorsLoaderRemote()
@@ -181,8 +181,12 @@ class Appserver6ClientFactory():
     #     return actor
 
 
-    def useAppserver6ExceptionHandler(self):
+    def usePortalExceptionHandler(self):
         self._init()
-        o.core.appserver6.exceptionHandler = Appserver6ExceptionHandler(
+        o.core.portal.exceptionHandler = PortalExceptionHandler(
             haltOnError=True)
-        return o.core.appserver6.exceptionHandler
+        return o.core.portal.exceptionHandler
+
+    def getConfigTemplatesPath(self):
+        dirname = o.system.fs.getDirName(__file__)
+        return o.system.fs.joinPaths(dirname, 'configtemplates')

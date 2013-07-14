@@ -1,5 +1,5 @@
 
-from pylabs import q
+from OpenWizzy import o
 
 class Def():
     def __init__(self):
@@ -37,7 +37,7 @@ class DefManager():
                     else:
                         content+="%s\n"%line
                 doc.content=content
-                pagename=q.system.fs.getBaseName(doc.path).split(".",1)[0]
+                pagename=o.system.fs.getBaseName(doc.path).split(".",1)[0]
                 aliases.append(pagename)                
                 if name=="":
                     name=pagename

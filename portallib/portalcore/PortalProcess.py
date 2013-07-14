@@ -6,16 +6,16 @@ from OpenWizzy import o
 
 import time
 import os
-from Appserver6TCPChannels import ManholeSession, WorkerSession, TCPSessionLog
+from PortalTCPChannels import ManholeSession, WorkerSession, TCPSessionLog
 
 try:
     import fcntl
 except:
     pass
 
-#from Appserver6CoreWebservices import *
+#from PortalCoreWebservices import *
 
-#from ActorLoaderAppserver import ActorLoaderAppserver
+#from ActorLoaderPortal import ActorLoaderPortal
 
 #from MessageRouter import MessageRouter
 
@@ -34,11 +34,11 @@ class Scheduler():
         self.taskQueue.append([executionEpoch,waitTime,method,params])
 
     def scheduleFromNow(self,secFromNow,minimalPeriod,method,**args):
-        self.schedule(o.core.appserver6.runningAppserver.epoch+secFromNow,minimalPeriod,0,method,**args)
+        self.schedule(o.core.portal.runningPortal.epoch+secFromNow,minimalPeriod,0,method,**args)
 
     def scheduleNow(self,minimalPeriod,method,**args):
         task=self.schedule(0,minimalPeriod,0,method,**args)
-        task.check(o.core.appserver6.runningAppserver.epoch)
+        task.check(o.core.portal.runningPortal.epoch)
 
     def schedule(self,executionEpoch,minimalPeriod,recurringPeriod,method,**args):
         print self.tasks
@@ -105,7 +105,7 @@ class Task():
 
 
 
-class Appserver6Process():
+class PortalProcess():
     """
     this is the server who knows about all the workers which run local to him
     a server is run on each node where we want workers
@@ -118,9 +118,9 @@ class Appserver6Process():
         self.epoch=time.time()
         self.lock={}
 
-        o.core.appserver6.runningAppserver = self
+        o.core.portal.runningPortal = self
 
-        self.actorsloader=o.core.appserver6loader.getActorsLoader()
+        self.actorsloader=o.core.portalloader.getActorsLoader()
 
         self.taskletengines={}
 
@@ -175,7 +175,7 @@ class Appserver6Process():
         else:
             raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon")
 
-        #self.systemdb=o.db.keyvaluestore.getFileSystemStore("appserver6system",baseDir=self._replaceVar(ini.getValue("systemdb","dbdpath")))
+        #self.systemdb=o.db.keyvaluestore.getFileSystemStore("appserversystem",baseDir=self._replaceVar(ini.getValue("systemdb","dbdpath")))
 
         self.processNr=processNr
 
@@ -249,7 +249,7 @@ class Appserver6Process():
             #pass
 
         self.mainLoop=mainLoop
-        o.core.appserver6.runningAppserver=self
+        o.core.portal.runningPortal=self
 
         self.ismaster=int(ini.getValue(skey,"ismaster"))==1
 
@@ -263,7 +263,7 @@ class Appserver6Process():
 
             #check redis installed
             if not o.system.platformtype.isWindows():
-                o.system.platformtype.ubuntu.checkInstall(["python-redis","redis-server"],"redis-server")
+                o.system.platform.ubuntu.checkInstall(["python-redis","redis-server"],"redis-server")
         else:
             self.rediscfg=None
 
@@ -278,7 +278,7 @@ class Appserver6Process():
             #self.master._init()
             #self.master.gridmapPrevious=None
             #self.master.gridMapSave()
-            #self.master.gridMapRegisterAppserver(self.ismaster,self.ipaddr,self.wsport,self.secret)
+            #self.master.gridMapRegisterPortal(self.ismaster,self.ipaddr,self.wsport,self.secret)
 
             #look for nginx & start
             self.startNginxServer()
@@ -328,7 +328,7 @@ class Appserver6Process():
         ini=o.tools.inifile.open("cfg/appserver.cfg")
         local=int(ini.getValue("nginx","local"))==1
 
-        configtemplate=o.system.fs.fileGetContents(o.system.fs.joinPaths(o.core.appserver6.pm_extensionpath,"configtemplates","nginx","appserver_template.conf"))
+        configtemplate=o.system.fs.fileGetContents(o.system.fs.joinPaths(o.core.portal.getConfigTemplatesPath(),"nginx","appserver_template.conf"))
         configtemplate=self._replaceVar(configtemplate)
 
         if local:
@@ -343,7 +343,7 @@ class Appserver6Process():
                 cmd="%s %s" % (apppath2,apppath)
                 cmd=cmd.replace("\\","/").replace("//","/")
 
-                maincfg=o.system.fs.joinPaths(o.core.appserver6.pm_extensionpath,"configtemplates","nginx","nginx.conf")
+                maincfg=o.system.fs.joinPaths(o.core.portal.pm_extensionpath,"configtemplates","nginx","nginx.conf")
                 configtemplate2=o.system.fs.fileGetContents(maincfg)
                 configtemplate2=self._replaceVar(configtemplate2)
                 o.system.fs.writeFile("%s/conf/nginx.conf"%apppath,configtemplate2)
@@ -362,10 +362,9 @@ class Appserver6Process():
                 o.system.process.executeAsync(cmd,outputToStdout=False)
                 
             else:
-                if not o.system.platformtype.ubuntu.checkIsUbuntu():
-                    raise RuntimeError("for linux only ubuntu supported for now (probably 10.4+ but did not test)")
-                o.system.platformtype.ubuntu.checkInstall(["php5-cgi"],"php-cgi")
-                o.system.platformtype.ubuntu.checkInstall("nginx","nginx")
+                o.system.platform.ubuntu.check()
+                o.system.platform.ubuntu.checkInstall(["php5-cgi"],"php-cgi")
+                o.system.platform.ubuntu.checkInstall("nginx","nginx")
 
                 o.system.fs.remove("/etc/nginx/sites-enabled/default")
 
@@ -374,7 +373,7 @@ class Appserver6Process():
 
                 if not o.system.fs.exists("/etc/nginx/nginx.conf.backup"):
                     o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.varDir,"nginx"))
-                    maincfg=o.system.fs.joinPaths(o.core.appserver6.pm_extensionpath,"configtemplates","nginx","nginx.conf")
+                    maincfg=o.system.fs.joinPaths(o.core.portal.getConfigTemplatesPath(),"nginx","nginx.conf")
                     configtemplate2=o.system.fs.fileGetContents(maincfg)
                     configtemplate2=self._replaceVar(configtemplate2)
                     o.system.fs.copyFile("/etc/nginx/nginx.conf","/etc/nginx/nginx.conf.backup")
@@ -386,7 +385,7 @@ class Appserver6Process():
                 for pid in o.system.process.getProcessPid("php-cgi"):
                     o.system.process.kill(int(pid))
 
-                maincfg=o.system.fs.joinPaths(o.core.appserver6.pm_extensionpath,"configtemplates","nginx","phpLinux.ini")
+                maincfg=o.system.fs.joinPaths(o.core.portal.getConfigTemplatesPath(),"nginx","phpLinux.ini")
                 configtemplate2=o.system.fs.fileGetContents(maincfg)
                 configtemplate2=self._replaceVar(configtemplate2)
                 o.system.fs.writeFile("/etc/nginx/php.ini",configtemplate2)
@@ -464,7 +463,7 @@ class Appserver6Process():
             else:
                 lastport=sysdb.get("rediscfg", key)
 
-            templpath=o.system.fs.joinPaths(o.core.appserver6.pm_extensionpath,"configtemplates","redis","redis_template.conf")
+            templpath=o.system.fs.joinPaths(o.core.portal.pm_extensionpath,"configtemplates","redis","redis_template.conf")
             configtemplate=o.system.fs.fileGetContents(templpath)
             configtemplate=configtemplate.replace("$port",str(lastport))
             configtemplate=configtemplate.replace("$key",key)
@@ -539,7 +538,7 @@ class Appserver6Process():
     # this handler will be run for each incoming connection in a dedicated greenlet
     def socketaccept_manhole(self,socket, address):
         ip,port=address
-        socket.sendall('Manhole For Application Server 6\n\n')
+        socket.sendall('Manhole For Portal Server \n\n')
         session=ManholeSession(ip,port,socket)
         self._addsession(session)
         session.run()
@@ -640,11 +639,11 @@ class Appserver6Process():
             from OpenWizzy.core.Shell import ipshell
             print "DEBUG NOW start is not master"
             ipshell()
-            self.masterClient=o.core.appserver6.getAppserverClient("127.0.0.1",9000,"1234")
+            self.masterClient=o.core.portal.getPortalClient("127.0.0.1",9000,"1234")
             #self.masterSystemActor=client.getActor("system","manager",instance=0)
             #contact master & populate gridmap there
             #self.masterClient
-            #o.core.appserver6.gridmaplocal.data
+            #o.core.portal.gridmaplocal.data
 
         else:
             #is master
@@ -652,8 +651,8 @@ class Appserver6Process():
             if ipaddr=="localhost":
                 ipaddr="127.0.0.1"
             #@todo implement registration
-            #for app,actorname,instance,ipaddr,port,secret in o.core.appserver6.gridmaplocal.datalist:
-                #o.core.appserver6.gridmap.set(app,actorname,instance,ipaddr,port,secret)
+            #for app,actorname,instance,ipaddr,port,secret in o.core.portal.gridmaplocal.datalist:
+                #o.core.portal.gridmap.set(app,actorname,instance,ipaddr,port,secret)
 
 
         

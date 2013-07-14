@@ -1,5 +1,5 @@
 
-from pylabs import q
+from OpenWizzy import o
 import copy
 
 class UserManager():
@@ -10,8 +10,8 @@ class UserManager():
 
     def _init(self):
         if self.inited==False:
-            self.userModelDB=q.apps.system.usermanager.models.user
-            self.groupModelDB=q.apps.system.usermanager.models.group
+            self.userModelDB=o.apps.system.usermanager.models.user
+            self.groupModelDB=o.apps.system.usermanager.models.group
             self._rememberUserKeys()
             self.inited=True
 
@@ -117,5 +117,5 @@ class UserManager():
                 print  "can temporarly resolve by destroing the user mgmt db: do:  model.destroy(), this is a temp hack" #@todo fix hack
                 ipshell()
 
-            q.core.appserver6.runningAppserver.webserver.userKeyToName[obj.secret]=obj.id
+            o.core.portal.runningPortal.webserver.userKeyToName[obj.secret]=obj.id
 
