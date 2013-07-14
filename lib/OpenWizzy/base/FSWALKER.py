@@ -1,5 +1,5 @@
 from OpenWizzy import o
-
+import struct
 try:
     from REGEXTOOL import *
 except:
@@ -83,19 +83,16 @@ class FSWalkerStats():
 
     __str__=__repr__
 
+
 class FSWalker():
 
-    def __init__(self,mdserverclient=None):
+    def __init__(self):
         self.stats=None
         self.statsStart()
         self.statsNr=0
         self.statsSize=0
         self.lastPath=""
-        self.mdserverclient=mdserverclient
-
-    def registerChange(self,ttype,status,name,stat=None):
-        pass
-
+       
     def log(self,msg):
         print msg
 
@@ -120,7 +117,7 @@ class FSWalker():
         arg.append(path)
     
     def find(self,root, includeFolders=False,includeLinks=False, pathRegexIncludes={},pathRegexExcludes={},followlinks=False,\
-        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],registerToMDServer=False):
+        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],mdserverclient=None):
         """
         @return {files:[],dirs:[],links:[],...$othertypes}
         """
@@ -130,16 +127,16 @@ class FSWalker():
         result["D"]=[]
         result["L"]=[]
 
-        def processfile(path,stat):
+        def processfile(path,stat,arg):
             result["F"].append([path,stat])    
 
-        def processdir(path,stat):
+        def processdir(path,stat,arg):
             result["D"].append([path,stat])    
 
-        def processlink(src,dest):
+        def processlink(src,dest,arg):
             result["L"].append([src,dest])   
 
-        def processother(path,stat,type):
+        def processother(path,stat,type,arg):
             if result.has_key(type):
                 result[type]=[]
             result[type].append([path,stat])  
@@ -153,7 +150,7 @@ class FSWalker():
         callbackMatchFunctions=self.getCallBackMatchFunctions(pathRegexIncludes,pathRegexExcludes,includeFolders=includeFolders,includeLinks=includeLinks)
 
         self.walk(root,callbackFunctions,arg={},callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes,\
-            registerToMDServer=registerToMDServer,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
+            pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,mdserverclient=mdserverclient)
 
         return result
 
@@ -174,7 +171,6 @@ else:
 """       
         for ttype in ["F","D","L"]:
             C2=C.replace("$type",ttype)
-            print C2
             exec(C2)
 
         callbackMatchFunctions={}
@@ -191,8 +187,8 @@ else:
 
         return callbackMatchFunctions
           
-    def walk(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,registerToMDServer=False,\
-        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],pathRegexIncludes={},pathRegexExcludes={}):
+    def walk(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
+        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],pathRegexIncludes={},pathRegexExcludes={},mdserverclient=None):
         '''
 
         Walk through filesystem and execute a method per file and dirname if the match function selected the item
@@ -230,19 +226,16 @@ else:
             raise ValueError('Root path for walk should be a folder')
         
         # print "ROOT OF WALKER:%s"%root
-        if self.mdserverclient==None:
-            self._walkFunctional(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,registerToMDServer,\
+        if mdserverclient==None:
+            self._walkFunctional(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
                 childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
         else:
-            self._walkFunctionalMDS(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,registerToMDServer,\
+            self._walkFunctionalMDS(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
                 childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
 
     def _walkFunctional(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
-        registerToMDServer=False,childrenRegexExcludes=[],pathRegexIncludes={},pathRegexExcludes={}):
-        if registerToMDServer:
-            from IPython import embed
-            print "DEBUG NOW get diro"
-            embed()
+        childrenRegexExcludes=[],pathRegexIncludes={},pathRegexExcludes={}):
+
         paths=o.base.fs.list(root)
         for path2 in paths:
             self.log("walker path:%s"% path2)
@@ -258,15 +251,19 @@ else:
             
             if not callbackMatchFunctions.has_key(ttype) or (callbackMatchFunctions.has_key(ttype) and callbackMatchFunctions[ttype](path2,arg,pathRegexIncludes,pathRegexExcludes)):
                 self.log("walker filepath:%s"% path2)                
-                if not registerToMDServer:
-                    self.statsAdd(path=path2,ttype=ttype,sizeUncompressed=0,sizeCompressed=0,duplicate=False)
-                else:
-                    from IPython import embed
-                    print "DEBUG NOW get dir object"
-                    embed()
+                self.statsAdd(path=path2,ttype=ttype,sizeUncompressed=0,sizeCompressed=0,duplicate=False)
 
                 if callbackFunctions.has_key(ttype):
-                    callbackFunctions[ttype](path2,arg)
+                    if ttype in "DF":
+                        stat=os.stat(path2)
+                        statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
+                        callbackFunctions[ttype](path=path2,stat=statb,arg=arg)
+                    else:
+                        stat=None
+                        from IPython import embed
+                        print "DEBUG NOW link"
+                        embed()
+                        callbackFunctions[ttype](src=path2,dest="",arg=arg)
 
             if ttype=="D":
                 if REGEXTOOL.matchPath(path2,[],childrenRegexExcludes):
@@ -275,8 +272,8 @@ else:
         
 
 class FSWalkerFactory():
-    def get(self,mdserverclient=None):
-        return FSWalker(mdserverclient=mdserverclient)
+    def get(self):
+        return FSWalker()
 
 o.base.fswalker=FSWalkerFactory()
 
