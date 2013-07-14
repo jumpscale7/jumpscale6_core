@@ -18,7 +18,7 @@ class RWCache():
 #based on LRUCache but modified for different purpose (write through cache)
 class WCache(LRUCache):    
 
-    def __init__(self, size=DEFAULT_SIZE,writermethod=None,maxtime=2000):
+    def __init__(self, size=5000,writermethod=None,maxtime=2000):
         """
         @param writermethod if given then this method will be called with max size reached or when flush called for objects older than specified maxtime
         """
