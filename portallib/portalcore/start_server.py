@@ -39,7 +39,7 @@ if __name__ == "__main__":
             args.workers,
             messageHandler,
             dbtype=dbtype)
-    o.core.appserver6.runningAppserver=server
+    o.core.portal.runningPortal=server
     o.console.echo("Started application server on port %s" % (args.port))
     server.addActors(applicationName="core", path="actorscore",
             inPylabsExtensionsDir=True)

@@ -716,7 +716,7 @@ function copyText$id() {
             C=C.replace("{path}",path)
             C=C.replace("{root}",root)
             
-            dest= o.system.fs.joinPaths(o.core.appserver6.runningAppserver.webserver.filesroot,dockey).replace("\\","/")
+            dest= o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.filesroot,dockey).replace("\\","/")
 
             if not o.system.fs.exists(dest):
                 if o.system.fs.isLink(dest):
@@ -839,7 +839,7 @@ function copyText$id() {
         C=C.replace("{dircmd}",dircmd)
         C=C.replace("{filecmd}",filecmd)
         if dockey==None:
-            dockey=o.tools.hash.md5_string(path)
+            dockey=o.base.byteprocessor.hashMd5(path)
 
         C=C.replace("$connector",writeExplorerPHP(path,"key__%s"%dockey))
         self.head+=C

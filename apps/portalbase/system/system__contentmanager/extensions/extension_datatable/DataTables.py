@@ -8,7 +8,7 @@ class DataTables():
 
     def getActorModel(self,appname,actorname,modelname):
         try:
-            actor=o.core.appserver6.runningAppserver.actorsloader.getActor(appname,actorname)
+            actor=o.core.portal.runningPortal.actorsloader.getActor(appname,actorname)
             model=actor.models.__dict__[modelname]
         except Exception,e:
             # self.page.addMessage()

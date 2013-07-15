@@ -70,7 +70,7 @@ class Message():
 
     def __init__(self,messagedata):
         self.messagedata=messagedata
-        self.starttime=o.core.appserver6.runningAppserver.epoch
+        self.starttime=o.core.portal.runningPortal.epoch
         self.timedout=False
         self.jobid=jobid
         self.caller=None

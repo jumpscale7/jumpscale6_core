@@ -70,8 +70,8 @@ class Doc(object):
         return self.preprocessor.spacename
 
     def getPageKey(self):
-        key=o.tools.hash.md5_string("%s_%s" % (self.pagename,self.getSpaceName()))
-        o.core.appserver6.runningAppserver.webserver.pageKey2doc[key]=self
+        key=o.base.byteprocessor.hashMd5("%s_%s" % (self.pagename,self.getSpaceName()))
+        o.core.portal.runningPortal.webserver.pageKey2doc[key]=self
         return key
 
 
@@ -173,7 +173,7 @@ class Doc(object):
             self.loadFromDisk()
             self.preprocess()
         content,doc=self.executeMacrosDynamicWiki(paramsExtra,ctx)
-        ws=o.core.appserver6.runningAppserver.webserver
+        ws=o.core.portal.runningPortal.webserver
         content,page=ws.confluence2htmlconvertor.convert(content,doc=self,page=ws.getpage())
         return page.body
 

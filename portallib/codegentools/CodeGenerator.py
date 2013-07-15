@@ -32,11 +32,11 @@ class CodeGenerator:
                 #print "remove code generated class %s from memory" % key
                 o.core.codegenerator.classes.pop(key2)
 
-        for key2 in o.core.appserver6.runningAppserver.taskletengines.keys():
+        for key2 in o.core.portal.runningPortal.taskletengines.keys():
             app,item,remaining=key2.split("_",2)
             if app==appname and item.find(actor)==0:
                 #print "remove tasklets %s from memory" % key
-                o.core.appserver6.runningAppserver.taskletengines.pop(key2)
+                o.core.portal.runningPortal.taskletengines.pop(key2)
 
     def resetMemNonSystem(self):
         for key2 in o.core.codegenerator.classes.keys():
@@ -44,10 +44,10 @@ class CodeGenerator:
             if app<>"system":
                 o.core.codegenerator.classes.pop(key2)
 
-        for key2 in o.core.appserver6.runningAppserver.taskletengines.keys():
+        for key2 in o.core.portal.runningPortal.taskletengines.keys():
             app,item,remaining=key2.split("_",2)
             if app<>"system":
-                o.core.appserver6.runningAppserver.taskletengines.pop(key2)
+                o.core.portal.runningPortal.taskletengines.pop(key2)
 
     def getClassActorLocal(self,appname,actor,typecheck=True,dieInGenCode=True):
         """

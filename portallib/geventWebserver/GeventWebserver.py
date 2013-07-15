@@ -937,7 +937,7 @@ class GeventWebserver:
                     except AttributeError:
                         data[key] = value
                 return data
-            msg = o.tools.json.encode(todict(eco))
+            msg = o.db.serializers.ujson.dumps(todict(eco))
 
         ctx.start_response(httpcode, [('Content-Type', 'text/html')])
 

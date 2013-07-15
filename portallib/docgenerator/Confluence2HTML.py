@@ -1,6 +1,6 @@
 import re
 from OpenWizzy import o
-from OpenWizzy.core.macros import div_base
+from OpenWizzy.portal.macrolib import div_base
 
 
 class Confluence2HTML():

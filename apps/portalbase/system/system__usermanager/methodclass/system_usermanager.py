@@ -28,7 +28,7 @@ class system_usermanager(system_usermanager_osis):
             return False
         if user.passwd.strip()==str(secret).strip():
             return True
-        if o.tools.hash.md5_string(user.passwd.strip())==str(secret).strip():
+        if o.base.byteprocessor.hashMd5(user.passwd.strip())==str(secret).strip():
             return True
         result=False
         return result

@@ -7,7 +7,7 @@ def main(o,args,params,tags,tasklet):
 
     out=""
     cmdstr=params.macrostr.split(":",1)[1].replace("}}","").strip()
-    md5=o.tools.hash.md5_string(cmdstr)
+    md5=o.base.byteprocessor.hashMd5(cmdstr)
     q.system.fs.createDir(q.system.fs.joinPaths(o.core.portal.runningPortal.webserver.filesroot,"dot"))
     path=q.system.fs.joinPaths(o.core.portal.runningPortal.webserver.filesroot,"dot",md5)
     if not o.system.fs.exists(path+".png"):

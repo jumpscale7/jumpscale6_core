@@ -196,7 +196,7 @@ class CodeGeneratorActorTasklets(CodeGeneratorBase):
             if o.system.fs.exists(path):
                 #content=o.system.fs.fileGetContents(path)
                 #if content.find(NOTGENSTR)<>-1:
-                    #path=o.system.fs.joinPaths(o.core.appserver6.runningAppserver.codepath,spec.appname,spec.actorname,method.name,"_5_main.py")
+                    #path=o.system.fs.joinPaths(o.core.portal.runningPortal.codepath,spec.appname,spec.actorname,method.name,"_5_main.py")
                 path=None
 
             if path<>None and str(path)<>"":

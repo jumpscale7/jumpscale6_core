@@ -82,7 +82,7 @@ class WorkerSession(TCPSession):
             print "loopstart"
             dtype,length,epoch,gid,nid,pid,data=self.read()
             print "loopend"
-            o.core.appserver6.runningAppserver.messagerouter.queue(gid,nid,pid,data)
+            o.core.portal.runningPortal.messagerouter.queue(gid,nid,pid,data)
                             
         #except Exception,e:
             #print "read error in appserver6 workergreenlet %s\n" % self.sessionnr
@@ -146,7 +146,7 @@ class ManholeSession(TCPSession):
     def __init__(self,addr,port,socket):
         TCPSession.__init__(self,addr,port,socket)
         self.type="manhole"
-        self.cmds=o.core.appserver6.runningAppserver.tcpservercmds    
+        self.cmds=o.core.portal.runningPortal.tcpservercmds    
         self.socket.settimeout(None)
         
     def run(self):
@@ -228,15 +228,15 @@ commands:
         return result   
     
     def getsession(self,id):
-        if not o.core.appserver6.runningAppserver.sessions.has_key(id):
+        if not o.core.portal.runningPortal.sessions.has_key(id):
             self.send( "Could not find session with id %s" % id)
             return False
-        return o.core.appserver6.runningAppserver.sessions[id]
+        return o.core.portal.runningPortal.sessions[id]
     
     def killallsessions(self):
         result=""
-        for key in o.core.appserver6.runningAppserver.sessions.keys():
-            session=o.core.appserver6.runningAppserver.sessions[key]
+        for key in o.core.portal.runningPortal.sessions.keys():
+            session=o.core.portal.runningPortal.sessions[key]
             if session.type<>"manhole":
                 session.active=False
                 session.kill()
@@ -246,8 +246,8 @@ commands:
             
     def listsessions(self):
         result=""
-        for key in o.core.appserver6.runningAppserver.sessions.keys():
-            session=o.core.appserver6.runningAppserver.sessions[key]
+        for key in o.core.portal.runningPortal.sessions.keys():
+            session=o.core.portal.runningPortal.sessions[key]
             result+="%s" % session
         return result  
     
