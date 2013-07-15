@@ -5,4 +5,4 @@ class mainclass(o.core.osis.getOsisImplementationParentClass("_modelobjects")):
     """
 
     def _getDB(self):
-        return q.db.keyvaluestore.getArakoonStore('osis')
+        return o.db.keyvaluestore.getArakoonStore('osis')

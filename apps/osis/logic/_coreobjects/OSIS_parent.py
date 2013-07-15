@@ -27,16 +27,16 @@ class mainclass(OSISStore):
         if ukey:
             if self.db.exists(self.dbprefix_incr, ukey):
                 print "ukey exists"
-                id,guid,ckey2=q.db.serializers.ujson.loads(self.db.get(self.dbprefix_incr, ukey))
+                id,guid,ckey2=o.db.serializers.ujson.loads(self.db.get(self.dbprefix_incr, ukey))
                 print "ckey in db: %s"%ckey2
                 if obj.id<>id:    
                     msg="coreobj id not in line with id in contentkey db."
-                    q.errorconditionhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
+                    o.errorconditationhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
                     changed=True
                     obj.id=id
                 elif obj.guid<>guid:
                     msg="coreobj guid not in line with id in contentkey db."
-                    q.errorconditionhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
+                    o.errorconditationhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
                     changed=True
                     obj.guid=guid
                 elif ckey2<>ckey:
@@ -57,11 +57,11 @@ class mainclass(OSISStore):
             ckey=obj.getContentKey()
             obj._ckey=ckey
             print "ckey at end:%s"%ckey
-            json=q.db.serializers.ujson.dumps([obj.id,obj.guid,obj.getContentKey()])
+            json=o.db.serializers.ujson.dumps([obj.id,obj.guid,obj.getContentKey()])
             self.db.set(self.dbprefix_incr, ukey, json)
 
         else:
-            obj2=q.db.serializers.ujson.loads(self.db.get(self.dbprefix, obj.guid))
+            obj2=o.db.serializers.ujson.loads(self.db.get(self.dbprefix, obj.guid))
             if obj2._ckey<>ckey:
                 changed=True
 
@@ -95,9 +95,9 @@ class mainclass(OSISStore):
             row=[]
             for prop in self.listProps:
                 r=o.__dict__["_P_%s"%prop]
-                if q.basetype.list.check(r):
+                if o.basetype.list.check(r):
                     r=",".join(r)
-                if q.basetype.dictionary.check(r):
+                if o.basetype.dictionary.check(r):
                     for key in r.keys():
                         r+="%s:%s,"%(key,r[key])
                     r.rstrip(",")
@@ -116,7 +116,7 @@ class mainclass(OSISStore):
 
 
     # def serialize(self,obj):
-    #     return q.db.serializers.ujson.dumps(obj)
+    #     return o.db.serializers.ujson.dumps(obj)
 
     # def unserialize(self,obj):
-    #     return q.db.serializers.ujson.loads(obj)
+    #     return o.db.serializers.ujson.loads(obj)

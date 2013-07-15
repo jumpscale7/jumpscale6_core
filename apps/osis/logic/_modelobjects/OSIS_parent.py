@@ -1,6 +1,6 @@
 from OpenWizzy import o
 from OpenWizzy.grid.osis.OSISStore import OSISStore
-ujson = q.db.serializers.ujson
+ujson = o.db.serializers.ujson
 
 
 class mainclass(OSISStore):
@@ -37,11 +37,10 @@ class mainclass(OSISStore):
                 if key5[0] == "_":
                     obj.pop(key5)
             obj.pop("sguid", None)
-            jsonobj = ujson.dumps(obj)
             if self.indexTTL <> "":
-                self.elasticsearch.index(index=index, id=str(obj['id']), doc_type=self.hrd.category_name, doc=jsonobj, ttl=self.indexTTL, replication="async")
+                self.elasticsearch.index(index=index, id=str(obj['id']), doc_type=self.hrd.category_name, doc=obj, ttl=self.indexTTL, replication="async")
             else:
-                self.elasticsearch.index(index=index, id=str(obj['id']), doc_type=self.hrd.category_name, doc=jsonobj, replication="async")
+                self.elasticsearch.index(index=index, id=str(obj['id']), doc_type=self.hrd.category_name, doc=obj, replication="async")
 
     def removeFromIndex(self, key):
         index = self.getIndexName()
