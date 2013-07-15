@@ -1,4 +1,4 @@
-from manage.managerbase import ManagerBase
+from OpenWizzy.baselib.manage.managerbase import ManagerBase
 
 class ElasticsearchManager(ManagerBase):
 
