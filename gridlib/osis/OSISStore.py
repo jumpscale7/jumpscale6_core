@@ -101,12 +101,12 @@ class OSISStore(object):
             try:
                 obj.__dict__.pop("sguid")
             except:
-                pass                    
-            json=o.db.serializers.ujson.dumps(obj.__dict__)
+                pass
+            data=obj.__dict__
             if self.indexTTL<>"":
-                self.elasticsearch.index(index=index,id=guid,doc_type="json",doc=json,ttl=self.indexTTL,replication="async")
+                self.elasticsearch.index(index=index,id=guid,doc_type="json",doc=data,ttl=self.indexTTL,replication="async")
             else:
-                self.elasticsearch.index(index=index,id=guid,doc_type="json",doc=json,replication="async")
+                self.elasticsearch.index(index=index,id=guid,doc_type="json",doc=data,replication="async")
 
     def exists(self,key):
         return self.db.exists(self.dbprefix, key)
