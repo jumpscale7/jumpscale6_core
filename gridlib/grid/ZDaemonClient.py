@@ -168,7 +168,7 @@ class ZDaemonClient():
     def sendbinary(self,bindata):
         return self.sendMsgOverCMDChannel("0%s"%bindata)
 
-    def _raiseError(self,result):
+    def _raiseError(self, cmd, result):
         if result["state"] == "nomethod":
             msg="execution error on server:%s on %s:%s.\n Could not find method:%s\n"%(self.servername,self.ipaddr,self.port,cmd)
             o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
@@ -184,7 +184,7 @@ class ZDaemonClient():
             data = "3%s"%ujson.dumps([cmd, args])
             data=self.sendMsgOverCMDChannel("3%s"%data)
             if data[0:7]=="ERROR:":
-                self._raiseError(ujson.loads(data[7:]))
+                self._raiseError(cmd, ujson.loads(data[7:]))
             else:
                 return data
         else:
@@ -195,7 +195,7 @@ class ZDaemonClient():
             if result["state"] == "ok":
                 return result["result"]
             else:
-                self._raiseError(result)
+                self._raiseError(cmd, result)
             
     # def sendcmdData(self, cmd, **args):
     #     data = "4%s"%ujson.dumps([cmd, args])
