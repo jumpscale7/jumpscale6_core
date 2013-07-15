@@ -21,7 +21,7 @@ class HashTool:
 #                print "realpath %s %s" % (rootpath,path2)
                 hhash=o.tools.hash.md5(realpath)
                 out+="%s|%s\n"%(hhash,path2)
-        return o.tools.hash.md5_string(out),out        
+        return o.base.byteprocessor.hashMd5(out),out        
 
 import hashlib
 import zlib

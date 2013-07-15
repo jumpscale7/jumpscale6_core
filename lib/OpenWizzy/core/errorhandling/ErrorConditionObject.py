@@ -262,7 +262,7 @@ class ErrorConditionObject():
             dd.pop("guid")
         if dd.has_key("sguid"):
             dd.pop("sguid")
-        return o.tools.hash.md5_string(str(dd))
+        return o.base.byteprocessor.hashMd5(str(dd))
         
     def getUniqueKey(self):
         """
