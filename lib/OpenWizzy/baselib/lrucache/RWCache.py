@@ -87,10 +87,6 @@ class WCache(object):
             self.writermethod(self.__dict[key])
             del self.__dict[key]
 
-
-                
-
-
     def __setitem__(self, key, obj):
         if self.__dict.has_key(key):
             node = self.__dict[key]

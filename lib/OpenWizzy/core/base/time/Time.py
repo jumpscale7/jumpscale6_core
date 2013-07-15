@@ -2,7 +2,7 @@
 
 from OpenWizzy import o
 import time
-
+import struct
 
 class Time:
     """
@@ -14,11 +14,17 @@ class Time:
         Get epoch timestamp (number of seconds passed since January 1, 1970)
         '''
         try:
-            return o.core.appserver6.runningAppserver.webserver.epoch
+            return o.core.appserver6.runningAppserver.webserver.epoch  #@todo P3 (check if working)
         except:
             pass
         timestamp = int(time.time())
         return timestamp
+
+    def getTimeEpochBin(self):
+        '''
+        Get epoch timestamp (number of seconds passed since January 1, 1970)
+        '''
+        return struct.pack("<I",self.getTimeEpoch())
 
 
     def getLocalTimeHR(self):

@@ -1,4 +1,3 @@
-
 import sys
 import os
 import os.path
@@ -490,7 +489,7 @@ class SystemFS:
 
     def getBaseName(self, path):
         """Return the base name of pathname path."""
-        o.logger.log('Get basename for path: %s'%path,9)
+        # o.logger.log('Get basename for path: %s'%path,9)
         if path is None:
             raise TypeError('Path is not passed in system.fs.getDirName')
         try:
