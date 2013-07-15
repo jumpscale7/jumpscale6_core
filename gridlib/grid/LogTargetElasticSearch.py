@@ -47,7 +47,7 @@ class LogTargetElasticSearch(object):
         #@todo Low Prio: need to batch & use geventloop to timeout when used e.g. in appserver
         try:
             print "LOG OBJECT in logging to elasticsearch ", logobject
-            self.esclient.index(index="clusterlog", doc_type="logrecord", ttl="14d", replication="async", doc=logobject.toJson())
+            self.esclient.index(index="clusterlog", doc_type="logrecord", ttl="14d", replication="async", doc=logobject.__dict__)
         except Exception, e:
             raise
             print "Could not log to elasticsearch server, log:\n%s"%logobject
