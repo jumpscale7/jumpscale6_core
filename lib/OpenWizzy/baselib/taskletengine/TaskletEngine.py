@@ -50,8 +50,8 @@ class Tasklet:
 
     def checkExecuteV2(self, args, params, tags):
         try:
-            if not hasattr(self.module, 'match') or self.module.match(q, args, params, tags, self):
-                params = self.module.main(q, args, params, tags, self)
+            if not hasattr(self.module, 'match') or self.module.match(o, args, params, tags, self):
+                params = self.module.main(o, args, params, tags, self)
         except:
             print self.module
             import traceback
@@ -66,8 +66,8 @@ class Tasklet:
 
         args = o.core.params.get(args)
 
-        if not hasattr(self.module, 'match') or self.module.match(q, args, params, actor, tags, self):
-            params = self.module.main(q, args, params, actor, tags, self)
+        if not hasattr(self.module, 'match') or self.module.match(o, args, params, actor, tags, self):
+            params = self.module.main(o, args, params, actor, tags, self)
 
         return params
 
@@ -217,7 +217,7 @@ class TaskletEngine():
             if params.get('stop') is True:
                 return params.result
             if params.get('skipstep') is not True:
-                params = tasklet.checkExecute(q, i, params, service, tags)
+                params = tasklet.checkExecute(o, i, params, service, tags)
 
         return params
 
@@ -270,7 +270,7 @@ class TaskletEngine():
 
     def _loadModule(self, path):
         '''Load the Python module from disk using a random name'''
-        openwizzy.o.logger.log('Loading tasklet module %s' % path, 7)
+        o.logger.log('Loading tasklet module %s' % path, 7)
         # Random name -> name in sys.modules
 
         def generate_module_name():

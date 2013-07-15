@@ -25,7 +25,7 @@ class ByteProcessor:
     def hashMd5(s):
         if isinstance(s, unicode):
             s = s.encode('utf-8')
-        impl = hashlib.new(s)
+        impl = hashlib.md5(s)
         return impl.hexdigest()
 
     @staticmethod

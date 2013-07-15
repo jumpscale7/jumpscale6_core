@@ -18,6 +18,7 @@ from stat import ST_MTIME
 
 
 from OpenWizzy import o
+import OpenWizzy.baselib.codetools #requirement for parsePath
 from text import Text
 
 toStr = Text.toStr

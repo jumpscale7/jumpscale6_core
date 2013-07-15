@@ -1,4 +1,5 @@
 from OpenWizzy import o
+import OpenWizzy as openwizzy
 from ConfigParser import ConfigParser
 
 #@todo UGLY, validation should not happen on object (file) where you read from but on file where you populate values (kds)

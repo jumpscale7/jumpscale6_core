@@ -1,4 +1,3 @@
-
 from OpenWizzy import o
 from SpecModelActorsGenerator import SpecModelActorsGenerator
 

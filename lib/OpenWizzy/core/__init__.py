@@ -230,8 +230,11 @@ import errorhandling
 
 from Dirs import Dirs
 o.dirs=Dirs()
+o.dirs.init()
+o.pm_hooked_extension_dirs = dict()
 
 import OpenWizzy.baselib.platforms
+import OpenWizzy.core.config
 
 import shellconfig
 import console
