@@ -320,6 +320,7 @@ class PortalProcess():
         txt=txt.replace("$qbase",o.dirs.baseDir).replace("\\","/")
         txt=txt.replace("$appdir", o.system.fs.getcwd()).replace("\\","/")
         txt=txt.replace("$vardir",o.dirs.varDir).replace("\\","/")
+        txt=txt.replace("$htmllibdir",o.html.getHtmllibDir()).replace("\\","/")
         txt=txt.replace("\\","/")
         return txt
 
