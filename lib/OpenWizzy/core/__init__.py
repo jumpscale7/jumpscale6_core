@@ -235,6 +235,7 @@ o.pm_hooked_extension_dirs = dict()
 
 import OpenWizzy.baselib.platforms
 import OpenWizzy.core.config
+import OpenWizzy.baselib.hrd
 
 import shellconfig
 import console

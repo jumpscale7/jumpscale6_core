@@ -17,20 +17,22 @@ class Ubuntu:
         apt.apt_pkg.Config.set("APT::Install-Suggests", "0")
         self._cache = apt.Cache()
 
-    def check(self):
+    def check(self, die=True):
         """
         check if ubuntu or mint (which is based on ubuntu)
         """
         if not self._checked:
             try:
                 import lsb_release
-                info = lsb_release.get_distro_information()['ID']                
+                info = lsb_release.get_distro_information()['ID']
                 if info != 'Ubuntu' and info !='LinuxMint':
                     raise RuntimeError("Only ubuntu or mint supported.")
                 self._checked = True
             except ImportError:
                 self._checked = False
-                raise RuntimeError("Only ubuntu or mint supported.")
+                if die:
+                    raise RuntimeError("Only ubuntu or mint supported.")
+        return self._checked
 
     def checkInstall(self, packagenames, cmdname):
         """
