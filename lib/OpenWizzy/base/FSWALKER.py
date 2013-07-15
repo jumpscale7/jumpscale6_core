@@ -100,7 +100,10 @@ class FSWalker():
 
     def statsPrint(self): 
         print "lastpath:%s"%self.lastPath       
-        print self.stats
+        try:
+            print str(self.stats)
+        except:
+            print 'None'
 
     def statsAdd(self,path="",ttype="F",sizeUncompressed=0,sizeCompressed=0,duplicate=False):
         self.stats.add2stat(ttype=ttype,sizeUncompressed=sizeUncompressed,sizeCompressed=sizeCompressed,duplicate=duplicate)
@@ -149,7 +152,7 @@ class FSWalker():
         callbackMatchFunctions=self.getCallBackMatchFunctions(pathRegexIncludes,pathRegexExcludes,includeFolders=includeFolders,includeLinks=includeLinks)
 
         root = os.path.abspath(root)
-        self._walk(root,callbackFunctions,arg={},callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes,\
+        self.walk(root,callbackFunctions,arg={},callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes,\
             pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,mdserverclient=mdserverclient)
 
         return result
@@ -188,7 +191,7 @@ else:
         return callbackMatchFunctions
           
     def walk(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
-        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],mdserverclient=None):
+        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],pathRegexIncludes={},pathRegexExcludes={},mdserverclient=None):
         '''
 
         Walk through filesystem and execute a method per file and dirname if the match function selected the item
@@ -267,7 +270,7 @@ else:
 
             if ttype=="D":
                 if REGEXTOOL.matchPath(path2,[],childrenRegexExcludes):
-                    self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,registerToMDServer,\
+                    self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
                         childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
         
 
