@@ -1,0 +1,12 @@
+category.description=
+category.encryptiontype = $(namespace.encryptiontype)
+category.compressiontype = $(namespace.compressiontype)
+category.serializationtype = $(namespace.serializationtype)
+
+category.index = $(namespace.index)
+category.elasticsearch = $(namespace.elasticsearch)
+
+category.indexttl = $(namespace.indexttl)
+
+category.type= $(namespace.type)
+

@@ -1,5 +1,5 @@
 from OpenWizzy import o
-
+import OpenWizzy.baselib.elasticsearch
 class OSIS:
     """
     """

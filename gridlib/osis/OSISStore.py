@@ -31,7 +31,7 @@ class OSISStore(object):
         if elasticsearchEnabled:
         #put on None if no elastic search
             self.elasticsearch=self._getElasticSearch()
-            from elasticsearch import pyelasticsearch
+            import pyelasticsearch
             try:
                 self.elasticsearch.create_index(self.getIndexName())
             except pyelasticsearch.IndexAlreadyExistsError:
