@@ -7,7 +7,7 @@ def main(o,args, params, tags, tasklet):
     spacename = params.paramsExtra['space']
     out=""
     logdir = o.core.portal.runningPortal.webserver.logdir
-    backupdir = q.system.fs.joinPaths(logdir, 'backup')
+    backupdir = o.system.fs.joinPaths(logdir, 'backup')
     if 'filename' in tags.keys():
         filen = tags['filename']
         if not o.system.fs.exists(backupdir):

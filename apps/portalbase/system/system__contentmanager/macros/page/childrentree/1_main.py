@@ -110,7 +110,7 @@ def format_dir_tree(dir_tree, space_name, bullets=False, tree=False, depth=1):
     return s.getvalue()
 
 
-def main(q, args, params, tags, tasklet):
+def main(o, args, params, tags, tasklet):
     doc = args.doc
     page = args.page
     params.result = page
@@ -156,7 +156,7 @@ def main(q, args, params, tags, tasklet):
             page.addMessage('MACRO CHILDREN ERROR: Could not find page with name %s to start from.' % page)
             return
 
-    dir_name = q.system.fs.getDirName(doc.path)
+    dir_name = o.system.fs.getDirName(doc.path)
     if items:
         dir_tree = items
     else:
@@ -166,5 +166,5 @@ def main(q, args, params, tags, tasklet):
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

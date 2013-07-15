@@ -1,9 +1,9 @@
 from OpenWizzy.portal.macrolib import div_base
 
 
-def main(q, args, params, *other_args):
-    return div_base.macro(q, args, params, self_closing=True)
+def main(o, args, params, *other_args):
+    return div_base.macro(o, args, params, self_closing=True)
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

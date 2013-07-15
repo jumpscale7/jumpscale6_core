@@ -1,7 +1,7 @@
 import re
 
 
-def main(q, args, params, tags, tasklet):
+def main(o, args, params, tags, tasklet):
     # There are 2 possible ways to create a contact_form
     # 1. Use the default layout
     #    {{ contact_form }}
@@ -92,5 +92,5 @@ def main(q, args, params, tags, tasklet):
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

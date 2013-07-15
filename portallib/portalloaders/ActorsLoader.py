@@ -298,10 +298,10 @@ h3. home page for space $$space
                 if not o.system.fs.exists(taskletpath):
                     o.system.fs.createDir(taskletpath)
                     taskletContent = """
-def main(q, args, params, actor, tags, tasklet):
+def main(o, args, params, actor, tags, tasklet):
     return params
 
-def match(q, args, params, actor, tags, tasklet):
+def match(o, args, params, actor, tags, tasklet):
     return True
                     """
                     methodtasklet = o.system.fs.joinPaths(taskletpath, "5_%s.py" % methodspec.name)

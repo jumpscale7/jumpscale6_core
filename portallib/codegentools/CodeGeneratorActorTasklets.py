@@ -6,16 +6,16 @@ NOTGENSTR="##DONOTGENERATE##"
 
 tasklets={}
 tasklets["default"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     params.result=None
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 
 tasklets["modeldelete"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #delete
     appname={appname}
     actorname={actorname}
@@ -23,12 +23,12 @@ def main(q, i, params, service, tags, tasklet):
     params.result=None
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 
 tasklets["modelget"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #delete
     appname="{appname}"
     actorname="{actorname}"
@@ -47,13 +47,13 @@ def main(q, i, params, service, tags, tasklet):
     params.result["pymodeltype"]="{appname}__{actorname}__{modelname}"
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 
 
 tasklets["modelcreate"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #create
     appname="{appname}"
     actorname="{actorname}"
@@ -67,12 +67,12 @@ def main(q, i, params, service, tags, tasklet):
     params.result=[obj2.id,obj2.guid]
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 
 tasklets["modelupdate"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #set
     #appname="{appname}"
     #actorname="{actorname}"
@@ -86,12 +86,12 @@ def main(q, i, params, service, tags, tasklet):
     params.result=[obj2.id,obj2.guid]
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 
 tasklets["modelfind"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #find
     appname="{appname}"
     actorname="{actorname}"
@@ -104,11 +104,11 @@ def main(q, i, params, service, tags, tasklet):
         params.result=res
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 tasklets["modellist"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #list
     from OpenWizzy.core.Shell import ipshellDebug,ipshell
     print "DEBUG NOW model list"
@@ -124,12 +124,12 @@ def main(q, i, params, service, tags, tasklet):
         params.result=res
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 
 tasklets["modeldatatables"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #list
     from OpenWizzy.core.Shell import ipshellDebug,ipshell
     print "DEBUG NOW model datatables"
@@ -146,12 +146,12 @@ def main(q, i, params, service, tags, tasklet):
         params.result=res
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 
 tasklets["modelnew"]="""
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     #new
     appname="{appname}"
     actorname="{actorname}"
@@ -164,7 +164,7 @@ def main(q, i, params, service, tags, tasklet):
     params.result["pymodeltype"]="{appname}__{actorname}__{modelname}"
     return params
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 """
 

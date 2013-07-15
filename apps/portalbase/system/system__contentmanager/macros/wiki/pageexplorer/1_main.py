@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     if  params.tags.tagExists("height"):
@@ -10,13 +10,13 @@ def main(q,args,params,tags,tasklet):
     if  params.tags.tagExists("docname"):
         docname=params.tags.tagGet("docname")
         doc=params.doc.preprocessor.docGet(docname)
-        path=q.system.fs.getDirName(doc.path)
+        path=o.system.fs.getDirName(doc.path)
     else:
-        path=q.system.fs.getDirName(params.doc.path)
+        path=o.system.fs.getDirName(params.doc.path)
 
 
-    if q.system.fs.exists(q.system.fs.joinPaths(path,"files")):
-        path=q.system.fs.joinPaths(path,"files")
+    if o.system.fs.exists(o.system.fs.joinPaths(path,"files")):
+        path=o.system.fs.joinPaths(path,"files")
 
     if  params.tags.tagExists("readonly") or params.tags.labelExists("readonly"):
         readonly=" readonly"
@@ -31,6 +31,6 @@ def main(q,args,params,tags,tasklet):
 
     return params
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

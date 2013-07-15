@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     doc=params.doc
@@ -9,7 +9,7 @@ def main(q,args,params,tags,tasklet):
 
     # args=params.tags.getValues(id="",width="800",height=400,title="")
 
-    infomgr= q.apps.actorsloader.getActor("system","infomgr")
+    infomgr= o.apps.actorsloader.getActor("system","infomgr")
     
     ids=infomgr.extensions.infomgr.listHistoryObjects()
     out=""
@@ -24,6 +24,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

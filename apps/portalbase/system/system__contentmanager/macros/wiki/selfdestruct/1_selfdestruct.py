@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     params.result=""
@@ -14,15 +14,15 @@ def main(q,args,params,tags,tasklet):
 
     else:
         if doc.destructed==False:
-            newdoc="@DESTRUCTED@\n%s"%q.system.fs.fileGetContents(params.doc.path)
+            newdoc="@DESTRUCTED@\n%s"%o.system.fs.fileGetContents(params.doc.path)
             doc.todestruct=True
-            q.system.fs.writeFile(params.doc.path,newdoc)
+            o.system.fs.writeFile(params.doc.path,newdoc)
 
     params.result=("",params.doc)
 
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

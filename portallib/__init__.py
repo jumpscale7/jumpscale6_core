@@ -18,6 +18,7 @@ from .html.HtmlFactory import HtmlFactory
 from .docpreprocessor.DocPreprocessorFactory import DocPreprocessorFactory
 from .docpreprocessor.DocParser import DocParser
 import codegentools
+from .macrolib import imagelib
 o.manage.portal = PortalManage()
 o.core.portal = PortalClientFactory()
 o.core.portalloader = PortalLoaderFactory()

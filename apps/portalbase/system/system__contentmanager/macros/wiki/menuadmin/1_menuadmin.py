@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     doc=params.doc
@@ -24,7 +24,7 @@ ResetLogs:/system/ResetAccessLog?space=$$space
 """
 
 
-    if q.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(params.requestContext):
+    if o.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(params.requestContext):
         params.result=C        
 
     params.result=(params.result,doc)
@@ -32,6 +32,6 @@ ResetLogs:/system/ResetAccessLog?space=$$space
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

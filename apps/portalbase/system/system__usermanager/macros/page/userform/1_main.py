@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
 
     params.merge(args)
     
@@ -8,7 +8,7 @@ def main(q,args,params,tags,tasklet):
 
     params.expandParams()
 
-    actor=q.apps.system.usermanager
+    actor=o.apps.system.usermanager
     osis= actor.models.user
 
     if params.has_key("name"):
@@ -29,6 +29,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

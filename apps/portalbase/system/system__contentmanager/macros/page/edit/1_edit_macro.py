@@ -15,7 +15,7 @@ def main(o,args,params,tags,tasklet):
     if args["app"]<>"" and args["actor"]<>"":
         #look for path for bucket
         aloader=o.core.portal.runningPortal.actorsloader.getActorLoaderFromId("%s__%s"%(args["app"].lower(),args["actor"].lower()))
-        path=q.system.fs.joinPaths(aloader.model.path,args["path"])
+        path=o.system.fs.joinPaths(aloader.model.path,args["path"])
     elif args["space"]<>"":
         #look for path for bucket
         space=o.core.portal.runningPortal.webserver.getSpace(args["space"])
@@ -42,6 +42,6 @@ def main(o,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

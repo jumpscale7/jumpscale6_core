@@ -94,7 +94,7 @@ class system_contentmanager(system_contentmanager_osis):
         """
         actor=o.core.portal.runningPortal.actorsloader.getActor(appname,actorname)
         cache=actor.dbmem.cacheGet(key)
-        dtext=q.apps.system.contentmanager.extensions.datatables
+        dtext=o.apps.system.contentmanager.extensions.datatables
         data=dtext.getDataFromActorModel(appname,actorname,modelname,cache["fields"],\
             cache["fieldids"],cache["fieldnames"])
         return data
@@ -159,12 +159,12 @@ class system_contentmanager(system_contentmanager_osis):
         if not o.core.portal.runningPortal.actorsloader.actors.has_key(key):
             #actor does not exist yet, create required dirs in basedir
             if path=="":
-                path=q.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"actors",key)
+                path=o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"actors",key)
                 o.system.fs.createDir(path)
-                o.system.fs.createDir(q.system.fs.joinPaths(path,".actor"))
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".actor"))
             else:
                 o.system.fs.createDir(path)
-                o.system.fs.createDir(q.system.fs.joinPaths(path,".actor"))
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".actor"))
                 
             print "scan path:%s"%path
             o.core.portal.runningPortal.actorsloader.scan(path)
@@ -234,12 +234,12 @@ class system_contentmanager(system_contentmanager_osis):
         if not loader.id2object.has_key(key):
             #does not exist yet, create required dirs in basedir
             if path=="":
-                path=q.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"buckets",key)
+                path=o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"buckets",key)
                 o.system.fs.createDir(path)
-                o.system.fs.createDir(q.system.fs.joinPaths(path,".bucket"))
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".bucket"))
             else:
                 o.system.fs.createDir(path)
-                o.system.fs.createDir(q.system.fs.joinPaths(path,".bucket"))
+                o.system.fs.createDir(o.system.fs.joinPaths(path,".bucket"))
                 
             loader.scan(path)
             result=True
@@ -312,9 +312,9 @@ class system_contentmanager(system_contentmanager_osis):
         if not loader.id2object.has_key(key):
             #does not exist yet, create required dirs in basedir
             if path=="":
-                path=q.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"spaces",name)            
+                path=o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.basepath,"spaces",name)            
             else:
-                q.system.fs.createDir(path)
+                o.system.fs.createDir(path)
                 
             #create default content
             mddir=o.system.fs.joinPaths(path,".space")

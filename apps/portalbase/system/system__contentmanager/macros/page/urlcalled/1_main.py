@@ -13,7 +13,7 @@ def main(o,args,params,tags,tasklet):
     querystr=querystr.replace("&authkey=","")
     querystr=querystr.replace("authkey=,","")
     querystr=querystr.replace("authkey=","")
-    querystr+="authkey=%s"%q.apps.system.usermanager.extensions.usermanager.getUserFromCTX(args.requestContext).secret
+    querystr+="authkey=%s"%o.apps.system.usermanager.extensions.usermanager.getUserFromCTX(args.requestContext).secret
     
     if args.has_key("machine"):        
         url= "http://"+addr+\

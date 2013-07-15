@@ -8,11 +8,11 @@ def main(o,args, params,  tags, tasklet, *others):
     logdir = o.core.portal.runningPortal.webserver.logdir
     if 'filename' in tags.keys():
         filename = tags['filename']
-        logs = q.system.fs.joinPaths(logdir, filename)
+        logs = o.system.fs.joinPaths(logdir, filename)
     else:
         spaces = o.core.portal.runningPortal.webserver.getSpaces()
         if space in spaces:
-            logs = q.system.fs.joinPaths(logdir, 'space_%s.log') % space
+            logs = o.system.fs.joinPaths(logdir, 'space_%s.log') % space
         else:
             params.result = (out, params.doc)
             return params
@@ -25,5 +25,5 @@ def main(o,args, params,  tags, tasklet, *others):
     params.result = (out, params.doc)
     return params
 
-def match(q,args, params, tags, tasklet):
+def match(o,args, params, tags, tasklet):
     return True

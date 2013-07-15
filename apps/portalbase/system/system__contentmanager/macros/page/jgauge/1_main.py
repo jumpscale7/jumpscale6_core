@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
 
     page = args.page
 
@@ -20,7 +20,7 @@ def main(q,args,params,tags,tasklet):
     if args.has_key("id"):
         gaugeid=int(args.id)
     else:
-        gaugeid=q.apps.system.contentmanager.dbmem.increment("jgaugeid")
+        gaugeid=o.apps.system.contentmanager.dbmem.increment("jgaugeid")
 
     if params.has_key("style"):
         style=params.style.lower().strip()
@@ -152,6 +152,6 @@ function randVal$id()
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

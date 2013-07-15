@@ -1,13 +1,14 @@
 # import urlparse
 import json, datetime
+import OpenWizzy.baselib.elasticsearch
 
-def main(q, args, params, tags, tasklet):
+def main(o, args, params, tags, tasklet):
     page = args.page
     # remoteaddr = "http://%s" % args.requestContext.env.get('REMOTE_ADDR')
     # referer = args.requestContext.env.get('HTTP_REFERER') or remoteaddr
     # urlinfo = urlparse.urlparse(referer)
 
-    esc = q.clients.elasticsearch.get()
+    esc = o.clients.elasticsearch.get()
     query={"query":{"match_all":{}},"facets":{"tag":{"terms":{"field":"epoch","order":"term"}}}}
     results = esc.search(query, index='clusterlog')['facets']['tag']['terms']
     headers = []
@@ -123,5 +124,5 @@ jQuery(document).ready(function($) {
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

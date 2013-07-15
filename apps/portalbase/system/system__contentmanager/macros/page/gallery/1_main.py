@@ -17,23 +17,23 @@ def main(o,args,params,tags,tasklet):
     buckets = o.core.portal.runningPortal.webserver.bucketsloader.buckets
     if pars.has_key('picturebucket') and pars['picturebucket'] in buckets:
         bucket = buckets[pars['picturebucket']]
-        files = q.system.fs.listFilesInDir(bucket.model.path)
+        files = o.system.fs.listFilesInDir(bucket.model.path)
     else:
         files = []
     """
     space = o.core.portal.runningPortal.webserver.spacesloader.spaces[args.doc.getSpaceName()]
-    imagedir = q.system.fs.joinPaths(space.model.path,'.files','img')
+    imagedir = o.system.fs.joinPaths(space.model.path,'.files','img')
     if not pars.has_key('title'):
         title =""
     else:
         title = pars['title']
     if pars.has_key('picturedir'):
         baseurlpath = "$$space/.files/img/%s" %  pars['picturedir']
-        fullimagepath = q.system.fs.joinPaths(imagedir, pars['picturedir'])
+        fullimagepath = o.system.fs.joinPaths(imagedir, pars['picturedir'])
     else:
         baseurlpath = "images/$$space/"
         localpath = args.doc.path
-        fullimagepath = q.system.fs.getDirName(localpath)
+        fullimagepath = o.system.fs.getDirName(localpath)
     
     allfiles = o.system.fs.listFilesInDir(fullimagepath, filter="*.jpg", case_sensitivity='insensitive')
     allfiles+=(o.system.fs.listFilesInDir(fullimagepath, filter="*.png", case_sensitivity='insensitive'))
@@ -61,8 +61,8 @@ def main(o,args,params,tags,tasklet):
         thumbnail_path = os.path.join(fullimagepath, 's_{0}x{1}_{2}'.format(thumb_size[0], thumb_size[1], basefile))
         if not os.path.exists(os.path.dirname(thumbnail_path)):
             os.makedirs(os.path.dirname(thumbnail_path))
-        if not q.system.fs.exists(thumbnail_path):
-            q.tools.imagelib.resize(i, thumbnail_path, width=thumb_size[0], overwrite=False)
+        if not o.system.fs.exists(thumbnail_path):
+            o.tools.imagelib.resize(i, thumbnail_path, width=thumb_size[0], overwrite=False)
         link = '<a data-gallery = "gallery" data-href=%s title=%s><img src="%s" /></a>' % (bigpath, title, smallpath, )
         C += link
     
@@ -89,6 +89,6 @@ def main(o,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

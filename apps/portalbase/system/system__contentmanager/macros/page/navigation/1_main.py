@@ -1,5 +1,5 @@
 
-def main(q, args, params, tags, tasklet):
+def main(o, args, params, tags, tasklet):
 
     page = args.page
     page.addBootstrap()
@@ -48,7 +48,7 @@ def main(q, args, params, tags, tasklet):
                     traceback.print_exc()
                     raise RuntimeError("**ERROR: error executing macros for line:%s and for doc:%s, this happens inside navigation macro."%(line, args.doc.name))
 
-                convertor = q.tools.docgenerator.getConfluence2htmlConvertor()
+                convertor = o.tools.docgenerator.getConfluence2htmlConvertor()
                 convertor.convert(line, args.page, args.doc)
             # out+=line+"\n"
             else:
@@ -72,5 +72,5 @@ def main(q, args, params, tags, tasklet):
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

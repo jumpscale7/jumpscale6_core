@@ -1,12 +1,12 @@
 from OpenWizzy.portal.macrolib.blog import BlogPost
 
 
-def main(q, args, params, *other_args):
+def main(o, args, params, *other_args):
     params.result = page = args.page
     post = BlogPost(args.doc.path)
     page.addMessage(post.title)
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

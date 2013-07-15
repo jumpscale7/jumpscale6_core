@@ -8,7 +8,7 @@ q.application.start()
 q.core.appserver6.loadActorsInProcess()
 #client=q.core.appserver6.getAppserverClient("127.0.0.1",9999,"1234")
 #usermanager=client.getActor("system","usermanager",instance=0)
-usermanager=q.apps.system.usermanager
+usermanager=o.apps.system.usermanager
 
 from pylabs.Shell import ipshellDebug,ipshell
 print "DEBUG NOW main creatuser"

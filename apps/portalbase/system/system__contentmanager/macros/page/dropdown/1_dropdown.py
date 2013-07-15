@@ -1,7 +1,7 @@
 import re
 from itertools import izip_longest
 
-def main(q, args, params, tags, tasklet):
+def main(o, args, params, tags, tasklet):
     params.result = page = args.page
 
     # parse params
@@ -41,5 +41,5 @@ def main(q, args, params, tags, tasklet):
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

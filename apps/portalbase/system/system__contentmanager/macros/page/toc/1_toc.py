@@ -1,6 +1,6 @@
 import random
 
-def main(q, args, params, *other_args):
+def main(o, args, params, *other_args):
     page = params.result = args.page
     try:
         macro_params = dict([p.strip() for p in param_pair.split('=')] for param_pair in args.cmdstr.split('|'))
@@ -25,5 +25,5 @@ def main(q, args, params, *other_args):
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

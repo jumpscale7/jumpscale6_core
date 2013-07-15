@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     doc=params.doc
@@ -25,13 +25,13 @@ def main(q,args,params,tags,tasklet):
             params.result="MACRO CHILDREN ERROR: Could not find page with name %s to start from."%page
 
     if depth<>0:
-        names=[q.system.fs.getBaseName(item).replace(".wiki","") for item in q.system.fs.listFilesAndDirsInDir(q.system.fs.getDirName(doc.path),\
+        names=[o.system.fs.getBaseName(item).replace(".wiki","") for item in o.system.fs.listFilesAndDirsInDir(o.system.fs.getDirName(doc.path),\
             True,filter="*.wiki",depth=depth,type="fd")] #@todo implement depth        
         
     else:
         names=[]
         for doc in doc.children:
-            names.append(q.system.fs.getBaseName(doc.path).replace(".wiki", ""))
+            names.append(o.system.fs.getBaseName(doc.path).replace(".wiki", ""))
     for name in sorted(names, key=lambda name: name.lower()):
         if name[0]<>".":
             if bullets:
@@ -42,10 +42,10 @@ def main(q,args,params,tags,tasklet):
 
     #bullets=True
 
-    #names=[q.system.fs.getBaseName(item).replace(".wiki","") for item in q.system.fs.listFilesInDir(q.system.fs.getDirName(doc.path),False,filter="*.wiki")]
+    #names=[o.system.fs.getBaseName(item).replace(".wiki","") for item in o.system.fs.listFilesInDir(o.system.fs.getDirName(doc.path),False,filter="*.wiki")]
 
 
-    #names=q.system.fs.listDirsInDir(q.system.fs.getDirName(doc.path),False)
+    #names=o.system.fs.listDirsInDir(o.system.fs.getDirName(doc.path),False)
     #for name in names:
         #if name.lower()<>doc.name:
             #if name.find("wiki")==0:
@@ -60,6 +60,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

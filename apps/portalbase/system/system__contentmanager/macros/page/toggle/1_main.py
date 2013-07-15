@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     
     page = args.page
 
@@ -65,7 +65,7 @@ function swap(img_id) {
 
     page.addJS(jsContent=C)
 
-    id=str(q.apps.system.contentmanager.dbmem.increment("toggleid"))
+    id=str(o.apps.system.contentmanager.dbmem.increment("toggleid"))
     
     # C="""
     # <td width="30%"><div align="left" class="toggleItemstyle">$title</div></td>
@@ -100,6 +100,6 @@ function swap(img_id) {
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

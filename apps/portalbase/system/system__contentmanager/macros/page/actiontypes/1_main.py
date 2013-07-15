@@ -1,5 +1,5 @@
 import copy
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     page = args.page
 
 
@@ -27,7 +27,7 @@ def main(q,args,params,tags,tasklet):
     if len(actionname)>0 and actionname[0]=="_":
         actionname=actionname[1:]
 
-    al=q.apps.acloudops.actionlogger
+    al=o.apps.acloudops.actionlogger
     lh=al.extensions.loghandler
 
     lh.init()
@@ -60,6 +60,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

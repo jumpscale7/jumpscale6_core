@@ -1,4 +1,4 @@
-def main(q, args, params, tags, tasklet):
+def main(o, args, params, tags, tasklet):
 
     page = args.page
 
@@ -7,7 +7,7 @@ def main(q, args, params, tags, tasklet):
     args.expandParams()
 
     if "app" in args and "actor" in args and "model" in args:
-        actor, model, fields, fieldids, fieldnames = q.apps.system.contentmanager.extensions.datatables.getTableDefFromActorModel(
+        actor, model, fields, fieldids, fieldnames = o.apps.system.contentmanager.extensions.datatables.getTableDefFromActorModel(
             args.app, args.actor, args.model, excludes=["guid"])
 
         page = modifier.addTableFromActorModel(args.app, args.actor, args.model, fields, fieldids, fieldnames)
@@ -21,5 +21,5 @@ def main(q, args, params, tags, tasklet):
     return params
 
 
-def match(q, args, params, tags, tasklet):
+def match(o, args, params, tags, tasklet):
     return True

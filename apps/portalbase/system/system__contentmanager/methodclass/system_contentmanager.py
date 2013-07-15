@@ -95,7 +95,7 @@ class system_contentmanager(system_contentmanager_osis):
         actor=o.core.portal.runningPortal.actorsloader.getActor(appname,actorname)     
         cache=actor.dbmem.cacheGet(key)
         
-        dtext=q.apps.system.contentmanager.extensions.datatables
+        dtext=o.apps.system.contentmanager.extensions.datatables
         data=dtext.getDataFromActorModel(appname,actorname,modelname,cache["fields"],\
             cache["fieldids"],cache["fieldnames"])
 
@@ -110,7 +110,7 @@ class system_contentmanager(system_contentmanager_osis):
         result html 
         
         """
-        actor=q.apps.__dict__[appname].__dict__[actorname]
+        actor=o.apps.__dict__[appname].__dict__[actorname]
         ctx=args["ctx"]
         data=actor.dbmem.cacheGet("form_%s"%key)
         for ref in [item for item in ctx.params.keys() if item.find("ref")==0]:
@@ -138,7 +138,7 @@ class system_contentmanager(system_contentmanager_osis):
         import os
         s = os.getcwd()
         path = s.split('/apps/')[0]
-        mc = q.clients.mercurial.getClient(path)
+        mc = o.clients.mercurial.getClient(path)
         mc.pullupdate()
         if spacename != 'None':
             o.core.portal.runningPortal.webserver.loadSpace(spacename)

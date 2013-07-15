@@ -1,5 +1,5 @@
 import copy
-def main(q,args,params,tasklet):
+def main(o,args,params,tasklet):
 
     page = args.page
 
@@ -43,7 +43,7 @@ def main(q,args,params,tasklet):
         actionname=p["actionname"].lower().strip()
 
 
-    al=q.apps.acloudops.actionlogger
+    al=o.apps.acloudops.actionlogger
     lh=al.extensions.loghandler
 
     actions=al.getActions(nrhoursago, state, location, channel,actor,actionname)
@@ -87,6 +87,6 @@ def main(q,args,params,tasklet):
     return params
 
 
-def match(q,args,params,tasklet):
+def match(o,args,params,tasklet):
     return True
 

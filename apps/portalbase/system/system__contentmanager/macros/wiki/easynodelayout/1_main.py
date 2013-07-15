@@ -1,5 +1,5 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
     
     doc=params.doc
@@ -19,7 +19,7 @@ $items
 """
         if descr=="":
             descr=name
-        defmanager=q.apps.system.contentmanager.extensions.defmanager
+        defmanager=o.apps.system.contentmanager.extensions.defmanager
         name=defmanager.replaceDefWithProperName(name)
         C=C.replace("$descr",name)
         C=C.replace("$id",str(id))
@@ -129,7 +129,7 @@ $items
             print e
             out="ERROR: could not process, error %s, line trying to parse was %s"%(e,conn)
             
-    defmanager=q.apps.system.contentmanager.extensions.defmanager
+    defmanager=o.apps.system.contentmanager.extensions.defmanager
 
     #set the descriptions
     for key in componentsall.keys():
@@ -175,6 +175,6 @@ $items
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 

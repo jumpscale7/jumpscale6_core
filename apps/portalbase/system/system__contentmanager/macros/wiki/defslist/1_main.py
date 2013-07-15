@@ -1,10 +1,10 @@
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     params.merge(args)
         
     doc=params.doc
     tags=params.tags
        
-    defmanager=q.apps.system.contentmanager.extensions.defmanager
+    defmanager=o.apps.system.contentmanager.extensions.defmanager
 
     defs=defmanager.getDefListWithLinks()
 
@@ -22,5 +22,5 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True

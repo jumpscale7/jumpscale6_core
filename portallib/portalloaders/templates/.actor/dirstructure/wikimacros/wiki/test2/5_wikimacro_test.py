@@ -1,5 +1,5 @@
     
-def main(q, i, params, service, tags, tasklet):
+def main(o, i, params, service, tags, tasklet):
     
     doc=params.doc
     tags=params.tags
@@ -19,6 +19,6 @@ def main(q, i, params, service, tags, tasklet):
     return params
 
 
-def match(q, i, params, service, tags, tasklet):
+def match(o, i, params, service, tags, tasklet):
     return True
 

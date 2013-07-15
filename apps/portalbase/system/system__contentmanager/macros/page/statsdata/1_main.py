@@ -1,8 +1,8 @@
 
-def main(q,args,params,tags,tasklet):
+def main(o,args,params,tags,tasklet):
     page = args.page
 
-    infomgr= q.apps.actorsloader.getActor("system","infomgr")
+    infomgr= o.apps.actorsloader.getActor("system","infomgr")
 
     args=args.tags.getValues(id=None,start=0,stop=0)
     id=args["id"]
@@ -19,6 +19,6 @@ def main(q,args,params,tags,tasklet):
     return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(o,args,params,tags,tasklet):
     return True
 
