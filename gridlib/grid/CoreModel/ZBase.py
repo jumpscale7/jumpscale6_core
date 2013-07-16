@@ -1,4 +1,5 @@
 from OpenWizzy import o
+import OpenWizzy.baselib.hash
 import copy
 
 class ZDataCategorySpec():

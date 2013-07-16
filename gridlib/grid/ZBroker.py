@@ -106,9 +106,9 @@ class ZBroker(ZDaemon):
 
         o.logger.consoleloglevel=7
 
-        port=o.core.grid.hrd.getInt("broker.osis.port")
-        ip=o.core.grid.hrd.get("broker.osis.ip")
-        nsid=o.core.grid.hrd.getInt("broker.id")
+        port=o.core.grid.config.getInt("broker.osis.port")
+        ip=o.core.grid.config.get("broker.osis.ip")
+        nsid=o.core.grid.config.getInt("broker.id")
         
 
         osisclient=o.core.osis.getClient(ip,port)
@@ -119,7 +119,7 @@ class ZBroker(ZDaemon):
             if not osisclient.existsNamespace("broker_%s"%nsid):
                 #namespace does not exist yet on server
                 nsname,nsid=osisclient.createNamespace(name="broker_",template="coreobjects", incrementName=True,nsid=nsid)
-                o.core.grid.hrd.set("broker.id",nsid)
+                o.core.grid.config.set("broker.id",nsid)
 
         self.id=nsid
 

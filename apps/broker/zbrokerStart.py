@@ -1,7 +1,11 @@
-from pylabs.InitBase import q
-q.application.appname = "zbroker"
-q.application.start()
+from OpenWizzy import o
+import OpenWizzy.grid
+import OpenWizzy.grid.osis
+o.application.appname = "zbroker"
+o.application.start()
 
-q.core.grid.startBroker()
+o.core.grid.startBroker()
 
-q.application.stop()
+o.application.stop()
+
+

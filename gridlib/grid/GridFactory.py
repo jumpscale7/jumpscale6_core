@@ -58,7 +58,7 @@ class GridFactory():
     def _loadConfig(self):
         if not o.application.__dict__.has_key("config"):
             raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart qshell")
-        self.config=o.application.config            
+        self.config=o.application.config
 
         if self.config==None:
              raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart qshell")
@@ -69,7 +69,7 @@ class GridFactory():
             o.errorconditionhandler.raiseInputError(msgpub="Grid needs grid id to be filled in in grid config file",message="",category="",die=True)
 
 
-    def init(self):
+    def init(self, broker=None):
         """
         """
         self._loadConfig()
@@ -216,16 +216,15 @@ class GridFactory():
     def initNode(self, name="", roles="*", broker="tcp://localhost:5555"):
         self.configureNode(name, roles, broker)
         o.application.initWhoAmI()
-        self.config = o.application.hrd
-        self.loadConfig()
+        self._loadConfig()
 
     def startBroker(self):
-        self.loadConfig()        
+        self._loadConfig()
         broker= ZBroker()
         broker.start()
 
     def getZWorkerClient(self, ipaddr="localhost"):
-        self.loadConfig()
+        self._loadConfig()
         return ZWorkerClient(ipaddr=ipaddr)
 
     def getZLoggerClient(self,ipaddr="localhost", port=4444):
