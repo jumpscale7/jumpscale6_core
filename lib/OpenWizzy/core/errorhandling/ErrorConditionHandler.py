@@ -197,7 +197,7 @@ class ErrorConditionHandler():
             errorobject.category=cat
             errorobject.backtrace=backtrace
         except Exception,e:
-            print "CRITICAL ERROR in trying to get errorobject, is BUG, please check (ErrorConditionHanler.py on line 196)"
+            print "CRITICAL ERROR in trying to get errorobject, is BUG, please check (ErrorConditionHandler.py on line 196)"
             print "error:%s"%e
             sys.exit()
             

@@ -89,21 +89,15 @@ class LogItem(object):
         self.message = message.strip().replace("\r\n", "/n").replace("\n", "/n")
         self.level = int(level)
         self.category = category.replace(".", "_")
-        if hasattr(o.application, 'whoAmI'):
-            if len(o.application.whoAmI)==3:
-                self.gid = o.application.whoAmI[0]
-                self.nid = o.application.whoAmI[1]
-                self.bid = 0
-                self.aid = 0
-                self.pid = 0
-            elif len(o.application.whoAmI)==4:
-                self.gid = o.application.whoAmI[0]
-                self.bid = o.application.whoAmI[1]
-                self.nid = o.application.whoAmI[2]
-                self.pid = o.application.whoAmI[3]
+        if o.application.whoAmI:
+            self.gid = o.application.whoAmI.gid
+            self.bid = o.application.whoAmI.bid
+            self.nid = o.application.whoAmI.nid
+            self.pid = o.application.whoAmI.pid
+            if hasattr(o, 'core') and hasattr(o.core, 'grid') and hasattr(o.core.grid, 'aid'):
                 self.aid = o.core.grid.aid
             else:
-                o.errorconditionhandler.raiseBug(message="whoAmi should be 3 or 4 items",category="log.id")
+                self.aid = 0
 
         self.tags = str(tags).strip().replace("\r\n", "/n").replace("\n", "/n").replace("|", "/|")
         self.jid = int(jid)
@@ -163,6 +157,19 @@ class LogHandler(object):
 
     def getLogObjectFromDict(self, ddict):
         return LogItemFromDict(ddict)
+
+    def nologger(self, func):
+        """
+        Decorator to disable logging for a specific method (probably not thread safe)
+        """
+        def wrapper(*args, **kwargs):
+            previousvalue = self.enabled
+            self.enabled = False
+            try:
+                return func(*args, **kwargs)
+            finally:
+                self.enabled = previousvalue
+        return wrapper
 
     def reset(self):
         self.maxlevel = 6

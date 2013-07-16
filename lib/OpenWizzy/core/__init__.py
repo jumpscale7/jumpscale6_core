@@ -207,9 +207,8 @@ except Exception,e:
 # Remove the no longer needed function
 del _setup_stacktrace_hook
 
-from Application import Application
-
 import logging
+from Application import Application
 
 import system
 

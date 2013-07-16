@@ -3,6 +3,9 @@ import os
 import atexit
 import struct
 from OpenWizzy.core.enumerators import AppStatusType
+from collections import namedtuple
+
+WhoAmI = namedtuple('WhoAmI', 'gid bid pid nid')
 
 #@todo Need much more protection: cannot change much of the state (e.g. dirs) once the app is running!
 #@todo Need to think through - when do we update the qpidfile (e.g. only when app is started ?)
@@ -20,9 +23,24 @@ class Application:
         self._calledexit = False
         self.skipTraceback = False
 
-        self.whoAmIBytestr = "AABBCC"  # is 2 bytes for grid id, 2 bytes for nodeid, 2 bytes for pid
+        self._whoAmIBytestr = None
+        self._whoAmI = None
 
         self.config = None
+
+    @property
+    @o.logger.nologger
+    def whoAmI(self):
+        if not self._whoAmI:
+            self.initWhoAmI()
+        return self._whoAmI
+
+    @property
+    @o.logger.nologger
+    def whoAmIBytestr(self):
+        if not self._whoAmIBytestr:
+            self.initWhoAmI()
+        return self._whoAmIBytestr
 
     def initWhoAmI(self,grid=False):
         """
@@ -31,7 +49,6 @@ class Application:
         """
 
         self.loadConfig()
-
         if self.config != None:
             nodeid = self.config.getInt("node.id")
             gridid = self.config.getInt("grid.id")
@@ -41,12 +58,12 @@ class Application:
             nodeid = 0
 
         if grid:
-            self.whoAmI = [o.core.grid.processobject.gid,o.core.grid.processobject.bid,\
-                o.core.grid.processobject.nid,o.core.grid.processobject.id]
-            self.whoAmIBytestr = struct.pack("<hhhh", self.whoAmI[3],self.whoAmI[2], self.whoAmI[1], self.whoAmI[0])
+            self._whoAmI = WhoAmI(gid=o.core.grid.processobject.gid,bid=o.core.grid.processobject.bid,\
+                nid=o.core.grid.processobject.nid,pid=o.core.grid.processobject.id)
+            self._whoAmIBytestr = struct.pack("<hhhh", self._whoAmI.pid,self._whoAmI.nid, self._whoAmI.bid, self._whoAmI.gid)
         else:
-            self.whoAmI = [gridid, nodeid, os.getpid()]
-            self.whoAmIBytestr = struct.pack("<hhh", self.whoAmI[2], self.whoAmI[1], self.whoAmI[0])
+            self._whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=os.getpid(), bid=0)
+            self._whoAmIBytestr = struct.pack("<hhh", self._whoAmI.pid, self._whoAmI.nid, self._whoAmI.gid)
 
     def getWhoAmiStr(self):
         return "_".join([str(item) for item in self.whoAmI])
@@ -57,7 +74,7 @@ class Application:
             self.config = o.core.hrd.getHRDTree(path=o.system.fs.joinPaths(o.dirs.cfgDir, "grid"))
 
 
-    def start(self,name="unknown",basedir="/opt/openwizzy",appdir="."):
+    def start(self,name="unknown",basedir="/opt/openwizzy6",appdir="."):
         '''Start the application
 
         You can only stop the application with return code 0 by calling
