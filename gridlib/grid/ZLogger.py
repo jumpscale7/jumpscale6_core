@@ -54,14 +54,15 @@ class ZLogger(ZDaemon):
             self.eventhandlingTE = o.core.taskletengine.get(path)
             self.eventsMemLog = {}
             if self.hrd.getInt("logger.osis.enable")==1:
-                bid=o.core.grid.hrd.getInt("grid.broker.id")
+                o.core.grid._loadConfig()
+                bid=o.core.grid.config.getInt("grid.broker.id")
                 counter=1
                 stop=False
                 while bid==0 and stop==False:
-                    bid=o.core.grid.hrd.getInt("grid.broker.id")
+                    bid=o.core.grid.config.getInt("grid.broker.id")
                     counter+=1
                     time.sleep(1)
-                    o.core.grid.loadConfig()
+                    o.core.grid._loadConfig()
                     print "wait for identification of broker id, comes from 'grid.broker.id' in hrd config for node."
                     if counter>30:                        
                         stop=True

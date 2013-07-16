@@ -31,7 +31,7 @@ class mainclass(OSISStore):
                 print "ckey in db: %s"%ckey2
                 if obj.id<>id:    
                     msg="coreobj id not in line with id in contentkey db."
-                    o.errorconditationhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
+                    o.errorconditionhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
                     changed=True
                     obj.id=id
                 elif obj.guid<>guid:
