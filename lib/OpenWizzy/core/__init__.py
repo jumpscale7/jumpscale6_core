@@ -239,6 +239,8 @@ import OpenWizzy.baselib.hrd
 import shellconfig
 import console
 import gui
+#reinit whoAmI after dirs are loaded
+o.application.initWhoAmI()
 
 
 # from extensions.PMExtensions import PMExtensions
