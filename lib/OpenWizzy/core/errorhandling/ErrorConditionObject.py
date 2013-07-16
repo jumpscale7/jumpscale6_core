@@ -32,7 +32,7 @@ class AlertObject():
         self.category="" #dot notation e.g. machine.start.failed
         self.tags="" #e.g. machine:2323
         self.state="NEW" #["NEW","ALERT","CLOSED"]
-        seld.inittime=0 #first time there was an error condition linked to this alert
+        self.inittime=0 #first time there was an error condition linked to this alert
         self.lasttime=0 #last time there was an error condition linked to this alert
         self.closetime=0  #alert is closed, no longer active
         self.nrerrorconditions=1 #nr of times this error condition happened
@@ -65,34 +65,14 @@ class ErrorConditionObject():
             self.backtrace=""
 
             self.appname=o.application.appname #name as used by application
-            
-            if hasattr(o.application, 'whoAmI'):
-                if len(o.application.whoAmI)==3:
-                    self.gid = o.application.whoAmI[0]
-                    self.nid = o.application.whoAmI[1]
-                    self.bid = 0
-                    self.aid = 0
-                    self.pid = 0
-                    self.jid = 0
-                    self.masterjid = 0
-                elif len(o.application.whoAmI)==4:
-                    self.gid = o.application.whoAmI[0]
-                    self.bid = o.application.whoAmI[1]
-                    self.nid = o.application.whoAmI[2]
-                    self.pid = o.application.whoAmI[3]
-                    self.aid = o.core.grid.aid
-                    self.jid = 0
-                    self.masterjid = 0
-                else:
-                    o.errorconditionhandler.raiseBug(message="whoAmi should be 3 or 4 items",category="log.id")
-            else:    
-                self.jid=0
-                self.masterjid = 0
-                self.gid=0
-                self.bid=0
-                self.nid=0
-                self.pid=0
-                self.aid=0
+            self.gid = o.application.whoAmI.gid
+            self.nid = o.application.whoAmI.nid
+            self.bid = o.application.whoAmI.bid
+            if hasattr(o, 'core') and hasattr(o.core, 'grid') and hasattr(o.core.grid, 'aid'):
+                self.aid = o.core.grid.aid
+            self.pid = o.application.whoAmI.pid
+            self.jid = 0
+            self.masterjid = 0
 
             self.epoch= o.base.time.getTimeEpoch()
             self.tags=""
@@ -177,6 +157,7 @@ class ErrorConditionObject():
         Get stackframe log
         is a very detailed log with filepaths, code locations & global vars, this output can become quite big
         """        
+        import inspect
         if o.application.skipTraceback:
             return ""
         sep="\n"+"-"*90+"\n"
