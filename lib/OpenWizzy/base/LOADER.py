@@ -1,7 +1,8 @@
 from OpenWizzy import o
 
 class Dummy(object):
-    pass
+    def __getattr__(self, key):
+        raise AttributeError("%s is not loaded, did your forget an import?" % key)
 
 class Loader(object):
     def makeAvailable(self, obj, path):
