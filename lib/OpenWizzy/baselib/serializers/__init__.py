@@ -24,8 +24,8 @@ o.db.serializers.blosc=SerializerBlosc()
 from SerializerTime import SerializerTime
 o.db.serializers.time=SerializerTime()
 
-# from SerializerMSGPack import SerializerMSGPack
-# o.db.serializers.msgpack=SerializerMSGPack()
+from SerializerMSGPack import SerializerMSGPack
+o.db.serializers.msgpack=SerializerMSGPack()
 
 # from SerializerSnappy import SerializerSnappy
 # o.db.serializers.snappy=SerializerSnappy()
