@@ -105,7 +105,7 @@ class ZDaemon(GeventLoop):
                 cmdsocket.send("OK")
             elif data[0] == "3":
                 data = data[1:]
-                result = self.processRPC(data[1:])
+                result = self.processRPC(data)
                 if result["state"]=="ok":
                     cmdsocket.send(result["result"])
                 else:
