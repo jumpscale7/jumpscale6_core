@@ -182,12 +182,11 @@ class ZDaemonClient():
     def sendcmd(self, cmd, rawreturn=False,**args):
         if rawreturn: #means the server will no return a json encoded result dict but the raw output of the method on the server
             data = "3%s"%ujson.dumps([cmd, args])
-            result = self.sendMsgOverCMDChannel(data)
-            result = ujson.loads(result)
-            if result['state'] == "ok":
-                return result
+            data=self.sendMsgOverCMDChannel("3%s"%data)
+            if data[0:7]=="ERROR:":
+                self._raiseError(cmd, ujson.loads(data[7:]))
             else:
-                self._raiseError(cmd, result)
+                return data
         else:
             data = "4%s"%ujson.dumps([cmd, args])
             result = self.sendMsgOverCMDChannel(data)
