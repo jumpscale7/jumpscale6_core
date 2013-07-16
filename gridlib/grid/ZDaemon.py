@@ -53,14 +53,15 @@ class ZDaemon(GeventLoop):
         self.now=0
 
         self.nrCmdGreenlets=nrCmdGreenlets
+        self._serializers = { '1': o.db.serializers.msgpack, '3': o.db.serializers.ujson}
 
 
     def addCMDsInterface(self, cmdInterfaceClass):
         self.cmdsInterfaces.append(cmdInterfaceClass(self))
 
-    def processRPC(self, data):
+    def processRPC(self, data, serializer=o.db.serializers.ujson):
         # print "process rpc:\n%s"%data
-        cmd = o.db.serializers.ujson.loads(data)  # list with item 0=cmd, item 1=args            
+        cmd = serializer.loads(data)  # list with item 0=cmd, item 1=args            
         cmd2 = {}
         if cmd[0] in self.cmds:
             ffunction = self.cmds[cmd[0]]
@@ -77,7 +78,7 @@ class ZDaemon(GeventLoop):
                 return cmd2
             else:
                 cmd2 = {}
-            self.cmds[cmd[0]] = ffunction        
+            self.cmds[cmd[0]] = ffunction
 
         try:
             result = ffunction(**cmd[1])
@@ -95,27 +96,29 @@ class ZDaemon(GeventLoop):
         return cmd2
 
     def repCmdServer(self):
+        def getSerialzer(data):
+            ser = self._serializers[data[1]]
+            return ser, data[2:]
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
             data = cmdsocket.recv()
-
             if data[0] == "1":
                 self.logQueue.put(data[1:])
                 cmdsocket.send("OK")
             elif data[0] == "3":
-                data = data[1:]
-                result = self.processRPC(data)
+                ser, data = getSerialzer(data)
+                result = self.processRPC(data, ser)
                 if result["state"]=="ok":
                     cmdsocket.send(result["result"])
                 else:
-                    cmdsocket.send("ERROR:%s"%o.db.serializers.ujson.dumps(result))
+                    cmdsocket.send("ERROR:%s"%ser.dumps(result))
             elif data[0] == "4":
-                data = data[1:]
-                result = self.processRPC(data)
-                cmdsocket.send(o.db.serializers.ujson.dumps(result))
+                ser, data = getSerialzer(data)
+                result = self.processRPC(data, ser)
+                cmdsocket.send(ser.dumps(result))
             else:
-                q.errorconditionhandler.raiseBug(message="Could not find supported message on cmd server",category="grid.cmdserver.valueerror")
+                o.errorconditionhandler.raiseBug(message="Could not find supported message on cmd server",category="grid.cmdserver.valueerror")
 
 
     def cmdGreenlet(self):
