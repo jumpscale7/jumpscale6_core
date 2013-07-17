@@ -5,6 +5,7 @@ import OpenWizzy.baselib.screen
 o.application.appname = "startworkers"
 o.application.start()
 
+o.dirs.appDir = o.system.fs.joinPaths(o.dirs.baseDir, 'apps')
 
 o.core.grid.configureNode(gridid=5,name="", roles=["atestmachine.1","all"], brokerip="localhost",brokerport="5554")
 
