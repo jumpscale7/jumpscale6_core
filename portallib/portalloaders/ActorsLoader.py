@@ -271,6 +271,7 @@ h3. home page for space $$space
                     #category
                     namespacename = actorname
                     if not self.osiscl:
+                        import OpenWizzy.grid.osis
                         self.osiscl = o.core.osis.getClient()
                     if actorname not in self.osiscl.listNamespaces():
                         template = tags.tagGet('osis_template', 'modelobjects')

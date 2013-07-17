@@ -11,10 +11,9 @@ import gevent
 import time
 
 from MacroExecutor import MacroExecutorPage, MacroExecutorWiki, MacroExecutorPreprocess
-
+import mimeparse
 
 BLOCK_SIZE = 4096
-
 
 CONTENT_TYPE_JSON = 'application/json'
 CONTENT_TYPE_JS = 'application/javascript'
@@ -114,13 +113,13 @@ class GeventWSClient():
         if isinstance(decodedResult, basestring):
             if decodedResult.find("ERROR: PLEASE SPECIFY PARAM") != -1:
                 raise RuntimeError(self.html2text(decodedResult))
-            elif decodedResult.startswith("ASYNC::") != -1:
+            elif decodedResult.startswith("ASYNC::"):
                 r = int(decodedResult.split("::", 1)[1])
                 return 3, r
-            elif decodedResult.startswith("ERRORJSON::") != -1:
+            elif decodedResult.startswith("ERRORJSON::"):
                 r = decodedResult.split("\n", 1)[1]  # remove first line
                 return 1, o.tools.json.decode(r)
-            elif decodedResult.starswith("ERROR::") != -1:
+            elif decodedResult.startswith("ERROR::"):
                 raise RuntimeError("ERROR SHOULD HAVE BEEN IN JSON FORMAT.\n%s"%self.html2text(decodedResult))
 
         return 0, decodedResult
@@ -377,14 +376,25 @@ class GeventWebserver:
 
     def startSession(self, ctx, path):
         session = ctx.env['beaker.session']
-
         if "authkey" in ctx.params:
             # user is authenticated by a special key
-            userkey = ctx.params["authkey"]
-            if userkey in self.userKeyToName:
-                username = self.userKeyToName[userkey]
+            key = ctx.params["authkey"]
+            if key in self.userKeyToName:
+                username = self.userKeyToName[key]
                 session['user'] = username
                 session.save()
+            elif key == self.secret:
+                session['user'] = 'admin'
+                session.save()
+            else:
+                #check if authkey is a session
+                newsession = session.get_by_id(key)
+                if newsession:
+                    session = newsession
+                    ctx.env['beaker.session'] = session
+                else:
+                    ctx.start_response('419 Authentication Timeout', [])
+                    return False, [str(self.returnDoc(ctx, ctx.start_response, "system", "accessdenied", extraParams={"path": path}))]
 
         if "user_logoff_" in ctx.params:
             session.delete()
@@ -689,17 +699,10 @@ class GeventWebserver:
         if ctx.params == "":
             msg = 'No parameters given to actormethod.'
             return False, msg
-
-        if auth:
-            validationkey = ctx.params.get('authkey', '').strip()
-            if o.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(ctx):
-                validationkey = self.secret
-
-            if validationkey != self.secret:
-                o.logger.log("Secret '%s' does not match" % validationkey, 3)
-                msg = 'NO VALID AUTHORIZATION KEY GIVEN, use get param called key (check key probably auth error).'
-                ctx.start_response('401 %s' % msg, [])
-                return False, msg
+        if auth and ctx.env['beaker.session']['user'] == 'guest':
+            msg = 'NO VALID AUTHORIZATION KEY GIVEN, use get param called key (check key probably auth error).'
+            ctx.start_response('401 %s' % msg, [])
+            return False, msg
 
         if restext:
             paramCriteria = self.routesext[ctx.path][1]
@@ -951,50 +954,70 @@ class GeventWebserver:
         # text=text.replace(" ","&nbsp; ")
         return text
 
+    def _text2htmlSerializer(self, content):
+        return self._text2html(pprint.pformat(content))
+
+    def _resultjsonSerializer(self, content):
+        return o.db.serializers.ujson.dumps({"result":content})
+
+    def _resultyamlSerializer(self, content):
+        return o.code.object2yaml({"result":content})
+
+    def getMimeType(self, contenttype, format_types):
+        CONTENT_TYPES = {
+    "application/json":q.tools.json.encode,
+    "application/yaml":self._resultyamlSerializer,
+    "text/plain":str,
+    "text/html":self._text2htmlSerializer
+    }
+
+        if not contenttype:
+            serializer = format_types["text"]["serializer"]
+            return CONTENT_TYPE_HTML, serializer
+        else:
+            mimeType = mimeparse.best_match(CONTENT_TYPES.keys(), contenttype)
+            serializer = CONTENT_TYPES[mimeType]
+            return mimeType, serializer
+
+
+
     def reformatOutput(self, ctx, result, restreturn=False):
+        FFORMAT_TYPES = {
+    "text": {"content_type":CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
+    "raw": {"content_type": CONTENT_TYPE_PLAIN, "serializer": str},
+    "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": q.tools.json.encode},
+    "json": {"content_type": CONTENT_TYPE_JSON, "serializer": self._resultjsonSerializer},
+    "yaml": {"content_type": CONTENT_TYPE_YAML, "serializer": self._resultyamlSerializer}
+    }
+
         fformat = ctx.fformat
+        if '_jsonp' in ctx.params:
+            return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], o.db.serializers.ujson.dumps(result))
+
         if "CONTENT_TYPE" not in ctx.env:
             ctx.env['CONTENT_TYPE'] = CONTENT_TYPE_PLAIN
 
         if ctx.env['CONTENT_TYPE'].find("form-") != -1:
             ctx.env['CONTENT_TYPE'] = CONTENT_TYPE_PLAIN
         # normally HTTP_ACCEPT defines the return type we should rewrite this
-        if 'HTTP_ACCEPT' in ctx.env and ctx.env['HTTP_ACCEPT'] != '*/*':
-            accept = ctx.env['HTTP_ACCEPT']
-            accept = [x.strip() for x in accept.split(',')]
-            returntype = accept
+        if fformat:
+            #extra format paramter overrides http_accept header
+            return FFORMAT_TYPES[fformat]['content_type'], FFORMAT_TYPES[fformat]['serializer'](result)
         else:
-            returntype = [ctx.env['CONTENT_TYPE']]
-
-        if '_jsonp' in ctx.params:
-            return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], o.tools.json.encode(result))
-
-        if fformat == "raw" or CONTENT_TYPE_PLAIN in returntype:
-            return CONTENT_TYPE_PLAIN, str(result)
-        if fformat == "jsonraw":
-            return CONTENT_TYPE_JSON, o.tools.json.encode(result)
-        if CONTENT_TYPE_JSON in returntype and restreturn:
-            return CONTENT_TYPE_JSON, o.tools.json.encode(result)
-        if fformat == "json" or CONTENT_TYPE_JSON in returntype:
-            result = {"result": result}
-            return CONTENT_TYPE_JSON, o.tools.json.encode(result)
-        if fformat == "yaml" or CONTENT_TYPE_YAML in returntype:
-            result = {"result": result}
-            return CONTENT_TYPE_YAML, o.code.object2yaml(result)
-        if fformat == "text" or CONTENT_TYPE_PLAIN in returntype or CONTENT_TYPE_HTML in returntype:
-            result2 = pprint.pformat(result)
-            return CONTENT_TYPE_HTML, self._text2html(result2)
-
-        return None, self.raiseError(ctx, "Could not find appropriate serializer.\n<br>%s" % result, httpcode="406 Not Acceptable")
+            if 'HTTP_ACCEPT' in ctx.env:
+                returntype = ctx.env['HTTP_ACCEPT']
+            else:
+                returntype = ctx.env['CONTENT_TYPE']
+            content_type, serializer = self.getMimeType(returntype, FFORMAT_TYPES)
+            return content_type, serializer(result)
 
     def processor_restext(self, env, start_response, path, human=True, ctx=False):
-        if ctx == False: 
+        if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:
             o.logger.log("Routing request to %s" % path, 5)
 
             def respond(contentType, msg):
-                # o.logger.log("Responding %s" % msg, 5)
                 if contentType:
                     start_response('200 OK', [('Content-Type', contentType)])
                 return msg

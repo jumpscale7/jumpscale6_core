@@ -2,7 +2,7 @@ def main(o, args, params, tags, tasklet):
 
     page = args.page
 
-    modifier = q.html.getPageModifierGridDataTables(page)
+    modifier = o.html.getPageModifierGridDataTables(page)
 
     args.expandParams()
 
