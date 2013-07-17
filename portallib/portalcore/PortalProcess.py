@@ -185,6 +185,11 @@ class PortalProcess():
 
         self.ipaddr=ini.getValue("main","ipaddr")
 
+        if ini.checkParam('main', 'dns'):
+            self.dns = ini.getValue('main', 'dns')
+        else:
+            self.dns = self.ipaddr.split(',')[0]
+
         self.secret=ini.getValue(skey,"secret").strip()
 
         self.wsport= int(ini.getValue(skey,"webserverport"))
@@ -200,7 +205,7 @@ class PortalProcess():
         else:
             self.webserver=None
 
-        self._greenLetsPath=o.system.fs.joinPaths(o.dirs.varDir,"appserver6_greenlets",self.wsport)
+        self._greenLetsPath=o.system.fs.joinPaths(o.dirs.varDir,"portal_greenlets",self.wsport)
         o.system.fs.createDir(self._greenLetsPath)
         sys.path.append(self._greenLetsPath)
 
@@ -464,7 +469,7 @@ class PortalProcess():
             else:
                 lastport=sysdb.get("rediscfg", key)
 
-            templpath=o.system.fs.joinPaths(o.core.portal.pm_extensionpath,"configtemplates","redis","redis_template.conf")
+            templpath=o.system.fs.joinPaths(o.core.portal.getConfigTemplatesPath(),"redis","redis_template.conf")
             configtemplate=o.system.fs.fileGetContents(templpath)
             configtemplate=configtemplate.replace("$port",str(lastport))
             configtemplate=configtemplate.replace("$key",key)

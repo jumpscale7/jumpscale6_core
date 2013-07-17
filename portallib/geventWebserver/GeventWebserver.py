@@ -965,7 +965,7 @@ class GeventWebserver:
 
     def getMimeType(self, contenttype, format_types):
         CONTENT_TYPES = {
-    "application/json":q.tools.json.encode,
+    "application/json":o.db.serializers.ujson.dumps,
     "application/yaml":self._resultyamlSerializer,
     "text/plain":str,
     "text/html":self._text2htmlSerializer
@@ -985,7 +985,7 @@ class GeventWebserver:
         FFORMAT_TYPES = {
     "text": {"content_type":CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
     "raw": {"content_type": CONTENT_TYPE_PLAIN, "serializer": str},
-    "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": q.tools.json.encode},
+    "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": o.db.serializers.ujson.dumps},
     "json": {"content_type": CONTENT_TYPE_JSON, "serializer": self._resultjsonSerializer},
     "yaml": {"content_type": CONTENT_TYPE_YAML, "serializer": self._resultyamlSerializer}
     }
