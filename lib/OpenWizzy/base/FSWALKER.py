@@ -263,9 +263,7 @@ else:
                         callbackFunctions[ttype](path=path2,stat=statb,arg=arg)
                     else:
                         stat=None
-                        from IPython import embed
-                        print "DEBUG NOW link"
-                        embed()
+#TODO there was embed here?
                         callbackFunctions[ttype](src=path2,dest="",arg=arg)
 
             if ttype=="D":

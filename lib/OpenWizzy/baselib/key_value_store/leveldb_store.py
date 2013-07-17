@@ -13,7 +13,6 @@ class LevelDBInterface():
     def __init__(self,namespace,basedir):
         o.system.fs.createDir(basedir)
         self.path="%s/%s"%(basedir,namespace)
-
         self.db=plyvel.DB(self.path, create_if_missing=True, compression='snappy', bloom_filter_bits=10,lru_cache_size=100*1024*1024,write_buffer_size=1*1024*1024)
         #write_buffer_size=None, max_open_files=None, lru_cache_size=None, block_size=None, block_restart_interval=None
 
@@ -37,7 +36,7 @@ class LevelDBInterface():
 
     def exists(self,key):
         val=self.db.get(key,default="NOTFOUND")
-        return val=="NOTFOUND"
+        return val!="NOTFOUND"
 
     def delete(self,key):
         self.delete(key,sync=False)
@@ -46,7 +45,7 @@ class LevelDBInterface():
         """
         """
         result=[]
-        for key, value in db.iterator(prefix=prefix):
+        for key, value in self.db.iterator(prefix=prefix):
             result.append(key)
 
 

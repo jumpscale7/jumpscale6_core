@@ -18,7 +18,7 @@ class REGEXTOOL():
 
     @staticmethod           
     def matchContent(path,contentRegexIncludes=[], contentRegexExcludes=[]):
-        content=FS.fileGetContents(path)
+        content=o.system.fs.fileGetContents(path)
         if REGEXTOOL.matchMultiple(patterns=contentRegexIncludes,text=content) and not REGEXTOOL.matchMultiple(patterns=contentRegexExcludes,text=content):
             return True
         return False
