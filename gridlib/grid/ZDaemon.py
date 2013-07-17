@@ -86,7 +86,7 @@ class ZDaemon(GeventLoop):
             eco=o.errorconditionhandler.parsePythonErrorObject(e)
             eco.level=2
             cmd2["state"] = "error"
-            cmd2["result"] = eco
+            cmd2["result"] = eco.__dict__
             # print eco
             o.errorconditionhandler.processErrorConditionObject(eco)
             return cmd2
@@ -110,7 +110,7 @@ class ZDaemon(GeventLoop):
                 ser, data = getSerialzer(data)
                 result = self.processRPC(data, ser)
                 if result["state"]=="ok":
-                    cmdsocket.send(result["result"])
+                    cmdsocket.send(result["result"] or "")
                 else:
                     cmdsocket.send("ERROR:%s"%ser.dumps(result))
             elif data[0] == "4":
