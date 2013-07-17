@@ -60,7 +60,7 @@ def _setup_stacktrace_hook():
         not available, the given frame will be returned using the string
         '<unknown>' as thread ID.
         '''
-        if openwizzy.application.skipTraceback:
+        if o.application.skipTraceback:
             return None
         import sys
 
@@ -77,7 +77,6 @@ def _setup_stacktrace_hook():
             return tuple(current_frames().items())
 
     def dump_proc_status(output):
-        import os
         import os.path
 
         procfile = '/proc/%d/status' % os.getpid()

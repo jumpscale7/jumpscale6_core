@@ -204,7 +204,8 @@ class Dirs(object):
             o.system.fs.copyDirTree(binsource,bindest)
             o.system.fs.copyDirTree(utilssource,utilsdest)
             o.system.fs.copyDirTree(cfgsource,cfgdest)
-            o.system.process.execute("rm -rf ~/.ipython") #@todo P3 dirty hack do with openwizy primitives
+            ipythondir = o.system.fs.joinPaths(os.environ['HOME'], '.ipython')
+            o.system.fs.removeDirTree(ipythondir)
 
             
     def __str__(self):
