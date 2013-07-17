@@ -1,0 +1,18 @@
+h1. Projectname
+
+Sets the projectname on the page object
+
+h2. Wiki
+
+{{code:
+{{projectname:
+myproject}}
+}}
+
+h2. Output
+
+This macro has no output
+{{projectname:
+myproject
+}}
+

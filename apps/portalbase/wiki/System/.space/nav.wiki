@@ -4,6 +4,7 @@ SystemMacros:/system/systemmacros
 Users:/system/userlist
 Groups:/system/groups
 Actors:/system/actors
+ActorsDocs:/system/actorsdocs
 Spaces:/system/spaces
 Stats:/system/stats
 Logs:/system/logs

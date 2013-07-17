@@ -1,26 +1,69 @@
-h2. Macros
-
-The wiki system support three categories of macros.
-
-h3. Page Macros
-
-These macros extend the wiki syntax
-The tasklet of these macros should set params.result as a page
-
-{{children: bullets page:Page}}
+h1. Macros
 
 
-h3. Wiki Macros
+Macros are an addition to the normal wiki syntax. They allow you to easily add extra information to a page without having to write code.
 
-These macros are part of the core wiki system
-The tasklet of these macros should set params.result as tuple first item being the output of this macro the second one beingg the document
+The OpenWizzy wiki system has four categories of macros, but allows you to create custom macros:
+
+* *Element*: to add extra elements to a page such as table of contents, contact forms, buttons, ...
+* *Layout*: to update the default page settings
+* *Wiki*: for specific OpenWizzy wiki functions, for example to show child pages
+* *Preprocessor*: to generate an intermediate wiki format, for example to include content of other wiki pages to avoid duplicate writing
+
+h2. Element Macros
+
+Element macros are an addition to the normal wiki syntax. They allow you to add extra elements to your page.
+Elements can be:
+
+* Image galleries
+* Contact forms
+* Menus
+* Search box
+* Literal JavaScript
+* ...
+
+The tasklet of these macros must set `params.result` as a page.
+
+{{children: bullets page:Element}}
+
+
+h2. Layout Macros
+
+Layout macros update the default page settings. 
+Page settings that you can update:
+
+* HTML title: the tab title and Internet browser page
+* CSS style
+* Footer
+* Padding
+* ...
+
+The tasklet of these macros must set `params.result` as a page.
+
+{{children: bullets page:Layout}}
+
+
+h2. Wiki Macros
+
+Wiki macros are part of the core OpenWizzy wiki system. They gather information about the wiki data.
+
+Wiki data can be:
+
+* List of child pages
+* List of spaces
+* List of actors
+* List of documents with specific criteria
+
+The tasklet of these macros must set `params.result` as a tuple, where the first item is the result of the macro and the second item the document itself.
+
 {{children: bullets page:Wiki}}
 
 
-h3. Preprocessor Macros
+h2. Preprocessor Macros
 
-These macros do not generate HTML output but return WIKI which in its turn will be parsed again
-The tasklet of these macros should set params.result as tuple first item being the output of this macro the second one beingg the document
+Preprocessor macros generate wiki content which is added to the page in which the macro is used. The resulting HTML page contains the original content and the included content from the preprocessor macro. 
+
+The tasklet of these macros must set `params.result` as a tuple, where the first item is the output of the preprocessor macro and the second item the document itself.
 
 {{children: bullets page:Preprocess}}
 
@@ -30,5 +73,4 @@ The tasklet of these macros should set params.result as tuple first item being t
             column-count:3;
 }
 }}
-
 

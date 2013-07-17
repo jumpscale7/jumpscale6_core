@@ -1,0 +1,18 @@
+h1. HtmlHead
+
+Add its parameters to the HTML document head
+
+h2. Example
+
+{{code:
+\{\{htmlhead:
+<meta name="description" content="Example of HtmlHead macro" />
+\}\}
+}}
+
+To see the result, view the source of this page in your browser
+
+{{htmlhead:
+<meta name="description" content="Example of HtmlHead macro" />
+}}
+

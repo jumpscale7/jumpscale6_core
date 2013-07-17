@@ -1,0 +1,14 @@
+h1. Restresult
+
+Will show the result set from a restcall
+
+h2. Wiki
+
+{{code:
+{{restresult}}
+}}
+
+h2. Output
+
+{{restresult}}
+

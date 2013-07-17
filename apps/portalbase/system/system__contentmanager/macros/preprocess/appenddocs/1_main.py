@@ -5,15 +5,15 @@ def main(o,args,params,tags,tasklet):
     doc=params.doc
     tags=params.tags
        
-    docs=doc.preprocessor.findDocs(filterTagsLabels=tags)          
-    
+    docs = doc.preprocessor.findDocs(filterTagsLabels=tags)
+    # In order to avoid recursive document inclusion, remove itself from selected docs
+    docs = sorted(d for d in docs if d.name.lower() != doc.name.lower() and not d.name.endswith('docs'))
     if tags.tagExists("prefix"):
         prefix=tags.tagGet("prefix")
     else:
         prefix=""
 
-    for doc2 in docs:        
-        doc2.parent=doc.name
+    for doc2 in docs:
         doc.children.append(doc2)
         doc2.preprocess()
         

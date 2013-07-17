@@ -1,0 +1,14 @@
+h1. Navigation
+
+Include nav.wiki from the special .space folder
+
+h2. Wiki
+
+{{code:
+{{navigation}}
+}}
+
+h2. Output
+
+{{navigation}}
+

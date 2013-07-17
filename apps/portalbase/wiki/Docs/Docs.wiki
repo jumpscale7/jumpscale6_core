@@ -1,4 +1,4 @@
-h1. Pylabs 6 Documentation
+h1. OpenWizzy Documentation
 
 {{children: no-tree}}
 

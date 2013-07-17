@@ -1,0 +1,11 @@
+@usedefault
+
+|{{jgauge: width:200 height:114 val:5}}|{{jgauge: width:200 height:114 val:7}}|{{jgauge: width:200 height:114 val:1}}|{{jgauge: width:200 height:114 val:10}}|
+|{{jgauge: width:200 height:114 val:5}}|{{jgauge: width:200 height:114 val:7}}|{{jgauge: width:200 height:114 val:1}}|{{jgauge: width:200 height:114 val:10}}|
+
+
+{{jgauge: width:200 height:114 val:5}}
+
+
+
+

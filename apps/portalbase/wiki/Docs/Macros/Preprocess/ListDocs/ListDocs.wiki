@@ -13,5 +13,4 @@ h2. Example
 \{\{listdocs: name:code}}
 }}
 
-
-{{listdocs: name:code}}
+{{listdocs:name:code}}

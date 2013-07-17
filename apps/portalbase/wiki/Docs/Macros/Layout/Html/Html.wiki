@@ -1,0 +1,24 @@
+h1. Html
+
+h2. Example
+
+h3. Wiki
+
+{{code:
+\{\{htmlhead: 
+<title>MyWiki</title>
+\}\}
+
+\{\{html: 
+<b>My bold text</b>
+\}\}
+}}
+
+h3. Output
+
+{{htmlhead:
+<title>MyWiki</title>
+}}
+{{html:
+<b>My bold text</b>
+}}

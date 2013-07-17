@@ -1,10 +1,17 @@
 def main(o,args,params,tags,tasklet):
     params.merge(args)
         
-    doc2=params.doc
+    doc=params.doc
     tags=params.tags
        
-    docs=doc2.preprocessor.findDocs(filterTagsLabels=tags)       
+    docs=doc.preprocessor.findDocs(filterTagsLabels=tags)
+    docs = [d for d in docs if d.name.lower() != doc.name.lower() and 'docs' not in d.name.lower()]
+        
+    out=""
+    for child_doc in docs:
+        out+="* [%s]\n" % child_doc.pagename
+        
+    params.result=(out,doc)
 
     out=""
     for doc in docs:

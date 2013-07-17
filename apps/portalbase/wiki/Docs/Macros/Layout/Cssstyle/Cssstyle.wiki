@@ -1,0 +1,21 @@
+h1. CSS Style
+
+This macro is used to add CSS content to a page
+
+h2. Example
+
+h3. Wiki
+
+{{code:
+\{\{cssstyle
+h3 { background-color: blue;  }
+\}\}
+}}
+
+
+h3. Output
+{{cssstyle
+h3 { color: blue;  }
+}}
+
+As you can see all h2 headers on this page are colored blue

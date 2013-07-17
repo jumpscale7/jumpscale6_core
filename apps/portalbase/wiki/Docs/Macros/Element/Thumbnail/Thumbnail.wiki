@@ -1,0 +1,32 @@
+h1. Thumbnail
+
+h2. Macro syntax
+
+The thumbnail macro has a 3 parameters
+
+* `picture_path`: The path to the picture, _without_ space name, e.g. `.files/img/testimages3/test1.jpg`. This parameter is mandatory.
+
+* `thumb_size`: The size of the thumbnail, as in the format `<em>width</em>x<em>height</em>` e.g. `300x200`. It can be specified for the whole website (or folder) in the file `.params.cfg`, or it can be specified explicitly as a parameter. If it's not specified in either of them, then the default thumb size will be 150x100. This parameter is optional.
+
+* `exact_size`: If this parameter is specified, then the generated thumbnail will be _exactly_ of the specified size. If this parameter is not specified, the generated thumbnail will keep the aspect ratio of the original image.
+
+h2. Demos
+
+{{code:
+{{thumbnail:.files/img/testimages3/test1.jpg}}
+}}
+
+{{thumbnail:.files/img/testimages3/test1.jpg}}
+
+{{code:
+{{thumbnail:.files/img/testimages3/test1.jpg 200x100}}
+}}
+
+{{thumbnail:.files/img/testimages3/test1.jpg 200x100}}
+
+{{code:
+{{thumbnail:.files/img/testimages3/test1.jpg 500x200 exact_size}}
+}}
+
+{{thumbnail:.files/img/testimages3/test1.jpg 500x200 exact_size}}
+

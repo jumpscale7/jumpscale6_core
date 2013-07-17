@@ -1,0 +1,14 @@
+h1. Urlcalled
+
+Generates rest url
+
+h2. Wiki
+
+{{code:
+{{urlcalled}}
+}}
+
+h2. Output
+
+{{urlcalled}}
+

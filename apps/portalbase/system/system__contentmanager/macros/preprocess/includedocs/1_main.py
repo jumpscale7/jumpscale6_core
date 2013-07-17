@@ -3,6 +3,7 @@ def main(o, args, params,  tags, tasklet):
     tags=args.tags
        
     docs=doc.preprocessor.findDocs(filterTagsLabels=tags)
+    # To avoid the document including itself (causing infinite recursion), remove itself from the list of selected docs
     docs = [d for d in docs if d.name.lower() != doc.name.lower()]
     if tags.tagExists("heading"):
         headinglevel=tags.tagGet("heading")
