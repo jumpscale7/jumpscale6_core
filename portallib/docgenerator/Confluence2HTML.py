@@ -72,7 +72,7 @@ class Confluence2HTML():
                 #     link=link.replace(":","___")
                 if link.find(";")<>-1:
                     space,pagename=link.split(";",1)
-                    link="/%s/%s" % (space.lower().strip("/"),pagename.strip("/"))
+                    link="/%s/%s" % (space.lower().strip().strip("/"),pagename.strip().strip("/"))
                 # print "match:%s"%match.founditem
                 # print "getlink:%s" %page.getLink(descr,link)
                 line = line.replace(match.founditem, page.getLink(descr, link, link_id, link_class))
