@@ -144,7 +144,7 @@ class ZWorker(GeventLoop):
                     
                     data=frames[1]
 
-                    jobDict = o.db.serializers.ujson.loads(data)
+                    jobDict = o.db.serializers.msgpack.loads(data)
                     job=o.core.grid.zobjects.getZJobObject(ddict=jobDict)
                     
                     job=self.process(job)

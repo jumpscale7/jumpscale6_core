@@ -1,20 +1,21 @@
-from pylabs.InitBase import *
+from OpenWizzy import o
+import OpenWizzy.grid
 
 import time
 import gevent
 import sys
 
-q.application.appname = "brokertest"
-q.application.start()
+o.application.appname = "brokertest"
+o.application.start()
 
-q.core.grid.init()
+o.core.grid.init()
 
 def test(name,color):
-    q.logger.log("this is test log of a job", level=3, category="a.msg")
+    o.logger.log("this is test log of a job", level=3, category="a.msg")
     #raise RuntimeError("testerror")
     return name+" "+color
 
-GeventLoop=q.core.grid.getGeventLoopClass()
+GeventLoop=o.core.grid.getGeventLoopClass()
 
 class WorkerClientTest(GeventLoop):
 
@@ -22,7 +23,7 @@ class WorkerClientTest(GeventLoop):
         GeventLoop.__init__(self)
         self.schedule("timer",self._timer)
         self.instance=instance
-        self.client=q.core.grid.getZWorkerClient(ipaddr=server)
+        self.client=o.core.grid.getZWorkerClient(ipaddr=server)
         # self.client=ZClient()
         self.nr=nrtests
         self.counter=0
@@ -75,4 +76,4 @@ else:
 testclient=WorkerClientTest(addr,port,instance,nrtests)
 testclient.start()
 
-q.application.stop()
+o.application.stop()

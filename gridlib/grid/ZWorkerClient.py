@@ -16,7 +16,7 @@ class ZWorkerClient():
 
         self.actions = {}
 
-        self.retry = retry        
+        self.retry = retry
 
         self.init()
 
@@ -31,8 +31,8 @@ class ZWorkerClient():
         self.log("zclient connects to %s"%(self.serverEndpoint), "zmq.client")
         self.socket.connect(self.serverEndpoint)
 
-        self.log("ZMQ client got as clientid: %s" % o.application.whoAmI, level=8, category="master.start")
-        
+        self.log("ZMQ client got as clientid: %s" % str(o.application.whoAmI), level=8, category="master.start")
+
         self.socket.setsockopt(zmq.IDENTITY, o.application.getWhoAmiStr())
 
         self.poll = zmq.Poller()
@@ -90,7 +90,7 @@ class ZWorkerClient():
         if ukey in self.actions:
             return self.actions[ukey]
         else:
-            id = self.brokerclient.sendcmd("registerAction", action=action)
+            id = self.brokerclient.sendcmd("registerAction", action=action.__dict__)
             action.id = id
             action.getSetGuid()
             self.actions[ukey] = action
