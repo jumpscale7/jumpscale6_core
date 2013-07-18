@@ -255,12 +255,11 @@ function program1(depth0,data) {
   buffer += escapeExpression(stack1) + "\n        ";
   return buffer;}
 
-  buffer += "\n<div class='container' id='resources_container'>\n    <ul id='resources'>\n    </ul>\n\n    <div class=\"footer\">\n        <br>\n        <br>\n        <h4 style=\"color: #999\">[ <span style=\"font-variant: small-caps\">base url</span>: ";
+  buffer += "\n<div class='container' id='resources_container'>\n    <ul id='resources'>\n    </ul>";
   foundHelper = helpers.basePath;
   stack1 = foundHelper || depth0.basePath;
   if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
   else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "basePath", { hash: {} }); }
-  buffer += escapeExpression(stack1) + "\n        ";
   foundHelper = helpers.apiVersion;
   stack1 = foundHelper || depth0.apiVersion;
   stack2 = helpers['if'];
@@ -270,7 +269,7 @@ function program1(depth0,data) {
   tmp1.inverse = self.noop;
   stack1 = stack2.call(depth0, stack1, tmp1);
   if(stack1 || stack1 === 0) { buffer += stack1; }
-  buffer += "]</h4>\n    </div>\n</div>\n";
+  buffer += "</div>\n";
   return buffer;});
 })();
 
@@ -283,7 +282,7 @@ templates['operation'] = template(function (Handlebars,depth0,helpers,partials,d
 function program1(depth0,data) {
   
   var buffer = "", stack1;
-  buffer += "\n                <h4>Implementation Notes</h4>\n                <p>";
+  buffer += "\n                <h4>Description</h4>\n                <p>";
   foundHelper = helpers.notes;
   stack1 = foundHelper || depth0.notes;
   if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
@@ -1157,12 +1156,12 @@ templates['resource'] = template(function (Handlebars,depth0,helpers,partials,da
   stack1 = foundHelper || depth0.name;
   if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
   else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "name", { hash: {} }); }
-  buffer += escapeExpression(stack1) + "'); return false;\">\n                Expand Operations\n            </a>\n        </li>\n        <li>\n            <a href='";
+  buffer += escapeExpression(stack1) + "'); return false;\">\n                Expand Operations\n            </a>\n        </li>\n";
   foundHelper = helpers.url;
   stack1 = foundHelper || depth0.url;
   if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
   else if(stack1=== undef) { stack1 = helperMissing.call(depth0, "url", { hash: {} }); }
-  buffer += escapeExpression(stack1) + "'>Raw</a>\n        </li>\n    </ul>\n</div>\n<ul class='endpoints' id='";
+  buffer += "</ul>\n</div>\n<ul class='endpoints' id='";
   foundHelper = helpers.name;
   stack1 = foundHelper || depth0.name;
   if(typeof stack1 === functionType) { stack1 = stack1.call(depth0, { hash: {} }); }
