@@ -1,11 +1,10 @@
 from OpenWizzy import o
 import struct
+import os
 try:
     from REGEXTOOL import *
 except:
     pass
-
-from FS import *
 
 class FSWalkerStats():
     def __init__(self):
@@ -288,7 +287,6 @@ else:
                         callbackFunctions[ttype](path=path2,stat=statb,arg=arg)
                     else:
                         stat=None
-#TODO there was embed here?
                         callbackFunctions[ttype](src=path2,dest="",arg=arg)
 
             if ttype=="D":
