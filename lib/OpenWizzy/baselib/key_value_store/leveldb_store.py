@@ -20,17 +20,24 @@ class LevelDBInterface():
         plyvel.repair_db()#paranoid_checks=None, write_buffer_size=None, max_open_files=None, lru_cache_size=None, block_size=None, block_restart_interval=None, compression='snappy', bloom_filter_bits=0 )
 
     def setb(self,key,value):
+        print "setb:%s"%key
         self.db.put(key,value,sync=False)
 
     def set(self,key,value):
+        print "set:%s"%key
         val=o.db.serializers.ujson.dumps(value)
         self.setb(key,val)
 
     def getb(self,key):
-        return self.db.get(key,fill_cache=True,verify_checksums=True)
+        result= self.db.get(key,fill_cache=True,verify_checksums=True)
+        if result==None:
+            raise RuntimeError("Cannot find object in db with key:%s"%key)
+        return result
 
     def get(self,key):
-        value=self.getb(key)
+        value=self.getb(key)        
+        if value==None:
+            raise RuntimeError("Cannot find object in db with key:%s"%key)
         val=o.db.serializers.ujson.loads(value)
         return val
 
@@ -39,7 +46,7 @@ class LevelDBInterface():
         return val!="NOTFOUND"
 
     def delete(self,key):
-        self.delete(key,sync=False)
+        self.delete(key)#,sync=False)
 
     def prefix(self,prefix):
         """
@@ -56,7 +63,8 @@ class LevelDBKeyValueStore(KeyValueStoreBase):
         self.dbclient = LevelDBInterface(namespace,basedir)
         self.categories = dict()
         if not self.exists("dbsystem", "categories"):
-            self.set("dbsystem", "categories", {})
+            key=self._getCategoryKey("dbsystem", "categories")
+            self.dbclient.set(key, {})
         self.categories=self.get("dbsystem", "categories")
 
     def getb(self, category, key):
@@ -71,8 +79,6 @@ class LevelDBKeyValueStore(KeyValueStoreBase):
             self.set("dbsystem", "categories", self.categories)
         categoryKey = self._getCategoryKey(category, key)
         self.dbclient.setb(categoryKey, self.serialize(value))
-
-
 
     def get(self, category, key):
         categoryKey = self._getCategoryKey(category, key)
