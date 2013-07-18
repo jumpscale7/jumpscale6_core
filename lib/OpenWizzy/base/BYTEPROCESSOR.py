@@ -36,6 +36,13 @@ class ByteProcessor:
         return h.hexdigest()
 
     @staticmethod
+    def hashTiger160bin(s):
+        if isinstance(s, unicode):
+            s = s.encode('utf-8')
+        h=mhash.MHASH(mhash.MHASH_TIGER160,s)
+        return h.digest()
+
+    @staticmethod
     def hashTiger192(s):
         h=mhash.MHASH(mhash.MHASH_TIGER,s)
         return h.hexdigest()

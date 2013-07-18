@@ -82,15 +82,40 @@ class FSWalkerStats():
 
     __str__=__repr__
 
+class LocalFS():
+
+    def abspath(self,path):
+        return os.path.abspath(path)
+
+    def isFile(self,path):
+        return o.system.fs.isFile(path)
+
+    def isDir(self,path):
+        return o.system.fs.isDir(path)
+
+    def isLink(self,path):
+        return o.system.fs.isLink(path)
+
+    def stat(self,path):
+        return os.stat(path)
+
+    def list(self,path):
+        return o.base.fs.list(path)
+
+
 
 class FSWalker():
 
-    def __init__(self):
+    def __init__(self,filesystemobject=None):
         self.stats=None
         self.statsStart()
         self.statsNr=0
         self.statsSize=0
         self.lastPath=""
+        if filesystemobject==None:
+            self.fs=LocalFS()
+        else:
+            self.fs=filesystemobject()
        
     def log(self,msg):
         print msg
@@ -225,7 +250,7 @@ else:
         #We want to work with full paths, even if a non-absolute path is provided
         root = os.path.abspath(root)
 
-        if not o.base.fs.isDir(root):
+        if not self.fs.isDir(root):
             raise ValueError('Root path for walk should be a folder')
         
         # print "ROOT OF WALKER:%s"%root
@@ -239,14 +264,14 @@ else:
     def _walkFunctional(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
         childrenRegexExcludes=[],pathRegexIncludes={},pathRegexExcludes={}):
 
-        paths=o.base.fs.list(root)
+        paths=self.fs.list(root)
         for path2 in paths:
             self.log("walker path:%s"% path2)
-            if o.base.fs.isFile(path2,followlinks):
+            if self.fs.isFile(path2,followlinks):
                 ttype="F"
-            elif o.base.fs.isDir(path2,followlinks):
+            elif self.fs.isDir(path2,followlinks):
                 ttype="D"
-            elif o.base.fs.isLink(path2):
+            elif self.fs.isLink(path2):
                 ttype="L"
             else:
                 raise RuntimeError("Can only detect files, dirs, links")
@@ -258,7 +283,7 @@ else:
 
                 if callbackFunctions.has_key(ttype):
                     if ttype in "DF":
-                        stat=os.stat(path2)
+                        stat=self.fs.stat(path2)
                         statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
                         callbackFunctions[ttype](path=path2,stat=statb,arg=arg)
                     else:
@@ -273,8 +298,8 @@ else:
         
 
 class FSWalkerFactory():
-    def get(self):
-        return FSWalker()
+    def get(self,filesystemobject=None):
+        return FSWalker(filesystemobject=filesystemobject)
 
 o.base.fswalker=FSWalkerFactory()
 
