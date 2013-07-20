@@ -114,7 +114,7 @@ class FSWalker():
         if filesystemobject==None:
             self.fs=LocalFS()
         else:
-            self.fs=filesystemobject()
+            self.fs=filesystemobject
        
     def log(self,msg):
         print msg

@@ -20,11 +20,11 @@ class LevelDBInterface():
         plyvel.repair_db()#paranoid_checks=None, write_buffer_size=None, max_open_files=None, lru_cache_size=None, block_size=None, block_restart_interval=None, compression='snappy', bloom_filter_bits=0 )
 
     def setb(self,key,value):
-        print "setb:%s"%key
+        # print "setb:%s"%key
         self.db.put(key,value,sync=False)
 
     def set(self,key,value):
-        print "set:%s"%key
+        # print "set:%s"%key
         val=o.db.serializers.ujson.dumps(value)
         self.setb(key,val)
 
@@ -46,7 +46,7 @@ class LevelDBInterface():
         return val!="NOTFOUND"
 
     def delete(self,key):
-        self.delete(key)#,sync=False)
+        self.db.delete(key)#,sync=False)
 
     def prefix(self,prefix):
         """
