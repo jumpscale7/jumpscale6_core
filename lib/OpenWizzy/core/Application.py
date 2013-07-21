@@ -74,13 +74,15 @@ class Application:
             self.config = o.core.hrd.getHRDTree(path=o.system.fs.joinPaths(o.dirs.cfgDir, "grid"))
 
 
-    def start(self,name="unknown",basedir="/opt/openwizzy6",appdir="."):
+    def start(self,name=None,basedir="/opt/openwizzy6",appdir="."):
         '''Start the application
 
         You can only stop the application with return code 0 by calling
         o.Application.stop(). Don't call sys.exit yourself, don't try to run
         to end-of-script, I will find you anyway!
         '''
+        if name:
+            self.appname = name
         if self.state == AppStatusType.RUNNING:
             raise RuntimeError("Application %s already started" % self.appname)
 

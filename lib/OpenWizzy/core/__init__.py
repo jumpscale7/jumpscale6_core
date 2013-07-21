@@ -206,38 +206,37 @@ except Exception,e:
 # Remove the no longer needed function
 del _setup_stacktrace_hook
 
-import logging
+from . import logging
 from Application import Application
 
-import system
+from . import system
 
 o.system.installtools=o.base.fs.installtools
 
-import enumerators
+from . import enumerators
 
 o.application=Application()
-import base
-import baseclasses
+from . import base
+from . import baseclasses
 from OpenWizzy.core.baseclasses.BaseEnumeration import enumerations
 o.enumerators=enumerations
-import pmtypes
+from . import pmtypes
 pmtypes.register_types()
 o.basetype=pmtypes.register_types()
 
-import errorhandling
+from . import errorhandling
 
 from Dirs import Dirs
 o.dirs=Dirs()
-o.dirs.init()
 o.pm_hooked_extension_dirs = dict()
 
 import OpenWizzy.baselib.platforms
 import OpenWizzy.core.config
 import OpenWizzy.baselib.hrd
 
-import shellconfig
-import console
-import gui
+from . import shellconfig
+from . import console
+from . import gui
 #reinit whoAmI after dirs are loaded
 o.application.initWhoAmI()
 

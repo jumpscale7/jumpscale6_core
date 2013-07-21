@@ -46,10 +46,10 @@ class Dirs(object):
     @type: string
     '''
 
-    libDir = [] ##array(string)
-    '''Library folders added to C{sys.path}
+    libDir = None ##string
+    '''OpenWizzy Library folder
 
-    @type: list<string>
+    @type: string
     '''
 
     varDir = None ##string
@@ -137,9 +137,7 @@ class Dirs(object):
         if not self.binDir:
             self.binDir = os.path.join(self.baseDir, 'bin')
 
-        self.libDir=inspect.getfile(o.application.getMemoryUsage).replace("Application.py","")
-        self.libDir=os.path.abspath(self.libDir).rstrip("/").rstrip("core")
-
+        self.getLibPath()
         if o.system.platformtype.isWindows() :
             self.codeDir=os.path.join(self.baseDir, 'code')
         else:
@@ -167,19 +165,17 @@ class Dirs(object):
                 _dir = _dir.replace('\n', '').strip()
                 if o.system.fs.isDir(_dir):
                     _protectedDirsList.append(o.system.fs.pathNormalize(_dir))
-        
         self.protectedDirs = _protectedDirsList
 
         self.deployDefaultFilesInSandbox()
-        
         self.__initialized = True
         return True
 
     def getLibPath(self):
-        self.libDir=inspect.getfile(o.application.getMemoryUsage).replace("Application.py","")
-        self.libDir=os.path.abspath(self.libDir).rstrip("/").rstrip("core")
+        parent = o.system.fs.getParent
+        self.libDir=parent(parent(__file__))
+        self.libDir=os.path.abspath(self.libDir).rstrip("/")
         return self.libDir
-
 
     def getPathOfRunningFunction(self,function):
         return inspect.getfile(function)

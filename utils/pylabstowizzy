@@ -12,4 +12,5 @@ sed -i "s/q.platform/o.system.platform/g" $1
 sed -i "s/q.dirs/o.dirs/g" $1
 sed -i "s/q.db/o.db/g" $1
 sed -i "s/q.basetype/o.basetype/g" $1
+sed -i "s/q.logger/o.logger/g" $1
 sed -i "s/q.errorconditionhandler/o.errorconditationhandler/g" $1
