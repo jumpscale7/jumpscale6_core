@@ -18,15 +18,17 @@ if o.system.platformtype.isLinux():
         do.execute("apt-get update")
         # do.execute("apt-get upgrade -y")
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
-                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests') 
-
-        #'python-pip', 'python-dev', 
+                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc","g++","python-dev","python-zmq","msgpack-python") 
 
         for name in debpackages:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)
 
         do.execute("easy_install urllib3")
+        do.execute("easy_install ujson")
+        do.execute("easy_install blosc")
+        do.execute("easy_install urllib3")
+
 
     installpackages()
 
