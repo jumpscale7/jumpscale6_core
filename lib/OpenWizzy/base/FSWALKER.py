@@ -1,10 +1,11 @@
 from OpenWizzy import o
 import struct
-import os
 try:
     from REGEXTOOL import *
 except:
     pass
+
+from FS import *
 
 class FSWalkerStats():
     def __init__(self):
@@ -86,14 +87,14 @@ class LocalFS():
     def abspath(self,path):
         return os.path.abspath(path)
 
-    def isFile(self,path):
-        return o.system.fs.isFile(path)
+    def isFile(self,path,followlinks=True):
+        return o.system.fs.isFile(path,followlinks)
 
-    def isDir(self,path):
-        return o.system.fs.isDir(path)
+    def isDir(self,path,followlinks=True):
+        return o.system.fs.isDir(path,followlinks)
 
-    def isLink(self,path):
-        return o.system.fs.isLink(path)
+    def isLink(self,path,junction=True):
+        return o.system.fs.isLink(path,junction)
 
     def stat(self,path):
         return os.stat(path)
@@ -114,7 +115,7 @@ class FSWalker():
         if filesystemobject==None:
             self.fs=LocalFS()
         else:
-            self.fs=filesystemobject
+            self.fs=filesystemobject()
        
     def log(self,msg):
         print msg
@@ -205,10 +206,10 @@ else:
             callbackMatchFunctions["F"]=matchobjF
         if includeFolders:
             if matchobjD<>None and (pathRegexIncludes.has_key("D") or pathRegexExcludes.has_key("D")):
-                callbackMatchFunctions["D"]=matchobjL
+                callbackMatchFunctions["D"]=matchobjD
         if includeLinks:
             if matchobjL<>None and (pathRegexIncludes.has_key("L") or pathRegexExcludes.has_key("L")):
-                callbackMatchFunctions["L"]=matchobjD
+                callbackMatchFunctions["L"]=matchobjL
         if pathRegexIncludes.has_key("O") or pathRegexExcludes.has_key("O"):
             callbackMatchFunctions["O"]=matchobjO
 
@@ -248,7 +249,6 @@ else:
         '''
         #We want to work with full paths, even if a non-absolute path is provided
         root = os.path.abspath(root)
-
         if not self.fs.isDir(root):
             raise ValueError('Root path for walk should be a folder')
         
@@ -275,7 +275,6 @@ else:
             else:
                 raise RuntimeError("Can only detect files, dirs, links")
 
-            
             if not callbackMatchFunctions.has_key(ttype) or (callbackMatchFunctions.has_key(ttype) and callbackMatchFunctions[ttype](path2,arg,pathRegexIncludes,pathRegexExcludes)):
                 self.log("walker filepath:%s"% path2)                
                 self.statsAdd(path=path2,ttype=ttype,sizeUncompressed=0,sizeCompressed=0,duplicate=False)
@@ -287,10 +286,11 @@ else:
                         callbackFunctions[ttype](path=path2,stat=statb,arg=arg)
                     else:
                         stat=None
+                        #TODO add handling for links
                         callbackFunctions[ttype](src=path2,dest="",arg=arg)
 
             if ttype=="D":
-                if REGEXTOOL.matchPath(path2,[],childrenRegexExcludes):
+                if REGEXTOOL.matchPath(path2,pathRegexIncludes.get(ttype,[]) ,childrenRegexExcludes):
                     self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
                         childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
         
@@ -300,4 +300,5 @@ class FSWalkerFactory():
         return FSWalker(filesystemobject=filesystemobject)
 
 o.base.fswalker=FSWalkerFactory()
+
 
