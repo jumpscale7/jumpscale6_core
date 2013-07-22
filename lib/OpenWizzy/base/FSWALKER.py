@@ -99,6 +99,9 @@ class LocalFS():
     def stat(self,path):
         return os.stat(path)
 
+    def lstat(self,path):
+        return os.lstat(path)
+
     def list(self,path):
         return o.base.fs.list(path)
 
@@ -160,8 +163,8 @@ class FSWalker():
         def processdir(path,stat,arg):
             result["D"].append([path,stat])    
 
-        def processlink(src,dest,arg):
-            result["L"].append([src,dest])   
+        def processlink(src,dest,stat,arg):
+            result["L"].append([src,dest,stat])   
 
         def processother(path,stat,type,arg):
             if result.has_key(type):
@@ -266,12 +269,12 @@ else:
         paths=self.fs.list(root)
         for path2 in paths:
             self.log("walker path:%s"% path2)
-            if self.fs.isFile(path2,followlinks):
+            if self.fs.isFile(path2):
                 ttype="F"
+            elif self.fs.isLink(path2):
+                ttype="L"   
             elif self.fs.isDir(path2,followlinks):
                 ttype="D"
-            elif self.fs.isLink(path2):
-                ttype="L"
             else:
                 raise RuntimeError("Can only detect files, dirs, links")
 
@@ -285,9 +288,9 @@ else:
                         statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
                         callbackFunctions[ttype](path=path2,stat=statb,arg=arg)
                     else:
-                        stat=None
-                        #TODO add handling for links
-                        callbackFunctions[ttype](src=path2,dest="",arg=arg)
+                        stat=self.fs.lstat(path2)
+                        statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
+                        callbackFunctions[ttype](src=path2,dest=os.path.realpath(path2),arg=arg,stat=statb)
 
             if ttype=="D":
                 if REGEXTOOL.matchPath(path2,pathRegexIncludes.get(ttype,[]) ,childrenRegexExcludes):
