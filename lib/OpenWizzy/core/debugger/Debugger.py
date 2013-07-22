@@ -253,20 +253,5 @@ class Debugger:
     def shell(self):
         '''Launch an IPython interactive shell in the current namespace'''
 
-        from OpenWizzy import core.Shell
-
-        local_ns = {}
-        global_ns = {}
-        user_ns = {}
-
-        try:
-            # Ugly NS hacks go here
-            parent_frame = sys._getframe(1)
-            global_ns.update(parent_frame.f_globals)
-            local_ns.update(parent_frame.f_locals)
-        except:
-            local_ns = {}
-            global_ns = {}
-
-        return openwizzy.Shell.Shell(debug=False, ns=user_ns)(local_ns=local_ns,
-            global_ns=global_ns)
+        from IPython import embed
+        return embed()
