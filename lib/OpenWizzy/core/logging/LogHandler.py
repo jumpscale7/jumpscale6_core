@@ -1,9 +1,13 @@
 import itertools
 import functools
 from OpenWizzy import o
+from .logtargets.LogTargetFS import LogTargetFS
+from .logtargets.LogTargetStdOut import LogTargetStdOut
 import re
 import sys
 import traceback
+import time
+from datetime import datetime
 
 try:
     from cStringIO import StringIO
@@ -103,9 +107,7 @@ class LogItem(object):
         self.jid = int(jid)
         self.parentjid = int(parentjid)
         self.masterjid = int(masterjid)
-        self.epoch = int(epoch)
-        if o.logger.clientdaemontarget<>False and self.epoch<>0:  #this  is for performance win, getting epoch is expensive
-            self.epoch = o.base.time.getTimeEpoch()
+        self.epoch = int(epoch) or o.base.time.getTimeEpoch()
         o.logger.order += 1
         if o.logger.order > 100000:
             o.logger.order = 1
@@ -122,26 +124,11 @@ class LogItem(object):
         if self.category<>"":
             return "%s: %s" % (self.category.replace("_","."),self.message)
         else:
-            return self.message
+            ttime=time.strftime("%H:%M:%S: ", datetime.fromtimestamp(self.epoch).timetuple())
+            message="%s %s %s%s" % (self.level, o.application.appname , ttime, self.message)
+            return message
 
     __repr__ = __str__
-
-    # @staticmethod
-    # def decodeLogMessage(cls, logmessage):
-    #     """
-    #     decode log to (message, level, category, tags)
-    #     usage:
-    #     message, level, category, tags=o.logger.decodeLogMessage(message)
-    #     """
-    #     epoch, level, category, tags, job, parentjid, private, message = logmessage.split("|", 7)
-    #     return cls(message=message, category=category, tags=tags, job=job, parentjid=parentjid, private=private)
-
-
-    # def toHRD(self):
-    #     """
-    #     decode log to human readable format (without time & tags)
-    #     """
-    #     return "#%s %s %s" % (self.level, self.category, self.message)
 
 class LogItemFromDict(LogItem):
     def __init__(self,ddict):

@@ -1,6 +1,6 @@
 from OpenWizzy import o
-import pprint
 import time
+from datetime import datetime
 import sys,os
 #import sitecustomize
 import random
@@ -22,6 +22,7 @@ class LogTargetFS(object):
         self.logopenTime=self._gettime()
         self.logopenNrlines=0
         self.logfile=""
+        self._initializing = False
         self.agentid=o.application.agentid
         self.appname=o.application.appname.split(':')[0]
         self.lastappstatus=o.application.state
@@ -61,7 +62,6 @@ class LogTargetFS(object):
     def log(self, log):
         """
         """
-        
         if not self._is_initialized():
             skip=self._initialize()
             if skip:
@@ -70,7 +70,7 @@ class LogTargetFS(object):
         if not self.enabled:
             self.enabled = self.checkTarget()
 
-        ttime=time.strftime("%H:%M:%S: ", log.epoch)
+        ttime=time.strftime("%H:%M:%S: ", datetime.fromtimestamp(log.epoch).timetuple())
         message="%s %s %s%s" % (log.level, o.application.appname , ttime, log.message)
 
         appLogname = o.application.appname.split(':')[0]
@@ -206,8 +206,9 @@ class LogTargetFS(object):
         As we are in the initialization phase of the logging framework, we can't use anything
         using the logging framework.
         """
-        if not o._init_final_called:
+        if o.application.state != o.enumerators.AppStatusType.RUNNING or self._initializing:
             return True
+        self._initializing = True
         
         mainfile = o.config.getInifile("main")
         if 'main' in mainfile.getSections() and mainfile.getValue('main', 'lastlogcleanup'):
@@ -249,50 +250,51 @@ class LogTargetFS(object):
 
 
         self.enabled = self.checkTarget()
+        self._initializing = False
 
         
 # Config
-from OpenWizzy.core.config import ConfigManagementItem, ItemSingleClass
-
-class LogTargetFSConfigManagementItem(ConfigManagementItem):
-    """
-    Configuration of a Cloud API connection
-    """
-    # (MANDATORY) CONFIGTYPE and DESCRIPTION
-    CONFIGTYPE = "logtargetfs"
-    DESCRIPTION = "Pylabs Filesystem Logtarget"
-    KEYS ={"logrotate_enable":"",
-           "logrotate_number_of_lines":"",
-           "logrotate_time":"",
-           "logremove_enable":"",
-           "logremove_age":"",
-           "logremove_check":""           
-           }
-    # MANDATORY IMPLEMENTATION OF ASK METHOD
-    def ask(self):
-        self.dialogAskYesNo('logrotate_enable', 'Enable automatic rotation of logfiles', True)
-        if self.params['logrotate_enable']:
-            self.dialogAskInteger('logrotate_number_of_lines', 'Max number of lines per file', 5000)
-            self.dialogAskInteger('logrotate_time', 'Max period of logging per files in seconds', 60)
-        self.dialogAskYesNo('logremove_enable', 'Enable automatic removal of logfiles', True)
-        if self.params['logremove_enable']:
-            self.dialogAskInteger('logremove_age', 'Max age of logfiles in seconds', 432000)
-            self.dialogAskInteger('logremove_check', 'Interval to remove files older than max age', 86400)
-            
-            
-    #  OPTIONAL CUSTOMIZATIONS OF CONFIGURATION
-
-    def show(self):
-        """
-        Optional customization of show() method
-        """
-        # Here we do not want to show the password, so a customized show() method
-        o.gui.dialog.message(self.params)
-        
-    def retrieve(self):
-        """
-        Optional implementation of retrieve() method, to be used by find()
-        """
-        return self.params
-
-      
+#from OpenWizzy.core.config import ConfigManagementItem, ItemSingleClass
+#
+#class LogTargetFSConfigManagementItem(ConfigManagementItem):
+#    """
+#    Configuration of a Cloud API connection
+#    """
+#    # (MANDATORY) CONFIGTYPE and DESCRIPTION
+#    CONFIGTYPE = "logtargetfs"
+#    DESCRIPTION = "Pylabs Filesystem Logtarget"
+#    KEYS ={"logrotate_enable":"",
+#           "logrotate_number_of_lines":"",
+#           "logrotate_time":"",
+#           "logremove_enable":"",
+#           "logremove_age":"",
+#           "logremove_check":""           
+#           }
+#    # MANDATORY IMPLEMENTATION OF ASK METHOD
+#    def ask(self):
+#        self.dialogAskYesNo('logrotate_enable', 'Enable automatic rotation of logfiles', True)
+#        if self.params['logrotate_enable']:
+#            self.dialogAskInteger('logrotate_number_of_lines', 'Max number of lines per file', 5000)
+#            self.dialogAskInteger('logrotate_time', 'Max period of logging per files in seconds', 60)
+#        self.dialogAskYesNo('logremove_enable', 'Enable automatic removal of logfiles', True)
+#        if self.params['logremove_enable']:
+#            self.dialogAskInteger('logremove_age', 'Max age of logfiles in seconds', 432000)
+#            self.dialogAskInteger('logremove_check', 'Interval to remove files older than max age', 86400)
+#            
+#            
+#    #  OPTIONAL CUSTOMIZATIONS OF CONFIGURATION
+#
+#    def show(self):
+#        """
+#        Optional customization of show() method
+#        """
+#        # Here we do not want to show the password, so a customized show() method
+#        o.gui.dialog.message(self.params)
+#        
+#    def retrieve(self):
+#        """
+#        Optional implementation of retrieve() method, to be used by find()
+#        """
+#        return self.params
+#
+#      
