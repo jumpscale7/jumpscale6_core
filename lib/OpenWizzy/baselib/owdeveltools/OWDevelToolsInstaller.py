@@ -6,7 +6,7 @@ class OWDevelToolsInstaller:
 
     def __init__(self):
         self._do=o.system.installtools
-        o.system.platform.ubuntu.check()
+        o.system.platform.packages.check()
         self.login=""
         self.passwd=""
 

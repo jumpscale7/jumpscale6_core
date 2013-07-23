@@ -11,7 +11,7 @@ do=o.system.installtools
 o.application.start("owinstaller",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
 
 if o.system.platformtype.isLinux():
-    o.system.platform.ubuntu.check()
+    o.system.platform.packages.check()
 
 
     def installpackages():
@@ -22,7 +22,7 @@ if o.system.platformtype.isLinux():
 
         for name in debpackages:
             print "check install %s"%name
-            o.system.platform.ubuntu.install(name)
+            o.system.platform.packages.install(name)
 
         do.execute("easy_install urllib3")
         do.execute("easy_install ujson")

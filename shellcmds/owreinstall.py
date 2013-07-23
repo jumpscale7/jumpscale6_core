@@ -13,7 +13,7 @@ o.application.start("owinstallrepos",basedir="/opt/openwizzy6/",appdir="/opt/ope
 print "REINSTALL OPENWIZZY ONTO OS."
 
 if o.system.platformtype.isLinux():
-    o.system.platform.ubuntu.check()
+    o.system.platform.packages.check()
     o.develtools.installer.deployExamplesLibsGridPortal()
     o.develtools.installer.deployDFS_IO()
 
