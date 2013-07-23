@@ -30,7 +30,7 @@ class ZDaemonClient():
 
         self.cmdchannel = self.context.socket(zmq.REQ)
 
-        # if self.port == 4444 and o.system.platformtype.ubuntu.checkIsUbuntu():
+        # if self.port == 4444 and o.system.platformtype.isLinux():
         #     self.cmdchannel.connect("ipc:///tmp/cmdchannel_clientdaemon")
         #     print "IPC channel opened to client daemon"
         # else:
