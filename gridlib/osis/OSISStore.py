@@ -124,7 +124,9 @@ class OSISStore(object):
         query  = json.loads(query)
         index = '%s_%s' % (self.hrd.category_name, self.hrd.namespace_id)
         result = self.elasticsearch.search(query=query, index=index, es_from=start,
-                size=size)()
+                size=size)
+        if not isinstance(result, dict):
+            result = result()
         return {'result': result['hits']['hits'],
                 'total':result['hits']['total']}
 

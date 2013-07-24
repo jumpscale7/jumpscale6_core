@@ -174,7 +174,7 @@ class ZDaemonClient():
             o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
         else:
             eco=o.errorconditionhandler.getErrorConditionObject(result["result"])
-            msg="execution error on server:%s on %s:%s.\nCmd:%s\nargs:\n%s\nErrorGUID=%s"%(self.servername,self.ipaddr,self.port,cmd,args,eco.guid)
+            msg="execution error on server:%s on %s:%s.\nCmd:%s\nErrorGUID=%s"%(self.servername,self.ipaddr,self.port,cmd,eco.guid)
             o.errorconditionhandler.raiseOperationalCritical(msgpub="",message=msg,category="rpc.exec",die=True,tags="ecoguid:%s"%eco.guid)            
             # raise RuntimeError("error in send cmd (error on server):%s, %s"%(cmd, result["result"]))
 
