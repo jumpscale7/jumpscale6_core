@@ -83,7 +83,7 @@ else:
     def generate(self):
         self.addClass()
 
-        s="self._appserverclient=o.core.appserver6._appserverclients[\"%s_%s\"]"%(self.ip,self.port)
+        s="self._appserverclient=o.core.portal._appserverclients[\"%s_%s\"]"%(self.ip,self.port)
         self.initprops+=o.code.indent(s,2)
 
         for method in self.spec.methods:
