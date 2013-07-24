@@ -43,8 +43,8 @@ class PortalClient():
 
 
         result=self.wsclient.callWebService("system","contentmanager","prepareActorSpecs",app=appname,actor=actorname)
-        if result[1]["result"]<>None and result[1]["result"].has_key("error"):
-            error=result[1]["result"]["error"]
+        if result[1] <> None and result[1].has_key("error"):
+            error=result[1]["error"]
             raise RuntimeError(error)
 
         #there is now a tgz specfile ready
