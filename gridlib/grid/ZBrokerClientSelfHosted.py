@@ -1,5 +1,5 @@
 from OpenWizzy import o
-import ujson
+ujson = o.db.serializers.ujson
 from ZBrokerClient import ZBrokerClient
 
 #creates local connection when inside broker

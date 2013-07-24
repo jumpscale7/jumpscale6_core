@@ -153,7 +153,7 @@ class ZDaemon(GeventLoop):
         context = zmq.Context()
         cmdsocket = context.socket(zmq.REP)
 
-        if q.system.platform.ubuntu.checkIsUbuntu():
+        if q.system.platformtype.isLinux():
             cmdsocket.bind ("ipc:///tmp/cmdchannel_ZDaemon")
             print "IPC"
         else:

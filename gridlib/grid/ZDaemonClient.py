@@ -30,7 +30,7 @@ class ZDaemonClient():
 
         self.cmdchannel = self.context.socket(zmq.REQ)
 
-        # if self.port == 4444 and o.system.platformtype.ubuntu.checkIsUbuntu():
+        # if self.port == 4444 and o.system.platformtype.isLinux():
         #     self.cmdchannel.connect("ipc:///tmp/cmdchannel_clientdaemon")
         #     print "IPC channel opened to client daemon"
         # else:
@@ -191,7 +191,6 @@ class ZDaemonClient():
             data = "41%s"%o.db.serializers.msgpack.dumps([cmd, args])
             result = self.sendMsgOverCMDChannel(data)
             result = o.db.serializers.msgpack.loads(result)
-            print result
             if result["state"] == "ok":
                 return result["result"]
             else:
@@ -219,3 +218,35 @@ class ZDaemonClient():
         stop = time.time()
         nritems = nr/(stop-start)
         print "nr items per sec: %s"%nritems
+
+class ZDaemonCmdClient(object):
+    def __init__(self,ipaddr="localhost", port=4444,datachannel=False,servername="unknownserver", introspect=True):
+        self._client = ZDaemonClient(ipaddr, port, datachannel, servername)
+        if introspect:
+            self._loadMethods()
+        
+    def _loadMethods(self):
+        methodspecs = self._client.sendcmd('_introspect', False)
+        for key, spec in methodspecs.iteritems():
+            strmethod = """
+class Klass(object):
+    def __init__(self, client):
+        self._client = client
+
+    def method(%s):
+        '''%s'''
+        return self._client.sendcmd("%s", False, %s)
+"""
+            Klass = None
+            args = [ "%s=%s" % (x, x) for x in spec['args'][0][1:]]
+            params = list()
+            if spec['args'][3]:
+                for cnt, default in enumerate(spec['args'][3][::-1]):
+                    cnt += 1
+                    spec['args'][0][-cnt] += "=%s" % default
+            params = ', '.join(spec['args'][0])
+            strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
+            exec(strmethod)
+            klass = Klass(self._client)
+            setattr(self, key, klass.method)
+
