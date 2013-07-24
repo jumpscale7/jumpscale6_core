@@ -1,12 +1,11 @@
 import time
-from pylabs.InitBase import *
+from OpenWizzy import *
+import OpenWizzy.portal
 
-q.application.appname = "appserver6_test"
-q.application.start()
+o.application.appname = "appserver6_test"
+o.application.start()
 
-q.qshellconfig.interactive=True
-
-q.logger.disable()
+o.logger.disable()
 
 #q.qshellconfig.checkCreateConfigFile("blobstor")
 #if "grid" not in q.qshellconfig.blobstor.getSections():
@@ -22,7 +21,7 @@ q.logger.disable()
         #q.qshellconfig.blobstor.setParam("grid","localpath","c:\\temp\\blobstor")
         #q.qshellconfig.blobstor.setParam("grid","namespace","grid")
 
-q.manage.appserver6.startprocess()
+o.manage.portal.startprocess()
 
 
-q.application.stop()
+o.application.stop()
