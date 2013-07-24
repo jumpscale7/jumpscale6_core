@@ -106,7 +106,7 @@ class GeventWSClient():
         # o.logger.log("Received result %s" % content, 8)
 
         if contentType == CONTENT_TYPE_JSON:
-            decodedResult = o.tools.json.decode(content)
+            decodedResult = o.db.serializers.ujson.loads(content)
         else:
             raise ValueError("Cannot handle content type %s" % contentType)
 
@@ -118,7 +118,7 @@ class GeventWSClient():
                 return 3, r
             elif decodedResult.startswith("ERRORJSON::"):
                 r = decodedResult.split("\n", 1)[1]  # remove first line
-                return 1, o.tools.json.decode(r)
+                return 1, o.db.serializers.ujson.loads(r)
             elif decodedResult.startswith("ERROR::"):
                 raise RuntimeError("ERROR SHOULD HAVE BEEN IN JSON FORMAT.\n%s"%self.html2text(decodedResult))
 
@@ -748,7 +748,7 @@ class GeventWebserver:
                 msg = "postdata cannot be empty"
                 self.raiseError(ctx, msg)
             if env['CONTENT_TYPE'].find("application/json") != -1:
-                postParams = o.tools.json.decode(postData)
+                postParams = o.db.serializers.ujson.loads(postData)
                 if postParams:
                     params.update(postParams)
                 return params
