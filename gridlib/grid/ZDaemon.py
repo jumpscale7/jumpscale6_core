@@ -8,8 +8,9 @@ import time
 from GeventLoop import GeventLoop
 from gevent import queue as queue
 import OpenWizzy.baselib.serializers
+import inspect
 
-class ZDaemonCMDS():
+class ZDaemonCMDS(object):
     def __init__(self, daemon):
         self.daemon = daemon
 
@@ -28,6 +29,15 @@ class ZDaemonCMDS():
 
     def pingcmd(self):
         return "pong"
+
+    def _introspect(self):
+        methods = {}
+        for name, method in inspect.getmembers(self, inspect.ismethod):
+            if name.startswith('_'):
+                continue
+            args = inspect.getargspec(method)
+            methods[name] = {'args' : args, 'doc': inspect.getdoc(method)}
+        return methods
 
 class Dummy():
     pass
