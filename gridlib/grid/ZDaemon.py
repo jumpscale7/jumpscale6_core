@@ -105,10 +105,11 @@ class ZDaemon(GeventLoop):
         cmd2["result"] = result
         return cmd2
 
+    def getSerializer(self, data):
+        ser = self._serializers[data[1]]
+        return ser, data[2:]
+
     def repCmdServer(self):
-        def getSerialzer(data):
-            ser = self._serializers[data[1]]
-            return ser, data[2:]
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
@@ -117,14 +118,14 @@ class ZDaemon(GeventLoop):
                 self.logQueue.put(data[1:])
                 cmdsocket.send("OK")
             elif data[0] == "3":
-                ser, data = getSerialzer(data)
+                ser, data = self.getSerializer(data)
                 result = self.processRPC(data, ser)
                 if result["state"]=="ok":
                     cmdsocket.send(result["result"] or "")
                 else:
                     cmdsocket.send("ERROR:%s"%ser.dumps(result))
             elif data[0] == "4":
-                ser, data = getSerialzer(data)
+                ser, data = self.getSerializer(data)
                 result = self.processRPC(data, ser)
                 cmdsocket.send(ser.dumps(result))
             else:
