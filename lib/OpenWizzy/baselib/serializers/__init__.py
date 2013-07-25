@@ -1,38 +1,21 @@
 from OpenWizzy import o
+from .SerializerInt import SerializerInt
+from .SerializerUJson import SerializerUJson
+from .SerializerPickle import SerializerPickle
+from .SerializerTime import SerializerTime
+from .SerializerBlosc import SerializerBlosc
+from .SerializerMSGPack import SerializerMSGPack
+from .SerializerSnappy import SerializerSnappy
+from .SerializerLZMA import SerializerLZMA
+from .SerializerBlowfish import SerializerBlowfish
 
-class Empty():
-	pass
-
-if not  o.__dict__.has_key("db"):
-	o.db=Empty()
-
-o.db.serializers=Empty()
-
-
-from SerializerInt import SerializerInt
-o.db.serializers.int=SerializerInt()
-
-from SerializerUJson import SerializerUJson
-o.db.serializers.ujson=SerializerUJson()
-
-# from SerializerPickle import SerializerPickle
-# o.db.serializers.pickle=SerializerPickle()
-
-from SerializerBlosc import SerializerBlosc
-o.db.serializers.blosc=SerializerBlosc()
-
-from SerializerTime import SerializerTime
-o.db.serializers.time=SerializerTime()
-
-from SerializerMSGPack import SerializerMSGPack
-o.db.serializers.msgpack=SerializerMSGPack()
-
-# from SerializerSnappy import SerializerSnappy
-# o.db.serializers.snappy=SerializerSnappy()
-
-# from SerializerLZMA import SerializerLZMA
-# o.db.serializers.lzma=SerializerLZMA()
-
-# from SerializerBlowfish import SerializerBlowfish
-# o.db.serializers.blowfish=SerializerBlowfish()
-
+o.base.loader.makeAvailable(o, 'db.serializers')
+o.db.serializers.int = SerializerInt()
+o.db.serializers.ujson = SerializerUJson()
+o.db.serializers.pickle = SerializerPickle()
+o.db.serializers.time = SerializerTime()
+o.db.serializers.blosc = SerializerBlosc()
+o.db.serializers.msgpack = SerializerMSGPack()
+o.db.serializers.snappy = SerializerSnappy()
+o.db.serializers.lzma = SerializerLZMA()
+o.db.serializers.blowfish = SerializerBlowfish()

@@ -1,10 +1,7 @@
 from OpenWizzy import o
-
-class Empty():
-    pass
-
-from CodeTools import CodeTools
-from CodeManager import CodeManager
-
-o.codetools=CodeTools()
-o.codetools.codemanager=CodeManager
+from .CodeTools import CodeTools
+from .CodeManager import CodeManager
+o.base.loader.makeAvailable(o, '')
+o.base.loader.makeAvailable(o, 'codetools')
+o.codetools = CodeTools()
+o.codetools.codemanager = CodeManager()
