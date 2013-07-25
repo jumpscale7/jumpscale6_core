@@ -1,5 +1,5 @@
 
-from pylzma import pylzma
+import pylzma
 
 class SerializerLZMA(object):
     def dumps(self,obj):
