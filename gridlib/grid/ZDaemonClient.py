@@ -184,7 +184,7 @@ class ZDaemonClient():
             data = "31%s"%o.db.serializers.msgpack.dumps([cmd, args])
             data=self.sendMsgOverCMDChannel(data)
             if data[0:7]=="ERROR:":
-                self._raiseError(cmd, ujson.loads(data[7:]))
+                self._raiseError(cmd, msgpack.loads(data[7:]))
             else:
                 return data
         else:
