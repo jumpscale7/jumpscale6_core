@@ -401,14 +401,14 @@ class system_contentmanager(system_contentmanager_osis):
         return result
     
 
-    def wikisave(self,authkey,text,**args):
+    def wikisave(self,cachekey,text,**args):
         """
-        param:authkey key to authenticate doc
+        param:cachekey key to the doc
         param:text content of file to edit
         result bool 
         
         """
-        contents = o.apps.system.contentmanager.dbmem.cacheGet(authkey)
+        contents = o.apps.system.contentmanager.dbmem.cacheGet(cachekey)
         o.system.fs.writeFile(contents['path'],text)
         o.core.portal.runningPortal.webserver.loadSpace(contents['space'])
         returnpath = "/%s/%s" % (contents['space'], contents['page'])

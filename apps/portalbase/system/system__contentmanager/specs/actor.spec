@@ -115,7 +115,7 @@
     method:wikisave @noauth
 		"""		
 		"""
-		var:authkey str,,key to authenticate doc
+		var:cachekey str,,key to the doc
 		var:text str,,content of file to edit
         result:bool  
 

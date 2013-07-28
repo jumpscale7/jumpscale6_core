@@ -330,7 +330,7 @@ class PageHTML(Page):
             F="""
     <form id="hiddenForm$id" name="hiddenForm$id" method="post" action="/restmachine/system/contentmanager/wikisave">
     <input type="hidden" name="text" id="text" value="">
-    <input type="hidden" name="authkey" id="authkey" value="$guid">
+    <input type="hidden" name="cachekey" id="cachekey" value="$guid">
     </form>
             """
             F=F.replace("$id",str(self._codeblockid))
