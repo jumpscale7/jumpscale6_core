@@ -1,4 +1,5 @@
 from OpenWizzy import o
+import OpenWizzy.baselib.serializers
 import zmq
 import time
 ujson = o.db.serializers.ujson
@@ -184,7 +185,7 @@ class ZDaemonClient():
             data = "31%s"%o.db.serializers.msgpack.dumps([cmd, args])
             data=self.sendMsgOverCMDChannel(data)
             if data[0:7]=="ERROR:":
-                self._raiseError(cmd, msgpack.loads(data[7:]))
+                self._raiseError(cmd, o.db.serializers.msgpack.loads(data[7:]))
             else:
                 return data
         else:
