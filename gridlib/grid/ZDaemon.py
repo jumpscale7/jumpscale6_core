@@ -119,6 +119,9 @@ class ZDaemon(GeventLoop):
                 cmdsocket.send("OK")
             elif data[0] == "3":
                 ser, data = self.getSerializer(data)
+                more = cmdsocket.getsockopt(zmq.RCVMORE)
+                if more:
+                    data = cmdsocket.recv()
                 result = self.processRPC(data, ser)
                 if result["state"]=="ok":
                     cmdsocket.send(result["result"] or "")
@@ -126,6 +129,9 @@ class ZDaemon(GeventLoop):
                     cmdsocket.send("ERROR:%s"%ser.dumps(result))
             elif data[0] == "4":
                 ser, data = self.getSerializer(data)
+                more = cmdsocket.getsockopt(zmq.RCVMORE)
+                if more:
+                    data = cmdsocket.recv()
                 result = self.processRPC(data, ser)
                 cmdsocket.send(ser.dumps(result))
             else:
