@@ -42,6 +42,18 @@ class ZDaemonCMDS(object):
 class Dummy():
     pass
 
+class RawDataSerializer(object):
+    @staticmethod
+    def loads(self, data):
+        methodlength = data[0]
+        methodname = data[1:methodlength+1]
+        data = data[1+methodlength:]
+        return [methodname, {'data': data}]
+
+    @staticmethod
+    def dumps(self, data):
+        return data
+
 class ZDaemon(GeventLoop):
 
     def __init__(self, port=4444,name="",nrCmdGreenlets=50):
@@ -63,7 +75,7 @@ class ZDaemon(GeventLoop):
         self.now=0
 
         self.nrCmdGreenlets=nrCmdGreenlets
-        self._serializers = { '1': o.db.serializers.msgpack, '3': o.db.serializers.ujson}
+        self._serializers = { '1': o.db.serializers.msgpack, '3': o.db.serializers.ujson, '0': RawDataSerializer}
 
 
     def addCMDsInterface(self, cmdInterfaceClass):
@@ -105,9 +117,13 @@ class ZDaemon(GeventLoop):
         cmd2["result"] = result
         return cmd2
 
-    def getSerializer(self, data):
+    def getSerializer(self, data, socket=None):
         ser = self._serializers[data[1]]
-        return ser, data[2:]
+        if socket and socket.getsockopt(zmq.RCVMORE):
+            data = socket.recv()
+        else:
+            data = data[2:]
+        return ser, data
 
     def repCmdServer(self):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
@@ -118,20 +134,14 @@ class ZDaemon(GeventLoop):
                 self.logQueue.put(data[1:])
                 cmdsocket.send("OK")
             elif data[0] == "3":
-                ser, data = self.getSerializer(data)
-                more = cmdsocket.getsockopt(zmq.RCVMORE)
-                if more:
-                    data = cmdsocket.recv()
+                ser, data = self.getSerializer(data, cmdsocket)
                 result = self.processRPC(data, ser)
                 if result["state"]=="ok":
                     cmdsocket.send(result["result"] or "")
                 else:
                     cmdsocket.send("ERROR:%s"%ser.dumps(result))
             elif data[0] == "4":
-                ser, data = self.getSerializer(data)
-                more = cmdsocket.getsockopt(zmq.RCVMORE)
-                if more:
-                    data = cmdsocket.recv()
+                ser, data = self.getSerializer(data, cmdsocket)
                 result = self.processRPC(data, ser)
                 cmdsocket.send(ser.dumps(result))
             else:
