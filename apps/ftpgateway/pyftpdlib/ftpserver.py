@@ -2503,7 +2503,7 @@ class FTPHandler(asynchat.async_chat):
         # print "MLSD:%s"%path
         # RFC-3659 requires 501 response code if path is not a directory
         if not self.fs.isdir(path):
-            #o.errorconditationhandler.raiseOperationalWarning("","ftpserver.fs","Could not find directory '%s'"%path)
+            o.errorconditationhandler.raiseOperationalWarning("","ftpserver.fs","Could not find directory '%s'"%path)
             self.respond("501 No such directory.")
             return
         try:
@@ -2528,7 +2528,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             fd = self.fs.openfile(file, 'rb')
         except IOError, err:
-            #o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditationhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             self.respond('550 %s.' % why)
             return
@@ -3244,7 +3244,7 @@ class FTPHandler(asynchat.async_chat):
             try:
                 self.run_as_current_user(self.fs.chmod, path, mode)
             except OSError, err:
-                #o.errorconditationhandler.processPythonExceptionObject(err)
+                o.errorconditationhandler.processPythonExceptionObject(err)
                 why = _strerror(err)
                 self.respond('550 %s.' % why)
             else:
