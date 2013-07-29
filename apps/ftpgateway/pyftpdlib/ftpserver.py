@@ -2573,7 +2573,7 @@ class FTPHandler(asynchat.async_chat):
         if rest_pos:
             mode = 'r+'
         try:
-            fd = self.fs.open(file, mode + 'b')
+            fd = self.fs.openfile(file, mode + 'b')
         except IOError, err:
             o.errorconditationhandler.processPythonExceptionObject(err) #@todo do better escalation
             why = _strerror(err)
