@@ -295,7 +295,7 @@ class FilesystemBase(object):
                 if ignore_err:
                     continue
                 raise
-            perms = _filemode(st.st_mode)  # permissions
+            perms = st.st_mode  # permissions
             nlinks = st.st_nlink  # number of links to inode
             if not nlinks:  # non-posix system, let's use a bogus value
                 nlinks = 1
@@ -311,14 +311,14 @@ class FilesystemBase(object):
             else:
                 fmtstr = "%d %H:%M"
             try:
-                mtimestr = "%s %s" % (_months_map[mtime.tm_mon],
+                mtimestr = "%s %s" % (mtime.tm_mon,
                                       time.strftime(fmtstr, mtime))
             except ValueError:
                 # It could be raised if last mtime happens to be too
                 # old (prior to year 1900) in which case we return
                 # the current time as last mtime.
                 mtime = timefunc()
-                mtimestr = "%s %s" % (_months_map[mtime.tm_mon],
+                mtimestr = "%s %s" % (mtime.tm_mon,
                                       time.strftime("%d %H:%M", mtime))
 
             # if the file is a symlink, resolve it, e.g. "symlink -> realfile"
@@ -354,7 +354,7 @@ class FilesystemBase(object):
         type=file;size=156;perm=r;modify=20071029155301;unique=801cd2; music.mp3
         type=dir;size=0;perm=el;modify=20071127230206;unique=801e33; ebooks
         type=file;size=211;perm=r;modify=20071103093626;unique=801e32; module.py
-        """  
+        """ 
         try:      
             # print "format_mlsx:%s"%basedir
             if self.cmd_channel.use_gmt_times:

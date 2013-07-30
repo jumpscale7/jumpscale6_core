@@ -46,6 +46,7 @@ class FilesystemReal(FilesystemBase):
     def listdir(self, path):
         """List the content of a directory."""            
         path1=self.ftp2fs(path)
+        #import ipdb; ipdb.set_trace()
         #print "listdir:%s:%s" %(path,path1)
         items=[item for item in os.listdir(path1) if not self._ignorePath(item)]
         return items
