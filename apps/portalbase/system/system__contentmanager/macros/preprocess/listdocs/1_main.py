@@ -14,10 +14,10 @@ def main(o,args,params,tags,tasklet):
     params.result=(out,doc)
 
     out=""
-    for doc in docs:
-        doc.preprocess()
-        out+="* [%s]\n" % doc.pagename
-    params.result=(out,doc2)
+    for tagdoc in docs:
+        tagdoc.preprocess()
+        out+="* [%s]\n" % tagdoc.pagename
+    params.result=(out,doc)
     
     return params
 
