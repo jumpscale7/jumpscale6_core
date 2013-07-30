@@ -153,7 +153,7 @@ class LoaderBase():
         if self.id2object.has_key(id):
             self.id2object.pop(id)
             loader=self.__dict__["%ss"%self.type]
-            if LoaderBase.has_key(id):
+            if id in loader:
                 loader.pop(id)
 
     def _getSystemLoaderForUsersGroups(self):
