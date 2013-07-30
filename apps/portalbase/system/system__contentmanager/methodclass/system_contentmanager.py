@@ -164,7 +164,7 @@ class system_contentmanager(system_contentmanager_osis):
         
         """
         loaders=o.core.portal.runningPortal.actorsloader
-        loader=loaders.getLoaderFromId(params.id)
+        loader=loaders.getLoaderFromId(id)
         loader.reset()
     
 
