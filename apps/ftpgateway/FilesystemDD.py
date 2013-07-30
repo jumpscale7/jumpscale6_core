@@ -40,7 +40,7 @@ class FilesystemDD(FilesystemBase):
         #print "fs2ftp: %s -> %s" % (fspath,p)
         return p
 
-    def open(self, path, mode):
+    def openfile(self, path, mode):
         """Open a file returning its handler."""
         #@todo check on extension .redirect (file path:  $originalpath.$size.redirect) read from redirect where to go and repoint open
         if self.readonly and "w" in mode:

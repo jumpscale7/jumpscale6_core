@@ -83,5 +83,5 @@ class FilesystemVirtualRoot(FilesystemBase):
             # print "FACT:%s" % item
             yield "%s\r\n"%item
 
-    def open(self, filename, mode):
+    def openfile(self, filename, mode):
         return None

@@ -140,7 +140,7 @@ class FilesystemBase(object):
         """
         raise RuntimeError("not implemented")
 
-    def open(self, filename, mode):
+    def openfile(self, filename, mode):
         """Open a file returning its handler"""
         raise RuntimeError("not implemented")        
 
