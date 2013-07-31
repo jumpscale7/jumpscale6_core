@@ -10,8 +10,8 @@ class Screen:
         @param name is name of session
         @screens is list with nr of screens required in session and their names (is [$screenname,...])
         """
-    	o.system.platform.packages.checkInstall("screen","screen")
-    	o.system.platform.packages.checkInstall("byobu","byobu")
+    	o.system.platform.ubuntu.checkInstall("screen","screen")
+    	o.system.platform.ubuntu.checkInstall("byobu","byobu")
         o.system.process.execute("byobu-select-backend  screen")
     	self.killSession(sessionname)
         if len(screens)<1:

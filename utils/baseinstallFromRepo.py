@@ -11,17 +11,21 @@ do=o.system.installtools
 o.application.start("owinstaller",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
 
 if o.system.platformtype.isLinux():
-    o.system.platform.packages.check()
+    o.system.platform.ubuntu.check()
 
 
     def installpackages():
         do.execute("apt-get update")
+
+    #     result=self.execute("apt-get install nginx curl mc ssh mercurial byobu python-gevent python-simplejson python-numpy redis-server python-pycryptopp -y")
+    #     result=self.execute("apt-get install msgpack-python python-pip python-dev python-zmq -y")
+        
         # do.execute("apt-get upgrade -y")
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
-                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc","g++","python-dev","python-zmq","msgpack-python","python-mhash") 
+                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc","g++","python-dev","python-zmq","msgpack-python","python-mhash","python-snappy") 
         for name in debpackages:
             print "check install %s"%name
-            o.system.platform.packages.install(name)
+            o.system.platform.ubuntu.install(name)
 
         pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma')
         for package in pypackages:

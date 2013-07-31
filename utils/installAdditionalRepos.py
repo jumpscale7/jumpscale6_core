@@ -11,7 +11,7 @@ do=o.system.installtools
 o.application.start("owinstallrepos",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
 
 if o.system.platformtype.isLinux():
-    o.system.platform.packages.check()
+    o.system.platform.ubuntu.check()
     o.develtools.installer.deployExamplesLibsGridPortal()
     o.develtools.installer.deployDFS_IO()
 

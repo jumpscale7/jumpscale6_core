@@ -24,7 +24,7 @@ class LogTargetClientDaemon(ZDaemonClientClass):
         check status of target, if ok return True
         for std out always True
         """
-        if not o.system.platform.packages.check(False):
+        if not o.system.platform.ubuntu.check(False):
             wait=True
             end=o.base.time.getTimeEpoch()+60
             while wait:
