@@ -268,7 +268,7 @@ class PortalProcess():
 
             #check redis installed
             if not o.system.platformtype.isWindows():
-                o.system.platform.packages.checkInstall(["python-redis","redis-server"],"redis-server")
+                o.system.platform.ubuntu.checkInstall(["python-redis","redis-server"],"redis-server")
         else:
             self.rediscfg=None
 
@@ -368,9 +368,9 @@ class PortalProcess():
                 o.system.process.executeAsync(cmd,outputToStdout=False)
                 
             else:
-                o.system.platform.packages.check()
-                o.system.platform.packages.checkInstall(["php5-cgi"],"php-cgi")
-                o.system.platform.packages.checkInstall("nginx","nginx")
+                o.system.platform.ubuntu.check()
+                o.system.platform.ubuntu.checkInstall(["php5-cgi"],"php-cgi")
+                o.system.platform.ubuntu.checkInstall("nginx","nginx")
 
                 o.system.fs.remove("/etc/nginx/sites-enabled/default")
 
