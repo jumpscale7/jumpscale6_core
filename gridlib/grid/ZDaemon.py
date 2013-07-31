@@ -44,14 +44,14 @@ class Dummy():
 
 class RawDataSerializer(object):
     @staticmethod
-    def loads(self, data):
+    def loads(data):
         methodlength = data[0]
         methodname = data[1:methodlength+1]
         data = data[1+methodlength:]
         return [methodname, {'data': data}]
 
     @staticmethod
-    def dumps(self, data):
+    def dumps(data):
         return data
 
 class ZDaemon(GeventLoop):
