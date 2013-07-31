@@ -228,7 +228,7 @@ class FilesystemBase(object):
         """Return True if path refers to an existing path, including
         a broken or circular symbolic link.
         """
-        raise NotImplementedError
+        return os.path.lexists(path)
 
     def get_user_by_uid(self, uid):
         """Return the username associated with user id.
