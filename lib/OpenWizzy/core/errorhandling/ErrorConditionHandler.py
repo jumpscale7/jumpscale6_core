@@ -276,13 +276,15 @@ class ErrorConditionHandler():
 
         print errorConditionObject
 
-        if o.logger.clientdaemontarget<>False:
+        if o.logger.clientdaemontarget:
             try:
                 o.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)
             except Exception,e:
                 from OpenWizzy.core.Shell import ipshellDebug,ipshell
                 print "DEBUG NOW error in error escalation in openwizzy main log target for loggerclient"
                 ipshell()
+        else:
+            o.logger.log(str(errorConditionObject), o.enumerators.LogLevel.OPERATORMSG)
 
         return errorConditionObject
         

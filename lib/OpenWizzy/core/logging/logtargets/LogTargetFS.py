@@ -5,6 +5,7 @@ import sys
 import os
 # import sitecustomize
 import random
+import stat
 
 #@todo time is not local time, redo
 
@@ -22,7 +23,7 @@ class LogTargetFS(object):
         # cannot use openwizzy primitives yet, not enabled yet
         self.name = "file"
         self.fileHandle = None
-        self.logopenTime = self._gettime()
+        self.logopenTime = 0
         self.logopenNrlines = 0
         self.logfile = ""
         self._initializing = False
@@ -81,8 +82,7 @@ class LogTargetFS(object):
         if self._config['main']['logrotate_enable'] == 'True':
             if self._gettime() > (self.logopenTime + int(self._config['main']['logrotate_time'])) \
                 or self.logopenNrlines > int(self._config['main']['logrotate_number_of_lines']) \
-                or self.appname <> appLogname \
-                    or o.application.state <> self.lastappstatus:
+                or self.appname <> appLogname:
 
                 # print "NEWLOG"
                 self.rotate()
@@ -121,11 +121,11 @@ class LogTargetFS(object):
             os.makedirs(o.log.logDir, 0755)
         logfile = os.path.join(o.dirs.logDir, appLogname)
         self.logfile = "%s.log" % logfile
-        # print "logfile:%s" % self.logfile
         try:
             self.fileHandle = open(self.logfile, 'a')
         except:
             return False
+        self.logopenTime = os.stat(self.logfile)[stat.ST_CTIME]
         return True
 
     def rotate(self):
@@ -224,7 +224,7 @@ class LogTargetFS(object):
                                  'logrotate_enable': 'True',
                                  'logrotate_number_of_lines': '5000',
                                  'logremove_age': '432000',
-                                 'logrotate_time': '60',
+                                 'logrotate_time': '86400', # one day
                                  'logremove_check': '86400'}}
 
         cfg = None
@@ -267,7 +267,7 @@ class LogTargetFS(object):
 #        self.dialogAskYesNo('logrotate_enable', 'Enable automatic rotation of logfiles', True)
 #        if self.params['logrotate_enable']:
 #            self.dialogAskInteger('logrotate_number_of_lines', 'Max number of lines per file', 5000)
-#            self.dialogAskInteger('logrotate_time', 'Max period of logging per files in seconds', 60)
+#            self.dialogAskInteger('logrotate_time', 'Max period of logging per files in seconds', 86400)
 #        self.dialogAskYesNo('logremove_enable', 'Enable automatic removal of logfiles', True)
 #        if self.params['logremove_enable']:
 #            self.dialogAskInteger('logremove_age', 'Max age of logfiles in seconds', 432000)
