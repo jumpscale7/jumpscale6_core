@@ -21,7 +21,7 @@ class FilesystemVirtualRoot(FilesystemBase):
         return True
 
     def listdir(self, path):
-        return ["spaces","buckets","actors"]#,"contentdirs"]#,"megafs"]
+        return ["spaces","buckets","actors", "osis"]#,"contentdirs"]#,"megafs"]
 
     def chdir(self, path):
         self.cwd = "/"

@@ -1600,7 +1600,7 @@ class FTPHandler(asynchat.async_chat):
         self._current_facts = ['type', 'perm', 'size', 'modify']
         self._rnfr = None
 
-        self.fsSwitcher=self._fsSwitcher(self.contentmanager,self.filemgr)
+        self.fsSwitcher=self._fsSwitcher(self.contentmanager,self.filemgr, self.client)
         
         if self.timeout:
             self._idler = CallLater(self.timeout, self.handle_timeout,
@@ -2433,7 +2433,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             iterator = self.fs.get_list_dir(path[:-2])
         except OSError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             self.respond('550 %s.' % why)
         else:

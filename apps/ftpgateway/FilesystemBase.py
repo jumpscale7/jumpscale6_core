@@ -58,9 +58,7 @@ class FilesystemBase(object):
         if ftppath.find(self.ftproot)==0:
             ftppath=ftppath[len(self.ftproot)+1:]
         else:
-            from pylabs.Shell import ipshellDebug,ipshell
-            print "DEBUG NOW removeftperror"
-            ipshell()
+            import ipdb; ipdb.set_trace()
             
             raise RuntimeError("ftppath needs to start with self.ftproot")
         return ftppath

@@ -19,7 +19,7 @@ class system_contentmanager(system_contentmanager_osis):
         result list(str) 
         
         """
-        return o.core.portal.runningPortal.webserver.actorsloader._objects.keys()    
+        return o.core.portal.runningPortal.actorsloader.actors.keys()
 
     def getActorsWithPaths(self,**args):
         """

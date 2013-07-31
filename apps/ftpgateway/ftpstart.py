@@ -1,12 +1,9 @@
-from pyftpdlib import ftpserver
-
 from OpenWizzy import o
+o.application.start('ftpgateway')
 import OpenWizzy.portal
 import OpenWizzy.baselib.http_client
-import os
+from pyftpdlib import ftpserver
 
-o.application.appname = "appserver6_client"
-o.application.start()
 
 
 print "* check nginx & appserver started"
@@ -16,13 +13,10 @@ if o.system.net.waitConnectionTest("127.0.0.1",80,15)==False or o.system.net.wai
 print "* appserver & webserver started."
 
 client=o.core.portal.getPortalClient("127.0.0.1",9999,"1234")
+
 contentmanager=client.getActor("system","contentmanager",instance=0)
-
-client2=o.core.portal.getPortalClient("127.0.0.1",9999,"1234")
-usermanager=client2.getActor("system","usermanager",instance=0)
-
-client3=o.core.portal.getPortalClient("127.0.0.1",9999,"1234")
-filemgr=client3.getActor("system","filemanager",instance=0)
+usermanager=client.getActor("system","usermanager",instance=0)
+filemgr=client.getActor("system","filemanager",instance=0)
 
 ROOTPATH='/opt/data'
 STORPATH="/opt/data"
@@ -96,6 +90,7 @@ def main():
     # Define a customized banner (string returned when client connects)
     handler.banner = "pyftpdlib %s based ftpd ready." %ftpserver.__ver__
     handler.contentmanager=contentmanager
+    handler.client = client
     handler.filemgr=filemgr
     # handler.filestore=FSIdentifier(STORPATH,usermanager)
     handler._fsSwitcher=FsSwitcher
