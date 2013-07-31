@@ -45,7 +45,7 @@ class Dummy():
 class RawDataSerializer(object):
     @staticmethod
     def loads(data):
-        methodlength = data[0]
+        methodlength = ord(data[0]) # get int out of 1byte chr
         methodname = data[1:methodlength+1]
         data = data[1+methodlength:]
         return [methodname, {'data': data}]
@@ -119,10 +119,9 @@ class ZDaemon(GeventLoop):
 
     def getSerializer(self, data, socket=None):
         ser = self._serializers[data[1]]
+        data = data[2:]
         if socket and socket.getsockopt(zmq.RCVMORE):
-            data = socket.recv()
-        else:
-            data = data[2:]
+            data += socket.recv()
         return ser, data
 
     def repCmdServer(self):
