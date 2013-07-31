@@ -114,7 +114,7 @@ class FilesystemVirtualRootList(FilesystemBase):
             # item="type=dir;size=0;perm=el;modify=20071127230206; %s" % dirname
             #item="modify=20130120092556;perm=el;size=4096;type=dir; %s" % dirname
             #item = "type=dir;size=0;perm=el;modify=20071127230206;unique=801e33; %s" % dirname
-            item = "type=dir;perm=flcdmpe;size=211;modify=20071103093626;unix.mode=0755;unix.uid=1002;unix.gid=1002;unique=801e32; %s" % dirname
+            item = "type=dir;perm=flcdmpe;size=4096;modify=20071103093626;unix.mode=0755;unix.uid=1002;unix.gid=1002;unique=801e32; %s" % dirname
             # print "FACT:%s" % item
             yield "%s\r\n"%item
 

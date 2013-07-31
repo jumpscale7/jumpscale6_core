@@ -3,6 +3,10 @@ from OpenWizzy import o
 import os
 import time
 import stat
+from tarfile import filemode as _filemode
+
+_months_map = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun', 7:'Jul',
+               8:'Aug', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'}
 
 class FilesystemBase(object):
     def __init__(self, root, cmd_channel):
@@ -246,7 +250,6 @@ class FilesystemBase(object):
         """
         raise NotImplementedError
 
-
     def get_list_dir(self, path):
         """"Return an iterator object that yields a directory listing
         in a form suitable for LIST command.
@@ -295,7 +298,7 @@ class FilesystemBase(object):
                 if ignore_err:
                     continue
                 raise
-            perms = st.st_mode  # permissions
+            perms = _filemode(st.st_mode)  # permissions
             nlinks = st.st_nlink  # number of links to inode
             if not nlinks:  # non-posix system, let's use a bogus value
                 nlinks = 1
@@ -311,14 +314,14 @@ class FilesystemBase(object):
             else:
                 fmtstr = "%d %H:%M"
             try:
-                mtimestr = "%s %s" % (mtime.tm_mon,
+                mtimestr = "%s %s" % (_months_map[mtime.tm_mon],
                                       time.strftime(fmtstr, mtime))
             except ValueError:
                 # It could be raised if last mtime happens to be too
                 # old (prior to year 1900) in which case we return
                 # the current time as last mtime.
                 mtime = timefunc()
-                mtimestr = "%s %s" % (mtime.tm_mon,
+                mtimestr = "%s %s" % (_months_map[mtime.tm_mon],
                                       time.strftime("%d %H:%M", mtime))
 
             # if the file is a symlink, resolve it, e.g. "symlink -> realfile"

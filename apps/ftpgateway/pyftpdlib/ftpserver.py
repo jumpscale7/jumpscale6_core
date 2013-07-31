@@ -2431,7 +2431,7 @@ class FTPHandler(asynchat.async_chat):
         # - Some older FTP clients erroneously issue /bin/ls-like LIST
         #   formats in which case we fall back on cwd as default.
         try:
-            iterator = self.fs.get_list_dir(path)
+            iterator = self.fs.get_list_dir(path[:-2])
         except OSError, err:
             o.errorconditationhandler.processPythonExceptionObject(err)
             why = _strerror(err)
