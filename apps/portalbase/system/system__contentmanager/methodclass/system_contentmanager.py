@@ -38,7 +38,7 @@ class system_contentmanager(system_contentmanager_osis):
         result list(str) 
         
         """
-        return o.core.portal.runningPortal.webserver.bucketsloader._objects.keys()
+        return o.core.portal.runningPortal.webserver.bucketsloader.buckets.keys()
 
     def getBucketsWithPaths(self,**args):
         """
