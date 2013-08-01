@@ -1,5 +1,6 @@
 from OpenWizzy import o
 o.application.start('ftpgateway')
+o.dirs.tmpDir = o.system.fs.joinPaths(o.dirs.tmpDir, 'ftpcache')
 import OpenWizzy.portal
 import OpenWizzy.baselib.http_client
 from pyftpdlib import ftpserver

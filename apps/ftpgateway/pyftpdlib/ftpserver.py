@@ -2575,7 +2575,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             fd = self.fs.openfile(file, mode + 'b')
         except IOError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err) #@todo do better escalation
+            o.errorconditionhandler.processPythonExceptionObject(err) #@todo do better escalation
             why = _strerror(err)
             self.respond('550 %s.' %why)
             return

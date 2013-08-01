@@ -3,6 +3,7 @@ from FilesystemBase import FilesystemBase
 
 from OpenWizzy import o
 import os
+import json
 import inspect
 
 class OsisList(FilesystemBase):
@@ -57,11 +58,38 @@ class OsisList(FilesystemBase):
     def rmdir(self, path):
         return
 
-    def fs2ftp(self, path):
-        raise RuntimeError("not implemented")
+    def _getActorMethod(self, parts, method):
+        if len(parts) < 3:
+            raise ValueError('Invalid path')
+        actor = self._getActorClient(*parts[0:2])
+        methodname = "model_%s_%s" % (parts[2], method)
+        return getattr(actor, methodname)
 
-    def ftp2fs(self, ftppath):
-        return self.joinPaths(self.ftppath,ftppath)
+    def _getParts(self, path):
+        return o.system.fs.joinPaths(self.cwd, path).split('/')
+
+    def _getObject(self, path):
+        parts = self._getParts(path)
+        method = self._getActorMethod(parts, 'get')
+        oid = os.path.splitext(parts[3])[0]
+        return method(oid)
+
+    def ftp2fs(self, path, retrieve=True):
+        parts = self._getParts(path)
+        tmpdir = o.system.fs.joinPaths(o.dirs.tmpDir, *parts[0:-1])
+        o.system.fs.createDir(tmpdir)
+        tmpfile = o.system.fs.joinPaths(tmpdir, parts[-1])
+        if retrieve:
+            try:
+                obj = self._getObject(path)
+            except:
+                return tmpfile
+            with open(tmpfile, 'w+') as fd:
+                json.dump(obj, fd)
+        return tmpfile
+
+    def fs2ftp(self, path):
+        return path[len(o.dirs.tmpDir):]
 
     def remove(self, path):
         return
@@ -99,7 +127,6 @@ class OsisList(FilesystemBase):
         return 0
 
     def format_list(self, basedir, listing, ignore_err=True):
-        mtimestr = "Sep 02  3:40"
         tdir = "drwxr-xr-x    3 ftp      ftp          4096 Dec 04 05:52 %s\r\n"
         tfile = "-rwxr-xr-x    3 ftp      ftp          4096 Dec 04 05:52 %s\r\n"
         for basename in listing:
@@ -119,5 +146,15 @@ class OsisList(FilesystemBase):
                 yield tdir % basename
 
     def openfile(self, filename, mode):
-        return None
+        fpath = self.ftp2fs(filename)
+        return open(fpath, mode)
 
+    def on_file_sent(self,path):
+        pass
+
+    def on_file_received(self, fpath):
+        path = self.fs2ftp(fpath)
+        parts = self._getParts(path)[1:]
+        method = self._getActorMethod(parts, 'set')
+        content = json.loads(o.system.fs.fileGetContents(fpath))
+        method(content)
