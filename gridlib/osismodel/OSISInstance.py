@@ -1,7 +1,7 @@
 from OpenWizzy import o
 #from IndexerWhoosh import IndexerWhoosh
 
-class OSISInstanceNoDB:
+class OSISInstanceNoDB(object):
 
     def __init__(self,appname,actorname,modelname,classs):
         self.modelclass=classs
@@ -51,12 +51,14 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
 
 
     def _getObj(self, obj):
-        obj = self._getDict(obj)
-        return o.core.grid.zobjects.getModelObject(obj)
+        obj = super(OSISRemoteOSISInstance, self)._getObj(obj)
+        return o.core.grid.zobjects.getModelObject(obj.obj2dict())
 
     def set(self, obj):
         value = self._getObj(obj)
         id = value.id
+        if not value.guid:
+            value.guid = o.base.idgenerator.generateGUID()
         key,new,changed = self.remoteOSISClient.set(self.actorname, self.modelname, value, id)
         return key
 
