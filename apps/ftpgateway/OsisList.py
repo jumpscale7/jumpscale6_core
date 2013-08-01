@@ -92,7 +92,11 @@ class OsisList(FilesystemBase):
         return path[len(o.dirs.tmpDir):]
 
     def remove(self, path):
-        return
+        parts = self._getParts(path)
+        oid = os.path.splitext(parts[-1])[0]
+        method = self._getActorMethod(parts, 'delete')
+        method(oid)
+
     def rename(self, src, dst):
         return
 
