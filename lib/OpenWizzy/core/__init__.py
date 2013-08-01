@@ -237,6 +237,9 @@ import OpenWizzy.baselib.hrd
 from . import shellconfig
 from . import console
 from . import gui
+
+import OpenWizzy.baselib.owdeveltools
+
 #reinit whoAmI after dirs are loaded
 o.application.initWhoAmI()
 
