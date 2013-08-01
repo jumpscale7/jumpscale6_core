@@ -25,7 +25,7 @@ class OWDevelToolsInstaller:
 
     def _getRemoteOWURL(self,name):
         if self.passwd=="" or self.login=="":
-            return "https://bitbucket.org/openwizzy/%s"%(self.login,self.passwd,name)
+            return "https://bitbucket.org/openwizzy/%s"%(name)
         else:
             return "https://%s:%s@bitbucket.org/openwizzy/%s"%(self.login,self.passwd,name)
 
