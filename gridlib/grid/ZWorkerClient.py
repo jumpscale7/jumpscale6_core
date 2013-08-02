@@ -82,6 +82,9 @@ class ZWorkerClient():
                 o.errorconditionhandler.raiseOperationalCritical(message="", category="",
                                                                  msgpub="could not communicate with server on %s"%self.serverEndpoint, die=True, tags="")
 
+    def getjobid(self):
+        result=self.send()
+
     def registerAction(self, action):
         """
         register action with broker if not done yet
