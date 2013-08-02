@@ -1,4 +1,9 @@
-from OpenWizzy import o
+from OpenWizzy import *
+
+o.application.appname = "owupdate"
+o.application.start()
+
+
 import OpenWizzy.baselib.mercurial
 o.application.shellconfig.interactive=True
 

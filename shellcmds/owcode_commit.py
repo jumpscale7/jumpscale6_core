@@ -1,5 +1,11 @@
-from OpenWizzy import o
+from OpenWizzy import *
+
+o.application.appname = "owcommit"
+o.application.start()
+
 import OpenWizzy.baselib.mercurial
+
+
 o.application.shellconfig.interactive=True
 
 for item in o.system.fs.listDirsInDir("/opt/code/openwizzy"):
