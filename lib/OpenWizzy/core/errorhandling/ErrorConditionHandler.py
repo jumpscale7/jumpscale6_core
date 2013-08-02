@@ -242,7 +242,6 @@ class ErrorConditionHandler():
         self.processErrorConditionObject(errorobject)
 
         if o.application.shellconfig.interactive:
-            #@todo kristof: get more detailed stacktrace
             return self.escalateBugToDeveloper(errorobject,tb)
 
     def checkErrorIgnore(self,eco):
@@ -280,11 +279,11 @@ class ErrorConditionHandler():
             try:
                 o.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)
             except Exception,e:
-                from OpenWizzy.core.Shell import ipshellDebug,ipshell
+                from IPython import embed                
                 print "DEBUG NOW error in error escalation in openwizzy main log target for loggerclient"
-                ipshell()
-        else:
-            o.logger.log(str(errorConditionObject), o.enumerators.LogLevel.OPERATORMSG)
+                embed()
+        # else:
+        #     o.logger.log(str(errorConditionObject), o.enumerators.LogLevel.OPERATORMSG)
 
         return errorConditionObject
         
@@ -320,7 +319,7 @@ class ErrorConditionHandler():
         tracefile=""
         
         def findEditorLinux():
-            apps=["geany","gedit","kate"]                
+            apps=["sublime_text","geany","gedit","kate"]                
             for app in apps:
                 try:
                     if o.system.unix.checkApplicationInstalled(app):
@@ -328,7 +327,7 @@ class ErrorConditionHandler():
                         return editor
                 except:
                     pass
-            return "less"        
+            return "less"
 
         if o.application.shellconfig.interactive:
             #if o.application.shellconfig.debug:

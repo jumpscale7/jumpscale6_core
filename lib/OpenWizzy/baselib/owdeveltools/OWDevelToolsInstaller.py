@@ -44,7 +44,7 @@ class OWDevelToolsInstaller:
         
         do=o.system.installtools
 
-        do.execute("apt-get update")
+        do.execute("apt-get update",dieOnNonZeroExitCode=False)
 
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
                         'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc",
