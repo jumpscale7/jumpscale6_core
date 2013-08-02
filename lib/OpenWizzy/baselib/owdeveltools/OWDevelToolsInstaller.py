@@ -12,19 +12,19 @@ class OWDevelToolsInstaller:
 
     def getCredentialsOpenWizzyRepo(self):
         login=raw_input("Pylabs Repo Login, if unknown press enter:")
-        # if self.login=="":
-        #     self.login=""
+        if login=="":
+            self.login="*"
             
         passwd=raw_input("Pylabs Repo Passwd, if unknown press enter:")
-        # if self.passwd=="":
-        #     self.passwd="passwd"
+        if passwd=="":
+            self.passwd="*"
 
     def _checkCredentials(self):
         if self.passwd=="" or self.login=="":
             self.getCredentialsOpenWizzyRepo()
 
     def _getRemoteOWURL(self,name):
-        if self.passwd=="" or self.login=="":
+        if self.passwd=="*" or self.login=="*":
             return "https://bitbucket.org/openwizzy/%s"%(name)
         else:
             return "https://%s:%s@bitbucket.org/openwizzy/%s"%(self.login,self.passwd,name)
