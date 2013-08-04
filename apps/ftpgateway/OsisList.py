@@ -3,6 +3,7 @@ from FilesystemBase import FilesystemBase
 
 from OpenWizzy import o
 import os
+import errno
 import json
 import inspect
 
@@ -25,17 +26,23 @@ class OsisList(FilesystemBase):
             app = getattr(o.apps, appname)
             if hasattr(app, actorname):
                 return getattr(app, actorname)
-        return self.client.getActor(appname, actorname)
+        try:
+            return self.client.getActor(appname, actorname)
+        except:
+            raise OSError(errno.ENOENT, "Not existing")
 
 
     def listdir(self, path):
         print "list for rootfilesystemlist: '%s' '%s'" % (self.cwd, path)
-        parts = self.cwd.split('/')
+        parts = [ x for x in os.path.join(self.cwd, path).split('/') if x ] #strip empty parts
+        return self._listdir(parts)
+
+    def _listdir(self, parts):
         dirs = []
-        if not self.cwd:
+        if not parts:
             dirs = [ x.split('__')[0] for x in self.actors ]
         elif len(parts) == 1:
-            dirs = [ x.split('__')[1] for x in self.actors if x.startswith(self.cwd) ]
+            dirs = [ x.split('__')[1] for x in self.actors if x.startswith(parts[0]) ]
         elif len(parts) == 2:
             print '***** %s' % parts
             actor = self._getActorClient(*parts)
@@ -47,10 +54,13 @@ class OsisList(FilesystemBase):
             dirs = [ "%s.json" %x for x in getattr(actor, methodname)() ]
         return list(set(dirs))
 
-    def chdir(self, ftppath):
-        print "chdirrootfslist:%s" % ftppath
+    def chdir(self, path):
+        path = path.replace(self.ftproot, '', 1)
+        parts = [ x for x in path.split('/') if x ] #strip empty parts
+        dirs = self._listdir(parts[:-1])
+        if parts and parts[-1] not in dirs:
+            raise OSError(errno.ENOENT, "Could not change to not existing path")
         return
-        self.cwd=self._removeFtproot(ftppath)
 
     def mkdir(self, path):
         return

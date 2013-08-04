@@ -391,10 +391,10 @@ class CallLater(object):
             try:
                 self._target(*self._args, **self._kwargs)
             except (KeyboardInterrupt, SystemExit, asyncore.ExitNow),err:
-                o.errorconditationhandler.processPythonExceptionObject(err)
+                o.errorconditionhandler.processPythonExceptionObject(err)
                 raise
             except Exception, exc:
-                o.errorconditationhandler.processPythonExceptionObject(exc)
+                o.errorconditionhandler.processPythonExceptionObject(exc)
                 if self._errback is not None:
                     self._errback()
                 else:
@@ -2453,7 +2453,7 @@ class FTPHandler(asynchat.async_chat):
                 self.fs.lstat(path)  # raise exc in case of problems
                 listing = [os.path.basename(path)]
         except OSError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             self.respond('550 %s.' % _strerror(err))
         else:
             data = ''
@@ -2480,7 +2480,7 @@ class FTPHandler(asynchat.async_chat):
             iterator = self.fs.format_mlsx(basedir,[basename], perms, self._current_facts, ignore_err=False)
             data = ''.join(iterator)
         except OSError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             self.respond('550 %s.' % _strerror(err))
         else:
             # since TVFS is supported (see RFC-3659 chapter 6), a fully
@@ -2503,14 +2503,14 @@ class FTPHandler(asynchat.async_chat):
         # print "MLSD:%s"%path
         # RFC-3659 requires 501 response code if path is not a directory
         if not self.fs.isdir(path):
-            o.errorconditationhandler.raiseOperationalWarning("","ftpserver.fs","Could not find directory '%s'"%path)
+            o.errorconditionhandler.raiseOperationalWarning("","ftpserver.fs","Could not find directory '%s'"%path)
             self.respond("501 No such directory.")
             return
         try:
             listing = self.fs.listdir(path)
             # print listing
         except OSError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             self.respond('550 %s.' % why)
         else:
@@ -2528,7 +2528,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             fd = self.fs.openfile(file, 'rb')
         except IOError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             self.respond('550 %s.' % why)
             return
@@ -2548,7 +2548,7 @@ class FTPHandler(asynchat.async_chat):
             except ValueError:
                 why = "Invalid REST parameter"
             except IOError, err:
-                o.errorconditationhandler.processPythonExceptionObject(err)
+                o.errorconditionhandler.processPythonExceptionObject(err)
                 why = _strerror(err)
             if not ok:
                 self.respond('554 %s' % why)
@@ -2595,7 +2595,7 @@ class FTPHandler(asynchat.async_chat):
             except ValueError:
                 why = "Invalid REST parameter"
             except IOError, err:
-                o.errorconditationhandler.processPythonExceptionObject(err)
+                o.errorconditionhandler.processPythonExceptionObject(err)
                 why = _strerror(err)
             if not ok:
                 self.respond('554 %s' %why)
@@ -2638,7 +2638,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             fd = self.fs.mkstemp(prefix=prefix,dir=basedir)
         except IOError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err) #@todo better escalation
+            o.errorconditionhandler.processPythonExceptionObject(err) #@todo better escalation
             # hitted the max number of tries to find out file with
             # unique name
             if err.errno == errno.EEXIST:
@@ -2654,7 +2654,7 @@ class FTPHandler(asynchat.async_chat):
                 fd.close()
                 self.fs.remove(fd.name)
             except OSError,err:
-                o.errorconditationhandler.processPythonExceptionObject(err)
+                o.errorconditionhandler.processPythonExceptionObject(err)
                 pass
             self.respond("550 Not enough privileges.")
             return
@@ -2868,7 +2868,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             self.fs.chdir(ftppath)
         except OSError, err:            
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             self.respond('550 %s.' % why)
         else:
@@ -2909,7 +2909,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             size = self.fs.getsize(path)
         except OSError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             print "ERROR:could not get size file %s\nerror:%s"%(path,why)
             self.respond('550 %s.' % why)
@@ -2934,7 +2934,7 @@ class FTPHandler(asynchat.async_chat):
             secs = self.fs.getmtime(path)
             lmt = time.strftime("%Y%m%d%H%M%S", timefunc(secs))
         except (OSError, ValueError), err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             if isinstance(err, OSError):
                 why = _strerror(err)
             else:
@@ -2954,7 +2954,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             self.fs.mkdir(path)            
         except OSError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             print "ERROR:could not create dir %s\nerror:%s"%(path,why)
             self.respond('550 %s.' %why)
@@ -2976,7 +2976,7 @@ class FTPHandler(asynchat.async_chat):
         try:          
             self.fs.rmdir(path)
         except Exception, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             print "ERROR:could not delete dir %s\nerror:%s"%(path,why)
             self.respond('550 %s.' % why)
@@ -2988,7 +2988,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             self.fs.remove(path)
         except Exception, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             print "ERROR:could not delete file %s\nerror:%s"%(path,why)
             self.responding('550 %s.' % why)
@@ -3017,7 +3017,7 @@ class FTPHandler(asynchat.async_chat):
         try:
             self.fs.rename(src, path) 
         except OSError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             why = _strerror(err)
             print "ERROR:could not rename file %s\nerror:%s"%(path,why)
             self.respond('550 %s.' % why)
@@ -3123,7 +3123,7 @@ class FTPHandler(asynchat.async_chat):
             try:
                 iterator = self.fs.get_list_dir(path)
             except OSError, err:
-                o.errorconditationhandler.processPythonExceptionObject(err)
+                o.errorconditionhandler.processPythonExceptionObject(err)
                 why = _strerror(err)
                 self.respond('550 %s.' %why)
             else:
@@ -3172,7 +3172,7 @@ class FTPHandler(asynchat.async_chat):
             if cmd.upper() != 'MLST' or 'MLST' not in self.proto_cmds:
                 raise ValueError('Unsupported command "%s"' % cmd)
         except ValueError, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             self.respond('501 %s.' % err)
         else:
             facts = [x.lower() for x in arg.split(';')]
@@ -3238,13 +3238,13 @@ class FTPHandler(asynchat.async_chat):
                 assert 0 <= int(x) <= 7
             mode = int(mode, 8)
         except (AssertionError, ValueError),err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             self.respond("501 Invalid SITE CHMOD format.")
         else:
             try:
                 self.run_as_current_user(self.fs.chmod, path, mode)
             except OSError, err:
-                o.errorconditationhandler.processPythonExceptionObject(err)
+                o.errorconditionhandler.processPythonExceptionObject(err)
                 why = _strerror(err)
                 self.respond('550 %s.' % why)
             else:
@@ -3357,7 +3357,7 @@ class FTPServer(object, asyncore.dispatcher):
                     self.set_reuse_addr()
                     self.bind(sa)
                 except socket.error, msg:
-                    o.errorconditationhandler.processPythonExceptionObject(msg) #@todo better errorescalation
+                    o.errorconditionhandler.processPythonExceptionObject(msg) #@todo better errorescalation
                     if self.socket:
                         self.socket.close()
                     self.socket = None
@@ -3490,10 +3490,10 @@ class FTPServer(object, asyncore.dispatcher):
         try:
             raise
         except (KeyboardInterrupt, SystemExit, asyncore.ExitNow),err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             raise
         except Exception, err:
-            o.errorconditationhandler.processPythonExceptionObject(err)
+            o.errorconditionhandler.processPythonExceptionObject(err)
             # logerror(traceback.format_exc())
         self.close()
 
