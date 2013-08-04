@@ -57,6 +57,9 @@ class FilesystemBase(object):
     def _removeFtproot(self,ftppath):
         if ftppath.find(self.ftproot)==0:
             ftppath=ftppath[len(self.ftproot)+1:]
+        elif ftppath.find(self.ftproot)!=-1:
+            ftppath = self.fs2ftp(ftppath)
+            ftppath=ftppath[len(self.ftproot)+1:]
         else:
             import ipdb; ipdb.set_trace()
             
