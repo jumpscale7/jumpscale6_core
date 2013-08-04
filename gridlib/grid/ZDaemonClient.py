@@ -244,7 +244,7 @@ class Klass(object):
             if spec['args'][3]:
                 for cnt, default in enumerate(spec['args'][3][::-1]):
                     cnt += 1
-                    spec['args'][0][-cnt] += "=%s" % default
+                    spec['args'][0][-cnt] += "=%r" % default
             params = ', '.join(spec['args'][0])
             strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
             exec(strmethod)
