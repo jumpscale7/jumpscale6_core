@@ -2964,6 +2964,7 @@ class FTPHandler(asynchat.async_chat):
         # they must be doubled (see RFC-959, chapter 7, appendix 2).
         #path=self.fs.ftpnorm(path)
         self.respond('257 "%s" directory created.' % path.replace('"', '""'))
+        return path
 
     def ftp_RMD(self, path):
         """Remove the specified directory."""
