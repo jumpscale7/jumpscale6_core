@@ -7,15 +7,12 @@ from CoreModel.ZApplication import ZApplication
 from CoreModel.ZProcess import ZProcess
 from CoreModel.ModelObject import ModelObject
 
-from ZDaemonClient import *
 from ZBrokerClientSelfHosted import ZBrokerClientSelfHosted
-from ZDaemon import ZDaemon
 from ZLogger import ZLogger
 from ZLoggerClient import ZLoggerClient
 from ZBroker import ZBroker
 from ZBrokerClient import ZBrokerClient
 from ZWorker import ZWorker
-from GeventLoop import GeventLoop
 from ZWorkerClient import ZWorkerClient
 
 from LogTargetElasticSearch import LogTargetElasticSearch

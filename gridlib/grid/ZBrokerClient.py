@@ -1,6 +1,6 @@
 from OpenWizzy import o
 
-from ZDaemonClient import ZDaemonClient
+from ..zdaemon.ZDaemonClient import ZDaemonClient
 
 class ZBrokerClient(ZDaemonClient):
     def __init__(self,ipaddr="localhost",port=5554):

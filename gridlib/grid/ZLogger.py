@@ -7,7 +7,7 @@ import time
 # import gevent.monkey
 # import zmq.green as zmq
 from gevent import queue as queue
-from ZDaemon import ZDaemon
+from ..zdaemon.ZDaemon import ZDaemon
 
 class ZLoggerCMDS():
     def __init__(self, daemon):
@@ -90,7 +90,7 @@ class ZLogger(ZDaemon):
             while i < 500 and self.logQueue.empty() == False:
                 msg = self.logQueue.get()
                 if self.loghandlingTE != None:
-                    obj=o.logger.getLogObjectFromDict(o.db.serializers.ujson.loads(msg))
+                    obj=o.logger.getLogObjectFromDict(o.db.serializers.getSerializerType('j').loads(msg))
                     if int(obj.order)==0:
                         key = "%s_%s_%s"%(obj.gid, obj.bid, obj.pid)
                         if key not in self.ids:

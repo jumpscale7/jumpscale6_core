@@ -1,9 +1,8 @@
 from OpenWizzy import o
 import zmq.green as zmq
 import inspect
-import struct
-ujson = o.db.serializers.ujson
-from ZDaemonClient import ZDaemonClient
+ujson = o.db.serializers.getSerializerType('j')
+from ..zdaemon.ZDaemonClient import ZDaemonClient
 
 
 class ZWorkerClient():
@@ -125,7 +124,7 @@ class ZWorkerClient():
 
         job = o.core.grid.zobjects.getZJobObject(executorrole=executorrole, actionid=action.id, args=args,jidmaster=masterid,jidparent=parentid,allworkers=allworkers)
         
-        returnjob = self.send(o.db.serializers.ujson.dumps(job.__dict__))
+        returnjob = self.send(ujson.dumps(job.__dict__))
         returnjob=ujson.loads(returnjob)
         job = o.core.grid.zobjects.getZJobObject(ddict=returnjob)
 

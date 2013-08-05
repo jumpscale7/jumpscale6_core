@@ -11,13 +11,13 @@ import copy
 
 import zmq.green as zmq
 # from ZDataProcessor import ZDataProcessor
-from GeventLoop import GeventLoop
+from ..gevent.GeventLoop import GeventLoop
 
 from BrokerMainActions import BrokerMainActions
 
-from ZDaemon import ZDaemon
+from ..zdaemon.ZDaemon import ZDaemon
 
-ujson = o.db.serializers.ujson
+ujson = o.db.serializers.getSerializerType('j')
 
 class ZBroker(ZDaemon):
     def __init__(self):
@@ -165,10 +165,10 @@ class ZBroker(ZDaemon):
                     print "reply from worker:%s"%msg
                     # msg here is what returns from worker
                     
-                    job = o.db.serializers.ujson.loads(msg[1])
+                    job = ujson.loads(msg[1])
 
                     if job["parent"] == 0:
-                        # msg[1]=o.db.serializers.ujson.dumps(job)
+                        # msg[1]=ujson.dumps(job)
                         self.frontend.send_multipart([msg[0], "", msg[1]])
                     else:
                         # keep track of other parts which need to come
@@ -197,7 +197,7 @@ class ZBroker(ZDaemon):
                     break
                 data = frames[2]  #is serialized job
                 try:
-                    job = o.db.serializers.ujson.loads(data)
+                    job = ujson.loads(data)
                 except:
                     raise RuntimeError("Could not decode msg,%s"%data)
                 self.processJob(job, client=frames[0])
@@ -218,7 +218,7 @@ class ZBroker(ZDaemon):
         for id in jobids:
             # print "send worker for job coming from client: %s" % frames[0]
             workerid=self.activeJobs[id]["wpid"]
-            self.backend.send_multipart([str(workerid), str(client), o.db.serializers.ujson.dumps(self.activeJobs[id])])
+            self.backend.send_multipart([str(workerid), str(client), ujson.dumps(self.activeJobs[id])])
 
         #
 

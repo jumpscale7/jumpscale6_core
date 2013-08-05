@@ -1,5 +1,5 @@
 from OpenWizzy import o
-from ZDaemonClient import ZDaemonClient
+from ..zdaemon.ZDaemonClient import ZDaemonClient
 
 class ZLoggerClient(ZDaemonClient):
 

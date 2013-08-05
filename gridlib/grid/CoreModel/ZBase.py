@@ -60,7 +60,7 @@ class ZBase():
 
     def loadMessage(self,s):
         # self.__dict__.update(msgpack.loads(s))
-        objecttype,objectversion,guid,obj=o.db.serializers.ujson.loads(s)
+        objecttype,objectversion,guid,obj=o.db.serializers.getSerializerType('j').loads(s)
         self.__dict__.update(obj)
         if self.guid<>"" and self.guid<>guid:
             raise RuntimeError("Data error, guid in object not same as given on serialized format")
@@ -70,7 +70,7 @@ class ZBase():
         """
         to serialize to send over wire (use ujson because is fastest)
         """
-        return o.db.serializers.ujson.dumps(self._getMessage())
+        return o.db.serializers.getSerializerType('j').dumps(self._getMessage())
 
     def getMessage(self):
         o.errorconditionhandler.raiseBug(message="notimplemented",category=cat)

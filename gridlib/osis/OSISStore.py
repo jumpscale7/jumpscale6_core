@@ -165,9 +165,9 @@ class OSISStore(object):
             self.index(obj)
 
     def serialize(self,obj):
-        return o.db.serializers.ujson.dumps(obj)
+        return o.db.serializers.getSerializerType('j').dumps(obj)
 
     def unserialize(self,obj):
-        return o.db.serializers.ujson.loads(obj)
+        return o.db.serializers.getSerializerType('j').loads(obj)
             
 

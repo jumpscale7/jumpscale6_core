@@ -1,6 +1,7 @@
 from OpenWizzy import o
-ujson = o.db.serializers.ujson
-from ZBrokerClient import ZBrokerClient
+import OpenWizzy.baselib.serializers
+ujson = o.db.serializers.getSerializerType('j')
+from .ZBrokerClient import ZBrokerClient
 
 #creates local connection when inside broker
 class ZBrokerClientSelfHosted(ZBrokerClient):

@@ -6,14 +6,11 @@
 #
 
 from OpenWizzy import o
-from GeventLoop import GeventLoop
-import time
-import os
-from random import randint
+from ..gevent.GeventLoop import GeventLoop
 import time
 import zmq
 from ZWorkerClient import ZWorkerClient
-ujson = o.db.serializers.ujson
+ujson = o.db.serializers.getSerializerType('j')
 
 class ZWorker(GeventLoop):
     def __init__(self,addr,port,instance=1,roles=["system"],category=""):
@@ -149,7 +146,7 @@ class ZWorker(GeventLoop):
                     
                     job=self.process(job)
 
-                    frames[1]=o.db.serializers.ujson.dumps(job.__dict__)
+                    frames[1]=ujson.dumps(job.__dict__)
 
                     self.worker.send_multipart(frames)
                     self.liveness = self.HEARTBEAT_LIVENESS
