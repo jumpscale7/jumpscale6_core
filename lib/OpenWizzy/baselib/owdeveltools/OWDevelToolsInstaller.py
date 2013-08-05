@@ -6,7 +6,6 @@ class OWDevelToolsInstaller:
 
     def __init__(self):
         self._do=o.system.installtools
-        o.system.platform.ubuntu.check()
         self.login=""
         self.passwd=""
 
@@ -41,7 +40,7 @@ class OWDevelToolsInstaller:
         
 
     def preparePlatformUbuntu(self):
-        
+        o.system.platform.ubuntu.check()
         do=o.system.installtools
 
         do.execute("apt-get update",dieOnNonZeroExitCode=False)
