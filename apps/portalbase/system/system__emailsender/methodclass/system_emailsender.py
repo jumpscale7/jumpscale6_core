@@ -10,7 +10,7 @@ class system_emailsender(system_emailsender_osis):
     """
     # Maybe we can add this later
     output_format_mapping = {
-        'json': o.db.serializers.ujson.dumps
+        'json': o.db.serializers.getSerializerType('j').dumps
     }
 
     def __init__(self):
