@@ -11,11 +11,8 @@ import OpenWizzy.baselib.serializers
 GeventLoop=o.core.gevent.getGeventLoopClass()
 
 class Session():
-
-    def __init__(self,user,key):
-        self.key=key
-        self.user=user
-
+    def __init__(self,ddict):
+        self.__dict__=ddict
 
 
 class ZDaemon(GeventLoop):
@@ -40,6 +37,8 @@ class ZDaemon(GeventLoop):
 
         self.nrCmdGreenlets=nrCmdGreenlets
 
+        self.sessions={}
+
         self.key=""
 
     def addCMDsInterface(self, cmdInterfaceClass):
@@ -49,7 +48,7 @@ class ZDaemon(GeventLoop):
         self.cmdsInterfaces=[]
         self.cmdsInterfaces.append(cmdInterfaceClass(self))
 
-    def processRPC(self, cmd,data,format,returnformat,user=""):
+    def processRPC(self, cmd,data,format,session):
         """
         list with item 0=cmd, item 1=args (dict)
 
@@ -78,7 +77,7 @@ class ZDaemon(GeventLoop):
             self.cmds[cmd] = ffunction
 
         try:
-            result = ffunction(returnformat=returnformat,user=user,**data)
+            result = ffunction(session=session,**data)
         except Exception, e:
             eco=o.errorconditionhandler.parsePythonErrorObject(e)
             eco.level=2
@@ -94,7 +93,7 @@ class ZDaemon(GeventLoop):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
-            cmd,informat,returnformat,data = cmdsocket.recv_multipart()
+            sessionid,cmd,informat,returnformat,data = cmdsocket.recv_multipart()
             if informat<>"":
                 ser=o.db.serializers.get(informat,key=self.key)
                 data=ser.loads(data)
@@ -103,7 +102,11 @@ class ZDaemon(GeventLoop):
             #     self.logQueue.put(data[1:])
             #     cmdsocket.send("OK")
 
-            parts = self.processRPC(cmd,data,informat,returnformat,user="")
+            if self.sessions.has_key(sessionid):
+                session=self.sessions[sessionid]
+            else:
+                session=None
+            parts = self.processRPC(cmd,data,informat,returnformat,session=session)
             if parts[1]<>"":
                 ser2=o.db.serializers.get(informat,key=self.key)
                 data=ser2.dumps(parts[2])
@@ -142,9 +145,15 @@ class ZDaemon(GeventLoop):
             if socks.get(frontend) == zmq.POLLIN:
                 parts=frontend.recv_multipart()
                 if not self.authenticate(parts[0]):                   
-                    frontend.send_multipart([1,"",""])
+                    frontend.send_multipart([1,"",""]) #reply to frontend does not work
+                elif parts[1]=="session":
+                    #register new session
+                    ser=o.db.serializers.getMessagePack()
+                    sessiondict=ser.loads(parts[2])
+                    self.sessions[parts[0]]=Session(sessiondict)
+
                 else:
-                   backend.send_multipart(parts)
+                   backend.send_multipart([parts[0]]+parts)
 
             if socks.get(backend) == zmq.POLLIN:
                 parts = backend.recv_multipart()

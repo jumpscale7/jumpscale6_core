@@ -5,6 +5,16 @@ import time
 import struct
 import math
 
+class Session():
+
+    def __init__(self,organization,user,encrkey,ipaddr,macaddr):
+        self.encrkey=key
+        self.user=user
+        self.organization=organization
+        self.ipaddr=ipaddr
+        self.macaddr=macaddr
+        self.start=int(time.time())
+
 class ZDaemonClient():
     def __init__(self,ipaddr="localhost", port=4444,org="myorg",user="root",passwd="passwd",ssl=False,datachannel=False,encrkey="",reset=False):
         """
@@ -45,6 +55,15 @@ class ZDaemonClient():
             self.sendcmd(cmd="registerpubkey", sendformat='m', returnformat='m', organization=self.org,user=self.user,pubkey=pubkey)
 
             self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver", sendformat='m', returnformat='m')
+
+            from IPython import embed
+            print "DEBUG NOW session"
+            embed()
+
+            session=Session(organization-self.org,user=self.user,encrkey="",ipaddr,macaddr)
+            ser=o.db.serializers.getMessagePack()
+            sessiondict=ser.dumps(session.__dict__)
+
 
             from IPython import embed
             print "DEBUG NOW pubserverserver"

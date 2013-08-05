@@ -13,23 +13,23 @@ class ZDaemonCMDS(object):
     #     """
     #     return self.daemon.getfreeportAndSchedule("datachannelProcessor", self.daemon.datachannelProcessor)
 
-    def authenticate(self,user,passwd,**args):
-        return True #will authenticall all (is std)
-
     def registerpubkey(self,organization,user,pubkey,**args):
         from IPython import embed
         print "DEBUG NOW register pubkeyr"
         embed()
 
-    def getpubkeyserver(self,**args):
+    def getpubkeyserver(self,session):
         return self.daemon.keystor.getPubKey(self.daemon.sslorg,self.daemon.ssluser,True)
 
-    def registersession(self,sessiondata,**args):
+    def registersession(self,organization,user,macaddr,hostname,session):
+        """
+        @param sessiondata is encrypted data (SSL)
+        """
         from IPython import embed
         print "DEBUG NOW sessiondata111"
         embed()
 
-    def logeco(self, eco,**args):
+    def logeco(self, eco,session):
         """
         log eco object (as dict)
         """
@@ -37,10 +37,10 @@ class ZDaemonCMDS(object):
         eco=o.errorconditionhandler.getErrorConditionObject(ddict=eco)
         self.daemon.eventhandlingTE.executeV2(eco=eco,history=self.daemon.eventsMemLog)
 
-    def pingcmd(self,**args):
+    def pingcmd(self,session):
         return "pong"
 
-    def _introspect(self,**args):
+    def _introspect(self,session):
         methods = {}
         for name, method in inspect.getmembers(self, inspect.ismethod):
             if name.startswith('_'):
