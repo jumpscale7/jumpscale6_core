@@ -6,25 +6,24 @@ class OWDevelToolsInstaller:
 
     def __init__(self):
         self._do=o.system.installtools
-        o.system.platform.ubuntu.check()
         self.login=""
         self.passwd=""
 
     def getCredentialsOpenWizzyRepo(self):
-        login=raw_input("Pylabs Repo Login, if unknown press enter:")
-        # if self.login=="":
-        #     self.login=""
+        self.login=raw_input("Pylabs Repo Login, if unknown press enter:")
+        if self.login=="":
+            self.login="*"
             
-        passwd=raw_input("Pylabs Repo Passwd, if unknown press enter:")
-        # if self.passwd=="":
-        #     self.passwd="passwd"
+        self.passwd=raw_input("Pylabs Repo Passwd, if unknown press enter:")
+        if self.passwd=="":
+            self.passwd="*"
 
     def _checkCredentials(self):
         if self.passwd=="" or self.login=="":
             self.getCredentialsOpenWizzyRepo()
 
     def _getRemoteOWURL(self,name):
-        if self.passwd=="" or self.login=="":
+        if self.passwd=="*" or self.login=="*":
             return "https://bitbucket.org/openwizzy/%s"%(name)
         else:
             return "https://%s:%s@bitbucket.org/openwizzy/%s"%(self.login,self.passwd,name)
@@ -41,13 +40,14 @@ class OWDevelToolsInstaller:
         
 
     def preparePlatformUbuntu(self):
-        
+        o.system.platform.ubuntu.check()
         do=o.system.installtools
 
-        do.execute("apt-get update")
+        do.execute("apt-get update",dieOnNonZeroExitCode=False)
 
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
-                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc","g++","python-dev","python-zmq","msgpack-python","python-mhash","python-snappy") 
+                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc",
+                        "g++","python-dev","python-zmq","msgpack-python","python-mhash","python-snappy","python-beaker","python-mimeparse","python-m2crypto") 
         for name in debpackages:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)

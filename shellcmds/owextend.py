@@ -1,4 +1,6 @@
-from OpenWizzy import o
+from OpenWizzy import *
+
+o.application.appname = "owext"
 
 import OpenWizzy.baselib.platforms #gets access to ubuntu code
 import OpenWizzy.baselib.owdeveltools
