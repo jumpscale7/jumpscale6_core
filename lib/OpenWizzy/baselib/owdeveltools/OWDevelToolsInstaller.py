@@ -48,7 +48,7 @@ class OWDevelToolsInstaller:
 
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
                         'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc",
-                        "g++","python-dev","python-zmq","msgpack-python","python-mhash","python-snappy","python-beaker","python-mimeparse") 
+                        "g++","python-dev","python-zmq","msgpack-python","python-mhash","python-snappy","python-beaker","python-mimeparse","python-m2crypto") 
         for name in debpackages:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)

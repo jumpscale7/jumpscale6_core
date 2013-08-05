@@ -8,6 +8,7 @@ from .SerializerMSGPack import SerializerMSGPack
 from .SerializerSnappy import SerializerSnappy
 from .SerializerLZMA import SerializerLZMA
 from .SerializerBlowfish import SerializerBlowfish
+from .SerializerBase64 import SerializerBase64
 
 o.base.loader.makeAvailable(o, 'db.serializers')
 o.db.serializers.int = SerializerInt()
@@ -19,3 +20,4 @@ o.db.serializers.msgpack = SerializerMSGPack()
 o.db.serializers.snappy = SerializerSnappy()
 o.db.serializers.lzma = SerializerLZMA()
 o.db.serializers.blowfish = SerializerBlowfish()
+o.db.serializers.base64 = SerializerBase64()

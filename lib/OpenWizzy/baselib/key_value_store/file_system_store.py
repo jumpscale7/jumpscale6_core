@@ -42,7 +42,6 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
             raise RuntimeError("Could not find key:'%s'"%key)
 
         value = self.fileGetContents(storePath)
-
         return self.unserialize(value)
 
     def set(self, category, key, value):
@@ -104,7 +103,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
     def _getCategoryDir(self, category):
         return o.system.fs.joinPaths(self.dbpath, category)
 
-    def _getStorePath(self, category, key,createIfNeeded=False):
+    def _getStorePath(self, category, key,createIfNeeded=True):
         key = str(key)
         origkey = key
         if len(key)<4:
