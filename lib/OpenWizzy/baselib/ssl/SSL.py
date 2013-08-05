@@ -39,7 +39,7 @@ class KeyStor():
         self.db=keyvaluestor
 
 
-    def createKeyPair(self,organization,user):
+    def createKeyPair(self,organization="",user="",path=""):
         """
         creates keypairs & stores in localdb
         @return (priv,pub) keys
@@ -59,8 +59,13 @@ class KeyStor():
         #Python would ask you to enter a password to use to encrypt the key file
         #For a demo script though it's easier/quicker to just use 'None' :) 
 
-        p1='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
-        p2='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
+        if path<>"":
+            q.system.fs.createDir(path)
+            p1="%s/priv.pem"%path
+            p2="%s/pub.pem"%path
+        else:
+            p1='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
+            p2='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
 
         keys.save_key (p1, None)
         keys.save_pub_key (p2)
@@ -68,20 +73,24 @@ class KeyStor():
         priv=o.system.fs.fileGetContents(p1)
         pub=o.system.fs.fileGetContents(p2)
 
-        o.system.fs.removeFile(p1)
-        o.system.fs.removeFile(p2)
 
-        self.db.set(organization,"private_%s"%user,priv)
-        self.db.set(organization,"public_%s"%user,pub)
+        if path=="":
+            o.system.fs.removeFile(p1)
+            o.system.fs.removeFile(p2)
+
+            self.db.set(organization,"private_%s"%user,priv)
+            self.db.set(organization,"public_%s"%user,pub)
 
         return (priv,pub)
 
-    def _getKey(self,organization,user,cat):
+    def _getKey(self,organization,user,cat,returnAsString=False):
         cachekey="%s_%s_%s"%(organization,user,cat)
         if self.keys.has_key(cachekey):
             return self.keys[cachekey]
         p1='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
         key=self.db.get(organization,"%s_%s"%(cat,user))
+        if returnAsString:
+            return key
         o.system.fs.writeFile(p1,key)
         try:
             if cat=="public":
@@ -98,9 +107,12 @@ class KeyStor():
         key=self._getKey(organization,user,"private")
         return key
 
-    def getPubKey(self,organization,user):
-        key=self._getKey(organization,user,"public")
+    def getPubKey(self,organization,user,returnAsString=False):
+        key=self._getKey(organization,user,"public",returnAsString)
         return key
+
+    def setPubKey(self,organization,user,pemstr):
+        key=self.db.set(organization,"%s_%s"%("public",user))
 
     def test(self):
         """

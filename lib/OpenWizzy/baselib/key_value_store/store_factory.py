@@ -54,7 +54,7 @@ class KeyValueStoreFactory(object):
         @rtype: FileSystemKeyValueStore
         '''
         if serializers==[]:
-            serializers=[o.db.serializers.ujson]
+            serializers=[o.db.serializers.getMessagePack()]
 
         key = '%s_%s' % ("fs", namespace)
         if key not in self._cache:

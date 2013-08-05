@@ -3,16 +3,15 @@ from Crypto.Cipher import Blowfish
 from random import randrange
 
 class SerializerBlowfish(object):
-    # def __init__(self):
-    #     pass
+    def __init__(self,encrkey):
+        self.c=Blowfish.new(encrkey)
 
-    def dumps(self,obj,encrkey):
-        bf=Blowfish.new(encrkey)
-        return bf.encrypt(self.__pad_file(str(obj)))
+    def dumps(self,obj):
+        return self.c.encrypt(self.__pad_file(obj))
 
-    def loads(self,s,encrkey):
-        bf=Blowfish.new(encrkey)
-        return self.__depad_file(bf.decrypt(s))
+    def loads(self,s):
+        return self.__depad_file(self.c.decrypt(s))
+
 
     # Blowfish cipher needs 8 byte blocks to work with
     def __pad_file(self, data):
