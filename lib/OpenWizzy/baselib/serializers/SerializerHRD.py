@@ -28,7 +28,10 @@ class SerializerHRD():
                 v = self.dumps(v, '%s%s.' % (prepend,k))
                 dictified += v
             else:
-                dictified += '%s%s = %s\n' % (prepend, k, v)
+                if not isinstance(v, str):
+                    dictified += '%s%s. = %s\n' % (prepend, k, v)
+                else:
+                    dictified += '%s%s = %s\n' % (prepend, k, v)
         return dictified
 
     def _dumpList(self, listdata, prepend=''):
@@ -44,7 +47,10 @@ class SerializerHRD():
                 item = self.dumps(item, listprepend)
                 listified += '%s' % item
             else:
-                listified += '%s = %s\n' % (listprepend[:-1], str(item))
+                if not isinstance(item, str):
+                    listified += '%s. = %s\n' % (listprepend[:-1], str(item))
+                else:
+                    listified += '%s = %s\n' % (listprepend[:-1], str(item))
         return listified
 
 
@@ -65,7 +71,6 @@ class SerializerHRD():
             key = key[:-1]
             value = self._getType(value)
         if key.find('.') == -1:
-            value  = self._loadPrimitive(value)
             if key.startswith('['):
                 index = int(key[1:-1])
                 result.insert(index, value)
@@ -88,17 +93,12 @@ class SerializerHRD():
 
     def _getType(self, value):
         values = {'{}': {}, '[]': [], 'None': None}
-        return values[value]
-
-    def _loadPrimitive(self, value):
-        if isinstance(value, (list, dict)) or value == None:
-            return value
-        if o.basetype.integer.checkString(value):
+        if value in values:
+            return values[value]
+        elif o.basetype.integer.checkString(value):
             primitive = o.basetype.integer.fromString(value)
         elif o.basetype.float.checkString(value):
             primitive = o.basetype.float.fromString(value)
         elif o.basetype.boolean.checkString(value):
             primitive = o.basetype.boolean.fromString(value)
-        elif o.basetype.string.checkString(value):
-            primitive = o.basetype.string.fromString(value)
         return primitive
