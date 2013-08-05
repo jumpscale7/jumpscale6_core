@@ -1,10 +1,10 @@
 
 from OpenWizzy import o
 
-cl=o.core.grid.getZDaemonClientClass()
+cl=o.core.zdaemon.getZDaemonClientClass()
 class OSISClient():
     def __init__(self,ipaddr,port=5544):
-        self.client=cl(ipaddr=ipaddr,port=5544,servername="osis")
+        self.client=cl(ipaddr=ipaddr,port=5544)
         self._init()
 
     def _init(self):

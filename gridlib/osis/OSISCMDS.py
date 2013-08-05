@@ -1,5 +1,5 @@
 from OpenWizzy import o
-from OpenWizzy.grid.grid.ZDaemon import ZDaemonCMDS
+from OpenWizzy.grid.zdaemon.ZDaemonCMDS import ZDaemonCMDS
 
 class OSISCMDS(ZDaemonCMDS):
     def __init__(self,daemon):
