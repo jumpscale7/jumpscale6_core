@@ -17,6 +17,8 @@ class SerializerHRD():
             processed = self._dumpList(data, prepend)
         elif isinstance(data, self._primitiveTypes):
             processed = data
+            if not isinstance(data, str):
+                processed = '%s.' % data
         return processed
 
     def _dumpDict(self, dictdata, prepend=''):
@@ -59,7 +61,9 @@ class SerializerHRD():
         dataresult = [] if data.startswith('[') else {}
         for line in data.splitlines():
             if '=' not in line:
-                return self._loadPrimitive(line)
+                if line.endswith('.'):
+                    return self._getType(line[:-1])
+                return line
             key, value = line.split('=')
             dataresult = self._processKey(key.strip(), value.strip(), dataresult)
         return dataresult
