@@ -1,58 +1,22 @@
 from OpenWizzy import o
-import OpenWizzy.grid
+# import OpenWizzy.grid
 # import zmq
 import gevent
 import gevent.monkey
 import zmq.green as zmq
 import time
-from GeventLoop import GeventLoop
 from gevent import queue as queue
 import OpenWizzy.baselib.serializers
-import inspect
 
-class ZDaemonCMDS(object):
-    def __init__(self, daemon):
-        self.daemon = daemon
+GeventLoop=o.core.gevent.getGeventLoopClass()
 
-    # def getfreeport(self):
-    #     """
-    #     init a datachannelProcessor on found port
-    #     is a server in pair socket processing incoming data
-    #     each scheduled instance is on separate port
-    #     """
-    #     return self.daemon.getfreeportAndSchedule("datachannelProcessor", self.daemon.datachannelProcessor)
+class Session():
 
-    def logeco(self, eco):
-        eco["epoch"]=self.daemon.now
-        eco=o.errorconditionhandler.getErrorConditionObject(ddict=eco)
-        self.daemon.eventhandlingTE.executeV2(eco=eco,history=self.daemon.eventsMemLog)
+    def __init__(self,user,key):
+        self.key=key
+        self.user=user
 
-    def pingcmd(self):
-        return "pong"
 
-    def _introspect(self):
-        methods = {}
-        for name, method in inspect.getmembers(self, inspect.ismethod):
-            if name.startswith('_'):
-                continue
-            args = inspect.getargspec(method)
-            methods[name] = {'args' : args, 'doc': inspect.getdoc(method)}
-        return methods
-
-class Dummy():
-    pass
-
-class RawDataSerializer(object):
-    @staticmethod
-    def loads(data):
-        methodlength = ord(data[0]) # get int out of 1byte chr
-        methodname = data[1:methodlength+1]
-        data = data[1+methodlength:]
-        return [methodname, {'data': data}]
-
-    @staticmethod
-    def dumps(data):
-        return data
 
 class ZDaemon(GeventLoop):
 
@@ -75,8 +39,8 @@ class ZDaemon(GeventLoop):
         self.now=0
 
         self.nrCmdGreenlets=nrCmdGreenlets
-        self._serializers = { '1': o.db.serializers.msgpack, '3': o.db.serializers.ujson, '0': RawDataSerializer}
 
+        self.key=""
 
     def addCMDsInterface(self, cmdInterfaceClass):
         self.cmdsInterfaces.append(cmdInterfaceClass(self))
@@ -85,71 +49,68 @@ class ZDaemon(GeventLoop):
         self.cmdsInterfaces=[]
         self.cmdsInterfaces.append(cmdInterfaceClass(self))
 
-    def processRPC(self, data, serializer=o.db.serializers.ujson):
-        # print "process rpc:\n%s"%data
-        cmd = serializer.loads(data)  # list with item 0=cmd, item 1=args            
+    def processRPC(self, cmd,data,format,returnformat,user=""):
+        """
+        list with item 0=cmd, item 1=args (dict)
+
+        @return (resultcode,result)
+        resultcode
+            0=ok
+            1= not authenticated
+            2= method not found
+            2+ any other error
+        """
+        print "process rpc:\n%s"%data
         cmd2 = {}
-        if cmd[0] in self.cmds:
-            ffunction = self.cmds[cmd[0]]
+        if cmd in self.cmds:
+            ffunction = self.cmds[cmd]
         else:
             ffunction = None
 
             for cmdinterface in self.cmdsInterfaces:
-                if hasattr(cmdinterface,cmd[0]):
-                    ffunction = getattr(cmdinterface, cmd[0])
+                if hasattr(cmdinterface,cmd):
+                    ffunction = getattr(cmdinterface, cmd)
 
-            if ffunction == None:
-                cmd2["state"] = "nomethod"
-                cmd2["result"] = "cannot find cmd %s on cmdsInterfaces."%cmd[0]
-                return cmd2
+            if ffunction == None:                
+                return "2","",None
             else:
                 cmd2 = {}
-            self.cmds[cmd[0]] = ffunction
+            self.cmds[cmd] = ffunction
 
         try:
-            result = ffunction(**cmd[1])
+            result = ffunction(returnformat=returnformat,user=user,**data)
         except Exception, e:
             eco=o.errorconditionhandler.parsePythonErrorObject(e)
             eco.level=2
-            cmd2["state"] = "error"
-            cmd2["result"] = eco.__dict__
-            # print eco
+            print eco
             o.errorconditionhandler.processErrorConditionObject(eco)
-            return cmd2
+            s=o.db.serializers.getSerializerType("m")
+            return "3","",s.dumps(eco.__dict__)
 
-        cmd2["state"] = "ok"
-        cmd2["result"] = result
-        return cmd2
+        return "0",returnformat,result
 
-    def getSerializer(self, data, socket=None):
-        ser = self._serializers[data[1]]
-        data = data[2:]
-        if socket and socket.getsockopt(zmq.RCVMORE):
-            data += socket.recv()
-        return ser, data
 
     def repCmdServer(self):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
-            data = cmdsocket.recv()
-            if data[0] == "1":
-                self.logQueue.put(data[1:])
-                cmdsocket.send("OK")
-            elif data[0] == "3":
-                ser, data = self.getSerializer(data, cmdsocket)
-                result = self.processRPC(data, ser)
-                if result["state"]=="ok":
-                    cmdsocket.send(result["result"] or "")
-                else:
-                    cmdsocket.send("ERROR:%s"%ser.dumps(result))
-            elif data[0] == "4":
-                ser, data = self.getSerializer(data, cmdsocket)
-                result = self.processRPC(data, ser)
-                cmdsocket.send(ser.dumps(result))
-            else:
-                o.errorconditionhandler.raiseBug(message="Could not find supported message on cmd server",category="grid.cmdserver.valueerror")
+            cmd,informat,returnformat,data = cmdsocket.recv_multipart()
+            if informat<>"":
+                ser=o.db.serializers.get(informat,key=self.key)
+                data=ser.loads(data)
 
+            # if data[0] == "1":
+            #     self.logQueue.put(data[1:])
+            #     cmdsocket.send("OK")
+
+            parts = self.processRPC(cmd,data,informat,returnformat,user="")
+            if parts[1]<>"":
+                ser2=o.db.serializers.get(informat,key=self.key)
+                data=ser2.dumps(parts[2])
+            else:
+                data=parts[2]
+
+            cmdsocket.send_multipart([parts[0],parts[1],data])
 
     def cmdGreenlet(self):
         #Nonblocking, e.g the osis server contains a broker which queus internally the messages.
@@ -179,21 +140,18 @@ class ZDaemon(GeventLoop):
         while True:
             socks = dict(poller.poll())
             if socks.get(frontend) == zmq.POLLIN:
-                message = frontend.recv()
-                more = frontend.getsockopt(zmq.RCVMORE)
-                if more:
-                    backend.send(message, zmq.SNDMORE)
+                parts=frontend.recv_multipart()
+                if not self.authenticate(parts[0]):                   
+                    frontend.send_multipart([1,"",""])
                 else:
-                    backend.send(message)
+                   backend.send_multipart(parts)
 
             if socks.get(backend) == zmq.POLLIN:
-                message = backend.recv()
-                more = backend.getsockopt(zmq.RCVMORE)
-                if more:
-                    frontend.send(message, zmq.SNDMORE)
-                else:
-                    frontend.send(message)
+                parts = backend.recv_multipart()
+                frontend.send_multipart(parts)
 
+    def authenticate(self,agentid):
+        return True
 
     def start(self,mainloop=None):
         self.schedule("cmdGreenlet", self.cmdGreenlet)

@@ -2,41 +2,91 @@ from OpenWizzy import o
 import OpenWizzy.baselib.serializers
 import zmq
 import time
-ujson = o.db.serializers.ujson
 import struct
 import math
 
 class ZDaemonClient():
-    def __init__(self,ipaddr="localhost", port=4444,datachannel=False,servername="unknownserver"):
-        if servername=="":
-            raise RuntimeError("servername cannot be empty")
-            o.errorconditionhandler.raiseBug(message="servername cannot be empty",category="grid.init") #@todo URGENT: this does not show stacktrace well
+    def __init__(self,ipaddr="localhost", port=4444,org="myorg",user="root",passwd="passwd",ssl=False,datachannel=False,encrkey="",reset=False):
+        """
+        @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
+        """
         self.retry = True
         self.port=port
         self.ipaddr=ipaddr
         self.datachannel=datachannel
-        self.servername=servername
         self.init()
         self.blocksize=8*1024*1024
+        self.key=encrkey
+        self.user=user
+        self.org=org
+        self.passwd=passwd
+        self.ssl=ssl
+
+        if ssl:
+            from OpenWizzy.baselib.ssl.SSL import SSL
+            self.keystor=SSL().getSSLHandler()
+            self.initSSL(reset)
+        else:
+            self.keystor=None
+
+
+    def initSSL(self,reset=False):
+
+        from IPython import embed
+        try:
+            self.keystor.getPrivKey(self.org,self.user)
+        except:
+            #priv key now known yet
+            reset=True
+
+        if reset:
+            self.keystor.createKeyPair(organization=self.org, user=self.user)
+            pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
+            self.sendcmd(cmd="registerpubkey", sendformat='m', returnformat='m', organization=self.org,user=self.user,pubkey=pubkey)
+
+            self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver", sendformat='m', returnformat='m')
+
+            from IPython import embed
+            print "DEBUG NOW pubserverserver"
+            embed()
+
+        sessiondata=""
+
+        from IPython import embed
+        print "DEBUG NOW sessiindata"
+        embed()
+
+        self.sendcmd(cmd="registersession", sendformat='m', returnformat='m', sessiondata=sessiondata)
+
+        from IPython import embed
+        print "DEBUG NOW oo"
+        embed()
 
     def init(self):
-        o.logger.log("check if %s is reachable on %s on port %s" % (self.servername,self.ipaddr,self.port), level=4, category='zdaemon.client.init')
+        o.logger.log("check server is reachable on %s on port %s" % (self.ipaddr,self.port), level=4, category='zdaemon.client.init')
         res=o.system.net.waitConnectionTest(self.ipaddr,self.port,20)
+
+        #12 bytes unique id
+        self.id=struct.pack("<III",o.base.idgenerator.generateRandomInt(1,2^(8*4)-1),o.base.idgenerator.generateRandomInt(1,2^(8*4)-1),o.base.idgenerator.generateRandomInt(1,2^(8*4)-1))
+        self.id="test"
+
         if res==False:
-            msg="Could not find a running server instance with name %s on %s:%s"%(self.servername,self.ipaddr,self.port)
+            msg="Could not find a running server instance  on %s:%s"%(self.ipaddr,self.port)
             o.errorconditionhandler.raiseOperationalCritical(msgpub=msg,message="",category="zdaemonclient.init",die=True)
-        o.logger.log("%s is reachable on %s on port %s" % (self.servername,self.ipaddr,self.port), level=4, category='zdaemon.client.init')
+        o.logger.log("server is reachable on %s on port %s" % (self.ipaddr,self.port), level=4, category='zdaemon.client.init')
 
         self.context = zmq.Context()
 
         self.cmdchannel = self.context.socket(zmq.REQ)
+
+        self.cmdchannel.setsockopt(zmq.IDENTITY,self.id)
 
         # if self.port == 4444 and o.system.platformtype.isLinux():
         #     self.cmdchannel.connect("ipc:///tmp/cmdchannel_clientdaemon")
         #     print "IPC channel opened to client daemon"
         # else:
         self.cmdchannel.connect("tcp://%s:%s" % (self.ipaddr,self.port))
-        print "TCP channel opened to %s:%s:%s"%(self.servername,self.ipaddr,self.port)
+        print "TCP channel opened to %s:%s"%(self.ipaddr,self.port)
 
         self.poll = zmq.Poller()
         self.poll.register(self.cmdchannel, zmq.POLLIN)
@@ -51,11 +101,49 @@ class ZDaemonClient():
 
             print "init port for datachannel: %s"%port
 
-    def sendMsgOverCMDChannelFast(self, msg):
-        self.cmdchannel.send(msg)
-        return self.cmdchannel.recv()
+    def sendMsgOverCMDChannelFast(self, cmd,data,sendformat="m",returnformat="m"):
+        """
+        cmd is command on server (is asci text)
+        data is any to be serialized data
 
-    def sendMsgOverCMDChannel(self, msg):
+        formatstring is right order of formats e.g. mc means messagepack & then compress
+        formats see: o.db.serializers.get(?
+
+        return is always multipart message [$resultcode(0=no error,1=autherror),$formatstr,$remainingdata]
+
+        errors are always return using msgpack and are a dict
+
+        """
+        if sendformat<>"":
+            ser=o.db.serializers.get(sendformat,key=self.key)
+            data=ser.dumps(data)
+        
+        self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
+
+        parts=self.cmdchannel.recv_multipart()
+
+        if parts[0]=='1':
+            msg="Authentication error on server on %s:%s.\n"%(self.ipaddr,self.port)
+            o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
+        elif parts[0]=='2':
+            msg="execution error on server:%s on %s:%s.\n Could not find method:%s\n"%(self.ipaddr,self.port,cmd)
+            o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
+        elif parts[0]<>"0":
+            s=o.db.serializers.getMessagePack() #get messagepack serializer
+            eco=o.errorconditionhandler.getErrorConditionObject(s.loads(parts[2]))
+            msg="execution error on server on %s:%s.\nCmd:%s\nError=%s"%(self.ipaddr,self.port,cmd,eco)
+            o.errorconditionhandler.raiseOperationalCritical(msgpub="",message=msg,category="rpc.exec",die=True,tags="ecoguid:%s"%eco.guid)
+
+        returnformat=parts[1]
+        if returnformat<>"":
+            ser=o.db.serializers.get(returnformat,key=self.key)
+            result=ser.loads(parts[2])
+        else:
+            result=parts[2]
+
+        return result
+
+    def sendMsgOverCMDChannel(self, cmd,data,sendformat="m",returnformat="m"):
         if self.retry:
             while True:
                 # print "Send (%s)" % msg
@@ -64,7 +152,7 @@ class ZDaemonClient():
                 while expect_reply:
                     socks = dict(self.poll.poll(1000))
                     if socks.get(self.cmdchannel) == zmq.POLLIN:
-                        reply = self.cmdchannel.recv()
+                        reply = self.cmdchannel.recv_multipart()
                         if not reply:
                             break
                         else:
@@ -79,7 +167,7 @@ class ZDaemonClient():
             self.cmdchannel.send(msg)
             socks = dict(self.poll.poll(1000))
             if socks.get(self.cmdchannel) == zmq.POLLIN:
-                return self.cmdchannel.recv()
+                return self.cmdchannel.recv_multipart()
             else:
                 o.errorconditionhandler.raiseOperationalCritical(message="", category="",
                                                                  msgpub="could not communicate with cmdclient daemon on port %s"%4444, die=True, tags="")
@@ -169,38 +257,14 @@ class ZDaemonClient():
     def sendbinary(self,bindata):
         return self.sendMsgOverCMDChannel("0%s"%bindata)
 
-    def _raiseError(self, cmd, result):
-        if result["state"] == "nomethod":
-            msg="execution error on server:%s on %s:%s.\n Could not find method:%s\n"%(self.servername,self.ipaddr,self.port,cmd)
-            o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
-        else:
-            eco=o.errorconditionhandler.getErrorConditionObject(result["result"])
-            msg="execution error on server:%s on %s:%s.\nCmd:%s\nErrorGUID=%s"%(self.servername,self.ipaddr,self.port,cmd,eco.guid)
-            o.errorconditionhandler.raiseOperationalCritical(msgpub="",message=msg,category="rpc.exec",die=True,tags="ecoguid:%s"%eco.guid)            
-            # raise RuntimeError("error in send cmd (error on server):%s, %s"%(cmd, result["result"]))
+    def sendcmd(self, cmd, sendformat="m",returnformat="m",**args):
+        """
+        formatstring is right order of formats e.g. mc means messagepack & then compress
+        formats see: o.db.serializers.get(?
 
-
-    def sendcmd(self, cmd, rawreturn=False,**args):
-        if rawreturn: #means the server will no return a json encoded result dict but the raw output of the method on the server
-            data = "31%s"%o.db.serializers.msgpack.dumps([cmd, args])
-            data=self.sendMsgOverCMDChannel(data)
-            if data[0:7]=="ERROR:":
-                self._raiseError(cmd, o.db.serializers.msgpack.loads(data[7:]))
-            else:
-                return data
-        else:
-            data = "41%s"%o.db.serializers.msgpack.dumps([cmd, args])
-            result = self.sendMsgOverCMDChannel(data)
-            result = o.db.serializers.msgpack.loads(result)
-            if result["state"] == "ok":
-                return result["result"]
-            else:
-                self._raiseError(cmd, result)
-            
-    # def sendcmdData(self, cmd, **args):
-    #     data = "4%s"%ujson.dumps([cmd, args])
-    #     self.datachannel.send(data)
-
+        return is the deserialized data object
+        """
+        return self.sendMsgOverCMDChannelFast(cmd,args,sendformat,returnformat)
 
     def perftest(self):
         start = time.time()
@@ -220,16 +284,19 @@ class ZDaemonClient():
         nritems = nr/(stop-start)
         print "nr items per sec: %s"%nritems
 
+
+
 class ZDaemonCmdClient(object):
-    def __init__(self,ipaddr="localhost", port=4444,datachannel=False,servername="unknownserver", introspect=True):
-        self._client = ZDaemonClient(ipaddr, port, datachannel, servername)
+    def __init__(self,ipaddr="localhost", port=4444,datachannel=False,org="myorg",user="root",passwd="passwd",ssl=False, introspect=True,reset=False):
+        self._client = ZDaemonClient(ipaddr, port=port,org=org,user=user,passwd=passwd,ssl=ssl, datachannel=datachannel,reset=reset)
+
         if introspect:
             self._loadMethods()
         
     def _loadMethods(self):
-        methodspecs = self._client.sendcmd('_introspect', False)
+        methodspecs = self._client.sendcmd('_introspect')
         for key, spec in methodspecs.iteritems():
-            print "key:%s spec:%s"%(key,spec)
+            # print "key:%s spec:%s"%(key,spec)
             strmethod = """
 class Klass(object):
     def __init__(self, client):
@@ -237,7 +304,7 @@ class Klass(object):
 
     def method(%s):
         '''%s'''
-        return self._client.sendcmd("%s", False, %s)
+        return self._client.sendcmd("%s", "m","m", %s)
 """
             Klass = None
             args = [ "%s=%s" % (x, x) for x in spec['args'][0][1:]]
@@ -251,4 +318,7 @@ class Klass(object):
             exec(strmethod)
             klass = Klass(self._client)
             setattr(self, key, klass.method)
+
+
+
 

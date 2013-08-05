@@ -230,83 +230,6 @@ class GridFactory():
     def getZLoggerClient(self,ipaddr="localhost", port=4444):
         return ZLoggerClient(ipaddr=ipaddr,port=port)
 
-    def getZDaemon(self, port=4444,name="",nrCmdGreenlets=50):
-        """
-
-        is a generic usable zmq daemon which has a data & cmd channel (data channel not completely implemented for now)
-        4444 is the std port for the clientdaemon (DO NOT USE FOR YOUR CUSTOM APPS!!!)
-        you can add commands to the deam as follows:
-
-        zd=o.core.grid.getZDaemon(port=5555,nrCmdGreenlets=50)
-
-        class MyCommands():
-            def __init__(self,daemon):
-                self.daemon=daemon
-
-            def getfreeport(self):
-                return self.daemon.getfreeportAndSchedule("datachannelProcessor",self.daemon.loggerGreenlet)
-
-            def log(self,log):
-                #in future should use bulk upload feature, now 1 by 1
-                print log["message"]
-
-            def pingcmd(self):
-                return "pong"
-
-            def echo(self,msg=""):
-                return msg
-
-        zd.addCMDsInterface(MyCommands)  #pass as class not as object !!!
-        zd.start()
-
-        use self.getZDaemonClientClass as client to this daemon
-
-        """
-
-        return ZDaemon(port=port,name=name,nrCmdGreenlets=nrCmdGreenlets)
-
-    def getZDaemonClientClass(self):
-        """
-        example usage, see example for server at self.getZDaemon
-
-        ZDaemonClientClass=o.core.grid.getZDaemonClientClass()
-
-        myClient(ZDaemonClientClass):
-            def __init__(self,ipaddr):
-                ZDaemonClientClass.__init__(self,ipaddr=ipaddr,port=5555)
-
-            def echo(self,msg):
-                return self.sendcmd("echo",msg=msg)
-
-        client=myClient()
-        client.perftest()
-        print client.echo("atest")
-
-        """
-        return ZDaemonClient
-
-    def getZDaemonClientClassAutoGen(self):
-        """
-        example usage, see example for server at self.getZDaemon
-
-        ZDaemonClientClass=o.core.grid.getZDaemonClientClass()
-
-        myClient(ZDaemonClientClass):
-            def __init__(self,ipaddr):
-                ZDaemonClientClass.__init__(self,ipaddr=ipaddr,port=5555)
-
-            def echo(self,msg):
-                return self.sendcmd("echo",msg=msg)
-
-        client=myClient()
-        client.perftest()
-        print client.echo("atest")
-
-        """
-        return ZDaemonCmdClient        
-
-
-
 
     def startZWorker(self,addr="localhost",port=5555,instance=0,roles=["all"]):
         """
@@ -328,6 +251,4 @@ class GridFactory():
     def getLogTargetOSIS(self):
         return LogTargetOSIS()
 
-    def getGeventLoopClass(self):
-        return GeventLoop
 
