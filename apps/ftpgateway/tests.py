@@ -16,11 +16,11 @@ def setUpModule():
 
 def tearDownModule():
     # delete testspace
-    o.system.fs.removeDirTree(o.system.fs.joinPaths(MOUNT_LOCATION, 'spaces', SESSION_DATA['spacename']))
+    o.system.fs.removeDir(o.system.fs.joinPaths(MOUNT_LOCATION, 'spaces', SESSION_DATA['spacename']))
     # delete testactor
-    o.system.fs.removeDirTree(o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname']))
+    o.system.fs.removeDir(o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname']))
     # delete testbucket
-    o.system.fs.removeDirTree(o.system.fs.joinPaths(MOUNT_LOCATION, 'buckets', SESSION_DATA['bucketname']))
+    o.system.fs.removeDir(o.system.fs.joinPaths(MOUNT_LOCATION, 'buckets', SESSION_DATA['bucketname']))
 
     o.system.process.execute('fusermount -u %s' % MOUNT_LOCATION)
 
@@ -56,6 +56,43 @@ class Tests(unittest.TestCase):
         o.system.fs.createDir(bucketpath)
         self.assertTrue(o.system.fs.exists(bucketpath))
         self.assertIn(SESSION_DATA['bucketname'], self.contentmanager.getBuckets())
+
+    def test_4_createActorMethod(self):
+        self.assertIn(SESSION_DATA['actorname'], self.contentmanager.getActors())
+        o.system.fs.renameFile(o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname'], 'specs', 'example__ActorModel.spec'), o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname'], 'specs', 'model.spec'))
+        o.system.fs.renameFile(o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname'], 'specs', 'example__Actor.spec'), o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname'], 'specs', 'actor.spec'))
+        o.system.fs.createDir(o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname'], 'methodclass'))
+        actorparts = SESSION_DATA['actorname'].split('__')
+        osisfilename = '%s_osis' % '_'.join(actorparts)
+        osisfile = """
+        from OpenWizzy import o
+        class %s(o.code.classGetBase()):
+            def __init__(self):
+                self.dbmem=o.db.keyvaluestore.getMemoryStore()
+                self.db=self.dbmem
+
+        """ % osisfilename
+
+        methodsfile = """
+        from OpenWizzy import o
+        from %(osisfilename)s import %(osisfilename)s
+
+        class %(actorclassname)s(%(osisfilename)s):
+            def __init__(self):
+                self._te={}
+                self.actorname=%(actorname)s
+                self.appname=%(appname)s
+                 %(osisfilename)s.__init__(self)
+
+            def dosomething(self, path, id, bool):
+                return True
+
+            def returnlist(self):
+                return [1, 2, 3]
+
+        """ % {'osisfilename': osisfilename, 'actorclassname': '_'.join(actorparts), 'actorname': actorparts[1], 'appname': actorparts[0]}
+        o.system.fs.writeFile(o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname'], 'methodclass', '%s.py' % osisfilename), osisfile)
+        o.system.fs.writeFile(o.system.fs.joinPaths(MOUNT_LOCATION, 'actors', SESSION_DATA['actorname'], 'methodclass', '%s.py' % '_'.join(actorparts)), methodsfile)
 
 if __name__ == '__main__':
     unittest.main()
