@@ -7,7 +7,7 @@ from CoreModel.ZApplication import ZApplication
 from CoreModel.ZProcess import ZProcess
 from CoreModel.ModelObject import ModelObject
 
-from ZDaemonClient import ZDaemonClient
+from ZDaemonClient import *
 from ZBrokerClientSelfHosted import ZBrokerClientSelfHosted
 from ZDaemon import ZDaemon
 from ZLogger import ZLogger
@@ -284,6 +284,28 @@ class GridFactory():
 
         """
         return ZDaemonClient
+
+    def getZDaemonClientClassAutoGen(self):
+        """
+        example usage, see example for server at self.getZDaemon
+
+        ZDaemonClientClass=o.core.grid.getZDaemonClientClass()
+
+        myClient(ZDaemonClientClass):
+            def __init__(self,ipaddr):
+                ZDaemonClientClass.__init__(self,ipaddr=ipaddr,port=5555)
+
+            def echo(self,msg):
+                return self.sendcmd("echo",msg=msg)
+
+        client=myClient()
+        client.perftest()
+        print client.echo("atest")
+
+        """
+        return ZDaemonCmdClient        
+
+
 
 
     def startZWorker(self,addr="localhost",port=5555,instance=0,roles=["all"]):

@@ -14,13 +14,13 @@ class ZDaemonCMDS(object):
     def __init__(self, daemon):
         self.daemon = daemon
 
-    def getfreeport(self):
-        """
-        init a datachannelProcessor on found port
-        is a server in pair socket processing incoming data
-        each scheduled instance is on separate port
-        """
-        return self.daemon.getfreeportAndSchedule("datachannelProcessor", self.daemon.datachannelProcessor)
+    # def getfreeport(self):
+    #     """
+    #     init a datachannelProcessor on found port
+    #     is a server in pair socket processing incoming data
+    #     each scheduled instance is on separate port
+    #     """
+    #     return self.daemon.getfreeportAndSchedule("datachannelProcessor", self.daemon.datachannelProcessor)
 
     def logeco(self, eco):
         eco["epoch"]=self.daemon.now
@@ -66,7 +66,7 @@ class ZDaemon(GeventLoop):
         self.ports = [] #is for datachannel
         self.sockets = {} #is for datachannel
 
-        self.cmdsInterfaces = [ZDaemonCMDS(self)]
+        self.cmdsInterfaces = []
 
         self.watchdog = {}  # active ports are in this list
 
@@ -79,6 +79,10 @@ class ZDaemon(GeventLoop):
 
 
     def addCMDsInterface(self, cmdInterfaceClass):
+        self.cmdsInterfaces.append(cmdInterfaceClass(self))
+
+    def setCMDsInterface(self, cmdInterfaceClass):
+        self.cmdsInterfaces=[]
         self.cmdsInterfaces.append(cmdInterfaceClass(self))
 
     def processRPC(self, data, serializer=o.db.serializers.ujson):

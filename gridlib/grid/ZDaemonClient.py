@@ -229,6 +229,7 @@ class ZDaemonCmdClient(object):
     def _loadMethods(self):
         methodspecs = self._client.sendcmd('_introspect', False)
         for key, spec in methodspecs.iteritems():
+            print "key:%s spec:%s"%(key,spec)
             strmethod = """
 class Klass(object):
     def __init__(self, client):
