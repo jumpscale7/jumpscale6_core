@@ -77,37 +77,6 @@ class ZDaemonClient():
             passwd = self.passwd
 
         session=Session(id=self.id,organization=self.org,user=self.user,passwd=passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo())
-
-    def initSSL(self,reset=False,ssl=False):
-
-        from IPython import embed
-        try:
-            self.keystor.getPrivKey(self.org,self.user)
-        except:
-            #priv key now known yet
-            reset=True
-
-        if reset:
-            self.keystor.createKeyPair(organization=self.org, user=self.user)
-
-        pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
-        result=self.sendcmd(cmd="registerpubkey", sendformat='m', returnformat='', organization=self.org,user=self.user,pubkey=pubkey)
-
-        self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver", sendformat='m', returnformat='')
-
-        #generate unique key
-        encrkey=""
-        for i in range(56):
-            encrkey += chr(randrange(0, 256))
-
-        session=Session(id=self.id,organization=self.org,user=self.user,passwd=self.passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo(),roles=self.roles)
-
-        #@todo JO fix ssl please
-        if ssl:
-            #only encrypt the key & the passwd, the rest is not needed
-            session.encrkey=self.keystor.encrypt(self.org, self.user, "", "", message=session.encrkey, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
-            session.passwd=self.keystor.encrypt(self.org, self.user, "", "", message=session.passwd, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
-        
         ser=o.db.serializers.getMessagePack()
         sessiondictstr=ser.dumps(session.__dict__)
         self.key=session.encrkey
