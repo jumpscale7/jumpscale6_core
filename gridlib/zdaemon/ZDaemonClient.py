@@ -60,7 +60,7 @@ class ZDaemonClient():
             print "DEBUG NOW session"
             embed()
 
-            session=Session(organization-self.org,user=self.user,encrkey="",ipaddr,macaddr)
+            session=Session(organization=self.org,user=self.user,encrkey="",ipaddr="",macaddr="")
             ser=o.db.serializers.getMessagePack()
             sessiondict=ser.dumps(session.__dict__)
 
