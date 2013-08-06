@@ -62,7 +62,7 @@ class SerializersFactory():
                 self.types[type]=o.db.serializers.blosc
 
             elif type=="b":
-                from .SerializerBlowfish import SerializerBlowfish                
+                from .SerializerBlowfish import SerializerBlowfish
                 self.types[type]=SerializerBlowfish(key)
 
             elif type=="s":

@@ -29,7 +29,7 @@ class KeyValueStoreFactory(object):
         @rtype: ArakoonKeyValueStore
         '''
         if serializers==[]:
-            serializers=[o.db.serializers.ujson]
+            serializers=[o.db.serializers.getSerializerType('j')]
         key = '%s_%s' % ("arakoon", namespace)
         if key not in self._cache:
             if namespace=="":
