@@ -100,3 +100,28 @@ class test_SerializerHRD(unittest.TestCase):
         self.assertEquals(dumped, '256.')
         loaded = o.db.serializers.hrd.loads(dumped)
         self.assertEquals(loaded, test_dumps14)
+
+        test_dumps15 = {'nam..e':'machinename'}
+        dumped = o.db.serializers.hrd.dumps(test_dumps15)
+        self.assertEquals(dumped, 'nam..e = machinename\n')
+        loaded = o.db.serializers.hrd.loads(dumped)
+        self.assertEquals(loaded, test_dumps15)
+
+        test_dumps16 = {'na..me':'machinename',
+                      'disks':[{'diskn..ame': 'disk1', 'size':256}, {'diskname': 'dis..k2', 'size':999}]}
+        dumped = o.db.serializers.hrd.dumps(test_dumps16)   
+        self.assertEquals(dumped, 'disks.[0].diskn..ame = disk1\ndisks.[0].size. = 256\ndisks.[1].diskname = dis..k2\ndisks.[1].size. = 999\nna..me = machinename\n')
+        loaded = o.db.serializers.hrd.loads(dumped)
+        self.assertEquals(loaded, test_dumps16)
+
+        test_dumps17 = [{'name..is': 'name'}, 'anotheritem']
+        dumped = o.db.serializers.hrd.dumps(test_dumps17)   
+        self.assertEquals(dumped, '[0].name..is = name\n[1] = anotheritem\n')
+        loaded = o.db.serializers.hrd.loads(dumped)
+        self.assertEquals(loaded, test_dumps17)
+
+        test_dumps18 = 'name..is'
+        dumped = o.db.serializers.hrd.dumps(test_dumps18)   
+        self.assertEquals(dumped, 'name..is')
+        loaded = o.db.serializers.hrd.loads(dumped)
+        self.assertEquals(loaded, test_dumps18)

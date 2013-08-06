@@ -1,8 +1,10 @@
 from OpenWizzy import o
+import uuid
 
 class SerializerHRD():
     def __init__(self):
         self._primitiveTypes = (int, str, float, bool)
+        self.__escape = str(uuid.uuid1())
 
     def _formatPrepends(self, prepend, type):
         prepend = prepend+'.' if prepend and prepend[-1] != '.' else prepend
@@ -26,10 +28,13 @@ class SerializerHRD():
         if not dictdata:
             dictified += self._formatPrepends(prepend, '{}')
         for k, v in dictdata.iteritems():
+            if isinstance(k, str) and '..' in k:
+                k = k.replace('..', self.__escape)
             if not (isinstance(v, self._primitiveTypes)):
                 v = self.dumps(v, '%s%s.' % (prepend,k))
                 dictified += v
             else:
+                k = k.replace(self.__escape, '..')
                 if not isinstance(v, str):
                     dictified += '%s%s. = %s\n' % (prepend, k, v)
                 else:
@@ -65,6 +70,7 @@ class SerializerHRD():
                     return self._getType(line[:-1])
                 return line
             key, value = line.split('=')
+            key = key.replace('..', self.__escape)
             dataresult = self._processKey(key.strip(), value.strip(), dataresult)
         return dataresult
 
@@ -74,7 +80,9 @@ class SerializerHRD():
         if key.endswith('.'):
             key = key[:-1]
             value = self._getType(value)
+
         if key.find('.') == -1:
+            key = key.replace(self.__escape, '..')
             if key.startswith('['):
                 index = int(key[1:-1])
                 result.insert(index, value)
