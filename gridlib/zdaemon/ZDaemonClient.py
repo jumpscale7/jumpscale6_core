@@ -76,7 +76,7 @@ class ZDaemonClient():
             encrkey = ""
             passwd = self.passwd
 
-        session=Session(id=self.id,organization=self.org,user=self.user,passwd=passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo())
+        session=Session(id=self.id,organization=self.org,user=self.user,passwd=passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo(), roles=self.roles)
         ser=o.db.serializers.getMessagePack()
         sessiondictstr=ser.dumps(session.__dict__)
         self.key=session.encrkey
