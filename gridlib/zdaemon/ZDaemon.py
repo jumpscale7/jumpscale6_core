@@ -7,6 +7,7 @@ import zmq.green as zmq
 import time
 from gevent import queue as queue
 import OpenWizzy.baselib.serializers
+import inspect
 
 GeventLoop=o.core.gevent.getGeventLoopClass()
 
@@ -72,7 +73,10 @@ class ZDaemon(GeventLoop):
             self.cmds[cmd] = ffunction
 
         try:
-            result = ffunction(session=session,**data)
+            args = inspect.getargspec(ffunction)
+            if 'session' in args.args:
+                data['session'] = session
+            result = ffunction(**data)
         except Exception, e:
             eco=o.errorconditionhandler.parsePythonErrorObject(e)
             eco.level=2
