@@ -93,8 +93,7 @@ class GeventWSClient():
                 params[key] = params["params"][key]
             params.pop("params")
         #params["caller"] = o.core.grid.config.whoami
-
-        data = o.db.serializers.ujson.dumps(params)
+        data = o.db.serializers.getSerializerType('j').dumps(params)
 
         headers = {'content-type': 'application/json'}
 
@@ -106,7 +105,7 @@ class GeventWSClient():
         # o.logger.log("Received result %s" % content, 8)
 
         if contentType == CONTENT_TYPE_JSON:
-            decodedResult = o.db.serializers.ujson.loads(content)
+            decodedResult = o.db.serializers.getSerializerType('j').loads(content)
         else:
             raise ValueError("Cannot handle content type %s" % contentType)
 
@@ -118,7 +117,7 @@ class GeventWSClient():
                 return 3, r
             elif decodedResult.startswith("ERRORJSON::"):
                 r = decodedResult.split("\n", 1)[1]  # remove first line
-                return 1, o.db.serializers.ujson.loads(r)
+                return 1, o.db.serializers.getSerializerType('j').loads(r)
             elif decodedResult.startswith("ERROR::"):
                 raise RuntimeError("ERROR SHOULD HAVE BEEN IN JSON FORMAT.\n%s"%self.html2text(decodedResult))
 
@@ -748,7 +747,7 @@ class GeventWebserver:
                 msg = "postdata cannot be empty"
                 self.raiseError(ctx, msg)
             if env['CONTENT_TYPE'].find("application/json") != -1:
-                postParams = o.db.serializers.ujson.loads(postData)
+                postParams = o.db.serializers.getSerializerType('j').loads(postData)
                 if postParams:
                     params.update(postParams)
                 return params
@@ -940,7 +939,7 @@ class GeventWebserver:
                     except AttributeError:
                         data[key] = value
                 return data
-            msg = o.db.serializers.ujson.dumps(todict(eco))
+            msg = o.db.serializers.getSerializerType('j').dumps(todict(eco))
 
         ctx.start_response(httpcode, [('Content-Type', 'text/html')])
 
@@ -958,14 +957,14 @@ class GeventWebserver:
         return self._text2html(pprint.pformat(content))
 
     def _resultjsonSerializer(self, content):
-        return o.db.serializers.ujson.dumps({"result":content})
+        return o.db.serializers.getSerializerType('j').dumps({"result":content})
 
     def _resultyamlSerializer(self, content):
         return o.code.object2yaml({"result":content})
 
     def getMimeType(self, contenttype, format_types):
         CONTENT_TYPES = {
-    "application/json":o.db.serializers.ujson.dumps,
+    "application/json":o.db.serializers.getSerializerType('j').dumps,
     "application/yaml":self._resultyamlSerializer,
     "text/plain":str,
     "text/html":self._text2htmlSerializer
@@ -985,14 +984,14 @@ class GeventWebserver:
         FFORMAT_TYPES = {
     "text": {"content_type":CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
     "raw": {"content_type": CONTENT_TYPE_PLAIN, "serializer": str},
-    "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": o.db.serializers.ujson.dumps},
+    "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": o.db.serializers.getSerializerType('j').dumps},
     "json": {"content_type": CONTENT_TYPE_JSON, "serializer": self._resultjsonSerializer},
     "yaml": {"content_type": CONTENT_TYPE_YAML, "serializer": self._resultyamlSerializer}
     }
 
         fformat = ctx.fformat
         if '_jsonp' in ctx.params:
-            return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], o.db.serializers.ujson.dumps(result))
+            return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], o.db.serializers.getSerializerType('j').dumps(result))
 
         if "CONTENT_TYPE" not in ctx.env:
             ctx.env['CONTENT_TYPE'] = CONTENT_TYPE_PLAIN

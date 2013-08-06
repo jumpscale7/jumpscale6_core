@@ -3,6 +3,7 @@ import smtplib
 from OpenWizzy import o
 from email.mime.text import MIMEText
 
+ujson = o.db.serializers.getSerializerType('j')
 
 class system_emailsender(system_emailsender_osis):
     """
@@ -10,7 +11,7 @@ class system_emailsender(system_emailsender_osis):
     """
     # Maybe we can add this later
     output_format_mapping = {
-        'json': o.db.serializers.ujson.dumps
+        'json': ujson.dumps
     }
 
     def __init__(self):

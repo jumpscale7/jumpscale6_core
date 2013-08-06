@@ -156,7 +156,7 @@ self.appname="{appname}"
             dbtypes=[item.lower() for item in self.tags.tagGet("dbtype").split(",")]
             ok=False
             if "arakoon" in dbtypes:
-                s+="""self.dbarakoon=o.db.keyvaluestore.getArakoonStore("main", namespace="{appname}_{actorname},serializers=[o.db.serializers.ujson]")\n"""
+                s+="""self.dbarakoon=o.db.keyvaluestore.getArakoonStore("main", namespace="{appname}_{actorname},serializers=[o.db.serializers.getSerializerType('j')]")\n"""
                 if dbtypes.index("arakoon")==0:
                     ok=True
                     s+="self.db=self.dbarakoon\n"
@@ -168,7 +168,7 @@ self.appname="{appname}"
                     s+="self.db=self.dbmem\n"
 
             if "fs" in dbtypes:
-                s+="self.dbfs=o.db.keyvaluestore.getFileSystemStore(namespace=\"{actorname}\", baseDir=None,serializers=[o.db.serializers.ujson])\n"
+                s+="self.dbfs=o.db.keyvaluestore.getFileSystemStore(namespace=\"{actorname}\", baseDir=None,serializers=[o.db.serializers.getSerializerType('j')])\n"
                 if dbtypes.index("fs")==0:
                     ok=True
                     s+="self.db=self.dbfs\n"

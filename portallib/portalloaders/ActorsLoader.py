@@ -258,10 +258,10 @@ h3. home page for space $$space
                             db = o.db.keyvaluestore.getArakoonStore(modelName) 
                     if "fs" in dbtypes:
                         if dbtypes.index("fs")==0:
-                            db = o.db.keyvaluestore.getFileSystemStore(namespace=modelName, serializers=[o.db.serializers.ujson])
+                            db = o.db.keyvaluestore.getFileSystemStore(namespace=modelName, serializers=[o.db.serializers.getSerializerType('j')])
                     if "redis" in dbtypes:
                         if dbtypes.index("redis")==0:
-                            db = o.db.keyvaluestore.getRedisStore(namespace=modelName, serializers=[o.db.serializers.ujson])
+                            db = o.db.keyvaluestore.getRedisStore(namespace=modelName, serializers=[o.db.serializers.getSerializerType('j')])
                     if "osis" in dbtypes:
                         osis = True
                     
