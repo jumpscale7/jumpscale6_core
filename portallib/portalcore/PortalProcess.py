@@ -261,7 +261,7 @@ class PortalProcess():
         self.cfg=ini
 
         self.redisServersLocal={}
-        if int(ini.getValue("redis","local"))==1:
+        if ini.checkSection('redis') and int(ini.getValue("redis","local"))==1:
             rediscfg=ini.getValue("redis","actors")
             self.rediscfg=rediscfg.split(",")
             self.rediscfg=[item.strip() for item in self.rediscfg]

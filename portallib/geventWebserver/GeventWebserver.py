@@ -93,6 +93,7 @@ class GeventWSClient():
                 params[key] = params["params"][key]
             params.pop("params")
         #params["caller"] = o.core.grid.config.whoami
+
         data = o.db.serializers.getSerializerType('j').dumps(params)
 
         headers = {'content-type': 'application/json'}
