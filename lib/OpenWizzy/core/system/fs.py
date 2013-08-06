@@ -746,7 +746,6 @@ class SystemFS:
             depth=None
         # if depth<>None:
         #     depth+=1
-        
         filesreturn,depth=self._listAllInDir(path, recursive, filter, minmtime, maxmtime,depth,type="f", case_sensitivity=case_sensitivity,exclude=exclude,followSymlinks=followSymlinks,listSymlinks=False)
         return filesreturn
 
