@@ -83,12 +83,15 @@ class KeyStor():
 
         return (priv,pub)
 
-    def _getKey(self,organization,user,cat,returnAsString=False):
+    def _getKey(self,organization,user,cat,returnAsString=False,keyoverrule=""):
         cachekey="%s_%s_%s"%(organization,user,cat)
         if self.keys.has_key(cachekey):
             return self.keys[cachekey]
         p1='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
-        key=self.db.get(organization,"%s_%s"%(cat,user))
+        if keyoverrule:
+            key=keyoverrule
+        else:
+            key=self.db.get(organization,"%s_%s"%(cat,user))
         if returnAsString:
             return key
         o.system.fs.writeFile(p1,key)
@@ -107,12 +110,12 @@ class KeyStor():
         key=self._getKey(organization,user,"private")
         return key
 
-    def getPubKey(self,organization,user,returnAsString=False):
-        key=self._getKey(organization,user,"public",returnAsString)
+    def getPubKey(self,organization,user,returnAsString=False,pubkeyReader=""):
+        key=self._getKey(organization,user,"public",returnAsString,keyoverrule=pubkeyReader)
         return key
 
     def setPubKey(self,organization,user,pemstr):
-        key=self.db.set(organization,"%s_%s"%("public",user))
+        key=self.db.set(organization,"%s_%s"%("public",user),pemstr)
 
     def test(self):
         """
@@ -138,7 +141,7 @@ class KeyStor():
             self.decrypt(org,"alice","bob",msg,signature)
         o.base.timer.stop(nrrounds)
 
-    def encrypt(self,organization,sender,reader,message,sign=True,base64=True):
+    def encrypt(self,orgsender,sender,orgreader,reader,message,sign=True,base64=True,pubkeyReader=""):
         """
         @param sender, name of person sending
         @param name of person reading
@@ -149,7 +152,7 @@ class KeyStor():
 
         #Alice wants to send a message to reader, which only reader will be able to decrypt
         #Step 1, load reader's public key
-        WriteRSA=self.getPubKey(organization,reader)
+        WriteRSA=self.getPubKey(orgreader,reader,pubkeyReader=pubkeyReader)
 
         #Step 2, encrypt the message using that public key
         #Only reader's private key can decrypt a message encrypted using reader's public key
@@ -164,7 +167,7 @@ class KeyStor():
             MsgDigest = m2c.EVP.MessageDigest ('sha1')
             MsgDigest.update (CipherText)
 
-            RSAsender = self.getPrivKey(organization,sender)
+            RSAsender = self.getPrivKey(orgsender,sender)
 
             signature = RSAsender.sign_rsassa_pss (MsgDigest.digest ())
             if base64:
@@ -176,9 +179,9 @@ class KeyStor():
 
         return CipherText2,signature
 
-    def decrypt(self,organization,sender,reader,message,signature=None,base64=True):
+    def decrypt(self,orgsender,sender,orgreader,reader,message,signature=None,base64=True):
         # print "decrypt org:%s for:%s from:%s\nmessage:%s"%(organization,reader,sender,message)
-        ReadRSA=self.getPrivKey(organization,reader)
+        ReadRSA=self.getPrivKey(orgreader,reader)
         if base64:
             message2=message.decode("base64")
         else:
@@ -191,7 +194,7 @@ class KeyStor():
             else:
                 signature2=signature
 
-            PubKey = self.getPubKey(organization,sender)
+            PubKey = self.getPubKey(orgsender,sender)
 
             MsgDigest = m2c.EVP.MessageDigest ('sha1')
             MsgDigest.update (message2)
