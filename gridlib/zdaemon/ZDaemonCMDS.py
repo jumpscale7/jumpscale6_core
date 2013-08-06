@@ -1,6 +1,16 @@
 from OpenWizzy import o
 import inspect
 
+class Session():
+    def __init__(self,ddict):
+        self.__dict__=ddict
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    __str__=__repr__        
+
+
 class ZDaemonCMDS(object):
     def __init__(self, daemon):
         self.daemon = daemon
@@ -13,21 +23,43 @@ class ZDaemonCMDS(object):
     #     """
     #     return self.daemon.getfreeportAndSchedule("datachannelProcessor", self.daemon.datachannelProcessor)
 
-    def registerpubkey(self,organization,user,pubkey,**args):
-        from IPython import embed
-        print "DEBUG NOW register pubkeyr"
-        embed()
+
+    def authenticate(self,session):
+        return True #will authenticall all (is std)
+
+    def registerpubkey(self,organization,user,pubkey,session):
+        self.daemon.keystor.setPubKey(organization, user, pubkey)
+        return ""
 
     def getpubkeyserver(self,session):
-        return self.daemon.keystor.getPubKey(self.daemon.sslorg,self.daemon.ssluser,True)
+        return self.daemon.keystor.getPubKey(self.daemon.sslorg,self.daemon.ssluser,returnAsString=True)
 
-    def registersession(self,organization,user,macaddr,hostname,session):
+    def registersession(self,data,session,ssl):
         """
         @param sessiondata is encrypted data (SSL)
         """
-        from IPython import embed
-        print "DEBUG NOW sessiondata111"
-        embed()
+        ser=o.db.serializers.getMessagePack()
+        sessiondictstr=ser.loads(data)
+
+        session=Session(sessiondictstr)
+
+        #@todo JO fix ssl please
+        if ssl:
+            session.encrkey=self.daemon.keystor.decrypt(orgsender=session.organization, sender=session.user, \
+                orgreader=self.daemon.sslorg,reader=self.daemon.ssluser, \
+                message=session.encrkey[0], signature=session.encrkey[1])
+
+            session.passwd=self.daemon.keystor.decrypt(orgsender=session.organization, sender=session.user, \
+                orgreader=self.daemon.sslorg,reader=self.daemon.ssluser, \
+                message=session.passwd[0], signature=session.passwd[1])
+
+        if not self.authenticate(session):
+            raise RuntimeError("Cannot Authenticate User:%s"%session.user)
+
+        self.daemon.sessions[session.id]=session
+
+        return "OK"
+
 
     def logeco(self, eco,session):
         """
@@ -46,6 +78,7 @@ class ZDaemonCMDS(object):
             if name.startswith('_'):
                 continue
             args = inspect.getargspec(method)
+            args.args.remove("session")
             methods[name] = {'args' : args, 'doc': inspect.getdoc(method)}
         return methods
 

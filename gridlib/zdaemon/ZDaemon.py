@@ -10,11 +10,6 @@ import OpenWizzy.baselib.serializers
 
 GeventLoop=o.core.gevent.getGeventLoopClass()
 
-class Session():
-    def __init__(self,ddict):
-        self.__dict__=ddict
-
-
 class ZDaemon(GeventLoop):
 
     def __init__(self, port=4444,name="",nrCmdGreenlets=50):
@@ -48,7 +43,7 @@ class ZDaemon(GeventLoop):
         self.cmdsInterfaces=[]
         self.cmdsInterfaces.append(cmdInterfaceClass(self))
 
-    def processRPC(self, cmd,data,format,session):
+    def processRPC(self, cmd,data,returnformat,session):
         """
         list with item 0=cmd, item 1=args (dict)
 
@@ -59,7 +54,7 @@ class ZDaemon(GeventLoop):
             2= method not found
             2+ any other error
         """
-        print "process rpc:\n%s"%data
+        # print "process rpc:\n%s"%data
         cmd2 = {}
         if cmd in self.cmds:
             ffunction = self.cmds[cmd]
@@ -93,10 +88,8 @@ class ZDaemon(GeventLoop):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
-            sessionid,cmd,informat,returnformat,data = cmdsocket.recv_multipart()
-            if informat<>"":
-                ser=o.db.serializers.get(informat,key=self.key)
-                data=ser.loads(data)
+            cmd,informat,returnformat,data,sessionid = cmdsocket.recv_multipart()
+
 
             # if data[0] == "1":
             #     self.logQueue.put(data[1:])
@@ -105,15 +98,26 @@ class ZDaemon(GeventLoop):
             if self.sessions.has_key(sessionid):
                 session=self.sessions[sessionid]
             else:
-                session=None
-            parts = self.processRPC(cmd,data,informat,returnformat,session=session)
-            if parts[1]<>"":
-                ser2=o.db.serializers.get(informat,key=self.key)
+                if cmd in ["registerpubkey","getpubkeyserver","registersession"]:
+                    session=None
+                    returnformat=""
+                else:
+                    from IPython import embed
+                    print "DEBUG NOW no session"
+                    embed()
+
+            if informat<>"":
+                ser=o.db.serializers.get(informat,key=self.key)
+                data=ser.loads(data)                
+            parts = self.processRPC(cmd,data,returnformat=returnformat,session=session)
+            returnformat=parts[1] #return format as comes back from processRPC
+            if returnformat<>"": #is 
+                ser2=o.db.serializers.get(returnformat,key=session.encrkey)
                 data=ser2.dumps(parts[2])
             else:
                 data=parts[2]
 
-            cmdsocket.send_multipart([parts[0],parts[1],data])
+            cmdsocket.send_multipart((parts[0],parts[1],data))
 
     def cmdGreenlet(self):
         #Nonblocking, e.g the osis server contains a broker which queus internally the messages.
@@ -145,19 +149,19 @@ class ZDaemon(GeventLoop):
             if socks.get(frontend) == zmq.POLLIN:
                 parts=frontend.recv_multipart()
                 if not self.authenticate(parts[0]):                   
-                    frontend.send_multipart([1,"",""]) #reply to frontend does not work
+                    frontend.send_multipart([1,"",""]) #reply to frontend, authentication error
                 elif parts[1]=="session":
                     #register new session
                     ser=o.db.serializers.getMessagePack()
                     sessiondict=ser.loads(parts[2])
                     self.sessions[parts[0]]=Session(sessiondict)
-
                 else:
-                   backend.send_multipart([parts[0]]+parts)
+                    parts.append(parts[0]) #add session id at end
+                    backend.send_multipart([parts[0]]+parts)
 
             if socks.get(backend) == zmq.POLLIN:
                 parts = backend.recv_multipart()
-                frontend.send_multipart(parts)
+                frontend.send_multipart( parts[1:]) #@todo dont understand why I need to remove first part of parts?
 
     def authenticate(self,agentid):
         return True

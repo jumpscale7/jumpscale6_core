@@ -4,16 +4,23 @@ import zmq
 import time
 import struct
 import math
+from random import randrange
 
 class Session():
 
-    def __init__(self,organization,user,encrkey,ipaddr,macaddr):
-        self.encrkey=key
+    def __init__(self,id,organization,user,passwd,encrkey,netinfo):
+        self.id=id
+        self.encrkey=encrkey
         self.user=user
+        self.passwd=passwd
         self.organization=organization
-        self.ipaddr=ipaddr
-        self.macaddr=macaddr
+        self.netinfo=netinfo
         self.start=int(time.time())
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    __str__=__repr__
 
 class ZDaemonClient():
     def __init__(self,ipaddr="localhost", port=4444,org="myorg",user="root",passwd="passwd",ssl=False,datachannel=False,encrkey="",reset=False):
@@ -24,6 +31,7 @@ class ZDaemonClient():
         self.port=port
         self.ipaddr=ipaddr
         self.datachannel=datachannel
+        self.id=""
         self.init()
         self.blocksize=8*1024*1024
         self.key=encrkey
@@ -40,7 +48,7 @@ class ZDaemonClient():
             self.keystor=None
 
 
-    def initSSL(self,reset=False):
+    def initSSL(self,reset=False,ssl=False):
 
         from IPython import embed
         try:
@@ -51,43 +59,38 @@ class ZDaemonClient():
 
         if reset:
             self.keystor.createKeyPair(organization=self.org, user=self.user)
-            pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
-            self.sendcmd(cmd="registerpubkey", sendformat='m', returnformat='m', organization=self.org,user=self.user,pubkey=pubkey)
 
-            self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver", sendformat='m', returnformat='m')
+        pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
+        result=self.sendcmd(cmd="registerpubkey", sendformat='m', returnformat='', organization=self.org,user=self.user,pubkey=pubkey)
 
-            from IPython import embed
-            print "DEBUG NOW session"
-            embed()
+        self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver", sendformat='m', returnformat='')
 
-            session=Session(organization=self.org,user=self.user,encrkey="",ipaddr="",macaddr="")
-            ser=o.db.serializers.getMessagePack()
-            sessiondict=ser.dumps(session.__dict__)
+        #generate unique key
+        encrkey=""
+        for i in range(56):
+            encrkey += chr(randrange(0, 256))
 
+        session=Session(id=self.id,organization=self.org,user=self.user,passwd=self.passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo())
 
-            from IPython import embed
-            print "DEBUG NOW pubserverserver"
-            embed()
+        #@todo JO fix ssl please
+        if ssl:
+            #only encrypt the key & the passwd, the rest is not needed
+            session.encrkey=self.keystor.encrypt(self.org, self.user, "", "", message=session.encrkey, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+            session.passwd=self.keystor.encrypt(self.org, self.user, "", "", message=session.passwd, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+        
+        ser=o.db.serializers.getMessagePack()
+        sessiondictstr=ser.dumps(session.__dict__)
+        self.key=session.encrkey
 
-        sessiondata=""
-
-        from IPython import embed
-        print "DEBUG NOW sessiindata"
-        embed()
-
-        self.sendcmd(cmd="registersession", sendformat='m', returnformat='m', sessiondata=sessiondata)
-
-        from IPython import embed
-        print "DEBUG NOW oo"
-        embed()
+        self.sendcmd(cmd="registersession", sendformat='m', returnformat='',data=sessiondictstr,ssl=ssl)
 
     def init(self):
         o.logger.log("check server is reachable on %s on port %s" % (self.ipaddr,self.port), level=4, category='zdaemon.client.init')
         res=o.system.net.waitConnectionTest(self.ipaddr,self.port,20)
 
         #12 bytes unique id
-        self.id=struct.pack("<III",o.base.idgenerator.generateRandomInt(1,2^(8*4)-1),o.base.idgenerator.generateRandomInt(1,2^(8*4)-1),o.base.idgenerator.generateRandomInt(1,2^(8*4)-1))
-        self.id="test"
+        end=4294967295  #4bytes max nr
+        self.id=struct.pack("<III",o.base.idgenerator.generateRandomInt(1,end),o.base.idgenerator.generateRandomInt(1,end),o.base.idgenerator.generateRandomInt(1,end))
 
         if res==False:
             msg="Could not find a running server instance  on %s:%s"%(self.ipaddr,self.port)
