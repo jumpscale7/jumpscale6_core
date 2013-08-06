@@ -40,14 +40,11 @@ class ZDaemonClient():
         self.org=org
         self.passwd=passwd
         self.ssl=ssl
-<<<<<<< local
         self.roles=roles
-=======
         self.keystor = None
         self.initSession(reset, ssl)
 
     def initSession(self,reset=False,ssl=False):
->>>>>>> other
 
         if ssl:
             from OpenWizzy.baselib.ssl.SSL import SSL
@@ -81,7 +78,6 @@ class ZDaemonClient():
 
         session=Session(id=self.id,organization=self.org,user=self.user,passwd=passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo())
 
-<<<<<<< local
     def initSSL(self,reset=False,ssl=False):
 
         from IPython import embed
@@ -112,8 +108,6 @@ class ZDaemonClient():
             session.encrkey=self.keystor.encrypt(self.org, self.user, "", "", message=session.encrkey, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
             session.passwd=self.keystor.encrypt(self.org, self.user, "", "", message=session.passwd, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
         
-=======
->>>>>>> other
         ser=o.db.serializers.getMessagePack()
         sessiondictstr=ser.dumps(session.__dict__)
         self.key=session.encrkey
