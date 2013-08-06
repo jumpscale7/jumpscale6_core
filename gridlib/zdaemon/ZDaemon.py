@@ -66,7 +66,7 @@ class ZDaemon(GeventLoop):
                 if hasattr(cmdinterface,cmd):
                     ffunction = getattr(cmdinterface, cmd)
 
-            if ffunction == None:                
+            if ffunction == None:
                 return "2","",None
             else:
                 cmd2 = {}
@@ -76,7 +76,10 @@ class ZDaemon(GeventLoop):
             args = inspect.getargspec(ffunction)
             if 'session' in args.args:
                 data['session'] = session
-            result = ffunction(**data)
+            if isinstance(data, dict):
+                result = ffunction(**data)
+            else:
+                result = ffunction(data)
         except Exception, e:
             eco=o.errorconditionhandler.parsePythonErrorObject(e)
             eco.level=2
