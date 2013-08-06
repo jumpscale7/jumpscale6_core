@@ -8,7 +8,7 @@ from random import randrange
 
 class Session():
 
-    def __init__(self,id,organization,user,passwd,encrkey,netinfo):
+    def __init__(self,id,organization,user,passwd,encrkey,netinfo,roles):
         self.id=id
         self.encrkey=encrkey
         self.user=user
@@ -16,6 +16,7 @@ class Session():
         self.organization=organization
         self.netinfo=netinfo
         self.start=int(time.time())
+        self.roles=roles
 
     def __repr__(self):
         return str(self.__dict__)
@@ -23,7 +24,7 @@ class Session():
     __str__=__repr__
 
 class ZDaemonClient():
-    def __init__(self,ipaddr="localhost", port=4444,org="myorg",user="root",passwd="passwd",ssl=False,datachannel=False,encrkey="",reset=False):
+    def __init__(self,ipaddr="localhost", port=4444,org="myorg",user="root",passwd="passwd",ssl=False,datachannel=False,encrkey="",reset=False,roles=[]):
         """
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
@@ -39,10 +40,14 @@ class ZDaemonClient():
         self.org=org
         self.passwd=passwd
         self.ssl=ssl
+<<<<<<< local
+        self.roles=roles
+=======
         self.keystor = None
         self.initSession(reset, ssl)
 
     def initSession(self,reset=False,ssl=False):
+>>>>>>> other
 
         if ssl:
             from OpenWizzy.baselib.ssl.SSL import SSL
@@ -76,6 +81,39 @@ class ZDaemonClient():
 
         session=Session(id=self.id,organization=self.org,user=self.user,passwd=passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo())
 
+<<<<<<< local
+    def initSSL(self,reset=False,ssl=False):
+
+        from IPython import embed
+        try:
+            self.keystor.getPrivKey(self.org,self.user)
+        except:
+            #priv key now known yet
+            reset=True
+
+        if reset:
+            self.keystor.createKeyPair(organization=self.org, user=self.user)
+
+        pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
+        result=self.sendcmd(cmd="registerpubkey", sendformat='m', returnformat='', organization=self.org,user=self.user,pubkey=pubkey)
+
+        self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver", sendformat='m', returnformat='')
+
+        #generate unique key
+        encrkey=""
+        for i in range(56):
+            encrkey += chr(randrange(0, 256))
+
+        session=Session(id=self.id,organization=self.org,user=self.user,passwd=self.passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo(),roles=self.roles)
+
+        #@todo JO fix ssl please
+        if ssl:
+            #only encrypt the key & the passwd, the rest is not needed
+            session.encrkey=self.keystor.encrypt(self.org, self.user, "", "", message=session.encrkey, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+            session.passwd=self.keystor.encrypt(self.org, self.user, "", "", message=session.passwd, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+        
+=======
+>>>>>>> other
         ser=o.db.serializers.getMessagePack()
         sessiondictstr=ser.dumps(session.__dict__)
         self.key=session.encrkey
@@ -307,8 +345,8 @@ class ZDaemonClient():
 
 
 class ZDaemonCmdClient(object):
-    def __init__(self,ipaddr="localhost", port=4444,datachannel=False,org="myorg",user="root",passwd="passwd",ssl=False, introspect=True,reset=False):
-        self._client = ZDaemonClient(ipaddr, port=port,org=org,user=user,passwd=passwd,ssl=ssl, datachannel=datachannel,reset=reset)
+    def __init__(self,ipaddr="localhost", port=4444,datachannel=False,org="myorg",user="root",passwd="passwd",ssl=False, introspect=True,reset=False,roles=[]):
+        self._client = ZDaemonClient(ipaddr, port=port,org=org,user=user,passwd=passwd,ssl=ssl, datachannel=datachannel,reset=reset,roles=roles)
 
         if introspect:
             self._loadMethods()

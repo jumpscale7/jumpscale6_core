@@ -60,6 +60,9 @@ class ZDaemonCMDS(object):
 
         return "OK"
 
+    def registerroles(self,session):
+        pass
+
 
     def logeco(self, eco,session):
         """

@@ -3,6 +3,7 @@ from OpenWizzy import o
 from ZDaemonCMDS import ZDaemonCMDS
 from ZDaemon import ZDaemon
 from ZDaemonClient import ZDaemonCmdClient
+from ZDaemonAgent import ZDaemonAgent
 
 import time
 
@@ -65,6 +66,21 @@ class ZDaemonFactory():
 
         return cl
 
+    def getZDaemonAgent(self,ipaddr="127.0.0.1",port=5555,org="myorg",user="root",passwd="1234",ssl=False,reset=False,roles=[]):
+        """
+        example usage, see example for server at self.getZDaemon
+
+        agent=o.core.zdaemon.getZDaemonAgent(ipaddr="127.0.0.1",port=5555,login="root",passwd="1234",ssl=False,roles=["*"])
+        agent.start()
+
+        @param roles describes which roles the agent can execute e.g. node.1,hypervisor.virtualbox.1,*  
+            * means all
+
+        """
+        cl=ZDaemonAgent(ipaddr=ipaddr,port=port,org=org,user=user,passwd=passwd,ssl=ssl,reset=reset,roles=roles)
+
+        return cl
+
     def getZDaemonClientClass(self):
         """
         example usage, see example for server at self.getZDaemon
@@ -73,8 +89,8 @@ class ZDaemonFactory():
         ZDaemonClientClass=o.core.zdaemon.getZDaemonClientClass()
 
         myClient(ZDaemonClientClass):
-            def __init__(self,ipaddr):
-                ZDaemonClientClass.__init__(self,ipaddr=ipaddr,port=5555,login="root",passwd="1234",ssl=False)
+            def __init__(self,ipaddr="127.0.0.1",port=5555,org="myorg",user="root",passwd="1234",ssl=False,reset=False):
+                ZDaemonClientClass.__init__(self,ipaddr=ipaddr,port=port,user=user,passwd=passwd,ssl=ssl,reset=reset)
 
         client=myClient()
         print client.echo("atest")
