@@ -1,6 +1,6 @@
 from OpenWizzy import o
 from OpenWizzy.grid.osis.OSISStore import OSISStore
-ujson = o.db.serializers.ujson
+ujson = o.db.serializers.getSerializerType('j')
 
 
 class mainclass(OSISStore):

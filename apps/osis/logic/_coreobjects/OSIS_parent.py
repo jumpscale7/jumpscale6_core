@@ -1,6 +1,9 @@
 from OpenWizzy import o
 from OpenWizzy.grid.osis.OSISStore import OSISStore
 import uuid
+
+ujson = o.db.serializers.getSerializerType('j')
+
 class mainclass(OSISStore):
     """
     """
@@ -27,7 +30,7 @@ class mainclass(OSISStore):
         if ukey:
             if self.db.exists(self.dbprefix_incr, ukey):
                 print "ukey exists"
-                id,guid,ckey2=o.db.serializers.ujson.loads(self.db.get(self.dbprefix_incr, ukey))
+                id,guid,ckey2=ujson.loads(self.db.get(self.dbprefix_incr, ukey))
                 print "ckey in db: %s"%ckey2
                 if obj.id<>id:    
                     msg="coreobj id not in line with id in contentkey db."
@@ -57,11 +60,11 @@ class mainclass(OSISStore):
             ckey=obj.getContentKey()
             obj._ckey=ckey
             print "ckey at end:%s"%ckey
-            json=o.db.serializers.ujson.dumps([obj.id,obj.guid,obj.getContentKey()])
+            json=ujson.dumps([obj.id,obj.guid,obj.getContentKey()])
             self.db.set(self.dbprefix_incr, ukey, json)
 
         else:
-            obj2=o.db.serializers.ujson.loads(self.db.get(self.dbprefix, obj.guid))
+            obj2=ujson.loads(self.db.get(self.dbprefix, obj.guid))
             if obj2._ckey<>ckey:
                 changed=True
 
@@ -116,7 +119,7 @@ class mainclass(OSISStore):
 
 
     # def serialize(self,obj):
-    #     return o.db.serializers.ujson.dumps(obj)
+    #     return ujson.dumps(obj)
 
     # def unserialize(self,obj):
-    #     return o.db.serializers.ujson.loads(obj)
+    #     return ujson.loads(obj)

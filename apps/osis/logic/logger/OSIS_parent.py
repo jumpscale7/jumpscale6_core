@@ -1,6 +1,10 @@
 from OpenWizzy import o
 from OpenWizzy.grid.osis.OSISStore import OSISStore
+import OpenWizzy.grid.grid
 import uuid
+
+ujson = o.db.serializers.getSerializerType('j')
+
 class mainclass(OSISStore):
     """
     """
@@ -11,7 +15,7 @@ class mainclass(OSISStore):
 
     def set(self,key,value):
         docs = []
-        for logobject in o.db.serializers.ujson.loads(value):
+        for logobject in ujson.loads(value):
             logobject["id"] = "%s_%s_%s_%s"%(logobject["gid"], logobject["bid"], logobject["pid"], logobject["order"])            
             docs.append(logobject)
 
