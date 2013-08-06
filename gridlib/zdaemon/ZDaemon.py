@@ -102,9 +102,7 @@ class ZDaemon(GeventLoop):
                     session=None
                     returnformat=""
                 else:
-                    from IPython import embed
-                    print "DEBUG NOW no session"
-                    embed()
+                    raise RuntimeError("Authentication  or Session error, session not known with id:%s"%sessionid)
 
             if informat<>"":
                 ser=o.db.serializers.get(informat,key=self.key)
@@ -148,23 +146,13 @@ class ZDaemon(GeventLoop):
             socks = dict(poller.poll())
             if socks.get(frontend) == zmq.POLLIN:
                 parts=frontend.recv_multipart()
-                if not self.authenticate(parts[0]):                   
-                    frontend.send_multipart([1,"",""]) #reply to frontend, authentication error
-                elif parts[1]=="session":
-                    #register new session
-                    ser=o.db.serializers.getMessagePack()
-                    sessiondict=ser.loads(parts[2])
-                    self.sessions[parts[0]]=Session(sessiondict)
-                else:
-                    parts.append(parts[0]) #add session id at end
-                    backend.send_multipart([parts[0]]+parts)
+                parts.append(parts[0]) #add session id at end
+                backend.send_multipart([parts[0]]+parts)
 
             if socks.get(backend) == zmq.POLLIN:
                 parts = backend.recv_multipart()
                 frontend.send_multipart( parts[1:]) #@todo dont understand why I need to remove first part of parts?
 
-    def authenticate(self,agentid):
-        return True
 
     def start(self,mainloop=None):
         self.schedule("cmdGreenlet", self.cmdGreenlet)
