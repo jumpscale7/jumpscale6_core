@@ -2,7 +2,7 @@ import time
 import gevent
 import zmq.green as zmq
 
-class GeventLoop():
+class GeventLoop(object):
     def __init__(self):
         self.greenlets = {}
         self.now=0

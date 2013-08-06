@@ -14,9 +14,9 @@ class ZDaemon(GeventLoop):
 
     def __init__(self, port=4444,name="",nrCmdGreenlets=50):
         gevent.monkey.patch_socket()
-        
         GeventLoop.__init__(self)
-        self.name=name        
+
+        self.name=name
         self.cmds = {}
 
         self.ports = [] #is for datachannel
@@ -102,7 +102,11 @@ class ZDaemon(GeventLoop):
                     session=None
                     returnformat=""
                 else:
-                    raise RuntimeError("Authentication  or Session error, session not known with id:%s"%sessionid)
+                    ser = o.db.serializers.get(returnformat)
+                    error = "Authentication  or Session error, session not known with id:%s"%sessionid
+                    eco = o.errorconditionhandler.getErrorConditionObject(msg=error)
+                    cmdsocket.send_multipart(("3","", ser.dumps(eco.__dict__)))
+                    continue
 
             if informat<>"":
                 ser=o.db.serializers.get(informat,key=self.key)
@@ -110,8 +114,8 @@ class ZDaemon(GeventLoop):
             parts = self.processRPC(cmd,data,returnformat=returnformat,session=session)
             returnformat=parts[1] #return format as comes back from processRPC
             if returnformat<>"": #is 
-                ser2=o.db.serializers.get(returnformat,key=session.encrkey)
-                data=ser2.dumps(parts[2])
+                returnser = o.db.serializers.get(returnformat,key=session.encrkey)
+                data=returnser.dumps(parts[2])
             else:
                 data=parts[2]
 

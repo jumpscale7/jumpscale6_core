@@ -78,7 +78,8 @@ class ZDaemonCMDS(object):
             if name.startswith('_'):
                 continue
             args = inspect.getargspec(method)
-            args.args.remove("session")
+            if 'session' in args.args:
+                args.args.remove("session")
             methods[name] = {'args' : args, 'doc': inspect.getdoc(method)}
         return methods
 
