@@ -2,9 +2,9 @@
 from FilesystemBase import FilesystemBase
 
 from OpenWizzy import o
+from OpenWizzy.baselib import serializers
 import os
 import errno
-import json
 import inspect
 
 class OsisList(FilesystemBase):
@@ -94,8 +94,9 @@ class OsisList(FilesystemBase):
                 obj = self._getObject(path)
             except:
                 return tmpfile
+            dumped = o.db.serializers.hrd.dumps(obj)
             with open(tmpfile, 'w+') as fd:
-                json.dump(obj, fd)
+                fd.write(dumped)
         return tmpfile
 
     def fs2ftp(self, path):
@@ -170,5 +171,5 @@ class OsisList(FilesystemBase):
         path = self.fs2ftp(fpath)
         parts = self._getParts(path)[1:]
         method = self._getActorMethod(parts, 'set')
-        content = json.loads(o.system.fs.fileGetContents(fpath))
+        content = o.db.serializers.hrd.loads(o.system.fs.fileGetContents(fpath))
         method(content)
