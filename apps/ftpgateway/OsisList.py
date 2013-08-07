@@ -6,6 +6,7 @@ import os
 import errno
 import json
 import inspect
+from OpenWizzy.core.system.text import Text
 
 class OsisList(FilesystemBase):
     """
@@ -19,7 +20,7 @@ class OsisList(FilesystemBase):
         self.name2path={}
         self.ftproot="/%s"% 'osis'
         self.client = client
-        self.actors = o.apps.system.contentmanager.getActors()
+        self.actors = [Text.toStr(a) for a in o.apps.system.contentmanager.getActors()]
 
     def _getActorClient(self, appname, actorname):
         if hasattr(o.apps, appname):
@@ -51,7 +52,7 @@ class OsisList(FilesystemBase):
         elif len(parts) == 3:
             actor = self._getActorClient(*parts[0:2])
             methodname = "model_%s_list" % parts[2]
-            dirs = [ "%s.json" %x for x in getattr(actor, methodname)() ]
+            dirs = [ "%s.json" % Text.toStr(x) for x in getattr(actor, methodname)() ]
         return list(set(dirs))
 
     def chdir(self, path):
