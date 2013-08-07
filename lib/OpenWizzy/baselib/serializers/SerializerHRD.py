@@ -17,7 +17,7 @@ class SerializerHRD():
             processed = self._dumpDict(data, prepend)
         elif isinstance(data, list):
             processed = self._dumpList(data, prepend)
-        elif isinstance(data, self._primitiveTypes):
+        else:
             processed = data
             if not isinstance(data, str):
                 processed = '%s.' % data
@@ -113,4 +113,6 @@ class SerializerHRD():
             primitive = o.basetype.float.fromString(value)
         elif o.basetype.boolean.checkString(value):
             primitive = o.basetype.boolean.fromString(value)
+        else:
+            o.basetype.string.fromString(value)
         return primitive
