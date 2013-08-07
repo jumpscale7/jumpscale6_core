@@ -2896,16 +2896,15 @@ class FTPHandler(asynchat.async_chat):
         # However, clients in general should not be resuming downloads
         # in ASCII mode.  Resuming downloads in binary mode is the
         # recommended way as specified in RFC-3659.
-
         line = self.fs.fs2ftp(path)
         if self._current_type == 'a':
             why = "SIZE not allowed in ASCII mode"
             self.respond("550 %s." %why)
             return
-        if not self.fs.isfile(path):
-            why = "%s is not retrievable" % line
-            self.respond("550 %s." % why)
-            return
+        # if not self.fs.isfile(self.fs.realpath(path)):
+        #     why = "%s is not retrievable" % line
+        #     self.respond("550 %s." % why)
+        #     return
         try:
             size = self.fs.getsize(path)
         except OSError, err:
@@ -2923,9 +2922,9 @@ class FTPHandler(asynchat.async_chat):
         path=path.split(" ",1)[1]
         # print "MDTM:%s"%path
         #line = self.fs.fs2ftp(path)
-        if not self.fs.isfile(path):
-            self.respond("550 %s is not retrievable" % path)
-            return
+        # if not self.fs.isfile(path):
+        #     self.respond("550 %s is not retrievable" % path)
+        #     return
         if self.use_gmt_times:
             timefunc = time.gmtime
         else:
