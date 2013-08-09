@@ -63,6 +63,7 @@ class OWDevelToolsInstaller:
         name="openwizzy6_examples"
         self._getOWRepo(name)
         self._do.symlink("%s/openwizzy/%s/prototypes"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/prototypes")
+        self._do.symlink("%s/openwizzy/%s/examples"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/examples")
 
     def deployOpenWizzyLibs(self):
         """
@@ -96,6 +97,18 @@ class OWDevelToolsInstaller:
         dest="%s/portal"%(o.dirs.libDir)
         self._do.symlink("%s/openwizzy/%s/portallib"%(o.dirs.codeDir,name),dest)
         self._do.symlink("%s/openwizzy/%s/apps/portalbase"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/portalbase")
+        self._do.symlink("%s/openwizzy/%s/apps/portalftpgateway"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/portalftpgateway")
+        self._do.symlink("%s/openwizzy/%s/apps/osis"%(o.dirs.codeDir,name),"/opt/code/openwizzy/openwizzy6_grid/apps/osis")
+        
+        if not o.system.fs.exists(path="/etc/init.d/elasticsearch"):
+            print "download / install elasticsearch"
+            self._do.download("https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.3.deb","/tmp/elasticsearch.deb")
+            self._do.execute("cd /tmp;dpkg -E -ielasticsearch.deb")
+
+        o.system.platform.ubuntu.install("redis-server")
+        o.system.platform.ubuntu.install("curlftpfs")
+
+        self._do.execute("pip install pyelasticsearch mimeparse beaker")
 
     def deployDFS_IO(self):
         """
