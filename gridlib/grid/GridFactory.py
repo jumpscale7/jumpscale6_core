@@ -53,7 +53,7 @@ class GridFactory():
 
 
     def _loadConfig(self):
-        if not o.application.__dict__.has_key("config"):
+        if not o.application.__dict__.has_key("config"):            
             raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart qshell")
         self.config=o.application.config
 
@@ -209,9 +209,6 @@ class GridFactory():
         o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.cfgDir, "grid"))
         path = o.system.fs.joinPaths(o.dirs.cfgDir, "grid", "node.hrd")
         o.system.fs.writeFile(path, contents=C)
-
-    def initNode(self, name="", roles="*", broker="tcp://localhost:5555"):
-        self.configureNode(name, roles, broker)
         o.application.initWhoAmI()
         self._loadConfig()
 
