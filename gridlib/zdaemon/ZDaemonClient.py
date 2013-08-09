@@ -244,10 +244,10 @@ class Klass(object):
             args = [ "%s=%s" % (x, x) for x in spec['args'][0][1:]]
             params_spec = spec['args'][0]
             if spec['args'][3]:
-                params_spec = []
-                for cnt, default in enumerate(spec['args'][3][::-1]):
+                params_spec = list(spec['args'][0])
+                for cnt, default in enumerate(spec['args'][3]):
                     cnt += 1
-                    params_spec.append(spec['args'][0][-cnt] + "=%r" % default)
+                    params_spec[-cnt] += "=%r" % default
             params = ', '.join(params_spec)
             strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
             exec(strmethod)

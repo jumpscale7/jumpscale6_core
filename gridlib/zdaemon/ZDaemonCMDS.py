@@ -87,8 +87,8 @@ class ZDaemonCMDS(object):
                 del args.args[session_index]
                 if args.defaults:
                     session_default_index = session_index - len(args.args) -1
-                    defaults = args.defaults
-                    defaults = defaults[:session_default_index] + defaults[session_default_index+1:]
+                    defaults = list(args.defaults)
+                    del defaults[session_default_index]
                     args = inspect.ArgSpec(args.args, args.varargs, args.keywords, defaults)
 
             methods[name] = {'args' : args, 'doc': inspect.getdoc(method)}
