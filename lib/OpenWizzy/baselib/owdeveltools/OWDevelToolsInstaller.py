@@ -52,7 +52,7 @@ class OWDevelToolsInstaller:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)
 
-        pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma')
+        pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma','circus')
         for package in pypackages:
             do.execute("easy_install %s" % package)
 
