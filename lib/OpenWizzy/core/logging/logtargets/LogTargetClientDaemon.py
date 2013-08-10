@@ -3,21 +3,17 @@ from OpenWizzy import o
 import time
 # q=openwizzy.q
 
-ZDaemonClientClass=o.core.grid.getZDaemonClientClass()
+# ZDaemonClientClass=o.core.grid.getZDaemonClientClass()
+# ZDaemonClientClass
 
-class LogTargetClientDaemon(ZDaemonClientClass):
+class LogTargetClientDaemon():
     """Forwards incoming logRecords to localclientdaemon"""
     def __init__(self, serverip=None):
         self.connected = False
         if serverip==None:
             serverip="127.0.0.1"
         self.serverip = serverip
-        enabled = self.checkTarget()
-        self.enabled=False
-        self.retry=True
-        if enabled:
-            self.loggerClient=o.core.grid.getZLoggerClient(ipaddr=serverip)
-            self.enabled=True
+        self.checkTarget()
 
     def checkTarget(self):
         """
@@ -34,6 +30,9 @@ class LogTargetClientDaemon(ZDaemonClientClass):
                     return False
                 print "try to connect to clientdaemon, will try for 60 sec."
                 time.sleep(1)
+        
+        self.loggerClient=o.core.grid.getZLoggerClient(ipaddr=self.serverip)
+        self.enabled=True
         o.logger.clientdaemontarget=self
         return True
 
@@ -47,10 +46,11 @@ class LogTargetClientDaemon(ZDaemonClientClass):
     def log(self, log):
         """
         forward the already encoded message to the target destination
-
         """
-        if self.enabled:
-            self.loggerClient.logMessage(log.toJson())
+        
+        if self.enabled:            
+            # print "LOG:%s"%log
+            self.loggerClient.log(log)
         # else:
         #     if o.logger.logTargets==[]:  #otherwise all logmessages in this phase would go unnoticed
         #         print log  
