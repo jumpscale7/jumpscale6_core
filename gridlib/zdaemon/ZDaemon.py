@@ -67,6 +67,7 @@ class ZDaemon(GeventLoop):
                     ffunction = getattr(cmdinterface, cmd)
 
             if ffunction == None:
+                #means could not find method
                 return "2","",None
             else:
                 cmd2 = {}
@@ -109,7 +110,7 @@ class ZDaemon(GeventLoop):
                     session=None
                     returnformat=""
                 else:
-                    ser = o.db.serializers.get(returnformat)
+                    ser = o.db.serializers.get("m")
                     error = "Authentication  or Session error, session not known with id:%s"%sessionid
                     eco = o.errorconditionhandler.getErrorConditionObject(msg=error)
                     cmdsocket.send_multipart(("3","", ser.dumps(eco.__dict__)))
@@ -126,6 +127,8 @@ class ZDaemon(GeventLoop):
             else:
                 data=parts[2]
 
+            if data==None:
+                data=""
             cmdsocket.send_multipart((parts[0],parts[1],data))
 
     def cmdGreenlet(self):

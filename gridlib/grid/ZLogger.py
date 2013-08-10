@@ -9,12 +9,29 @@ import time
 from gevent import queue as queue
 from ..zdaemon.ZDaemon import ZDaemon
 
-class ZLoggerCMDS():
+# from ..zdaemon.ZDaemonClient import ZDaemon
+
+ZDaemonCMDS=o.core.zdaemon.getZDaemonCMDS()
+
+class ZLoggerCMDS(ZDaemonCMDS):
     def __init__(self, daemon):
         self.daemon = daemon
 
-    def test(self):
-        return "pong"
+    def logeco(self, eco,session):
+        """
+        log eco object (as dict)
+        """        
+        eco["epoch"]=self.daemon.now
+        eco=o.errorconditionhandler.getErrorConditionObject(ddict=eco)
+        self.daemon.eventhandlingTE.executeV2(eco=eco,history=self.daemon.eventsMemLog)
+
+    def log(self,log,session):
+        log=o.logger.getLogObjectFromDict(log)        
+        self.daemon.loghandlingTE.executeV2(logobj=log)
+
+    def logbatch(self,logbatch,session):
+        self.daemon.loghandlingBatchedTE.executeV2(logbatch=logbatch)
+
 
 class Dummy():
     pass
@@ -23,7 +40,7 @@ class ZLogger(ZDaemon):
 
     def __init__(self, port=4444):
         ZDaemon.__init__(self,port=port,name="logger")
-        self.addCMDsInterface(ZLoggerCMDS)
+        self.setCMDsInterface(ZLoggerCMDS)
         self.init()
 
     def init(self):

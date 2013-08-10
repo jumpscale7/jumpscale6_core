@@ -80,7 +80,7 @@ class ZDaemonClient():
         ser=o.db.serializers.getMessagePack()
         sessiondictstr=ser.dumps(session.__dict__)
         self.key=session.encrkey
-
+        
         self.sendcmd(cmd="registersession", sendformat='m', returnformat='',data=sessiondictstr,ssl=ssl)
 
     def init(self):
@@ -122,6 +122,7 @@ class ZDaemonClient():
 
             print "init port for datachannel: %s"%port
 
+
     def sendMsgOverCMDChannelFast(self, cmd,data,sendformat="m",returnformat="m"):
         """
         cmd is command on server (is asci text)
@@ -138,21 +139,23 @@ class ZDaemonClient():
         if sendformat<>"":
             ser=o.db.serializers.get(sendformat,key=self.key)
             data=ser.dumps(data)
-        
+
         self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
 
         parts=self.cmdchannel.recv_multipart()
 
         if parts[0]=='1':
             msg="Authentication error on server on %s:%s.\n"%(self.ipaddr,self.port)
-            o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
+            o.errorconditionhandler.raiseBug(msgpub=msg,message="",category="rpc.exec")
         elif parts[0]=='2':
-            msg="execution error on server:%s on %s:%s.\n Could not find method:%s\n"%(self.ipaddr,self.port,cmd)
-            o.errorconditionhandler.raiseBug(msgpub="msg",message="",category="rpc.exec")
+            msg="execution error on server on %s:%s.\n Could not find method:%s\n"%(self.ipaddr,self.port,cmd)
+            o.errorconditionhandler.raiseBug(msgpub=msg,message="",category="rpc.exec")
         elif parts[0]<>"0":
             s=o.db.serializers.getMessagePack() #get messagepack serializer
             eco=o.errorconditionhandler.getErrorConditionObject(s.loads(parts[2]))
             msg="execution error on server on %s:%s.\nCmd:%s\nError=%s"%(self.ipaddr,self.port,cmd,eco)
+            if cmd=="logeco":
+                raise RuntimeError("Could not forward errorcondition object to logserver, error was %s"%eco)
             o.errorconditionhandler.raiseOperationalCritical(msgpub="",message=msg,category="rpc.exec",die=True,tags="ecoguid:%s"%eco.guid)
 
         returnformat=parts[1]
@@ -163,6 +166,38 @@ class ZDaemonClient():
             result=parts[2]
 
         return result
+
+    sendMsgOverCMDChannel=sendMsgOverCMDChannelFast
+
+    # def sendMsgOverCMDChannel(self, cmd,data,sendformat="m",returnformat="m"):
+    #     if self.retry:
+    #         while True:
+    #             # print "Send (%s)" % msg
+    #             self.cmdchannel.send(msg)
+    #             expect_reply = True
+    #             while expect_reply:
+    #                 socks = dict(self.poll.poll(1000))
+    #                 if socks.get(self.cmdchannel) == zmq.POLLIN:
+    #                     reply = self.cmdchannel.recv_multipart()
+    #                     if not reply:
+    #                         break
+    #                     else:
+    #                         return reply
+    #                 else:
+    #                     print "W: No response from clientdaemon, retrying"
+    #                     self.reset()
+    #                     self.cmdchannel.send(msg)
+    #         return reply
+    #     else:
+    #         print "Send once (%s)" % msg
+    #         self.cmdchannel.send(msg)
+    #         socks = dict(self.poll.poll(1000))
+    #         if socks.get(self.cmdchannel) == zmq.POLLIN:
+    #             return self.cmdchannel.recv_multipart()
+    #         else:
+    #             o.errorconditionhandler.raiseOperationalCritical(message="", category="",
+    #                                                              msgpub="could not communicate with cmdclient daemon on port %s"%4444, die=True, tags="")
+
 
     def close(self):
         try:

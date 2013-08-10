@@ -4,18 +4,24 @@ from ..zdaemon.ZDaemonClient import ZDaemonClient
 class ZLoggerClient(ZDaemonClient):
 
     def __init__(self,ipaddr="localhost", port=4444):
-        ZDaemonClient.__init__(self,ipaddr=ipaddr,port=port,datachannel=False,servername="logger")
 
-    def logMessage(self, logmessage):
-        if logmessage.find("\n")<>-1:
-            o.errorconditionhandler.raiseBug(message="logmessage cannot have \\n inside, msg was %s"%logmessage,category="loghandler.logmessage")
-        logmessage = "1%s"%logmessage
-        self.sendMsgOverCMDChannel(logmessage)
+        ZDaemonClient.__init__(self,ipaddr=ipaddr,port=port,datachannel=False,ssl=False)
+            
+
+    def log(self, logobject):
+
+        # logmessage = "1%s"%logmessage
+        args={}
+        args["log"]=logobject.__dict__
+        
+        self.sendMsgOverCMDChannelFast("log",data=args,sendformat="m",returnformat="")
 
     def logECO(self, eco):
         """
         log ErrorConditionObject
         """
         eco.type=str(eco.type)
-        self.sendcmd("logeco", eco=eco.__dict__)
+        args={}
+        args["eco"]=eco.__dict__       
+        self.sendMsgOverCMDChannelFast("logeco",data=args,sendformat="m",returnformat="")
 

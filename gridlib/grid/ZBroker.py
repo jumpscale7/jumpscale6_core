@@ -16,6 +16,7 @@ from ..gevent.GeventLoop import GeventLoop
 from BrokerMainActions import BrokerMainActions
 
 from ..zdaemon.ZDaemon import ZDaemon
+import OpenWizzy.grid.grid
 
 ujson = o.db.serializers.getSerializerType('j')
 
@@ -55,7 +56,7 @@ class ZBroker(ZDaemon):
         self.heartbeat_at = time.time() + self.HEARTBEAT_INTERVAL
 
         if o.core.grid.id==None:
-            o.core.grid.id=o.core.grid.hrd.getInt("grid.id")
+            raise RuntimeError("Could not find grid id at o.core.grid.id, means grid not configured?")
 
     def registerRole4NewWorker(self, workerid, rolestr):        
         rolestr = str(rolestr).lower()
@@ -110,11 +111,10 @@ class ZBroker(ZDaemon):
         ip=o.core.grid.config.get("broker.osis.ip")
         nsid=o.core.grid.config.getInt("broker.id")
         
-
         osisclient=o.core.osis.getClient(ip,port)
         if nsid==0:
             nsname,nsid=osisclient.createNamespace(name="broker_",template="coreobjects", incrementName=True)
-            o.core.grid.hrd.set("broker.id",nsid)
+            o.core.grid.config.set("broker.id",nsid)
         else:
             if not osisclient.existsNamespace("broker_%s"%nsid):
                 #namespace does not exist yet on server
