@@ -13,17 +13,15 @@ o.application.start()
 
 o.core.grid.init()
 
-if len(sys.argv)==5:
+if len(sys.argv)==4:
     addr=sys.argv[1] 
     port=int(sys.argv[2])
     instance=int(sys.argv[3])
-    roles=sys.argv[4].split(",")
 elif len(sys.argv)==1:
     addr="localhost"
     port=5556
     instance=1
-    roles=["system.1","*"]
 else:
-    raise RuntimeError("Format needs to be: 'python zworker.py 127.0.0.1 5556 4 roles1,roles2,roles.sub.1,system'")
+    raise RuntimeError("Format needs to be: 'python zworker.py 127.0.0.1 5556 4'")
 
-o.core.grid.startZWorker(addr=addr,port=port,instance=instance,roles=roles)
+o.core.grid.startZWorker(addr=addr,port=port,instance=instance)

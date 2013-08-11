@@ -18,11 +18,6 @@ q.application.start()
 
 q.core.grid.init()
 
-from pylabs.Shell import ipshellDebug,ipshell
-print "DEBUG NOW uuuu"
-ipshell()
-
-
 q.logger.log("test message2", level=5, category="a.cat")
 
 q.errorconditionhandler.raiseBug(message="a test bug",category="my.cat.2")
@@ -41,6 +36,6 @@ elif len(sys.argv)==1:
     instance=1
     roles=["system.1","*"]
 else:
-    raise RuntimeError("Format needs to be: 'python zworker.py 127.0.0.1 5556 4 roles1,roles2,roles.sub.1,system'")
+    raise RuntimeError("Format needs to be: 'python zworker.py 127.0.0.1 5556 4'")
 
 q.core.grid.startZWorker(addr=addr,port=port,instance=instance,roles=roles)
