@@ -297,7 +297,7 @@ class InstallTools():
                 os.remove(path)
 
     def copytreedeletefirst(self,source,dest):
-        delete(dest)
+        self.delete(dest)
         if self.debug:
             print "copy %s %s" % (source,dest)
         shutil.copytree(source,dest)
