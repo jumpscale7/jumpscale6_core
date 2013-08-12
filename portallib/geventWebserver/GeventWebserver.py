@@ -38,6 +38,7 @@ class GeventWSClient():
         self.ip = ip
         self.port = port
         self.secret = secret
+        import OpenWizzy.baselib.http_client
         self.httpconnection = o.clients.http.getConnection()
 
     def html2text(self, data):
