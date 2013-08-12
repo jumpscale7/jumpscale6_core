@@ -106,7 +106,7 @@ class OWDevelToolsInstaller:
         if not o.system.fs.exists(path="/etc/init.d/elasticsearch"):
             print "download / install elasticsearch"
             self._do.download("https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.3.deb","/tmp/elasticsearch.deb")
-            self._do.execute("cd /tmp;dpkg -E -ielasticsearch.deb")
+            self._do.execute("cd /tmp; dpkg -E -i elasticsearch.deb")
 
     def deployOpenWizzyPortal(self):
         """
