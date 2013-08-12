@@ -469,6 +469,7 @@ def logline(msg):
 
 def logerror(msg):
     """Log traceback outputs occurring in case of errors."""
+    o.logger.log(str(msg) + '\n')
     sys.stderr.write(str(msg) + '\n')
     sys.stderr.flush()
 
