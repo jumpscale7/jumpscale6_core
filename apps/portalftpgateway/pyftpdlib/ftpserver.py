@@ -1241,9 +1241,6 @@ class DTPHandler(object, asynchat.async_chat):
             self._closed = True
             # RFC-959 says we must close the connection before replying
             asyncore.dispatcher.close(self)
-            if self._resp:
-                self.cmd_channel.respond(self._resp)
-
             if self.file_obj is not None and not self.file_obj.closed:
                 self.file_obj.close()
             if self._idler is not None and not self._idler.cancelled:
@@ -1258,10 +1255,16 @@ class DTPHandler(object, asynchat.async_chat):
                                               elapsed=elapsed_time,
                                               bytes=self.get_transmitted_bytes())
                 if self.transfer_finished:
-                    if self.receive:
-                        self.cmd_channel.fs.on_file_received(filename)
-                    else:
-                        self.cmd_channel.fs.on_file_sent(filename)
+                    try:
+                        if self.receive:
+                            self.cmd_channel.fs.on_file_received(filename)
+                        else:
+                            self.cmd_channel.fs.on_file_sent(filename)
+                    except OSError, e:
+                        self._resp = "500 %s" % e.strerror
+            if self._resp:
+                self.cmd_channel.respond(self._resp)
+
                 # else:
                 #     if self.receive:
                 #         self.cmd_channel.on_incomplete_file_received(filename)
