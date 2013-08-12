@@ -252,7 +252,8 @@ class Code():
         return o.tools.yaml.encode(self.object2dict(obj))
 
     def object2json(self,obj,pretty=False):
-        return o.tools.json.encode(obj,pretty)
+        import json
+        return json.dumps(obj,pretty)
 
     def pprint(self,obj):
         result=self.object2yaml(obj)
