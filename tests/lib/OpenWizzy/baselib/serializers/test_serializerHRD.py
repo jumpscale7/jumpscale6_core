@@ -1,3 +1,5 @@
+#-*- coding: utf-8 -*-
+
 import unittest
 from OpenWizzy import o
 import OpenWizzy.baselib.serializers
@@ -125,3 +127,20 @@ class test_SerializerHRD(unittest.TestCase):
         self.assertEquals(dumped, 'name..is')
         loaded = o.db.serializers.hrd.loads(dumped)
         self.assertEquals(loaded, test_dumps18)
+
+        test_dumps19 = u'name..is'
+        dumped = o.db.serializers.hrd.dumps(test_dumps19)   
+        self.assertEquals(dumped, 'name..is')
+        loaded = o.db.serializers.hrd.loads(dumped)
+        self.assertEquals(loaded, test_dumps19)
+
+        test_dumps20 = {u'passwd': u'admin', 
+                        u'emails': [u''], 
+                        u'secret': u'mysecret', 
+                        u'groups': [u'admin'], 
+                        u'guid': u'96ec17c7-e8ea-431e-9014-65b70be65b67', 
+                        u'id': u'admin'}
+        dumped = o.db.serializers.hrd.dumps(test_dumps20)
+        self.assertEquals(dumped, 'passwd = admin\nid = admin\nsecret = mysecret\ngroups.[0] = admin\nguid = 96ec17c7-e8ea-431e-9014-65b70be65b67\nemails.[0] = \n')
+        loaded = o.db.serializers.hrd.loads(dumped)
+        self.assertEquals(loaded, test_dumps20)
