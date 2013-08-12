@@ -5,7 +5,7 @@
 #   Author: Kristof@incubaid.com
 #
 from OpenWizzy import o
-import OpenWizzy.grid
+import OpenWizzy.grid.grid
 import sys 
 
 o.application.appname = "zworker"
