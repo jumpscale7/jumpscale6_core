@@ -10,11 +10,11 @@ class OWDevelToolsInstaller:
         self.passwd=""
 
     def getCredentialsOpenWizzyRepo(self):
-        self.login=raw_input("Pylabs Repo Login, if unknown press enter:")
+        self.login=raw_input("OpenWizzy Repo Login, if unknown press enter:")
         if self.login=="":
             self.login="*"
             
-        self.passwd=raw_input("Pylabs Repo Passwd, if unknown press enter:")
+        self.passwd=raw_input("OpenWizzy Repo Passwd, if unknown press enter:")
         if self.passwd=="":
             self.passwd="*"
 
