@@ -53,7 +53,11 @@ class OsisList(FilesystemBase):
             actor = self._getActorClient(*parts[0:2])
             methodname = "model_%s_list" % parts[2]
             if hasattr(actor ,methodname):
-                dirs = [ "%s.hrd" % Text.toStr(x) for x in getattr(actor, methodname)() ]
+                try:
+                    dirs = [ "%s.hrd" % Text.toStr(x) for x in getattr(actor, methodname)() ]
+                except Exception, e:
+                    o.errorconditionhandler.processPythonExceptionObject(e)
+                    raise OSError(errno.EIO, "Failed to list")
 
         return list(set(dirs))
 
