@@ -1,8 +1,7 @@
 from OpenWizzy import o
 
 import OpenWizzy.baselib.screen
-import OpenWizzy.grid
-
+import OpenWizzy.grid.grid
 class OWDevelTools:
 
     def __init__(self):
