@@ -115,7 +115,7 @@ class CodeGenerator:
             return self.classes[key]
         #spec=o.core.specparser.findSpec(appname=appname,actorname=actor,specname=modelname,type=spectype,findOnlyOne=True)
         spec=o.core.specparser.getModelSpec(appname,actor,modelname)
-        classs=self.generate(spec,type=type,typecheck=typecheck,dieInGenCode=dieInGenCode,codepath=codepath)            
+        classs=self.generate(spec,type=type,typecheck=typecheck,dieInGenCode=dieInGenCode,codepath=codepath)
         return classs
 
 
@@ -160,7 +160,7 @@ class CodeGenerator:
         #path is location in a var dir where code will be generated, is always overwritten
         #if not self.generated.has_key(name):
         if spec.type=="model" and type=="pymodel":
-            cg=CodeGeneratorModel(spec,typecheck,dieInGenCode,codepath=codepath)
+            cg=CodeGeneratorModel(spec,typecheck,dieInGenCode,codepath=codepath,writeForm=False)
         # elif spec.type=="model" and type=="whoosh":
         #     cg=CodeGeneratorWhoosh(spec,typecheck,dieInGenCode)
         elif spec.type=="enumeration":

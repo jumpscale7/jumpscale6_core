@@ -3,8 +3,9 @@ from OpenWizzy import o
 from CodeGeneratorBase import CodeGeneratorBase
 
 class CodeGeneratorModel(CodeGeneratorBase):
-    def __init__(self,spec,typecheck=True,dieInGenCode=True,codepath=""):
+    def __init__(self,spec,typecheck=True,dieInGenCode=True,codepath="",writeForm=True):
         self.codepath=codepath
+        self._writeForm = writeForm
         CodeGeneratorBase.__init__(self,spec,typecheck,dieInGenCode)
         self.type="pymodel"        
         # self.initprops+="        self._appname=\"%s\"\n" %spec.appname
@@ -253,7 +254,8 @@ self._P__meta=["{appname}","{actorname}","{modelname}",{version}] #@todo version
 
 
         self.addInitExtras()
-        self.writeForm()
+        if self._writeForm:
+            self.writeForm()
 
         return self.getContent()
 
