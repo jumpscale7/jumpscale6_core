@@ -54,13 +54,12 @@ class OWDevelToolsInstaller:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)
 
+        do.execute("apt-get purge python-zmq")
+        do.execute("pip install 'pyzmq==13.0.2'")
+        
         pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma','circus')
         for package in pypackages:
             do.execute("easy_install %s" % package)
-
-        pippackages = ['pyzmq']
-        for package in pippackages:
-            do.execute("pip install %s" % package)
 
     def deployExampleCode(self):
         """
@@ -180,7 +179,7 @@ class OWDevelToolsInstaller:
 
         src="%s/../../shellcmds"%libDir
         dest="%s/shellcmds"%o.dirs.baseDir
-        self._do.symlink(src,dest)  
+        self._do.symlink(src,dest)
 
         for item in o.system.fs.listFilesInDir(dest,filter="*.py"):
             C="python %s/%s $@"%(dest,o.system.fs.getBaseName(item))

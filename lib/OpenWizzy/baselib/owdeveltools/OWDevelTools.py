@@ -1,13 +1,14 @@
 from OpenWizzy import o
 
 import OpenWizzy.baselib.screen
-import OpenWizzy.grid.grid
+
 class OWDevelTools:
 
     def __init__(self):
         pass
 
     def initSystemLocal(self,domain="adomain.com",gridid=0,roles=[]):
+        import OpenWizzy.grid
         o.core.grid.configureBroker(domain="adomain.com")
         o.core.grid.configureNode(gridid=gridid,roles=roles)
 
