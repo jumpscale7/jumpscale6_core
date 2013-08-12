@@ -52,7 +52,9 @@ class OsisList(FilesystemBase):
         elif len(parts) == 3:
             actor = self._getActorClient(*parts[0:2])
             methodname = "model_%s_list" % parts[2]
-            dirs = [ "%s.json" % Text.toStr(x) for x in getattr(actor, methodname)() ]
+            if hasattr(actor ,methodname):
+                dirs = [ "%s.hrd" % Text.toStr(x) for x in getattr(actor, methodname)() ]
+
         return list(set(dirs))
 
     def chdir(self, path):
@@ -171,6 +173,11 @@ class OsisList(FilesystemBase):
     def on_file_received(self, fpath):
         path = self.fs2ftp(fpath)
         parts = self._getParts(path)[1:]
-        method = self._getActorMethod(parts, 'set')
-        content = o.db.serializers.hrd.loads(o.system.fs.fileGetContents(fpath))
-        method(content)
+        try:
+            method = self._getActorMethod(parts, 'set')
+            content = o.db.serializers.hrd.loads(o.system.fs.fileGetContents(fpath))
+            method(content)
+        except Exception, e:
+            o.errorconditionhandler.processPythonExceptionObject(e)
+            raise OSError(errno.EIO, "Failed to store object")
+
