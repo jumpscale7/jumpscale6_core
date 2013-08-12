@@ -276,12 +276,7 @@ class ErrorConditionHandler():
         print errorConditionObject
 
         if o.logger.clientdaemontarget:
-            try:
-                o.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)
-            except Exception,e:
-                from IPython import embed                
-                print "DEBUG NOW error in error escalation in openwizzy main log target for loggerclient"
-                embed()
+            o.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)
         # else:
         #     o.logger.log(str(errorConditionObject), o.enumerators.LogLevel.OPERATORMSG)
 
@@ -397,4 +392,4 @@ class ErrorConditionHandler():
             o.application.stop(1)
 
     def halt(self):
-            o.application.stop(1)
+        o.application.stop(1)

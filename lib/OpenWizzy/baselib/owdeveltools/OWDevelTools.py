@@ -51,7 +51,8 @@ class OWDevelTools:
 
         path=o.system.fs.joinPaths("/opt/openwizzy6/apps","broker")
         for worker in range(1,nrworkers+1):
-            cmd="cd %s;python zworkerStart.py %s %s %s"%(path,"127.0.0.1",5554,worker)
+            roles="system,worker.%s"%worker
+            cmd="cd %s;python zworkerStart.py %s %s %s %s"%(path,"127.0.0.1",5556,worker,roles)
             o.system.platform.screen.executeInScreen(name,"w%s"%worker,cmd,wait=1)
 
 
