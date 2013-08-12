@@ -1,10 +1,11 @@
 
 def main(q,args,params,tags,tasklet):
-   
-	print "%s %s" % (args.logobj.category,args.logobj.message)
+
+	print "batch"
+	print args.logbatch		
 	return params
 
 
 def match(q,args,params,tags,tasklet):
-    return True
+    return  True
 

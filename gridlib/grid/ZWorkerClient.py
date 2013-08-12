@@ -8,7 +8,7 @@ from ..zdaemon.ZDaemonClient import ZDaemonClient
 class ZWorkerClient():
     def __init__(self,ipaddr="localhost", retry=True):
         #client to talk with broker over standard zdaemon communication channel
-        self.brokerclient=ZDaemonClient(ipaddr=ipaddr,port=5554,servername="broker")
+        self.brokerclient=ZDaemonClient(ipaddr=ipaddr,port=5554)
 
         self.serverEndpoint = "tcp://%s:5555"%ipaddr
         self.requestTimeout = 100*1000  # 100 sec
@@ -55,7 +55,7 @@ class ZWorkerClient():
     def send(self, msg):
         if self.retry:
             while True:
-                print "Send (%s)" % msg
+                # print "Send (%s)" % msg
                 self.socket.send(msg)
                 expect_reply = True
                 while expect_reply:

@@ -7,7 +7,6 @@ from CoreModel.ZApplication import ZApplication
 from CoreModel.ZProcess import ZProcess
 from CoreModel.ModelObject import ModelObject
 
-from ZBrokerClientSelfHosted import ZBrokerClientSelfHosted
 from ZLogger import ZLogger
 from ZLoggerClient import ZLoggerClient
 from ZBroker import ZBroker
@@ -104,7 +103,7 @@ class GridFactory():
         if self.processobject.name=="":
             self.processobject.name=o.application.appname
 
-        self.pid=self.brokerClient.registerProcess(obj=self.processobject)
+        self.pid=self.brokerClient.registerProcess(obj=self.processobject.__dict__)
         
         self.processobject.id=self.pid
         self.processobject.getSetGuid()
@@ -132,7 +131,7 @@ class GridFactory():
         """
 
         if broker<>None:
-            self.brokerClient =ZBrokerClientSelfHosted(broker)
+            self.brokerClient =broker.cmdsInterfaces[0]
             return True
 
         brokerip = self.config.get("grid.broker.ip")
@@ -183,7 +182,7 @@ class GridFactory():
         znode.netaddr=netaddr
         znode.name=name
         znode.roles=roles
-        nid,bid = self.brokerClient.registerNode(znode)
+        nid,bid = self.brokerClient.registerNode(znode.__dict__)
         o.logger.log("NodeId=%s,BrokerId=%s"%(nid,bid), level=3, category="grid.startup")
 
         return nid,bid
@@ -225,11 +224,11 @@ class GridFactory():
         return ZLoggerClient(ipaddr=ipaddr,port=port)
 
 
-    def startZWorker(self,addr="localhost",port=5555,instance=0):
+    def startZWorker(self,addr="localhost",port=5555,instance=0,roles=["*"]):
         """
         #@todo doc
         """
-        zw=ZWorker(addr=addr,port=port,instance=instance)
+        zw=ZWorker(addr=addr,port=port,instance=instance,roles=roles)
         zw.start()
 
     def startLocalLogger(self):

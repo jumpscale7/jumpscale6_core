@@ -1,5 +1,5 @@
 from OpenWizzy import o
-import OpenWizzy.grid
+import OpenWizzy.grid.grid
 
 import time
 import gevent
@@ -15,7 +15,8 @@ def test(name,color):
     #raise RuntimeError("testerror")
     return name+" "+color
 
-GeventLoop=o.core.grid.getGeventLoopClass()
+
+GeventLoop=o.core.gevent.getGeventLoopClass()
 
 class WorkerClientTest(GeventLoop):
 
@@ -52,7 +53,7 @@ class WorkerClientTest(GeventLoop):
             self.total+=1
             # result=self.client.ping()
             result=self.client.do(test,name="hallo",color="red")
-            print "result of remote exec:%s"%result
+            # print "result of remote exec:%s"%result
             if self.total>self.nr:
                 break
         print "done"

@@ -68,38 +68,6 @@ class ZBroker(ZDaemon):
         self.role2workers[rolestr].append(str(workerid))
         self.role2workersAvailable[rolestr].append(str(workerid))
 
-
-    def getWork(self, job):
-        # keep in dict format
-
-        role = str(job["executorrole"])
-        if role == "*":
-            workers = self.workers.keys()
-
-        jobids = [job["guid"]] 
-
-        if len(workers) == 1:  
-            job["wpid"] = workers[0]
-            self.activeJobs[job["guid"]] = job
-        elif len(workers)==0:
-            return []
-        else:
-            from OpenWizzy.core.Shell import ipshellDebug,ipshell
-            print "DEBUG NOW more than 1 worker"
-            ipshell()
-            
-            self.activeJobs[job["id"]] = job
-            for worker in workers:
-                job2 = copy.copy(job)
-                job2["guid"] = o.base.idgenerator.generateGUID()#@todo need other algoritm in line with first job guid creation
-                job2["agent"] = worker
-                job2["parent"] = job["id"]
-                job["childrenWaiting"].append(job2["guid"])
-                self.activeJobs[job["id"]] = job2
-                jobids.append(job["id"])
-
-        return jobids
-
     def hasWorkers(self):
         return self.workers != {}
 
@@ -124,7 +92,7 @@ class ZBroker(ZDaemon):
         self.id=nsid
 
         self.osis_node=o.core.osis.getClientForCategory("broker_%s"%nsid,"node",ip,port)
-        self.osis_job=o.core.osis.getClientForCategory("broker_%s"%nsid,"job",ip,port)
+        # self.osis_job=o.core.osis.getClientForCategory("broker_%s"%nsid,"job",ip,port)
         self.osis_process=o.core.osis.getClientForCategory("broker_%s"%nsid,"process",ip,port)
         self.osis_application=o.core.osis.getClientForCategory("broker_%s"%nsid,"applicationtype",ip,port)
         self.osis_action=o.core.osis.getClientForCategory("broker_%s"%nsid,"action",ip,port)
@@ -149,7 +117,7 @@ class ZBroker(ZDaemon):
             ##############
             # Handle worker activity on backend
             if socks.get(self.backend) == zmq.POLLIN:
-                print "activity on backend (workers)"
+                # print "activity on backend (workers)"
 
                 frames = self.backend.recv_multipart()
                 
@@ -162,7 +130,7 @@ class ZBroker(ZDaemon):
                     if msg[0] not in (self.PPP_READY, self.PPP_HEARTBEAT):
                         print "E: Invalid message from worker: %s" % msg
                 else:
-                    print "reply from worker:%s"%msg
+                    # print "reply from worker:%s"%msg
                     # msg here is what returns from worker
                     
                     job = ujson.loads(msg[1])
@@ -191,7 +159,7 @@ class ZBroker(ZDaemon):
             ##############
             # receive job from client
             if socks.get(self.frontend) == zmq.POLLIN:
-                print "activity on frontend (client)"
+                # print "activity on frontend (client)"
                 frames = self.frontend.recv_multipart()
                 if not frames:
                     break
@@ -205,33 +173,31 @@ class ZBroker(ZDaemon):
     def processJob(self, job, client):
 
 
-        jobids = self.getWork(job)
+        role = str(job["executorrole"])
 
-        if jobids==[]:
+        if role == "*":
+            workers = self.workers.keys()
+        else:
+            if self.role2workersAvailable.has_key(role):
+                workers=self.role2workersAvailable[role]
+            else:
+                workers=[]
+
+
+        if len(workers)==1:
+            worker=workers[0]
+        elif len(workers)==0:
             #could not find workers to execute jog
             job["state"]="workernotfound"
             job["result"]="could not find worker to execute work, no workers known which comply to role"
             self.frontend.send_multipart([str(client), "", ujson.dumps(job)])
+            return
+        else:
+            workerid=o.base.idgenerator.generateRandomInt(0,len(workers)-1)
+            worker=workers[workerid]
 
+        job["wpid"] = worker
+        self.activeJobs[job["guid"]] = job
 
-        # frames.insert(0, "")
-        for id in jobids:
-            # print "send worker for job coming from client: %s" % frames[0]
-            workerid=self.activeJobs[id]["wpid"]
-            self.backend.send_multipart([str(workerid), str(client), ujson.dumps(self.activeJobs[id])])
+        self.backend.send_multipart([str(worker), str(client), ujson.dumps(job)])
 
-        #
-
-        # if job.has_key("actionid"):
-        #     job=self.executecmdMsg(job)
-        #     self.frontend.send_multipart([frames[0],"",ujson.dumps(job)])
-        # else:
-
-
-
-
-# locals={}
-# # locals["params"]=broker
-# locals["q"]=q
-# locals["test"]=test
-# do=o.tools.performancetrace.profile('main()', locals)

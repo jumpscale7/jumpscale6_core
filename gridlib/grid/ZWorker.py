@@ -24,7 +24,7 @@ class ZWorker(GeventLoop):
         self.jfunctions={}
 
         self.HEARTBEAT_LIVENESS = 3 #amounts of times before hardbeat fails
-        self.HEARTBEAT_INTERVAL = 2 #time to wait on poll 
+        self.HEARTBEAT_INTERVAL = 1 #time to wait on poll 
         self.INTERVAL_INIT = 1 #seconds wait before init
         self.INTERVAL_MAX = 5
 
@@ -141,7 +141,7 @@ class ZWorker(GeventLoop):
                     
                     data=frames[1]
 
-                    jobDict = o.db.serializers.msgpack.loads(data)
+                    jobDict = ujson.loads(data)
                     job=o.core.grid.zobjects.getZJobObject(ddict=jobDict)
                     
                     job=self.process(job)

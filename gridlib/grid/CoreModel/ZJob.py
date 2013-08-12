@@ -21,10 +21,6 @@ class ZJob(ZBase):
             self.state="init"
             self.allworkers=allworkers
             self.executorrole=executorrole
-            self.childrenWaiting=[] #refers to jids
-            self.childrenActive=[]#refers to jids
-            self.childrenError=[]#refers to jids
-            self.childrenDone=[]#refers to jids
             self.parent=jidparent#refers to jids
             self.master=jidmaster#refers to jids
             self.wpid=0 #worker_pid refers to process id of a worker = unique id for process which represents the worker (unique per broker)

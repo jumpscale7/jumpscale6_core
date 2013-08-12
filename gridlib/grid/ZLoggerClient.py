@@ -14,7 +14,7 @@ class ZLoggerClient(ZDaemonClient):
         args={}
         args["log"]=logobject.__dict__
         
-        self.sendMsgOverCMDChannelFast("log",data=args,sendformat="m",returnformat="")
+        self.sendMsgOverCMDChannel("log",data=args,sendformat="m",returnformat="")
 
     def logECO(self, eco):
         """
@@ -23,5 +23,5 @@ class ZLoggerClient(ZDaemonClient):
         eco.type=str(eco.type)
         args={}
         args["eco"]=eco.__dict__       
-        self.sendMsgOverCMDChannelFast("logeco",data=args,sendformat="m",returnformat="")
+        self.sendMsgOverCMDChannel("logeco",data=args,sendformat="m",returnformat="")
 

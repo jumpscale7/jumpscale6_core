@@ -1,10 +1,14 @@
 from OpenWizzy import o
 
+ZDaemonCMDS=o.core.zdaemon.getZDaemonCMDS()  #get base class which needs to be used as basis for commands
 
-class BrokerMainActions():
+class BrokerMainActions(ZDaemonCMDS):
 
     def __init__(self, broker):
+        
+
         self.broker = broker
+        self.daemon=self.broker
         self.methods = {}
         self.applicationtypes={}
 

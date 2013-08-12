@@ -9,7 +9,7 @@ class mainclass(parentclass):
         pass       
 
     def getObject(self,ddict={}):
-    	obj=q.errorconditionhandler.getErrorConditionObject(ddict=ddict)
+    	obj=o.errorconditionhandler.getErrorConditionObject(ddict=ddict)
         return obj
 
     def setObjIds(self,obj):
