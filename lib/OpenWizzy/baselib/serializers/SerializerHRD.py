@@ -4,7 +4,7 @@ from OpenWizzy.core.system.text import Text
 
 class SerializerHRD():
     def __init__(self):
-        self._primitiveTypes = (int, str, float, bool)
+        self._primitiveTypes = (int, basestring, float, bool)
         self.__escape = str(uuid.uuid1())
 
     def _formatPrepends(self, prepend, type):
@@ -19,9 +19,8 @@ class SerializerHRD():
         elif isinstance(data, list):
             processed = self._dumpList(data, prepend)
         else:
-            data = Text.toStr(data) if isinstance(data, unicode) else data
             processed = data
-            if not isinstance(data, str):
+            if not isinstance(data, basestring):
                 processed = '%s.' % data
         return processed
 
@@ -30,8 +29,6 @@ class SerializerHRD():
         if not dictdata:
             dictified += self._formatPrepends(prepend, '{}')
         for k, v in dictdata.iteritems():
-            k = Text.toStr(k)
-            v = Text.toStr(v) if isinstance(v, unicode) else v
             if isinstance(k, str) and '..' in k:
                 k = k.replace('..', self.__escape)
             if not (isinstance(v, self._primitiveTypes)):
@@ -39,7 +36,7 @@ class SerializerHRD():
                 dictified += v
             else:
                 k = k.replace(self.__escape, '..')
-                if not isinstance(v, str):
+                if not isinstance(v, basestring):
                     dictified += '%s%s. = %s\n' % (prepend, k, v)
                 else:
                     dictified += '%s%s = %s\n' % (prepend, k, v)
@@ -50,7 +47,6 @@ class SerializerHRD():
         if not listdata:
             listified += self._formatPrepends(prepend, '[]')
         for index, item in enumerate(listdata):
-            item = Text.toStr(item) if isinstance(item, unicode) else item
             if prepend:
                 listprepend = '%s[%s].' % (prepend, index)
             else:
@@ -59,7 +55,7 @@ class SerializerHRD():
                 item = self.dumps(item, listprepend)
                 listified += '%s' % item
             else:
-                if not isinstance(item, str):
+                if not isinstance(item, basestring):
                     listified += '%s. = %s\n' % (listprepend[:-1], item)
                 else:
                     listified += '%s = %s\n' % (listprepend[:-1], item)

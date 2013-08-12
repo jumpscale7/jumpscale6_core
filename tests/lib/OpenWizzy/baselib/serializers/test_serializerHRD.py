@@ -144,3 +144,8 @@ class test_SerializerHRD(unittest.TestCase):
         self.assertEquals(dumped, 'passwd = admin\nid = admin\nsecret = mysecret\ngroups.[0] = admin\nguid = 96ec17c7-e8ea-431e-9014-65b70be65b67\nemails.[0] = \n')
         loaded = o.db.serializers.hrd.loads(dumped)
         self.assertEquals(loaded, test_dumps20)
+
+        test_dumps21 = u'présenté'
+        dumped = o.db.serializers.hrd.dumps(test_dumps21)
+        loaded = o.db.serializers.hrd.loads(dumped)
+        self.assertEquals(loaded, test_dumps21)
