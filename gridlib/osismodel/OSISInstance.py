@@ -474,10 +474,10 @@ class OSISInstance(OSISInstanceNoDB):
 
         result=[]
         for item in db.list(cat,""):
-            o=self.get(id=item)
+            ob=self.get(id=item)
             row=[]
             for prop in self.listProps:
-                r=o.__dict__["_P_%s"%prop]
+                r=ob.__dict__["_P_%s"%prop]
                 if o.basetype.list.check(r):
                     r=",".join(r)
                 if o.basetype.dictionary.check(r):
