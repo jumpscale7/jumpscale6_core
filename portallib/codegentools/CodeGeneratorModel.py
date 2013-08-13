@@ -139,7 +139,7 @@ def main(o,args,params,tags,tasklet):
     
     page=args.page
 
-    mod=q.html.getPageModifierBootstrapForm(page)
+    mod=o.html.getPageModifierBootstrapForm(page)
 
     appname="{appname}"
     actorname="{actor}"

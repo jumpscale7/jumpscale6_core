@@ -985,6 +985,7 @@ class GeventWebserver:
     def reformatOutput(self, ctx, result, restreturn=False):
         FFORMAT_TYPES = {
     "text": {"content_type":CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
+    "html": {"content_type":CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
     "raw": {"content_type": CONTENT_TYPE_PLAIN, "serializer": str},
     "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": o.db.serializers.getSerializerType('j').dumps},
     "json": {"content_type": CONTENT_TYPE_JSON, "serializer": self._resultjsonSerializer},

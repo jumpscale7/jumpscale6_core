@@ -3,7 +3,7 @@ def main(o,args,params,tags,tasklet):
 
     page = args.page
 
-    modifier=q.html.getPageModifierGridDataTables(page)
+    modifier=o.html.getPageModifierGridDataTables(page)
     page=modifier.addTable(args.tags.tagGet("url"))
 
     params.result = page 

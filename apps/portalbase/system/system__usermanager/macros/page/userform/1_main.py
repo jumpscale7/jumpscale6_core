@@ -16,7 +16,7 @@ def main(o,args,params,tags,tasklet):
     else:
         name = ''
 
-    pm=q.html.getPageModifierBootstrapForm(params.page)
+    pm=o.html.getPageModifierBootstrapForm(params.page)
 
     form=pm.getForm("a user",actor)
 

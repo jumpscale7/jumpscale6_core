@@ -140,14 +140,12 @@ class ActorsLoader(LoaderBase):
 
     def getActor(self,appname,actorname):
 
-        key="%s_%s" % (appname.lower(),actorname.lower())
+        key="%s__%s" % (appname.lower(),actorname.lower())
 
         if o.core.portal.runningPortal.actors.has_key(key):
             return o.core.portal.runningPortal.actors[key]
 
         print "get actor cache miss for %s %s"%(appname,actorname)
-
-        key="%s__%s" % (appname.lower(),actorname.lower())        
 
         if self.actorIdToActorLoader.has_key(key):
             loader=self.actorIdToActorLoader[key]
