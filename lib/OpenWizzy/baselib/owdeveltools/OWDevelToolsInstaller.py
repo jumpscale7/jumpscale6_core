@@ -54,7 +54,7 @@ class OWDevelToolsInstaller:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)
 
-        do.execute("apt-get purge python-zmq")
+        do.execute("apt-get purge python-zmq -y")
         do.execute("pip install 'pyzmq==13.0.2'")
         
         pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma','circus')
