@@ -19,3 +19,4 @@ if o.system.platformtype.isLinux():
 else:
     raise RuntimeError("Openwizzy 6 is for now only supported on ubuntu or mint.")
 
+o.application.stop()
