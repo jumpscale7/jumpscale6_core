@@ -23,11 +23,6 @@ class ClassBase(object):
     def dict2obj(self,data):
         o.code.dict2object(self,data)    
 
-    def getMetaInfo(self):
-        """
-        @return [appname,actorname,modelname,version] if relevant (e.g. for rootobject)
-        """
-        return self._P__meta 
         
     def __str__(self):
         return o.code.object2json(o.code.object2dict(self),True)
@@ -37,3 +32,11 @@ class ClassBase(object):
 class PyModelBase(ClassBase):
     def dict2obj(self,data):
         o.code.dict2pymodelobject(self,data)    
+
+
+class PyRootModelBase(PyModelBase):
+    def getMetaInfo(self):
+        """
+        @return [appname,actorname,modelname,version] if relevant (e.g. for rootobject)
+        """
+        return self._P__meta 

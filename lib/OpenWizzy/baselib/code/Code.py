@@ -2,7 +2,7 @@ import inspect
 from OpenWizzy import o
 
 from Appserver6GreenletScheduleBase import Appserver6GreenletScheduleBase
-from ClassBase import ClassBase, PyModelBase
+from ClassBase import ClassBase, PyModelBase, PyRootModelBase
 from Appserver6GreenletBase import Appserver6GreenletBase
 from Appserver6GreenletTaskletsBase import Appserver6GreenletTaskletsBase
 
@@ -60,6 +60,10 @@ class Code():
 
     def classGetPyModelBase(self):
         return PyModelBase
+
+
+    def classGetPyRootModelBase(self):
+        return PyRootModelBase
 
     def classGetAppserver6GreenletSchedule(self):
         return Appserver6GreenletScheduleBase
