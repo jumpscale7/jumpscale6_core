@@ -12,7 +12,7 @@ o.core.grid.init()
 
 def test(name,color):
     o.logger.log("this is test log of a job", level=3, category="a.cat")
-    #raise RuntimeError("testerror")
+    # raise RuntimeError("testerror")
     return name+" "+color
 
 client=o.core.grid.getZWorkerClient(ipaddr="127.0.0.1")
