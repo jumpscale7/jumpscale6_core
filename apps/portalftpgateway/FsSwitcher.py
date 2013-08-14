@@ -106,16 +106,22 @@ class FsSwitcher():
                         fs= FilesystemVirtualRootList(cmd_channel,self.getContentDirs,ttype,self.contentmanager)
                 else:
                     ftproot="/"+"/".join(ids[0:2])
+                    rpath = None
                     if ttype=="spaces":
-                        rpath=self.spaces[name]
+                        if name in self.spaces:
+                            rpath=self.spaces[name]
                     elif ttype=="actors":
-                        rpath=self.actors[name]
+                        if name in self.actors:
+                            rpath=self.actors[name]
                     elif ttype=="buckets":
-                        rpath=self.buckets[name]
+                        if name in self.buckets:
+                            rpath=self.buckets[name]
                     elif ttype=="contentdirs":
-                        rpath=self.contentdirs[name]
+                        if name in self.contentdirs:
+                            rpath=self.contentdirs[name]
                     #real root of special filesystem
-                    fs= FilesystemReal(rpath,cmd_channel,ftproot=ftproot,readonly=False,name=name,\
+                    if rpath:
+                        fs= FilesystemReal(rpath,cmd_channel,ftproot=ftproot,readonly=False,name=name,\
                         ttype=ttype,contentmanager=self.contentmanager)
 
             # if path.find("/stor")==0:
@@ -123,7 +129,7 @@ class FsSwitcher():
             #         ttype=ttype,contentmanager=self.contentmanager)
 
             if fs==None:
-                return FilesystemVirtualRoot(cmd_channel)
+                return None
                 from pylabs.Shell import ipshellDebug,ipshell
                 print "DEBUG NOW getfs, could not find fs"
                 ipshell()
