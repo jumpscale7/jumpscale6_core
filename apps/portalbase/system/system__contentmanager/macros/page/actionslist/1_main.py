@@ -56,7 +56,7 @@ def main(o,args,params,tasklet):
     for action in actions:
         if not locations.has_key(action.source):
             locations[action.source]={}
-        day=q.base.time.epoch2HRDate(action.start)
+        day=o.base.time.epoch2HRDate(action.start)
         daykey=str(action.source)+"_"+str(day)
         if not locations[action.source].has_key(daykey):
             locations[action.source][daykey]=[]        

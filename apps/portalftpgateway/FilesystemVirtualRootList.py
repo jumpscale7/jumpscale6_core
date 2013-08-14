@@ -40,7 +40,7 @@ class FilesystemVirtualRootList(FilesystemBase):
         elif self.type=="actors":
             if parent.find("__")==-1:
                 msg="Cannot create actor with name which is not constructed as $appname__$actorname, here %s"%parent
-                o.errorconditationhandler.raiseOperationalWarning("","ftpserver.fs",msg)
+                o.errorconditionhandler.raiseOperationalWarning("","ftpserver.fs",msg)
             self.contentmanager.notifyActorNew(path=rpath,name=parent)
         return
 

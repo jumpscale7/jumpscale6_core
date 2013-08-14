@@ -34,7 +34,7 @@ def main(o,args,params,tags,tasklet):
     page.addDescr("resourcename",action.resourcename)
     page.addDescr("resourceguid",action.resourceguid)
     page.addDescr("state",action.state)
-    page.addDescr("start",q.base.time.epoch2HRDateTime(action.start))
+    page.addDescr("start",o.base.time.epoch2HRDateTime(action.start))
     page.addDescr("hour",action.hour)
 
     page.addHeading("action type history info",3)
