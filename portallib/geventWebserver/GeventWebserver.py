@@ -552,7 +552,7 @@ class GeventWebserver:
         # doc.applyParams(ctx.params)
         content, doc = doc.executeMacrosDynamicWiki(paramsExtra=extraParams, ctx=ctx)
 
-        content, page = self.confluence2htmlconvertor.convert(content, doc=doc, requestContext=ctx, page=self.getpage(), paramsExtra=ctx.params)
+        page = self.confluence2htmlconvertor.convert(content, doc=doc, requestContext=ctx, page=self.getpage(), paramsExtra=ctx.params)
 
         if not 'postprocess' in page.processparameters or page.processparameters['postprocess']:
             page.body = page.body.replace("$$space", space)

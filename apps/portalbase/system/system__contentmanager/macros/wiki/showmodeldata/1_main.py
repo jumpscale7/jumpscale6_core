@@ -38,7 +38,7 @@ def main(o,args,params,tags,tasklet):
 
     try:
         model=actor2.models.__dict__[model].get(id=id)
-    except:
+    except:        
         result="could not find model %s from actor %s with id %s." % (model,actor,id)
         params.result=(result,params.doc)
         return params
@@ -46,11 +46,10 @@ def main(o,args,params,tags,tasklet):
 
     hrd=o.core.hrd.getHRDFromOsisObject(model,True)
 
-    content=o.core.hrd.replaceVarsInText(params.content,hrd)
+    result="{{code:\n%s\n}}"%hrd
 
+    params.result=(result,params.doc)
 
-    #if return not doc but also content then the system knows that doc.content has been manipulated
-    params.result=(content,content)
 
     return params
 

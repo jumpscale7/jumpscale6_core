@@ -34,6 +34,7 @@ class Doc(object):
         self.visibility=["public"] #std PUBLIC,INTERNAL
         self.visible=True
         self.destructed=False
+        self.docContentChanged=False
         self.content=""
         self.path=""
         self.shortpath=""
@@ -237,9 +238,11 @@ class Doc(object):
 
         if self.preprocessor.spaceMacroexecutorWiki<>None:
             content,doc=self.preprocessor.spaceMacroexecutorWiki.execMacrosOnContent(content=self.content,doc=self,paramsExtra=paramsExtra,ctx=ctx)
-            return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=content,doc=doc,paramsExtra=paramsExtra,ctx=ctx)
+            return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=doc.content,doc=doc,paramsExtra=paramsExtra,ctx=ctx)
         else:
             return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=self.content,doc=self,paramsExtra=paramsExtra,ctx=ctx)
+
+
 
     def generate2disk(self,outpath):
         if self.generate and self.visible:

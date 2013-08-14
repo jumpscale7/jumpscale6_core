@@ -165,6 +165,7 @@ class MacroExecutorPage(MacroExecutorBase):
         #for ease of use add the requestContext params to the main params
 
         if self.taskletsgroup2<>None and self.taskletsgroup2.hasGroup(macro):
+            # print macrostr
             page=self.taskletsgroup2.executeV2(macro,doc=doc,tags=tags,macro=macro,macrostr=macrostr,\
                 paramsExtra=paramsExtra,cmdstr=cmdstr,page=page,requestContext=requestContext)
         elif self.taskletsgroup.hasGroup(macro):
@@ -234,21 +235,25 @@ class MacroExecutorWiki(MacroExecutorBase):
         macro,tags,cmdstr=self.parseMacroStr(macrostr)
         if self.taskletsgroup.hasGroup(macro):
             try:
-                result,doc=self.taskletsgroup.executeV2(groupname=macro,doc=doc,tags=tags,macro=macro,macrostr=macrostr,\
-                    paramsExtra=paramsExtra,cmdstr=cmdstr,requestContext=ctx)
+                result,doc2=self.taskletsgroup.executeV2(groupname=macro,doc=doc,tags=tags,macro=macro,macrostr=macrostr,\
+                    paramsExtra=paramsExtra,cmdstr=cmdstr,requestContext=ctx,content=content)
             except Exception:
                 e = traceback.format_exc()
                 if str(e).find("non-sequence")<>-1:
                     result="***ERROR***: Could not execute macro %s on %s, did not return (out,doc)." % (macro,doc.name)                    
                 else:
                     result="***ERROR***: Could not execute macro %s on %s, error in macro. Error was:\n%s " % (macro,doc.name,e)
+            if result==doc2:
+                #means we did manipulate the doc.content 
+                content=result.replace(macrostr,"")
+                return content,doc
             if result<>None:
                 if not o.basetype.string.check(result):
                     result="***ERROR***: Could not execute macro %s on %s, did not return content as string (params.result=astring)" % (macro,doc.name)
                 content=content.replace(macrostr,result)
         else:
             content=content.replace(macrostr,"***ERROR***: Could not execute macro %s on %s, did not find the macro, was a wiki macro." % (macro,doc.name))
-        return content,doc
+        return content,doc2
 
 
     def findMacros(self,text):

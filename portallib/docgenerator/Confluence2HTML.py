@@ -495,5 +495,5 @@ class Confluence2HTML():
 
                 page.body=page.body.replace(item,page2.body)
 
-        return str(page),page
+        return page
 
