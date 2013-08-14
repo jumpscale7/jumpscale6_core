@@ -1,6 +1,6 @@
 #from ActorsLoaderRemote import ActorsLoaderRemote
 from PortalProcess import PortalProcess
-from PortalClient import *
+from PortalClient import PortalClient
 #from ActorLoaderLocal import *
 
 from OpenWizzy import o
