@@ -75,6 +75,8 @@ class OSISClient():
         return len(result)==1
 
     def search(self,namespace,category,query, start=0, size=10):
+        if o.basetype.dictionary.check(query):
+            query=o.db.serializers.ujson.dumps(query)
         namespaceid,catid=self._getIds(namespace,category)
         return self.client.search(namespaceid=namespaceid,catid=catid,query=query,
             start=start, size=size)
