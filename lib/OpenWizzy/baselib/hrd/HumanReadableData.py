@@ -19,13 +19,41 @@ class HumanReadableDataFactory:
 
     def replaceVarsInText(self,content,hrdtree,position=""):
         items=o.codetools.regex.findAll(r"\$\([\w.]*\)",content)
+        
         if len(items)>0:
             for item in items:
+                # print "look for : %s"%item
                 item2=item.strip(" ").strip("$").strip(" ").strip("(").strip(")")
-                newcontent=hrdtree.get(item2,position,checkExists=True)
+
+                if position<>"":
+                
+                    newcontent=hrdtree.get(item2,position=position,checkExists=True)
+                else:
+                    newcontent=hrdtree.get(item2,checkExists=True)
+
+                # print "nc:%s"%newcontent
                 if newcontent<>False:
                     content=content.replace(item,newcontent)
         return content
+
+    def getHRDFromOsisObject(self,osisobj,prefixRootObjectType=True):
+        txt=o.db.serializers.hrd.dumps(osisobj.obj2dict())
+        prefix=osisobj._P__meta[2]
+        out=""
+        for line in txt.split("\n"):
+            if line.strip()=="":
+                continue
+            if line[0]=="_":
+                continue
+            if line.find("_meta.")<>-1:
+                continue
+            if prefixRootObjectType:
+                out+="%s.%s\n"%(prefix,line)
+            else:
+                out+="%s\n"%(line)
+        return self.getHRDFromContent(out)        
+
+
         
 
 class HRDPos():
@@ -129,6 +157,9 @@ class HRDPos():
             if key[0]<>"_":
                 value=self.__dict__[key]
                 if key not in ["tree","treeposition","path"]:
+                    key=key.replace("_",".")
+                    if key[-1]==".":
+                        key=key[:-1]                    
                     parts.append(" %s:%s" % (key, value))
         return "\n".join(parts)
 
@@ -305,13 +336,17 @@ class HRD():
         self.__dict__.update(dictObject)
 
     def __repr__(self):
-        parts = ["path:%s"%self._path]
-        parts.append("treeposition:%s"%self._treeposition)
+        # parts = ["path:%s"%self._path]
+        # parts.append("treeposition:%s"%self._treeposition)
+        parts=[]
         keys=self.__dict__.keys()
         keys.sort()
         for key in keys:
             value=self.__dict__[key]
             if key[0]<>"_":
+                key=key.replace("_",".")
+                if key[-1]==".":
+                    key=key[:-1]
                 parts.append(" %s:%s" % (key, value))
         return "\n".join(parts)
 
