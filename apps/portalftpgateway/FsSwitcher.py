@@ -130,9 +130,6 @@ class FsSwitcher():
 
             if fs==None:
                 return None
-                from pylabs.Shell import ipshellDebug,ipshell
-                print "DEBUG NOW getfs, could not find fs"
-                ipshell()
 
             self.fs[key]=fs
 
