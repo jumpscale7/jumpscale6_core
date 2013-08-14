@@ -43,23 +43,22 @@ class OWDevelToolsInstaller:
         o.system.platform.ubuntu.check()
         do=o.system.installtools
 
-        do.execute("apt-get update",dieOnNonZeroExitCode=False)
+        print "Updating metadata"
+        o.system.platform.ubuntu.updatePackageMetadata()
 
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
                         'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc",
-                        "g++","python-dev","msgpack-python","python-mhash","python-snappy","python-beaker","python-mimeparse","python-m2crypto",
+                        "g++","python-dev","python-mhash","python-snappy","python-beaker","python-mimeparse","python-m2crypto",
                         "openjdk-7-jre")
 
         for name in debpackages:
             print "check install %s"%name
             o.system.platform.ubuntu.install(name)
 
-        do.execute("apt-get purge python-zmq -y")
-        do.execute("pip install 'pyzmq==13.0.2'")
-        
-        pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma','circus')
-        for package in pypackages:
-            do.execute("easy_install %s" % package)
+        o.system.platform.ubuntu.remove('python-zmq')
+        pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma','circus', 'msgpack-python>=0.3.0', 'pyzmq==13.0.2')
+        pypackages = [ '"%s"' % x for x in pypackages ]
+        do.execute("pip install %s" % ' '.join(pypackages))
 
     def deployExampleCode(self):
         """
