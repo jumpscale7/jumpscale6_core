@@ -8,9 +8,6 @@ class CodeGeneratorModel(CodeGeneratorBase):
         self._writeForm = writeForm
         CodeGeneratorBase.__init__(self,spec,typecheck,dieInGenCode)
         self.type="pymodel"        
-        # self.initprops+="        self._appname=\"%s\"\n" %spec.appname
-        # self.initprops+="        self._actorname=\"%s\"\n" %spec.actorname
-        # self.initprops+="        self._modelname=\"%s\"\n" %spec.name
 
     def getPropertyCode(self,name,type,indent=1):
         value=""
@@ -220,18 +217,20 @@ h2. {modelname}
 
     def addInitExtras(self):
         # following code will be loaded at runtime
-        s="""
-self._P__meta=["{appname}","{actorname}","{modelname}",{version}] #@todo version not implemented now, just already foreseen
-"""
-        s=s.replace("{appname}",self.spec.appname)
-        s=s.replace("{actorname}",self.spec.actorname)
-        s=s.replace("{modelname}",self.spec.name)
-        s=s.replace("{version}","1")
-        self.initprops+=o.code.indent(s,2)
+        if self.spec.rootobject:
+            s="""self._P__meta=["{appname}","{actorname}","{modelname}",{version}] #@todo version not implemented now, just already foreseen"""
+            s=s.replace("{appname}",self.spec.appname)
+            s=s.replace("{actorname}",self.spec.actorname)
+            s=s.replace("{modelname}",self.spec.name)
+            s=s.replace("{version}","1")
+            self.initprops+=o.code.indent(s,2)
 
 
     def generate(self):
-        self.addClass(baseclass="o.code.classGetPyModelBase()")
+        if self.spec.rootobject:
+            self.addClass(baseclass="o.code.classGetPyRootModelBase()")
+        else:
+            self.addClass(baseclass="o.code.classGetPyModelBase()")
 
         for prop in self.spec.properties:
             self.addProperty( propertyname=prop.name, type=prop.type, default=prop.default, description=prop.description)
@@ -239,7 +238,8 @@ self._P__meta=["{appname}","{actorname}","{modelname}",{version}] #@todo version
         if "guid" not in [item.name for item in self.spec.properties]:
             self.addProperty( propertyname="guid", type="str", default="", description="unique guid for object")
 
-        self.addProperty( propertyname="_meta", type="list", default=[], description="metainfo")
+        if self.spec.rootobject:
+            self.addProperty( propertyname="_meta", type="list", default=[], description="metainfo")
 
         #if "id" not in [item.name for item in self.spec.properties]:
             #self.addProperty( propertyname="id", type="int", default="", description="unique id for object")
