@@ -11,7 +11,7 @@ class system_docgenerator(system_docgenerator_osis):
         system_docgenerator_osis.__init__(self)
 
     def getDocForActor(self, actorname, **args):
-        actorjson = {'swaggerVersion': '1.1', 'basePath': 'http://%s'%self.host,
+        actorjson = {'swaggerVersion': '1.1', 'basePath': '/',
                      'resourcePath': '/%s'%actorname, 'apis': []}
         routes = o.core.portal.runningPortal.webserver.routes
         for path, route in routes.iteritems():
@@ -30,7 +30,7 @@ class system_docgenerator(system_docgenerator_osis):
         return actorjson
 
     def prepareCatalog(self, **args):
-        catalog = {'swaggerVersion': '1.1', 'basePath': 'http://%s/restmachine/system/docgenerator/getDocForActor?format=jsonraw&actorname='%self.host}
+        catalog = {'swaggerVersion': '1.1', 'basePath': '/restmachine/system/docgenerator/getDocForActor?format=jsonraw&actorname='}
         catalog['apis'] = list()
         if args.has_key('actors') and args['actors']:
             actors = args['actors'].split(',')
