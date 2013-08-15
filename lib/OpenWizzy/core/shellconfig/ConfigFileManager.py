@@ -20,7 +20,7 @@ class ConfigFileManager():
 
     def _getConfigFile(self):
         if self._loaded==False:
-            cfgfile=o.dirs.cfgDir+os.sep+"qconfig"+os.sep+"%s.cfg" % self._configType
+            cfgfile=configsDir+os.sep+"%s.cfg" % self._configType
             
             if o.system.fs.exists(cfgfile):
                 self.cfg=o.tools.inifile.open(cfgfile)

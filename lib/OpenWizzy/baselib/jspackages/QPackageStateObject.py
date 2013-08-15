@@ -4,7 +4,7 @@ class QPackageStateObject():
     
     def __init__(self,owpackageObject):
         key="%s_%s_%s" % (owpackageObject.domain,owpackageObject.name,owpackageObject.version)
-        self._path = o.system.fs.joinPaths(o.dirs.cfgDir, "owpackages6", "state", key + ".cfg")
+        self._path = o.system.fs.joinPaths(o.dirs.cfgDir, "owpackages", "state", key + ".cfg")
 
         if not o.system.fs.exists(self._path):
             self._ini=o.tools.inifile.new(self._path)

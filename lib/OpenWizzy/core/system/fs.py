@@ -23,7 +23,7 @@ from text import Text
 toStr = Text.toStr
 #from OpenWizzy.core.decorators import deprecated
 
-# We do not use the o.platform here nor do we import the PlatformType as this would
+# We do not use the o.system.platformtype here nor do we import the PlatformType as this would
 # lead to circular imports and raise an exception
 
 if not sys.platform.startswith('win'):

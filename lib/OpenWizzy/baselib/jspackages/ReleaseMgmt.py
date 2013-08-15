@@ -131,7 +131,7 @@ class ReleaseMgmt():
         Packages will be downloaded for all platforms.
         Next to the packages, the metadata will be copied as well to the temporary folder.
         Finally the folders and files will be compressed in a tgz file
-        Note that the packages and metadata are downloaded from the location specified in bundledownload in /opt/qbase3/cfg/owpackages6/sources.cfg
+        Note that the packages and metadata are downloaded from the location specified in bundledownload in /opt/qbase3/cfg/owpackages/sources.cfg
         If there are no changes between the two package files, an empty tgz file will be created.
 
         Parameters:
@@ -156,7 +156,7 @@ class ReleaseMgmt():
         o.system.fs.removeDirTree(tempDir, onlyLogWarningOnRemoveError=True)
         o.system.fs.createDir(tempDir)
         pcklist = self._listChangedPackagesAsObjects(earlierFile, laterFile, '+')
-        # get all owpackages from the location specified in bundledownload in /opt/qbase6/cfg/owpackages6/sources.cfg
+        # get all owpackages from the location specified in bundledownload in /opt/qbase6/cfg/owpackages/sources.cfg
         for pck in pcklist:
             pck.download(dependencies=False, destinationDirectory=tempDir, allplatforms=True)
         # We now need the domains that contain downloaded packages. These correspond to the directories created in the temporary directory

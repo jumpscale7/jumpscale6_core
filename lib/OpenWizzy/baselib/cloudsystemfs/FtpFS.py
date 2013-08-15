@@ -62,7 +62,7 @@ class FtpFS(object):
             for directory in path:
                 try:
                     self.ftp.cwd(directory)
-                except:
+                except Exception,e:
                     self.ftp.mkd(directory)
                     self.ftp.cwd(directory)
 

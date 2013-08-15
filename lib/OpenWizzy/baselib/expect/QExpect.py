@@ -282,13 +282,13 @@ class QExpect:
         
         If that still fails then we return False.
         """
-        if not openwizzy.o.system.platformtype.isLinux():
+        if not o.system.platformtype.isLinux():
             raise RuntimeError('pexpect/pxssh not supported on this platform')
 
         if not self._pxssh.login(ip, login, password, login_timeout=login_timeout):
             raise ValueError('Could not connect to %s, check either login/password are not correct or host is not reacheable over SSH.'%ip)
         else:
-            openwizzy.o.logger.log('SSH %s@%s session login successful' % (login, ip), 6)
+            o.logger.log('SSH %s@%s session login successful' % (login, ip), 6)
 
     def logout(self):
         """This sends exit. If there are stopped jobs then this sends exit twice.
@@ -301,15 +301,15 @@ class QExpect:
         This function also remembers these data for later usage in the 
         classes C{_out} & C{_error}.
         """
-        if openwizzy.o.system.platformtype.isWindows():
+        if o.system.platformtype.isWindows():
             out=self.receiveOut()
             err=self.receiveError()
             return out,err
         
-        elif openwizzy.o.system.platformtype.isLinux() and not self._expect:
+        elif o.system.platformtype.isLinux() and not self._expect:
             return self._pxssh.before
 
-        elif openwizzy.o.system.platformtype.isUnix() and self._expect:
+        elif o.system.platformtype.isUnix() and self._expect:
             
             if self._expect.match:
                 return '%s%s'%(self._expect.after, self._expect.buffer)
@@ -335,7 +335,7 @@ class QExpect:
         if self._cleanStringEnabled:
             out=self._cleanStr(out)
         self._add2lastOutput(out)
-        openwizzy.o.logger.log("stdout:%s" % out, 9)
+        o.logger.log("stdout:%s" % out, 9)
         return out
 
     def receiveError(self):
@@ -356,9 +356,9 @@ class QExpect:
         out=self._ignoreLinesBasedOnFilter(self._lastOutput)
         error=self._lastError
         if(error<>""):
-            openwizzy.o.console.echo("%s/nerror:%s" % (out,error))
+            o.console.echo("%s/nerror:%s" % (out,error))
         else:
-            openwizzy.o.console.echo(out)
+            o.console.echo(out)
 
     def _receive(self,checkError=False):
         #stdin=self._stdin
@@ -457,28 +457,28 @@ class QExpect:
         After sending a command, one of the receive functions must be called to 
         check for the result on C{stdout} or C{stderr}.
         """
-        openwizzy.o.logger.log("Executor send: %s" % data, 9)
+        o.logger.log("Executor send: %s" % data, 9)
         self._lastsend=data
         self._lastOutput=""
         self._lastError=""
         
-        if openwizzy.o.system.platformtype.isUnix():
+        if o.system.platformtype.isUnix():
             if self._expect:
                 if self._expect.sendline(data):
                     return
             
-        if openwizzy.o.system.platformtype.isWindows():
+        if o.system.platformtype.isWindows():
             data=data+"\r\n"
 
         p=self._p
 
         if len(data) != 0:
-            if openwizzy.o.system.platformtype.isWindows():
+            if o.system.platformtype.isWindows():
                 sent = p.send(data)
                 if sent is None:
                     raise Exception("ERROR: Data sent is none")
                 data = buffer(data, sent)
-            elif openwizzy.o.system.platformtype.isLinux():
+            elif o.system.platformtype.isLinux():
                 self._pxssh.sendline(data)
 
     def prompt(self, timeout=20):
@@ -487,7 +487,7 @@ class QExpect:
         Return C{True} if the prompt was matched.
         Returns C{False} if there was a time out.
         """
-        if openwizzy.o.system.platformtype.isLinux():
+        if o.system.platformtype.isLinux():
             self._pxssh.prompt()
         else:
             raise RuntimeError('pexpect/pxssh module not supported on this platform')
@@ -532,7 +532,7 @@ class QExpect:
             token=token.lower()
             if text.find(token)<>-1:
                 #token found
-                openwizzy.o.logger.log("Found token:%s" % token, 9)
+                o.logger.log("Found token:%s" % token, 9)
                 return tokennr
         return 0
 
@@ -545,7 +545,7 @@ class QExpect:
                 #print line
                 #print filter
                 if line.find(filter)<>-1:
-                    openwizzy.o.logger.log("Found ignore line:%s:%s" % (filter,line), 9)
+                    o.logger.log("Found ignore line:%s:%s" % (filter,line), 9)
                     foundmatch=True
             if foundmatch==False:
                 returnstr=returnstr+line+"\n"
@@ -557,9 +557,9 @@ class QExpect:
 
         @param timeoutval: time in seconds we maximum will wait
         """
-        openwizzy.o.logger.log("Waiting for receive with timeout:%s " % (timeoutval), 7)
+        o.logger.log("Waiting for receive with timeout:%s " % (timeoutval), 7)
         timeout=False
-        starttime=openwizzy.o.system.getTimeEpoch()
+        starttime=o.system.getTimeEpoch()
         r="" #full return
         returnpart="" #one time return after receive
         done=False #status param
@@ -571,10 +571,10 @@ class QExpect:
             #o.logger.log("tokenfound:%s"%tokenfound)
             returnpart=self._ignoreLinesBasedOnFilter(returnpart)
             r= r+returnpart
-            curtime=openwizzy.o.system.getTimeEpoch()
-            openwizzy.o.logger.log("TimeoutCheck on waitreceive: %s %s %s" % (curtime,starttime,timeoutval),8)
+            curtime=o.system.getTimeEpoch()
+            o.logger.log("TimeoutCheck on waitreceive: %s %s %s" % (curtime,starttime,timeoutval),8)
             if(curtime-starttime>timeoutval):
-                openwizzy.o.logger.log("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend,timeoutval), 6)
+                o.logger.log("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend,timeoutval), 6)
                 timeout=True
             if tokenfound>0:
                 done=True
@@ -604,11 +604,11 @@ class QExpect:
             o.console.echo(qexpect.receive())
         
         """
-        openwizzy.o.logger.log('Expect %s '%outputToExpect, 7)
+        o.logger.log('Expect %s '%outputToExpect, 7)
         
         try:
             self._expect.expect(outputToExpect, 2)
             return True
         except:
-            openwizzy.o.logger.log('Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive()), 7)
+            o.logger.log('Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive()), 7)
         return False

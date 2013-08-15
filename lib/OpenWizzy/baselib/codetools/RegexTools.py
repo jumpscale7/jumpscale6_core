@@ -94,7 +94,7 @@ class RegexTools:
         """
         if pattern=="" or text=="":
             raise RuntimeError("Cannot do .codetools.regex.match when pattern or text parameter is empty")     
-        #openwizzy.o.logger.log("Regextools: pattern:%s in text:%s" % (pattern,text),5)        
+        #o.logger.log("Regextools: pattern:%s in text:%s" % (pattern,text),5)        
         #print "Regextools: pattern:%s in text:%s" % (pattern,text)
         pattern=self._patternFix(pattern)
         result=re.findall(pattern,text)
@@ -400,7 +400,7 @@ class RegexTools:
 
     
 if __name__ == '__main__':
-    content=openwizzy.o.system.fs.fileGetContents("examplecontent1.txt")
+    content=o.system.fs.fileGetContents("examplecontent1.txt")
     rt=RegexTools()
     print rt.getClassName("class iets(test):")
     #content="class iets(test):"

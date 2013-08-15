@@ -61,7 +61,7 @@ class Sort(object):
 		    os.remove(chunk.name)
 		    chunks.remove(chunk)
 		except:
-		    openwizzy.o.logger.log("StopIterationException", 5)
+		    o.logger.log("StopIterationException", 5)
 	    else:
 		heappush(values,((key(value),index,value,iterator,chunk)))
 
@@ -77,7 +77,7 @@ class Sort(object):
 		    os.remove(chunk.name)
 		    chunks.remove(chunk)
 		except:
-		    openwizzy.o.logger.log("StopIterationException", 5)
+		    o.logger.log("StopIterationException", 5)
 	    else:
 		heappush(values,(key(value),index,value,iterator,chunk))
 
@@ -113,13 +113,13 @@ class Sort(object):
 			chunk.close()
 			os.remove(chunk.name)
 		    except:
-			openwizzy.o.logger.log("StopIterationException", 5)
+			o.logger.log("StopIterationException", 5)
 		if output_chunk not in chunks:
 		    try:
 			output_chunk.close()
 			os.remove(output_chunk.name)
 		    except:
-			openwizzy.o.logger.log("StopIterationException", 5)
+			o.logger.log("StopIterationException", 5)
 		return
 	finally:
 	    input_file.close()
@@ -140,7 +140,7 @@ class Sort(object):
 		    chunk.close()
 		    os.remove(chunk.name)
 		except:
-		    openwizzy.o.logger.log("StopIterationException", 5)
+		    o.logger.log("StopIterationException", 5)
 	    output_file.close()
 	    
 

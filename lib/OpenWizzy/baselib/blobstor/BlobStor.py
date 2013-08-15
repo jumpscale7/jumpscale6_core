@@ -29,7 +29,7 @@ class BlobType(BaseEnumeration):
     def _initItems(cls):
         cls.registerItem('log')
         cls.registerItem('varia')
-        cls.registerItem('owpackage')
+        cls.registerItem('opackage')
         cls.finishItemRegistration()
 
 
@@ -40,6 +40,7 @@ class BlobStor:
 
     def __init__(self, name):
         config = BlobStorConfigManagement()
+        
         if name not in config.list():
             raise RuntimeError("Cannot find blobstor connection with name %s" % name)
         else:

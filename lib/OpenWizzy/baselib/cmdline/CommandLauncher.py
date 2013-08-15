@@ -63,7 +63,7 @@ class CommandLauncher(threading.Thread):
     def run ( self ):
         """Run the command launcher"""
         os.chdir(self.workingdir)
-        resultcode=openwizzy.o.system.process.executeAsync(self.cmd, redirectStreams=False)
+        resultcode=o.system.process.executeAsync(self.cmd, redirectStreams=False)
 
 
 

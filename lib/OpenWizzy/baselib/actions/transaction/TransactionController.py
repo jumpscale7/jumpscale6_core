@@ -35,9 +35,9 @@ class TransactionController(object):
         @param callbackparams dict of parameters
 
         '''
-        #openwizzy.o.logger.log('Starting transaction: %s' % description,5)
+        #o.logger.log('Starting transaction: %s' % description,5)
         if self.hasRunningTransactions()==False:
-            self.originalwidth=openwizzy.o.console.width
+            self.originalwidth=o.console.width
         
         transaction = Transaction(description, errormessage, resolutionmessage,\
                         maxloglevel=maxloglevel,maxloglevelcapture=maxloglevelcapture,\
@@ -50,11 +50,11 @@ class TransactionController(object):
         #msg="TRANSACTION START: %s" % transaction.description
         msg="%s" % transaction.description
         if self.send2console and silent==False:
-            openwizzy.o.console.echoListItem(msg)
+            o.console.echoListItem(msg)
         else:
-            openwizzy.o.logger.log(msg,5)
+            o.logger.log(msg,5)
         if silent==False:
-            openwizzy.o.console.indent+=1   
+            o.console.indent+=1   
 
     def stop(self,failed=False):
         '''
@@ -69,14 +69,14 @@ class TransactionController(object):
                                   'running at all')
         
         transaction = self.transactions.pop()
-        #_TransactionStatus=openwizzy.o.enumerators.TransactionStatus
+        #_TransactionStatus=o.enumerators.TransactionStatus
         #status = _TransactionStatus.DONE if not failed else _TransactionStatus.FAILED
         status=2
         if not failed and not self.transactions:
             #status = _TransactionStatus.FINISHED
             status=1
         if transaction.silent==False:
-            openwizzy.o.console.indent-=1                    
+            o.console.indent-=1                    
         #if status==_TransactionStatus.FINISHED:
         if status==1:
             msg="TRANSACTION %s: %s" % (string.upper(str(status)),transaction.description)
@@ -84,9 +84,9 @@ class TransactionController(object):
         else:
             msg="TRANSACTION %s: %s" % (string.upper(str(status)),transaction.description)
         #if self.send2console:
-            #openwizzy.o.console.echoListItem(msg)
+            #o.console.echoListItem(msg)
         #else:
-        openwizzy.o.logger.log(msg,5)
+        o.logger.log(msg,5)
         
     def stopall(self):
         """
@@ -97,7 +97,7 @@ class TransactionController(object):
 
     def clean(self):
         '''Clean the list of running actions'''
-        openwizzy.o.logger.log('[ACTIONS] Clearing all actions', 5)
+        o.logger.log('[ACTIONS] Clearing all actions', 5)
         self.transactions = list()
 
 

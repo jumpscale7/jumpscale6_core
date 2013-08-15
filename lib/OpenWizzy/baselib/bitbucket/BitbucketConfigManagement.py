@@ -1,5 +1,8 @@
-from OpenWizzy.core.config import ConfigManagementItem, ItemSingleClass, ItemGroupClass
 from OpenWizzy import o
+
+from OpenWizzy.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
+from OpenWizzy.core.config.QConfigBase import ConfiguredItem, ConfiguredItemGroup
+from OpenWizzy.core.config.ConfigLib import ItemGroupClass, ItemSingleClass
 
 class BitbucketConfigManagementItem(ConfigManagementItem):
     CONFIGTYPE = "bitbucket"

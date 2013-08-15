@@ -1,5 +1,5 @@
 from OpenWizzy import o
-
+o.application.shellconfig.interactive=True
 class RepoList():
     pass
 

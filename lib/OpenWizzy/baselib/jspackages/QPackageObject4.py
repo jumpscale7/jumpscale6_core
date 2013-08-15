@@ -8,7 +8,7 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
-
+import inspect
 from OpenWizzy import o
 from OpenWizzy.core.baseclasses import BaseType
 from OpenWizzy.core.enumerators.PlatformType import PlatformType
@@ -95,7 +95,9 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         hrddir=o.system.fs.joinPaths(self.metadataPath,"hrd")
         if not o.system.fs.exists(hrddir):  
             new=True
-            src=o.system.fs.joinPaths(o.packages.pm_extensionpath,"templates")
+            extpath=inspect.getfile(self.__init__)
+            extpath=o.system.fs.getDirName(extpath)
+            src=o.system.fs.joinPaths(extpath,"templates")
             o.system.fs.copyDirTree(src,self.metadataPath)                                                  
         
         self.hrd=o.core.hrd.getHRDTree(hrddir)
@@ -310,7 +312,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
     def getState(self):
         ##self.assertAccessable()
         """
-        from dir get [qbase]/cfg/owpackages5/state/$owpackagedomain_$owpackagename_$owpackageversion.state
+        from dir get [qbase]/cfg/owpackages/state/$owpackagedomain_$owpackagename_$owpackageversion.state
         is a inifile with following variables
         * lastinstalledbuildNr
         * lastaction
@@ -804,8 +806,8 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 
         o.action.start('Installing %s' % str(self), 'Failed to install %s' % str(self))
 
-        if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+        if dependencies:            
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.install(dependencies, download, reinstall)
 
@@ -839,7 +841,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
             self.codeLink(dependencies=False, update=True, force=True)
 
 
-        q.extensions.pm_sync()
+        # q.extensions.pm_sync()
 
         o.action.stop(False)
 
@@ -894,7 +896,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 
     def copyFiles(self, destination=""):
         """
-        Copy the files from package dirs (/opt/qbase5/var/owpackages5/...) to their proper location in the sandbox.
+        Copy the files from package dirs (/opt/qbase5/var/owpackages/...) to their proper location in the sandbox.
 
         @param destination: destination of the files, default is the sandbox
         """
@@ -973,7 +975,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         self.loadActions()
         o.action.start('Configuring %s' % str(self), 'Failed to configure %s' % str(self))
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.configure()
         self.actions.configure()
@@ -995,7 +997,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         if update:
             self.codeUpdate(dependencies)
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.codeExport(update=update)
         self.actions.code.export()
@@ -1009,7 +1011,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         o.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
         o.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.codeUpdate(force=force)
         self.actions.code.update()
@@ -1023,7 +1025,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         o.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
         o.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.codeCommit(push=push)
         self.actions.code.commit()
@@ -1062,7 +1064,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         # time would be a non-op, which is again not desired. So we disable the
         # action caching for this action.
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.package(platform=platform)
         self.actions.code.update()
@@ -1078,7 +1080,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         params.owpackage = self
         o.action.start('Compiling %s' % str(self))
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.compile()
         self.actions.compile()
@@ -1240,7 +1242,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         self.loadActions()
         o.action.start('Import %s' % str(self), 'Failed to import code for %s back to local repo' % str(self))
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.codeImport()
         self.actions.code.importt()
@@ -1256,7 +1258,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         o.action.start('Push %s' % str(self), 'Failed to push code for %s' % str(self))
         o.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.codePush(merge=merge)
         self.actions.code.push(merge=merge)
@@ -1280,7 +1282,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         if update:
             self.codeUpdate(dependencies, force=force)
         if dependencies:
-            deps = self.getDependencies(platform=o.platform)
+            deps = self.getDependencies(platform=o.system.platformtype)
             for dep in deps:
                 dep.codeLink(update=update,force=force)            
 
@@ -1295,7 +1297,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         [requiredblobs]
         blob1= ...
 
-        #param destinationDirectory: allows you to overwrite the default destination (opt/qbase/var/owpackages5/files/...)
+        #param destinationDirectory: allows you to overwrite the default destination (opt/qbase/var/owpackages/files/...)
         """
         self.loadActions()
         o.action.start('Downloading %s' % str(self), 'Failed to download %s' % str(self))
@@ -1453,7 +1455,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         """
 
         platformDirs = list()
-        platform = o.platform
+        platform = o.system.platformtype
 
         _owpackageDir = self.getPathFiles()
 

@@ -1,5 +1,7 @@
 from OpenWizzy import o
 
+import OpenWizzy.baselib.mercurial
+
 class Domain(): 
 
     """
@@ -17,7 +19,7 @@ class Domain():
         if self.initialized:
             return
         
-        cfgFilePath = o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages6', 'sources.cfg')
+        cfgFilePath = o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg')
         cfg = o.tools.inifile.open(cfgFilePath)
 
         self.bitbucketreponame=cfg.getValue( self.domainname, 'bitbucketreponame')
@@ -125,7 +127,7 @@ class Domain():
         """
         Saves changes to the owpackages config file
         """
-        cfg = o.tools.inifile.open(o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages6', 'sources.cfg'))
+        cfg = o.tools.inifile.open(o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg'))
         if not cfg.checkSection(self.domainname):
             cfg.addSection(self.domainname)
         cfg.setParam(self.domainname, 'metadatadownload', self.metadataDownload)

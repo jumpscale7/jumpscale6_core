@@ -1,15 +1,13 @@
 from OpenWizzy import *
 
 o.application.appname = "owlink"
-o.application.start()
+o.application.start("owinstallrepos",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
 
 o.application.shellconfig.interactive=True
-
 
 import OpenWizzy.baselib.platforms #gets access to ubuntu code
 import OpenWizzy.baselib.owdeveltools
 
-o.application.start("owinstallrepos",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
 
 if o.system.platformtype.isLinux():
     o.system.platform.ubuntu.check()

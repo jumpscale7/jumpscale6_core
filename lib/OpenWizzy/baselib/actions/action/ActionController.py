@@ -1,37 +1,3 @@
-# <License type="Sun Cloud BSD" version="2.2">
-#
-# Copyright (c) 2005-2009, Sun Microsystems, Inc.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or
-# without modification, are permitted provided that the following
-# conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in
-#    the documentation and/or other materials provided with the
-#    distribution.
-#
-# 3. Neither the name Sun Microsystems, Inc. nor the names of other
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY SUN MICROSYSTEMS, INC. "AS IS" AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SUN MICROSYSTEMS, INC. OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# </License>
 
 import sys
 import inspect
@@ -231,10 +197,10 @@ class ActionController(object):
         '''
         #TODO Be more verbose / raise in time
         if show is not False:
-            openwizzy.o.logger.log('[ACTIONS] Using deprecated/unused argument '
+            o.logger.log('[ACTIONS] Using deprecated/unused argument '
                                   '\'show\'', 4)
         if messageLevel is not False:
-            openwizzy.o.logger.log('[ACTIONS] Using deprecated/unused argument '
+            o.logger.log('[ACTIONS] Using deprecated/unused argument '
                                   '\'messageLevel\'', 4)
 
         if self._actions and not self._actions[-1].interrupted:
@@ -242,7 +208,7 @@ class ActionController(object):
                                            self._width)
             self._actions[-1].interrupted = True
 
-        openwizzy.o.logger.log('[ACTIONS] Starting action: %s' % description,
+        o.logger.log('[ACTIONS] Starting action: %s' % description,
                               5)
         action = _Action(description, errormessage, resolutionmessage,
                         indent=len(self._actions))
@@ -251,7 +217,7 @@ class ActionController(object):
         action.write(self._output, self._width)
 
         #TODO Get rid of this when reworking console handling properly
-        openwizzy.o.console.hideOutput()
+        o.console.hideOutput()
 
     def stop(self, failed=False):
         '''Stop the currently running action
@@ -264,7 +230,7 @@ class ActionController(object):
         '''
         if not self._actions:
             #TODO Raise some exception?
-            openwizzy.o.logger.log('[ACTIONS] Stop called while no actions are '
+            o.logger.log('[ACTIONS] Stop called while no actions are '
                                   'running at all', 3)
             return
 
@@ -285,20 +251,20 @@ class ActionController(object):
         status = _ActionStatus.DONE if not failed else _ActionStatus.FAILED
         if not failed and not self._actions and action.interrupted:
             status = _ActionStatus.FINISHED
-        openwizzy.o.logger.log('[ACTIONS] Stopping action \'%s\', result '
+        o.logger.log('[ACTIONS] Stopping action \'%s\', result '
                               'is %s' % (action.description, status), 5)
         action.writeResult(self._output, status, self._width)
 
         if not self._actions:
             #TODO Get rid of this when reworking console handling properly
-            openwizzy.o.console.showOutput()
+            o.console.showOutput()
 
     def clean(self):
         '''Clean the list of running actions'''
-        openwizzy.o.logger.log('[ACTIONS] Clearing all actions', 5)
+        o.logger.log('[ACTIONS] Clearing all actions', 5)
         self._actions = list()
         #TODO Get rid of this when reworking console handling properly
-        openwizzy.o.console.showOutput()
+        o.console.showOutput()
 
     def hasRunningActions(self):
         '''Check whether actions are currently running
@@ -321,7 +287,7 @@ class ActionController(object):
         """
         Enable o.console output. Format such that it is nicely shown between action start/stop.
         """
-        openwizzy.o.console.showOutput()
+        o.console.showOutput()
 
         self._output_start_count += 1
         if self.hasRunningActions():
@@ -351,7 +317,7 @@ class ActionController(object):
             self._handleStartStopOutputCountMismatch()
 
         if self.hasRunningActions() and (self._output_start_count == 0):
-            openwizzy.o.console.hideOutput()
+            o.console.hideOutput()
 
 
     def _handleStartStopOutputCountMismatch(self):
@@ -361,7 +327,7 @@ class ActionController(object):
 
         This will break running actions or might break future actions.
         '''
-        openwizzy.o.logger.log(
+        o.logger.log(
             '[ACTIONS] Warning: start/stop output count mismatch', 4)
         self._actions = list()
         self._output_start_count = 0

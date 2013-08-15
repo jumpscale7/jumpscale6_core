@@ -10,7 +10,7 @@ class _RecipeItem:
         self.platform=platform
         
         # determine supported platforms 
-        hostPlatform = o.platform
+        hostPlatform = o.system.platformtype
         supportedPlatforms = list()
                     
         while hostPlatform != None:

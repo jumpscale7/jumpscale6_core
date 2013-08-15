@@ -34,7 +34,7 @@ class QPackageClient4():
         returns tool which can be  used to scan the owpackage repo's and manipulate them
         """
         
-        from core.owpackages6.QPackageMetadataScanner import QPackageMetadataScanner
+        from core.owpackages.QPackageMetadataScanner import QPackageMetadataScanner
         return QPackageMetadataScanner()
 
     def _renew(self):
@@ -77,13 +77,13 @@ class QPackageClient4():
         Reload all owpackage config data from disk
         """
         self.resetState()
-        cfgpath=o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages6', 'sources.cfg')
+        cfgpath=o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg')
 
         if not o.system.fs.exists(cfgpath):
             #check if there is old owpackage dir
-            cfgpathOld=o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages5', 'sources.cfg')            
+            cfgpathOld=o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg')            
             if o.system.fs.exists(cfgpathOld):
-                o.system.fs.renameDir(o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages5'),o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages6'))
+                o.system.fs.renameDir(o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages'),o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages'))
 
         if not o.system.fs.exists(cfgpath):
             o.system.fs.createDir(o.system.fs.getDirName(cfgpath))
@@ -471,10 +471,7 @@ class QPackageClient4():
             d=self.getDomainObject(domain)
             d.updateMetadata(force=force)
         else:
-            if o.application.shellconfig.interactive:
-                domainnames=o.console.askChoiceMultiple(o.packages.getDomainNames())
-            else:
-                domainnames=self.getDomainNames()            
+            domainnames=self.getDomainNames()            
             for domainName in domainnames:
                 self.updateMetaData(domainName, force=force)
 
@@ -608,7 +605,7 @@ class QPackageClient4():
 ##########################################################
 
     def _setHasPackagesPendingConfiguration(self, value=True):
-        file = o.system.fs.joinPaths(o.dirs.baseDir, 'cfg', 'owpackages6', 'reconfigure.cfg')
+        file = o.system.fs.joinPaths(o.dirs.baseDir, 'cfg', 'owpackages', 'reconfigure.cfg')
         if not o.system.fs.exists(file):
             ini_file = o.tools.inifile.new(file)
         else:
@@ -622,7 +619,7 @@ class QPackageClient4():
         ini_file.write()
 
     def _hasPackagesPendingConfiguration(self):
-        file = o.system.fs.joinPaths(o.dirs.baseDir, 'cfg', 'owpackages6', 'reconfigure.cfg')
+        file = o.system.fs.joinPaths(o.dirs.baseDir, 'cfg', 'owpackages', 'reconfigure.cfg')
         if not o.system.fs.exists(file):
             return False
         ini_file = o.tools.inifile.open(file)
@@ -715,7 +712,7 @@ class QPackageClient4():
         The target audience are the developers of accross groups and domains that depend on each others packages.
         
         The graph can be found here:   
-        /opt/qbase5/var/owpackages6/metadata/dependencyGraph.png
+        /opt/qbase5/var/owpackages/metadata/dependencyGraph.png
         
         Notes:  
         The graph omits the constraints, such as version numbers and platform.
@@ -797,4 +794,4 @@ class QPackageClient4():
         graphPath = o.system.fs.joinPaths(o.dirs.packageDir, 'metadata','dependencyGraph_singleNodes.png')
         s.draw(graphPath)
 
-        o.console.echo("Dependency graph successfully created. Open file at /opt/qbase5/var/owpackages6/metadata/dependencyGraph.png")
+        o.console.echo("Dependency graph successfully created. Open file at /opt/qbase5/var/owpackages/metadata/dependencyGraph.png")

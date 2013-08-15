@@ -17,7 +17,7 @@ class InifileTool:
         @returns: Opened INI file object
         @rtype: openwizzy.inifile.IniFile.IniFile
         '''
-        if isinstance(filename, basestring) and not openwizzy.o.system.fs.exists(filename):
+        if isinstance(filename, basestring) and not o.system.fs.exists(filename):
             if createIfNonExisting:
                 return InifileTool.new(filename)
             else:
@@ -36,7 +36,7 @@ class InifileTool:
         @returns: New INI file object
         @rtype: openwizzy.inifile.IniFile.IniFile
         '''
-        if isinstance(filename, basestring) and openwizzy.o.system.fs.exists(filename):
+        if isinstance(filename, basestring) and o.system.fs.exists(filename):
             raise RuntimeError('Attempt to create existing INI file %s as a new file' % filename)
         return IniFile(filename, create=True)
 
@@ -70,10 +70,10 @@ class IniFile(object):
         if isinstance(iniFile, basestring): # iniFile is a filepath
             self.__inifilepath = iniFile
             if create:
-                openwizzy.o.system.fs.createDir(openwizzy.o.system.fs.getDirName(iniFile))
-                openwizzy.o.logger.log("Create config file: "+iniFile,7)
-                openwizzy.o.system.fs.writeFile(iniFile, '')
-            if not openwizzy.o.system.fs.isFile(iniFile):
+                o.system.fs.createDir(o.system.fs.getDirName(iniFile))
+                o.logger.log("Create config file: "+iniFile,7)
+                o.system.fs.writeFile(iniFile, '')
+            if not o.system.fs.isFile(iniFile):
                 raise RuntimeError("Inifile could not be found on location %s" %  iniFile)
         else: # iniFile is a file-like object
             self.__file = iniFile
@@ -88,10 +88,10 @@ class IniFile(object):
 
     def __del__(self):
         if self.__inifilepath and self.__removeWhenDereferenced:
-            openwizzy.o.system.fs.removeFile(self.__inifilepath)
+            o.system.fs.removeFile(self.__inifilepath)
 
     def __readFile(self):
-        #content=openwizzy.o.system.fs.fileGetContents(self.__inifilepath)
+        #content=o.system.fs.fileGetContents(self.__inifilepath)
         fp = None
         try:
             if self.__inifilepath:
@@ -149,7 +149,7 @@ class IniFile(object):
             return default
         try:
             result=self.__configParser.get(sectionName, paramName, raw)
-            openwizzy.o.logger.log("Inifile: get %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
+            o.logger.log("Inifile: get %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
             return result
         except Exception, err:
             raise LookupError('Failed to get value of the parameter: %s under section: %s in file %s.\nERROR: %s'%(paramName, sectionName, self.__inifilepath,str(err)))
@@ -160,7 +160,7 @@ class IniFile(object):
         @param paramName:   name of the parameter"""
         try:
             result= self.__configParser.getboolean(sectionName, paramName)
-            openwizzy.o.logger.log("Inifile: get boolean %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
+            o.logger.log("Inifile: get boolean %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
             return result
 
         except Exception, e:
@@ -172,7 +172,7 @@ class IniFile(object):
         @param paramName:   name of the parameter"""
         try:
             result= self.__configParser.getint(sectionName, paramName)
-            openwizzy.o.logger.log("Inifile: get integer %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
+            o.logger.log("Inifile: get integer %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
             return result
         except Exception, e:
             raise LookupError('Failed to get integer value of parameter: %s under section: %s\nERROR: %s' % (paramName, sectionName, e))
@@ -183,7 +183,7 @@ class IniFile(object):
         @param paramName:   name of the parameter"""
         try:
             result=self.__configParser.getfloat(sectionName, paramName)
-            openwizzy.o.logger.log("Inifile: get integer %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
+            o.logger.log("Inifile: get integer %s:%s from %s, result:%s" % (sectionName,paramName,self.__inifilepath,result),7)
             return result
         except Exception, e:
             raise LookupError('Failed to get float value of parameter:%s under section:%s \nERROR: %'%(paramName, sectionName, e))
@@ -194,7 +194,7 @@ class IniFile(object):
         try:
             if(self.checkSection(sectionName)):
                 return
-            openwizzy.o.logger.log("Inifile: add section %s to %s" % (sectionName,self.__inifilepath))
+            o.logger.log("Inifile: add section %s to %s" % (sectionName,self.__inifilepath))
             self.__configParser.add_section(sectionName)
             if self.checkSection(sectionName):
                 return True
@@ -210,7 +210,7 @@ class IniFile(object):
             if str(newvalue)=="none":
                 newvalue=="*NONE*"
             self.__configParser.set(sectionName, paramName, str(newvalue))
-            openwizzy.o.logger.log("Inifile: set %s:%s=%s on %s" % (sectionName,paramName,str(newvalue),self.__inifilepath))
+            o.logger.log("Inifile: set %s:%s=%s on %s" % (sectionName,paramName,str(newvalue),self.__inifilepath))
             #if self.checkParam(sectionName, paramName):
             #    return True
             self.write()
@@ -231,7 +231,7 @@ class IniFile(object):
         if not self.checkSection(sectionName): return False
         try:
             self.__configParser.remove_section(sectionName)
-            openwizzy.o.logger.log("inifile: remove section %s on %s" % (sectionName,self.__inifilepath))
+            o.logger.log("inifile: remove section %s on %s" % (sectionName,self.__inifilepath))
             if self.checkSection(sectionName):
                 return False
             return True
@@ -245,7 +245,7 @@ class IniFile(object):
         if not self.checkParam(sectionName, paramName): return False
         try:
             self.__configParser.remove_option(sectionName, paramName)
-            openwizzy.o.logger.log("Inifile:remove %s:%s from %s" % (sectionName,paramName,self.__inifilepath))
+            o.logger.log("Inifile:remove %s:%s from %s" % (sectionName,paramName,self.__inifilepath))
             return True
         except Exception, err:
             raise RuntimeError('Failed to remove parameter: %s under section: %s \nERROR: %s'%(paramName, sectionName, str(err)))
@@ -257,7 +257,7 @@ class IniFile(object):
         """
         closeFileHandler = True
         fp = None
-        openwizzy.o.logger.log("Inifile: Write configfile %s to disk" % (self.__inifilepath))
+        o.logger.log("Inifile: Write configfile %s to disk" % (self.__inifilepath))
         if not filePath:
             if self.__inifilepath: # Use the inifilepath that was set in the constructor
                 filePath = self.__inifilepath

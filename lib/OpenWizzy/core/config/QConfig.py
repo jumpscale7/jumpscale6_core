@@ -27,11 +27,11 @@ class QConfig():
         """
         List all configuration types available.
         """
-        qconfigPath = o.system.fs.joinPaths(o.dirs.cfgDir, "qconfig")
-        if not o.system.fs.exists(qconfigPath):
+        qconfigPath = o.system.fs.joinPaths(o.dirs.cfgDir, "owconfig")
+        if not o.system.fs.exists(o.dirs.configsDir):
             return []
-        fullpaths = o.system.fs.listFilesInDir(qconfigPath)
+        fullpaths = o.system.fs.listFilesInDir(o.dirs.configsDir)
         return [o.system.fs.getBaseName(path)[:-4] for path in fullpaths if path.endswith(".cfg")]
 
     def _buildPath(self, configtype):
-        return o.system.fs.joinPaths(o.dirs.cfgDir, "qconfig", configtype + ".cfg")
+        return o.system.fs.joinPaths(o.dirs.configsDir, configtype + ".cfg")

@@ -143,6 +143,11 @@ class Dirs(object):
         else:
             self.codeDir="/opt/code"
 
+        self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
+        self.configsDir = os.path.join(self.baseDir,"cfg","owconfig")
+
+        o.system.fs.createDir(self.configsDir)
+        o.system.fs.createDir(self.hrdDir)
         o.system.fs.createDir(self.tmpDir)
         o.system.fs.createDir(self.varDir)
         o.system.fs.createDir(self.logDir)

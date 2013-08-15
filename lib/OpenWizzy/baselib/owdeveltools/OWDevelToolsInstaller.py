@@ -171,23 +171,39 @@ class OWDevelToolsInstaller:
         self.deployOpenWizzyGrid()
         self.deployOpenWizzyPortal()
 
-    def initJumpCodeUser(self,passwd):
-        home="/home/jumpcode"
-        name="jumpcode"
+    def initJumpscaleUser(self,passwd):
+        home="/home/jumpscale"
+        name="jumpscale"
         import OpenWizzy.lib.cuisine
         o.system.platform.ubuntu.createUser(name,passwd,home=home)
         c=o.tools.cuisine.api       
 
         c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
 
-    def deployFTPServer4qpackages(self,passwd,jumpcodepasswd):
+        C=o.system.fs.fileGetContents("/root/.hgrc")
+        C2=""
+
+        for line in C.split("\n"):
+            if line.find("[trusted]")<>-1:
+                break
+            C2+="%s\n"%line
+
+        C2+="[trusted]\n"
+        C2+="users = jumpscale\n\n"
+
+        o.system.fs.writeFile("/root/.hgrc",C2)
+        
+
+    def deployFTPServer4qpackages(self,passwd,jumpscalepasswd):
         # import OpenWizzy.lib.psutil
-        self.initJumpCodeUser(jumpcodepasswd)
+        self.initJumpscaleUser(jumpscalepasswd)
 
         o.system.platform.ubuntu.install("proftpd-basic")
 
-        ftphome="/opt/opackagesftp"
-        ftpname="opackages"
+        ftphome="/opt/jspackagesftp"
+        ftpname="jspackages"
+
+        o.system.fs.createDir("/opt/jspackagesftp")
 
         o.system.platform.ubuntu.createUser(ftpname,passwd,home="/home/%s"%ftpname)
         o.system.platform.ubuntu.createUser("ftp","1234")#o.base.idgenerator.generateGUID(),home="/home/ftp")
@@ -195,12 +211,15 @@ class OWDevelToolsInstaller:
         o.system.platform.ubuntu.addUser2Group("proftpd","proftpd")
 
         C="""
+
 ServerName          "ProFTPD Default Installation"
 ServerType          standalone
 DefaultServer       on
-Port                2100
+Port                21
 Umask               022
 MaxInstances        30
+
+RequireValidShell   no
 
 User                proftpd
 Group               proftpd
@@ -212,18 +231,29 @@ SystemLog   /var/log/proftpd/proftpd.log
 
 DefaultRoot                    ~
 
-<Directory />
-  AllowOverwrite        on
-</Directory>
-
 <Anonymous ~ftp>
     User ftp
-    Group opackages
+    Group o.
 
     UserAlias anonymous ftp
 
-    DirFakeMode 0444
+    DirFakeMode 0440
+
+    <Limit WRITE STOR MKD RMD DELE RNTO>
+      DenyAll
+    </Limit>
+
 </Anonymous>
+
+<Directory />
+  AllowOverwrite  on
+
+    <Limit WRITE STOR MKD RMD DELE RNTO>
+        DenyUser ftp
+    </Limit>
+
+</Directory>
+
 
 """
         o.system.fs.writeFile("/etc/proftpd/proftpd.conf", C)
@@ -231,25 +261,37 @@ DefaultRoot                    ~
         import OpenWizzy.lib.cuisine
 
         c=o.tools.cuisine.api
-        c.dir_ensure(ftphome,owner=ftpname,group=ftpname,mode=660,recursive=True)
+        c.dir_ensure(ftphome,owner=ftpname,group=ftpname,mode=770,recursive=True)
 
-        o.system.platform.ubuntu.addUser2Group(ftpname,"jumpcode")
-        o.system.platform.ubuntu.addUser2Group("jumpcode","proftpd")
-        o.system.platform.ubuntu.addUser2Group("jumpcode","ftp")
+        o.system.platform.ubuntu.addUser2Group(ftpname,"jumpscale")
+        o.system.platform.ubuntu.addUser2Group(ftpname,"ftp")
+        o.system.platform.ubuntu.addUser2Group(ftpname,"proftpd")
+        o.system.platform.ubuntu.addUser2Group("jumpscale","proftpd")
+        o.system.platform.ubuntu.addUser2Group("jumpscale","ftp")
 
         self._do.execute("/etc/init.d/proftpd restart")
 
         def symlink(src,dest):
-            o.system.fs.remove(dest)
+            try:
+                o.system.fs.remove(dest)
+            except Exception,e:
+                if str(e).find("could not be removed")<>-1:
+                    cmd="umount %s"%dest
+                    try:
+                        self._do.execute(cmd)
+                    except Exception,e:
+                        pass
+                
+            o.system.fs.createDir(dest)
             cmd="mount --bind %s %s"%(src,dest)
             self._do.execute(cmd)
 
 
-        symlink("/opt/code","/home/jumpcode/code")
-        symlink("/opt/openwizzy6","/home/jumpcode/openwizzy")
-        symlink("/opt/opackagesftp","/home/jumpcode/opackages")
-        symlink("/opt/opackagesftp","/home/ftp/opackages")
-        symlink("/opt/opackagesftp","/home/opackages/opackages")
+        symlink("/opt/code","/home/jumpscale/code")
+        symlink("/opt/openwizzy6","/home/jumpscale/openwizzy")
+        symlink("/opt/jspackagesftp","/home/jumpscale/jspackages")
+        symlink("/opt/jspackagesftp","/home/ftp/jspackages")
+        symlink("/opt/jspackagesftp","/home/jspackages/jspackages")
 
 
     def link2code(self):
@@ -280,5 +322,7 @@ DefaultRoot                    ~
             o.system.fs.writeFile(path,C)
             cmd='chmod 777 %s'%path
             o.system.process.execute(cmd)
+
+        self.linkOpenWizzyLibs()
 
 

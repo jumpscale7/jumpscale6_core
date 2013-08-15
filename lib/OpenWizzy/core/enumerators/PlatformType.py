@@ -117,7 +117,7 @@ class PlatformType(BaseEnumeration):
             else:
                 raise ValueError("Executed [uname -v] Expected output ." % output)
         else:
-            raise OSError('Unsupported Platform (%s)'%o.platform)
+            raise OSError('Unsupported Platform (%s)'%o.system.platformtype)
 
     def __init__(self, parent=None):
         '''Initialization

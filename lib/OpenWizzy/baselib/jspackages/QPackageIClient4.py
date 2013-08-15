@@ -107,7 +107,7 @@ class QPackageIClient4():
         for d in o.packages.getDomainNames():
             o.console.echo('Domain: ' + str(o.packages.getDomainObject(d)))
         o.console.echo('These configurations can be altered by manually editing the file:')
-        o.console.echo('sources.cfg under /opt/qbase6/cfg/owpackages6/ ')
+        o.console.echo('sources.cfg under /opt/qbase6/cfg/owpackages/ ')
         
         '''
         # TODO finish this

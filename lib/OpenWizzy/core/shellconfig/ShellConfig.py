@@ -18,7 +18,7 @@ class ShellConfig():
         self.ipython=False
         
     def refresh(self):
-        configfiles= o.system.fs.listFilesInDir(o.system.fs.joinPaths(o.dirs.cfgDir,"qconfig"))
+        configfiles= o.system.fs.listFilesInDir(o.dirs.configsDir)
         for file in configfiles:
             if file.find(".cfg")<>-1:
                 configType=os.path.basename(file.replace(".cfg",""))
@@ -29,7 +29,7 @@ class ShellConfig():
         """
         check if config file exists, if not create and reload
         """
-        path=o.system.fs.joinPaths(o.dirs.cfgDir,"qconfig","%s.cfg"%configType)
+        path=o.system.fs.joinPaths(o.dirs.configsDir,"%s.cfg"%configType)
         if not o.system.fs.exists(path):
             o.system.fs.createEmptyFile(path)
         self.refresh()        
