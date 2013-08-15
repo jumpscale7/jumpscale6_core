@@ -2,7 +2,7 @@ from OpenWizzy import o
 from OpenWizzy.core.baseclasses import BaseEnumeration
 
 
-IN_DEBUG_MODE = openwizzy.o.application.shellconfig.debug
+IN_DEBUG_MODE = o.application.shellconfig.debug
 
 
 def printInDebugMode(message):
