@@ -59,6 +59,7 @@ class OWDevelTools:
         print "* started all required systems"
 
     def startPortalByobu(self):
+        o.application.shellconfig.interactive=True
         name="owbackend"
         self.startBackendByobu(["ftpgw","portal"],name=name)
 

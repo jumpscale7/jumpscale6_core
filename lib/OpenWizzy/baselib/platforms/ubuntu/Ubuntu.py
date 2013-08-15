@@ -34,6 +34,39 @@ class Ubuntu:
                     raise RuntimeError("Only ubuntu or mint supported.")
         return self._checked
 
+    def getVersion(self):
+        """
+        returns codename,descr,id,release
+        known ids" raring, linuxmint
+        """
+        self.check()
+        import lsb_release
+        result=lsb_release.get_distro_information()        
+        return result["CODENAME"].lower().strip(),result["DESCRIPTION"],result["ID"].lower().strip(),int(result["RELEASE"]),
+
+    def createUser(self,name,passwd,home=None,creategroup=True):
+        import OpenWizzy.lib.cuisine
+        c=o.tools.cuisine.api
+        c.user_ensure(name, passwd=passwd, home=home, uid=None, gid=None, shell=None, fullname=None, encrypted_passwd=False)
+        if creategroup:
+            self.createGroup(name)
+            self.addUser2Group(name,name)
+        if home<>None:
+            c.dir_ensure(home,owner=name,group=name)
+
+
+    def createGroup(self,name):
+        import OpenWizzy.lib.cuisine
+        c=o.tools.cuisine.api
+        c.group_ensure(name)
+
+    def addUser2Group(self,group,user):
+        import OpenWizzy.lib.cuisine
+        c=o.tools.cuisine.api
+        c.group_user_ensure(group, user)
+
+            
+
     def checkInstall(self, packagenames, cmdname):
         """
         @param packagenames is name or array of names of ubuntu package to install e.g. curl

@@ -10,6 +10,7 @@ class OWDevelToolsInstaller:
         self.passwd=""
 
     def getCredentialsOpenWizzyRepo(self):
+        o.application.shellconfig.interactive=True
         self.login=o.console.askString("OpenWizzy Repo Login, if unknown press enter")
         if self.login=="":
             self.login="*"
@@ -29,6 +30,7 @@ class OWDevelToolsInstaller:
             return "https://%s:%s@bitbucket.org/openwizzy/%s"%(self.login,self.passwd,name)
 
     def _getOWRepo(self,name):
+        o.application.shellconfig.interactive=True
         self._checkCredentials()
         cl=o.clients.mercurial.getClient("%s/openwizzy/%s/"%(o.dirs.codeDir,name), remoteUrl=self._getRemoteOWURL(name))
         cl.pullupdate()
@@ -69,16 +71,23 @@ class OWDevelToolsInstaller:
         self._do.symlink("%s/openwizzy/%s/prototypes"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/prototypes")
         self._do.symlink("%s/openwizzy/%s/examples"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/examples")
 
-    def deployOpenWizzyLibs(self):
+    def deployOpenWizzyLibs(self,linkonly=False):
         """
         checkout the openwizzy libs repo & link to python 2.7 to make it available for the developer
         """        
         name="openwizzy6_lib"
-        self._getOWRepo(name)
+        if not linkonly:
+            self._getOWRepo(name)
         for item in [item for item in o.system.fs.listDirsInDir("%s/openwizzy/%s"%(o.dirs.codeDir,name),dirNameOnly=True) if item[0]<>"."]:
             src="%s/openwizzy/%s/%s"%(o.dirs.codeDir,name,item)
             dest="%s/lib/%s"%(o.dirs.libDir,item)
             self._do.symlink(src,dest)
+        dest="%s/lib/__init__.py"%(o.dirs.libDir)
+        o.system.fs.writeFile(dest,"")
+
+    def linkOpenWizzyLibs(self):
+        self.deployOpenWizzyLibs(True)
+
 
     def deployOpenWizzyGrid(self):
         """
@@ -145,6 +154,10 @@ class OWDevelToolsInstaller:
         self._do.symlink("%s/openwizzy/%s/ow6libs/dfs_io"%(o.dirs.codeDir,name),dest)
         self._do.symlink("%s/openwizzy/%s/apps/dfs_io"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/dfs_io")
 
+    def deployPuppet(self):
+        import OpenWizzy.lib.puppet
+        o.tools.puppet.install()
+
 
     def deployExamplesLibsGridPortal(self):
         """
@@ -157,6 +170,86 @@ class OWDevelToolsInstaller:
         self.deployOpenWizzyLibs()
         self.deployOpenWizzyGrid()
         self.deployOpenWizzyPortal()
+
+    def initJumpCodeUser(self,passwd):
+        home="/home/jumpcode"
+        name="jumpcode"
+        import OpenWizzy.lib.cuisine
+        o.system.platform.ubuntu.createUser(name,passwd,home=home)
+        c=o.tools.cuisine.api        
+        c.dir_ensure(home,owner=name,group=name,recursive=True)
+
+    def deployFTPServer4qpackages(self,passwd,jumpcodepasswd):
+        # import OpenWizzy.lib.psutil
+        self.initJumpCodeUser(jumpcodepasswd)
+
+        o.system.platform.ubuntu.install("proftpd-basic")
+
+        ftphome="/opt/opackagesftp"
+        ftpname="opackages"
+
+        o.system.platform.ubuntu.createUser(ftpname,passwd,home="/home/%s"%ftpname)
+        o.system.platform.ubuntu.createUser("ftp","1234")#o.base.idgenerator.generateGUID(),home="/home/ftp")
+        o.system.platform.ubuntu.createGroup("proftpd")
+        o.system.platform.ubuntu.addUser2Group("proftpd","proftpd")
+
+        C="""
+ServerName          "ProFTPD Default Installation"
+ServerType          standalone
+DefaultServer       on
+Port                2100
+Umask               022
+MaxInstances        30
+
+User                proftpd
+Group               proftpd
+
+#DefaultRoot /opt/qpackagesftp
+
+#TransferLog /var/log/proftpd/xferlog
+SystemLog   /var/log/proftpd/proftpd.log
+
+DefaultRoot                    ~
+
+<Directory />
+  AllowOverwrite        on
+</Directory>
+
+<Anonymous ~ftp>
+    User ftp
+    Group opackages
+
+    UserAlias anonymous ftp
+
+    DirFakeMode 0444
+</Anonymous>
+
+"""
+        o.system.fs.writeFile("/etc/proftpd/proftpd.conf", C)
+
+        import OpenWizzy.lib.cuisine
+
+        c=o.tools.cuisine.api
+        c.dir_ensure(ftphome,owner=ftpname,group=ftpname,recursive=True)
+
+        o.system.platform.ubuntu.addUser2Group(ftpname,"jumpcode")
+        o.system.platform.ubuntu.addUser2Group("jumpcode","proftpd")
+        o.system.platform.ubuntu.addUser2Group("jumpcode","ftp")
+
+        self._do.execute("/etc/init.d/proftpd restart")
+
+        def symlink(src,dest):
+            o.system.fs.remove(dest)
+            cmd="mount --bind %s %s"%(src,dest)
+            self._do.execute(cmd)
+
+
+        symlink("/opt/code","/home/jumpcode/code")
+        symlink("/opt/openwizzy6","/home/jumpcode/openwizzy")
+        symlink("/opt/opackagesftp","/home/jumpcode/opackages")
+        symlink("/opt/opackagesftp","/home/ftp/opackages")
+        symlink("/opt/opackagesftp","/home/opackages/opackages")
+
 
     def link2code(self):
 
