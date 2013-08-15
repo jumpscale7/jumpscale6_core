@@ -1596,13 +1596,6 @@
 		
 		_main_template: function() {
 			return { tag: "SPAN", cls: "es-cluster", children: [
-				{ tag: "INPUT", type: "text", cls: "es-header-uri", onkeyup: function( jEv ) {
-					if(jEv.which === 13) {
-						jEv.preventDefault();
-						this._reconnect_handler();
-					}
-				}.bind(this), id: this.id("baseUri"), value: this.config.base_uri },
-				{ tag: "BUTTON", type: "button", text: acx.text("Header.Connect"), onclick: this._reconnect_handler },
 				{ tag: "SPAN", cls: "es-header-clusterName" },
 				{ tag: "SPAN", cls: "es-header-clusterStatus" }
 			]};

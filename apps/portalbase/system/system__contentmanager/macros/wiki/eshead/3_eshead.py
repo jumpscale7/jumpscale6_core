@@ -4,8 +4,8 @@ def main(o,args,params,tags,tasklet):
     
     doc = params.doc
     tags = params.tags.getDict()
-    #import pdb; pdb.set_trace()
-    out = "<iframe src='%s' width='%s' height='%s'></iframe>" % ('/eshead', '100%', '800px')
+    host = o.core.portal.runningPortal.dns
+    out = "<iframe src='%s' width='%s' height='%s'></iframe>" % ('/eshead?base_uri=http://%s:9200' % host, '100%', '800px')
 
     params.result = (out, doc)
 

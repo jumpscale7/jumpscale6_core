@@ -1,2 +1,2 @@
-h2. Eshead:
+h2. Elasticsearch Management:
 {{eshead}}
