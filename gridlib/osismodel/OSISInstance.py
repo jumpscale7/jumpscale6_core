@@ -51,14 +51,12 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
 
 
     def _getObj(self, obj):
-        obj = super(OSISRemoteOSISInstance, self)._getObj(obj)
-        return o.core.grid.zobjects.getModelObject(obj.obj2dict())
+        obj = self._getDict(obj)
+        return o.core.grid.zobjects.getModelObject(obj)
 
     def set(self, obj):
         value = self._getObj(obj)
-        id = value.id
-        if not value.guid:
-            value.guid = o.base.idgenerator.generateGUID()
+        id = getattr(value, 'id', None)
         key,new,changed = self.remoteOSISClient.set(self.actorname, self.modelname, value, id)
         return key
 

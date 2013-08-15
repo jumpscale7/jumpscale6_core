@@ -21,6 +21,8 @@ class mainclass(OSISStore):
             if not id:
                 id = self.db.increment(self.dbprefix_incr)
                 value['id'] = id
+            if not value.get('guid'):
+                value['guid'] = o.base.idgenerator.generateGUID()
             changed = False
             new = True
         self.db.set(self.dbprefix, key=id, value=value)
