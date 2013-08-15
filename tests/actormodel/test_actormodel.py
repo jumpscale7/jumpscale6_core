@@ -8,7 +8,12 @@ import logging
 import threading
 
 from OpenWizzy import o
-o.application.start('actortest')
+
+def setUp():
+    o.application.start('actortest')
+
+def tearDown():
+    o.application.stop()
 
 debug = True
 out = err = None
