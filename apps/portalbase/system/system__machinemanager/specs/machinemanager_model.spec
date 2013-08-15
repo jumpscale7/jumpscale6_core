@@ -18,6 +18,7 @@
     prop:cloudspaceId int,,id of space which holds this machine
     prop:networkGatewayIPv4 str,,IP address of the gateway for this machine
     prop:organization str,,free dot notation organization name
+    prop:roles list(str),,roles for machine
 
 [model:ACE]
     """
