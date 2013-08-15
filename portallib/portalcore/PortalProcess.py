@@ -3,7 +3,7 @@ import sys
 from gevent.server import StreamServer
 
 from OpenWizzy import o
-
+import inspect
 import time
 import os
 from PortalTCPChannels import ManholeSession, WorkerSession, TCPSessionLog
@@ -349,7 +349,9 @@ class PortalProcess():
                 cmd="%s %s" % (apppath2,apppath)
                 cmd=cmd.replace("\\","/").replace("//","/")
 
-                maincfg=o.system.fs.joinPaths(o.core.portal.pm_extensionpath,"configtemplates","nginx","nginx.conf")
+                extpath=inspect.getfile(self.__init__)
+                extpath=o.system.fs.getDirName(extpath)
+                maincfg=o.system.fs.joinPaths(extpath,"configtemplates","nginx","nginx.conf")
                 configtemplate2=o.system.fs.fileGetContents(maincfg)
                 configtemplate2=self._replaceVar(configtemplate2)
                 o.system.fs.writeFile("%s/conf/nginx.conf"%apppath,configtemplate2)
