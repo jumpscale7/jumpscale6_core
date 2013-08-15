@@ -175,10 +175,14 @@ class OWDevelToolsInstaller:
         home="/home/jumpscale"
         name="jumpscale"
         import OpenWizzy.lib.cuisine
+        
+        homeexists=o.system.fs.exists(home)
+
         o.system.platform.ubuntu.createUser(name,passwd,home=home)
         c=o.tools.cuisine.api       
 
-        c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
+        if not homeexists:
+            c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
 
         C=o.system.fs.fileGetContents("/root/.hgrc")
         C2=""

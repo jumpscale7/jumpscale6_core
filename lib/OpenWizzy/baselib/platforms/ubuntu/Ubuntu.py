@@ -47,11 +47,17 @@ class Ubuntu:
     def createUser(self,name,passwd,home=None,creategroup=True):
         import OpenWizzy.lib.cuisine
         c=o.tools.cuisine.api
-        homeexists=o.system.fs.exists(home)
+
+        if home==None:
+            homeexists=True
+        else:
+            homeexists=o.system.fs.exists(home)
+
         c.user_ensure(name, passwd=passwd, home=home, uid=None, gid=None, shell=None, fullname=None, encrypted_passwd=False)
         if creategroup:
             self.createGroup(name)
             self.addUser2Group(name,name)
+
         if home<>None and not homeexists:
             c.dir_ensure(home,owner=name,group=name)
 
