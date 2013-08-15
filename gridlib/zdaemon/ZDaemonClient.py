@@ -137,26 +137,32 @@ class ZDaemonClient():
         errors are always return using msgpack and are a dict
 
         """
+        rawdata = data
         if sendformat<>"":
             ser=o.db.serializers.get(sendformat,key=self.key)
             data=ser.dumps(data)
 
         # self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
         parts=self.sendMsgOverCMDChannelRetry(cmd,data,sendformat,returnformat)        
+        returncode = parts[0]
 
-        if parts[0]=='1':
+        if returncode in ('1', '3'):
             if retry < maxretry:
                 print "session lost"
-                self.init()
+
+                if returncode == '3':
+                    self.initSession()
+                else:
+                    self.init()
                 retry+=1
-                self.sendMsgOverCMDChannelFast(cmd,data,sendformat,returnformat,retry,maxretry)
+                return self.sendMsgOverCMDChannel(cmd,rawdata,sendformat,returnformat,retry,maxretry)
             else:
                 msg="Authentication error on server on %s:%s.\n"%(self.ipaddr,self.port)
                 raise RuntimeError(msg)
-        elif parts[0]=='2':
+        elif returncode == '2':
             msg="execution error on server on %s:%s.\n Could not find method:%s\n"%(self.ipaddr,self.port,cmd)
             o.errorconditionhandler.raiseBug(msgpub=msg,message="",category="rpc.exec")
-        elif parts[0]<>"0":
+        elif returncode != "0":
             s=o.db.serializers.getMessagePack() #get messagepack serializer
             eco=o.errorconditionhandler.getErrorConditionObject(s.loads(parts[2]))
             msg="execution error on server on %s:%s.\nCmd:%s\nError=%s"%(self.ipaddr,self.port,cmd,eco)

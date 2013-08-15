@@ -75,7 +75,7 @@ class ZDaemon(GeventLoop):
 
         try:
             args = inspect.getargspec(ffunction)
-            if 'session' in args.args:
+            if 'session' in args.args and isinstance(data, dict):
                 data['session'] = session
             if isinstance(data, dict):
                 result = ffunction(**data)
