@@ -176,8 +176,9 @@ class OWDevelToolsInstaller:
         name="jumpcode"
         import OpenWizzy.lib.cuisine
         o.system.platform.ubuntu.createUser(name,passwd,home=home)
-        c=o.tools.cuisine.api        
-        c.dir_ensure(home,owner=name,group=name,recursive=True)
+        c=o.tools.cuisine.api       
+
+        c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
 
     def deployFTPServer4qpackages(self,passwd,jumpcodepasswd):
         # import OpenWizzy.lib.psutil
@@ -230,7 +231,7 @@ DefaultRoot                    ~
         import OpenWizzy.lib.cuisine
 
         c=o.tools.cuisine.api
-        c.dir_ensure(ftphome,owner=ftpname,group=ftpname,recursive=True)
+        c.dir_ensure(ftphome,owner=ftpname,group=ftpname,mode=660,recursive=True)
 
         o.system.platform.ubuntu.addUser2Group(ftpname,"jumpcode")
         o.system.platform.ubuntu.addUser2Group("jumpcode","proftpd")
