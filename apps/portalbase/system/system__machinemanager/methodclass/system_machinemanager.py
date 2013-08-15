@@ -61,6 +61,7 @@ class system_machinemanager(system_machinemanager_osis):
             machine.name=name
         else:
             machine=o.system.net.getHostname()
+        machine.hostname=o.system.net.getHostname()
         if organization<>"":
             machine.organization=organization
         else:
