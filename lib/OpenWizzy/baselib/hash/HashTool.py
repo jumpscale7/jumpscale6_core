@@ -44,7 +44,7 @@ def _hash_funcs(alg):
         impl = hashlib.new(alg, s)
         return impl.hexdigest()
 
-    _string.__doc__ = _string.__doc__ % template_data
+    # _string.__doc__ = _string.__doc__ % template_data
 
     def _fd(fd):
         '''Calculate %(alg)s hash of content available on an FD
@@ -75,7 +75,7 @@ def _hash_funcs(alg):
 
         return impl.hexdigest()
 
-    _fd.__doc__ = _fd.__doc__ % template_data
+    # _fd.__doc__ = _fd.__doc__ % template_data
 
     def _file(path):
         '''Calculate %(alg)s hash of data available in a file
@@ -92,7 +92,7 @@ def _hash_funcs(alg):
         with open(path, 'rb') as fd:
             return _fd(fd)
 
-    _file.__doc__ = _file.__doc__ % template_data
+    # _file.__doc__ = _file.__doc__ % template_data
 
     return _string, _fd, _file
 

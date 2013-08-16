@@ -349,7 +349,10 @@ def generateGroupConfigManagementMethods(**kwargs):
         if hasattr(self._ITEMCLASS, "commit") and inspect.ismethod(self._ITEMCLASS.commit):
             item.commit()  # If commit() is defined by the ItemClass, signal that configuration has been changed.
 
-    add.__doc__ = add.__doc__ % kwargs
+    try:
+        add.__doc__ = add.__doc__ % kwargs
+    except:
+        pass
 
     def _sortConfigList(self, config):
         if not hasattr(self, '_SORT_PARAM') or not hasattr(self, '_SORT_METHOD'):
@@ -380,8 +383,6 @@ def generateGroupConfigManagementMethods(**kwargs):
         # return list of names of ConfigManagementItem instances
         return self._sortConfigList(o.config.getConfig(self._CONFIGTYPE))
 
-    list.__doc__ = list.__doc__ % kwargs
-
     def getConfig(self, itemname=None):
         """
         Get config dictionary for a [%(description)s]
@@ -392,7 +393,6 @@ def generateGroupConfigManagementMethods(**kwargs):
             itemname = self._itemnameSelect("Please select a %s" % self._DESCRIPTION)
         return o.config.getConfig(self._CONFIGTYPE)[itemname]
 
-    getConfig.__doc__ = getConfig.__doc__ % kwargs
 
     def review(self, itemname=None):
         """
@@ -414,7 +414,6 @@ def generateGroupConfigManagementMethods(**kwargs):
         if hasattr(self._ITEMCLASS, "commit") and inspect.ismethod(self._ITEMCLASS.commit):
             item.commit()
 
-    review.__doc__ = review.__doc__ % kwargs
 
     def show(self, itemnames=None):
         """
@@ -431,7 +430,6 @@ def generateGroupConfigManagementMethods(**kwargs):
             item.show()
             o.action.stopOutput()
 
-    show.__doc__ = show.__doc__ % kwargs
 
     def remove(self, itemname=None):
         """
@@ -450,7 +448,6 @@ def generateGroupConfigManagementMethods(**kwargs):
             item.remove()
         self._itemRemove(itemname)
 
-    remove.__doc__ = show.__doc__ % kwargs
 
     def configure(self, itemname, newparams):
         """
@@ -476,7 +473,6 @@ def generateGroupConfigManagementMethods(**kwargs):
             if hasattr(self._ITEMCLASS, "commit") and inspect.ismethod(self._ITEMCLASS.commit):
                 item.commit()
 
-    configure.__doc__ = configure.__doc__ % kwargs
 
     return {"add": add, "list": list, "getConfig": getConfig, "review": review, "show": show, "remove": remove, "configure": configure, "_sortConfigList":_sortConfigList}
 

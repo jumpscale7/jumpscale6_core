@@ -22,82 +22,88 @@ def pathToUnicode(path):
 class Dirs(object):
     """Utility class to configure and store all relevant directory paths"""
 
-    appDir = "/opt/openwizzy6/apps/exampleapp" ##string
-    '''Application installation base folder (basedir/apps)
+    # __initialized = False ##bool
 
-    @type: string
-    '''
-    
-    baseDir = "/opt/openwizzy6" ##string
-    '''openwizzy sandbox base folder
+    def __init__(self):
+        '''openwizzy sandbox base folder'''
+        curdir=os.path.abspath(".")
 
-    @type: string
-    '''
+        if os.path.exists("library.zip"):
+            self.frozen=True
+        else:
+            self.frozen=False
 
-    cfgDir = None ##string
-    '''Configuration file folder (appdir/etc)
+        iswindows=os.name=="nt"
 
-    @type: string
-    '''
+        if iswindows or self.frozen:
+            self.baseDir=curdir
+        else:
+            self.baseDir = "/opt/openwizzy6" ##string
 
-    tmpDir = None ##string
-    '''Temporary file folder (appdir/tmp)
+        self.baseDir=self.baseDir.replace("\\","/")
 
-    @type: string
-    '''
+        '''Application installation base folder (basedir/apps)'''
+        self.appDir = curdir
+        
+        '''Configuration file folder (appdir/etc)'''
+        self.cfgDir = os.path.join(self.baseDir,"cfg")
+        self._createDir(self.cfgDir)
 
-    libDir = None ##string
-    '''OpenWizzy Library folder
+        '''Var folder (basedir/var)'''
+        if self.frozen:
+            self.varDir = "/var/jumpscale"
+        else:
+            self.varDir = os.path.join(self.baseDir,"var")
+        self._createDir(self.varDir)
 
-    @type: string
-    '''
+        '''Temporary file folder (appdir/tmp)'''
+        if iswindows or self.frozen:
+            self.tmpDir = os.path.join(self.varDir,"tmp")
+        else:
+            self.tmpDir = "/tmp/jumpscale"
+        self._createDir(self.tmpDir)
 
-    varDir = None ##string
-    '''Var folder (basedir/var)
+        
+        if iswindows or self.frozen:
+            self.libDir = os.path.join(self.baseDir,"library.zip")
+        else:
+            self.libDir = os.path.join(self.baseDir,"lib")
+        self._createDir(self.libDir)
 
-    @type: string'''
+        if self.libDir not in sys.path:
+            sys.path.insert(1,self.libDir)
+        
 
-    logDir = None ##string
-    '''Log file folder (appdir/log)
+        self.logDir = os.path.join(self.varDir,"log")
+        self._createDir(self.logDir)
 
-    @type: string
-    '''
+        self.packageDir = os.path.join(self.varDir,"jspackages")
+        self._createDir(self.packageDir)
 
-    homeDir = None ##string
-    '''Home folder
+        # self.homeDir = pathToUnicode(os.path.join(home, ".owbase"))
 
-    @type: string
-    '''
+        self.pidDir = os.path.join(self.varDir,"log")   
+        
 
-    pidDir = None ##string
-    '''Location of the PID files, is set in the initialization of the
-    application
+        '''CMDB storage folder (vardir/cmdb)'''
+        self.cmdbDir = os.path.join(self.varDir,"cmdb")
+        self._createDir(self.cmdbDir)
 
-    @type: string
-    '''
+        self.binDir = os.path.join(self.baseDir, 'bin')
 
-    cmdbDir = None ##string
-    '''CMDB storage folder (vardir/cmdb)
+        self.codeDir="/opt/code"
 
-    @type: string
-    '''
+        self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
+        self._createDir(self.hrdDir)
 
-    extensionsDir = None ##string
-    '''openwizzy extensions base folder (basedir/lib/openwizzy/extensions)
+        self.configsDir = os.path.join(self.baseDir,"cfg","owconfig")
+        self._createDir(self.configsDir)
 
-    @type: string
-    '''
 
-    packageDir = None
-    
+    def _createDir(self,path):
+        if not os.path.exists(path):
+            os.mkdir(path)
 
-    binDir = None ##string
-    '''Binaries folder (basedir/bin)
-
-    @type: string
-    '''
-
-    __initialized = False ##bool
 
     def init(self,reinit=False):
         """Initializes all the configured directories if needed
@@ -108,59 +114,18 @@ class Dirs(object):
         @returns: Initialization success
         @rtype: bool
         """
-        self.baseDir=self.baseDir.replace("\\","/")
-        if str(self.baseDir).strip()=="":
-            self.baseDir="/opt/openwizzy6"
-        o.system.fs.createDir(self.baseDir)
+
         if reinit==False and self.__initialized == True:
             return True
-        if not self.appDir:
-            self.appDir = os.path.join(self.baseDir,"apps")
-        else:
-            #localdir is appdir
-            if self.appDir==".":
-                self.appDir =o.system.fs.getcwd()
-        if not self.varDir:
-            self.varDir = os.path.join(self.baseDir,"var")
-        if not self.tmpDir:
-            self.tmpDir = os.path.join(self.varDir,"tmp")
-        if not self.cfgDir:
-            self.cfgDir = os.path.join(self.baseDir,"cfg")
-        if not self.logDir:
-            self.logDir = os.path.join(self.varDir,"log")
-        if not self.cmdbDir:
-            self.cmdbDir = os.path.join(self.varDir,"cmdb")
-        if not self.packageDir:
-            self.packageDir = os.path.join(self.varDir,"owpackages")
-        if not self.homeDir:
-            self.homeDir = pathToUnicode(os.path.join(home, ".owbase"))
-        if not self.binDir:
-            self.binDir = os.path.join(self.baseDir, 'bin')
 
-        self.getLibPath()
         if o.system.platformtype.isWindows() :
             self.codeDir=os.path.join(self.baseDir, 'code')
-        else:
-            self.codeDir="/opt/code"
 
-        self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
-        self.configsDir = os.path.join(self.baseDir,"cfg","owconfig")
-
-        o.system.fs.createDir(self.configsDir)
-        o.system.fs.createDir(self.hrdDir)
-        o.system.fs.createDir(self.tmpDir)
-        o.system.fs.createDir(self.varDir)
-        o.system.fs.createDir(self.logDir)
-        o.system.fs.createDir(self.cmdbDir)
-        o.system.fs.createDir(self.packageDir)
-        o.system.fs.createDir(self.homeDir)
-
-        # TODO: Should check for basedir also and barf if it is not set properly!
-        #initialize protected dirs
+        self.getLibPath()
 
         protectedDirsDir = os.path.join(self.cfgDir, 'debug', 'protecteddirs')
-        if not o.system.fs.exists(protectedDirsDir):
-            o.system.fs.createDir(protectedDirsDir)
+        if not os.path.exists(protectedDirsDir):
+            self._createDir(protectedDirsDir)
         _listOfCfgFiles = o.system.fs.listFilesInDir(protectedDirsDir, filter='*.cfg')
         _protectedDirsList = []
         for _cfgFile in _listOfCfgFiles:
@@ -193,12 +158,16 @@ class Dirs(object):
         return False
 
     def deployDefaultFilesInSandbox(self):
+        iswindows=os.name=="nt"
+        if self.frozen or iswindows:
+            return
+
         #@todo P3 let it work for windows as well
         bindest=o.system.fs.joinPaths(self.baseDir,"bin")
         utilsdest=o.system.fs.joinPaths(self.baseDir,"utils")
         cfgdest=o.system.fs.joinPaths(self.baseDir,"cfg")
 
-        if not o.system.fs.exists(bindest) or not o.system.fs.exists(utilsdest) or not o.system.fs.exists(cfgdest):
+        if not os.path.exists(bindest) or not os.path.exists(utilsdest) or not os.path.exists(cfgdest):
             cfgsource=o.system.fs.joinPaths(self.libDir,"core","_defaultcontent","cfg")
             binsource=o.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","bin")
             utilssource=o.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","utils")
