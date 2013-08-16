@@ -206,6 +206,9 @@ except Exception,e:
 # Remove the no longer needed function
 del _setup_stacktrace_hook
 
+from Dirs import Dirs
+o.dirs=Dirs()
+
 from . import logging
 from Application import Application
 
@@ -226,9 +229,7 @@ o.basetype=pmtypes.register_types()
 
 from . import errorhandling
 
-from Dirs import Dirs
-o.dirs=Dirs()
-o.pm_hooked_extension_dirs = dict()
+# o.pm_hooked_extension_dirs = dict()
 
 import OpenWizzy.baselib.platforms
 import OpenWizzy.core.config

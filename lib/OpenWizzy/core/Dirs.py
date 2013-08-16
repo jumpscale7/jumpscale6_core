@@ -49,6 +49,15 @@ class Dirs(object):
         self.cfgDir = os.path.join(self.baseDir,"cfg")
         self._createDir(self.cfgDir)
 
+        tpath = os.path.join(self.cfgDir,"debug")
+        self._createDir(tpath)
+        tpath = os.path.join(self.cfgDir,"debug","protecteddirs")
+        self._createDir(tpath)
+        tpath = os.path.join(self.cfgDir,"grid")
+        self._createDir(tpath)
+        tpath = os.path.join(self.cfgDir,"hrd")
+        self._createDir(tpath)
+
         '''Var folder (basedir/var)'''
         if self.frozen:
             self.varDir = "/var/jumpscale"
@@ -91,7 +100,11 @@ class Dirs(object):
 
         self.binDir = os.path.join(self.baseDir, 'bin')
 
-        self.codeDir="/opt/code"
+        if self.frozen:
+            self.codeDir=os.path.join(self.varDir,"code")
+        else:
+            self.codeDir="/opt/code"
+        self._createDir(self.codeDir)
 
         self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
         self._createDir(self.hrdDir)

@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0,"lib")
+
 from OpenWizzy import o
 
 o.application.appname = "owext"

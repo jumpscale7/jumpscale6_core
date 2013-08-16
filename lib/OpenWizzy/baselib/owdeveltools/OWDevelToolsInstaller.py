@@ -184,18 +184,19 @@ class OWDevelToolsInstaller:
         if not homeexists:
             c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
 
-        C=o.system.fs.fileGetContents("/root/.hgrc")
-        C2=""
+        if o.system.fs.exists("/root/.hgrc"):
+            C=o.system.fs.fileGetContents("/root/.hgrc")
+            C2=""
 
-        for line in C.split("\n"):
-            if line.find("[trusted]")<>-1:
-                break
-            C2+="%s\n"%line
+            for line in C.split("\n"):
+                if line.find("[trusted]")<>-1:
+                    break
+                C2+="%s\n"%line
 
-        C2+="[trusted]\n"
-        C2+="users = jumpscale\n\n"
+            C2+="[trusted]\n"
+            C2+="users = jumpscale\n\n"
 
-        o.system.fs.writeFile("/root/.hgrc",C2)
+            o.system.fs.writeFile("/root/.hgrc",C2)
         
 
     def deployFTPServer4qpackages(self,passwd,jumpscalepasswd):
@@ -275,6 +276,9 @@ DefaultRoot                    ~
 
         self._do.execute("/etc/init.d/proftpd restart")
 
+        self._do.createdir("/opt/code")
+        self._do.createdir("/opt/jumpscale")
+
         def symlink(src,dest):
             try:
                 o.system.fs.remove(dest)
@@ -283,7 +287,7 @@ DefaultRoot                    ~
                     cmd="umount %s"%dest
                     try:
                         self._do.execute(cmd)
-                    except Exception,e:
+                    except:
                         pass
                 
             o.system.fs.createDir(dest)
@@ -292,7 +296,7 @@ DefaultRoot                    ~
 
 
         symlink("/opt/code","/home/jumpscale/code")
-        symlink("/opt/openwizzy6","/home/jumpscale/openwizzy")
+        symlink("/opt/jumpscale","/home/jumpscale/openwizzy")
         symlink("/opt/jspackagesftp","/home/jumpscale/jspackages")
         symlink("/opt/jspackagesftp","/home/ftp/jspackages")
         symlink("/opt/jspackagesftp","/home/jspackages/jspackages")
