@@ -11,11 +11,10 @@ import OpenWizzy.baselib.jspackages
 print "upload package to blobstor"
 
 package=o.packagesi.find()
-package.upload()
-
-from IPython import embed
-print "DEBUG NOW upload"
-embed()
+if package<>None:
+    package.upload()
+else:
+    raise RuntimeError("Could not find package.")
 
 
 o.application.stop()
