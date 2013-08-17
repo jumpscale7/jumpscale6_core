@@ -3,6 +3,7 @@ from OpenWizzy import o
 import OpenWizzy.grid.zdaemon
 
 from .ZDaemonClient import ZDaemonCmdClient
+import OpenWizzy.grid.socketserver
 
 o.logger.consoleloglevel=5
 

@@ -44,6 +44,7 @@ class ZDaemonCMDS(object):
         session=Session(sessiondictstr)
 
         #@todo JO fix ssl please
+        ssl=False
         if ssl:
             session.encrkey=self.daemon.keystor.decrypt(orgsender=session.organization, sender=session.user, \
                 orgreader=self.daemon.sslorg,reader=self.daemon.ssluser, \

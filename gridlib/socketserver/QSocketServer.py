@@ -96,7 +96,7 @@ class QSocketServerHandler(SocketServer.BaseRequestHandler):
             if data.find("**connect**")<>-1:
                 try:
                     self.senddata("ok")
-                    print data
+                    # print data
                     print  "new client connected: %s,%s"%self.client_address
                     
                 except Exception,e:
