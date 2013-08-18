@@ -115,7 +115,7 @@ class Dirs(object):
 
     def _createDir(self,path):
         if not os.path.exists(path):
-            os.mkdir(path)
+            os.makedirs(path)
 
 
     def init(self,reinit=False):
