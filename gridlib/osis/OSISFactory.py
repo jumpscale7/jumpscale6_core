@@ -27,8 +27,8 @@ class OSISFactory:
         """
         osis=self.getLocal(path,overwriteHRD,overwriteImplementation,namespacename)
         zd=o.core.zdaemon.getZDaemon(port=port)
-        zd.addCMDsInterface(OSISCMDS)  #pass as class not as object !!!
-        zd.cmdsInterfaces[-1].osis=osis  #is the first instance of the cmd interface
+        zd.setCMDsInterface(OSISCMDS)  #pass as class not as object !!!
+        zd.daemon.cmdsInterfaces[""][-1].osis=osis  #is the first instance of the cmd interface
        
         zd.start()
 

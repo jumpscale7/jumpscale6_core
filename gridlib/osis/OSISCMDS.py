@@ -1,7 +1,7 @@
 from OpenWizzy import o
-from OpenWizzy.grid.zdaemon.ZDaemonCMDS import ZDaemonCMDS
+from OpenWizzy.grid.serverbase.BaseCMDS import BaseCMDS
 
-class OSISCMDS(ZDaemonCMDS):
+class OSISCMDS(BaseCMDS):
     def __init__(self,daemon):
         self.daemon=daemon
         self.osis=None
