@@ -47,47 +47,47 @@ class Dirs(object):
         
         '''Configuration file folder (appdir/etc)'''
         self.cfgDir = os.path.join(self.baseDir,"cfg")
-        o.system.fs.createDir(self.cfgDir)
+        self._createDir(self.cfgDir)
 
         tpath = os.path.join(self.cfgDir,"debug")
-        o.system.fs.createDir(tpath)
+        self._createDir(tpath)
         tpath = os.path.join(self.cfgDir,"debug","protecteddirs")
-        o.system.fs.createDir(tpath)
+        self._createDir(tpath)
         tpath = os.path.join(self.cfgDir,"grid")
-        o.system.fs.createDir(tpath)
+        self._createDir(tpath)
         tpath = os.path.join(self.cfgDir,"hrd")
-        o.system.fs.createDir(tpath)
+        self._createDir(tpath)
 
         '''Var folder (basedir/var)'''
         if self.frozen:
             self.varDir = "/var/jumpscale"
         else:
             self.varDir = os.path.join(self.baseDir,"var")
-        o.system.fs.createDir(self.varDir)
+        self._createDir(self.varDir)
 
         '''Temporary file folder (appdir/tmp)'''
         if iswindows or self.frozen:
             self.tmpDir = os.path.join(self.varDir,"tmp")
         else:
             self.tmpDir = "/tmp/jumpscale"
-        o.system.fs.createDir(self.tmpDir)
+        self._createDir(self.tmpDir)
 
         
         if iswindows or self.frozen:
             self.libDir = os.path.join(self.baseDir,"library.zip")
         else:
             self.libDir = os.path.join(self.baseDir,"lib")
-        o.system.fs.createDir(self.libDir)
+        self._createDir(self.libDir)
 
         if self.libDir not in sys.path:
             sys.path.insert(1,self.libDir)
         
 
         self.logDir = os.path.join(self.varDir,"log")
-        o.system.fs.createDir(self.logDir)
+        self._createDir(self.logDir)
 
         self.packageDir = os.path.join(self.varDir,"jspackages")
-        o.system.fs.createDir(self.packageDir)
+        self._createDir(self.packageDir)
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".owbase"))
 
@@ -96,7 +96,7 @@ class Dirs(object):
 
         '''CMDB storage folder (vardir/cmdb)'''
         self.cmdbDir = os.path.join(self.varDir,"cmdb")
-        o.system.fs.createDir(self.cmdbDir)
+        self._createDir(self.cmdbDir)
 
         self.binDir = os.path.join(self.baseDir, 'bin')
 
@@ -104,13 +104,18 @@ class Dirs(object):
             self.codeDir=os.path.join(self.varDir,"code")
         else:
             self.codeDir="/opt/code"
-        o.system.fs.createDir(self.codeDir)
+        self._createDir(self.codeDir)
 
         self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
-        o.system.fs.createDir(self.hrdDir)
+        self._createDir(self.hrdDir)
 
         self.configsDir = os.path.join(self.baseDir,"cfg","owconfig")
-        o.system.fs.createDir(self.configsDir)
+        self._createDir(self.configsDir)
+
+
+    def _createDir(self,path):
+        if not os.path.exists(path):
+            os.mkdir(path)
 
 
     def init(self,reinit=False):
@@ -133,7 +138,7 @@ class Dirs(object):
 
         protectedDirsDir = os.path.join(self.cfgDir, 'debug', 'protecteddirs')
         if not os.path.exists(protectedDirsDir):
-            o.system.fs.createDir(protectedDirsDir)
+            self._createDir(protectedDirsDir)
         _listOfCfgFiles = o.system.fs.listFilesInDir(protectedDirsDir, filter='*.cfg')
         _protectedDirsList = []
         for _cfgFile in _listOfCfgFiles:
