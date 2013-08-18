@@ -78,7 +78,10 @@ class OWDevelToolsInstaller:
         name="openwizzy6_lib"
         if not linkonly:
             self._getOWRepo(name)
-        for item in [item for item in o.system.fs.listDirsInDir("%s/openwizzy/%s"%(o.dirs.codeDir,name),dirNameOnly=True) if item[0]<>"."]:
+        openwizzylib = "%s/openwizzy/%s"%(o.dirs.codeDir,name)
+        if not o.system.fs.exists(openwizzylib):
+            return
+        for item in [item for item in o.system.fs.listDirsInDir(openwizzylib,dirNameOnly=True) if item[0]<>"."]:
             src="%s/openwizzy/%s/%s"%(o.dirs.codeDir,name,item)
             dest="%s/lib/%s"%(o.dirs.libDir,item)
             self._do.symlink(src,dest)
