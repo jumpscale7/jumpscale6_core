@@ -10,6 +10,8 @@ import OpenWizzy.baselib.inifile
 from OpenWizzy.core.extensions.PMExtensionsGroup import PMExtensionsGroup
 from OpenWizzy.core.extensions.PMExtension import PMExtension, EggPMExtension
 
+HOOKED_EXTENSION_DIR = dict()
+
 
 #SYSTEM_EXTENSIONS = list() #list of all known extension
 #HOOK_POINTS = dict()  #dict between PMExtensions and its location e.g. q.
@@ -291,10 +293,10 @@ class PMExtensions:
         ##self.pmExtensionsGroups={}  #dict of multiple extenionsgroups
 
     def load(self, extensionDir,actor=False):
-        if self.hook_base_object not in o.pm_hooked_extension_dirs:
-            o.pm_hooked_extension_dirs[self.hook_base_object] = list()
+        if self.hook_base_object not in HOOKED_EXTENSION_DIR:
+            HOOKED_EXTENSION_DIR[self.hook_base_object] = list()
 
-        hookedExtensionDirs = o.pm_hooked_extension_dirs[self.hook_base_object]
+        hookedExtensionDirs = HOOKED_EXTENSION_DIR[self.hook_base_object]
 
         if extensionDir in hookedExtensionDirs:
             return
