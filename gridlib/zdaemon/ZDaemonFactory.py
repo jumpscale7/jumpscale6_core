@@ -1,9 +1,5 @@
 from OpenWizzy import o
 
-from ZDaemonCMDS import ZDaemonCMDS
-from ZDaemon import ZDaemon
-from ZDaemonClient import ZDaemonCmdClient
-from ZDaemonAgent import ZDaemonAgent
 
 import time
 
@@ -17,16 +13,14 @@ class ZDaemonFactory():
 
         zd=o.core.zdaemon.getZDaemon(port=5555,nrCmdGreenlets=50)
 
-        ZDaemonCMDS=o.core.zdaemon.getZDaemonCMDS()  #get base class which needs to be used as basis for commands
-
-        class MyCommands(ZDaemonCMDS):
+        class MyCommands():
             def __init__(self,daemon):
                 self.daemon=daemon
 
-		    def pingcmd(self,**args):
+		    def pingcmd(self,session=None):
 		        return "pong"
 
-		    def echo(self,msg="",**args):
+		    def echo(self,msg="",session=None):
 		        return msg
 
         #remark always need to add **args in method because user & returnformat are passed as params which can be used in method
@@ -37,17 +31,8 @@ class ZDaemonFactory():
         use self.getZDaemonClientClass as client to this daemon
 
         """
-
-        zd=ZDaemon(port=port,name=name,nrCmdGreenlets=nrCmdGreenlets)
-        if ssluser<>"":
-            from OpenWizzy.baselib.ssl.SSL import SSL
-            zd.ssluser=ssluser
-            zd.sslorg=sslorg
-            zd.keystor=SSL().getSSLHandler(sslkeyvaluestor)            
-        else:
-            zd.keystor=None
-            zd.ssluser=None
-            zd.sslorg=None
+        from ZDaemon import ZDaemon
+        zd=ZDaemon(port=port,name=name,nrCmdGreenlets=nrCmdGreenlets,sslorg=sslorg,ssluser=ssluser,sslkeyvaluestor=sslkeyvaluestor)
         return zd
 
     def getZDaemonCMDS(self):
@@ -62,8 +47,8 @@ class ZDaemonFactory():
 		print client.echo("Hello World.")
 
         """
+        from ZDaemonClient import ZDaemonCmdClient
         cl=ZDaemonCmdClient(ipaddr=ipaddr,port=port,org=org,user=user,passwd=passwd,ssl=ssl,reset=reset)
-
         return cl
 
     def getZDaemonAgent(self,ipaddr="127.0.0.1",port=5555,org="myorg",user="root",passwd="1234",ssl=False,reset=False,roles=[]):
@@ -77,6 +62,7 @@ class ZDaemonFactory():
             * means all
 
         """
+        from ZDaemonAgent import ZDaemonAgent
         cl=ZDaemonAgent(ipaddr=ipaddr,port=port,org=org,user=user,passwd=passwd,ssl=ssl,reset=reset,roles=roles)
 
         return cl
@@ -96,6 +82,7 @@ class ZDaemonFactory():
         print client.echo("atest")
 
         """
+        from ZDaemonClient import ZDaemonCmdClient
         return ZDaemonCmdClient        
 
     def initSSL4Server(self,organization,serveruser,sslkeyvaluestor=None):

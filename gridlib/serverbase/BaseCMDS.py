@@ -11,7 +11,7 @@ class Session():
     __str__=__repr__        
 
 
-class ZDaemonCMDS(object):
+class BaseCMDS(object):
     def __init__(self, daemon):
         self.daemon = daemon
 
