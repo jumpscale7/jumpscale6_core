@@ -63,7 +63,7 @@ class DaemonCMDS(object):
         self.daemon.eventhandlingTE.executeV2(eco=eco,history=self.daemon.eventsMemLog)
 
 
-class Daemon():
+class Daemon(object):
 
     def __init__(self,name=None):
 
@@ -131,8 +131,8 @@ class Daemon():
         # print "process rpc:\n%s"%data
         cmdkey="%s_%s"%(category,cmd)
         # cmd2 = {}
-        if cmd in self.cmds[cmdkey]:
-            ffunction = self.cmds[cmdkey][cmd]
+        if cmdkey in self.cmds:
+            ffunction = self.cmds[cmdkey]
         else:
             ffunction = None
 
@@ -144,18 +144,19 @@ class Daemon():
                 #means could not find method
                 return "2","",None
 
-            args = inspect.getargspec(ffunction)
-            if not 'session' in args.args:
-                raise RuntimeError("there needs to be a session argument in the cmd function,function=%s"%function)
-            # else:
-            #     cmd2 = {}
             self.cmds[cmdkey] = ffunction
 
+        takessession = 'session' in inspect.getargspec(ffunction).args
         try:
             if inputisdict:          
-                result = ffunction(session=session,**data)
+                if takessession:
+                    data['session'] = session
+                result = ffunction(**data)
             else:
-                result = ffunction(data,session=session)
+                if takessession:
+                    result = ffunction(data,session=session)
+                else:
+                    result = ffunction(data)
         except Exception, e:
             eco=o.errorconditionhandler.parsePythonErrorObject(e)
             eco.level=2

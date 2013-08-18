@@ -57,9 +57,9 @@ class ZDaemon(GeventLoop):
         while True:
             cmd,informat,returnformat,data,sessionid = cmdsocket.recv_multipart()
 
-            self.daemon.processRPCUnSerialized(cmd,informat,returnformat,data,sessionid)
+            result = self.daemon.processRPCUnSerialized(cmd,informat,returnformat,data,sessionid)
 
-            cmdsocket.send_multipart((parts[0],parts[1],data))
+            cmdsocket.send_multipart(result)
 
     def cmdGreenlet(self):
         #Nonblocking, e.g the osis server contains a broker which queus internally the messages.
