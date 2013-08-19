@@ -86,7 +86,9 @@ class ZDaemonFactory():
         return ZDaemonCmdClient        
 
     def initSSL4Server(self,organization,serveruser,sslkeyvaluestor=None):
-        from OpenWizzy.baselib.ssl.SSL import SSL
-        ks=SSL().getSSLHandler(sslkeyvaluestor)
-        ks.createKeyPair(organization, serveruser)
+        """
+        use this to init your ssl keys for the server (they can be used over all transports)
+        """
+        import OpenWizzy.grid.serverbase
+        o.servers.base.initSSL4Server(organization,serveruser,sslkeyvaluestor)
 

@@ -27,14 +27,14 @@ class DaemonCMDS(object):
     def getpubkeyserver(self,session):
         return self.daemon.keystor.getPubKey(self.daemon.sslorg,self.daemon.ssluser,returnAsString=True)
 
-    def registersession(self,data,session,ssl):
+    def registersession(self,sessiondata,session,ssl):
         """
         @param sessiondata is encrypted data (SSL)
         """
-        ser=o.db.serializers.getMessagePack()
-        sessiondictstr=ser.loads(data)
+        # ser=o.db.serializers.getMessagePack()
+        # sessiondictstr=ser.loads(data)
 
-        session=Session(sessiondictstr)
+        session=Session(sessiondata)
 
         #@todo JO fix ssl please
         ssl=False
@@ -78,7 +78,7 @@ class Daemon(object):
 
         self.key=""
 
-        self.errorconditionserializer=o.db.serializers.getSerializerType("j")
+        self.errorconditionserializer=o.db.serializers.getSerializerType("m")
 
         self.addCMDsInterface(DaemonCMDS,"core")
 
@@ -117,9 +117,9 @@ class Daemon(object):
 
     def processRPC(self, cmd,data,returnformat,session,category=""):
         """
-        list with item 0=cmd, item 1=args (dict)
-
+        
         @return (resultcode,returnformat,result)
+                item 0=cmd, item 1=returnformat (str), item 2=args (dict)
         resultcode
             0=ok
             1= not authenticated
@@ -146,35 +146,43 @@ class Daemon(object):
 
             self.cmds[cmdkey] = ffunction
 
-        takessession = 'session' in inspect.getargspec(ffunction).args
+        # takessession = 'session' in inspect.getargspec(ffunction).args
+        ###DO NOT DO THIS THIS IS SLOW !
         try:
             if inputisdict:          
-                if takessession:
-                    data['session'] = session
+                data['session'] = session
                 result = ffunction(**data)
             else:
-                if takessession:
-                    result = ffunction(data,session=session)
-                else:
-                    result = ffunction(data)
+                result = ffunction(data,session=session)
         except Exception, e:
             eco=o.errorconditionhandler.parsePythonErrorObject(e)
             eco.level=2
-            print eco
+            # print eco
+            eco.errormessage+="\nfunction arguments were:%s\n"%str(inspect.getargspec(ffunction).args)
             o.errorconditionhandler.processErrorConditionObject(eco)            
-            return "3","",self.errorconditionserializer.dumps(eco.__dict__)
+            result=self.errorconditionserializer.dumps(eco.__dict__)
+            return "3","",result
 
         return "0",returnformat,result
 
 
     def processRPCUnSerialized(self,cmd,informat,returnformat,data,sessionid,category=""):
+        """
+        @return (resultcode,returnformat,result)
+                item 0=cmd, item 1=returnformat (str), item 2=args (dict)
+        resultcode
+            0=ok
+            1= not authenticated
+            2= method not found
+            2+ any other error
+        """
 
         if self.sessions.has_key(sessionid):
             session=self.sessions[sessionid]
         else:
             if cmd in ["registerpubkey","getpubkeyserver","registersession"]:
                 session=None
-                returnformat=""
+                # returnformat=""
                 category="core"
             else:
                 error = "Authentication  or Session error, session not known with id:%s"%sessionid
@@ -183,7 +191,7 @@ class Daemon(object):
 
         if informat<>"":
             ser=o.db.serializers.get(informat,key=self.key)
-            data=ser.loads(data)                
+            data=ser.loads(data)
 
         parts = self.processRPC(cmd,data,returnformat=returnformat,session=session,category=category)
         returnformat=parts[1] #return format as comes back from processRPC

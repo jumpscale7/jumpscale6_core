@@ -1,113 +1,64 @@
 from OpenWizzy import o
-import struct
-import SocketServer
-import socket
+
+import OpenWizzy.grid.serverbase
+DaemonClienClass=o.servers.base.getDaemonClientClass()
+
+
+
 try:
-    import gevent
-    def sleep(sec):
-        gevent.sleep(sec)
+    import requests
 except:
-    import time
-    def sleep(sec):
-        time.sleep(sec)
+    o.system.installtools.execute("easy_install requests")
+    import requests
 
-import select
+class TornadoClient(DaemonClienClass):
+    def __init__(self,addr="localhost",port=9999,org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
 
-class SocketServerClient():
-    def __init__(self,addr="localhost",port=9999,key="1234"):
-        self.port=port
-        self.addr=addr
-        self.key=key
-        self.type="client"
         self.timeout=60
-        self.initclient()
-        self.dataleftover=""
+        self.url="http://%s:%s/rpc/"%(addr,port)
+        self.init(org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m")
 
-    def senddata(self,data):
+
+    def _connect(self):
         """
-        sends data & wait for result
+        everwrite this method in implementation to init your connection to server (the transport layer)
         """
-        data="A"+struct.pack("I",len(data))+data
-        try:
-            self.socket.sendall(data)
-        except Exception,e:
-            print "sendata error: %s"%e
-            self.reinitclient()
-            return self.senddata(data)
+        pass
 
-    def reinitclient(self):
-        try:                    
-            self.socket.close()
-        except Exception,e:
-            print "Error in send to socket, could not close the socket"
-            print e
-        self.initclient()
+    def _close(self):
+        """
+        close the connection (reset all required)
+        """
+        pass
 
-    def initclient(self):
-        self.dataleftover=""
-        for t in range(1000):
-            if self._initclient()==True:
-                self.socket.settimeout(self.timeout)
-                return True
-        raise RuntimeError("Connection timed out to server %s" % self.addr)
 
-    def _initclient(self):
-        print "try to connect to %s:%s" % (self.addr,self.port)
-        self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        #self.sender.settimeout(2)
-        data='**connect** whoami:%s key:%s'%(o.application.whoAmI,self.key)
-        try:
-            self.socket.connect((self.addr,self.port))
-            self.senddata(data)
-        except Exception,e:
-            try:
-                print "connection error to %s %s" % (self.addr,self.port)
-            except:
-                pass
-            try:
-                self.socket.close()
-            except:
-                pass
-            print "initclient error:%s, sleep 1 sec." % e
-            sleep(1)
-            return False
+    def _sendMsg(self, cmd,data,sendformat="",returnformat=""):
+        """
+        overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
+
+        @return (resultcode,returnformat,result)
+                item 0=cmd, item 1=returnformat (str), item 2=args (dict)
+        resultcode
+            0=ok
+            1= not authenticated
+            2= method not found
+            2+ any other error
+        """
+
+        headers = {'content-type': 'application/raw'}
+        # headers={'Content-Type': 'application/octet-stream'}
+
+        data2=o.servers.base._serializeBinSend(cmd,data,sendformat,returnformat,10)
+
+        r = requests.post(self.url, data=data2, headers=headers)
+
+        # r.status_code
+        # r.headers['content-type']
+        # r.encoding
+        # r.text
+
+        return o.servers.base._unserializeBinReturn(r.content)
+
         
-        print "connected"        
-        if self.readdata()=="ok":
-            return True
-        else:
-            return False
 
-    def getsize(self,data):
-        check=data[0]
-        if check<>"A":
-            raise RuntimeError("error in tcp stream, first byte needs to be 'A'")
-        sizebytes=data[1:5]
-        size=struct.unpack("I",sizebytes)[0]
-        return data[5:],size
-
-
-    def _readdata(self,data):
-        print "select"
-        ready = select.select([self.socket], [], [], self.timeout)
-        if ready[0]:
-            data+=self.socket.recv(4096)
-        return data
-
-    def readdata(self):
-        """
-        """
-        data=self.dataleftover
-        self.dataleftover=""
-        #wait for initial data packet
-        while len(data)<6: #need 5 bytes at least
-            data=self._readdata(data)
-            
-        data,size=self.getsize(data) #5 first bytes removed & size returned
-
-        while len(data)<size:
-            data=self._readdata(data)
-
-        self.dataleftover=data[size:]
-        return data[0:size]
 

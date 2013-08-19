@@ -1,8 +1,8 @@
 from OpenWizzy import o
 
 
-from .TornadoServer import TornadoServerFactory
+from .TornadoFactory import TornadoFactory
 
 o.base.loader.makeAvailable(o, 'servers')
-o.servers.tornado = TornadoServerFactory()
+o.servers.tornado = TornadoFactory()
 

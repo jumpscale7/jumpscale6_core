@@ -1,0 +1,259 @@
+from OpenWizzy import o
+import OpenWizzy.baselib.serializers
+import time
+import struct
+import math
+from random import randrange
+
+class Session():
+
+    def __init__(self,id,organization,user,passwd,encrkey,netinfo,roles):
+        self.id=id
+        self.encrkey=encrkey
+        self.user=user
+        self.passwd=passwd
+        self.organization=organization
+        self.netinfo=netinfo
+        self.start=int(time.time())
+        self.roles=roles
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    __str__=__repr__
+
+class DaemonClientCmd():
+    def __init__(self,org="myorg",user="root",passwd="passwd",ssl=False,encrkey="",reset=False,roles=[],transport=None,defaultSerialization="m"):
+        """
+        @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
+        """
+        self.retry = True
+        #12 bytes unique id
+        end=4294967295  #4bytes max nr
+        self.id=struct.pack("<III",o.base.idgenerator.generateRandomInt(1,end),o.base.idgenerator.generateRandomInt(1,end),o.base.idgenerator.generateRandomInt(1,end))
+        self.blocksize=8*1024*1024
+        self.key=encrkey
+        self.user=user
+        self.org=org
+        self.passwd=passwd
+        self.ssl=ssl
+        self.roles=roles
+        self.keystor = None
+        self.transport=transport
+        self.defaultSerialization=defaultSerialization
+        self.transport._connect()
+        self.initSession(reset, ssl)
+        
+
+
+    def initSession(self,reset=False,ssl=False):
+
+        if ssl:
+            from OpenWizzy.baselib.ssl.SSL import SSL
+            self.keystor=SSL().getSSLHandler()
+            try:
+                self.keystor.getPrivKey(self.org,self.user)
+            except:
+                #priv key now known yet
+                reset=True
+
+            if reset:
+                self.keystor.createKeyPair(organization=self.org, user=self.user)
+
+            pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
+            self.sendcmd(cmd="registerpubkey", organization=self.org,user=self.user,pubkey=pubkey)
+
+            self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver")
+
+            #generate unique key
+            encrkey=""
+            for i in range(56):
+                encrkey += chr(randrange(0, 256))
+
+            #only encrypt the key & the passwd, the rest is not needed
+            encrkey=self.keystor.encrypt(self.org, self.user, "", "", message=encrkey, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+            passwd=self.keystor.encrypt(self.org, self.user, "", "", message=self.passwd, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+
+        else:
+            encrkey = ""
+            passwd = self.passwd
+
+        session=Session(id=self.id,organization=self.org,user=self.user,passwd=passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo(), roles=self.roles)
+        # ser=o.db.serializers.getMessagePack()
+        # sessiondictstr=ser.dumps(session.__dict__)
+        self.key=session.encrkey        
+        self.sendcmd(cmd="registersession", sessiondata=session.__dict__,ssl=ssl,returnformat="")
+
+    def sendMsgOverCMDChannel(self, cmd,data,sendformat=None,returnformat=None,retry=1,maxretry=2):
+        """
+        cmd is command on server (is asci text)
+        data is any to be serialized data
+
+        formatstring is right order of formats e.g. mc means messagepack & then compress
+        formats see: o.db.serializers.get(?
+
+        return is always multipart message [$resultcode(0=no error,1=autherror),$formatstr,$remainingdata]
+
+        errors are always return using msgpack and are a dict
+
+        """
+        if sendformat==None:
+            sendformat=self.defaultSerialization
+        if returnformat==None:
+            returnformat=self.defaultSerialization
+
+        rawdata = data
+        if sendformat<>"":
+            ser=o.db.serializers.get(sendformat,key=self.key)
+            data=ser.dumps(data)
+
+        # self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
+        parts=self.transport._sendMsg(cmd,data,sendformat,returnformat)        
+        returncode = parts[0]
+
+        if returncode in ('1', '3'):
+            if retry < maxretry:
+                print "session lost"
+
+                if returncode == '3':
+                    self.initSession()
+                else:
+                    self.reset()
+                retry+=1
+                return self.sendMsgOverCMDChannel(cmd,rawdata,sendformat,returnformat,retry,maxretry)
+            else:
+                msg="Authentication error on server on %s:%s.\n"%(self.ipaddr,self.port)
+                raise RuntimeError(msg)
+        elif returncode == '2':
+            msg="execution error on server on %s:%s.\n Could not find method:%s\n"%(self.ipaddr,self.port,cmd)
+            o.errorconditionhandler.raiseBug(msgpub=msg,message="",category="rpc.exec")
+        elif str(returncode) != "0":
+            s=o.db.serializers.getMessagePack() #get messagepack serializer
+            ddict=s.loads(parts[2])
+            eco=o.errorconditionhandler.getErrorConditionObject(ddict)
+            msg="execution error on server cmd:%s error=%s"%(cmd,eco)
+            if cmd=="logeco":
+                raise RuntimeError("Could not forward errorcondition object to logserver, error was %s"%eco)
+            print "*** error in client to zdaemon ***"
+            # print eco        
+            o.errorconditionhandler.raiseOperationalCritical(msgpub="",message=msg,category="rpc.exec",die=True,tags="ecoguid:%s"%eco.guid)
+
+        returnformat=parts[1]
+        if returnformat<>"":
+            ser=o.db.serializers.get(returnformat,key=self.key)
+            result=ser.loads(parts[2])
+        else:
+            result=parts[2]
+
+        return result
+
+
+
+    def reset(self):
+        # Socket is confused. Close and remove it.
+        self.transport._close()
+        self.transport._connect()
+
+    def sendcmd(self, cmd, sendformat=None,returnformat=None,**args):
+        """
+        formatstring is right order of formats e.g. mc means messagepack & then compress
+        formats see: o.db.serializers.get(?
+
+        return is the deserialized data object
+        """
+        return self.sendMsgOverCMDChannel(cmd,args,sendformat,returnformat)
+
+    def perftest(self):
+        start = time.time()
+        nr = 10000
+        print "start perftest for %s for ping cmd"%nr
+        for i in range(nr):
+            if not self.sendcmd("ping") == "pong":
+                raise RuntimeError("ping did not return pong.")
+        stop = time.time()
+        nritems = nr/(stop-start)
+        print "nr items per sec: %s"%nritems
+        print "start perftest for %s for cmd ping"%nr
+        for i in range(nr):
+            if not self.sendcmd("pingcmd") == "pong":
+                raise RuntimeError("ping did not return pong.")
+        stop = time.time()
+        nritems = nr/(stop-start)
+        print "nr items per sec: %s"%nritems
+
+
+
+class DaemonClient():
+    def __init__(self):
+        pass
+
+    def init(self,org="myorg",user="root",passwd="passwd",ssl=False, introspect=True,reset=False,roles=[],defaultSerialization="m"):
+        self._client=DaemonClientCmd(org=org,user=user,passwd=passwd,ssl=ssl,reset=reset,roles=roles,transport=self,defaultSerialization=defaultSerialization)
+        if introspect:
+            self._loadMethods()
+
+
+    def _loadMethods(self):
+        methodspecs = self._client.sendcmd('_introspect')
+        for key, spec in methodspecs.iteritems():
+            # print "key:%s spec:%s"%(key,spec)
+            strmethod = """
+class Klass(object):
+    def __init__(self, client):
+        self._client = client
+
+    def method(%s):
+        '''%s'''
+        return self._client.sendcmd("%s", %s)
+"""
+            Klass = None
+            args = [ "%s=%s" % (x, x) for x in spec['args'][0][1:]]
+            params_spec = spec['args'][0]
+            if spec['args'][3]:
+                params_spec = list(spec['args'][0])
+                for cnt, default in enumerate(spec['args'][3]):
+                    cnt += 1
+                    params_spec[-cnt] += "=%r" % default
+            params = ', '.join(params_spec)
+            strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
+            exec(strmethod)
+            klass = Klass(self._client)
+            setattr(self, key, klass.method)
+
+
+
+
+    #TRANSPORT IMPLEMENTATION
+    ###########################################################################################################
+
+    def _connect(self):
+        """
+        everwrite this method in implementation to init your connection to server (the transport layer)
+        """
+        raise RuntimeError("not implemented")
+
+    def _close(self):
+        """
+        close the connection (reset all required)
+        """
+        raise RuntimeError("not implemented")
+
+
+    def _sendMsg(self, cmd,data,sendformat="m",returnformat="m"):
+        """
+        overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
+
+        @return (resultcode,returnformat,result)
+                item 0=cmd, item 1=returnformat (str), item 2=args (dict)
+        resultcode
+            0=ok
+            1= not authenticated
+            2= method not found
+            2+ any other error
+        """
+        raise RuntimeError("not implemented")
+        #send message, retry if needed, retrieve message
+
+        
+
+
