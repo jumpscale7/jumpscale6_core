@@ -88,7 +88,7 @@ class TornadoServer():
         self.ioloop=tornado.ioloop.IOLoop.instance()
         self.ioloop.start()
 
-    def addCMDsInterface(self,MyCommands,category="optional"):
+    def addCMDsInterface(self,MyCommands,category=""):
         self.daemon.addCMDsInterface(MyCommands,category)
 
 

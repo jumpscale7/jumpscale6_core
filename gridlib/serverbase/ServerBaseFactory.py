@@ -91,14 +91,17 @@ class ServerBaseFactory():
         lendata=len(data)
         lenreturnformat=len(returnformat)
         lensendformat=len(sendformat)
-        return struct.pack("<IIIII",sessionid,lencmd,lendata,lensendformat,lenreturnformat)+cmd+data+sendformat+returnformat
+        return sessionid + struct.pack("<IIII",lencmd,lendata,lensendformat,lenreturnformat)+cmd+data+sendformat+returnformat
 
     def _unserializeBinSend(self,data):
         """
         return cmd,data,sendformat,returnformat,sessionid
         """
-        sessionid,lencmd,lendata,lensendformat,lenreturnformat=struct.unpack("<IIIII",data[0:20])
-        return data[20:lencmd+20],data[lencmd+20:lencmd+20+lendata],data[lencmd+20+lendata:lencmd+20+lendata+lensendformat],data[lencmd+20+lendata+lensendformat:],sessionid
+        sessionid = data[0:12]
+        data = data[12:]
+        lencmd,lendata,lensendformat,lenreturnformat=struct.unpack("<IIII",data[0:16])
+        data = data[16:]
+        return data[0:lencmd],data[lencmd:lencmd+lendata],data[lencmd+lendata:lencmd+lendata+lensendformat],data[lencmd+lendata+lensendformat:],sessionid
 
     def _serializeBinReturn(self,resultcode,returnformat,result):
         lendata=len(result)

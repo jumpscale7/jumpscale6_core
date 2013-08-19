@@ -16,7 +16,9 @@ class TornadoClient(DaemonClienClass):
 
         self.timeout=60
         self.url="http://%s:%s/rpc/"%(addr,port)
-        self.init(org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m")
+        self._id = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' #empty id
+        self.init(org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m", introspect=False)
+        self._id = self._client.id
 
 
     def _connect(self):
@@ -47,8 +49,7 @@ class TornadoClient(DaemonClienClass):
 
         headers = {'content-type': 'application/raw'}
         # headers={'Content-Type': 'application/octet-stream'}
-
-        data2=o.servers.base._serializeBinSend(cmd,data,sendformat,returnformat,10)
+        data2=o.servers.base._serializeBinSend(cmd,data,sendformat,returnformat,self._id)
 
         r = requests.post(self.url, data=data2, headers=headers)
 
