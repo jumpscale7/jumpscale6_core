@@ -186,8 +186,6 @@ class Daemon(object):
         else:
             if cmd in ["registerpubkey","getpubkeyserver","registersession"]:
                 session=None
-                # returnformat=""
-                category="core"
             else:
                 error = "Authentication  or Session error, session not known with id:%s"%sessionid
                 eco = o.errorconditionhandler.getErrorConditionObject(msg=error)
