@@ -8,17 +8,15 @@ DaemonClienClass=o.servers.base.getDaemonClientClass()
 try:
     import requests
 except:
-    o.system.installtools.execute("easy_install requests")
+    o.system.installtools.execute("pip install requests")
     import requests
 
 class TornadoClient(DaemonClienClass):
-    def __init__(self,addr="localhost",port=9999,org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
+    def __init__(self,addr="localhost",port=9999,category="core", org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
 
         self.timeout=60
         self.url="http://%s:%s/rpc/"%(addr,port)
-        self._id = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' #empty id
-        self.init(org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m", introspect=False)
-        self._id = self._client.id
+        super(TornadoClient, self).__init__(category=category,org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m", introspect=False)
 
 
     def _connect(self):
@@ -34,7 +32,7 @@ class TornadoClient(DaemonClienClass):
         pass
 
 
-    def _sendMsg(self, cmd,data,sendformat="",returnformat=""):
+    def _sendMsg(self,category,cmd,data,sendformat="",returnformat=""):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -48,18 +46,9 @@ class TornadoClient(DaemonClienClass):
         """
 
         headers = {'content-type': 'application/raw'}
-        # headers={'Content-Type': 'application/octet-stream'}
-        data2=o.servers.base._serializeBinSend(cmd,data,sendformat,returnformat,self._id)
-
+        data2=o.servers.base._serializeBinSend(category,cmd,data,sendformat,returnformat,self._id)
         r = requests.post(self.url, data=data2, headers=headers)
-
-        # r.status_code
-        # r.headers['content-type']
-        # r.encoding
-        # r.text
-
         return o.servers.base._unserializeBinReturn(r.content)
 
-        
 
 

@@ -32,8 +32,8 @@ class MainHandlerRPC(tornado.web.RequestHandler):
 
     def post(self):
         data=self.request.body
-        cmd,data2,informat,returnformat,sessionid=o.servers.base._unserializeBinSend(data)
-        resultcode,returnformat,result=self.server.daemon.processRPCUnSerialized(cmd, informat, returnformat, data2, sessionid)
+        category,cmd,data2,informat,returnformat,sessionid=o.servers.base._unserializeBinSend(data)
+        resultcode,returnformat,result=self.server.daemon.processRPCUnSerialized(cmd, informat, returnformat, data2, sessionid, category=category)
         data3=o.servers.base._serializeBinReturn(resultcode,returnformat,result)
         # resultcode,returnformat,result2=o.servers.base._unserializeBinReturn(data3)
         # if result<>result2:

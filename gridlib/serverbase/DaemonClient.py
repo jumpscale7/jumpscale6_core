@@ -23,7 +23,7 @@ class Session():
     __str__=__repr__
 
 class DaemonClientCmd():
-    def __init__(self,org="myorg",user="root",passwd="passwd",ssl=False,encrkey="",reset=False,roles=[],transport=None,defaultSerialization="m"):
+    def __init__(self,category="core",org="myorg",user="root",passwd="passwd",ssl=False,encrkey="",reset=False,roles=[],transport=None,defaultSerialization="m"):
         """
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
@@ -35,6 +35,7 @@ class DaemonClientCmd():
         self.key=encrkey
         self.user=user
         self.org=org
+        self.category = category
         self.passwd=passwd
         self.ssl=ssl
         self.roles=roles
@@ -61,9 +62,9 @@ class DaemonClientCmd():
                 self.keystor.createKeyPair(organization=self.org, user=self.user)
 
             pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
-            self.sendcmd(cmd="registerpubkey", organization=self.org,user=self.user,pubkey=pubkey)
+            self.sendcmd(category="core",cmd="registerpubkey", organization=self.org,user=self.user,pubkey=pubkey)
 
-            self.pubkeyserver=self.sendcmd(cmd="getpubkeyserver")
+            self.pubkeyserver=self.sendcmd(category="core",cmd="getpubkeyserver")
 
             #generate unique key
             encrkey=""
@@ -82,9 +83,9 @@ class DaemonClientCmd():
         # ser=o.db.serializers.getMessagePack()
         # sessiondictstr=ser.dumps(session.__dict__)
         self.key=session.encrkey        
-        self.sendcmd(cmd="registersession", sessiondata=session.__dict__,ssl=ssl,returnformat="")
+        self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__,ssl=ssl,returnformat="")
 
-    def sendMsgOverCMDChannel(self, cmd,data,sendformat=None,returnformat=None,retry=1,maxretry=2):
+    def sendMsgOverCMDChannel(self, cmd,data,sendformat=None,returnformat=None,retry=1,maxretry=2, category=None):
         """
         cmd is command on server (is asci text)
         data is any to be serialized data
@@ -102,13 +103,15 @@ class DaemonClientCmd():
         if returnformat==None:
             returnformat=self.defaultSerialization
 
+        category = category or self.category #prioritize passed argument fallback to client default
+
         rawdata = data
         if sendformat<>"":
             ser=o.db.serializers.get(sendformat,key=self.key)
             data=ser.dumps(data)
 
         # self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
-        parts=self.transport._sendMsg(cmd,data,sendformat,returnformat)        
+        parts=self.transport._sendMsg(category,cmd,data,sendformat,returnformat)        
         returncode = parts[0]
 
         if returncode in ('1', '3'):
@@ -120,7 +123,7 @@ class DaemonClientCmd():
                 else:
                     self.reset()
                 retry+=1
-                return self.sendMsgOverCMDChannel(cmd,rawdata,sendformat,returnformat,retry,maxretry)
+                return self.sendMsgOverCMDChannel(cmd,rawdata,sendformat,returnformat,retry,maxretry,category)
             else:
                 msg="Authentication error on server on %s:%s.\n"%(self.ipaddr,self.port)
                 raise RuntimeError(msg)
@@ -154,14 +157,14 @@ class DaemonClientCmd():
         self.transport._close()
         self.transport._connect()
 
-    def sendcmd(self, cmd, sendformat=None,returnformat=None,**args):
+    def sendcmd(self, cmd, sendformat=None,returnformat=None, category=None, **args):
         """
         formatstring is right order of formats e.g. mc means messagepack & then compress
         formats see: o.db.serializers.get(?
 
         return is the deserialized data object
         """
-        return self.sendMsgOverCMDChannel(cmd,args,sendformat,returnformat)
+        return self.sendMsgOverCMDChannel(cmd,args,sendformat,returnformat, category=category)
 
     def perftest(self):
         start = time.time()
@@ -183,12 +186,11 @@ class DaemonClientCmd():
 
 
 
-class DaemonClient():
-    def __init__(self):
-        pass
-
-    def init(self,org="myorg",user="root",passwd="passwd",ssl=False, introspect=True,reset=False,roles=[],defaultSerialization="m"):
-        self._client=DaemonClientCmd(org=org,user=user,passwd=passwd,ssl=ssl,reset=reset,roles=roles,transport=self,defaultSerialization=defaultSerialization)
+class DaemonClient(object):
+    def __init__(self,category="core",org="myorg",user="root",passwd="passwd",ssl=False, introspect=True,reset=False,roles=[],defaultSerialization="m"):
+        self._id = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' #empty id needed durring session initialization
+        self._client=DaemonClientCmd(category=category,org=org,user=user,passwd=passwd,ssl=ssl,reset=reset,roles=roles,transport=self,defaultSerialization=defaultSerialization)
+        self._id = self._client.id
         if introspect:
             self._loadMethods()
 

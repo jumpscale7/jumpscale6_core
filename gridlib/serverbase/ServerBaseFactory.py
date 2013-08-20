@@ -86,22 +86,27 @@ class ServerBaseFactory():
         from DaemonClient import DaemonClient
         return DaemonClient  
 
-    def _serializeBinSend(self,cmd,data,sendformat,returnformat,sessionid):
+    def _serializeBinSend(self,category,cmd,data,sendformat,returnformat,sessionid):
+        lencategory=len(category)
         lencmd=len(cmd)
         lendata=len(data)
         lenreturnformat=len(returnformat)
         lensendformat=len(sendformat)
-        return sessionid + struct.pack("<IIII",lencmd,lendata,lensendformat,lenreturnformat)+cmd+data+sendformat+returnformat
+        lensessionid=len(sessionid)
+        return struct.pack("<IIIIII",lencategory,lencmd,lendata,lensendformat,lenreturnformat,lensessionid)+category+cmd+data+sendformat+returnformat+sessionid
 
     def _unserializeBinSend(self,data):
         """
         return cmd,data,sendformat,returnformat,sessionid
         """
-        sessionid = data[0:12]
-        data = data[12:]
-        lencmd,lendata,lensendformat,lenreturnformat=struct.unpack("<IIII",data[0:16])
-        data = data[16:]
-        return data[0:lencmd],data[lencmd:lencmd+lendata],data[lencmd+lendata:lencmd+lendata+lensendformat],data[lencmd+lendata+lensendformat:],sessionid
+        fformat = "<IIIIII"
+        size = struct.calcsize(fformat)
+        datasizes=struct.unpack(fformat,data[0:size])
+        data = data[size:]
+        for size in datasizes:
+            res = data[0:size]
+            data = data[size:]
+            yield res
 
     def _serializeBinReturn(self,resultcode,returnformat,result):
         lendata=len(result)

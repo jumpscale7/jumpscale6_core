@@ -27,9 +27,9 @@ class TornadoFactory():
         from .TornadoServer import TornadoServer
         return TornadoServer('',port)
 
-    def getClient(self,addr,port,org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
+    def getClient(self,addr,port,category="core",org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
         from .TornadoClient import TornadoClient
-        return TornadoClient(addr=addr,port=port,org=org,user=user,passwd=passwd,ssl=ssl,roles=roles)
+        return TornadoClient(addr=addr,port=port,category=category,org=org,user=user,passwd=passwd,ssl=ssl,roles=roles)
 
     def initSSL4Server(self,organization,serveruser,sslkeyvaluestor=None):
         """
