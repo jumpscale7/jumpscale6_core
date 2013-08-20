@@ -196,7 +196,7 @@ class DaemonClient(object):
 
 
     def _loadMethods(self):
-        methodspecs = self._client.sendcmd('_introspect')
+        methodspecs = self._client.sendcmd(category='core', cmd='introspect', cat=self._client.category)
         for key, spec in methodspecs.iteritems():
             # print "key:%s spec:%s"%(key,spec)
             strmethod = """

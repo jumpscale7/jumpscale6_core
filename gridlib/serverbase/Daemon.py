@@ -63,6 +63,28 @@ class DaemonCMDS(object):
         self.daemon.eventhandlingTE.executeV2(eco=eco,history=self.daemon.eventsMemLog)
 
 
+    def introspect(self,session,cat):
+        methods = {}
+        interfaces = self.daemon.cmdsInterfaces[cat]
+        for interface in interfaces:
+            for name, method in inspect.getmembers(interface, inspect.ismethod):
+                if name.startswith('_'):
+                    continue
+                args = inspect.getargspec(method)
+                #Remove the 'session' parameter
+                if 'session' in args.args:
+                    session_index = args.args.index('session')
+                    del args.args[session_index]
+                    if args.defaults:
+                        session_default_index = session_index - len(args.args) -1
+                        defaults = list(args.defaults)
+                        del defaults[session_default_index]
+                        args = inspect.ArgSpec(args.args, args.varargs, args.keywords, defaults)
+
+                methods[name] = {'args' : args, 'doc': inspect.getdoc(method)}
+        return methods
+
+
 class Daemon(object):
 
     def __init__(self,name=None):
@@ -86,24 +108,6 @@ class Daemon(object):
         #can overrule this to e.g. in gevent set the time every sec, takes less resource (using self._now)
         return int(time.time())
 
-    def introspect(self,cmds,category=""):
-        methods = {}
-        for name, method in inspect.getmembers(cmds, inspect.ismethod):
-            if name.startswith('_'):
-                continue
-            args = inspect.getargspec(method)
-            #Remove the 'session' parameter
-            if 'session' in args.args:
-                session_index = args.args.index('session')
-                del args.args[session_index]
-                if args.defaults:
-                    session_default_index = session_index - len(args.args) -1
-                    defaults = list(args.defaults)
-                    del defaults[session_default_index]
-                    args = inspect.ArgSpec(args.args, args.varargs, args.keywords, defaults)
-
-            methods[name] = {'args' : args, 'doc': inspect.getdoc(method)}
-        return methods
 
 
     def addCMDsInterface(self, cmdInterfaceClass,category=""):

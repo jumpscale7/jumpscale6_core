@@ -16,7 +16,7 @@ class TornadoClient(DaemonClienClass):
 
         self.timeout=60
         self.url="http://%s:%s/rpc/"%(addr,port)
-        super(TornadoClient, self).__init__(category=category,org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m", introspect=False)
+        super(TornadoClient, self).__init__(category=category,org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m", introspect=True)
 
 
     def _connect(self):
