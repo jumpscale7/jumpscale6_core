@@ -25,7 +25,7 @@ class TornadoFactory():
 
         """
         from .TornadoServer import TornadoServer
-        return TornadoServer('',port)
+        return TornadoServer('',port, ssluser=ssluser, sslorg=sslorg, sslkeyvaluestor=sslkeyvaluestor)
 
     def getClient(self,addr,port,category="core",org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
         from .TornadoClient import TornadoClient

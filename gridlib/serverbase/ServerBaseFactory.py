@@ -6,7 +6,7 @@ import struct
 
 class ServerBaseFactory():
 
-    def getDaemon(self, name="unknown",sslorg="",ssluser="",sslkeyvaluestor=None):
+    def getDaemon(self, name="unknown",sslorg=None,ssluser=None,sslkeyvaluestor=None):
         """
 
         is the basis for every daemon we create which can be exposed over e.g. zmq or sockets or http
@@ -32,11 +32,15 @@ class ServerBaseFactory():
         """
         
         zd=Daemon(name=name)
-        if ssluser<>"":
+        if ssluser:
             from OpenWizzy.baselib.ssl.SSL import SSL
             zd.ssluser=ssluser
             zd.sslorg=sslorg
-            zd.keystor=SSL().getSSLHandler(sslkeyvaluestor)            
+            zd.keystor=SSL().getSSLHandler(sslkeyvaluestor)
+            try:
+                zd.keystor.getPrivKey(sslorg, ssluser)
+            except:
+                zd.keystor.createKeyPair(sslorg, ssluser)
         else:
             zd.keystor=None
             zd.ssluser=None

@@ -40,12 +40,26 @@ class DaemonClientCmd():
         self.ssl=ssl
         self.roles=roles
         self.keystor = None
+        self.key = None
         self.transport=transport
+        self.pubkeyserver = None
         self.defaultSerialization=defaultSerialization
         self.transport._connect()
         self.initSession(reset, ssl)
         
 
+    def encrypt(self, message):
+        if self.ssl:
+            if not self.pubkeyserver:
+                self.pubkeyserver=self.sendcmd(category="core",cmd="getpubkeyserver")
+            return self.keystor.encrypt(self.org, self.user, "", "", message=message, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+        return message
+
+    def decrypt(self, message):
+        if self.ssl and self.key:
+            return self.keystor.decrypt("", "", self.org, self.user, message)
+        else:
+            return message
 
     def initSession(self,reset=False,ssl=False):
 
@@ -53,18 +67,16 @@ class DaemonClientCmd():
             from OpenWizzy.baselib.ssl.SSL import SSL
             self.keystor=SSL().getSSLHandler()
             try:
-                self.keystor.getPrivKey(self.org,self.user)
+                publickey = self.keystor.getPubKey(self.org,self.user, returnAsString=True)
             except:
                 #priv key now known yet
                 reset=True
 
             if reset:
-                self.keystor.createKeyPair(organization=self.org, user=self.user)
+                publickey,_ = self.keystor.createKeyPair(organization=self.org, user=self.user)
 
-            pubkey=self.keystor.getPubKey(organization=self.org, user=self.user,returnAsString=True)
-            self.sendcmd(category="core",cmd="registerpubkey", organization=self.org,user=self.user,pubkey=pubkey)
+            self.sendcmd(category="core",cmd="registerpubkey", organization=self.org,user=self.user,pubkey=publickey)
 
-            self.pubkeyserver=self.sendcmd(category="core",cmd="getpubkeyserver")
 
             #generate unique key
             encrkey=""
@@ -72,11 +84,12 @@ class DaemonClientCmd():
                 encrkey += chr(randrange(0, 256))
 
             #only encrypt the key & the passwd, the rest is not needed
-            encrkey=self.keystor.encrypt(self.org, self.user, "", "", message=encrkey, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
-            passwd=self.keystor.encrypt(self.org, self.user, "", "", message=self.passwd, sign=True, base64=True, pubkeyReader=self.pubkeyserver)
+            encrkey = self.encrypt(encrkey)
+            passwd = self.encrypt(self.passwd)
 
         else:
             encrkey = ""
+            publickey = ""
             passwd = self.passwd
 
         session=Session(id=self.id,organization=self.org,user=self.user,passwd=passwd,encrkey=encrkey,netinfo=o.system.net.getNetworkInfo(), roles=self.roles)
@@ -144,7 +157,8 @@ class DaemonClientCmd():
         returnformat=parts[1]
         if returnformat<>"":
             ser=o.db.serializers.get(returnformat,key=self.key)
-            result=ser.loads(parts[2])
+            res = self.decrypt(parts[2])
+            result=ser.loads(res)
         else:
             result=parts[2]
 

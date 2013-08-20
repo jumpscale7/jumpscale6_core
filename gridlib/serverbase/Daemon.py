@@ -36,16 +36,9 @@ class DaemonCMDS(object):
 
         session=Session(sessiondata)
 
-        #@todo JO fix ssl please
-        ssl=False
         if ssl:
-            session.encrkey=self.daemon.keystor.decrypt(orgsender=session.organization, sender=session.user, \
-                orgreader=self.daemon.sslorg,reader=self.daemon.ssluser, \
-                message=session.encrkey[0], signature=session.encrkey[1])
-
-            session.passwd=self.daemon.keystor.decrypt(orgsender=session.organization, sender=session.user, \
-                orgreader=self.daemon.sslorg,reader=self.daemon.ssluser, \
-                message=session.passwd[0], signature=session.passwd[1])
+            session.encrkey = self.daemon.decrypt(session.encrkey, session)
+            session.passwd = self.daemon.decrypt(session.passwd, session)
 
         if not self.authenticate(session):
             raise RuntimeError("Cannot Authenticate User:%s"%session.user)
@@ -108,6 +101,21 @@ class Daemon(object):
         #can overrule this to e.g. in gevent set the time every sec, takes less resource (using self._now)
         return int(time.time())
 
+    def decrypt(self, message, session):
+        if session.encrkey:
+            return self.keystor.decrypt(orgsender=session.organization, sender=session.user, \
+                orgreader=self.sslorg,reader=self.ssluser, \
+                message=message[0], signature=message[1])
+        else:
+            return message
+
+    def encrypt(self, message, session):
+        if session and session.encrkey:
+            if not hasattr(session, 'publickey'):
+                session.publickey = self.keystor.getPubKey(user=session.user, organization=session.organization, returnAsString=True)
+            return self.keystor.encrypt(self.sslorg, self.ssluser, "", "", message, False, pubkeyReader=session.publickey)[0]
+        else:
+            return message
 
 
     def addCMDsInterface(self, cmdInterfaceClass,category=""):
@@ -183,9 +191,11 @@ class Daemon(object):
 
         if self.sessions.has_key(sessionid):
             session=self.sessions[sessionid]
+            encrkey = session.encrkey
         else:
             if cmd in ["registerpubkey","getpubkeyserver","registersession"]:
                 session=None
+                encrkey = ""
             else:
                 error = "Authentication  or Session error, session not known with id:%s"%sessionid
                 eco = o.errorconditionhandler.getErrorConditionObject(msg=error)
@@ -198,8 +208,8 @@ class Daemon(object):
         parts = self.processRPC(cmd,data,returnformat=returnformat,session=session,category=category)
         returnformat=parts[1] #return format as comes back from processRPC
         if returnformat<>"": #is 
-            returnser = o.db.serializers.get(returnformat,key=session.encrkey)
-            data=returnser.dumps(parts[2])
+            returnser = o.db.serializers.get(returnformat,key=encrkey)
+            data=self.encrypt(returnser.dumps(parts[2]), session)
         else:
             data=parts[2]
 
