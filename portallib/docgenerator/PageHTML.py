@@ -3,6 +3,7 @@ from OpenWizzy import o
 from Page import Page
 import copy
 import json
+import inspect
 
 class PageHTML(Page):
     """
@@ -45,7 +46,9 @@ class PageHTML(Page):
             if online:
                 self.liblocation="https://bitbucket.org/incubaid/openwizzy-core-6.0/raw/default/extensions/core/docgenerator/htmllib"
             else:
-                self.liblocation=o.system.fs.joinPaths(o.tools.docgenerator.pm_extensionpath,"htmllib")
+                extpath=inspect.getfile(self.__init__)
+                extpath=o.system.fs.getDirName(extpath)
+                self.liblocation=o.system.fs.joinPaths(extpath,"htmllib")
 
         self._hasCharts = False
         self._hasCodeblock = False

@@ -1,4 +1,5 @@
 from OpenWizzy import o
+# import inspect
 
 class GridDataTables:
     def __init__(self,page,online=False):
@@ -6,7 +7,8 @@ class GridDataTables:
         if online:
             self.liblocation="https://bitbucket.org/incubaid/openwizzy-core-6.0/raw/default/extensions/html/htmllib"
         else:
-            # self.liblocation=o.system.fs.joinPaths(o.tools.docgenerator.pm_extensionpath,"lib/datatables/")
+            # extpath=inspect.getfile(self.__init__)
+            # extpath=o.system.fs.getDirName(extpath)
             self.liblocation="/lib"
 
         self.page.addJS("%s/datatables/jquery.dataTables.min.js"% self.liblocation)
