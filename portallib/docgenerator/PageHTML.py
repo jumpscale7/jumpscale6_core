@@ -453,6 +453,8 @@ function copyText$id() {
         legend = list()
         newRows = []
         for row in rows:
+            if len(row) < 2:
+                continue
             newRow = [row[0]] + [int(n) for n in row[1:]]
             newRows.append(newRow)
         rows = newRows
