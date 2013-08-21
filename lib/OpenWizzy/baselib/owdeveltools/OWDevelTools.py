@@ -58,7 +58,7 @@ class OWDevelTools:
 
         print "* started all required systems"
 
-    def startPortalByobu(self):
+    def startPortalByobu(self, path=None):
         o.application.shellconfig.interactive=True
         name="owbackend"
         self.startBackendByobu(["ftpgw","portal"],name=name)
@@ -68,8 +68,9 @@ class OWDevelTools:
         items=[item.replace("/opt/openwizzy6/apps/","") for item in items]
         items=[item for item in items if item.find("examples")==-1]
         items=[item for item in items if item.find("portalbase")==-1]
-        print "select which portal you would like to start."
-        path=o.console.askChoice(items)
+        if not path: #to enable startPortal to work non-interactively as well
+            print "select which portal you would like to start."
+            path=o.console.askChoice(items)
         if path==None:
             raise RuntimeError("Could not find a portal, please copy a portan in /opt/openwizzy6/apps/")
         cmd="cd /opt/openwizzy6/apps/%s;python start_appserver.py"%(path)

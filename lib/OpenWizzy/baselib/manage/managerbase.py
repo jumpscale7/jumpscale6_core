@@ -1,4 +1,5 @@
 from OpenWizzy import o
+import os
 
 class ManagerBase(object):
 
@@ -7,9 +8,8 @@ class ManagerBase(object):
     def __init__(self):
         if not self._servicename:
             o.errorconditionhandler.raiseBug("Class ManagerBase must be extended to be used", "Error")
-
-        self._serviceinit = o.system.fs.joinPaths('/', 'etc', 'init.d', self._servicename)
-        if not o.system.fs.exists(self._serviceinit):
+        self._serviceinit = os.path.join('/', 'etc', 'init.d', self._servicename)
+        if not os.path.exists(self._serviceinit):
             o.errorconditionhandler.raiseBug("'%s' init script doesn't exist" % self._servicename, "Error")
 
     def start(self):

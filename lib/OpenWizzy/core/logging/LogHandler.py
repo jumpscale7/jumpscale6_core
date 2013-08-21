@@ -3,6 +3,7 @@ import functools
 from OpenWizzy import o
 from .logtargets.LogTargetFS import LogTargetFS
 from .logtargets.LogTargetStdOut import LogTargetStdOut
+from .logtargets.LogTargetElasticSearch import LogTargetElasticSearch
 import re
 import sys
 import traceback
@@ -177,6 +178,9 @@ class LogHandler(object):
 
     def addLogTargetStdOut(self):
         self.logTargetAdd(LogTargetStdOut())
+
+    def addLogTargetElasticSearch(self):
+        self.logTargetAdd(LogTargetElasticSearch('localhost'))
 
     def addLogTargetLocalFS(self):
         self.logTargetAdd(LogTargetFS())
