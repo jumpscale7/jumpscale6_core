@@ -5,7 +5,7 @@ import time
 o.application.appname = "testlogger"
 o.application.start()
 
-o.logger.setLogTargetLogForwarder()
+o.logger.addLogTargetElasticSearch()
 
 nr=10000
 start=time.time()
