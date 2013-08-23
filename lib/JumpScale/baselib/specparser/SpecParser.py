@@ -1,7 +1,7 @@
-from OpenWizzy import o
+from JumpScale import j
 from SpecModelActorsGenerator import SpecModelActorsGenerator
 
-class Specbase(o.code.classGetBase()):
+class Specbase(j.code.classGetBase()):
     def __init__(self,linenr):
         self.name=""
         self.description=""
@@ -15,12 +15,12 @@ class Specbase(o.code.classGetBase()):
     def getDefaultValue(self, type, value):
         if value.strip()=="" or value.strip() == "None":
             return None
-        elif o.basetype.string.check(value):
+        elif j.basetype.string.check(value):
             value = value.strip("\"")  
         if type == 'int' and value:
             return int(value)
         elif type == 'bool' and value:
-            return o.basetype.boolean.fromString(value)
+            return j.basetype.boolean.fromString(value)
         return value
 
 class SpecEnum(Specbase):
@@ -220,18 +220,18 @@ class SpecBlock():
         if self.type=="actor":
             ttypeId="method"
             spec=None
-            if len(o.core.specparser.specs.keys())>0 and self.type=="actor":
+            if len(j.core.specparser.specs.keys())>0 and self.type=="actor":
                 key="%s_%s"%(self.appname,self.actorname)
-                if key in o.core.specparser.actornames:
-                    spec=o.core.specparser.getActorSpec(self.appname,self.actorname, False)
+                if key in j.core.specparser.actornames:
+                    spec=j.core.specparser.getActorSpec(self.appname,self.actorname, False)
             if spec==None:
                 spec=SpecActor(self.name,self.descr,self.tags,self.parser.path,self.startline)
                 spec.actorname=self.actorname
                 spec.appname=self.appname
-            if not o.core.specparser.app_actornames.has_key(spec.appname):
-                o.core.specparser.app_actornames[self.appname]=[]
-            if spec.actorname not in o.core.specparser.app_actornames[self.appname]:
-                o.core.specparser.app_actornames[self.appname].append(spec.actorname)
+            if not j.core.specparser.app_actornames.has_key(spec.appname):
+                j.core.specparser.app_actornames[self.appname]=[]
+            if spec.actorname not in j.core.specparser.app_actornames[self.appname]:
+                j.core.specparser.app_actornames[self.appname].append(spec.actorname)
             currentitemClass=SpecActorMethod
 
         elif self.type=="enumeration":
@@ -326,7 +326,7 @@ class SpecBlock():
         spec.type=self.type
         spec.addDefaults()
 
-        o.core.specparser.addSpec(spec)
+        j.core.specparser.addSpec(spec)
 
     def __str__(self):
         s="name:%s\n" % self.name
@@ -345,14 +345,14 @@ class SpecDirParser():
         self.actorname=actorname
         self.path=path
 
-        files=o.system.fs.listFilesInDir(self.path,True,"*.spec")
+        files=j.system.fs.listFilesInDir(self.path,True,"*.spec")
 
         def sortFilesFollowingLength(files):
             r={}
             result=[]
             for item in ["actor","enum","model"]:
                 for p in files:
-                    pp=o.system.fs.getBaseName(p)
+                    pp=j.system.fs.getBaseName(p)
                     if pp.find(item)==0:
                         result.append(p)
                         files.pop(files.index(p))
@@ -371,9 +371,9 @@ class SpecDirParser():
 
         self.specblocks={}
         for path in files:
-            if o.system.fs.getBaseName(path).find("example__")==0:
+            if j.system.fs.getBaseName(path).find("example__")==0:
                 continue
-            parser=o.core.specparser._getSpecFileParser(path,self.appname,self.actorname)
+            parser=j.core.specparser._getSpecFileParser(path,self.appname,self.actorname)
 
             for key in parser.specblocks.keys():
                 block=parser.specblocks[key]
@@ -408,7 +408,7 @@ class SpecFileParser():
         if self.appname<>self.appname.lower().strip():
             emsg="appname %s for specs should be lowercase & no spaces" % self.appname
             raise RuntimeError(emsg+" {category:spec.nameerror}")
-        self.contentin=o.system.fs.fileGetContents(path)
+        self.contentin=j.system.fs.fileGetContents(path)
         self.contentout=""
         self.specblocks={} #key is name
         state="start"
@@ -468,7 +468,7 @@ class SpecFileParser():
                 state="blockfound"
                 #line2=line
                 #if line2.find("#")>0:
-                    #from OpenWizzy.core.Shell import ipshellDebug,ipshell
+                    #from JumpScale.core.Shell import ipshellDebug,ipshell
                     #print "DEBUG NOW jjj"
                     #ipshell()
 
@@ -539,9 +539,9 @@ class SpecFileParser():
         return ok
 
     def raiseError(self, msg,line="",linenr=0):
-        o.errorconditionhandler.raiseInputError("Cannot parse file %s\nError on line:%s\n%s\n%s\n" % (self.path,linenr,line,msg),"specparser.input")
+        j.errorconditionhandler.raiseInputError("Cannot parse file %s\nError on line:%s\n%s\n%s\n" % (self.path,linenr,line,msg),"specparser.input")
 
-class Role(o.code.classGetBase()):
+class Role(j.code.classGetBase()):
     def __init__(self,name,actors=[]):
         self.actors=actors
         self.name=name
@@ -557,7 +557,7 @@ class SpecParserFactory():
         self.app_actornames={}
         self.modelnames={} #key = appname_actorname
         self.roles={} #key is appname_rolename
-        #self.codepath=o.system.fs.joinPaths( o.dirs.varDir,"actorscode")
+        #self.codepath=j.system.fs.joinPaths( j.dirs.varDir,"actorscode")
 
     def getEnumerationSpec(self,app,actorname,name,die=True):
             key="enumeration_%s_%s_%s"%(app,actorname,name)
@@ -594,7 +594,7 @@ class SpecParserFactory():
 
     def getModelNames(self,appname,actorname):
         key="%s_%s"%(appname,actorname)
-        if o.core.specparser.modelnames.has_key(key):
+        if j.core.specparser.modelnames.has_key(key):
             return self.modelnames[key]
         else:
             return []
@@ -614,7 +614,7 @@ class SpecParserFactory():
             specname=spec.name
 
         if spec.type=="actor" and specname<>"":
-            from OpenWizzy.core.Shell import ipshell
+            from JumpScale.core.Shell import ipshell
             print "DEBUG NOW addSpec in specparser, cannot have actor with specname<>empty"
             ipshell()
 
@@ -658,7 +658,7 @@ class SpecParserFactory():
             appname=""
             if len(splitted)>1:
                 possibleappname=splitted[0]
-                if possibleappname in o.core.specparser.appnames:
+                if possibleappname in j.core.specparser.appnames:
                     appname=possibleappname
                     splitted=splitted[1:] #remove the already matched item
 
@@ -666,7 +666,7 @@ class SpecParserFactory():
             actorname=""
             if len(splitted)>1:
                 possibleactor=splitted[0]
-                if possibleactor in o.core.specparser.actornames:
+                if possibleactor in j.core.specparser.actornames:
                     actorname=possibleactor
                     splitted=splitted[1:] #remove the already matched item
 
@@ -691,12 +691,12 @@ class SpecParserFactory():
 
         if actorname<>"" and appname<>""  and specname<>"" and type<>"":
             key="%s_%s_%s_%s" % (type,appname,actorname,specname)
-            if o.core.specparser.specs.has_key(key):
-                result=[o.core.specparser.specs[key]]
+            if j.core.specparser.specs.has_key(key):
+                result=[j.core.specparser.specs[key]]
         else:
             #not enough specified need to walk over all
-            for  key in o.core.specparser.specs.keys():
-                spec=o.core.specparser.specs[key]
+            for  key in j.core.specparser.specs.keys():
+                spec=j.core.specparser.specs[key]
                 found=True
                 if actorname<>"" and spec.actorname<>actorname:
                     found=False
@@ -773,7 +773,7 @@ class SpecParserFactory():
         """
         @param specpath if empty will look for path specs in current dir
         """
-        if not o.system.fs.exists(specpath):
+        if not j.system.fs.exists(specpath):
             raise RuntimeError("Cannot find specs on path %s"%specpath)
 
         SpecDirParser(specpath,appname,actorname=actorname)
@@ -813,7 +813,7 @@ class SpecParserFactory():
                 if returntype not in ["list","dict"]:
                     returntype="enum"
             if result==False:
-                from OpenWizzy.core.Shell import ipshell
+                from JumpScale.core.Shell import ipshell
                 print "DEBUG NOW cannot find spec in getSpecFromTypeStr"
                 print "Cannot find spec for app:%s, actor:%s, with typestr:%s" % (appname,actorname,typestr)
                 ipshell()

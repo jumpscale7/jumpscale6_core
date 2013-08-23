@@ -1,6 +1,6 @@
 import os
 import re
-from OpenWizzy import o
+from JumpScale import j
 KEYP = re.compile("(\w+(\.\w+)*)\s*=\s*(.*)", re.DOTALL)
 
 DEFAULTLOCALE='en'
@@ -40,8 +40,8 @@ class Localizer(object):
     
     def __load(self, tdirs):
         domains = {}
-        for path in o.system.fs.listFilesInDir(tdirs, filter="*.l"):
-            locale = os.path.splitext(o.system.fs.getBaseName(path))[0]
+        for path in j.system.fs.listFilesInDir(tdirs, filter="*.l"):
+            locale = os.path.splitext(j.system.fs.getBaseName(path))[0]
             locale = locale.partition("-")[0] #remove any packaging suffix
             if locale not in domains:
                 domains[locale] = Domain(locale)

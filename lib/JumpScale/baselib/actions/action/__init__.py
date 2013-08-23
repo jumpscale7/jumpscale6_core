@@ -1,8 +1,8 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from .ActionController import ActionController
 
-o.action=ActionController()
+j.action=ActionController()
 
 
 

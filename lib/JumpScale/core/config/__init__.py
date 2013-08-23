@@ -1,8 +1,8 @@
-from OpenWizzy import o
+from JumpScale import j
 
-#from OpenWizzy.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
-#from OpenWizzy.core.config.QConfigBase import ConfiguredItem, ConfiguredItemGroup
-#from OpenWizzy.core.config.ConfigLib import ItemGroupClass, ItemSingleClass
-from OpenWizzy.core.config.QConfig import QConfig
+#from JumpScale.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
+#from JumpScale.core.config.QConfigBase import ConfiguredItem, ConfiguredItemGroup
+#from JumpScale.core.config.ConfigLib import ItemGroupClass, ItemSingleClass
+from JumpScale.core.config.QConfig import QConfig
 
-o.config=QConfig()
+j.config=QConfig()

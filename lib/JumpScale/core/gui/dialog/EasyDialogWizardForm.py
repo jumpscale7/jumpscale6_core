@@ -31,7 +31,7 @@
 #
 # </License>
 
-from OpenWizzy import o
+from JumpScale import j
 from EasyDialogWizardServer import WizardActions
 from EasyDialogWizardServer import EasyDialogWizardServer
 

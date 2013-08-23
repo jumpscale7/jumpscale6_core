@@ -1,14 +1,14 @@
 
-from OpenWizzy import o
-from OpenWizzy.baselib.inifile.IniFile import IniFile
+from JumpScale import j
+from JumpScale.baselib.inifile.IniFile import IniFile
 
 class QConfig():
     """
-    openwizzy singleton class available under o.config
+    openwizzy singleton class available under j.config
     Meant for non interactive access to configuration items
     """
     def getInifile(self, configtype):
-        fileAlreadyExists = o.system.fs.exists(self._buildPath(configtype))
+        fileAlreadyExists = j.system.fs.exists(self._buildPath(configtype))
         return IniFile(self._buildPath(configtype), create=(not fileAlreadyExists))
     
     def getConfig(self, configtype):
@@ -21,17 +21,17 @@ class QConfig():
         return ini.getFileAsDict()
     
     def remove(self, configtype):
-        o.system.fs.removeFile(self._buildPath(configtype))
+        j.system.fs.removeFile(self._buildPath(configtype))
         
     def list(self):
         """
         List all configuration types available.
         """
-        qconfigPath = o.system.fs.joinPaths(o.dirs.cfgDir, "owconfig")
-        if not o.system.fs.exists(o.dirs.configsDir):
+        qconfigPath = j.system.fs.joinPaths(j.dirs.cfgDir, "owconfig")
+        if not j.system.fs.exists(j.dirs.configsDir):
             return []
-        fullpaths = o.system.fs.listFilesInDir(o.dirs.configsDir)
-        return [o.system.fs.getBaseName(path)[:-4] for path in fullpaths if path.endswith(".cfg")]
+        fullpaths = j.system.fs.listFilesInDir(j.dirs.configsDir)
+        return [j.system.fs.getBaseName(path)[:-4] for path in fullpaths if path.endswith(".cfg")]
 
     def _buildPath(self, configtype):
-        return o.system.fs.joinPaths(o.dirs.configsDir, configtype + ".cfg")
+        return j.system.fs.joinPaths(j.dirs.configsDir, configtype + ".cfg")

@@ -1,5 +1,5 @@
 import socket
-#from OpenWizzy.core.logging.LogConsoleServer import ManagementProtocol
+#from JumpScale.core.logging.LogConsoleServer import ManagementProtocol
 
 
 DEFAULT_PORT = 9998

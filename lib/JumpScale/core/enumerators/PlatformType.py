@@ -1,8 +1,8 @@
 
 # Preparation for returning the platformtype of the system
 import sys, os, re
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseEnumeration
 
 def _useELFtrick(file):
     fd=os.open(file, os.O_RDONLY)
@@ -66,8 +66,8 @@ class PlatformType(BaseEnumeration):
     def findSandboxType():
         '''Discovers the platform and sets the C{PlatformType} to the retrieved platform'''
         _platform = None
-        from OpenWizzy import o
-        _pythonPath = o.system.fs.joinPaths(o.dirs.baseDir, "bin", "python")
+        from JumpScale import j
+        _pythonPath = j.system.fs.joinPaths(j.dirs.baseDir, "bin", "python")
         if sys.platform.startswith("linux"):
             bits = _useELFtrick(_pythonPath)
             if bits == 32:
@@ -109,7 +109,7 @@ class PlatformType(BaseEnumeration):
         Only Solaris is currently supported. Executing <uname -v>
         """
         if self.isSolaris():
-            exitcode, output = o.system.process.execute("uname -v", outputToStdout=False)
+            exitcode, output = j.system.process.execute("uname -v", outputToStdout=False)
 
             matchresult = re.search("[snv_|osce-](\d+)", output)
             if matchresult:
@@ -117,7 +117,7 @@ class PlatformType(BaseEnumeration):
             else:
                 raise ValueError("Executed [uname -v] Expected output ." % output)
         else:
-            raise OSError('Unsupported Platform (%s)'%o.system.platformtype)
+            raise OSError('Unsupported Platform (%s)'%j.system.platformtype)
 
     def __init__(self, parent=None):
         '''Initialization
@@ -178,14 +178,14 @@ class PlatformType(BaseEnumeration):
     
     def isXen(self):
         '''Checks whether Xen support is enabled'''
-        return o.system.process.checkProcess('xen') == 0
+        return j.system.process.checkProcess('xen') == 0
     
     def isVirtualBox(self):
         '''Check whether the system supports VirtualBox'''
         if self.isWindows():
             #@TODO P3 Implement proper check if VBox on Windows is supported
             return False
-        exitcode, stdout, stderr = o.system.process.run('lsmod |grep vboxdrv |grep -v grep', stopOnError=False)
+        exitcode, stdout, stderr = j.system.process.run('lsmod |grep vboxdrv |grep -v grep', stopOnError=False)
         return exitcode == 0
     
     def isHyperV(self):

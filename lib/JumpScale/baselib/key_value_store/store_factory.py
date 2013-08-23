@@ -3,7 +3,7 @@ from file_system_store import FileSystemKeyValueStore
 from memory_store import MemoryKeyValueStore
 from redis_store import RedisKeyValueStore
 from leveldb_store import LevelDBKeyValueStore
-from OpenWizzy import o
+from JumpScale import j
 
 
 class KeyValueStoreFactory(object):
@@ -29,7 +29,7 @@ class KeyValueStoreFactory(object):
         @rtype: ArakoonKeyValueStore
         '''
         if serializers==[]:
-            serializers=[o.db.serializers.getSerializerType('j')]
+            serializers=[j.db.serializers.getSerializerType('j')]
         key = '%s_%s' % ("arakoon", namespace)
         if key not in self._cache:
             if namespace=="":
@@ -44,7 +44,7 @@ class KeyValueStoreFactory(object):
         @param namespace: namespace of the store, defaults to an empty string
         @type namespace: String
 
-        @param baseDir: base directory of the store, defaults to o.dirs.db
+        @param baseDir: base directory of the store, defaults to j.dirs.db
         @type namespace: String
 
         @param defaultPymodelSerializer: default Pymodel serializer
@@ -54,7 +54,7 @@ class KeyValueStoreFactory(object):
         @rtype: FileSystemKeyValueStore
         '''
         if serializers==[]:
-            serializers=[o.db.serializers.getMessagePack()]
+            serializers=[j.db.serializers.getMessagePack()]
 
         key = '%s_%s' % ("fs", namespace)
         if key not in self._cache:

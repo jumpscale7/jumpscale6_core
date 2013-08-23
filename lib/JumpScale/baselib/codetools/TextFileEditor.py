@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from TextLineEditor import TextLineEditor
 from TextCharEditor import TextCharEditor
 
@@ -11,7 +11,7 @@ class TextFileEditor:
     """
     def __init__(self,filepath):
         self.filepath=filepath
-        self.content=o.system.fs.fileGetContents(filepath)
+        self.content=j.system.fs.fileGetContents(filepath)
         
     def getTextLineEditor(self):
         """
@@ -27,7 +27,7 @@ class TextFileEditor:
         """
         return True if pattern found (regex) False if not
         """        
-        return o.codetools.regex.findOne(pattern,self.content)<>""
+        return j.codetools.regex.findOne(pattern,self.content)<>""
                 
     
     def find1Line(self,includes="",excludes=""):
@@ -37,7 +37,7 @@ class TextFileEditor:
         @param excludes
         @return [linenr,line]
         """
-        o.logger.log("try to find 1 line which matches the specified includes %s & excludes %s" % (includes,excludes),8)
+        j.logger.log("try to find 1 line which matches the specified includes %s & excludes %s" % (includes,excludes),8)
         result=[]
         linenr=0
         if includes=="":
@@ -45,7 +45,7 @@ class TextFileEditor:
         if excludes=="":
             excludes=[]  #match none
         for line in self.content.split("\n"):
-            if o.codetools.regex.matchMultiple(includes,line) and not o.codetools.regex.matchMultiple(excludes,line):
+            if j.codetools.regex.matchMultiple(includes,line) and not j.codetools.regex.matchMultiple(excludes,line):
                 result.append(line)
                 linenrfound=linenr
                 linefound=line
@@ -68,7 +68,7 @@ class TextFileEditor:
         
         """   
         #@todo add good logging statements everywhere   (id:49)
-        self.content=o.codetools.regex.replaceLines(replaceFunction,argument, self.content,includes,excludes)
+        self.content=j.codetools.regex.replaceLines(replaceFunction,argument, self.content,includes,excludes)
         self.save()
 
     def replace1LineFromFunction(self,replaceFunction,argument,includes="",excludes=""):
@@ -108,7 +108,7 @@ class TextFileEditor:
         """
         remove lines which match the pattern (regex) (only 1 pattern)
         """
-        self.content=o.codetools.regex.removeLines(pattern,self.content)
+        self.content=j.codetools.regex.removeLines(pattern,self.content)
         self.save()
         
     def appendReplaceLine(self,pattern,line):
@@ -160,7 +160,7 @@ class TextFileEditor:
         @param regexFindsubsetToReplace: The subset within regexFind that you want to replace
         @param replacewith: The replacement
         """        
-        self.content=o.codetools.regex.replace(regexFind,regexFindsubsetToReplace,replaceWith,self.content)
+        self.content=j.codetools.regex.replace(regexFind,regexFindsubsetToReplace,replaceWith,self.content)
         self.save()
                 
     def replaceNonRegex(self,tofind,replaceWith):
@@ -179,12 +179,12 @@ class TextFileEditor:
         for line in self.content.split("\n"):
             if reset  and done==False and line.find(tofind)<>-1 and ignoreRegex<>None:
                 #found right line
-                line=o.codetools.regex.replace(ignoreRegex, ignoreRegex, "", line).rstrip()
+                line=j.codetools.regex.replace(ignoreRegex, ignoreRegex, "", line).rstrip()
                 line=line+add
                 print "CH:%s" % line
                 done=True
             if done==False and line.find(tofind)<>-1 and  \
-               (ignoreRegex<>None and not o.codetools.regex.match(ignoreRegex,line)):
+               (ignoreRegex<>None and not j.codetools.regex.match(ignoreRegex,line)):
                 #found line we can change
                 line=line.replace(tofind,tofind+add)
                 done=True
@@ -194,7 +194,7 @@ class TextFileEditor:
             
         
     def getRegexMatches(self, pattern):
-        result= o.codetools.regex.getRegexMatches(pattern, self.content)
+        result= j.codetools.regex.getRegexMatches(pattern, self.content)
         return result
             
     def save(self,filepath=None):
@@ -205,7 +205,7 @@ class TextFileEditor:
             filepath=self.filepath
         if filepath==None:
             raise RuntimeError("Cannot write the textfile because path is None")
-        o.system.fs.writeFile(filepath,self.content)            
+        j.system.fs.writeFile(filepath,self.content)            
         
 
 

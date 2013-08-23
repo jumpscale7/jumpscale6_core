@@ -1,7 +1,7 @@
 
 import sys, os, inspect
 
-from OpenWizzy import o
+from JumpScale import j
 
 
 home = os.curdir                        # Default
@@ -143,7 +143,7 @@ class Dirs(object):
         if reinit==False and self.__initialized == True:
             return True
 
-        if o.system.platformtype.isWindows() :
+        if j.system.platformtype.isWindows() :
             self.codeDir=os.path.join(self.baseDir, 'code')
 
         self.getLibPath()
@@ -151,15 +151,15 @@ class Dirs(object):
         protectedDirsDir = os.path.join(self.cfgDir, 'debug', 'protecteddirs')
         if not os.path.exists(protectedDirsDir):
             self._createDir(protectedDirsDir)
-        _listOfCfgFiles = o.system.fs.listFilesInDir(protectedDirsDir, filter='*.cfg')
+        _listOfCfgFiles = j.system.fs.listFilesInDir(protectedDirsDir, filter='*.cfg')
         _protectedDirsList = []
         for _cfgFile in _listOfCfgFiles:
             _cfg = open(_cfgFile, 'r')
             _dirs = _cfg.readlines()
             for _dir in _dirs:
                 _dir = _dir.replace('\n', '').strip()
-                if o.system.fs.isDir(_dir):
-                    _protectedDirsList.append(o.system.fs.pathNormalize(_dir))
+                if j.system.fs.isDir(_dir):
+                    _protectedDirsList.append(j.system.fs.pathNormalize(_dir))
         self.protectedDirs = _protectedDirsList
 
         self.deployDefaultFilesInSandbox()
@@ -167,7 +167,7 @@ class Dirs(object):
         return True
 
     def getLibPath(self):
-        parent = o.system.fs.getParent
+        parent = j.system.fs.getParent
         self.libDir=parent(parent(__file__))
         self.libDir=os.path.abspath(self.libDir).rstrip("/")
         return self.libDir
@@ -176,7 +176,7 @@ class Dirs(object):
         return inspect.getfile(function)
 
     def checkInProtectedDir(self,path):
-        path=o.system.fs.pathNormalize(path)
+        path=j.system.fs.pathNormalize(path)
         for item in self.protectedDirs :
             if path.find(item)!=-1:
                 return True
@@ -188,19 +188,19 @@ class Dirs(object):
             return
 
         #@todo P3 let it work for windows as well
-        bindest=o.system.fs.joinPaths(self.baseDir,"bin")
-        utilsdest=o.system.fs.joinPaths(self.baseDir,"utils")
-        cfgdest=o.system.fs.joinPaths(self.baseDir,"cfg")
+        bindest=j.system.fs.joinPaths(self.baseDir,"bin")
+        utilsdest=j.system.fs.joinPaths(self.baseDir,"utils")
+        cfgdest=j.system.fs.joinPaths(self.baseDir,"cfg")
 
         if not os.path.exists(bindest) or not os.path.exists(utilsdest) or not os.path.exists(cfgdest):
-            cfgsource=o.system.fs.joinPaths(self.libDir,"core","_defaultcontent","cfg")
-            binsource=o.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","bin")
-            utilssource=o.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","utils")
-            o.system.fs.copyDirTree(binsource,bindest)
-            o.system.fs.copyDirTree(utilssource,utilsdest)
-            o.system.fs.copyDirTree(cfgsource,cfgdest)
-            ipythondir = o.system.fs.joinPaths(os.environ['HOME'], '.ipython')
-            o.system.fs.removeDirTree(ipythondir)
+            cfgsource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","cfg")
+            binsource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","bin")
+            utilssource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","utils")
+            j.system.fs.copyDirTree(binsource,bindest)
+            j.system.fs.copyDirTree(utilssource,utilsdest)
+            j.system.fs.copyDirTree(cfgsource,cfgdest)
+            ipythondir = j.system.fs.joinPaths(os.environ['HOME'], '.ipython')
+            j.system.fs.removeDirTree(ipythondir)
 
             
     def __str__(self):

@@ -33,7 +33,7 @@
 #
 # </License>
 
-from OpenWizzy import o
+from JumpScale import j
 
 from DialogType import DialogType
 from EasyDialogConsole import EasyDialogConsole
@@ -42,7 +42,7 @@ class EasyDialog():
     def __init__(self):
       self.easyDialog=EasyDialogConsole()
     def pm_setDialogHandler(self):
-        if o.system.platformtype.isWindows():
+        if j.system.platformtype.isWindows():
             self.chooseDialogType(DialogType.WIN32)
         else:
             self.chooseDialogType(None)
@@ -57,7 +57,7 @@ class EasyDialog():
         if self.type==DialogType.WIZARDSERVER:
             from EasyDialogWizardServer import EasyDialogWizardServer
             self.easyDialog=EasyDialogWizardServer()
-        if self.type==DialogType.WIN32 and o.system.platformtype.isWindows():
+        if self.type==DialogType.WIN32 and j.system.platformtype.isWindows():
             try:
                 import EasyDialogs
                 easyDialogsInstalled = True
@@ -86,7 +86,7 @@ class EasyDialog():
         """
 
         filepath=self.easyDialog.askFilePath(message, startPath)
-        if not o.system.fs.exists(filepath):
+        if not j.system.fs.exists(filepath):
             raise RuntimeError ("Could not find selected file path %s." % filepath)
         return filepath
 
@@ -100,7 +100,7 @@ class EasyDialog():
         """
 
         filepath=self.easyDialog.askDirPath(message, startPath)
-        if not o.system.fs.exists(filepath):
+        if not j.system.fs.exists(filepath):
             raise RuntimeError ("Could not find selected folder path %s." % filepath)
         return filepath
 

@@ -1,11 +1,11 @@
-from OpenWizzy import o
+from JumpScale import j
 from OWDevelToolsInstaller import OWDevelToolsInstaller
 from OWDevelTools import OWDevelTools
 
 class Empty():
 	pass
 
-o.develtools=OWDevelTools()
+j.develtools=OWDevelTools()
 
-o.develtools.installer=OWDevelToolsInstaller()
+j.develtools.installer=OWDevelToolsInstaller()
 

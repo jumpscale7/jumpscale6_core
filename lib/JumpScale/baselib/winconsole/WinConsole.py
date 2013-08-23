@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class WinConsoleFactory():
     def get(self):
@@ -11,9 +11,9 @@ class WinConsole():
     def __init__(self):
         """
         """
-        if not  o.system.platformtype.isWindows():
+        if not  j.system.platformtype.isWindows():
             raise RuntimeError("Only supported on windows.")
-        self.configpath=o.system.fs.joinPaths(o.dirs.tmpDir,"consolecfg",str(o.base.idgenerator.generateRandomInt(1,1000))+".xml")
+        self.configpath=j.system.fs.joinPaths(j.dirs.tmpDir,"consolecfg",str(j.base.idgenerator.generateRandomInt(1,1000))+".xml")
         self.config="""
 
 <?xml version="1.0"?>
@@ -114,7 +114,7 @@ $tabs
 
 
         """
-        self.config=self.config.replace("$base",o.dirs.baseDir)
+        self.config=self.config.replace("$base",j.dirs.baseDir)
         self.tabs=[]
         self.tabCmd=[]
         self.addTab("console","","")
@@ -126,13 +126,13 @@ $tabs
         for tab in self.tabs:
             tabs+="%s\n"%tab
         config=self.config.replace("$tabs",tabs)
-        o.system.fs.createDir(o.system.fs.getDirName(self.configpath))
-        o.system.fs.writeFile(self.configpath,config)                
+        j.system.fs.createDir(j.system.fs.getDirName(self.configpath))
+        j.system.fs.writeFile(self.configpath,config)                
 
     def addTab(self,name,startdir,cmd):
         if startdir=="":
-            # startdir=o.dirs.baseDir
-            startdir=o.system.fs.getcwd()
+            # startdir=j.dirs.baseDir
+            startdir=j.system.fs.getcwd()
 
         C="""
         <tab title="$name" use_default_icon="0">
@@ -154,17 +154,17 @@ $tabs
 
     def start(self):
         self.writeConfig()
-        cwd=o.system.fs.getcwd()
-        o.system.fs.changeDir(o.system.fs.joinPaths(o.dirs.baseDir,"appsbin","console"))
+        cwd=j.system.fs.getcwd()
+        j.system.fs.changeDir(j.system.fs.joinPaths(j.dirs.baseDir,"appsbin","console"))
         cmd="start console.exe -c \"%s\"" % self.configpath.replace("\\\\","\\")
         for name,startdir,cmd2 in self.tabCmd:
             # startdir=startdir.replace("/","\\")
             # startdir=startdir.replace("\\\\","\\")
             cmd+=" -t %s "% (name)
 
-        # o.system.process.execute(cmd)
-        o.system.process.executeWithoutPipe(cmd)
-        o.system.fs.changeDir(cwd)
+        # j.system.process.execute(cmd)
+        j.system.process.executeWithoutPipe(cmd)
+        j.system.fs.changeDir(cwd)
 
         
         

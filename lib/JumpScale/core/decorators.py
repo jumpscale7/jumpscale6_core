@@ -83,7 +83,7 @@ import warnings
 import functools
 import inspect
 
-from OpenWizzy import o
+from JumpScale import j
 
 class Version:
     '''Helper class to perform version calculations'''
@@ -137,10 +137,10 @@ class deprecated(object):
         '''Provide display information for deprecated methods
 
         @param name: Human-readable name of the function,
-                     e.g. o.system.fs.Walk
+                     e.g. j.system.fs.Walk
         @type name: string
         @param alternative: Optional alternative function,
-                            e.g. o.system.fs.walk
+                            e.g. j.system.fs.walk
         @type alternative: string
         @param version: Version in which the function will be removed,
                         e.g. 3.3
@@ -180,16 +180,16 @@ class deprecated(object):
             name = self.name or \
                 '%s.%s' % (inspect.getmodule(func).__name__, func.__name__)
             if hasattr(openwizzy, 'q'):
-                o.logger.log('[DEPRECATION] Found deprecated method %s, this can be removed' % name, 5)
+                j.logger.log('[DEPRECATION] Found deprecated method %s, this can be removed' % name, 5)
 
         @functools.wraps(func)
         def newfunc(*args, **kwargs):
             message = self.calculate_message(func)
 
-            o.logger.log('[DEPRECATION] %s' % message, 4)
+            j.logger.log('[DEPRECATION] %s' % message, 4)
 
             # TODO Display this in non-debug mode as well one day
-            if o.application.shellconfig.debug or self.show_warning:
+            if j.application.shellconfig.debug or self.show_warning:
                 warnings.warn(message, category=DeprecationWarning)
 
             if 'PM_DISABLE_DEPRECATED' in os.environ or self.removed:

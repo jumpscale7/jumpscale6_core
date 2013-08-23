@@ -2,14 +2,14 @@ from __future__ import generators
 import time
 from heapq import heappush, heappop, heapify
 
-from OpenWizzy import o
+from JumpScale import j
 from LRUCache import LRUCache
 
 from operator import itemgetter, attrgetter
 
 class RWCache():
     def __init__(self,nrItemsReadCache,maxNrItemsWriteCache=50,maxTimeWriteCache=2000,writermethod=None):
-        self.cacheR=o.db.cache.getRCache(nrItemsReadCache)
+        self.cacheR=j.db.cache.getRCache(nrItemsReadCache)
         self.cacheW=WCache(maxNrItemsWriteCache,writermethod,maxTimeWriteCache)
 
     def set(self,key,obj):

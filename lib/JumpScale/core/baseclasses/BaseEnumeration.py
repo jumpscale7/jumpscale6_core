@@ -92,7 +92,7 @@ they should set, C{_INTERMEDIATE_CLASS}.
 import os.path
 import re
 import keyword
-from OpenWizzy import o
+from JumpScale import j
 
 IDENTIFIER_RE = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
 
@@ -318,7 +318,7 @@ class BaseEnumerationMeta(type):
         #applicable.
         #
         #For some reason, it was decided to use smallCapStarting names for
-        #enumerations registered on o.enumerators, although they're types.
+        #enumerations registered on j.enumerators, although they're types.
         #I guess this should be emulated here.
         if hasattr(enumerations, name):
             raise RuntimeError('Unable to register enumeration %s, name already in use' % name)
@@ -342,7 +342,7 @@ class BaseEnumeration(object):
     account when adding methods to final classes.
 
     Subclasses of BaseEnumeration can have a classmethod called C{_initItems}
-    which will be called when the corresponding type is constructed. Thiso.enumerators.MessageType.UNKNOWN
+    which will be called when the corresponding type is constructed. Thisj.enumerators.MessageType.UNKNOWN
     allows you to add items to an enumeration inside the enumeration
     definition, eg:
 

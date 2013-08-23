@@ -1,6 +1,6 @@
 import os
 
-from OpenWizzy import o
+from JumpScale import j
 
 class OsisPyApps:
 
@@ -10,11 +10,11 @@ class OsisPyApps:
                         ('database', self.appName),('ip', '127.0.0.1')]
 
     def generate_cfg(self):
-        iniFile = o.system.fs.joinPaths(o.dirs.cfgDir, 'osisdb.cfg')
+        iniFile = j.system.fs.joinPaths(j.dirs.cfgDir, 'osisdb.cfg')
         if os.path.isfile(iniFile):
-            ini = o.tools.inifile.open(iniFile)
+            ini = j.tools.inifile.open(iniFile)
         else:
-            ini = o.tools.inifile.new(iniFile)
+            ini = j.tools.inifile.new(iniFile)
 
         exists = ini.checkSection(self.appName)
         if not exists:

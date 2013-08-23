@@ -10,7 +10,7 @@ import subprocess
 import inspect
 import signal
 
-from OpenWizzy import o
+from JumpScale import j
 
 def kill(pid, sig=None):
     """
@@ -18,8 +18,8 @@ def kill(pid, sig=None):
     @param pid: pid of the process to kill
     @param sig: signal. If no signal is specified signal.SIGKILL is used
     """
-    o.logger.log('Killing process %d' % pid, 7)
-    if o.system.platformtype.isUnix():
+    j.logger.log('Killing process %d' % pid, 7)
+    if j.system.platformtype.isUnix():
         import signal
         try:
             if sig is None:
@@ -30,7 +30,7 @@ def kill(pid, sig=None):
         except OSError,e:
             raise RuntimeError("Could not kill process with id %s.\n%s" % (pid,e))
         
-    elif o.system.platformtype.isWindows():
+    elif j.system.platformtype.isWindows():
         import win32api, win32process, win32con
         try:
             handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, False, pid)
@@ -539,7 +539,7 @@ def _safe_subprocess(*args, **kwargs):
     @see: L{subprocess.Popen}
     '''
     #Close all threaded log targets before creating a subprocess, which forks
-    ##from OpenWizzy.core.log.LogTargets import ThreadedLogTarget
+    ##from JumpScale.core.log.LogTargets import ThreadedLogTarget
     ##ThreadedLogTarget.disable_all_instances(close=True)
 
     try:
@@ -738,12 +738,12 @@ def run(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
         # variables can be passed to processhelper.py with only a slight
         # chance of things going wrong in there
 
-        openwizzy_path = os.path.join(o.dirs.baseDir, 'lib', 'openwizzy', 'core')
+        openwizzy_path = os.path.join(j.dirs.baseDir, 'lib', 'openwizzy', 'core')
 
         cmd = list()
         cmd.append(sys.executable)
 
-        cmd.extend(('-c', '\'from OpenWizzy.core.system.processhelper import main; main()\'', ))
+        cmd.extend(('-c', '\'from JumpScale.core.system.processhelper import main; main()\'', ))
 
         if uid is not None:
             cmd.extend(('--uid', '%d' % uid, ))
@@ -790,7 +790,7 @@ def _runWithEnv(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
     if captureOutput and showOutput:
         raise ValueError('captureOutput and showOutput are mutually exclusive')
 
-    o.logger.log(
+    j.logger.log(
             'system.process.start "%s" maxSeconds=%d stopOnError=%s' % \
             (commandline, maxSeconds, stopOnError), 5)
 
@@ -805,7 +805,7 @@ def _runWithEnv(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
     elif not showOutput and not captureOutput:
         #There's no place like devnull
         fd = open(getattr(os, 'devnull', \
-                'nul' if o.system.platformtype.isWindows() else '/dev/null'),
+                'nul' if j.system.platformtype.isWindows() else '/dev/null'),
                 'rw')
         stdin = stdout = stderr = fd
 
@@ -870,7 +870,7 @@ def _runWithEnv(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
 
         if process.poll() is None:
             #Child is still running, kill it
-            if o.system.platformtype.isUnix():
+            if j.system.platformtype.isUnix():
                 #Soft and hard kill on Unix
                 try:
                     process.terminate()
@@ -898,7 +898,7 @@ def _runWithEnv(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
             #fun).
 
             #Read out process streams, but don't block
-            if o.system.platformtype.isUnix():
+            if j.system.platformtype.isUnix():
                 def readout(stream):
                     #Non-blocking, safe UNIX-style stream readout
                     import fcntl
@@ -960,18 +960,18 @@ def _runWithEnv(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
     for func in cleanup:
         func()
 
-    o.logger.log('system.process.run ended, exitcode was %d' % \
+    j.logger.log('system.process.run ended, exitcode was %d' % \
             ret[0], 4)
-    o.logger.log('system.process.run stdout:\n%s' % ret[1], 7)
-    o.logger.log('system.process.run stderr:\n%s' % ret[2], 7)
+    j.logger.log('system.process.run stdout:\n%s' % ret[1], 7)
+    j.logger.log('system.process.run stderr:\n%s' % ret[2], 7)
 
     #45 first, since -2 != 0
     if stopOnError and killed:
-        o.logger.log(
+        j.logger.log(
                 'system.process.start had to kill the subprocess', 3)
         sys.exit(45)
     if stopOnError and ret[0] != 0:
-        o.logger.log('system.process.start subprocess failed', 3)
+        j.logger.log('system.process.start subprocess failed', 3)
         sys.exit(44)
 
     return ret
@@ -996,11 +996,11 @@ def runScript(script, showOutput=False, captureOutput=True, maxSeconds=0,
 
     @see: openwizzy.system.process.run
     '''
-    if not o.system.fs.isFile(script):
+    if not j.system.fs.isFile(script):
         raise ValueError('Unable to execute %s: not an existing file' % script)
 
     cmdline = '%s -u "%s"' % (sys.executable, script)
-    o.logger.log('Executing script: %s' % cmdline, 6)
+    j.logger.log('Executing script: %s' % cmdline, 6)
 
     return run(cmdline, showOutput=showOutput, captureOutput=captureOutput,
             maxSeconds=maxSeconds, stopOnError=stopOnError)
@@ -1060,7 +1060,7 @@ def runDaemon(commandline, stdout=None, stderr=None, user=None, group=None,
     if group is not None:
         logmessage.append('setgid to group %s' % str(group))
     logmessage = ', '.join(logmessage)
-    o.logger.log(logmessage, 5)
+    j.logger.log(logmessage, 5)
 
     uid, gid = _convert_uid_gid(user, group)
 
@@ -1068,18 +1068,18 @@ def runDaemon(commandline, stdout=None, stderr=None, user=None, group=None,
     # variables can be passed to processhelper.py with only a slight chance of
     # things going wrong in there
 
-    openwizzy_path = os.path.join(o.dirs.baseDir, 'lib', 'openwizzy', 'core')
+    openwizzy_path = os.path.join(j.dirs.baseDir, 'lib', 'openwizzy', 'core')
 
     cmd = list()
     cmd.append(sys.executable)
 
-    cmd.extend(('-c', '\'from OpenWizzy.core.system.processhelper import main; main()\'', ))
+    cmd.extend(('-c', '\'from JumpScale.core.system.processhelper import main; main()\'', ))
 
     if stdout:
-        o.system.fs.createDir(os.path.dirname(stdout))
+        j.system.fs.createDir(os.path.dirname(stdout))
         cmd.extend(('--stdout', '"%s"' % stdout, ))
     if stderr:
-        o.system.fs.createDir(os.path.dirname(stderr))
+        j.system.fs.createDir(os.path.dirname(stderr))
         cmd.extend(('--stderr', '"%s"' % stderr, ))
 
     if uid is not None:
@@ -1117,7 +1117,7 @@ def runDaemon(commandline, stdout=None, stderr=None, user=None, group=None,
     if 'GID' in processdata:
         logmessage.append('GID is %d' % int(processdata['GID']))
     logmessage = ', '.join(logmessage)
-    o.logger.log(logmessage, 6)
+    j.logger.log(logmessage, 6)
 
     return childpid
 
@@ -1190,19 +1190,19 @@ class SystemProcess:
         @rtype: integer represents the exitcode
         if exitcode is not zero then the executed command returned with errors
         """
-        o.logger.log("Using DEPRECATED method system.process.executeWithoutPipe(). Please use system.process.executeAsync() instead, and call the wait() method of the returned object.", 3)
+        j.logger.log("Using DEPRECATED method system.process.executeWithoutPipe(). Please use system.process.executeAsync() instead, and call the wait() method of the returned object.", 3)
         if not (outputToStdout == "deprecatedArgument"):
-            o.logger.log("system.process.executeWithoutPipe called with deprecated argument 'outputToStdout'. This paramater is deprecated because it is confusing: printing the output to StdOut is impossible when executing a command without piping. The argument indicates if the command itself should be written on screen and is therefore renamed to 'printCommandToStdout'. Use this argument instead.", 3)
+            j.logger.log("system.process.executeWithoutPipe called with deprecated argument 'outputToStdout'. This paramater is deprecated because it is confusing: printing the output to StdOut is impossible when executing a command without piping. The argument indicates if the command itself should be written on screen and is therefore renamed to 'printCommandToStdout'. Use this argument instead.", 3)
             printCommandToStdout = outputToStdout
 
         if printCommandToStdout:
-            o.logger.log("system.process.executeWithoutPipe [%s]" % command, 8)
+            j.logger.log("system.process.executeWithoutPipe [%s]" % command, 8)
         else:
-            o.logger.log("system.process.executeWithoutPipe [%s]" % command, 8)
+            j.logger.log("system.process.executeWithoutPipe [%s]" % command, 8)
         exitcode = os.system(command)
 
         if exitcode !=0 and dieOnNonZeroExitCode:
-            o.logger.log("command: [%s]\nexitcode:%s" % (command, exitcode), 3)
+            j.logger.log("command: [%s]\nexitcode:%s" % (command, exitcode), 3)
             raise RuntimeError("Error during execution!\nCommand: %s\nExitcode: %s" % (command, exitcode))
 
         return exitcode
@@ -1218,18 +1218,18 @@ class SystemProcess:
         @return: If redirectStreams is true, this function returns a subprocess.Popen object representing the started process. Otherwise, it will return the pid-number of the started process.
         """
         if useShell == None: # The default value depends on which platform we're using.
-            if o.system.platformtype.isUnix():
+            if j.system.platformtype.isUnix():
                 useShell = True
-            elif o.system.platformtype.isWindows():
+            elif j.system.platformtype.isWindows():
                 useShell = False
             else:
                 raise RuntimeError("Platform not supported")
 
-        o.logger.log("system.process.executeAsync [%s]" % command, 6)
+        j.logger.log("system.process.executeAsync [%s]" % command, 6)
         if printCommandToStdout:
             print "system.process.executeAsync [%s]" % command
 
-        if o.system.platformtype.isWindows():
+        if j.system.platformtype.isWindows():
             if argsInCommand:                
                 cmd = subprocess.list2cmdline([command] + args)
             else:
@@ -1265,7 +1265,7 @@ class SystemProcess:
                                                  sui)         # Startup Information
                 retVal = pid
 
-        elif o.system.platformtype.isUnix():
+        elif j.system.platformtype.isUnix():
             if useShell:
                 if argsInCommand:
                     cmd = command
@@ -1316,12 +1316,12 @@ class SystemProcess:
         # on stdout or stdin of the child process, we log it
         #
         # When the process terminates, we log the final lines (and add a \n to them)
-        o.logger.log("exec:%s" % command)
+        j.logger.log("exec:%s" % command)
         def _logentry(entry,loglevel=5):
             if outputToStdout:
-                o.console.echo(entry, loglevel)
+                j.console.echo(entry, loglevel)
             else:
-                o.logger.log(entry,loglevel)
+                j.logger.log(entry,loglevel)
 
         def _splitdata(data):
             """ Split data in pieces separated by \n """
@@ -1365,21 +1365,21 @@ class SystemProcess:
 
         if command is None:
             raise ValueError('Error, cannot execute command not specified')
-        o.logger.log("system.process.execute [%s]" % command, 8)
+        j.logger.log("system.process.execute [%s]" % command, 8)
         try:
             import errno
-            if o.system.platformtype.isUnix():
+            if j.system.platformtype.isUnix():
                 import subprocess
                 import signal
                 try:
                     signal.signal(signal.SIGCHLD, signal.SIG_DFL)
                 except Exception, ex:
-                    o.logger.log('failed to set child signal, error %s'%ex, 2)
+                    j.logger.log('failed to set child signal, error %s'%ex, 2)
                 childprocess = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, shell=True, env=os.environ)
                 (output,error) = childprocess.communicate()
                 exitcode = childprocess.returncode
                 
-            elif o.system.platformtype.isWindows():
+            elif j.system.platformtype.isWindows():
                 import subprocess, win32pipe, msvcrt, pywintypes
 
                 # For some awkward reason you need to include the stdin pipe, or you get an error deep inside
@@ -1410,19 +1410,19 @@ class SystemProcess:
             raise
 
         if exitcode<>0 or error<>"":
-            o.logger.log(" Exitcode:%s\nOutput:%s\nError:%s\n" % (exitcode, output, error), 5)
+            j.logger.log(" Exitcode:%s\nOutput:%s\nError:%s\n" % (exitcode, output, error), 5)
             if ignoreErrorOutput<>True:
                 output="%s\n***ERROR***\n%s\n" % (output,error)
 
         if exitcode !=0 and dieOnNonZeroExitCode:
-            o.logger.log("command: [%s]\nexitcode:%s\noutput:%s\nerror:%s" % (command, exitcode, output, error), 3)
+            j.logger.log("command: [%s]\nexitcode:%s\noutput:%s\nerror:%s" % (command, exitcode, output, error), 3)
             raise RuntimeError("Error during execution! (system.process.execute())\n\nCommand: [%s]\n\nExitcode: %s\n\nProgram output:\n%s\n\nErrormessage:\n%s\n" % (command, exitcode, output, error))
 
         return exitcode, output
 
     def executeScript(self, scriptName):
         """execute python script from shell/Interactive Window"""
-        o.logger.log('Excecuting script with name: %s'%scriptName, 8)
+        j.logger.log('Excecuting script with name: %s'%scriptName, 8)
         if scriptName is None:
             raise ValueError('Error, Script name in empty in system.process.executeScript')
         try:
@@ -1435,7 +1435,7 @@ class SystemProcess:
         @param command: string (command to be executed)
         @param timeout: 0 means to ever, expressed in seconds
         """
-        o.logger.log('Executing command %s in sandbox'%command, 8)
+        j.logger.log('Executing command %s in sandbox'%command, 8)
         if command is None:
             raise RuntimeError('Error, cannot execute command not specified')
         try:
@@ -1451,10 +1451,10 @@ class SystemProcess:
     def executeCode(self,code,params=None):
         """
         execute a method (python code with def)
-        use params=o.core.params.get() as input
+        use params=j.core.params.get() as input
         """
         if params==None:
-            params=o.core.params.get()
+            params=j.core.params.get()
         codeLines = code.split("\n")        
         if "def " not in codeLines[0]:
             raise ValueError("code to execute needs to start with def")
@@ -1470,7 +1470,7 @@ class SystemProcess:
             out = "\n".join(map(unindent, codeLines))
             code = out
 
-        if len(o.codetools.regex.findAll("^def",code))<>1:
+        if len(j.codetools.regex.findAll("^def",code))<>1:
             server.raiseError("Cannot find 1 def method in code to execute, code submitted was \n%s" % code)
 
         code2=""
@@ -1503,8 +1503,8 @@ class SystemProcess:
            For windows, the process information is retrieved and it is double checked that the process is python.exe
            or pythonw.exe
         """
-        o.logger.log('Checking whether process with PID %d is alive' % pid, 9)
-        if o.system.platformtype.isUnix():
+        j.logger.log('Checking whether process with PID %d is alive' % pid, 9)
+        if j.system.platformtype.isUnix():
             # Unix strategy: send signal SIGCONT to process pid
             # Achilles heal: another process which happens to have the same pid could be running
             # and incorrectly considered as this process
@@ -1517,18 +1517,18 @@ class SystemProcess:
 
             return True
 
-        elif o.system.platformtype.isWindows():
+        elif j.system.platformtype.isWindows():
 
-            return o.system.windows.isPidAlive(pid)
+            return j.system.windows.isPidAlive(pid)
 
     kill = staticmethod(kill)
 
     def getProcessPid(self, process):
-        if o.system.platformtype.isUnix():
+        if j.system.platformtype.isUnix():
             # Need to set $COLUMNS such that we can grep full commandline
             # Note: apparently this does not work on solaris
             command = "env COLUMNS=300 ps -ef"
-            (exitcode, output) = o.system.process.execute(command, dieOnNonZeroExitCode=False, outputToStdout=False)
+            (exitcode, output) = j.system.process.execute(command, dieOnNonZeroExitCode=False, outputToStdout=False)
             pids = list()
             co = re.compile("\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)")
             for line in output.splitlines():
@@ -1558,17 +1558,17 @@ class SystemProcess:
 
         @TODO: The process matching on strings is incorrect, it will match a partial match (e.g.: apache will match a process using apache2)
         """
-        o.logger.log('Checking whether at least %d processes %s are running' % (min, process), 8)
-        if o.system.platformtype.isUnix():
+        j.logger.log('Checking whether at least %d processes %s are running' % (min, process), 8)
+        if j.system.platformtype.isUnix():
             pids = self.getProcessPid(process)
             if len(pids) >= min:
                 return 0
             return 1
 
         # Windows platform
-        elif o.system.platformtype.isWindows():
+        elif j.system.platformtype.isWindows():
 
-            return o.system.windows.checkProcess(process, min)
+            return j.system.windows.checkProcess(process, min)
 
     def checkProcessForPid(self, pid, process):
         """
@@ -1577,15 +1577,15 @@ class SystemProcess:
         @param process: (str) the process that should have the pid
         @return status: (int) 0 when ok, 1 when not ok.
         """
-        o.logger.log('Checking whether process with PID %d is actually %s' % (pid, process), 7)
-        if o.system.platformtype.isUnix():
+        j.logger.log('Checking whether process with PID %d is actually %s' % (pid, process), 7)
+        if j.system.platformtype.isUnix():
             command = "ps -p %i"%pid
-            (exitcode, output) = o.system.process.execute(command, dieOnNonZeroExitCode=False, outputToStdout=False)
+            (exitcode, output) = j.system.process.execute(command, dieOnNonZeroExitCode=False, outputToStdout=False)
             i=0
             for line in output.splitlines():
-                if o.system.platformtype.isLinux() or o.system.platformtype.isESX():
+                if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
                     match = re.match(".{23}.*(\s|\/)%s(\s|$).*" % process, line)
-                elif o.system.platformtype.isSolaris():
+                elif j.system.platformtype.isSolaris():
                     match = re.match(".{22}.*(\s|\/)%s(\s|$).*" % process, line)
                 if match :
                     i= i+1
@@ -1593,9 +1593,9 @@ class SystemProcess:
                 return 0
             return 1
 
-        elif o.system.platformtype.isWindows():
+        elif j.system.platformtype.isWindows():
 
-            return o.system.windows.checkProcessForPid(process, pid)
+            return j.system.windows.checkProcessForPid(process, pid)
 
     def setEnvironmentVariable(self, varnames, varvalues):
         """Set the value of the environment variables C{varnames}. Existing variable are overwritten
@@ -1620,9 +1620,9 @@ class SystemProcess:
         @return: full process name
         @rtype: string
         """
-        if o.system.platformtype.isLinux() or o.system.platformtype.isESX():
+        if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
             command = "netstat -ntulp | grep ':%s '" % port
-            (exitcode, output) = o.system.process.execute(command, dieOnNonZeroExitCode=False,outputToStdout=False)
+            (exitcode, output) = j.system.process.execute(command, dieOnNonZeroExitCode=False,outputToStdout=False)
 
             # Not found if grep's exitcode  > 0
             if not exitcode == 0:
@@ -1651,7 +1651,7 @@ class SystemProcess:
             # Need to set $COLUMNS such that we can grep full commandline
             # Note: apparently this does not work on solaris
             command = "env COLUMNS=300 ps -ef"
-            (exitcode, output) = o.system.process.execute(command, dieOnNonZeroExitCode=False, outputToStdout=False)
+            (exitcode, output) = j.system.process.execute(command, dieOnNonZeroExitCode=False, outputToStdout=False)
             co = re.compile("\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)")
             for line in output.splitlines():
                 match = co.search(line)
@@ -1662,7 +1662,7 @@ class SystemProcess:
                     return gd['cmd'].strip()
             return None
         else:
-            raise RuntimeError("This platform is not supported in o.system.process.getProcessByPort()")
+            raise RuntimeError("This platform is not supported in j.system.process.getProcessByPort()")
     run = staticmethod(run)
     runScript = staticmethod(runScript)
     runDaemon = staticmethod(runDaemon)

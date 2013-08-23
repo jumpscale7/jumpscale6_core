@@ -4,7 +4,7 @@ import inspect
 import textwrap
 import operator
 
-from OpenWizzy import o
+from JumpScale import j
 
 class StartStopOutputCountException(Exception):
     '''Exception raised when an action.startOutput/action.stopOutput count
@@ -197,10 +197,10 @@ class ActionController(object):
         '''
         #TODO Be more verbose / raise in time
         if show is not False:
-            o.logger.log('[ACTIONS] Using deprecated/unused argument '
+            j.logger.log('[ACTIONS] Using deprecated/unused argument '
                                   '\'show\'', 4)
         if messageLevel is not False:
-            o.logger.log('[ACTIONS] Using deprecated/unused argument '
+            j.logger.log('[ACTIONS] Using deprecated/unused argument '
                                   '\'messageLevel\'', 4)
 
         if self._actions and not self._actions[-1].interrupted:
@@ -208,7 +208,7 @@ class ActionController(object):
                                            self._width)
             self._actions[-1].interrupted = True
 
-        o.logger.log('[ACTIONS] Starting action: %s' % description,
+        j.logger.log('[ACTIONS] Starting action: %s' % description,
                               5)
         action = _Action(description, errormessage, resolutionmessage,
                         indent=len(self._actions))
@@ -217,7 +217,7 @@ class ActionController(object):
         action.write(self._output, self._width)
 
         #TODO Get rid of this when reworking console handling properly
-        o.console.hideOutput()
+        j.console.hideOutput()
 
     def stop(self, failed=False):
         '''Stop the currently running action
@@ -230,7 +230,7 @@ class ActionController(object):
         '''
         if not self._actions:
             #TODO Raise some exception?
-            o.logger.log('[ACTIONS] Stop called while no actions are '
+            j.logger.log('[ACTIONS] Stop called while no actions are '
                                   'running at all', 3)
             return
 
@@ -251,20 +251,20 @@ class ActionController(object):
         status = _ActionStatus.DONE if not failed else _ActionStatus.FAILED
         if not failed and not self._actions and action.interrupted:
             status = _ActionStatus.FINISHED
-        o.logger.log('[ACTIONS] Stopping action \'%s\', result '
+        j.logger.log('[ACTIONS] Stopping action \'%s\', result '
                               'is %s' % (action.description, status), 5)
         action.writeResult(self._output, status, self._width)
 
         if not self._actions:
             #TODO Get rid of this when reworking console handling properly
-            o.console.showOutput()
+            j.console.showOutput()
 
     def clean(self):
         '''Clean the list of running actions'''
-        o.logger.log('[ACTIONS] Clearing all actions', 5)
+        j.logger.log('[ACTIONS] Clearing all actions', 5)
         self._actions = list()
         #TODO Get rid of this when reworking console handling properly
-        o.console.showOutput()
+        j.console.showOutput()
 
     def hasRunningActions(self):
         '''Check whether actions are currently running
@@ -285,9 +285,9 @@ class ActionController(object):
 
     def startOutput(self):
         """
-        Enable o.console output. Format such that it is nicely shown between action start/stop.
+        Enable j.console output. Format such that it is nicely shown between action start/stop.
         """
-        o.console.showOutput()
+        j.console.showOutput()
 
         self._output_start_count += 1
         if self.hasRunningActions():
@@ -301,7 +301,7 @@ class ActionController(object):
 
     def stopOutput(self):
         """
-        Disable o.console output. Format such that it is nicely shown between action start/stop.
+        Disable j.console output. Format such that it is nicely shown between action start/stop.
         """
         if self.hasRunningActions():
             try:
@@ -317,7 +317,7 @@ class ActionController(object):
             self._handleStartStopOutputCountMismatch()
 
         if self.hasRunningActions() and (self._output_start_count == 0):
-            o.console.hideOutput()
+            j.console.hideOutput()
 
 
     def _handleStartStopOutputCountMismatch(self):
@@ -327,7 +327,7 @@ class ActionController(object):
 
         This will break running actions or might break future actions.
         '''
-        o.logger.log(
+        j.logger.log(
             '[ACTIONS] Warning: start/stop output count mismatch', 4)
         self._actions = list()
         self._output_start_count = 0

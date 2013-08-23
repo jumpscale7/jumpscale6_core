@@ -1,21 +1,21 @@
 
 __all__ = ['IPv4Address', 'IPv4Range']
 
-from OpenWizzy.core.pmtypes.IPAddress import IPv4Address, IPv4Range
+from JumpScale.core.pmtypes.IPAddress import IPv4Address, IPv4Range
 
 __all__ += ['Boolean', 'Integer', 'Float', 'String']
-from OpenWizzy.core.pmtypes.PrimitiveTypes import Boolean, Integer, Float, String
+from JumpScale.core.pmtypes.PrimitiveTypes import Boolean, Integer, Float, String
 
 __all__ += ['List', 'Set', 'Dictionary']
-from OpenWizzy.core.pmtypes.CollectionTypes import List, Set, Dictionary
+from JumpScale.core.pmtypes.CollectionTypes import List, Set, Dictionary
 
 __all__ += ['Guid', 'Path', 'DirPath', 'FilePath', 'UnixDirPath',
             'UnixFilePath', 'WindowsDirPath', 'WindowsFilePath', ]
-from OpenWizzy.core.pmtypes.CustomTypes import Guid, Path, DirPath, FilePath, \
+from JumpScale.core.pmtypes.CustomTypes import Guid, Path, DirPath, FilePath, \
         UnixDirPath, UnixFilePath, WindowsDirPath, WindowsFilePath
 
 __all__ += ['Object', 'Enumeration']
-from OpenWizzy.core.pmtypes.GenericTypes import Object, Enumeration
+from JumpScale.core.pmtypes.GenericTypes import Object, Enumeration
 
 # Type registration starts here
 
@@ -28,7 +28,7 @@ def register_types():
 
     #All modules we want to load types from
     #This is inline not to clutter package namespace
-    from OpenWizzy.core.pmtypes import PrimitiveTypes, CollectionTypes, CustomTypes
+    from JumpScale.core.pmtypes import PrimitiveTypes, CollectionTypes, CustomTypes
     TYPEMODS = (PrimitiveTypes, CollectionTypes, CustomTypes, )
 
     class TypeContainer: pass
@@ -76,7 +76,7 @@ def register_types():
                         raise RuntimeError('Type %s is already registered on type base' % function.qtypename)
                     setattr(base, function.qtypename, function)
 
-    from OpenWizzy.core.pmtypes import GenericTypes
+    from JumpScale.core.pmtypes import GenericTypes
     GENERICMODS = (GenericTypes, )
     for mod in GENERICMODS:
         _register_generic_types_from_module(mod, base)

@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .HttpClient import HttpClient
-o.base.loader.makeAvailable(o, 'clients')
-o.clients.http = HttpClient()
+j.base.loader.makeAvailable(j, 'clients')
+j.clients.http = HttpClient()

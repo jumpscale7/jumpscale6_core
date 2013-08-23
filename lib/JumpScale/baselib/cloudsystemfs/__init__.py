@@ -1,8 +1,8 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from .CloudSystemFS import CloudSystemFS
 
-o.base.loader.makeAvailable(o, 'cloud.system')
+j.base.loader.makeAvailable(j, 'cloud.system')
 
-o.cloud.system.fs=CloudSystemFS()
+j.cloud.system.fs=CloudSystemFS()
 

@@ -1,6 +1,6 @@
 def main(q,args,params,tags,tasklet):
    
-    #monitor the app if it is performing well, if not ok raise o.errorconditionhandler.raiseMonitoringError( error 
+    #monitor the app if it is performing well, if not ok raise j.errorconditionhandler.raiseMonitoringError( error 
     
     params.result=True #or False
     return params

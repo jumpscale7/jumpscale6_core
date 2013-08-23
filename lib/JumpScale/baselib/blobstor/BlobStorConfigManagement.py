@@ -1,7 +1,7 @@
 
-from OpenWizzy.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
-from OpenWizzy.core.config.QConfigBase import ConfiguredItem, ConfiguredItemGroup
-from OpenWizzy.core.config.ConfigLib import ItemGroupClass, ItemSingleClass
+from JumpScale.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
+from JumpScale.core.config.QConfigBase import ConfiguredItem, ConfiguredItemGroup
+from JumpScale.core.config.ConfigLib import ItemGroupClass, ItemSingleClass
 
 class BlobStorConfigManagementItem(ConfigManagementItem):
     CONFIGTYPE = 'blobstor'
@@ -11,12 +11,12 @@ class BlobStorConfigManagementItem(ConfigManagementItem):
         'http': '',
         'type': 'local',
         'localpath': '',
-        'namespace': 'o.'
+        'namespace': 'j.'
     }
 
     def ask(self):
         self.dialogAskChoice('type', 'select type', ['local', 'ftphttp'], 'local')
-        self.dialogAskString('namespace', 'Optional Namespace', 'o.')
+        self.dialogAskString('namespace', 'Optional Namespace', 'j.')
         self.dialogAskString('ftp', 'Optional FTP Location (full url location with login/passwd)')
         self.dialogAskString('http', 'Optional HTTP Location (for download only)')
         self.dialogAskString('localpath', 'Optional localpath', '/opt/openwizzy6/var/blobstor')

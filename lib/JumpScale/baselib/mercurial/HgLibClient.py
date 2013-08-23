@@ -1,9 +1,9 @@
 '''Utility methods to work with hg repositories'''
-from OpenWizzy import o
+from JumpScale import j
 import sys
-sys.path.append(o.system.fs.joinPaths(o.dirs.getLibPath(),"baselib","mercurial"))
+sys.path.append(j.system.fs.joinPaths(j.dirs.getLibPath(),"baselib","mercurial"))
 import hglib
-import OpenWizzy.baselib.codetools
+import JumpScale.baselib.codetools
 import os
         
 class HgLibClient:    
@@ -32,30 +32,30 @@ class HgLibClient:
         if not self.isInitialized() and not self.remoteUrl:
             raise RuntimeError(".hg not found and remote url is not supplied")
 
-        if o.system.fs.exists(self.basedir) and not self.isInitialized():
-            if len(o.system.fs.listFilesInDir(self.basedir,recursive=True))==0:
+        if j.system.fs.exists(self.basedir) and not self.isInitialized():
+            if len(j.system.fs.listFilesInDir(self.basedir,recursive=True))==0:
                 if self.branchname==None:
-                    self.branchname=o.console.askString("Which branch do you want to clone, if empty will be the tip (trunk)","")
+                    self.branchname=j.console.askString("Which branch do you want to clone, if empty will be the tip (trunk)","")
                 self._clone()
             else:
                 #did not find the mercurial dir
-                if o.application.shellconfig.interactive:
+                if j.application.shellconfig.interactive:
                     if cleandir == None and self.remoteUrl<>"":
-                        cleandir = o.gui.dialog.askYesNo("\nDid find a directory but there was no mercurial metadata inside.\n\tdir: %s\n\turl:%s\n\tIs it ok to remove all files from the target destination before cloning the repository?"\
+                        cleandir = j.gui.dialog.askYesNo("\nDid find a directory but there was no mercurial metadata inside.\n\tdir: %s\n\turl:%s\n\tIs it ok to remove all files from the target destination before cloning the repository?"\
                                                        % (self.basedir,self.remoteUrl))
                         
                 if cleandir:
-                    o.system.fs.removeDirTree(self.basedir)
-                    o.system.fs.createDir(self.basedir)
+                    j.system.fs.removeDirTree(self.basedir)
+                    j.system.fs.createDir(self.basedir)
                     self._clone()
                 else:
                     self._raise("Could not clone %s to %s, target dir was not empty" % (self.basedir,self.remoteUrl))
             
-        elif not o.system.fs.exists(self.basedir):
-            o.system.fs.createDir(self.basedir)
+        elif not j.system.fs.exists(self.basedir):
+            j.system.fs.createDir(self.basedir)
             if self.branchname == None:
-                if o.application.shellconfig.interactive:
-                    self.branchname = o.console.askString("Which branch do you want to clone?", "default")
+                if j.application.shellconfig.interactive:
+                    self.branchname = j.console.askString("Which branch do you want to clone?", "default")
                 else:
                     self.branchname = "default"
             self._clone()
@@ -71,7 +71,7 @@ class HgLibClient:
         self.checkbranch()
        
     def isInitialized(self):
-        return o.system.fs.exists(o.system.fs.joinPaths(self.basedir,".hg"))
+        return j.system.fs.exists(j.system.fs.joinPaths(self.basedir,".hg"))
 
     def patchHgIgnore(self):
         #create or update the hgignore file
@@ -89,14 +89,14 @@ syntax: regexp
 /_remote/
 .orig$
 """
-        ignorefilepath = o.system.fs.joinPaths(self.basedir,".hgignore")
-        if o.system.fs.exists(self.basedir) and not o.system.fs.exists(ignorefilepath):
-            o.system.fs.writeFile(ignorefilepath,hgignore)
+        ignorefilepath = j.system.fs.joinPaths(self.basedir,".hgignore")
+        if j.system.fs.exists(self.basedir) and not j.system.fs.exists(ignorefilepath):
+            j.system.fs.writeFile(ignorefilepath,hgignore)
             
-        elif  o.system.fs.exists(self.basedir):
+        elif  j.system.fs.exists(self.basedir):
             #add items not in hgignore yet
             lines=hgignore.split("\n")
-            inn=o.system.fs.fileGetContents(ignorefilepath)
+            inn=j.system.fs.fileGetContents(ignorefilepath)
             linesExisting=inn.split("\n")
             linesout=[]
             for line in linesExisting:
@@ -107,7 +107,7 @@ syntax: regexp
                     linesout.append(line)
             out="\n".join(linesout)
             if out.strip()<>inn.strip():
-                o.system.fs.writeFile(ignorefilepath,out)
+                j.system.fs.writeFile(ignorefilepath,out)
 
     def isConnected(self): #??
         try:
@@ -136,10 +136,10 @@ syntax: regexp
         self._log("mercurial verify %s" % (self.basedir),2)
         if not self.verify(False):
             msg="Mercurial directory on %s is corrupt." % (self.basedir)
-            if o.application.shellconfig.interactive:
-                o.console.echo(msg)
-                if o.gui.dialog.askYesNo("/nDo you want to repair the situation by removing the corrupt directory and clone again?"):
-                    o.system.fs.removeDirTree(self.basedir)
+            if j.application.shellconfig.interactive:
+                j.console.echo(msg)
+                if j.gui.dialog.askYesNo("/nDo you want to repair the situation by removing the corrupt directory and clone again?"):
+                    j.system.fs.removeDirTree(self.basedir)
                     self.__init__(self.basedir,self.remoteUrl)                  
                     return True
             else:
@@ -151,7 +151,7 @@ syntax: regexp
     
     def _log(self, message, level=5):
         message="hglclient, repo:%s \n%s" % (self.basedir,message)
-        o.logger.log(message, level)
+        j.logger.log(message, level)
 
     def _raise(self, message):        
         message="ERROR hgclient: %s\nPlease fix the merurial local repo manually and restart failed mercurial action.\nRepo is %s" % (message, self.basedir)
@@ -184,10 +184,10 @@ syntax: regexp
         
         # first remove backup files as these confuse the system
         # If the system contains backup files raise an exception
-        files  = o.system.fs.listFilesInDir(self.basedir, recursive=True)
+        files  = j.system.fs.listFilesInDir(self.basedir, recursive=True)
         for file in files:
             if file[-1] == '~': # if backupfile
-                o.system.fs.removeFile(file)
+                j.system.fs.removeFile(file)
         self._removeRedundantFiles()
         rules = self.status()
         modified=[]
@@ -235,10 +235,10 @@ syntax: regexp
         result=self.update(die=False)
         if not result:
             if trymerge:
-                o.console.echo("cannot update will try a merge")
+                j.console.echo("cannot update will try a merge")
                 result = self.merge(commitMessage=commitMessage, user=user)
                 if result == 1 or result == 2:
-                    o.console.log("There was nothing to merge")
+                    j.console.log("There was nothing to merge")
                 else:
                     self.commit("Automatic Merge")                
                 result = self.update()            
@@ -248,12 +248,12 @@ syntax: regexp
         # means files are in repo but no longer on filesystem
         if any([result["ignored"], result["nottracked"], result["missing"]]):
             #there are files not added yet
-            if o.application.shellconfig.interactive:
-                o.console.echo("\n\nFound files not added yet to repo or deleted from filesystem")
+            if j.application.shellconfig.interactive:
+                j.console.echo("\n\nFound files not added yet to repo or deleted from filesystem")
 
                 if result["missing"]:
-                    o.console.echo("\n".join(["Missing: %s" % item for item in result["missing"]]))
-                    if not o.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?"):
+                    j.console.echo("\n".join(["Missing: %s" % item for item in result["missing"]]))
+                    if not j.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?"):
                         self._raise("Cannot update repo because files are deleted on filesystem which should not have.")
                     else:
                         self.addremove(message="add remove missing files for %s" % commitMessage) #@todo P1 check if this is ok?
@@ -261,16 +261,16 @@ syntax: regexp
                             #self.remove(path)
                             
                 if len(result["nottracked"])>0 or len(result["ignored"])>0:
-                    o.console.echo("\n".join(["Nottracked/Ignored: %s" % item for item in result["nottracked"] + result["ignored"]]))
-                    o.console.echo("\n\Above files are not added yet to repo but on filesystem")
-                    action = o.gui.dialog.askChoice("What do you want to do with these files" , ["RemoveTheseFiles", "AddRemove", "Abort"])
+                    j.console.echo("\n".join(["Nottracked/Ignored: %s" % item for item in result["nottracked"] + result["ignored"]]))
+                    j.console.echo("\n\Above files are not added yet to repo but on filesystem")
+                    action = j.gui.dialog.askChoice("What do you want to do with these files" , ["RemoveTheseFiles", "AddRemove", "Abort"])
                     if action == "RemoveTheseFiles":
                         for path in result["nottracked"] + result["ignored"]:
-                            if o.system.fs.exists(o.system.fs.joinPaths(self.basedir,path)):
-                                if o.system.fs.isDir(o.system.fs.joinPaths(self.basedir,path)):
-                                    o.system.fs.removeDir(o.system.fs.joinPaths(self.basedir,path))
+                            if j.system.fs.exists(j.system.fs.joinPaths(self.basedir,path)):
+                                if j.system.fs.isDir(j.system.fs.joinPaths(self.basedir,path)):
+                                    j.system.fs.removeDir(j.system.fs.joinPaths(self.basedir,path))
                                 else:
-                                    o.system.fs.removeFile(o.system.fs.joinPaths(self.basedir,path))
+                                    j.system.fs.removeFile(j.system.fs.joinPaths(self.basedir,path))
                     elif action == "AddRemove":
                         self.addremove(message="commit missing owpackage files, addremove")
                     elif action == "Abort":
@@ -285,14 +285,14 @@ syntax: regexp
             
         result=self.getModifiedFiles()   
         if any([result["added"], result["removed"], result["modified"]]):
-            if o.application.shellconfig.interactive:
-                o.console.echo("\nFound modified, added, deleted files not committed yet")
-                o.console.echo("\n".join(["Added:    %s" % item for item in result["added"]]))
-                o.console.echo("\n".join(["Removed:  %s" % item for item in result["removed"]]))
-                o.console.echo("\n".join(["Modified: %s" % item for item in result["modified"]]))                    
-                if o.gui.dialog.askYesNo("\nDo you want to commit the files?"):
+            if j.application.shellconfig.interactive:
+                j.console.echo("\nFound modified, added, deleted files not committed yet")
+                j.console.echo("\n".join(["Added:    %s" % item for item in result["added"]]))
+                j.console.echo("\n".join(["Removed:  %s" % item for item in result["removed"]]))
+                j.console.echo("\n".join(["Modified: %s" % item for item in result["modified"]]))                    
+                if j.gui.dialog.askYesNo("\nDo you want to commit the files?"):
                     commitMessage=self.commit(commitMessage, user=user)
-                elif o.gui.dialog.askYesNo("\nDo you want to ignore the changed files? The changes will be lost"):
+                elif j.gui.dialog.askYesNo("\nDo you want to ignore the changed files? The changes will be lost"):
                     self.update(force=True) #@todo P1 not implemented
                 else:
                     self._raise("Cannot update repo because uncommitted files in %s" % self.basedir)        
@@ -315,7 +315,7 @@ syntax: regexp
         """
         mypaths = list()
         for val in paths:
-            mypaths.append(o.system.fs.joinPaths(self.basedir, val))
+            mypaths.append(j.system.fs.joinPaths(self.basedir, val))
         self._log("remove file from local repo with path %s" % mypaths,8)
         self.client.remove(mypaths)
 
@@ -376,8 +376,8 @@ syntax: regexp
         if self.branchname:
             if self.getbranchname() != self.branchname:
                 force=False
-                if o.application.shellconfig.interactive:
-                    if o.gui.dialog.askYesNo("\nBranchnames conflict for repo, qshell mercurial client has branchname: %s and branchname on filesystem: %s\nThis might result in loosing code changes. \nDo you want to continue, this will pull & update to the branch?" % (self.branchname,self.getbranchname())):
+                if j.application.shellconfig.interactive:
+                    if j.gui.dialog.askYesNo("\nBranchnames conflict for repo, qshell mercurial client has branchname: %s and branchname on filesystem: %s\nThis might result in loosing code changes. \nDo you want to continue, this will pull & update to the branch?" % (self.branchname,self.getbranchname())):
                         self.pullupdate(force=True)
                 if not force:
                     self._raise("Branchnames conflict for repo, qshell mercurial client has branchname: %s and branchname on filesystem: %s" % (self.branchname,self.getbranchname()))
@@ -422,8 +422,8 @@ syntax: regexp
         if not self.status():
             self._log("Nothing to commit, e.g. after a merge which had nothing to do.",5)
             return 
-        if o.application.shellconfig.interactive and not message:
-            message = o.gui.dialog.askString("give commit message:")
+        if j.application.shellconfig.interactive and not message:
+            message = j.gui.dialog.askString("give commit message:")
         elif not message:
             raise RuntimeError("need commit message")
 
@@ -463,7 +463,7 @@ syntax: regexp
                     addRemoveUntrackedFiles, trymerge, pull=False, user=user)
             self.push()        
         except:
-            o.logger.exception("Failed to update/merge/push %s" % self)
+            j.logger.exception("Failed to update/merge/push %s" % self)
             self.pull()  #now try to pull first
             self.updatemerge(commitMessage, ignorechanges,
                     addRemoveUntrackedFiles, trymerge, pull=False, user=user)
@@ -474,12 +474,12 @@ syntax: regexp
         dirs2delete=[]
         def process(args, path):
             if path[-4:].lower()==".pyc" or path[-4:].lower()==".pyo" or path[-4:].lower()==".pyw" or path[-1]=="~":
-                o.system.fs.removeFile(path)
+                j.system.fs.removeFile(path)
             if path.find("/.cache")<>-1 and path.find("/.hg/")==-1:
                 dirs2delete.append(path)
-        o.system.fswalker.walk(self.basedir,process,"",True,True) 
+        j.system.fswalker.walk(self.basedir,process,"",True,True) 
         for cachedir in dirs2delete:
-            o.system.fs.removeDirTree(cachedir)
+            j.system.fs.removeDirTree(cachedir)
 
     def getConfigItem(self, section, key):
         config = self.client.config(section)
@@ -523,7 +523,7 @@ syntax: regexp
         @rtype: list(string)
         """
         revrange = "%s:%s" % (fromNode, toNode)
-        path = o.system.fs.joinPaths(self.basedir, path)
+        path = j.system.fs.joinPaths(self.basedir, path)
         logs = self.client.log(files=[path], revrange=revrange)
         return [ log.node for log in logs ]
 
@@ -538,7 +538,7 @@ syntax: regexp
         @return: content of the file at `path` in commit `rev`
         @rtype: string
         """
-        path = o.system.fs.joinPaths(self.basedir, path)
+        path = j.system.fs.joinPaths(self.basedir, path)
         return self.client.cat([path], rev=rev)
 
     def walk(self, rev, paths, callback):
@@ -570,14 +570,14 @@ syntax: regexp
         if user:
             return
 
-        hgrclocation = o.system.fs.joinPaths(os.environ["HOME"], ".hgrc")
-        if o.system.fs.exists(hgrclocation):
+        hgrclocation = j.system.fs.joinPaths(os.environ["HOME"], ".hgrc")
+        if j.system.fs.exists(hgrclocation):
             raise RuntimeError("A hgrc file exists at %s, but no username was "
                     "filled in in the [ui] section" % hgrclocation)
         else:
-            name = o.gui.dialog.askString("\n\nSpecify your username & email address for mercurial\n e.g Firstname Lastname <firstname.lastname@example.net>\n")
+            name = j.gui.dialog.askString("\n\nSpecify your username & email address for mercurial\n e.g Firstname Lastname <firstname.lastname@example.net>\n")
             config = "[ui]\nusername = %s\nverbose = True\n" % name
-            o.system.fs.writeFile(hgrclocation, config)
+            j.system.fs.writeFile(hgrclocation, config)
             self.reset()
 
     def reset(self):

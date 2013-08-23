@@ -1,13 +1,13 @@
 import sys
 sys.path.insert(0,"lib")
 
-from OpenWizzy import *
+from JumpScale import *
 
-o.application.appname = "jspackage"
-o.application.start()
+j.application.appname = "jspackage"
+j.application.start()
 
-import OpenWizzy.baselib.jspackages
+import JumpScale.baselib.jspackages
 
-o.packagesi.createNewPackage()
+j.packagesi.createNewPackage()
 
-o.application.stop()
+j.application.stop()

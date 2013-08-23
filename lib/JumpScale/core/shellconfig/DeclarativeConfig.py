@@ -4,9 +4,9 @@ import inspect
 import re
 from operator import attrgetter
 
-from OpenWizzy.core.baseclasses import BaseType
-from OpenWizzy.core.inifile.IniFile import IniFile
-from OpenWizzy import o
+from JumpScale.core.baseclasses import BaseType
+from JumpScale.core.inifile.IniFile import IniFile
+from JumpScale import j
 
 """
 Note: does not support defaults (yet)
@@ -15,14 +15,14 @@ Note: does not support defaults (yet)
 class AutoCreateIniFile(IniFile):
     def __init__(self, path, auto_create=False):
         self._pmd_path = path
-        if auto_create and not o.system.fs.isFile(path):
+        if auto_create and not j.system.fs.isFile(path):
             create=True
         else:
             create=False
         IniFile.__init__(self, path, create=create)
 
     def remove(self):
-        o.system.fs.removeFile(self._pmd_path)
+        j.system.fs.removeFile(self._pmd_path)
 
 class ConfigSection(BaseType):
     def __init__(self, config, name):
@@ -64,7 +64,7 @@ class ConfigSection(BaseType):
             if basetype.check(val):
                 setattr(o, self._getPrivateName(name), val)
                 str_val = basetype.toString(val)
-                o._setConfigParam(name, str_val)
+                j._setConfigParam(name, str_val)
             else:
                 raise ValueError("Invalid value for this parameter")
         return setter
@@ -73,7 +73,7 @@ class ConfigSection(BaseType):
         self._config.setParam(self._section_name, name, val)
 
     def __str__(self):
-        config_basename = o.system.fs.getBaseName(self._config._pmd_path)
+        config_basename = j.system.fs.getBaseName(self._config._pmd_path)
         return "Config Section '%s' of %s" % (self._section_name, config_basename)
 
     def __repr__(self):
@@ -125,7 +125,7 @@ class Config(object):
         self._config.remove()
 
     def __str__(self):
-        config_basename = o.system.fs.getBaseName(self._filename)
+        config_basename = j.system.fs.getBaseName(self._filename)
         return "Config %s" % (config_basename)
 
     def __repr__(self):

@@ -1,11 +1,11 @@
-from OpenWizzy import o
+from JumpScale import j
 from LRUCacheFactory import LRUCacheFactory
 
 class Empty():
 	pass
-if not  o.__dict__.has_key("db"):
-    o.db=Empty()
+if not  j.__dict__.has_key("db"):
+    j.db=Empty()
 
-o.db.cache=LRUCacheFactory()
+j.db.cache=LRUCacheFactory()
 
 

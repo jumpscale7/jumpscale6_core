@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class Dummy(object):
     def __getattr__(self, key):
@@ -17,4 +17,4 @@ class Loader(object):
 
 
 
-o.base.loader = Loader()
+j.base.loader = Loader()

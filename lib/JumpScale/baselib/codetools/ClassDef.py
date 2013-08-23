@@ -1,5 +1,5 @@
 
-from OpenWizzy import o
+from JumpScale import j
 import PropertyDef
 
 class ClassDef:
@@ -40,5 +40,5 @@ class ClassDef:
                 pd = classDef.getProp(propname, True)
                 if not pd == None:
                     return pd
-        o.logger.log("Could not find the property [%s]" % propname, 3)
+        j.logger.log("Could not find the property [%s]" % propname, 3)
         return None

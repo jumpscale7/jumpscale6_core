@@ -1,9 +1,9 @@
 import math
-from OpenWizzy import o
+from JumpScale import j
 from QPackageObject4 import QPackageObject4
 from Domain import Domain
 from CodeManagementRecipe import CodeManagementRecipe
-from OpenWizzy.core.enumerators.PlatformType import PlatformType
+from JumpScale.core.enumerators.PlatformType import PlatformType
 
 class QPackageClient4():
     sourcesFile = None
@@ -11,18 +11,18 @@ class QPackageClient4():
     """
     methods to deal with owpackages, seen from client level
 
-    @qlocation o.packages
+    @qlocation j.packages
     """
     def __init__(self):
         """
         """
-        o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.packageDir, "metadata"))
-        o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.packageDir, "files"))
-        o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.packageDir, "bundles"))
-        o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.packageDir, "metatars"))
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metadata"))
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "files"))
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "bundles"))
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metatars"))
         self.domains=[]
-        self._metadatadirTmp=o.system.fs.joinPaths(o.dirs.varDir,"tmp","owpackages","md")
-        o.system.fs.createDir(self._metadatadirTmp)        
+        self._metadatadirTmp=j.system.fs.joinPaths(j.dirs.varDir,"tmp","owpackages","md")
+        j.system.fs.createDir(self._metadatadirTmp)        
         # can't ask username here
         # because openwizzy is not interactive yet
         # So we ask the username/passwd lazy in the domain object
@@ -38,7 +38,7 @@ class QPackageClient4():
         return QPackageMetadataScanner()
 
     def _renew(self):
-        o.packages = QPackageClient6()
+        j.packages = QPackageClient6()
 
     def checkProtectedDirs(self,redo=True,checkInteractive=True):
         """
@@ -48,12 +48,12 @@ class QPackageClient4():
         @checkInteractive if False, will not ask just execute on it
         """
      
-        result,llist=o.system.process.execute("find /opt/qbase5 -type l")
+        result,llist=j.system.process.execute("find /opt/qbase5 -type l")
         lines=[item for item in llist.split("\n") if item.strip()<>""]
         if len(lines)>0:
-            cfgpath=o.system.fs.joinPaths(o.dirs.cfgDir,"debug","protecteddirs","protected.cfg")
-            if redo==False and o.system.fs.exists(cfgpath):
-                llist=o.system.fs.fileGetContents(cfgpath)
+            cfgpath=j.system.fs.joinPaths(j.dirs.cfgDir,"debug","protecteddirs","protected.cfg")
+            if redo==False and j.system.fs.exists(cfgpath):
+                llist=j.system.fs.fileGetContents(cfgpath)
                 lines.extend([item for item in llist.split("\n") if item.strip()<>""])
             prev=""
             lines2=[]
@@ -65,30 +65,30 @@ class QPackageClient4():
             out="\n".join(lines2)
             do=False
             if checkInteractive: 
-                if o.console.askYesNo("Do you want to make sure that existing linked dirs are not overwritten by installer? \n(if yes the linked dirs will be put in protected dir configuration)\n"):
+                if j.console.askYesNo("Do you want to make sure that existing linked dirs are not overwritten by installer? \n(if yes the linked dirs will be put in protected dir configuration)\n"):
                     do=True
             else:
                 do=True
             if do:
-                o.system.fs.writeFile(cfgpath,out)     
+                j.system.fs.writeFile(cfgpath,out)     
 
     def reloadconfig(self):
         """
         Reload all owpackage config data from disk
         """
         self.resetState()
-        cfgpath=o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg')
+        cfgpath=j.system.fs.joinPaths(j.dirs.cfgDir, 'owpackages', 'sources.cfg')
 
-        if not o.system.fs.exists(cfgpath):
+        if not j.system.fs.exists(cfgpath):
             #check if there is old owpackage dir
-            cfgpathOld=o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg')            
-            if o.system.fs.exists(cfgpathOld):
-                o.system.fs.renameDir(o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages'),o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages'))
+            cfgpathOld=j.system.fs.joinPaths(j.dirs.cfgDir, 'owpackages', 'sources.cfg')            
+            if j.system.fs.exists(cfgpathOld):
+                j.system.fs.renameDir(j.system.fs.joinPaths(j.dirs.cfgDir, 'owpackages'),j.system.fs.joinPaths(j.dirs.cfgDir, 'owpackages'))
 
-        if not o.system.fs.exists(cfgpath):
-            o.system.fs.createDir(o.system.fs.getDirName(cfgpath))
+        if not j.system.fs.exists(cfgpath):
+            j.system.fs.createDir(j.system.fs.getDirName(cfgpath))
         else:
-            cfg = o.tools.inifile.open(cfgpath)
+            cfg = j.tools.inifile.open(cfgpath)
             self.sourcesConfig=cfg
             domainDict = dict()
             for domains in self.domains: 
@@ -99,18 +99,18 @@ class QPackageClient4():
                 self.domains.append(Domain(domainname=domain))
 
 
-    def createNewQPackage(self, domain, name, version="1.0", description="", supportedPlatforms=[o.enumerators.PlatformType.LINUX]):
+    def createNewQPackage(self, domain, name, version="1.0", description="", supportedPlatforms=[j.enumerators.PlatformType.LINUX]):
         """
         Creates a new owpackage4, this includes all standard tasklets, a config file and a description.wiki file
         @param domain:      string - The domain the new owpackage should reside in
         @param name:        string - The name of the new owpackage
         @param version:     string - The version of the new owpackage
         @param description: string - The description of the new owpackage (is stored in the description.wiki file)
-        @param supportedPlatforms  [o.enumerators.PlatformType.LINUX,...] other examples WIN,LINUX32,LINUX64
+        @param supportedPlatforms  [j.enumerators.PlatformType.LINUX,...] other examples WIN,LINUX32,LINUX64
         """
         supportedPlatforms=[str(item) for item in supportedPlatforms]
         # Create one in the repo
-        if not domain in o.packages.getDomainNames():
+        if not domain in j.packages.getDomainNames():
             raise RuntimeError('Provided domain is nonexistent on this system')
         if self.getDomainObject(domain).metadataFromTgz:
             raise RuntimeError('The meta data for domain ' + domain + ' is coming from a tgz, you cannot create new packages in it.')
@@ -119,10 +119,10 @@ class QPackageClient4():
         qp.supportedPlatforms = supportedPlatforms
         qp.description=description
         qp.save()
-        o.system.fs.createDir(qp.getPathFiles())
-        o.system.fs.createDir(o.system.fs.joinPaths(qp.getPathFiles(),"generic"))
+        j.system.fs.createDir(qp.getPathFiles())
+        j.system.fs.createDir(j.system.fs.joinPaths(qp.getPathFiles(),"generic"))
         for pl in supportedPlatforms:
-            o.system.fs.createDir(o.system.fs.joinPaths(qp.getPathFiles(),"%s"%pl))
+            j.system.fs.createDir(j.system.fs.joinPaths(qp.getPathFiles(),"%s"%pl))
         return qp
 
 
@@ -158,7 +158,7 @@ class QPackageClient4():
                 try:
                     package.download(allplatforms=True)
                 except:
-                    o.console.echo("could not download package %s" % package.name)
+                    j.console.echo("could not download package %s" % package.name)
             else:
                 package.download()
                     
@@ -171,7 +171,7 @@ class QPackageClient4():
         """
         Checks whether the owpackage's metadata path is currently present on your system
         """
-        return o.system.fs.exists(self.getMetadataPath(domain,name,version))
+        return j.system.fs.exists(self.getMetadataPath(domain,name,version))
 
     def getInstalledPackages(self):
         """
@@ -234,9 +234,9 @@ class QPackageClient4():
         """
         if fromtmp:
             self._metadatadirTmp
-            return o.system.fs.joinPaths(self._metadatadirTmp,domain,name,version,"actions")
+            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,version,"actions")
         else:
-            return o.system.fs.joinPaths(o.dirs.packageDir, "active", domain,name,version,"actions")
+            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,version,"actions")
 
 
     def getQPActiveHRDPath(self,domain,name,version,fromtmp=False):
@@ -251,9 +251,9 @@ class QPackageClient4():
         """
         if fromtmp:
             self._metadatadirTmp
-            return o.system.fs.joinPaths(self._metadatadirTmp,domain,name,version,"hrd")
+            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,version,"hrd")
         else:
-            return o.system.fs.joinPaths(o.dirs.packageDir, "active", domain,name,version,"hrd")
+            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,version,"hrd")
 
     def getMetadataPath(self,domain,name,version):
         """
@@ -264,7 +264,7 @@ class QPackageClient4():
         @param version: string - The version of the owpackage
         @param fromtmp: boolean
         """
-        return o.system.fs.joinPaths(o.dirs.packageDir, "metadata", domain,name,version)
+        return j.system.fs.joinPaths(j.dirs.packageDir, "metadata", domain,name,version)
 
     def getDataPath(self,domain,name,version):
         """
@@ -273,14 +273,14 @@ class QPackageClient4():
         @param name:    string - The name of the owpackage
         @param version: string - The version of the owpackage
         """
-        return o.system.fs.joinPaths(o.dirs.packageDir, "files", domain,name,version)
+        return j.system.fs.joinPaths(j.dirs.packageDir, "files", domain,name,version)
 
     def getMetaTarPath(self, domainName):
         """
         Returns the metatarsdatapath for the provided domain
         This is the place where the .tgz bundles are stored for each domain
         """
-        return o.system.fs.joinPaths(o.dirs.packageDir, "metatars", domainName)
+        return j.system.fs.joinPaths(j.dirs.packageDir, "metatars", domainName)
 
     # This is a name inconsitency with owpackage.getPathFiles
     #                                          .getPathBundles
@@ -289,7 +289,7 @@ class QPackageClient4():
         """
         Returns the bundlesdatapath where all bundles are stored for all different domains
         """
-        return o.system.fs.joinPaths(o.dirs.packageDir, "bundles")
+        return j.system.fs.joinPaths(j.dirs.packageDir, "bundles")
 
 
 ############################################################
@@ -309,7 +309,7 @@ class QPackageClient4():
 ##########################  FIND  ##########################
 ############################################################
 
-    def findNewest(self, name="", domain="", minversion="",maxversion="",platform=o.enumerators.PlatformType.GENERIC, returnNoneIfNotFound=False):
+    def findNewest(self, name="", domain="", minversion="",maxversion="",platform=j.enumerators.PlatformType.GENERIC, returnNoneIfNotFound=False):
         """
         Find the newest owpackage which matches the criteria
         If more than 1 owpackage matches -> error
@@ -353,14 +353,14 @@ class QPackageClient4():
             raise RuntimeError("Did not find owpackage with criteria domain:%s, name:%s, minversion:%s, maxversion:%s, platform:%s" % (domain,name,minversion,maxversion,platform))
         return result[0]
 
-    def find(self, name="", domain="", version="", platform=o.enumerators.PlatformType.GENERIC):
+    def find(self, name="", domain="", version="", platform=j.enumerators.PlatformType.GENERIC):
         """
         returns list of found owpackages
         @param domain:  string - The name of owpackage domain, when using * means partial name
         @param name:    string - The name of the owpackage you are looking for
         @param version: string - The version of the owpackage you are looking for
         """
-        o.logger.log("Find owpackage domain:%s name:%s version:%s platform:%s" %(domain,name,version,platform))
+        j.logger.log("Find owpackage domain:%s name:%s version:%s platform:%s" %(domain,name,version,platform))
         #work with some functional methods works faster than doing the check everytime
         def findPartial(pattern,text):
             pattern=pattern.replace("*","")
@@ -407,17 +407,17 @@ class QPackageClient4():
         res = list()
         domains=self.getDomainNames()
         for domainName in domains:
-            domainpath=o.system.fs.joinPaths(o.dirs.packageDir, "metadata", domainName)
-            if o.system.fs.exists(domainpath): #this follows the link
-                packages= [p for p in o.system.fs.listDirsInDir(domainpath,dirNameOnly=True) if p != '.hg'] # skip hg file
+            domainpath=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", domainName)
+            if j.system.fs.exists(domainpath): #this follows the link
+                packages= [p for p in j.system.fs.listDirsInDir(domainpath,dirNameOnly=True) if p != '.hg'] # skip hg file
                 for packagename in packages:
-                    packagepath=o.system.fs.joinPaths(domainpath,packagename)
-                    versions=o.system.fs.listDirsInDir(packagepath,dirNameOnly=True)
+                    packagepath=j.system.fs.joinPaths(domainpath,packagename)
+                    versions=j.system.fs.listDirsInDir(packagepath,dirNameOnly=True)
                     for version in versions:
                         res.append([domainName,packagename,version])
         return res
 
-    def getQPackageObjects(self, platform=o.enumerators.PlatformType.GENERIC, domain=None):
+    def getQPackageObjects(self, platform=j.enumerators.PlatformType.GENERIC, domain=None):
         """
         Returns a list of owpackage objects for specified platform & domain
         """
@@ -467,7 +467,7 @@ class QPackageClient4():
         """
         self.resetState()
         if domain<>"":
-            o.logger.log("Update metadata information for owpackages domain %s" % domain, 1)
+            j.logger.log("Update metadata information for owpackages domain %s" % domain, 1)
             d=self.getDomainObject(domain)
             d.updateMetadata(force=force)
         else:
@@ -480,12 +480,12 @@ class QPackageClient4():
         Does an update of the meta information repo for each domain
         """
 
-        if not o.application.shellconfig.interactive:
+        if not j.application.shellconfig.interactive:
             if commitMessage == '':
                 raise RuntimeError('Need commit message')
 
         if domain<>"":
-            o.logger.log("Merge metadata information for owpackages domain %s" % domain, 1)
+            j.logger.log("Merge metadata information for owpackages domain %s" % domain, 1)
             d=self.getDomainObject(domain)
             d.mergeMetadata(commitMessage=commitMessage)
         else:
@@ -496,7 +496,7 @@ class QPackageClient4():
         cfg=self.sourcesConfig        
         bitbucketreponame=cfg.getValue( domain, 'bitbucketreponame')
         bitbucketaccount=cfg.getValue( domain, 'bitbucketaccount')      
-        qualityLevels=o.system.fs.listDirsInDir(o.system.fs.joinPaths(o.dirs.codeDir,bitbucketaccount,bitbucketreponame),dirNameOnly=True)        
+        qualityLevels=j.system.fs.listDirsInDir(j.system.fs.joinPaths(j.dirs.codeDir,bitbucketaccount,bitbucketreponame),dirNameOnly=True)        
         qualityLevels=[item for item in qualityLevels if item<>".hg"]
         return qualityLevels
     
@@ -507,20 +507,20 @@ class QPackageClient4():
         if descr=="":
             descr="please select your qualitylevel"
         if qualityLevel==None or qualityLevel=="":
-            qualityLevel=o.console.askChoice(self._getQualityLevels(domain),descr)
-        return o.system.fs.joinPaths(o.dirs.codeDir,bitbucketaccount,bitbucketreponame,qualityLevel)      
+            qualityLevel=j.console.askChoice(self._getQualityLevels(domain),descr)
+        return j.system.fs.joinPaths(j.dirs.codeDir,bitbucketaccount,bitbucketreponame,qualityLevel)      
 
     def metadataDeleteQualityLevel(self, domain="",qualityLevel=None):
         """
         Delete a quality level 
         """
         if domain<>"":
-            o.logger.log("Delete quality level %s for %s." % (qualityLevel,domain), 1)
+            j.logger.log("Delete quality level %s for %s." % (qualityLevel,domain), 1)
             metadataPath=self._getMetadataDir(domain,qualityLevel)            
-            o.system.fs.removeDirTree(metadataPath)
+            j.system.fs.removeDirTree(metadataPath)
         else:
-            if o.application.shellconfig.interactive:
-                domainnames=o.console.askChoiceMultiple(o.packages.getDomainNames())
+            if j.application.shellconfig.interactive:
+                domainnames=j.console.askChoiceMultiple(j.packages.getDomainNames())
             else:
                 domainnames=self.getDomainNames()
             for domainName in domainnames:
@@ -534,30 +534,30 @@ class QPackageClient4():
         @param force, will delete the destination
         """
         if domain<>"":
-            o.logger.log("Create quality level for %s from %s to %s" % (domain,qualityLevelFrom,qualityLevelTo), 1)
+            j.logger.log("Create quality level for %s from %s to %s" % (domain,qualityLevelFrom,qualityLevelTo), 1)
             metadataFrom=self._getMetadataDir(domain,qualityLevelFrom,"please select your qualitylevel where you want to copy from for domain %s." % domain)
             if qualityLevelTo==None or qualityLevelTo=="":
-                qualityLevelTo=o.console.askString("Please specify qualitylevel you would like to create for domain %s" % domain)                
+                qualityLevelTo=j.console.askString("Please specify qualitylevel you would like to create for domain %s" % domain)                
             metadataTo=self._getMetadataDir(domain,qualityLevelTo)
-            dirsfrom=o.system.fs.listDirsInDir(metadataFrom)
-            if o.system.fs.exists(metadataTo):
-                if force or o.console.askYesNo("metadata dir %s exists, ok to remove?" % metadataTo):
-                    o.system.fs.removeDirTree(metadataTo)
+            dirsfrom=j.system.fs.listDirsInDir(metadataFrom)
+            if j.system.fs.exists(metadataTo):
+                if force or j.console.askYesNo("metadata dir %s exists, ok to remove?" % metadataTo):
+                    j.system.fs.removeDirTree(metadataTo)
                 else:
                     raise RuntimeError("Cannot continue to create metadata for new qualitylevel, because dest dir exists")
-            o.system.fs.createDir(metadataTo)
+            j.system.fs.createDir(metadataTo)
             for item in dirsfrom:
-                while o.system.fs.isLink(item):
+                while j.system.fs.isLink(item):
                     #look for source of link                
-                    item=o.system.fs.readlink(item)
-                dirname=o.system.fs.getDirName( item+"/", lastOnly=True)
+                    item=j.system.fs.readlink(item)
+                dirname=j.system.fs.getDirName( item+"/", lastOnly=True)
                 if link:
-                    o.system.fs.symlink( item,o.system.fs.joinPaths(metadataTo,dirname),overwriteTarget=True)
+                    j.system.fs.symlink( item,j.system.fs.joinPaths(metadataTo,dirname),overwriteTarget=True)
                 else:
-                    o.system.fs.copyDirTree(item, o.system.fs.joinPaths(metadataTo,dirname), keepsymlinks=False, eraseDestination=True)
+                    j.system.fs.copyDirTree(item, j.system.fs.joinPaths(metadataTo,dirname), keepsymlinks=False, eraseDestination=True)
         else:
-            if o.application.shellconfig.interactive:
-                domainnames=o.console.askChoiceMultiple(o.packages.getDomainNames())
+            if j.application.shellconfig.interactive:
+                domainnames=j.console.askChoiceMultiple(j.packages.getDomainNames())
             else:
                 domainnames=self.getDomainNames()
             for domainName in domainnames:
@@ -570,7 +570,7 @@ class QPackageClient4():
         Updates the metadata for all domains (if no domain specified), makes a tar from it and uploads the tar to the owpackage server so tar based clients can now use the latest packages
         """
         if domain<>"":
-            o.logger.log("Push metadata information for owpackages domain %s to reposerver." % domain, 1)
+            j.logger.log("Push metadata information for owpackages domain %s to reposerver." % domain, 1)
             if qualityLevel=="all":
                 for ql in self._getQualityLevels(domain):
                     d = self.getDomainObject(domain,qualityLevel=ql)
@@ -580,8 +580,8 @@ class QPackageClient4():
                 d.publishMetaDataAsTarGz()
            
         else:
-            if o.application.shellconfig.interactive:
-                domainnames=o.console.askChoiceMultiple(o.packages.getDomainNames())
+            if j.application.shellconfig.interactive:
+                domainnames=j.console.askChoiceMultiple(j.packages.getDomainNames())
             else:
                 domainnames=self.getDomainNames()
             for domainName in domainnames:
@@ -593,10 +593,10 @@ class QPackageClient4():
         @param commitMessage: string - The commit message you want to assign to the publish
         """
         if domain=="":
-            for domain in o.packages.getDomainNames():
+            for domain in j.packages.getDomainNames():
                 self.publish( commitMessage=commitMessage,domain=domain)
         else:
-            domainobject=o.packages.getDomainObject(domain)
+            domainobject=j.packages.getDomainObject(domain)
             domainobject.publish(commitMessage=commitMessage)
 
 
@@ -605,11 +605,11 @@ class QPackageClient4():
 ##########################################################
 
     def _setHasPackagesPendingConfiguration(self, value=True):
-        file = o.system.fs.joinPaths(o.dirs.baseDir, 'cfg', 'owpackages', 'reconfigure.cfg')
-        if not o.system.fs.exists(file):
-            ini_file = o.tools.inifile.new(file)
+        file = j.system.fs.joinPaths(j.dirs.baseDir, 'cfg', 'owpackages', 'reconfigure.cfg')
+        if not j.system.fs.exists(file):
+            ini_file = j.tools.inifile.new(file)
         else:
-            ini_file = o.tools.inifile.open(file)
+            ini_file = j.tools.inifile.open(file)
 
         if not ini_file.checkSection('main'):
             ini_file.addSection('main')
@@ -619,10 +619,10 @@ class QPackageClient4():
         ini_file.write()
 
     def _hasPackagesPendingConfiguration(self):
-        file = o.system.fs.joinPaths(o.dirs.baseDir, 'cfg', 'owpackages', 'reconfigure.cfg')
-        if not o.system.fs.exists(file):
+        file = j.system.fs.joinPaths(j.dirs.baseDir, 'cfg', 'owpackages', 'reconfigure.cfg')
+        if not j.system.fs.exists(file):
             return False
-        ini_file = o.tools.inifile.open(file)
+        ini_file = j.tools.inifile.open(file)
 
         if ini_file.checkSection('main'):
             return ini_file.getValue("main","hasPackagesPendingConfiguration") == '1'
@@ -651,12 +651,12 @@ class QPackageClient4():
 
             # now configure the package
             if package.isPendingReconfiguration():
-                o.logger.log("owpackage %s %s %s needs reconfiguration" % (package.domain,package.name,package.version),3)
+                j.logger.log("owpackage %s %s %s needs reconfiguration" % (package.domain,package.name,package.version),3)
                 try:
                     package.configure()
                 except:
                     q.debugging.printTraceBack('Got error while reconfiguring ' + str(package))
-                    if o.console.askChoice(['Skip this one', 'Go to shell'], 'What do you want to do?') == 'Skip this one':
+                    if j.console.askChoice(['Skip this one', 'Go to shell'], 'What do you want to do?') == 'Skip this one':
                         return True
                     else:
                         return False
@@ -729,7 +729,7 @@ class QPackageClient4():
             #n  += obj.domain
             return n
 
-        o.console.echo("Making Dependency graph ... please wait.")
+        j.console.echo("Making Dependency graph ... please wait.")
     
         platform = PlatformType.getByName('generic')
            
@@ -739,7 +739,7 @@ class QPackageClient4():
         g.graph_attr['ratio']=1.3
     
         #Generate the graph
-        for pack in o.packages.getQPackageObjects():
+        for pack in j.packages.getQPackageObjects():
             dn= 'cluster_'+pack.domain
             s= g.add_subgraph(name = dn)
             s.add_node(_getPackageTagName(pack))
@@ -764,7 +764,7 @@ class QPackageClient4():
                 linkedNodes.append(n)
      
         #Add the domain name to the graph
-        for pack in o.packages.getQPackageObjects():
+        for pack in j.packages.getQPackageObjects():
             n=pack.domain
             dn= 'cluster_'+pack.domain       
     
@@ -787,11 +787,11 @@ class QPackageClient4():
             s.delete_node(n)
         
         g.layout(prog='dot')    
-        graphPath = o.system.fs.joinPaths(o.dirs.packageDir, 'metadata','dependencyGraph.png')
+        graphPath = j.system.fs.joinPaths(j.dirs.packageDir, 'metadata','dependencyGraph.png')
         g.draw(graphPath)
     
         s.layout(prog='dot')
-        graphPath = o.system.fs.joinPaths(o.dirs.packageDir, 'metadata','dependencyGraph_singleNodes.png')
+        graphPath = j.system.fs.joinPaths(j.dirs.packageDir, 'metadata','dependencyGraph_singleNodes.png')
         s.draw(graphPath)
 
-        o.console.echo("Dependency graph successfully created. Open file at /opt/qbase5/var/owpackages/metadata/dependencyGraph.png")
+        j.console.echo("Dependency graph successfully created. Open file at /opt/qbase5/var/owpackages/metadata/dependencyGraph.png")

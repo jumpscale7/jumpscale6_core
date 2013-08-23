@@ -2,8 +2,8 @@ import json
 #import pymodel
 import time
 from abc import ABCMeta, abstractmethod
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseEnumeration
 
 
 class KeyValueStoreType(BaseEnumeration):
@@ -26,7 +26,7 @@ class KeyValueStoreBase(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, serializers=[]):
-        #self.id = o.application.getUniqueMachineId()
+        #self.id = j.application.getUniqueMachineId()
         self.serializers = serializers
         self.unserializers = list(reversed(self.serializers))
 
@@ -77,19 +77,19 @@ class KeyValueStoreBase(object):
 
     def cacheSet(self,key,value,expirationInSecondsFromNow=60):
         #time in minutes for expiration
-        ttime=o.base.time.getTimeEpoch()
+        ttime=j.base.time.getTimeEpoch()
         value=[ttime+expirationInSecondsFromNow,value]
         if key=="":
-            key=o.base.idgenerator.generateGUID()
+            key=j.base.idgenerator.generateGUID()
         self.set("cache", key, value)
         return key
         # if nrMinutesExpiration>0:            
         #     self.set("cache", key, value)
-        #     tt=o.base.time.getMinuteId()
+        #     tt=j.base.time.getMinuteId()
         #     actor.dbmem.set("mcache_%s"%tt, key, "")
         # elif nrHoursExpiration>0:            
         #     self.set("cache", key, value)
-        #     tt=o.base.time.getHourId()
+        #     tt=j.base.time.getHourId()
         #     actor.dbmem.set("hcache_%s"%tt, key, "")
 
     def cacheGet(self,key,deleteAfterGet=False):
@@ -113,7 +113,7 @@ class KeyValueStoreBase(object):
             return []
 
     def cacheExpire(self):
-        now=o.base.time.getTimeEpoch()
+        now=j.base.time.getTimeEpoch()
         for key in self.list():
             expiretime,val=self.get(key)
             if expiretime>now:
@@ -206,7 +206,7 @@ class KeyValueStoreBase(object):
         if not lockfree:
             if force==False:
                 raise RuntimeError("Cannot lock %s %s"%(locktype, info))
-        value = [self.id, o.base.time.getTimeEpoch() + timeout, info]
+        value = [self.id, j.base.time.getTimeEpoch() + timeout, info]
         encodedValue = json.dumps(value)
         self.settest(category, locktype, encodedValue)
 
@@ -221,10 +221,10 @@ class KeyValueStoreBase(object):
             try:
                 id, lockEnd, info = json.loads(encodedValue)
             except ValueError:
-                o.logger.exception("Failed to decode lock value")
+                j.logger.exception("Failed to decode lock value")
                 raise ValueError("Invalid lock type %s" % locktype)
 
-            if o.base.time.getTimeEpoch() > lockEnd:
+            if j.base.time.getTimeEpoch() > lockEnd:
                 self.delete("lock",locktype)
                 return False,0,0,""
             value = [True, id, lockEnd, info]
@@ -239,13 +239,13 @@ class KeyValueStoreBase(object):
         """
         locked,id, lockEnd,info=self.lockCheck(locktype)
         if locked:
-            start=o.base.time.getTimeEpoch()
+            start=j.base.time.getTimeEpoch()
             if lockEnd + timeoutwait < start:
                 #the lock was already timed out so is free
                 return True
 
             while True:
-                now=o.base.time.getTimeEpoch()
+                now=j.base.time.getTimeEpoch()
                 if now>start+timeoutwait:
                     return False
                 if now > lockEnd:
@@ -312,23 +312,23 @@ class KeyValueStoreBase(object):
         if not self.exists(category, key):
             errorMessage = 'Key value store doesnt have a value for key '\
                            '"%s" in category "%s"' % (key, category)
-            o.logger.log(errorMessage, 4)
+            j.logger.log(errorMessage, 4)
             raise KeyError(errorMessage)
 
     def _assertCategoryExists(self, category):
         if not self._categoryExists(category):
             errorMessage = 'Key value store doesn\'t have a category %s' % (category)
-            o.logger.log(errorMessage, 4)
+            j.logger.log(errorMessage, 4)
             raise KeyError(errorMessage)
 
     def now(self):
         """
         return current time (when in appserver will require less time then calling native openwizzy function)
         """
-        if o.core.appserver6.runningAppserver<> None:
-            return o.core.appserver6.runningAppserver.time
+        if j.core.appserver6.runningAppserver<> None:
+            return j.core.appserver6.runningAppserver.time
         else:
-            return o.base.time.getTimeEpoch()
+            return j.base.time.getTimeEpoch()
 
     def getModifySet(self,category,key,modfunction,**kwargs):
         """
@@ -343,7 +343,7 @@ class KeyValueStoreBase(object):
             data2=modfunction(data)
             if self.settest(category, key, data2):
                 break  #go out  of loop, could store well
-            time.time.sleep(float(o.base.idgenerator.generateRandomInt(1,10))/50)
+            time.time.sleep(float(j.base.idgenerator.generateRandomInt(1,10))/50)
             counter+=1
         return data2
 

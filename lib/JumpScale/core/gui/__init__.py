@@ -1,3 +1,3 @@
-from OpenWizzy import o
+from JumpScale import j
 from Gui import Gui
-o.gui=Gui()
+j.gui=Gui()

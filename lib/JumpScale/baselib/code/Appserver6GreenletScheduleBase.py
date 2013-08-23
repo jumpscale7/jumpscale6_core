@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from ClassBase import ClassBase
 
 class Appserver6GreenletScheduleBase(ClassBase):    

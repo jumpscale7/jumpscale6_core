@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from ClassBase import ClassBase
 
@@ -14,7 +14,7 @@ class Appserver6GreenletTaskletsBase(ClassBase):
         self.paramoptional={}
         self.taskletsPath=taskletsPath
         self.service=""#service object (e.g. the appobject) we want to give to tasklets
-        self.te=o.core.taskletengine.get(self.taskletsPath)
+        self.te=j.core.taskletengine.get(self.taskletsPath)
         
     def wscall(self,ctx,server):
         params=self.te.execute(ctx.params,service=self.service,job=None,tags=None)

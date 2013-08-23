@@ -1,6 +1,6 @@
 # import socket
-from OpenWizzy import o
-import OpenWizzy.baselib.elasticsearch
+from JumpScale import j
+import JumpScale.baselib.elasticsearch
 
 
 class LogTargetElasticSearch(object):
@@ -29,10 +29,10 @@ class LogTargetElasticSearch(object):
         for std out always True
         """
         if self._serverip:
-            if o.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
+            if j.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
                 return False
-            self.esclient = o.clients.elasticsearch.get(self._serverip, 9200)
-            # o.logger.elasticsearchtarget=True
+            self.esclient = j.clients.elasticsearch.get(self._serverip, 9200)
+            # j.logger.elasticsearchtarget=True
 
     def __str__(self):
         """ string representation of a LogTargetServer to ES"""
@@ -88,6 +88,6 @@ class LogTargetElasticSearch(object):
             Q['query']['bool']['must'].append({'term': {'json.private': '1'}})
         result = self.esclient.search(query=Q)
         for item in result["hits"]["hits"]:
-            log = o.logger.getLogObjectFromDict(item["_source"])
+            log = j.logger.getLogObjectFromDict(item["_source"])
             result2.append(log)
         return result2

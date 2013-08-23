@@ -1,5 +1,5 @@
 
-from OpenWizzy import o
+from JumpScale import j
 
 import os
 
@@ -60,7 +60,7 @@ def _setup_stacktrace_hook():
         not available, the given frame will be returned using the string
         '<unknown>' as thread ID.
         '''
-        if o.application.skipTraceback:
+        if j.application.skipTraceback:
             return None
         import sys
 
@@ -207,47 +207,47 @@ except Exception as e:
 del _setup_stacktrace_hook
 
 from .Dirs import Dirs
-o.dirs=Dirs()
+j.dirs=Dirs()
 
 from . import logging
 from .Application import Application
 
 from . import system
 
-o.system.installtools=o.base.fs.installtools
+j.system.installtools=j.base.fs.installtools
 
 from . import enumerators
 
-o.application=Application()
+j.application=Application()
 from . import base
 from . import baseclasses
-from OpenWizzy.core.baseclasses.BaseEnumeration import enumerations
-o.enumerators=enumerations
+from JumpScale.core.baseclasses.BaseEnumeration import enumerations
+j.enumerators=enumerations
 from . import pmtypes
 pmtypes.register_types()
-o.basetype=pmtypes.register_types()
+j.basetype=pmtypes.register_types()
 
 from . import errorhandling
 
-# o.pm_hooked_extension_dirs = dict()
+# j.pm_hooked_extension_dirs = dict()
 
-import OpenWizzy.baselib.platforms
-import OpenWizzy.core.config
-import OpenWizzy.baselib.hrd
+import JumpScale.baselib.platforms
+import JumpScale.core.config
+import JumpScale.baselib.hrd
 
 from . import shellconfig
 from . import console
 from . import gui
 
-import OpenWizzy.baselib.owdeveltools
+import JumpScale.baselib.owdeveltools
 
 #reinit whoAmI after dirs are loaded
-o.application.initWhoAmI()
+j.application.initWhoAmI()
 
 
 # from extensions.PMExtensions import PMExtensions
 
-# from OpenWizzy.core.Pylabs import Pylabs
+# from JumpScale.core.Pylabs import Pylabs
 
 # class InteractiveExtensions(PMExtensionsGroup):
 #     def __init__(self):
@@ -259,8 +259,8 @@ o.application.initWhoAmI()
 #     def _initExtensions(self):
 #         if self._init==False:
 #             self._pmExtensions = PMExtensions(self, 'i.', suppressAlreadyMountedError=True)
-#             ##self._pmExtensions.load(o.system.fs.joinPaths(self.dirs.extensionsDir,"interactive"))
-#             self._pmExtensions.load(o.system.fs.joinPaths(o.dirs.extensionsDir,"core"))
+#             ##self._pmExtensions.load(j.system.fs.joinPaths(self.dirs.extensionsDir,"interactive"))
+#             self._pmExtensions.load(j.system.fs.joinPaths(j.dirs.extensionsDir,"core"))
 #             self._init=True
 
 #     def extensionsLoad(self,extensionsDir):

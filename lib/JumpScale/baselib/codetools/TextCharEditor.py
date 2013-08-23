@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 
 class TextCharEditor():
@@ -38,13 +38,13 @@ class TextCharEditor():
         will only work on text which is not part of known blocks yet
         example to find comments which are full line based startpattern='^[ \t]*%%'  stoppattern="\n"
         """
-        result=o.codetools.regex.getRegexMatches(startpattern,self.getText())
+        result=j.codetools.regex.getRegexMatches(startpattern,self.getText())
         if len(result.matches)==0:
             pass
         for match in result.matches:    
             start=match.start
             textToInvestigate=string.join([char[0] for char in self.chars[match.start:]],"")
-            result2=o.codetools.regex.getRegexMatches(stoppattern,textToInvestigate)     
+            result2=j.codetools.regex.getRegexMatches(stoppattern,textToInvestigate)     
             if len(result2.matches)==0:
                 raise RuntimeError("could not find stoppattern %s"%stoppattern)
             end=result2.matches[0].end
@@ -52,7 +52,7 @@ class TextCharEditor():
             for pos in range(match.start,match.start+end): #scan first time if somewhere there is already a char part of a block
                 if self.chars[pos][1]<>"":
                     skip=True
-                    #o.logger.log("Could not match the pattern because as part of result there was already another block found, posstart:%s posstop%s" % (match.start,match.start+end-1),5)
+                    #j.logger.log("Could not match the pattern because as part of result there was already another block found, posstart:%s posstop%s" % (match.start,match.start+end-1),5)
             blocknr=self._getNextBlockNr(blockname)
             if skip==False:
                 for pos in range(match.start,match.start+end):                    
@@ -67,7 +67,7 @@ class TextCharEditor():
         will only work on text which is not part of known blocks yet
         @startpattern example to find '{listen,'  startpattern="^[ \t]*{[ \r\n\t]*listen[ \r\n\t]*,"   #note the way how we allow tabs,newlines and spaces
         """
-        result=o.codetools.regex.getRegexMatches(startpattern,self.getText())
+        result=j.codetools.regex.getRegexMatches(startpattern,self.getText())
         if len(result.matches)==0:
             pass
         for match in result.matches:

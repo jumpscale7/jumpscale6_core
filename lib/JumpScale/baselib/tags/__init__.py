@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .TagsFactory import TagsFactory
-o.base.loader.makeAvailable(o, 'tags')
-o.core.tags = TagsFactory()
+j.base.loader.makeAvailable(j, 'tags')
+j.core.tags = TagsFactory()

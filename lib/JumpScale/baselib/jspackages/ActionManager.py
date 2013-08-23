@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from types import MethodType
 
@@ -13,9 +13,9 @@ class ActionManager:
         self._path=self._owpackage.getPathActions()
         self._taskletEngines={}
 
-        for item in o.system.fs.listDirsInDir(self._path,dirNameOnly=True):
+        for item in j.system.fs.listDirsInDir(self._path,dirNameOnly=True):
             item2=item.replace(".","_")
-            self._taskletEngines[item2]=o.core.taskletengine.get(o.system.fs.joinPaths(self._path,item))
+            self._taskletEngines[item2]=j.core.taskletengine.get(j.system.fs.joinPaths(self._path,item))
             self.__dict__[item2]=self._getActionMethod(item2)
         
     def _getActionMethod(self,name):    

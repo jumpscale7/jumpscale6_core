@@ -1,27 +1,27 @@
-from OpenWizzy import o
+from JumpScale import j
 
-import OpenWizzy.baselib.mercurial
+import JumpScale.baselib.mercurial
 
 class OWDevelToolsInstaller:
 
     def __init__(self):
-        self._do=o.system.installtools
+        self._do=j.system.installtools
         self.login=""
         self.passwd=""
 
-    def getCredentialsOpenWizzyRepo(self):
-        o.application.shellconfig.interactive=True
-        self.login=o.console.askString("OpenWizzy Repo Login, if unknown press enter")
+    def getCredentialsJumpScaleRepo(self):
+        j.application.shellconfig.interactive=True
+        self.login=j.console.askString("JumpScale Repo Login, if unknown press enter")
         if self.login=="":
             self.login="*"
             
-        self.passwd=o.console.askPassword("OpenWizzy Repo Passwd, if unknown press enter", False)
+        self.passwd=j.console.askPassword("JumpScale Repo Passwd, if unknown press enter", False)
         if self.passwd=="":
             self.passwd="*"
 
     def _checkCredentials(self):
         if self.passwd=="" or self.login=="":
-            self.getCredentialsOpenWizzyRepo()
+            self.getCredentialsJumpScaleRepo()
 
     def _getRemoteOWURL(self,name):
         if self.passwd=="*" or self.login=="*":
@@ -30,23 +30,23 @@ class OWDevelToolsInstaller:
             return "https://%s:%s@bitbucket.org/openwizzy/%s"%(self.login,self.passwd,name)
 
     def _getOWRepo(self,name):
-        o.application.shellconfig.interactive=True
+        j.application.shellconfig.interactive=True
         self._checkCredentials()
-        cl=o.clients.mercurial.getClient("%s/openwizzy/%s/"%(o.dirs.codeDir,name), remoteUrl=self._getRemoteOWURL(name))
+        cl=j.clients.mercurial.getClient("%s/openwizzy/%s/"%(j.dirs.codeDir,name), remoteUrl=self._getRemoteOWURL(name))
         cl.pullupdate()
 
     def installSublimeTextUbuntu(self):
-        do=o.develtools.installer
+        do=j.develtools.installer
 
         do.execute("curl https://bitbucket.org/incubaid/develtools/raw/default/sublimetext/install.sh | sh")
         
 
     def preparePlatformUbuntu(self):
-        o.system.platform.ubuntu.check()
-        do=o.system.installtools
+        j.system.platform.ubuntu.check()
+        do=j.system.installtools
 
         print "Updating metadata"
-        o.system.platform.ubuntu.updatePackageMetadata()
+        j.system.platform.ubuntu.updatePackageMetadata()
 
         debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
                         'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc",
@@ -55,9 +55,9 @@ class OWDevelToolsInstaller:
 
         for name in debpackages:
             print "check install %s"%name
-            o.system.platform.ubuntu.install(name)
+            j.system.platform.ubuntu.install(name)
 
-        o.system.platform.ubuntu.remove('python-zmq')
+        j.system.platform.ubuntu.remove('python-zmq')
         pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma','circus', 'msgpack-python>=0.3.0', 'pyzmq==13.0.2')
         pypackages = [ '"%s"' % x for x in pypackages ]
         do.execute("pip install %s" % ' '.join(pypackages))
@@ -68,49 +68,49 @@ class OWDevelToolsInstaller:
         """
         name="openwizzy6_examples"
         self._getOWRepo(name)
-        self._do.symlink("%s/openwizzy/%s/prototypes"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/prototypes")
-        self._do.symlink("%s/openwizzy/%s/examples"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/examples")
+        self._do.symlink("%s/openwizzy/%s/prototypes"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/prototypes")
+        self._do.symlink("%s/openwizzy/%s/examples"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/examples")
 
-    def deployOpenWizzyLibs(self,linkonly=False):
+    def deployJumpScaleLibs(self,linkonly=False):
         """
         checkout the openwizzy libs repo & link to python 2.7 to make it available for the developer
         """        
         name="openwizzy6_lib"
         if not linkonly:
             self._getOWRepo(name)
-        openwizzylib = "%s/openwizzy/%s"%(o.dirs.codeDir,name)
-        if not o.system.fs.exists(openwizzylib):
+        openwizzylib = "%s/openwizzy/%s"%(j.dirs.codeDir,name)
+        if not j.system.fs.exists(openwizzylib):
             return
-        for item in [item for item in o.system.fs.listDirsInDir(openwizzylib,dirNameOnly=True) if item[0]<>"."]:
-            src="%s/openwizzy/%s/%s"%(o.dirs.codeDir,name,item)
-            dest="%s/lib/%s"%(o.dirs.libDir,item)
+        for item in [item for item in j.system.fs.listDirsInDir(openwizzylib,dirNameOnly=True) if item[0]<>"."]:
+            src="%s/openwizzy/%s/%s"%(j.dirs.codeDir,name,item)
+            dest="%s/lib/%s"%(j.dirs.libDir,item)
             self._do.symlink(src,dest)
-        dest="%s/lib/__init__.py"%(o.dirs.libDir)
-        o.system.fs.writeFile(dest,"")
+        dest="%s/lib/__init__.py"%(j.dirs.libDir)
+        j.system.fs.writeFile(dest,"")
 
-    def linkOpenWizzyLibs(self):
-        self.deployOpenWizzyLibs(True)
+    def linkJumpScaleLibs(self):
+        self.deployJumpScaleLibs(True)
 
 
-    def deployOpenWizzyGrid(self):
+    def deployJumpScaleGrid(self):
         """
         checkout the openwizzy grid repo & link to python 2.7 to make it available for the developer
         """
         name="openwizzy6_grid"        
         self._getOWRepo(name)
-        dest="%s/grid"%(o.dirs.libDir)
-        self._do.symlink("%s/openwizzy/%s/gridlib"%(o.dirs.codeDir,name),dest)
-        self._do.symlink("%s/openwizzy/%s/apps/broker"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/broker")
-        self._do.symlink("%s/openwizzy/%s/apps/logger"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/logger")
+        dest="%s/grid"%(j.dirs.libDir)
+        self._do.symlink("%s/openwizzy/%s/gridlib"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/openwizzy/%s/apps/broker"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/broker")
+        self._do.symlink("%s/openwizzy/%s/apps/logger"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/logger")
 
         osisdir="/opt/openwizzy6/apps/osis/"
 
         do=self._do
 
-        if not  o.system.fs.exists(osisdir):
-            do.copytreedeletefirst("%s/openwizzy/%s/apps/osis"%(o.dirs.codeDir,name),osisdir)
+        if not  j.system.fs.exists(osisdir):
+            do.copytreedeletefirst("%s/openwizzy/%s/apps/osis"%(j.dirs.codeDir,name),osisdir)
 
-        for item in [item for item in o.system.fs.listDirsInDir("/opt/code/openwizzy/openwizzy6_grid/apps/osis/logic",dirNameOnly=True) if item[0]<>"."]:
+        for item in [item for item in j.system.fs.listDirsInDir("/opt/code/openwizzy/openwizzy6_grid/apps/osis/logic",dirNameOnly=True) if item[0]<>"."]:
             src="/opt/code/openwizzy/openwizzy6_grid/apps/osis/logic/%s"%(item)
             dest="%s/logic/%s"%(osisdir,item)
             self._do.symlink(src,dest)
@@ -119,29 +119,29 @@ class OWDevelToolsInstaller:
         dest="%s/_templates"%(osisdir)
         self._do.symlink(src,dest)
 
-        if not o.system.fs.exists(path="/etc/init.d/elasticsearch"):
+        if not j.system.fs.exists(path="/etc/init.d/elasticsearch"):
             print "download / install elasticsearch"
             self._do.download("https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.3.deb","/tmp/elasticsearch.deb")
             self._do.execute("cd /tmp; dpkg -E -i elasticsearch.deb")
 
-    def deployOpenWizzyPortal(self):
+    def deployJumpScalePortal(self):
         """
         checkout the openwizzy portal repo & link to python 2.7 to make it available for the developer
         an example portal will also be installed in /opt/openwizzy6/apps/exampleportal
         """
         name="openwizzy6_portal"        
         self._getOWRepo(name)
-        dest="%s/portal"%(o.dirs.libDir)
-        self._do.symlink("%s/openwizzy/%s/portallib"%(o.dirs.codeDir,name),dest)
-        self._do.symlink("%s/openwizzy/%s/apps/portalbase"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/portalbase")
-        self._do.symlink("%s/openwizzy/%s/apps/portalftpgateway"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/portalftpgateway")
+        dest="%s/portal"%(j.dirs.libDir)
+        self._do.symlink("%s/openwizzy/%s/portallib"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/openwizzy/%s/apps/portalbase"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalbase")
+        self._do.symlink("%s/openwizzy/%s/apps/portalftpgateway"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalftpgateway")
 
-        o.system.platform.ubuntu.install("redis-server")
-        o.system.platform.ubuntu.install("curlftpfs")
+        j.system.platform.ubuntu.install("redis-server")
+        j.system.platform.ubuntu.install("curlftpfs")
 
         portaldir="/opt/openwizzy6/apps/exampleportal/"
 
-        if not  o.system.fs.exists(portaldir):
+        if not  j.system.fs.exists(portaldir):
             src="/opt/code/openwizzy/openwizzy6_examples/examples/exampleportal"
             self._do.copytreedeletefirst(src,portaldir)        
 
@@ -153,42 +153,42 @@ class OWDevelToolsInstaller:
         """
         name="dfs_io_core"     
         self._getOWRepo(name)
-        dest="%s/dfs_io"%(o.dirs.libDir)
-        self._do.symlink("%s/openwizzy/%s/ow6libs/dfs_io"%(o.dirs.codeDir,name),dest)
-        self._do.symlink("%s/openwizzy/%s/apps/dfs_io"%(o.dirs.codeDir,name),"/opt/openwizzy6/apps/dfs_io")
+        dest="%s/dfs_io"%(j.dirs.libDir)
+        self._do.symlink("%s/openwizzy/%s/ow6libs/dfs_io"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/openwizzy/%s/apps/dfs_io"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/dfs_io")
 
     def deployPuppet(self):
-        import OpenWizzy.lib.puppet
-        o.tools.puppet.install()
+        import JumpScale.lib.puppet
+        j.tools.puppet.install()
 
 
     def deployExamplesLibsGridPortal(self):
         """
         self.deployExampleCode()
-        self.deployOpenWizzyLibs()
-        self.deployOpenWizzyGrid()
-        self.deployOpenWizzyPortal()
+        self.deployJumpScaleLibs()
+        self.deployJumpScaleGrid()
+        self.deployJumpScalePortal()
         """
         self.deployExampleCode()
-        self.deployOpenWizzyLibs()
-        self.deployOpenWizzyGrid()
-        self.deployOpenWizzyPortal()
+        self.deployJumpScaleLibs()
+        self.deployJumpScaleGrid()
+        self.deployJumpScalePortal()
 
     def initJumpscaleUser(self,passwd):
         home="/home/jumpscale"
         name="jumpscale"
-        import OpenWizzy.lib.cuisine
+        import JumpScale.lib.cuisine
         
-        homeexists=o.system.fs.exists(home)
+        homeexists=j.system.fs.exists(home)
 
-        o.system.platform.ubuntu.createUser(name,passwd,home=home)
-        c=o.tools.cuisine.api       
+        j.system.platform.ubuntu.createUser(name,passwd,home=home)
+        c=j.tools.cuisine.api       
 
         if not homeexists:
             c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
 
-        if o.system.fs.exists("/root/.hgrc"):
-            C=o.system.fs.fileGetContents("/root/.hgrc")
+        if j.system.fs.exists("/root/.hgrc"):
+            C=j.system.fs.fileGetContents("/root/.hgrc")
             C2=""
 
             for line in C.split("\n"):
@@ -199,24 +199,24 @@ class OWDevelToolsInstaller:
             C2+="[trusted]\n"
             C2+="users = jumpscale\n\n"
 
-            o.system.fs.writeFile("/root/.hgrc",C2)
+            j.system.fs.writeFile("/root/.hgrc",C2)
         
 
     def deployFTPServer4qpackages(self,passwd,jumpscalepasswd):
-        # import OpenWizzy.lib.psutil
+        # import JumpScale.lib.psutil
         self.initJumpscaleUser(jumpscalepasswd)
 
-        o.system.platform.ubuntu.install("proftpd-basic")
+        j.system.platform.ubuntu.install("proftpd-basic")
 
         ftphome="/opt/jspackagesftp"
         ftpname="jspackages"
 
-        o.system.fs.createDir("/opt/jspackagesftp")
+        j.system.fs.createDir("/opt/jspackagesftp")
 
-        o.system.platform.ubuntu.createUser(ftpname,passwd,home="/home/%s"%ftpname)
-        o.system.platform.ubuntu.createUser("ftp","1234")#o.base.idgenerator.generateGUID(),home="/home/ftp")
-        o.system.platform.ubuntu.createGroup("proftpd")
-        o.system.platform.ubuntu.addUser2Group("proftpd","proftpd")
+        j.system.platform.ubuntu.createUser(ftpname,passwd,home="/home/%s"%ftpname)
+        j.system.platform.ubuntu.createUser("ftp","1234")#j.base.idgenerator.generateGUID(),home="/home/ftp")
+        j.system.platform.ubuntu.createGroup("proftpd")
+        j.system.platform.ubuntu.addUser2Group("proftpd","proftpd")
 
         C="""
 
@@ -241,7 +241,7 @@ DefaultRoot                    ~
 
 <Anonymous ~ftp>
     User ftp
-    Group o.
+    Group j.
 
     UserAlias anonymous ftp
 
@@ -264,18 +264,18 @@ DefaultRoot                    ~
 
 
 """
-        o.system.fs.writeFile("/etc/proftpd/proftpd.conf", C)
+        j.system.fs.writeFile("/etc/proftpd/proftpd.conf", C)
 
-        import OpenWizzy.lib.cuisine
+        import JumpScale.lib.cuisine
 
-        c=o.tools.cuisine.api
+        c=j.tools.cuisine.api
         c.dir_ensure(ftphome,owner=ftpname,group=ftpname,mode=770,recursive=True)
 
-        o.system.platform.ubuntu.addUser2Group(ftpname,"jumpscale")
-        o.system.platform.ubuntu.addUser2Group(ftpname,"ftp")
-        o.system.platform.ubuntu.addUser2Group(ftpname,"proftpd")
-        o.system.platform.ubuntu.addUser2Group("jumpscale","proftpd")
-        o.system.platform.ubuntu.addUser2Group("jumpscale","ftp")
+        j.system.platform.ubuntu.addUser2Group(ftpname,"jumpscale")
+        j.system.platform.ubuntu.addUser2Group(ftpname,"ftp")
+        j.system.platform.ubuntu.addUser2Group(ftpname,"proftpd")
+        j.system.platform.ubuntu.addUser2Group("jumpscale","proftpd")
+        j.system.platform.ubuntu.addUser2Group("jumpscale","ftp")
 
         self._do.execute("/etc/init.d/proftpd restart")
 
@@ -284,7 +284,7 @@ DefaultRoot                    ~
 
         def symlink(src,dest):
             try:
-                o.system.fs.remove(dest)
+                j.system.fs.remove(dest)
             except Exception,e:
                 if str(e).find("could not be removed")<>-1:
                     cmd="umount %s"%dest
@@ -293,7 +293,7 @@ DefaultRoot                    ~
                     except:
                         pass
                 
-            o.system.fs.createDir(dest)
+            j.system.fs.createDir(dest)
             cmd="mount --bind %s %s"%(src,dest)
             self._do.execute(cmd)
 
@@ -308,32 +308,32 @@ DefaultRoot                    ~
     def link2code(self):
 
         pythpath="/usr/lib/python2.7/"
-        if not o.system.fs.exists(pythpath):
+        if not j.system.fs.exists(pythpath):
             raise RuntimeError("Could not find python 2.7 env on %s"%pythpath)
 
-        owdir="%s/OpenWizzy"%pythpath
+        owdir="%s/JumpScale"%pythpath
         self._do.createdir(owdir)
 
-        libDir="/opt/code/openwizzy/openwizzy6_core/lib/OpenWizzy"
+        libDir="/opt/code/openwizzy/openwizzy6_core/lib/JumpScale"
 
         self._do.copydeletefirst("%s/__init__.py"%libDir,"%s/__init__.py"%owdir)
         srcdir=libDir
         for item in ["base","baselib","core"]:
             self._do.symlink("%s/%s"%(srcdir,item),"%s/%s"%(owdir,item))  
 
-        self._do.createdir("%s/%s"%(o.dirs.baseDir,"apps"))
+        self._do.createdir("%s/%s"%(j.dirs.baseDir,"apps"))
 
         src="%s/../../shellcmds"%libDir
-        dest="%s/shellcmds"%o.dirs.baseDir
+        dest="%s/shellcmds"%j.dirs.baseDir
         self._do.symlink(src,dest)
 
-        for item in o.system.fs.listFilesInDir(dest,filter="*.py"):
-            C="python %s/%s $@"%(dest,o.system.fs.getBaseName(item))
-            path="/usr/bin/%s"%o.system.fs.getBaseName(item).replace(".py","")
-            o.system.fs.writeFile(path,C)
+        for item in j.system.fs.listFilesInDir(dest,filter="*.py"):
+            C="python %s/%s $@"%(dest,j.system.fs.getBaseName(item))
+            path="/usr/bin/%s"%j.system.fs.getBaseName(item).replace(".py","")
+            j.system.fs.writeFile(path,C)
             cmd='chmod 777 %s'%path
-            o.system.process.execute(cmd)
+            j.system.process.execute(cmd)
 
-        self.linkOpenWizzyLibs()
+        self.linkJumpScaleLibs()
 
 

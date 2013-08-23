@@ -6,8 +6,8 @@ import sys
 import os.path
 import zipfile
 
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseEnumeration, BaseType
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseEnumeration, BaseType
 
 #NOTE: We use this enumeration so we can add zip file creation and others
 #later on. This enumeration is used when constructing a new ZipFile object,
@@ -25,8 +25,8 @@ class ZipFileAction(BaseEnumeration):
 class ZipFile(BaseType):
     '''Handle zip files'''
 
-    path = o.basetype.filepath(doc='Path of the on-disk zip file')
-    action = o.basetype.enumeration(ZipFileAction,
+    path = j.basetype.filepath(doc='Path of the on-disk zip file')
+    action = j.basetype.enumeration(ZipFileAction,
                 doc='Access method of zip file')
 
     def __init__(self, path, action=ZipFileAction.READ):
@@ -37,10 +37,10 @@ class ZipFile(BaseType):
         @prarm action: Action to perform on the zip file
         @type action: ZipFileAction
         '''
-        if not o.basetype.filepath.check(path):
+        if not j.basetype.filepath.check(path):
             raise ValueError('Provided string %s is not a valid path' % path)
         if action is ZipFileAction.READ:
-            if not o.system.fs.isFile(path):
+            if not j.system.fs.isFile(path):
                 raise ValueError(
                         'Provided path %s is not an existing file' % path)
             if not zipfile.is_zipfile(path):
@@ -87,9 +87,9 @@ class ZipFile(BaseType):
             dirname = os.path.dirname(f)
             basename = os.path.basename(f)
 
-            outdir = o.system.fs.joinPaths(destination_path, dirname)
-            o.system.fs.createDir(outdir)
-            outfile_path = o.system.fs.joinPaths(outdir, basename)
+            outdir = j.system.fs.joinPaths(destination_path, dirname)
+            j.system.fs.createDir(outdir)
+            outfile_path = j.system.fs.joinPaths(outdir, basename)
 
             #On Windows we get some \ vs / in path issues. Check whether the
             #provided filename works, if not, retry replacing \ with /, and use
@@ -109,7 +109,7 @@ class ZipFile(BaseType):
 
             data = self._zip.read(f)
             #We need binary write
-            o.logger.log('Writing file %s' % outfile_path)
+            j.logger.log('Writing file %s' % outfile_path)
             fd = open(outfile_path, 'wb')
             fd.write(data)
             fd.close()

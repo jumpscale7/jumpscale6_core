@@ -31,7 +31,7 @@ class Connection(object):
             handle = urllib2.urlopen(req)
             return handle 
         except IOError, e:
-            o.logger.log(e)
+            j.logger.log(e)
             
             
     def get(self, url, data=None, headers=None, **params):

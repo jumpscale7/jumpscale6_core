@@ -1,12 +1,12 @@
-from OpenWizzy import o
+from JumpScale import j
 
 # from OpenSSL import crypto
 import os
 try:
     import M2Crypto as m2c
 except:
-    if o.system.platform.ubuntu.check():
-        o.system.platform.ubuntu.install("python-m2crypto")
+    if j.system.platform.ubuntu.check():
+        j.system.platform.ubuntu.install("python-m2crypto")
     import M2Crypto as m2c
 
 import textwrap
@@ -18,17 +18,17 @@ def empty_callback ():
 
 #howto used from http://e1ven.com/2011/04/06/how-to-use-m2crypto-tutorial/
 
-import OpenWizzy.baselib.key_value_store
+import JumpScale.baselib.key_value_store
 
 class SSL(object):
 
     def getSSLHandler(self,keyvaluestor=None):
         """
-        default keyvaluestor=o.db.keyvaluestore.getFileSystemStore("sslkeys", serializers=[])  #make sure to use no serializers
-        pass another keyvaluestor if required (first do 'import OpenWizzy.baselib.key_value_store')
+        default keyvaluestor=j.db.keyvaluestore.getFileSystemStore("sslkeys", serializers=[])  #make sure to use no serializers
+        pass another keyvaluestor if required (first do 'import JumpScale.baselib.key_value_store')
         """
         if keyvaluestor==None:
-            keyvaluestor=o.db.keyvaluestore.getFileSystemStore("sslkeys", serializers=[])
+            keyvaluestor=j.db.keyvaluestore.getFileSystemStore("sslkeys", serializers=[])
         return KeyStor(keyvaluestor)
 
 
@@ -64,19 +64,19 @@ class KeyStor():
             p1="%s/priv.pem"%path
             p2="%s/pub.pem"%path
         else:
-            p1='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
-            p2='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
+            p1='/tmp/_key_%s'%j.base.idgenerator.generateGUID()
+            p2='/tmp/_key_%s'%j.base.idgenerator.generateGUID()
 
         keys.save_key (p1, None)
         keys.save_pub_key (p2)
 
-        priv=o.system.fs.fileGetContents(p1)
-        pub=o.system.fs.fileGetContents(p2)
+        priv=j.system.fs.fileGetContents(p1)
+        pub=j.system.fs.fileGetContents(p2)
 
 
         if path=="":
-            o.system.fs.removeFile(p1)
-            o.system.fs.removeFile(p2)
+            j.system.fs.removeFile(p1)
+            j.system.fs.removeFile(p2)
 
             self.db.set(organization,"private_%s"%user,priv)
             self.db.set(organization,"public_%s"%user,pub)
@@ -87,14 +87,14 @@ class KeyStor():
         cachekey="%s_%s_%s"%(organization,user,cat)
         if self.keys.has_key(cachekey):
             return self.keys[cachekey]
-        p1='/tmp/_key_%s'%o.base.idgenerator.generateGUID()
+        p1='/tmp/_key_%s'%j.base.idgenerator.generateGUID()
         if keyoverrule:
             key=keyoverrule
         else:
             key=self.db.get(organization,"%s_%s"%(cat,user))
         if returnAsString:
             return key
-        o.system.fs.writeFile(p1,key)
+        j.system.fs.writeFile(p1,key)
         try:
             if cat=="public":
                 key=m2c.RSA.load_pub_key(p1)
@@ -102,7 +102,7 @@ class KeyStor():
                 key=m2c.RSA.load_key(p1,empty_callback)
         except:
             raise RuntimeError("Cannot load key:%s"%cachekey)
-        o.system.fs.removeFile(p1)
+        j.system.fs.removeFile(p1)
         self.keys[cachekey]=key
         return key
 
@@ -133,13 +133,13 @@ class KeyStor():
 
 
     def perftest(self,nrrounds=1000,sign=True):
-        o.base.timer.start()
+        j.base.timer.start()
         org="myorg.com"
         print "\n\nstart perftest for encryption, nrrounds:%s"%nrrounds
         for i in range(nrrounds):
             msg,signature= self.encrypt(org,"alice","bob","this is a test message.",sign=sign)
             self.decrypt(org,"alice","bob",msg,signature)
-        o.base.timer.stop(nrrounds)
+        j.base.timer.stop(nrrounds)
 
     def encrypt(self,orgsender,sender,orgreader,reader,message,sign=True,base64=True,pubkeyReader=""):
         """

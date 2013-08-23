@@ -1,10 +1,10 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class Debugging:
     """Pylabs debugging tools"""
 
     def printTraceBack(self, message='No error message supplied'):
-        o.logger.exception(message, 1)
+        j.logger.exception(message, 1)
         import traceback
         import sys
         traceback.print_exc(file=sys.stdout)

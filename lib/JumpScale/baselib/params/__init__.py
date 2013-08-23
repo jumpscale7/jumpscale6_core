@@ -1,5 +1,5 @@
-from OpenWizzy import o
+from JumpScale import j
 from .Params import ParamsFactory
-o.base.loader.makeAvailable(o, 'core')
+j.base.loader.makeAvailable(j, 'core')
 
-o.core.params = ParamsFactory()
+j.core.params = ParamsFactory()

@@ -1,7 +1,7 @@
 import os, re, tarfile
 import difflib
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseType
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseType
 
 ##########################################
 #
@@ -34,7 +34,7 @@ def compareDependencyFiles(file1, file2):
 
 class ReleaseMgmt():
     """
-    @qlocation = o.packages.releasemgmt
+    @qlocation = j.packages.releasemgmt
     """
 
 
@@ -114,7 +114,7 @@ class ReleaseMgmt():
         for str in strlist:
             pckfound = False
             pckattributes = str.split('|')
-            pckfoundlist = o.packages.find(name=pckattributes[1],domain=pckattributes[0], version=pckattributes[2])
+            pckfoundlist = j.packages.find(name=pckattributes[1],domain=pckattributes[0], version=pckattributes[2])
             for pck in pckfoundlist:
                 if repr(pck.buildNr) == pckattributes[3]:
                     addedpackagelist.append(pck)
@@ -151,36 +151,36 @@ class ReleaseMgmt():
                                              Please move the files to another location or choose another temporary directory')
         
         # Check if temp dir is not a couple of levels deep. This gives troubles when cleaning up
-        if not o.system.fs.exists(o.system.fs.getParent(absTempDir)):
+        if not j.system.fs.exists(j.system.fs.getParent(absTempDir)):
             raise RuntimeError ('the temporary directory must be located in an existing directory')
-        o.system.fs.removeDirTree(tempDir, onlyLogWarningOnRemoveError=True)
-        o.system.fs.createDir(tempDir)
+        j.system.fs.removeDirTree(tempDir, onlyLogWarningOnRemoveError=True)
+        j.system.fs.createDir(tempDir)
         pcklist = self._listChangedPackagesAsObjects(earlierFile, laterFile, '+')
         # get all owpackages from the location specified in bundledownload in /opt/qbase6/cfg/owpackages/sources.cfg
         for pck in pcklist:
             pck.download(dependencies=False, destinationDirectory=tempDir, allplatforms=True)
         # We now need the domains that contain downloaded packages. These correspond to the directories created in the temporary directory
-        domainlist = o.system.fs.listDirsInDir(tempDir, recursive=False, dirNameOnly=True)         
-        tarpath = o.system.fs.joinPaths(tempDir, tarName) 
+        domainlist = j.system.fs.listDirsInDir(tempDir, recursive=False, dirNameOnly=True)         
+        tarpath = j.system.fs.joinPaths(tempDir, tarName) 
         # Create the tgz file and add the domain directories to it, as well as the metadata files
         tar = tarfile.open(name=tarpath, mode='w:gz')
         try:   
             for domain in domainlist:
-                domainobject = o.packages.getDomainObject(domain)
+                domainobject = j.packages.getDomainObject(domain)
                 metadatabranchfile = domainobject.metadataBranch + '.branch.tgz'
-                metadatatarfile = o.system.fs.joinPaths(o.packages.getMetaTarPath(domain), metadatabranchfile)
-                domaindir = o.system.fs.joinPaths(tempDir, domain)
-                if o.system.fs.exists(metadatatarfile):
-                    o.system.fs.copyFile(metadatatarfile, domaindir)
+                metadatatarfile = j.system.fs.joinPaths(j.packages.getMetaTarPath(domain), metadatabranchfile)
+                domaindir = j.system.fs.joinPaths(tempDir, domain)
+                if j.system.fs.exists(metadatatarfile):
+                    j.system.fs.copyFile(metadatatarfile, domaindir)
                 else:
                     failed = True
                     raise RuntimeError('Metadata tarfile %s does not exist for domain %s. Run i.qp.updateMetaDataAll() first' % (metadatatarfile, domain))
                 tar.add(name=domaindir, arcname=domain, recursive=True)
-                o.system.fs.removeDirTree(domaindir, onlyLogWarningOnRemoveError=True)
+                j.system.fs.removeDirTree(domaindir, onlyLogWarningOnRemoveError=True)
         finally:
             tar.close()
             if failed:
-                o.system.fs.removeDirTree(tempDir, onlyLogWarningOnRemoveError=True)  # clean up everything            
+                j.system.fs.removeDirTree(tempDir, onlyLogWarningOnRemoveError=True)  # clean up everything            
     
 
 

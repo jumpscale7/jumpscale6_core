@@ -5,8 +5,8 @@ import types
 import operator
 import json
 
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses.dirtyflaggingmixin import \
+from JumpScale import j
+from JumpScale.core.baseclasses.dirtyflaggingmixin import \
         DIRTY_PROPERTIES_ATTRIBUTE, DIRTY_AFTER_LAST_SAVE_ATTRIBUTE
 
 #Needed to handle default values
@@ -168,7 +168,7 @@ class BaseType(object):
             if not self._check_value(obj, value):
                 msg = ('Default value %r of property %s on %s is invalid' % \
                         (value, self._PM_NAME, obj.__class__.__name__))
-                o.logger.log(msg, 5)
+                j.logger.log(msg, 5)
                 raise RuntimeError(msg)
 
             return value

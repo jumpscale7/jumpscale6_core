@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 import struct
 import hashlib
 import yaml
@@ -97,7 +97,7 @@ class ActorObject(object):
         actorObject = actorObjectManager.get()
 
         serializedModel = data[actorObjectTypeLen + 2:-16]
-        actorObject.model = actorObject.model.deserialize(o.db.pymodelserializers.thriftbase64, serializedModel)
+        actorObject.model = actorObject.model.deserialize(j.db.pymodelserializers.thriftbase64, serializedModel)
         return actorObject
 
 
@@ -110,7 +110,7 @@ class ActorObject(object):
         """
 
         actorObjectType = self.__class__.__name__
-        serializedModel = self.model.serialize(o.db.pymodelserializers.thriftbase64)
+        serializedModel = self.model.serialize(j.db.pymodelserializers.thriftbase64)
 
         data = struct.pack('B', self._DATA_TYPE_ID)
         data += struct.pack('B', len(actorObjectType))

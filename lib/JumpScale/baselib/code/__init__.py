@@ -1,3 +1,3 @@
-from OpenWizzy import o
+from JumpScale import j
 from .Code import Code
-o.code = Code()
+j.code = Code()

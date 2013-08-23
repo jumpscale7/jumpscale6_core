@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class QPackageIObject4:
     
@@ -39,7 +39,7 @@ class QPackageIObject4:
         
     def _printList(self, arr):
         for item in arr:
-            o.console.echo(item)        
+            j.console.echo(item)        
     
     def showDependencies(self):
         """
@@ -47,8 +47,8 @@ class QPackageIObject4:
         See also: addDependency and removeDependency
         """
         
-        platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
-        recursive = o.console.askYesNo("Recursive?")
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
         self._printList(self.owpackage.getDependencies(platform, recursive))
         
     def showBuildDependencies(self):
@@ -58,8 +58,8 @@ class QPackageIObject4:
         """
         
         ##self.assertAccessable()
-        platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
-        recursive = o.console.askYesNo("Recursive?")
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
         self._printList(self.owpackage.getBuildDependencies(platform, recursive))
         
     def showRuntimeDependencies(self):
@@ -69,8 +69,8 @@ class QPackageIObject4:
         """
         
         ##self.assertAccessable()
-        platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
-        recursive = o.console.askYesNo("Recursive?")
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
         self._printList(self.owpackage.getRuntimeDependencies(platform, recursive))
     
     def showDependingInstalledPackages(self):
@@ -80,7 +80,7 @@ class QPackageIObject4:
         """
         
         ##self.assertAccessable()
-        recursive = o.console.askYesNo("Recursive?")
+        recursive = j.console.askYesNo("Recursive?")
         self._printList(self.owpackage.getDependingInstalledPackages(recursive))
 
     def showDependingPackages(self):
@@ -89,8 +89,8 @@ class QPackageIObject4:
         """
 
         ##self.assertAccessable()
-        platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
-        recursive = o.console.askYesNo("Recursive?")
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
         self._printList(self.owpackage.getDependingPackages(recursive, platform))
 
     def backup(self):
@@ -99,7 +99,7 @@ class QPackageIObject4:
         """
         
         ##self.assertAccessable()
-        url = o.console.askString("Url to backup to?")
+        url = j.console.askString("Url to backup to?")
         self.owpackage.backup(url)
         
     def restore(self):
@@ -107,7 +107,7 @@ class QPackageIObject4:
         Restore a owpackage from specified url by running its restore tasklet.
         """
         
-        url = o.console.askString("Url to restore from?")
+        url = j.console.askString("Url to restore from?")
         self.owpackage.restore(url)
 
 
@@ -122,7 +122,7 @@ class QPackageIObject4:
         """
         
         ##self.assertAccessable()
-        #dependencies = o.console.askYesNo("Do you want the dependencies to be configured too?")
+        #dependencies = j.console.askYesNo("Do you want the dependencies to be configured too?")
         self.owpackage.configure()
 
     def start(self):
@@ -150,7 +150,7 @@ class QPackageIObject4:
             platform = self.owpackage.supportedPlatforms[0]
         
         while not platform: 
-            platform = o.gui.dialog.askChoice("Select platform. If multiple platforms please quit, is not supported.", o.enumerators.PlatformType.ALL)    
+            platform = j.gui.dialog.askChoice("Select platform. If multiple platforms please quit, is not supported.", j.enumerators.PlatformType.ALL)    
         self.owpackage.package(platform=platform)
      
           
@@ -168,7 +168,7 @@ class QPackageIObject4:
         """
         
         ##self.assertAccessable()
-        dependencies = o.console.askYesNo("Do you want the bundles of all depending packages to be downloaded too?")
+        dependencies = j.console.askYesNo("Do you want the bundles of all depending packages to be downloaded too?")
         self.owpackage.download(dependencies)
 
 

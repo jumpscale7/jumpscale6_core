@@ -1,9 +1,9 @@
 # import socket
-from OpenWizzy import o
+from JumpScale import j
 import time
 # q=openwizzy.q
 
-# ZDaemonClientClass=o.core.grid.getZDaemonClientClass()
+# ZDaemonClientClass=j.core.grid.getZDaemonClientClass()
 # ZDaemonClientClass
 
 class LogTargetClientDaemon():
@@ -20,20 +20,20 @@ class LogTargetClientDaemon():
         check status of target, if ok return True
         for std out always True
         """
-        if not o.system.platform.ubuntu.check(False):
+        if not j.system.platform.ubuntu.check(False):
             wait=True
-            end=o.base.time.getTimeEpoch()+60
+            end=j.base.time.getTimeEpoch()+60
             while wait:
-                wait=o.system.net.tcpPortConnectionTest(self.serverip,4444)==False
-                if wait and o.base.time.getTimeEpoch()>end:
-                    o.errorconditionhandler.raiseOperationalWarning(msgpub="cannot find local client daemon, cannot connect",message="",category="grid.startup",tags="")
+                wait=j.system.net.tcpPortConnectionTest(self.serverip,4444)==False
+                if wait and j.base.time.getTimeEpoch()>end:
+                    j.errorconditionhandler.raiseOperationalWarning(msgpub="cannot find local client daemon, cannot connect",message="",category="grid.startup",tags="")
                     return False
                 print "try to connect to clientdaemon, will try for 60 sec."
                 time.sleep(1)
         
-        self.loggerClient=o.core.grid.getZLoggerClient(ipaddr=self.serverip)
+        self.loggerClient=j.core.grid.getZLoggerClient(ipaddr=self.serverip)
         self.enabled=True
-        o.logger.clientdaemontarget=self
+        j.logger.clientdaemontarget=self
         return True
 
     def __str__(self):
@@ -52,6 +52,6 @@ class LogTargetClientDaemon():
             # print "LOG:%s"%log
             self.loggerClient.log(log)
         # else:
-        #     if o.logger.logTargets==[]:  #otherwise all logmessages in this phase would go unnoticed
+        #     if j.logger.logTargets==[]:  #otherwise all logmessages in this phase would go unnoticed
         #         print log  
 

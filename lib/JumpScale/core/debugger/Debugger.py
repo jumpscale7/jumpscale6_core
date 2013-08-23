@@ -37,7 +37,7 @@
 
 import sys
 
-from OpenWizzy import o
+from JumpScale import j
 
 # Dictionary containing all known debuggers
 # Key is name (string), value is a tuple of 2 callables: one to start the actual
@@ -48,7 +48,7 @@ DEBUGGERS = dict()
 # 'disabled' debugger
 def disabled_break(frame, depth): #pylint: disable-msg=W0613
     '''Callback for systems where debugging is disabled'''
-    o.logger.log('Debugging disabled on this system', 5)
+    j.logger.log('Debugging disabled on this system', 5)
 
 DEBUGGERS['disabled'] = disabled_break, lambda s: None
 
@@ -110,12 +110,12 @@ except ImportError:
 else:
     def rpdb2_break(frame, depth): #pylint: disable-msg=W0613
         '''Start an embedded debugger session based on WinPDB/RPDB2'''
-        o.logger.log('Starting embedded WinPDB debugger, '
+        j.logger.log('Starting embedded WinPDB debugger, '
                               'this will sleep until you attach your debug '
                               'client, or the default timeout (300 seconds) '
                               'is reached', 5)
         # Retrieve configuration
-        config = o.config.getConfig('openwizzy_debugger')['main']
+        config = j.config.getConfig('openwizzy_debugger')['main']
         password = config['rpdb2_password']
         remote = config['rpdb2_allow_remote']
         remote = remote.lower() not in ('0', 'no', 'false', )
@@ -132,7 +132,7 @@ else:
         if 'depth' in inspect.getargspec(rpdb2.start_embedded_debugger)[0]:
             kwargs['depth'] = depth + 1
         else:
-            o.logger.log('Warning: the debugger will start 2 frames '
+            j.logger.log('Warning: the debugger will start 2 frames '
                                   'under the calling frame, you\'ll need to '
                                   'jump 2 frames up to debug your own code. '
                                   'A newer version of WinPDB might fix this.',
@@ -160,16 +160,16 @@ def set_trace(frame=None, frame_idx=0):
     @type frame_idx: number
     '''
     try:
-        config = o.config.getConfig('openwizzy_debugger')['main']
+        config = j.config.getConfig('openwizzy_debugger')['main']
         if not config:
             raise RuntimeError('No configuration found')
         debugger = config['type']
     except (KeyError, RuntimeError):
-        o.logger.log('No debugger configuration found, debugging '
+        j.logger.log('No debugger configuration found, debugging '
                               'disabled', 4)
         debugger = 'disabled'
 
-    o.logger.log('Breakpoint, using debugger \'%s\'' % debugger, 4)
+    j.logger.log('Breakpoint, using debugger \'%s\'' % debugger, 4)
 
     if debugger not in DEBUGGERS:
         raise RuntimeError('Configured debugger %s not supported '
@@ -191,7 +191,7 @@ def set_trace(frame=None, frame_idx=0):
         # 'File "/foo/bar.py", line 27, in <module>: bleh()'
         call = ': '.join(s.strip() for s in
                          traceback.format_stack()[0].splitlines())
-        o.logger.log('Breakpoint call at %s' % call, 5)
+        j.logger.log('Breakpoint call at %s' % call, 5)
     except Exception: #pylint: disable-msg=W0703, W0704
         # We don't really care if the previous line go wrong somewhere, the log
         # message won't be there but that's not critical at all
@@ -200,7 +200,7 @@ def set_trace(frame=None, frame_idx=0):
     DEBUGGERS[debugger][0](frame, frame_idx + 1)
 
 
-from OpenWizzy.core.config import ConfigManagementItem, ItemSingleClass
+from JumpScale.core.config import ConfigManagementItem, ItemSingleClass
 
 class openwizzyDebuggerConfigurationItem(ConfigManagementItem):
     '''QConfig item class for the configuration of the debugger subsystem'''

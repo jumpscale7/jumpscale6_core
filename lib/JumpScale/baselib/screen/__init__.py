@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .Screen import Screen
-o.base.loader.makeAvailable(o, 'system.platform')
-o.system.platform.screen = Screen()
+j.base.loader.makeAvailable(j, 'system.platform')
+j.system.platform.screen = Screen()

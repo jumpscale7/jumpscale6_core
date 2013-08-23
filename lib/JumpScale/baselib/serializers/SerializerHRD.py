@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 import uuid
-from OpenWizzy.core.system.text import Text
+from JumpScale.core.system.text import Text
 
 class SerializerHRD():
     def __init__(self):
@@ -108,12 +108,12 @@ class SerializerHRD():
         values = {'{}': {}, '[]': [], 'None': None}
         if value in values:
             return values[value]
-        elif o.basetype.integer.checkString(value):
-            primitive = o.basetype.integer.fromString(value)
-        elif o.basetype.float.checkString(value):
-            primitive = o.basetype.float.fromString(value)
-        elif o.basetype.boolean.checkString(value):
-            primitive = o.basetype.boolean.fromString(value)
+        elif j.basetype.integer.checkString(value):
+            primitive = j.basetype.integer.fromString(value)
+        elif j.basetype.float.checkString(value):
+            primitive = j.basetype.float.fromString(value)
+        elif j.basetype.boolean.checkString(value):
+            primitive = j.basetype.boolean.fromString(value)
         else:
-            o.basetype.string.fromString(value)
+            j.basetype.string.fromString(value)
         return primitive

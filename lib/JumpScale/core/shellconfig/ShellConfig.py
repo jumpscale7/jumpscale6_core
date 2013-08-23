@@ -1,6 +1,6 @@
 
 
-from OpenWizzy import o
+from JumpScale import j
 from ConfigFileManager import ConfigFileManager
 import os
 
@@ -18,7 +18,7 @@ class ShellConfig():
         self.ipython=False
         
     def refresh(self):
-        configfiles= o.system.fs.listFilesInDir(o.dirs.configsDir)
+        configfiles= j.system.fs.listFilesInDir(j.dirs.configsDir)
         for file in configfiles:
             if file.find(".cfg")<>-1:
                 configType=os.path.basename(file.replace(".cfg",""))
@@ -29,9 +29,9 @@ class ShellConfig():
         """
         check if config file exists, if not create and reload
         """
-        path=o.system.fs.joinPaths(o.dirs.configsDir,"%s.cfg"%configType)
-        if not o.system.fs.exists(path):
-            o.system.fs.createEmptyFile(path)
+        path=j.system.fs.joinPaths(j.dirs.configsDir,"%s.cfg"%configType)
+        if not j.system.fs.exists(path):
+            j.system.fs.createEmptyFile(path)
         self.refresh()        
     
     def loadConfigFile(self,configType):

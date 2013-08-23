@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .IniFile import InifileTool
-o.base.loader.makeAvailable(o, 'tools')
-o.tools.inifile = InifileTool()
+j.base.loader.makeAvailable(j, 'tools')
+j.tools.inifile = InifileTool()

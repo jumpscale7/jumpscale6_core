@@ -1,16 +1,16 @@
 #!/bin/bash
-sed -i "s/from pylabs.InitBase import \*/from OpenWizzy import o/g" $1
-sed -i "s/from pylabs.InitBase import q/from OpenWizzy import o/g" $1
-sed -i "s/from pylabs import q/from OpenWizzy import o/g" $1
-sed -i "s/from pylabs import */from OpenWizzy import o/g" $1
-sed -i "s/q.system/o.system/g" $1
-sed -i "s/q.apps/o.apps/g" $1
-sed -i "s/q.tools/o.tools/g" $1
-sed -i "s/q.core/o.core/g" $1
-sed -i "s/q.application/o.application/g" $1
-sed -i "s/q.platform/o.system.platform/g" $1
-sed -i "s/q.dirs/o.dirs/g" $1
-sed -i "s/q.db/o.db/g" $1
-sed -i "s/q.basetype/o.basetype/g" $1
-sed -i "s/q.logger/o.logger/g" $1
-sed -i "s/q.errorconditionhandler/o.errorconditationhandler/g" $1
+sed -i "s/from pylabs.InitBase import \*/from JumpScale import j/g" $1
+sed -i "s/from pylabs.InitBase import q/from JumpScale import j/g" $1
+sed -i "s/from pylabs import q/from JumpScale import j/g" $1
+sed -i "s/from pylabs import */from JumpScale import j/g" $1
+sed -i "s/q.system/j.system/g" $1
+sed -i "s/q.apps/j.apps/g" $1
+sed -i "s/q.tools/j.tools/g" $1
+sed -i "s/q.core/j.core/g" $1
+sed -i "s/q.application/j.application/g" $1
+sed -i "s/q.platform/j.system.platform/g" $1
+sed -i "s/q.dirs/j.dirs/g" $1
+sed -i "s/q.db/j.db/g" $1
+sed -i "s/q.basetype/j.basetype/g" $1
+sed -i "s/q.logger/j.logger/g" $1
+sed -i "s/q.errorconditionhandler/j.errorconditationhandler/g" $1

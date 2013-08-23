@@ -1,5 +1,5 @@
 import inspect
-from OpenWizzy import o
+from JumpScale import j
 
 from Appserver6GreenletScheduleBase import Appserver6GreenletScheduleBase
 from ClassBase import ClassBase, PyModelBase, PyRootModelBase
@@ -45,14 +45,14 @@ class Code():
         look for editor (uses geany) and then edit the file
         """
         filepath,linenr,sourcecode=self.classInfoGet(classs)
-        o.system.process.executeWithoutPipe("geany %s" % filepath)
+        j.system.process.executeWithoutPipe("geany %s" % filepath)
 
     def classEditWing(self,classs):
         """
         look for editor (uses geany) and then edit the file
         """
         filepath,linenr,sourcecode=self.classInfoGet(classs)
-        o.system.process.executeWithoutPipe("wing4.1 %s" % filepath)
+        j.system.process.executeWithoutPipe("wing4.1 %s" % filepath)
 
 
     def classGetBase(self):
@@ -182,7 +182,7 @@ class Code():
         def toStr(obj,possibleList=True):
             if isinstance(obj, (unicode,int,str,float,bool)) or obj==None:
                 return str(obj)
-            elif possibleList==True and o.basetype.list.check(obj):
+            elif possibleList==True and j.basetype.list.check(obj):
                 r=""
                 for item in obj:
                     rr=toStr(obj,possibleList=False)
@@ -197,7 +197,7 @@ class Code():
                     key=key[3:]
                 elif key[0]=="_":
                     continue
-                if o.basetype.dictionary.check(value):
+                if j.basetype.dictionary.check(value):
                     for key2 in value.keys():
                         r=toStr(value[key2])
                         if r<>"":
@@ -210,7 +210,7 @@ class Code():
         
 
     def object2dict(self,obj,dieOnUnknown=False):
-        if o.basetype.dictionary.check(obj):
+        if j.basetype.dictionary.check(obj):
             return obj
         data={}
 
@@ -239,7 +239,7 @@ class Code():
                         data[key] = todict(value,{})
                 return data
             else:
-                #from OpenWizzy.core.Shell import ipshellDebug,ipshell
+                #from JumpScale.core.Shell import ipshellDebug,ipshell
                 #print "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
                 #ipshell()
                 if dieOnUnknown:
@@ -253,7 +253,7 @@ class Code():
         return todict(obj,data)
 
     def object2yaml(self,obj):
-        return o.tools.yaml.encode(self.object2dict(obj))
+        return j.tools.yaml.encode(self.object2dict(obj))
 
     def object2json(self,obj,pretty=False):
         import json

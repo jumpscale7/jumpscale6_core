@@ -15,20 +15,20 @@ def get_version(package):
     init_py = open(os.path.join(package, '__init__.py')).read()
     return re.match("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
 
-version = get_version('lib/OpenWizzy')
+version = get_version('lib/JumpScale')
 
-setup(name='OpenWizzy',
+setup(name='JumpScale',
       version=version,
       description='Python Automation framework',
-      author='OpenWizzy',
-      author_email='info@openwizzy.org',
-      url='http://www.openwizzy.org',
+      author='JumpScale',
+      author_email='info@jumpscale.org',
+      url='http://www.jumpscale.org',
 
       packages = find_packages('lib'),
       package_dir = {'':'lib'},
       scripts=scripts,
 
-      download_url='http://pypi.python.org/pypi/OpenWizzy/',
+      download_url='http://pypi.python.org/pypi/JumpScale/',
       install_requires=[],
       classifiers=[
         'Intended Audience :: Developers',

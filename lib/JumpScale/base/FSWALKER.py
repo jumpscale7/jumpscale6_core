@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 import struct
 try:
     from REGEXTOOL import *
@@ -9,7 +9,7 @@ from .FS import *
 
 class FSWalkerStats():
     def __init__(self):
-        self.start=o.base.time.getTimeEpoch()
+        self.start=j.base.time.getTimeEpoch()
         self.stop=0
         self.sizeUncompressed={}
 
@@ -36,7 +36,7 @@ class FSWalkerStats():
             self.duplicate[ttype]=0
 
     def callstop(self):
-        self.stop=o.base.time.getTimeEpoch()
+        self.stop=j.base.time.getTimeEpoch()
         self._getTotals()
 
     def _getTotals(self):
@@ -88,13 +88,13 @@ class LocalFS():
         return os.path.abspath(path)
 
     def isFile(self,path,followlinks=True):
-        return o.system.fs.isFile(path,followlinks)
+        return j.system.fs.isFile(path,followlinks)
 
     def isDir(self,path,followlinks=True):
-        return o.system.fs.isDir(path,followlinks)
+        return j.system.fs.isDir(path,followlinks)
 
     def isLink(self,path,junction=True):
-        return o.system.fs.isLink(path,junction)
+        return j.system.fs.isLink(path,junction)
 
     def stat(self,path):
         return os.stat(path)
@@ -103,7 +103,7 @@ class LocalFS():
         return os.lstat(path)
 
     def list(self,path):
-        return o.base.fs.list(path)
+        return j.base.fs.list(path)
 
 
 
@@ -302,6 +302,6 @@ class FSWalkerFactory():
     def get(self,filesystemobject=None):
         return FSWalker(filesystemobject=filesystemobject)
 
-o.base.fswalker=FSWalkerFactory()
+j.base.fswalker=FSWalkerFactory()
 
 

@@ -13,20 +13,20 @@ except:
         raise "python module pwd is not supported on this platform, please fix the dependency"
     
 import time,socket,random,tempfile
-from OpenWizzy import o
-from OpenWizzy.core.enumerators.PlatformType import PlatformType
-#from OpenWizzy.core.Vars import Vars
-from OpenWizzy.core.system.fs import SystemFS
-from OpenWizzy.core.system.string import String
-from OpenWizzy.core.system.net import SystemNet
-from OpenWizzy.core.system.process import SystemProcess
+from JumpScale import j
+from JumpScale.core.enumerators.PlatformType import PlatformType
+#from JumpScale.core.Vars import Vars
+from JumpScale.core.system.fs import SystemFS
+from JumpScale.core.system.string import String
+from JumpScale.core.system.net import SystemNet
+from JumpScale.core.system.process import SystemProcess
 
 if sys.platform.startswith('win'):
-    from OpenWizzy.core.system.windows import WindowsSystem
+    from JumpScale.core.system.windows import WindowsSystem
 else:
-    from OpenWizzy.core.system.unix import UnixSystem
+    from JumpScale.core.system.unix import UnixSystem
 
-from OpenWizzy.core.system.fswalker import FSWalker
+from JumpScale.core.system.fswalker import FSWalker
 
 try:
     from functools import wraps
@@ -39,7 +39,7 @@ def _wrap_deprecated_fs(f):
     def wrapper(self, *args, **kwargs):
         #By the end of May (says Jochen) this should become
         #raise DeprecationWarning
-        o.logger.log('Using deprecated method %s on System' % f.__name__, 5)
+        j.logger.log('Using deprecated method %s on System' % f.__name__, 5)
         s = SystemFS()
         return f(s, *args, **kwargs)
     return wrapper
@@ -49,7 +49,7 @@ def _wrap_deprecated_net(f):
     def wrapper(self, *args, **kwargs):
         #By the end of May (says Jochen) this should become
         #raise DeprecationWarning
-        o.logger.log('Using deprecated method %s on System' % f.__name__, 5)
+        j.logger.log('Using deprecated method %s on System' % f.__name__, 5)
         s = SystemNet()
         return f(s, *args, **kwargs)
     return wrapper
@@ -59,7 +59,7 @@ def _wrap_deprecated_process(f):
     def wrapper(self, *args, **kwargs):
         #By the end of May (says Jochen) this should become
         #raise DeprecationWarning
-        o.logger.log('Using deprecated method %s on System' % f.__name__, 5)
+        j.logger.log('Using deprecated method %s on System' % f.__name__, 5)
         s = SystemProcess()
         return f(s, *args, **kwargs)
     return wrapper

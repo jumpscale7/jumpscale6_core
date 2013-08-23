@@ -4,11 +4,11 @@ import unittest
 from arakoon_store import ArakoonKeyValueStore
 from file_system_store import FileSystemKeyValueStore
 from memory_store import MemoryKeyValueStore
-from OpenWizzy import o
+from JumpScale import j
 from store import KeyValueStoreType
 
 if not q._init_called:
-    from OpenWizzy.core.InitBase import q
+    from JumpScale.core.InitBase import q
 
 class PatchedTimeContext(object):
     def __init__(self, time):
@@ -21,13 +21,13 @@ def pathed_time(t):
     def fakeGetTimeEpoch():
         return ctx.time
 
-    origGetTimeEpoch = o.base.time.getTimeEpoch
-    o.base.time.getTimeEpoch = fakeGetTimeEpoch
+    origGetTimeEpoch = j.base.time.getTimeEpoch
+    j.base.time.getTimeEpoch = fakeGetTimeEpoch
     # Make sure we restore the original getTimeEpoch function
     try:
         yield ctx
     finally:
-        o.base.time.getTimeEpoch = origGetTimeEpoch
+        j.base.time.getTimeEpoch = origGetTimeEpoch
 
 class KeyValueStoreTestCaseBase(object):
 
@@ -119,10 +119,10 @@ class KeyValueStoreTestCaseBase(object):
         info2 = "Attempting to take the lock a second time"
         timeout = 2
 
-        before = o.base.time.getTimeEpoch()
+        before = j.base.time.getTimeEpoch()
         self._store.lock(lType, info, timeout=timeout, timeoutwait=0)
         self._store.lock(lType, info2, timeout=3, timeoutwait=10)
-        after = o.base.time.getTimeEpoch()
+        after = j.base.time.getTimeEpoch()
         difference = after - before
         self.assert_(difference > (timeout - 1), "It seems like the original "
                 "lock was not held long enough")
@@ -149,12 +149,12 @@ class ArakoonKeyValueStoreTestCase(unittest.TestCase,
 
         self.cleanUp()
 
-        cluster = o.manage.arakoon.getCluster(self.STORE_CLUSTER)
+        cluster = j.manage.arakoon.getCluster(self.STORE_CLUSTER)
         # Avoid conflicts with other cluster ports
         cluster.setUp(1, basePort=54321)
         cluster.start()
 
-        config = o.clients.arakoon.getClientConfig(self.STORE_CLUSTER)
+        config = j.clients.arakoon.getClientConfig(self.STORE_CLUSTER)
         config.generateFromServerConfig()
 
         self._store = ArakoonKeyValueStore(self.STORE_CLUSTER,
@@ -169,22 +169,22 @@ class ArakoonKeyValueStoreTestCase(unittest.TestCase,
         directories related to them.
         '''
 
-        cluster = o.manage.arakoon.getCluster(self.STORE_CLUSTER)
+        cluster = j.manage.arakoon.getCluster(self.STORE_CLUSTER)
         cluster.stop()
         cluster.tearDown()
         cluster.remove()
 
-        dbDir = o.system.fs.joinPaths(o.dirs.varDir, 'db', self.STORE_CLUSTER)
-        o.system.fs.removeDirTree(dbDir)
+        dbDir = j.system.fs.joinPaths(j.dirs.varDir, 'db', self.STORE_CLUSTER)
+        j.system.fs.removeDirTree(dbDir)
 
-        logDir = o.system.fs.joinPaths(o.dirs.logDir, self.STORE_CLUSTER)
-        o.system.fs.removeDirTree(logDir)
+        logDir = j.system.fs.joinPaths(j.dirs.logDir, self.STORE_CLUSTER)
+        j.system.fs.removeDirTree(logDir)
 
     def testFactory(self):
-        storeA = o.db.keyvaluestore.getStore(KeyValueStoreType.ARAKOON,
+        storeA = j.db.keyvaluestore.getStore(KeyValueStoreType.ARAKOON,
             self.STORE_CLUSTER, self.STORE_NAMESPACE)
 
-        storeB = o.db.keyvaluestore.getArakoonStore(self.STORE_CLUSTER,
+        storeB = j.db.keyvaluestore.getArakoonStore(self.STORE_CLUSTER,
             self.STORE_NAMESPACE)
 
         self.assertEquals(storeA, storeB)
@@ -194,7 +194,7 @@ class FileSystemKeyValueStoreTestCase(unittest.TestCase,
     KeyValueStoreTestCaseBase):
 
     def setUp(self):
-        self._storeBaseDir = o.system.fs.joinPaths(o.dirs.tmpDir)
+        self._storeBaseDir = j.system.fs.joinPaths(j.dirs.tmpDir)
 
         self.cleanUp()
 
@@ -205,15 +205,15 @@ class FileSystemKeyValueStoreTestCase(unittest.TestCase,
         self.cleanUp()
 
     def cleanUp(self):
-        self._storeDir = o.system.fs.joinPaths(o.dirs.tmpDir, self.STORE_NAME,
+        self._storeDir = j.system.fs.joinPaths(j.dirs.tmpDir, self.STORE_NAME,
             self.STORE_NAMESPACE)
-        o.system.fs.removeDirTree(self._storeDir)
+        j.system.fs.removeDirTree(self._storeDir)
 
     def testFactory(self):
-        storeA = o.db.keyvaluestore.getStore(KeyValueStoreType.FILE_SYSTEM,
+        storeA = j.db.keyvaluestore.getStore(KeyValueStoreType.FILE_SYSTEM,
             self.STORE_NAME, self.STORE_NAMESPACE)
 
-        storeB = o.db.keyvaluestore.getFileSystemStore(self.STORE_NAME,
+        storeB = j.db.keyvaluestore.getFileSystemStore(self.STORE_NAME,
             self.STORE_NAMESPACE)
 
         self.assertEquals(storeA, storeB)
@@ -224,10 +224,10 @@ class MemoryKeyValueStoreTestCase(unittest.TestCase, KeyValueStoreTestCaseBase):
         self._store = MemoryKeyValueStore()
 
     def testFactory(self):
-        storeA = o.db.keyvaluestore.getStore(KeyValueStoreType.MEMORY,
+        storeA = j.db.keyvaluestore.getStore(KeyValueStoreType.MEMORY,
             self.STORE_NAME, self.STORE_NAMESPACE)
 
-        storeB = o.db.keyvaluestore.getMemoryStore(self.STORE_NAME,
+        storeB = j.db.keyvaluestore.getMemoryStore(self.STORE_NAME,
             self.STORE_NAMESPACE)
 
         self.assertEquals(storeA, storeB)

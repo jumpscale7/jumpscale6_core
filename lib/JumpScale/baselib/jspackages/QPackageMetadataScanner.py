@@ -1,11 +1,11 @@
-from OpenWizzy import o
+from JumpScale import j
 import collections
 import imp
 import random
 import sys
 
 def monkey_getRepoConnection(accountName, repoName, branch='default'):
-    #return 'https://bitbucket.org/%s/%s/ %s/%s %s' % (accountName, repoName, o.dirs.codeDir, repoName, branch)
+    #return 'https://bitbucket.org/%s/%s/ %s/%s %s' % (accountName, repoName, j.dirs.codeDir, repoName, branch)
     return [accountName,repoName,branch]        
 
 class DuplicateFilesResult(object):
@@ -32,7 +32,7 @@ class DuplicateFilesResult(object):
             if len(packages) > 1:
                 invertedDups[prettyPackages(packages)].append(filePath)
 
-        echo = o.console.echo
+        echo = j.console.echo
         for d, filePaths in invertedDups.iteritems():
             echo(d)
             for filePath in sorted(filePaths):
@@ -45,13 +45,13 @@ class DuplicateFilesResult(object):
         """
         for filePath, packages in self.perFileDict.iteritems():
             if len(packages) > 1:
-                o.console.echo("%s" % filePath)
-                o.console.echo("Available in:")
+                j.console.echo("%s" % filePath)
+                j.console.echo("Available in:")
                 for qp in packages:
                     name = "%s %s %s %s" % (qp.qualitylevel, qp.domain,
                             qp.name, qp.version)
-                    o.console.echo(name, indent=4)
-                o.console.echo("")
+                    j.console.echo(name, indent=4)
+                j.console.echo("")
 
 
 class QPModel():
@@ -79,7 +79,7 @@ class QPModel():
         self.name=name
         self.path=path
         
-        domainnameList=[domain.domainname for domain in o.packages.domains if domain.bitbucketreponame==bitbucketreponame]
+        domainnameList=[domain.domainname for domain in j.packages.domains if domain.bitbucketreponame==bitbucketreponame]
         if len(domainnameList)>0:
             self.domain=domainnameList[0]
         else:
@@ -88,15 +88,15 @@ class QPModel():
                 
         self.qualitylevel=qualitylevel
 
-        cfgpath=o.system.fs.joinPaths(path,"owpackage.cfg")
-        rnpath=o.system.fs.joinPaths(path,"releasenotes.wiki")
-        descrpath=o.system.fs.joinPaths(path,"description.wiki")
+        cfgpath=j.system.fs.joinPaths(path,"owpackage.cfg")
+        rnpath=j.system.fs.joinPaths(path,"releasenotes.wiki")
+        descrpath=j.system.fs.joinPaths(path,"description.wiki")
 
-        if not o.system.fs.exists(cfgpath):
+        if not j.system.fs.exists(cfgpath):
             self.broken = True
-            o.logger.log("Invalid Qpackage (%s). Cannot find configuration file: %s" % (name, cfgpath))
+            j.logger.log("Invalid Qpackage (%s). Cannot find configuration file: %s" % (name, cfgpath))
             return
-        ini=o.tools.inifile.open(cfgpath)
+        ini=j.tools.inifile.open(cfgpath)
 
         self.buildnr=ini.getValue("main","buildnr")
         if not ini.checkParam("main","debug"):            
@@ -108,10 +108,10 @@ class QPModel():
         self.supportedplatforms=ini.getValue("main","supportedplatforms")
         self.supportedplatforms=[item.lower() for item in self.supportedplatforms.split(",") if item.strip()<>""]
 
-        tmp_restore = o.clients.bitbucket.getRepoConnection
-        o.clients.bitbucket.getRepoConnection = monkey_getRepoConnection
+        tmp_restore = j.clients.bitbucket.getRepoConnection
+        j.clients.bitbucket.getRepoConnection = monkey_getRepoConnection
         self._loadRecipe()  
-        o.clients.bitbucket.getRepoConnection = tmp_restore        
+        j.clients.bitbucket.getRepoConnection = tmp_restore        
         
         section="checksum"
         platforms2=ini.getParams(section)
@@ -126,9 +126,9 @@ class QPModel():
             if platform not in platforms2 and self.coderecipe<>False:
                 self.raiseError("Found platform %s config but not in  bundle section and there is a recipe." %platform )
                 #if self.qualitylevel=="unstable":
-                    #if o.application.shellconfig.interactive:
-                        #if o.console.askYesNo("Package %s_%s has a recipe but no bundle. Do you want to package and upload the bundle?" % (self.name, self.version)):
-                            #result=o.packages.find(self.domain,self.name,self.version)
+                    #if j.application.shellconfig.interactive:
+                        #if j.console.askYesNo("Package %s_%s has a recipe but no bundle. Do you want to package and upload the bundle?" % (self.name, self.version)):
+                            #result=j.packages.find(self.domain,self.name,self.version)
                             #if not result:
                                 #raise RuntimeError("Found no Q-Package %s in %s with version %s" % (self.name, self.domain, self.version))
                             #elif len(result)==1:
@@ -144,16 +144,16 @@ class QPModel():
             details['name'] = dep[4:]
             self.dependants.append(details)
             
-        ini=o.tools.inifile.open(cfgpath)
+        ini=j.tools.inifile.open(cfgpath)
 
-        if o.system.fs.exists(rnpath):
-            self.releasenotes=o.system.fs.fileGetContents(rnpath)
-        if o.system.fs.exists(descrpath):
-            self.description=o.system.fs.fileGetContents(descrpath)                
+        if j.system.fs.exists(rnpath):
+            self.releasenotes=j.system.fs.fileGetContents(rnpath)
+        if j.system.fs.exists(descrpath):
+            self.description=j.system.fs.fileGetContents(descrpath)                
         for platform in self.supportedplatforms:
-            blobPath = o.system.fs.joinPaths(path, "blob_%s.info" % platform)
-            if o.system.fs.exists(blobPath):
-                self.blobs[platform] = o.system.fs.fileGetContents(blobPath)
+            blobPath = j.system.fs.joinPaths(path, "blob_%s.info" % platform)
+            if j.system.fs.exists(blobPath):
+                self.blobs[platform] = j.system.fs.fileGetContents(blobPath)
             else:
                 self.blobs[platform] = ""
 
@@ -162,11 +162,11 @@ class QPModel():
         self.scanner.raiseError("%s %s %s %s: %s" % (self.domain,self.name,self.qualitylevel,self.version,message))
 
     def getQPobject(self):
-        return o.packages.find(self.name,self.domain,self.version)
+        return j.packages.find(self.name,self.domain,self.version)
 
     def _loadModule(self,path):
         '''Load the Python module from disk using a random name'''
-        #o.logger.log('Loading module %s' % path, 7)
+        #j.logger.log('Loading module %s' % path, 7)
         #Random name -> name in sys.modules
         def generate_module_name():
             '''Generate a random unused module name'''
@@ -175,28 +175,28 @@ class QPModel():
         while modname in sys.modules:
             modname = generate_module_name()
         
-        #o.console.echo("Loading %s as %s" % (path, modname))
+        #j.console.echo("Loading %s as %s" % (path, modname))
         module = imp.load_source(modname, path)
             
         return module        
 
     def _loadRecipe(self):
 
-        recipepath=o.system.fs.joinPaths(self.path,"tasklets","codemanagement","1_defineCodeRecipe")
-        if o.system.fs.exists(recipepath):
-            paths=o.system.fs.listFilesInDir(recipepath,filter="*.py")
+        recipepath=j.system.fs.joinPaths(self.path,"tasklets","codemanagement","1_defineCodeRecipe")
+        if j.system.fs.exists(recipepath):
+            paths=j.system.fs.listFilesInDir(recipepath,filter="*.py")
             if len(paths)==1:
                 path=paths[0]
-                #compile(o.system.fs.fileGetContents(path),path,'exec')                      
+                #compile(j.system.fs.fileGetContents(path),path,'exec')                      
                 try:
                     module=self._loadModule(path)
                 except:
-                    o.logger.exception("Failed to load recipe for %s" % self)
+                    j.logger.exception("Failed to load recipe for %s" % self)
                     self.coderecipe=False
-                    o.console.echo("Could not load recipe on %s (%s)" % (recipepath, path))
+                    j.console.echo("Could not load recipe on %s (%s)" % (recipepath, path))
                                     
                 if self.coderecipe != False:
-                    params=o.core.params.get()
+                    params=j.core.params.get()
                     try:
                         params=module.main(q, i, params, service="", job="", tags="", tasklet="")
                         self.coderecipe=params.recipe
@@ -207,13 +207,13 @@ class QPModel():
                     except:
                         self.broken = True
                         self.coderecipe=False
-                        o.console.echo("Broken QPackage. Could not execute recipe on %s (%s)" % (recipepath, path))
+                        j.console.echo("Broken QPackage. Could not execute recipe on %s (%s)" % (recipepath, path))
 
     def generateWikiPageGroupConfluence(self,wikigenerator=None):
         if self.broken:
             raise RuntimeError("Broken Qpackage")
             
-        page=o.tools.wikigenerator.pageNewConfluence("")
+        page=j.tools.wikigenerator.pageNewConfluence("")
         #page.addHeading(  ...
         page.addHeading(self.name)
         page.name = self.name
@@ -248,20 +248,20 @@ class QPModel():
         #@todo P1 put link to each required part of repo (on default tip) on trac (so is easy for user to go and check out the code)
         
         #@todo P1 create a subpage with the  release notes
-        pagern=o.tools.wikigenerator.pageNewConfluence("")
+        pagern=j.tools.wikigenerator.pageNewConfluence("")
         pagern.name = self.name + " Release Notes"
         page.addHeading("Release Notes")
         page.addMessage(self.releasenotes)
         
         #@todo P1 create a subpage with the info from blobstor for the different platforms
-        pagebl=o.tools.wikigenerator.pageNewConfluence("")
+        pagebl=j.tools.wikigenerator.pageNewConfluence("")
         pagern.name = self.name + " Blob Info"
         page.addHeading("Blob Info")
         page.addMessage(self.blobs)
         
         #add pages to pagegroup
         pages = {'p0' : page, 'p1' : pagern, 'p2' : pagebl}
-        pagegroup=o.tools.wikigenerator.pageGroupNew(pages)
+        pagegroup=j.tools.wikigenerator.pageGroupNew(pages)
         
         
         return pagegroup
@@ -286,7 +286,7 @@ class QPackageMetadataScanner():
     def __init__(self):
         self.owpackages={} #dict with key the quality level
         self.tracserver="http://188.93.112.39:8080/"  #server which can be used to link to the code
-        #o.system.fs.writeFile("ERRORS.TXT","\n########%s###########\n" % o.base.time.getLocalTimeHR(),append=True)
+        #j.system.fs.writeFile("ERRORS.TXT","\n########%s###########\n" % j.base.time.getLocalTimeHR(),append=True)
     
     def getAllQpackages(self,qualityLevels=None):
         qualityLevels = qualityLevels if qualityLevels is not None else []
@@ -303,12 +303,12 @@ class QPackageMetadataScanner():
         @param remoteBlobStor & localBlobStor, if none then "qplocal" & "qpremote" configured blobstores are used
         """
         if remoteBlobStor==None:
-            remoteBlobStor=o.clients.blobstor.get("qpremote")
+            remoteBlobStor=j.clients.blobstor.get("qpremote")
         if localBlobStor==None:
-            localBlobStor=o.clients.blobstor.get("qpremote")
+            localBlobStor=j.clients.blobstor.get("qpremote")
         qps=self.getAllQpackages()
         for qp in qps:
-            from OpenWizzy.core.Shell import ipshell
+            from JumpScale.core.Shell import ipshell
             print "DEBUG NOW "
             ipshell()
                     
@@ -323,9 +323,9 @@ class QPackageMetadataScanner():
                     bbaccount=item.coderepoConnection[0]
                     bbrepo=item.coderepoConnection[1]
                     branch=item.coderepoConnection[2]
-                    basedir=o.system.fs.joinPaths(o.dirs.codeDir,bbaccount,bbrepo)
-                    source = o.system.fs.joinPaths(basedir, item.source)
-                    destination = o.system.fs.pathNormalize(item.destination, o.dirs.baseDir)                            
+                    basedir=j.system.fs.joinPaths(j.dirs.codeDir,bbaccount,bbrepo)
+                    source = j.system.fs.joinPaths(basedir, item.source)
+                    destination = j.system.fs.pathNormalize(item.destination, j.dirs.baseDir)                            
                     result.append([qp.qualitylevel,qp.name,qp.version,branch,source,destination])
         return result
 
@@ -335,8 +335,8 @@ class QPackageMetadataScanner():
         self.owpackages[qualitylevel].append(qp)
 
     def raiseError(self,msg):
-        o.console.echo("ERROR:: %s" % msg)
-        #o.system.fs.writeFile("ERRORS.TXT", msg+"\n", append=True)
+        j.console.echo("ERROR:: %s" % msg)
+        #j.system.fs.writeFile("ERRORS.TXT", msg+"\n", append=True)
 
     def scan(self, allVersions=False, qualityLevels=None, packageNames=None):
         """
@@ -349,9 +349,9 @@ class QPackageMetadataScanner():
         @param packageNames: names of the packages to scan
         @type packageNames: list(string)
         """
-        codePath = o.system.fs.joinPaths(o.dirs.codeDir, 'incubaid')
+        codePath = j.system.fs.joinPaths(j.dirs.codeDir, 'incubaid')
         
-        dirPaths = o.system.fs.listDirsInDir(codePath, )
+        dirPaths = j.system.fs.listDirsInDir(codePath, )
         
         domainDirPaths = list()
         
@@ -364,21 +364,21 @@ class QPackageMetadataScanner():
         #@todo P1 implement all versions behaviour
         for domainDirPath in domainDirPaths:
             if not qualityLevels:
-                qualityLevels = o.system.fs.listDirsInDir(domainDirPath, dirNameOnly=True)            
+                qualityLevels = j.system.fs.listDirsInDir(domainDirPath, dirNameOnly=True)            
                 qualityLevels.remove('.hg')
             
             for qualityLevel in qualityLevels:        
-                qualityLevelDirPath = o.system.fs.joinPaths(domainDirPath, qualityLevel)
+                qualityLevelDirPath = j.system.fs.joinPaths(domainDirPath, qualityLevel)
                 
                 # if the quality level doesn't exists for this
                 # domain continue to the next quality level
-                if not o.system.fs.isDir(qualityLevelDirPath):
+                if not j.system.fs.isDir(qualityLevelDirPath):
                     continue
                   
-                qPackageDirs = o.system.fs.listDirsInDir(qualityLevelDirPath)
+                qPackageDirs = j.system.fs.listDirsInDir(qualityLevelDirPath)
                 
                 for qPackageDir in qPackageDirs:
-                    versionDirs = o.system.fs.listDirsInDir(qPackageDir, dirNameOnly=True)
+                    versionDirs = j.system.fs.listDirsInDir(qPackageDir, dirNameOnly=True)
                     versionMaxiInt = 0
                     
                     #look for highest version nr
@@ -395,7 +395,7 @@ class QPackageMetadataScanner():
                                 versionMaxiInt = version
                                 maxVersion = versionDir
                                 
-                    path = o.system.fs.joinPaths(qPackageDir, maxVersion)
+                    path = j.system.fs.joinPaths(qPackageDir, maxVersion)
                     pathPieces = path.strip('/').split('/')
                     pathPieces.reverse()
                     version = pathPieces[0]
@@ -422,30 +422,30 @@ class QPackageMetadataScanner():
                     bbaccount=item.coderepoConnection[0]
                     bbrepo=item.coderepoConnection[1]
                     branch=item.coderepoConnection[2]
-                    basedir=o.system.fs.joinPaths(o.dirs.codeDir,bbaccount,bbrepo)
-                    source = o.system.fs.joinPaths(basedir, item.source)
-                    destination = o.system.fs.pathNormalize(item.destination, o.dirs.baseDir)
+                    basedir=j.system.fs.joinPaths(j.dirs.codeDir,bbaccount,bbrepo)
+                    source = j.system.fs.joinPaths(basedir, item.source)
+                    destination = j.system.fs.pathNormalize(item.destination, j.dirs.baseDir)
                     if not destination in result.keys():
                         result[destination] = [qp.qualitylevel,qp.name,qp.version, qp.coderecipe.path]
                         destinations.append(destination)
                     else:
                         duplicateResult[destination] = [qp.qualitylevel,qp.name,qp.version,qp.coderecipe.path,result[destination]]
-                        o.console.echo("Duplicate entry found: ")
-                        o.console.echo("%s -> %s" % (source,destination))
-                        o.console.echo("Available in:")
-                        o.console.echo("%s" % (qp.coderecipe.path))
-                        o.console.echo("%s\n\n" % (result[destination][3]))
+                        j.console.echo("Duplicate entry found: ")
+                        j.console.echo("%s -> %s" % (source,destination))
+                        j.console.echo("Available in:")
+                        j.console.echo("%s" % (qp.coderecipe.path))
+                        j.console.echo("%s\n\n" % (result[destination][3]))
         for destination in destinations:
             for destination2 in destinations:
                 checkdestination = destination
                 if checkdestination[-1] != '/':
                     checkdestination += '/'
                 if checkdestination in destination2 and destination != destination2:
-                    o.console.echo("Parent directory issue: ")
-                    o.console.echo("%s -> %s" % (destination,destination2))
-                    o.console.echo("Available in:")
-                    o.console.echo("%s" % (result[destination][3]))
-                    o.console.echo("%s\n\n" % (result[destination2][3]))
+                    j.console.echo("Parent directory issue: ")
+                    j.console.echo("%s -> %s" % (destination,destination2))
+                    j.console.echo("Available in:")
+                    j.console.echo("%s" % (result[destination][3]))
+                    j.console.echo("%s\n\n" % (result[destination2][3]))
         #return duplicateResult
     
     def detectDuplicateFiles(self, download=True, qualityLevels=None,
@@ -471,8 +471,8 @@ class QPackageMetadataScanner():
         qps=self.getAllQpackages(qualityLevels)
         result = dict()
 
-        if download and o.application.shellconfig.interactive:
-            download = o.console.askYesNo("Are you sure you want to download all packages?")
+        if download and j.application.shellconfig.interactive:
+            download = j.console.askYesNo("Are you sure you want to download all packages?")
 
         if download:
             self.downloadAllQPackages(qualityLevels)
@@ -484,7 +484,7 @@ class QPackageMetadataScanner():
                 owpackage=owpackage[0]
                 #info = [qp.qualitylevel, qp.name, qp.version, owpackage.getPathFiles()]
                 info = qp
-                files = o.system.fs.listFilesInDir(owpackage.getPathFiles(), recursive=True)
+                files = j.system.fs.listFilesInDir(owpackage.getPathFiles(), recursive=True)
                 for entry in files:
                     entry = entry.replace(owpackage.getPathFiles(),'')
                     for platform in qp.supportedplatforms:
@@ -523,7 +523,7 @@ class QPackageMetadataScanner():
         @rtype: List
         '''
         
-        platform = o.enumerators.PlatformType.getByName(platformName)
+        platform = j.enumerators.PlatformType.getByName(platformName)
         
         children = platform.getChildren()
         childrenNames = list()
@@ -549,7 +549,7 @@ class QPackageMetadataScanner():
         @rtype: List
         '''
         
-        platform = o.enumerators.PlatformType.getByName(platformName)
+        platform = j.enumerators.PlatformType.getByName(platformName)
         
         parentNames = list()
         
@@ -622,13 +622,13 @@ class QPackageMetadataScanner():
             
                 qpName = qPackageModel.name
                 qpPath = qPackageModel.path                            
-                qpConfigPath = o.system.fs.joinPaths(qpPath, 'owpackage.cfg')
+                qpConfigPath = j.system.fs.joinPaths(qpPath, 'owpackage.cfg')
                     
-                if not o.system.fs.exists(qpConfigPath):
+                if not j.system.fs.exists(qpConfigPath):
                     raise RuntimeError('Could\'t find %(qPackageName)s owpackage config file at %(qpConfigPath)s' % {'qPackageName': qPackageModel.name,
                                                                                                                     'qpConfigPath': qpConfigPath})
                 
-                config = o.tools.inifile.open(qpConfigPath)
+                config = j.tools.inifile.open(qpConfigPath)
                             
                 supportedPlatforms = self._getSupportedPlatformsFromConfig(config)
                 supportedPlatform = list(set(supportedPlatforms))
@@ -693,13 +693,13 @@ class QPackageMetadataScanner():
         @type qpConflicts: Dictionary
         '''
         
-        o.console.echo('\n\n')
-        o.console.echo('name:   %(name)s' % qpInfo)
-        o.console.echo('config: %(configPath)s' % qpInfo)
+        j.console.echo('\n\n')
+        j.console.echo('name:   %(name)s' % qpInfo)
+        j.console.echo('config: %(configPath)s' % qpInfo)
         
-        o.console.echo('recipe: yes')            
-        o.console.echo('\n')
-        o.console.echo('platform        supported    bundled')
+        j.console.echo('recipe: yes')            
+        j.console.echo('\n')
+        j.console.echo('platform        supported    bundled')
         
         for platformName, conflictDetails in qpConflicts.iteritems():
             whiteSpaceA =  (16 - len(platformName)) * ' '
@@ -707,7 +707,7 @@ class QPackageMetadataScanner():
             
             line = platformName + whiteSpaceA + conflictDetails['isSupported'] + whiteSpaceB + conflictDetails['isBundled']
             
-            o.console.echo(line)
+            j.console.echo(line)
             
             
     def detectConfigConflicts(self, qualityLevels=None):
@@ -728,13 +728,13 @@ class QPackageMetadataScanner():
         for qPackageModel in qPackageModels:
             qpName = qPackageModel.name
             qpPath = qPackageModel.path                            
-            qpConfigPath = o.system.fs.joinPaths(qpPath, 'owpackage.cfg')
+            qpConfigPath = j.system.fs.joinPaths(qpPath, 'owpackage.cfg')
                 
-            if not o.system.fs.exists(qpConfigPath):
+            if not j.system.fs.exists(qpConfigPath):
                 raise RuntimeError('Could\'t find %(qPackageName)s owpackage config file at %(qpConfigPath)s' % {
                     'qPackageName': qPackageModel.name, 'qpConfigPath': qpConfigPath})
             
-            config = o.tools.inifile.open(qpConfigPath)
+            config = j.tools.inifile.open(qpConfigPath)
                         
             supportedPlatforms = self._getSupportedPlatformsFromConfig(config)
             
@@ -787,9 +787,9 @@ class QPackageMetadataScanner():
         @type qpConflicts: List
         '''
         
-        o.console.echo('\n\n')
-        o.console.echo('name:   %(name)s' % qpInfo)
-        o.console.echo('config: %(configPath)s' % qpInfo)
+        j.console.echo('\n\n')
+        j.console.echo('name:   %(name)s' % qpInfo)
+        j.console.echo('config: %(configPath)s' % qpInfo)
         
         for qpConflict in qpConflicts:
-            o.console.echo(qpConflict)
+            j.console.echo(qpConflict)

@@ -1,8 +1,8 @@
-# from OpenWizzy import o
+# from JumpScale import j
 # from InstallTools import InstallTools
 
 # class Empty():
 # 	pass
 
-# o.system.installtools=InstallTools()
+# j.system.installtools=InstallTools()
 

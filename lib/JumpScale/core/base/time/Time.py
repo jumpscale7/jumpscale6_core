@@ -1,20 +1,20 @@
 
 
-from OpenWizzy import o
+from JumpScale import j
 import time
 import struct
 
 class Time:
     """
     generic provider of time functions
-    lives at o.base.time
+    lives at j.base.time
     """
     def getTimeEpoch(self):
         '''
         Get epoch timestamp (number of seconds passed since January 1, 1970)
         '''
         try:
-            return o.core.appserver6.runningAppserver.webserver.epoch  #@todo P3 (check if working)
+            return j.core.appserver6.runningAppserver.webserver.epoch  #@todo P3 (check if working)
         except:
             pass
         timestamp = int(time.time())
@@ -109,7 +109,7 @@ class Time:
         """
         if txt==None or str(txt).strip()=="0":
             return self.getEpochAgo("-1d")
-        if o.basetype.string.check(txt):
+        if j.basetype.string.check(txt):
             txt=txt.lower()
             if txt.find("-")==-1:
                 raise RuntimeError("Cannot find time, needs to be in format -3d and -3h  (ofcourse 3 can be any int)")
@@ -132,7 +132,7 @@ class Time:
         """
         if txt==None or str(txt).strip()=="0":
             return self.getTimeEpoch()
-        if o.basetype.string.check(txt):
+        if j.basetype.string.check(txt):
             txt=txt.lower()
             if txt.find("+")==-1:
                 raise RuntimeError("Cannot find time, needs to be in format +3d and +3h  (ofcourse 3 can be any int)")

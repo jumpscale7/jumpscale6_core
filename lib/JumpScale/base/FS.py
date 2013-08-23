@@ -1,9 +1,9 @@
-from OpenWizzy import o
+from JumpScale import j
 
 import os
 import sys
 
-from OpenWizzy.baselib.installtools.InstallTools import InstallTools
+from JumpScale.baselib.installtools.InstallTools import InstallTools
 
 class FS:
 
@@ -111,5 +111,5 @@ class FS:
             FS.installtools.copydeletefirst(path,"%s/%s"%(dest,name))
         
 
-o.base.fs=FS
+j.base.fs=FS
 

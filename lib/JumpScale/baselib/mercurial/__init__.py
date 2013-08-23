@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 from .HgLibFactory import HgLibFactory
-o.base.loader.makeAvailable(o, 'clients')
-o.clients.mercurial = HgLibFactory()
+j.base.loader.makeAvailable(j, 'clients')
+j.clients.mercurial = HgLibFactory()
 
-o.system.platform.ubuntu.checkInstall("mercurial","hg")
+j.system.platform.ubuntu.checkInstall("mercurial","hg")

@@ -1,35 +1,35 @@
 import sys
 sys.path.insert(0,"lib")
 
-from OpenWizzy import *
+from JumpScale import *
 
-o.application.appname = "reinstall"
-o.application.start()
+j.application.appname = "reinstall"
+j.application.start()
 
-import OpenWizzy.baselib.platforms #gets access to ubuntu code
-import OpenWizzy.baselib.owdeveltools
+import JumpScale.baselib.platforms #gets access to ubuntu code
+import JumpScale.baselib.owdeveltools
 
-o.application.shellconfig.interactive=True
+j.application.shellconfig.interactive=True
 
 
-do=o.system.installtools
+do=j.system.installtools
 
-o.application.start("owinstallrepos",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
+j.application.start("jsinstallrepos",basedir="/opt/jumpscale6/",appdir="/opt/jumpscale6/apps/exampleapp/")
 
-print "REINSTALL OPENWIZZY ONTO OS."
+print "REINSTALL JUMPSCALE ONTO OS."
 
-if o.system.platformtype.isLinux():
-    o.system.platform.ubuntu.check()
-    o.develtools.installer.deployExamplesLibsGridPortal()
-    o.develtools.installer.deployDFS_IO()
+if j.system.platformtype.isLinux():
+    j.system.platform.ubuntu.check()
+    j.develtools.installer.deployExamplesLibsGridPortal()
+    j.develtools.installer.deployDFS_IO()
 
-    for item in o.system.fs.listDirsInDir("/opt/code/openwizzy"):
+    for item in j.system.fs.listDirsInDir("/opt/code/jumpscale"):
         print "update/merge/commit/push for %s"%item
-        cl=o.clients.mercurial.getClient(item)
+        cl=j.clients.mercurial.getClient(item)
         cl.updatemerge()
 
-    o.develtools.installer.link2code()
+    j.develtools.installer.link2code()
 
 else:
-    raise RuntimeError("Openwizzy 6 is for now only supported on ubuntu or mint.")
+    raise RuntimeError("Jumpscale is for now only supported on ubuntu or mint.")
 

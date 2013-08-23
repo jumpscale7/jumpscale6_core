@@ -1,5 +1,5 @@
-from OpenWizzy import o
-join = o.system.fs.joinPaths
+from JumpScale import j
+join = j.system.fs.joinPaths
 
 class AgentPyApps:
     agentguid = "agent1"
@@ -9,7 +9,7 @@ class AgentPyApps:
         self.appName = appName
     
     def generate_cfg(self):
-        configfile = o.config.getInifile('agent')
+        configfile = j.config.getInifile('agent')
         if not configfile.checkSection(self.appName):
             configfile.addSection(self.appName)
         configfile.addParam(self.appName, "domain", self.appName)

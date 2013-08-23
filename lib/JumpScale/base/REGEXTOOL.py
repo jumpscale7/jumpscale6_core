@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 try:
     import regex
@@ -18,7 +18,7 @@ class REGEXTOOL():
 
     @staticmethod           
     def matchContent(path,contentRegexIncludes=[], contentRegexExcludes=[]):
-        content=o.system.fs.fileGetContents(path)
+        content=j.system.fs.fileGetContents(path)
         if REGEXTOOL.matchMultiple(patterns=contentRegexIncludes,text=content) and not REGEXTOOL.matchMultiple(patterns=contentRegexExcludes,text=content):
             return True
         return False
@@ -53,4 +53,4 @@ class REGEXTOOL():
         return pattern        
 
 
-o.base.regex=REGEXTOOL
+j.base.regex=REGEXTOOL

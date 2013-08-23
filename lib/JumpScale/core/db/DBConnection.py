@@ -33,7 +33,7 @@
 #
 # </License>
 
-from OpenWizzy import o
+from JumpScale import j
 import pg
 
 class DBConnection(object):

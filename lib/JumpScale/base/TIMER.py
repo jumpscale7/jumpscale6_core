@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 import time
 
 class TIMER:
@@ -33,4 +33,4 @@ class TIMER:
         print("performance:%s"%TIMER.performance)
 
 
-o.base.timer=TIMER
+j.base.timer=TIMER

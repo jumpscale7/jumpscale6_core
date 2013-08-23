@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .HumanReadableData import HumanReadableDataFactory
-o.base.loader.makeAvailable(o, 'core')
-o.core.hrd = HumanReadableDataFactory()
+j.base.loader.makeAvailable(j, 'core')
+j.core.hrd = HumanReadableDataFactory()

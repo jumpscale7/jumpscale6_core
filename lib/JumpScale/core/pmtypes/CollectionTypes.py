@@ -37,7 +37,7 @@
 
 import types
 
-from OpenWizzy.core.pmtypes.base import BaseType, NO_DEFAULT
+from JumpScale.core.pmtypes.base import BaseType, NO_DEFAULT
 
 class Dictionary(BaseType):
     '''Generic dictionary type'''

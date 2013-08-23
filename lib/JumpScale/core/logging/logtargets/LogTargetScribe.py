@@ -1,5 +1,5 @@
-from OpenWizzy.core.enumerators import AppStatusType
-from OpenWizzy import o
+from JumpScale.core.enumerators import AppStatusType
+from JumpScale import j
 from fb303_scripts import *
 from scribe import scribe
 from thrift.transport import TTransport, TSocket
@@ -24,7 +24,7 @@ class LogTargetScribe(object):
         check status of scribe, if accessible return True
         """
         try:    
-            result = o.cmdtools.logclient.getStatus()
+            result = j.cmdtools.logclient.getStatus()
         except AttributeError:
             result = AppStatusType.HALTED
             

@@ -1,4 +1,4 @@
-from OpenWizzy.core.extensions.PMExtension import BasePMExtension
+from JumpScale.core.extensions.PMExtension import BasePMExtension
 
 class _ModulePlaceholder: pass
 

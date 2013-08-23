@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 o.application.shellconfig.interactive=True
 class RepoList():
     pass

@@ -1,9 +1,9 @@
 
 
-from OpenWizzy import o
+from JumpScale import j
 
-from OpenWizzy import o
-from OpenWizzy.core.pmtypes.base import BaseType as TypeBaseType
+from JumpScale import j
+from JumpScale.core.pmtypes.base import BaseType as TypeBaseType
 
 def generate_init_properties(cls, attrs):
     '''Generate a class __init_properties__ method

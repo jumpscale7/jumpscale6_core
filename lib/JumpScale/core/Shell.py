@@ -1,5 +1,5 @@
 
-from OpenWizzy import o
+from JumpScale import j
 from IPython import embed
 embed()
 

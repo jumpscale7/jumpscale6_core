@@ -1,4 +1,4 @@
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale.core.baseclasses import BaseEnumeration
 
 class DependencyType4(BaseEnumeration):
     """

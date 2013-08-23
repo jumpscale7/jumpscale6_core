@@ -1,3 +1,3 @@
-from OpenWizzy import o
+from JumpScale import j
 from ShellConfig import ShellConfig
-o.application.shellconfig=ShellConfig()
+j.application.shellconfig=ShellConfig()

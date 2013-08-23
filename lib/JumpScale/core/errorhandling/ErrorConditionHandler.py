@@ -2,7 +2,7 @@ import sys
 import traceback
 import string
 
-from OpenWizzy import o
+from JumpScale import j
 
 from ErrorConditionObject import ErrorConditionObject
 
@@ -32,7 +32,7 @@ class ErrorConditionHandler():
         try:
             ##do something            
         except Exception,e:
-            o.errorconditionhandler.raiseBug("an error",category="exceptions.init",e)
+            j.errorconditionhandler.raiseBug("an error",category="exceptions.init",e)
         
         """
         if pythonExceptionObject<>None:
@@ -43,9 +43,9 @@ class ErrorConditionHandler():
             eco.getBacktrace()
                                   
         eco.tags=tags
-        eco.type=type=o.enumerators.ErrorConditionType.BUG
+        eco.type=type=j.enumerators.ErrorConditionType.BUG
         self.processErrorConditionObject(eco)
-        if o.application.shellconfig.interactive:
+        if j.application.shellconfig.interactive:
          
             if pythonTraceBack<>None:
                 return self.escalateBugToDeveloper(eco,pythonTraceBack)  
@@ -67,7 +67,7 @@ class ErrorConditionHandler():
         """
         
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=1,\
-                                         type=o.enumerators.ErrorConditionType.OPERATIONS)
+                                         type=j.enumerators.ErrorConditionType.OPERATIONS)
         eco.tags=tags
         self.processErrorConditionObject(eco)    
         if die:
@@ -75,13 +75,13 @@ class ErrorConditionHandler():
     
     def raiseOperationalWarning(self, message="", category="",msgpub="",tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=2,\
-                                         type=o.enumerators.ErrorConditionType.OPERATIONS)
+                                         type=j.enumerators.ErrorConditionType.OPERATIONS)
         eco.tags=tags
         self.processErrorConditionObject(eco)
         
     def raiseInputError(self, message="", category="input",msgpub="",die=False ,backtrace="",tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
-                                         level=2,type=o.enumerators.ErrorConditionType.INPUT)
+                                         level=2,type=j.enumerators.ErrorConditionType.INPUT)
         eco.tags=tags
         if backtrace<>"":
             errorConditionObject.backtrace=backtrace        
@@ -91,7 +91,7 @@ class ErrorConditionHandler():
         
     def raiseMonitoringError(self, message, category="",msgpub="",die=False,tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
-                                         level=2,type=o.enumerators.ErrorConditionType.MONITORING)
+                                         level=2,type=j.enumerators.ErrorConditionType.MONITORING)
         eco.tags=tags
         self.processErrorConditionObject(eco)
         if die:
@@ -100,7 +100,7 @@ class ErrorConditionHandler():
 
     def raisePerformanceError(self, message, category="",msgpub="",tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
-                                         level=2,type=o.enumerators.ErrorConditionType.PERFORMANCE)
+                                         level=2,type=j.enumerators.ErrorConditionType.PERFORMANCE)
         eco.tags=tags
         self.processErrorConditionObject(eco)        
         
@@ -120,7 +120,7 @@ class ErrorConditionHandler():
         try:
             ##do something            
         except Exception,e:
-            o.errorconditionhandler.processpythonExceptionObject(e)
+            j.errorconditionhandler.processpythonExceptionObject(e)
             
         @param pythonExceptionObject is errorobject thrown by python when there is an exception
         @param ttype : is the description of the error, can be None
@@ -129,7 +129,7 @@ class ErrorConditionHandler():
         @return [ecsource,ecid,ecguid]
         
         the errorcondition is then also processed e.g. send to local logserver and/or stored locally in errordb
-        see o.errorconditionhandler.processErrorConditionObject how to use this and overrule the behaviour
+        see j.errorconditionhandler.processErrorConditionObject how to use this and overrule the behaviour
         """        
         obj=self.parsePythonErrorObject(pythonExceptionObject,ttype, tb,level,message)
 
@@ -145,10 +145,10 @@ class ErrorConditionHandler():
         try:
             ##do something            
         except Exception,e:
-            eco=o.errorconditionhandler.parsePythonErrorObject(e)
+            eco=j.errorconditionhandler.parsePythonErrorObject(e)
 
         eco is openwizzy internal format for an error 
-        next step could be to process the error objecect (eco) e.g. by o.errorconditionhandler.processErrorConditionObject(eco)
+        next step could be to process the error objecect (eco) e.g. by j.errorconditionhandler.processErrorConditionObject(eco)
             
         @param pythonExceptionObject is errorobject thrown by python when there is an exception
         @param ttype : is the description of the error, can be None
@@ -167,7 +167,7 @@ class ErrorConditionHandler():
             message2=str(pythonExceptionObject)
             
         if message2.find("{category:")<>-1:
-            cat=o.codetools.regex.findOne("\{ *category.*\:.*}",message2)
+            cat=j.codetools.regex.findOne("\{ *category.*\:.*}",message2)
             cat=cat.split(":")[1].replace("}","").strip()
         else:
             cat=""
@@ -232,7 +232,7 @@ class ErrorConditionHandler():
         
         
         if self.lastAction<>"":
-            o.logger.log("Last action done before error was %s" % self.lastAction)
+            j.logger.log("Last action done before error was %s" % self.lastAction)
             message="%s\n%s\n" % (message,"Last action done before error was: %s" % self.lastAction)
         
         self._dealWithRunningAction()      
@@ -241,7 +241,7 @@ class ErrorConditionHandler():
         
         self.processErrorConditionObject(errorobject)
 
-        if o.application.shellconfig.interactive:
+        if j.application.shellconfig.interactive:
             return self.escalateBugToDeveloper(errorobject,tb)
 
     def checkErrorIgnore(self,eco):
@@ -263,7 +263,7 @@ class ErrorConditionHandler():
         def myProcessErrorConditionObject(eco):
             print eco
 
-        o.errorconditionhandler.processErrorConditionObject=myProcessErrorConditionObject
+        j.errorconditionhandler.processErrorConditionObject=myProcessErrorConditionObject
         ###
 
         now there would be no further processing appart from priting the errorcondition object (eco)
@@ -275,25 +275,25 @@ class ErrorConditionHandler():
 
         print errorConditionObject
 
-        if o.logger.clientdaemontarget:
-            o.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)
+        if j.logger.clientdaemontarget:
+            j.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)
         # else:
-        #     o.logger.log(str(errorConditionObject), o.enumerators.LogLevel.OPERATORMSG)
+        #     j.logger.log(str(errorConditionObject), j.enumerators.LogLevel.OPERATORMSG)
 
         return errorConditionObject
         
     
     def _dealWithRunningAction(self):
-        """Function that deals with the error/resolution messages generated by o.action.start() and o.action.stop()
+        """Function that deals with the error/resolution messages generated by j.action.start() and j.action.stop()
         such that when an action fails it throws a openwizzy event and is directed to be handled here
         """
-        if o.__dict__.has_key("action") and o.action.hasRunningActions():
-            o.console.echo("\n\n")
-            o.action.printOutput()
-            o.console.echo("\n\n")
-            o.console.echo( "ERROR:\n%s\n" % o.action._runningActions[-1].errorMessage)
-            o.console.echo( "RESOLUTION:\n%s\n" % o.action._runningActions[-1].resolutionMessage)
-            o.action.clean()    
+        if j.__dict__.has_key("action") and j.action.hasRunningActions():
+            j.console.echo("\n\n")
+            j.action.printOutput()
+            j.console.echo("\n\n")
+            j.console.echo( "ERROR:\n%s\n" % j.action._runningActions[-1].errorMessage)
+            j.console.echo( "RESOLUTION:\n%s\n" % j.action._runningActions[-1].resolutionMessage)
+            j.action.clean()    
 
     def lastActionSet(self,lastActionDescription):
         """
@@ -309,7 +309,7 @@ class ErrorConditionHandler():
 
     def escalateBugToDeveloper(self,errorConditionObject,tb=None):
 
-        o.logger.enabled=False #no need to further log, there is error
+        j.logger.enabled=False #no need to further log, there is error
 
         tracefile=""
         
@@ -317,26 +317,26 @@ class ErrorConditionHandler():
             apps=["sublime_text","geany","gedit","kate"]                
             for app in apps:
                 try:
-                    if o.system.unix.checkApplicationInstalled(app):
+                    if j.system.unix.checkApplicationInstalled(app):
                         editor=app                    
                         return editor
                 except:
                     pass
             return "less"
 
-        if o.application.shellconfig.interactive:
-            #if o.application.shellconfig.debug:
+        if j.application.shellconfig.interactive:
+            #if j.application.shellconfig.debug:
                 #print "###ERROR: BACKTRACE"
                 #print errorConditionObject.backtrace
                 #print "###END: BACKTRACE"                
 
             editor = None
-            if o.system.platformtype.isLinux():
-                #o.console.echo("THIS ONLY WORKS WHEN GEDIT IS INSTALLED")
+            if j.system.platformtype.isLinux():
+                #j.console.echo("THIS ONLY WORKS WHEN GEDIT IS INSTALLED")
                 editor = findEditorLinux()
-            elif o.system.platformtype.isWindows():
-                editorPath = o.system.fs.joinPaths(o.dirs.baseDir,"apps","wscite","scite.exe")
-                if o.system.fs.exists(editorPath):
+            elif j.system.platformtype.isWindows():
+                editorPath = j.system.fs.joinPaths(j.dirs.baseDir,"apps","wscite","scite.exe")
+                if j.system.fs.exists(editorPath):
                     editor = editorPath
             tracefile=errorConditionObject.log2filesystem()
             #print "EDITOR FOUND:%s" % editor            
@@ -344,13 +344,13 @@ class ErrorConditionHandler():
                 #print errorConditionObject.errormessagepublic   
                 if tb==None:
                     try:
-                        res = o.console.askString("\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace)")
+                        res = j.console.askString("\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace)")
                     except:
                         #print "ERROR IN ASKSTRING TO SEE IF WE HAVE TO USE EDITOR"
                         res="s"
                 else:
                     try:
-                        res = o.console.askString("\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace, d=debug)")
+                        res = j.console.askString("\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace, d=debug)")
                     except:
                         #print "ERROR IN ASKSTRING TO SEE IF WE HAVE TO USE EDITOR"
                         res="s"
@@ -358,38 +358,38 @@ class ErrorConditionHandler():
                     cmd="%s '%s'" % (editor,tracefile)
                     #print "EDITORCMD: %s" %cmd
                     if editor=="less":
-                        o.system.process.executeWithoutPipe(cmd,dieOnNonZeroExitCode=False)
+                        j.system.process.executeWithoutPipe(cmd,dieOnNonZeroExitCode=False)
                     else:
-                        result,out=o.system.process.execute(cmd,dieOnNonZeroExitCode=False, outputToStdout=False)
+                        result,out=j.system.process.execute(cmd,dieOnNonZeroExitCode=False, outputToStdout=False)
                     
-                o.logger.clear()
+                j.logger.clear()
                 if res == "c":
                     return
                 elif res == "d":
-                    o.console.echo("Starting pdb, exit by entering the command 'q'")
+                    j.console.echo("Starting pdb, exit by entering the command 'q'")
                     import pdb; pdb.post_mortem(tb)
                 elif res=="s":
                     #print errorConditionObject
-                    o.application.stop(1)
+                    j.application.stop(1)
             else:
                 #print errorConditionObject
-                res = o.console.askString("\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, d=debug)")
-                o.logger.clear()
+                res = j.console.askString("\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, d=debug)")
+                j.logger.clear()
                 if res == "c":
                     return
                 elif res == "d":
-                    o.console.echo("Starting pdb, exit by entering the command 'q'")
+                    j.console.echo("Starting pdb, exit by entering the command 'q'")
                     import pdb; pdb.post_mortem()
                 elif res=="s":
                     #print eobject
-                    o.application.stop(1)
+                    j.application.stop(1)
 
         else:
             #print "ERROR"
             #tracefile=eobject.log2filesystem()
             #print errorConditionObject
-            #o.console.echo( "Tracefile in %s" % tracefile)
-            o.application.stop(1)
+            #j.console.echo( "Tracefile in %s" % tracefile)
+            j.application.stop(1)
 
     def halt(self):
-        o.application.stop(1)
+        j.application.stop(1)

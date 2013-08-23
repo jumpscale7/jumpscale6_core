@@ -1,6 +1,6 @@
 
 import re, functools, types, inspect
-from OpenWizzy import o
+from JumpScale import j
 
 
 
@@ -33,8 +33,8 @@ def autoCast(x):
 def _dialogFunctionConstruct(dialogMethod, castMethod=autoCast, hasDefault=True):
     """ This function is intended to avoid code duplication.
         The ConfigManagementItem class has a lot of functions (dialogAskString, dialogAskInteger, ...) that have similar
-        functionality, but call another function on o.gui.dialog.
-        The fuction on o.gui.dialog is passed as argument (dialogMethod), and with this information a new function is constructed.
+        functionality, but call another function on j.gui.dialog.
+        The fuction on j.gui.dialog is passed as argument (dialogMethod), and with this information a new function is constructed.
         The parameter "hasDefault" defines if the constructed function should have a "default" paramter.
     """
 
@@ -151,11 +151,11 @@ class ConfigManagementItem(object):
         if termios:
             if self.state in [self.ConfigMode.ADD, self.ConfigMode.REVIEW, self.ConfigMode.PARTIALADD]:
                 termios.tcflush(0, termios.TCIFLUSH)
-        o.action.startOutput()
+        j.action.startOutput()
         self.dialogMessage("")
         self.ask()
         self.dialogMessage("")
-        o.action.stopOutput()
+        j.action.stopOutput()
 
     def setDefaultValues(self):
         self.state = self.ConfigMode.SETDEFAULTS
@@ -180,7 +180,7 @@ class ConfigManagementItem(object):
         self.state = self.ConfigMode.IDLE
 
     def review(self):
-        if not o.application.shellconfig.interactive:
+        if not j.application.shellconfig.interactive:
             raise RuntimeError("Cannot review configuration of [%s]/[%s] in non-interactive mode" % (self.configtype, self.itemname))
         self.state = self.ConfigMode.REVIEW
         self.wrappedAsk()
@@ -212,7 +212,7 @@ class ConfigManagementItem(object):
                 errors.append("Invalid value item [%s] / key [%s] / value [%s]\n" % (self.itemname, k, v))
         if errors:
             raise ValueError("Invalid configuration:\n%s" % "\n".join(errors))
-        file = o.config.getInifile(self.configtype)
+        file = j.config.getInifile(self.configtype)
         if not file.checkSection(self.itemname):
             file.addSection(self.itemname)
         for k, v in self.params.iteritems():
@@ -220,7 +220,7 @@ class ConfigManagementItem(object):
         file.write()
 
     def load(self):
-        file = o.config.getInifile(self.configtype)
+        file = j.config.getInifile(self.configtype)
         if not file.checkSection(self.itemname):
             raise ConfigError("Cannot find configuration for configtype [%s] configitem [%s]" % (self.configtype, self.itemname))
         self.params = file.getSectionAsDict(self.itemname)
@@ -229,7 +229,7 @@ class ConfigManagementItem(object):
         lines = [self.itemname]
         for k, v in self.params.iteritems():
             lines.append("  - " + k.ljust(12) + " = " + str(v))
-        o.gui.dialog.message("\n%s\n" % "\n".join(lines))
+        j.gui.dialog.message("\n%s\n" % "\n".join(lines))
 
     def _autoFillIn(self, name, castMethod, default):
         """ To be used in the ask*-methods: This function will check if it's possible to automatically add the parameter.
@@ -261,21 +261,21 @@ class ConfigManagementItem(object):
 
     # The functions below are automatically created based on the function templates in _dialogFunctionConstruct().
     # The parameter hasDefault determines whether the template funcWithDefault or funcWithoutDefault is used.
-    dialogAskFilePath  = _dialogFunctionConstruct(o.gui.dialog.askFilePath, hasDefault=False)
-    dialogAskDirPath   = _dialogFunctionConstruct(o.gui.dialog.askDirPath, hasDefault=False)
-    dialogAskString    = _dialogFunctionConstruct(o.gui.dialog.askString)
-    dialogAskYesNo     = _dialogFunctionConstruct(o.gui.dialog.askYesNo, castMethod=(lambda x: str(x).lower() == 'true'))
-    dialogAskPassword  = _dialogFunctionConstruct(o.gui.dialog.askPassword, hasDefault=True)
-    dialogAskInteger   = _dialogFunctionConstruct(o.gui.dialog.askInteger, castMethod=int)
-    dialogAskIntegers  = _dialogFunctionConstruct(o.gui.dialog.askIntegers, castMethod=(lambda x: [int(i) for i in x.strip()[1:-1].split(",")]), hasDefault=False)
-    dialogAskMultiline = _dialogFunctionConstruct(o.gui.dialog.askMultiline)
+    dialogAskFilePath  = _dialogFunctionConstruct(j.gui.dialog.askFilePath, hasDefault=False)
+    dialogAskDirPath   = _dialogFunctionConstruct(j.gui.dialog.askDirPath, hasDefault=False)
+    dialogAskString    = _dialogFunctionConstruct(j.gui.dialog.askString)
+    dialogAskYesNo     = _dialogFunctionConstruct(j.gui.dialog.askYesNo, castMethod=(lambda x: str(x).lower() == 'true'))
+    dialogAskPassword  = _dialogFunctionConstruct(j.gui.dialog.askPassword, hasDefault=True)
+    dialogAskInteger   = _dialogFunctionConstruct(j.gui.dialog.askInteger, castMethod=int)
+    dialogAskIntegers  = _dialogFunctionConstruct(j.gui.dialog.askIntegers, castMethod=(lambda x: [int(i) for i in x.strip()[1:-1].split(",")]), hasDefault=False)
+    dialogAskMultiline = _dialogFunctionConstruct(j.gui.dialog.askMultiline)
     
     def dialogAskChoice(self, name, message, choices, default=None):           # This is a special case: we have an additional parameter "choices"
         for choice in choices:
             if not type(choice) in types.StringTypes:
                 raise ValueError("All choices should be strings")
         
-        self.params[name] =o.gui.dialog.askChoice(message, choices, default)
+        self.params[name] =j.gui.dialog.askChoice(message, choices, default)
         return self.params[name] 
     
     def dialogAskChoiceMultiple(self, name, message, choices, default=None):
@@ -283,27 +283,27 @@ class ConfigManagementItem(object):
             if not type(choice) in types.StringTypes:
                 raise ValueError("All choices should be strings")
         def partFunc(message, default):
-            return o.gui.dialog.askChoiceMultiple(message, choices, default)
+            return j.gui.dialog.askChoiceMultiple(message, choices, default)
         constructedFunc = _dialogFunctionConstruct(partFunc, \
                                                    castMethod=(lambda x: [s.strip()[1:-1] for s in x.strip()[1:-1].split(",")]))
         return constructedFunc(self, name, message, default)
     
     def dialogAskDate(self, name, message, minValue=None, maxValue=None,
             selectedValue=None, format='YYYY/MM/DD', default=None):
-        partFunc = functools.partial(o.gui.dialog.askDate, minValue=minValue, maxValue=maxValue, selectedValue=selectedValue, format=format)
+        partFunc = functools.partial(j.gui.dialog.askDate, minValue=minValue, maxValue=maxValue, selectedValue=selectedValue, format=format)
         constructedFunc = _dialogFunctionConstruct(partFunc, hasDefault=False)
         return constructedFunc(self, message, default)
     
     def dialogMessage(self, message):
         if not self.state == self.ConfigMode.CHECKCONFIG:
-            msg = o.gui.dialog.message(message)
+            msg = j.gui.dialog.message(message)
             return msg
     
     def dialogShowProgress(self, minvalue, maxvalue, currentvalue):
-        return o.gui.dialog.showProgress(minvalue, maxvalue, currentvalue)
+        return j.gui.dialog.showProgress(minvalue, maxvalue, currentvalue)
 
     def dialogShowLogging(self, text):
-        return o.gui.dialog.showLogging(text)
+        return j.gui.dialog.showLogging(text)
 
 
 
@@ -331,15 +331,15 @@ def generateGroupConfigManagementMethods(**kwargs):
             while itemname is None:  # Ask the user to enter a name. (Until he entered a valid name.)
                 itemname = self._itemnameAsk()
                 if not itemname:
-                    o.gui.dialog.message("The name can only contain lowercase letter, numbers and underscores. Please try again.")
+                    j.gui.dialog.message("The name can only contain lowercase letter, numbers and underscores. Please try again.")
                 if itemname in self.list():
-                    o.gui.dialog.message("There is already a %s with this name. Please try again." % self._DESCRIPTION)
+                    j.gui.dialog.message("There is already a %s with this name. Please try again." % self._DESCRIPTION)
                     itemname = None            
         if params is not None:
             # When params are given
             #   If interactive mode: Use these params as a partial set of params. Ask the values, but populate existing values as defaults in UI.
             #   If non-interactive mode: Use these params as full set of params. If values are missing --> error
-            partialadd = o.application.shellconfig.interactive
+            partialadd = j.application.shellconfig.interactive
             item = self._ITEMCLASS(self._CONFIGTYPE, itemname, params=params, load=False, partialadd=partialadd)
         else:
             # No parameters are given, the user should answer all questions defined in the ask() method.
@@ -381,7 +381,7 @@ def generateGroupConfigManagementMethods(**kwargs):
         List all [%(description)s]s
         """
         # return list of names of ConfigManagementItem instances
-        return self._sortConfigList(o.config.getConfig(self._CONFIGTYPE))
+        return self._sortConfigList(j.config.getConfig(self._CONFIGTYPE))
 
     def getConfig(self, itemname=None):
         """
@@ -391,7 +391,7 @@ def generateGroupConfigManagementMethods(**kwargs):
         """
         if not itemname:
             itemname = self._itemnameSelect("Please select a %s" % self._DESCRIPTION)
-        return o.config.getConfig(self._CONFIGTYPE)[itemname]
+        return j.config.getConfig(self._CONFIGTYPE)[itemname]
 
 
     def review(self, itemname=None):
@@ -406,7 +406,7 @@ def generateGroupConfigManagementMethods(**kwargs):
         if not itemname:
             itemname = self._itemnameSelect("Please select a %s" % self._DESCRIPTION)
         item = self._ITEMCLASS(self._CONFIGTYPE, itemname, load=True, validate=False)
-        if o.application.shellconfig.interactive:
+        if j.application.shellconfig.interactive:
             item.review()
         else:
             item.validate()
@@ -426,9 +426,9 @@ def generateGroupConfigManagementMethods(**kwargs):
 
         for name in itemnames:
             item = self._ITEMCLASS(self._CONFIGTYPE, name, load=True)
-            o.action.startOutput()
+            j.action.startOutput()
             item.show()
-            o.action.stopOutput()
+            j.action.stopOutput()
 
 
     def remove(self, itemname=None):
@@ -517,13 +517,13 @@ class GroupConfigManagement(object):
     def _itemnameSelect(self, message):
         if len(self.list()) == 0:
             raise ValueError("No configured items of type [%s]" % self._DESCRIPTION)
-        return o.gui.dialog.askChoice(message, self.list())
+        return j.gui.dialog.askChoice(message, self.list())
 
     def _itemnameAsk(self):
         # Ask itemname to user.
         # If self._itemdescription has been defined, use it to make a useful question
         # Check that the name is compatible with the persistency technology (e.g. inifile sectionname)
-        name = o.gui.dialog.askString("Please enter a name for the %s" % self._DESCRIPTION)
+        name = j.gui.dialog.askString("Please enter a name for the %s" % self._DESCRIPTION)
         if isValidInifileSectionName(name):
             return name
         else:
@@ -531,7 +531,7 @@ class GroupConfigManagement(object):
 
     def _itemRemove(self, itemname):
         # Remove item from configuration file
-        inifile = o.config.getInifile(self._CONFIGTYPE)
+        inifile = j.config.getInifile(self._CONFIGTYPE)
         inifile.removeSection(itemname)
         inifile.write()
 
@@ -552,7 +552,7 @@ def generateSingleConfigManagementMethods(**kwargs):
         """
         if self._checkConfigItemExists():
             item = self._ITEMCLASS(self._CONFIGTYPE, SINGLE_ITEM_SECTION_NAME, load=True)
-            if o.application.shellconfig.interactive:
+            if j.application.shellconfig.interactive:
                 item.review()
             else:
                 item.validate()
@@ -569,9 +569,9 @@ def generateSingleConfigManagementMethods(**kwargs):
         Show [%(description)s] configuration.
         """
         item = self._ITEMCLASS(self._CONFIGTYPE, SINGLE_ITEM_SECTION_NAME, load=True)
-        o.action.startOutput()
+        j.action.startOutput()
         item.show()
-        o.action.stopOutput()
+        j.action.stopOutput()
 
     show.__doc__ = show.__doc__ % kwargs
 
@@ -615,7 +615,7 @@ def generateSingleConfigManagementMethods(**kwargs):
         """
         Get config dictionary for [%(description)s]
         """
-        return o.config.getConfig(self._CONFIGTYPE)[SINGLE_ITEM_SECTION_NAME]
+        return j.config.getConfig(self._CONFIGTYPE)[SINGLE_ITEM_SECTION_NAME]
 
     getConfig.__doc__ = getConfig.__doc__ % kwargs
 
@@ -644,9 +644,9 @@ class SingleConfigManagement(object):
             return type.__new__(cls, name, bases, attrs)
 
     def _checkConfigItemExists(self):
-        if not (self._CONFIGTYPE in o.config.list()):
+        if not (self._CONFIGTYPE in j.config.list()):
             return False
-        elif len(o.config.getConfig(self._CONFIGTYPE)) == 0:
+        elif len(j.config.getConfig(self._CONFIGTYPE)) == 0:
             return False
         else:
             return True

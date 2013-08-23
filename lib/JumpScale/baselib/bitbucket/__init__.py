@@ -1,11 +1,11 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from .Bitbucket import Bitbucket
 from .BitbucketConfigManagement import BitbucketConfigManagement
 from .BitbucketInterface import BitbucketInterface
 
-o.base.loader.makeAvailable(o, 'clients')
+j.base.loader.makeAvailable(j, 'clients')
 
-o.clients.bitbucket=Bitbucket()
-o.clients.bitbucket._config=BitbucketConfigManagement()
-o.clients.bitbucketi=BitbucketInterface()
+j.clients.bitbucket=Bitbucket()
+j.clients.bitbucket._config=BitbucketConfigManagement()
+j.clients.bitbucketi=BitbucketInterface()

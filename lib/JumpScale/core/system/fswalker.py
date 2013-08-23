@@ -2,7 +2,7 @@
 
 import os
 import os.path
-from OpenWizzy import o
+from JumpScale import j
 
 class FSWalker:
     
@@ -10,8 +10,8 @@ class FSWalker:
     def _checkDepth(path,depths,root=""):
         if depths==[]:
             return True
-        #path=o.system.fs.pathclean(path)
-        path=o.system.fs.pathRemoveDirPart(path,root)
+        #path=j.system.fs.pathclean(path)
+        path=j.system.fs.pathRemoveDirPart(path,root)
         for depth in depths:
             dname=os.path.dirname(path)
             split=dname.split(os.sep)
@@ -26,8 +26,8 @@ class FSWalker:
     def _checkContent(path,contentRegexIncludes=[], contentRegexExcludes=[]):
         if contentRegexIncludes==[] and contentRegexExcludes==[]:
             return True
-        content=o.system.fs.fileGetContents(path)
-        if o.codetools.regex.matchMultiple(patterns=contentRegexIncludes,text=content) and not o.codetools.regex.matchMultiple(patterns=contentRegexExcludes,text=content):
+        content=j.system.fs.fileGetContents(path)
+        if j.codetools.regex.matchMultiple(patterns=contentRegexIncludes,text=content) and not j.codetools.regex.matchMultiple(patterns=contentRegexExcludes,text=content):
             return True
         return False
 
@@ -90,7 +90,7 @@ class FSWalker:
         @param depths array of depth values e.g. only return depth 0 & 1 (would mean first dir depth and then 1 more deep) (array(int)) 
         
         '''
-        if not o.system.fs.isDir(root):
+        if not j.system.fs.isDir(root):
             raise ValueError('Root path for walk should be a folder')
         if recursive==False:
             depths=[0]
@@ -99,7 +99,7 @@ class FSWalker:
 
         # print "ROOT OF WALKER:%s"%root
 
-        o.system.fswalker._walk(root,callback,arg, includeFolders, pathRegexIncludes,pathRegexExcludes,\
+        j.system.fswalker._walk(root,callback,arg, includeFolders, pathRegexIncludes,pathRegexExcludes,\
             contentRegexIncludes, contentRegexExcludes, depths,followlinks)
 
         # #if recursive:
@@ -108,14 +108,14 @@ class FSWalker:
         #     if includeFolders:
         #         for dirname in dirnames:
         #             path = os.path.join(dirpath, dirname)
-        #             if o.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path) and \
-        #                     not o.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path):
+        #             if j.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path) and \
+        #                     not j.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path):
         #                 if FSWalker._checkDepth(path,depths,root) and \
         #                         FSWalker._checkContent(path,contentRegexIncludes, contentRegexExcludes):
         #                     result=callback(arg, path)
         #     for filename in filenames:
         #         path = os.path.join(dirpath, filename)
-        #         if o.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path) and not o.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path):
+        #         if j.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path) and not j.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path):
         #             if FSWalker._checkDepth(path,depths,root) and FSWalker._checkContent(path,contentRegexIncludes, contentRegexExcludes):
         #                 callback(arg, path)
                 
@@ -124,23 +124,23 @@ class FSWalker:
     def _walk(path, callback, arg="", includeFolders=False, \
         pathRegexIncludes=[".*"],pathRegexExcludes=[], contentRegexIncludes=[], contentRegexExcludes=[],\
         depths=[],followlinks=True):
-        for path2 in o.system.fs.listFilesAndDirsInDir(path):
-            if o.system.fs.isDir(path2, followlinks):
+        for path2 in j.system.fs.listFilesAndDirsInDir(path):
+            if j.system.fs.isDir(path2, followlinks):
                 if includeFolders:
                     result=True
-                    if o.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path2) and \
-                            not o.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path2):
+                    if j.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path2) and \
+                            not j.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path2):
                         if FSWalker._checkDepth(path2,depths,path) and \
                                 FSWalker._checkContent(path2,contentRegexIncludes, contentRegexExcludes):
                             result=callback(arg, path2)
                     if result==False:
                         continue #do not recurse go to next dir
                 #recurse
-                o.system.fswalker._walk(path2,callback,arg, includeFolders, pathRegexIncludes,pathRegexExcludes,\
+                j.system.fswalker._walk(path2,callback,arg, includeFolders, pathRegexIncludes,pathRegexExcludes,\
                         contentRegexIncludes, contentRegexExcludes, depths,followlinks)
         
-            if o.system.fs.isFile(path2, followlinks):
-                if o.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path2) and not o.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path):
+            if j.system.fs.isFile(path2, followlinks):
+                if j.codetools.regex.matchMultiple(patterns=pathRegexIncludes,text=path2) and not j.codetools.regex.matchMultiple(patterns=pathRegexExcludes,text=path):
                     if FSWalker._checkDepth(path2,depths,path) and FSWalker._checkContent(path2,contentRegexIncludes, contentRegexExcludes):
                         callback(arg, path2)
 
@@ -183,31 +183,31 @@ class FSWalker:
         #We want to work with full paths, even if a non-absolute path is provided
         root = os.path.abspath(root)
 
-        if not o.system.fs.isDir(root):
+        if not j.system.fs.isDir(root):
             raise ValueError('Root path for walk should be a folder')
         
         # print "ROOT OF WALKER:%s"%root
 
-        o.system.fswalker._walkFunctional(root,callbackFunctionFile, callbackFunctionDir,arg, callbackForMatchDir,callbackForMatchFile)
+        j.system.fswalker._walkFunctional(root,callbackFunctionFile, callbackFunctionDir,arg, callbackForMatchDir,callbackForMatchFile)
 
     @staticmethod
     def _walkFunctional(path,callbackFunctionFile=None, callbackFunctionDir=None,arg="", callbackForMatchDir=None,callbackForMatchFile=None):
-        for path2 in o.system.fs.listFilesAndDirsInDir(path):
+        for path2 in j.system.fs.listFilesAndDirsInDir(path):
             # print "walker path:%s"% path2
-            if o.system.fs.isDir(path2, True):
+            if j.system.fs.isDir(path2, True):
                 # print "walker dirpath:%s"% path2
                 if callbackForMatchDir==None or callbackForMatchDir(path2,arg):
                     #recurse
                     # print "walker matchdir:%s"% path2
                     if callbackFunctionDir==None:
-                        o.system.fswalker._walkFunctional(path2,callbackFunctionFile, callbackFunctionDir,arg, callbackForMatchDir,callbackForMatchFile)
+                        j.system.fswalker._walkFunctional(path2,callbackFunctionFile, callbackFunctionDir,arg, callbackForMatchDir,callbackForMatchFile)
                     else:
                         result=callbackFunctionDir(path2,arg)
                         if result<>False:
                             # print "walker recurse:%s"% path2
-                            o.system.fswalker._walkFunctional(path2,callbackFunctionFile, callbackFunctionDir,arg, callbackForMatchDir,callbackForMatchFile)
+                            j.system.fswalker._walkFunctional(path2,callbackFunctionFile, callbackFunctionDir,arg, callbackForMatchDir,callbackForMatchFile)
         
-            if o.system.fs.isFile(path2, True):
+            if j.system.fs.isFile(path2, True):
                 # print "walker filepath:%s"% path2
                 if callbackForMatchFile==False:
                     continue

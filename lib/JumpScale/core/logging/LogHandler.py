@@ -1,6 +1,6 @@
 import itertools
 import functools
-from OpenWizzy import o
+from JumpScale import j
 from .logtargets.LogTargetFS import LogTargetFS
 from .logtargets.LogTargetStdOut import LogTargetStdOut
 #from .logtargets.LogTargetElasticSearch import LogTargetElasticSearch
@@ -53,7 +53,7 @@ class LogUtils(object):
 
         TRACING_ENABLED = True
 
-        @o.logger.utils.trace(level=3, enabled=TRACING_ENABLED)
+        @j.logger.utils.trace(level=3, enabled=TRACING_ENABLED)
         def myFunc(arg1, arg2=12):
             ...
 
@@ -80,11 +80,11 @@ class LogUtils(object):
                     argiter = itertools.chain(args, ["%s=%s" % (k, v) for k, v in
                                                      kwargs.iteritems()])
                     descr = "%s(%s)" % (func.__name__, ", ".join(argiter))
-                    o.logger.log("Calling " + descr, level)
+                    j.logger.log("Calling " + descr, level)
                     try:
                         return func(*args, **kwargs)
                     finally:
-                        o.logger.log("Called " + descr, level)
+                        j.logger.log("Called " + descr, level)
                 return wrappedFunc
         else:
             def decorator(func):
@@ -97,13 +97,13 @@ class LogItem(object):
         self.message = message.strip().replace("\r\n", "/n").replace("\n", "/n")
         self.level = int(level)
         self.category = category.replace(".", "_")
-        if o.application.whoAmI:
-            self.gid = o.application.whoAmI.gid
-            self.bid = o.application.whoAmI.bid
-            self.nid = o.application.whoAmI.nid
-            self.pid = o.application.whoAmI.pid
-            if hasattr(o, 'core') and hasattr(o.core, 'grid') and hasattr(o.core.grid, 'aid'):
-                self.aid = o.core.grid.aid
+        if j.application.whoAmI:
+            self.gid = j.application.whoAmI.gid
+            self.bid = j.application.whoAmI.bid
+            self.nid = j.application.whoAmI.nid
+            self.pid = j.application.whoAmI.pid
+            if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
+                self.aid = j.core.grid.aid
             else:
                 self.aid = 0
 
@@ -111,25 +111,25 @@ class LogItem(object):
         self.jid = int(jid)
         self.parentjid = int(parentjid)
         self.masterjid = int(masterjid)
-        self.epoch = int(epoch) or o.base.time.getTimeEpoch()
-        o.logger.order += 1
-        if o.logger.order > 100000:
-            o.logger.order = 1
-        self.order = o.logger.order
+        self.epoch = int(epoch) or j.base.time.getTimeEpoch()
+        j.logger.order += 1
+        if j.logger.order > 100000:
+            j.logger.order = 1
+        self.order = j.logger.order
         if private == True or int(private) == 1:
             self.private = 1
         else:
             self.private = 0
 
     def toJson(self):
-        return o.db.serializers.ujson.dumps(self.__dict__)
+        return j.db.serializers.ujson.dumps(self.__dict__)
 
     def __str__(self):
         if self.category!="":
             return "%s: %s" % (self.category.replace("_","."),self.message)
         else:
             ttime=time.strftime("%H:%M:%S: ", datetime.fromtimestamp(self.epoch).timetuple())
-            message="%s %s %s%s" % (self.level, o.application.appname , ttime, self.message)
+            message="%s %s %s%s" % (self.level, j.application.appname , ttime, self.message)
             return message
 
     __repr__ = __str__
@@ -217,7 +217,7 @@ class LogHandler(object):
         return  # need to rewrite logging
         self._lastinittime = 0
         self.nolog = True
-        inifile = o.config.getInifile("main")
+        inifile = j.config.getInifile("main")
         if inifile.checkParam("main", "lastlogcleanup") == False:
             inifile.setParam("main", "lastlogcleanup", 0)
         self._lastcleanuptime = int(inifile.getValue("main", "lastlogcleanup"))
@@ -254,13 +254,13 @@ class LogHandler(object):
             self.clientdaemontarget.log(log)
 
             if level < (self.consoleloglevel + 1):
-                o.console.echo(str(log), log=False)
+                j.console.echo(str(log), log=False)
             return
 
         else:
             # print "level:%s %s" % (level,message)
             if level < (self.consoleloglevel + 1):
-                o.console.echo(str(log), log=False)
+                j.console.echo(str(log), log=False)
 
             if self.nolog:
                 return
@@ -268,10 +268,10 @@ class LogHandler(object):
             #    message+="\n"
 
             if level < self.maxlevel+1:
-                if "transaction" in o.__dict__ and o.transaction.activeTransaction != None:
-                    if len(o.transaction.activeTransaction.logs) > 250:
-                        o.transaction.activeTransaction.logs = o.transaction.activeTransaction.logs[-200:]
-                    o.transaction.activeTransaction.logs.append(log)
+                if "transaction" in j.__dict__ and j.transaction.activeTransaction != None:
+                    if len(j.transaction.activeTransaction.logs) > 250:
+                        j.transaction.activeTransaction.logs = j.transaction.activeTransaction.logs[-200:]
+                    j.transaction.activeTransaction.logs.append(log)
 
                 self.logs.append(log)
                 if len(self.logs) > 500:

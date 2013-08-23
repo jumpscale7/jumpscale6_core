@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class PerformanceTraceFactory():
     """
@@ -16,13 +16,13 @@ class PerformanceTraceFactory():
         locals={}
         locals["params"]=params
         locals["q"]=q
-        do=o.tools.performancetrace.profile('o.apps.system.infomgr.extensions.infomgr.addInfo(params.info)', locals)
+        do=j.tools.performancetrace.profile('j.apps.system.infomgr.extensions.infomgr.addInfo(params.info)', locals)
         
         """
         import cProfile
         import pstats
-        path=o.system.fs.joinPaths(o.dirs.tmpDir,"perftest","%s.log"%o.base.idgenerator.generateRandomInt(1,10000))        
-        o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.tmpDir,"perftest"))        
+        path=j.system.fs.joinPaths(j.dirs.tmpDir,"perftest","%s.log"%j.base.idgenerator.generateRandomInt(1,10000))        
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"perftest"))        
         globs = {
             '__file__': "afile",
             '__name__': '__main__',
@@ -33,7 +33,7 @@ class PerformanceTraceFactory():
         p1 = pstats.Stats(path)
         p1.strip_dirs().sort_stats('cum').print_stats(100)
         p1.strip_dirs().sort_stats('time').print_stats(100)
-        o.system.fs.removeDirTree(path)
+        j.system.fs.removeDirTree(path)
 
 
 

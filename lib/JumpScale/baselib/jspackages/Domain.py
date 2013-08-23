@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 
-import OpenWizzy.baselib.mercurial
+import JumpScale.baselib.mercurial
 
 class Domain(): 
 
@@ -19,8 +19,8 @@ class Domain():
         if self.initialized:
             return
         
-        cfgFilePath = o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg')
-        cfg = o.tools.inifile.open(cfgFilePath)
+        cfgFilePath = j.system.fs.joinPaths(j.dirs.cfgDir, 'owpackages', 'sources.cfg')
+        cfg = j.tools.inifile.open(cfgFilePath)
 
         self.bitbucketreponame=cfg.getValue( self.domainname, 'bitbucketreponame')
         self.bitbucketaccount=cfg.getValue( self.domainname, 'bitbucketaccount')
@@ -33,8 +33,8 @@ class Domain():
         self.metadataFromTgz = cfg.getValue(self.domainname, 'metadatafromtgz') in ('1', 'True')        
             
         if self.metadataFromTgz :
-            self.metadatadir=o.system.fs.joinPaths(o.dirs.varDir,"owpackages","metadata",self.domainname)
-            o.system.fs.createDir(self.metadatadir)
+            self.metadatadir=j.system.fs.joinPaths(j.dirs.varDir,"owpackages","metadata",self.domainname)
+            j.system.fs.createDir(self.metadatadir)
             
         else:
             self._sourcePath = self._getSourcePath()
@@ -52,15 +52,15 @@ class Domain():
         self._bitbucketclient = None
         self._mercurialclient = None
 
-        #if not o.system.fs.exists(self.metadatadir):
-            #o.console.echo("Could not find owpackage domain %s for quality level %s, will try to get the repo info from tgz or mercurial" % (self.domainname,self.qualitylevel))
+        #if not j.system.fs.exists(self.metadatadir):
+            #j.console.echo("Could not find owpackage domain %s for quality level %s, will try to get the repo info from tgz or mercurial" % (self.domainname,self.qualitylevel))
             #self.updateMetadata()
-            #if not o.system.fs.exists(self.metadatadir):
+            #if not j.system.fs.exists(self.metadatadir):
                 #raise RuntimeError("Cannot open owpackage domain %s for quality level %s because path %s does not exist" % (self.domainname,self.qualitylevel,self.metadatadir))
         
         #
 
-        self._metadatadirTmp = o.system.fs.joinPaths(o.dirs.varDir,"tmp","owpackages","md", self.domainname)
+        self._metadatadirTmp = j.system.fs.joinPaths(j.dirs.varDir,"tmp","owpackages","md", self.domainname)
 
         self.initialized = True
 
@@ -80,7 +80,7 @@ class Domain():
         @rtype: string
         """
         metadataDir = self.getMetadataDir(qualitylevel)
-        return o.system.fs.joinPaths(metadataDir, name, version)
+        return j.system.fs.joinPaths(metadataDir, name, version)
 
     def getMetadataDir(self, qualitylevel=None):
         """
@@ -97,7 +97,7 @@ class Domain():
                     "based domain is not yet supported")
         else:
             qualitylevel = qualitylevel or self.qualitylevel
-            return o.system.fs.joinPaths(self._sourcePath, qualitylevel)
+            return j.system.fs.joinPaths(self._sourcePath, qualitylevel)
 
     def getQualityLevels(self):
         """
@@ -110,7 +110,7 @@ class Domain():
             raise NotImplementedError("Getting the quality levels for a tar-gz "
                     "based domain is not yet supported")
         else:
-            dirs = o.system.fs.listDirsInDir(self._sourcePath, dirNameOnly=True)
+            dirs = j.system.fs.listDirsInDir(self._sourcePath, dirNameOnly=True)
             qualitylevels = [d for d in dirs if not d.startswith('.')]
             return qualitylevels
 
@@ -119,7 +119,7 @@ class Domain():
             raise NotImplementedError("Getting the source path for a tar-gz "
                     "based domain is not yet supported")
         else:
-            sourcePath = o.system.fs.joinPaths(o.dirs.codeDir,
+            sourcePath = j.system.fs.joinPaths(j.dirs.codeDir,
                     self.bitbucketaccount, self.bitbucketreponame)
             return sourcePath
 
@@ -127,7 +127,7 @@ class Domain():
         """
         Saves changes to the owpackages config file
         """
-        cfg = o.tools.inifile.open(o.system.fs.joinPaths(o.dirs.cfgDir, 'owpackages', 'sources.cfg'))
+        cfg = j.tools.inifile.open(j.system.fs.joinPaths(j.dirs.cfgDir, 'owpackages', 'sources.cfg'))
         if not cfg.checkSection(self.domainname):
             cfg.addSection(self.domainname)
         cfg.setParam(self.domainname, 'metadatadownload', self.metadataDownload)
@@ -163,7 +163,7 @@ class Domain():
         if self.metadataFromTgz:
             raise RuntimeError('Meta data is comming from tar, cannot make connection to mercurial server ')
 
-        self._bitbucketclient = o.clients.bitbucket.getBitbucketConnection(self.bitbucketaccount)
+        self._bitbucketclient = j.clients.bitbucket.getBitbucketConnection(self.bitbucketaccount)
         self._mercurialclient = self.bitbucketclient.getMercurialClient(self.bitbucketreponame,branch="default")
 
     def hasModifiedMetadata(self):
@@ -251,7 +251,7 @@ class Domain():
         """
         Publishes all metadata of the currently active domain
         """
-        o.logger.log("Publish metadata for domain %s" % self.domainname,2)
+        j.logger.log("Publish metadata for domain %s" % self.domainname,2)
         if not self.metadataFromTgz:
             self.bitbucketclient.push(self.bitbucketreponame, message=commitMessage)
         else:
@@ -266,19 +266,19 @@ class Domain():
                 Use a combination of updateMetadata(), publishMetadata() and upload() instead.
                 Reason publish() changes the build numbers on top of update()
         """
-        o.logger.log("Publish metadata for owpackage domain: %s " % self.domainname ,2)
+        j.logger.log("Publish metadata for owpackage domain: %s " % self.domainname ,2)
 
         # determine which packages changed
         modifiedPackages, mess = self.showChangedItems()
         
-        if o.application.shellconfig.interactive:
-            if not o.console.askYesNo('continue?'):
+        if j.application.shellconfig.interactive:
+            if not j.console.askYesNo('continue?'):
                 return
 
-        o.logger.log('publishing packages:\n' + mess, 5)
+        j.logger.log('publishing packages:\n' + mess, 5)
 
         if not commitMessage:
-            commitMessage = o.console.askString('please enter a commit message')
+            commitMessage = j.console.askString('please enter a commit message')
 
         # If the mercurial source for this domain is not trunck
         # we build the corresponding package for each modified package in the trunck repo
@@ -289,7 +289,7 @@ class Domain():
         # This is why bundles are uploaded afterwards
         # @type source DomainSource
 
-        o.logger.log("1) Updating buildNumbers in metadata and uploading files", 1)
+        j.logger.log("1) Updating buildNumbers in metadata and uploading files", 1)
 
         # The build numbers are not modified, but we already committed?
         # How does this work again?
@@ -300,19 +300,19 @@ class Domain():
 
         # self._updateMetadataTmpLocation() Where will the tmp repo get updated??
 
-        o.logger.log("2) Updating buildNumbers in metadata and uploading files", 1)
+        j.logger.log("2) Updating buildNumbers in metadata and uploading files", 1)
         deletedPackagesMetaData = self.getQPackageTuplesWithDeletedMetadata()
         modifiedPackagesMetaData = self.getQPackageTuplesWithModifiedMetadata()
         modifiedPackagesFiles = self.getQPackageTuplesWithModifiedFiles()
         for owpackageActive in modifiedPackages:
             if owpackageActive in deletedPackagesMetaData:
-                o.logger.log("Deleting files of package " + str(owpackageActive), 1)
-                o.system.fs.removeDirTree(o.packages.getDataPath(*owpackageActive))
+                j.logger.log("Deleting files of package " + str(owpackageActive), 1)
+                j.system.fs.removeDirTree(j.packages.getDataPath(*owpackageActive))
             else:
             #if owpackageActive in newPackagesMetaData or owpackageActive in modifiedPackagesMetaData:
-                owpackageActiveObject = o.packages.get(owpackageActive[0], owpackageActive[1], owpackageActive[2])
-                o.logger.log("For owpackage: " + str(owpackageActiveObject), 1)
-                o.logger.log("current numbers : " + owpackageActiveObject.reportNumbers(), 1)
+                owpackageActiveObject = j.packages.get(owpackageActive[0], owpackageActive[1], owpackageActive[2])
+                j.logger.log("For owpackage: " + str(owpackageActiveObject), 1)
+                j.logger.log("current numbers : " + owpackageActiveObject.reportNumbers(), 1)
                 # Update build number
                 owpackageActiveObject.buildNr  = owpackageActiveObject.buildNr + 1
 
@@ -321,12 +321,12 @@ class Domain():
                     owpackageActiveObject.metaNr = owpackageActiveObject.buildNr
                 if owpackageActive in modifiedPackagesFiles:
                     owpackageActiveObject.bundleNr = owpackageActiveObject.buildNr
-                o.logger.log("updated to new numbers : " + owpackageActiveObject.reportNumbers(), 1)
+                j.logger.log("updated to new numbers : " + owpackageActiveObject.reportNumbers(), 1)
                 owpackageActiveObject.save()
 
             # At this point we may be
             if owpackageActive in modifiedPackagesFiles:
-                owpackageActiveObject = o.packages.get(owpackageActive[0], owpackageActive[1], owpackageActive[2])
+                owpackageActiveObject = j.packages.get(owpackageActive[0], owpackageActive[1], owpackageActive[2])
                 #owpackageActiveObject._compress(overwriteIfExists=True)
                 owpackageActiveObject.upload()
 
@@ -335,13 +335,13 @@ class Domain():
         # Next time we run this the meta data no longer changed and we dont increment the metaNr as a result of it
         #@feedback kristof: this is no issue, above will happen again in next run, the metadata was not uploaded yet so no issue
 
-        o.logger.log("3) Commiting and uploadind metadata with updated buildNumbers", 1)
+        j.logger.log("3) Commiting and uploadind metadata with updated buildNumbers", 1)
         self.publishMetadata(commitMessage=commitMessage)
 
         # Only do this after complete success!
         # If something goes wrong we know which files where modified
         for owpackageActive in modifiedPackagesFiles:
-            owpackageActiveObject = o.packages.get(owpackageActive[0], owpackageActive[1], owpackageActive[2])
+            owpackageActiveObject = j.packages.get(owpackageActive[0], owpackageActive[1], owpackageActive[2])
             owpackageActiveObject._resetPreparedForUpdatingFiles()
     
     
@@ -349,7 +349,7 @@ class Domain():
         """
         Shows all changes in the files or metadata
         """
-        o.logger.log("Show changes in files and metadata for owpackage domain: %s " % self.domainname ,2)
+        j.logger.log("Show changes in files and metadata for owpackage domain: %s " % self.domainname ,2)
 
         # determine which packages changed
         newPackagesMetaData      = self.getQPackageTuplesWithNewMetadata()
@@ -361,11 +361,11 @@ class Domain():
         # If there are no packages to do something with don't bother the user
         # with annoying questions
         if not modifiedPackages:
-            o.logger.log("There where no modified packages for domain: %s " % self.domainname , 1)
+            j.logger.log("There where no modified packages for domain: %s " % self.domainname , 1)
             return modifiedPackages, ''  #debug
 
         # report to the user what will happen if he proceeds
-        o.logger.log('The following packages will be published:', 1)
+        j.logger.log('The following packages will be published:', 1)
         just = 15
         mess  = ' ' * 4 + 'domain:'.ljust(just) + 'name:'.ljust(just) + 'version:'.ljust(just)
         mess +=           'metachanged:'.ljust(just) + 'fileschanged:'.ljust(just) + 'status:'.ljust(just) + '\n'
@@ -388,7 +388,7 @@ class Domain():
             mess += ' ' * 4 + package[0].ljust(just) + package[1].ljust(just) + package[2].ljust(just)
             mess +=           str(metachanged).ljust(just) + str(fileschanged).ljust(just) + str(status).ljust(just) + '\n'
 
-        o.logger.log('publishing packages for domain %s:\n' % self.domainname + mess, 1)
+        j.logger.log('publishing packages for domain %s:\n' % self.domainname + mess, 1)
                     
         return modifiedPackages, mess
     
@@ -408,7 +408,7 @@ class Domain():
         
         if self.metadataFromTgz == False:
 
-            o.action.start("updateowpackage metadata for domain %s" % self.domainname,\
+            j.action.start("updateowpackage metadata for domain %s" % self.domainname,\
                            "Could not update the metadata for the domain",\
                            "go to directory %s and update the metadata yourself using mercurial" % self.metadatadir)
                   
@@ -420,29 +420,29 @@ class Domain():
        
             #link code to right metadata location
             sourcepath = self.getMetadataDir()
-            destpath=o.system.fs.joinPaths(o.dirs.packageDir,"metadata",self.domainname)
-            o.system.fs.createDir(sourcepath)            
-            o.system.fs.symlink(sourcepath,destpath,True)
+            destpath=j.system.fs.joinPaths(j.dirs.packageDir,"metadata",self.domainname)
+            j.system.fs.createDir(sourcepath)            
+            j.system.fs.symlink(sourcepath,destpath,True)
             
-            o.action.stop()
+            j.action.stop()
         else:
             repoUrl        = self.metadataDownload
-            targetTarDir   = o.packages.getMetaTarPath(self.domainname)
+            targetTarDir   = j.packages.getMetaTarPath(self.domainname)
             targetTarFileName = ("metadata_qp5"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
-            remoteTarPath  = o.system.fs.joinPaths(repoUrl, targetTarFileName)  #@todo P3 needs to work with new tar filenames corresponding to qualitylevels
+            remoteTarPath  = j.system.fs.joinPaths(repoUrl, targetTarFileName)  #@todo P3 needs to work with new tar filenames corresponding to qualitylevels
  
-            o.logger.log("Getting meta data from a tar: %s" % remoteTarPath, 1)
+            j.logger.log("Getting meta data from a tar: %s" % remoteTarPath, 1)
             
-            if not o.system.fs.exists(targetTarDir):
-                o.system.fs.createDir(targetTarDir)
-            o.cloud.system.fs.copyFile(remoteTarPath, 'file://' +  targetTarDir) # Add protocol
+            if not j.system.fs.exists(targetTarDir):
+                j.system.fs.createDir(targetTarDir)
+            j.cloud.system.fs.copyFile(remoteTarPath, 'file://' +  targetTarDir) # Add protocol
 
             ## Extract the tar to the correct location
-            if o.system.fs.exists(self.metadatadir):
-                o.system.fs.removeDirTree(self.metadatadir)
-            targetTarPath = o.system.fs.joinPaths(targetTarDir, targetTarFileName)
+            if j.system.fs.exists(self.metadatadir):
+                j.system.fs.removeDirTree(self.metadatadir)
+            targetTarPath = j.system.fs.joinPaths(targetTarDir, targetTarFileName)
             
-            o.system.fs.targzUncompress(targetTarPath, self.metadatadir)
+            j.system.fs.targzUncompress(targetTarPath, self.metadatadir)
             #Note: Syslinks were just overwritten
             
         # Reload all packages
@@ -455,14 +455,14 @@ class Domain():
         """
         self._ensureInitialized()
         if not self.metadataFromTgz:
-            o.action.start("update & merge owpackage metadata for domain %s" % self.domainname,\
+            j.action.start("update & merge owpackage metadata for domain %s" % self.domainname,\
                            "Could not update/merge the metadata for the domain",\
                            "go to directory %s and update/merge/commit the metadata yourself using mercurial" % self.metadatadir)
             hgclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)            
             hgclient.pull()
             hgclient.updatemerge(commitMessage=commitMessage,ignorechanges=False,addRemoveUntrackedFiles=True,trymerge=True)	    
             #self.hgclientTmp.pullupdate(commitMessage=commitMessage) ? not needed no?
-            o.action.stop()
+            j.action.stop()
         else:
             raise RuntimeError("Cannot merge metadata from tgz info, make sure in sources.cfg file this domain %s metadata is not coming from a tgz file"% self.domainname)
 
@@ -473,27 +473,27 @@ class Domain():
     def publishMetaDataAsTarGz(self):
         
         #self._ensureInitialized()
-        revisionTxt = o.system.fs.joinPaths(self.metadatadir, 'revision.txt')
+        revisionTxt = j.system.fs.joinPaths(self.metadatadir, 'revision.txt')
         
         if self.metadataFromTgz == False:
             hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
             id = hg.id()            
-            o.system.fs.writeFile(revisionTxt, id) #this to remember from which revision the tgz has been created
+            j.system.fs.writeFile(revisionTxt, id) #this to remember from which revision the tgz has been created
             
-        targetTarDir  = o.packages.getMetaTarPath(self.domainname)
+        targetTarDir  = j.packages.getMetaTarPath(self.domainname)
         targetTarFileName = ("metadata_qp5"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
-        targetTarPath = o.system.fs.joinPaths(targetTarDir, targetTarFileName)
+        targetTarPath = j.system.fs.joinPaths(targetTarDir, targetTarFileName)
         
-        o.logger.log("Building tar file from " + self.metadatadir + " to location " + targetTarPath)
+        j.logger.log("Building tar file from " + self.metadatadir + " to location " + targetTarPath)
 
-        o.system.fs.targzCompress(self.metadatadir, targetTarPath, pathRegexExcludes=['.*\/\.hg\/.*'])
+        j.system.fs.targzCompress(self.metadatadir, targetTarPath, pathRegexExcludes=['.*\/\.hg\/.*'])
         
-        o.system.fs.removeFile(revisionTxt)    
+        j.system.fs.removeFile(revisionTxt)    
         
         remoteTarDir  = self.metadataUpload
-        o.logger.log("Uploading tar file for owpackage metadata" + targetTarPath + " to location " + remoteTarDir)
-        o.cloud.system.fs.copyFile('file://' +  targetTarPath, 'file://' +  remoteTarDir + "/")        
-        o.system.fs.removeFile(targetTarPath)
+        j.logger.log("Uploading tar file for owpackage metadata" + targetTarPath + " to location " + remoteTarDir)
+        j.cloud.system.fs.copyFile('file://' +  targetTarPath, 'file://' +  remoteTarDir + "/")        
+        j.system.fs.removeFile(targetTarPath)
     
 
     def _isTrackingFile(self, file):
@@ -501,11 +501,11 @@ class Domain():
         file.replace(self.metadatadir,"")
         if file[0]=="/":
             file=file[1:]
-        curpath=o.system.fs.getcwd()
-        o.system.fs.changeDir(self.metadatadir)
+        curpath=j.system.fs.getcwd()
+        j.system.fs.changeDir(self.metadatadir)
         hgclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
         result=hgclient.isTrackingFile(file)
-        o.system.fs.changeDir(curpath)
+        j.system.fs.changeDir(curpath)
         return result
 
     def getLatestBuildNrForQPackage(self,domain,name,version):
@@ -513,14 +513,14 @@ class Domain():
         Returns the lastest buildnumber
         Buildnr comes from default tip of mercurial repo
         """        
-        owpackage=o.packages.get(domain,name,version,"default",fromTmp=True)
+        owpackage=j.packages.get(domain,name,version,"default",fromTmp=True)
         return owpackage.buildNr
 
     def getQPackages(self):
         """
         Returns a list of all owpackages of the currently active domain
         """
-        return o.packages.find(domain=self.domainname)
+        return j.packages.find(domain=self.domainname)
     
     
     def switchQualityLevel(self, qlevel):
@@ -531,14 +531,14 @@ class Domain():
         Includes a check that the repository has the new quality level
         '''
                   
-        o.console.echo("\nDomain:  %s\n %s (Repo)\n %s (Quality Level)\n %s (MetaFromTgz)\n" % (self.domainname,self.bitbucketreponame,self.qualitylevel,self.metadataFromTgz))
+        j.console.echo("\nDomain:  %s\n %s (Repo)\n %s (Quality Level)\n %s (MetaFromTgz)\n" % (self.domainname,self.bitbucketreponame,self.qualitylevel,self.metadataFromTgz))
         self.updateMetadata()
         
         #check that new quality level is valid in this metadata repo
         list=[]
-        list = o.system.fs.listDirsInDir(path=self._sourcepath, dirNameOnly=True)
+        list = j.system.fs.listDirsInDir(path=self._sourcepath, dirNameOnly=True)
         if qlevel in list:
-            o.console.echo("Found matching Quality Level in repo. - %s - has quality level: %s" % (self.domainname, qlevel))
+            j.console.echo("Found matching Quality Level in repo. - %s - has quality level: %s" % (self.domainname, qlevel))
         else:
             raise RuntimeError("Metadata repo %s of domain %s has no such Quality Level %s " % (self.bitbucketreponame, self.domainname, qlevel))
         
@@ -550,26 +550,26 @@ class Domain():
         
         self._ensureInitialized()
         QLTo = self.qualitylevel
-        o.console.echo("Changed quality level of domain %s from: %s to: %s " % (self.domainname,QLFrom, QLTo))
+        j.console.echo("Changed quality level of domain %s from: %s to: %s " % (self.domainname,QLFrom, QLTo))
         
         #reinstall all packages of domain, if needed       
         for package in self.getQPackages():
             package.reload()
-            o.console.echo("%s %s" % (package.name, package.version))
+            j.console.echo("%s %s" % (package.name, package.version))
             
             #find at least one platform with a checksum
             matchOne = False
             for platform in package.supportedPlatforms:
                 c = package.getChecksum(platform)
                 if c <> None:
-                    o.console.echo("    %s %s " % (platform, c))
+                    j.console.echo("    %s %s " % (platform, c))
                     matchOne = True
             
             if matchOne == True:
                 package.install(dependencies=False, reinstall=True, download=True)
-                o.console.echo("\n    >>>> Successful Download")
+                j.console.echo("\n    >>>> Successful Download")
             else: 
-                o.console.echo("    No checksum for any platform of this package/version.")
+                j.console.echo("    No checksum for any platform of this package/version.")
         
         self.updateMetadata()  #importantly, this resets the symlink to the metadata directories
                 

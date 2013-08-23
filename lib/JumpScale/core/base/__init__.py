@@ -1,17 +1,17 @@
 
 __all__ = ['Time','IDgenerator', ]
 
-from OpenWizzy import o
+from JumpScale import j
 
-from OpenWizzy.core.base.time.Time import Time
-from OpenWizzy.core.base.idgenerator.IDGenerator import IDGenerator
+from JumpScale.core.base.time.Time import Time
+from JumpScale.core.base.idgenerator.IDGenerator import IDGenerator
 
 class Empty():
     pass
 
-if not o.__dict__.has_key("base"):
-    o.base=Empty()
+if not j.__dict__.has_key("base"):
+    j.base=Empty()
 
     
-o.base.time=Time()
-o.base.idgenerator=IDGenerator()
+j.base.time=Time()
+j.base.idgenerator=IDGenerator()

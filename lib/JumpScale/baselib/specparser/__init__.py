@@ -1,5 +1,5 @@
-from OpenWizzy import o
-import OpenWizzy.baselib.code
+from JumpScale import j
+import JumpScale.baselib.code
 from .SpecParser import SpecParserFactory
-o.base.loader.makeAvailable(o, 'core')
-o.core.specparser = SpecParserFactory()
+j.base.loader.makeAvailable(j, 'core')
+j.core.specparser = SpecParserFactory()

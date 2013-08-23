@@ -1,8 +1,8 @@
 
 
-# from OpenWizzy.core.System import System
+# from JumpScale.core.System import System
 import re
-from OpenWizzy import o
+from JumpScale import j
 
 class RegexTemplates_FindLines:
     """
@@ -94,7 +94,7 @@ class RegexTools:
         """
         if pattern=="" or text=="":
             raise RuntimeError("Cannot do .codetools.regex.match when pattern or text parameter is empty")     
-        #o.logger.log("Regextools: pattern:%s in text:%s" % (pattern,text),5)        
+        #j.logger.log("Regextools: pattern:%s in text:%s" % (pattern,text),5)        
         #print "Regextools: pattern:%s in text:%s" % (pattern,text)
         pattern=self._patternFix(pattern)
         result=re.findall(pattern,text)
@@ -192,7 +192,7 @@ class RegexTools:
         return RegexMatches  (is array of RegexMatch)
         """
         if pattern=="" or text=="":
-            raise RuntimeError("Cannot do o.codetools.regex.getRegexMatches when pattern or text parameter is empty")
+            raise RuntimeError("Cannot do j.codetools.regex.getRegexMatches when pattern or text parameter is empty")
         pattern=self._patternFix(pattern)
         rm=RegexMatches()
         for match in re.finditer(pattern, text, flags):
@@ -204,7 +204,7 @@ class RegexTools:
             witch would improve the performance of the search function.
         """
         if pattern=="" or text=="":
-            raise RuntimeError("Cannot do o.codetools.regex.getRegexMatches when pattern or text parameter is empty")
+            raise RuntimeError("Cannot do j.codetools.regex.getRegexMatches when pattern or text parameter is empty")
         pattern=self._patternFix(pattern)
         
         for match in re.finditer(pattern, text, flags):
@@ -228,7 +228,7 @@ class RegexTools:
         @return RegexMatch object, or None if didn't match any.
         """
         if pattern == "" or text == "":
-            raise RuntimeError("Cannot do o.codetools.regex.getRegexMatches when pattern or text parameter is empty")
+            raise RuntimeError("Cannot do j.codetools.regex.getRegexMatches when pattern or text parameter is empty")
         pattern = self._patternFix(pattern)
         match = re.match(pattern, text, flags)
         if match:
@@ -246,7 +246,7 @@ class RegexTools:
         remove lines based on pattern  
         """
         if pattern=="" or text=="":
-            raise RuntimeError("Cannot do o.codetools.regex.removeLines when pattern or text parameter is empty")
+            raise RuntimeError("Cannot do j.codetools.regex.removeLines when pattern or text parameter is empty")
         pattern=self._patternFix(pattern)
         return self.processLines(text,excludes=[pattern])
 
@@ -400,7 +400,7 @@ class RegexTools:
 
     
 if __name__ == '__main__':
-    content=o.system.fs.fileGetContents("examplecontent1.txt")
+    content=j.system.fs.fileGetContents("examplecontent1.txt")
     rt=RegexTools()
     print rt.getClassName("class iets(test):")
     #content="class iets(test):"

@@ -8,7 +8,7 @@ import re
 if sys.platform.startswith('linux') or sys.platform.startswith('sunos'):
     import fcntl
 
-from OpenWizzy import o
+from JumpScale import j
 
 # THIS METHOD IS NOT THREADSAFE
 
@@ -39,11 +39,11 @@ class Util:
         if locktimeout < 0:
             raise RuntimeError("Cannot take lock [%s] with negative timeout [%d]" % (lockname, locktimeout))
 
-        if o.system.platformtype.isUnix():
+        if j.system.platformtype.isUnix():
             # linux implementation
             lockfile = self._LOCKPATHLINUX + os.sep + self.cleanupString(lockname)
-            o.system.fs.createDir(Util._LOCKPATHLINUX)
-            o.system.fs.createEmptyFile(lockfile)
+            j.system.fs.createDir(Util._LOCKPATHLINUX)
+            j.system.fs.createEmptyFile(lockfile)
 
             # Do the locking
             lockAcquired = False
@@ -61,12 +61,12 @@ class Util:
                 myfile.close()
                 raise RuntimeError("Cannot acquire lock [%s]" % (lockname))
 
-        elif o.system.platformtype.isWindows():
+        elif j.system.platformtype.isWindows():
             raise NotImplementedError
 
     def unlock(self, lockname):
         """ Unlock system-wide interprocess lock """
-        if o.system.platformtype.isUnix():
+        if j.system.platformtype.isUnix():
             try:
                 myfile = self.__LOCKDICTIONARY.pop(lockname)
                 fcntl.flock(myfile.fileno(), fcntl.LOCK_UN)
@@ -74,5 +74,5 @@ class Util:
             except Exception, exc:
                 raise RuntimeError("Cannot unlock [%s] with ERROR:%s" % (lockname, str(exc)))
 
-        elif o.system.platformtype.isWindows():
+        elif j.system.platformtype.isWindows():
             raise NotImplementedError

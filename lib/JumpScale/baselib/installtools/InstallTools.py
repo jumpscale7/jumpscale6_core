@@ -1,4 +1,4 @@
-# from OpenWizzy import o
+# from JumpScale import j
 
 try:
     from urllib.request import urlopen
@@ -217,7 +217,7 @@ class InstallTools():
         os.chdir(self.TMP)
         basename=os.path.basename(path)
         if basename.find(".tar.gz")==-1:
-            o.errorconditionhandler.raiseBug(message="Can only expand a tar gz file now %s"%path,category="installer.expand")
+            j.errorconditionhandler.raiseBug(message="Can only expand a tar gz file now %s"%path,category="installer.expand")
         tarfilename=".".join(basename.split(".gz")[:-1])
         self.delete(tarfilename)
         

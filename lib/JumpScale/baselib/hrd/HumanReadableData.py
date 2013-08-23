@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class HumanReadableDataFactory:
     def __init__(self):
@@ -18,7 +18,7 @@ class HumanReadableDataFactory:
 
 
     def replaceVarsInText(self,content,hrdtree,position=""):
-        items=o.codetools.regex.findAll(r"\$\([\w.]*\)",content)
+        items=j.codetools.regex.findAll(r"\$\([\w.]*\)",content)
         
         if len(items)>0:
             for item in items:
@@ -37,7 +37,7 @@ class HumanReadableDataFactory:
         return content
 
     def getHRDFromOsisObject(self,osisobj,prefixRootObjectType=True):
-        txt=o.db.serializers.hrd.dumps(osisobj.obj2dict())
+        txt=j.db.serializers.hrd.dumps(osisobj.obj2dict())
         prefix=osisobj._P__meta[2]
         out=""
         for line in txt.split("\n"):
@@ -76,7 +76,7 @@ class HRDPos():
     def getHRD(self,key):
         key=key.replace(".","_")
         if not self._key2hrd.has_key(key):
-            o.errorconditionhandler.raiseBug(message="Cannot find hrd on position '%s'"%(self._treeposition),category="osis.gethrd")
+            j.errorconditionhandler.raiseBug(message="Cannot find hrd on position '%s'"%(self._treeposition),category="osis.gethrd")
         return self._hrds[self._key2hrd[key]]
 
     def addHrdItem(self,hrd,hrdpos):
@@ -98,7 +98,7 @@ class HRDPos():
         val=self.__dict__[key]
 
         if str(val).find("$(")<>-1:
-            items=o.codetools.regex.findAll(r"\$\([\w.]*\)",val)
+            items=j.codetools.regex.findAll(r"\$\([\w.]*\)",val)
             for item in items:
                 #param found which needs to be filled in
                 item2=item.replace("(","").replace(")","").replace("$","").strip()
@@ -129,7 +129,7 @@ class HRDPos():
 
     def getInt(self,key):
         res=self.get(key)
-        if o.basetype.string.check(res):
+        if j.basetype.string.check(res):
             if res.lower()=="none":
                 res=0
             elif res=="":
@@ -177,19 +177,19 @@ class HRD():
             self.process(content)
 
     def _serialize(self,value):
-        if o.basetype.string.check(value):
+        if j.basetype.string.check(value):
             value=value.replace("\n","\\n")    
-        elif o.basetype.boolean.check(value):
+        elif j.basetype.boolean.check(value):
             if value==True:
                 value="1"
             else:
                 value="0"
-        elif o.basetype.list.check(value):
+        elif j.basetype.list.check(value):
             valueout=""
             for item in value:
                 valueout+="%s,"%item
             value=valueout.strip(",")                 
-        elif o.basetype.dictionary.check(value):
+        elif j.basetype.dictionary.check(value):
             valueout=""
             test={}
             for key in value.keys():                    
@@ -216,7 +216,7 @@ class HRD():
     def _set(self,key,value):
         out=""
         comment="" 
-        for line in o.system.fs.fileGetContents(self._path).split("\n"):
+        for line in j.system.fs.fileGetContents(self._path).split("\n"):
             line=line.strip()
             if line=="" or line[0]=="#":
                 out+=line+"\n"
@@ -237,7 +237,7 @@ class HRD():
             comment=""
             out+=line+"\n"
 
-        o.system.fs.writeFile(self._path,out)
+        j.system.fs.writeFile(self._path,out)
 
     def write(self, path=None):
         C=""
@@ -247,11 +247,11 @@ class HRD():
             key=key0.replace("_",".")
             C+="%s=%s\n"%(key,self.__dict__[key0])
         if path:
-            o.system.fs.writeFile(path,C)
+            j.system.fs.writeFile(path,C)
         else:
             self._fixPath()
-            o.system.fs.createDir(o.system.fs.getDirName(self._path))
-            o.system.fs.writeFile(self._path,C)        
+            j.system.fs.createDir(j.system.fs.getDirName(self._path))
+            j.system.fs.writeFile(self._path,C)        
                 
     def _fixPath(self):
         self._path=self._path.replace(":","")
@@ -303,7 +303,7 @@ class HRD():
         return self.__dict__.has_key(key)
 
     def read(self):
-        content=o.system.fs.fileGetContents(self._path)
+        content=j.system.fs.fileGetContents(self._path)
         self.process(content)
 
     def process(self,content):
@@ -322,7 +322,7 @@ class HRD():
 
 
     def getPath(self,key):
-        return o.core.hrd.getPath(self._paths[key])
+        return j.core.hrd.getPath(self._paths[key])
 
 
     def pop(self,key):
@@ -360,7 +360,7 @@ class HumanReadableDataTree():
         self.hrds=[]
         self.hrdpaths={}
         if path<>"":
-            self.path=o.system.fs.pathNormalize(path)        
+            self.path=j.system.fs.pathNormalize(path)        
             self.add2tree(self.path)
         else:
             self.path=None
@@ -369,9 +369,9 @@ class HumanReadableDataTree():
 
     def getPosition(self,startpath,curpath,position=""):  
         position=position.strip("/")
-        # curpath=o.system.fs.getDirName(curpath+"/")
+        # curpath=j.system.fs.getDirName(curpath+"/")
         # print "path:%s"%self.path
-        key=o.system.fs.pathRemoveDirPart(curpath,startpath,True)
+        key=j.system.fs.pathRemoveDirPart(curpath,startpath,True)
         if position not in key:
             res="%s/%s"%(position,key)
         else:
@@ -390,12 +390,12 @@ class HumanReadableDataTree():
         hrdposObject.addHrdItem(hrd,hrdpos=hrdpos) 
 
     def add2tree(self,path,recursive=True,position="",startpath=""):
-        path=o.system.fs.pathNormalize(path)
+        path=j.system.fs.pathNormalize(path)
         if startpath=="":
             startpath=path
         # self.positions[startpoint]=[HRD(path,startpoint,self)]
 
-        paths= o.system.fs.listFilesInDir(path, recursive=False, filter="*.hrd")
+        paths= j.system.fs.listFilesInDir(path, recursive=False, filter="*.hrd")
         
         treeposition=self.getPosition(startpath,path,position)
 
@@ -405,7 +405,7 @@ class HumanReadableDataTree():
         hrdposObject=self.positions[treeposition]
 
         for pathfound in paths:
-            o.logger.log("Add hrd %s from %s to position:'%s'" % (pathfound,startpath,treeposition), level=9, category="hrd.load")
+            j.logger.log("Add hrd %s from %s to position:'%s'" % (pathfound,startpath,treeposition), level=9, category="hrd.load")
                         
             hrd=HRD(pathfound,treeposition,self)
             hrd.read()
@@ -419,7 +419,7 @@ class HumanReadableDataTree():
             hrdposObject.addHrdItem(hrd,hrdpos=hrdpos)            
 
         if recursive:
-            dirs= o.system.fs.listDirsInDir(path, recursive=False)
+            dirs= j.system.fs.listDirsInDir(path, recursive=False)
             for ddir in dirs:
                 self.add2tree(ddir,recursive=recursive,position=treeposition,startpath=startpath)
 
@@ -514,20 +514,20 @@ class HumanReadableDataTree():
     def applyOnDir(self,path,position="",filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
         print "apply on dir: %s in position:%s"%(path,position)
         
-        items=o.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
+        items=j.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
         for item in items:
             if changeFileName:
-                item2=o.core.hrd.replaceVarsInText(item,self,position)
+                item2=j.core.hrd.replaceVarsInText(item,self,position)
                 if item2<>item:
-                     o.system.fs.renameFile(item,item2)
+                     j.system.fs.renameFile(item,item2)
                     
             if changeContent:
                 self.applyOnFile(item2,position=position)
 
     def applyOnFile(self,path,position=""):
-        content=o.system.fs.fileGetContents(path)
-        content=o.core.hrd.replaceVarsInText(content,self,position)
-        o.system.fs.writeFile(path,content)
+        content=j.system.fs.fileGetContents(path)
+        content=j.core.hrd.replaceVarsInText(content,self,position)
+        j.system.fs.writeFile(path,content)
 
     def __repr__(self):
         parts = []

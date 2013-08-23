@@ -144,10 +144,10 @@ class propertycache(object):
     ...         return []
     ...     func = propertycache(func)
     >>> o = obj()
-    >>> o.func
+    >>> j.func
     func
     []
-    >>> o.func
+    >>> j.func
     []
     """
     def __init__(self, func):

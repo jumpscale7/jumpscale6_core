@@ -1,6 +1,6 @@
 
 
-from OpenWizzy.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
+from JumpScale.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
 
 def checkItemClass(itemclass):
     import inspect

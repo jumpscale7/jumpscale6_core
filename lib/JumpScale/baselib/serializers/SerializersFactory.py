@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class SerializersFactory():
 
@@ -54,12 +54,12 @@ class SerializersFactory():
         if not self.types.has_key(type):
             if type=="m":
                 from .SerializerMSGPack import SerializerMSGPack
-                o.db.serializers.msgpack = SerializerMSGPack()
-                self.types[type]=o.db.serializers.msgpack
+                j.db.serializers.msgpack = SerializerMSGPack()
+                self.types[type]=j.db.serializers.msgpack
             elif type=="c":
                 from .SerializerBlosc import SerializerBlosc
-                o.db.serializers.blosc = SerializerBlosc()
-                self.types[type]=o.db.serializers.blosc
+                j.db.serializers.blosc = SerializerBlosc()
+                self.types[type]=j.db.serializers.blosc
 
             elif type=="b":
                 from .SerializerBlowfish import SerializerBlowfish
@@ -67,26 +67,26 @@ class SerializersFactory():
 
             elif type=="s":
                 from .SerializerSnappy import SerializerSnappy
-                o.db.serializers.snappy = SerializerSnappy()
-                self.types[type]=o.db.serializers.snappy
+                j.db.serializers.snappy = SerializerSnappy()
+                self.types[type]=j.db.serializers.snappy
 
             elif type=="j":
                 from .SerializerUJson import SerializerUJson
-                o.db.serializers.ujson = SerializerUJson()
-                self.types[type]=o.db.serializers.ujson
+                j.db.serializers.ujson = SerializerUJson()
+                self.types[type]=j.db.serializers.ujson
 
             elif type=="l":
                 from .SerializerLZMA import SerializerLZMA
-                o.db.serializers.lzma = SerializerLZMA()
-                self.types[type]=o.db.serializers.lzma
+                j.db.serializers.lzma = SerializerLZMA()
+                self.types[type]=j.db.serializers.lzma
 
             elif type=="p":
                 from .SerializerPickle import SerializerPickle
-                o.db.serializers.pickle = SerializerPickle()
-                self.types[type]=o.db.serializers.pickle
+                j.db.serializers.pickle = SerializerPickle()
+                self.types[type]=j.db.serializers.pickle
 
             elif type=="6":
-                self.types[type]=o.db.serializers.base64
+                self.types[type]=j.db.serializers.base64
 
         return self.types[type]
 
@@ -96,14 +96,14 @@ class Serializer():
         self.serializationstr=serializationstr
         self.key=key
         for k in self.serializationstr:
-            o.db.serializers.getSerializerType(k,self.key)
+            j.db.serializers.getSerializerType(k,self.key)
 
     def dumps(self,val):
         if self.serializationstr=="":
             return val
         for key in self.serializationstr:
             # print "dumps:%s"%key
-            val=o.db.serializers.types[key].dumps(val)
+            val=j.db.serializers.types[key].dumps(val)
         return val
 
     def loads(self,data):
@@ -112,6 +112,6 @@ class Serializer():
 
         for key in reversed(self.serializationstr):
             # print "loads:%s"%key
-            data=o.db.serializers.types[key].loads(data)
+            data=j.db.serializers.types[key].loads(data)
         return data
 

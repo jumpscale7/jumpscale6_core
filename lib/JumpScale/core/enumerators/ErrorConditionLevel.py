@@ -1,5 +1,5 @@
 
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale.core.baseclasses import BaseEnumeration
 
 class ErrorConditionLevel(BaseEnumeration):
     """

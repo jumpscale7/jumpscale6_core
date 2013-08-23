@@ -1,8 +1,8 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from .BlobStor import BlobStorFactory
-import OpenWizzy.baselib.hash
+import JumpScale.baselib.hash
 
-o.base.loader.makeAvailable(o, 'clients')
+j.base.loader.makeAvailable(j, 'clients')
 
-o.clients.blobstor=BlobStorFactory()
+j.clients.blobstor=BlobStorFactory()

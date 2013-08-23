@@ -1,5 +1,5 @@
-# from OpenWizzy.core.System import System
-from OpenWizzy import o
+# from JumpScale.core.System import System
+from JumpScale import j
 import urllib
 
 class TemplateEngine(object):
@@ -8,9 +8,9 @@ class TemplateEngine(object):
         #System ##System
 
     def add(self, search, replace,variants=False):
-        if not o.basetype.string.check(search):
+        if not j.basetype.string.check(search):
             raise RuntimeError("only strings can be searched for when using template engine, param search is not a string")
-        if not o.basetype.string.check(replace):
+        if not j.basetype.string.check(replace):
             raise RuntimeError("can only replace with strings when using template engine, param replace is not a string")        
         self.replaceDict[search] = replace
         if variants:
@@ -48,15 +48,15 @@ class TemplateEngine(object):
         self.__createFileFromTemplate(templatePath, targetPath)
         
     def getOutputFromTemplate(self,templatePath):
-        originalFile = o.system.fs.fileGetContents(templatePath)
+        originalFile = j.system.fs.fileGetContents(templatePath)
         modifiedString = self.replace(originalFile, replaceCount=3)
         return modifiedString
         
     
     def __createFileFromTemplate(self, templatePath, targetPath, replaceCount = 3):
-        originalFile = o.system.fs.fileGetContents(templatePath)
+        originalFile = j.system.fs.fileGetContents(templatePath)
         modifiedString = self.replace(originalFile, replaceCount)
-        o.system.fs.writeFile(targetPath, modifiedString)
+        j.system.fs.writeFile(targetPath, modifiedString)
 
     def reset(self):
         self.replaceDict={}

@@ -1,18 +1,18 @@
 import sys
 sys.path.insert(0,"lib")
 
-from OpenWizzy import *
+from JumpScale import *
 
-o.application.appname = "owcommit"
-o.application.start()
+j.application.appname = "jscommit"
+j.application.start()
 
-import OpenWizzy.baselib.mercurial
+import JumpScale.baselib.mercurial
 
 
-o.application.shellconfig.interactive=True
+j.application.shellconfig.interactive=True
 
-for item in o.system.fs.listDirsInDir("/opt/code/openwizzy"):
+for item in j.system.fs.listDirsInDir("/opt/code/openwizzy"):
     print "update/merge/commit/push for %s"%item
-    cl=o.clients.mercurial.getClient(item)
+    cl=j.clients.mercurial.getClient(item)
     cl.commit()
 

@@ -1,13 +1,13 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class QPackageStateObject():
     
     def __init__(self,owpackageObject):
         key="%s_%s_%s" % (owpackageObject.domain,owpackageObject.name,owpackageObject.version)
-        self._path = o.system.fs.joinPaths(o.dirs.cfgDir, "owpackages", "state", key + ".cfg")
+        self._path = j.system.fs.joinPaths(j.dirs.cfgDir, "owpackages", "state", key + ".cfg")
 
-        if not o.system.fs.exists(self._path):
-            self._ini=o.tools.inifile.new(self._path)
+        if not j.system.fs.exists(self._path):
+            self._ini=j.tools.inifile.new(self._path)
             self._ini.addSection("main")
             self.lastinstalledbuildnr=-1
             self.lastdownloadedbuildnr=-1
@@ -18,7 +18,7 @@ class QPackageStateObject():
             self.currentaction=""
             self.currenttag=""
             self.currentactiontime=0
-            #self.state=o.enumerators.QPackageState4.OK
+            #self.state=j.enumerators.QPackageState4.OK
             self.retry=0 #nr of times we tried to repair last broken state
             self.prepared=0
             self.isPendingReconfiguration=0
@@ -27,7 +27,7 @@ class QPackageStateObject():
             self.installedBlobStorKeys={}#is dict with key platform & value the key
             self._save()
         else:
-            self._ini=o.tools.inifile.open(self._path)
+            self._ini=j.tools.inifile.open(self._path)
             self.lastinstalledbuildnr=int(self._ini.getValue("main","lastinstalledbuildnr"))
             self.lastexpandedbuildnr=int(self._ini.getValue("main","lastexpandedbuildnr"))
             self.lastdownloadedbuildnr=int(self._ini.getValue("main","lastdownloadedbuildnr"))
@@ -41,7 +41,7 @@ class QPackageStateObject():
             self.installedBlobStorKeys=self._strToDict(self._ini.getValue("main","installedblobstorkeys"))
 
             #print 'Asking enum : ' + self._ini.getValue("main","state") + ' from ' + str(self._ini)
-            #self.state=o.enumerators.QPackageState4.getByName(self._ini.getValue("main","state"))
+            #self.state=j.enumerators.QPackageState4.getByName(self._ini.getValue("main","state"))
             self.retry=int(self._ini.getValue("main","retry"))
             self.prepared=int(self._ini.getValue("main","prepared"))
             if self._ini.checkParam("main", "debugMode"):
@@ -148,7 +148,7 @@ class QPackageStateObject():
             self.lastaction=self.currentaction
         if self.currentactiontime<>0:
             self.lastactiontime=self.currentactiontime
-        self.currentactiontime=o.base.time.getTimeEpoch()
+        self.currentactiontime=j.base.time.getTimeEpoch()
         self.currentaction=action
         self.currenttag=tag
         self._save()
@@ -158,7 +158,7 @@ class QPackageStateObject():
         current action is succesfully completed
         """
         self.setCurrentAction("","")
-        self.state=o.enumerators.QPackageState4.OK
+        self.state=j.enumerators.QPackageState4.OK
         self._save()
 
     def setPrepared(self, prepared):
@@ -172,7 +172,7 @@ class QPackageStateObject():
         """
         if no current action return True
         """
-        if self.state==o.enumerators.QPackageState4.OK and self.currentaction=="":
+        if self.state==j.enumerators.QPackageState4.OK and self.currentaction=="":
             return True
         return False
     

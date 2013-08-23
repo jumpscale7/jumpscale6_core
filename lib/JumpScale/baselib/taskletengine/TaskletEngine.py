@@ -1,5 +1,5 @@
 import sys
-from OpenWizzy import o
+from JumpScale import j
 import random
 import imp
 
@@ -39,10 +39,10 @@ class Tasklet:
         self.groupname = ""
 
     def checkExecute(self, q, i, params, service, tags):
-        if o.basetype.dictionary.check(params):
-            params = o.core.params.get(params)
+        if j.basetype.dictionary.check(params):
+            params = j.core.params.get(params)
         else:
-            if not o.core.params.isParams(params):
+            if not j.core.params.isParams(params):
                 raise RuntimeError("Params need to be a params object, cannot execute tasklet: %s" % self.path)
         if not hasattr(self.module, 'match') or self.module.match(q, i, params, service, tags, self):
             params = self.module.main(q, i, params, service, tags, self)
@@ -61,10 +61,10 @@ class Tasklet:
 
     def checkExecute4method(self, args={}, params={}, actor=None, tags=None):
         if tags != None:
-            if o.basetype.string.check(tags):
-                tags = o.core.tags.getObject(tags)
+            if j.basetype.string.check(tags):
+                tags = j.core.tags.getObject(tags)
 
-        args = o.core.params.get(args)
+        args = j.core.params.get(args)
 
         if not hasattr(self.module, 'match') or self.module.match(o, args, params, actor, tags, self):
             params = self.module.main(o, args, params, actor, tags, self)
@@ -82,9 +82,9 @@ class TaskletEngineGroup():
         self.addTasklets(path)
 
     def addTasklets(self, path):
-        taskletdirs = o.system.fs.listDirsInDir(path, False, True)
+        taskletdirs = j.system.fs.listDirsInDir(path, False, True)
         for taskletgroupname in taskletdirs:
-            self.taskletEngines[taskletgroupname.lower().strip()] = TaskletEngine(o.system.fs.joinPaths(path, taskletgroupname))
+            self.taskletEngines[taskletgroupname.lower().strip()] = TaskletEngine(j.system.fs.joinPaths(path, taskletgroupname))
 
     def hasGroup(self, name):
         """
@@ -124,7 +124,7 @@ class TaskletEngine():
         """
         load tasklet steps & _init.py for 1 specific group of tasklets
         """
-        o.logger.log("load tasklets in %s" % (path), 6)
+        j.logger.log("load tasklets in %s" % (path), 6)
         # now load tasklet steps
         items = self._getDirItemsNaturalSorted(path, "_", True, True)
         if items == []:
@@ -133,17 +133,17 @@ class TaskletEngine():
 
         for prio, name, path2 in items:
             if name != "":
-                path2 = o.system.fs.joinPaths(path, "%s_%s" % (prio, name))
+                path2 = j.system.fs.joinPaths(path, "%s_%s" % (prio, name))
             self._loadTaskletsFromStep(prio, name, path2)
 
     def _getDirItemsNaturalSorted(self, path, separator="_", strict=False, dirs=False):
         if dirs:
-            items = o.system.fs.listDirsInDir(path, recursive=False)
+            items = j.system.fs.listDirsInDir(path, recursive=False)
         else:
-            items = o.system.fs.listFilesInDir(path, recursive=False)
+            items = j.system.fs.listFilesInDir(path, recursive=False)
         prios = {}
         for item in items:
-            dirName = o.system.fs.getBaseName(item)
+            dirName = j.system.fs.getBaseName(item)
             if not dirName.endswith(".py") and not dirs:
                 continue
             if not dirName.startswith("_") and not dirName.startswith("."):
@@ -184,9 +184,9 @@ class TaskletEngine():
     def _loadTaskletsFromStep(self, stepid, taskletstepname, path):
         items = self._getDirItemsNaturalSorted(path)
         for prio, name, item in items:
-            ppath = o.system.fs.joinPaths(path, item)
-            o.logger.log("Load tasklet %s" % ppath)
-            if o.system.fs.parsePath(ppath)[2].lower() == "py":
+            ppath = j.system.fs.joinPaths(path, item)
+            j.logger.log("Load tasklet %s" % ppath)
+            if j.system.fs.parsePath(ppath)[2].lower() == "py":
                 tasklet = Tasklet()
                 tasklet.name = name.replace(".py", "")
                 tasklet.taskletsStepname = taskletstepname
@@ -198,15 +198,15 @@ class TaskletEngine():
 
     def execute(self, params, service=None, tags=None):
         """
-        @param params is params object like from o.core.params.get() or a dict
+        @param params is params object like from j.core.params.get() or a dict
         @param service is an object which want to give to the tasklets, it will also be called service there
         """
-        # params are of type o.core.params.get() !!!
+        # params are of type j.core.params.get() !!!
         if len(self.tasklets) == 0:
             params.result = None
 
-        if o.basetype.string.check(tags):
-            tags = o.core.tags.getObject(tags)
+        if j.basetype.string.check(tags):
+            tags = j.core.tags.getObject(tags)
         else:
             tags = tags
 
@@ -226,16 +226,16 @@ class TaskletEngine():
             return None
 
         if "tags" in args:
-            if o.basetype.string.check(args["tags"]):
-                tags = o.core.tags.getObject(args["tags"])
+            if j.basetype.string.check(args["tags"]):
+                tags = j.core.tags.getObject(args["tags"])
             else:
                 tags = args["tags"]
         else:
             tags = None
 
-        args = o.core.params.get(args)
+        args = j.core.params.get(args)
 
-        params = o.core.params.get({})
+        params = j.core.params.get({})
         params.result = None
 
         for tasklet in self.tasklets:
@@ -250,10 +250,10 @@ class TaskletEngine():
         if len(self.tasklets) == 0:
             params.result = None
 
-        if o.basetype.dictionary.check(params):
-            params = o.core.params.get(params)
+        if j.basetype.dictionary.check(params):
+            params = j.core.params.get(params)
         else:
-            if not o.core.params.isParams(params):
+            if not j.core.params.isParams(params):
                 raise RuntimeError("Params need to be a params object, cannot execute tasklet: %s" % self.path)
 
         if 'result' not in params:
@@ -270,7 +270,7 @@ class TaskletEngine():
 
     def _loadModule(self, path):
         '''Load the Python module from disk using a random name'''
-        o.logger.log('Loading tasklet module %s' % path, 7)
+        j.logger.log('Loading tasklet module %s' % path, 7)
         # Random name -> name in sys.modules
 
         def generate_module_name():

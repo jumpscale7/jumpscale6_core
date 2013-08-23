@@ -3,9 +3,9 @@
 
 import re
 
-from OpenWizzy.core.pmtypes import PrimitiveTypes
-from OpenWizzy.core.pmtypes.base import BaseType
-from OpenWizzy.core.pmtypes import IPv4Range, IPv4Address
+from JumpScale.core.pmtypes import PrimitiveTypes
+from JumpScale.core.pmtypes.base import BaseType
+from JumpScale.core.pmtypes import IPv4Range, IPv4Address
 GUID_RE = re.compile('^[0-9a-fA-F]{8}[-:][0-9a-fA-F]{4}[-:][0-9a-fA-F]{4}[-:][0-9a-fA-F]{4}[-:][0-9a-fA-F]{12}$')
 class Guid(PrimitiveTypes.String):
     '''Generic GUID type'''

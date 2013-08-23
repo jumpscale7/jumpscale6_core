@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 import platform
 import urllib2
 import gzip
@@ -8,7 +8,7 @@ import sys
 import copy
 import time
 
-class PortApp(o.code.classGetBase()):
+class PortApp(j.code.classGetBase()):
     def __init__(self):
         self.descr=""
         self.url=""
@@ -26,7 +26,7 @@ class PortApp(o.code.classGetBase()):
         self.category=""
         
     def _update(self):
-        self.configdir=o.system.fs.joinPaths(o.dirs.varDir,"portapps",self.name)
+        self.configdir=j.system.fs.joinPaths(j.dirs.varDir,"portapps",self.name)
         self.configdir=self.configdir.replace("/","\\")
         
     def _replaceArgs(self,txt):
@@ -40,21 +40,21 @@ class PortApp(o.code.classGetBase()):
             if self.shutdowncmd.strip()<>"":
                 cmd=self._replaceArgs(self.shutdowncmd)
                 try:
-                    o.system.process.execute(cmd)
+                    j.system.process.execute(cmd)
                 except:
                     pass
             if self.name=="skype":
                 time.sleep(3)
 
-        for procid in o.system.windows.listRunningProcesses():
+        for procid in j.system.windows.listRunningProcesses():
             procid=str(procid.lower().strip())
             for name in self.processnames.split(","):
                 if procid.find(name)<>-1:
-                    pid=o.system.windows.getPidOfProcess(procid)
+                    pid=j.system.windows.getPidOfProcess(procid)
                     if pid>100:
                         shutdown()
                         try:
-                            o.system.process.kill(pid)
+                            j.system.process.kill(pid)
                         except Exception,e:
                             print "could not kill %s %s" % (pid,name)
                             print e
@@ -63,33 +63,33 @@ class PortApp(o.code.classGetBase()):
         self._update()
         if kill:
             self.kill()
-        app=o.clients.portapps.getFromRepo(self.name)
-        o.system.fs.createDir(self.configdir)
-        if not o.system.fs.exists(app.dest):
+        app=j.clients.portapps.getFromRepo(self.name)
+        j.system.fs.createDir(self.configdir)
+        if not j.system.fs.exists(app.dest):
             q.client.portapps.install(app.name)
         dest=self._replaceArgs(app.exe)
         cmd=dest            
         if args<>"":
             cmd=cmd+" "+args
         print "Execute %s" % cmd
-        o.system.process.execute(dest)
+        j.system.process.execute(dest)
 
-class PortApps(o.code.classGetBase()):
+class PortApps(j.code.classGetBase()):
     
     def __init__(self):
         self.portappsrepo={}
         self.portappsactive={}
-        o.dirs.varDir=o.system.fs.joinPaths(o.dirs.baseDir,"var")
+        j.dirs.varDir=j.system.fs.joinPaths(j.dirs.baseDir,"var")
         self._load()        
     
     def updatefromrepo(self):
         """
         list all apps
         """
-        destcfg=o.system.fs.joinPaths(o.dirs.cfgDir,"portappslist.cfg")
+        destcfg=j.system.fs.joinPaths(j.dirs.cfgDir,"portappslist.cfg")
         self._download("http://bitbucket.org/incubaid/portapps/raw/default/cfg/list.cfg",\
                        destcfg,expand=False)
-        ini=o.tools.inifile.open(destcfg)
+        ini=j.tools.inifile.open(destcfg)
         for section in ini.getSections():
             pa=PortApp()
             pa.name=section
@@ -101,7 +101,7 @@ class PortApps(o.code.classGetBase()):
             pa.category=ini.getValue(section,"category",default="").strip().lower()
             pa.dest=ini.getValue(section,"dest",default="")
             if pa.dest.strip()=="":
-                pa.dest=o.system.fs.joinPaths(o.dirs.baseDir,"portapps",pa.name)
+                pa.dest=j.system.fs.joinPaths(j.dirs.baseDir,"portapps",pa.name)
             pa.auth=ini.getValue(section,"auth",default=False)
             pa.processnames=ini.getValue(section,"processnames",default="")
             pa.shutdowncmd=ini.getValue(section,"shutdowncmd",default="")            
@@ -112,37 +112,37 @@ class PortApps(o.code.classGetBase()):
 
     def reset(self):
         self.killall()
-        destcfg=o.system.fs.joinPaths(o.dirs.cfgDir,"portappslist.cfg")
-        o.system.fs.removeFile(destcfg)
-        destcfg=o.system.fs.joinPaths(o.dirs.varDir,"portapps.data")
-        o.system.fs.removeFile(destcfg)
-        appsdir=o.system.fs.joinPaths(o.dirs.baseDir,"portapps")
-        o.system.fs.removeDirTree(appsdir)
+        destcfg=j.system.fs.joinPaths(j.dirs.cfgDir,"portappslist.cfg")
+        j.system.fs.removeFile(destcfg)
+        destcfg=j.system.fs.joinPaths(j.dirs.varDir,"portapps.data")
+        j.system.fs.removeFile(destcfg)
+        appsdir=j.system.fs.joinPaths(j.dirs.baseDir,"portapps")
+        j.system.fs.removeDirTree(appsdir)
         self.update()
     
     def save(self):
-        destcfg=o.system.fs.joinPaths(o.dirs.varDir,"portapps.data")
-        data=o.tools.json.encode(self.obj2dict())
-        o.system.fs.writeFile(destcfg,data)
+        destcfg=j.system.fs.joinPaths(j.dirs.varDir,"portapps.data")
+        data=j.tools.json.encode(self.obj2dict())
+        j.system.fs.writeFile(destcfg,data)
 
     def _load(self):
-        destcfg=o.system.fs.joinPaths(o.dirs.varDir,"portapps.data")
-        if o.system.fs.exists(destcfg):
-            data=o.system.fs.fileGetContents(destcfg)
-            data=o.tools.json.decode(data)
+        destcfg=j.system.fs.joinPaths(j.dirs.varDir,"portapps.data")
+        if j.system.fs.exists(destcfg):
+            data=j.system.fs.fileGetContents(destcfg)
+            data=j.tools.json.decode(data)
             for name in data["portappsactive"].keys():
                 datasub=data["portappsactive"][name]
                 pa=PortApp()
-                o.code.dict2object(pa,datasub)
+                j.code.dict2object(pa,datasub)
                 self.portappsactive[name]=pa
             for name in data["portappsrepo"].keys():
                 datasub=data["portappsrepo"][name]
                 pa=PortApp()
-                o.code.dict2object(pa,datasub)
+                j.code.dict2object(pa,datasub)
                 self.portappsrepo[name]=pa
             
     def _download(self,url,to="",expand=True):
-        o.system.fs.changeDir(o.dirs.tmpDir)
+        j.system.fs.changeDir(j.dirs.tmpDir)
         if expand:
             toTgz="portappexpanded.tgz"
         else:
@@ -207,15 +207,15 @@ class PortApps(o.code.classGetBase()):
         return result    
         
     def _delete(self,path):
-        o.system.fs.removeDirTree(path)
+        j.system.fs.removeDirTree(path)
     
     def _expand(self,path,destdir,ddelete=True):
-        o.system.fs.changeDir(o.dirs.tmpDir)
+        j.system.fs.changeDir(j.dirs.tmpDir)
         self._delete(destdir)    
         self._delete('portappexpanded.tar')
-        if o.system.platformtype.isWindows():            
+        if j.system.platformtype.isWindows():            
             cmd="gzip -d %s" % path
-            o.system.process.execute(cmd)
+            j.system.process.execute(cmd)
         else:
             #@todo use openwizzy everywhere we can (was copied from an installer where openwizzy could not be used)
             handle = gzip.open(path)
@@ -239,7 +239,7 @@ class PortApps(o.code.classGetBase()):
         if self.portappsrepo=={}:
             self.updatefromrepo()
         if name=="":
-            names=o.console.askChoiceMultiple([item for item in o.clients.portapps.list().split("\n") if item.strip()<>""])
+            names=j.console.askChoiceMultiple([item for item in j.clients.portapps.list().split("\n") if item.strip()<>""])
             names=[item.split(" ")[0].strip() for item in names]
         else:
             names=[name]
@@ -247,9 +247,9 @@ class PortApps(o.code.classGetBase()):
             paActive=copy.deepcopy(self.get(name))
             if self.portappsrepo.has_key(name):
                 pa=self.portappsrepo[name]
-                to=o.system.fs.joinPaths(o.dirs.baseDir,"portapps",name)
-                if not o.system.fs.exists(to):
-                    o.system.fs.createDir(to)
+                to=j.system.fs.joinPaths(j.dirs.baseDir,"portapps",name)
+                if not j.system.fs.exists(to):
+                    j.system.fs.createDir(to)
                     paActive.installed=False
                 if paActive.installed==False or int(paActive.build)<int(pa.build):
                     print "download portapp %s, this can take a while please wait." % name

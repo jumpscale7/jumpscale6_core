@@ -1,13 +1,13 @@
 from store import KeyValueStoreBase
-from OpenWizzy import o
+from JumpScale import j
 
-import OpenWizzy.baselib.serializers
+import JumpScale.baselib.serializers
 
 class ArakoonKeyValueStore(KeyValueStoreBase):
 
     def __init__(self, namespace=None, serializers=None):
         KeyValueStoreBase.__init__(self, serializers)
-        self._client = o.clients.arakoon.getClient(namespace)
+        self._client = j.clients.arakoon.getClient(namespace)
         self.categories = dict()
         if not self.exists("dbsystem", "categories"):
             self.set("dbsystem", "categories", {})

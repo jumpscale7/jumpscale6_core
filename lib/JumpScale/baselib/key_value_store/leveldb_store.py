@@ -1,17 +1,17 @@
-from OpenWizzy import o
+from JumpScale import j
 from store import KeyValueStoreBase
 
 try:
     import plyvel
 except:
-    o.base.fs.installtools.execute('apt-get install libleveldb1 libleveldb-dev -y')
-    o.base.fs.installtools.execute('pip install plyvel')
+    j.base.fs.installtools.execute('apt-get install libleveldb1 libleveldb-dev -y')
+    j.base.fs.installtools.execute('pip install plyvel')
 
 
 class LevelDBInterface():
 
     def __init__(self,namespace,basedir):
-        o.system.fs.createDir(basedir)
+        j.system.fs.createDir(basedir)
         self.path="%s/%s"%(basedir,namespace)
         self.db=plyvel.DB(self.path, create_if_missing=True, compression='snappy', bloom_filter_bits=10,lru_cache_size=100*1024*1024,write_buffer_size=1*1024*1024)
         #write_buffer_size=None, max_open_files=None, lru_cache_size=None, block_size=None, block_restart_interval=None
@@ -25,7 +25,7 @@ class LevelDBInterface():
 
     def set(self,key,value):
         # print "set:%s"%key
-        val=o.db.serializers.getSerializerType('j').dumps(value)
+        val=j.db.serializers.getSerializerType('j').dumps(value)
         self.setb(key,val)
 
     def getb(self,key):
@@ -38,7 +38,7 @@ class LevelDBInterface():
         value=self.getb(key)        
         if value==None:
             raise RuntimeError("Cannot find object in db with key:%s"%key)
-        val=o.db.serializers.getSerializerType('j').loads(value)
+        val=j.db.serializers.getSerializerType('j').loads(value)
         return val
 
     def exists(self,key):

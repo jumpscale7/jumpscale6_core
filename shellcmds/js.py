@@ -1,12 +1,12 @@
 import sys
 sys.path.insert(0,"lib")
 
-from OpenWizzy import *
+from JumpScale import *
 
-o.application.appname = "owshell"
-o.application.start()
+j.application.appname = "jsshell"
+j.application.start()
 
-o.application.shellconfig.interactive=True
+j.application.shellconfig.interactive=True
 
 from IPython import embed
 embed()

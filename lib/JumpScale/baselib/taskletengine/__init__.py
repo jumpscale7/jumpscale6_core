@@ -1,6 +1,6 @@
-from OpenWizzy import o
-import OpenWizzy.baselib.params
+from JumpScale import j
+import JumpScale.baselib.params
 from .TaskletEngine import TaskletEngineFactory
 
-o.base.loader.makeAvailable(o, 'core')
-o.core.taskletengine = TaskletEngineFactory()
+j.base.loader.makeAvailable(j, 'core')
+j.core.taskletengine = TaskletEngineFactory()

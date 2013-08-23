@@ -1,5 +1,5 @@
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseEnumeration
 from BlobStorConfigManagement import BlobStorConfigManagement
 
 class BlobStorType(BaseEnumeration):
@@ -72,22 +72,22 @@ class BlobStor:
         @type key: string
         """
 
-        targetDirPath = o.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
+        targetDirPath = j.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
 
         try:
-            resultMeta = o.cloud.system.fs.sourcePathExists(o.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key}))
-            resultGz = o.cloud.system.fs.sourcePathExists(o.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key})) or \
-                     o.cloud.system.fs.sourcePathExists(o.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key}))
+            resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key}))
+            resultGz = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key})) or \
+                     j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key}))
         except Exception, e:
-            o.console.echo("Error in cloudsystem: %s" % e)
+            j.console.echo("Error in cloudsystem: %s" % e)
             raise RuntimeError("Could not check existence of key %s in blobstor %s in namespace %s, there was error.\n%s" % (key, self.name, self.namespace, e))
         return resultMeta and resultGz
 
     def getMetadata(self, key):
         if self.exists(key):
-            targetDirName = o.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
-            targetFileNameMeta = o.system.fs.joinPaths(targetDirName, key + ".meta")
-            content = o.cloud.system.fs.fileGetContents(targetFileNameMeta)
+            targetDirName = j.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
+            targetFileNameMeta = j.system.fs.joinPaths(targetDirName, key + ".meta")
+            content = j.cloud.system.fs.fileGetContents(targetFileNameMeta)
             metadata = BlobMetadata(content, key)
             return metadata
         else:
@@ -100,11 +100,11 @@ class BlobStor:
         metadata = self.getMetadata(key)
         filetype = metadata.filetype
         hashh = metadata.hash
-        targetDirName = o.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
+        targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
-            targetFileNameTgz = o.system.fs.joinPaths(targetDirName, hashh + ".gz")
+            targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
         else:
-            targetFileNameTgz = o.system.fs.joinPaths(targetDirName, hashh + ".tgz")
+            targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".tgz")
 
         source = ""
 
@@ -112,7 +112,7 @@ class BlobStor:
         counter = 0
         while downloading:
             if counter > 0:
-                o.console.echo("Could not download %s, %s try" % (key, counter))
+                j.console.echo("Could not download %s, %s try" % (key, counter))
             counter += 1
             if counter > 5:
                 raise RuntimeError("Could not download %s, have tried 5 times, could be file is corrupt" % source)
@@ -121,23 +121,23 @@ class BlobStor:
                 # when blobstore type is local, don't copy the tgz file, that would be a waste of resources
                 tmpfile = targetFileNameTgz[len('file://'):]
             else:
-                tmpfile = o.system.fs.getTempFileName()
+                tmpfile = j.system.fs.getTempFileName()
                 #here we do the download
-                o.cloud.system.fs.copyFile(targetFileNameTgz, 'file://' + tmpfile)
+                j.cloud.system.fs.copyFile(targetFileNameTgz, 'file://' + tmpfile)
 
-            hashFromCompressed = o.tools.hash.md5(tmpfile)
+            hashFromCompressed = j.tools.hash.md5(tmpfile)
             if metadata.md5 == hashFromCompressed:
                 downloading = False
         if uncompress:
             if filetype == "file":
-                o.system.fs.gunzip(tmpfile, destination)
+                j.system.fs.gunzip(tmpfile, destination)
             else:
-                o.system.fs.targzUncompress(tmpfile, destination, removeDestinationdir=True)
+                j.system.fs.targzUncompress(tmpfile, destination, removeDestinationdir=True)
 
         if keepTempFile == False:
             # when blobstore type is remote, clean up temporary file
             if self.config['type'] == 'remote':
-                o.system.fs.removeFile(tmpfile)
+                j.system.fs.removeFile(tmpfile)
         else:
             return tmpfile, metadata
 
@@ -149,9 +149,9 @@ class BlobStor:
         metadata = self.getMetadata(key)
         filetype = metadata.filetype
         if filetype == "file":
-            hashh = o.tools.hash.md5(destination)
+            hashh = j.tools.hash.md5(destination)
         else:
-            hashh, filesdescr = o.tools.hash.hashDir(destination)
+            hashh, filesdescr = j.tools.hash.hashDir(destination)
         return metadata.hash == hashh
 
     def copyToOtherBlocStor(self, key, blobstor):
@@ -159,70 +159,70 @@ class BlobStor:
             tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
             self._put(blobstor, metadata, tmpfile)
             if not self.config['type'] == 'local':
-                o.system.fs.remove(tmpfile)
+                j.system.fs.remove(tmpfile)
         else:
-            o.logger.log("No need to download %s to blobstor, because is already there" % key, 6)
+            j.logger.log("No need to download %s to blobstor, because is already there" % key, 6)
 
     def _put(self, blobstor, metadata, tmpfile):
         hashh = metadata.hash
-        targetDirName = o.system.fs.joinPaths(blobstor._getDestination(), hashh[0:2], hashh[2:4])
+        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
-            targetFileNameTgz = o.system.fs.joinPaths(targetDirName, hashh + ".gz")
+            targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
         else:
-            targetFileNameTgz = o.system.fs.joinPaths(targetDirName, hashh + ".tgz")
-        targetFileNameMeta = o.system.fs.joinPaths(targetDirName, hashh + ".meta")
+            targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".tgz")
+        targetFileNameMeta = j.system.fs.joinPaths(targetDirName, hashh + ".meta")
 
         if blobstor.config["type"] == "local":
             targetFileNameTgz = targetFileNameTgz.replace("file://", "")
-            o.system.fs.createDir(o.system.fs.getDirName(targetFileNameTgz))
-            o.system.fs.copyFile(tmpfile, targetFileNameTgz)
+            j.system.fs.createDir(j.system.fs.getDirName(targetFileNameTgz))
+            j.system.fs.copyFile(tmpfile, targetFileNameTgz)
         else:
             #@todo P1 need to create the required dir (do directly with FTP)
-            o.cloud.system.fs.copyFile('file://' + tmpfile, targetFileNameTgz)
-        o.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
+            j.cloud.system.fs.copyFile('file://' + tmpfile, targetFileNameTgz)
+        j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
 
     def put(self, path, type="", expiration=0, tags="", blobstores=[], prevkey=None):
         """
         put file or directory to blobstor
         @param expiration in hours
-        @param type see: o.enumerators.BlobType....
+        @param type see: j.enumerators.BlobType....
         """
 
         anyPutDone = False
 
-        if not o.system.fs.exists(path):
+        if not j.system.fs.exists(path):
             raise RuntimeError("Cannot find file %s" % path)
-        if o.system.fs.isFile(path):
+        if j.system.fs.isFile(path):
             filetype = "file"
-        elif o.system.fs.isDir(path):
+        elif j.system.fs.isDir(path):
             filetype = "dir"
         else:
             raise RuntimeError("Cannot find file (exists but is not a file or dir) %s" % path)
 
         if filetype == "file":
-            hashh = o.tools.hash.md5(path)
+            hashh = j.tools.hash.md5(path)
             filesdescr = ""
         else:
-            hashh, filesdescr = o.tools.hash.hashDir(path)
+            hashh, filesdescr = j.tools.hash.hashDir(path)
 
-        tmpfile = o.system.fs.getTempFileName()
+        tmpfile = j.system.fs.getTempFileName()
 
         if filetype == "file":
             # @TODO: Check what realpath should be.
-            #if not o.system.windows.checkFileToIgnore(realpath):
-            #    o.system.fs.gzip(path, tmpfile)
+            #if not j.system.windows.checkFileToIgnore(realpath):
+            #    j.system.fs.gzip(path, tmpfile)
             pass
         else:
-            o.system.fs.targzCompress(path, tmpfile, followlinks=False)
+            j.system.fs.targzCompress(path, tmpfile, followlinks=False)
 
-        hashFromCompressed = o.tools.hash.md5(tmpfile)
+        hashFromCompressed = j.tools.hash.md5(tmpfile)
         descr = ""
-        descr += "agentid=%s\n" % o.application.agentid
-        descr += "appname=%s\n" % o.application.appname
+        descr += "agentid=%s\n" % j.application.agentid
+        descr += "appname=%s\n" % j.application.appname
         descr += "tags=%s\n" % tags
         descr += "expiration=%s\n" % expiration
         descr += "type=%s\n" % type
-        descr += "epochtime=%s\n" % o.base.time.getTimeEpoch()
+        descr += "epochtime=%s\n" % j.base.time.getTimeEpoch()
         descr += "filepath=%s\n" % path
         descr += "filetype=%s\n" % filetype
         descr += "md5=%s\n" % hashFromCompressed
@@ -234,22 +234,22 @@ class BlobStor:
 
         #if hashh==prevkey or self.exists(hashh):
         if self.exists(hashh):
-            o.console.echo("No need to upload to blobstor:%s, have already done so." % self.namespace)
+            j.console.echo("No need to upload to blobstor:%s, have already done so." % self.namespace)
             #return hashh,descr,anyPutDone
         else:
             self._put(self, metadata, tmpfile)
             anyPutDone = True
-            o.logger.log('Successfully uploaded blob: ' + path)
+            j.logger.log('Successfully uploaded blob: ' + path)
 
         for blobstor in blobstores:
             if blobstor.exists(hashh):
-                o.console.echo("No need to upload to blobstor:%s, have already done so." % blobstor.namespace)
+                j.console.echo("No need to upload to blobstor:%s, have already done so." % blobstor.namespace)
             else:
                 self._put(blobstor, metadata, tmpfile)
                 anyPutDone = True
-                o.logger.log('Successfully uploaded blob: ' + path)
+                j.logger.log('Successfully uploaded blob: ' + path)
 
-        o.system.fs.remove(tmpfile)
+        j.system.fs.remove(tmpfile)
         return hashh, descr, anyPutDone
 
 

@@ -1,12 +1,12 @@
 from __future__ import with_statement
-from OpenWizzy import o
+from JumpScale import j
 
 class HashTool:
     def hashDir(self,rootpath):
         """
         walk over all files, calculate md5 and of sorted list also calc md5 this is the resulting hash for the dir independant from time and other metadata (appart from path)
         """
-        paths=o.system.fs.listFilesInDir(rootpath,recursive=True)
+        paths=j.system.fs.listFilesInDir(rootpath,recursive=True)
         paths2=[]
         for path in paths:
             path2=path.replace(rootpath,"") 
@@ -16,12 +16,12 @@ class HashTool:
         paths2.sort()
         out=""
         for path2 in paths2:
-            realpath=o.system.fs.joinPaths(rootpath,path2)
-            if not o.system.platformtype.isWindows() or not o.system.windows.checkFileToIgnore(realpath):
+            realpath=j.system.fs.joinPaths(rootpath,path2)
+            if not j.system.platformtype.isWindows() or not j.system.windows.checkFileToIgnore(realpath):
 #                print "realpath %s %s" % (rootpath,path2)
-                hhash=o.tools.hash.md5(realpath)
+                hhash=j.tools.hash.md5(realpath)
                 out+="%s|%s\n"%(hhash,path2)
-        return o.base.byteprocessor.hashMd5(out),out        
+        return j.base.byteprocessor.hashMd5(out),out        
 
 import hashlib
 import zlib

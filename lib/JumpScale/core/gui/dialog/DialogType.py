@@ -33,8 +33,8 @@
 #
 # </License>
 
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseEnumeration
 
 class DialogType(BaseEnumeration):    
     @classmethod

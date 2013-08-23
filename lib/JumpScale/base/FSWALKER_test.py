@@ -1,6 +1,6 @@
 import unittest
 import os
-from OpenWizzy import o
+from JumpScale import j
 import shutil
 
 class FSWALKER_test(unittest.TestCase):
@@ -33,7 +33,7 @@ class FSWALKER_test(unittest.TestCase):
         self.assertTrue(True)
     
     def test_find(self):
-        fswalker = o.base.fswalker.get()
+        fswalker = j.base.fswalker.get()
         result = fswalker.find(self.root, includeFolders=True, includeLinks=True, pathRegexIncludes={}, pathRegexExcludes={'F':['.*.donotinclude']}, followlinks=True, childrenRegexExcludes=['.*/log/.*', '/dev/.*', '/proc/.*'], mdserverclient=None)
         print result
         self.assertRegexpMatches(str(result.values()), '.*f2.*')

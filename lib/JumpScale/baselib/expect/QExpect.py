@@ -38,7 +38,7 @@ import subprocess
 import errno
 import time
 import sys
-from OpenWizzy import o
+from JumpScale import j
 
 PIPE = subprocess.PIPE
 
@@ -66,9 +66,9 @@ if sys.platform.startswith('sun') or sys.platform.startswith('linux'):
         import pexpect
     except ImportError, e:
         print "did not find pexpect"
-        o.system.platformtype.isLinux()
+        j.system.platformtype.isLinux()
         try:
-            o.system.platformtype.ubuntu.install("python-pexpect")
+            j.system.platformtype.ubuntu.install("python-pexpect")
         except:
             pass
 
@@ -282,13 +282,13 @@ class QExpect:
         
         If that still fails then we return False.
         """
-        if not o.system.platformtype.isLinux():
+        if not j.system.platformtype.isLinux():
             raise RuntimeError('pexpect/pxssh not supported on this platform')
 
         if not self._pxssh.login(ip, login, password, login_timeout=login_timeout):
             raise ValueError('Could not connect to %s, check either login/password are not correct or host is not reacheable over SSH.'%ip)
         else:
-            o.logger.log('SSH %s@%s session login successful' % (login, ip), 6)
+            j.logger.log('SSH %s@%s session login successful' % (login, ip), 6)
 
     def logout(self):
         """This sends exit. If there are stopped jobs then this sends exit twice.
@@ -301,15 +301,15 @@ class QExpect:
         This function also remembers these data for later usage in the 
         classes C{_out} & C{_error}.
         """
-        if o.system.platformtype.isWindows():
+        if j.system.platformtype.isWindows():
             out=self.receiveOut()
             err=self.receiveError()
             return out,err
         
-        elif o.system.platformtype.isLinux() and not self._expect:
+        elif j.system.platformtype.isLinux() and not self._expect:
             return self._pxssh.before
 
-        elif o.system.platformtype.isUnix() and self._expect:
+        elif j.system.platformtype.isUnix() and self._expect:
             
             if self._expect.match:
                 return '%s%s'%(self._expect.after, self._expect.buffer)
@@ -335,7 +335,7 @@ class QExpect:
         if self._cleanStringEnabled:
             out=self._cleanStr(out)
         self._add2lastOutput(out)
-        o.logger.log("stdout:%s" % out, 9)
+        j.logger.log("stdout:%s" % out, 9)
         return out
 
     def receiveError(self):
@@ -356,9 +356,9 @@ class QExpect:
         out=self._ignoreLinesBasedOnFilter(self._lastOutput)
         error=self._lastError
         if(error<>""):
-            o.console.echo("%s/nerror:%s" % (out,error))
+            j.console.echo("%s/nerror:%s" % (out,error))
         else:
-            o.console.echo(out)
+            j.console.echo(out)
 
     def _receive(self,checkError=False):
         #stdin=self._stdin
@@ -457,28 +457,28 @@ class QExpect:
         After sending a command, one of the receive functions must be called to 
         check for the result on C{stdout} or C{stderr}.
         """
-        o.logger.log("Executor send: %s" % data, 9)
+        j.logger.log("Executor send: %s" % data, 9)
         self._lastsend=data
         self._lastOutput=""
         self._lastError=""
         
-        if o.system.platformtype.isUnix():
+        if j.system.platformtype.isUnix():
             if self._expect:
                 if self._expect.sendline(data):
                     return
             
-        if o.system.platformtype.isWindows():
+        if j.system.platformtype.isWindows():
             data=data+"\r\n"
 
         p=self._p
 
         if len(data) != 0:
-            if o.system.platformtype.isWindows():
+            if j.system.platformtype.isWindows():
                 sent = p.send(data)
                 if sent is None:
                     raise Exception("ERROR: Data sent is none")
                 data = buffer(data, sent)
-            elif o.system.platformtype.isLinux():
+            elif j.system.platformtype.isLinux():
                 self._pxssh.sendline(data)
 
     def prompt(self, timeout=20):
@@ -487,7 +487,7 @@ class QExpect:
         Return C{True} if the prompt was matched.
         Returns C{False} if there was a time out.
         """
-        if o.system.platformtype.isLinux():
+        if j.system.platformtype.isLinux():
             self._pxssh.prompt()
         else:
             raise RuntimeError('pexpect/pxssh module not supported on this platform')
@@ -527,12 +527,12 @@ class QExpect:
         tokens=self._waitTokens
         tokennr=0
         for token in tokens:
-            #o.logger.log("checktoken %s : %s" % (token,text))
+            #j.logger.log("checktoken %s : %s" % (token,text))
             tokennr=tokennr+1
             token=token.lower()
             if text.find(token)<>-1:
                 #token found
-                o.logger.log("Found token:%s" % token, 9)
+                j.logger.log("Found token:%s" % token, 9)
                 return tokennr
         return 0
 
@@ -545,7 +545,7 @@ class QExpect:
                 #print line
                 #print filter
                 if line.find(filter)<>-1:
-                    o.logger.log("Found ignore line:%s:%s" % (filter,line), 9)
+                    j.logger.log("Found ignore line:%s:%s" % (filter,line), 9)
                     foundmatch=True
             if foundmatch==False:
                 returnstr=returnstr+line+"\n"
@@ -557,9 +557,9 @@ class QExpect:
 
         @param timeoutval: time in seconds we maximum will wait
         """
-        o.logger.log("Waiting for receive with timeout:%s " % (timeoutval), 7)
+        j.logger.log("Waiting for receive with timeout:%s " % (timeoutval), 7)
         timeout=False
-        starttime=o.system.getTimeEpoch()
+        starttime=j.system.getTimeEpoch()
         r="" #full return
         returnpart="" #one time return after receive
         done=False #status param
@@ -568,13 +568,13 @@ class QExpect:
         while(timeout==False and done==False):
             returnpart,err=self.receive()
             tokenfound=self._checkForTokens(returnpart)
-            #o.logger.log("tokenfound:%s"%tokenfound)
+            #j.logger.log("tokenfound:%s"%tokenfound)
             returnpart=self._ignoreLinesBasedOnFilter(returnpart)
             r= r+returnpart
-            curtime=o.system.getTimeEpoch()
-            o.logger.log("TimeoutCheck on waitreceive: %s %s %s" % (curtime,starttime,timeoutval),8)
+            curtime=j.system.getTimeEpoch()
+            j.logger.log("TimeoutCheck on waitreceive: %s %s %s" % (curtime,starttime,timeoutval),8)
             if(curtime-starttime>timeoutval):
-                o.logger.log("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend,timeoutval), 6)
+                j.logger.log("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend,timeoutval), 6)
                 timeout=True
             if tokenfound>0:
                 done=True
@@ -591,7 +591,7 @@ class QExpect:
         usage: Excuting a command that expects user input, this method can be used to 
         expect the question asked then send the answer
         Example:
-        qexpect = o.tools.expect.new('passwd')
+        qexpect = j.tools.expect.new('passwd')
         if qexpect.expect('Enter new'):
             qexpect.send('newPasswd')
             
@@ -599,16 +599,16 @@ class QExpect:
                 qexpect.send('anotherPasswd')
                 
                 if qexpect.expect('passwords do not match'):
-                    o.console.echo(qexpect.receive())
+                    j.console.echo(qexpect.receive())
         else:
-            o.console.echo(qexpect.receive())
+            j.console.echo(qexpect.receive())
         
         """
-        o.logger.log('Expect %s '%outputToExpect, 7)
+        j.logger.log('Expect %s '%outputToExpect, 7)
         
         try:
             self._expect.expect(outputToExpect, 2)
             return True
         except:
-            o.logger.log('Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive()), 7)
+            j.logger.log('Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive()), 7)
         return False

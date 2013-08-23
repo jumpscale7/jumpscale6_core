@@ -2,7 +2,7 @@
 from PropertyDef import PropertyDef
 from MethodDef import MethodDef
 from ClassDef import ClassDef
-from OpenWizzy import o
+from JumpScale import j
 
 class CodeElements:
     
@@ -31,5 +31,5 @@ class CodeElements:
         for classDef in self.classDefs:
             if classDef.name==classname:
                 return classDef
-        o.logger.log("Could not find class [%s]." % classname)
+        j.logger.log("Could not find class [%s]." % classname)
         return None

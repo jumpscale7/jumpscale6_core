@@ -39,7 +39,7 @@ import functools
 
 import json
 
-from OpenWizzy import o
+from JumpScale import j
 
 from EasyDialogGeneric import EasyDialogGeneric
 
@@ -48,8 +48,8 @@ def dialogmessage(func):
     def _wrapped(*args, **kwargs):
         value = func(*args, **kwargs)
 
-        if hasattr(o.gui.dialog, 'MessageType'):
-            return o.gui.dialog.MessageType(value)
+        if hasattr(j.gui.dialog, 'MessageType'):
+            return j.gui.dialog.MessageType(value)
         else:
             return value
 

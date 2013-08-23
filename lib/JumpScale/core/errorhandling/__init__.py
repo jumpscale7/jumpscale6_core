@@ -1,3 +1,3 @@
-from OpenWizzy import o
+from JumpScale import j
 from ErrorConditionHandler import ErrorConditionHandler
-o.errorconditionhandler=ErrorConditionHandler()
+j.errorconditionhandler=ErrorConditionHandler()

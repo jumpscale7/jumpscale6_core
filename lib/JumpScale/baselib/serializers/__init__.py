@@ -1,14 +1,14 @@
-from OpenWizzy import o
+from JumpScale import j
 from .SerializerInt import SerializerInt
 from .SerializerTime import SerializerTime
 from .SerializerBase64 import SerializerBase64
 from .SerializerHRD import SerializerHRD
 from .SerializersFactory import SerializersFactory
 
-o.base.loader.makeAvailable(o, 'db')
+j.base.loader.makeAvailable(j, 'db')
 
-o.db.serializers=SerializersFactory()
-o.db.serializers.int = SerializerInt()
-o.db.serializers.time = SerializerTime()
-o.db.serializers.base64 = SerializerBase64()
-o.db.serializers.hrd = SerializerHRD()
+j.db.serializers=SerializersFactory()
+j.db.serializers.int = SerializerInt()
+j.db.serializers.time = SerializerTime()
+j.db.serializers.base64 = SerializerBase64()
+j.db.serializers.hrd = SerializerHRD()

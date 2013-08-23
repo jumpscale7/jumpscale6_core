@@ -5,10 +5,10 @@ import os
 import sys
 import zipfile
 
-from OpenWizzy import o
-import OpenWizzy.baselib.inifile
-from OpenWizzy.core.extensions.PMExtensionsGroup import PMExtensionsGroup
-from OpenWizzy.core.extensions.PMExtension import PMExtension, EggPMExtension
+from JumpScale import j
+import JumpScale.baselib.inifile
+from JumpScale.core.extensions.PMExtensionsGroup import PMExtensionsGroup
+from JumpScale.core.extensions.PMExtension import PMExtension, EggPMExtension
 
 HOOKED_EXTENSION_DIR = dict()
 
@@ -112,7 +112,7 @@ class ExtensionInfoFinder(object):
         sections = inifile.getSections()
         hookInformationList = list()
         for hookid in sorted(section for section in sections if section.startswith('hook')):
-            o.logger.log('Found hook %s in %s' % (hookid, inifile, ), 7)
+            j.logger.log('Found hook %s in %s' % (hookid, inifile, ), 7)
             # Extract the information from the section
             hookInformation = self._extractHookInformation(inifile, hookid)
             if not hookInformation:
@@ -138,7 +138,7 @@ class ExtensionInfoFinder(object):
 ##            #This is most likely an old-style extension
 ##            import warnings
 ##            raise RuntimeError('Extension %s contains a main section in the extension.cfg file, please update it' % \
-##                    dir[len(o.dirs.extensionsDir) + 1:] if dir.startswith(o.dirs.extensionsDir) else dir)
+##                    dir[len(j.dirs.extensionsDir) + 1:] if dir.startswith(j.dirs.extensionsDir) else dir)
 ##            # Explicit None for clarity
 ##            return None
 
@@ -171,21 +171,21 @@ class PyExtensionInfoFinder(ExtensionInfoFinder):
         """
         extension_hooks = list()
         #Find all extension names
-        dirs = o.system.fs.listDirsInDir(self.rootDir, True, findDirectorySymlinks=True)
+        dirs = j.system.fs.listDirsInDir(self.rootDir, True, findDirectorySymlinks=True)
         # print "extensiondirs:%s\n"%dirs
         dirs.append(self.rootDir)
         # Use a simple PMExtensionFactory
         factory = PMExtensionFactory()
 
-        for dir in (d for d in dirs if o.system.fs.exists(os.path.join(d, self.extensionConfigName))):
+        for dir in (d for d in dirs if j.system.fs.exists(os.path.join(d, self.extensionConfigName))):
             #we found possible extension because extension.cfg file found
-            if True or o._extensionpathfilter(dir):  #disabled the extensionpath filter untill we found a better solution, now too cumbersome and not documented (kds)
+            if True or j._extensionpathfilter(dir):  #disabled the extensionpath filter untill we found a better solution, now too cumbersome and not documented (kds)
                 # print 'Found extension in %s' % dir
-                o.logger.log('Found extension in %s' % dir, 6)
+                j.logger.log('Found extension in %s' % dir, 6)
                 # Load extension ini file
                 configfilePath = os.path.join(dir, self.extensionConfigName)
-                inifile = o.tools.inifile.open(configfilePath)
-                path = o.system.fs.getDirName(configfilePath)
+                inifile = j.tools.inifile.open(configfilePath)
+                path = j.system.fs.getDirName(configfilePath)
                 hooks = self._getHookInformation(inifile, path, factory)
                 extension_hooks.extend(hooks)
 
@@ -200,18 +200,18 @@ class ActorExtensionInfoFinder(ExtensionInfoFinder):
         """
         extension_hooks = list()
         #Find all extension names
-        dirs = set(o.system.fs.listDirsInDir(self.rootDir, True, findDirectorySymlinks=True))
+        dirs = set(j.system.fs.listDirsInDir(self.rootDir, True, findDirectorySymlinks=True))
         dirs.add(self.rootDir)
         # Use a simple PMExtensionFactory
         factory = PMExtensionFactory()
         
         for d in dirs:
             configfilePath = os.path.join(d, self.extensionConfigName)
-            if o.system.fs.exists(configfilePath):
+            if j.system.fs.exists(configfilePath):
                 #we found possible extension because extension.cfg file found
                 # Load extension ini file
-                inifile = o.tools.inifile.open(configfilePath)
-                path = o.system.fs.getDirName(configfilePath)
+                inifile = j.tools.inifile.open(configfilePath)
+                path = j.system.fs.getDirName(configfilePath)
                 hooks = self._getHookInformation(inifile, path, factory)
                 extension_hooks.extend(hooks)
         return extension_hooks    
@@ -231,7 +231,7 @@ class EggExtensionInfoFinder(ExtensionInfoFinder):
             eggfile = egg.location
             sys.path.append(eggfile)
             for filePointer, path in self._generateExtensionConfigFilePointers(eggfile):
-                inifile = o.tools.inifile.open(filePointer)
+                inifile = j.tools.inifile.open(filePointer)
                 hooks = self._getHookInformation(inifile, path, factory)
                 extension_hooks.extend(hooks)
             return extension_hooks
@@ -301,8 +301,8 @@ class PMExtensions:
         if extensionDir in hookedExtensionDirs:
             return
 
-        if not o.system.fs.exists(extensionDir):
-            o.logger.log("Extensions dir %s does not exist" % extensionDir, 4)
+        if not j.system.fs.exists(extensionDir):
+            j.logger.log("Extensions dir %s does not exist" % extensionDir, 4)
             hookedExtensionDirs.append(extensionDir)
             return
 
@@ -315,7 +315,7 @@ class PMExtensions:
         for infoFinder in self._extensionInfoFinders:
             hooks.extend(infoFinder.find())
 
-        o.logger.log('Loading openwizzy extensions from %s' % extensionDir, 7)
+        j.logger.log('Loading openwizzy extensions from %s' % extensionDir, 7)
 
         # Add extensions directory to sys.path.
         sys.path.append(extensionDir)
@@ -338,7 +338,7 @@ class PMExtensions:
         priority = hookInfo['priority']
         extensionFactory = hookInfo['extension_factory']
 
-        o.logger.log('Found %s hook %s.%s to be hooked on %s with priority %s' % (
+        j.logger.log('Found %s hook %s.%s to be hooked on %s with priority %s' % (
                                 'enabled' if enabled else 'disabled',
                                 modulename, classname,
                                 qlocation, priority), 7)
@@ -346,14 +346,14 @@ class PMExtensions:
         if enabled == True:
             self._hook_extension(extensionFactory, extensionPath, modulename, classname, qlocation)
 
-        o.logger.log('Finished loading hook', 7)
+        j.logger.log('Finished loading hook', 7)
 
     def _hook_extension(self, extensionFactory, extensionPath, modulename, classname, qlocation):
         """
         hook extension to appropriate pmExtensionsGroup
         """
 
-        o.logger.log('Hooking %s.%s of extension in %s on %s' % (modulename, classname, extensionPath, qlocation,), 6)
+        j.logger.log('Hooking %s.%s of extension in %s on %s' % (modulename, classname, extensionPath, qlocation,), 6)
 
         pmExtensionName = qlocation.rpartition('.')[-1]
         if qlocation[0:1] != self.hook_base_name[0]:
@@ -397,7 +397,7 @@ class PMExtensions:
             if self._suppressAlreadyMountedError:
                 raise RuntimeError(msg)
             else:
-                o.errorconditionhandler.raiseBug(msg,category="extensions.init")
+                j.errorconditionhandler.raiseBug(msg,category="extensions.init")
 
         if not isinstance(current, PMExtensionsGroup):
             #is not extensionsgroup, means we need to activate right away and add to right attribute

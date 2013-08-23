@@ -8,9 +8,9 @@ the same:
 
 >>> class MyType: pass
 ...
->>> from OpenWizzy.core.baseclasses import BaseType
+>>> from JumpScale.core.baseclasses import BaseType
 >>> class MyClass(BaseType):
-...     mt = o.basetype.object(MyType)
+...     mt = j.basetype.object(MyType)
 ...
 >>> instance = MyClass()
 >>> print instance.mt
@@ -25,7 +25,7 @@ Traceback (most recent call last):
 '''
 import inspect
 
-from OpenWizzy.core.pmtypes.base import BaseType as TypeBaseType, NO_DEFAULT
+from JumpScale.core.pmtypes.base import BaseType as TypeBaseType, NO_DEFAULT
 
 OBJECT_DESCRIPTOR_CACHE = dict()
 def Object(type_, **kwargs):
@@ -69,7 +69,7 @@ def Object(type_, **kwargs):
 
     return ObjectType(**kwargs)
 
-#qtypename should be set so we can hook on o.basetype.
+#qtypename should be set so we can hook on j.basetype.
 Object.qtypename = 'object'
 
 
@@ -89,7 +89,7 @@ def Enumeration(enumerationtype, **kwargs):
 
     @see: L{openwizzy.pmtypes.base.BaseType.__init__}
     '''
-    from OpenWizzy.core.baseclasses import BaseEnumeration
+    from JumpScale.core.baseclasses import BaseEnumeration
     if not issubclass(enumerationtype, BaseEnumeration):
         raise TypeError('enumerationtype parameter of Object should be of type type or class')
 
@@ -148,5 +148,5 @@ def Enumeration(enumerationtype, **kwargs):
 
     return EnumerationType(**kwargs)
 
-#qtypename should be set so we can hook on o.basetype.
+#qtypename should be set so we can hook on j.basetype.
 Enumeration.qtypename = 'enumeration'

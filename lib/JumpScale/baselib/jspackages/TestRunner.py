@@ -7,7 +7,7 @@
 #                            /opt/tests/test1/afterFiles/...
 #
 
-from OpenWizzy import o,i
+from JumpScale import j,i
 
 def assertTrue(value):
     if not value:
@@ -88,7 +88,7 @@ class TestRunner:
         except Exception, e:
             import sys
             import traceback
-            o.console.echo('Script failed for test ' + testName + ' got error:')
+            j.console.echo('Script failed for test ' + testName + ' got error:')
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print '\n'.join(traceback.format_exception(exceptionType, exceptionValue,
                                                   exceptionTraceback))
@@ -101,7 +101,7 @@ class TestRunner:
             self.doBeforeFiles(testName)
         # copy each file to the dir tree
         baseDir = '/opt/testcases/' + testName + '/beforeFiles'
-        o.system.fs.copyDirTree(baseDir, '/opt/qbase3/')
+        j.system.fs.copyDirTree(baseDir, '/opt/qbase3/')
         return True
 
     def doAfterFiles(self, testName):
@@ -113,12 +113,12 @@ class TestRunner:
 
         # assert that each file is present and equals the existing files
         baseDir      = '/opt/testcases/' + testName + '/afterFiles'
-        files        = o.system.fs.walk(baseDir, recurse=1)
+        files        = j.system.fs.walk(baseDir, recurse=1)
         differences  = []
         
         for file in files:
             projectedFile = '/opt/qbase3' + file[len(baseDir):]
-            if not o.system.fs.exists(projectedFile):
+            if not j.system.fs.exists(projectedFile):
                 differences += [file]
                 continue
             if open(file).read() != open(projectedFile).read():
@@ -126,9 +126,9 @@ class TestRunner:
                 continue
 
         if differences:
-            o.console.echo('\n\nTests failed for test ' + testName + ', expected different results for :')
+            j.console.echo('\n\nTests failed for test ' + testName + ', expected different results for :')
             for diff in differences:
-                o.console.echo(diff)
+                j.console.echo(diff)
 
         return True
 
@@ -141,21 +141,21 @@ class TestRunner:
 
         # copy each file to the dir tree
         baseDir = '/opt/testcases/' + testName + '/beforeFiles'
-        files=o.system.fs.walk(baseDir, recurse=1, return_folders=0)
+        files=j.system.fs.walk(baseDir, recurse=1, return_folders=0)
         for file in files:
             projectedFile = '/opt/qbase3' + file[len(baseDir):]
-            o.system.fs.remove(projectedFile, onlyIfExists=True)
+            j.system.fs.remove(projectedFile, onlyIfExists=True)
 
         return True
 
 
     def runTests(self):
-        o.application.shellconfig.interactive = False
-        files   = o.system.fs.listDirsInDir('/opt/testcases/')
+        j.application.shellconfig.interactive = False
+        files   = j.system.fs.listDirsInDir('/opt/testcases/')
         failed = []
         files.sort()
         for file in files:
-            baseName = o.system.fs.getBaseName(file)
+            baseName = j.system.fs.getBaseName(file)
             if baseName[0]  != '_':
                 print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Doing test: ' + baseName
                 if self.doTest(baseName):

@@ -1,11 +1,11 @@
 
 
-from OpenWizzy import o
+from JumpScale import j
 
 class ConfiguredItemGroup(object):
 
     def __init__(self):
-       allParamsDict = o.config.getConfig(self._CONFIGTYPE)
+       allParamsDict = j.config.getConfig(self._CONFIGTYPE)
        self.__allItemsDict = {}
        for itemname, paramsDict in allParamsDict.iteritems():
            self._pushParamsToItem(itemname, paramsDict)

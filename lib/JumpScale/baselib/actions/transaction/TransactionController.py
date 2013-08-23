@@ -3,7 +3,7 @@ import string
 #import inspect
 #import operator
 from Transaction import Transaction
-from OpenWizzy import o
+from JumpScale import j
 
 class TransactionController(object):
     '''
@@ -35,9 +35,9 @@ class TransactionController(object):
         @param callbackparams dict of parameters
 
         '''
-        #o.logger.log('Starting transaction: %s' % description,5)
+        #j.logger.log('Starting transaction: %s' % description,5)
         if self.hasRunningTransactions()==False:
-            self.originalwidth=o.console.width
+            self.originalwidth=j.console.width
         
         transaction = Transaction(description, errormessage, resolutionmessage,\
                         maxloglevel=maxloglevel,maxloglevelcapture=maxloglevelcapture,\
@@ -50,11 +50,11 @@ class TransactionController(object):
         #msg="TRANSACTION START: %s" % transaction.description
         msg="%s" % transaction.description
         if self.send2console and silent==False:
-            o.console.echoListItem(msg)
+            j.console.echoListItem(msg)
         else:
-            o.logger.log(msg,5)
+            j.logger.log(msg,5)
         if silent==False:
-            o.console.indent+=1   
+            j.console.indent+=1   
 
     def stop(self,failed=False):
         '''
@@ -69,14 +69,14 @@ class TransactionController(object):
                                   'running at all')
         
         transaction = self.transactions.pop()
-        #_TransactionStatus=o.enumerators.TransactionStatus
+        #_TransactionStatus=j.enumerators.TransactionStatus
         #status = _TransactionStatus.DONE if not failed else _TransactionStatus.FAILED
         status=2
         if not failed and not self.transactions:
             #status = _TransactionStatus.FINISHED
             status=1
         if transaction.silent==False:
-            o.console.indent-=1                    
+            j.console.indent-=1                    
         #if status==_TransactionStatus.FINISHED:
         if status==1:
             msg="TRANSACTION %s: %s" % (string.upper(str(status)),transaction.description)
@@ -84,9 +84,9 @@ class TransactionController(object):
         else:
             msg="TRANSACTION %s: %s" % (string.upper(str(status)),transaction.description)
         #if self.send2console:
-            #o.console.echoListItem(msg)
+            #j.console.echoListItem(msg)
         #else:
-        o.logger.log(msg,5)
+        j.logger.log(msg,5)
         
     def stopall(self):
         """
@@ -97,7 +97,7 @@ class TransactionController(object):
 
     def clean(self):
         '''Clean the list of running actions'''
-        o.logger.log('[ACTIONS] Clearing all actions', 5)
+        j.logger.log('[ACTIONS] Clearing all actions', 5)
         self.transactions = list()
 
 

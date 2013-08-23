@@ -1,4 +1,4 @@
-from OpenWizzy.baselib.manage.managerbase import ManagerBase
+from JumpScale.baselib.manage.managerbase import ManagerBase
 
 class ElasticsearchManager(ManagerBase):
 

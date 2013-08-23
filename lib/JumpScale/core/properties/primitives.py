@@ -38,8 +38,8 @@
 See the documentation of openwizzy.properties.common for more info.
 '''
 
-from OpenWizzy.core.properties import BaseDescriptor
-from OpenWizzy.core.pmtypes.PrimitiveTypes import Boolean, Integer, Float, String
+from JumpScale.core.properties import BaseDescriptor
+from JumpScale.core.pmtypes.PrimitiveTypes import Boolean, Integer, Float, String
 
 class Boolean(BaseDescriptor):
     '''Descriptor for L{openwizzy.pmtypes.PrimitiveTypes.Boolean}'''

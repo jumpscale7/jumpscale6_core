@@ -24,7 +24,7 @@ class LogTargetStdOut(object):
         """    
         print(log)
 
-        # logobj=o.logger.getLogObject(message)
+        # logobj=j.logger.getLogObject(message)
         # message = str(logobj)#will render differently for logs and events
         # formattedOut = screenline = message[:self.screenwidth]
         # message = message[self._screenWidth:]

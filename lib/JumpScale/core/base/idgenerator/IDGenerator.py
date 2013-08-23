@@ -1,17 +1,17 @@
 
-from OpenWizzy import o
+from JumpScale import j
 import random
 
 
 class IDGenerator:
     """
     generic provider of id's
-    lives at o.idgenerator
+    lives at j.idgenerator
     """
 
     def generateRandomInt(self,fromInt,toInt):
         """
-        how to use:  o.base.idgenerator.generateRandomInt(0,10)
+        how to use:  j.base.idgenerator.generateRandomInt(0,10)
         """
         return random.randint(fromInt,toInt)
         
@@ -19,7 +19,7 @@ class IDGenerator:
         """
         type is like agent, job, jobstep
         needs to be a unique type, can only work if application service is known
-        how to use:  o.base.idgenerator.generateIncrID("agent")
+        how to use:  j.base.idgenerator.generateIncrID("agent")
         @reset if True means restart from 1
         """
         key="incrementor_%s"%incrTypeId
@@ -48,7 +48,7 @@ class IDGenerator:
     def generateGUID(self):
         """
         generate unique guid
-        how to use:  o.base.idgenerator.generateGUID()
+        how to use:  j.base.idgenerator.generateGUID()
         """
         import uuid
         return str(uuid.uuid4())

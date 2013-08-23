@@ -2,7 +2,7 @@
 
 '''Definition of several primitive type properties (integer, string,...)'''
 
-from OpenWizzy.core.pmtypes.base import BaseType
+from JumpScale.core.pmtypes.base import BaseType
 
 class Boolean(BaseType):
     '''Generic boolean type'''

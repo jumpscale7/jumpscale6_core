@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from .System import System
-o.system=System()
+j.system=System()
 
 

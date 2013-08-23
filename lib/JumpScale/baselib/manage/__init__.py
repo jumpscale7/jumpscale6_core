@@ -1,3 +1,3 @@
-from OpenWizzy import o
+from JumpScale import j
 
-o.base.loader.makeAvailable(o, 'system')
+j.base.loader.makeAvailable(j, 'system')

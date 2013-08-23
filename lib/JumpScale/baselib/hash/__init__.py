@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .HashTool import HashTool
-o.base.loader.makeAvailable(o, 'tools')
-o.tools.hash = HashTool()
+j.base.loader.makeAvailable(j, 'tools')
+j.tools.hash = HashTool()

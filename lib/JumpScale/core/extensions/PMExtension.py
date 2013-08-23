@@ -8,7 +8,7 @@ import traceback
 import zipimport
 import threading
 
-from OpenWizzy import o
+from JumpScale import j
 
 class BasePMExtension(object):
     """
@@ -30,12 +30,12 @@ class BasePMExtension(object):
         """
         self._activation_lock = threading.Lock()
 
-        if not o.basetype.dirpath.check(extensionPath):
+        if not j.basetype.dirpath.check(extensionPath):
             raise ValueError('Invalid extension path %s, not a folder' %
                     extensionPath)
-        if not o.basetype.string.check(moduleName):
+        if not j.basetype.string.check(moduleName):
             raise ValueError('Invalid moduleName provided, not a string')
-        if not o.basetype.string.check(className):
+        if not j.basetype.string.check(className):
             raise ValueError('Invalid className provided, not a string')
 
         self.activated = False              #is extension already loaded or not
@@ -94,9 +94,9 @@ class BasePMExtension(object):
         last_code = last_frame[3]
         msg+= 'The exception occurred in %s on line %d: %s\n\n' % (last_file, last_line, last_code)
         print msg
-        o.errorconditionhandler.raiseBug(msg,pythonTraceBack=tb,category="extensions.init")
+        j.errorconditionhandler.raiseBug(msg,pythonTraceBack=tb,category="extensions.init")
         
-        if not o.application.shellconfig.debug:
+        if not j.application.shellconfig.debug:
             print 'To see a full error report, check your logserver or run Q-Shell using debug mode'
             # Reset TTY
             # See above for more info
@@ -105,14 +105,14 @@ class BasePMExtension(object):
                 termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, __IPYTHON__.tty_settings)
             except:
                 pass
-            o.application.stop()
+            j.application.stop()
         else:
-            o.application.stop()
+            j.application.stop()
 
     def _handleLoadClassModuleException(self, t, v, tb):
         #Send to logserver
-        if o.application.shellconfig.ipython:
-            o.application.shellconfig.interactive=True
+        if j.application.shellconfig.ipython:
+            j.application.shellconfig.interactive=True
 
 
         #Display
@@ -127,7 +127,7 @@ class BasePMExtension(object):
         last_code = last_frame[3]
         msg+= 'The exception occurred in %s on line %d: %s\n\n' % (last_file, last_line, last_code)        
         print msg
-        o.errorconditionhandler.raiseBug(msg,pythonTraceBack=tb,category="extensions.load")
+        j.errorconditionhandler.raiseBug(msg,pythonTraceBack=tb,category="extensions.load")
         
         if openwizzy.qshellconfig.__dict__.has_key("debug") and not openwizzy.qshellconfig.debug:
             print 'To see a full error report, check your logserver or run Q-Shell using debug mode'
@@ -142,9 +142,9 @@ class BasePMExtension(object):
             except:
                 pass
 
-            o.application.stop()
+            j.application.stop()
         else:
-            o.application.stop()
+            j.application.stop()
 
     def _loadClassModule(self):
         """Load the class module for this extension"""
@@ -164,13 +164,13 @@ class PMExtension(BasePMExtension):
         sys.path.append(cleanedPath)
         # Make sure the sys.path is cleaned up by using a try...finally
         try:
-            o.errorconditionhandler.lastAction='Try to load in %s %s ' % (self.extensionPath, self.moduleName)
+            j.errorconditionhandler.lastAction='Try to load in %s %s ' % (self.extensionPath, self.moduleName)
             self.moduleInfo = imp.find_module(self.moduleName, [self.extensionPath, ])
             # Make sure the module file handle is closed by using a
             # try...finally
             try:
                 extensionName = os.path.basename(self.extensionPath)
-                o.logger.log("loadmodule: extensionName:%s, moduleName:%s" % (extensionName, self.moduleName), 8)
+                j.logger.log("loadmodule: extensionName:%s, moduleName:%s" % (extensionName, self.moduleName), 8)
                 moduleName = self._createModuleName()
                 if moduleName in sys.modules:
                     mod = sys.modules[moduleName]
@@ -179,7 +179,7 @@ class PMExtension(BasePMExtension):
                     #display a message providing info about the failing extension, then
                     #raise the original exception
                     mod = imp.load_module(moduleName, *self.moduleInfo)
-                o.errorconditionhandler.lastAction=""
+                j.errorconditionhandler.lastAction=""
                 return mod
             except Exception, e:
                 #Get exception type, exception instance and backtrace
@@ -214,7 +214,7 @@ class EggPMExtension(BasePMExtension):
 
         # Zipped extension path:
         zippedExtensionPath = self.extensionPath
-        o.logger.log("Zipped extension path: '%s'" % (zippedExtensionPath), 5)
+        j.logger.log("Zipped extension path: '%s'" % (zippedExtensionPath), 5)
 
         extensionImporter = zipimport.zipimporter(zippedExtensionPath)
         try:

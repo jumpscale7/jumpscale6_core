@@ -2,7 +2,7 @@ import os
 import sys
 from datetime import date
 
-from OpenWizzy import o
+from JumpScale import j
 
 from EasyDialogGeneric import EasyDialogGeneric
 
@@ -20,15 +20,15 @@ class EasyDialogConsole(EasyDialogGeneric):
 
         filepath=""
         currentDir = startPath or "/"
-        if o.system.fs.isEmptyDir(currentDir):
+        if j.system.fs.isEmptyDir(currentDir):
             raise RuntimeError('Startpath directory contains no files, please enter a non empty dir')
-        while(o.system.fs.isDir(currentDir)):
-            dirs = o.system.fs.walk(currentDir, return_folders = 1)
+        while(j.system.fs.isDir(currentDir)):
+            dirs = j.system.fs.walk(currentDir, return_folders = 1)
             if dirs:
                 previousDir = currentDir
                 currentDir = self.askChoice(message, dirs)
             else:
-                o.console.echo('This directory contains no files, please choose a different one')
+                j.console.echo('This directory contains no files, please choose a different one')
                 currentDir = previousDir
 
         filepath = currentDir
@@ -46,8 +46,8 @@ class EasyDialogConsole(EasyDialogGeneric):
 
         currentDir = startPath or "/"
         traverse = True
-        while(o.system.fs.isDir(currentDir) and traverse and not o.system.fs.isEmptyDir(currentDir)):
-            dirs = o.system.fs.walk(currentDir, return_folders = 1, return_files = 0)
+        while(j.system.fs.isDir(currentDir) and traverse and not j.system.fs.isEmptyDir(currentDir)):
+            dirs = j.system.fs.walk(currentDir, return_folders = 1, return_files = 0)
             currentDir = self.askChoice(message, dirs)
             traverse = not self.askYesNo("To Choose Current folder [y/yes] to continue navigation [n/No]?", 'y')
         return currentDir
@@ -60,7 +60,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         @param validator: regex validation value
         @return: response string or the default value
         """
-        return o.console.askString(question, defaultValue if defaultValue else '', validator)
+        return j.console.askString(question, defaultValue if defaultValue else '', validator)
 
     def askInt(self, question, defaultValue = None):
         """
@@ -83,7 +83,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         @param defaultValue: if the user did not provide a response this value is used as an answer
         @return: response answer or the default value
         """
-        return o.console.askYesNo(question)
+        return j.console.askYesNo(question)
 
     def askPassword(self, question, confirm=True, regex=None, retry=-1, defaultValue=None):
         """
@@ -97,7 +97,7 @@ class EasyDialogConsole(EasyDialogGeneric):
 
             question = '%s [%s]: ' % (question, '*' * len(defaultValue))
 
-        value = o.console.askPassword(question, confirm, regex, retry)
+        value = j.console.askPassword(question, confirm, regex, retry)
 
         if defaultValue and not value:
             value = defaultValue
@@ -110,7 +110,7 @@ class EasyDialogConsole(EasyDialogGeneric):
 
         @param message: message to print
         """
-        o.console.echo(message)
+        j.console.echo(message)
 
     def askInteger(self, question, defaultValue = None):
         """
@@ -120,7 +120,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         @param defaultValue: if the user did not provide a response this value is used as an answer
         @return: response integer or the default value
         """
-        return o.console.askInteger(question, defaultValue)
+        return j.console.askInteger(question, defaultValue)
 
 
     def askChoice(self, question, choices, defaultValue = None, pageSize = 40, sortChoices=False, sortCallBack=None):
@@ -137,7 +137,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         @return:  selected choice
         """
 
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
 
         defaultValues = list()
@@ -155,13 +155,13 @@ class EasyDialogConsole(EasyDialogGeneric):
             else:
                 sortCallBack(choices)
 
-        if len(choices) > pageSize and not o.system.platformtype.isLinux():
+        if len(choices) > pageSize and not j.system.platformtype.isLinux():
             #@todo implement, make multi screen, sort & allow default value usage, use next-previous (also n&p as short notation)
             ##result = self._handleScreens(choices, defaultValues, pageSize = pageSize)[0]
-            o.console.echo("Too many potential choices, more than %s, choose again" % pageSize)
+            j.console.echo("Too many potential choices, more than %s, choose again" % pageSize)
             return False
         else:
-            result=o.console.askChoice(choices, question)
+            result=j.console.askChoice(choices, question)
         return result
 
 
@@ -180,7 +180,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         @return:  selected choice[s] or default value[s]
         """
 
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a choice in a list of items in a non interactive mode.")
 
         defaultValues = list()
@@ -203,13 +203,13 @@ class EasyDialogConsole(EasyDialogGeneric):
                 sortCallBack(choices)
 
         if len(choices) > pageSize:
-            o.console.echo("Too many potential choices, more than %s, choose again" % pageSize)
+            j.console.echo("Too many potential choices, more than %s, choose again" % pageSize)
             return False
-            ##o.console.echo("%s\n"%question)
+            ##j.console.echo("%s\n"%question)
             ##@todo implement, make multi screen, sort & allow default value usage, use next-previous (also n&p as short notation)
             ##result = self._handleScreens(choices, defaultValues, pageSize = pageSize, multiSelection = True)
         else:
-            result=o.console.askChoiceMultiple(choices,question)
+            result=j.console.askChoiceMultiple(choices,question)
 
         return result
 
@@ -233,7 +233,7 @@ class EasyDialogConsole(EasyDialogGeneric):
                 return self._showPage(choices, pageSize, currentLocation, defaultValue, multiSelection, False)
             except :
                 t,v,tb = sys.exc_info()
-                o.errorconditionhandler.logTryExcept(t,v,tb)
+                j.errorconditionhandler.logTryExcept(t,v,tb)
                 return ask(choices, pageSize, currentLocation, defaultValue, multiSelection)
 
         currentLocation = 0
@@ -266,7 +266,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         if up:
             numberOfChoices = len(choices)
             if currentLocation > numberOfChoices:
-                o.logger.log('Location [%s] exceeds the limits [%s]'%(currentLocation, numberOfChoices))
+                j.logger.log('Location [%s] exceeds the limits [%s]'%(currentLocation, numberOfChoices))
                 raise ValueError('Last page reached')
 
             messageHeader = 'Make a selection. '
@@ -276,26 +276,26 @@ class EasyDialogConsole(EasyDialogGeneric):
                 messageBody = "Use (p) to show previous set of choices"
             else:
                 messageBody = "Use (n/p) to show next/previous set of choices"
-            o.console.echo("%s%s"%(messageHeader, messageBody))
+            j.console.echo("%s%s"%(messageHeader, messageBody))
             currentPage = choices[currentLocation: currentLocation + pageSize]
             index = currentLocation
         else:
             if currentLocation < 0:
-                o.logger.log('Location [%s] cannot be less than zero'%currentLocation)
+                j.logger.log('Location [%s] cannot be less than zero'%currentLocation)
                 raise ValueError('First page reached')
             messageHeader = 'Make a selection. '
             if currentLocation - pageSize <= 0:
                 messageBody = "Use (n) to show next set of choices"
             else:
                 messageBody = "Use (n/p) to show next/previous set of choices"
-            o.console.echo("%s%s"%(messageHeader, messageBody))
+            j.console.echo("%s%s"%(messageHeader, messageBody))
             currentPage = choices[currentLocation - pageSize: currentLocation]
             index = currentLocation - pageSize
         for choise in currentPage:
             index += 1
-            o.console.echo("   %s: %s" % (index, choise))
-        o.console.echo("")
-        selection = o.console.askString("   Select Nr,%s %s"%('use comma separation if more e.g. "1,4"' if multiSelection else '',messageBody))
+            j.console.echo("   %s: %s" % (index, choise))
+        j.console.echo("")
+        selection = j.console.askString("   Select Nr,%s %s"%('use comma separation if more e.g. "1,4"' if multiSelection else '',messageBody))
 
         #selection OR default
         if selection:
@@ -313,7 +313,7 @@ class EasyDialogConsole(EasyDialogGeneric):
 
         @param question: the question to be displayed
         """
-        return o.console.askMultiline(question)
+        return j.console.askMultiline(question)
 
     def askDate(self, question, minValue=None, maxValue=None, selectedValue=None, format='%Y/%m/%d'):
         """
@@ -330,8 +330,8 @@ class EasyDialogConsole(EasyDialogGeneric):
 
         format = '%Y/%m/%d'
         #@todo implement is simple input, show format [day]/[month]/[year]  year is 09 or 2009, day is 2 or 02
-        o.console.echo("%s\n"%question)
-        o.console.echo("Enter a date with format YYYY/MM/DD, where year can be 09 or 2009, day is 2 or 02:")
+        j.console.echo("%s\n"%question)
+        j.console.echo("Enter a date with format YYYY/MM/DD, where year can be 09 or 2009, day is 2 or 02:")
         userInput = raw_input()
         #@todo validate date is in correct format
         yearPrefix = "20"
@@ -387,7 +387,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         """
         Shows logging message
         """
-        o.console.echo(text, 1)
+        j.console.echo(text, 1)
 
 
     def navigateTo(self, url):
@@ -458,6 +458,6 @@ class EasyDialogConsole(EasyDialogGeneric):
         @param secondDate:
         @return: positive integer if first date is greater than second date, 0 if equals, and negative integer if less than
         """
-        o.logger.log("trying to compare [%s] with [%s]"%(firstDate, secondDate), 3)
+        j.logger.log("trying to compare [%s] with [%s]"%(firstDate, secondDate), 3)
         daysDifference = firstDate - secondDate
         return daysDifference.days

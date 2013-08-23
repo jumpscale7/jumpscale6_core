@@ -1,5 +1,5 @@
 
-from OpenWizzy import o
+from JumpScale import j
 
 #@todo P2 S4 :eduard TextLineEditor tool does not work any more, is a pitty because ideal to parse config files on a filesystem (id:83)
 
@@ -56,7 +56,7 @@ class TextLineEditor():
                     self._processLine(lineObject,blockname)  #add last line
                 return
 
-            if state=="foundblock" and o.codetools.regex.matchMultiple(blockStopPatterns,line) and not o.codetools.regex.matchMultiple(blockStopPatternsNegative,line):
+            if state=="foundblock" and j.codetools.regex.matchMultiple(blockStopPatterns,line) and not j.codetools.regex.matchMultiple(blockStopPatternsNegative,line):
                 #found end of block
                 state="scan" #can continue to scan for next line
                 self._processLine(lineObject,blockname)
@@ -65,7 +65,7 @@ class TextLineEditor():
             if state=="foundblock": #still in found block so add the last line
                 self._processLine(lineObject,blockname)  #add last line                            
 
-            if o.codetools.regex.matchMultiple(blockStartPatterns,line) and not o.codetools.regex.matchMultiple(blockStartPatternsNegative,line):
+            if j.codetools.regex.matchMultiple(blockStartPatterns,line) and not j.codetools.regex.matchMultiple(blockStartPatternsNegative,line):
                 #found beginning of block
                 state="foundblock"
                 self._processLine(lineObject,blockname,next=True)
@@ -73,7 +73,7 @@ class TextLineEditor():
 
     def _processLine(self,lineObject,blockname,next=False):
         if lineObject.block==blockname:
-            o.errorconditionhandler.raiseBug(message="Cannot find block with name %s in block which has already same name"%blo,category="lineeditor")
+            j.errorconditionhandler.raiseBug(message="Cannot find block with name %s in block which has already same name"%blo,category="lineeditor")
         lineObject.block=blockname
         if next:
             lineObject.blocknr=self.getNextBlockNr(blockname)
@@ -171,7 +171,7 @@ class TextLineEditor():
     def save(self):
         txt="\n".join([item.line for item in self.lines])
         
-        o.system.fs.writeFile(filename=self.path,contents=txt)
+        j.system.fs.writeFile(filename=self.path,contents=txt)
         
     def getFirstLineNrForBlock(self,blockname,blocknr):
         for linenr in range(len(self.lines)):

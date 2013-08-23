@@ -1,6 +1,6 @@
 
 
-from OpenWizzy import o
+from JumpScale import j
 from Tags import Tags
 
 

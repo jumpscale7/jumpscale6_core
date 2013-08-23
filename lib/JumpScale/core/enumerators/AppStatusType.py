@@ -1,6 +1,6 @@
 
 
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale.core.baseclasses import BaseEnumeration
 
 class AppStatusType(BaseEnumeration):
     """Application status"""

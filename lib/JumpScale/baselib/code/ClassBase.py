@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class ClassBase(object):    
     """
@@ -9,29 +9,29 @@ class ClassBase(object):
         #"""
         #print info like source code of class
         #"""               
-        #o.code.classInfoPrint(self)
+        #j.code.classInfoPrint(self)
 
     #def classCodeEdit(self):
         #"""
         #edit this source code in Geany
         #"""               
-        #o.code.classEditGeany(self)
+        #j.code.classEditGeany(self)
         
     def obj2dict(self):
-        return o.code.object2dict(self)
+        return j.code.object2dict(self)
     
     def dict2obj(self,data):
-        o.code.dict2object(self,data)    
+        j.code.dict2object(self,data)    
 
         
     def __str__(self):
-        return o.code.object2json(o.code.object2dict(self),True)
+        return j.code.object2json(j.code.object2dict(self),True)
                 
     __repr__=__str__
 
 class PyModelBase(ClassBase):
     def dict2obj(self,data):
-        o.code.dict2pymodelobject(self,data)    
+        j.code.dict2pymodelobject(self,data)    
 
 
 class PyRootModelBase(PyModelBase):

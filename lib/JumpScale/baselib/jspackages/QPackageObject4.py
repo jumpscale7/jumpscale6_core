@@ -9,13 +9,13 @@ try:
 except ImportError:
     from StringIO import StringIO
 import inspect
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseType
-from OpenWizzy.core.enumerators.PlatformType import PlatformType
-from OpenWizzy.core.baseclasses.dirtyflaggingmixin import DirtyFlaggingMixin
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseType
+from JumpScale.core.enumerators.PlatformType import PlatformType
+from JumpScale.core.baseclasses.dirtyflaggingmixin import DirtyFlaggingMixin
 from DependencyDef4 import DependencyDef4
 from QPackageStateObject import QPackageStateObject
-#from OpenWizzy.core.sync.Sync import SyncLocal
+#from JumpScale.core.sync.Sync import SyncLocal
 from QPackageIObject4 import QPackageIObject4
 from ActionManager import ActionManager
 
@@ -31,23 +31,23 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
     # All this information represents the package as in the repo..
     # the already install package may have different dependencies,
     # may have a higher build number
-    domain  = o.basetype.string(doc='The domain this QPackage belongs to', allow_none=True, default=None)
-    name    = o.basetype.string(doc='Name of the QPackage should be lowercase', allow_none=False)
-    version = o.basetype.string(doc='Version of a string', allow_none=False)
+    domain  = j.basetype.string(doc='The domain this QPackage belongs to', allow_none=True, default=None)
+    name    = j.basetype.string(doc='Name of the QPackage should be lowercase', allow_none=False)
+    version = j.basetype.string(doc='Version of a string', allow_none=False)
 
 
-    buildNr  = o.basetype.integer(doc='Build number of the QPackage', allow_none=False, default=0)
-    #bundleNr = o.basetype.integer(doc='Build number of the Bundle', allow_none=False, default=0)
-    #metaNr   = o.basetype.integer(doc='Build number of the MetaData', allow_none=False, default=0)
+    buildNr  = j.basetype.integer(doc='Build number of the QPackage', allow_none=False, default=0)
+    #bundleNr = j.basetype.integer(doc='Build number of the Bundle', allow_none=False, default=0)
+    #metaNr   = j.basetype.integer(doc='Build number of the MetaData', allow_none=False, default=0)
 
     #should be readonly
     # @todo check why this should be read only because this class provides public methods that alter these lists which doesn't make sense
-    supportedPlatforms = o.basetype.list(doc='List of PlatformTypes', allow_none=False, default=list())
-    tags               = o.basetype.list(doc='list of tags describing the QPackage', allow_none=True, default=list())
-    description        = o.basetype.string(doc='Description of the QPackage, can be larger than the description in the VList4', allow_none=True, flag_dirty=True, default='')
-    dependencies       = o.basetype.list(doc='List of DependencyDefinitions for this QPackage', allow_none=True, default=list())
-    #guid               = o.basetype.string(doc='Unique global id', allow_none=False, flag_dirty=True, default='')
-    #lastModified       = o.basetype.float(doc='When was this package last modified (time.time)', allow_none=False, flag_dirty=True, default='')
+    supportedPlatforms = j.basetype.list(doc='List of PlatformTypes', allow_none=False, default=list())
+    tags               = j.basetype.list(doc='list of tags describing the QPackage', allow_none=True, default=list())
+    description        = j.basetype.string(doc='Description of the QPackage, can be larger than the description in the VList4', allow_none=True, flag_dirty=True, default='')
+    dependencies       = j.basetype.list(doc='List of DependencyDefinitions for this QPackage', allow_none=True, default=list())
+    #guid               = j.basetype.string(doc='Unique global id', allow_none=False, flag_dirty=True, default='')
+    #lastModified       = j.basetype.float(doc='When was this package last modified (time.time)', allow_none=False, flag_dirty=True, default='')
 
     def __init__(self, domain, name, version):
         """
@@ -58,7 +58,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         @param version: The version of the QPackage
         """
 
-        ##o.logger.log('Initializing the QPackage Object %s - %s - %s'%(domain, name, version), 6)
+        ##j.logger.log('Initializing the QPackage Object %s - %s - %s'%(domain, name, version), 6)
         #checks on correctness of the parameters
         if not domain:
             raise ValueError('The domain parameter cannot be empty or None')
@@ -92,15 +92,15 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
     def init(self):
 
         #create defaults for new owpackage
-        hrddir=o.system.fs.joinPaths(self.metadataPath,"hrd")
-        if not o.system.fs.exists(hrddir):  
+        hrddir=j.system.fs.joinPaths(self.metadataPath,"hrd")
+        if not j.system.fs.exists(hrddir):  
             new=True
             extpath=inspect.getfile(self.__init__)
-            extpath=o.system.fs.getDirName(extpath)
-            src=o.system.fs.joinPaths(extpath,"templates")
-            o.system.fs.copyDirTree(src,self.metadataPath)                                                  
+            extpath=j.system.fs.getDirName(extpath)
+            src=j.system.fs.joinPaths(extpath,"templates")
+            j.system.fs.copyDirTree(src,self.metadataPath)                                                  
         
-        self.hrd=o.core.hrd.getHRDTree(hrddir)
+        self.hrd=j.core.hrd.getHRDTree(hrddir)
 
         if self.hrd.get("qp.name",checkExists=True)<>self.name:
             self.hrd.set("qp.name",self.name)
@@ -117,7 +117,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         supportedPlatforms=self.hrd.getList("qp.supportedplatforms")
 
         for platform in self.supportedPlatforms:
-            o.system.fs.createDir(self.getPathFilesPlatform(platform))        
+            j.system.fs.createDir(self.getPathFilesPlatform(platform))        
 
         self.hrd.applyOnDir(self.metadataPath,changeContent=False)
 
@@ -125,10 +125,10 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
     def load(self,hrdDir=None,position=""):                
 
         #create defaults for new owpackage
-        hrddir=o.system.fs.joinPaths(self.metadataPath,"hrd")
-        if not o.system.fs.exists(hrddir):  
+        hrddir=j.system.fs.joinPaths(self.metadataPath,"hrd")
+        if not j.system.fs.exists(hrddir):  
             self.init()
-        self.hrd=o.core.hrd.getHRDTree(hrddir)
+        self.hrd=j.core.hrd.getHRDTree(hrddir)
         self._clear()
         self.buildNr = self.hrd.getInt("qp.buildnr")
         self.debug = self.hrd.getBool("qp.debug")
@@ -140,7 +140,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         
         # self.processDependencies()  #@todo P1
 
-        o.packages.getDomainObject(self.domain)
+        j.packages.getDomainObject(self.domain)
 
         self.blobstorRemote = None
         self.blobstorLocal = None
@@ -152,23 +152,23 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         if self.actions <> None:
             return
 
-        self.hrd.add2tree(o.system.fs.joinPaths(o.dirs.cfgDir,"hrd"))        
+        self.hrd.add2tree(j.system.fs.joinPaths(j.dirs.cfgDir,"hrd"))        
 
-        o.system.fs.createDir(self.getPathActiveHRD())
+        j.system.fs.createDir(self.getPathActiveHRD())
         self.hrd.add2tree(self.getPathActiveHRD(),position="active") 
         
-        o.system.fs.copyDirTree(o.system.fs.joinPaths(self.metadataPath,"actions"),self.getPathActions())        
+        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.metadataPath,"actions"),self.getPathActions())        
         
         self.hrd.applyOnDir(self.getPathActions(),"") #make sure params are filled in in actions dir
 
         self.actions = ActionManager(self)
         
-        do = o.packages.getDomainObject(self.domain)
+        do = j.packages.getDomainObject(self.domain)
         if do.blobstorremote.strip() <> "":
-            self.blobstorRemote = o.clients.blobstor.get(do.blobstorremote)
+            self.blobstorRemote = j.clients.blobstor.get(do.blobstorremote)
 
         if do.blobstorlocal.strip() <> "":
-            self.blobstorLocal = o.clients.blobstor.get(do.blobstorlocal)
+            self.blobstorLocal = j.clients.blobstor.get(do.blobstorlocal)
 
     def getDebugMode(self):
         return self.getState().debugMode
@@ -190,21 +190,21 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         Delete all bundles, metadata, files of the owpackage
         """
         self._init()
-        if o.application.shellconfig.interactive:
-            do = o.gui.dialog.askYesNo("Are you sure you want to remove %s_%s_%s, all bundles, metadata & files will be removed" % (self.domain, self.name, self.version))
+        if j.application.shellconfig.interactive:
+            do = j.gui.dialog.askYesNo("Are you sure you want to remove %s_%s_%s, all bundles, metadata & files will be removed" % (self.domain, self.name, self.version))
         else:
             do = True
         if do:
-            path = o.packages.getDataPath(self.domain, self.name, self.version)
-            o.system.fs.removeDirTree(path)
-            path = o.packages.getMetadataPath(self.domain, self.name,self.version)
-            o.system.fs.removeDirTree(path)
-            path = o.packages.getQPActionsPath(self.domain, self.name,self.version)
-            o.system.fs.removeDirTree(path)
-            for f in o.system.fs.listFilesInDir(o.packages.getBundlesPath()):
-                baseName = o.system.fs.getBaseName(f)
+            path = j.packages.getDataPath(self.domain, self.name, self.version)
+            j.system.fs.removeDirTree(path)
+            path = j.packages.getMetadataPath(self.domain, self.name,self.version)
+            j.system.fs.removeDirTree(path)
+            path = j.packages.getQPActionsPath(self.domain, self.name,self.version)
+            j.system.fs.removeDirTree(path)
+            for f in j.system.fs.listFilesInDir(j.packages.getBundlesPath()):
+                baseName = j.system.fs.getBaseName(f)
                 if baseName.split('__')[0] == self.name and baseName.split('__')[1] == self.version:
-                    o.system.fs.deleteFile(f)
+                    j.system.fs.deleteFile(f)
             #@todo over ftp try to delete the targz file (less urgent), check with other quality levels to make sure we don't delete files we should not delete
 
     def save(self, new=False):
@@ -241,8 +241,8 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
 
     def addActiveHrdFile(self,name,content):
         activehrd=self.getPathActiveHRD()
-        o.system.fs.createDir(activehrd)
-        o.system.fs.writeFile(filename=o.system.fs.joinPaths(activehrd,"%s.hrd"%name),contents=content)
+        j.system.fs.createDir(activehrd)
+        j.system.fs.writeFile(filename=j.system.fs.joinPaths(activehrd,"%s.hrd"%name),contents=content)
         self.hrd.add2tree(activehrd,position="active")         
 
 ##################################################################################################
@@ -266,12 +266,12 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
 
         for dependencyInfo in cfg.getRuntimeDependencies():
             dep = depFromInfo(dependencyInfo)
-            dep.dependencytype = o.enumerators.DependencyType4.RUNTIME
+            dep.dependencytype = j.enumerators.DependencyType4.RUNTIME
             self.dependencies.append(dep)
 
         for dependencyInfo in cfg.getBuildDependencies():
             dep = depFromInfo(dependencyInfo)
-            dep.dependencytype = o.enumerators.DependencyType4.BUILD
+            dep.dependencytype = j.enumerators.DependencyType4.BUILD
             self.dependencies.append(dep)
 
         self.requiredblobs = cfg.getRequiredBlobs()
@@ -300,13 +300,13 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
             raise RuntimeError("No depending packages present")
         [p for p in self.getDependingPackages(recursive=recursive) if p.isInstalled()]
 
-    def getDependingPackages(self, recursive=False, platform=o.enumerators.PlatformType.GENERIC):
+    def getDependingPackages(self, recursive=False, platform=j.enumerators.PlatformType.GENERIC):
         """
         Return the packages that are dependent on this package
         This is a heavy operation and might take some time
         """
         ##self.assertAccessable()
-        return [p for p in o.packages.getQPackageObjects() if self in p.getDependencies(recursive=recursive, platform=platform)]
+        return [p for p in j.packages.getQPackageObjects() if self in p.getDependencies(recursive=recursive, platform=platform)]
 
 
     def getState(self):
@@ -338,19 +338,19 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         """
         Return absolute pathname of the package's metadatapath
         """
-        return o.packages.getQPActionsPath(self.domain, self.name, self.version)
+        return j.packages.getQPActionsPath(self.domain, self.name, self.version)
 
     def getPathActiveHRD(self):
         """
         Return absolute path to active hrd of package
         """
-        return o.packages.getQPActiveHRDPath(self.domain, self.name, self.version)
+        return j.packages.getQPActiveHRDPath(self.domain, self.name, self.version)
 
     def getPathMetadata(self):
         """
         Return absolute pathname of the package's metadatapath active
         """
-        return o.packages.getMetadataPath(self.domain, self.name, self.version)
+        return j.packages.getMetadataPath(self.domain, self.name, self.version)
 
 
     def getPathFiles(self):
@@ -358,7 +358,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         Return absolute pathname of the owpackage's filespath
         """
         ##self.assertAccessable()
-        return o.packages.getDataPath(self.domain, self.name, self.version)
+        return j.packages.getDataPath(self.domain, self.name, self.version)
 
 
     def getPathFilesPlatform(self, platform):
@@ -366,7 +366,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         Return absolute pathname of the owpackage's filespath
         """
         ##self.assertAccessable()
-        path =  o.system.fs.joinPaths(self.getPathFiles(), str(platform))
+        path =  j.system.fs.joinPaths(self.getPathFiles(), str(platform))
         return path
 
 
@@ -375,7 +375,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         Return absolute path to where this package's source can be extracted to
         """
         raise NotImplementedError()
-        #return o.system.fs.joinPaths(o.dirs.varDir, 'src', self.name, self.version)
+        #return j.system.fs.joinPaths(j.dirs.varDir, 'src', self.name, self.version)
 
 
     def getBundlePlatforms(self):
@@ -387,7 +387,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
 
         for supportedPlatform in self.supportedPlatforms:
             platform = supportedPlatform
-            platform = o.enumerators.PlatformType.__dict__[(str(platform).upper())]
+            platform = j.enumerators.PlatformType.__dict__[(str(platform).upper())]
             
             while platform != None:
                 platforms.append(platform)
@@ -407,30 +407,30 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
         Return a list of dependencies that cannot be resolved
         """
         if platform==None:
-            platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
+            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
         broken = []
         for dep in self.dependencies:   # go over my dependencies
                                         # Do this without try catch
                                         # pass boolean to findnewest that it should return None instead of fail
             try:
-                o.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform)
+                j.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform)
             except Exception, e:
                 print str(e)
                 broken.append(dep)
         return broken
 
 
-    def pm_getDependencies(self, dependencytype=None, platform=o.enumerators.PlatformType.GENERIC, recursive=False, depsfound=None, parent=None, depth=0, printTree=False, padding='', isLast=False, encountered=False):
+    def pm_getDependencies(self, dependencytype=None, platform=j.enumerators.PlatformType.GENERIC, recursive=False, depsfound=None, parent=None, depth=0, printTree=False, padding='', isLast=False, encountered=False):
         """
         Return the dependencies for the QPackage
 
         @param depsfound [[$domain,$name,$version]]
         @return [[parent,owpackageObject]]
         """
-        if o.enumerators.DependencyType4.check(dependencytype) == False and dependencytype <> None:
-            raise RuntimeError("parameter dependencytype in get dependencies needs to be of type: o.enumerators.DependencyType4, now %s" % dependencytype)
-        if o.enumerators.PlatformType.check(platform) == False and platform <> None:
-            raise RuntimeError("parameter platform in get dependencies needs to be of type: o.enumerators.PlatformType, now %s" % platform)
+        if j.enumerators.DependencyType4.check(dependencytype) == False and dependencytype <> None:
+            raise RuntimeError("parameter dependencytype in get dependencies needs to be of type: j.enumerators.DependencyType4, now %s" % dependencytype)
+        if j.enumerators.PlatformType.check(platform) == False and platform <> None:
+            raise RuntimeError("parameter platform in get dependencies needs to be of type: j.enumerators.PlatformType, now %s" % platform)
         depsfoundToReturn = []
 
         if depsfound == None:
@@ -444,7 +444,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
             end = '*'      if encountered            else ''
             prefix = '\''  if isLast else '|'
             childPadding = padding + (' ' if isLast else '|') + '   '
-            o.console.echo(padding + prefix + '--' + str(self) + end)
+            j.console.echo(padding + prefix + '--' + str(self) + end)
 
         if not encountered:
             for x in range(len(self.dependencies)): # go over my dependencies
@@ -467,7 +467,7 @@ class QPackageObject4(BaseType, DirtyFlaggingMixin):
                     # If platform is generic, than we look for a package supporting generic?
                     # Thus we look for a package supporting all platforms? Or do we look for packages supporting any of the enumerated platforms?
                     # We need the do the latter, so the definition of findNewest should reflect this!
-                    depowpackage = o.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform, returnNoneIfNotFound=True)
+                    depowpackage = j.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform, returnNoneIfNotFound=True)
                     if not depowpackage:
                         self._log('dependency ' + str(dep) + ' could not be resolved for package ' + str(self))
 
@@ -496,10 +496,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         """
         Return the Build dependencies for the QPackage
 
-        @param platform see o.enumerators.PlatformType....
+        @param platform see j.enumerators.PlatformType....
         """
         if platform == None:
-            platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
+            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
 
         self.pm_getDependencies(None, platform, recursive=True, printTree=True)
 
@@ -508,24 +508,24 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         Return the Build dependencies for the QPackage
         """
         if platform == None:
-            platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
-        self.pm_getDependencies(o.enumerators.DependencyType4.BUILD, platform, recursive=True, printTree=True)
+            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        self.pm_getDependencies(j.enumerators.DependencyType4.BUILD, platform, recursive=True, printTree=True)
 
     def getRuntimeDependencyTree(self, platform=None):
         """
         Return the runtime dependencies for the QPackage, will not recurse into the dependencies
         """
         if platform == None:
-            platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
+            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
 
-        self.pm_getDependencies(o.enumerators.DependencyType4.RUNTIME, platform, recursive=True, printTree=True)
+        self.pm_getDependencies(j.enumerators.DependencyType4.RUNTIME, platform, recursive=True, printTree=True)
 
     def getDependencies(self, platform=None, recursive=True):
         """
         Return the Build dependencies for the QPackage
         """
         if platform == None:
-            platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
+            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
         res = self.pm_getDependencies(None, platform,recursive)
         res.sort()
         return res
@@ -535,10 +535,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         Return the Build dependencies for the QPackage
         """
         if platform == None:
-            platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
+            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
         if recursive == None:
-            recursive = o.console.askYesNo( "Recursive?")
-        res = self.pm_getDependencies(o.enumerators.DependencyType4.BUILD, platform, recursive)
+            recursive = j.console.askYesNo( "Recursive?")
+        res = self.pm_getDependencies(j.enumerators.DependencyType4.BUILD, platform, recursive)
         res.sort()
         return res
 
@@ -547,10 +547,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         Return the runtime dependencies for the QPackage, will not recurse into the dependencies
         """
         if platform == None:
-            platform = o.console.askChoice(o.enumerators.PlatformType.ALL, "Please select a platform")
+            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
         if recursive == None:
-            recursive = o.console.askYesNo( "Recursive?")
-        res = self.pm_getDependencies(o.enumerators.DependencyType4.RUNTIME, platform, recursive)
+            recursive = j.console.askYesNo( "Recursive?")
+        res = self.pm_getDependencies(j.enumerators.DependencyType4.RUNTIME, platform, recursive)
         res.sort()
         return res
 
@@ -575,7 +575,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         qualitylevels = {}
         for qualitylevel in domain.getQualityLevels():
             cfgPath = self._getConfigPath(qualitylevel)
-            if o.system.fs.exists(cfgPath):
+            if j.system.fs.exists(cfgPath):
                 cfg = self._getConfig(qualitylevel)
                 info = getQualityLevelInfo(cfg)
                 qualitylevels[qualitylevel] = info
@@ -609,10 +609,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         def copy(repo, filectx):
             subPath = filectx.path()
             destSubPath = getDestPath(subPath)
-            destPath = o.system.fs.joinPaths(repo.root, destSubPath)
-            destDir = o.system.fs.getDirName(destPath)
-            if not o.system.fs.isDir(destDir):
-                o.system.fs.createDir(destDir)
+            destPath = j.system.fs.joinPaths(repo.root, destSubPath)
+            destDir = j.system.fs.getDirName(destPath)
+            if not j.system.fs.isDir(destDir):
+                j.system.fs.createDir(destDir)
             data = filectx.data()
             with open(destPath, 'w') as f:
                 f.write(data)
@@ -641,12 +641,12 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
                     "number %s; if you are sure you want to promote down, "
                     "pass the force argument as True" % (toBuildNr, buildNr))
         except LookupError:
-            o.logger.exception("There is no Q-Package config file on quality "
+            j.logger.exception("There is no Q-Package config file on quality "
                     "level %s yet" % toQl, 5)
 
         toPath = domain.getQPackageMetadataDir(toQl, self.name, self.version)
-        o.system.fs.removeDirTree(toPath)
-        o.system.fs.createDir(toPath)
+        j.system.fs.removeDirTree(toPath)
+        j.system.fs.createDir(toPath)
         subPath1 = os.path.sep.join([fromQl, self.name, self.version, "**", "*"])
         subPath2 = os.path.sep.join([fromQl, self.name, self.version, "*"])
         subPaths = [subPath1, subPath2]
@@ -670,7 +670,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         Check if files are modified in the QPackage metadata
         """
         ##self.assertAccessable()
-        return self in o.packages.getDomainObject(self.domain).getQPackageTuplesWithModifiedMetadata()
+        return self in j.packages.getDomainObject(self.domain).getQPackageTuplesWithModifiedMetadata()
 
     def isInstalled(self):
         """
@@ -758,7 +758,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         supported platform their parents in account.
 
         @param platform: platform to check
-        @type platform: o.enumerators.PlatformType
+        @type platform: j.enumerators.PlatformType
 
         @return: flag that indicates if the given platform is supported
         @rtype: Boolean
@@ -795,7 +795,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         #self.checkProtectedDirs(redo=True,checkInteractive=True)
         action="install"
 
-        if o.packages._actionCheck(self,action):
+        if j.packages._actionCheck(self,action):
             return True
 
 
@@ -804,10 +804,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
             self._log('already installed')
             return # Nothing to do
 
-        o.action.start('Installing %s' % str(self), 'Failed to install %s' % str(self))
+        j.action.start('Installing %s' % str(self), 'Failed to install %s' % str(self))
 
         if dependencies:            
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.install(dependencies, download, reinstall)
 
@@ -818,10 +818,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 
         if self.debug or reinstall or self.buildNr > self.getState().lastinstalledbuildnr:
 
-            src=o.system.fs.joinPaths(self.getPathMetadata(),"hrdactive")
-            dest=o.system.fs.joinPaths(self.getPathActiveHRD())
-            o.system.fs.createDir(dest)
-            o.system.fs.copyDirTree(src,dest) 
+            src=j.system.fs.joinPaths(self.getPathMetadata(),"hrdactive")
+            dest=j.system.fs.joinPaths(self.getPathActiveHRD())
+            j.system.fs.createDir(dest)
+            j.system.fs.copyDirTree(src,dest) 
 
             self.hrd.applyOnDir(self.metadataPath,changeContent=False)
             
@@ -843,7 +843,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 
         # q.extensions.pm_sync()
 
-        o.action.stop(False)
+        j.action.stop(False)
 
 
     def uninstall(self, unInstallDependingFirst=False):
@@ -880,7 +880,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         After this command the operator can change the files of the owpackage.
         Files do not aways come from code repo, they can also come from owpackage repo only
         """
-        o.system.fs.createDir(self.getPathFiles())
+        j.system.fs.createDir(self.getPathFiles())
         if  self.getState().prepared <> 1:
             if not self.isNew():
                 self.download(suppressErrors=suppressErrors)
@@ -891,7 +891,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         # We are new when our files have not yet been committed
         # check if our owpackage.cfg file in the repo is in the ignored or added categories
         domainObject = self._getDomainObject()
-        cfgPath = o.system.fs.joinPaths(self.metadataPath, QPACKAGE_CFG)
+        cfgPath = j.system.fs.joinPaths(self.metadataPath, QPACKAGE_CFG)
         return not domainObject._isTrackingFile(cfgPath)
 
     def copyFiles(self, destination=""):
@@ -905,7 +905,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         self._log('Syncing %s to sandbox' % _owpackageDir)
         platformDirsToCopy = self._getPlatformDirsToCopy()
         if destination == "":
-            destination = o.dirs.baseDir
+            destination = j.dirs.baseDir
         for platformDir in platformDirsToCopy:
             self._log('Syncing files in <%s>' % platformDir)
             self._copyFilesTo(platformDir, destination)
@@ -919,34 +919,34 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         """
         def createAncestors(file):
             # Create the ancestors
-            o.system.fs.createDir(o.system.fs.getDirName(file))
+            j.system.fs.createDir(j.system.fs.getDirName(file))
 
         if sourceDir [-1] != '/':
             sourceDir = sourceDir + '/'
         prefixHiddenFile = sourceDir + '_'
 
-        if o.system.fs.isDir(sourceDir):
-            files = o.system.fs.walk(sourceDir, recurse=True, return_folders=True, followSoftlinks=False)
+        if j.system.fs.isDir(sourceDir):
+            files = j.system.fs.walk(sourceDir, recurse=True, return_folders=True, followSoftlinks=False)
             for file in files:
                 # Remove hidden files and directories:
                 if file.find(prefixHiddenFile) == 0 :
                     continue
-                destinationFile = o.system.fs.joinPaths(destination, file[len(sourceDir):])
+                destinationFile = j.system.fs.joinPaths(destination, file[len(sourceDir):])
                 _copy = True
 
-                if destinationFile in o.dirs.protectedDirs:
-                    o.console.echo( "Skipping %s because it's protected" % destinationFile)
+                if destinationFile in j.dirs.protectedDirs:
+                    j.console.echo( "Skipping %s because it's protected" % destinationFile)
                     _copy = False
 
                 if _copy:
-                    for protectedDir in o.dirs.protectedDirs:
+                    for protectedDir in j.dirs.protectedDirs:
                         # Add a '/' if needed, so we don't accidentally filter
                         # out /home/openwizzy if /home/p is protected
                         if protectedDir and protectedDir[-1] != os.path.sep:
                             protectedDir = protectedDir + os.path.sep
 
                         if destinationFile.startswith(protectedDir):
-                            o.console.echo( "Skipping %s because %s is protected" % (
+                            j.console.echo( "Skipping %s because %s is protected" % (
                                         destinationFile, protectedDir))
                             _copy = False
                             break
@@ -955,12 +955,12 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
                     self._log("Copying <%s>" % destinationFile)
 
                     createAncestors(destinationFile)
-                    if o.system.fs.isLink( file ) :
-                        o.system.fs.symlink(os.readlink( file ), destinationFile, overwriteTarget=True )
-                    elif o.system.fs.isDir (file) :
-                        o.system.fs.createDir(destinationFile )
+                    if j.system.fs.isLink( file ) :
+                        j.system.fs.symlink(os.readlink( file ), destinationFile, overwriteTarget=True )
+                    elif j.system.fs.isDir (file) :
+                        j.system.fs.createDir(destinationFile )
                     else:
-                        o.system.fs.copyFile(file, destinationFile)
+                        j.system.fs.copyFile(file, destinationFile)
 
             self._log('Syncing done')
         else:
@@ -973,14 +973,14 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         """
         self._log('configure')
         self.loadActions()
-        o.action.start('Configuring %s' % str(self), 'Failed to configure %s' % str(self))
+        j.action.start('Configuring %s' % str(self), 'Failed to configure %s' % str(self))
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.configure()
         self.actions.configure()
         self.getState().setIsPendingReconfiguration(False)
-        o.action.stop(False)
+        j.action.stop(False)
 
     def codeExport(self, dependencies=False, update=None):
         """
@@ -989,51 +989,51 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         only the sections in the recipe which are relevant to you will be used
         """
         self.loadActions()
-        o.action.start('Export %s\n' % str(self), 'Failed to export code for %s' % str(self))
+        j.action.start('Export %s\n' % str(self), 'Failed to export code for %s' % str(self))
         if dependencies == None:
-            o.gui.dialog.askYesNo(" Do you want to link the dependencies?", False)
+            j.gui.dialog.askYesNo(" Do you want to link the dependencies?", False)
         if update == None:
-            o.gui.dialog.askYesNo(" Do you want to update your code before exporting?", True)
+            j.gui.dialog.askYesNo(" Do you want to update your code before exporting?", True)
         if update:
             self.codeUpdate(dependencies)
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeExport(update=update)
         self.actions.code.export()
-        o.action.stop(False)
+        j.action.stop(False)
 
     def codeUpdate(self, dependencies=False, force=False):
         """
         Update code from code repo (get newest code)
         """
         self.loadActions()
-        o.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
-        o.clients.mercurial.statusClearAll()
+        j.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
+        j.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeUpdate(force=force)
         self.actions.code.update()
-        o.action.stop(False)
+        j.action.stop(False)
 
     def codeCommit(self, dependencies=False, push=False):
         """
         update code from code repo (get newest code)
         """
         self.loadActions()
-        o.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
-        o.clients.mercurial.statusClearAll()
+        j.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
+        j.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeCommit(push=push)
         self.actions.code.commit()
         if push:
             self.codePush(dependencies)
-        o.action.stop(False)
+        j.action.stop(False)
 
-    def package(self, platform=o.enumerators.PlatformType.GENERIC, dependencies=False):
+    def package(self, platform=j.enumerators.PlatformType.GENERIC, dependencies=False):
         """
         Package code from the sandbox system into files section of owpackage
         Only 1 platform may be supported in this owpackage at the same time!!!
@@ -1051,10 +1051,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         if platform == None:
             raise RuntimeError("Cannot package because platform not specified")
 
-        params = o.core.params.get()
+        params = j.core.params.get()
         params.owpackage = self
         params.platform = platform
-        o.action.start('Package %s' % str(self), 'Failed to package code for %s back to owpackage files section.' % str(self))
+        j.action.start('Package %s' % str(self), 'Failed to package code for %s back to owpackage files section.' % str(self))
         # Disable action caching:
         # If a user packages for 2 different platforms in the same qshell
         # instance, the second call is just ignored, which is not desired
@@ -1064,7 +1064,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         # time would be a non-op, which is again not desired. So we disable the
         # action caching for this action.
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.package(platform=platform)
         self.actions.code.update()
@@ -1072,19 +1072,19 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         identities = recipe.identify()
         cfg = self._getConfig()
         cfg.setIdentities(platform, identities, write=True)
-        o.action.stop(False)
+        j.action.stop(False)
 
     def compile(self,dependencies=False):
         self.loadActions()
-        params = o.core.params.get()
+        params = j.core.params.get()
         params.owpackage = self
-        o.action.start('Compiling %s' % str(self))
+        j.action.start('Compiling %s' % str(self))
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.compile()
         self.actions.compile()
-        o.action.stop(False)
+        j.action.stop(False)
 
     @property
     def identities(self):
@@ -1109,17 +1109,17 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         info = {}
         for platform in self.getBundlePlatforms():
             path = self._getBlobInfoPath(platform)
-            if o.system.fs.isFile(path):
-                description = o.clients.blobstor.parse(path)
+            if j.system.fs.isFile(path):
+                description = j.clients.blobstor.parse(path)
                 info[platform] = description
-        legacyBlobPath = o.system.fs.joinPaths(self.metadataPath,
+        legacyBlobPath = j.system.fs.joinPaths(self.metadataPath,
                 "blob.info")
-        if o.system.fs.isFile(legacyBlobPath):
-            info['blob'] = o.clients.blobstor.parse(legacyBlobPath)
+        if j.system.fs.isFile(legacyBlobPath):
+            info['blob'] = j.clients.blobstor.parse(legacyBlobPath)
         return info
 
     def _getBlobInfoPath(self, platform):
-        return o.system.fs.joinPaths(self.metadataPath, "blob_%s.info"%platform)
+        return j.system.fs.joinPaths(self.metadataPath, "blob_%s.info"%platform)
 
     def getBuilds(self, qualitylevels):
         """
@@ -1176,11 +1176,11 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 
         for ql in qualitylevels[1:]:
             path = self._getConfigPath(ql)
-            if not o.system.fs.isFile(path):
+            if not j.system.fs.isFile(path):
                 continue
 
             with open(path) as f:
-                cfg = o.packages.pm_getQPackageConfig(f)
+                cfg = j.packages.pm_getQPackageConfig(f)
                 buildNr = cfg.getBuildNumber()
 
             for r in result:
@@ -1215,7 +1215,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         for nodeId in nodeIds:
             content = hgc.cat(nodeId, subPath)
             with contextlib.closing(StringIO(content)) as f:
-                cfg = o.packages.pm_getQPackageConfig(f)
+                cfg = j.packages.pm_getQPackageConfig(f)
                 yield nodeId, cfg
 
     def _getCfgSubPath(self, qualitylevel):
@@ -1229,7 +1229,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         @return: path of the owpackage.cfg file for `qualitylevel`
         @rtype: string
         """
-        return o.system.fs.joinPaths(qualitylevel, self.name,
+        return j.system.fs.joinPaths(qualitylevel, self.name,
                 self.version, QPACKAGE_CFG)
 
     def codeImport(self, dependencies=False):
@@ -1240,29 +1240,29 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         information will be removed when this method is used!
         """
         self.loadActions()
-        o.action.start('Import %s' % str(self), 'Failed to import code for %s back to local repo' % str(self))
+        j.action.start('Import %s' % str(self), 'Failed to import code for %s back to local repo' % str(self))
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeImport()
         self.actions.code.importt()
         cfg = self._getConfig()
         cfg.clearIdentities(write=True)
-        o.action.stop(False)
+        j.action.stop(False)
 
     def codePush(self, dependencies=False, merge=True):
         """
         Push code to repo (be careful this can brake code of other people)
         """
         self.loadActions()
-        o.action.start('Push %s' % str(self), 'Failed to push code for %s' % str(self))
-        o.clients.mercurial.statusClearAll()
+        j.action.start('Push %s' % str(self), 'Failed to push code for %s' % str(self))
+        j.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codePush(merge=merge)
         self.actions.code.push(merge=merge)
-        o.action.stop(False)
+        j.action.stop(False)
 
     def codeLink(self, dependencies=None, update=None, force=False):
         """
@@ -1271,23 +1271,23 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         @param force: if True, do an update which removes the changes (when using as install method should be True)
         """
         self.loadActions()
-        o.clients.mercurial.statusClearAll()
+        j.clients.mercurial.statusClearAll()
 
         if dependencies is None:
-            dependencies = o.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
+            dependencies = j.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
 
         if update is None:
-            update = o.gui.dialog.askYesNo("Do you want to update your code before linking?", True)
+            update = j.gui.dialog.askYesNo("Do you want to update your code before linking?", True)
 
         if update:
             self.codeUpdate(dependencies, force=force)
         if dependencies:
-            deps = self.getDependencies(platform=o.system.platformtype)
+            deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeLink(update=update,force=force)            
 
         self.actions.code.push(force=force)
-        o.action.stop(False)
+        j.action.stop(False)
 
     def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
         """
@@ -1300,13 +1300,13 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         #param destinationDirectory: allows you to overwrite the default destination (opt/qbase/var/owpackages/files/...)
         """
         self.loadActions()
-        o.action.start('Downloading %s' % str(self), 'Failed to download %s' % str(self))
+        j.action.start('Downloading %s' % str(self), 'Failed to download %s' % str(self))
         if dependencies:
             deps = self.getDependencies(recursive=True)
             for dep in deps:
                 dep.download(dependencies=False, destinationDirectory=destinationDirectory,allplatforms=allplatforms,expand=expand)
 
-        o.packages.getDomainObject(self.domain)
+        j.packages.getDomainObject(self.domain)
 
         self._log('Downloading bundles for package ' + str(self))
         state = self.getState()
@@ -1314,10 +1314,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         downloadDestinationDirectory = destinationDirectory
 
         try:
-            o.system.fs.removeDirTree(self.getPathFiles())
+            j.system.fs.removeDirTree(self.getPathFiles())
         except:
             pass
-        o.system.fs.createDir(self.getPathFiles())
+        j.system.fs.createDir(self.getPathFiles())
 
         for platform in self.getBundlePlatforms():
             
@@ -1328,11 +1328,11 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
                 continue
 
             if destinationDirectory == None:
-                downloadDestinationDirectory = o.system.fs.joinPaths(self.getPathFiles(), str(platform))
+                downloadDestinationDirectory = j.system.fs.joinPaths(self.getPathFiles(), str(platform))
 
 
             if state.downloadedBlobStorKeys.has_key(platform) and state.downloadedBlobStorKeys[platform] == checksum:
-                o.console.echo("No need to download owpackage %s" % self.name)
+                j.console.echo("No need to download owpackage %s" % self.name)
                 continue
 
             if not self.blobstorLocal.exists(checksum):
@@ -1346,7 +1346,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         # for checksum in self.requiredblobs.itervalues():
         #     self.blobstorRemote.copyToOtherBlocStor(checksum, self.blobstorLocal)
 
-        o.action.stop(False)
+        j.action.stop(False)
         return True
 
 
@@ -1365,13 +1365,13 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         self._log('Begin Uploading bundles for package ' + str(self) + ' ... (Please wait)')
         self.loadActions()
 
-        o.packages.getDomainObject(self.domain)
+        j.packages.getDomainObject(self.domain)
 
         updateBuildnr = False
         foundAnyPlatform = False
         #delete blob.info (not used anymore)
-        if o.system.fs.exists(o.system.fs.joinPaths(self.metadataPath, "blob.info")):
-            o.system.fs.removeFile(o.system.fs.joinPaths(self.metadataPath, "blob.info"))
+        if j.system.fs.exists(j.system.fs.joinPaths(self.metadataPath, "blob.info")):
+            j.system.fs.removeFile(j.system.fs.joinPaths(self.metadataPath, "blob.info"))
 
         for platform in self.getBundlePlatforms():
             # self.getBundleKey(platform) #hash as stored in config file
@@ -1379,9 +1379,9 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 
             foundAnyPlatform = True
 
-            if not o.system.fs.exists(pathFilesForPlatform):
+            if not j.system.fs.exists(pathFilesForPlatform):
                 path = self._getBlobInfoPath(platform)
-                o.system.fs.removeFile(path)
+                j.system.fs.removeFile(path)
                 continue
 
 
@@ -1398,24 +1398,24 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
             print key
 
             if plchecksum <> key:
-                o.console.echo("files did change for %s, upgrade buildnr" % self.name)
+                j.console.echo("files did change for %s, upgrade buildnr" % self.name)
                 updateBuildnr = True
                 self.bundles[str(platform)] = key
                 path = self._getBlobInfoPath(platform)
-                o.system.fs.writeFile(path, descr)
+                j.system.fs.writeFile(path, descr)
                 self.save()
                 self._log('Successfully uploaded bundles for package ' + str(self) )
             else:
-                o.console.echo("files did not change for %s, no need to upgrade buildnr for filechange" % self.name)
+                j.console.echo("files did not change for %s, no need to upgrade buildnr for filechange" % self.name)
 
-        taskletsChecksum, descr2 = o.tools.hash.hashDir(o.system.fs.joinPaths(self.metadataPath, "actions"))
+        taskletsChecksum, descr2 = j.tools.hash.hashDir(j.system.fs.joinPaths(self.metadataPath, "actions"))
         if taskletsChecksum <> self.taskletsChecksum:
-            o.console.echo("actions did change for %s, upgrade buildnr" % self.name)
+            j.console.echo("actions did change for %s, upgrade buildnr" % self.name)
             #buildnr needs to go up
             updateBuildnr = True
             self.taskletsChecksum = taskletsChecksum
         else:
-            o.console.echo("actions did not change for %s, no need to upgrade buildnr for taskletchange" % self.name)
+            j.console.echo("actions did not change for %s, no need to upgrade buildnr for taskletchange" % self.name)
 
         if  updateBuildnr:
             self.buildNr += 1
@@ -1423,7 +1423,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 
         if foundAnyPlatform == False:
             self._log('No platform found for upload' )
-            o.console.echo("No platform found for upload")
+            j.console.echo("No platform found for upload")
             
             
         self.load()
@@ -1437,7 +1437,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 #        ##
 #        _owpackageDir = self.getPathFiles()
 #
-#        o.logger.log('Syncing %s to sandbox' % _owpackageDir, 5)
+#        j.logger.log('Syncing %s to sandbox' % _owpackageDir, 5)
 #        platformDirsToCopy = self._getPlatformDirsToCopy()
 #        print 'platformDirsToCopy: ' + str(platformDirsToCopy)
 #        if False:
@@ -1447,44 +1447,44 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
 #                import traceback
 #                print '\n'.join(traceback.format_stack())
 #        for platformDir in platformDirsToCopy:
-#            o.logger.log('Syncing files in <%s>'%platformDir, 5)
-#            self._copyFilesTo(platformDir, o.dirs.baseDir)
+#            j.logger.log('Syncing files in <%s>'%platformDir, 5)
+#            self._copyFilesTo(platformDir, j.dirs.baseDir)
     def _getPlatformDirsToCopy(self):
         """
         Return a list of platform related directories to be copied in sandbox
         """
 
         platformDirs = list()
-        platform = o.system.platformtype
+        platform = j.system.platformtype
 
         _owpackageDir = self.getPathFiles()
 
-        platformSpecificDir = o.system.fs.joinPaths(_owpackageDir, str(platform), '')
+        platformSpecificDir = j.system.fs.joinPaths(_owpackageDir, str(platform), '')
 
-        if o.system.fs.isDir(platformSpecificDir):
+        if j.system.fs.isDir(platformSpecificDir):
             platformDirs.append(platformSpecificDir)
 
-        genericDir = o.system.fs.joinPaths(_owpackageDir, 'generic', '')
+        genericDir = j.system.fs.joinPaths(_owpackageDir, 'generic', '')
 
-        if o.system.fs.isDir(genericDir):
+        if j.system.fs.isDir(genericDir):
             platformDirs.append(genericDir)
 
         if platform.isUnix():
-            unixDir = o.system.fs.joinPaths(_owpackageDir, 'unix', '')
-            if o.system.fs.isDir(unixDir):
+            unixDir = j.system.fs.joinPaths(_owpackageDir, 'unix', '')
+            if j.system.fs.isDir(unixDir):
                 platformDirs.append(unixDir)
 
             if platform.isSolaris():
-                sourceDir = o.system.fs.joinPaths(_owpackageDir, 'solaris', '')
+                sourceDir = j.system.fs.joinPaths(_owpackageDir, 'solaris', '')
             elif platform.isLinux():
-                sourceDir = o.system.fs.joinPaths(_owpackageDir, 'linux', '')
+                sourceDir = j.system.fs.joinPaths(_owpackageDir, 'linux', '')
             elif platform.isDarwin():
-                sourceDir = o.system.fs.joinPaths(_owpackageDir, 'darwin', '')
+                sourceDir = j.system.fs.joinPaths(_owpackageDir, 'darwin', '')
 
         elif platform.isWindows():
-            sourceDir = o.system.fs.joinPaths(_owpackageDir, 'win', '')
+            sourceDir = j.system.fs.joinPaths(_owpackageDir, 'win', '')
 
-        if o.system.fs.isDir(sourceDir):
+        if j.system.fs.isDir(sourceDir):
             if not str(sourceDir) in platformDirs:
                 platformDirs.append(sourceDir)
 
@@ -1500,7 +1500,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         Set in the corresponding owpackage's state file if reconfiguration is needed
         """
         self.getState().setIsPendingReconfiguration(True)
-        o.packages._setHasPackagesPendingConfiguration(True)
+        j.packages._setHasPackagesPendingConfiguration(True)
 
     def isPendingReconfiguration(self):
         """
@@ -1524,10 +1524,10 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         @type actionCaching: boolean
         """
         if actionCaching:
-            if o.packages._actionCheck(self, action):
+            if j.packages._actionCheck(self, action):
                 return True
 
-            o.packages._actionSet(self, action)
+            j.packages._actionSet(self, action)
 
         #process all dependencies
         state = self.getState()
@@ -1552,7 +1552,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         @return: domain object for this Q-Package
         @rtype: Domain.Domain
         """
-        return o.packages.getDomainObject(self.domain)
+        return j.packages.getDomainObject(self.domain)
 
     def _raiseError(self,message):
         ##self.assertAccessable()
@@ -1572,7 +1572,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
     def __cmp__(self,other):
         if other == None or other=="":
             return False
-        return self.name == other.name and str(self.domain) == str(other.domain) and o.packages._getVersionAsInt(self.version) == o.packages._getVersionAsInt(other.version)
+        return self.name == other.name and str(self.domain) == str(other.domain) and j.packages._getVersionAsInt(self.version) == j.packages._getVersionAsInt(other.version)
 
     def __repr__(self):
         return self.__str__()
@@ -1594,7 +1594,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
         return str(self) == str(other)
 
     def _log(self, mess):
-        o.logger.log(str(self) + ':' + mess, 3)
+        j.logger.log(str(self) + ':' + mess, 3)
         print str(self) + ':' + mess
 
     def reportNumbers(self):

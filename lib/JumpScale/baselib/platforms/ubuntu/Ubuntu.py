@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class Ubuntu:
     def __init__(self):
@@ -45,13 +45,13 @@ class Ubuntu:
         return result["CODENAME"].lower().strip(),result["DESCRIPTION"],result["ID"].lower().strip(),int(result["RELEASE"]),
 
     def createUser(self,name,passwd,home=None,creategroup=True):
-        import OpenWizzy.lib.cuisine
-        c=o.tools.cuisine.api
+        import JumpScale.lib.cuisine
+        c=j.tools.cuisine.api
 
         if home==None:
             homeexists=True
         else:
-            homeexists=o.system.fs.exists(home)
+            homeexists=j.system.fs.exists(home)
 
         c.user_ensure(name, passwd=passwd, home=home, uid=None, gid=None, shell=None, fullname=None, encrypted_passwd=False)
         if creategroup:
@@ -62,13 +62,13 @@ class Ubuntu:
             c.dir_ensure(home,owner=name,group=name)
 
     def createGroup(self,name):
-        import OpenWizzy.lib.cuisine
-        c=o.tools.cuisine.api
+        import JumpScale.lib.cuisine
+        c=j.tools.cuisine.api
         c.group_ensure(name)
 
     def addUser2Group(self,group,user):
-        import OpenWizzy.lib.cuisine
-        c=o.tools.cuisine.api
+        import JumpScale.lib.cuisine
+        c=j.tools.cuisine.api
         c.group_user_ensure(group, user)
 
             
@@ -79,17 +79,17 @@ class Ubuntu:
         @param cmdname is cmd to check e.g. curl
         """
         self.check()
-        if o.basetype.list.check(packagenames):
+        if j.basetype.list.check(packagenames):
             for packagename in packagenames:
                 self.checkInstall(packagename,cmdname)
         else:
             packagename=packagenames
-            result, out = o.system.process.execute("which %s" % cmdname, False)
+            result, out = j.system.process.execute("which %s" % cmdname, False)
             if result != 0:
                 self.install(packagename)
             else:
                 return
-            result, out = o.system.process.execute("which %s" % cmdname, False)
+            result, out = j.system.process.execute("which %s" % cmdname, False)
             if result != 0:
                 raise RuntimeError("Could not install package %s and check for command %s." % (packagename, cmdname))
 
@@ -157,10 +157,10 @@ class Ubuntu:
         self._service(servicename, 'stop')
 
     def disableStartAtBoot(self, servicename):
-        o.system.process.execute("update-rc.d -f %s remove" % servicename)
+        j.system.process.execute("update-rc.d -f %s remove" % servicename)
 
     def _service(self, servicename, action):
-        return o.system.process.execute("service %s %s" % (servicename, action))
+        return j.system.process.execute("service %s %s" % (servicename, action))
 
     def updatePackageMetadata(self, force=True):
         self.check()

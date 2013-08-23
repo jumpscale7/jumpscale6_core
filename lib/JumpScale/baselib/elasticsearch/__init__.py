@@ -1,7 +1,7 @@
-from OpenWizzy import o
+from JumpScale import j
 from .Elasticsearch import ElasticsearchFactory
 from .elasticsearchmanager import ElasticsearchManager
-o.base.loader.makeAvailable(o, 'clients')
-o.base.loader.makeAvailable(o, 'manage')
-o.manage.elasticsearch = ElasticsearchManager()
-o.clients.elasticsearch = ElasticsearchFactory()
+j.base.loader.makeAvailable(j, 'clients')
+j.base.loader.makeAvailable(j, 'manage')
+j.manage.elasticsearch = ElasticsearchManager()
+j.clients.elasticsearch = ElasticsearchFactory()

@@ -1,6 +1,6 @@
 import copy
 
-from OpenWizzy import o
+from JumpScale import j
 import traceback
 
 # class Base():
@@ -24,7 +24,7 @@ import traceback
 class AlertObject():
     def __init__(self):
         self.id=0  #is unique where alert has been created
-        self.guid=o.base.idgenerator.generateGUID() #can be used for authentication purposes
+        self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes
         self.description=""
         self.descriptionpub=""
         self.level=1 #1:critical, 2:warning, 3:info
@@ -45,18 +45,18 @@ class AlertObject():
 class ErrorConditionObject():
     """
     used enumerators:
-    - o.enumerators.ErrorConditionLevel.
-    - o.enumerators.ErrorConditionType.
+    - j.enumerators.ErrorConditionLevel.
+    - j.enumerators.ErrorConditionType.
     """
     def __init__(self,ddict={},msg="",msgpub="",category="",level=1,type=0):
         if ddict<>{}:
             self.__dict__=ddict
         else:
-            self.guid=o.base.idgenerator.generateGUID()
+            self.guid=j.base.idgenerator.generateGUID()
             self.category=category #is category in dot notation
             self.errormessage=msg
             self.errormessagePub=msgpub
-            self.level=int(level) #1:critical, 2:warning, 3:info see o.enumerators.ErrorConditionLevel.
+            self.level=int(level) #1:critical, 2:warning, 3:info see j.enumerators.ErrorConditionLevel.
 
             self.code=""
             self.funcname=""
@@ -64,26 +64,26 @@ class ErrorConditionObject():
             self.funclinenr=0
             self.backtrace=""
 
-            self.appname=o.application.appname #name as used by application
-            self.gid = o.application.whoAmI.gid
-            self.nid = o.application.whoAmI.nid
-            self.bid = o.application.whoAmI.bid
-            if hasattr(o, 'core') and hasattr(o.core, 'grid') and hasattr(o.core.grid, 'aid'):
-                self.aid = o.core.grid.aid
-            self.pid = o.application.whoAmI.pid
+            self.appname=j.application.appname #name as used by application
+            self.gid = j.application.whoAmI.gid
+            self.nid = j.application.whoAmI.nid
+            self.bid = j.application.whoAmI.bid
+            if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
+                self.aid = j.core.grid.aid
+            self.pid = j.application.whoAmI.pid
             self.jid = 0
             self.masterjid = 0
 
-            self.epoch= o.base.time.getTimeEpoch()
+            self.epoch= j.base.time.getTimeEpoch()
             self.tags=""
-            self.type=int(type) #o.enumerators.ErrorConditionType
+            self.type=int(type) #j.enumerators.ErrorConditionType
 
     def __str__(self):
-        if o.basetype.integer.check(self.type):
-            ttype=str(o.enumerators.ErrorConditionType.getByLevel(int(self.type)))
+        if j.basetype.integer.check(self.type):
+            ttype=str(j.enumerators.ErrorConditionType.getByLevel(int(self.type)))
         else:
             ttype=str(self.type)
-        level=str(o.enumerators.ErrorConditionLevel.getByLevel(int(self.level)))
+        level=str(j.enumerators.ErrorConditionLevel.getByLevel(int(self.level)))
         content="\n\n***ERROR***\n"
         if self.backtrace<>"":
             content="%s\n" % self.backtrace
@@ -99,27 +99,27 @@ class ErrorConditionObject():
         """
         write errorcondition to filesystem
         """
-        o.system.fs.createDir(o.system.fs.joinPaths(o.dirs.logDir,"errors",o.application.appname))
-        path=o.system.fs.joinPaths(o.dirs.logDir,"errors",o.application.appname,"backtrace_%s.log"%(o.base.time.getLocalTimeHRForFilesystem()))        
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.logDir,"errors",j.application.appname))
+        path=j.system.fs.joinPaths(j.dirs.logDir,"errors",j.application.appname,"backtrace_%s.log"%(j.base.time.getLocalTimeHRForFilesystem()))        
         msg="***ERROR BACKTRACE***\n"
         msg+="%s\n"%self.backtrace
         msg+="***ERROR MESSAGE***\n"
         msg+="%s\n"%self.errormessage
         if self.errormessagePub<>"":
             msg+="%s\n"%self.errormessagePub
-        if len(o.logger.logs)>0:
+        if len(j.logger.logs)>0:
             msg+="\n***LOG MESSAGES***\n"
-            for log in o.logger.logs:
+            for log in j.logger.logs:
                 msg+="%s\n"%log
                 
         msg+="***END***\n"
         
-        o.system.fs.writeFile(path,msg)
+        j.system.fs.writeFile(path,msg)
         return path    
     
     def getBacktrace(self):
         stack=""
-        if o.application.skipTraceback:
+        if j.application.skipTraceback:
             return stack
         for x in traceback.format_stack():
             ignore=False            
@@ -158,7 +158,7 @@ class ErrorConditionObject():
         is a very detailed log with filepaths, code locations & global vars, this output can become quite big
         """        
         import inspect
-        if o.application.skipTraceback:
+        if j.application.skipTraceback:
             return ""
         sep="\n"+"-"*90+"\n"
         result = ''
@@ -243,7 +243,7 @@ class ErrorConditionObject():
             dd.pop("guid")
         if dd.has_key("sguid"):
             dd.pop("sguid")
-        return o.base.byteprocessor.hashMd5(str(dd))
+        return j.base.byteprocessor.hashMd5(str(dd))
         
     def getUniqueKey(self):
         """

@@ -7,9 +7,9 @@ import commands
 import sys
 import math
 
-from OpenWizzy import o
-from OpenWizzy.core.Time import TimeIntervalUnit
-#from OpenWizzy.core.decorators import deprecated
+from JumpScale import j
+from JumpScale.core.Time import TimeIntervalUnit
+#from JumpScale.core.decorators import deprecated
 
 def user_in_group(username, groupname):
     '''Check whether a given user is member of a given group
@@ -48,7 +48,7 @@ class UnixSystem:
         @param var: Variable name
         @type var: string
         '''
-        exitcode, output = o.system.process.execute(". %s > /dev/null && echo $%s"%(file,var))
+        exitcode, output = j.system.process.execute(". %s > /dev/null && echo $%s"%(file,var))
         if exitcode !=0:
             return ""
         else:
@@ -63,8 +63,8 @@ class UnixSystem:
         mem = 0
         cpumhz = 0
         nrcpu = 0
-        if o.system.platformtype.isLinux() or o.system.platformtype.isESX():
-            memcontent = o.system.fs.fileGetContents("/proc/meminfo")
+        if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
+            memcontent = j.system.fs.fileGetContents("/proc/meminfo")
             match = re.search("^MemTotal\:\s+(\d+)\s+kB$",memcontent, re.MULTILINE)
             if match:
                 #algorithme to round the memory again
@@ -72,18 +72,18 @@ class UnixSystem:
                 percisions = 2 # means 1 / 2 GB precision
                 #we use ceil because we can only loose memory used by system
                 mem = int((math.ceil((mem_in_gb*percisions))/percisions)*1024)
-            cpucontent = o.system.fs.fileGetContents("/proc/cpuinfo")
+            cpucontent = j.system.fs.fileGetContents("/proc/cpuinfo")
             matches = re.findall("^cpu\sMHz\s+:\s(\d+)\.\d+$", cpucontent, re.MULTILINE)
             if matches:
                 nrcpu = len(matches)
                 cpumhz = int(matches[0])
             return mem,cpumhz,nrcpu
-        elif o.system.platformtype.isSolaris():
+        elif j.system.platformtype.isSolaris():
             command = "prtconf | grep Memory | awk '{print $3}'"
-            (exitcoude, output) = o.system.process.execute(command)
+            (exitcoude, output) = j.system.process.execute(command)
             mem = output.strip()
             command = "psrinfo -v | grep 'processor operates' | awk '{print $6}'"
-            (exitcoude, output) = o.system.process.execute(command)
+            (exitcoude, output) = j.system.process.execute(command)
             tuples = output.strip().split("\n")
             nrcpu = len(tuples)
             cpumhz = int(tuples[0])
@@ -129,10 +129,10 @@ class UnixSystem:
             raise ValueError("This function only supports following intervals: " + str(allowedIntervals))
 
         # Construct timing options
-        if o.system.platformtype.isLinux() or o.system.platformtype.isESX():
+        if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
             crontabFilePath = "/etc/crontab"
             crontabItem = "*/" + str(interval)
-        elif o.system.platformtype.isSolaris():
+        elif j.system.platformtype.isSolaris():
             crontabFilePath = "/var/spool/cron/crontabs/root"
             if interval == 1:
                 crontabItem = "*"
@@ -149,7 +149,7 @@ class UnixSystem:
             crontabOptions = crontabOptions + " "
         crontabOptions = crontabOptions + crontabItem + " "
         crontabOptions = crontabOptions + "* " * (5 - unitPlace)
-        if o.system.platformtype.isLinux():
+        if j.system.platformtype.isLinux():
             crontabOptions = crontabOptions + "root    " # The Vixie cron (for Linux) has an extra option: username of running process.
 
         # Construct output redirection
@@ -157,12 +157,12 @@ class UnixSystem:
             crontabOutputRedir = " >/dev/null"
         else:
             if not self.exists(self.getDirName(logFilePath)):
-                o.system.fs.createDir(self.getDirName(logFilePath))
+                j.system.fs.createDir(self.getDirName(logFilePath))
             crontabOutputRedir = " >>" + logFilePath
         crontabOutputRedir = crontabOutputRedir + " 2>&1"
 
         # Check if command already present.
-        crontabLines = o.system.fs.fileGetContents(crontabFilePath).splitlines()
+        crontabLines = j.system.fs.fileGetContents(crontabFilePath).splitlines()
         commandFoundInCrontab = -1
         for i in range(len(crontabLines)):
             if crontabLines[i].find(commandToExecute) > -1 and not crontabLines[i].lstrip().startswith("#"):
@@ -176,15 +176,15 @@ class UnixSystem:
             crontabLines[commandFoundInCrontab] = (crontabOptions + commandToExecute + crontabOutputRedir)
 
         # Backup old crontab file and write modifications new crontab file.
-        o.system.fs.copyFile(crontabFilePath, crontabFilePath + ".backup") # Create backup
-        if o.system.platformtype.isSolaris():
+        j.system.fs.copyFile(crontabFilePath, crontabFilePath + ".backup") # Create backup
+        if j.system.platformtype.isSolaris():
             self.writeFile(crontabFilePath + "_new", "\n".join(crontabLines) + "\n")
             # On Solaris, we need to call the crontab command to activate the changes.
             self.execute("crontab " + crontabFilePath + "_new")
             self.removeFile(crontabFilePath + "_new")
-        elif o.system.platformtype.isLinux() or o.system.platformtype.isESX():
+        elif j.system.platformtype.isLinux() or j.system.platformtype.isESX():
             # On Linux, we edit the system-wide crontab of Vixie Cron, so don't have to run the "crontab" command to be sure changes have effect.
-            o.system.fs.writeFile(crontabFilePath, "\n".join(crontabLines) + "\n")
+            j.system.fs.writeFile(crontabFilePath, "\n".join(crontabLines) + "\n")
         else:
             raise RuntimeError("Platform not supported.")
 
@@ -197,7 +197,7 @@ class UnixSystem:
         @param pid: process id
         """
 
-        o.logger.log('Killing process group of %d' % pid, 7)
+        j.logger.log('Killing process group of %d' % pid, 7)
         import signal
         os.killpg(os.getpgid(pid), signal.SIGKILL)
 
@@ -215,12 +215,12 @@ class UnixSystem:
         """
         if not group:
             group = 'root'
-        o.logger.log('Chown %s:%s %s'%(user,group,path),8)
+        j.logger.log('Chown %s:%s %s'%(user,group,path),8)
         uid=pwd.getpwnam(user).pw_uid
         gid=grp.getgrnam(group).gr_gid
         os.chown(path, uid, gid)
         if recursive:
-            files=o.system.fs.walk(path,return_folders=1,return_files=1,recurse=-1)
+            files=j.system.fs.walk(path,return_folders=1,return_files=1,recurse=-1)
             for file in files:
                 os.chown(file,uid,gid)
 
@@ -229,8 +229,8 @@ class UnixSystem:
         """
         Chmod based on system.fs.walk
         """
-        o.logger.log('Chmod %s'%root,8)
-        items = o.system.fs.walkExtended( root = root, recurse = recurse, dirPattern = dirPattern, filePattern = filePattern, dirs = dirs, files = files)
+        j.logger.log('Chmod %s'%root,8)
+        items = j.system.fs.walkExtended( root = root, recurse = recurse, dirPattern = dirPattern, filePattern = filePattern, dirs = dirs, files = files)
         for item in items:
             os.chmod(item,mode)
 
@@ -241,7 +241,7 @@ class UnixSystem:
         be executed as some specific user. This requires the application which
         spawns the command to be running as root.
 
-        Next to this, it behaves exactly as C{o.system.process.execute},
+        Next to this, it behaves exactly as C{j.system.process.execute},
         including the same named arguments.
 
         @param command: Command to execute
@@ -263,10 +263,10 @@ class UnixSystem:
         kwargs = kwargs.copy()
         kwargs['command'] = command
 
-        return o.system.process.execute(**kwargs)
+        return j.system.process.execute(**kwargs)
 
-    #@deprecated('o.system.unix.executeDaemonAsUser',
-    #            alternative='o.system.process.runDaemon', version='3.2')
+    #@deprecated('j.system.unix.executeDaemonAsUser',
+    #            alternative='j.system.process.runDaemon', version='3.2')
     def executeDaemonAsUser(self, command, username, **kwargs):
         '''Execute a given command as a background process as a specific user
 
@@ -274,7 +274,7 @@ class UnixSystem:
         be executed as some specific user. This requires the application which
         spawns the command to be running as root.
 
-        Next to this, it behaves exactly as C{o.system.process.runDaemon},
+        Next to this, it behaves exactly as C{j.system.process.runDaemon},
         including the same named arguments.
 
         @param command: Command to execute
@@ -296,10 +296,10 @@ class UnixSystem:
         kwargs = kwargs.copy()
         kwargs['commandline'] = command
 
-        return o.system.process.runDaemon(**kwargs)
+        return j.system.process.runDaemon(**kwargs)
 
     def _prepareCommand(self, command, username):
-        o.logger.log('Attempt to run %s as user %s' % (command, username), 6)
+        j.logger.log('Attempt to run %s as user %s' % (command, username), 6)
         try:
             pwent = pwd.getpwnam(username)
         except KeyError:
@@ -310,7 +310,7 @@ class UnixSystem:
 
         subin = '/bin/su'
 
-        if not o.system.fs.exists(subin):
+        if not j.system.fs.exists(subin):
             raise RuntimeError('%s not found on this system, I need it there' % subin)
 
         command = '%s --login --command %s %s' % (subin, commands.mkarg(command), username)
@@ -323,10 +323,10 @@ class UnixSystem:
         @param path: Path to chroot() to
         @type path: string
         '''
-        if not path or not o.basetype.unixdirpath.check(path):
+        if not path or not j.basetype.unixdirpath.check(path):
             raise ValueError('Path %s is invalid' % path)
 
-        o.logger.log('Change root to %s' % path, 5)
+        j.logger.log('Change root to %s' % path, 5)
         os.chroot(path)
 
     def addSystemUser(self, username, groupname=None, shell=None):
@@ -340,20 +340,20 @@ class UnixSystem:
         @type username: string
         '''
         
-        if not o.system.unix.unixUserExists(username):
-            o.logger.log(
+        if not j.system.unix.unixUserExists(username):
+            j.logger.log(
                 "User [%s] does not exist, creating an entry" % username, 5)
 
             command = "useradd"
             options = []
-            if groupname and not o.system.unix.unixGroupExists(groupname):
+            if groupname and not j.system.unix.unixGroupExists(groupname):
                 raise RuntimeError('Failed to add user because group %s does not exist' %groupname)
-            if groupname and o.system.unix.unixGroupExists(groupname):
+            if groupname and j.system.unix.unixGroupExists(groupname):
                 options.append("-g %s" %(groupname))
             if shell:
                 options.append("-s %s" % shell)
             command = "%s %s %s" % (command, " ".join(options), username)
-            exitCode, stdout, stderr = o.system.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.system.process.run(command, stopOnError=False)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -361,7 +361,7 @@ class UnixSystem:
                                     (username,output))
 
         else:
-            o.logger.log("User %s already exists" % username, 4)
+            j.logger.log("User %s already exists" % username, 4)
 
     def addSystemGroup(self, groupname):
         ''' Add a group to the system
@@ -371,15 +371,15 @@ class UnixSystem:
         @param groupname: Name of the group to add
         @type groupname : string
         '''
-        if not o.system.unix.unixGroupExists(groupname):
-            o.logger.log("Group [%s] does not exist, creating an entry" %groupname, 5)
-            exitCode, stdout, stderr = o.system.process.run("groupadd %s" %groupname, stopOnError=False)
+        if not j.system.unix.unixGroupExists(groupname):
+            j.logger.log("Group [%s] does not exist, creating an entry" %groupname, 5)
+            exitCode, stdout, stderr = j.system.process.run("groupadd %s" %groupname, stopOnError=False)
             
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
                 raise RuntimeError('Failed to add group %s, error: %s' %(groupname,output))
         else:
-            o.logger.log("Group %s already exists" % groupname, 4)
+            j.logger.log("Group %s already exists" % groupname, 4)
 
     def unixUserExists(self, username):
         """Checks if a given user already exists in the system
@@ -418,11 +418,11 @@ class UnixSystem:
         @type username: string
 
         """
-        if not o.system.unix.unixUserExists(username):
+        if not j.system.unix.unixUserExists(username):
             raise ValueError("User [%s] does not exist, cannot disable user" % username)
         else:
             command = 'passwd %s -l' %username
-            exitCode, stdout, stderr = o.system.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.system.process.run(command, stopOnError=False)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -436,11 +436,11 @@ class UnixSystem:
         @type username: string
 
         """
-        if not o.system.unix.unixUserExists(username):
+        if not j.system.unix.unixUserExists(username):
             raise ValueError("User [%s] does not exist, cannot enable user" % username)
         else:
             command = 'passwd %s -u' %username
-            exitCode, stdout, stderr = o.system.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.system.process.run(command, stopOnError=False)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -454,12 +454,12 @@ class UnixSystem:
         @type username: string
 
         """
-        if not o.system.unix.unixUserExists(username):
+        if not j.system.unix.unixUserExists(username):
             raise ValueError("User [%s] does not exist, cannot remove user" % username)
         else:
             removehome = "-r" if removehome else ""
             command = 'userdel %s %s' % (removehome, username)
-            exitCode, stdout, stderr = o.system.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.system.process.run(command, stopOnError=False)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -476,11 +476,11 @@ class UnixSystem:
         @type username: string        
 
         """
-        if not o.system.unix.unixUserExists(username):
+        if not j.system.unix.unixUserExists(username):
             raise ValueError("User [%s] does not exist, cannot set password" % username)
         else:
             command = "echo '%s:%s' | chpasswd" %(username, password)
-            exitCode, stdout, stderr = o.system.process.run(command, stopOnError=False)
+            exitCode, stdout, stderr = j.system.process.run(command, stopOnError=False)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
@@ -551,7 +551,7 @@ class UnixSystem:
 
         import threading
         if threading.activeCount() > 1:
-            o.errorconditionhandler.raiseWarning(
+            j.errorconditionhandler.raiseWarning(
                 'You application got running threads, this can cause issues when using fork')
 
         pid = os.fork()
@@ -604,7 +604,7 @@ class UnixSystem:
         """
         check if app is installed,  if yes return True
         """
-        result,out=o.system.process.execute("which %s" % appname,dieOnNonZeroExitCode=False)
+        result,out=j.system.process.execute("which %s" % appname,dieOnNonZeroExitCode=False)
         if result==0 and len(out)>5:
             return True
         return False

@@ -1,9 +1,9 @@
-from OpenWizzy import o
+from JumpScale import j
 
 class Empty():
 	pass
 
-o.base=Empty()
+j.base=Empty()
 
 from . import FSWALKER
 from . import FS

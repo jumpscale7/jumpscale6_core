@@ -27,7 +27,7 @@ import sys
 if not sys.platform.startswith('win'):
     raise "WinRegHiveType enumerator is only supported on Windows operating system"
 
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale.core.baseclasses import BaseEnumeration
 import _winreg as reg
 
 class WinRegHiveType(BaseEnumeration):

@@ -1,23 +1,23 @@
 import sys
 sys.path.insert(0,"lib")
 
-from OpenWizzy import *
+from JumpScale import *
 
-o.application.appname = "owlink"
-o.application.start("owinstallrepos",basedir="/opt/openwizzy6/",appdir="/opt/openwizzy6/apps/exampleapp/")
+j.application.appname = "jslink"
+j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
 
-o.application.shellconfig.interactive=True
+j.application.shellconfig.interactive=True
 
-import OpenWizzy.baselib.platforms #gets access to ubuntu code
-import OpenWizzy.baselib.owdeveltools
+import JumpScale.baselib.platforms #gets access to ubuntu code
+import JumpScale.baselib.owdeveltools
 
 
-if o.system.platformtype.isLinux():
-    o.system.platform.ubuntu.check()
-    # o.develtools.installer.deployExamplesLibsGridPortal()
-    # o.develtools.installer.deployDFS_IO()
-    o.develtools.installer.link2code()
+if j.system.platformtype.isLinux():
+    j.system.platform.ubuntu.check()
+    # j.develtools.installer.deployExamplesLibsGridPortal()
+    # j.develtools.installer.deployDFS_IO()
+    j.develtools.installer.link2code()
 
 else:
-    raise RuntimeError("Openwizzy 6 is for now only supported on ubuntu or mint.")
+    raise RuntimeError("JumpScale 6 is for now only supported on ubuntu or mint.")
 

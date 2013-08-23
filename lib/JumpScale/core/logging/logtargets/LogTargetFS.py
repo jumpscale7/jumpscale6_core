@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 import time
 from datetime import datetime
 import sys
@@ -27,14 +27,14 @@ class LogTargetFS(object):
         self.logopenNrlines = 0
         self.logfile = ""
         self._initializing = False
-        self.agentid = o.application.agentid
-        self.appname = o.application.appname.split(':')[0]
-        self.lastappstatus = o.application.state
+        self.agentid = j.application.agentid
+        self.appname = j.application.appname.split(':')[0]
+        self.lastappstatus = j.application.state
         self._queue = []
         # except:
             # self.agentid="unknown"
-        if o.system.platformtype.isWindows():
-            logdir = os.path.join(o.system.windows.getTmpPath(), "QBASEVAR")
+        if j.system.platformtype.isWindows():
+            logdir = os.path.join(j.system.windows.getTmpPath(), "QBASEVAR")
             if not os.path.isdir(logdir):
                 os.mkdir(logdir)
             logdir = os.path.join(logdir, "LOGSTARTUP")
@@ -43,7 +43,7 @@ class LogTargetFS(object):
 
         self.enabled = True  # self.checkTarget()
 
-        # o.base.time.getLocalTimeHRForFilesystem()
+        # j.base.time.getLocalTimeHRForFilesystem()
 
     def _gettime(self):
         return int(time.time())
@@ -74,9 +74,9 @@ class LogTargetFS(object):
             self.enabled = self.checkTarget()
 
         ttime = time.strftime("%H:%M:%S: ", datetime.fromtimestamp(log.epoch).timetuple())
-        message = "%s %s %s%s" % (log.level, o.application.appname, ttime, log.message)
+        message = "%s %s %s%s" % (log.level, j.application.appname, ttime, log.message)
 
-        appLogname = o.application.appname.split(':')[0]
+        appLogname = j.application.appname.split(':')[0]
 
         # print self._gettime()>(self.logopenTime+60)
         if self._config['main']['logrotate_enable'] == 'True':
@@ -88,7 +88,7 @@ class LogTargetFS(object):
                 self.rotate()
                 self.logopenTime = self._gettime()
                 self.logopenNrlines = 0
-                self.lastappstatus = o.application.state
+                self.lastappstatus = j.application.state
 
         try:
             # print "log:%s" % message
@@ -112,14 +112,14 @@ class LogTargetFS(object):
         if not self._is_initialized():
             self._initialize()
 
-        appLogname = o.application.appname.split(':')[0]
+        appLogname = j.application.appname.split(':')[0]
 
         if appLogname != self.appname:
             self.appname = appLogname
 
-        if not os.path.isdir(o.dirs.logDir):
-            os.makedirs(o.log.logDir, 0o755)
-        logfile = os.path.join(o.dirs.logDir, appLogname)
+        if not os.path.isdir(j.dirs.logDir):
+            os.makedirs(j.log.logDir, 0o755)
+        logfile = os.path.join(j.dirs.logDir, appLogname)
         self.logfile = "%s.log" % logfile
         try:
             self.fileHandle = open(self.logfile, 'a')
@@ -131,8 +131,8 @@ class LogTargetFS(object):
     def rotate(self):
         cnt = 1
         while True:
-            filename = os.path.join(o.dirs.logDir, "%s.log.%d" % (self.appname, cnt))
-            if not o.system.fs.exists(filename):
+            filename = os.path.join(j.dirs.logDir, "%s.log.%d" % (self.appname, cnt))
+            if not j.system.fs.exists(filename):
                 break
             cnt += 1
         if self.logfile and os.path.exists(self.logfile):
@@ -178,21 +178,21 @@ class LogTargetFS(object):
         if self.__dict__.has_key("_config"):
             if self._config['main']['logremove_enable'] == 'True':
 
-                if int(self._lastcleanuptime) <= (o.base.time.getTimeEpoch() - int(self._config['main']['logremove_check'])):
+                if int(self._lastcleanuptime) <= (j.base.time.getTimeEpoch() - int(self._config['main']['logremove_check'])):
 
-                    self._lastcleanuptime = o.base.time.getTimeEpoch()
+                    self._lastcleanuptime = j.base.time.getTimeEpoch()
                     self.nolog = True
-                    inifile = o.config.getInifile("main")
+                    inifile = j.config.getInifile("main")
                     inifile.setParam("main", "lastlogcleanup", self._lastcleanuptime)
-                    files = o.system.fs.listFilesInDir(
-                        o.system.fs.joinPaths(o.dirs.logDir, 'openwizzylogs'),
+                    files = j.system.fs.listFilesInDir(
+                        j.system.fs.joinPaths(j.dirs.logDir, 'openwizzylogs'),
                         recursive=True,
-                        maxmtime=(o.base.time.getTimeEpoch() - int(self._config['main']['logremove_age'])))
+                        maxmtime=(j.base.time.getTimeEpoch() - int(self._config['main']['logremove_age'])))
 
                     for filepath in files:
-                        if o.system.fs.exists(filepath):
+                        if j.system.fs.exists(filepath):
                             try:
-                                o.system.fs.removeFile(filepath)
+                                j.system.fs.removeFile(filepath)
                             except Exception as ex:
                                 pass  # We don't want to fail on logging
 
@@ -208,11 +208,11 @@ class LogTargetFS(object):
         As we are in the initialization phase of the logging framework, we can't use anything
         using the logging framework.
         """
-        if o.application.state != o.enumerators.AppStatusType.RUNNING or self._initializing:
+        if j.application.state != j.enumerators.AppStatusType.RUNNING or self._initializing:
             return True
         self._initializing = True
 
-        mainfile = o.config.getInifile("main")
+        mainfile = j.config.getInifile("main")
         if 'main' in mainfile.getSections() and mainfile.getValue('main', 'lastlogcleanup'):
             self._lastcleanuptime = mainfile.getValue('main', 'lastlogcleanup')
         else:
@@ -228,8 +228,8 @@ class LogTargetFS(object):
                                  'logremove_check': '86400'}}
 
         cfg = None
-        if 'logtargetfs' in o.config.list():
-            logtargetfs_file = o.config.getInifile("logtargetfs")
+        if 'logtargetfs' in j.config.list():
+            logtargetfs_file = j.config.getInifile("logtargetfs")
             cfg = logtargetfs_file.getFileAsDict()
 
         if not cfg or not 'main' in cfg.keys():
@@ -246,7 +246,7 @@ class LogTargetFS(object):
 
 
 # Config
-# from OpenWizzy.core.config import ConfigManagementItem, ItemSingleClass
+# from JumpScale.core.config import ConfigManagementItem, ItemSingleClass
 #
 # class LogTargetFSConfigManagementItem(ConfigManagementItem):
 #    """
@@ -281,7 +281,7 @@ class LogTargetFS(object):
 #        Optional customization of show() method
 #        """
 # Here we do not want to show the password, so a customized show() method
-#        o.gui.dialog.message(self.params)
+#        j.gui.dialog.message(self.params)
 #
 #    def retrieve(self):
 #        """

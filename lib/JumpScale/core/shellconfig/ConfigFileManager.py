@@ -1,5 +1,5 @@
 
-from OpenWizzy import o
+from JumpScale import j
 import os
 
 
@@ -22,10 +22,10 @@ class ConfigFileManager():
         if self._loaded==False:
             cfgfile=configsDir+os.sep+"%s.cfg" % self._configType
             
-            if o.system.fs.exists(cfgfile):
-                self.cfg=o.tools.inifile.open(cfgfile)
+            if j.system.fs.exists(cfgfile):
+                self.cfg=j.tools.inifile.open(cfgfile)
             else:
-                self.cfg=o.tools.inifile.new(cfgfile)
+                self.cfg=j.tools.inifile.new(cfgfile)
             self._loaded=True
         return self.cfg
 
@@ -33,18 +33,18 @@ class ConfigFileManager():
         """
         show all settings from a specific section and ask for confirmation if correct, if not ask to change
         """
-        if o.application.shellconfig.interactive==False:
+        if j.application.shellconfig.interactive==False:
             raise Exception("Running non interactive, script is asking to review a config file, please adjust section %s in configfile cfg/%s.cfg" % (section,self._configType))
 
         cfg=self._getConfigFile()
         params=cfg.getParams(section)
-        o.console.echo("")
+        j.console.echo("")
         if descr=="" and confirm==False:
             descr="##### %s OF %s #####" % (section,self._configType)
         else:
             descr="##### REVIEW CONFIG SECTION %s OF %s #####" % (section,self._configType)
 
-        o.console.echo(descr)
+        j.console.echo(descr)
         nr=0
         params2={}
         for param in params:
@@ -52,21 +52,21 @@ class ConfigFileManager():
             params2[nr]=ParamDetail(nr,param)
             value=cfg.getValue(section,param)
             params2[nr].value=value
-            o.console.echo("    %s : %s = %s " % (nr,param,value))
-        o.console.echo("")
+            j.console.echo("    %s : %s = %s " % (nr,param,value))
+        j.console.echo("")
         if confirm:
-            yesno=o.console.askYesNo("Is this correct?")
+            yesno=j.console.askYesNo("Is this correct?")
             if yesno==False:
                 #mistakes in config, ask which line
-                nr=o.console.askInteger("Which line is not correct?")
+                nr=j.console.askInteger("Which line is not correct?")
                 if params2.has_key(nr):
                     parameterName=params2[nr].name
-                    newvalue= o.console.askString("Give appropriate new value for parameter %s" % parameterName)
+                    newvalue= j.console.askString("Give appropriate new value for parameter %s" % parameterName)
                     cfg.setParam(section,parameterName,newvalue)
                     cfg.write()
                     self.validateSectionInteractive(section)
                 else:
-                    o.console.echo ("ERROR: please specify appropriate line nr")
+                    j.console.echo ("ERROR: please specify appropriate line nr")
                     self.validateSectionInteractive(section)
 
     def showSection(self,section,descr=""):
@@ -76,8 +76,8 @@ class ConfigFileManager():
         return self.validateSectionInteractive(section,descr,confirm=False)
 
     def _askString(self,description,section):
-        if o.application.shellconfig.interactive:
-            o.console.askString(description)
+        if j.application.shellconfig.interactive:
+            j.console.askString(description)
         else:
             raise 
 
@@ -125,7 +125,7 @@ class ConfigFileManager():
         configType=self._configType
         if section=="" or configType=="":
             raise Exception("cannot get parameter when section or configType not specified")
-        o.logger.log("get param: configtype %s, section %s, param %s, defaulvalue %s, forceDefaultValue %s" % (configType,section,paramName,defaultValue,forceDefaultValue))
+        j.logger.log("get param: configtype %s, section %s, param %s, defaulvalue %s, forceDefaultValue %s" % (configType,section,paramName,defaultValue,forceDefaultValue))
         maincfg=self._getConfigFile()
         maincfg.addSection(section)
         if maincfg.checkParam(section,paramName)==False or maincfg.getValue(section,paramName)=="" or forceAsk:
@@ -142,13 +142,13 @@ class ConfigFileManager():
             if forceDefaultValue==True and defaultValue==None:
                 value="*NONE*"
             if forceDefaultValue==False or defaultValue=="":
-                if o.application.shellconfig.interactive:
+                if j.application.shellconfig.interactive:
                     if not password:
-                        value= o.console.askString(description)
+                        value= j.console.askString(description)
                     else:
-                        value= o.console.askPassword(description)
+                        value= j.console.askPassword(description)
                 else: 
-                    raise Exception("Parameter not configured yet in config file: %s, section:%s , param:%s. Please fix. \nTIP You can also put qshell in interactive mode (o.application.shellconfig.interactive=True):" %(self._configType,section,paramName))
+                    raise Exception("Parameter not configured yet in config file: %s, section:%s , param:%s. Please fix. \nTIP You can also put qshell in interactive mode (j.application.shellconfig.interactive=True):" %(self._configType,section,paramName))
                 if value=="":
                     value=defaultValue
             maincfg.setParam(section,paramName,value)
@@ -189,7 +189,7 @@ class ConfigFileManager():
         return name
         """
         self._getConfigFile()
-        if o.application.shellconfig.interactive==False:
+        if j.application.shellconfig.interactive==False:
             raise Exception("Running non interactive, script is asking for interactive input (choice of item), looking for %s in configfile %s" % (sectionDescription,self._configType))
         cfg=self._getConfigFile()
         sections=cfg.getSections()
@@ -202,13 +202,13 @@ class ConfigFileManager():
                 #Plain ascii sort
                 sections = sorted(sections)
 
-        o.console.echo("\nWhich %s do you want to choose: " % (sectionDescription))
+        j.console.echo("\nWhich %s do you want to choose: " % (sectionDescription))
         nr=0
         for section in sections:
             nr=nr+1
-            o.console.echo("   %s: %s" % (nr, section))
-        o.console.echo("")
-        result=o.console.askInteger("   Select Nr")
+            j.console.echo("   %s: %s" % (nr, section))
+        j.console.echo("")
+        result=j.console.askInteger("   Select Nr")
         if result>0 and result < nr+1:
             return sections[result-1]    
         else:

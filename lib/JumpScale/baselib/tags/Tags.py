@@ -1,6 +1,6 @@
 
 
-from OpenWizzy import o
+from JumpScale import j
 from urllib import unquote, quote
 
 class Tags():
@@ -35,8 +35,8 @@ class Tags():
 
         if tagstring.find("'")<>-1:
             #special more complex processing required
-            # r=o.codetools.regex.replace("'[\w\-_=? !]*'","","-_-",tagstring,nonRegexSubsetToReplace=" ")
-            tagstring=o.codetools.regex.replace("'[\w\-_=? !]*'"," ","-|-",tagstring)
+            # r=j.codetools.regex.replace("'[\w\-_=? !]*'","","-_-",tagstring,nonRegexSubsetToReplace=" ")
+            tagstring=j.codetools.regex.replace("'[\w\-_=? !]*'"," ","-|-",tagstring)
             tagstring=tagstring.replace("'","")
 
         tags = tagstring.split()

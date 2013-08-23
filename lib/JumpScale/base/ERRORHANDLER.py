@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 
 import sys
 import traceback
@@ -56,4 +56,4 @@ class ERRORHANDLER:
         return backtrace
 
 
-o.base.errorhandler=ERRORHANDLER
+j.base.errorhandler=ERRORHANDLER

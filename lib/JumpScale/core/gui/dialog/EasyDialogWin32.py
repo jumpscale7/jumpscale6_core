@@ -45,8 +45,8 @@ from datetime import date
 #import commctrl
 #import Queue
 
-from OpenWizzy import o
-from OpenWizzy.core.Shell import *
+from JumpScale import j
+from JumpScale.core.Shell import *
 #import win32gui
 #from win32com.shell import shell, shellcon
 import EasyDialogs

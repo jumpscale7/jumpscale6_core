@@ -1,12 +1,12 @@
 
 __all__ = ['BaseEnumeration', 'EnumerationWithValue', 'BaseType', ]
 
-from OpenWizzy.core.baseclasses.BaseEnumeration import BaseEnumeration, EnumerationWithValue
-from OpenWizzy.core.baseclasses.BaseType import BaseType
+from JumpScale.core.baseclasses.BaseEnumeration import BaseEnumeration, EnumerationWithValue
+from JumpScale.core.baseclasses.BaseType import BaseType
 
-from OpenWizzy import o
+from JumpScale import j
 
-# o.basetype=BaseType()
+# j.basetype=BaseType()
 
 
 #from ManagementApplication import ManagementApplication, CMDBLockMixin

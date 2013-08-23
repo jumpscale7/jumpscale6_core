@@ -1,3 +1,3 @@
-from OpenWizzy import o
-from OpenWizzy.core.console.Console import Console
-o.console=Console()
+from JumpScale import j
+from JumpScale.core.console.Console import Console
+j.console=Console()

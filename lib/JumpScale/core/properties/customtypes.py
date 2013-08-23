@@ -38,13 +38,13 @@
 See the documentation of openwizzy.properties.common for more info.
 '''
 
-from OpenWizzy.core.properties import BaseDescriptor
+from JumpScale.core.properties import BaseDescriptor
 
-from OpenWizzy.core.pmtypes.CustomTypes import Guid
-from OpenWizzy.core.pmtypes.CustomTypes import Path, DirPath, FilePath
-from OpenWizzy.core.pmtypes.CustomTypes import UnixDirPath, UnixFilePath
-from OpenWizzy.core.pmtypes.CustomTypes import WindowsDirPath, WindowsFilePath
-from OpenWizzy.core.pmtypes.CustomTypes import IPv4Address
+from JumpScale.core.pmtypes.CustomTypes import Guid
+from JumpScale.core.pmtypes.CustomTypes import Path, DirPath, FilePath
+from JumpScale.core.pmtypes.CustomTypes import UnixDirPath, UnixFilePath
+from JumpScale.core.pmtypes.CustomTypes import WindowsDirPath, WindowsFilePath
+from JumpScale.core.pmtypes.CustomTypes import IPv4Address
 
 class Guid(BaseDescriptor):
     '''Descriptor for L{openwizzy.pmtypes.CustomTypes.Guid}'''

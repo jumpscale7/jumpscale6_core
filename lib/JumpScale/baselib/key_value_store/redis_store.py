@@ -1,13 +1,13 @@
 from store import KeyValueStoreBase
 
-from OpenWizzy import o
+from JumpScale import j
 
 
 class RedisKeyValueStore(KeyValueStoreBase):
 
     def __init__(self,namespace="",host='localhost',port=6379,db=0,key='', serializers=[]):
 
-        self.redisclient=o.clients.redis.get(host, port, db=db, key=key)
+        self.redisclient=j.clients.redis.get(host, port, db=db, key=key)
         self.db = self.redisclient.redis
         self.namespace=""
         KeyValueStoreBase.__init__(self)

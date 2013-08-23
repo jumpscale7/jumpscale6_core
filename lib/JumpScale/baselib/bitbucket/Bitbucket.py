@@ -1,6 +1,6 @@
 import json
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseEnumeration
 
 from BitbucketConfigManagement import *
 import urllib
@@ -61,8 +61,8 @@ class Bitbucket:
         self.apiVersion = '1.0'
         self.apiURI = 'https://api.bitbucket.org'
         self.resultFormat = "json"
-        self.codedir = o.system.fs.joinPaths(o.dirs.baseDir, ".." , "code")
-        o.system.fs.createDir(self.codedir)
+        self.codedir = j.system.fs.joinPaths(j.dirs.baseDir, ".." , "code")
+        j.system.fs.createDir(self.codedir)
         self.config=BitbucketConfigManagement()
         self.connections={}
 
@@ -86,7 +86,7 @@ class Bitbucket:
             #return bitbucket_connection.getRepoNamesLocal()
 
     #def getAccountNames(self):
-        #names = o.clients.bitbucket.config.list()
+        #names = j.clients.bitbucket.config.list()
         #self._accountnames = names
         #return names
 
@@ -148,7 +148,7 @@ class Bitbucket:
 
     def _accountGetConfig(self,accountName=""):
         if accountName not in self.config.list():
-            o.console.echo("Did not find account name %s for bitbucket, will ask for information for this account")
+            j.console.echo("Did not find account name %s for bitbucket, will ask for information for this account")
             self.config.add(accountName)
 
         return self.config.getConfig(accountName)
@@ -158,20 +158,20 @@ class Bitbucket:
         """
         self._init()
         if accountName=="":
-            accountName=o.gui.dialog.askChoice("Select Bitbucket account name",self._getAccountNames())
+            accountName=j.gui.dialog.askChoice("Select Bitbucket account name",self._getAccountNames())
         config=self._accountGetConfig(accountName)
         login=config["login"]
         if login.find("@login")<>-1:
-            o.application.shellconfig.interactive=True
-            login=o.gui.dialog.askString("  \nLogin for bitbucket account %s"%accountName)
+            j.application.shellconfig.interactive=True
+            login=j.gui.dialog.askString("  \nLogin for bitbucket account %s"%accountName)
             self.config.configure(accountName,{'login': login})
         passwd=config["passwd"]
         if passwd.find("@passwd")<>-1:
-            o.application.shellconfig.interactive=True
-            passwd=o.gui.dialog.askString("  \nPassword for bitbucket account %s"%accountName)
+            j.application.shellconfig.interactive=True
+            passwd=j.gui.dialog.askString("  \nPassword for bitbucket account %s"%accountName)
             '''
             @todo should use a password entry dialog, but the line below does not work
-            passwd=o.gui.dialog.askPassword("  \nPassword for bitbucket account %s"%accountName)
+            passwd=j.gui.dialog.askPassword("  \nPassword for bitbucket account %s"%accountName)
             '''
             self.config.configure(accountName,{'passwd': passwd})
             
@@ -195,23 +195,23 @@ class Bitbucket:
 
 
         '''
-        if o.application.shellconfig.interactive:
+        if j.application.shellconfig.interactive:
             if not accountName:
-                accountName=o.gui.dialog.askChoice("Select bitbucket accountName",self._getAccountNames())
+                accountName=j.gui.dialog.askChoice("Select bitbucket accountName",self._getAccountNames())
 
             accounts = self._getAccountNames()
             if not accountName in accounts:
                 if not accountLogin:
-                    accountLogin = o.gui.dialog.askString("Please enter account Login:")
+                    accountLogin = j.gui.dialog.askString("Please enter account Login:")
                 if not accountPasswd or accountPasswd=="@passwd":
-                    accountPasswd = o.gui.dialog.askPassword("Please enter account Password", True)                
+                    accountPasswd = j.gui.dialog.askPassword("Please enter account Password", True)                
                 self.accountAdd(accountName, accountLogin, accountPasswd)
 
             if self.config.getConfig(accountName)["passwd"].lower().strip()=="@passwd":
                 if not accountLogin:
-                    accountLogin = o.gui.dialog.askString("Please enter account Login:")
+                    accountLogin = j.gui.dialog.askString("Please enter account Login:")
                 if not accountPasswd or accountPasswd=="@passwd":
-                    accountPasswd = o.gui.dialog.askPassword("Please enter account Password", True)
+                    accountPasswd = j.gui.dialog.askPassword("Please enter account Password", True)
                 self.accountAdd(accountName, accountLogin, accountPasswd)
         '''       
 
@@ -220,45 +220,45 @@ class BitbucketConnection(object):
 
     def __init__(self, accountName):
         self.accountName = accountName
-        #self.codedir = o.system.fs.joinPaths(o.dirs.baseDir, ".." , "code")
-        self.codedir=o.dirs.codeDir
-        self.bitbucket_client = o.clients.bitbucket
-        self.accountPathLocal = o.system.fs.joinPaths(self.codedir,accountName)
-        o.system.fs.createDir(self.accountPathLocal )
+        #self.codedir = j.system.fs.joinPaths(j.dirs.baseDir, ".." , "code")
+        self.codedir=j.dirs.codeDir
+        self.bitbucket_client = j.clients.bitbucket
+        self.accountPathLocal = j.system.fs.joinPaths(self.codedir,accountName)
+        j.system.fs.createDir(self.accountPathLocal )
         self.bitbucketclients={}
         self.ignoredrepos=[]
         self.activerepos=[]
         self._init()
         
     def _init(self):
-        self.lastactionstatusFile=o.system.fs.joinPaths(self.accountPathLocal,".lastactionstatus")         
-        if o.system.fs.exists(self.lastactionstatusFile):
-            for line in o.system.fs.fileGetContents(self.lastactionstatusFile).split("\n"):
+        self.lastactionstatusFile=j.system.fs.joinPaths(self.accountPathLocal,".lastactionstatus")         
+        if j.system.fs.exists(self.lastactionstatusFile):
+            for line in j.system.fs.fileGetContents(self.lastactionstatusFile).split("\n"):
                 line.strip().lower()
                 if line<>"" and line[0]<>"#":
                     self.ignoredrepos.append(line.split("::")[0])            
         
-        ignorefile=o.system.fs.joinPaths(self.accountPathLocal,".ignore") 
-        if o.system.fs.exists(ignorefile):
-            for line in o.system.fs.fileGetContents(ignorefile).split("\n"):
+        ignorefile=j.system.fs.joinPaths(self.accountPathLocal,".ignore") 
+        if j.system.fs.exists(ignorefile):
+            for line in j.system.fs.fileGetContents(ignorefile).split("\n"):
                 line.strip().lower()
                 if line<>"" and line[0]<>"#":
                     self.ignoredrepos.append(line.strip().lower())
         else:
-            o.system.fs.writeFile(ignorefile,"#repos listed in this file will be ignored when doing a group action like push & pull. \n")
-        activereposfile=o.system.fs.joinPaths(self.accountPathLocal,".active") 
-        if o.system.fs.exists(activereposfile):
-            for line in o.system.fs.fileGetContents(activereposfile).split("\n"):
+            j.system.fs.writeFile(ignorefile,"#repos listed in this file will be ignored when doing a group action like push & pull. \n")
+        activereposfile=j.system.fs.joinPaths(self.accountPathLocal,".active") 
+        if j.system.fs.exists(activereposfile):
+            for line in j.system.fs.fileGetContents(activereposfile).split("\n"):
                 line.strip().lower()
                 if line<>""  and line[0]<>"#":
                     self.activerepos.append(line)
-                    if not o.system.fs.exists(o.system.fs.joinPaths(self.accountPathLocal,line)):
-                        o.console.echo("Cannot find active repo with name %s from bitbucket account %s, will now try to clone" % (line,self.accountName))
+                    if not j.system.fs.exists(j.system.fs.joinPaths(self.accountPathLocal,line)):
+                        j.console.echo("Cannot find active repo with name %s from bitbucket account %s, will now try to clone" % (line,self.accountName))
                         url,login,passwd = self.bitbucket_client._accountGetLoginInfo(self.accountName)
                         if url[-1]<>"/":
                             url=url+"/"
                         repoName=line
-                        cl=o.clients.mercurial.getclient("/opt/code/%s/%s/" % (self.accountName,repoName) ,"%s%s" % (url,repoName),branchname="")
+                        cl=j.clients.mercurial.getclient("/opt/code/%s/%s/" % (self.accountName,repoName) ,"%s%s" % (url,repoName),branchname="")
                         self.bitbucketclients[repoName]=cl
                     
         if self.activerepos==[]:
@@ -268,13 +268,13 @@ class BitbucketConnection(object):
             out="#repos listed in this file will be the only ones looked at when doing a group action like push & pull. \n"
             for reponame in reponames:
                 out+="#%s\n" % reponame
-            o.system.fs.writeFile(activereposfile,out)
+            j.system.fs.writeFile(activereposfile,out)
                 
     def lastactionstatusSet(self,name,status):
-        o.system.fs.writeFile(self.lastactionstatusFile,"%s::%s\n" % (name,status),append=True)
+        j.system.fs.writeFile(self.lastactionstatusFile,"%s::%s\n" % (name,status),append=True)
         
     def lastactionstatusClear(self):
-        o.system.fs.removeFile(self.lastactionstatusFile)
+        j.system.fs.removeFile(self.lastactionstatusFile)
         self._init()
                 
                 
@@ -301,7 +301,7 @@ class BitbucketConnection(object):
         @raise Exception in case of errors
         """
         self._validateValues(groupName=groupName, accountName=self.accountName)
-        return self._callBitbucketRestAPI(BitbucketRESTCall.GROUPS, o.enumerators.RESTMethod.POST, uriParts=[self.accountName], data={'name': groupName})
+        return self._callBitbucketRestAPI(BitbucketRESTCall.GROUPS, j.enumerators.RESTMethod.POST, uriParts=[self.accountName], data={'name': groupName})
 
     def addRepo(self, repoName,usersOwner=[]):
         """
@@ -312,7 +312,7 @@ class BitbucketConnection(object):
                                                                                                          accountConfig['passwd'],repoName)
         resultcode,content,object= self._execCurl(cmd)
         if resultcode>0:
-            from OpenWizzy.core.Shell import ipshell
+            from JumpScale.core.Shell import ipshell
             print "DEBUG NOW addrepo bitbucket"
             ipshell()
         return object
@@ -326,10 +326,10 @@ class BitbucketConnection(object):
         cmd="curl -X DELETE -u %s:%s https://api.bitbucket.org/1.0/repositories/%s/%s/" % \
             (accountConfig['login'],  accountConfig['passwd'],self.accountName,repoName)
         object=False
-        if o.console.askYesNo("Are you sure you want to delete %s" % repoName):
+        if j.console.askYesNo("Are you sure you want to delete %s" % repoName):
             resultcode,content,object= self._execCurl(cmd)
             if resultcode>0:
-                from OpenWizzy.core.Shell import ipshell
+                from JumpScale.core.Shell import ipshell
                 print "DEBUG NOW delete bitbucket"
                 ipshell()
                 return object
@@ -346,13 +346,13 @@ class BitbucketConnection(object):
         return object
 
     def _execCurl(self,cmd):        
-        resultTmpfile = o.system.fs.joinPaths(o.dirs.tmpDir, o.base.idgenerator.generateGUID())
+        resultTmpfile = j.system.fs.joinPaths(j.dirs.tmpDir, j.base.idgenerator.generateGUID())
         cmd+=" > %s" % resultTmpfile 
-        resultcode, content = o.system.process.execute(cmd, False, True)
-        content = o.system.fs.fileGetContents(resultTmpfile )
-        o.system.fs.removeFile(resultTmpfile)
+        resultcode, content = j.system.process.execute(cmd, False, True)
+        content = j.system.fs.fileGetContents(resultTmpfile )
+        j.system.fs.removeFile(resultTmpfile)
         if resultcode > 0:
-            o.errorconditionhandler.raiseError("Cannot addrepo. Cannot execute \n%s" %cmd)
+            j.errorconditionhandler.raiseError("Cannot addrepo. Cannot execute \n%s" %cmd)
         try:
             object = json.loads(content) if content else dict()
         except:
@@ -360,25 +360,25 @@ class BitbucketConnection(object):
         return resultcode,content,object
 
 #    def _getAccountPathLocal(self,accountName):
-#        return o.system.fs.joinPaths(self.codedir,"bitbucket_%s"%accountName)
+#        return j.system.fs.joinPaths(self.codedir,"bitbucket_%s"%accountName)
 
     def getRepoPathLocal(self,repoName="",die=True):      
         if repoName=="":
-            repoName=o.gui.dialog.askChoice("Select repo",self.getRepoNamesLocal())
+            repoName=j.gui.dialog.askChoice("Select repo",self.getRepoNamesLocal())
             if repoName==None:
                 if die:
                     raise RuntimeError("Cannot find repo for accountName %s" % self.accountName)
                 else:
                     return ""
-        path=o.system.fs.joinPaths(self.accountPathLocal,repoName)
-        o.system.fs.createDir(path)
+        path=j.system.fs.joinPaths(self.accountPathLocal,repoName)
+        j.system.fs.createDir(path)
         return path
 
 
     ##REVIEW codemgmt1 :all P1 
     def getRepoNamesLocal(self,checkIgnore=True,checkactive=True):
-        if o.system.fs.exists(self.accountPathLocal):
-            items=o.system.fs.listDirsInDir(self.accountPathLocal,False,True)
+        if j.system.fs.exists(self.accountPathLocal):
+            items=j.system.fs.listDirsInDir(self.accountPathLocal,False,True)
             if checkactive and len(self.activerepos)<>0:
                 items=[item for item in items if self.checkRepoActive(item)]                 
             if checkIgnore:
@@ -391,7 +391,7 @@ class BitbucketConnection(object):
     def getRepoPathRemote(self,repoName=""):
         url,login,passwd=self.bitbucket_client.accountGetLoginInfo(self.accountName)
         if repoName=="":
-            repoName=o.gui.dialog.askChoice("Select repo from bitbucket",self.getRepoNamesFromBitbucket())
+            repoName=j.gui.dialog.askChoice("Select repo from bitbucket",self.getRepoNamesFromBitbucket())
         return "%s%s".strip() % (url,repoName)
 
     def _callBitbucketRestAPI(self, call, method="GET", uriParts=None, params=None, data=None):
@@ -413,14 +413,14 @@ class BitbucketConnection(object):
         """
         # TODO - MNour: Think about a generic REST client that can be configured and used from different components.
         # url, login, passwd = self.accountGetLoginInfo(accountName)
-        #http=o.clients.http.getconnection()
+        #http=j.clients.http.getconnection()
         #http.addAuthentication(login,passwd)
         #url="https://api.bitbucket.org/1.0/users/%s/" % self._getBitbucketUsernameFromUrl(url)
         #content=http.get(url)
         # TODO - KDS: Need a better way than curl, the authentication doesnt seem to work when using the http openwizzy extension.
-        o.system.platformtype.ubuntu.checkInstall("curl","curl")
-        resultTmpfile = o.system.fs.joinPaths(o.dirs.tmpDir, o.base.idgenerator.generateGUID())
-        headerTmpfile = o.system.fs.joinPaths(o.dirs.tmpDir, o.base.idgenerator.generateGUID())
+        j.system.platformtype.ubuntu.checkInstall("curl","curl")
+        resultTmpfile = j.system.fs.joinPaths(j.dirs.tmpDir, j.base.idgenerator.generateGUID())
+        headerTmpfile = j.system.fs.joinPaths(j.dirs.tmpDir, j.base.idgenerator.generateGUID())
         accountConfig = self.bitbucket_client._accountGetConfig(self.accountName)
         uriPartsString = '%s/' %'/'.join(uriParts) if uriParts else ''
         parameters = params if params else dict()
@@ -433,7 +433,7 @@ class BitbucketConnection(object):
             elif type(data) is dict:
                 dataString = urllib.urlencode(data)
             else:
-                o.errorconditionhandler.raiseError("Invalid data type '%s', data value is '%s'." %(type(data), data))
+                j.errorconditionhandler.raiseError("Invalid data type '%s', data value is '%s'." %(type(data), data))
 
         #cmd = "curl --dump-header %(headerTmpfile)s --user %(login)s:%(password)s --request %(method)s '%(apiURI)s/%(apiVersion)s/%(call)s/%(uriParts)s?%(parameters)s' --data '%(data)s' > %(resultTmpfile)s" \
             #%{'headerTmpfile': headerTmpfile,
@@ -467,19 +467,19 @@ class BitbucketConnection(object):
 
         cmd+=" > %s" % resultTmpfile        
 
-        resultcode, content = o.system.process.execute(cmd, False, True)
+        resultcode, content = j.system.process.execute(cmd, False, True)
         if resultcode > 0:
-            o.errorconditionhandler.raiseError("Cannot get reponames from repo. Cannot execute %s" %cmd)
+            j.errorconditionhandler.raiseError("Cannot get reponames from repo. Cannot execute %s" %cmd)
 
         # TODO - MNour: Add error checking and handling.
-        content = o.system.fs.fileGetContents(resultTmpfile )
-        o.system.fs.removeFile(resultTmpfile)
-        #o.system.fs.removeFile(headerTmpfile)
+        content = j.system.fs.fileGetContents(resultTmpfile )
+        j.system.fs.removeFile(resultTmpfile)
+        #j.system.fs.removeFile(headerTmpfile)
 
         try:
             object = json.loads(content) if content else dict()
         except:
-            o.errorconditionhandler.raiseError("Cannot call rest api of bitbucket, call was %s" %cmd)
+            j.errorconditionhandler.raiseError("Cannot call rest api of bitbucket, call was %s" %cmd)
 
         # TODO - MNour: Do we need to construct Bitbucket resources classes out of json deserialized object ?
         return object
@@ -493,8 +493,8 @@ class BitbucketConnection(object):
         @param reload means reload from bitbucket   
         """
         names=self.getRepoNamesFromBitbucket(partofName,reload)
-        o.gui.dialog.message("Select bitbucket repository")
-        reposFound2=o.gui.dialog.askChoice("",names)        
+        j.gui.dialog.message("Select bitbucket repository")
+        reposFound2=j.gui.dialog.askChoice("",names)        
         return reposFound2
 
     def getRepoNamesFromBitbucket(self,partOfRepoName="",reload=False):
@@ -539,12 +539,12 @@ class BitbucketConnection(object):
             
         url+="%s/"%repoName
             
-        hgrcpath=o.system.fs.joinPaths(self.getRepoPathLocal(repoName),".hg","hgrc")
-        if o.system.fs.exists(hgrcpath):
-            editor=o.codetools.getTextFileEditor(hgrcpath)
+        hgrcpath=j.system.fs.joinPaths(self.getRepoPathLocal(repoName),".hg","hgrc")
+        if j.system.fs.exists(hgrcpath):
+            editor=j.codetools.getTextFileEditor(hgrcpath)
             editor.replace1Line("default=%s" % url,["default *=.*"])
                         
-        cl = o.clients.mercurial.getClient("%s/%s/%s/" % (o.dirs.codeDir,self.accountName,repoName), url, branchname=branch)
+        cl = j.clients.mercurial.getClient("%s/%s/%s/" % (j.dirs.codeDir,self.accountName,repoName), url, branchname=branch)
         self.bitbucketclients[repoName]=cl
         return cl
 
@@ -562,17 +562,17 @@ class BitbucketConnection(object):
         def pprint(reponame,status,mods,pagepos):
             if len(mods)>0:
                 pagepos+=1
-                o.console.echo("%s : %s" % (reponame,status.upper()))
-                if pagepos>50 and o.application.shellconfig.interactive:
-                    o.console.askString("Next page, press enter")
+                j.console.echo("%s : %s" % (reponame,status.upper()))
+                if pagepos>50 and j.application.shellconfig.interactive:
+                    j.console.askString("Next page, press enter")
                     pagepos=0
                 for mod in mods:
-                    if pagepos>50 and o.application.shellconfig.interactive:
-                        o.console.askString("Next page, press enter")
+                    if pagepos>50 and j.application.shellconfig.interactive:
+                        j.console.askString("Next page, press enter")
                         pagepos=0
                     pagepos+=1
-                    o.console.echo(" %s" % mod)
-                o.console.echo("\n")
+                    j.console.echo(" %s" % mod)
+                j.console.echo("\n")
                 pagepos+=2
             return pagepos
                        
@@ -587,7 +587,7 @@ class BitbucketConnection(object):
         if all:
             names=self.getRepoNamesFromBitbucket()
         else:
-            names=o.console.askChoiceMultiple(self.getRepoNamesFromBitbucket(),"select repo's",True)
+            names=j.console.askChoiceMultiple(self.getRepoNamesFromBitbucket(),"select repo's",True)
         
         for name in names:
             match=False
@@ -602,10 +602,10 @@ class BitbucketConnection(object):
                     except Exception,e:                        
                         if str(e).find("NOT IMPLEMENTED"):
                             errors.append(["not mercurial type repo",self.accountName,name])
-                            o.system.fs.removeDirTree(o.system.fs.joinPaths(self.accountPathLocal,name))
+                            j.system.fs.removeDirTree(j.system.fs.joinPaths(self.accountPathLocal,name))
                         else:
                             errors.append([str(e),self.accountName,name])                        
-                        o.console.echo( "ERROR: %s" % name)                        
+                        j.console.echo( "ERROR: %s" % name)                        
                 else:
                     self.pull(name,checkIgnore=False,force=force)
         return errors
@@ -626,7 +626,7 @@ class BitbucketConnection(object):
         
         for repoName in reponames:
             cl=self.getMercurialClient(repoName,branch=branch)
-            o.console.echo("* pull %s" % repoName)
+            j.console.echo("* pull %s" % repoName)
             
             cl.pull()
             
@@ -672,9 +672,9 @@ class BitbucketConnection(object):
         for repoName in reponames:
             cl=self.getMercurialClient(repoName)
             if pull:
-                o.console.echo("* commit push pull %s" % repoName)
+                j.console.echo("* commit push pull %s" % repoName)
             else:
-                o.console.echo("* commit push %s" % repoName)
+                j.console.echo("* commit push %s" % repoName)
             cl.commitpush(commitMessage=message, ignorechanges=False,
                     addRemoveUntrackedFiles=addremove, trymerge=True, pull=pull,
                     user=user)
@@ -714,9 +714,9 @@ class BitbucketConnection(object):
         self._validateValues(groupName=groupName, accountName=self.accountName)
         groups = [group for group in self.getGroups() if group['name'] == groupName]#self.getGroups(self.accountName)
         if not groups:
-            o.errorconditionhandler.raiseError('No group found with name [%s].' %groupName)
+            j.errorconditionhandler.raiseError('No group found with name [%s].' %groupName)
 
-        return groups[0] if len(groups) == 1 else o.errorconditionhandler.raiseError('Found more than group with name [%s].' %groupName)
+        return groups[0] if len(groups) == 1 else j.errorconditionhandler.raiseError('Found more than group with name [%s].' %groupName)
 
     ## TODO - MNour: Implement this method
     #def findGroup(self, regex):
@@ -730,7 +730,7 @@ class BitbucketConnection(object):
         #@raise Exception in case of errors
         #"""
         #self._validateValues(accountName=self.accountName)
-        #o.errorconditionhandler.raiseError('Method not yet implemented.')
+        #j.errorconditionhandler.raiseError('Method not yet implemented.')
 
 
 
@@ -959,17 +959,17 @@ class BitbucketConnection(object):
                 invalidValues[key] = kwargs[key]
 
         if invalidValues:
-            o.errorconditionhandler.raiseError('Invalid values: %s' %invalidValues)
+            j.errorconditionhandler.raiseError('Invalid values: %s' %invalidValues)
 
 
     def exportRepo(self,name, branch, codeDir = '/opt/code3'):
-        source = o.system.fs.joinPaths(o.dirs.codeDir, self.accountName, name)
-        destination = o.system.fs.joinPaths(codeDir, self.accountName, name, branch)
-        o.system.fs.copyDirTree(source, destination)      
+        source = j.system.fs.joinPaths(j.dirs.codeDir, self.accountName, name)
+        destination = j.system.fs.joinPaths(codeDir, self.accountName, name, branch)
+        j.system.fs.copyDirTree(source, destination)      
         return destination
     
     def exportAllFromQpackages(self, allVersions=False, qualityLevels=[], codeDir = '/opt/code3'):
-        scanner = o.packages.getQPackageMetadataScanner()
+        scanner = j.packages.getQPackageMetadataScanner()
         scanner.scan(allVersions, qualityLevels)
         repos = []
         for item in scanner.getRecipeItemsAsLists():

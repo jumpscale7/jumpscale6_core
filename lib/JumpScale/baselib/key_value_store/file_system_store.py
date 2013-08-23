@@ -1,5 +1,5 @@
 from store import KeyValueStoreBase
-from OpenWizzy import o
+from JumpScale import j
 import os
 
 class FileSystemKeyValueStore(KeyValueStoreBase):
@@ -11,13 +11,13 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         KeyValueStoreBase.__init__(self, serializers)
 
         if not baseDir:
-            baseDir = o.system.fs.joinPaths(o.dirs.varDir, 'db')
+            baseDir = j.system.fs.joinPaths(j.dirs.varDir, 'db')
 
-        #self.id = o.application.getUniqueMachineId()
-        self.dbpath = o.system.fs.joinPaths(baseDir,namespace)
+        #self.id = j.application.getUniqueMachineId()
+        self.dbpath = j.system.fs.joinPaths(baseDir,namespace)
 
-        #if not o.system.fs.exists(self.dbpath):
-            #o.system.fs.createDir(self.dbpath)
+        #if not j.system.fs.exists(self.dbpath):
+            #j.system.fs.createDir(self.dbpath)
 
     def fileGetContents(self,filename):
         fp = open(filename,"r")
@@ -52,16 +52,16 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
     def destroy(self,category=""):
         if category<>"":
             categoryDir = self._getCategoryDir(category)
-            o.system.fs.removeDirTree(categoryDir)
+            j.system.fs.removeDirTree(categoryDir)
         else:
-            o.system.fs.removeDirTree(self.dbpath)
+            j.system.fs.removeDirTree(self.dbpath)
 
     def delete(self, category, key):
         #self._assertExists(category, key)
 
         if self.exists(category, key):
             storePath = self._getStorePath(category, key)
-            o.system.fs.removeFile(storePath)
+            j.system.fs.removeFile(storePath)
 
             # Remove all empty directories up to the base of the store being the
             # directory with the store name (4 deep).
@@ -71,10 +71,10 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
             parentDir = storePath
 
             while depth > 0:
-                parentDir = o.system.fs.getParent(parentDir)
+                parentDir = j.system.fs.getParent(parentDir)
 
-                if o.system.fs.isEmptyDir(parentDir):
-                    o.system.fs.removeDir(parentDir)
+                if j.system.fs.isEmptyDir(parentDir):
+                    j.system.fs.removeDir(parentDir)
 
                 depth -= 1
 
@@ -85,8 +85,8 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         if not self._categoryExists(category):
             return []
         categoryDir = self._getCategoryDir(category)
-        filePaths = o.system.fs.listFilesInDir(categoryDir, recursive=True)
-        fileNames = [o.system.fs.getBaseName(path) for path in filePaths]
+        filePaths = j.system.fs.listFilesInDir(categoryDir, recursive=True)
+        fileNames = [j.system.fs.getBaseName(path) for path in filePaths]
 
         if prefix:
             fileNames = [name for name in fileNames if name.startswith(prefix)]
@@ -94,14 +94,14 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         return fileNames
 
     def listCategories(self):
-        return o.system.fs.listDirsInDir(self.dbpath, dirNameOnly=True)
+        return j.system.fs.listDirsInDir(self.dbpath, dirNameOnly=True)
 
     def _categoryExists(self, category):
         categoryDir = self._getCategoryDir(category)
-        return o.system.fs.exists(categoryDir)
+        return j.system.fs.exists(categoryDir)
 
     def _getCategoryDir(self, category):
-        return o.system.fs.joinPaths(self.dbpath, category)
+        return j.system.fs.joinPaths(self.dbpath, category)
 
     def _getStorePath(self, category, key,createIfNeeded=True):
         key = str(key)

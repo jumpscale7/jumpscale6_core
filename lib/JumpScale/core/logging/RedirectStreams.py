@@ -1,6 +1,6 @@
 
 import sys
-from OpenWizzy import o
+from JumpScale import j
 
 original_stdout = None
 original_stderr = None
@@ -21,13 +21,13 @@ class _Redirector:
             try:
                 self.savedstream.write(string)
             except IOError, e:
-                o.logger.log("Could not write to stdout: %s" % e, self.loglevel, dontprint=True)
-        if o._init_final_called<>False:
-            if o.logger.inlog==False:
+                j.logger.log("Could not write to stdout: %s" % e, self.loglevel, dontprint=True)
+        if j._init_final_called<>False:
+            if j.logger.inlog==False:
                 if self.stringBuff <> '':
-                    o.logger.log(self.stringBuff, self.loglevel,dontprint=True)
+                    j.logger.log(self.stringBuff, self.loglevel,dontprint=True)
                     self.stringBuff=''
-                o.logger.log(string, self.loglevel,dontprint=True)
+                j.logger.log(string, self.loglevel,dontprint=True)
 
     def flush(self):
         if canWrite(self.savedstream):
@@ -46,7 +46,7 @@ def isRedirected(stream):
 
 def redirectStreams(hideoutput=False, loglevel=4, stdout=True, stderr=True):
     """
-    Redirect sys.stdout and sys.stderr to o.logger.
+    Redirect sys.stdout and sys.stderr to j.logger.
     Original streams are saved as original_stdout and original_stderr in this package
     @hideoutput: boolean indicating whether output must still be sent to original stderr/stdout
     @loglevel: log severity level to be used

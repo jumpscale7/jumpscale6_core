@@ -43,7 +43,7 @@ class DirtyFlaggingProperty(property):
         Contstructor for this property
         
         @param propname : the name of the property
-        @param checktype : the o.basetype type class that can be used for type validation of the value
+        @param checktype : the j.basetype type class that can be used for type validation of the value
         """
         self._propname = propname
         self._checkType = checkType

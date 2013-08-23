@@ -1,8 +1,8 @@
 
 import re
 import sys
-from OpenWizzy import o
-from OpenWizzy.core.pmtypes import IPv4Address, IPv4Range
+from JumpScale import j
+from JumpScale.core.pmtypes import IPv4Address, IPv4Range
 import textwrap
 import string
 
@@ -23,7 +23,7 @@ class Console:
         """
         when typing, char per char will be returned
         """
-        o.system.platformtype.ubuntu.check()
+        j.system.platformtype.ubuntu.check()
         import termios
         fd = sys.stdin.fileno()
 
@@ -39,7 +39,7 @@ class Console:
                     c = sys.stdin.read(1)
                     cont, result, params = callback(c, params)
                 except IOError:
-                    o.logger.exception("Failed to read one character from stdin", 5)
+                    j.logger.exception("Failed to read one character from stdin", 5)
         finally:
             termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
 
@@ -67,7 +67,7 @@ class Console:
         if indent==0 or indent==None:
             indent=self.indent
             
-        #if o.transaction.hasRunningTransactions():
+        #if j.transaction.hasRunningTransactions():
         #    maxLengthStatusType= 8 #nr chars
         #else:
         #    maxLengthStatusType=0
@@ -113,23 +113,23 @@ class Console:
         '''
         Display some text to the end-user, use this method instead of print
         @param indent std, will use indent from console object (same for all), this param allows to overrule
-                will only work when o.console.reformat==True
+                will only work when j.console.reformat==True
 
         '''
         msg=str(msg)
         if lf and msg<>"" and msg[-1]<>"\n":
             msg+="\n"
         msg=self._cleanline(msg)
-        #if o.transaction.hasRunningTransactions() and withStar==False:
+        #if j.transaction.hasRunningTransactions() and withStar==False:
         #    indent=self.indent+1
         msg=self.formatMessage(msg,indent=indent,withStar=withStar,prefix=prefix).rstrip(" ")
         if sys.__dict__.has_key("_stdout_ori"):
             sys._stdout_ori.write(msg)
         else:
             print msg,
-        o.logger.inlog=False
+        j.logger.inlog=False
         if log:
-            o.logger.log(msg,1)
+            j.logger.log(msg,1)
 
     def echoListItem(self, msg):
         """
@@ -173,7 +173,7 @@ class Console:
                 self.echoWithPrefix(str(dictionary[key]),key,withStar,indent)
             except:
                 t,v,tb = sys.exc_info()
-                o.eventhandler.logTryExcept(t,v,tb)                  
+                j.eventhandler.logTryExcept(t,v,tb)                  
                 raise RuntimeError("Could not convert item of dictionary %s to string" % key)
 
     def transformDictToMessage(self,dictionary,withStar=False,indent=None):
@@ -182,7 +182,7 @@ class Console:
                 self.formatMessage(str(dictionary[key]),key,withStar,indent)
             except:
                 t,v,tb = sys.exc_info()
-                o.eventhandler.logTryExcept(t,v,tb)                  
+                j.eventhandler.logTryExcept(t,v,tb)                  
                 raise RuntimeError("Could not convert item of dictionary %s to string" % key)            
 
     def askString(self, question, defaultparam='', regex=None, retry=-1, validate=None):
@@ -197,7 +197,7 @@ class Console:
         @returns: Response provided by the user
         @rtype: string
         """
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a string in a non interactive mode.")
         if validate and not callable(validate):
             raise TypeError('The validate argument should be a callable')
@@ -230,7 +230,7 @@ class Console:
         @returns: Password provided by the user
         @rtype: string
         """
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a password in a non interactive mode."        )
         if validate and not callable(validate):
             raise TypeError('The validate argument should be a callable')
@@ -274,7 +274,7 @@ class Console:
 
         @return: integer representing the response on the question
         """
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask an integer in a non interactive mode.")
         if validate and not callable(validate):
             raise TypeError('The validate argument should be a callable')
@@ -299,7 +299,7 @@ class Console:
                 responseInt = int(response.strip())
                 if (minValue == None or responseInt >= minValue) and (maxValue == None or responseInt <= maxValue):
                     return responseInt
-            o.console.echo("Please insert a valid value!")
+            j.console.echo("Please insert a valid value!")
             retryCount = retryCount - 1
 
         raise ValueError("Console.askInteger() failed: tried %d times but user didn't fill out a value that matches '%s'." % (retry, response))
@@ -314,7 +314,7 @@ class Console:
         @return: Positive or negative answer
         @rtype: bool
         '''
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a yes/no question in a non interactive mode.")
         
         while True:
@@ -371,7 +371,7 @@ class Console:
     def askChoice(self,choicearray, descr=None, sort=False):
         maxchoice=20
         
-        if len(choicearray)>maxchoice and o.system.platformtype.isLinux():
+        if len(choicearray)>maxchoice and j.system.platformtype.isLinux():
             descr2 = "%s\nMake a selection please, start typing, we will try to do auto completion.\n     ? prints the list, * turns on wildcard search." % descr
             self.echo(descr2)
             print
@@ -452,7 +452,7 @@ class Console:
             
 
     def _askChoice(self, choicearray, descr=None, sort=False):
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         if not choicearray:
             return None
@@ -481,7 +481,7 @@ class Console:
         return valuearray[result-1]
 
     def askChoiceMultiple(self, choicearray, descr=None, sort=None):
-        if o.application.shellconfig.interactive<>True:
+        if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         if not choicearray:
             return []

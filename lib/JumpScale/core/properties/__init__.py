@@ -43,14 +43,14 @@ __all__ += ['UnixDirPath', 'UnixFilePath', ]
 __all__ += ['WindowsDirPath', 'WindowsFilePath', ]
 __all__ += ['IPv4Address', ]
 
-from OpenWizzy.core.properties.common import BaseDescriptor
+from JumpScale.core.properties.common import BaseDescriptor
 
-from OpenWizzy.core.properties.primitives import Boolean, Integer, Float, String
+from JumpScale.core.properties.primitives import Boolean, Integer, Float, String
 
-from OpenWizzy.core.properties.collections import Dictionary, List, Set
+from JumpScale.core.properties.collections import Dictionary, List, Set
 
-from OpenWizzy.core.properties.customtypes import Guid
-from OpenWizzy.core.properties.customtypes import Path, DirPath, FilePath
-from OpenWizzy.core.properties.customtypes import UnixDirPath, UnixFilePath
-from OpenWizzy.core.properties.customtypes import WindowsDirPath, WindowsFilePath
-from OpenWizzy.core.properties.customtypes import IPv4Address
+from JumpScale.core.properties.customtypes import Guid
+from JumpScale.core.properties.customtypes import Path, DirPath, FilePath
+from JumpScale.core.properties.customtypes import UnixDirPath, UnixFilePath
+from JumpScale.core.properties.customtypes import WindowsDirPath, WindowsFilePath
+from JumpScale.core.properties.customtypes import IPv4Address

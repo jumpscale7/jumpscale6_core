@@ -38,8 +38,8 @@
 See the documentation of openwizzy.properties.common for more info.
 '''
 
-from OpenWizzy.core.properties import BaseDescriptor
-from OpenWizzy.core.pmtypes.CollectionTypes import Dictionary, List, Set
+from JumpScale.core.properties import BaseDescriptor
+from JumpScale.core.pmtypes.CollectionTypes import Dictionary, List, Set
 
 class Dictionary(BaseDescriptor):
     '''Descriptor for L{openwizzy.pmtypes.CollectionTypes.Dictionary}'''

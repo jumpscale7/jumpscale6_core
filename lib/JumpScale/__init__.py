@@ -5,6 +5,6 @@ class JumpScale():
 	def __init__(self):
 		pass
 
-o = JumpScale()
+j = JumpScale()
 from . import base
 from . import core

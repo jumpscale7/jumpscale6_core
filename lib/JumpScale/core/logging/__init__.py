@@ -1,5 +1,5 @@
-from OpenWizzy import o
+from JumpScale import j
 from .LogHandler import *
 
-o.logger=LogHandler()
+j.logger=LogHandler()
 

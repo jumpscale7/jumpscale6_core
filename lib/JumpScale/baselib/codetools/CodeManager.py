@@ -1,5 +1,5 @@
 import json
-from OpenWizzy import o
+from JumpScale import j
 import re
 
 #@review [kristof,incubaid] name:codereviewtools tools for codereview, check all new code
@@ -59,7 +59,7 @@ class CodeManager():
         for item in self.ignoreDirs:
             item=item.replace(".","\\.")
             item=item.replace("*",".*")
-            if o.codetools.regex.match(item,path):
+            if j.codetools.regex.match(item,path):
                 return True
         return False
 
@@ -72,10 +72,10 @@ class CodeManager():
         """
         self.rootpath=path
         files=[]
-        files.extend(o.system.fs.listFilesInDir(path,True,filter="*.py")) #@todo P1 this is not very nice, should be done in one go, also make sure we don't descend in .hg dirs
-        files.extend(o.system.fs.listFilesInDir(path,True,filter="*.txt"))
-        files.extend(o.system.fs.listFilesInDir(path,True,filter="*.md"))
-        files.extend(o.system.fs.listFilesInDir(path,True,filter="*.wiki"))
+        files.extend(j.system.fs.listFilesInDir(path,True,filter="*.py")) #@todo P1 this is not very nice, should be done in one go, also make sure we don't descend in .hg dirs
+        files.extend(j.system.fs.listFilesInDir(path,True,filter="*.txt"))
+        files.extend(j.system.fs.listFilesInDir(path,True,filter="*.md"))
+        files.extend(j.system.fs.listFilesInDir(path,True,filter="*.wiki"))
         for pathItem in files:
             if not self._pathIgnoreCheck(pathItem):
                 path2=pathItem.replace(path,"")
@@ -91,10 +91,10 @@ class CodeManagerFile():
     manages code for one file
     """
     def __init__(self,codemanager,path):   
-        self.users=o.codetools.codemanager.users
-        self.groups=o.codetools.codemanager.groups
+        self.users=j.codetools.codemanager.users
+        self.groups=j.codetools.codemanager.groups
         self.path=path
-        self.code=o.system.fs.fileGetContents(path)
+        self.code=j.system.fs.fileGetContents(path)
         self.nrlines=len(self.code)
         self.codemanager=codemanager
 
@@ -119,7 +119,7 @@ class CodeManagerFile():
                 line=line.split("(")[0].strip()                
             result.append(line)
             return ""   
-        text2=o.codetools.regex.replaceLines( process, arg="", text=self.code, includes=["%s.*"%item], excludes='')
+        text2=j.codetools.regex.replaceLines( process, arg="", text=self.code, includes=["%s.*"%item], excludes='')
         if len(result)>maxitems:
             self.errorTrap("Error in text to parse, found more entities:%s than %s" % (item,maxitems))
         if maxitems==1:
@@ -136,7 +136,7 @@ class CodeManagerFile():
         return ""
 
     def findId(self,text,path):
-        result=o.codetools.regex.findAll("\(\(.*: *\d* *\)\)",text)
+        result=j.codetools.regex.findAll("\(\(.*: *\d* *\)\)",text)
         
         if len(result)>1:
             raise RuntimeError("Found 2 id's in %s" % path)
@@ -215,8 +215,8 @@ class CodeManagerFile():
         """
         return [$text,$users] with unique id and the usergroup construct is taken out of text, all groups are resolved to users
         """
-        #items=o.codetools.regex.findAll("[a-z]*:[a-z]*","s: d:d")
-        items=o.codetools.regex.findAll("\[[a-z, ]*\]",text)  
+        #items=j.codetools.regex.findAll("[a-z]*:[a-z]*","s: d:d")
+        items=j.codetools.regex.findAll("\[[a-z, ]*\]",text)  
         text=text.lower()
         if len(items)>1:
             raise RuntimeError("Found to many users,groups items in string, needs to be one [ and one ] and users & groups inside, now %s" % text)
@@ -294,7 +294,7 @@ class CodeManagerFile():
         return out.strip()
 
     def _findStories(self,text,path,fullPath):
-        found=o.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
+        found=j.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
         for item in found:
             if item.lower().find("@storydef")<>-1:
                 #found a story  
@@ -329,7 +329,7 @@ class CodeManagerFile():
                 obj.model.roadmapid=self._strToInt(roadmap)
                 
     def _findScrumteams(self,text,path,fullPath):
-        found=o.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
+        found=j.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
         for item in found:
             if item.lower().find("@scrumteamdef")<>-1:
                 #found a story      
@@ -347,7 +347,7 @@ class CodeManagerFile():
                 
                 
     def _findSprints(self,text,path,fullPath):
-        found=o.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
+        found=j.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
         for item in found:
             if item.lower().find("@sprintdef")<>-1:
                 #found a story      
@@ -369,8 +369,8 @@ class CodeManagerFile():
                 obj.model.goal=goal          
                 obj.model.id=id1
                 obj.model.company=company    
-                obj.model.deadline=int(o.base.time.HRDatetoEpoch(deadline.replace("-","/")))
-                obj.model.start=int(o.base.time.HRDatetoEpoch(start.replace("-","/")))
+                obj.model.deadline=int(j.base.time.HRDatetoEpoch(deadline.replace("-","/")))
+                obj.model.start=int(j.base.time.HRDatetoEpoch(start.replace("-","/")))
         
     def _strToArrayInt(self,items):
         if items=="":
@@ -394,7 +394,7 @@ class CodeManagerFile():
                 
         
     def _findRoadmapitems(self,text,path,fullPath):
-        found=o.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
+        found=j.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
         for item in found:
             if item.lower().find("@roadmapdef")<>-1:
                 #found a story      
@@ -426,8 +426,8 @@ class CodeManagerFile():
                 obj.model.goal=goal                         
                 obj.model.priority=int(priority)
                 obj.model.remarks=remarks
-                obj.model.releasedate_int=int(o.base.time.HRDatetoEpoch(releasedate_int.replace("-","/")))
-                obj.model.releasedate_pub=int(o.base.time.HRDatetoEpoch(releasedate_pub.replace("-","/")))
+                obj.model.releasedate_int=int(j.base.time.HRDatetoEpoch(releasedate_int.replace("-","/")))
+                obj.model.releasedate_pub=int(j.base.time.HRDatetoEpoch(releasedate_pub.replace("-","/")))
                 obj.model.featurerequests=self._strToArrayInt(featurerequests)
                 obj.model.bugs=self._strToArrayInt(bugs)
                 obj.model.company=company
@@ -439,7 +439,7 @@ class CodeManagerFile():
                 
                 
     def _findUsers(self,text,path,fullPath):
-        found=o.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
+        found=j.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
         for item in found:
             if item.lower().find("@userdef")<>-1:       
                 lineFull=self.findLine(item,"@userdef") 
@@ -459,7 +459,7 @@ class CodeManagerFile():
                 
                 
     def _findGroups(self,text,path,fullPath):
-        found=o.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
+        found=j.codetools.regex.extractBlocks(text,includeMatchingLine=False,blockStartPatterns=["\"\"\""]) 
         for item in found:
             if item.lower().find("@groupdef")<>-1:      
                 lineFull=self.findLine(item,"@groupdef") 
@@ -510,10 +510,10 @@ class CodeManagerFile():
         return text
 
     def shortenDescr(self,text,maxnrchars=60):
-        return o.codetools.textToTitle(text,maxnrchars)
+        return j.codetools.textToTitle(text,maxnrchars)
 
     def _getLinesAround(self,path,tofind,nrabove,nrbelow):
-        text=o.system.fs.fileGetContents(path)
+        text=j.system.fs.fileGetContents(path)
         nr=0
         lines=text.split("\n")
         for line in lines:
@@ -534,10 +534,10 @@ class CodeManagerFile():
         line,id1=self.findId(line,fullPath)        
         if id1==0:
             #create unique id and put it in the file
-            id1=o.base.idgenerator.generateIncrID("%sid"%ttype,self.service) 
-            #tfe=o.codetools.getTextFileEditor(fullPath)
+            id1=j.base.idgenerator.generateIncrID("%sid"%ttype,self.service) 
+            #tfe=j.codetools.getTextFileEditor(fullPath)
             #tfe.addItemToFoundLineOnlyOnce(line," ((%s:%s))"%(ttype,id1),"\(id *: *\d* *\)",reset=True)
-            tfe=o.codetools.getTextFileEditor(fullPath)
+            tfe=j.codetools.getTextFileEditor(fullPath)
             tfe.addItemToFoundLineOnlyOnce(line," ((%s:%s))"%(ttype,id1),"\(+.*: *\d* *\)+",reset=self.reset)
         return id1
             
@@ -550,7 +550,7 @@ class CodeManagerFile():
                 if line.strip().find(variant)==0:
                     return variant
         if text.lower().find("@todo")<>-1:
-            lines=o.codetools.regex.findAll("@todo.*",text)
+            lines=j.codetools.regex.findAll("@todo.*",text)
             for line in lines:
                 self.addUniqueId(line,fullPath,ttype="todo")
                 line,id1=self.findId(line,fullPath)
@@ -592,7 +592,7 @@ class CodeManagerFile():
             linenr=self.findLineNr(item)
             [infoitems,timeitem,users,tags,descr]=self.parseBasics(item)
             tags=tags.lower()
-            tt=o.core.tags.getObject(tags)
+            tt=j.core.tags.getObject(tags)
             if tt.tagExists("line"):
                 linesfromto=tt.tagGet("line")
                 items=linesfromto.split(",")
@@ -615,7 +615,7 @@ class CodeManagerFile():
         
         
     def errorTrap(self,msg):
-        o.console.echo("ERROR: %s" % msg)   
+        j.console.echo("ERROR: %s" % msg)   
 
     def __str__(self):
         ss=""

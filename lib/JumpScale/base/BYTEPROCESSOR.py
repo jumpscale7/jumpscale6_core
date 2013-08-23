@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScaleJumpScale import j
 
 try:
     import hashlib
@@ -74,4 +74,4 @@ class ByteProcessor:
 
 
 
-o.base.byteprocessor=ByteProcessor
+j.base.byteprocessor=ByteProcessor
