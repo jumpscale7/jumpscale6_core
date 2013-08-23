@@ -10,8 +10,8 @@ class REGEXTOOL():
     @staticmethod       
     def match(pattern,text):
         m = regex.match(pattern,text)
-        if m<>None:
-            print "%s %s"%(pattern,text)
+        if m:
+            print("%s %s"%(pattern,text))
             return True
         else:
             return False        
@@ -29,7 +29,7 @@ class REGEXTOOL():
         see if any patterns matched
         if patterns=[] then will return False
         """
-        if type(patterns).__name__<>'list' :
+        if type(patterns).__name__!='list' :
             raise RuntimeError("patterns has to be of type list []")
         if patterns==[]:
             return True

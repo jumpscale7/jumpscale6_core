@@ -418,7 +418,7 @@ class BaseEnumeration(object):
 
     def printdoc(self):
         #@todo get this to work
-        print __doc__
+        print(__doc__)
 
 
 class EnumerationWithValue(BaseEnumeration):

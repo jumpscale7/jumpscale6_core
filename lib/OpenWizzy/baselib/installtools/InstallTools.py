@@ -1,7 +1,9 @@
 # from OpenWizzy import o
 
-
-import urllib2
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
 import gzip
 import os
 import tarfile
@@ -36,8 +38,8 @@ class InstallTools():
 
     def download(self,url,to):
         os.chdir(self.TMP)
-        print 'Downloading %s ' % (url)
-        handle = urllib2.urlopen(url)
+        print('Downloading %s ' % (url))
+        handle = urlopen(url)
         with open(to, 'wb') as out:
             while True:
                 data = handle.read(1024)
@@ -77,20 +79,16 @@ class InstallTools():
     #     return stdout
 
     def log(self,msg,level=0):
-        print msg
+        print(msg)
 
     def isUnix(self):
-        if sys.platform.lower().find("linux")<>--1:
+        if sys.platform.lower().find("linux")!=-1:
             return True
         return False
 
 
     def isWindows(self):
-        from OpenWizzy.core.Shell import ipshellDebug,ipshell
-        print "DEBUG NOW implement method iswindows on installtools"
-        ipshell()
-        
-        if sys.platform.lower().find("linux")<>--1:
+        if sys.platform.lower().find("linux")==1:
             return True
         return False
 
@@ -165,7 +163,7 @@ class InstallTools():
                 import signal
                 try:
                     signal.signal(signal.SIGCHLD, signal.SIG_DFL)
-                except Exception, ex:
+                except Exception as ex:
                     selflog('failed to set child signal, error %s'%ex, 2)
                 childprocess = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, shell=True, env=os.environ)
                 (output,error) = childprocess.communicate()
@@ -198,12 +196,12 @@ class InstallTools():
             else:
                 raise RuntimeError("Non supported OS for self.execute()")
 
-        except Exception, e:
+        except Exception as e:
             raise
 
-        if exitcode<>0 or error<>"":
+        if exitcode!=0 or error!="":
             self.log(" Exitcode:%s\nOutput:%s\nError:%s\n" % (exitcode, output, error), 5)
-            if ignoreErrorOutput<>True:
+            if ignoreErrorOutput!=True:
                 output="%s\n***ERROR***\n%s\n" % (output,error)
 
         if exitcode !=0 and dieOnNonZeroExitCode:
@@ -254,10 +252,10 @@ class InstallTools():
     def getLastChangeSetBitbucket(self,account="incubaid",reponame="openwizzy-core-6.0"):
         
         url="https://api.bitbucket.org/1.0/repositories/%s/%s/src/tip/" % (account,reponame)
-        handle = urllib2.urlopen(url)
+        handle = urlopen(url)
         lines=handle.readlines()
         for line in lines:
-            if line.find("\"node\"")<>-1:
+            if line.find("\"node\"")!=-1:
                 return line.split("\"")[3]   
 
     def getTmpPath(self,filename):
@@ -272,7 +270,7 @@ class InstallTools():
         minl=1000000
         result=""
         for item in sys.path:
-            if len(item)<minl and item.find("python")<>-1:
+            if len(item)<minl and item.find("python")!=-1:
                 result=item
                 minl=len(item)
         return result
@@ -284,7 +282,7 @@ class InstallTools():
 
     def delete(self,path):
         if self.debug:
-            print "delete: %s" % path
+            print("delete: %s" % path)
         if os.path.exists(path) or os.path.islink(path):
             if os.path.isdir(path):
                 #print "delete dir %s" % path           
@@ -299,7 +297,7 @@ class InstallTools():
     def copytreedeletefirst(self,source,dest):
         self.delete(dest)
         if self.debug:
-            print "copy %s %s" % (source,dest)
+            print("copy %s %s" % (source,dest))
         shutil.copytree(source,dest)
 
     def copydeletefirst(self,source,dest):
@@ -309,12 +307,12 @@ class InstallTools():
         #    pass
         self.delete(dest)
         if self.debug:
-            print "copy %s %s" % (source,dest)
+            print("copy %s %s" % (source,dest))
         shutil.copy(source,dest)
 
     def createdir(self,path):
         if self.debug:
-            print "createdir: %s" % path
+            print("createdir: %s" % path)
         if not os.path.exists(path) and not os.path.islink(path):
             os.makedirs(path)
 
@@ -343,15 +341,15 @@ class InstallTools():
             os.makedirs("%s/utils"%self.BASE)
         except:
             pass
-        print "minimal qself.BASE installed"
+        print("minimal qself.BASE installed")
         
     def removesymlink(self,path):
         if self.TYPE=="WIN":
             try:            
                 cmd="junction -d %s 2>&1 > null" % (path)
-                print cmd
+                print(cmd)
                 os.system(cmd)
-            except Exception,e:
+            except Exception as e:
                 pass
 
     def symlink(self,src,dest):
@@ -359,7 +357,7 @@ class InstallTools():
         dest is where the link will be created pointing to src
         """
         if self.debug:
-            print "symlink: src:%s dest:%s" % (src,dest)
+            print("symlink: src:%s dest:%s" % (src,dest))
         
         #if os.path.exists(dest):
         #try:
@@ -372,10 +370,10 @@ class InstallTools():
             self.delete(dest)
         else:
             self.delete(dest)
-        print "symlink %s to %s" %(dest, src)
+        print("symlink %s to %s" %(dest, src))
         if self.TYPE=="WIN":
             if self.debug:
-                print "symlink %s %s" % (src,dest)
+                print("symlink %s %s" % (src,dest))
             cmd="junction %s %s 2>&1 > null" % (dest,src)
             os.system(cmd)
             #raise RuntimeError("not supported on windows yet")
@@ -390,9 +388,9 @@ class InstallTools():
             self.symlink("%s/utils/sitecustomize.py"%self.BASE,ppath)
                 
             def do(path,dirname,names):
-                if path.find("sitecustomize")<>-1:
+                if path.find("sitecustomize")!=-1:
                     self.symlink("%s/utils/sitecustomize.py"%self.BASE,path)
-            print "walk over /usr to find sitecustomize and link to new one"
+            print("walk over /usr to find sitecustomize and link to new one")
             os.path.walk("/usr", do,"")
             os.path.walk("/etc", do,"")
         

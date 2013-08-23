@@ -5,7 +5,7 @@ try:
 except:
     pass
 
-from FS import *
+from .FS import *
 
 class FSWalkerStats():
     def __init__(self):
@@ -121,17 +121,17 @@ class FSWalker():
             self.fs=filesystemobject()
        
     def log(self,msg):
-        print msg
+        print(msg)
 
     def statsStart(self):
         self.stats=FSWalkerStats()
 
     def statsPrint(self): 
-        print "lastpath:%s"%self.lastPath       
+        print("lastpath:%s"%self.lastPath)
         try:
-            print str(self.stats)
+            print(str(self.stats))
         except:
-            print 'None'
+            print('None')
 
     def statsAdd(self,path="",ttype="F",sizeUncompressed=0,sizeCompressed=0,duplicate=False):
         self.stats.add2stat(ttype=ttype,sizeUncompressed=sizeUncompressed,sizeCompressed=sizeCompressed,duplicate=duplicate)
@@ -205,13 +205,13 @@ else:
             exec(C2)
 
         callbackMatchFunctions={}
-        if matchobjF<>None and (pathRegexIncludes.has_key("F") or pathRegexExcludes.has_key("F")):
+        if matchobjF!=None and (pathRegexIncludes.has_key("F") or pathRegexExcludes.has_key("F")):
             callbackMatchFunctions["F"]=matchobjF
         if includeFolders:
-            if matchobjD<>None and (pathRegexIncludes.has_key("D") or pathRegexExcludes.has_key("D")):
+            if matchobjD!=None and (pathRegexIncludes.has_key("D") or pathRegexExcludes.has_key("D")):
                 callbackMatchFunctions["D"]=matchobjD
         if includeLinks:
-            if matchobjL<>None and (pathRegexIncludes.has_key("L") or pathRegexExcludes.has_key("L")):
+            if matchobjL!=None and (pathRegexIncludes.has_key("L") or pathRegexExcludes.has_key("L")):
                 callbackMatchFunctions["L"]=matchobjL
         if pathRegexIncludes.has_key("O") or pathRegexExcludes.has_key("O"):
             callbackMatchFunctions["O"]=matchobjO

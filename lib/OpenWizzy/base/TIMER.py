@@ -28,9 +28,9 @@ class TIMER:
     
     @staticmethod
     def result():
-        print "duration:%s"%TIMER.duration
-        print "nritems:%s"%TIMER.nritems
-        print "performance:%s"%TIMER.performance
+        print("duration:%s"%TIMER.duration)
+        print("nritems:%s"%TIMER.nritems)
+        print("performance:%s"%TIMER.performance)
 
 
 o.base.timer=TIMER

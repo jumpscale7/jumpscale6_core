@@ -9,7 +9,7 @@ class FS:
 
     @staticmethod           
     def log(msg):
-        print msg
+        print(msg)
 
     @staticmethod       
     def fileGetContents(filename): 
@@ -90,14 +90,14 @@ class FS:
         excl=["libc.so","libpthread.so","libutil.so"]
         out=FS.installtools.execute("ldd %s"%path)
         result=[]
-        for item in [item.strip() for item in out.split("\n") if item.strip()<>""]:
-            if item.find("=>")<>-1:
+        for item in [item.strip() for item in out.split("\n") if item.strip()!=""]:
+            if item.find("=>")!=-1:
                 link=item.split("=>")[1].strip()
                 link=link.split("(")[0].strip()
                 if FS.exists(link):
                     name=os.path.basename(link)
                     if not deps.has_key(name):
-                        print link
+                        print(link)
                         deps[name]=link
                         deps=FS.findDependencies(link)
         return deps

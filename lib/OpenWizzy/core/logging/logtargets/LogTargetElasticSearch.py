@@ -9,7 +9,7 @@ class LogTargetElasticSearch(object):
     attached to loghandler on openwizzy
     """
     def __init__(self, serverip=None,esclient=None):
-        if esclient<>None:
+        if esclient:
             self.connected = True
             self._serverip = serverip
             self.enabled = True
@@ -28,7 +28,7 @@ class LogTargetElasticSearch(object):
         check status of target, if ok return True
         for std out always True
         """
-        if self._serverip<>None:
+        if self._serverip:
             if o.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
                 return False
             self.esclient = o.clients.elasticsearch.get(self._serverip, 9200)
@@ -47,12 +47,12 @@ class LogTargetElasticSearch(object):
         """
         #@todo Low Prio: need to batch & use geventloop to timeout when used e.g. in appserver
         try:
-            print "LOG OBJECT in logging to elasticsearch ", logobject
+            print("LOG OBJECT in logging to elasticsearch ", logobject)
             self.esclient.index(index="clusterlog", doc_type="logrecord", ttl="14d", replication="async", doc=logobject.__dict__)
-        except Exception, e:
+        except Exception as e:
             raise
-            print "Could not log to elasticsearch server, log:\n%s"%logobject
-            print "error was %s"%e
+            print("Could not log to elasticsearch server, log:\n%s"%logobject)
+            print("error was %s"%e)
 
     def close(self):
         """
@@ -64,7 +64,7 @@ class LogTargetElasticSearch(object):
         for logobject in batch:
             logobject.id = "%s_%s_%s_%s"%(logobject.gid, logobject.nodeid, logobject.appid, logobject.order)
             docs.append(logobject.__dict__)
-        print "batch:%s"%len(docs)
+        print("batch:%s"%len(docs))
         self.esclient.bulk_index(index="clusterlog", doc_type="json", docs=docs, id_field="id")
 
     def list(self, categoryPrefix="", levelMin=0, levelMax=5, job=0, parentjob=0, private=False, nritems=500):

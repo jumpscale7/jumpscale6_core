@@ -1,8 +1,20 @@
 
 import sys, os, inspect
-from user import home
 
 from OpenWizzy import o
+
+
+home = os.curdir                        # Default
+if 'HOME' in os.environ:
+    home = os.environ['HOME']
+elif os.name == 'posix':
+    home = os.path.expanduser("~/")
+elif os.name == 'nt':                   # Contributed by Jeff Bauer
+    if 'HOMEPATH' in os.environ:
+        if 'HOMEDRIVE' in os.environ:
+            home = os.environ['HOMEDRIVE'] + os.environ['HOMEPATH']
+        else:
+            home = os.environ['HOMEPATH']
 
 def pathToUnicode(path):
     """
@@ -166,7 +178,7 @@ class Dirs(object):
     def checkInProtectedDir(self,path):
         path=o.system.fs.pathNormalize(path)
         for item in self.protectedDirs :
-            if path.find(item)<>-1:
+            if path.find(item)!=-1:
                 return True
         return False
 

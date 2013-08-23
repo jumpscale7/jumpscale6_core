@@ -3,7 +3,7 @@ import functools
 from OpenWizzy import o
 from .logtargets.LogTargetFS import LogTargetFS
 from .logtargets.LogTargetStdOut import LogTargetStdOut
-from .logtargets.LogTargetElasticSearch import LogTargetElasticSearch
+#from .logtargets.LogTargetElasticSearch import LogTargetElasticSearch
 import re
 import sys
 import traceback
@@ -13,7 +13,10 @@ from datetime import datetime
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    try:
+        from StringIO import StringIO
+    except:
+        from io import StringIO
 
 
 # from logtargets.LogTargetFS import LogTargetFS
@@ -122,7 +125,7 @@ class LogItem(object):
         return o.db.serializers.ujson.dumps(self.__dict__)
 
     def __str__(self):
-        if self.category<>"":
+        if self.category!="":
             return "%s: %s" % (self.category.replace("_","."),self.message)
         else:
             ttime=time.strftime("%H:%M:%S: ", datetime.fromtimestamp(self.epoch).timetuple())

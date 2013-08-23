@@ -7,7 +7,7 @@ class ERRORHANDLER:
 
     @staticmethod           
     def log(msg):
-        print msg
+        print(msg)
 
     @staticmethod           
     def setExceptHook():
@@ -23,7 +23,7 @@ class ERRORHANDLER:
         @tb : can be a python data object or a Event
         """
         
-        print "EXCEPTIONHOOK"
+        print("EXCEPTIONHOOK")
         
         ERRORHANDLER.inException=True
            
@@ -31,9 +31,9 @@ class ERRORHANDLER:
                         
         #ERRORHANDLER.processErrorConditionObject(errorobject)
 
-        print "**ERROR**"
-        print pythonExceptionObject
-        print "\n".join(traceback.format_tb(tb))
+        print("**ERROR**")
+        print(pythonExceptionObject)
+        print("\n".join(traceback.format_tb(tb)))
 
         # trace=ERRORHANDLER.getTraceback()
         

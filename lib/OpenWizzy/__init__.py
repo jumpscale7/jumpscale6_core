@@ -6,5 +6,5 @@ class OpenWizzy():
 		pass
 
 o = OpenWizzy()
-import base
-import core
+from . import base
+from . import core

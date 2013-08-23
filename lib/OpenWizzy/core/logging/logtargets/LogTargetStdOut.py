@@ -22,8 +22,7 @@ class LogTargetStdOut(object):
         example 1|754545|performancetester|5||copy file from a to b
         @param message string in format time(epoch)|source(string)|level(0-10)|tags|logmessage\n 
         """    
-        print log
-        return
+        print(log)
 
         # logobj=o.logger.getLogObject(message)
         # message = str(logobj)#will render differently for logs and events

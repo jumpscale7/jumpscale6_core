@@ -5,11 +5,11 @@ class Empty():
 
 o.base=Empty()
 
-import FSWALKER
-import FS
-import REGEXTOOL
-import TIMER
-import BYTEPROCESSOR
-import ERRORHANDLER
-import LOADER
+from . import FSWALKER
+from . import FS
+from . import REGEXTOOL
+from . import TIMER
+from . import BYTEPROCESSOR
+from . import ERRORHANDLER
+from . import LOADER
 

@@ -82,7 +82,7 @@ class LogTargetFS(object):
         if self._config['main']['logrotate_enable'] == 'True':
             if self._gettime() > (self.logopenTime + int(self._config['main']['logrotate_time'])) \
                 or self.logopenNrlines > int(self._config['main']['logrotate_number_of_lines']) \
-                or self.appname <> appLogname:
+                or self.appname != appLogname:
 
                 # print "NEWLOG"
                 self.rotate()
@@ -114,11 +114,11 @@ class LogTargetFS(object):
 
         appLogname = o.application.appname.split(':')[0]
 
-        if appLogname <> self.appname:
+        if appLogname != self.appname:
             self.appname = appLogname
 
         if not os.path.isdir(o.dirs.logDir):
-            os.makedirs(o.log.logDir, 0755)
+            os.makedirs(o.log.logDir, 0o755)
         logfile = os.path.join(o.dirs.logDir, appLogname)
         self.logfile = "%s.log" % logfile
         try:
@@ -150,7 +150,7 @@ class LogTargetFS(object):
                 attempts += 1
                 try:
                     self.fileHandle.close()
-                except IOError, ioe:
+                except IOError as ioe:
                     if ioe.errno is None:
                         # 'close() called during concurrent operation on the same file object'
                         # Probably a thread is trying to write to the log file.
@@ -193,7 +193,7 @@ class LogTargetFS(object):
                         if o.system.fs.exists(filepath):
                             try:
                                 o.system.fs.removeFile(filepath)
-                            except Exception, ex:
+                            except Exception as ex:
                                 pass  # We don't want to fail on logging
 
                     self.nolog = False

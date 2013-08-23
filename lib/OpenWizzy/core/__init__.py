@@ -179,7 +179,7 @@ def _setup_stacktrace_hook():
         output = output.send
         try:
             handler_impl(output, num, frame)
-        except Exception, e:
+        except Exception as e:
             output('An exception occurred while handling signal %d\n' % num)
             output('Exception information:\n')
             output('%s\n\n' % str(e))
@@ -201,16 +201,16 @@ def _setup_stacktrace_hook():
 # Set up our signal handler
 try:
     _setup_stacktrace_hook()
-except Exception,e:
+except Exception as e:
     pass
 # Remove the no longer needed function
 del _setup_stacktrace_hook
 
-from Dirs import Dirs
+from .Dirs import Dirs
 o.dirs=Dirs()
 
 from . import logging
-from Application import Application
+from .Application import Application
 
 from . import system
 
