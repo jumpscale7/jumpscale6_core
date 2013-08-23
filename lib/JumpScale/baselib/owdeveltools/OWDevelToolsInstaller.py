@@ -25,14 +25,14 @@ class OWDevelToolsInstaller:
 
     def _getRemoteOWURL(self,name):
         if self.passwd=="*" or self.login=="*":
-            return "https://bitbucket.org/openwizzy/%s"%(name)
+            return "https://bitbucket.org/jumpscale/%s"%(name)
         else:
-            return "https://%s:%s@bitbucket.org/openwizzy/%s"%(self.login,self.passwd,name)
+            return "https://%s:%s@bitbucket.org/jumpscale/%s"%(self.login,self.passwd,name)
 
     def _getOWRepo(self,name):
         j.application.shellconfig.interactive=True
         self._checkCredentials()
-        cl=j.clients.mercurial.getClient("%s/openwizzy/%s/"%(j.dirs.codeDir,name), remoteUrl=self._getRemoteOWURL(name))
+        cl=j.clients.mercurial.getClient("%s/jumpscale/%s/"%(j.dirs.codeDir,name), remoteUrl=self._getRemoteOWURL(name))
         cl.pullupdate()
 
     def installSublimeTextUbuntu(self):
@@ -64,25 +64,25 @@ class OWDevelToolsInstaller:
 
     def deployExampleCode(self):
         """
-        checkout example code repo & link examples to sandbox on /opt/openwizzy6/apps/examples
+        checkout example code repo & link examples to sandbox on /opt/jumpscale6/apps/examples
         """
-        name="openwizzy6_examples"
+        name="jumpscale_examples"
         self._getOWRepo(name)
-        self._do.symlink("%s/openwizzy/%s/prototypes"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/prototypes")
-        self._do.symlink("%s/openwizzy/%s/examples"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/examples")
+        self._do.symlink("%s/jumpscale/%s/prototypes"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/prototypes")
+        self._do.symlink("%s/jumpscale/%s/examples"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/examples")
 
     def deployJumpScaleLibs(self,linkonly=False):
         """
-        checkout the openwizzy libs repo & link to python 2.7 to make it available for the developer
+        checkout the jumpscale libs repo & link to python 2.7 to make it available for the developer
         """        
-        name="openwizzy6_lib"
+        name="jumpscale_lib"
         if not linkonly:
             self._getOWRepo(name)
-        openwizzylib = "%s/openwizzy/%s"%(j.dirs.codeDir,name)
-        if not j.system.fs.exists(openwizzylib):
+        jumpscalelib = "%s/jumpscale/%s"%(j.dirs.codeDir,name)
+        if not j.system.fs.exists(jumpscalelib):
             return
-        for item in [item for item in j.system.fs.listDirsInDir(openwizzylib,dirNameOnly=True) if item[0]<>"."]:
-            src="%s/openwizzy/%s/%s"%(j.dirs.codeDir,name,item)
+        for item in [item for item in j.system.fs.listDirsInDir(jumpscalelib,dirNameOnly=True) if item[0]<>"."]:
+            src="%s/jumpscale/%s/%s"%(j.dirs.codeDir,name,item)
             dest="%s/lib/%s"%(j.dirs.libDir,item)
             self._do.symlink(src,dest)
         dest="%s/lib/__init__.py"%(j.dirs.libDir)
@@ -94,28 +94,28 @@ class OWDevelToolsInstaller:
 
     def deployJumpScaleGrid(self):
         """
-        checkout the openwizzy grid repo & link to python 2.7 to make it available for the developer
+        checkout the jumpscale grid repo & link to python 2.7 to make it available for the developer
         """
-        name="openwizzy6_grid"        
+        name="jumpscale_grid"        
         self._getOWRepo(name)
         dest="%s/grid"%(j.dirs.libDir)
-        self._do.symlink("%s/openwizzy/%s/gridlib"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/openwizzy/%s/apps/broker"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/broker")
-        self._do.symlink("%s/openwizzy/%s/apps/logger"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/logger")
+        self._do.symlink("%s/jumpscale/%s/gridlib"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/jumpscale/%s/apps/broker"%(j.dirs.codeDir,name),"/opt/jumpscale6/apps/broker")
+        self._do.symlink("%s/jumpscale/%s/apps/logger"%(j.dirs.codeDir,name),"/opt/jumpscale6/apps/logger")
 
-        osisdir="/opt/openwizzy6/apps/osis/"
+        osisdir="/opt/jumpscale6/apps/osis/"
 
         do=self._do
 
         if not  j.system.fs.exists(osisdir):
-            do.copytreedeletefirst("%s/openwizzy/%s/apps/osis"%(j.dirs.codeDir,name),osisdir)
+            do.copytreedeletefirst("%s/jumpscale/%s/apps/osis"%(j.dirs.codeDir,name),osisdir)
 
-        for item in [item for item in j.system.fs.listDirsInDir("/opt/code/openwizzy/openwizzy6_grid/apps/osis/logic",dirNameOnly=True) if item[0]<>"."]:
-            src="/opt/code/openwizzy/openwizzy6_grid/apps/osis/logic/%s"%(item)
+        for item in [item for item in j.system.fs.listDirsInDir("/opt/code/jumpscale/jumpscale_grid/apps/osis/logic",dirNameOnly=True) if item[0]<>"."]:
+            src="/opt/code/jumpscale/jumpscale_grid/apps/osis/logic/%s"%(item)
             dest="%s/logic/%s"%(osisdir,item)
             self._do.symlink(src,dest)
 
-        src="/opt/code/openwizzy/openwizzy6_grid/apps/osis/_templates/"
+        src="/opt/code/jumpscale/jumpscale_grid/apps/osis/_templates/"
         dest="%s/_templates"%(osisdir)
         self._do.symlink(src,dest)
 
@@ -126,23 +126,23 @@ class OWDevelToolsInstaller:
 
     def deployJumpScalePortal(self):
         """
-        checkout the openwizzy portal repo & link to python 2.7 to make it available for the developer
-        an example portal will also be installed in /opt/openwizzy6/apps/exampleportal
+        checkout the jumpscale portal repo & link to python 2.7 to make it available for the developer
+        an example portal will also be installed in /opt/jumpscale6/apps/exampleportal
         """
-        name="openwizzy6_portal"        
+        name="jumpscale_portal"        
         self._getOWRepo(name)
         dest="%s/portal"%(j.dirs.libDir)
-        self._do.symlink("%s/openwizzy/%s/portallib"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/openwizzy/%s/apps/portalbase"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalbase")
-        self._do.symlink("%s/openwizzy/%s/apps/portalftpgateway"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalftpgateway")
+        self._do.symlink("%s/jumpscale/%s/portallib"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/jumpscale/%s/apps/portalbase"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalbase")
+        self._do.symlink("%s/jumpscale/%s/apps/portalftpgateway"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalftpgateway")
 
         j.system.platform.ubuntu.install("redis-server")
         j.system.platform.ubuntu.install("curlftpfs")
 
-        portaldir="/opt/openwizzy6/apps/exampleportal/"
+        portaldir="/opt/jumpscale6/apps/exampleportal/"
 
         if not  j.system.fs.exists(portaldir):
-            src="/opt/code/openwizzy/openwizzy6_examples/examples/exampleportal"
+            src="/opt/code/jumpscale/jumpscale_examples/examples/exampleportal"
             self._do.copytreedeletefirst(src,portaldir)        
 
         self._do.execute("pip install pyelasticsearch mimeparse beaker")
@@ -154,8 +154,8 @@ class OWDevelToolsInstaller:
         name="dfs_io_core"     
         self._getOWRepo(name)
         dest="%s/dfs_io"%(j.dirs.libDir)
-        self._do.symlink("%s/openwizzy/%s/ow6libs/dfs_io"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/openwizzy/%s/apps/dfs_io"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/dfs_io")
+        self._do.symlink("%s/jumpscale/%s/ow6libs/dfs_io"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/jumpscale/%s/apps/dfs_io"%(j.dirs.codeDir,name),"/opt/jumpscale6/apps/dfs_io")
 
     def deployPuppet(self):
         import JumpScale.lib.puppet
@@ -280,7 +280,7 @@ DefaultRoot                    ~
         self._do.execute("/etc/init.d/proftpd restart")
 
         self._do.createdir("/opt/code")
-        self._do.createdir("/opt/jumpscale")
+        self._do.createdir("/opt/jumpscale6")
 
         def symlink(src,dest):
             try:
@@ -299,7 +299,7 @@ DefaultRoot                    ~
 
 
         symlink("/opt/code","/home/jumpscale/code")
-        symlink("/opt/jumpscale","/home/jumpscale/openwizzy")
+        symlink("/opt/jumpscale6","/home/jumpscale/jumpscale")
         symlink("/opt/jspackagesftp","/home/jumpscale/jspackages")
         symlink("/opt/jspackagesftp","/home/ftp/jspackages")
         symlink("/opt/jspackagesftp","/home/jspackages/jspackages")
@@ -314,7 +314,7 @@ DefaultRoot                    ~
         owdir="%s/JumpScale"%pythpath
         self._do.createdir(owdir)
 
-        libDir="/opt/code/openwizzy/openwizzy6_core/lib/JumpScale"
+        libDir="/opt/code/jumpscale/jumpscale_core/lib/JumpScale"
 
         self._do.copydeletefirst("%s/__init__.py"%libDir,"%s/__init__.py"%owdir)
         srcdir=libDir

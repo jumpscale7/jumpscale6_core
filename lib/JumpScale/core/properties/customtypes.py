@@ -33,9 +33,9 @@
 #
 # </License>
 
-'''Descriptors for openwizzy custom types
+'''Descriptors for jumpscale custom types
 
-See the documentation of openwizzy.properties.common for more info.
+See the documentation of jumpscale.properties.common for more info.
 '''
 
 from JumpScale.core.properties import BaseDescriptor
@@ -47,45 +47,45 @@ from JumpScale.core.pmtypes.CustomTypes import WindowsDirPath, WindowsFilePath
 from JumpScale.core.pmtypes.CustomTypes import IPv4Address
 
 class Guid(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.Guid}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.Guid}'''
     PMTYPE = Guid
 
 
 class Path(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.Path}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.Path}'''
     PMTYPE = Path
 
 
 class DirPath(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.DirPath}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.DirPath}'''
     PMTYPE = DirPath
 
 
 class FilePath(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.FilePath}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.FilePath}'''
     PMTYPE = FilePath
 
 
 class UnixDirPath(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.UnixDirPath}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.UnixDirPath}'''
     PMTYPE = UnixDirPath
 
 
 class UnixFilePath(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.UnixFilePath}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.UnixFilePath}'''
     PMTYPE = UnixFilePath
 
 
 class WindowsDirPath(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.WindowsDirPath}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.WindowsDirPath}'''
     PMTYPE = WindowsDirPath
 
 
 class WindowsFilePath(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.WindowsFilePath}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.WindowsFilePath}'''
     PMTYPE = WindowsFilePath
 
 
 class IPv4Address(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CustomTypes.IPv4Address}'''
+    '''Descriptor for L{jumpscale.pmtypes.CustomTypes.IPv4Address}'''
     PMTYPE = IPv4Address

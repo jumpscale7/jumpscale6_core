@@ -212,7 +212,7 @@ class LogHandler(object):
 
     def _init(self):
         """
-        called by openwizzy
+        called by jumpscale
         """
         return  # need to rewrite logging
         self._lastinittime = 0

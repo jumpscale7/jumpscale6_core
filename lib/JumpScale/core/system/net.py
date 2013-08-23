@@ -472,7 +472,7 @@ class SystemNet:
     def isIpInDifferentNetwork(self, ipaddress):
         for nic in j.system.net.getNics():
             for ip in j.system.net.getIpAddress(nic):
-                if openwizzy.pmtypes.IPv4Address(ipaddress) in openwizzy.pmtypes.IPv4Range(netIp=ip[0], netMask=ip[1]):
+                if jumpscale.pmtypes.IPv4Address(ipaddress) in jumpscale.pmtypes.IPv4Range(netIp=ip[0], netMask=ip[1]):
                     return False
         return True
 

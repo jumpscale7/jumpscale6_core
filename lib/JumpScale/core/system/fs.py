@@ -13,7 +13,7 @@ import cPickle as pickle
 from stat import ST_MTIME
 
 
-# We import only openwizzy as the j.system.fs is used before openwizzy is initialized. Thus the q cannot be imported yet
+# We import only jumpscale as the j.system.fs is used before jumpscale is initialized. Thus the q cannot be imported yet
 
 
 from JumpScale import j
@@ -856,7 +856,7 @@ class SystemFS:
     def changeFileNames(self,toReplace,replaceWith,pathToSearchIn,recursive=True, filter=None, minmtime=None, maxmtime=None):
         """
         @param toReplace e.g. {name}
-        @param replace with e.g. "openwizzy"
+        @param replace with e.g. "jumpscale"
         """
         paths=self.listFilesInDir(pathToSearchIn, recursive, filter, minmtime, maxmtime)
         for path in paths:
@@ -1683,7 +1683,7 @@ class SystemFS:
         @return: unicode path
         @rtype: unicode
         """
-        from openwizzy import Dirs
+        from jumpscale import Dirs
         return Dirs.pathToUnicode(path)
 
     def targzCompress(self, sourcepath, destinationpath,followlinks=False,destInTar="",pathRegexIncludes=['.[a-zA-Z0-9]*'], \

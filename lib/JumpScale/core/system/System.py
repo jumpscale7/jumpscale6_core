@@ -66,7 +66,7 @@ def _wrap_deprecated_process(f):
 
 
 class System:
-    #openwizzy internal object
+    #jumpscale internal object
     # Singleton state
     __shared_state = {}
     '''Singleton-like shared state
@@ -106,7 +106,7 @@ class System:
     _qPlatformType=None
     '''PlatformType of currently running platform
 
-    @type: L{openwizzy.enumerators.PlatformType.PlatformType}
+    @type: L{jumpscale.enumerators.PlatformType.PlatformType}
     '''
 
     fswalker = FSWalker
@@ -115,7 +115,7 @@ class System:
     # Initialize singleton object
     def __init__(self):
         '''Initializes a new System instance
-        Binds currently running L{openwizzy.enumerators.PlatformType.PlatformType}
+        Binds currently running L{jumpscale.enumerators.PlatformType.PlatformType}
         and initializes the C{fs}, C{net} and C{process} attributes.
         '''
         self._qPlatformType=PlatformType.findPlatformType()

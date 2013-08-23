@@ -38,7 +38,7 @@ def find_eggs(path):
     return eggs
 
 
-class openwizzyZipFile(zipfile.ZipFile):
+class jumpscaleZipFile(zipfile.ZipFile):
     """Extends the Python 2.5 zipfile ZipFile class to add a Python 2.6 like
     open method that returns a file pointer"""
     def open(self, name, mode='r'):
@@ -64,7 +64,7 @@ class ExtensionFactory(object):
         @param pmExtensionName: name used to expose class under q.[one or more extensionsgroup's].[pmExtensionName]
         @type pmExtensionName: string
         @return: a freshly instantiated extension
-        @rtype: L{openwizzy.extensions.PMextension.BasePMExtension}
+        @rtype: L{jumpscale.extensions.PMextension.BasePMExtension}
         """
         raise NotImplementedError
 
@@ -101,7 +101,7 @@ class ExtensionInfoFinder(object):
         are extra parameters to be added to each information dict.
 
         @param inifile: inifile that should be scanned for extension information
-        @type inifile: L{openwizzy.inifile.IniFile.IniFile}
+        @type inifile: L{jumpscale.inifile.IniFile.IniFile}
         @param path: internal extension path
         @type path: string
         @param factory: factory to create the extension described in the INI file
@@ -128,7 +128,7 @@ class ExtensionInfoFinder(object):
         Extract hook information from an INI file section
 
         @param inifile: INI file containing the section with the hook information
-        @type inifile: L{openwizzy.inifile.IniFile.IniFile}
+        @type inifile: L{jumpscale.inifile.IniFile.IniFile}
         @param section: section of the INI file that contains the hook information
         @type section: string
         @return: hook information
@@ -227,7 +227,7 @@ class EggExtensionInfoFinder(ExtensionInfoFinder):
         eggs = find_eggs(self.rootDir)
         factory = EggPMExtensionFactory()
         for egg in eggs:
-            # Add egg to path so other parts of openwizzy can import its contents
+            # Add egg to path so other parts of jumpscale can import its contents
             eggfile = egg.location
             sys.path.append(eggfile)
             for filePointer, path in self._generateExtensionConfigFilePointers(eggfile):
@@ -252,12 +252,12 @@ class EggExtensionInfoFinder(ExtensionInfoFinder):
         """
         # Always use forward slashes in eggs
         sep = "/"
-        eggFile = openwizzyZipFile(eggFileName)
+        eggFile = jumpscaleZipFile(eggFileName)
         for internalFileName in eggFile.namelist():
             parts = internalFileName.split(sep)
             if parts and parts[-1] == self.extensionConfigName:
                 # construct egg path i.e.
-                # /opt/qbase2/lib/openwizzy/extensions/my_extension.egg/my_first_extension/
+                # /opt/qbase2/lib/jumpscale/extensions/my_extension.egg/my_first_extension/
                 # This format is supported by the eggfile module
                 path = sep.join([eggFileName] + parts[:-1])
                 yield eggFile.open(internalFileName), path
@@ -315,7 +315,7 @@ class PMExtensions:
         for infoFinder in self._extensionInfoFinders:
             hooks.extend(infoFinder.find())
 
-        j.logger.log('Loading openwizzy extensions from %s' % extensionDir, 7)
+        j.logger.log('Loading jumpscale extensions from %s' % extensionDir, 7)
 
         # Add extensions directory to sys.path.
         sys.path.append(extensionDir)

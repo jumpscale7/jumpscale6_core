@@ -1,6 +1,6 @@
 #!/bin/bash
 curdir=`pwd`
-QBASE=/opt/openwizzy
+QBASE=/opt/jumpscale6
 
 PATH=$QBASE:$QBASE/bin:$PATH
 

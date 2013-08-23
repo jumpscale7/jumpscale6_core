@@ -78,7 +78,7 @@ class EasyDialogConsole(EasyDialogGeneric):
         """
         Asks user the supplied question and prompt for an answer, if none given the default value is used, the response and the default value one of the values [y|Y|yes|Yes..n|N|No..]
 
-        Currently the default value effect is ignored since it would require changing the openwizzy vapp
+        Currently the default value effect is ignored since it would require changing the jumpscale vapp
         @param question: question to be prompted
         @param defaultValue: if the user did not provide a response this value is used as an answer
         @return: response answer or the default value

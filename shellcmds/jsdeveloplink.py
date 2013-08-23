@@ -4,7 +4,7 @@ sys.path.insert(0,"lib")
 from JumpScale import *
 
 j.application.appname = "jslink"
-j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
+j.application.start("jsinstallrepos",basedir="/opt/jumpscale6/",appdir="/opt/jumpscale6/apps/exampleapp/")
 
 j.application.shellconfig.interactive=True
 

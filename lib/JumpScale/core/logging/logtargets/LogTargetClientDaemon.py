@@ -1,10 +1,6 @@
 # import socket
 from JumpScale import j
 import time
-# q=openwizzy.q
-
-# ZDaemonClientClass=j.core.grid.getZDaemonClientClass()
-# ZDaemonClientClass
 
 class LogTargetClientDaemon():
     """Forwards incoming logRecords to localclientdaemon"""

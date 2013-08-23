@@ -137,7 +137,7 @@ class ErrorConditionObject():
         try:
             k="%s"%k
             v="%s"%v
-            if k in ["re","q","openwizzy","pprint","qexec","qshell","Shell","__doc__","__file__","__name__","__package__","i","main","page"]:
+            if k in ["re","q","jumpscale","pprint","qexec","qshell","Shell","__doc__","__file__","__name__","__package__","i","main","page"]:
                 return False
             if v.find("<module")<>-1:
                 return False
@@ -145,7 +145,7 @@ class ErrorConditionObject():
                 return False
             if v.find("<built-in function")<>-1:
                 return False
-            if v.find("openwizzy.Shell")<>-1:
+            if v.find("jumpscale.Shell")<>-1:
                 return False
         except:
             return False

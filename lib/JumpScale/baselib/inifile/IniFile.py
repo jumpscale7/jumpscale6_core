@@ -1,5 +1,5 @@
 from JumpScale import j
-import JumpScale as openwizzy
+import JumpScale as jumpscale
 from ConfigParser import ConfigParser
 
 #@todo UGLY, validation should not happen on object (file) where you read from but on file where you populate values (kds)
@@ -15,7 +15,7 @@ class InifileTool:
         @raises RuntimeError: When the provided filename doesn't exist
 
         @returns: Opened INI file object
-        @rtype: openwizzy.inifile.IniFile.IniFile
+        @rtype: jumpscale.inifile.IniFile.IniFile
         '''
         if isinstance(filename, basestring) and not j.system.fs.exists(filename):
             if createIfNonExisting:
@@ -34,7 +34,7 @@ class InifileTool:
         @raises RuntimeError: When the provided filename exists
 
         @returns: New INI file object
-        @rtype: openwizzy.inifile.IniFile.IniFile
+        @rtype: jumpscale.inifile.IniFile.IniFile
         '''
         if isinstance(filename, basestring) and j.system.fs.exists(filename):
             raise RuntimeError('Attempt to create existing INI file %s as a new file' % filename)
@@ -285,7 +285,7 @@ class IniFile(object):
     def getContent(self):
         """ Get the Inifile content to a string
         """
-        #@todo openwizzy primitives should be used (no fp...)
+        #@todo jumpscale primitives should be used (no fp...)
         fp = None
         if self.__file and not self.__file.closed:
             fp = self.__file

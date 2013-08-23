@@ -37,7 +37,7 @@ class Dirs(object):
     # __initialized = False ##bool
 
     def __init__(self):
-        '''openwizzy sandbox base folder'''
+        '''jumpscale sandbox base folder'''
         curdir=os.path.abspath(".")
 
         if os.path.exists("library.zip"):
@@ -50,7 +50,7 @@ class Dirs(object):
         if iswindows or self.frozen:
             self.baseDir=curdir
         else:
-            self.baseDir = "/opt/openwizzy6" ##string
+            self.baseDir = "/opt/jumpscale6" ##string
 
         self.baseDir=self.baseDir.replace("\\","/")
 

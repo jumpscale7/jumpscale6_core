@@ -114,8 +114,8 @@ class ConfigFileManager():
 
     def getParam(self,section,paramName,description="",defaultValue="",forceDefaultValue=False,forceAsk=False,password=False):
         """
-        is default configuration management which is personal per user of openwizzy e.g. personal svn connections
-        this method allows you to get a parameter, if not found it will interactive ask for that parameter and store it in the apropriate .cfg file in the openwizzy cfg dir
+        is default configuration management which is personal per user of jumpscale e.g. personal svn connections
+        this method allows you to get a parameter, if not found it will interactive ask for that parameter and store it in the apropriate .cfg file in the jumpscale cfg dir
         """
         self._getConfigFile()
         #if forceDefaultValue:

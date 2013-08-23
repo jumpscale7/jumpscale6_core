@@ -20,7 +20,7 @@ class LogTargetFS(object):
         """
         """
         self.enabled = False
-        # cannot use openwizzy primitives yet, not enabled yet
+        # cannot use jumpscale primitives yet, not enabled yet
         self.name = "file"
         self.fileHandle = None
         self.logopenTime = 0
@@ -185,7 +185,7 @@ class LogTargetFS(object):
                     inifile = j.config.getInifile("main")
                     inifile.setParam("main", "lastlogcleanup", self._lastcleanuptime)
                     files = j.system.fs.listFilesInDir(
-                        j.system.fs.joinPaths(j.dirs.logDir, 'openwizzylogs'),
+                        j.system.fs.joinPaths(j.dirs.logDir, 'jumpscalelogs'),
                         recursive=True,
                         maxmtime=(j.base.time.getTimeEpoch() - int(self._config['main']['logremove_age'])))
 

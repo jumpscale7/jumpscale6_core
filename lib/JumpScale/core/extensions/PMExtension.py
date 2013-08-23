@@ -129,7 +129,7 @@ class BasePMExtension(object):
         print msg
         j.errorconditionhandler.raiseBug(msg,pythonTraceBack=tb,category="extensions.load")
         
-        if openwizzy.qshellconfig.__dict__.has_key("debug") and not openwizzy.qshellconfig.debug:
+        if jumpscale.qshellconfig.__dict__.has_key("debug") and not jumpscale.qshellconfig.debug:
             print 'To see a full error report, check your logserver or run Q-Shell using debug mode'
             # Reset TTY
             # We need to reset our TTY to the settings it had before
@@ -154,7 +154,7 @@ class BasePMExtension(object):
         return self.__str__()
     
     def __str__(self):
-        return "openwizzy Extension %s (at %s)" % (self.pmExtensionName, self.extensionPath)
+        return "jumpscale Extension %s (at %s)" % (self.pmExtensionName, self.extensionPath)
 
 class PMExtension(BasePMExtension):
     """Extension class for 'normal' (non-zipped) extensions"""

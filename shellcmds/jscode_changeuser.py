@@ -13,7 +13,7 @@ j.application.shellconfig.interactive=True
 
 j.develtools.installer.getCredentialsJumpScaleRepo()
 
-for item in j.system.fs.listDirsInDir("/opt/code/openwizzy"):
+for item in j.system.fs.listDirsInDir("/opt/code/jumpscale"):
     itembase=j.system.fs.getBaseName(item)
     url=j.develtools.installer._getRemoteOWURL(itembase)
     path=j.system.fs.joinPaths(item,".hg","hgrc")

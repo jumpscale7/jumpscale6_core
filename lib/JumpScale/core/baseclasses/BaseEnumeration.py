@@ -47,7 +47,7 @@ Python process, types defined in it should be generated, registered, and used
 later on, right?
 
 Well, in a normal application this is the way it's supposed to work. Inside
-openwizzy we got one extra catch though: lazy-loading of extensions.
+jumpscale we got one extra catch though: lazy-loading of extensions.
 
 When an extension is lazy-loaded, this is done using the load_module function
 of the built-in imp module. This results in a complete reload of the module and
@@ -311,10 +311,10 @@ class BaseEnumerationMeta(type):
         #Call class._initItems
         getattr(ret, '_initItems', lambda: None)()
 
-        #Since we can't hook enumerations on openwizzy.q directly, since 'q'
+        #Since we can't hook enumerations on jumpscale.q directly, since 'q'
         #could be not initialized when the first enumeration type is created.
         #To get around this, we use a module-global container variable which
-        #gets populated, and should be hooked onto openwizzy.q whenever
+        #gets populated, and should be hooked onto jumpscale.j whenever
         #applicable.
         #
         #For some reason, it was decided to use smallCapStarting names for

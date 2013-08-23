@@ -184,7 +184,7 @@ class QExpectTool:
 	@type cmd: string
 	
 	@returns: Expect session
-	@rtype: openwizzy.cmdline.QExpect.QExpect
+	@rtype jumpscale.cmdline.QExpect.QExpect
 	'''	
 	return QExpect(cmd=cmd or '')
 	

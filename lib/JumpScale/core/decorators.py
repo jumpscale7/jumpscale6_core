@@ -1,5 +1,5 @@
 
-'''Module providing several decorators used inside openwizzy.
+'''Module providing several decorators used inside jumpscale.
 
 A decorator is a function 'wrapped around' another function or method: it
 allows us to perform actions before or after the decorated method is
@@ -121,7 +121,7 @@ class Version:
     def is_previous(self, other):
         return self.major == other.major and self.minor == other.minor + 1
 
-openwizzy_VERSION = Version(str_='.'.join(map(str, openwizzy.__version__)))
+jumpscale_VERSION = Version(str_='.'.join(map(str, openwizzy.__version__)))
 
 
 class deprecated(object):
@@ -154,9 +154,9 @@ class deprecated(object):
 
         if version:
             self.version = Version(str_=version)
-            if self.version <= openwizzy_VERSION:
+            if self.version <= jumpscale_VERSION:
                 self.removed = True
-            if self.version.is_previous(openwizzy_VERSION):
+            if self.version.is_previous(jumpscale_VERSION):
                 self.show_warning = True
         else:
             self.version = None
@@ -168,7 +168,7 @@ class deprecated(object):
         msg = 'Call to %s function %s' % \
                 ('deprecated' if not self.removed else 'removed', name)
         if self.version:
-            msg = '%s (removed in openwizzy version %s)' % (msg, self.version)
+            msg = '%s (removed in jumpscale version %s)' % (msg, self.version)
 
         if self.alternative:
             msg = '%s, use %s instead' % (msg, self.alternative)
@@ -179,7 +179,7 @@ class deprecated(object):
         if self.removed:
             name = self.name or \
                 '%s.%s' % (inspect.getmodule(func).__name__, func.__name__)
-            if hasattr(openwizzy, 'q'):
+            if hasattr(jumpscale, 'q'):
                 j.logger.log('[DEPRECATION] Found deprecated method %s, this can be removed' % name, 5)
 
         @functools.wraps(func)
@@ -199,7 +199,7 @@ class deprecated(object):
 
         extra_doc = 'Note: this function is deprecated'
         if self.version:
-            extra_doc = '%s and will be removed in openwizzy version %s' % \
+            extra_doc = '%s and will be removed in jumpscale version %s' % \
                     (extra_doc, self.version)
         if self.alternative:
             extra_doc = '%s, use %s' % (extra_doc, self.alternative)

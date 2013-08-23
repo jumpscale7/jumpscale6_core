@@ -33,24 +33,24 @@
 #
 # </License>
 
-'''Descriptors for openwizzy collection types
+'''Descriptors for jumpscale collection types
 
-See the documentation of openwizzy.properties.common for more info.
+See the documentation of jumpscale.properties.common for more info.
 '''
 
 from JumpScale.core.properties import BaseDescriptor
 from JumpScale.core.pmtypes.CollectionTypes import Dictionary, List, Set
 
 class Dictionary(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CollectionTypes.Dictionary}'''
+    '''Descriptor for L{jumpscale.pmtypes.CollectionTypes.Dictionary}'''
     PMTYPE = Dictionary
 
 
 class List(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CollectionTypes.List}'''
+    '''Descriptor for L{jumpscale.pmtypes.CollectionTypes.List}'''
     PMTYPE = List
 
 
 class Set(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.CollectionTypes.Set}'''
+    '''Descriptor for L{jumpscale.pmtypes.CollectionTypes.Set}'''
     PMTYPE = Set

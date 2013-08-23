@@ -738,7 +738,7 @@ def run(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
         # variables can be passed to processhelper.py with only a slight
         # chance of things going wrong in there
 
-        openwizzy_path = os.path.join(j.dirs.baseDir, 'lib', 'openwizzy', 'core')
+        jumpscale_path = os.path.join(j.dirs.baseDir, 'lib', 'jumpscale', 'core')
 
         cmd = list()
         cmd.append(sys.executable)
@@ -759,9 +759,9 @@ def run(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
         # See Trac #165
         path = env.get('PYTHONPATH', None)
         if path:
-            path = os.pathsep.join((openwizzy_path, path, ))
+            path = os.pathsep.join((jumpscale_path, path, ))
         else:
-            path = openwizzy_path
+            path = jumpscale_path
         env['PYTHONPATH'] = path
 
     return _runWithEnv(commandline, showOutput=showOutput,
@@ -826,7 +826,7 @@ def _runWithEnv(commandline, showOutput=False, captureOutput=True, maxSeconds=0,
     if not subprocess.mswindows:
         # Reset all signals before calling execlp but after forking. This
         # fixes Python issue 1652 (http://bugs.python.org/issue1652) and
-        # openwizzy ticket 189
+        # jumpscale ticket 189
         def reset_signals():
             '''Reset all signals to SIG_DFL'''
             for i in xrange(1, signal.NSIG):
@@ -984,7 +984,7 @@ def runScript(script, showOutput=False, captureOutput=True, maxSeconds=0,
     not be buffered.
 
     For an overview of the parameters and function behaviour, see the
-    documentation of L{openwizzy.system.process.run}.
+    documentation of L{jumpscale.system.process.run}.
 
     @param script: Script to execute
     @type script: string
@@ -994,7 +994,7 @@ def runScript(script, showOutput=False, captureOutput=True, maxSeconds=0,
 
     @raise ValueError: Script is not an existing file
 
-    @see: openwizzy.system.process.run
+    @see: jumpscale.system.process.run
     '''
     if not j.system.fs.isFile(script):
         raise ValueError('Unable to execute %s: not an existing file' % script)
@@ -1068,7 +1068,7 @@ def runDaemon(commandline, stdout=None, stderr=None, user=None, group=None,
     # variables can be passed to processhelper.py with only a slight chance of
     # things going wrong in there
 
-    openwizzy_path = os.path.join(j.dirs.baseDir, 'lib', 'openwizzy', 'core')
+    jumpscale_path = os.path.join(j.dirs.baseDir, 'lib', 'openwizzy', 'core')
 
     cmd = list()
     cmd.append(sys.executable)
@@ -1098,9 +1098,9 @@ def runDaemon(commandline, stdout=None, stderr=None, user=None, group=None,
     env['PYTHONUNBUFFERED'] = '1'
     path = env.get('PYTHONPATH', None)
     if path:
-        path = os.pathsep.join((openwizzy_path, path, ))
+        path = os.pathsep.join((jumpscale_path, path, ))
     else:
-        path = openwizzy_path
+        path = jumpscale_path
     env['PYTHONPATH'] = path
 
     code, out, err = _runWithEnv(cmd, env=env)

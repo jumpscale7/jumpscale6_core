@@ -33,29 +33,29 @@
 #
 # </License>
 
-'''Descriptors for openwizzy primitive types
+'''Descriptors for jumpscale primitive types
 
-See the documentation of openwizzy.properties.common for more info.
+See the documentation of jumpscale.properties.common for more info.
 '''
 
 from JumpScale.core.properties import BaseDescriptor
 from JumpScale.core.pmtypes.PrimitiveTypes import Boolean, Integer, Float, String
 
 class Boolean(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.PrimitiveTypes.Boolean}'''
+    '''Descriptor for L{jumpscale.pmtypes.PrimitiveTypes.Boolean}'''
     PMTYPE = Boolean
 
 
 class Integer(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.PrimitiveTypes.Integer}'''
+    '''Descriptor for L{jumpscale.pmtypes.PrimitiveTypes.Integer}'''
     PMTYPE = Integer
 
 
 class Float(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.PrimitiveTypes.Float}'''
+    '''Descriptor for L{jumpscale.pmtypes.PrimitiveTypes.Float}'''
     PMTYPE = Float
 
 
 class String(BaseDescriptor):
-    '''Descriptor for L{openwizzy.pmtypes.PrimitiveTypes.String}'''
+    '''Descriptor for L{jumpscale.pmtypes.PrimitiveTypes.String}'''
     PMTYPE = String

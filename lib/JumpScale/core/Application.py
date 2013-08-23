@@ -74,7 +74,7 @@ class Application:
             self.config = j.core.hrd.getHRDTree(path=j.system.fs.joinPaths(j.dirs.cfgDir, "grid"))
 
 
-    def start(self,name=None,basedir="/opt/openwizzy6",appdir="."):
+    def start(self,name=None,basedir="/opt/jumpscale6",appdir="."):
         '''Start the application
 
         You can only stop the application with return code 0 by calling
@@ -100,7 +100,7 @@ class Application:
 
         self.initWhoAmI()
 
-        j.logger.log("Application %s started" % self.appname, level=8, category="openwizzy.app")
+        j.logger.log("Application %s started" % self.appname, level=8, category="jumpscale.app")
 
     def stop(self, exitcode=0):
 

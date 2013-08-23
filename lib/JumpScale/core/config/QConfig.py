@@ -4,7 +4,7 @@ from JumpScale.baselib.inifile.IniFile import IniFile
 
 class QConfig():
     """
-    openwizzy singleton class available under j.config
+    jumpscale singleton class available under j.config
     Meant for non interactive access to configuration items
     """
     def getInifile(self, configtype):
@@ -14,7 +14,7 @@ class QConfig():
     def getConfig(self, configtype):
         """
         Return dict of dicts for this configuration.
-        E.g. { 'openwizzy.org'    : {url:'http://openwizzy.org', login='test'} ,
+        E.g. { 'jumpscale.org'    : {url:'http://jumpscale.org', login='test'} ,
                'trac.qlayer.com' : {url:'http://trac.qlayer.com', login='mylogin'} }
         """
         ini = self.getInifile(configtype)

@@ -217,7 +217,7 @@ class PortApps(j.code.classGetBase()):
             cmd="gzip -d %s" % path
             j.system.process.execute(cmd)
         else:
-            #@todo use openwizzy everywhere we can (was copied from an installer where openwizzy could not be used)
+            #@todo use jumpscale everywhere we can (was copied from an installer where jumpscale could not be used)
             handle = gzip.open(path)
             with open('portappexpanded.tar', 'w') as out:
                 for line in handle:

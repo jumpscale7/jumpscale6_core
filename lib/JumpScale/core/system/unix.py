@@ -256,7 +256,7 @@ class UnixSystem:
         @raises RuntimeError: If /bin/su is not available on the system
         @raises ValueError: When the provided username can't be resolved
 
-        @see: openwizzy.system.process.SystemProcess.execute
+        @see: jumpscale.system.process.SystemProcess.execute
         '''
         command = self._prepareCommand(command, username)
 
@@ -289,7 +289,7 @@ class UnixSystem:
         @raises RuntimeError: If /bin/su is not available on the system
         @raises ValueError: When the provided username can't be resolved
 
-        @see: openwizzy.system.process.runDaemon
+        @see: jumpscale.system.process.runDaemon
         '''
 
         command = self._prepareCommand(command, username)

@@ -18,7 +18,6 @@ class LogTargetStdOut(object):
     def log(self, log):
         """
         log to stdout use q.loghandler.reformatMessageToHR() 
-        format of log message see: http://bitbucket.org/despiegk/ssospecs/src/tip/1.1/concepts/EventManagement/1. openwizzyLogEventMgmt.wiki
         example 1|754545|performancetester|5||copy file from a to b
         @param message string in format time(epoch)|source(string)|level(0-10)|tags|logmessage\n 
         """    

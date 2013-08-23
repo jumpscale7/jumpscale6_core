@@ -11,7 +11,7 @@ import JumpScale.baselib.owdeveltools
 
 do=j.system.installtools
 
-j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
+j.application.start("jsinstallrepos",basedir="/opt/jumpscale6/",appdir="/opt/jumpscale6/apps/exampleapp/")
 
 if j.system.platformtype.isLinux():
     j.system.platform.ubuntu.check()
