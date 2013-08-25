@@ -3,6 +3,7 @@
 from JumpScale import j
 from ConfigFileManager import ConfigFileManager
 import os
+import sys
 
 class Group():
     pass
@@ -13,9 +14,19 @@ class ShellConfig():
     attach configuration items to this configure object (can happen at runtime)
     """
     def __init__(self):
-        self.interactive=False
+        self._interactive=None
         self.debug=False
         self.ipython=False
+
+    @property
+    def interactive(self):
+        if self._interactive is not None:
+            return self._interactive
+        return sys.__stdin__.isatty()
+
+    @interactive.setter
+    def interactive(self, value):
+        self._interactive = value
         
     def refresh(self):
         configfiles= j.system.fs.listFilesInDir(j.dirs.configsDir)
