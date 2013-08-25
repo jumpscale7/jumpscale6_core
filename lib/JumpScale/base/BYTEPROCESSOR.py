@@ -1,4 +1,4 @@
-from JumpScaleJumpScale import j
+from JumpScale import j
 
 try:
     import hashlib
