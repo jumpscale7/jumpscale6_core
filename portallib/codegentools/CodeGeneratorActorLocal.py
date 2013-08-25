@@ -1,62 +1,63 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from CodeGeneratorBase import CodeGeneratorBase
 
+
 class CodeGeneratorActorLocal(CodeGeneratorBase):
-    def __init__(self,spec,typecheck=True,dieInGenCode=True):
-        CodeGeneratorBase.__init__(self,spec,typecheck,dieInGenCode)
 
-        self.actorpath=o.system.fs.joinPaths(o.core.codegenerator.codepath,spec.appname,spec.actorname)
-        o.system.fs.createDir(self.actorpath)
-        self.type="actorlocal"
+    def __init__(self, spec, typecheck=True, dieInGenCode=True):
+        CodeGeneratorBase.__init__(self, spec, typecheck, dieInGenCode)
 
+        self.actorpath = j.system.fs.joinPaths(j.core.codegenerator.codepath, spec.appname, spec.actorname)
+        j.system.fs.createDir(self.actorpath)
+        self.type = "actorlocal"
 
-    def addMethod(self,method):
-        spec=self.spec
-        s="def %s(self{paramcodestr}):\n" % method.name
-        descr=""
+    def addMethod(self, method):
+        spec = self.spec
+        s = "def %s(self{paramcodestr}):\n" % method.name
+        descr = ""
 
-        if method.description<>"":
-            if method.description[-1]<>"\n":
-                method.description+="\n\n"
-            descr=method.description
+        if method.description != "":
+            if method.description[-1] != "\n":
+                method.description += "\n\n"
+            descr = method.description
 
         for var in method.vars:
-            descr+="param:%s %s" % (var.name,self.descrTo1Line(var.description))
-            if var.defaultvalue<>None:
-                descr+=" default=%s" % var.defaultvalue
-            descr+="\n"
+            descr += "param:%s %s" % (var.name, self.descrTo1Line(var.description))
+            if var.defaultvalue != None:
+                descr += " default=%s" % var.defaultvalue
+            descr += "\n"
 
-        if method.result<>None:
-            descr+="result %s %s\n" % (method.result.type,self.descrTo1Line(method.result.description))
+        if method.result != None:
+            descr += "result %s %s\n" % (method.result.type, self.descrTo1Line(method.result.description))
 
-        if descr<>"":
-            s+=o.code.indent("\"\"\"\n%s\n\"\"\"\n"%descr,1)
+        if descr != "":
+            s += j.code.indent("\"\"\"\n%s\n\"\"\"\n" % descr, 1)
 
-        paramCodeStr=","
+        paramCodeStr = ","
         for param in method.vars:
-            if param.defaultvalue<>None:
-                paramCodeStr+="%s=%r,"%(param.name, param.defaultvalue)
+            if param.defaultvalue != None:
+                paramCodeStr += "%s=%r," % (param.name, param.defaultvalue)
             else:
-                paramCodeStr+="%s,"%param.name
-        if len(paramCodeStr)>0 and paramCodeStr[-1]==",":
-            paramCodeStr=paramCodeStr[:-1]
-        if paramCodeStr<>"":
-            s=s.replace("{paramcodestr}",self.descrTo1Line(paramCodeStr))
+                paramCodeStr += "%s," % param.name
+        if len(paramCodeStr) > 0 and paramCodeStr[-1] == ",":
+            paramCodeStr = paramCodeStr[:-1]
+        if paramCodeStr != "":
+            s = s.replace("{paramcodestr}", self.descrTo1Line(paramCodeStr))
         else:
-            s=s.replace("{paramcodestr}","")
+            s = s.replace("{paramcodestr}", "")
 
-        self.content+="\n%s"%o.code.indent(s,1)
+        self.content += "\n%s" % j.code.indent(s, 1)
 
-        s="params=o.core.params.get()\n"
+        s = "params=j.core.params.get()\n"
 
         for var in method.vars:
-            s+= "params.%s=%s\n" % (var.name,var.name)
+            s += "params.%s=%s\n" % (var.name, var.name)
 
-        key="%s_%s_%s" % (spec.appname,spec.actorname,method.name)
+        key = "%s_%s_%s" % (spec.appname, spec.actorname, method.name)
 
-        s+="""
-te=o.core.portal.runningPortal.taskletengines["{key}"]
+        s += """
+te=j.core.portal.runningPortal.taskletengines["{key}"]
 params=te.execute(params)
 if params.has_key("result"):
     return params.result
@@ -64,26 +65,25 @@ else:
     return params
 """
         #@todo need to complete the code for te.execute(self, params, service=None, job=None, tags=None, groupname='main')
-        s=s.replace("{key}",key)
+        s = s.replace("{key}", key)
 
-        self.content+=o.code.indent(s,2)
+        self.content += j.code.indent(s, 2)
         return
 
     def addInitExtras(self):
-        s="""
+        s = """
 ## following code will be loaded at runtime
-from OpenWizzy.core.Shell import ipshellDebug,ipshell
+from JumpScale.core.Shell import ipshellDebug,ipshell
 print "DEBUG NOW db init"
 ipshell()
 
 actorObject.dbfs=self.dbclientFactory.get(self.appName,actorName,self.dbtype)
-actorObject.dbmem=self.dbclientFactory.get(self.appName,actorName,o.enumerators.KeyValueStoreType.MEMORY)
-actorObject.dbredis=self.dbclientFactory.get(self.appName,actorName,o.enumerators.KeyValueStoreType.REDIS)
+actorObject.dbmem=self.dbclientFactory.get(self.appName,actorName,j.enumerators.KeyValueStoreType.MEMORY)
+actorObject.dbredis=self.dbclientFactory.get(self.appName,actorName,j.enumerators.KeyValueStoreType.REDIS)
 actorObject.name=actorName
 actorObject.appname=self.appName
 """
-        #self.initprops+=o.code.indent(s,2)
-
+        # self.initprops+=j.code.indent(s,2)
 
     def generate(self):
         self.addClass()
@@ -94,7 +94,3 @@ actorObject.appname=self.appName
             self.addMethod(method)
 
         return self.getContent()
-
-
-
-

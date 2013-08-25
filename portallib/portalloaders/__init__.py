@@ -1,5 +1,5 @@
-from OpenWizzy import o
-import OpenWizzy.grid.osismodel
+from JumpScale import j
+import JumpScale.grid.osismodel
 from .PortalLoaderFactory import PortalLoaderFactory
-o.base.loader.makeAvailable(o, 'core')
-o.core.portalloader = PortalLoaderFactory()
+j.base.loader.makeAvailable(j, 'core')
+j.core.portalloader = PortalLoaderFactory()

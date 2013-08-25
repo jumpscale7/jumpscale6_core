@@ -7,7 +7,7 @@ import subprocess
 import logging
 import threading
 
-from OpenWizzy import o
+from JumpScale import j
 
 
 debug = True
@@ -20,8 +20,9 @@ if debug:
 baseurl = 'http://localhost:%s/restmachine/space/objects/model.%%s' % appport
 baserestfull = 'http://localhost:%s/restextmachine/space/objects/%%s' % appport
 loginurl = "http://localhost:%s" % appport
-appdir = os.path.join(o.dirs.appDir, str(uuid.uuid4()))
+appdir = os.path.join(j.dirs.appDir, str(uuid.uuid4()))
 procs = list()
+
 
 class LogPipe(threading.Thread):
 
@@ -57,7 +58,7 @@ class LogPipe(threading.Thread):
 
 def setUp():
     app = os.path.join(os.path.dirname(__file__), '_app')
-    o.system.fs.copyDirTree(app, appdir)
+    j.system.fs.copyDirTree(app, appdir)
     if not debug:
         global out, err
         out = LogPipe(logging.INFO)
@@ -67,21 +68,23 @@ def setUp():
 
 
 def startOsis(out, err):
-    import ipdb; ipdb.set_trace()
-    path = o.system.fs.joinPaths(o.dirs.baseDir, 'apps', 'osis')
+    import ipdb
+    ipdb.set_trace()
+    path = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'osis')
     proc = subprocess.Popen(['python', 'osisServerStart.py'], cwd=path, stdout=out, stderr=err)
     procs.append(proc)
+
 
 def startApp(out, err):
     proc = subprocess.Popen(['python', 'start_appserver.py'], cwd=appdir, stdout=out, stderr=err)
     procs.append(proc)
-    o.system.net.waitConnectionTest('127.0.0.1', appport, 5)
+    j.system.net.waitConnectionTest('127.0.0.1', appport, 5)
 
 
 def tearDown():
     for proc in procs:
         proc.kill()
-    o.system.fs.removeDirTree(appdir)
+    j.system.fs.removeDirTree(appdir)
     global out, err
     if out:
         out.close()
@@ -100,7 +103,6 @@ class RestMachine(unittest.TestCase):
         self.session = requests.Session()
         self.login('admin', 'admin')
         self.ids = list()
-
 
     def tearDown(self):
         for id in self.ids[:]:
@@ -196,26 +198,30 @@ class RestExtMachine(RestMachine):
         self.assertEqual(r.status_code, 200)
         return r
 
+
 class RestMachineOsis(RestMachine):
     objecttype = 'machineosis'
 
+
 class RestMachineExtOsis(RestExtMachine):
     objecttype = 'machineosis'
+
 
 class RestNic(RestMachine):
     objecttype = 'nic'
     idtype = basestring
 
+
 class RestExtNic(RestExtMachine):
     objecttype = 'nic'
     idtype = basestring
+
 
 class RestNicOsis(RestMachine):
     objecttype = 'nicosis'
     idtype = basestring
 
+
 class RestExtNicOsis(RestExtMachine):
     objecttype = 'nicosis'
     idtype = basestring
-
-

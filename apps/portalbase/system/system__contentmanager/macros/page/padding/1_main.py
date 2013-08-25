@@ -1,21 +1,20 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     page = args.page
-                
+
     if args.tags.tagExists("top"):
-        top=args.tags.tagGet("top")
+        top = args.tags.tagGet("top")
         try:
-            bottom=args.tags.tagGet("bottom")
+            bottom = args.tags.tagGet("bottom")
         except:
-            bottom=0
-        page.padding="%s-%s"%(top,bottom)
+            bottom = 0
+        page.padding = "%s-%s" % (top, bottom)
     else:
-        page.padding=True
+        page.padding = True
 
     params.result = page
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

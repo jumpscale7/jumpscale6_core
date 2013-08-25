@@ -1,19 +1,22 @@
 
-from OpenWizzy import o
+from JumpScale import j
 from Page import Page
 import copy
 import json
 import inspect
 
+
 class PageHTML(Page):
+
     """
     the methods add code to the self.body part !!!!!
     """
-    def __init__(self,name,content="",htmllibPath=None,online=False,stylesheet=None):
+
+    def __init__(self, name, content="", htmllibPath=None, online=False, stylesheet=None):
         """
         @param stylesheet if 'local' will get stylesheet from disk, otherwise can specify other stylesheet
         """
-        Page.__init__(self,name,content)
+        Page.__init__(self, name, content)
 
         #self.title = "<title>%s</title>\n" % name
         self.title = ""
@@ -21,92 +24,91 @@ class PageHTML(Page):
         self.libs = ""
         #self.body = "<div class='heading'><h1>%s</h1></div>\n" % name
         self.body = ""
-        self.projectname=""
-        self.logo=""
+        self.projectname = ""
+        self.logo = ""
         self.scriptBody = ""
-        self.jscsslinks={}
-        self.login=False
-        self.divlevel=[]
-        self._inBlock=False
-        self._inBlockType=""
-        self._inBlockClosingStatement=""
-        self._bulletslevel=0
-        self._codeblockid=0
-        self._hasmenu=False
+        self.jscsslinks = {}
+        self.login = False
+        self.divlevel = []
+        self._inBlock = False
+        self._inBlockType = ""
+        self._inBlockClosingStatement = ""
+        self._bulletslevel = 0
+        self._codeblockid = 0
+        self._hasmenu = False
         self._hostbasedmacro = False
-        self.hasfindmenu=False
-        self.padding=True
-        self.pagemirror4jscss=None
-        self.processparameters = {} 
-        
+        self.hasfindmenu = False
+        self.padding = True
+        self.pagemirror4jscss = None
+        self.processparameters = {}
 
-        if htmllibPath<>None:
-            self.liblocation=htmllibPath
+        if htmllibPath != None:
+            self.liblocation = htmllibPath
         else:
             if online:
-                self.liblocation="https://bitbucket.org/incubaid/openwizzy-core-6.0/raw/default/extensions/core/docgenerator/htmllib"
+                self.liblocation = "https://bitbucket.org/incubaid/jumpscale-core-6.0/raw/default/extensions/core/docgenerator/htmllib"
             else:
-                extpath=inspect.getfile(self.__init__)
-                extpath=o.system.fs.getDirName(extpath)
-                self.liblocation=o.system.fs.joinPaths(extpath,"htmllib")
+                extpath = inspect.getfile(self.__init__)
+                extpath = j.system.fs.getDirName(extpath)
+                self.liblocation = j.system.fs.joinPaths(extpath, "htmllib")
 
         self._hasCharts = False
         self._hasCodeblock = False
-        self._hasBootstrap=False
-        self._hasSidebar=False
-        self.functionsAdded={}
-        self._explorerInstance=0
-        self._lineId=0
-        self.documentReadyFunctions=[]
+        self._hasBootstrap = False
+        self._hasSidebar = False
+        self.functionsAdded = {}
+        self._explorerInstance = 0
+        self._lineId = 0
+        self.documentReadyFunctions = []
 
-        chartTemplatePath = o.system.fs.joinPaths(o.system.fs.getDirName(__file__),"templates", "chart.js")
-        self._chartTemplateContent = o.system.fs.fileGetContents(chartTemplatePath)
+        chartTemplatePath = j.system.fs.joinPaths(j.system.fs.getDirName(__file__), "templates", "chart.js")
+        self._chartTemplateContent = j.system.fs.fileGetContents(chartTemplatePath)
         self._chartId = 44
 
-        #pieTemplatePath = o.system.fs.joinPaths(o.system.fs.getDirName(__file__),"templates", "pie.js")
-        #self._pieTemplateContent = o.system.fs.fileGetContents(pieTemplatePath)    
+        #pieTemplatePath = j.system.fs.joinPaths(j.system.fs.getDirName(__file__),"templates", "pie.js")
+        #self._pieTemplateContent = j.system.fs.fileGetContents(pieTemplatePath)
         #self._pieId = 100
 
-        #lineTemplatePath = o.system.fs.joinPaths(o.system.fs.getDirName(__file__),"templates", "line.js")
-        #self._lineTemplateContent = o.system.fs.fileGetContents(lineTemplatePath)
+        #lineTemplatePath = j.system.fs.joinPaths(j.system.fs.getDirName(__file__),"templates", "line.js")
+        #self._lineTemplateContent = j.system.fs.fileGetContents(lineTemplatePath)
         #self._lineId = 150
 
-        if stylesheet=="local":
-            stylesheet = o.system.fs.joinPaths(o.system.fs.getDirName(__file__), "style.css")
-            if o.system.fs.exists(stylesheet):
-                css=o.system.fs.fileGetContents(stylesheet)
+        if stylesheet == "local":
+            stylesheet = j.system.fs.joinPaths(j.system.fs.getDirName(__file__), "style.css")
+            if j.system.fs.exists(stylesheet):
+                css = j.system.fs.fileGetContents(stylesheet)
                 self.addCSS("", css)
 
-    def addMessage(self, message, newline=False, isElement=True,blockcheck=True):
+    def addMessage(self, message, newline=False, isElement=True, blockcheck=True):
         if blockcheck:
-            #print "blockcheck %s" % message
-            self._checkBlock("","","")
-        #else:
-            #print "no blockcheck %s" % message
-        message=str(message)
-        message=message.replace("text:u","")
+            # print "blockcheck %s" % message
+            self._checkBlock("", "", "")
+        # else:
+            # print "no blockcheck %s" % message
+        message = str(message)
+        message = message.replace("text:u", "")
         message.strip("'")
-        message=message.strip()
-        message=message.replace("\r","")
+        message = message.strip()
+        message = message.replace("\r", "")
         if message != '' and isElement:
             message = "%s" % message
         elif newline and message != '':
             message = "<p>%s</p><br/>" % message
         elif newline and message == '':
             message = '<br/>'
-        elif message=="":
+        elif message == "":
             pass
         else:
             message = "<p>%s</p>" % message
 
         if message != "":
-            self.body="%s%s\n" % (self.body,message)
+            self.body = "%s%s\n" % (self.body, message)
 
-    def addParagraph(self,message):
-        self.addMessage(message,isElement=False)
+    def addParagraph(self, message):
+        self.addMessage(message, isElement=False)
 
-    def addBullet(self,message,level=1, bullet_type='bullet', tag='ul', attributes=''):
-        self._checkBlock(bullet_type,"","</{0}>".format(tag))
+    def addBullet(self, message, level=1, bullet_type='bullet', tag='ul', attributes=''):
+        self._checkBlock(bullet_type, "", "</{0}>".format(tag))
         if level > self._bulletslevel:
             for i in range(level - self._bulletslevel):
                 self.addMessage("<{0} {1}>".format(tag, attributes), blockcheck=False)
@@ -117,142 +119,141 @@ class PageHTML(Page):
             self._bulletslevel = level
         self.addMessage("<li>%s</li>" % message, blockcheck=False)
 
-    def _checkBlock(self,ttype,open,close):
+    def _checkBlock(self, ttype, open, close):
         """
         types are : bullet,descr
         """
-        #print "checkblock inblock:%s ttype:%s intype:%s" %(self._inBlock,ttype,self._inBlockType)
+        # print "checkblock inblock:%s ttype:%s intype:%s" %(self._inBlock,ttype,self._inBlockType)
         if self._inBlock:
-            if self._inBlockType<>ttype:
+            if self._inBlockType != ttype:
                 if self._inBlockType in ("bullet", "number"):
                     for i in range(self._bulletslevel):
-                        self.addMessage(self._inBlockClosingStatement,blockcheck=False)
-                    self._bulletslevel=0
+                        self.addMessage(self._inBlockClosingStatement, blockcheck=False)
+                    self._bulletslevel = 0
                 else:
-                    self.addMessage(self._inBlockClosingStatement,blockcheck=False)
-                if open<>"":
-                    self.addMessage(open,blockcheck=False)
-                    self._inBlock=True
-                    self._inBlockType=ttype
-                    self._inBlockClosingStatement=close
+                    self.addMessage(self._inBlockClosingStatement, blockcheck=False)
+                if open != "":
+                    self.addMessage(open, blockcheck=False)
+                    self._inBlock = True
+                    self._inBlockType = ttype
+                    self._inBlockClosingStatement = close
                 else:
-                    self._inBlock=False
-                    self._inBlockType=""
-                    self._inBlockClosingStatement=""
+                    self._inBlock = False
+                    self._inBlockType = ""
+                    self._inBlockClosingStatement = ""
         else:
-            self.addMessage(open,blockcheck=False)
-            if ttype<>"" and close<>"":
-                self._inBlock=True
-                self._inBlockType=ttype
-                self._inBlockClosingStatement=close
-        #print "checkblock END: inblock:%s ttype:%s intype:%s" %(self._inBlock,ttype,self._inBlockType)
+            self.addMessage(open, blockcheck=False)
+            if ttype != "" and close != "":
+                self._inBlock = True
+                self._inBlockType = ttype
+                self._inBlockClosingStatement = close
+        # print "checkblock END: inblock:%s ttype:%s intype:%s" %(self._inBlock,ttype,self._inBlockType)
 
+    def addDescr(self, name, descr):
+        self._checkBlock("descr", "<dl class=\"dl-horizontal\">", "</dl>")
+        self.addMessage("<dt>%s</dt>\n<dd>%s</dd>" % (name, descr), blockcheck=False)
 
-    def addDescr(self,name,descr):
-        self._checkBlock("descr","<dl class=\"dl-horizontal\">","</dl>")
-        self.addMessage("<dt>%s</dt>\n<dd>%s</dd>" % (name,descr),blockcheck=False)
-
-    def addBullets(self,messages,level=1):
+    def addBullets(self, messages, level=1):
         """
         messages: list of bullets
         """
 
-        #todo: figure a way for nested bullets!!
+        # todo: figure a way for nested bullets!!
         bullets = '<ul>'
         for message in messages:
             bullets += '<li>%s</li>' % message
-        bullets += '</ul>';
-        self.addMessage(bullets,blockcheck=False)
+        bullets += '</ul>'
+        self.addMessage(bullets, blockcheck=False)
 
     def addNewLine(self, nrlines=1):
         for line in range(nrlines):
             self.addMessage("", True, isElement=True)
 
-    def addHeading(self,message,level=1):
-        message=str(message)
+    def addHeading(self, message, level=1):
+        message = str(message)
         heading = "<h%s>%s</h%s>" % (level, message, level)
         self.addMessage(heading, isElement=True)
 
-    def addList(self,rows,headers="",showcolumns=[],columnAliases={},classparams="table-condensed table-hover",linkcolumns=[]):
+    def addList(self, rows, headers="", showcolumns=[], columnAliases={}, classparams="table-condensed table-hover", linkcolumns=[]):
         """
         @param rows [[col1,col2, ...]]  (array of array of column values)
         @param headers [header1, header2, ...]
         @param linkcolumns has pos (starting 0) of columns which should be formatted as links  (in that column format needs to be $description__$link
         """
-        if self.functionsAdded.has_key("datatables"):
-            classparams+=" display dataTable"
-        if len(rows)==0:
+        if "datatables" in self.functionsAdded:
+            classparams += " display dataTable"
+        if len(rows) == 0:
             return False
-        l=len(rows[0])
-        if str(headers) != "" and headers<>None:
+        l = len(rows[0])
+        if str(headers) != "" and headers != None:
             if l != len(headers):
-                headers=[""]+headers
+                headers = [""] + headers
             if l != len(headers):
                 #raise RuntimeError("Cannot process headers, wrong nr of cols")
-                from OpenWizzy.core.Shell import ipshellDebug,ipshell
+                from JumpScale.core.Shell import ipshellDebug, ipshell
                 print "DEBUG NOW Cannot process headers, wrong nr of cols"
                 ipshell()
 
                 print "Cannot process headers, wrong nr of cols"
                 self.addMessage("ERROR header wrong nr of cols:%s" % headers)
-                headers=[]
+                headers = []
 
-            #if len(headers) > l:
-                #while len(headers) != l:
-                    #headers.pop(0)
+            # if len(headers) > l:
+                # while len(headers) != l:
+                    # headers.pop(0)
 
-        ##@todo does not work
-        #if showcolumns != []:
-            #rows2=rows
-            #rows=[]
-            #for row in rows2:
-                #if row[0] in showcolumns:
-                    #rows.append(row)
+        # @todo does not work
+        # if showcolumns != []:
+            # rows2=rows
+            # rows=[]
+            # for row in rows2:
+                # if row[0] in showcolumns:
+                    # rows.append(row)
             #headers.insert(0," ")
 
-        c="<table  class='table %s'>\n"%classparams  #the content
+        c = "<table  class='table %s'>\n" % classparams  # the content
         if headers != "":
-            c+="<thead><tr>\n"
+            c += "<thead><tr>\n"
             for item in headers:
-                if item=="":
-                    item=" "
-                c = "%s<th>%s</th>\n" % (c,item)
+                if item == "":
+                    item = " "
+                c = "%s<th>%s</th>\n" % (c, item)
             c += "</tr></thead>\n"
-        rows3=copy.deepcopy(rows)
+        rows3 = copy.deepcopy(rows)
         c += "<tbody>\n"
         for row in rows3:
             c += "<tr>\n"
-            if columnAliases.has_key(row[0]):
-                row[0]=columnAliases[row[0]]
-            colnr=0
+            if row[0] in columnAliases:
+                row[0] = columnAliases[row[0]]
+            colnr = 0
             for col in row:
-                if col=="":
-                    col=" "
+                if col == "":
+                    col = " "
                 if colnr in linkcolumns:
-                    if len(col.split("__"))<>2:
+                    if len(col.split("__")) != 2:
                         raise RuntimeError("column which represents a link needs to be of format $descr__$link, here was:%s" % col)
-                    c += "<td>%s</td>\n" % self.getLink(col.split("__")[0],col.split("__")[1])
+                    c += "<td>%s</td>\n" % self.getLink(col.split("__")[0], col.split("__")[1])
                 else:
                     c += "<td>%s</td>\n" % self.getRound(col)
-                colnr+=1
+                colnr += 1
             c += "</tr>\n"
         c += "</tbody></table>\n\n"
-        self.addMessage(c,True, isElement=True)
+        self.addMessage(c, True, isElement=True)
 
-    def addDict(self,dictobject,description="",keystoshow=[],aliases={},roundingDigits=None):
+    def addDict(self, dictobject, description="", keystoshow=[], aliases={}, roundingDigits=None):
         """
         @params aliases is dict with mapping between name in dict and name to use
         """
-        if keystoshow==[]:
-            keystoshow=dictobject.keys()
+        if keystoshow == []:
+            keystoshow = dictobject.keys()
         self.addMessage(description)
-        arr=[]
+        arr = []
         for item in keystoshow:
-            if aliases.has_key(item):
-                name=aliases[item]
+            if item in aliases:
+                name = aliases[item]
             else:
-                name=item
-            arr.append([name,dictobject[item]])
+                name = item
+            arr.append([name, dictobject[item]])
         self.addList(arr)
         self.addNewLine()
 
@@ -277,74 +278,74 @@ class PageHTML(Page):
     def addPageBreak(self,):
         self.addMessage("<hr style='page-break-after: always;'/>")
 
-    def addActionBox(self,actions):
+    def addActionBox(self, actions):
         """
         @actions is array of array, [[$actionname1,$params1],[$actionname2,$params2]]
         """
-        row=[]
+        row = []
         for item in actions:
-            action=item[0]
-            actiondescr=item[1]
-            if actiondescr=="":
-                actiondescr=action
-            params=item[2]
+            action = item[0]
+            actiondescr = item[1]
+            if actiondescr == "":
+                actiondescr = action
+            params = item[2]
 
-            if self.actions.has_key(action):
-                link=self.actions[action]
-                link=link.replace("{params}",params)
-                row.append(self.getLink(actiondescr,link))
+            if action in self.actions:
+                link = self.actions[action]
+                link = link.replace("{params}", params)
+                row.append(self.getLink(actiondescr, link))
             else:
-                raise RuntimeError("Could not find action %s"%action)
+                raise RuntimeError("Could not find action %s" % action)
         self.addList([row])
 
-    def addCodeBlock(self,code,template="python",path="",edit=False,exitpage=True, spacename='', pagename=''):
+    def addCodeBlock(self, code, template="python", path="", edit=False, exitpage=True, spacename='', pagename=''):
         """
         @todo define types of templates supported
         @template e.g. python
         if path is given and edit=True then file can be editted and a edit button will appear on editor             
         """
-        #if codeblock no postprocessing(e.g replacing $$space, ...) should be
-        #done
+        # if codeblock no postprocessing(e.g replacing $$space, ...) should be
+        # done
         if edit:
             self.processparameters['postprocess'] = False
-        self.addJS("%s/codemirror/lib/codemirror.js"% self.liblocation)
-        self.addCSS("%s/codemirror/lib/codemirror.css"% self.liblocation)
-        self.addJS("%s/codemirror/mode/javascript/javascript.js"% self.liblocation)
-        self.addCSS("%s/codemirror/theme/elegant.css"% self.liblocation)
+        self.addJS("%s/codemirror/lib/codemirror.js" % self.liblocation)
+        self.addCSS("%s/codemirror/lib/codemirror.css" % self.liblocation)
+        self.addJS("%s/codemirror/mode/javascript/javascript.js" % self.liblocation)
+        self.addCSS("%s/codemirror/theme/elegant.css" % self.liblocation)
         #self.addCSS("%s/codemirror/doc/docs.css"% self.liblocation)
-        self.addJS("%s/codemirror/mode/%s/%s.js" % ( self.liblocation,template,template))
-        CSS="""
+        self.addJS("%s/codemirror/mode/%s/%s.js" % (self.liblocation, template, template))
+        CSS = """
 <style type="text/css">
       .CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black}
       .CodeMirror-scroll { height: 100% }
 </style>
 """
-        self.head+=CSS
-        self._codeblockid+=1
-        TA="<textarea id=\"code%s\" name=\"code%s\" rows=\"5\">" % (self._codeblockid,self._codeblockid)
-        TA+=code
-        TA+="</textarea>"
-        if path<>"" and edit:
-            TA+="<button type=\"submit\" onclick=\"copyText%s();\">Save.</button>"%self._codeblockid
+        self.head += CSS
+        self._codeblockid += 1
+        TA = "<textarea id=\"code%s\" name=\"code%s\" rows=\"5\">" % (self._codeblockid, self._codeblockid)
+        TA += code
+        TA += "</textarea>"
+        if path != "" and edit:
+            TA += "<button type=\"submit\" onclick=\"copyText%s();\">Save.</button>" % self._codeblockid
         self.addMessage(TA)
-    
-        if path<>"" and edit:
 
-            F="""
+        if path != "" and edit:
+
+            F = """
     <form id="hiddenForm$id" name="hiddenForm$id" method="post" action="/restmachine/system/contentmanager/wikisave">
     <input type="hidden" name="text" id="text" value="">
     <input type="hidden" name="cachekey" id="cachekey" value="$guid">
     </form>
             """
-            F=F.replace("$id",str(self._codeblockid))
-            guid=o.base.idgenerator.generateGUID()
+            F = F.replace("$id", str(self._codeblockid))
+            guid = j.base.idgenerator.generateGUID()
             content = {'space': spacename, 'path': path, 'page': pagename}
-            o.apps.system.contentmanager.dbmem.cacheSet(guid,content,60)
-            F=F.replace("$guid",guid)
+            j.apps.system.contentmanager.dbmem.cacheSet(guid, content, 60)
+            F = F.replace("$guid", guid)
             self.addMessage(F)
 
-        #if not self._hasCodeblock:
-        JS="""
+        # if not self._hasCodeblock:
+        JS = """
 var editor$id = CodeMirror.fromTextArea(document.getElementById("code$id"),
     {
     lineNumbers: true,
@@ -364,27 +365,24 @@ function copyText$id() {
     document.forms["hiddenForm$id"].submit();
     }
 """
-       
-        JS=JS.replace("$id",str(self._codeblockid))
-        self.addJS(jsContent=JS.replace("{template}",template),header=False)
-        self._hasCodeblock=True
 
+        JS = JS.replace("$id", str(self._codeblockid))
+        self.addJS(jsContent=JS.replace("{template}", template), header=False)
+        self._hasCodeblock = True
 
-
-    def addCodePythonBlock(self,code,title="",removeLeadingTab=True):
-        #todo
+    def addCodePythonBlock(self, code, title="", removeLeadingTab=True):
+        # todo
         if removeLeadingTab:
-            check=True
+            check = True
             for line in code.split("\n"):
-                if not(line.find("    ")==0 or line.strip()==""):
-                    check=False
-            if check==True:
-                code2=code
-                code=""
+                if not(line.find("    ") == 0 or line.strip() == ""):
+                    check = False
+            if check == True:
+                code2 = code
+                code = ""
                 for line in code2.split("\n"):
-                    code+="%s\n"%line[4:]
+                    code += "%s\n" % line[4:]
         self.addCodeBlock(code)
-
 
     def addLineChart(self, title, rows, headers="", width=800, height=400):
         """
@@ -394,16 +392,16 @@ function copyText$id() {
 
         legend = list()
 
-        headers2=[]
-        prev=""
+        headers2 = []
+        prev = ""
         for item in headers:
-            if item<>prev:
+            if item != prev:
                 headers2.append(item)
-                prev=item
+                prev = item
             else:
                 headers2.append("")
 
-        if len(rows)==0:
+        if len(rows) == 0:
             return False
         data = ""
         for row in rows:
@@ -419,16 +417,16 @@ function copyText$id() {
         if headers == "":
             headers = []
 
-        te=o.codetools.templateengine.new()
-        te.add('lineId',lineId)
-        te.add('lineTitle',title)
-        te.add('lineData',data)
-        te.add('lineHeaders',str(headers2))
-        te.add('lineLegend',str(legend))
-        te.add('lineWidth',str(width))
-        te.add('lineHeight',str(height))
+        te = j.codetools.templateengine.new()
+        te.add('lineId', lineId)
+        te.add('lineTitle', title)
+        te.add('lineData', data)
+        te.add('lineHeaders', str(headers2))
+        te.add('lineLegend', str(legend))
+        te.add('lineWidth', str(width))
+        te.add('lineHeight', str(height))
 
-        C="""
+        C = """
     var line = new RGraph.Line("{lineId}", {lineData});
     
     line.Set('chart.title', '{lineTitle}');
@@ -441,12 +439,11 @@ function copyText$id() {
     line.Draw();        
         """
 
-        jsContent = te.replace(C)        
+        jsContent = te.replace(C)
         lineContainer = "<canvas id='%s' width='%s' height='%s' >[No Canvas Support!]</canvas>" % (lineId, width, height)
         self.addMessage(lineContainer, isElement=True, newline=True)
 
-        self.addJS(jsContent=jsContent,header=False)
-
+        self.addJS(jsContent=jsContent, header=False)
 
     def addBarChart(self, title, rows, headers="", width=900, height=400, showcolumns=[], columnAliases={}, onclickfunction=''):
         """
@@ -462,12 +459,12 @@ function copyText$id() {
             newRows.append(newRow)
         rows = newRows
 
-        if len(rows)==0:
+        if len(rows) == 0:
             return False
 
         if showcolumns != []:
-            rows2=rows
-            rows=[]
+            rows2 = rows
+            rows = []
             for row in rows2:
                 if row[0] in showcolumns:
                     rows.append(row)
@@ -475,23 +472,22 @@ function copyText$id() {
         data = [list(x) for x in zip(*rows)][1:]
 
         for row in rows:
-            if columnAliases.has_key(row[0]):
+            if row[0] in columnAliases:
                 legend.append(columnAliases[row[0]])
             else:
                 legend.append(row[0])
 
         if str(headers) != "":
-            if len(headers) == len(data)+1:
-                headers=headers[1:]
-            #headers=[""]+headers
+            if len(headers) == len(data) + 1:
+                headers = headers[1:]
+            # headers=[""]+headers
             if len(headers) != len(data):
                 #raise RuntimeError("headers has more items then nr columns")
                 print "Cannot process headers, wrong nr of cols"
                 self.addMessage("ERROR header wrong nr of cols:%s" % headers)
-                headers=[]
+                headers = []
 
-
-                #headers = [] #Wrong number of headers
+                # headers = [] #Wrong number of headers
         else:
             headers = []
 
@@ -499,18 +495,18 @@ function copyText$id() {
         self._chartId += 1
         chartId = 'chart-%s' % (self._chartId)
 
-        te=o.codetools.templateengine.new()
-        te.add('chartId',chartId)
-        te.add('chartTitle',title)
-        te.add('chartData',str(data))
-        te.add('chartHeaders',str(headers)) #labels
-        te.add('chartLegend',str(legend))
-        te.add('chartWidth',str(width))
-        te.add('chartHeight',str(height))
+        te = j.codetools.templateengine.new()
+        te.add('chartId', chartId)
+        te.add('chartTitle', title)
+        te.add('chartData', str(data))
+        te.add('chartHeaders', str(headers))  # labels
+        te.add('chartLegend', str(legend))
+        te.add('chartWidth', str(width))
+        te.add('chartHeight', str(height))
         if onclickfunction == '':
             onclickfunction = 'function(){}'
         te.add('onclickfunction', onclickfunction)
-        
+
         jsContent = te.replace(self._chartTemplateContent)
 
         self.addScriptBodyJS(jsContent)
@@ -527,10 +523,10 @@ function copyText$id() {
         self._pieId += 1
         pieId = 'pie-%s' % (self._pieId)
 
-        te=o.codetools.templateengine.new()
-        te.add('pieId',pieId)
-        te.add('pieTitle',title)
-        te.add('pieData',str(data))
+        te = j.codetools.templateengine.new()
+        te.add('pieId', pieId)
+        te.add('pieTitle', title)
+        te.add('pieData', str(data))
         te.add('pieLegend', str(legend))
 
         jsContent = te.replace(self._pieTemplateContent)
@@ -570,7 +566,7 @@ function copyText$id() {
         img = "<img src='%s' alt='%s' %s style='clear:both;%s' />" % (imagePath, title, width_n_height, PageHTML._format_styles(styles))
         self.addMessage(img, isElement=True)
 
-    def addTableWithContent(self,columnsWidth,colContents):
+    def addTableWithContent(self, columnsWidth, colContents):
         """
         @param columnsWidth = Array with each element a nr, when None then HTML does the formatting, otherwise relative to each other
         @param colContents = array with each element HTML code
@@ -584,37 +580,35 @@ function copyText$id() {
         table += "</tr></head></table>"
         self.addMessage(table, isElement=True)
 
-    def addHTML(self,htmlcode):
+    def addHTML(self, htmlcode):
         #import cgi
         #html = "<pre>%s</pre>" % cgi.escape(htmlcode)
         self.addMessage(htmlcode, isElement=False)
 
-    def removeCSS(self, exclude,permanent=False):
+    def removeCSS(self, exclude, permanent=False):
         """
         will walk over header and remove css links
         link need to be full e.g. bootstrap.min.css
         """
-        out=""
+        out = ""
         for line in self.head.split("\n"):
-            if line.lower().find(exclude)==-1:
-                out+="%s\n"%line
-        self.head=out
+            if line.lower().find(exclude) == -1:
+                out += "%s\n" % line
+        self.head = out
         if permanent:
-            key=exclude.strip().lower()
-            self.jscsslinks[key]=True
-        
+            key = exclude.strip().lower()
+            self.jscsslinks[key] = True
 
-
-    def addCSS(self, cssLink=None, cssContent=None,exlcude=""):
+    def addCSS(self, cssLink=None, cssContent=None, exlcude=""):
         """
         """
-        if self.pagemirror4jscss<>None:
+        if self.pagemirror4jscss != None:
             self.pagemirror4jscss.addCSS(cssLink, cssContent)
-        if cssLink<>None:
-            key=cssLink.strip().lower()
-            if self.jscsslinks.has_key(key):
+        if cssLink != None:
+            key = cssLink.strip().lower()
+            if key in self.jscsslinks:
                 return
-            self.jscsslinks[key]=True
+            self.jscsslinks[key] = True
 
         if cssContent:
             css = "<style type='text/css'>\n%s</style>\n" % cssContent
@@ -622,14 +616,14 @@ function copyText$id() {
             css = "<link  href='%s' type='text/css' rel='Stylesheet'/>\n" % cssLink
         self.head += css
 
-    def addJS(self, jsLink=None, jsContent=None,header=True):
-        if self.pagemirror4jscss<>None:
-            self.pagemirror4jscss.addJS(jsLink, jsContent,header)        
-        if jsLink<>None:
-            key=jsLink.strip().lower()
-            if self.jscsslinks.has_key(key):
+    def addJS(self, jsLink=None, jsContent=None, header=True):
+        if self.pagemirror4jscss != None:
+            self.pagemirror4jscss.addJS(jsLink, jsContent, header)
+        if jsLink != None:
+            key = jsLink.strip().lower()
+            if key in self.jscsslinks:
                 return
-            self.jscsslinks[key]=True
+            self.jscsslinks[key] = True
 
         if jsContent:
             js = "<script type='text/javascript'>\n%s</script>\n" % jsContent
@@ -639,7 +633,7 @@ function copyText$id() {
         if header:
             self.head += js
         else:
-            self.body +=js
+            self.body += js
 
     def addScriptBodyJS(self, jsContent):
         self.scriptBody = "%s%s\n" % (self.scriptBody, jsContent)
@@ -652,23 +646,23 @@ function copyText$id() {
         self.addJS("%s/rgraph/RGraph.bar.js" % self.liblocation)
         self.addJS("%s/rgraph/RGraph.pie.js" % self.liblocation)
         self.addJS("%s/rgraph/RGraph.line.js" % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.common.key.js"  % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.common.effects.js"  % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.common.dynamic.js"  % self.liblocation)
+        self.addJS("%s/rgraph/RGraph.common.key.js" % self.liblocation)
+        self.addJS("%s/rgraph/RGraph.common.effects.js" % self.liblocation)
+        self.addJS("%s/rgraph/RGraph.common.dynamic.js" % self.liblocation)
 
         self._hasCharts = True
 
-    def addBootstrap(self,jquery=True):
+    def addBootstrap(self, jquery=True):
         if self._hasBootstrap:
             return
-        self._hasBootstrap=True
+        self._hasBootstrap = True
         if jquery:
-            self.addJS("%s/jquery-latest.js"  % self.liblocation)
-        self.addJS("%s/bootstrap/js/bootstrap.js"  % self.liblocation)
-        self.addJS("%s/jquery.cookie.js"  % self.liblocation)
+            self.addJS("%s/jquery-latest.js" % self.liblocation)
+        self.addJS("%s/bootstrap/js/bootstrap.js" % self.liblocation)
+        self.addJS("%s/jquery.cookie.js" % self.liblocation)
         #self.addCSS("%s/bootstrap/css/bootstrap.min.css"% self.liblocation)
-        self.addCSS("%s/bootstrap/css/bootstrap.css"% self.liblocation)
-        self.addCSS("%s/bootstrap/css/bootstrap-responsive.css"% self.liblocation)
+        self.addCSS("%s/bootstrap/css/bootstrap.css" % self.liblocation)
+        self.addCSS("%s/bootstrap/css/bootstrap-responsive.css" % self.liblocation)
 
     def addHostBasedContent(self):
         if self._hostbasedmacro:
@@ -688,74 +682,73 @@ function copyText$id() {
          }
     }
     $(document).ready(function() { tocheck.map(filter_div);})
-    """  
+    """
             self.addJS(jsContent=extracontent)
             self._hostbasedmacro = True
 
-    def addDocumentReadyJSfunction(self,function):
+    def addDocumentReadyJSfunction(self, function):
         """
         e.g. $('.dataTable').dataTable();
         """
-        if self.pagemirror4jscss<>None:
-            self.pagemirror4jscss.addDocumentReadyJSfunction(function) 
+        if self.pagemirror4jscss != None:
+            self.pagemirror4jscss.addDocumentReadyJSfunction(function)
         self.documentReadyFunctions.append(function)
 
+    def addExplorer(self, path="", dockey=None, height=500, width=750, readonly=False, tree=False):
 
-    def addExplorer(self,path="",dockey=None,height=500,width=750,readonly=False,tree=False):
+        self.addJS("%s/lib/elfinder/jquery.min.js" % self.liblocation)
+        self.addJS("%s/lib/elfinder/jquery-ui.min.js" % self.liblocation)
+        self.addCSS("%s/lib/elfinder/jquery-ui.css" % self.liblocation)
+        self.addCSS("%s/elfinder/css/elfinder.min.css" % self.liblocation)
+        self.addCSS("%s/elfinder/css/theme.css" % self.liblocation)
+        self.addJS("%s/elfinder/js/elfinder.min.js" % self.liblocation)
 
-        self.addJS("%s/lib/elfinder/jquery.min.js"  % self.liblocation)
-        self.addJS("%s/lib/elfinder/jquery-ui.min.js"  % self.liblocation)
-        self.addCSS("%s/lib/elfinder/jquery-ui.css"  % self.liblocation)
-        self.addCSS("%s/elfinder/css/elfinder.min.css"% self.liblocation)
-        self.addCSS("%s/elfinder/css/theme.css"% self.liblocation)
-        self.addJS("%s/elfinder/js/elfinder.min.js"  % self.liblocation)
-
-        def writeExplorerPHP(path,dockey):
-            path=o.system.fs.pathNormalize(path).replace("\\","/")
-            path2=o.system.fs.joinPaths(o.system.fs.getcwd(),"libphp","elfinder","connector.php").replace("\\","/")
-            C=o.system.fs.fileGetContents(path2)
-            if o.system.platformtype.isWindows():
-                root='c:/qb6/apps/ishare/'
+        def writeExplorerPHP(path, dockey):
+            path = j.system.fs.pathNormalize(path).replace("\\", "/")
+            path2 = j.system.fs.joinPaths(j.system.fs.getcwd(), "libphp", "elfinder", "connector.php").replace("\\", "/")
+            C = j.system.fs.fileGetContents(path2)
+            if j.system.platformtype.isWindows():
+                root = 'c:/qb6/apps/ishare/'
             else:
-                root="/opt/qbase6/apps/ishare/"
-            C=C.replace("{path}",path)
-            C=C.replace("{root}",root)
-            
-            dest= o.system.fs.joinPaths(o.core.portal.runningPortal.webserver.filesroot,dockey).replace("\\","/")
+                root = "/opt/qbase6/apps/ishare/"
+            C = C.replace("{path}", path)
+            C = C.replace("{root}", root)
 
-            if not o.system.fs.exists(dest):
-                if o.system.fs.isLink(dest):
-                    o.system.fs.unlink(dest)
-                o.system.fs.symlink(path,dest)
-            C=C.replace("{rootdownload}","/%s"%dockey)
-            pathout=o.system.fs.joinPaths(o.system.fs.getcwd(),"libphp","elfinder","connector_%s.php"%dockey).replace("\\","/")
-            o.system.fs.writeFile(pathout,C) #@todo need to do something here as well to have readonly behaviour
-            return "connector_%s.php"%dockey
+            dest = j.system.fs.joinPaths(j.core.portal.runningPortal.webserver.filesroot, dockey).replace("\\", "/")
+
+            if not j.system.fs.exists(dest):
+                if j.system.fs.isLink(dest):
+                    j.system.fs.unlink(dest)
+                j.system.fs.symlink(path, dest)
+            C = C.replace("{rootdownload}", "/%s" % dockey)
+            pathout = j.system.fs.joinPaths(j.system.fs.getcwd(), "libphp", "elfinder", "connector_%s.php" % dockey).replace("\\", "/")
+            j.system.fs.writeFile(pathout, C)  # @todo need to do something here as well to have readonly behaviour
+            return "connector_%s.php" % dockey
 
         if readonly:
-            commands="""
+            commands = """
 	    commands : [
 	    'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'download', 'archive',
 	    'resize', 'sort'
 	    ],"""
 
-            dircmd="'reload', 'back'"
-            filecmd="'open', '|', 'download', '|', 'archive',"
+            dircmd = "'reload', 'back'"
+            filecmd = "'open', '|', 'download', '|', 'archive',"
         else:
-            #customData : {rootpath:'$path'} ,
-            commands="""
+            # customData : {rootpath:'$path'} ,
+            commands = """
 	    commands : [
 	    'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
 	    'cut', 'paste','extract', 'archive', 'help',
 	    'resize', 'sort'
 	    ],"""
-            dircmd="'reload', 'back', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
-            filecmd="'getfile', '|','open', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
+            dircmd = "'reload', 'back', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
+            filecmd = "'getfile', '|','open', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
 	                'rm', '|', 'edit', 'rename', 'resize', '|', 'archive', 'extract',"
 
-        C="""
+        C = """
 <script type="text/javascript" charset="utf-8">
      $().ready(function() {
 
@@ -827,49 +820,44 @@ function copyText$id() {
 	});
 </script>
 """
-        #//var elf = $('#elfinder').elfinder(options);
-        C=C.replace("$path",path)
-        height=str(height)
-        C=C.replace("$height",str(height))
-        C=C.replace("$width",str(width))
-        C=C.replace("$EDITOR","")
-        C=C.replace("{commands}",commands)
-        self._explorerInstance+=1
-        C=C.replace("{nr}",str(self._explorerInstance))
+        # //var elf = $('#elfinder').elfinder(options);
+        C = C.replace("$path", path)
+        height = str(height)
+        C = C.replace("$height", str(height))
+        C = C.replace("$width", str(width))
+        C = C.replace("$EDITOR", "")
+        C = C.replace("{commands}", commands)
+        self._explorerInstance += 1
+        C = C.replace("{nr}", str(self._explorerInstance))
         if tree:
-            C=C.replace("{tree}","'places', 'tree',")
+            C = C.replace("{tree}", "'places', 'tree',")
         else:
-            C=C.replace("{tree}","")
+            C = C.replace("{tree}", "")
 
-        C=C.replace("{dircmd}",dircmd)
-        C=C.replace("{filecmd}",filecmd)
-        if dockey==None:
-            dockey=o.base.byteprocessor.hashMd5(path)
+        C = C.replace("{dircmd}", dircmd)
+        C = C.replace("{filecmd}", filecmd)
+        if dockey == None:
+            dockey = j.base.byteprocessor.hashMd5(path)
 
-        C=C.replace("$connector",writeExplorerPHP(path,"key__%s"%dockey))
-        self.head+=C
+        C = C.replace("$connector", writeExplorerPHP(path, "key__%s" % dockey))
+        self.head += C
         self.addBootstrap(jquery=False)
-        self.addMessage("<div id=\"elfinder%s\"></div>"%self._explorerInstance)
+        self.addMessage("<div id=\"elfinder%s\"></div>" % self._explorerInstance)
 
-
-    #def _generateFromTemplate(self, filePath, params):
+    # def _generateFromTemplate(self, filePath, params):
         #fd = open(filePath, 'r')
         #contents = fd.read()
-        #fd.close()
+        # fd.close()
         #from Cheetah.Template import Template
         #template = Template(contents, params)
         #contents = str(template)
-        #return contents
-
-    #def _generateChartFromTemplate(self, params):
-        #return self._generateFromTemplate(self._chartTemplate, params)
-
-    #def _generateLineFromTemplate(self, params):
-        #return self._generateFromTemplate(self._lineTemplate, params)
-
-    #def _generatePieFromTemplate(self, params):
-        #return self._generateFromTemplate(self._pieTemplate, params)
-
+        # return contents
+    # def _generateChartFromTemplate(self, params):
+        # return self._generateFromTemplate(self._chartTemplate, params)
+    # def _generateLineFromTemplate(self, params):
+        # return self._generateFromTemplate(self._lineTemplate, params)
+    # def _generatePieFromTemplate(self, params):
+        # return self._generateFromTemplate(self._pieTemplate, params)
     def _generateChartScript(self):
         js = ""
         if(self._hasCharts):
@@ -878,52 +866,48 @@ function copyText$id() {
             js += "\n};\n</script>\n"
         return js
 
-    def addHTMLHeader(self,header):
-        self.head+=header
+    def addHTMLHeader(self, header):
+        self.head += header
 
-    def addHTMLBody(self,body):
-        self.body+=body
-
+    def addHTMLBody(self, body):
+        self.body += body
 
     def getContent(self):
         return str(self)
 
     def __str__(self):
-        #make sure we get closures where needed (/div)
-        self._checkBlock("DDD","","")
-        if self.title<>"":
-            title="<title>%s</title>\n" % self.title
+        # make sure we get closures where needed (/div)
+        self._checkBlock("DDD", "", "")
+        if self.title != "":
+            title = "<title>%s</title>\n" % self.title
         else:
-            title=""
+            title = ""
 
-        jsHead = title+self.head + self._generateChartScript()
+        jsHead = title + self.head + self._generateChartScript()
 
-        if (self.login or self._hasmenu) and (self.padding<>False):
-            jsHead+="<style type='text/css'>\n"
-            if self.padding<>True and self.padding.find("-")<>-1:
-                top,bottomn=self.padding.split("-")
-                top=int(top.strip())
-                bottomn=int(bottomn.strip())
-                jsHead+="body {padding-top: %spx; padding-bottom: %spx;}</style> \n"%(top,bottomn)
+        if (self.login or self._hasmenu) and (self.padding != False):
+            jsHead += "<style type='text/css'>\n"
+            if self.padding != True and self.padding.find("-") != -1:
+                top, bottomn = self.padding.split("-")
+                top = int(top.strip())
+                bottomn = int(bottomn.strip())
+                jsHead += "body {padding-top: %spx; padding-bottom: %spx;}</style> \n" % (top, bottomn)
             else:
-                jsHead+="body {padding-top: 60px; padding-bottom: 40px;}</style> \n"
+                jsHead += "body {padding-top: 60px; padding-bottom: 40px;}</style> \n"
 
         if self._hasSidebar:
-            jsHead+="<style type='text/css'> body.sidebar-nav {padding: 9px 0;} </style> \n"
+            jsHead += "<style type='text/css'> body.sidebar-nav {padding: 9px 0;} </style> \n"
 
         # if self.pagemirror4jscss<>None:
         #     self.pagemirror4jscss.jsHead+=jsHead
 
-        if self.documentReadyFunctions<>[]:
-            CC="$(document).ready(function() {\n"
+        if self.documentReadyFunctions != []:
+            CC = "$(document).ready(function() {\n"
             for f in self.documentReadyFunctions:
-                CC+="%s\n"%f
-            CC+="} );\n"
+                CC += "%s\n" % f
+            CC += "} );\n"
             self.addJS(jsContent=CC)
-
 
         return '<!DOCTYPE html>\n<html>\n \
         <head>\n%s\n</head>\n \
-        <body>\n%s</body>\n</html>' % ( jsHead, self.body)
-
-
+        <body>\n%s</body>\n</html>' % (jsHead, self.body)

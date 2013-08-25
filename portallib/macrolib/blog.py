@@ -1,27 +1,28 @@
 import re
-from OpenWizzy import o
+from JumpScale import j
 
 
 class BlogPost:
+
     def __init__(self, file_name):
         self.file_name = file_name
 
         # remove comments & metadata
         self.file_content = open(file_name).read()
-        self.content = '\n'.join(l for l in self.file_content.splitlines() if not l.startswith(('#', '@'))) 
+        self.content = '\n'.join(l for l in self.file_content.splitlines() if not l.startswith(('#', '@')))
 
     @staticmethod
     def get_posts_in(base_name):
-        blog_files = o.system.fs.listFilesAndDirsInDir(o.system.fs.getDirName(base_name), True, filter="*.wiki", type="f")
+        blog_files = j.system.fs.listFilesAndDirsInDir(j.system.fs.getDirName(base_name), True, filter="*.wiki", type="f")
         blog_posts = [BlogPost(file) for file in blog_files]
-        blog_posts = sorted([post for post in blog_posts if post.date and post.title], 
-                            key=lambda p: p.date, 
+        blog_posts = sorted([post for post in blog_posts if post.date and post.title],
+                            key=lambda p: p.date,
                             reverse=True)
         return blog_posts
 
     @property
     def url(self):
-        return o.system.fs.getBaseName(self.file_name).replace(".wiki", "")
+        return j.system.fs.getBaseName(self.file_name).replace(".wiki", "")
 
     @property
     def date(self):

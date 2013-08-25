@@ -1,19 +1,22 @@
-from OpenWizzy import o
+from JumpScale import j
 from system_master_osis import system_master_osis
 
+
 class system_master(system_master_osis):
+
     """
     get dict of list of apps & actors
     
     """
+
     def __init__(self):
-        
-        self._te={}
-        self.actorname="master"
-        self.appname="system"
+
+        self._te = {}
+        self.actorname = "master"
+        self.appname = "system"
         system_master_osis.__init__(self)
-    
-    def echo(self,input,**args):
+
+    def echo(self, input, **args):
         """
         just a simple echo service
         param:input result will be same as this input
@@ -21,36 +24,33 @@ class system_master(system_master_osis):
         
         """
         return input
-    
 
-    def getAppsActors(self,model,**args):
+    def getAppsActors(self, model, **args):
         """
         param:model if you want to also get model actors; otherwise 0
         result dict 
         
         """
-        if int(model)==1:
-            result= o.core.specparser.app_actornames
+        if int(model) == 1:
+            result = j.core.specparser.app_actornames
         else:
-            result={}
-            for app in o.core.specparser.app_actornames.keys():
-                result[app]=[]
-                actors=o.core.specparser.app_actornames[app]
+            result = {}
+            for app in j.core.specparser.app_actornames.keys():
+                result[app] = []
+                actors = j.core.specparser.app_actornames[app]
                 for actor in actors:
-                    if actor.find("_model_")==-1:
+                    if actor.find("_model_") == -1:
                         result[app].append(actor)
 
         return result
-    
 
-    def ping(self,**args):
+    def ping(self, **args):
         """
         just a simple ping to the service        
         """
         return "pong"
-    
 
-    def registerRedisInstance(self,ipaddr,port,secret,appname,actorname,**args):
+    def registerRedisInstance(self, ipaddr, port, secret, appname, actorname, **args):
         """
         get dict of list of apps & actors
         param:ipaddr ipaddr of instance
@@ -61,6 +61,5 @@ class system_master(system_master_osis):
         result dict 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method registerRedisInstance")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method registerRedisInstance")

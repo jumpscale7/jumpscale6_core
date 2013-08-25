@@ -1,27 +1,26 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     params.merge(args)
-        
-    doc=params.doc
-    tags=params.tags
-       
+
+    doc = params.doc
+    tags = params.tags
+
     docs = doc.preprocessor.findDocs(filterTagsLabels=tags)
     # In order to avoid recursive document inclusion, remove itself from selected docs
     docs = sorted(d for d in docs if d.name.lower() != doc.name.lower() and not d.name.endswith('docs'))
     if tags.tagExists("prefix"):
-        prefix=tags.tagGet("prefix")
+        prefix = tags.tagGet("prefix")
     else:
-        prefix=""
+        prefix = ""
 
     for doc2 in docs:
         doc.children.append(doc2)
         doc2.preprocess()
-        
-    params.result="",doc
-    
+
+    params.result = "", doc
+
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

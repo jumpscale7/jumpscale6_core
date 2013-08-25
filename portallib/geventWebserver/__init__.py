@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .GeventWebserver import GeventWebserverFactory
-o.base.loader.makeAvailable(o, 'web')
-o.web.geventws = GeventWebserverFactory()
+j.base.loader.makeAvailable(j, 'web')
+j.web.geventws = GeventWebserverFactory()

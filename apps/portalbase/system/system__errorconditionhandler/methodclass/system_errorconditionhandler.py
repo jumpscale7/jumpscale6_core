@@ -1,22 +1,24 @@
-from OpenWizzy import o
+from JumpScale import j
 from system_errorconditionhandler_osis import system_errorconditionhandler_osis
 
+
 class system_errorconditionhandler(system_errorconditionhandler_osis):
+
     """
     errorcondition handling
     
     """
+
     def __init__(self):
-        
-        self._te={}
-        self.actorname="errorconditionhandler"
-        self.appname="system"
+
+        self._te = {}
+        self.actorname = "errorconditionhandler"
+        self.appname = "system"
         system_errorconditionhandler_osis.__init__(self)
-    
 
         pass
 
-    def describeCategory(self,category,language,description,resolution_user,resolution_ops,**args):
+    def describeCategory(self, category, language, description, resolution_user, resolution_ops, **args):
         """
         describe the errorcondition category (type)
         describe it as well as the possible solution
@@ -29,42 +31,39 @@ class system_errorconditionhandler(system_errorconditionhandler_osis):
         result bool 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method describeCategory")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method describeCategory")
 
-    def getEcoKey(self,eco):
-        key=eco.actorname+str(eco.level)+eco.appname+\
-            eco.category+eco.description+eco.tags+\
+    def getEcoKey(self, eco):
+        key = eco.actorname + str(eco.level) + eco.appname +\
+            eco.category + eco.description + eco.tags +\
             eco.descriptionpub
-        key=o.base.byteprocessor.hashMd5(key)
-        print "ecokey:%s"%key
+        key = j.base.byteprocessor.hashMd5(key)
+        print "ecokey:%s" % key
         return key
 
-    def processECO(self,eco):
+    def processECO(self, eco):
         """
         process eco 
         first find duplicates for eco (errorcondition obj of style as used in this actor)
         the store in db
         """
-        key=self.getEcoKey(eco)
+        key = self.getEcoKey(eco)
         if self.dbmem.cacheExists(key):
-            #previous item found
-            if eco.lasttime<o.base.time.getTimeEpoch()-3600:
+            # previous item found
+            if eco.lasttime < j.base.time.getTimeEpoch() - 3600:
                 self.dbmem.cacheDelete(key)
             else:
-                #we found a duplicate and it is not expired
-                eco2=self.dbmem.cacheGet(key)
-                self.model_errorcondition_set(eco2)  #@todo does not work yet test @todo hendrik
+                # we found a duplicate and it is not expired
+                eco2 = self.dbmem.cacheGet(key)
+                self.model_errorcondition_set(eco2)  # @todo does not work yet test @todo hendrik
                 # from pylabs.Shell import ipshellDebug,ipshell
                 # print "DEBUG NOW double eco"
                 # ipshell()
-                
+
                 return eco2
 
         else:
-            #no previous found
+            # no previous found
             self.dbmem.cacheSet(key, eco, expirationInSecondsFromNow=3600)
             return self.model_errorcondition_set(eco)
-
-        

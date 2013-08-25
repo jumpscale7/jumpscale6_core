@@ -1,57 +1,57 @@
-from OpenWizzy import o
-o.application.start('ftpgateway')
-o.dirs.tmpDir = o.system.fs.joinPaths(o.dirs.tmpDir, 'ftpcache')
-import OpenWizzy.portal
-import OpenWizzy.baselib.http_client
+from JumpScale import j
+j.application.start('ftpgateway')
+j.dirs.tmpDir = j.system.fs.joinPaths(j.dirs.tmpDir, 'ftpcache')
+import JumpScale.portal
+import JumpScale.baselib.http_client
 from pyftpdlib import ftpserver
 
 
-
 print "* check nginx & appserver started"
-if o.system.net.waitConnectionTest("127.0.0.1",80,15)==False or o.system.net.waitConnectionTest("127.0.0.1",9999,15)==False:
-    msg="could find a running appserver & nginx webserver."
+if j.system.net.waitConnectionTest("127.0.0.1", 80, 15) == False or j.system.net.waitConnectionTest("127.0.0.1", 9999, 15) == False:
+    msg = "could find a running appserver & nginx webserver."
     raise RuntimeError(msg)
 print "* appserver & webserver started."
 
-client=o.core.portal.getPortalClient("127.0.0.1",9999,"1234")
+client = j.core.portal.getPortalClient("127.0.0.1", 9999, "1234")
 
-contentmanager=client.getActor("system","contentmanager",instance=0)
-usermanager=client.getActor("system","usermanager",instance=0)
-filemgr=client.getActor("system","filemanager",instance=0)
+contentmanager = client.getActor("system", "contentmanager", instance=0)
+usermanager = client.getActor("system", "usermanager", instance=0)
+filemgr = client.getActor("system", "filemanager", instance=0)
 
-ROOTPATH='/opt/data'
-STORPATH="/opt/data"
+ROOTPATH = '/opt/data'
+STORPATH = "/opt/data"
 
-o.system.fs.createDir(STORPATH)
+j.system.fs.createDir(STORPATH)
 
 #from MetadataHandler import *
 from FsSwitcher import FsSwitcher
 from FilesystemVirtualRoot import FilesystemVirtualRoot
+
 
 class Authorizer(ftpserver.DummyAuthorizer):
 
     def validate_authentication(self, username, password):
         """Return True if the supplied username and password match the
         stored credentials."""
-        result=self.usermanager.authenticate(username,password)
+        result = self.usermanager.authenticate(username, password)
         # print "user:%s authenticated:%s" % (username,result)
         return result
 
     def has_user(self, username):
-        result=self.usermanager.userexists(username)
+        result = self.usermanager.userexists(username)
         # print "hasuser:%s" % (username)
         return result
 
     def has_perm(self, username, perm, path=None):
-        result=True
-        if path==".":
-            result= True
-        #print "hasperm:%s result:%s" % (username,result)
+        result = True
+        if path == ".":
+            result = True
+        # print "hasperm:%s result:%s" % (username,result)
         return result
 
     def get_perms(self, username):
         """Return current user permissions."""
-        result= "elr"
+        result = "elr"
         # print "getperm:%s result:%s" % (username,result)
         return result
 
@@ -68,20 +68,20 @@ class Authorizer(ftpserver.DummyAuthorizer):
         return "bye"
 
 
-
 def processErrorConditionObject(eco):
     print eco
     # from pylabs.Shell import ipshellDebug,ipshell
     # print "DEBUG NOW eco for ftp"
     # ipshell()
 
+
 def main():
-  
-    #o.errorconditationhandler.processErrorConditionObject=processErrorConditionObject
+
+    # j.errorconditationhandler.processErrorConditionObject=processErrorConditionObject
 
     # Instantiate a dummy authorizer for managing 'virtual' users
     authorizer = Authorizer()
-    authorizer.usermanager=usermanager
+    authorizer.usermanager = usermanager
 
     # handler = MyHandler
     handler = ftpserver.FTPHandler
@@ -89,12 +89,12 @@ def main():
     handler.authorizer = authorizer
 
     # Define a customized banner (string returned when client connects)
-    handler.banner = "pyftpdlib %s based ftpd ready." %ftpserver.__ver__
-    handler.contentmanager=contentmanager
+    handler.banner = "pyftpdlib %s based ftpd ready." % ftpserver.__ver__
+    handler.contentmanager = contentmanager
     handler.client = client
-    handler.filemgr=filemgr
+    handler.filemgr = filemgr
     # handler.filestore=FSIdentifier(STORPATH,usermanager)
-    handler._fsSwitcher=FsSwitcher
+    handler._fsSwitcher = FsSwitcher
 
     # Specify a masquerade address and the range of ports to use for
     # passive connections.  Decomment in case you're behind a NAT.
@@ -108,7 +108,6 @@ def main():
     # set a limit for connections
     server.max_cons = 256
     server.max_cons_per_ip = 5
-
 
     # start ftp server
     server.serve_forever()

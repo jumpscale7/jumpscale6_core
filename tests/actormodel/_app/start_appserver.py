@@ -1,5 +1,5 @@
-from OpenWizzy import o
-o.application.start('testapp')
-import OpenWizzy.portal
-o.manage.portal.startprocess()
-o.application.stop()
+from JumpScale import j
+j.application.start('testapp')
+import JumpScale.portal
+j.manage.portal.startprocess()
+j.application.stop()

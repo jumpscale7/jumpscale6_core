@@ -1,30 +1,31 @@
 import os
 
-def main(o,args,params,tags,tasklet):
+
+def main(o, args, params, tags, tasklet):
     params.merge(args)
-    
-    out=""
 
-    actors=o.core.portal.runningPortal.actorsloader.actors
+    out = ""
 
-    for ttype in ["specs","methodtasklets","extensions","wikimacros"]:
+    actors = j.core.portal.runningPortal.actorsloader.actors
 
-        out+="h3. Actor %s\n" %ttype.capitalize()
+    for ttype in ["specs", "methodtasklets", "extensions", "wikimacros"]:
+
+        out += "h3. Actor %s\n" % ttype.capitalize()
 
         for actorname in actors.keys():
-            model=actors[actorname].model   #@todo security breach
-            path=os.path.abspath(model.path)
-            o.system.fs.createDir(path) 
-            path=path.replace(":","___").replace("/","\\")+"\\%s\\"%ttype
+            model = actors[actorname].model  # @todo security breach
+            path = os.path.abspath(model.path)
+            j.system.fs.createDir(path)
+            path = path.replace(":", "___").replace("/", "\\") + "\\%s\\" % ttype
             # out+="|[%s | /system/Explorer/?path=%s] |[reload | /system/reloadactor/?name=%s]|\n" % (model.id,path,model.id)
-            out+="|[%s | /system/Explorer/?path=%s] |\n" % (model.id,path)
+            out += "|[%s | /system/Explorer/?path=%s] |\n" % (model.id, path)
 
-    params.result=out
+    params.result = out
 
-    params.result=(params.result,params.doc)
+    params.result = (params.result, params.doc)
 
     return params
 
-def match(o,args,params,tags,tasklet):
-    return True
 
+def match(o, args, params, tags, tasklet):
+    return True

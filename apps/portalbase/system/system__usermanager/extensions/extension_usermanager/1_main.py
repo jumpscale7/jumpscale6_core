@@ -1,34 +1,33 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
 
-    doc=params.doc
+    doc = params.doc
 
-    e=params.requestContext.env
+    e = params.requestContext.env
 
-    addr=o.core.portal.runningPortal.ipaddr
+    addr = j.core.portal.runningPortal.ipaddr
 
-    querystr=e["QUERY_STRING"]
-    querystr=querystr.replace("&format=text","")
-    querystr=querystr.replace("&key=,","")
-    querystr=querystr.replace("&key=","")
-    querystr=querystr.replace("key=,","")
-    querystr=querystr.replace("key=","")
-    querystr+="key=%s"%o.apps.system.usermanager.extensions.usermanager.getUserFromCTX(params.requestContext).secret
+    querystr = e["QUERY_STRING"]
+    querystr = querystr.replace("&format=text", "")
+    querystr = querystr.replace("&key=,", "")
+    querystr = querystr.replace("&key=", "")
+    querystr = querystr.replace("key=,", "")
+    querystr = querystr.replace("key=", "")
+    querystr += "key=%s" % j.apps.system.usermanager.extensions.usermanager.getUserFromCTX(params.requestContext).secret
 
-    if params.has_key("machine"):        
-        url= "http://"+addr+\
-            e["PATH_INFO"].strip("/")+"?"+querystr
-        params.page.addLink(url,url)
+    if "machine" in params:
+        url = "http://" + addr +\
+            e["PATH_INFO"].strip("/") + "?" + querystr
+        params.page.addLink(url, url)
     else:
-        url= "http://"+addr+"/restmachine/"+\
-                e["PATH_INFO"].replace("/rest/","").strip("/")+"?"+querystr
+        url = "http://" + addr + "/restmachine/" +\
+            e["PATH_INFO"].replace("/rest/", "").strip("/") + "?" + querystr
 
-        params.page.addLink(url,url)
+        params.page.addLink(url, url)
         params.page.addMessage("Be carefull generated key above has been generated for you as administrator.")
 
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

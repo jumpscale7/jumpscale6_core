@@ -9064,7 +9064,7 @@ elFinder.prototype.commands.quicklook = function() {
 		.bind('change', function(e) {
 			self.info.attr('style', '').hide();
 			icon.removeAttr('class').attr('style', '');
-			info.html('');
+			infj.html('');
 
 		})
 		// update info/icon
@@ -9081,7 +9081,7 @@ elFinder.prototype.commands.quicklook = function() {
 				self.preview.unbind('changesize').trigger('change').children().remove();
 				title.html(fm.escape(file.name));
 				
-				info.html(
+				infj.html(
 						tpl.replace(/\{value\}/, file.name)
 						+ tpl.replace(/\{value\}/, fm.mime2kind(file))
 						+ (file.mime == 'directory' ? '' : tpl.replace(/\{value\}/, fm.formatSize(file.size)))

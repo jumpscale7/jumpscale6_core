@@ -1,36 +1,35 @@
 
-def main(o,args,params,tags,tasklet):
-    
-    doc=args.doc
-    tags=args.tags
+def main(o, args, params, tags, tasklet):
 
-    out=""
+    doc = args.doc
+    tags = args.tags
 
-    bullets=args.tags.labelExists("bullets")
-    table=args.tags.labelExists("table")
-    
+    out = ""
+
+    bullets = args.tags.labelExists("bullets")
+    table = args.tags.labelExists("table")
+
     if table:
-        rows=[]
+        rows = []
 
-        for item in o.core.portal.runningPortal.webserver.getActors():
-            app,actor=item.split("__")
-            out+="|[%s|/rest/%s/%s]|\n" % (item,app.lower().strip("/"),actor.lower().strip("/"))
-    
+        for item in j.core.portal.runningPortal.webserver.getActors():
+            app, actor = item.split("__")
+            out += "|[%s|/rest/%s/%s]|\n" % (item, app.lower().strip("/"), actor.lower().strip("/"))
+
     else:
 
-        for item in o.core.portal.runningPortal.webserver.getActors():
-            if item[0]<>"_" and item.strip()<>"":
-                app,actor=item.split("__")
+        for item in j.core.portal.runningPortal.webserver.getActors():
+            if item[0] != "_" and item.strip() != "":
+                app, actor = item.split("__")
                 if bullets:
-                    out+="* [%s|/rest/%s/%s]\n" % (item,app.lower().strip("/"),actor.lower().strip("/"))
+                    out += "* [%s|/rest/%s/%s]\n" % (item, app.lower().strip("/"), actor.lower().strip("/"))
                 else:
-                    out+="|[%s|/rest/%s/%s]|\n" % (item,app.lower().strip("/"),actor.lower().strip("/"))
+                    out += "|[%s|/rest/%s/%s]|\n" % (item, app.lower().strip("/"), actor.lower().strip("/"))
 
-    params.result=(out,doc)
+    params.result = (out, doc)
 
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

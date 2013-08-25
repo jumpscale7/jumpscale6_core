@@ -2,12 +2,15 @@ import functools
 import json
 import sqlalchemy
 
-from OpenWizzy import o
+from JumpScale import j
+
 
 class SqlDb(object):
+
     """
     SQL connection
     """
+
     def __init__(self, lazyConfig):
         self._lazyConfig = lazyConfig
         self._sqldb = None
@@ -15,8 +18,8 @@ class SqlDb(object):
     def _getSqlDb(self):
         if not self._sqldb:
             host, database, user, password = self._lazyConfig()
-            self._sqldb = o.db.sqlConnectionTool.getConnection(host, database,
-                    user, password)
+            self._sqldb = j.db.sqlConnectionTool.getConnection(host, database,
+                                                               user, password)
         return self._sqldb
 
     def query(self, query):
@@ -30,13 +33,14 @@ class SqlDb(object):
         """
         return self._getSqlDb().sqlexecute(query)
 
+
 def genericLazyConfig(db, dbKey, serviceName, clusterName):
     if db.exists(dbKey):
         rawConfig = db.get(dbKey)
 
         try:
             config = json.loads(rawConfig)
-        except ValueError, e:
+        except ValueError as e:
             raise ValueError("Failed to decode SQL DB config %s: %s" % (config, e))
 
         try:
@@ -44,19 +48,22 @@ def genericLazyConfig(db, dbKey, serviceName, clusterName):
             database = config["database"]
             user = config["user"]
             password = config["password"]
-        except KeyError, e:
+        except KeyError as e:
             raise KeyError("Missing a required SQL config key in config %s: %s" % (config, e))
 
         return host, database, user, password
     else:
         raise RuntimeError("No SQL connection configures for "
-                "service %s of cluster %s" % (
-                    serviceName, clusterName))
+                           "service %s of cluster %s" % (
+                               serviceName, clusterName))
+
 
 class __SqlAlchemyConnectionFactory(object):
+
     """
     SQL alchemy factory, creates sqlalchemy connections and sessions
     """
+
     def __init__(self):
         self._connections = {}
 
@@ -73,12 +80,14 @@ class __SqlAlchemyConnectionFactory(object):
 
 
 class __SqlDbFactory(object):
+
     """
     SQL DB factory, creates and configures SQL connections
 
     Created SQL connections are cached, so they are created only once per
     Arakoon db.
     """
+
     def __init__(self):
         self._dbs = {}
 
@@ -91,7 +100,7 @@ class __SqlDbFactory(object):
 
         if key not in self._dbs:
             lazyConfig = functools.partial(genericLazyConfig, db, dbKey,
-                    serviceName, clusterName)
+                                           serviceName, clusterName)
             self._dbs[key] = SqlDb(lazyConfig)
         return self._dbs[key]
 
@@ -111,11 +120,11 @@ class __SqlDbFactory(object):
 
     def configure(self, db, serviceName, host, database, user, password):
         config = json.dumps({
-                "host": host,
-                "database": database,
-                "user": user,
-                "password": password,
-                })
+            "host": host,
+            "database": database,
+            "user": user,
+            "password": password,
+        })
         dbKey = self._getDbKey(serviceName)
         db.set(dbKey, config)
 
@@ -123,7 +132,7 @@ class __SqlDbFactory(object):
         key = self._getDbKey(serviceName)
         if not db.exists(key):
             raise RuntimeError("No SQL connection was configured for service %s"
-                    % serviceName)
+                               % serviceName)
         rawConfig = db.get(key)
         return json.loads(rawConfig)
 

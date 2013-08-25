@@ -1,4 +1,4 @@
-from OpenWizzy.portal.macrolib import div_base
+from JumpScale.portal.macrolib import div_base
 
 
 def main(o, args, params, *other_args):

@@ -1,5 +1,5 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     args.page.addBootstrap()
     args.page.projectname = args.cmdstr
 
@@ -7,6 +7,5 @@ def main(o,args,params,tags,tasklet):
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

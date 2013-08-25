@@ -1,16 +1,15 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     page = args.page
-    
-    refresh=int(args.tags.tagGet("time", 60))
-    if args.doc.destructed==False:
-        page.head+="<meta http-equiv=\"refresh\" content=\"%s\" >" % refresh
-        page.head+='<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" /> '
+
+    refresh = int(args.tags.tagGet("time", 60))
+    if args.doc.destructed == False:
+        page.head += "<meta http-equiv=\"refresh\" content=\"%s\" >" % refresh
+        page.head += '<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" /> '
 
     params.result = page
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 from .DocPreprocessorFactory import DocPreprocessorFactory
 from .DocParser import DocParser
-o.base.loader.makeAvailable(o, 'tools')
-o.tools.docpreprocessor = DocPreprocessorFactory()
-o.tools.docpreprocessorparser = DocParser()
+j.base.loader.makeAvailable(j, 'tools')
+j.tools.docpreprocessor = DocPreprocessorFactory()
+j.tools.docpreprocessorparser = DocParser()

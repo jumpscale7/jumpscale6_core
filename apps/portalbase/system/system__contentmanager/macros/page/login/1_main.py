@@ -1,12 +1,11 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
 
-    page=args.page
+    page = args.page
 
     page.addBootstrap()
 
-
-    head="""
+    head = """
 <title>Login</title>
 <style type='text/css'>
 body {padding-top: 60px; padding-bottom: 40px;}</style>
@@ -43,7 +42,7 @@ body {padding-top: 60px; padding-bottom: 40px;}</style>
 </style>
 	"""
 
-    body="""
+    body = """
 <div class="container">
       <form id="loginform" class="form-signin" method="post" action="/$$path">
         <h2 class="form-signin-heading">Please sign in</h2>
@@ -54,35 +53,34 @@ body {padding-top: 60px; padding-bottom: 40px;}</style>
  </div> <!-- /container -->
 	"""
     if args.tags.tagExists("jumptopath"):
-        jumpto=args.tags.tagGet("jumptopath")
+        jumpto = args.tags.tagGet("jumptopath")
     else:
-        jumpto=args.requestContext.path
-        if jumpto.find("wiki")==0:
-            jumpto=jumpto[5:].strip("/")
+        jumpto = args.requestContext.path
+        if jumpto.find("wiki") == 0:
+            jumpto = jumpto[5:].strip("/")
 
     if args.tags.tagExists("querystr"):
-        querystr=args.tags.tagGet("querystr")
+        querystr = args.tags.tagGet("querystr")
     else:
-        querystr=""
+        querystr = ""
 
-    session=args.requestContext.env['beaker.session']
-    session["querystr"]=querystr
+    session = args.requestContext.env['beaker.session']
+    session["querystr"] = querystr
     session.save()
 
-    #if jumpto=="$$path":
-        ##path unknown
-        #jumpto=""
+    # if jumpto=="$$path":
+        # path unknown
+        # jumpto=""
 
     page.addBootstrap()
     page.addHTMLHeader(head)
-    page.body+=body
-    page.body=page.body.replace("$$path",jumpto)
-    page.body=page.body.replace("$$querystr",querystr)
+    page.body += body
+    page.body = page.body.replace("$$path", jumpto)
+    page.body = page.body.replace("$$querystr", querystr)
 
     params.result = page
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

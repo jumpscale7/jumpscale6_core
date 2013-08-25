@@ -10,7 +10,7 @@ def main(o, args, params, tags, tasklet):
 
     if args.tags.labelExists("nopadding"):
         page.padding = False
-    
+
     if args.tags.tagExists("classtags"):
         classtags = args.tags.tagGet("classtags")
     else:
@@ -41,9 +41,9 @@ def main(o, args, params, tags, tasklet):
     T = T.replace("{classtags}", classtags)
     if page.logo != "":
         # will be logo
-        T = T.replace("{brand}", "<a class=\"brand\" href=\"#\"><img src=\"%s\" alt=\"logo\" title=\"logo\"></a>"%page.logo)
+        T = T.replace("{brand}", "<a class=\"brand\" href=\"#\"><img src=\"%s\" alt=\"logo\" title=\"logo\"></a>" % page.logo)
     elif page.projectname != "":
-        T = T.replace("{brand}", "<a class=\"brand\" href=\"#\">%s</a>"%page.projectname)
+        T = T.replace("{brand}", "<a class=\"brand\" href=\"#\">%s</a>" % page.projectname)
     else:
         T = T.replace("{brand}", "")
 
@@ -79,9 +79,9 @@ def main(o, args, params, tags, tasklet):
                 name, target = line.split(":", 1)
             else:
                 name = line
-                target = "/%s/%s"%(args.doc.getSpaceName(), line)
+                target = "/%s/%s" % (args.doc.getSpaceName(), line)
             line2 = "<li><a href=\"%s\">%s</a></li>" % (target, name)
-            items += "%s\n"%line2
+            items += "%s\n" % line2
     T = T.replace("{items}", items)
 
     page.addHTMLBody(T)

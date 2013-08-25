@@ -1,19 +1,18 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     page = args.page
 
-
-    if args.paramsExtra.has_key("actorname"):
-        actorname=args.paramsExtra["actorname"]
+    if "actorname" in args.paramsExtra:
+        actorname = args.paramsExtra["actorname"]
     else:
-        actorname=""
+        actorname = ""
 
-    if args.paramsExtra.has_key("appname"):
-        appname=args.paramsExtra["appname"]
+    if "appname" in args.paramsExtra:
+        appname = args.paramsExtra["appname"]
     else:
-        appname=""
+        appname = ""
 
-    page2= o.core.portal.runningPortal.webserver.getServicesInfo(appname=appname,actor=actorname)
+    page2 = j.core.portal.runningPortal.webserver.getServicesInfo(appname=appname, actor=actorname)
 
     page.addBootstrap()
     page.addMessage(page2.body)
@@ -22,6 +21,5 @@ def main(o,args,params,tags,tasklet):
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

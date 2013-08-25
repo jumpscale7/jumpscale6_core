@@ -63,7 +63,6 @@ except ImportError:
 else:
     __all__.extend(['SSLConnection', 'TLS_FTPHandler', 'TLS_DTPHandler'])
 
-
     new_proto_cmds = proto_cmds.copy()
     new_proto_cmds.update({
         'AUTH': dict(perm=None, auth=False, arg=True,
@@ -72,10 +71,10 @@ else:
                      help='Syntax: PBSZ <SP> 0 (negotiate TLS buffer).'),
         'PROT': dict(perm=None, auth=False,  arg=True,
                      help='Syntax: PROT <SP> [C|P] (set up un/secure data channel).'),
-        })
-
+    })
 
     class SSLConnection(object, asyncore.dispatcher):
+
         """An asyncore.dispatcher subclass supporting TLS/SSL."""
 
         _ssl_accepting = False
@@ -104,7 +103,8 @@ else:
                 self.socket.do_handshake()
             except (SSL.WantReadError, SSL.WantWriteError):
                 return
-            except SSL.SysCallError, (retval, desc):
+            except SSL.SysCallError as xxx_todo_changeme:
+                (retval, desc) = xxx_todo_changeme.args
                 if (retval == -1 and desc == 'Unexpected EOF') or retval > 0:
                     return self.handle_close()
                 raise
@@ -163,7 +163,8 @@ else:
             except SSL.ZeroReturnError:
                 super(SSLConnection, self).handle_close()
                 return 0
-            except SSL.SysCallError, (errnum, errstr):
+            except SSL.SysCallError as xxx_todo_changeme1:
+                (errnum, errstr) = xxx_todo_changeme1.args
                 if errnum == errno.EWOULDBLOCK:
                     return 0
                 elif errnum in _DISCONNECTED or errstr == 'Unexpected EOF':
@@ -180,7 +181,8 @@ else:
             except SSL.ZeroReturnError:
                 super(SSLConnection, self).handle_close()
                 return ''
-            except SSL.SysCallError, (errnum, errstr):
+            except SSL.SysCallError as xxx_todo_changeme2:
+                (errnum, errstr) = xxx_todo_changeme2.args
                 if errnum in _DISCONNECTED or errstr == 'Unexpected EOF':
                     super(SSLConnection, self).handle_close()
                     return ''
@@ -198,7 +200,7 @@ else:
             # connection has gone away
             try:
                 os.write(self.socket.fileno(), '')
-            except (OSError, socket.error), err:
+            except (OSError, socket.error) as err:
                 if err.args[0] in (errno.EINTR, errno.EWOULDBLOCK, errno.ENOBUFS):
                     return
                 elif err.args[0] in _DISCONNECTED:
@@ -232,12 +234,13 @@ else:
                 pass
             except SSL.ZeroReturnError:
                 super(SSLConnection, self).close()
-            except SSL.SysCallError, (errnum, errstr):
+            except SSL.SysCallError as xxx_todo_changeme3:
+                (errnum, errstr) = xxx_todo_changeme3.args
                 if errnum in _DISCONNECTED or errstr == 'Unexpected EOF':
                     super(SSLConnection, self).close()
                 else:
                     raise
-            except SSL.Error, err:
+            except SSL.Error as err:
                 # see:
                 # http://code.google.com/p/pyftpdlib/issues/detail?id=171
                 # https://bugs.launchpad.net/pyopenssl/+bug/785985
@@ -245,7 +248,7 @@ else:
                     pass
                 else:
                     raise
-            except socket.error, err:
+            except socket.error as err:
                 if err.args[0] in _DISCONNECTED:
                     super(SSLConnection, self).close()
                 else:
@@ -265,8 +268,8 @@ else:
                 self._ssl_closing = False
                 super(SSLConnection, self).close()
 
-
     class TLS_DTPHandler(SSLConnection, DTPHandler):
+
         """A ftpserver.DTPHandler subclass supporting TLS/SSL."""
 
         def __init__(self, sock_obj, cmd_channel):
@@ -286,8 +289,8 @@ else:
             self.cmd_channel.log_cmd("PROT", "P", 522, "SSL handshake failed.")
             self.close()
 
-
     class TLS_FTPHandler(SSLConnection, FTPHandler):
+
         """A ftpserver.FTPHandler subclass supporting TLS/SSL.
         Implements AUTH, PBSZ and PROT commands (RFC-2228 and RFC-4217).
 
@@ -413,7 +416,7 @@ else:
                 # From RFC-4217: "As the SSL/TLS protocols self-negotiate
                 # their levels, there is no need to distinguish between SSL
                 # and TLS in the application layer".
-                self.respond('234 AUTH %s successful.' %arg)
+                self.respond('234 AUTH %s successful.' % arg)
                 self.secure_connection(self.ssl_context)
             else:
                 self.respond("502 Unrecognized encryption type (use TLS or SSL).")
@@ -443,6 +446,6 @@ else:
                 self.respond('200 Protection set to Private')
                 self._prot = True
             elif arg in ('S', 'E'):
-                self.respond('521 PROT %s unsupported (use C or P).' %arg)
+                self.respond('521 PROT %s unsupported (use C or P).' % arg)
             else:
                 self.respond("502 Unrecognized PROT type (use C or P).")

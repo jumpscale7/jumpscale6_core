@@ -11,7 +11,8 @@ import os
 
 DEFAULT_THUMB_SIZE = '150x100'
 
-def main(o,args,params,tags,tasklet):
+
+def main(o, args, params, tags, tasklet):
     page = args.page
 
     try:
@@ -21,8 +22,8 @@ def main(o,args,params,tags,tasklet):
         from PIL import Image
 
     space_name = args.doc.getSpaceName()
-    space_path = o.core.portal.runningPortal.webserver.getSpace(space_name).model.path
-    
+    space_path = j.core.portal.runningPortal.webserver.getSpace(space_name).model.path
+
     macro_params = args.cmdstr.split(' ')
     img_url = macro_params[0]
     if len(macro_params) >= 2:
@@ -38,13 +39,13 @@ def main(o,args,params,tags,tasklet):
     thumb_size = thumb_size or args.doc.docparams.get('thumb_size', DEFAULT_THUMB_SIZE)
 
     width, height = [int(x) for x in thumb_size.split('x')]
-    
+
     img_path = img_url.strip('/')
     full_img_path = os.path.join(space_path, img_path)
     # Add 's_' to file name to tell that this is a thumbnail, and add width & height too
     thumbnail_path = ('{0}s_{1}x{2}_').format(os.path.sep, width, height).join(os.path.split(full_img_path))
     img_url_base, img_name = os.path.split(img_url)
-    thumbnail_url  = os.path.join(space_name, img_url_base.strip('/'), r's_{0}x{1}_{2}'.format(width, height, img_name))
+    thumbnail_url = os.path.join(space_name, img_url_base.strip('/'), r's_{0}x{1}_{2}'.format(width, height, img_name))
 
     # If the thumbnail doesn't exist on the desk, generate it
     if not os.path.exists(thumbnail_path):
@@ -59,5 +60,6 @@ def main(o,args,params,tags,tasklet):
     params.result = page
     return params
 
-def match(o,args,params,tags,tasklet):
+
+def match(o, args, params, tags, tasklet):
     return True

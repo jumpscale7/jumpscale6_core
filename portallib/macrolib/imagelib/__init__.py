@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .ImageLib import ImageLib
-o.base.loader.makeAvailable(o, 'tools')
-o.tools.imagelib = ImageLib()
+j.base.loader.makeAvailable(j, 'tools')
+j.tools.imagelib = ImageLib()

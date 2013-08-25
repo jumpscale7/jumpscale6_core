@@ -2,12 +2,12 @@ def main(o, args, params, tags, tasklet):
 
     page = args.page
 
-    modifier = o.html.getPageModifierGridDataTables(page)
+    modifier = j.html.getPageModifierGridDataTables(page)
 
     args.expandParams()
 
     if "app" in args and "actor" in args and "model" in args:
-        actor, model, fields, fieldids, fieldnames = o.apps.system.contentmanager.extensions.datatables.getTableDefFromActorModel(
+        actor, model, fields, fieldids, fieldnames = j.apps.system.contentmanager.extensions.datatables.getTableDefFromActorModel(
             args.app, args.actor, args.model, excludes=["guid"])
 
         page = modifier.addTableFromActorModel(args.app, args.actor, args.model, fields, fieldids, fieldnames)

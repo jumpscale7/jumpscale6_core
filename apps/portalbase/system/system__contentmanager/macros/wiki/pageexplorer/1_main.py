@@ -1,36 +1,35 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     params.merge(args)
-    
-    if  params.tags.tagExists("height"):
-        height=int(params.tags.tagGet("height"))
+
+    if params.tags.tagExists("height"):
+        height = int(params.tags.tagGet("height"))
     else:
-        height=400
+        height = 400
 
-    if  params.tags.tagExists("docname"):
-        docname=params.tags.tagGet("docname")
-        doc=params.doc.preprocessor.docGet(docname)
-        path=o.system.fs.getDirName(doc.path)
+    if params.tags.tagExists("docname"):
+        docname = params.tags.tagGet("docname")
+        doc = params.doc.preprocessor.docGet(docname)
+        path = j.system.fs.getDirName(doc.path)
     else:
-        path=o.system.fs.getDirName(params.doc.path)
+        path = j.system.fs.getDirName(params.doc.path)
 
+    if j.system.fs.exists(j.system.fs.joinPaths(path, "files")):
+        path = j.system.fs.joinPaths(path, "files")
 
-    if o.system.fs.exists(o.system.fs.joinPaths(path,"files")):
-        path=o.system.fs.joinPaths(path,"files")
-
-    if  params.tags.tagExists("readonly") or params.tags.labelExists("readonly"):
-        readonly=" readonly"
+    if params.tags.tagExists("readonly") or params.tags.labelExists("readonly"):
+        readonly = " readonly"
     else:
-        readonly=""
+        readonly = ""
 
-    path=path.replace(":","+")
+    path = path.replace(":", "+")
 
-    out="{{explorer: path:%s height:%s key:%s %s}}" %(path,height,params.doc.getPageKey(),readonly)
+    out = "{{explorer: path:%s height:%s key:%s %s}}" % (path, height, params.doc.getPageKey(), readonly)
 
-    params.result=(out,params.doc)
+    params.result = (out, params.doc)
 
     return params
 
-def match(o,args,params,tags,tasklet):
-    return True
 
+def match(o, args, params, tags, tasklet):
+    return True

@@ -1,4 +1,4 @@
-h1. OpenWizzy Documentation
+h1. JumpScale Documentation
 
 {{children: no-tree}}
 

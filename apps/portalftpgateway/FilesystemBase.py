@@ -1,14 +1,16 @@
 
-from OpenWizzy import o
+from JumpScale import j
 import os
 import time
 import stat
 from tarfile import filemode as _filemode
 
-_months_map = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun', 7:'Jul',
-               8:'Aug', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'}
+_months_map = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul',
+               8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'}
+
 
 class FilesystemBase(object):
+
     def __init__(self, root, cmd_channel):
         """
          - (str) root: the user "real" home directory (e.g. '/home/user')
@@ -21,56 +23,55 @@ class FilesystemBase(object):
         # are responsible to set _cwd attribute as necessary.
         self.cwd = '/'
         self.root = root
-        self.ftproot= root
+        self.ftproot = root
         self.cmd_channel = cmd_channel
-        self.handler=None
+        self.handler = None
 
     # --- Pathname / conversion utilities
 
-
-    def realpath(self,path):
+    def realpath(self, path):
         return self.ftp2fs(path)
 
-    def joinPaths(self,*args):
-        out=""
+    def joinPaths(self, *args):
+        out = ""
         for arg in args:
-            out+="%s/"%arg
-        out=out.replace("//","/")
-        out=out.replace("//","/")        
-        if len(out)>2:
-            out=out.rstrip("/")
+            out += "%s/" % arg
+        out = out.replace("//", "/")
+        out = out.replace("//", "/")
+        if len(out) > 2:
+            out = out.rstrip("/")
         return out
-      
 
     def ftpnorm(self, ftppath):
-        if ftppath.strip()=="":
-            ftppath=self.joinPaths(self.ftproot,self.cwd)
-        
-        ftppathn=os.path.normpath(ftppath)
-        ftppathn=ftppathn.replace("\\","/").strip()
+        if ftppath.strip() == "":
+            ftppath = self.joinPaths(self.ftproot, self.cwd)
+
+        ftppathn = os.path.normpath(ftppath)
+        ftppathn = ftppathn.replace("\\", "/").strip()
         # print "%s -> %s" % (ftppath,ftppathn)
 
-        if ftppathn[0]<>"/":
-            ftppathn=self.joinPaths(self.ftproot,self.cwd,ftppathn)
+        if ftppathn[0] != "/":
+            ftppathn = self.joinPaths(self.ftproot, self.cwd, ftppathn)
         return ftppathn
 
-    def _removeFtproot(self,ftppath):
-        if ftppath.find(self.ftproot)==0:
-            ftppath=ftppath[len(self.ftproot)+1:]
-        elif ftppath.find(self.ftproot)!=-1:
+    def _removeFtproot(self, ftppath):
+        if ftppath.find(self.ftproot) == 0:
+            ftppath = ftppath[len(self.ftproot) + 1:]
+        elif ftppath.find(self.ftproot) != -1:
             ftppath = self.fs2ftp(ftppath)
-            ftppath=ftppath[len(self.ftproot)+1:]
+            ftppath = ftppath[len(self.ftproot) + 1:]
         else:
-            import ipdb; ipdb.set_trace()
-            
+            import ipdb
+            ipdb.set_trace()
+
             raise RuntimeError("ftppath needs to start with self.ftproot")
         return ftppath
 
     def ftp2fs(self, ftppath):
-        ftppath=self.ftpnorm(ftppath)
-        ftppath=self._removeFtproot(ftppath)
+        ftppath = self.ftpnorm(ftppath)
+        ftppath = self._removeFtproot(ftppath)
         # print "REMOVEROOT:%s"%ftppath
-        result= o.system.fs.joinPaths(self.root,ftppath)
+        result = j.system.fs.joinPaths(self.root, ftppath)
         # print "ISDIRPOST:%s"%result
         return result
 
@@ -95,17 +96,17 @@ class FilesystemBase(object):
     #         p = os.path.normpath(ftppath)
     #     else:
     #         p = os.path.normpath(os.path.join(self.cwd, ftppath))
-    #     # normalize string in a standard web-path notation having '/'
-    #     # as separator.
+    # normalize string in a standard web-path notation having '/'
+    # as separator.
     #     p = p.replace("\\", "/")
-    #     # os.path.normpath supports UNC paths (e.g. "//a/b/c") but we
-    #     # don't need them.  In case we get an UNC path we collapse
-    #     # redundant separators appearing at the beginning of the string
+    # os.path.normpath supports UNC paths (e.g. "//a/b/c") but we
+    # don't need them.  In case we get an UNC path we collapse
+    # redundant separators appearing at the beginning of the string
     #     while p[:2] == '//':
     #         p = p[1:]
-    #     # Anti path traversal: don't trust user input, in the event
-    #     # that self.cwd is not absolute, return "/" as a safety measure.
-    #     # This is for extra protection, maybe not really necessary.
+    # Anti path traversal: don't trust user input, in the event
+    # that self.cwd is not absolute, return "/" as a safety measure.
+    # This is for extra protection, maybe not really necessary.
     #     if not os.path.isabs(p):
     #         raise RuntimeError("ftpnorm error, possible security breach")
     #         p = "/"
@@ -139,7 +140,6 @@ class FilesystemBase(object):
     #     """
     #     raise NotImplementedError
 
-
     def validpath(self, path):
         """
         """
@@ -147,38 +147,38 @@ class FilesystemBase(object):
 
     def openfile(self, filename, mode):
         """Open a file returning its handler"""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def mkstemp(self, suffix='', prefix='', dir=None, mode='wb'):
         """A wrap around tempfile.mkstemp creating a file with a unique
         name.  Unlike mkstemp it returns an object with a file-like
         interface.
         """
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def chdir(self, ftppath):
         """Change the current directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def mkdir(self, ftppath):
         """Create the specified directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def listdir(self, path):
         """List the content of a directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def rmdir(self, path):
         """Remove the specified directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def remove(self, path):
         """Remove the specified file."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def rename(self, src, dst):
         """Rename the specified src file to the dst filename."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def chmod(self, path, mode):
         """Change file/directory mode."""
@@ -218,12 +218,12 @@ class FilesystemBase(object):
         the epoch."""
         raise NotImplementedError
 
-    #def realpath(self, path):
+    # def realpath(self, path):
         #"""Return the canonical version of path eliminating any
-        #symbolic links encountered in the path (if they are
-        #supported by the operating system).
+        # symbolic links encountered in the path (if they are
+        # supported by the operating system).
         #"""
-        #return os.path.realpath(path)
+        # return os.path.realpath(path)
 
     def lexists(self, path):
         """Return True if path refers to an existing path, including
@@ -256,8 +256,7 @@ class FilesystemBase(object):
         in a form suitable for LIST command.
         """
         if self.isdir(path):
-            listing = self.listdir(path)
-            listing.sort()
+            listing = sorted(self.listdir(path))
             return self.format_list(path, listing)
         # if path is a file or a symlink we return information about it
         else:
@@ -358,8 +357,8 @@ class FilesystemBase(object):
         type=file;size=156;perm=r;modify=20071029155301;unique=801cd2; music.mp3
         type=dir;size=0;perm=el;modify=20071127230206;unique=801e33; ebooks
         type=file;size=211;perm=r;modify=20071103093626;unique=801e32; module.py
-        """ 
-        try:      
+        """
+        try:
             # print "format_mlsx:%s"%basedir
             if self.cmd_channel.use_gmt_times:
                 timefunc = time.gmtime
@@ -372,14 +371,14 @@ class FilesystemBase(object):
             if 'd' in perms:
                 permdir += 'p'
 
-            basedir2=self.ftp2fs(basedir)
+            basedir2 = self.ftp2fs(basedir)
             for basename in listing:
                 file = os.path.join(basedir2, basename)
                 retfacts = dict()
                 # in order to properly implement 'unique' fact (RFC-3659,
                 # chapter 7.5.2) we are supposed to follow symlinks, hence
                 try:
-                    st = os.stat(file) 
+                    st = os.stat(file)
                 except OSError:
                     if ignore_err:
                         print "error for %s, cannot list (stat)" % file
@@ -407,7 +406,7 @@ class FilesystemBase(object):
                 if 'modify' in facts:
                     try:
                         retfacts['modify'] = time.strftime("%Y%m%d%H%M%S",
-                                                            timefunc(st.st_mtime))
+                                                           timefunc(st.st_mtime))
                     # it could be raised if last mtime happens to be too old
                     # (prior to year 1900)
                     except ValueError:
@@ -416,12 +415,12 @@ class FilesystemBase(object):
                     # on Windows we can provide also the creation time
                     try:
                         retfacts['create'] = time.strftime("%Y%m%d%H%M%S",
-                                                            timefunc(st.st_ctime))
+                                                           timefunc(st.st_ctime))
                     except ValueError:
                         pass
                 # UNIX only
                 if 'unix.mode' in facts:
-                    retfacts['unix.mode'] = oct(st.st_mode & 0777)
+                    retfacts['unix.mode'] = oct(st.st_mode & 0o777)
                 if 'unix.uid' in facts:
                     retfacts['unix.uid'] = st.st_uid
                 if 'unix.gid' in facts:
@@ -439,13 +438,11 @@ class FilesystemBase(object):
                     retfacts['unique'] = "%xg%x" % (st.st_dev, st.st_ino)
 
                 # facts can be in any order but we sort them by name
-                factstring = "".join(["%s=%s;" % (x, retfacts[x]) \
+                factstring = "".join(["%s=%s;" % (x, retfacts[x])
                                       for x in sorted(retfacts.keys())])
                 # print "FACT:%s" % factstring+" "+basename
                 yield "%s %s\r\n" % (factstring, basename)
-        except Exception, err:
-            from pylabs.Shell import ipshellDebug,ipshell
+        except Exception as err:
+            from pylabs.Shell import ipshellDebug, ipshell
             print "DEBUG NOW error in format MLSD"
             ipshell()
-                
-

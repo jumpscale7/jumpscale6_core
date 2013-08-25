@@ -1,11 +1,13 @@
 from system_emailsender_osis import system_emailsender_osis
 import smtplib
-from OpenWizzy import o
+from JumpScale import j
 from email.mime.text import MIMEText
 
-ujson = o.db.serializers.getSerializerType('j')
+ujson = j.db.serializers.getSerializerType('j')
+
 
 class system_emailsender(system_emailsender_osis):
+
     """
     Email sender
     """
@@ -57,9 +59,9 @@ class system_emailsender(system_emailsender_osis):
         # This is the same email pattern used in `contact_form` macro
         # TODO: abstract it in one place
         email_pattern = r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$"
-        if not o.codetools.regex.match(email_pattern, receiver_email):
+        if not j.codetools.regex.match(email_pattern, receiver_email):
             return 'Error: receiver email is not formatted well.'
-        if not o.codetools.regex.match(email_pattern, sender_email):
+        if not j.codetools.regex.match(email_pattern, sender_email):
             return 'Error: your email is not formatted well.'
 
         receivers = [receiver_email]

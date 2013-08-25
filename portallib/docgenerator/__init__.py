@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .Docgenerator import DocgeneratorFactory
-o.base.loader.makeAvailable(o, 'tools')
-o.tools.docgenerator = DocgeneratorFactory()
+j.base.loader.makeAvailable(j, 'tools')
+j.tools.docgenerator = DocgeneratorFactory()

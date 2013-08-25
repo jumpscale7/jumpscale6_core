@@ -1,19 +1,20 @@
-from OpenWizzy import o
+from JumpScale import j
 from system_filemanager_osis import system_filemanager_osis
 
 
 class system_filemanager(system_filemanager_osis):
+
     """
     manipulate our virtual filesystem
     
     """
+
     def __init__(self):
-        
-        self._te={}
-        self.actorname="filemanager"
-        self.appname="system"
+
+        self._te = {}
+        self.actorname = "filemanager"
+        self.appname = "system"
         system_filemanager_osis.__init__(self)
-    
 
         pass
 
@@ -25,9 +26,8 @@ class system_filemanager(system_filemanager_osis):
         result bool 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method dirdelete")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method dirdelete")
 
     def filedelete(self, path, user, **kwargs):
         """
@@ -36,9 +36,8 @@ class system_filemanager(system_filemanager_osis):
         result bool 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method filedelete")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method filedelete")
 
     def filemod(self, path, user, **kwargs):
         """
@@ -47,9 +46,8 @@ class system_filemanager(system_filemanager_osis):
         result str 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method filemod")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method filemod")
 
     def filenew(self, path, user, **kwargs):
         """
@@ -58,9 +56,8 @@ class system_filemanager(system_filemanager_osis):
         result str 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method filenew")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method filenew")
 
     def getdirobject(self, id, **kwargs):
         """
@@ -68,9 +65,8 @@ class system_filemanager(system_filemanager_osis):
         result str 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getdirobject")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method getdirobject")
 
     def listdir(self, path, **kwargs):
         """
@@ -78,6 +74,5 @@ class system_filemanager(system_filemanager_osis):
         result list(str) 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method listdir")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method listdir")

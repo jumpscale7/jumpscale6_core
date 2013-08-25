@@ -1,243 +1,238 @@
-from OpenWizzy import o
+from JumpScale import j
 from CodeGeneratorBase import CodeGeneratorBase
 
-class CodeGeneratorActorClass(CodeGeneratorBase):
-    def __init__(self,spec,typecheck=True,dieInGenCode=True,codepath=None,args={}):
-        CodeGeneratorBase.__init__(self,spec,typecheck,dieInGenCode)
-        self.codepath=o.system.fs.joinPaths(codepath,"methodclass")
-        o.system.fs.createDir(self.codepath)
-        self.type="actorclass"
 
-        self.tags=args["tags"]
+class CodeGeneratorActorClass(CodeGeneratorBase):
+
+    def __init__(self, spec, typecheck=True, dieInGenCode=True, codepath=None, args={}):
+        CodeGeneratorBase.__init__(self, spec, typecheck, dieInGenCode)
+        self.codepath = j.system.fs.joinPaths(codepath, "methodclass")
+        j.system.fs.createDir(self.codepath)
+        self.type = "actorclass"
+
+        self.tags = args["tags"]
 
     def getClassName(self):
-        return "%s_%s"%(self.spec.appname,self.spec.actorname)
+        return "%s_%s" % (self.spec.appname, self.spec.actorname)
 
-    def getCodeTaskletExecute(self,method):
-        key=method.name
-        s="args={}\n"
+    def getCodeTaskletExecute(self, method):
+        key = method.name
+        s = "args={}\n"
         for var in method.vars:
-            s+= "args[\"%s\"]=%s\n" % (var.name,var.name)
-        s+="return self._te[\"%s\"].execute4method(args,params={},actor=self)"%key
+            s += "args[\"%s\"]=%s\n" % (var.name, var.name)
+        s += "return self._te[\"%s\"].execute4method(args,params={},actor=self)" % key
         return s
 
-    def getCodeOsisExecute(self,method):
+    def getCodeOsisExecute(self, method):
 
-        na,modelname,methodcall=method.name.split("_",3)
+        na, modelname, methodcall = method.name.split("_", 3)
 
-        if methodcall=="set":
-            s="""
+        if methodcall == "set":
+            s = """
 return self.models.{modelname}.set(data)            
             """
-        elif methodcall=="get":
-            s="""
+        elif methodcall == "get":
+            s = """
 obj = self.models.{modelname}.get(id=id,guid=guid).obj2dict()
 obj.pop('_meta', None)
 return obj
-            """            
-        elif methodcall=="delete":
-            s="""
+            """
+        elif methodcall == "delete":
+            s = """
 return self.models.{modelname}.delete(guid=guid, id=id)
-            """ 
-        elif methodcall=="list":
-            s="""
+            """
+        elif methodcall == "list":
+            s = """
 return self.models.{modelname}.list()            
-            """ 
-        elif methodcall=="find":
-            s="""
+            """
+        elif methodcall == "find":
+            s = """
 return self.models.{modelname}.find(query)            
-            """ 
-        elif methodcall=="new":
-            s="""
+            """
+        elif methodcall == "new":
+            s = """
 return self.models.{modelname}.new()
-            """             
-        elif methodcall=="datatables":
-            s="""
+            """
+        elif methodcall == "datatables":
+            s = """
 return self.models.{modelname}.datatables() #@todo
-            """   
-        elif methodcall=="create":
-            s="""
+            """
+        elif methodcall == "create":
+            s = """
 {modelname} = self.models.{modelname}.new()
 {populatemodel}
 return self.models.{modelname}.set({modelname})
         """
         else:
-            raise RuntimeError("Cound not find method %s for osis.\n%s"%(methodcall,method))
+            raise RuntimeError("Cound not find method %s for osis.\n%s" % (methodcall, method))
 
-        s=s.replace("{modelname}",modelname)
+        s = s.replace("{modelname}", modelname)
         populateparams = ""
         vs = method.vars
         for v in method.vars:
-            newparam = """%(modelname)s.%(v)s = %(v)s\n""" % {'modelname':modelname, 'v':v.name}
-            populateparams+=newparam
+            newparam = """%(modelname)s.%(v)s = %(v)s\n""" % {'modelname': modelname, 'v': v.name}
+            populateparams += newparam
         s = s.format(modelname=modelname, populatemodel=populateparams)
         return s
 
+    def addMethod(self, method):
+        spec = self.spec
+        s = "def %s({paramcodestr}, **kwargs):\n" % method.name
+        descr = ""
+        methodtags = j.core.tags.getObject(method.tags)
+        method.hasTasklets = methodtags.labelExists("tasklets")
 
-    def addMethod(self,method):
-        spec=self.spec
-        s="def %s({paramcodestr}, **kwargs):\n" % method.name
-        descr=""
-        methodtags=o.core.tags.getObject(method.tags)
-        method.hasTasklets=methodtags.labelExists("tasklets")
-
-
-        if method.description<>"":
-            if method.description[-1]<>"\n":
-                method.description+="\n\n"
-            descr=method.description
+        if method.description != "":
+            if method.description[-1] != "\n":
+                method.description += "\n\n"
+            descr = method.description
 
         for var in method.vars:
-            descr+="param:%s %s" % (var.name,self.descrTo1Line(var.description))
-            if var.defaultvalue<>None:
-                descr+=" default=%s" % var.defaultvalue
-            descr+="\n"
+            descr += "param:%s %s" % (var.name, self.descrTo1Line(var.description))
+            if var.defaultvalue != None:
+                descr += " default=%s" % var.defaultvalue
+            descr += "\n"
 
-        if method.result<>None:
-            descr+="result %s %s\n" % (method.result.type,self.descrTo1Line(method.result.description))
+        if method.result != None:
+            descr += "result %s %s\n" % (method.result.type, self.descrTo1Line(method.result.description))
 
-        if descr<>"":
-            s+=o.code.indent("\"\"\"\n%s\n\"\"\"\n"%descr,1)
+        if descr != "":
+            s += j.code.indent("\"\"\"\n%s\n\"\"\"\n" % descr, 1)
 
         params = ['self']
         paramsd = list()
         for param in method.vars:
-            if param.defaultvalue<>None:
-                paramsd.append("%s=%r"%(param.name, param.defaultvalue))
+            if param.defaultvalue != None:
+                paramsd.append("%s=%r" % (param.name, param.defaultvalue))
             else:
                 params.append(param.name)
         params.extend(paramsd)
-        s=s.format(paramcodestr=", ".join(params))
-        self.content+="\n%s"%o.code.indent(s,1)
+        s = s.format(paramcodestr=", ".join(params))
+        self.content += "\n%s" % j.code.indent(s, 1)
 
-        ####BODY OF METHOD
-        if method.name.find("model_")==0:
+        # BODY OF METHOD
+        if method.name.find("model_") == 0:
             if self.spec.hasTasklets:
-                s=self.getCodeTaskletExecute(method)
-                self.content+=o.code.indent(s,2)
+                s = self.getCodeTaskletExecute(method)
+                self.content += j.code.indent(s, 2)
             else:
-                s=self.getCodeOsisExecute(method)
-                self.content+=o.code.indent(s,2)
+                s = self.getCodeOsisExecute(method)
+                self.content += j.code.indent(s, 2)
         else:
-            if  method.hasTasklets or self.spec.hasTasklets:
+            if method.hasTasklets or self.spec.hasTasklets:
 
-                s=self.getCodeTaskletExecute(method)
-                self.content+=o.code.indent(s,2)
+                s = self.getCodeTaskletExecute(method)
+                self.content += j.code.indent(s, 2)
             else:
-                #generate when no tasklets
-                s="#put your code here to implement this method\n"
-                s+="raise NotImplementedError (\"not implemented method %s\")"%method.name
-                self.content+=o.code.indent(s,2)
-
+                # generate when no tasklets
+                s = "#put your code here to implement this method\n"
+                s += "raise NotImplementedError (\"not implemented method %s\")" % method.name
+                self.content += j.code.indent(s, 2)
 
         return
 
     def addInitExtras(self):
         # following code will be loaded at runtime
-        s="""
+        s = """
 self._te={}
 self.actorname="{actorname}"
 self.appname="{appname}"
 {appname}_{actorname}_osis.__init__(self)
 """
-        s=s.replace("{appname}",self.spec.appname)
-        s=s.replace("{actorname}",self.spec.actorname)
-        self.initprops+=o.code.indent(s,2)
-
+        s = s.replace("{appname}", self.spec.appname)
+        s = s.replace("{actorname}", self.spec.actorname)
+        self.initprops += j.code.indent(s, 2)
 
     def addInitModel(self):
 
         if self.tags.labelExists("nomodel"):
             return
 
-        s=""
+        s = ""
 
         if self.tags.tagExists("dbtype"):
-            dbtypes=[item.lower() for item in self.tags.tagGet("dbtype").split(",")]
-            ok=False
+            dbtypes = [item.lower() for item in self.tags.tagGet("dbtype").split(",")]
+            ok = False
             if "arakoon" in dbtypes:
-                s+="""self.dbarakoon=o.db.keyvaluestore.getArakoonStore("main", namespace="{appname}_{actorname},serializers=[o.db.serializers.getSerializerType('j')]")\n"""
-                if dbtypes.index("arakoon")==0:
-                    ok=True
-                    s+="self.db=self.dbarakoon\n"
+                s += """self.dbarakoon=j.db.keyvaluestore.getArakoonStore("main", namespace="{appname}_{actorname},serializers=[j.db.serializers.getSerializerType('j')]")\n"""
+                if dbtypes.index("arakoon") == 0:
+                    ok = True
+                    s += "self.db=self.dbarakoon\n"
 
-            s+="self.dbmem=o.db.keyvaluestore.getMemoryStore()\n"
+            s += "self.dbmem=j.db.keyvaluestore.getMemoryStore()\n"
             if "mem" in dbtypes:
-                if dbtypes.index("mem")==0:
-                    ok=True
-                    s+="self.db=self.dbmem\n"
+                if dbtypes.index("mem") == 0:
+                    ok = True
+                    s += "self.db=self.dbmem\n"
 
             if "fs" in dbtypes:
-                s+="self.dbfs=o.db.keyvaluestore.getFileSystemStore(namespace=\"{actorname}\", baseDir=None,serializers=[o.db.serializers.getSerializerType('j')])\n"
-                if dbtypes.index("fs")==0:
-                    ok=True
-                    s+="self.db=self.dbfs\n"
+                s += "self.dbfs=j.db.keyvaluestore.getFileSystemStore(namespace=\"{actorname}\", baseDir=None,serializers=[j.db.serializers.getSerializerType('j')])\n"
+                if dbtypes.index("fs") == 0:
+                    ok = True
+                    s += "self.db=self.dbfs\n"
 
-            if ok==False:
+            if ok == False:
                 raise RuntimeError("Cannot find default db, there needs to be fs,mem or arakoon specified as db on aktor level.")
 
-            if False:#"redis" in dbtypes: #@todo
-                if o.core.portal.runningPortal.rediscfg<>None and appname<>"system":
-                    redisip,redisport,redisdb,rediskey=o.core.portal.runningPortal.startConnectRedisServer(appname,actorname)
-                    actorobject.dbredis=o.db.keyvaluestore.getRedisStore(namespace="", host=redisip, port=redisport, db=redisdb, key=rediskey)
-                    actorobject.dbredis.getQueue=actorobject.dbredis.redisclient.getQueue
-                if dbtypes.index("redis")==0:
-                    actorobject.db=actorobject.dbredis
+            if False:  # "redis" in dbtypes: #@todo
+                if j.core.portal.runningPortal.rediscfg != None and appname != "system":
+                    redisip, redisport, redisdb, rediskey = j.core.portal.runningPortal.startConnectRedisServer(appname, actorname)
+                    actorobject.dbredis = j.db.keyvaluestore.getRedisStore(namespace="", host=redisip, port=redisport, db=redisdb, key=rediskey)
+                    actorobject.dbredis.getQueue = actorobject.dbredis.redisclient.getQueue
+                if dbtypes.index("redis") == 0:
+                    actorobject.db = actorobject.dbredis
 
-        s=s.replace("{appname}",self.spec.appname)
-        s=s.replace("{actorname}",self.spec.actorname)
-        self.initprops+=o.code.indent(s,2)
-
-
+        s = s.replace("{appname}", self.spec.appname)
+        s = s.replace("{actorname}", self.spec.actorname)
+        self.initprops += j.code.indent(s, 2)
 
     def generate(self):
 
-        mainMethods={}
-        osisMethods={}
+        mainMethods = {}
+        osisMethods = {}
         for method in self.spec.methods:
-            if method.name.find("model_")==0:
-                osisMethods[method.name]=method
+            if method.name.find("model_") == 0:
+                osisMethods[method.name] = method
             else:
-                mainMethods[method.name]=method
+                mainMethods[method.name] = method
 
-        mainMethods_list=mainMethods.keys()
-        osisMethods_list=osisMethods.keys()
+        mainMethods_list = mainMethods.keys()
+        osisMethods_list = osisMethods.keys()
         mainMethods_list.sort()
         osisMethods_list.sort()
 
-        ###########OSIS methods
-        self.addClass(className="%s_%s_osis"%(self.spec.appname,self.spec.actorname))
+        # OSIS methods
+        self.addClass(className="%s_%s_osis" % (self.spec.appname, self.spec.actorname))
 
         self.addInitModel()
 
         for methodname in osisMethods_list:
-            method=osisMethods[methodname]
+            method = osisMethods[methodname]
             self.addMethod(method)
 
-        #write class file 
-        ppath=o.system.fs.joinPaths(self.codepath,"%s_%s_osis.py"%(self.spec.appname,self.spec.actorname))
-        o.system.fs.writeFile(ppath,self.getContent())
+        # write class file
+        ppath = j.system.fs.joinPaths(self.codepath, "%s_%s_osis.py" % (self.spec.appname, self.spec.actorname))
+        j.system.fs.writeFile(ppath, self.getContent())
 
+        # main methods
+        self.initprops = ""
+        self.content = ""
 
-        ############main methods        
-        self.initprops=""
-        self.content=""
-
-        bcls="%s_%s_osis"%(self.spec.appname,self.spec.actorname)
-        extraimport = "from %s import %s\n"% (bcls, bcls)
-        self.addClass(className="%s_%s"%(self.spec.appname,self.spec.actorname),baseclass=bcls, extraImport =extraimport )
+        bcls = "%s_%s_osis" % (self.spec.appname, self.spec.actorname)
+        extraimport = "from %s import %s\n" % (bcls, bcls)
+        self.addClass(className="%s_%s" % (self.spec.appname, self.spec.actorname), baseclass=bcls, extraImport=extraimport)
 
         self.addInitExtras()
 
         for methodname in mainMethods_list:
-            method=mainMethods[methodname]
+            method = mainMethods[methodname]
             self.addMethod(method)
 
-        #write class file 
-        # ppath=o.system.fs.joinPaths(self.codepath,"%s_%s.py"%(self.spec.appname,self.spec.actorname))
-        # ppath2=o.system.fs.joinPaths(self.codepath,"%s_%s.gen.py"%(self.spec.appname,self.spec.actorname))
-        # if True or not o.system.fs.exists(ppath):
-        #     o.system.fs.writeFile(ppath,self.getContent())
-        # o.system.fs.writeFile(ppath2,self.getContent())
+        # write class file
+        # ppath=j.system.fs.joinPaths(self.codepath,"%s_%s.py"%(self.spec.appname,self.spec.actorname))
+        # ppath2=j.system.fs.joinPaths(self.codepath,"%s_%s.gen.py"%(self.spec.appname,self.spec.actorname))
+        # if True or not j.system.fs.exists(ppath):
+        #     j.system.fs.writeFile(ppath,self.getContent())
+        # j.system.fs.writeFile(ppath2,self.getContent())
 
-        return  self.getContent()
+        return self.getContent()

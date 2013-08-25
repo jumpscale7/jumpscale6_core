@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .CodeGenerator import CodeGenerator
-o.base.loader.makeAvailable(o, 'core')
-o.core.codegenerator = CodeGenerator()
+j.base.loader.makeAvailable(j, 'core')
+j.core.codegenerator = CodeGenerator()

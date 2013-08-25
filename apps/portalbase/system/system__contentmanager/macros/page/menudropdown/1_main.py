@@ -10,7 +10,7 @@ def main(o, args, params, tags, tasklet):
     keyword = args.tags.tagGet('marker', "$$$menuright")
 
     if page.body.find(keyword) == -1:
-        htmlkeyword = keyword.replace('$', '&#36;') #prevent other macros from overwriting this keyword
+        htmlkeyword = keyword.replace('$', '&#36;')  # prevent other macros from overwriting this keyword
         page.addMessage("**error: Cannot create page because menudropdown macro need a menu macro which has %s keyword placed inside." % htmlkeyword)
         return params
 
@@ -23,13 +23,13 @@ def main(o, args, params, tags, tasklet):
 </li>
 """
 
-    #<li><a href="#">Action</a></li>
-        #<li><a href="#">Another action</a></li>
-        #<li><a href="#">Something else here</a></li>
+    # <li><a href="#">Action</a></li>
+        # <li><a href="#">Another action</a></li>
+        # <li><a href="#">Something else here</a></li>
         #<li class="divider"></li>
         #<li class="nav-header">Nav header</li>
-        #<li><a href="#">Separated link</a></li>
-        #<li><a href="#">One more separated link</a></li>
+        # <li><a href="#">Separated link</a></li>
+        # <li><a href="#">One more separated link</a></li>
 
     items = ""
     name = args.tags.tagGet("name", "Admin")
@@ -45,7 +45,7 @@ def main(o, args, params, tags, tasklet):
             else:
                 name2, target = line.split(":", 1)
                 line2 = "<li><a href=\"%s\">%s</a></li>" % (target, name2)
-                items += "%s\n"%line2
+                items += "%s\n" % line2
 
     ddcode = ddcode.replace("$$items", items)
     ddcode = ddcode.replace("$$name", name)

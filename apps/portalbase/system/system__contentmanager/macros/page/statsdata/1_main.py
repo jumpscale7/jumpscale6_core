@@ -1,24 +1,23 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     page = args.page
 
-    infomgr= o.apps.actorsloader.getActor("system","infomgr")
+    infomgr = j.apps.actorsloader.getActor("system", "infomgr")
 
-    args=args.tags.getValues(id=None,start=0,stop=0)
-    id=args["id"]
+    args = args.tags.getValues(id=None, start=0, stop=0)
+    id = args["id"]
 
-    data=infomgr.extensions.infomgr.getInfo5Min(id,args["start"],args["stop"],epoch2human=True)
+    data = infomgr.extensions.infomgr.getInfo5Min(id, args["start"], args["stop"], epoch2human=True)
 
-    if data<>None:
+    if data != None:
 
         page.addList(data)
     else:
-        page.addMessage("No data for %s"%id)
+        page.addMessage("No data for %s" % id)
 
-    params.result = page 
+    params.result = page
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

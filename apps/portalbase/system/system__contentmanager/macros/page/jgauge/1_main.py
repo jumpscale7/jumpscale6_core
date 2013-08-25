@@ -1,11 +1,11 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
 
     page = args.page
 
     # page.addBootstrap()
     page.addJS("/lib/jquery-latest.js")
-    #the javascript & css files need to be put int c:/qb61/lib/pylabsextensions/core/html/
+    # the javascript & css files need to be put int c:/qb61/lib/pylabsextensions/core/html/
     page.addJS("/lib/jgauge/excanvas.min.js")
     page.addJS("/lib/jgauge/jQueryRotate.min.js")
     page.addJS("/lib/jgauge/jgauge-0.3.0.a3.min.js")
@@ -14,51 +14,49 @@ def main(o,args,params,tags,tasklet):
 
     args.expandParams()
 
-    d=params.getDict()
+    d = params.getDict()
 
-
-    if args.has_key("id"):
-        gaugeid=int(args.id)
+    if "id" in args:
+        gaugeid = int(args.id)
     else:
-        gaugeid=o.apps.system.contentmanager.dbmem.increment("jgaugeid")
+        gaugeid = j.apps.system.contentmanager.dbmem.increment("jgaugeid")
 
-    if params.has_key("style"):
-        style=params.style.lower().strip()
+    if "style" in params:
+        style = params.style.lower().strip()
     else:
-        style="default"
+        style = "default"
 
-    if params.has_key("height"):
-        height=params.height
+    if "height" in params:
+        height = params.height
     else:
-        height=114
+        height = 114
 
-    if params.has_key("width"):
-        width=params.width
+    if "width" in params:
+        width = params.width
     else:
-        width=200
+        width = 200
 
-    if params.has_key("start"):
-        start=params.start
+    if "start" in params:
+        start = params.start
     else:
-        start=0
+        start = 0
 
-    if params.has_key("end"):
-        end=params.end
+    if "end" in params:
+        end = params.end
     else:
-        end=12        
+        end = 12
 
-    if params.has_key("labelsuffix"):
-        labelsuffix=str(params.labelsuffix)
+    if "labelsuffix" in params:
+        labelsuffix = str(params.labelsuffix)
     else:
-        labelsuffix=""        
+        labelsuffix = ""
 
-    if params.has_key("randomspeed"):
-        randomspeed=str(params.randomspeed)
+    if "randomspeed" in params:
+        randomspeed = str(params.randomspeed)
     else:
-        randomspeed=100
+        randomspeed = 100
 
-
-    C="""
+    C = """
 var gauge$idval= $val
 var myGauge$id = new jGauge();
 myGauge$id.id = 'jGauge$id';
@@ -69,10 +67,10 @@ $gid.ticks.end = $end;
 
     """
 
-    if style=="black":   
-        C=C.replace("$height",str(170))
-        C=C.replace("$width",str(170))  
-        C+="""
+    if style == "black":
+        C = C.replace("$height", str(170))
+        C = C.replace("$width", str(170))
+        C += """
 $gid.imagePath = '/lib/jgauge/img/jgauge_face_taco.png';
 $gid.segmentStart = -225
 $gid.segmentEnd = 45
@@ -90,38 +88,36 @@ $gid.ticks.count = 7;
 $gid.ticks.color = 'rgba(0, 0, 0, 0)';
 $gid.range.color = 'rgba(0, 0, 0, 0)';
 """
-        C=C.replace("$gid","myGauge%s"%gaugeid)
+        C = C.replace("$gid", "myGauge%s" % gaugeid)
     else:
-        C+="myGauge%s.imagePath='/lib/jgauge/img/jgauge_face_default.png'\n"%(gaugeid)
-        C+="myGauge%s.needle.imagePath='/lib/jgauge/img/jgauge_needle_default.png'\n"%(gaugeid)
-    
-    cmds=["segmentStart","segmentEnd","needle.limitAction ","needle.xOffset","needle.yOffset",\
-        "label.xOffset","label.yOffset","label.prefix","label.suffix","label.precision","ticks.count","ticks.start","ticks.end",\
-        "ticks.color ","ticks.thickness","ticks.radius","ticks.labelPrecision","ticks.labelRadius","range.radius",\
-        "range.thickness "," range.start ","range.end ","range.color"]
+        C += "myGauge%s.imagePath='/lib/jgauge/img/jgauge_face_default.png'\n" % (gaugeid)
+        C += "myGauge%s.needle.imagePath='/lib/jgauge/img/jgauge_needle_default.png'\n" % (gaugeid)
+
+    cmds = ["segmentStart", "segmentEnd", "needle.limitAction ", "needle.xOffset", "needle.yOffset",
+            "label.xOffset", "label.yOffset", "label.prefix", "label.suffix", "label.precision", "ticks.count", "ticks.start", "ticks.end",
+            "ticks.color ", "ticks.thickness", "ticks.radius", "ticks.labelPrecision", "ticks.labelRadius", "range.radius",
+            "range.thickness ", " range.start ", "range.end ", "range.color"]
     for cmd in cmds:
         if cmd in args:
-            C="myGauge%s.%s=%s\n"%(gaugeid,cmd,d["%s"%cmd])
-        
+            C = "myGauge%s.%s=%s\n" % (gaugeid, cmd, d["%s" % cmd])
 
-    C=C.replace("$id",str(gaugeid))
-    C=C.replace("$height",str(height))
-    C=C.replace("$width",str(width))
-    C=C.replace("$start",str(start))
-    C=C.replace("$end",str(end))
-    C=C.replace("$gid","myGauge%s"%gaugeid)
-    C=C.replace("$suffix",labelsuffix)
-    C=C.replace("$val",args.val)
-    
+    C = C.replace("$id", str(gaugeid))
+    C = C.replace("$height", str(height))
+    C = C.replace("$width", str(width))
+    C = C.replace("$start", str(start))
+    C = C.replace("$end", str(end))
+    C = C.replace("$gid", "myGauge%s" % gaugeid)
+    C = C.replace("$suffix", labelsuffix)
+    C = C.replace("$val", args.val)
 
     page.addJS(jsContent=C)
 
-    page.addHTML("<div id=\"jGauge%s\" class=\"jgauge\"></div>"%gaugeid)
+    page.addHTML("<div id=\"jGauge%s\" class=\"jgauge\"></div>" % gaugeid)
     # page.addNewLine()
     # page.addPageBreak()
 
-    if args.has_key("random"):
-        C="""
+    if "random" in args:
+        C = """
 function randVal$id()
 {
         var newValue; 
@@ -137,21 +133,20 @@ function randVal$id()
                 }
         }
 }"""
-        range=args.random
-        C=C.replace("$id",str(gaugeid))
-        C=C.replace("$range",str(range))
+        range = args.random
+        C = C.replace("$id", str(gaugeid))
+        C = C.replace("$range", str(range))
         page.addJS(jsContent=C)
 
-    C="myGauge%s.init();\n"%gaugeid
-    C+="myGauge%s.setValue(%s)\n"%(gaugeid,args.val)
+    C = "myGauge%s.init();\n" % gaugeid
+    C += "myGauge%s.setValue(%s)\n" % (gaugeid, args.val)
 
-    if args.has_key("random"):
-        C+="setInterval('randVal%s()', %s);\n"%(gaugeid,randomspeed)
+    if "random" in args:
+        C += "setInterval('randVal%s()', %s);\n" % (gaugeid, randomspeed)
     page.addDocumentReadyJSfunction(C)
     params.result = page
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

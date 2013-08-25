@@ -1,13 +1,12 @@
 
-def main(o,args,params,tags,tasklet):
-    
+def main(o, args, params, tags, tasklet):
+
     page = args.page
 
     page.addJS(jsContent=args.cmdstr)
-    params.result = page 
+    params.result = page
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

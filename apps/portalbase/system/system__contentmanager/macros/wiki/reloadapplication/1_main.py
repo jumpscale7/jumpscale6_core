@@ -1,14 +1,12 @@
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     params.merge(args)
-    
-    #temporary hack to get the application name
-    name = o.system.fs.getParentDirName(o.system.fs.getParent(o.core.portal.runningPortal.webserver.cfgdir))
-    o.core.portal.runningPortal.restartInProcess(name)
 
-    params.result=("",params.doc)
+    # temporary hack to get the application name
+    name = j.system.fs.getParentDirName(j.system.fs.getParent(j.core.portal.runningPortal.webserver.cfgdir))
+    j.core.portal.runningPortal.restartInProcess(name)
 
- 
+    params.result = ("", params.doc)
 
-def match(o,args,params,tags,tasklet):
+
+def match(o, args, params, tags, tasklet):
     return True
-

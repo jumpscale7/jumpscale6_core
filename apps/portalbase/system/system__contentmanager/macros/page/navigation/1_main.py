@@ -10,7 +10,7 @@ def main(o, args, params, tags, tasklet):
 
     if args.doc.navigation != "":
         if navStr.strip() == "":
-            navStr = args.doc.navigation+"\n"
+            navStr = args.doc.navigation + "\n"
         if navStr.strip() != "" and navStr[-1] != "\n":
             navStr += "\n"
             navStr += args.doc.navigation
@@ -46,9 +46,10 @@ def main(o, args, params, tags, tasklet):
                 except Exception:
                     import traceback
                     traceback.print_exc()
-                    raise RuntimeError("**ERROR: error executing macros for line:%s and for doc:%s, this happens inside navigation macro."%(line, args.doc.name))
+                    raise RuntimeError(
+                        "**ERROR: error executing macros for line:%s and for doc:%s, this happens inside navigation macro." % (line, args.doc.name))
 
-                convertor = o.tools.docgenerator.getConfluence2htmlConvertor()
+                convertor = j.tools.docgenerator.getConfluence2htmlConvertor()
                 convertor.convert(line, args.page, args.doc)
             # out+=line+"\n"
             else:
@@ -62,7 +63,7 @@ def main(o, args, params, tags, tasklet):
                     target = ""
                     icon = ""
                 line2 = "<li><a href=\"%s\"><i class=\"%s\"></i>%s</a></li>" % (target.strip(), icon.strip(), name.strip())
-                items += "%s\n"%line2
+                items += "%s\n" % line2
 
     page.addMessage(items)
     page.addMessage("</div>")

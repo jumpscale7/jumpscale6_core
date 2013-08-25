@@ -4,7 +4,7 @@
     """    
     method:initOverSSH
         """     
-        will ssh into the machin and install openwizzy & bootstrap the machine
+        will ssh into the machin and install jumpscale & bootstrap the machine
         will also fetch the info from the machine & populate local portal
         """
         var:name str,,optional name of machine

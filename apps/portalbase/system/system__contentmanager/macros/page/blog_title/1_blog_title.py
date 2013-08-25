@@ -1,4 +1,4 @@
-from OpenWizzy.portal.macrolib.blog import BlogPost
+from JumpScale.portal.macrolib.blog import BlogPost
 
 
 def main(o, args, params, *other_args):

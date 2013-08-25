@@ -3,11 +3,11 @@ h1. Macros
 
 Macros are an addition to the normal wiki syntax. They allow you to easily add extra information to a page without having to write code.
 
-The OpenWizzy wiki system has four categories of macros, but allows you to create custom macros:
+The JumpScale wiki system has four categories of macros, but allows you to create custom macros:
 
 * *Element*: to add extra elements to a page such as table of contents, contact forms, buttons, ...
 * *Layout*: to update the default page settings
-* *Wiki*: for specific OpenWizzy wiki functions, for example to show child pages
+* *Wiki*: for specific JumpScale wiki functions, for example to show child pages
 * *Preprocessor*: to generate an intermediate wiki format, for example to include content of other wiki pages to avoid duplicate writing
 
 h2. Element Macros
@@ -45,7 +45,7 @@ The tasklet of these macros must set `params.result` as a page.
 
 h2. Wiki Macros
 
-Wiki macros are part of the core OpenWizzy wiki system. They gather information about the wiki data.
+Wiki macros are part of the core JumpScale wiki system. They gather information about the wiki data.
 
 Wiki data can be:
 

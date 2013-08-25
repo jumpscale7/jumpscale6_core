@@ -1,32 +1,33 @@
-from OpenWizzy import o
+from JumpScale import j
 from system_infomgr_osis import *
 
+
 class system_infomgr(system_infomgr_osis):
+
     """
     this is an example actor
     
     """
+
     def __init__(self):
-        
-        self._te={}
-        self.actorname="infomgr"
-        self.appname="system"
+
+        self._te = {}
+        self.actorname = "infomgr"
+        self.appname = "system"
         system_infomgr_osis.__init__(self)
-    
 
         pass
 
-    def addInfo(self,info,**args):
+    def addInfo(self, info, **args):
         """
         can be multi line
         param:info dotnotation of info e.g. 'water.white.level.sb 10'  (as used in graphite)
         result bool 
         
         """
-        return o.apps.system.infomgr.extensions.infomgr.addInfo(info)
-    
+        return j.apps.system.infomgr.extensions.infomgr.addInfo(info)
 
-    def getInfo1h(self,id,start,stop,**args):
+    def getInfo1h(self, id, start, stop, **args):
         """
         return raw info (resolution is 1h)
         param:id id in dot noation e.g. 'water.white.level.sb' (can be multiple use comma as separation)
@@ -35,11 +36,10 @@ class system_infomgr(system_infomgr_osis):
         result list(list) 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getInfo1h")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method getInfo1h")
 
-    def getInfo1hFromTo(self,id,start,stop,**args):
+    def getInfo1hFromTo(self, id, start, stop, **args):
         """
         will not return more than 12 months of info, resolution = 1h
         param:id id in dot noation e.g. 'water.white.level.sb'
@@ -48,11 +48,10 @@ class system_infomgr(system_infomgr_osis):
         result dict() 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getInfo1hFromTo")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method getInfo1hFromTo")
 
-    def getInfo5Min(self,id,start,stop,**args):
+    def getInfo5Min(self, id, start, stop, **args):
         """
         return raw info (resolution is 5min)
         param:id id in dot noation e.g. 'water.white.level.sb' (can be multiple use comma as separation)
@@ -61,11 +60,10 @@ class system_infomgr(system_infomgr_osis):
         result list(list) 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getInfo5Min")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method getInfo5Min")
 
-    def getInfo5MinFromTo(self,id,start,stop,**args):
+    def getInfo5MinFromTo(self, id, start, stop, **args):
         """
         will not return more than 1 month of info
         param:id id in dot noation e.g. 'water.white.level.sb'
@@ -74,11 +72,10 @@ class system_infomgr(system_infomgr_osis):
         result dict() 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getInfo5MinFromTo")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method getInfo5MinFromTo")
 
-    def getInfoWithHeaders(self,id,start,stop,maxvalues,**args):
+    def getInfoWithHeaders(self, id, start, stop, maxvalues, **args):
         """
         param:id id in dot noation e.g. 'water.white.level.sb'  (can be multiple use comma as separation)
         param:start epoch
@@ -87,17 +84,15 @@ class system_infomgr(system_infomgr_osis):
         result list(list) 
         
         """
-        result=o.apps.system.infomgr.extensions.infomgr.getInfoWithHeaders(maxvalues=100,id=id,start=start,stop=stop)
+        result = j.apps.system.infomgr.extensions.infomgr.getInfoWithHeaders(maxvalues=100, id=id, start=start, stop=stop)
 
         return result
-    
 
-    def reset(self,**args):
+    def reset(self, **args):
         """
         reset all stats
         result bool 
         
         """
-        o.apps.system.infomgr.extensions.infomgr.reset()
+        j.apps.system.infomgr.extensions.infomgr.reset()
         return "RESET DONE"
-    

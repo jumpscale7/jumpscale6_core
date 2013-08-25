@@ -1,8 +1,10 @@
 
-from OpenWizzy import o
+from JumpScale import j
 import os
 
+
 class FilesystemBase(object):
+
     def __init__(self, root, cmd_channel):
         """
          - (str) root: the user "real" home directory (e.g. '/home/user')
@@ -16,8 +18,7 @@ class FilesystemBase(object):
         self._cwd = '/'
         self._root = root
         self.cmd_channel = cmd_channel
-        self.handler=None
-
+        self.handler = None
 
     @property
     def root(self):
@@ -82,9 +83,9 @@ class FilesystemBase(object):
         """
         raise NotImplementedError
         # as far as I know, it should always be path traversal safe
-        #if relative path go to virtual abs path
-        if ftppath[0]<>"/" and ftppath[0]<>os.sep:
-            ftppath=self.ftpnorm(ftppath)
+        # if relative path go to virtual abs path
+        if ftppath[0] != "/" and ftppath[0] != os.sep:
+            ftppath = self.ftpnorm(ftppath)
 
         if os.path.normpath(self.root) == os.sep:
             return os.path.realpath(os.path.normpath(self.ftpnorm(ftppath)))
@@ -127,38 +128,38 @@ class FilesystemBase(object):
 
     def open(self, filename, mode):
         """Open a file returning its handler"""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def mkstemp(self, suffix='', prefix='', dir=None, mode='wb'):
         """A wrap around tempfile.mkstemp creating a file with a unique
         name.  Unlike mkstemp it returns an object with a file-like
         interface.
         """
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def chdir(self, ftppath):
         """Change the current directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def mkdir(self, ftppath):
         """Create the specified directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def listdir(self, path):
         """List the content of a directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def rmdir(self, path):
         """Remove the specified directory."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def remove(self, path):
         """Remove the specified file."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def rename(self, src, dst):
         """Rename the specified src file to the dst filename."""
-        raise RuntimeError("not implemented")        
+        raise RuntimeError("not implemented")
 
     def chmod(self, path, mode):
         """Change file/directory mode."""
@@ -198,12 +199,12 @@ class FilesystemBase(object):
         the epoch."""
         raise NotImplementedError
 
-    #def realpath(self, path):
+    # def realpath(self, path):
         #"""Return the canonical version of path eliminating any
-        #symbolic links encountered in the path (if they are
-        #supported by the operating system).
+        # symbolic links encountered in the path (if they are
+        # supported by the operating system).
         #"""
-        #return os.path.realpath(path)
+        # return os.path.realpath(path)
 
     def lexists(self, path):
         """Return True if path refers to an existing path, including
@@ -231,14 +232,12 @@ class FilesystemBase(object):
         """
         raise NotImplementedError
 
-
     def get_list_dir(self, path):
         """"Return an iterator object that yields a directory listing
         in a form suitable for LIST command.
         """
         if self.isdir(path):
-            listing = self.listdir(path)
-            listing.sort()
+            listing = sorted(self.listdir(path))
             return self.format_list(path, listing)
         # if path is a file or a symlink we return information about it
         else:
@@ -340,7 +339,7 @@ class FilesystemBase(object):
         type=dir;size=0;perm=el;modify=20071127230206;unique=801e33; ebooks
         type=file;size=211;perm=r;modify=20071103093626;unique=801e32; module.py
         """
-        basedir=self.ftp2fs(basedir)
+        basedir = self.ftp2fs(basedir)
         if self.cmd_channel.use_gmt_times:
             timefunc = time.gmtime
         else:
@@ -387,7 +386,7 @@ class FilesystemBase(object):
             if 'modify' in facts:
                 try:
                     retfacts['modify'] = time.strftime("%Y%m%d%H%M%S",
-                                                        timefunc(st.st_mtime))
+                                                       timefunc(st.st_mtime))
                 # it could be raised if last mtime happens to be too old
                 # (prior to year 1900)
                 except ValueError:
@@ -396,12 +395,12 @@ class FilesystemBase(object):
                 # on Windows we can provide also the creation time
                 try:
                     retfacts['create'] = time.strftime("%Y%m%d%H%M%S",
-                                                        timefunc(st.st_ctime))
+                                                       timefunc(st.st_ctime))
                 except ValueError:
                     pass
             # UNIX only
             if 'unix.mode' in facts:
-                retfacts['unix.mode'] = oct(st.st_mode & 0777)
+                retfacts['unix.mode'] = oct(st.st_mode & 0o777)
             if 'unix.uid' in facts:
                 retfacts['unix.uid'] = st.st_uid
             if 'unix.gid' in facts:
@@ -419,7 +418,6 @@ class FilesystemBase(object):
                 retfacts['unique'] = "%xg%x" % (st.st_dev, st.st_ino)
 
             # facts can be in any order but we sort them by name
-            factstring = "".join(["%s=%s;" % (x, retfacts[x]) \
+            factstring = "".join(["%s=%s;" % (x, retfacts[x])
                                   for x in sorted(retfacts.keys())])
             yield "%s %s\r\n" % (factstring, basename)
-

@@ -57,6 +57,7 @@ def replace_anonymous(callable):
     methods as first arugument with the actual user used to handle
     anonymous sessions.
     """
+
     def wrapper(self, username, *args, **kwargs):
         if username == 'anonymous':
             username = self.anonymous_user or username
@@ -65,6 +66,7 @@ def replace_anonymous(callable):
 
 
 class _Base(object):
+
     """Methods common to both Unix and Windows authorizers.
     Not supposed to be used directly.
     """
@@ -96,7 +98,7 @@ class _Base(object):
         for a specific user.
         """
         if not password and not homedir and not perm and not msg_login \
-        and not msg_quit:
+                and not msg_quit:
             raise ValueError("at least one keyword argument must be specified")
         if self.allowed_users and username not in self.allowed_users:
             raise ValueError('%s is not an allowed user' % username)
@@ -111,10 +113,10 @@ class _Base(object):
             # re-set parameters
             del self._dummy_authorizer.user_table[username]
         self._dummy_authorizer.add_user(username, password or "",
-                                                  homedir or os.getcwd(),
-                                                  perm or "",
-                                                  msg_login or "",
-                                                  msg_quit or "")
+                                        homedir or os.getcwd(),
+                                        perm or "",
+                                        msg_login or "",
+                                        msg_quit or "")
         if homedir is None:
             self._dummy_authorizer.user_table[username]['home'] = ""
 
@@ -152,7 +154,9 @@ class _Base(object):
 
 # Note: requires python >= 2.5
 try:
-    import pwd, spwd, crypt
+    import pwd
+    import spwd
+    import crypt
 except ImportError:
     pass
 else:
@@ -163,6 +167,7 @@ else:
     PROCESS_GID = os.getgid()
 
     class BaseUnixAuthorizer(object):
+
         """An authorizer compatible with Unix user account and password
         database.
         This class should not be used directly unless for subclassing.
@@ -249,8 +254,8 @@ else:
         def has_perm(self, username, perm, path=None):
             return perm in self.get_perms(username)
 
-
     class UnixAuthorizer(_Base, BaseUnixAuthorizer):
+
         """A wrapper on top of BaseUnixAuthorizer providing options
         to specify what users should be allowed to login, per-user
         options, etc.
@@ -274,12 +279,12 @@ else:
         # --- public API
 
         def __init__(self, global_perm="elradfmw",
-                           allowed_users=[],
-                           rejected_users=[],
-                           require_valid_shell=True,
-                           anonymous_user=None,
-                           msg_login="Login successful.",
-                           msg_quit="Goodbye."):
+                     allowed_users=[],
+                     rejected_users=[],
+                     require_valid_shell=True,
+                     anonymous_user=None,
+                     msg_login="Login successful.",
+                     msg_quit="Goodbye."):
             """Parameters:
 
              - (string) global_perm:
@@ -383,7 +388,7 @@ else:
             try:
                 try:
                     file = open('/etc/shells', 'r')
-                except IOError, err:
+                except IOError as err:
                     if err.errno == errno.ENOENT:
                         return True
                     raise
@@ -407,13 +412,18 @@ else:
 # Note: requires pywin32 extension
 try:
     import _winreg
-    import win32security, win32net, pywintypes, win32con, win32api
+    import win32security
+    import win32net
+    import pywintypes
+    import win32con
+    import win32api
 except ImportError:
     pass
 else:
     __all__.extend(['BaseWindowsAuthorizer', 'WindowsAuthorizer'])
 
     class BaseWindowsAuthorizer(object):
+
         """An authorizer compatible with Windows user account and
         password database.
         This class should not be used directly unless for subclassing.
@@ -465,8 +475,8 @@ else:
             """
             try:
                 sid = win32security.ConvertSidToStringSid(
-                        win32security.LookupAccountName(None, username)[0])
-            except pywintypes.error, err:
+                    win32security.LookupAccountName(None, username)[0])
+            except pywintypes.error as err:
                 raise AuthorizerError(err)
             path = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" + \
                    "\\" + sid
@@ -495,8 +505,8 @@ else:
         def has_perm(self, username, perm, path=None):
             return perm in self.get_perms(username)
 
-
     class WindowsAuthorizer(_Base, BaseWindowsAuthorizer):
+
         """A wrapper on top of BaseWindowsAuthorizer providing options
         to specify what users should be allowed to login, per-user
         options, etc.
@@ -517,12 +527,12 @@ else:
         # --- public API
 
         def __init__(self, global_perm="elradfmw",
-                           allowed_users=[],
-                           rejected_users=[],
-                           anonymous_user=None,
-                           anonymous_password=None,
-                           msg_login="Login successful.",
-                           msg_quit="Goodbye."):
+                     allowed_users=[],
+                     rejected_users=[],
+                     anonymous_user=None,
+                     anonymous_password=None,
+                     msg_login="Login successful.",
+                     msg_quit="Goodbye."):
             """Parameters:
 
              - (string) global_perm:
@@ -599,7 +609,7 @@ else:
                 return overridden_password == password
             else:
                 return BaseWindowsAuthorizer.validate_authentication(self,
-                                                            username, password)
+                                                                     username, password)
 
         def impersonate_user(self, username, password):
             """Impersonate the security context of another user."""

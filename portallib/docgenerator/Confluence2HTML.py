@@ -1,61 +1,61 @@
 import re
-from OpenWizzy import o
-from OpenWizzy.portal.macrolib import div_base
+from JumpScale import j
+from JumpScale.portal.macrolib import div_base
 
 
 class Confluence2HTML():
 
-    def defGet(self,name):
-        name=name.lower().replace("_","").replace("-","").replace(" ","")
-        if o.apps.system.contentmanager.extensions.defmanager.aliases.has_key(name):
-            name=o.apps.system.contentmanager.extensions.defmanager.aliases[name]
-        if not o.apps.system.contentmanager.extensions.defmanager.defs.has_key(name):
+    def defGet(self, name):
+        name = name.lower().replace("_", "").replace("-", "").replace(" ", "")
+        if name in j.apps.system.contentmanager.extensions.defmanager.aliases:
+            name = j.apps.system.contentmanager.extensions.defmanager.aliases[name]
+        if name not in j.apps.system.contentmanager.extensions.defmanager.defs:
             return None
-        return o.apps.system.contentmanager.extensions.defmanager.defs[name]
+        return j.apps.system.contentmanager.extensions.defmanager.defs[name]
 
-    def processDefs(self,line,doc,page):
+    def processDefs(self, line, doc, page):
         if not doc.processDefs:
             return line
 
         # print "processdefs:%s"%line
 
         def processToken(token):
-            if token.find("{")<>-1 or token.find("[")<>-1 or token.find("]")<>-1:
+            if token.find("{") != -1 or token.find("[") != -1 or token.find("]") != -1:
                 return token
             # print "tok1:%s"%token
-            deff=self.defGet(token)
-            if deff<>None:
+            deff = self.defGet(token)
+            if deff != None:
                 # print "founddef"
-                token="[%s|%s]"%(deff.name,deff.pagename)
+                token = "[%s|%s]" % (deff.name, deff.pagename)
                 # print "tok2:%s"%token
             return token
 
-        token=""
-        lineout=""
+        token = ""
+        lineout = ""
         for char in line:
-            if char in [",",";",":"," ",".","?","!","|"]:
-                token=processToken(token)
-                lineout+="%s%s"%(token,char)
-                token=""
-            elif char in ["/","\\","]"]:
-                lineout+="%s%s"%(token,char)
-                token=""
+            if char in [",", ";", ":", " ", ".", "?", "!", "|"]:
+                token = processToken(token)
+                lineout += "%s%s" % (token, char)
+                token = ""
+            elif char in ["/", "\\", "]"]:
+                lineout += "%s%s" % (token, char)
+                token = ""
             else:
-                token+=char
-        lineout+=processToken(token)
-        lineout=self.findLinks(lineout,page)
+                token += char
+        lineout += processToken(token)
+        lineout = self.findLinks(lineout, page)
         return lineout
 
-    def findLinks(self,line,page):
-        #r=r"\[[-:|_@#.?\w\s\\=/&]*\]"
+    def findLinks(self, line, page):
+        # r=r"\[[-:|_@#.?\w\s\\=/&]*\]"
         r = r"\[[^\[\]]+\]"
-        if o.codetools.regex.match(r,line): #find links
+        if j.codetools.regex.match(r, line):  # find links
             # print "match %s"% line
-            for match in o.codetools.regex.yieldRegexMatches(r,line):
+            for match in j.codetools.regex.yieldRegexMatches(r, line):
                 # print "link: %s" % match.founditem
                 link_id = link_class = None
-                match2=match.founditem.replace("[","").replace("]","")
-                if match2.find("|")<>-1:
+                match2 = match.founditem.replace("[", "").replace("]", "")
+                if match2.find("|") != -1:
                     parts = match2.split("|")
                     descr = parts[0]
                     link = parts[1]
@@ -63,16 +63,16 @@ class Confluence2HTML():
                         link_id = parts[2].split('=')[1]
                     if len(parts) >= 4:
                         link_class = parts[3].split('=')[1]
-                elif match2.find(":")<>-1:
-                    descr,link=match2.split(":",1)[1], match2
+                elif match2.find(":") != -1:
+                    descr, link = match2.split(":", 1)[1], match2
                 else:
-                    link=match2
-                    descr=link
+                    link = match2
+                    descr = link
                 # if link.find(":")<>-1:  #@todo what was the reason for this, probly have broken something now
                 #     link=link.replace(":","___")
-                if link.find(";")<>-1:
-                    space,pagename=link.split(";",1)
-                    link="/%s/%s" % (space.lower().strip().strip("/"),pagename.strip().strip("/"))
+                if link.find(";") != -1:
+                    space, pagename = link.split(";", 1)
+                    link = "/%s/%s" % (space.lower().strip().strip("/"), pagename.strip().strip("/"))
                 # print "match:%s"%match.founditem
                 # print "getlink:%s" %page.getLink(descr,link)
                 line = line.replace(match.founditem, page.getLink(descr, link, link_id, link_class))
@@ -109,7 +109,6 @@ class Confluence2HTML():
             width_n_height += ' height="{0}"'.format(height)
 
         return "<img src='%s' alt='%s' %s style='clear:both;%s' />" % (imagePath, title, width_n_height, Confluence2HTML._format_styles(styles))
-
 
     def convert(self, content, page=None, doc=None, requestContext=None, paramsExtra={}):
         # Now I should format the wiki text, but keeping the macros untouched because I don't want to
@@ -167,67 +166,67 @@ class Confluence2HTML():
 
         content = ''.join(blocks)
 
-        if page==None:
-            page=o.tools.docgenerator.pageNewHTML("temp")
+        if page == None:
+            page = j.tools.docgenerator.pageNewHTML("temp")
 
-        #images=o.system.fs.listFilesInDir(dirpath,False)
-        #images3=[]L
-        #for image in images:
-            #image2=image.lower()
-            #if image2.find(".jpg")<>-1 or image2.find(".png")<>-1:
-                #image2=image2.strip()
-                #image2=o.system.fs.getBaseName(image2.replace("\\","/"))
-                #images3.append(image2)
+        # images=j.system.fs.listFilesInDir(dirpath,False)
+        # images3=[]L
+        # for image in images:
+            # image2=image.lower()
+            # if image2.find(".jpg")<>-1 or image2.find(".png")<>-1:
+                # image2=image2.strip()
+                # image2=j.system.fs.getBaseName(image2.replace("\\","/"))
+                # images3.append(image2)
 
-        state="start"
-        macro=""
-        params=""
+        state = "start"
+        macro = ""
+        params = ""
 
-        if content.find("@show")<>-1:
-            #process show blocks before converting
-            state="start"
-            result=False
-            out=""
+        if content.find("@show") != -1:
+            # process show blocks before converting
+            state = "start"
+            result = False
+            out = ""
             for line in content.split("\n"):
-                #print "%s %s" % (state,line)
-                if line.find("@show")==0:
-                    state="hide"
-                    pythoncode=line.replace("@show","").strip()
-                    paramsExtra2=paramsExtra
-                    paramsExtra2["doc"]=doc
-                    paramsExtra2["page"]=page
-                    paramsExtra2["requestContext"]=requestContext
+                # print "%s %s" % (state,line)
+                if line.find("@show") == 0:
+                    state = "hide"
+                    pythoncode = line.replace("@show", "").strip()
+                    paramsExtra2 = paramsExtra
+                    paramsExtra2["doc"] = doc
+                    paramsExtra2["page"] = page
+                    paramsExtra2["requestContext"] = requestContext
                     try:
-                        result=eval(pythoncode,paramsExtra)
+                        result = eval(pythoncode, paramsExtra)
                     except Exception:
                         #out+="***error***: Could not parse & execute %s, error was %s\n" % (pythoncode,e)
                         continue
-                    if not o.basetype.boolean.check(result):
+                    if not j.basetype.boolean.check(result):
                         #out+="***error***: Could not parse & execute %s, result needs to be a boolean.\n" % (pythoncode)
                         continue
 
-                    if result==True:
-                        state="show"
+                    if result == True:
+                        state = "show"
                         continue
                     else:
-                        state="hide"
+                        state = "hide"
                         continue
 
-                if line.find("@end")==0:
-                    state="start"
-                    result=False
+                if line.find("@end") == 0:
+                    state = "start"
+                    result = False
                     continue
 
-                if state=="start" or state=="show":
-                    out+=line+"\n"
+                if state == "start" or state == "show":
+                    out += line + "\n"
 
-            content=out
+            content = out
 
         for line in content.split("\n"):
 
-            self._lastLine=line
-            line=line.strip()
-            
+            self._lastLine = line
+            line = line.strip()
+
             # New lines
             # This should be the last thing
             if line == r'\\':
@@ -237,34 +236,34 @@ class Confluence2HTML():
 
             # print "#: %s %s" % (state,line)
 
-            #END TABLE
-            if state=="table" and ( line[0:1]=="||" or line.find("|")<>0):
-                state="start"
-                if params<>"":
-                    page.addList(trows,theader,classparams=params)
+            # END TABLE
+            if state == "table" and (line[0:1] == "||" or line.find("|") != 0):
+                state = "start"
+                if params != "":
+                    page.addList(trows, theader, classparams=params)
                 else:
-                    page.addList(trows,theader)
-                params=""
+                    page.addList(trows, theader)
+                params = ""
 
-            ##PAGEBREAK
-            if state=="start" and  (line.find("@LF")==0  or line.find("&nbsp;")<>-1):# or line=="":
+            # PAGEBREAK
+            if state == "start" and (line.find("@LF") == 0 or line.find("&nbsp;") != -1):  # or line=="":
                 page.addNewLine()
                 continue
 
-            if line=="":
+            if line == "":
                 page._checkBlock('', '', '')
                 continue
 
-            #SKIP LINES
-            if state<>"macro" and line[0]=="#":
+            # SKIP LINES
+            if state != "macro" and line[0] == "#":
                 continue
 
-            ##IMAGE
-            regex=r"\![\w\-:_/= *.,|]*\!"
-            if (state=="start" or state=="table" )and o.codetools.regex.match(regex,line):
-                matches=o.codetools.regex.findAll(regex,line)
+            # IMAGE
+            regex = r"\![\w\-:_/= *.,|]*\!"
+            if (state == "start" or state == "table")and j.codetools.regex.match(regex, line):
+                matches = j.codetools.regex.findAll(regex, line)
                 for match in matches:
-                    image=match.replace("!","")
+                    image = match.replace("!", "")
                     if '|' in image:
                         # Image may have attributes, like
                         #   !image.png|border=1px solid black, margin=1px!
@@ -276,94 +275,94 @@ class Confluence2HTML():
                     else:
                         styles = []
                     imagePath = "/images/%s/%s" % (doc.getSpaceName(), image)
-                    if not doc.images.has_key(image):
-                        # th=o.core.tags.getObject(tags)
+                    if image not in doc.images:
+                        # th=j.core.tags.getObject(tags)
                         # result=th.getValues(width=800,height=600,border=True)
                         #page.addImage(image, image, result["width"], result["height"])
                         #page.addImage(image, imagePath, styles=styles)
                         line = line.replace(match, self.createImage(image, imagePath, styles=styles))
-                        #continue
+                        # continue
                     else:
                         imagePath, tags, _ = doc.images[image]
-                        th = o.core.tags.getObject(tags)
+                        th = j.core.tags.getObject(tags)
                         result = th.getValues(width=None, height=None, border=True)
                         imagePath = "/images/%s/%s" % (doc.getSpaceName(), image)
                         #page.addImage(image, imagePath, result["width"], result["height"], styles)
                         line = line.replace(match, self.createImage(image, imagePath, result["width"], result["height"], styles))
 
-                    #continue
+                    # continue
                 line = self.findLinks(line, page)
-            if line.find("{center}")>-1:
+            if line.find("{center}") > -1:
                 continue
 
             if line.startswith("{toc:"):
-                #line="{{toc}}"
-                line=""
+                # line="{{toc}}"
+                line = ""
                 continue
 
-            #1 line macros
-            if (state=="start" or state=="table") and line.find("{{")<>-1 and line.find("}}")<>-1:                
-                if doc.preprocessor.spaceMacroexecutorPage<>None:
-                    doc.preprocessor.macroexecutorPage.taskletsgroup2=doc.preprocessor.spaceMacroexecutorPage.taskletsgroup
+            # 1 line macros
+            if (state == "start" or state == "table") and line.find("{{") != -1 and line.find("}}") != -1:
+                if doc.preprocessor.spaceMacroexecutorPage != None:
+                    doc.preprocessor.macroexecutorPage.taskletsgroup2 = doc.preprocessor.spaceMacroexecutorPage.taskletsgroup
 
                 macros = doc.preprocessor.macroexecutorPage.getMacroCandidates(line)
                 for macro in macros:
                     # print "## 1linemacro:%s"%macro
 
                     # mtayseer: this condition looks wrong!!
-                    if line.find("{{")<>0 or len(macros) > 1:
-                        htmlMacro=doc.preprocessor.macroexecutorPage.executeMacroReturnHTML(macro,\
-                            doc=doc,requestContext=requestContext,paramsExtra=paramsExtra,pagemirror4jscss=page)
-                        line=line.replace(macro,htmlMacro)
+                    if line.find("{{") != 0 or len(macros) > 1:
+                        htmlMacro = doc.preprocessor.macroexecutorPage.executeMacroReturnHTML(macro,
+                                                                                              doc=doc, requestContext=requestContext, paramsExtra=paramsExtra, pagemirror4jscss=page)
+                        line = line.replace(macro, htmlMacro)
                     else:
-                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro,page,doc=doc,\
-                            requestContext=requestContext,paramsExtra=paramsExtra)
-                        line=""
-                macro=""
+                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc,
+                                                                                requestContext=requestContext, paramsExtra=paramsExtra)
+                        line = ""
+                macro = ""
                 # print "processed 1 macro line:%s"%line
-                if line.strip()=="":
+                if line.strip() == "":
                     continue
-                doc.preprocessor.macroexecutorPage.taskletsgroup2=None
+                doc.preprocessor.macroexecutorPage.taskletsgroup2 = None
 
             # print "after1linemacrostate:%s %s"%(line,state)
 
-            if state=="start" and line.find("{{")<>-1:
-                state="macro"
+            if state == "start" and line.find("{{") != -1:
+                state = "macro"
 
-            if state=="macro":
-                macro+="%s\n" % line
+            if state == "macro":
+                macro += "%s\n" % line
 
-            if state=="macro" and line.find("}}")==0:
-                state="start"
+            if state == "macro" and line.find("}}") == 0:
+                state = "start"
                 # print "macroend:%s"%line
-                #macrostr=macro
-                #macro=macro.strip().lstrip("{{")
-                #macro=macro.rstrip("}}")
-                if doc<>None:
-                    #ms=doc.preprocessor.macroexecutorPage.findMacros(macro)
-                    #if len(ms)==1:
+                # macrostr=macro
+                # macro=macro.strip().lstrip("{{")
+                # macro=macro.rstrip("}}")
+                if doc != None:
+                    # ms=doc.preprocessor.macroexecutorPage.findMacros(macro)
+                    # if len(ms)==1:
                     # print "EXECUTE MACRO %s"%macro
-                    if doc.preprocessor.spaceMacroexecutorPage<>None:
-                        doc.preprocessor.macroexecutorPage.taskletsgroup2=doc.preprocessor.spaceMacroexecutorPage.taskletsgroup
-                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro,page,doc=doc,requestContext=requestContext,paramsExtra=paramsExtra)
-                        doc.preprocessor.macroexecutorPage.taskletsgroup2=None
+                    if doc.preprocessor.spaceMacroexecutorPage != None:
+                        doc.preprocessor.macroexecutorPage.taskletsgroup2 = doc.preprocessor.spaceMacroexecutorPage.taskletsgroup
+                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc, requestContext=requestContext, paramsExtra=paramsExtra)
+                        doc.preprocessor.macroexecutorPage.taskletsgroup2 = None
                     else:
-                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro,page,doc=doc,requestContext=requestContext,paramsExtra=paramsExtra)
-                    macro=""
-                    #params=""
+                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc, requestContext=requestContext, paramsExtra=paramsExtra)
+                    macro = ""
+                    # params=""
                     continue
-                macro=""
+                macro = ""
                 continue
 
-            if line.strip()=="":
+            if line.strip() == "":
                 continue
 
-            # print "linkcheck: %s" % o.codetools.regex.match("\[[-\\:|_\w\s/]*\]",line)
-            ##FIND LINKS
-            line=self.findLinks(line,page)
+            # print "linkcheck: %s" % j.codetools.regex.match("\[[-\\:|_\w\s/]*\]",line)
+            # FIND LINKS
+            line = self.findLinks(line, page)
 
-            #HEADING
-            header = o.codetools.regex.getRegexMatch("^h(\d)\. (.+?)$",line)
+            # HEADING
+            header = j.codetools.regex.getRegexMatch("^h(\d)\. (.+?)$", line)
             if header and state == "start":
                 level, line = header.foundSubitems
                 level = int(level)
@@ -371,16 +370,16 @@ class Confluence2HTML():
                 page.addHeading(line, level)
                 continue
 
-            unorderedItem = o.codetools.regex.getRegexMatch("^(\*+) (.+?)$", line)
-            if state=="start" and unorderedItem:
+            unorderedItem = j.codetools.regex.getRegexMatch("^(\*+) (.+?)$", line)
+            if state == "start" and unorderedItem:
                 stars, line = unorderedItem.foundSubitems
                 level = len(stars)
                 line = self.processDefs(line, doc, page)
                 page.addBullet(line, level, attributes=ulAttributes)
                 ulAttributes = ''
                 continue
-    
-            numberedItem = o.codetools.regex.getRegexMatch("^\*(#+) (.+?)$", line)
+
+            numberedItem = j.codetools.regex.getRegexMatch("^\*(#+) (.+?)$", line)
             if state == "start" and numberedItem:
                 hashes, line = numberedItem.foundSubitems
                 level = len(hashes)
@@ -389,111 +388,106 @@ class Confluence2HTML():
                 ulAttributes = ''
                 continue
 
-            ulAttributes = o.codetools.regex.getRegexMatch("^(\*+)- (.+?)$", line)
+            ulAttributes = j.codetools.regex.getRegexMatch("^(\*+)- (.+?)$", line)
             if ulAttributes:
                 ulAttributes = div_base.tag_params_to_html_attrs(ulAttributes.foundSubitems[1])
                 continue
             else:
                 ulAttributes = ''
 
-            if state=="start" and o.codetools.regex.match(".*\|\|.*",line) and len(line.split("||"))==2:
-                #DESCRIPTIONS
-                p1,p2=line.split("||")
-                p2=self.processDefs(line,doc,page)
-                page.addDescr(p1,p2)
+            if state == "start" and j.codetools.regex.match(".*\|\|.*", line) and len(line.split("||")) == 2:
+                # DESCRIPTIONS
+                p1, p2 = line.split("||")
+                p2 = self.processDefs(line, doc, page)
+                page.addDescr(p1, p2)
                 continue
-            
-            if state=="start" and (line.find("@divend")==0 or line.find("@rowend")==0 or line.find("@colend")==0 or line.find("@blockend")==0):
+
+            if state == "start" and (line.find("@divend") == 0 or line.find("@rowend") == 0 or line.find("@colend") == 0 or line.find("@blockend") == 0):
                 page.addMessage("</div>")
                 continue
 
-            if state=="start" and line.find("@block")==0:
-                #divlower(divauto,page,"block")
-                arg=line.replace("@block","").strip()
-                if arg=="":
-                    arg="container"
+            if state == "start" and line.find("@block") == 0:
+                # divlower(divauto,page,"block")
+                arg = line.replace("@block", "").strip()
+                if arg == "":
+                    arg = "container"
                 page.addMessage("<div class=\"%s\">" % arg)
                 page.divlevel.append("block")
                 continue
 
-            if state=="start" and line.find("@row")==0:
-                #divlower(divauto,page,"row")
-                arg=line.replace("@row","").strip()
-                if arg=="":
-                    arg="row-fluid"
+            if state == "start" and line.find("@row") == 0:
+                # divlower(divauto,page,"row")
+                arg = line.replace("@row", "").strip()
+                if arg == "":
+                    arg = "row-fluid"
                 page.addMessage("<div class=\"%s\">" % arg)
                 page.divlevel.append("row")
                 continue
 
-            if state=="start" and line.find("@col")==0:
-                #divlower(divauto,page,"col")
-                arg=line.replace("@col","").strip()
+            if state == "start" and line.find("@col") == 0:
+                # divlower(divauto,page,"col")
+                arg = line.replace("@col", "").strip()
                 page.addMessage("<div class=\"span%s\">" % arg)
                 page.divlevel.append("col")
                 continue
 
-            if state=="start" and line.find("@block")==0:
-                arg=line.replace("@block","").strip()
-                if arg=="":
-                    arg="container-fluid"
+            if state == "start" and line.find("@block") == 0:
+                arg = line.replace("@block", "").strip()
+                if arg == "":
+                    arg = "container-fluid"
                 page.addMessage("<div class=\"%s\">" % arg)
-                page.divlevel+=1
+                page.divlevel += 1
 
-
-            #check params
-            if state=="start" and line.find("@params")==0:
-                params=line.replace("@params","").strip()
-                from OpenWizzy.core.Shell import ipshell
+            # check params
+            if state == "start" and line.find("@params") == 0:
+                params = line.replace("@params", "").strip()
+                from JumpScale.core.Shell import ipshell
                 print "DEBUG NOW params, not implemented"
                 ipshell()
 
-            if state=="start" and line.find("||")==0:
-                #beginning of table
-                line=self.processDefs(line,doc,page)
-                state="table"
-                cols=line.split("||")
-                cols=cols[1:-1]
-                theader=cols
-                trows=[]
+            if state == "start" and line.find("||") == 0:
+                # beginning of table
+                line = self.processDefs(line, doc, page)
+                state = "table"
+                cols = line.split("||")
+                cols = cols[1:-1]
+                theader = cols
+                trows = []
                 continue
 
-            if state=="start" and line.find("|")==0:
-                #beginning of table
-                line=self.processDefs(line,doc,page)
-                state="table"
-                theader=""
-                trows=[]
+            if state == "start" and line.find("|") == 0:
+                # beginning of table
+                line = self.processDefs(line, doc, page)
+                state = "table"
+                theader = ""
+                trows = []
 
-            if state=="table" and line.find("|")==0:
-                #ADD ROW TO TABLE
-                line=self.processDefs(line,doc,page)
-                cols=line.split("|")
+            if state == "table" and line.find("|") == 0:
+                # ADD ROW TO TABLE
+                line = self.processDefs(line, doc, page)
+                cols = line.split("|")
                 trows.append(cols[1:-1])
 
-            #was a regular line so add
-            if state<>"macro" and state<>"table" and line<>"":
-                if line[0]<>"@":
-                    line=self.processDefs(line,doc,page)
-                    page.addMessage(line,isElement=False)
+            # was a regular line so add
+            if state != "macro" and state != "table" and line != "":
+                if line[0] != "@":
+                    line = self.processDefs(line, doc, page)
+                    page.addMessage(line, isElement=False)
 
-
-
-
-        if page.body<>"":
-            #work on the special includes with [[]]
-            includes=o.codetools.regex.findAll("\[\[[\w :;,\.\*\!\?\^\=\'\-/]*\]\]",page.body)
+        if page.body != "":
+            # work on the special includes with [[]]
+            includes = j.codetools.regex.findAll("\[\[[\w :;,\.\*\!\?\^\=\'\-/]*\]\]", page.body)
             for item in includes:
-                item2=item.replace("[[","").replace("]]","")
+                item2 = item.replace("[[", "").replace("]]", "")
                 if doc.preprocessor.docExists(item2):
-                    doc2=doc.preprocessor.docGet(item2)
+                    doc2 = doc.preprocessor.docGet(item2)
                 else:
-                    page.body=page.body.replace(item," ***error*** : COULD NOT FIND DOC %s, could not include." % item2)
+                    page.body = page.body.replace(item, " ***error*** : COULD NOT FIND DOC %s, could not include." % item2)
                     continue
-                page2=o.tools.docgenerator.pageNewHTML("includeInConfluence2Wiki")
-                page2.liblocation=page.liblocation
-                content2,page2=self.convert(doc2.content,page2,doc2,requestContext)
+                page2 = j.tools.docgenerator.pageNewHTML("includeInConfluence2Wiki")
+                page2.liblocation = page.liblocation
+                content2, page2 = self.convert(doc2.content, page2, doc2, requestContext)
 
-                page.body=page.body.replace(item,page2.body)
+                page.body = page.body.replace(item, page2.body)
 
         return page
-

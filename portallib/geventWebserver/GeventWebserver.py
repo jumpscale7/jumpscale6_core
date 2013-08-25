@@ -5,7 +5,7 @@ import os
 
 from beaker.middleware import SessionMiddleware
 
-from OpenWizzy import o
+from JumpScale import j
 from gevent.pywsgi import WSGIServer
 import gevent
 import time
@@ -23,6 +23,7 @@ CONTENT_TYPE_HTML = 'text/html'
 
 
 class GeventWebserverFactory:
+
     def get(self, port, secret, wwwroot="", filesroot="", cfgdir=""):
         return GeventWebserver(port, secret, wwwroot=wwwroot, filesroot=filesroot, cfgdir=cfgdir)
 
@@ -34,12 +35,13 @@ class GeventWebserverFactory:
 
 
 class GeventWSClient():
+
     def __init__(self, ip, port, secret=None):
         self.ip = ip
         self.port = port
         self.secret = secret
-        import OpenWizzy.baselib.http_client
-        self.httpconnection = o.clients.http.getConnection()
+        import JumpScale.baselib.http_client
+        self.httpconnection = j.clients.http.getConnection()
 
     def html2text(self, data):
         # get only the body content
@@ -88,14 +90,14 @@ class GeventWSClient():
         """
 
         url = "http://%s:%s/restmachine/%s/%s/%s?authkey=%s" % (self.ip, self.port, appname, actorname, method, self.secret)
-        o.logger.log("Calling URL %s" % url, 8)
+        j.logger.log("Calling URL %s" % url, 8)
         if "params" in params:
             for key in params["params"]:
                 params[key] = params["params"][key]
             params.pop("params")
-        #params["caller"] = o.core.grid.config.whoami
+        #params["caller"] = j.core.grid.config.whoami
 
-        data = o.db.serializers.getSerializerType('j').dumps(params)
+        data = j.db.serializers.getSerializerType('j').dumps(params)
 
         headers = {'content-type': 'application/json'}
 
@@ -104,10 +106,10 @@ class GeventWSClient():
         contentType = result.headers['Content-Type']
         content = result.read()
 
-        # o.logger.log("Received result %s" % content, 8)
+        # j.logger.log("Received result %s" % content, 8)
 
         if contentType == CONTENT_TYPE_JSON:
-            decodedResult = o.db.serializers.getSerializerType('j').loads(content)
+            decodedResult = j.db.serializers.getSerializerType('j').loads(content)
         else:
             raise ValueError("Cannot handle content type %s" % contentType)
 
@@ -119,18 +121,20 @@ class GeventWSClient():
                 return 3, r
             elif decodedResult.startswith("ERRORJSON::"):
                 r = decodedResult.split("\n", 1)[1]  # remove first line
-                return 1, o.db.serializers.getSerializerType('j').loads(r)
+                return 1, j.db.serializers.getSerializerType('j').loads(r)
             elif decodedResult.startswith("ERROR::"):
-                raise RuntimeError("ERROR SHOULD HAVE BEEN IN JSON FORMAT.\n%s"%self.html2text(decodedResult))
+                raise RuntimeError("ERROR SHOULD HAVE BEEN IN JSON FORMAT.\n%s" % self.html2text(decodedResult))
 
         return 0, decodedResult
 
 
 class RequestContext(object):
+
     """
     is context of one request to WS
     please keep this as light as possible because these objects are mostly created
     """
+
     def __init__(self, application, actor, method, env, start_response, path, params={}, fformat=""):
         self.env = env
         self._start_response = start_response
@@ -160,6 +164,7 @@ class RequestContext(object):
 
 
 class GeventWebserver:
+
     def __init__(self, port, secret, wwwroot="", filesroot="", cfgdir=""):
         self.port = int(port)
         self.secret = secret
@@ -167,16 +172,16 @@ class GeventWebserver:
         self.epoch = 0
         self.contentdirs = {}
         self.cfgdir = cfgdir
-        self.libpath = o.html.getHtmllibDir()
-        self.logdir = o.system.fs.joinPaths(o.dirs.varDir, "qwiki", "logs")
-        o.system.fs.createDir(self.logdir)
-        # o.errorconditionhandler.setExceptHook()
+        self.libpath = j.html.getHtmllibDir()
+        self.logdir = j.system.fs.joinPaths(j.dirs.varDir, "qwiki", "logs")
+        j.system.fs.createDir(self.logdir)
+        # j.errorconditionhandler.setExceptHook()
         self.userKeyToName = {}
 
         session_opts = {
             'session.cookie_expires': False,
             'session.type': 'file',
-            'session.data_dir': '%s'%o.system.fs.joinPaths(o.dirs.varDir, "beakercache")
+            'session.data_dir': '%s' % j.system.fs.joinPaths(j.dirs.varDir, "beakercache")
         }
         self.router = SessionMiddleware(self.router, session_opts)
         self.webserver = WSGIServer(('127.0.0.1', self.port), self.router)
@@ -187,7 +192,7 @@ class GeventWebserver:
 
         self.wwwroot = wwwroot
         self.filesroot = filesroot
-        self.confluence2htmlconvertor = o.tools.docgenerator.getConfluence2htmlConvertor()
+        self.confluence2htmlconvertor = j.tools.docgenerator.getConfluence2htmlConvertor()
 
         self.schedule1min = {}
         self.schedule15min = {}
@@ -200,8 +205,8 @@ class GeventWebserver:
         self.pageKey2doc = {}
         self.routes = {}
         self.routesext = {}
-        self.bucketsloader = o.core.portalloader.getBucketsLoader()
-        self.spacesloader = o.core.portalloader.getSpacesLoader()
+        self.bucketsloader = j.core.portalloader.getBucketsLoader()
+        self.spacesloader = j.core.portalloader.getSpacesLoader()
 
         macroPathsPreprocessor = ["system/system__contentmanager/macros/preprocess"]
         macroPathsWiki = ["system/system__contentmanager/macros/wiki"]
@@ -221,7 +226,7 @@ class GeventWebserver:
             self.geoIP = None
 
     def getpage(self):
-        page = o.tools.docgenerator.pageNewHTML("index.html", htmllibPath="/lib")
+        page = j.tools.docgenerator.pageNewHTML("index.html", htmllibPath="/lib")
         return page
 
     def sendpage(self, page, start_response):
@@ -242,7 +247,7 @@ class GeventWebserver:
         if username == "":
             right = ""
         else:
-            groupsusers = o.apps.system.usermanager.getusergroups(username)
+            groupsusers = j.apps.system.usermanager.getusergroups(username)
             if groupsusers != None:
                 # groupsusers+=[username]  #@todo why did we do that???, maybe something will break now
                 pass
@@ -272,7 +277,7 @@ class GeventWebserver:
                 self.routes.pop(key)
 
     def getDoc(self, space, name, ctx, params={}):
-        print "getdoc:%s"%space
+        print "getdoc:%s" % space
         space = space.lower()
         name = name.lower()
 
@@ -356,10 +361,10 @@ class GeventWebserver:
         return doc, params
 
     def log(self, ctx, user, path, space="", pagename=""):
-        path2 = o.system.fs.joinPaths(self.logdir, "user_%s.log" % user)
+        path2 = j.system.fs.joinPaths(self.logdir, "user_%s.log" % user)
 
-        epoch = o.base.time.getTimeEpoch()+3600*6
-        hrtime = o.base.time.epoch2HRDateTime(epoch)
+        epoch = j.base.time.getTimeEpoch() + 3600 * 6
+        hrtime = j.base.time.epoch2HRDateTime(epoch)
 
         if False and self.geoIP != None:  # @todo fix geoip, also make sure nginx forwards the right info
             ee = self.geoIP.record_by_addr(ctx.env["REMOTE_ADDR"])
@@ -368,12 +373,12 @@ class GeventWebserver:
             loc = ""
 
         msg = "%s|%s|%s|%s|%s|%s|%s\n" % (hrtime, ctx.env["REMOTE_ADDR"], epoch, space, pagename, path, loc)
-        o.system.fs.writeFile(path2, msg, True)
+        j.system.fs.writeFile(path2, msg, True)
 
         if space != "":
             msg = "%s|%s|%s|%s|%s|%s|%s\n" % (hrtime, ctx.env["REMOTE_ADDR"], epoch, user, pagename, path, loc)
-            pathSpace = o.system.fs.joinPaths(self.logdir, "space_%s.log" % space)
-            o.system.fs.writeFile(pathSpace, msg, True)
+            pathSpace = j.system.fs.joinPaths(self.logdir, "space_%s.log" % space)
+            j.system.fs.writeFile(pathSpace, msg, True)
 
     def startSession(self, ctx, path):
         session = ctx.env['beaker.session']
@@ -388,7 +393,7 @@ class GeventWebserver:
                 session['user'] = 'admin'
                 session.save()
             else:
-                #check if authkey is a session
+                # check if authkey is a session
                 newsession = session.get_by_id(key)
                 if newsession:
                     session = newsession
@@ -405,14 +410,14 @@ class GeventWebserver:
             # user has filled in his login details, this is response on posted info
             name = ctx.params['user_login_']
             secret = ctx.params['passwd']
-            if o.apps.system.usermanager.authenticate(name, secret):
+            if j.apps.system.usermanager.authenticate(name, secret):
                 session['user'] = name
                 if "querystr" in session:
                     ctx.env['QUERY_STRING'] = session['querystr']
                 else:
                     ctx.env['QUERY_STRING'] = ""
                 session.save()
-                #user is loging in from login page redirect him to home
+                # user is loging in from login page redirect him to home
                 if path.endswith('system/login'):
                     status = '302'
                     headers = [
@@ -436,14 +441,12 @@ class GeventWebserver:
 
         return True, session
 
-
-
     def router(self, environ, start_response):
         path = environ["PATH_INFO"].lstrip("/")
         path = path.replace("wiki/wiki", "wiki")
         if path == "" or path.rstrip("/") == "wiki":
             path == "wiki/system"
-        print "path:%s"%path
+        print "path:%s" % path
 
         if path.find("favicon.ico") != -1:
             return self.processor_page(environ, start_response, self.filesroot, "favicon.ico", prefix="")
@@ -459,7 +462,7 @@ class GeventWebserver:
             image = image.lower()
             if image in spaceObject.docprocessor.images:
                 path = spaceObject.docprocessor.images[image]
-                return self.processor_page(environ, start_response, o.system.fs.getDirName(path), o.system.fs.getBaseName(path), prefix="images")
+                return self.processor_page(environ, start_response, j.system.fs.getDirName(path), j.system.fs.getBaseName(path), prefix="images")
             ctx.start_response('404', [])
 
         if path.find("files/specs/") == 0:
@@ -474,7 +477,7 @@ class GeventWebserver:
             space = path.split("/")[1].lower()
             path = "/".join(path.split("/")[3:])
             sploader = self.spacesloader.getSpaceFromId(space)
-            filesroot = o.system.fs.joinPaths(sploader.model.path, ".files")
+            filesroot = j.system.fs.joinPaths(sploader.model.path, ".files")
             return self.processor_page(environ, start_response, filesroot, path, prefix="")
 
         # user is logged in now
@@ -483,7 +486,6 @@ class GeventWebserver:
             return session
         user = session['user']
 
-
         if path.startswith("restmachine/"):
             path = path[12:]
             return self.processor_rest(environ, start_response, path, human=False, ctx=ctx)
@@ -491,7 +493,6 @@ class GeventWebserver:
         if path.find("restextmachine/") == 0:
             path = path[15:]
             return self.processor_restext(environ, start_response, path, human=False, ctx=ctx)
-
 
         if path.find("wiki") == 0:
             # is page in wiki
@@ -596,7 +597,7 @@ class GeventWebserver:
             return False
 
         def formatContent(contenttype, path, template, start_response):
-            content = o.system.fs.fileGetContents(path)
+            content = j.system.fs.fileGetContents(path)
             page = self.getpage()
             page.addCodeBlock(content, template, edit=True)
             start_response('200 OK', [('Content-Type', contenttype), ])
@@ -608,16 +609,16 @@ class GeventWebserver:
             path = path.replace("//", "/")
             while len(path) > 0 and path[0] == "/":
                 path = path[1:]
-            while path.find(webprefix+"/") == 0:
-                path = path[len(webprefix)+1:]
-            while path.find(prefix+"/") == 0:
-                path = path[len(prefix)+1:]
+            while path.find(webprefix + "/") == 0:
+                path = path[len(webprefix) + 1:]
+            while path.find(prefix + "/") == 0:
+                path = path[len(prefix) + 1:]
             return path
 
         def send_file(file_path, size):
             # print "sendfile:%s" % path
             f = open(file_path, "rb")
-            block = f.read(BLOCK_SIZE*10)
+            block = f.read(BLOCK_SIZE * 10)
             BLOCK_SIZE2 = 0
             # print "%s %s" % (file_path,size)
             while BLOCK_SIZE2 < size:
@@ -634,7 +635,7 @@ class GeventWebserver:
 
         # print "wwwroot:%s" % wwwroot
         if not wwwroot.replace("/", "") == "":
-            pathfull = wwwroot+"/"+path
+            pathfull = wwwroot + "/" + path
 
         else:
             pathfull = path
@@ -645,7 +646,7 @@ class GeventWebserver:
         if path == "favicon.ico":
             pathfull = "wiki/System/favicon.ico"
 
-        if not o.system.fs.exists(pathfull):
+        if not j.system.fs.exists(pathfull):
             print "error"
             headers = [('Content-Type', contenttype), ]
             start_response("404 Not found", headers)
@@ -721,8 +722,8 @@ class GeventWebserver:
                     message = 'get param with name:%s is missing.' % key
                     return False, message
             elif (criteria != "" and ctx.params[key] == "")\
-                    or (criteria != "" and not o.codetools.regex.matchAllText(criteria, ctx.params[key])):
-                msg = 'value of param %s not correct needs to comform to regex %s'%(key, criteria)
+                    or (criteria != "" and not j.codetools.regex.matchAllText(criteria, ctx.params[key])):
+                msg = 'value of param %s not correct needs to comform to regex %s' % (key, criteria)
                 return False, msg
         return True, ""
 
@@ -731,7 +732,7 @@ class GeventWebserver:
 
         # HTTP parameters can be repeated multiple times, i.e. in case of using <select multiple>
         # Example: a=1&b=2&a=3
-        # 
+        #
         # urlparse.parse_qs returns a dictionary of names & list of values. Then it's simplified
         # for lists with only a single element, e.g.
         #
@@ -749,7 +750,7 @@ class GeventWebserver:
                 msg = "postdata cannot be empty"
                 self.raiseError(ctx, msg)
             if env['CONTENT_TYPE'].find("application/json") != -1:
-                postParams = o.db.serializers.getSerializerType('j').loads(postData)
+                postParams = j.db.serializers.getSerializerType('j').loads(postData)
                 if postParams:
                     params.update(postParams)
                 return params
@@ -774,7 +775,7 @@ class GeventWebserver:
         params.extend(self.routes["%s_%s_%s" % (appname, actor, method)][1].keys())
 
         for param in params:
-            url += "%s=&"%param
+            url += "%s=&" % param
         url += "format=text"
         if url[-1] == "&":
             url = url[:-1]
@@ -832,13 +833,13 @@ class GeventWebserver:
         """
         used for during error show info about all services
         """
-        actorsloader = o.core.portal.runningPortal.actorsloader
+        actorsloader = j.core.portal.runningPortal.actorsloader
         if appname != "" and actor != "":
-            result = o.core.portal.runningPortal.activateActor(appname, actor)
+            result = j.core.portal.runningPortal.activateActor(appname, actor)
             if result == False:
                 # actor was not there
                 page = self.getpage()
-                page.addHeading("Could not find actor %s %s."%(appname, actor), 4)
+                page.addHeading("Could not find actor %s %s." % (appname, actor), 4)
                 return page
 
         if page == None:
@@ -849,8 +850,7 @@ class GeventWebserver:
 
             for appname, actorname in actorsloader.getAppActors():  # [item.split("_", 1) for  item in self.app_actor_dict.keys()]:
                 appnames[appname] = 1
-            appnames = appnames.keys()
-            appnames.sort()
+            appnames = sorted(appnames.keys())
             for appname in appnames:
                 link = page.getLink("%s" % (appname), self._getActorInfoUrl(appname, ""))
                 page.addBullet(link)
@@ -869,8 +869,7 @@ class GeventWebserver:
                 page.addBullet(link)
             return page
 
-        keys = self.routes.keys()
-        keys.sort()
+        keys = sorted(self.routes.keys())
         page.addHeading("list", 2)
         for item in keys:
             app2, actor2, method = item.split("_")
@@ -891,7 +890,7 @@ class GeventWebserver:
         """
         if not ctx.checkFormat():
             # error in format
-            eco = o.errorconditionhandler.getErrorConditionObject()
+            eco = j.errorconditionhandler.getErrorConditionObject()
             eco.errormessage = "only format supported = human or json, format is put with param &format=..."
             eco.type = "WRONGINPUT"
             print "WRONG FORMAT"
@@ -899,7 +898,7 @@ class GeventWebserver:
             if errorObject != None:
                 eco = errorObject
             else:
-                eco = o.errorconditionhandler.getErrorConditionObject()
+                eco = j.errorconditionhandler.getErrorConditionObject()
 
         scriptName = ctx.env["SCRIPT_NAME"]
         remoteAddress = ctx.env["REMOTE_ADDR"]
@@ -920,7 +919,7 @@ class GeventWebserver:
         if eco.type == "":
             eco.type = "WSERROR"
 
-        o.errorconditionhandler.processErrorConditionObject(eco)
+        j.errorconditionhandler.processErrorConditionObject(eco)
 
         if ctx.fformat == "human" or ctx.fformat == "text":
             if msginfo != None and msginfo != "":
@@ -941,11 +940,11 @@ class GeventWebserver:
                     except AttributeError:
                         data[key] = value
                 return data
-            msg = o.db.serializers.getSerializerType('j').dumps(todict(eco))
+            msg = j.db.serializers.getSerializerType('j').dumps(todict(eco))
 
         ctx.start_response(httpcode, [('Content-Type', 'text/html')])
 
-        o.console.echo("***ERROR***:%s : method %s from ip %s with params %s" % (
+        j.console.echo("***ERROR***:%s : method %s from ip %s with params %s" % (
             msg, scriptName, remoteAddress, queryString), 2)
 
         return msg
@@ -959,18 +958,18 @@ class GeventWebserver:
         return self._text2html(pprint.pformat(content))
 
     def _resultjsonSerializer(self, content):
-        return o.db.serializers.getSerializerType('j').dumps({"result":content})
+        return j.db.serializers.getSerializerType('j').dumps({"result": content})
 
     def _resultyamlSerializer(self, content):
-        return o.code.object2yaml({"result":content})
+        return j.code.object2yaml({"result": content})
 
     def getMimeType(self, contenttype, format_types):
         CONTENT_TYPES = {
-    "application/json":o.db.serializers.getSerializerType('j').dumps,
-    "application/yaml":self._resultyamlSerializer,
-    "text/plain":str,
-    "text/html":self._text2htmlSerializer
-    }
+            "application/json": j.db.serializers.getSerializerType('j').dumps,
+            "application/yaml": self._resultyamlSerializer,
+            "text/plain": str,
+            "text/html": self._text2htmlSerializer
+        }
 
         if not contenttype:
             serializer = format_types["text"]["serializer"]
@@ -980,21 +979,19 @@ class GeventWebserver:
             serializer = CONTENT_TYPES[mimeType]
             return mimeType, serializer
 
-
-
     def reformatOutput(self, ctx, result, restreturn=False):
         FFORMAT_TYPES = {
-    "text": {"content_type":CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
-    "html": {"content_type":CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
-    "raw": {"content_type": CONTENT_TYPE_PLAIN, "serializer": str},
-    "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": o.db.serializers.getSerializerType('j').dumps},
-    "json": {"content_type": CONTENT_TYPE_JSON, "serializer": self._resultjsonSerializer},
-    "yaml": {"content_type": CONTENT_TYPE_YAML, "serializer": self._resultyamlSerializer}
-    }
+            "text": {"content_type": CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
+            "html": {"content_type": CONTENT_TYPE_HTML, "serializer": self._text2htmlSerializer},
+            "raw": {"content_type": CONTENT_TYPE_PLAIN, "serializer": str},
+            "jsonraw": {"content_type": CONTENT_TYPE_JSON, "serializer": j.db.serializers.getSerializerType('j').dumps},
+            "json": {"content_type": CONTENT_TYPE_JSON, "serializer": self._resultjsonSerializer},
+            "yaml": {"content_type": CONTENT_TYPE_YAML, "serializer": self._resultyamlSerializer}
+        }
 
         fformat = ctx.fformat
         if '_jsonp' in ctx.params:
-            return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], o.db.serializers.getSerializerType('j').dumps(result))
+            return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], j.db.serializers.getSerializerType('j').dumps(result))
 
         if "CONTENT_TYPE" not in ctx.env:
             ctx.env['CONTENT_TYPE'] = CONTENT_TYPE_PLAIN
@@ -1003,7 +1000,7 @@ class GeventWebserver:
             ctx.env['CONTENT_TYPE'] = CONTENT_TYPE_PLAIN
         # normally HTTP_ACCEPT defines the return type we should rewrite this
         if fformat:
-            #extra format paramter overrides http_accept header
+            # extra format paramter overrides http_accept header
             return FFORMAT_TYPES[fformat]['content_type'], FFORMAT_TYPES[fformat]['serializer'](result)
         else:
             if 'HTTP_ACCEPT' in ctx.env:
@@ -1017,7 +1014,7 @@ class GeventWebserver:
         if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:
-            o.logger.log("Routing request to %s" % path, 5)
+            j.logger.log("Routing request to %s" % path, 5)
 
             def respond(contentType, msg):
                 if contentType:
@@ -1029,7 +1026,7 @@ class GeventWebserver:
                 params["error"] = message
                 if human:
                     page = self.returnDoc(ctx, start_response, "system", "rest",
-                        extraParams = params)
+                                          extraParams=params)
                     return [str(page)]
                 else:
                     return self.raiseError(ctx, message)
@@ -1097,15 +1094,14 @@ class GeventWebserver:
             else:
                 contentType, result = self.reformatOutput(ctx, result)
                 return respond(contentType, result)
-        except Exception, errorObject:
-            eco = o.errorconditionhandler.parsePythonErrorObject(errorObject)
+        except Exception as errorObject:
+            eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
             if ctx == False:
                 print "NO webserver context yet, serious error"
-                o.errorconditionhandler.processErrorConditionObject(eco)
+                j.errorconditionhandler.processErrorConditionObject(eco)
                 print eco
             else:
                 return self.raiseError(ctx, errorObject=eco)
-
 
     def restPathProcessor(self, path):
         """
@@ -1114,7 +1110,7 @@ class GeventWebserver:
         When successfull the params dict contains the path elements otherwise it
         contains if provided the actorname  and appname.
         """
-        o.logger.log("Process path %s" % path, 5)
+        j.logger.log("Process path %s" % path, 5)
         params = {}
         while path != "" and path[0] == "/":
             path = path[1:]
@@ -1134,7 +1130,7 @@ class GeventWebserver:
                 actor = paths[1]
             else:
                 actor = ""
-            params["appname"]  =  appname
+            params["appname"] = appname
             params["actorname"] = actor
             return (False, msginfo, params)
         params["paths"] = paths
@@ -1145,7 +1141,7 @@ class GeventWebserver:
         """
         if not routekey:
             routekey = "%s_%s_%s" % (paths[0], paths[1], paths[2])
-        o.logger.log("Execute %s %s" % (env["REMOTE_ADDR"], routekey))
+        j.logger.log("Execute %s %s" % (env["REMOTE_ADDR"], routekey))
         if ext:
             routes = self.routesext
         else:
@@ -1167,12 +1163,12 @@ class GeventWebserver:
             if resultcode == False:
                 if human:
                     params = {}
-                    params["error"] =  "Incorrect Request: %s" % msg
+                    params["error"] = "Incorrect Request: %s" % msg
                     params["appname"] = ctx.application
                     params["actorname"] = ctx.actor
                     params["method"] = ctx.method
                     page = self.returnDoc(ctx, start_response, "system",
-                    "restvalidationerror", extraParams=params)
+                                          "restvalidationerror", extraParams=params)
                     return (False, ctx, [str(page)])
                 else:
                     return (False, ctx, self.raiseError(ctx, msg))
@@ -1184,8 +1180,7 @@ class GeventWebserver:
             actor = paths[1]
             page = self.getServicesInfo(appname, actor)
             return (False, ctx, self.raiseError(ctx=ctx, msg=msg,
-                msginfo=str(page)))
-
+                                                msginfo=str(page)))
 
     def execute_rest_call(self, ctx, routekey, ext=False):
         if ext:
@@ -1196,8 +1191,8 @@ class GeventWebserver:
             method = routes[routekey][0]
             result = method(ctx=ctx, **ctx.params)
             return (True, result)
-        except Exception, errorObject:
-            eco = o.errorconditionhandler.parsePythonErrorObject(errorObject)
+        except Exception as errorObject:
+            eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
             msg = "Execute method %s failed." % (routekey)
             return (False, self.raiseError(ctx=ctx, msg=msg, errorObject=eco))
 
@@ -1205,10 +1200,10 @@ class GeventWebserver:
         if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:
-            o.logger.log("Routing request to %s" % path, 5)
+            j.logger.log("Routing request to %s" % path, 5)
 
             def respond(contentType, msg):
-                # o.logger.log("Responding %s" % msg, 5)
+                # j.logger.log("Responding %s" % msg, 5)
                 if contentType:
                     ctx.start_response('200 OK', [('Content-Type', contentType)])
                 print msg
@@ -1219,14 +1214,14 @@ class GeventWebserver:
                 params["error"] = msg
                 if human:
                     page = self.returnDoc(ctx, start_response, "system", "rest",
-                        extraParams = params)
+                                          extraParams=params)
                     return [str(page)]
                 else:
                     return self.raiseError(ctx, msg)
             paths = params['paths']
 
             success, ctx, result = self.restRouter(env, start_response, path,
-                    paths, ctx, human = human)
+                                                   paths, ctx, human=human)
             if not success:
                 return result
             success, result = self.execute_rest_call(ctx, result)
@@ -1241,11 +1236,11 @@ class GeventWebserver:
             else:
                 contentType, result = self.reformatOutput(ctx, result)
                 return [respond(contentType, result)]
-        except Exception, errorObject:
-            eco = o.errorconditionhandler.parsePythonErrorObject(errorObject)
+        except Exception as errorObject:
+            eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
             if ctx == False:
                 print "NO webserver context yet, serious error"
-                o.errorconditionhandler.processErrorConditionObject(eco)
+                j.errorconditionhandler.processErrorConditionObject(eco)
                 print eco
             else:
                 return self.raiseError(ctx, errorObject=eco)
@@ -1346,11 +1341,11 @@ class GeventWebserver:
         lfmid = 0
         while True:
             self.epoch = int(time.time())
-            if lfmid < self.epoch-200:
+            if lfmid < self.epoch - 200:
                 lfmid = self.epoch
-                self.fiveMinuteId = o.base.time.get5MinuteId(self.epoch)
-                self.hourId = o.base.time.getHourId(self.epoch)
-                self.dayId = o.base.time.getDayId(self.epoch)
+                self.fiveMinuteId = j.base.time.get5MinuteId(self.epoch)
+                self.hourId = j.base.time.getHourId(self.epoch)
+                self.dayId = j.base.time.getDayId(self.epoch)
             gevent.sleep(0.5)
 
     def _minRepeat(self):
@@ -1362,14 +1357,14 @@ class GeventWebserver:
 
     def _15minRepeat(self):
         while True:
-            gevent.sleep(60*15)
+            gevent.sleep(60 * 15)
             for key in self.schedule15min.keys():
                 item, args, kwargs = self.schedule15min[key]
                 item(*args, **kwargs)
 
     def _60minRepeat(self):
         while True:
-            gevent.sleep(60*60)
+            gevent.sleep(60 * 60)
             for key in self.schedule60min.keys():
                 item, args, kwargs = self.schedule60min[key]
                 item(*args, **kwargs)
@@ -1410,7 +1405,7 @@ class GeventWebserver:
         S3 = gevent.greenlet.Greenlet(self._60minRepeat)
         S3.start()
 
-        o.console.echo("webserver started on port %s" % self.port)
+        j.console.echo("webserver started on port %s" % self.port)
         self.webserver.serve_forever()
 
     def getNow(self):
@@ -1418,37 +1413,37 @@ class GeventWebserver:
 
     def loadFromConfig4loader(self, loader, reset=False):
         if self.cfgdir == "":
-            cfgpath = o.system.fs.joinPaths("cfg", "contentdirs.cfg")
+            cfgpath = j.system.fs.joinPaths("cfg", "contentdirs.cfg")
         else:
-            cfgpath = o.system.fs.joinPaths(self.cfgdir, "contentdirs.cfg")
+            cfgpath = j.system.fs.joinPaths(self.cfgdir, "contentdirs.cfg")
         wikicfg = ""
-        if o.system.fs.exists(cfgpath):
-            wikicfg = o.system.fs.fileGetContents(cfgpath)
+        if j.system.fs.exists(cfgpath):
+            wikicfg = j.system.fs.fileGetContents(cfgpath)
 
         paths = wikicfg.split("\n")
-        self.basepath = o.system.fs.joinPaths(o.system.fs.getParent(self.cfgdir), "base")
-        o.system.fs.createDir(self.basepath)
+        self.basepath = j.system.fs.joinPaths(j.system.fs.getParent(self.cfgdir), "base")
+        j.system.fs.createDir(self.basepath)
         if self.basepath not in paths:
             paths.append(self.basepath)
 
-        appdir = o.core.portal.runningPortal.appdir
-        paths.append(o.system.fs.joinPaths(appdir, "wiki"))
+        appdir = j.core.portal.runningPortal.appdir
+        paths.append(j.system.fs.joinPaths(appdir, "wiki"))
 
         for path in paths:
             path = path.strip()
             if path != "" and path[0] != "#":
                 print "import from %s" % path
                 if path[0].replace("\\", "/") != "/" and path.find(":") == -1:
-                    path = o.system.fs.joinPaths(o.system.fs.getParent(self.cfgdir), path)
+                    path = j.system.fs.joinPaths(j.system.fs.getParent(self.cfgdir), path)
                 self.contentdirs[path.replace("\\", "/").replace("/", "_").replace(":", "").rstrip("_").lower()] = path
                 loader.scan(path, reset)
 
     def loadSpaces(self, reset=False):
         if reset:
-            self.bucketsloader = o.core.portalloader.getBucketsLoader()
-            self.spacesloader = o.core.portalloader.getSpacesLoader()
-            o.core.codegenerator.resetMemNonSystem()
-            o.core.specparser.resetMemNonSystem()
+            self.bucketsloader = j.core.portalloader.getBucketsLoader()
+            self.spacesloader = j.core.portalloader.getSpacesLoader()
+            j.core.codegenerator.resetMemNonSystem()
+            j.core.specparser.resetMemNonSystem()
             # self.actorsloader=ActorsLoader()
             self.contentdirs = {}
 
@@ -1460,8 +1455,8 @@ class GeventWebserver:
 
         self.spacesloader.spaces["system"].loadDocProcessor()
 
-        for actorid in o.core.portal.runningPortal.actorsloader.id2object.keys():
-            actorloader = o.core.portal.runningPortal.actorsloader.id2object[actorid]
+        for actorid in j.core.portal.runningPortal.actorsloader.id2object.keys():
+            actorloader = j.core.portal.runningPortal.actorsloader.id2object[actorid]
             actorloader.loadSpace()
 
     def getSpaces(self):
@@ -1471,7 +1466,7 @@ class GeventWebserver:
         return self.bucketsloader.id2object.keys()
 
     def getActors(self):
-        return o.core.portal.runningPortal.actorsloader.id2object.keys()
+        return j.core.portal.runningPortal.actorsloader.id2object.keys()
 
     def getSpace(self, name):
         name = name.lower()

@@ -1,10 +1,12 @@
 
 from FilesystemBase import FilesystemBase
 
-from OpenWizzy import o
+from JumpScale import j
 import os
 
+
 class FilesystemVirtualRoot(FilesystemBase):
+
     """
     is our virtual root
     """
@@ -22,7 +24,7 @@ class FilesystemVirtualRoot(FilesystemBase):
         return None
 
     def listdir(self, path):
-        return ["spaces","buckets","actors","contentdirs","stor"]
+        return ["spaces", "buckets", "actors", "contentdirs", "stor"]
 
     def chdir(self, path):
         self._cwd = "/"
@@ -46,7 +48,7 @@ class FilesystemVirtualRoot(FilesystemBase):
         return
 
     def lstat(self, path):
-        return 
+        return
 
     def isfile(self, path):
         """Return True if path is a file."""
@@ -72,12 +74,12 @@ class FilesystemVirtualRoot(FilesystemBase):
     def format_list(self, basedir, listing, ignore_err=True):
         mtimestr = "Sep 02  3:40"
         for basename in listing:
-            yield "%s %3s %-8s %-8s %8s %s %s\r\n" % ("elc", 0, "", "",0, mtimestr, basename)
+            yield "%s %3s %-8s %-8s %8s %s %s\r\n" % ("elc", 0, "", "", 0, mtimestr, basename)
 
     def format_mlsx(self, basedir, listing, perms, facts, ignore_err=True):
         for dirname in listing:
-            item="type=dir;size=0;perm=el;modify=20071127230206; %s\r\n" % dirname
-            #print item,
+            item = "type=dir;size=0;perm=el;modify=20071127230206; %s\r\n" % dirname
+            # print item,
             yield item
 
     def open(self, filename, mode):

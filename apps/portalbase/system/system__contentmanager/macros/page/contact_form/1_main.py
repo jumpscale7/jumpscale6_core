@@ -38,7 +38,6 @@ def main(o, args, params, tags, tasklet):
     else:
         subject = 'About the website'
 
-
     page.addJS(jsLink='/lib/jquery.form/jquery.form.js')
     js_content = '''
         $(function(){

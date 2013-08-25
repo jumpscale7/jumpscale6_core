@@ -1,10 +1,10 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
 
     page = args.page
-    
-    if len(args.doc.htmlHeadersCustom)<1:
-        raise RuntimeError("Could not find custom html header on doc %s"%args.doc.name)
+
+    if len(args.doc.htmlHeadersCustom) < 1:
+        raise RuntimeError("Could not find custom html header on doc %s" % args.doc.name)
 
     page.addHTMLHeader(args.doc.htmlHeadersCustom[0])
 
@@ -12,6 +12,5 @@ def main(o,args,params,tags,tasklet):
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

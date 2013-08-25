@@ -1,13 +1,13 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     params.merge(args)
-    
-    doc=params.doc
-    tags=params.tags
 
-    params.result=""
+    doc = params.doc
+    tags = params.tags
 
-    C="""
+    params.result = ""
+
+    C = """
 {{menudropdown: name:Admin
 Pages:/system/Pages?space=$$space
 Spaces:/system/Spaces
@@ -23,15 +23,13 @@ ResetLogs:/system/ResetAccessLog?space=$$space
 }}
 """
 
+    if j.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(params.requestContext):
+        params.result = C
 
-    if o.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(params.requestContext):
-        params.result=C        
-
-    params.result=(params.result,doc)
+    params.result = (params.result, doc)
 
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

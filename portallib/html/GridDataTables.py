@@ -1,34 +1,36 @@
-from OpenWizzy import o
+from JumpScale import j
 # import inspect
 
+
 class GridDataTables:
-    def __init__(self,page,online=False):
-        self.page=page
+
+    def __init__(self, page, online=False):
+        self.page = page
         if online:
-            self.liblocation="https://bitbucket.org/incubaid/openwizzy-core-6.0/raw/default/extensions/html/htmllib"
+            self.liblocation = "https://bitbucket.org/incubaid/jumpscale-core-6.0/raw/default/extensions/html/htmllib"
         else:
             # extpath=inspect.getfile(self.__init__)
-            # extpath=o.system.fs.getDirName(extpath)
-            self.liblocation="/lib"
+            # extpath=j.system.fs.getDirName(extpath)
+            self.liblocation = "/lib"
 
-        self.page.addJS("%s/datatables/jquery.dataTables.min.js"% self.liblocation)
+        self.page.addJS("%s/datatables/jquery.dataTables.min.js" % self.liblocation)
         self.page.addBootstrap()
 
-    def addTableFromActorModel(self,appname,actorname,modelname,fields,fieldids,fieldnames):
-        key=o.apps.system.contentmanager.extensions.datatables.storInCache(appname,actorname,modelname,fields,fieldids,fieldnames)
-        url="/restmachine/system/contentmanager/modelobjectlist?appname=%s&actorname=%s&modelname=%s&key=%s"%(appname,actorname,modelname,key)
-        self.addTableFromURL(url,fieldnames)
+    def addTableFromActorModel(self, appname, actorname, modelname, fields, fieldids, fieldnames):
+        key = j.apps.system.contentmanager.extensions.datatables.storInCache(appname, actorname, modelname, fields, fieldids, fieldnames)
+        url = "/restmachine/system/contentmanager/modelobjectlist?appname=%s&actorname=%s&modelname=%s&key=%s" % (appname, actorname, modelname, key)
+        self.addTableFromURL(url, fieldnames)
         return self.page
 
-    def addTableFromURL(self,url,fieldnames):
-        
-        self.page.addCSS("%s/datatables/DT_bootstrap.css"% self.liblocation)
+    def addTableFromURL(self, url, fieldnames):
+
+        self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
         # self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
-        self.page.addJS("%s/datatables/dataTables.bootstrap.js"% self.liblocation)
+        self.page.addJS("%s/datatables/dataTables.bootstrap.js" % self.liblocation)
         # self.page.addCSS("%s/datatables/demo_page.css"% self.liblocation)
         # self.page.addCSS("%s/datatables/demo_table.css"% self.liblocation)
 
-        C="""
+        C = """
 $(document).ready(function() {
     $('#example').dataTable( {
         "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
@@ -40,13 +42,13 @@ $(document).ready(function() {
         "sWrapper": "dataTables_wrapper form-inline"
     } );
 } );"""
-        C=C.replace("$url",url)
-        self.page.addJS(jsContent=C,header=False)
+        C = C.replace("$url", url)
+        self.page.addJS(jsContent=C, header=False)
 
 #<table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
 # <table class="table table-striped table-bordered" id="example" border="0" cellpadding="0" cellspacing="0" width="100%">
 
-        C="""
+        C = """
 <div id="dynamic">
 <table class="table table-striped table-bordered" id="example" border="0" cellpadding="0" cellspacing="0" width="100%">
     <thead>
@@ -62,10 +64,10 @@ $fields
 </table>
 </div>"""
 
-        fieldstext=""
+        fieldstext = ""
         for name in fieldnames:
-            fieldstext+="<th>%s</th>\n" % (name)
-        C=C.replace("$fields",fieldstext)   
+            fieldstext += "<th>%s</th>\n" % (name)
+        C = C.replace("$fields", fieldstext)
 
         self.page.addMessage(C, isElement=True, newline=True)
         return self.page
@@ -76,5 +78,5 @@ $fields
         # self.page.addJS("%s/datatables/dataTables.bootstrap.js"% self.liblocation)
 
         self.page.addDocumentReadyJSfunction("$('.dataTable').dataTable();")
-        self.page.functionsAdded["datatables"]=True
+        self.page.functionsAdded["datatables"] = True
         return self.page

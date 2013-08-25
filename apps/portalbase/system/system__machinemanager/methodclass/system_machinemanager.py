@@ -1,19 +1,20 @@
-from OpenWizzy import o
+from JumpScale import j
 from system_machinemanager_osis import system_machinemanager_osis
 
 
 class system_machinemanager(system_machinemanager_osis):
+
     """
     manage the machines in a physical network
     
     """
+
     def __init__(self):
-        
-        self._te={}
-        self.actorname="machinemanager"
-        self.appname="system"
+
+        self._te = {}
+        self.actorname = "machinemanager"
+        self.appname = "system"
         system_machinemanager_osis.__init__(self)
-    
 
         pass
 
@@ -27,13 +28,12 @@ class system_machinemanager(system_machinemanager_osis):
         result bool 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method executeAction")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method executeAction")
 
     def initOverSSH(self, name, organization, ipaddr, passwd, login='root', **kwargs):
         """
-        will ssh into the machin and install openwizzy & bootstrap the machine
+        will ssh into the machin and install jumpscale & bootstrap the machine
         will also fetch the info from the machine & populate local portal
         param:name optional name of machine
         param:organization optional organization of machine
@@ -43,9 +43,8 @@ class system_machinemanager(system_machinemanager_osis):
         result bool 
         
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method initOverSSH")
-    
+        # put your code here to implement this method
+        raise NotImplementedError("not implemented method initOverSSH")
 
     def initSelf(self, name="", organization="", **kwargs):
         """
@@ -55,45 +54,46 @@ class system_machinemanager(system_machinemanager_osis):
         result bool 
         
         """
-        #put your code here to implement this method
-        machine=self.models.machine.new()
-        if name<>"":
-            machine.name=name
+        # put your code here to implement this method
+        machine = self.models.machine.new()
+        if name != "":
+            machine.name = name
         else:
-            machine=o.system.net.getHostname()
-        machine.hostname=o.system.net.getHostname()
-        if organization<>"":
-            machine.organization=organization
+            machine = j.system.net.getHostname()
+        machine.hostname = j.system.net.getHostname()
+        if organization != "":
+            machine.organization = organization
         else:
-            machine.organization="default"
-        machine.status="NEW"
+            machine.organization = "default"
+        machine.status = "NEW"
 
-        machine.mac=o.application.getUniqueMachineId()
+        machine.mac = j.application.getUniqueMachineId()
 
-        nics=o.system.net.getNics()
+        nics = j.system.net.getNics()
         for nic in nics:
-            if nic.find("eth")==0 or nic.find("br")==0:
-                nicobj=machine.new_nic()
-                nicobj.deviceName=nic
-                mac=o.system.net.getMacAddress(nic)
-                nicobj.macAddress=mac
-                if o.system.net.isNicConnected(nic):
-                    nicobj.status="ACTIVE"
+            if nic.find("eth") == 0 or nic.find("br") == 0:
+                nicobj = machine.new_nic()
+                nicobj.deviceName = nic
+                mac = j.system.net.getMacAddress(nic)
+                nicobj.macAddress = mac
+                if j.system.net.isNicConnected(nic):
+                    nicobj.status = "ACTIVE"
                 else:
-                    nicobj.status="DOWN"
-                nicobj.ipAddresses=[item[0] for item in o.system.net.getIpAddress(nic)]
-                nicobj.realityUpdateEpoch=o.base.time.getTimeEpoch()
+                    nicobj.status = "DOWN"
+                nicobj.ipAddresses = [item[0] for item in j.system.net.getIpAddress(nic)]
+                nicobj.realityUpdateEpoch = j.base.time.getTimeEpoch()
 
         #@todo do same for disks (aren't there any extensions for it?)
 
-        query={"query":{"bool":{"must":[{"term":{"machine.mac":machine.mac}}],"must_not":[],"should":[]}},"from":0,"size":50,"sort":[],"facets":{}}
-        result=self.model_machine_find(query=query)
+        query = {
+            "query": {"bool": {"must": [{"term": {"machine.mac": machine.mac}}], "must_not": [], "should": []}}, "from": 0, "size": 50, "sort": [], "facets": {}}
+        result = self.model_machine_find(query=query)
 
-        if len(result["result"])>0:
-            #a machine with that mac is already in db
-            machinefound=result["result"][0]["_source"]
-            machine.guid=machinefound["guid"]
-            machine.id=machinefound["id"]
+        if len(result["result"]) > 0:
+            # a machine with that mac is already in db
+            machinefound = result["result"][0]["_source"]
+            machine.guid = machinefound["guid"]
+            machine.id = machinefound["id"]
 
         self.model_machine_set(data=machine)
 

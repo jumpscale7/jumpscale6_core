@@ -1,6 +1,8 @@
 # import urlparse
-import json, datetime
-import OpenWizzy.baselib.elasticsearch
+import json
+import datetime
+import JumpScale.baselib.elasticsearch
+
 
 def main(o, args, params, tags, tasklet):
     page = args.page
@@ -8,17 +10,17 @@ def main(o, args, params, tags, tasklet):
     # referer = args.requestContext.env.get('HTTP_REFERER') or remoteaddr
     # urlinfo = urlparse.urlparse(referer)
 
-    esc = o.clients.elasticsearch.get()
-    query={"query":{"match_all":{}},"facets":{"tag":{"terms":{"field":"epoch","order":"term"}}}}
+    esc = j.clients.elasticsearch.get()
+    query = {"query": {"match_all": {}}, "facets": {"tag": {"terms": {"field": "epoch", "order": "term"}}}}
     results = esc.search(query, index='clusterlog')['facets']['tag']['terms']
     headers = []
     data = []
     for result in results:
-      data.append(result['count'])
-      t = datetime.datetime.fromtimestamp(result['term'])
-      header = t.strftime('%Y-%m-%d %H:%M:%S')
-      result['header'] = header
-      headers.append(header)
+        data.append(result['count'])
+        t = datetime.datetime.fromtimestamp(result['term'])
+        header = t.strftime('%Y-%m-%d %H:%M:%S')
+        result['header'] = header
+        headers.append(header)
 
     page.addJS("/lib/jquery.facetview.js")
     C = """

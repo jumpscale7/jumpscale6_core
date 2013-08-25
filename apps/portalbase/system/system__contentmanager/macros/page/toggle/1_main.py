@@ -1,10 +1,9 @@
 
-def main(o,args,params,tags,tasklet):
-    
+def main(o, args, params, tags, tasklet):
+
     page = args.page
 
-
-    C="""
+    C = """
 <style type="text/css">
 <!--
 .toggleItemstyle {font-family: Verdana, Arial, Helvetica, sans-serif; font-size:18px}
@@ -13,7 +12,7 @@ def main(o,args,params,tags,tasklet):
     """
     page.addHTMLHeader(C)
 
-    C="""
+    C = """
 function MM_preloadImages() { //v3.0
   var d=document; if(d.images){ if(!d.MM_p) d.MM_p=new Array();
     var i,j=d.MM_p.length,a=MM_preloadImages.arguments; for(i=0; i<a.length; i++)
@@ -51,55 +50,54 @@ function swap(img_id) {
 }
     """
 
-    args=args.tags.getValues(nodeid=None,cmdipaddr="127.0.0.1",title="",port="0",value="off")
+    args = args.tags.getValues(nodeid=None, cmdipaddr="127.0.0.1", title="", port="0", value="off")
 
-    nodeid=args["nodeid"]
-    ip=args["cmdipaddr"]
-    url="http://"+ip+":8001/rest/boatomatic/snapmanager"
-    on = "%s/turnPortOn?key=1234&nodeid=%s&port=$port&format=text;"%(url,nodeid)
-    off = "%s/turnPortOff?key=1234&nodeid=%s&port=$port&format=text;"%(url,nodeid)
+    nodeid = args["nodeid"]
+    ip = args["cmdipaddr"]
+    url = "http://" + ip + ":8001/rest/boatomatic/snapmanager"
+    on = "%s/turnPortOn?key=1234&nodeid=%s&port=$port&format=text;" % (url, nodeid)
+    off = "%s/turnPortOff?key=1234&nodeid=%s&port=$port&format=text;" % (url, nodeid)
 
-    C=C.replace("$on",on)
-    C=C.replace("$off",off)
-    C=C.replace("$port",args["port"])
+    C = C.replace("$on", on)
+    C = C.replace("$off", off)
+    C = C.replace("$port", args["port"])
 
     page.addJS(jsContent=C)
 
-    id=str(o.apps.system.contentmanager.dbmem.increment("toggleid"))
-    
+    id = str(j.apps.system.contentmanager.dbmem.increment("toggleid"))
+
     # C="""
     # <td width="30%"><div align="left" class="toggleItemstyle">$title</div></td>
     # <td width="70%"><a href="#" align="left"  onClick="swap('$id')"><img src="/system/.files/toggle/toggle_off.gif"  name="$id" width="66" height="29" border="0" id="$id" /></a></td>
     # """
 
-    title=args["title"]
-    value=args["value"]
+    title = args["title"]
+    value = args["value"]
 
-    if title<>"":
+    if title != "":
 
-        C="""
+        C = """
         <div align="left" class="toggleItemstyle">$title
             <a href="#" onClick="swap('$id')"><img src="/system/.files/toggle/toggle_$value.gif" name="$id" width="66" height="29" border="0" id="$id" valign="middle"/></a>
         </div>
         """
-       
+
     else:
 
-        C="""
+        C = """
         <div align="left" class="toggleItemstyle">
             <a href="#" onClick="swap('$id')"><img src="/system/.files/toggle/toggle_$value.gif" align="left" name="$id" width="66" height="29" border="0" id="$id" /></a>
             </div>
         """
 
-    C=C.replace("$id",id)
-    C=C.replace("$value",value)
-    C=C.replace("$title",title)
+    C = C.replace("$id", id)
+    C = C.replace("$value", value)
+    C = C.replace("$title", title)
 
     page.addMessage(C)
     params.result = page
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

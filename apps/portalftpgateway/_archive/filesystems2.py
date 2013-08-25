@@ -1,12 +1,13 @@
 from pyftpdlib.ftpserver import AbstractedFS
 
-from OpenWizzy import o
+from JumpScale import j
 import os
 
 
 # --- filesystem
 
 class AbstractedFS(object):
+
     """A class used to interact with the file system, providing a
     cross-platform interface compatible with both Windows and
     UNIX style filesystems where all paths use "/" separator.
@@ -34,8 +35,7 @@ class AbstractedFS(object):
         self._cwd = '/'
         self._root = root
         self.cmd_channel = cmd_channel
-        self.handler=None
-
+        self.handler = None
 
     @property
     def root(self):
@@ -151,7 +151,7 @@ class AbstractedFS(object):
             path = path + os.sep
         if path[0:len(root)] == root:
             return True
-        from pylabs.Shell import ipshellDebug,ipshell
+        from pylabs.Shell import ipshellDebug, ipshell
         print "DEBUG NOW validpath is not valid"
         ipshell()
 
@@ -169,9 +169,11 @@ class AbstractedFS(object):
         interface.
         """
         class FileWrapper:
+
             def __init__(self, fd, name):
                 self.file = fd
                 self.name = name
+
             def __getattr__(self, attr):
                 return getattr(self.file, attr)
 
@@ -188,8 +190,8 @@ class AbstractedFS(object):
         """Change the current directory."""
         # temporarily join the specified directory to see if we have
         # permissions to do so
-        path=self.ftp2fs(ftppath)
-        print "chdir for %s : %s"%(ftppath,path)
+        path = self.ftp2fs(ftppath)
+        print "chdir for %s : %s" % (ftppath, path)
         #basedir = os.getcwd()
         try:
             os.chdir(path)
@@ -200,37 +202,37 @@ class AbstractedFS(object):
 
     def mkdir(self, ftppath):
         """Create the specified directory."""
-        ftppath=self.ftpnorm(ftppath)
-        path=self.ftp2fs(ftppath)
-        o.system.fs.createDir(path)
+        ftppath = self.ftpnorm(ftppath)
+        path = self.ftp2fs(ftppath)
+        j.system.fs.createDir(path)
 
     def listdir(self, path):
         """List the content of a directory."""
-        path1=self.ftp2fs(path)
-        #print "listdir:%s:%s" %(path,path1)
+        path1 = self.ftp2fs(path)
+        # print "listdir:%s:%s" %(path,path1)
         return os.listdir(path1)
 
     def rmdir(self, path):
         """Remove the specified directory."""
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         os.rmdir(path)
 
     def remove(self, path):
         """Remove the specified file."""
-        path=self.ftpnorm(path)
-        path=self.ftp2fs(path)
+        path = self.ftpnorm(path)
+        path = self.ftp2fs(path)
         os.remove(path)
 
     def rename(self, src, dst):
         """Rename the specified src file to the dst filename."""
-        src=self.ftp2fs(src)
-        dst=self.ftp2fs(dst)
+        src = self.ftp2fs(src)
+        dst = self.ftp2fs(dst)
         os.rename(src, dst)
 
     def chmod(self, path, mode):
         """Change file/directory mode."""
         raise NotImplementedError
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         if not hasattr(os, 'chmod'):
             raise NotImplementedError
         os.chmod(path, mode)
@@ -241,7 +243,7 @@ class AbstractedFS(object):
 
     def lstat(self, path):
         """Like stat but does not follow symbolic links."""
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         return os.lstat(path)
 
     if not hasattr(os, 'lstat'):
@@ -251,42 +253,42 @@ class AbstractedFS(object):
 
     def isfile(self, path):
         """Return True if path is a file."""
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         return os.path.isfile(path)
 
     def islink(self, path):
         """Return True if path is a symbolic link."""
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         return os.path.islink(path)
 
     def isdir(self, path):
         """Return True if path is a directory."""
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         return os.path.isdir(path)
 
     def getsize(self, path):
         """Return the size of the specified file in bytes."""
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         return os.path.getsize(path)
 
     def getmtime(self, path):
         """Return the last modified time as a number of seconds since
         the epoch."""
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         return os.path.getmtime(path)
 
-    #def realpath(self, path):
+    # def realpath(self, path):
         #"""Return the canonical version of path eliminating any
-        #symbolic links encountered in the path (if they are
-        #supported by the operating system).
+        # symbolic links encountered in the path (if they are
+        # supported by the operating system).
         #"""
-        #return os.path.realpath(path)
+        # return os.path.realpath(path)
 
     def lexists(self, path):
         """Return True if path refers to an existing path, including
         a broken or circular symbolic link.
         """
-        path=self.ftp2fs(path)
+        path = self.ftp2fs(path)
         return os.path.lexists(path)
 
     def get_user_by_uid(self, uid):
@@ -329,8 +331,7 @@ class AbstractedFS(object):
         in a form suitable for LIST command.
         """
         if self.isdir(path):
-            listing = self.listdir(path)
-            listing.sort()
+            listing = sorted(self.listdir(path))
             return self.format_list(path, listing)
         # if path is a file or a symlink we return information about it
         else:
@@ -432,7 +433,7 @@ class AbstractedFS(object):
         type=dir;size=0;perm=el;modify=20071127230206;unique=801e33; ebooks
         type=file;size=211;perm=r;modify=20071103093626;unique=801e32; module.py
         """
-        basedir=self.ftp2fs(basedir)
+        basedir = self.ftp2fs(basedir)
         if self.cmd_channel.use_gmt_times:
             timefunc = time.gmtime
         else:
@@ -479,7 +480,7 @@ class AbstractedFS(object):
             if 'modify' in facts:
                 try:
                     retfacts['modify'] = time.strftime("%Y%m%d%H%M%S",
-                                                        timefunc(st.st_mtime))
+                                                       timefunc(st.st_mtime))
                 # it could be raised if last mtime happens to be too old
                 # (prior to year 1900)
                 except ValueError:
@@ -488,12 +489,12 @@ class AbstractedFS(object):
                 # on Windows we can provide also the creation time
                 try:
                     retfacts['create'] = time.strftime("%Y%m%d%H%M%S",
-                                                        timefunc(st.st_ctime))
+                                                       timefunc(st.st_ctime))
                 except ValueError:
                     pass
             # UNIX only
             if 'unix.mode' in facts:
-                retfacts['unix.mode'] = oct(st.st_mode & 0777)
+                retfacts['unix.mode'] = oct(st.st_mode & 0o777)
             if 'unix.uid' in facts:
                 retfacts['unix.uid'] = st.st_uid
             if 'unix.gid' in facts:
@@ -511,12 +512,13 @@ class AbstractedFS(object):
                 retfacts['unique'] = "%xg%x" % (st.st_dev, st.st_ino)
 
             # facts can be in any order but we sort them by name
-            factstring = "".join(["%s=%s;" % (x, retfacts[x]) \
+            factstring = "".join(["%s=%s;" % (x, retfacts[x])
                                   for x in sorted(retfacts.keys())])
             yield "%s %s\r\n" % (factstring, basename)
 
 
 class RootFilesystem(AbstractedFS):
+
     """
     is our virtual root
     """
@@ -534,13 +536,13 @@ class RootFilesystem(AbstractedFS):
         return None
 
     def listdir(self, path):
-        return ["spaces","buckets","actors","contentdirs","stor"]
+        return ["spaces", "buckets", "actors", "contentdirs", "stor"]
 
     def chdir(self, path):
         self._cwd = "/"
 
     def mkdir(self, path):
-        o.system.fs.createDir(pathr)
+        j.system.fs.createDir(pathr)
         raise RuntimeError("not implemented")
 
     def rmdir(self, path):
@@ -556,7 +558,7 @@ class RootFilesystem(AbstractedFS):
         return
 
     def stat(self, path):
-        from pylabs.Shell import ipshellDebug,ipshell
+        from pylabs.Shell import ipshellDebug, ipshell
         print "DEBUG NOW stat"
         ipshell()
 
@@ -587,12 +589,12 @@ class RootFilesystem(AbstractedFS):
     def format_list(self, basedir, listing, ignore_err=True):
         mtimestr = "Sep 02  3:40"
         for basename in listing:
-            yield "%s %3s %-8s %-8s %8s %s %s\r\n" % ("elc", 0, "", "",0, mtimestr, basename)
+            yield "%s %3s %-8s %-8s %8s %s %s\r\n" % ("elc", 0, "", "", 0, mtimestr, basename)
 
     def format_mlsx(self, basedir, listing, perms, facts, ignore_err=True):
         for dirname in listing:
-            item="type=dir;size=0;perm=el;modify=20071127230206; %s\r\n" % dirname
-            #print item,
+            item = "type=dir;size=0;perm=el;modify=20071127230206; %s\r\n" % dirname
+            # print item,
             yield item
 
     def open(self, filename, mode):
@@ -600,14 +602,15 @@ class RootFilesystem(AbstractedFS):
 
 
 class RootFilesystemList(RootFilesystem):
+
     """
     basis for 1 level down eg spaces
     """
 
-    def __init__(self, root, cmd_channel,list):
+    def __init__(self, root, cmd_channel, list):
         AbstractedFS.__init__(self, root, cmd_channel)
         self.cwd = root
-        self.list=list
+        self.list = list
 
     def listdir(self, path):
         print "list for rootfilesystemlist: %s" % self.cwd
@@ -615,82 +618,81 @@ class RootFilesystemList(RootFilesystem):
 
     def chdir(self, path):
         print "chdirrootfslist:%s" % path
-        self._cwd=path
+        self._cwd = path
         #self._cwd = self.fs2ftp(path)
 
     def fs2ftp(self, path):
-        p=o.system.fs.pathRemoveDirPart(path,self.cmd_channel.rootpath).replace("\\","/")
-        if len(p)<>0 and p[0]<>"/":
-            p="/"+p
-        #print "fs2ftp_list: %s -> %s" % (path,p)
+        p = j.system.fs.pathRemoveDirPart(path, self.cmd_channel.rootpath).replace("\\", "/")
+        if len(p) != 0 and p[0] != "/":
+            p = "/" + p
+        # print "fs2ftp_list: %s -> %s" % (path,p)
         return p
 
     def ftp2fs(self, ftppath):
         return self.root
 
+
 class BaseFilesystem(AbstractedFS):
+
     """
     is our virtual root
     """
 
-    def __init__(self, root, cmd_channel,ftproot,cwd,readonly=False):
+    def __init__(self, root, cmd_channel, ftproot, cwd, readonly=False):
         #_Base.__init__(self, root, cmd_channel)
         AbstractedFS.__init__(self, root, cmd_channel)
         self.cwd = cwd
-        self.cwdftp=""
-        self.ftproot=ftproot
-        self.readonly=readonly
+        self.cwdftp = ""
+        self.ftproot = ftproot
+        self.readonly = readonly
 
-    #def chdir(self, path):
-        #self._cwd=path
+    # def chdir(self, path):
+        # self._cwd=path
 
     def ftp2fs(self, ftppath):
-        if ftppath.find(self.ftproot)==0:
-            ftppath=ftppath[len(self.ftproot):]
-        result= o.system.fs.joinPaths(self.root,ftppath)
+        if ftppath.find(self.ftproot) == 0:
+            ftppath = ftppath[len(self.ftproot):]
+        result = j.system.fs.joinPaths(self.root, ftppath)
         return result
 
-    def _ignorePath(self,item):
-        #items=[]
-        #for item in os.listdir(path):
-        ext=o.system.fs.getFileExtension(item)
-        if item.find(".quarantine")==0 or item.find(".tmb")==0:
+    def _ignorePath(self, item):
+        # items=[]
+        # for item in os.listdir(path):
+        ext = j.system.fs.getFileExtension(item)
+        if item.find(".quarantine") == 0 or item.find(".tmb") == 0:
             try:
-                o.system.fs.remove(item)
+                j.system.fs.remove(item)
             except:
                 pass
             return True
-        elif ext=="pyc":
+        elif ext == "pyc":
             return True
-        #else:
-            #items.append(item)
+        # else:
+            # items.append(item)
 
     def listdir(self, path):
         """List the content of a directory."""
-        path1=self.ftp2fs(path)
-        #print "listdir:%s:%s" %(path,path1)
-        items=[item for item in os.listdir(path1) if not self._ignorePath(item)]
+        path1 = self.ftp2fs(path)
+        # print "listdir:%s:%s" %(path,path1)
+        items = [item for item in os.listdir(path1) if not self._ignorePath(item)]
         return items
 
     def mkdir(self, path):
-        pathr=self.ftp2fs(path)
-        o.system.fs.createDir(pathr)
+        pathr = self.ftp2fs(path)
+        j.system.fs.createDir(pathr)
 
     def fs2ftp(self, fspath):
-        p=o.system.fs.pathRemoveDirPart(fspath,self.root)
-        if len(p)<>0 and p[0]<>"/":
-            p="/"+p
-        p=self.ftproot+p
-        #print "fs2ftp: %s -> %s" % (fspath,p)
+        p = j.system.fs.pathRemoveDirPart(fspath, self.root)
+        if len(p) != 0 and p[0] != "/":
+            p = "/" + p
+        p = self.ftproot + p
+        # print "fs2ftp: %s -> %s" % (fspath,p)
         return p
 
     def open(self, filename, mode):
         """Open a file returning its handler."""
         #@todo check on extension .redirect (file path:  $originalpath.$size.redirect) read from redirect where to go and repoint open
-        #if self.readonly and "w" in mode:
-            #return None
+        # if self.readonly and "w" in mode:
+            # return None
 
         return open(filename, mode)
-
-
-

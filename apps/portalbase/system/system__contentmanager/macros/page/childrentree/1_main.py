@@ -6,6 +6,7 @@ import os
 # This has the interesting property that I can `eval` it with a custom scope. The custom scope allows me to define items
 # which are not already defined, and return the structure that I need.
 class Scope(dict):
+
     def __init__(self, value=None):
         self.value = value
 
@@ -84,7 +85,7 @@ def get_dir_tree(dir_name, max_depth=1, items=None):
         items_key = lambda x: x[0].lower()
         items_filter = lambda x: True
 
-    return sorted([(child, get_dir_tree(child, max_depth=max_depth-1))
+    return sorted([(child, get_dir_tree(child, max_depth=max_depth - 1))
                   for child in dir_children(dir_name)
                   if is_wiki_page(child) and items_filter(child)],
                   key=items_key)
@@ -138,7 +139,7 @@ def main(o, args, params, tags, tasklet):
     if args.tags.tagExists('items'):
         # The tag "items" can contain spaces. Unfortunately the current implementation doesn't take care of spaces, so
         # I must parse items myself
-        m = o.codetools.regex.getRegexMatches(r'items\:\[.*\]', args.cmdstr)
+        m = j.codetools.regex.getRegexMatches(r'items\:\[.*\]', args.cmdstr)
         if m and len(m.matches):
             items = m.matches[0].founditem
             items = items.replace('items:', '', 1)
@@ -156,7 +157,7 @@ def main(o, args, params, tags, tasklet):
             page.addMessage('MACRO CHILDREN ERROR: Could not find page with name %s to start from.' % page)
             return
 
-    dir_name = o.system.fs.getDirName(doc.path)
+    dir_name = j.system.fs.getDirName(doc.path)
     if items:
         dir_tree = items
     else:

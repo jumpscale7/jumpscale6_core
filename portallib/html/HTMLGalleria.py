@@ -1,23 +1,22 @@
-from OpenWizzy import o
+from JumpScale import j
+
 
 class HTMLGalleria:
-    def __init__(self,page,online=False):
-        self.page=page
+
+    def __init__(self, page, online=False):
+        self.page = page
         if online:
-            self.liblocation="https://bitbucket.org/incubaid/openwizzy-core-6.0/raw/default/extensions/html/lib"
+            self.liblocation = "https://bitbucket.org/incubaid/jumpscale-core-6.0/raw/default/extensions/html/lib"
         else:
-            # self.liblocation=o.system.fs.joinPaths(o.tools.docgenerator.pm_extensionpath,"lib/datatables/")
-            self.liblocation="/lib"
+            # self.liblocation=j.system.fs.joinPaths(j.tools.docgenerator.pm_extensionpath,"lib/datatables/")
+            self.liblocation = "/lib"
 
         # self.page.addJS("%s/jquery-latest.js"% self.liblocation)
         self.page.addBootstrap()
 
-    def addImagesFromBucket(self,bucketname,subfolder="lowdef   "):
-        
+    def addImagesFromBucket(self, bucketname, subfolder="lowdef   "):
 
-        
-
-        C="""
+        C = """
 $(document).ready(function() {
     $('#example').dataTable( {
         "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
@@ -29,13 +28,13 @@ $(document).ready(function() {
         "sWrapper": "dataTables_wrapper form-inline"
     } );
 } );"""
-        C=C.replace("$url",url)
-        self.page.addJS(jsContent=C,header=False)
+        C = C.replace("$url", url)
+        self.page.addJS(jsContent=C, header=False)
 
 #<table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
 # <table class="table table-striped table-bordered" id="example" border="0" cellpadding="0" cellspacing="0" width="100%">
 
-        C="""
+        C = """
 <div id="dynamic">
 <table class="table table-striped table-bordered" id="example" border="0" cellpadding="0" cellspacing="0" width="100%">
     <thead>
@@ -51,10 +50,10 @@ $fields
 </table>
 </div>"""
 
-        fieldstext=""
+        fieldstext = ""
         for name in fieldnames:
-            fieldstext+="<th>%s</th>\n" % (name)
-        C=C.replace("$fields",fieldstext)   
+            fieldstext += "<th>%s</th>\n" % (name)
+        C = C.replace("$fields", fieldstext)
 
         self.page.addMessage(C, isElement=True, newline=True)
         return self.page
@@ -65,5 +64,5 @@ $fields
         # self.page.addJS("%s/datatables/dataTables.bootstrap.js"% self.liblocation)
 
         self.page.addDocumentReadyJSfunction("$('.dataTable').dataTable();")
-        self.page.functionsAdded["datatables"]=True
+        self.page.functionsAdded["datatables"] = True
         return self.page

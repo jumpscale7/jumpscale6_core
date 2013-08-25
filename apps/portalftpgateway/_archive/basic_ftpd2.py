@@ -22,7 +22,7 @@ def main():
     ftp_handler.authorizer = authorizer
 
     # Define a customized banner (string returned when client connects)
-    ftp_handler.banner = "pyftpdlib %s based ftpd ready." %ftpserver.__ver__
+    ftp_handler.banner = "pyftpdlib %s based ftpd ready." % ftpserver.__ver__
 
     # Specify a masquerade address and the range of ports to use for
     # passive connections.  Decomment in case you're behind a NAT.

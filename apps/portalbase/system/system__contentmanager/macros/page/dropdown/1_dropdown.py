@@ -1,6 +1,7 @@
 import re
 from itertools import izip_longest
 
+
 def main(o, args, params, tags, tasklet):
     params.result = page = args.page
 
@@ -35,7 +36,7 @@ def main(o, args, params, tags, tasklet):
         options.append('<option value="{0}">{0}</option>'.format(current_text))
         if len(current_level) > len(next_level):
             options.append('</optgroup>')
-        
+
     page.addMessage('<select {}>{}</select>'.format(''.join(attributes), ''.join(options)))
 
     return params

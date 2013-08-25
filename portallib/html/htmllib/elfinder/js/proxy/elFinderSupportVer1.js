@@ -298,7 +298,7 @@ window.elFinderSupportVer1 = function(upload) {
 		}
 
 		if (file.dirs && file.dirs.length) {
-			info.dirs = true;
+			infj.dirs = true;
 		}
 		if (file.dim) {
 			info.dim = file.dim;

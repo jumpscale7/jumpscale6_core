@@ -1,8 +1,8 @@
 #load dependencies
-from OpenWizzy import o
-import OpenWizzy.baselib.key_value_store
-import OpenWizzy.baselib.taskletengine
-import OpenWizzy.baselib.specparser
+from JumpScale import j
+import JumpScale.baselib.key_value_store
+import JumpScale.baselib.taskletengine
+import JumpScale.baselib.specparser
 
 import codegentools
 import portalcore

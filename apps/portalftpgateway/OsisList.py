@@ -1,14 +1,16 @@
 
 from FilesystemBase import FilesystemBase
 
-from OpenWizzy import o
-from OpenWizzy.baselib import serializers
+from JumpScale import j
+from JumpScale.baselib import serializers
 import os
 import errno
 import inspect
-from OpenWizzy.core.system.text import Text
+from JumpScale.core.system.text import Text
+
 
 class OsisList(FilesystemBase):
+
     """
     basis for 1 level down eg spaces
     """
@@ -16,15 +18,15 @@ class OsisList(FilesystemBase):
     def __init__(self, cmd_channel, client):
         FilesystemBase.__init__(self, 'osis', cmd_channel)
         self.cwd = "/"
-        self.list=[]
-        self.name2path={}
-        self.ftproot="/%s"% 'osis'
+        self.list = []
+        self.name2path = {}
+        self.ftproot = "/%s" % 'osis'
         self.client = client
-        self.actors = [Text.toStr(a) for a in o.apps.system.contentmanager.getActors()]
+        self.actors = [Text.toStr(a) for a in j.apps.system.contentmanager.getActors()]
 
     def _getActorClient(self, appname, actorname):
-        if hasattr(o.apps, appname):
-            app = getattr(o.apps, appname)
+        if hasattr(j.apps, appname):
+            app = getattr(j.apps, appname)
             if hasattr(app, actorname):
                 return getattr(app, actorname)
         try:
@@ -32,38 +34,37 @@ class OsisList(FilesystemBase):
         except:
             raise OSError(errno.ENOENT, "Not existing")
 
-
     def listdir(self, path):
         print "list for rootfilesystemlist: '%s' '%s'" % (self.cwd, path)
-        parts = [ x for x in os.path.join(self.cwd, path).split('/') if x ] #strip empty parts
+        parts = [x for x in os.path.join(self.cwd, path).split('/') if x]  # strip empty parts
         return self._listdir(parts)
 
     def _listdir(self, parts):
         dirs = []
         if not parts:
-            dirs = [ x.split('__')[0] for x in self.actors ]
+            dirs = [x.split('__')[0] for x in self.actors]
         elif len(parts) == 1:
-            dirs = [ x.split('__')[1] for x in self.actors if x.startswith(parts[0]) ]
+            dirs = [x.split('__')[1] for x in self.actors if x.startswith(parts[0])]
         elif len(parts) == 2:
             print '***** %s' % parts
             actor = self._getActorClient(*parts)
             if hasattr(actor, 'models'):
-                dirs = [ x[0] for x in inspect.getmembers(getattr(actor, 'models')) if not x[0].startswith('_') ]
+                dirs = [x[0] for x in inspect.getmembers(getattr(actor, 'models')) if not x[0].startswith('_')]
         elif len(parts) == 3:
             actor = self._getActorClient(*parts[0:2])
             methodname = "model_%s_list" % parts[2]
-            if hasattr(actor ,methodname):
+            if hasattr(actor, methodname):
                 try:
-                    dirs = [ "%s.hrd" % Text.toStr(x) for x in getattr(actor, methodname)() ]
-                except Exception, e:
-                    o.errorconditionhandler.processPythonExceptionObject(e)
+                    dirs = ["%s.hrd" % Text.toStr(x) for x in getattr(actor, methodname)()]
+                except Exception as e:
+                    j.errorconditionhandler.processPythonExceptionObject(e)
                     raise OSError(errno.EIO, "Failed to list")
 
         return list(set(dirs))
 
     def chdir(self, path):
         path = path.replace(self.ftproot, '', 1)
-        parts = [ x for x in path.split('/') if x ] #strip empty parts
+        parts = [x for x in path.split('/') if x]  # strip empty parts
         dirs = self._listdir(parts[:-1])
         if parts and parts[-1] not in dirs:
             raise OSError(errno.ENOENT, "Could not change to not existing path")
@@ -83,7 +84,7 @@ class OsisList(FilesystemBase):
         return getattr(actor, methodname)
 
     def _getParts(self, path):
-        return o.system.fs.joinPaths(self.cwd, path).split('/')
+        return j.system.fs.joinPaths(self.cwd, path).split('/')
 
     def _getObject(self, path):
         parts = self._getParts(path)
@@ -93,21 +94,21 @@ class OsisList(FilesystemBase):
 
     def ftp2fs(self, path, retrieve=True):
         parts = self._getParts(path)
-        tmpdir = o.system.fs.joinPaths(o.dirs.tmpDir, *parts[0:-1])
-        o.system.fs.createDir(tmpdir)
-        tmpfile = o.system.fs.joinPaths(tmpdir, parts[-1])
+        tmpdir = j.system.fs.joinPaths(j.dirs.tmpDir, *parts[0:-1])
+        j.system.fs.createDir(tmpdir)
+        tmpfile = j.system.fs.joinPaths(tmpdir, parts[-1])
         if retrieve:
             try:
                 obj = self._getObject(path)
             except:
                 return tmpfile
-            dumped = o.db.serializers.hrd.dumps(obj)
+            dumped = j.db.serializers.hrd.dumps(obj)
             with open(tmpfile, 'w+') as fd:
                 fd.write(dumped)
         return tmpfile
 
     def fs2ftp(self, path):
-        return path[len(o.dirs.tmpDir):]
+        return path[len(j.dirs.tmpDir):]
 
     def remove(self, path):
         parts = self._getParts(path)
@@ -157,7 +158,6 @@ class OsisList(FilesystemBase):
             else:
                 yield tdir % basename
 
-
     def format_mlsx(self, basedir, listing, perms, facts, ignore_err=True):
         tdir = "type=dir;perm=flcdmpe;size=4096;modify=20071103093626;unix.mode=0755;unix.uid=1002;unix.gid=1002;unique=801e32; %s\r\n"
         tfile = "type=file;perm=flcdmpe;size=4096;modify=20071103093626;unix.mode=0755;unix.uid=1002;unix.gid=1002;unique=801e32; %s\r\n"
@@ -171,7 +171,7 @@ class OsisList(FilesystemBase):
         fpath = self.ftp2fs(filename)
         return open(fpath, mode)
 
-    def on_file_sent(self,path):
+    def on_file_sent(self, path):
         pass
 
     def on_file_received(self, fpath):
@@ -179,9 +179,8 @@ class OsisList(FilesystemBase):
         parts = self._getParts(path)[1:]
         try:
             method = self._getActorMethod(parts, 'set')
-            content = o.db.serializers.hrd.loads(o.system.fs.fileGetContents(fpath))
+            content = j.db.serializers.hrd.loads(j.system.fs.fileGetContents(fpath))
             method(content)
-        except Exception, e:
-            o.errorconditionhandler.processPythonExceptionObject(e)
+        except Exception as e:
+            j.errorconditionhandler.processPythonExceptionObject(e)
             raise OSError(errno.EIO, "Failed to store object")
-

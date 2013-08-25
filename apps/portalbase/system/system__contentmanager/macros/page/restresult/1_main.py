@@ -1,10 +1,10 @@
 
-def main(o,args,params,tags,tasklet):
-    
+def main(o, args, params, tags, tasklet):
+
     import pprint
-    result=args.paramsExtra.get("result")
+    result = args.paramsExtra.get("result")
     if result:
-        result=pprint.pformat(result)
+        result = pprint.pformat(result)
         args.page.addCodeBlock(result)
     else:
         args.page.addMessage("No result set")
@@ -12,6 +12,5 @@ def main(o,args,params,tags,tasklet):
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

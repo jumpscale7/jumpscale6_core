@@ -1,14 +1,13 @@
 
-def main(o,args,params,tags,tasklet):
+def main(o, args, params, tags, tasklet):
     params.result = page = args.page
     tags = args.tags
 
-    modifier = o.html.getPageModifierGridDataTables(args.page)
+    modifier = j.html.getPageModifierGridDataTables(args.page)
     params.result = modifier.prepare4DataTables()
-    
+
     return params
 
 
-def match(o,args,params,tags,tasklet):
+def match(o, args, params, tags, tasklet):
     return True
-

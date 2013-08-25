@@ -3,20 +3,20 @@
 
 from setuptools import setup, find_packages
 
-packages = [ 'OpenWizzy.portal' ]
-packages += [ "OpenWizzy.portal.%s" % x for x in find_packages('portallib') ]
+packages = [ 'JumpScale.portal' ]
+packages += [ "JumpScale.portal.%s" % x for x in find_packages('portallib') ]
 
-setup(name='OpenWizzy Portal',
+setup(name='JumpScale Portal',
       version='6.0.0',
       description='Python Automation framework',
-      author='OpenWizzy',
-      author_email='info@openwizzy.org',
-      url='http://www.openwizzy.org',
+      author='JumpScale',
+      author_email='info@jumpscale.org',
+      url='http://www.jumpscale.org',
 
       packages=packages,
-      package_dir = {'OpenWizzy.portal': 'portallib'},
+      package_dir = {'JumpScale.portal': 'portallib'},
 
-      download_url='http://pypi.python.org/pypi/OpenWizzy/',
+      download_url='http://pypi.python.org/pypi/JumpScale/',
       install_requires=[],
       classifiers=[
         'Intended Audience :: Developers',

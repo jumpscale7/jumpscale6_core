@@ -1,5 +1,6 @@
 import random
 
+
 def main(o, args, params, *other_args):
     page = params.result = args.page
     try:
@@ -20,7 +21,6 @@ def main(o, args, params, *other_args):
                         }});'''.format(id, macro_params.get('start', 1), macro_params.get('depth', 6)))
 
     page.addMessage('<ul id="{0}"></ul>'.format(id))
-
 
     return params
 

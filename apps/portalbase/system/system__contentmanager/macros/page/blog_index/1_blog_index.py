@@ -1,4 +1,4 @@
-from OpenWizzy.portal.macrolib.blog import BlogPost
+from JumpScale.portal.macrolib.blog import BlogPost
 
 
 def main(o, args, params, *other_args):
@@ -14,9 +14,9 @@ def main(o, args, params, *other_args):
         </article>
     '''
 
-    page.addMessage(''.join(blog_template.format(blog_url=post.url, 
-                                                 blog_title=post.title, 
-                                                 blog_date=post.date, 
+    page.addMessage(''.join(blog_template.format(blog_url=post.url,
+                                                 blog_title=post.title,
+                                                 blog_date=post.date,
                                                  blog_content=post.content)
                     for post in blog_posts))
     return params

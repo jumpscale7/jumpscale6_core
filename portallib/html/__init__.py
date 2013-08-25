@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .HtmlFactory import HtmlFactory
-o.base.loader.makeAvailable(o, '')
-o.html = HtmlFactory()
+j.base.loader.makeAvailable(j, '')
+j.html = HtmlFactory()
