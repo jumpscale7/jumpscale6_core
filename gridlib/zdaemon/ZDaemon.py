@@ -11,18 +11,6 @@ import inspect
 
 GeventLoop = j.core.gevent.getGeventLoopClass()
 
-# class DaemonCMDS(object):
-#     def __init__(self, daemon):
-#         self.daemon = daemon
-
-    # def getfreeport(self):
-    #     """
-    #     init a datachannelProcessor on found port
-    #     is a server in pair socket processing incoming data
-    #     each scheduled instance is on separate port
-    #     """
-    #     return self.daemon.getfreeportAndSchedule("datachannelProcessor", self.daemon.datachannelProcessor)
-
 
 class ZDaemon(GeventLoop):
 
@@ -55,9 +43,9 @@ class ZDaemon(GeventLoop):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
-            cmd, informat, returnformat, data, sessionid = cmdsocket.recv_multipart()
+            category, cmd, informat, returnformat, data, sessionid = cmdsocket.recv_multipart()
 
-            result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, data, sessionid)
+            result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, data, sessionid, category)
 
             cmdsocket.send_multipart(result)
 
@@ -159,7 +147,7 @@ class ZDaemon(GeventLoop):
     #             return found
     #         gevent.sleep(0.01)
 
-    #     j.errorconditationhandler.raiseOperationalCritical(msgpub="Cannot open port nr %s for client daemon."%found,
+    #     j.errorconditionhandler.raiseOperationalCritical(msgpub="Cannot open port nr %s for client daemon."%found,
     #                                                      message="", category="grid.startup", die=False, tags="")
     #     return 0
 

@@ -70,7 +70,7 @@ class OSISFactory:
         # find main classname of module
         # classes=[item for item in module.__dict__.keys() if (item<>"q" and item[0]<>"_")]
         # if len(classes)<>1:
-        #     j.errorconditationhandler.raiseBug(message="there must be only 1 class implemented in %s"%path,category="osis.init")
+        #     j.errorconditionhandler.raiseBug(message="there must be only 1 class implemented in %s"%path,category="osis.init")
         # classname=classes[0]
         # return module.__dict__[classname]
         return module.mainclass

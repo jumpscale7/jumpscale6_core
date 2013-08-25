@@ -23,7 +23,7 @@ class LogTargetOSIS(object):
         if self.serverip <> None:
             if j.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
                 return False
-            self.esclient = o.clients.elasticsearch.get(self._serverip, 9200)
+            self.esclient = j.clients.elasticsearch.get(self._serverip, 9200)
             # j.logger.elasticsearchtarget=True
 
     def __str__(self):

@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 
-parentclass=o.core.osis.getOsisImplementationParentClass("_coreobjects")  #is the name of the namespace
+parentclass=j.core.osis.getOsisImplementationParentClass("_coreobjects")  #is the name of the namespace
 
 class mainclass(parentclass):
     """
@@ -9,7 +9,7 @@ class mainclass(parentclass):
         pass       
 
     def getObject(self,ddict={}):
-    	obj=o.errorconditionhandler.getErrorConditionObject(ddict=ddict)
+    	obj=j.errorconditionhandler.getErrorConditionObject(ddict=ddict)
         return obj
 
     def setObjIds(self,obj):

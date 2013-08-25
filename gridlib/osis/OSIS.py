@@ -28,7 +28,7 @@ class OSIS:
         fullname = "%s_%s" % (namespaceid, categoryid)
         if self.osisInstances.has_key(fullname):
             return self.osisInstances[fullname]
-        j.errorconditationhandler.raiseBug(
+        j.errorconditionhandler.raiseBug(
             message="cannot find osis local instance for namespaceid:%s & categoryid:%s" % (namespaceid, categoryid), category="osis.valueerror")
 
     def getFromName(self, namespaceName, categoryName):
@@ -153,7 +153,7 @@ class OSIS:
                 raise RuntimeError("Only filesystem db implemented in osis")
 
             # wait for elastic search & get
-            self.elasticsearch = o.clients.elasticsearch.get(ip=hrd2.osis_elasticsearch_ip, port=int(hrd2.osis_elasticsearch_port))
+            self.elasticsearch = j.clients.elasticsearch.get(ip=hrd2.osis_elasticsearch_ip, port=int(hrd2.osis_elasticsearch_port))
             j.core.osis.db = self.db
             j.core.osis.elasticsearch = self.elasticsearch
 

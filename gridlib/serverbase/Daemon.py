@@ -55,7 +55,7 @@ class DaemonCMDS(object):
         log eco object (as dict)
         """
         eco["epoch"] = self.daemon.now
-        eco = j.errorconditationhandler.getErrorConditionObject(ddict=eco)
+        eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
         self.daemon.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
 
     def introspect(self, session, cat):
@@ -168,11 +168,11 @@ class Daemon(object):
             else:
                 result = ffunction(data, session=session)
         except Exception, e:
-            eco = j.errorconditationhandler.parsePythonErrorObject(e)
+            eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco
             eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
-            j.errorconditationhandler.processErrorConditionObject(eco)
+            j.errorconditionhandler.processErrorConditionObject(eco)
             result = self.errorconditionserializer.dumps(eco.__dict__)
             return "3", "", result
 
@@ -188,7 +188,6 @@ class Daemon(object):
             2= method not found
             2+ any other error
         """
-
         if self.sessions.has_key(sessionid):
             session = self.sessions[sessionid]
             encrkey = session.encrkey
@@ -198,7 +197,7 @@ class Daemon(object):
                 encrkey = ""
             else:
                 error = "Authentication  or Session error, session not known with id:%s" % sessionid
-                eco = j.errorconditationhandler.getErrorConditionObject(msg=error)
+                eco = j.errorconditionhandler.getErrorConditionObject(msg=error)
                 return "3", "", self.errorconditionserializer.dumps(eco.__dict__)
 
         if informat <> "":

@@ -1,6 +1,6 @@
-from OpenWizzy import o
-from OpenWizzy.grid.osis.OSISStore import OSISStore
-ujson = o.db.serializers.getSerializerType('j')
+from JumpScale import j
+from JumpScale.grid.osis.OSISStore import OSISStore
+ujson = j.db.serializers.getSerializerType('j')
 
 
 class mainclass(OSISStore):
@@ -22,7 +22,7 @@ class mainclass(OSISStore):
                 id = self.db.increment(self.dbprefix_incr)
                 value['id'] = id
             if not value.get('guid'):
-                value['guid'] = o.base.idgenerator.generateGUID()
+                value['guid'] = j.base.idgenerator.generateGUID()
             changed = False
             new = True
         self.db.set(self.dbprefix, key=id, value=value)

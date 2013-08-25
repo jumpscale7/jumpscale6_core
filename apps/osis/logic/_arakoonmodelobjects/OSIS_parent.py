@@ -1,8 +1,8 @@
-from OpenWizzy import o
-class mainclass(o.core.osis.getOsisImplementationParentClass("_modelobjects")):
+from JumpScale import j
+class mainclass(j.core.osis.getOsisImplementationParentClass("_modelobjects")):
     """
     Defeault object implementation
     """
 
     def _getDB(self):
-        return o.db.keyvaluestore.getArakoonStore('osis')
+        return j.db.keyvaluestore.getArakoonStore('osis')

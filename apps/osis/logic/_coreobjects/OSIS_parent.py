@@ -1,8 +1,8 @@
-from OpenWizzy import o
-from OpenWizzy.grid.osis.OSISStore import OSISStore
+from JumpScale import j
+from JumpScale.grid.osis.OSISStore import OSISStore
 import uuid
 
-ujson = o.db.serializers.getSerializerType('j')
+ujson = j.db.serializers.getSerializerType('j')
 
 class mainclass(OSISStore):
     """
@@ -34,12 +34,12 @@ class mainclass(OSISStore):
                 print "ckey in db: %s"%ckey2
                 if obj.id<>id:    
                     msg="coreobj id not in line with id in contentkey db."
-                    o.errorconditionhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
+                    j.errorconditionhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
                     changed=True
                     obj.id=id
                 elif obj.guid<>guid:
                     msg="coreobj guid not in line with id in contentkey db."
-                    o.errorconditationhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
+                    o.errorconditionhandler.raiseOperationalWarning(msgpub=msg,message="",category="osis.corruption")
                     changed=True
                     obj.guid=guid
                 elif ckey2<>ckey:
@@ -98,9 +98,9 @@ class mainclass(OSISStore):
             row=[]
             for prop in self.listProps:
                 r=o.__dict__["_P_%s"%prop]
-                if o.basetype.list.check(r):
+                if j.basetype.list.check(r):
                     r=",".join(r)
-                if o.basetype.dictionary.check(r):
+                if j.basetype.dictionary.check(r):
                     for key in r.keys():
                         r+="%s:%s,"%(key,r[key])
                     r.rstrip(",")

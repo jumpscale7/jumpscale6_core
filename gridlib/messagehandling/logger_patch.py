@@ -51,7 +51,7 @@ class LoggerPatch(object):
 
         address = config.getValue('main', 'address')
 
-        self._messageServerClient = o.clients.messageserver.get(address)
+        self._messageServerClient = j.clients.messageserver.get(address)
 
         # Check if the message server is running by pinging it.
         serverIsRunning = self._messageServerClient.ping()

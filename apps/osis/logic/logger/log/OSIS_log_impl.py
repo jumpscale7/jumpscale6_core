@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 
-parentclass=o.core.osis.getOsisImplementationParentClass("logger")  #is the name of the namespace
+parentclass=j.core.osis.getOsisImplementationParentClass("logger")  #is the name of the namespace
 
 class mainclass(parentclass):
     """

@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 
-parentclass=o.core.osis.getOsisImplementationParentClass("_coreobjects")  #is the name of the namespace
+parentclass=j.core.osis.getOsisImplementationParentClass("_coreobjects")  #is the name of the namespace
 
 class mainclass(parentclass):
     """
@@ -9,5 +9,5 @@ class mainclass(parentclass):
         pass
 
     def getObject(self,ddict={}):
-        obj=o.core.grid.zobjects.getZApplicationObject(ddict=ddict)
+        obj=j.core.grid.zobjects.getZApplicationObject(ddict=ddict)
         return obj

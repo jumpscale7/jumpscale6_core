@@ -53,7 +53,7 @@ class IndexerWhoosh:
                 writer.cancel()
                 self.rebuild()
             else:
-                j.errorconditationhandler.processPythonExceptionObject(e)
+                j.errorconditionhandler.processPythonExceptionObject(e)
 
     def optimize(self):
         # writer=self.index.writer()

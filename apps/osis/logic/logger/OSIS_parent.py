@@ -1,9 +1,9 @@
-from OpenWizzy import o
-from OpenWizzy.grid.osis.OSISStore import OSISStore
-import OpenWizzy.grid.grid
+from JumpScale import j
+from JumpScale.grid.osis.OSISStore import OSISStore
+import JumpScale.grid.grid
 import uuid
 
-ujson = o.db.serializers.getSerializerType('j')
+ujson = j.db.serializers.getSerializerType('j')
 
 class mainclass(OSISStore):
     """
@@ -11,7 +11,7 @@ class mainclass(OSISStore):
 
     def __init__(self):
         OSISStore.__init__(self)
-        self.eslogclient=o.core.grid.getLogTargetElasticSearch(esclient=o.core.osis.elasticsearch)        
+        self.eslogclient=j.core.grid.getLogTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
 
     def set(self,key,value):
         docs = []
@@ -25,19 +25,19 @@ class mainclass(OSISStore):
         return ["",True,True]
 
     def get(self,key):
-        o.errorconditationhandler.raiseBug(message="osis get for log not implemented",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis get for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
     def exists(self,key):
-        o.errorconditationhandler.raiseBug(message="osis exists for log not implemented",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis exists for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
     def find(self,query, start = 0, size = 10):
-        o.errorconditationhandler.raiseBug(message="osis find for log not implemented",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis find for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
     def destroyindex(self):
-        o.errorconditationhandler.raiseBug(message="osis destroyindex for log not implemented",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis destroyindex for log not implemented",category="osis.notimplemented")
         #work with elastic search only  
 
     def destroy(self):
@@ -50,14 +50,14 @@ class mainclass(OSISStore):
     #NOT IMPLEMENTED METHODS WHICH WILL NEVER HAVE TO BE IMPLEMENTED
 
     def setObjIds(self,**args):
-        o.errorconditationhandler.raiseBug(message="osis method setObjIds is not relevant for logger namespace",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis method setObjIds is not relevant for logger namespace",category="osis.notimplemented")
 
     def rebuildindex(self,**args):
-        o.errorconditationhandler.raiseBug(message="osis method rebuildindex is not relevant for logger namespace",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis method rebuildindex is not relevant for logger namespace",category="osis.notimplemented")
 
     def list(self,**args):
-        o.errorconditationhandler.raiseBug(message="osis method list is not relevant for logger namespace",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis method list is not relevant for logger namespace",category="osis.notimplemented")
 
     def removeFromIndex(self,**args):
-        o.errorconditationhandler.raiseBug(message="osis method removeFromIndex is not relevant for logger namespace",category="osis.notimplemented")
+        o.errorconditionhandler.raiseBug(message="osis method removeFromIndex is not relevant for logger namespace",category="osis.notimplemented")
 

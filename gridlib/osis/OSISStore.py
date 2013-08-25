@@ -53,12 +53,12 @@ class OSISStore(object):
 
     def _getDB(self):
         if j.core.osis.db == None:
-            j.errorconditationhandler.raiseBug(message="osis needs to have a temp db connection", category="osis.init")
+            j.errorconditionhandler.raiseBug(message="osis needs to have a temp db connection", category="osis.init")
         return j.core.osis.db
 
     def _getElasticSearch(self):
         if j.core.osis.elasticsearch == None:
-            j.errorconditationhandler.raiseBug(message="osis needs to have a temp db connection", category="osis.init")
+            j.errorconditionhandler.raiseBug(message="osis needs to have a temp db connection", category="osis.init")
         return j.core.osis.elasticsearch
 
     def get(self, key):
@@ -137,7 +137,7 @@ class OSISStore(object):
 
     def destroyindex(self):
         if len(self.categoryname) < 4:
-            j.errorconditationhandler.raiseBug(message="osis categoryname needs to be at least 3 chars.", category="osis.bug")
+            j.errorconditionhandler.raiseBug(message="osis categoryname needs to be at least 3 chars.", category="osis.bug")
         indexes = self.elasticsearch.get_mapping().keys()
         for i in indexes:
             if i.find(self.categoryname) == 0:

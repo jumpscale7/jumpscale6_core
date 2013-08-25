@@ -31,10 +31,6 @@ class DaemonClientCmd():
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
         self.retry = True
-        # 12 bytes unique id
-        end = 4294967295  # 4bytes max nr
-        self.id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
-            1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
         self.blocksize = 8 * 1024 * 1024
         self.key = encrkey
         self.user = user
@@ -94,7 +90,7 @@ class DaemonClientCmd():
             publickey = ""
             passwd = self.passwd
 
-        session = Session(id=self.id, organization=self.org, user=self.user, passwd=passwd,
+        session = Session(id=self.transport._id, organization=self.org, user=self.user, passwd=passwd,
                           encrkey=encrkey, netinfo=j.system.net.getNetworkInfo(), roles=self.roles)
         # ser=j.db.serializers.getMessagePack()
         # sessiondictstr=ser.dumps(session.__dict__)
@@ -141,21 +137,21 @@ class DaemonClientCmd():
                 retry += 1
                 return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat, returnformat, retry, maxretry, category)
             else:
-                msg = "Authentication error on server on %s:%s.\n" % (self.ipaddr, self.port)
+                msg = "Authentication error on server.\n"
                 raise RuntimeError(msg)
         elif returncode == '2':
             msg = "execution error on server on %s:%s.\n Could not find method:%s\n" % (self.ipaddr, self.port, cmd)
-            j.errorconditationhandler.raiseBug(msgpub=msg, message="", category="rpc.exec")
+            j.errorconditionhandler.raiseBug(msgpub=msg, message="", category="rpc.exec")
         elif str(returncode) != "0":
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
             ddict = s.loads(parts[2])
-            eco = j.errorconditationhandler.getErrorConditionObject(ddict)
+            eco = j.errorconditionhandler.getErrorConditionObject(ddict)
             msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
             print "*** error in client to zdaemon ***"
             # print eco
-            j.errorconditationhandler.raiseOperationalCritical(msgpub="", message=msg, category="rpc.exec", die=True, tags="ecoguid:%s" % eco.guid)
+            j.errorconditionhandler.raiseOperationalCritical(msgpub="", message=msg, category="rpc.exec", die=True, tags="ecoguid:%s" % eco.guid)
 
         returnformat = parts[1]
         if returnformat <> "":
@@ -203,10 +199,11 @@ class DaemonClientCmd():
 class DaemonClient(object):
 
     def __init__(self, category="core", org="myorg", user="root", passwd="passwd", ssl=False, introspect=True, reset=False, roles=[], defaultSerialization="m"):
-        self._id = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'  # empty id needed durring session initialization
+        end = 4294967295  # 4bytes max nr
+        self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
+            1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
         self._client = DaemonClientCmd(category=category, org=org, user=user, passwd=passwd, ssl=ssl,
                                        reset=reset, roles=roles, transport=self, defaultSerialization=defaultSerialization)
-        self._id = self._client.id
         if introspect:
             self._loadMethods()
 

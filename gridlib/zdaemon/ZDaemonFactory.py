@@ -48,8 +48,8 @@ class ZDaemonFactory():
                 print client.echo("Hello World.")
 
         """
-        from ZDaemonClient import ZDaemonCmdClient
-        cl = ZDaemonCmdClient(ipaddr=ipaddr, port=port, org=org, user=user, passwd=passwd, ssl=ssl, reset=reset)
+        from ZDaemonClient import ZDaemonClient
+        cl = ZDaemonClient(ipaddr=ipaddr, port=port, org=org, user=user, passwd=passwd, ssl=ssl, reset=reset)
         return cl
 
     def getZDaemonAgent(self, ipaddr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, reset=False, roles=[]):
@@ -83,8 +83,8 @@ class ZDaemonFactory():
         print client.echo("atest")
 
         """
-        from ZDaemonClient import ZDaemonCmdClient
-        return ZDaemonCmdClient
+        from ZDaemonClient import ZDaemonClient
+        return ZDaemonClient
 
     def initSSL4Server(self, organization, serveruser, sslkeyvaluestor=None):
         """

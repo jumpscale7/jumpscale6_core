@@ -85,10 +85,10 @@ class ZWorker(GeventLoop):
             try:
                 exec(action.code)
             except Exception, e:
-                eco = j.errorconditationhandler.parsePythonErrorObject(e)
+                eco = j.errorconditionhandler.parsePythonErrorObject(e)
                 eco.descriptionpub = "Syntax error probably in def, check the code & try again. Could not import, action id = %s" % action.id
                 eco.code = action.code
-                j.errorconditationhandler.processErrorConditionObject(eco)
+                j.errorconditionhandler.processErrorConditionObject(eco)
                 jobobj.state = "error"
                 jobobj.errordescr = "%s Error was:\n%s" % (eco.descriptionpub, e)
                 return jobobj
@@ -97,10 +97,10 @@ class ZWorker(GeventLoop):
         try:
             jobobj.result = jfunc(**jobobj.args)
         except Exception, e:
-            eco = j.errorconditationhandler.parsePythonErrorObject(e)
+            eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.errormessagePub = "Execution error, check the code, action id = %s" % action.id
             eco.code = action.code
-            j.errorconditationhandler.processErrorConditionObject(eco)
+            j.errorconditionhandler.processErrorConditionObject(eco)
             jobobj.ecid = eco.guid
             jobobj.state = "error"
             jobobj.errordescr = "%s Error was:\n%s" % (eco.errormessagePub, e)
@@ -111,7 +111,7 @@ class ZWorker(GeventLoop):
     def reset(self):
 
         # print reset worker
-        j.errorconditationhandler.raiseOperationalWarning(msgpub="reset zworker", category="zbroker")
+        j.errorconditionhandler.raiseOperationalWarning(msgpub="reset zworker", category="zbroker")
         self.poller.unregister(self.worker)
         self.worker.setsockopt(zmq.LINGER, 0)
         self.worker.close()
@@ -157,7 +157,7 @@ class ZWorker(GeventLoop):
                     self.liveness = self.HEARTBEAT_LIVENESS
                 else:
                     msg = "E: Invalid message: %s" % frames
-                    j.errorconditationhandler.raiseOperationalWarning(msgpub="error in message send to zworker", message=msg, category="zbroker")
+                    j.errorconditionhandler.raiseOperationalWarning(msgpub="error in message send to zworker", message=msg, category="zbroker")
                 self.interval = self.INTERVAL_INIT
             else:
                 self.liveness -= 1

@@ -215,13 +215,13 @@ class MessageServer(object):
 
     def _processErrorMessage(self, message):
         dtype, length, epoch, gid, nid, pid, data = j.core.messagehandler.unPackMessage(message)
-        eco = j.errorconditationhandler.getErrorConditionObject(data=j.tools.json.decode(data))
+        eco = j.errorconditionhandler.getErrorConditionObject(data=j.tools.json.decode(data))
 
         content = "source/id/level: %s/%s/%s\n" % (eco.getSource(), eco.id, eco.level)
         content += "error: %s\n" % eco.errormessage
         print content
 
-        j.errorconditationhandler.db.store(eco)
+        j.errorconditionhandler.db.store(eco)
 
     def _processLogMessage(self, message):
         if self.echo:
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         server.forwarders.add(forwarder)
 
     if args.arakoonClientName:
-        client = o.clients.arakoon.getClient(args.arakoonClientName)
+        client = j.clients.arakoon.getClient(args.arakoonClientName)
         j.core.loghandler.setArakoonClient(client)
 
     server.start()

@@ -24,7 +24,7 @@ class ZLoggerCMDS(ZDaemonCMDS):
         log eco object (as dict)
         """
         eco["epoch"] = self.daemon.now
-        eco = j.errorconditationhandler.getErrorConditionObject(ddict=eco)
+        eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
         self.daemon.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
 
     def log(self, log, session):
@@ -88,7 +88,7 @@ class ZLogger(ZDaemon):
                     if counter > 30:
                         stop = True
                 if bid == 0:
-                    j.errorconditationhandler.raiseBug(message="grid.broker.id cannot be 0 when starting logger", category="grid.init")
+                    j.errorconditionhandler.raiseBug(message="grid.broker.id cannot be 0 when starting logger", category="grid.init")
                 j.core.grid.logger.osiseco = j.core.osis.getClientForCategory(
                     "broker_%s" % bid, "eco", ipaddr=self.hrd.get("logger.osis.ip"), port=self.hrd.getInt("logger.osis.port"))
         else:

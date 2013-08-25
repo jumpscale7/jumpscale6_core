@@ -78,7 +78,7 @@ class ZWorkerClient():
             if socks.get(self.socket) == zmq.POLLIN:
                 return self.socket.recv()
             else:
-                j.errorconditationhandler.raiseOperationalCritical(message="", category="",
+                j.errorconditionhandler.raiseOperationalCritical(message="", category="",
                                                                    msgpub="could not communicate with server on %s" % self.serverEndpoint, die=True, tags="")
 
     def getjobid(self):
@@ -130,15 +130,15 @@ class ZWorkerClient():
         job = j.core.grid.zobjects.getZJobObject(ddict=returnjob)
 
         if job.state == "workernotfound":
-            j.errorconditationhandler.raiseOperationalCritical(
+            j.errorconditionhandler.raiseOperationalCritical(
                 msgpub="Could not find worker to execute work.", message="work not executed was: %s" % job, category="worker.execute", die=True, tags="jobguid:%s" % job.guid)
         elif job.state == "error":
             msg = "Error in worker execution of %s. Job guid was:%s.\nError was:%s." % (jname, job.guid, job.errordescr)
-            j.errorconditationhandler.raiseBug(message=msg, category="worker.client", tags="jobguid:%s" % job.guid)
+            j.errorconditionhandler.raiseBug(message=msg, category="worker.client", tags="jobguid:%s" % job.guid)
         elif job.state == "ok":
             return job.result
         else:
-            j.errorconditationhandler.raiseBug(message="job state unknown", category="worker.client")
+            j.errorconditionhandler.raiseBug(message="job state unknown", category="worker.client")
 
     def registerWorker(self, obj, roles, instance, identity):
         return self.brokerclient.sendcmd("registerWorker", obj=obj.__dict__, roles=roles, instance=instance, identity=identity)

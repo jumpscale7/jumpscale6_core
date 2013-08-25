@@ -65,7 +65,7 @@ class BrokerMainActions(ZDaemonCMDS):
 
     def getAction(self, actionid):
         if not self.broker.actions.has_key(actionid):
-            j.errorconditationhandler.raiseBug(message="could not find action with id %s" % actionid, category="broker.actions")
+            j.errorconditionhandler.raiseBug(message="could not find action with id %s" % actionid, category="broker.actions")
         return self.broker.actions[actionid]
 
     def registerWorker(self, obj, roles, instance, identity):

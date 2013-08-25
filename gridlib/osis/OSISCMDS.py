@@ -1,8 +1,7 @@
 from JumpScale import j
-from JumpScale.grid.serverbase.BaseCMDS import BaseCMDS
 
 
-class OSISCMDS(BaseCMDS):
+class OSISCMDS(object):
 
     def __init__(self, daemon):
         self.daemon = daemon

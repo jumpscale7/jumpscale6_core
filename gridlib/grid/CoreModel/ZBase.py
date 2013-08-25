@@ -75,10 +75,10 @@ class ZBase():
         return j.db.serializers.getSerializerType('j').dumps(self._getMessage())
 
     def getMessage(self):
-        j.errorconditationhandler.raiseBug(message="notimplemented", category=cat)
+        j.errorconditionhandler.raiseBug(message="notimplemented", category=cat)
 
     def getCategory(self):
-        j.errorconditationhandler.raiseBug(message="notimplemented", category=cat)
+        j.errorconditionhandler.raiseBug(message="notimplemented", category=cat)
 
     def __str__(self):
         return str(self.__dict__)

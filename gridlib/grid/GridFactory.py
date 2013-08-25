@@ -56,7 +56,7 @@ class GridFactory():
         self.id = self.config.getInt("grid.id")
         self.bid = self.config.getInt("grid.broker.id")
         if self._id == 0:
-            j.errorconditationhandler.raiseInputError(msgpub="Grid needs grid id to be filled in in grid config file", message="", category="", die=True)
+            j.errorconditionhandler.raiseInputError(msgpub="Grid needs grid id to be filled in in grid config file", message="", category="", die=True)
 
     def init(self, broker=None):
         """
@@ -142,11 +142,11 @@ class GridFactory():
 
         if die:
             if self.isbrokerLocal():
-                j.errorconditationhandler.raiseOperationalCritical(
+                j.errorconditionhandler.raiseOperationalCritical(
                     msgpub="broker process cannot be contacted, make sure broker is running & connection settings are configured properly.",
                     message="", category="", die=True, tags="")
             else:
-                j.errorconditationhandler.raiseOperationalCritical(message="", category="", msgpub='Cannot find active broker.', die=True, tags="")
+                j.errorconditionhandler.raiseOperationalCritical(message="", category="", msgpub='Cannot find active broker.', die=True, tags="")
         else:
             return False
 
