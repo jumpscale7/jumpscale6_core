@@ -60,7 +60,7 @@ class KeyStor():
         #For a demo script though it's easier/quicker to just use 'None' :) 
 
         if path<>"":
-            q.system.fs.createDir(path)
+            j.system.fs.createDir(path)
             p1="%s/priv.pem"%path
             p2="%s/pub.pem"%path
         else:
@@ -86,7 +86,10 @@ class KeyStor():
     def _getKey(self,organization,user,cat,returnAsString=False,keyoverrule=""):
         cachekey="%s_%s_%s"%(organization,user,cat)
         if self.keys.has_key(cachekey):
-            return self.keys[cachekey]
+            if returnAsString:
+                return self.keys[cachekey].as_pem()
+            else:
+                return self.keys[cachekey]
         p1='/tmp/_key_%s'%j.base.idgenerator.generateGUID()
         if keyoverrule:
             key=keyoverrule
