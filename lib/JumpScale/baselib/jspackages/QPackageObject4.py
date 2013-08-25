@@ -941,7 +941,7 @@ updating the metadata for the %(qpDepDomain)s owpackage domain might resolve thi
                 if _copy:
                     for protectedDir in j.dirs.protectedDirs:
                         # Add a '/' if needed, so we don't accidentally filter
-                        # out /home/openwizzy if /home/p is protected
+                        # out /home/jumpscale if /home/p is protected
                         if protectedDir and protectedDir[-1] != os.path.sep:
                             protectedDir = protectedDir + os.path.sep
 

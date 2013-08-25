@@ -417,7 +417,7 @@ class BitbucketConnection(object):
         #http.addAuthentication(login,passwd)
         #url="https://api.bitbucket.org/1.0/users/%s/" % self._getBitbucketUsernameFromUrl(url)
         #content=http.get(url)
-        # TODO - KDS: Need a better way than curl, the authentication doesnt seem to work when using the http openwizzy extension.
+        # TODO - KDS: Need a better way than curl, the authentication doesnt seem to work when using the http jumpscale extension.
         j.system.platformtype.ubuntu.checkInstall("curl","curl")
         resultTmpfile = j.system.fs.joinPaths(j.dirs.tmpDir, j.base.idgenerator.generateGUID())
         headerTmpfile = j.system.fs.joinPaths(j.dirs.tmpDir, j.base.idgenerator.generateGUID())

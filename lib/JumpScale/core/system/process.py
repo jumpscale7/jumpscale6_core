@@ -1068,7 +1068,7 @@ def runDaemon(commandline, stdout=None, stderr=None, user=None, group=None,
     # variables can be passed to processhelper.py with only a slight chance of
     # things going wrong in there
 
-    jumpscale_path = os.path.join(j.dirs.baseDir, 'lib', 'openwizzy', 'core')
+    jumpscale_path = os.path.join(j.dirs.baseDir, 'lib', 'jumpscale', 'core')
 
     cmd = list()
     cmd.append(sys.executable)

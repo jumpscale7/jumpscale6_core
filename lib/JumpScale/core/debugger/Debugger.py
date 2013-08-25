@@ -33,7 +33,7 @@
 #
 # </License>
 
-'''The openwizzy symbolic debugger subsystem'''
+'''The jumpscale symbolic debugger subsystem'''
 
 import sys
 
@@ -115,7 +115,7 @@ else:
                               'client, or the default timeout (300 seconds) '
                               'is reached', 5)
         # Retrieve configuration
-        config = j.config.getConfig('openwizzy_debugger')['main']
+        config = j.config.getConfig('jumpscale_debugger')['main']
         password = config['rpdb2_password']
         remote = config['rpdb2_allow_remote']
         remote = remote.lower() not in ('0', 'no', 'false', )
@@ -160,7 +160,7 @@ def set_trace(frame=None, frame_idx=0):
     @type frame_idx: number
     '''
     try:
-        config = j.config.getConfig('openwizzy_debugger')['main']
+        config = j.config.getConfig('jumpscale_debugger')['main']
         if not config:
             raise RuntimeError('No configuration found')
         debugger = config['type']
@@ -202,10 +202,10 @@ def set_trace(frame=None, frame_idx=0):
 
 from JumpScale.core.config import ConfigManagementItem, ItemSingleClass
 
-class openwizzyDebuggerConfigurationItem(ConfigManagementItem):
+class jumpscaleDebuggerConfigurationItem(ConfigManagementItem):
     '''QConfig item class for the configuration of the debugger subsystem'''
-    CONFIGTYPE = 'openwizzy_debugger'
-    DESCRIPTION = 'openwizzy Debugger'
+    CONFIGTYPE = 'jumpscale_debugger'
+    DESCRIPTION = 'jumpscale Debugger'
     KEYS={"type":"Debugger type"}
     def ask(self):
         '''Retrieve all required information to configure the debugger
@@ -217,14 +217,14 @@ class openwizzyDebuggerConfigurationItem(ConfigManagementItem):
         handler(self)
 
 #pylint: disable-msg=C0103
-openwizzyDebuggerConfiguration = ItemSingleClass( \
-                                            openwizzyDebuggerConfigurationItem)
+jumpscaleDebuggerConfiguration = ItemSingleClass( \
+                                            jumpscaleDebuggerConfigurationItem)
 #pylint: enable-msg=C0103
 
 class Debugger:
-    '''Hook debugging support on the openwizzy class'''
+    '''Hook debugging support on the jumpscale class'''
     def __init__(self):
-        self._config = openwizzyDebuggerConfiguration()
+        self._config = jumpscaleDebuggerConfiguration()
 
     def configure(self, debugger=None):
         '''Configure the debugger subsystem'''

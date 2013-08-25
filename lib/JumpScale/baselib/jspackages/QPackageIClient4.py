@@ -25,8 +25,8 @@ class QPackageIClient4():
     
     # builds the required directory structure
     # When repo is not None a default codemanagement tasklet is generated
-    # When isExtension is true the files are put under lib/openwizzy/extensions
-    # When create link is true a link is made in lib/openwizzy/extensions to the files.. for easy testing  
+    # When isExtension is true the files are put under lib/jumpscale/extensions
+    # When create link is true a link is made in lib/jumpscale/extensions to the files.. for easy testing  
     def createNewPackage(self):
         """ 
         Builds the required directory structure and generates the default files; 

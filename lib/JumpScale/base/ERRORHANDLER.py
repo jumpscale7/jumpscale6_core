@@ -16,7 +16,7 @@ class ERRORHANDLER:
     @staticmethod
     def exceptHook(ttype, pythonExceptionObject, tb):
         """ 
-        every fatal error in openwizzy or by python itself will result in an exception
+        every fatal error in jumpscale or by python itself will result in an exception
         in this function the exception is caught.
         This routine will create an errorobject & escalate to the infoserver
         @ttype : is the description of the error

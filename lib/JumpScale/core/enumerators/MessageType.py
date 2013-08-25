@@ -8,15 +8,15 @@ class MessageType(BaseEnumeration):
     iterator for types of messages
     - logmessage
     - errorcondition, e.g. 
-       - bug in application (a raised error by openwizzy)
+       - bug in application (a raised error by jumpscale)
        - cpu overloaded (detected by monitoring tasklet) 
     - testresult e.g. avgcpu over last 1h 
     - job message e.g. tells information about object
     - pymodel update message 
     - rpc message 
     more info see: 
-    - http://www.openwizzy.org/display/PM/Pylabs+Messages
-    - http://www.openwizzy.org/display/PM/MessageTypes
+    - http://www.jumpscale.org/display/PM/Pylabs+Messages
+    - http://www.jumpscale.org/display/PM/MessageTypes
     """
 
     def __init__(self, level):

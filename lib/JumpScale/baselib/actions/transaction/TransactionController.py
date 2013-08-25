@@ -8,12 +8,12 @@ from JumpScale import j
 class TransactionController(object):
     '''
     Manager controlling actions
-    Transactions = openwizzy transactions
-    see #@todo doc on openwizzy
+    Transactions = jumpscale transactions
+    see #@todo doc on jumpscale
     @property transactions: array of transactions 
     @property width: Maximum width of output
     @property maxloglevel : max loglevel which will be captured (default for all transactions)
-    for more info see: http://www.openwizzy.org/display/PM/Transactions
+    for more info see: http://www.jumpscale.org/display/PM/Transactions
     '''
     def __init__(self):
         self.activeTransaction=None

@@ -323,7 +323,7 @@ class KeyValueStoreBase(object):
 
     def now(self):
         """
-        return current time (when in appserver will require less time then calling native openwizzy function)
+        return current time (when in appserver will require less time then calling native jumpscale function)
         """
         if j.core.appserver6.runningAppserver<> None:
             return j.core.appserver6.runningAppserver.time

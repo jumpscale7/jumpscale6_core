@@ -24,7 +24,7 @@ class QPackageClient4():
         self._metadatadirTmp=j.system.fs.joinPaths(j.dirs.varDir,"tmp","owpackages","md")
         j.system.fs.createDir(self._metadatadirTmp)        
         # can't ask username here
-        # because openwizzy is not interactive yet
+        # because jumpscale is not interactive yet
         # So we ask the username/passwd lazy in the domain object
         self.reloadconfig()
         self.resetState()

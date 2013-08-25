@@ -14,7 +14,7 @@ import platform
 import subprocess
 import time
 
-#how to import without extensions (openwizzy is not required)
+#how to import without extensions (jumpscale is not required)
 #from core.installtools import InstallTools
 
 class InstallTools():
@@ -249,7 +249,7 @@ class InstallTools():
 
     expand=expand_tar_gz
 
-    def getLastChangeSetBitbucket(self,account="incubaid",reponame="openwizzy-core-6.0"):
+    def getLastChangeSetBitbucket(self,account="jumpscale",reponame="jumpscale-core"):
         
         url="https://api.bitbucket.org/1.0/repositories/%s/%s/src/tip/" % (account,reponame)
         handle = urlopen(url)
@@ -263,7 +263,7 @@ class InstallTools():
 
     def downloadPylabsCore(self,dest):
         #csid=getLastChangeSetBitbucket()        
-        self.download ("https://bitbucket.org/incubaid/openwizzy-core-6.0/get/default.tar.gz","%s/pl6core.tgz"%self.TMP)
+        self.download ("https://bitbucket.org/jumpscale/jumpscale-core/get/default.tar.gz","%s/pl6core.tgz"%self.TMP)
         self.expand("%s/pl6core.tgz"%self.TMP,dest)
             
     def getPythonSiteConfigPath(self):
@@ -325,16 +325,15 @@ class InstallTools():
         self.copytreedeletefirst(os.path.join(pldir,"qself.BASE6","cfg"),"%s/cfg/" % self.BASE)
         if not self.TYPE=="WIN":
             self.copydeletefirst(os.path.join(pldir,"qself.BASE6","qshell"),"%s/qshell" % self.BASE)
-        self.copytreedeletefirst(os.path.join(pldir,"core"),"%s/lib/openwizzy" % self.BASE)
-        #writefile("%s/lib/openwizzy/core/__init__.py"%self.BASE,"")
-        self.copytreedeletefirst(os.path.join(pldir,"extensions","core"),"%s/lib/openwizzyextensions/core" % self.BASE)
+        self.copytreedeletefirst(os.path.join(pldir,"core"),"%s/lib/jumpscale" % self.BASE)
+        #writefile("%s/lib/jumpscale/core/__init__.py"%self.BASE,"")
+        self.copytreedeletefirst(os.path.join(pldir,"extensions","core"),"%s/lib/jumpscaleextensions/core" % self.BASE)
         self.copytreedeletefirst(os.path.join(pldir,"utils"),"%s/utils" % self.BASE)
         if not self.TYPE=="WIN":
             shutil.copyfile(os.path.join(pldir,"lib","python.zip"),"%s/lib/python.zip" % self.BASE)
-        self.writefile("%s/lib/openwizzyextensions/__init__.py"%self.BASE,"")
         self.writefile("%s/lib/__init__.py"%self.BASE,"")
         try:
-            os.makedirs("%s/var/log/openwizzylogs"%self.BASE)
+            os.makedirs("%s/var/log/jumpscalelogs"%self.BASE)
         except:
             pass
         try:

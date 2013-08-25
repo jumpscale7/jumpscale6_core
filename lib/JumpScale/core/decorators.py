@@ -121,7 +121,7 @@ class Version:
     def is_previous(self, other):
         return self.major == other.major and self.minor == other.minor + 1
 
-jumpscale_VERSION = Version(str_='.'.join(map(str, openwizzy.__version__)))
+jumpscale_VERSION = Version(str_='.'.join(map(str, jumpscale.__version__)))
 
 
 class deprecated(object):
