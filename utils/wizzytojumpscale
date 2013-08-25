@@ -1,0 +1,17 @@
+#!/bin/bash
+sed -i "s/from OpenWizzy import \*/from JumpScale import j/g" $1
+sed -i "s/from OpenWizzy import o/from JumpScale import j/g" $1
+sed -i "s/OpenWizzy/JumpScale/g" $1
+sed -i "s/o.system/j.system/g" $1
+sed -i "s/o.apps/j.apps/g" $1
+sed -i "s/o.tools/j.tools/g" $1
+sed -i "s/o.core/j.core/g" $1
+sed -i "s/o.codetools/j.codetools/g" $1
+sed -i "s/o.application/j.application/g" $1
+sed -i "s/o.dirs/j.dirs/g" $1
+sed -i "s/o.db/j.db/g" $1
+sed -i "s/o.basetype/j.basetype/g" $1
+sed -i "s/..base.loader.makeAvailable(o/j.base.loader.makeAvailable(j/g" $1
+sed -i "s/o.base/j.base/g" $1
+sed -i "s/o.logger/j.logger/g" $1
+sed -i "s/o.errorconditionhandler/j.errorconditationhandler/g" $1
