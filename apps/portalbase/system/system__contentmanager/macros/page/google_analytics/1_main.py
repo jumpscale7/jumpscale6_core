@@ -1,4 +1,4 @@
-def main(o, args, params, tags, tasklet):
+def main(j, args, params, tags, tasklet):
     params.result = page = args.page
 
     google_analytics_id = args.cmdstr or args.doc.docparams.get('google_analytics_id', None)
@@ -23,5 +23,5 @@ def main(o, args, params, tags, tasklet):
     return params
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True

@@ -1,4 +1,4 @@
-def main(o, args, params, tags, tasklet):
+def main(j, args, params, tags, tasklet):
     params.merge(args)
 
     # temporary hack to get the application name
@@ -8,5 +8,5 @@ def main(o, args, params, tags, tasklet):
     params.result = ("", params.doc)
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True

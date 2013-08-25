@@ -1,7 +1,7 @@
 import copy
 
 
-def main(o, args, params, tasklet):
+def main(j, args, params, tasklet):
 
     page = args.page
 
@@ -88,5 +88,5 @@ def main(o, args, params, tasklet):
     return params
 
 
-def match(o, args, params, tasklet):
+def match(j, args, params, tasklet):
     return True

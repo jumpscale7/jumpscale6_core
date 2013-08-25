@@ -4,7 +4,7 @@ import datetime
 import JumpScale.baselib.elasticsearch
 
 
-def main(o, args, params, tags, tasklet):
+def main(j, args, params, tags, tasklet):
     page = args.page
     # remoteaddr = "http://%s" % args.requestContext.env.get('REMOTE_ADDR')
     # referer = args.requestContext.env.get('HTTP_REFERER') or remoteaddr
@@ -126,5 +126,5 @@ jQuery(document).ready(function($) {
     return params
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True

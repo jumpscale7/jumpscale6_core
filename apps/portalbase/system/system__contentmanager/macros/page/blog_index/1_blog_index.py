@@ -1,7 +1,7 @@
 from JumpScale.portal.macrolib.blog import BlogPost
 
 
-def main(o, args, params, *other_args):
+def main(j, args, params, *other_args):
     params.result = page = args.page
 
     blog_posts = BlogPost.get_posts_in(args.doc.path)
@@ -22,5 +22,5 @@ def main(o, args, params, *other_args):
     return params
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True
