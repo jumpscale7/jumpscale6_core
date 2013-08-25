@@ -37,3 +37,7 @@ sed -i "s/o.gui/j.gui/g" $1
 sed -i "s/o.cmdtools/j.cmdtools/g" $1
 sed -i "s/o.cloud/j.cloud/g" $1
 sed -i "s/o.transaction/j.transaction/g" $1
+sed -i "s/main\(o, *i,/main(j,/g" $1
+sed -i "s/main\(o,/main(j,/g" $1
+sed -i "s/match(o, *i/match(j,/g" $1
+sed -i "s/match\(o,/match(j,/g" $1
