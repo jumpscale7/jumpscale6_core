@@ -64,12 +64,12 @@ class OWDevelToolsInstaller:
 
     def deployExampleCode(self):
         """
-        checkout example code repo & link examples to sandbox on /opt/jumpscale6/apps/examples
+        checkout example code repo & link examples to sandbox on /opt/jumpscale/apps/examples
         """
         name="jumpscale_examples"
         self._getOWRepo(name)
-        self._do.symlink("%s/jumpscale/%s/prototypes"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/prototypes")
-        self._do.symlink("%s/jumpscale/%s/examples"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/examples")
+        self._do.symlink("%s/jumpscale/%s/prototypes"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/prototypes")
+        self._do.symlink("%s/jumpscale/%s/examples"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/examples")
 
     def deployJumpScaleLibs(self,linkonly=False):
         """
@@ -100,10 +100,10 @@ class OWDevelToolsInstaller:
         self._getOWRepo(name)
         dest="%s/grid"%(j.dirs.libDir)
         self._do.symlink("%s/jumpscale/%s/gridlib"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/jumpscale/%s/apps/broker"%(j.dirs.codeDir,name),"/opt/jumpscale6/apps/broker")
-        self._do.symlink("%s/jumpscale/%s/apps/logger"%(j.dirs.codeDir,name),"/opt/jumpscale6/apps/logger")
+        self._do.symlink("%s/jumpscale/%s/apps/broker"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/broker")
+        self._do.symlink("%s/jumpscale/%s/apps/logger"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/logger")
 
-        osisdir="/opt/jumpscale6/apps/osis/"
+        osisdir="/opt/jumpscale/apps/osis/"
 
         do=self._do
 
@@ -127,19 +127,19 @@ class OWDevelToolsInstaller:
     def deployJumpScalePortal(self):
         """
         checkout the jumpscale portal repo & link to python 2.7 to make it available for the developer
-        an example portal will also be installed in /opt/jumpscale6/apps/exampleportal
+        an example portal will also be installed in /opt/jumpscale/apps/exampleportal
         """
         name="jumpscale_portal"        
         self._getOWRepo(name)
         dest="%s/portal"%(j.dirs.libDir)
         self._do.symlink("%s/jumpscale/%s/portallib"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/jumpscale/%s/apps/portalbase"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalbase")
-        self._do.symlink("%s/jumpscale/%s/apps/portalftpgateway"%(j.dirs.codeDir,name),"/opt/openwizzy6/apps/portalftpgateway")
+        self._do.symlink("%s/jumpscale/%s/apps/portalbase"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/portalbase")
+        self._do.symlink("%s/jumpscale/%s/apps/portalftpgateway"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/portalftpgateway")
 
         j.system.platform.ubuntu.install("redis-server")
         j.system.platform.ubuntu.install("curlftpfs")
 
-        portaldir="/opt/jumpscale6/apps/exampleportal/"
+        portaldir="/opt/jumpscale/apps/exampleportal/"
 
         if not  j.system.fs.exists(portaldir):
             src="/opt/code/jumpscale/jumpscale_examples/examples/exampleportal"
@@ -155,7 +155,7 @@ class OWDevelToolsInstaller:
         self._getOWRepo(name)
         dest="%s/dfs_io"%(j.dirs.libDir)
         self._do.symlink("%s/jumpscale/%s/ow6libs/dfs_io"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/jumpscale/%s/apps/dfs_io"%(j.dirs.codeDir,name),"/opt/jumpscale6/apps/dfs_io")
+        self._do.symlink("%s/jumpscale/%s/apps/dfs_io"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/dfs_io")
 
     def deployPuppet(self):
         import JumpScale.lib.puppet
@@ -280,7 +280,7 @@ DefaultRoot                    ~
         self._do.execute("/etc/init.d/proftpd restart")
 
         self._do.createdir("/opt/code")
-        self._do.createdir("/opt/jumpscale6")
+        self._do.createdir("/opt/jumpscale")
 
         def symlink(src,dest):
             try:
@@ -299,7 +299,7 @@ DefaultRoot                    ~
 
 
         symlink("/opt/code","/home/jumpscale/code")
-        symlink("/opt/jumpscale6","/home/jumpscale/jumpscale")
+        symlink("/opt/jumpscale","/home/jumpscale/jumpscale")
         symlink("/opt/jspackagesftp","/home/jumpscale/jspackages")
         symlink("/opt/jspackagesftp","/home/ftp/jspackages")
         symlink("/opt/jspackagesftp","/home/jspackages/jspackages")

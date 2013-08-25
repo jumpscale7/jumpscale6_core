@@ -14,7 +14,7 @@ j.application.shellconfig.interactive=True
 
 do=j.system.installtools
 
-j.application.start("jsinstallrepos",basedir="/opt/jumpscale6/",appdir="/opt/jumpscale6/apps/exampleapp/")
+j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
 
 print "REINSTALL JUMPSCALE ONTO OS."
 

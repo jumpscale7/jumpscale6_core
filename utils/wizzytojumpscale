@@ -1,6 +1,8 @@
 #!/bin/bash
 sed -i "s/from OpenWizzy import \*/from JumpScale import j/g" $1
 sed -i "s/from OpenWizzy import o/from JumpScale import j/g" $1
+sed -i "s/openwizzy6/jumpscale/g" $1
+sed -i "s/jumpscale6/jumpscale/g" $1
 sed -i "s/OpenWizzy/JumpScale/g" $1
 sed -i "s/o.system/j.system/g" $1
 sed -i "s/o.apps/j.apps/g" $1

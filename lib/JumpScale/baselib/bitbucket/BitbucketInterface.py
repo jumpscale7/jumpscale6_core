@@ -1,5 +1,5 @@
 from JumpScale import j
-o.application.shellconfig.interactive=True
+j.application.shellconfig.interactive=True
 class RepoList():
     pass
 

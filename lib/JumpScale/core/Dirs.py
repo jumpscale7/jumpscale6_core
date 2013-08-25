@@ -50,7 +50,7 @@ class Dirs(object):
         if iswindows or self.frozen:
             self.baseDir=curdir
         else:
-            self.baseDir = "/opt/jumpscale6" ##string
+            self.baseDir = "/opt/jumpscale" ##string
 
         self.baseDir=self.baseDir.replace("\\","/")
 
@@ -101,7 +101,7 @@ class Dirs(object):
         self.packageDir = os.path.join(self.varDir,"jspackages")
         self._createDir(self.packageDir)
 
-        # self.homeDir = pathToUnicode(os.path.join(home, ".owbase"))
+        # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
 
         self.pidDir = os.path.join(self.varDir,"log")   
         

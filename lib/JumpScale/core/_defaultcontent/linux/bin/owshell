@@ -1,6 +1,6 @@
 #!/bin/bash
 curdir=`pwd`
-QBASE=/opt/jumpscale6
+QBASE=/opt/jumpscale
 
 PATH=$QBASE:$QBASE/bin:$PATH
 

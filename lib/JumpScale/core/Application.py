@@ -74,7 +74,7 @@ class Application:
             self.config = j.core.hrd.getHRDTree(path=j.system.fs.joinPaths(j.dirs.cfgDir, "grid"))
 
 
-    def start(self,name=None,basedir="/opt/jumpscale6",appdir="."):
+    def start(self,name=None,basedir="/opt/jumpscale",appdir="."):
         '''Start the application
 
         You can only stop the application with return code 0 by calling

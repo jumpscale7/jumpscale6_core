@@ -35,21 +35,21 @@ class OWDevelTools:
             j.system.net.waitConnectionTest("127.0.0.1",9200,30)
 
         #start osis
-        path=j.system.fs.joinPaths("/opt/openwizzy6/apps","osis")
+        path=j.system.fs.joinPaths("/opt/jumpscale/apps","osis")
         cmd="cd %s;python osisServerStart.py"%path
         j.system.platform.screen.executeInScreen(name,"osis",cmd,wait=1)
 
         #start broker
-        pathb=j.system.fs.joinPaths("/opt/openwizzy6/apps","broker")
+        pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
         cmd="cd %s;python zbrokerStart.py"%pathb
         j.system.platform.screen.executeInScreen(name,"broker",cmd,wait=1)
 
         #start logger
-        path=j.system.fs.joinPaths("/opt/openwizzy6/apps","logger")
+        path=j.system.fs.joinPaths("/opt/jumpscale/apps","logger")
         cmd="cd %s;python loggerStart.py"%path
         j.system.platform.screen.executeInScreen(name,"logger",cmd,wait=1)
 
-        path=j.system.fs.joinPaths("/opt/openwizzy6/apps","broker")
+        path=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
         for worker in range(1,nrworkers+1):
             roles="system,worker.%s"%worker
             cmd="cd %s;python zworkerStart.py %s %s %s %s"%(path,"127.0.0.1",5556,worker,roles)
@@ -63,21 +63,21 @@ class OWDevelTools:
         name="owbackend"
         self.startBackendByobu(["ftpgw","portal"],name=name)
 
-        items=j.system.fs.listFilesInDir("/opt/openwizzy6/apps",True,filter="appserver.cfg")
+        items=j.system.fs.listFilesInDir("/opt/jumpscale/apps",True,filter="appserver.cfg")
         items=[item.split("/cfg")[0] for item in items]
-        items=[item.replace("/opt/openwizzy6/apps/","") for item in items]
+        items=[item.replace("/opt/jumpscale/apps/","") for item in items]
         items=[item for item in items if item.find("examples")==-1]
         items=[item for item in items if item.find("portalbase")==-1]
         if not path: #to enable startPortal to work non-interactively as well
             print "select which portal you would like to start."
             path=j.console.askChoice(items)
         if path==None:
-            raise RuntimeError("Could not find a portal, please copy a portan in /opt/openwizzy6/apps/")
-        cmd="cd /opt/openwizzy6/apps/%s;python start_appserver.py"%(path)
+            raise RuntimeError("Could not find a portal, please copy a portan in /opt/jumpscale/apps/")
+        cmd="cd /opt/jumpscale/apps/%s;python start_appserver.py"%(path)
         j.system.platform.screen.executeInScreen(name,"portal",cmd,wait=1)
 
         #start ftp
-        pathb=j.system.fs.joinPaths("/opt/openwizzy6/apps","portalftpgateway")
+        pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","portalftpgateway")
         cmd="cd %s;python ftpstart.py"%pathb
         j.system.platform.screen.executeInScreen(name,"ftpgw",cmd,wait=1)
 
