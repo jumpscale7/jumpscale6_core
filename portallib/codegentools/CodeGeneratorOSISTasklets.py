@@ -6,49 +6,49 @@ NOTGENSTR = "##DONOTGENERATE##"
 
 tasklets = {}
 tasklets["delete"] = """
-def main(o, params, args,actor, tags, tasklet):
+def main(j, params, args,actor, tags, tasklet):
     #delete
     actor.models.{modelname}.delete(args["guid"])
     return params,True
 
-def match(o, params, args,actor, tags, tasklet):
+def match(j, params, args,actor, tags, tasklet):
     return True
 """
 
 tasklets["get"] = """
-def main(o, params, args,actor, tags, tasklet): 
+def main(j, params, args,actor, tags, tasklet): 
     #get obj
     obj=actor.models.{modelname}.get(args["guid"])
     return params,obj
 
-def match(o, params, args,actor, tags, tasklet):
+def match(j, params, args,actor, tags, tasklet):
     return True
 """
 
 
 tasklets["set"] = """
-def main(o, params, args,actor, tags, tasklet):
+def main(j, params, args,actor, tags, tasklet):
     #create
     obj=actor.models.{modelname}.new()
     return params,obj
 
-def match(o, params, args,actor, tags, tasklet):
+def match(j, params, args,actor, tags, tasklet):
     return True
 """
 
 tasklets["find"] = """
-def main(o, i, params, service, tags, tasklet):
+def main(j, i, params, service, tags, tasklet):
     #find
     res=actor.models.{modelname}.find(args["query"])
     if len(res)>100:
         raise RuntimeError("TOO MANY RESULTS FOR QUERY, MAX 100 for {appname}.{actorname}.{modelname} for query:%s"%args["query"])
     return params,res
 
-def match(o, params, args,actor, tags, tasklet):
+def match(j, params, args,actor, tags, tasklet):
     return True
 """
 tasklets["list"] = """
-def main(o, params, args,actor, tags, tasklet):
+def main(j, params, args,actor, tags, tasklet):
     #list
     res=actor.models.{modelname}.list()
     if len(res)>100:
@@ -56,12 +56,12 @@ def main(o, params, args,actor, tags, tasklet):
     return params,res
 
 
-def match(o, params, args,actor, tags, tasklet):
+def match(j, params, args,actor, tags, tasklet):
     return True
 """
 
 tasklets["datatables"] = """
-def main(o, params, args,actor, tags, tasklet):
+def main(j, params, args,actor, tags, tasklet):
     #list
     from JumpScale.core.Shell import ipshellDebug,ipshell
     print "DEBUG NOW model datatables"
@@ -78,7 +78,7 @@ def main(o, params, args,actor, tags, tasklet):
         params.result=res
     return params
 
-def match(o, params, args,actor, tags, tasklet):
+def match(j, params, args,actor, tags, tasklet):
     return True
 """
 

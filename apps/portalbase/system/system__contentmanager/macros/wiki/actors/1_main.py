@@ -1,5 +1,5 @@
 
-def main(o, args, params, tags, tasklet):
+def main(j, args, params, tags, tasklet):
 
     doc = args.doc
     tags = args.tags
@@ -31,5 +31,5 @@ def main(o, args, params, tags, tasklet):
     return params
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True

@@ -1,5 +1,5 @@
 
-def main(o, arg, params,  tags, tasklet):
+def main(j, arg, params,  tags, tasklet):
     params.merge(arg)
     doc = params.doc
     space = params.paramsExtra['space']
@@ -23,5 +23,5 @@ def main(o, arg, params,  tags, tasklet):
     return params
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True

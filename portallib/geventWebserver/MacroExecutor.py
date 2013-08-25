@@ -230,6 +230,7 @@ class MacroExecutorWiki(MacroExecutorBase):
         a doc is a document in preprocessor phase
         """
         macro, tags, cmdstr = self.parseMacroStr(macrostr)
+        doc2 = None
         if self.taskletsgroup.hasGroup(macro):
             try:
                 result, doc2 = self.taskletsgroup.executeV2(groupname=macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,

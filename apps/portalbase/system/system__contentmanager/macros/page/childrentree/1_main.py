@@ -111,7 +111,7 @@ def format_dir_tree(dir_tree, space_name, bullets=False, tree=False, depth=1):
     return s.getvalue()
 
 
-def main(o, args, params, tags, tasklet):
+def main(j, args, params, tags, tasklet):
     doc = args.doc
     page = args.page
     params.result = page
@@ -167,5 +167,5 @@ def main(o, args, params, tags, tasklet):
     return params
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True

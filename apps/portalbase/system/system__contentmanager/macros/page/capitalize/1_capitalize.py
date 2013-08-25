@@ -1,5 +1,5 @@
 
-def main(o, args, params, *other_args):
+def main(j, args, params, *other_args):
     params.result = page = args.page
     page.addMessage(args.cmdstr.title())
     return params

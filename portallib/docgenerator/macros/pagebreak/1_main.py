@@ -1,5 +1,5 @@
 
-def main(o, i, params, service, tags, tasklet):
+def main(j, i, params, service, tags, tasklet):
 
     page = params.page
     tags = params.tags
@@ -9,5 +9,5 @@ def main(o, i, params, service, tags, tasklet):
     return params
 
 
-def match(o, i, params, service, tags, tasklet):
+def match(j, i, params, service, tags, tasklet):
     return True

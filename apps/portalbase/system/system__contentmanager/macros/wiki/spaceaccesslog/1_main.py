@@ -1,4 +1,4 @@
-def main(o, args, params,  tags, tasklet, *others):
+def main(j, args, params,  tags, tasklet, *others):
     params.merge(args)
     doc = params.doc
     tags = params.tags.getDict()
@@ -26,5 +26,5 @@ def main(o, args, params,  tags, tasklet, *others):
     return params
 
 
-def match(o, args, params, tags, tasklet):
+def match(j, args, params, tags, tasklet):
     return True
