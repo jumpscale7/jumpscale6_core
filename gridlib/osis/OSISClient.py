@@ -7,7 +7,7 @@ cl = j.core.zdaemon.getZDaemonClientClass()
 class OSISClient():
 
     def __init__(self, ipaddr, port=5544):
-        self.client = cl(ipaddr=ipaddr, port=5544)
+        self.client = cl(addr=ipaddr, port=5544, category="osis")
         self._init()
 
     def _init(self):
