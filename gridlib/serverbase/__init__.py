@@ -1,8 +1,7 @@
-from OpenWizzy import o
+from JumpScale import j
 
 
 from .ServerBaseFactory import ServerBaseFactory
 
-o.base.loader.makeAvailable(o, 'servers')
-o.servers.base = ServerBaseFactory()
-
+j.base.loader.makeAvailable(j, 'servers')
+j.servers.base = ServerBaseFactory()

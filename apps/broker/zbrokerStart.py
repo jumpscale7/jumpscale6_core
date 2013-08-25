@@ -1,11 +1,9 @@
-from OpenWizzy import o
-import OpenWizzy.grid
-import OpenWizzy.grid.osis
-o.application.appname = "zbroker"
-o.application.start()
+from JumpScale import j
+import JumpScale.grid
+import JumpScale.grid.osis
+j.application.appname = "zbroker"
+j.application.start()
 
-o.core.grid.startBroker()
+j.core.grid.startBroker()
 
-o.application.stop()
-
-
+j.application.stop()

@@ -6,18 +6,18 @@ import struct
 from gevent import Greenlet, Timeout
 from gevent.queue import Queue
 from gevent_zeromq import zmq
-from OpenWizzy.core.InitBase import *
-from zmo.core.error import ZMQError
+from JumpScale.core.InitBase import *
+from zmj.core.error import ZMQError
 import time
 
 #@todo do not use arakoon to pass information to the commandcenter, integrate with appserver6 to pass info like this (in other words let logserver3 work together in same process space as appserver 6)
 
 
 # IMPORT INFORMATION
-# ##################
+#
 
 # ZMQ::REQ
-# ########
+#
 # A socket of type ZMQ::REQ is used by a client to send requests to and
 # receive replies from a service. This socket type allows only an
 # alternating sequence of send(request) and subsequent recv(reply)
@@ -31,7 +31,7 @@ import time
 # discarded.
 
 # ZMQ::REP
-# ########
+#
 # A socket of type ZMQ::REP is used by a service to receive requests from and
 # send replies to a client. This socket type allows only an alternating sequence
 # of recv(request) and subsequent send(reply) calls. Each request received is
@@ -85,10 +85,10 @@ class MessageForwarder(object):
 
         if isSucces:
             self._log('Successfully forwarded message to %s in %d attempts'
-                % (self._address, attempts))
+                      % (self._address, attempts))
         else:
             self._log('Failed to forward message to %s in %d attemts'
-                % (self._address, attempts))
+                      % (self._address, attempts))
 
     @property
     def _connected(self):
@@ -117,8 +117,8 @@ class MessageForwarder(object):
         self._log('''\
 Failed to forward message to %(address)s in %(attempts)d attempt(s)'
 Retrying to forward message to %(address)s in %(interval)d seconds'''
-            % {'address': self._address, 'attempts': attempts,
-            'interval': interval})
+                  % {'address': self._address, 'attempts': attempts,
+                     'interval': interval})
 
     def __del__(self):
         self._disconnect()
@@ -126,14 +126,14 @@ Retrying to forward message to %(address)s in %(interval)d seconds'''
 
 class MessageServer(object):
 
-    FORWARD_MESSAGES_BATCH_SIZE = 100 #@todo queues have been removed this introduced completely different behaviour
+    FORWARD_MESSAGES_BATCH_SIZE = 100  # @todo queues have been removed this introduced completely different behaviour
 
     def __init__(self, address, storeLocally):
         self._address = 'tcp://%s' % address
         self._storeLocally = storeLocally
 
         self._socket = None
-        self._messages = Queue()   #@todo there were multiple queues for the 4 styles which is needed because different behaviour required
+        self._messages = Queue()  # @todo there were multiple queues for the 4 styles which is needed because different behaviour required
         self._stats = {
             'received': 0,
             'processed': 0,
@@ -142,16 +142,16 @@ class MessageServer(object):
         self._statsChanged = False
         self._categories = None
 
-        self.epoch=0
+        self.epoch = 0
 
         self.echo = False
-        self.forwarders = set()  
+        self.forwarders = set()
 
     def start(self):
         greenlet = Greenlet(self._start)
         greenlet.link_exception(self._logGreenletError)
 
-        TIMER=gevent.greenlet.Greenlet(self._timer)
+        TIMER = gevent.greenlet.Greenlet(self._timer)
         TIMER.start()
 
         # Start and wait until the log server stops (main greenlet).
@@ -185,17 +185,16 @@ class MessageServer(object):
         will remember time every sec
         """
         while True:
-            #self.epochbin=struct.pack("I",time.time())
-            self.epoch=time.time() 
+            # self.epochbin=struct.pack("I",time.time())
+            self.epoch = time.time()
             gevent.sleep(1)
-
 
     @property
     def isForwarding(self):
         return len(self.forwarders) > 0
 
-    @property 
-    def numberMessages(self):  #@todo why properties??? this makes it slower
+    @property
+    def numberMessages(self):  # @todo why properties??? this makes it slower
         return self._messages.qsize()
 
     def _forward(self, messages):
@@ -215,32 +214,32 @@ class MessageServer(object):
         self._log(greenlet.exception)
 
     def _processErrorMessage(self, message):
-        dtype,length,epoch,gid,nid,pid,data=o.core.messagehandler.unPackMessage(message)
-        eco=o.errorconditionhandler.getErrorConditionObject(data=o.tools.json.decode(data)) 
-        
-        content="source/id/level: %s/%s/%s\n" % (eco.getSource(),eco.id,eco.level)
-        content+="error: %s\n" % eco.errormessage        
+        dtype, length, epoch, gid, nid, pid, data = j.core.messagehandler.unPackMessage(message)
+        eco = j.errorconditationhandler.getErrorConditionObject(data=j.tools.json.decode(data))
+
+        content = "source/id/level: %s/%s/%s\n" % (eco.getSource(), eco.id, eco.level)
+        content += "error: %s\n" % eco.errormessage
         print content
-        
-        o.errorconditionhandler.db.store(eco)            
+
+        j.errorconditationhandler.db.store(eco)
 
     def _processLogMessage(self, message):
         if self.echo:
             self._log(message)
-            
+
         if self._storeLocally:
-            o.core.loghandler.save(message)
+            j.core.loghandler.save(message)
 
     def _processMessages(self):
         forwardMessages = None
-        
+
         while self.numberMessages > 0:
-            
+
             message = self._messages.get()
             messageType = struct.unpack('B', message[20])[0]
-            messageTypeId = int(messageType)        
-                        
-            message=o.core.messagehandler.modifyTimeInMessage(message,self.epoch)            
+            messageTypeId = int(messageType)
+
+            message = j.core.messagehandler.modifyTimeInMessage(message, self.epoch)
 
             if messageTypeId == 1:
                 self._processLogMessage(message)
@@ -259,12 +258,12 @@ class MessageServer(object):
             if self.isForwarding:
                 if not forwardMessages:
                     forwardMessages = list()
-                    
+
                 forwardMessages.append(message)
 
                 if len(forwardMessages) == self.FORWARD_MESSAGES_BATCH_SIZE \
-                    or self.numberMessages == 0:
-                    self._forward(forwardMessages) #@todo this should be the same code as sending a message to the locallogserver
+                        or self.numberMessages == 0:
+                    self._forward(forwardMessages)  # @todo this should be the same code as sending a message to the locallogserver
 
     def _processSignalMessage(self, message):
         raise NotImplementedError()
@@ -273,7 +272,7 @@ class MessageServer(object):
         raise NotImplementedError()
 
     def _receive(self):
-        #there were multiple queues, please re-introduce (why did we remove it?)
+        # there were multiple queues, please re-introduce (why did we remove it?)
         while True:
             request = self._socket.recv()
 
@@ -292,20 +291,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Starts the log server.')
 
     parser.add_argument('-a', '--address', default='127.0.0.1:7777',
-        dest='address', help='Address (ip and port) for this message server')
+                        dest='address', help='Address (ip and port) for this message server')
 
     parser.add_argument('-c', '--arakoon-client-name', dest='arakoonClientName',
-        help='Arakoon client name to store the categories to')
+                        help='Arakoon client name to store the categories to')
 
     parser.add_argument('-e', '--echo', action='store_true', dest='echo',
-        help='Print the log messages when processing them')
+                        help='Print the log messages when processing them')
 
     parser.add_argument('-s', '--store-locally', action='store_true',
-        dest='storeLocally', help='Store messages locally to disk')
+                        dest='storeLocally', help='Store messages locally to disk')
 
     parser.add_argument('-f', '--forward-addresses', default=[],
-        dest='forwardAddresses', nargs='*', help='Addresses (ip and port) to '
-            'forward the messages to')
+                        dest='forwardAddresses', nargs='*', help='Addresses (ip and port) to '
+                        'forward the messages to')
 
     args = parser.parse_args()
 
@@ -318,6 +317,6 @@ if __name__ == '__main__':
 
     if args.arakoonClientName:
         client = o.clients.arakoon.getClient(args.arakoonClientName)
-        o.core.loghandler.setArakoonClient(client)
+        j.core.loghandler.setArakoonClient(client)
 
     server.start()

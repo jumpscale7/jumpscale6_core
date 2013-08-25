@@ -1,6 +1,6 @@
-from OpenWizzy import o
+from JumpScale import j
 from .OSISFactory import OSISFactory
-import OpenWizzy.baselib.hrd
-import OpenWizzy.baselib.key_value_store
-o.base.loader.makeAvailable(o, 'core')
-o.core.osis = OSISFactory()
+import JumpScale.baselib.hrd
+import JumpScale.baselib.key_value_store
+j.base.loader.makeAvailable(j, 'core')
+j.core.osis = OSISFactory()

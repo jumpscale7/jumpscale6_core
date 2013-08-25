@@ -1,19 +1,21 @@
 # import socket
-from OpenWizzy import o
+from JumpScale import j
 
 
 class LogTargetElasticSearch(object):
+
     """
     Forwards incoming logRecords to elastic search
     attached to loghandler on openwizzy
     """
-    def __init__(self, serverip=None,esclient=None):
-        if esclient<>None:
+
+    def __init__(self, serverip=None, esclient=None):
+        if esclient <> None:
             self.connected = True
             self._serverip = serverip
             self.enabled = True
             self.name = "LogToES"
-            self.esclient=esclient
+            self.esclient = esclient
         else:
             self.connected = False
             if serverip == None:
@@ -27,11 +29,11 @@ class LogTargetElasticSearch(object):
         check status of target, if ok return True
         for std out always True
         """
-        if self._serverip<>None:
-            if o.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
+        if self._serverip <> None:
+            if j.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
                 return False
             self.esclient = o.clients.elasticsearch.get(self._serverip, 9200)
-            # o.logger.elasticsearchtarget=True
+            # j.logger.elasticsearchtarget=True
 
     def __str__(self):
         """ string representation of a LogTargetServer to ES"""
@@ -50,8 +52,8 @@ class LogTargetElasticSearch(object):
             self.esclient.index(index="clusterlog", doc_type="logrecord", ttl="14d", replication="async", doc=logobject.__dict__)
         except Exception, e:
             raise
-            print "Could not log to elasticsearch server, log:\n%s"%logobject
-            print "error was %s"%e
+            print "Could not log to elasticsearch server, log:\n%s" % logobject
+            print "error was %s" % e
 
     def close(self):
         """
@@ -61,9 +63,9 @@ class LogTargetElasticSearch(object):
     def logbatch(self, batch):
         docs = []
         for logobject in batch:
-            logobject.id = "%s_%s_%s_%s"%(logobject.gid, logobject.nodeid, logobject.appid, logobject.order)
+            logobject.id = "%s_%s_%s_%s" % (logobject.gid, logobject.nodeid, logobject.appid, logobject.order)
             docs.append(logobject.__dict__)
-        print "batch:%s"%len(docs)
+        print "batch:%s" % len(docs)
         self.esclient.bulk_index(index="clusterlog", doc_type="json", docs=docs, id_field="id")
 
     def list(self, categoryPrefix="", levelMin=0, levelMax=5, job=0, parentjob=0, private=False, nritems=500):
@@ -72,21 +74,21 @@ class LogTargetElasticSearch(object):
              'from': 0,
              'size': nritems,
              'sort': ['job', 'appid', 'order'],
-             'query': { 'bool': 
-                 {'must': [{'prefix': {'logrecord..category': categoryPrefix}},
-                           {'range': {'logrecord.level': {'from': '%s' % levelMin, 'to': '%s' % levelMax}}},
-                           {'term': {'logrecord.job': '%s' % job}},
-                           {'term': {'logrecord.parentjob': '%s' % parentjob}},
-                          ],
-                         'must_not': [],
-                         'should': []
-                        } 
-                      }
-            }
+             'query': {'bool':
+                       {'must': [{'prefix': {'logrecord..category': categoryPrefix}},
+                                 {'range': {'logrecord.level': {'from': '%s' % levelMin, 'to': '%s' % levelMax}}},
+                                 {'term': {'logrecord.job': '%s' % job}},
+                                 {'term': {'logrecord.parentjob': '%s' % parentjob}},
+                                 ],
+                           'must_not': [],
+                           'should': []
+                        }
+                       }
+             }
         if private:
             Q['query']['bool']['must'].append({'term': {'json.private': '1'}})
         result = self.esclient.search(query=Q)
         for item in result["hits"]["hits"]:
-            log = o.logger.getLogObjectFromDict(item["_source"])
+            log = j.logger.getLogObjectFromDict(item["_source"])
             result2.append(log)
         return result2

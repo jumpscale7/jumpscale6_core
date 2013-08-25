@@ -4,15 +4,16 @@ import zmq
 from zmq import *
 
 # imported with different names as to not have the star import try to to clobber (when building with cython)
-from zmo.core.context import Context as _original_Context
-from zmo.core.socket import Socket as _original_Socket
+from zmj.core.context import Context as _original_Context
+from zmj.core.socket import Socket as _original_Socket
 
 from gevent.event import AsyncResult
 from gevent.hub import get_hub
 
 
 class _Context(_original_Context):
-    """Replacement for :class:`zmo.core.context.Context`
+
+    """Replacement for :class:`zmj.core.context.Context`
 
     Ensures that the greened Socket below is used in calls to `socket`.
     """
@@ -20,7 +21,7 @@ class _Context(_original_Context):
     def socket(self, socket_type):
         """Overridden method to ensure that the green version of socket is used
 
-        Behaves the same as :meth:`zmo.core.context.Context.socket`, but ensures
+        Behaves the same as :meth:`zmj.core.context.Context.socket`, but ensures
         that a :class:`Socket` with all of its send and recv methods set to be
         non-blocking is returned
         """
@@ -28,8 +29,10 @@ class _Context(_original_Context):
             raise ZMQError(ENOTSUP)
         return _Socket(self, socket_type)
 
+
 class _Socket(_original_Socket):
-    """Green version of :class:`zmo.core.socket.Socket`
+
+    """Green version of :class:`zmj.core.socket.Socket`
 
     The following methods are overridden:
 
@@ -38,13 +41,13 @@ class _Socket(_original_Socket):
 
     To ensure that the ``zmq.NOBLOCK`` flag is set and that sending or recieving
     is deferred to the hub if a ``zmq.EAGAIN`` (retry) error is raised.
-    
+
     The `__state_changed` method is triggered when the zmq.FD for the socket is
     marked as readable and triggers the necessary read and write events (which
     are waited for in the recv and send methods).
 
     Some double underscore prefixes are used to minimize pollution of
-    :class:`zmo.core.socket.Socket`'s namespace.
+    :class:`zmj.core.socket.Socket`'s namespace.
     """
 
     def __init__(self, context, socket_type):
@@ -64,7 +67,7 @@ class _Socket(_original_Socket):
         self.__readable = AsyncResult()
         self.__writable = AsyncResult()
         try:
-            self._state_event = get_hub().loop.io(self.getsockopt(FD), 1) # read state watcher
+            self._state_event = get_hub().loop.io(self.getsockopt(FD), 1)  # read state watcher
             self._state_event.start(self.__state_changed)
         except AttributeError:
             # for gevent<1.0 compatibility
@@ -102,7 +105,7 @@ class _Socket(_original_Socket):
             return super(_Socket, self).send(data, flags, copy, track)
         # ensure the zmq.NOBLOCK flag is part of flags
         flags |= zmq.NOBLOCK
-        while True: # Attempt to complete this operation indefinitely, blocking the current greenlet
+        while True:  # Attempt to complete this operation indefinitely, blocking the current greenlet
             try:
                 # attempt the actual call
                 return super(_Socket, self).send(data, flags, copy, track)

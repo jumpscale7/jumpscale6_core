@@ -1,7 +1,7 @@
 import simplejson
 
 from time import mktime, strptime
-from OpenWizzy import o
+from JumpScale import j
 
 
 class LogHandlerDB:
@@ -12,8 +12,8 @@ class LogHandlerDB:
     ARAKOON_CATEGORIES_KEY = 'log.category.entries'
 
     def __init__(self, baseLogDir=None):
-        self.baseLogDir = baseLogDir or o.system.fs.joinPaths(o.dirs.varDir,
-            'messagehandler', 'logdb')
+        self.baseLogDir = baseLogDir or j.system.fs.joinPaths(j.dirs.varDir,
+                                                              'messagehandler', 'lj.db')
 
         self._fileHandlers = {}
         self.currentPeriod = 0
@@ -79,12 +79,12 @@ class LogHandlerDB:
         self._arakoonClient.set(self.ARAKOON_CATEGORIES_KEY, categoriesString)
 
     def save(self, logmessage):
-        messages = o.core.messagehandler.unPackMessageSeries(logmessage)
-                                        
+        messages = j.core.messagehandler.unPackMessageSeries(logmessage)
+
         for _, _, epoch, gid, nid, pid, data in messages:
 
-            if epoch==0:
-                epoch=o.core.messagehandler.epoch
+            if epoch == 0:
+                epoch = j.core.messagehandler.epoch
             category = data.split(',')[1]
 
             if category not in self._knownCategories:
@@ -106,10 +106,10 @@ class LogHandlerDB:
 
             logDir = self.pm_getLogDir(gid, nid, pid)
 
-            if not o.system.fs.exists(logDir):
-                o.system.fs.createDir(logDir)
+            if not j.system.fs.exists(logDir):
+                j.system.fs.createDir(logDir)
 
-            logFile = o.system.fs.joinPaths(logDir, str(period) + '.logdb')
+            logFile = j.system.fs.joinPaths(logDir, str(period) + '.lj.db')
 
             if logFile not in self._fileHandlers[period]:
                 self._fileHandlers[period][logFile] = open(logFile, 'ab')
@@ -125,20 +125,20 @@ class LogHandlerDB:
         if gid != None and pid != None and nid != None:
             logDir = self.pm_getLogDir(gid, nid, pid)
 
-            if o.system.fs.exists(logDir):
+            if j.system.fs.exists(logDir):
                 filteredLogDirs.add(logDir)
         elif gid == None and pid == None and nid == None:
-            return o.system.fs.listDirsInDir(self.baseLogDir)
+            return j.system.fs.listDirsInDir(self.baseLogDir)
         else:
-            logDirs = o.system.fs.listDirsInDir(self.baseLogDir)
+            logDirs = j.system.fs.listDirsInDir(self.baseLogDir)
 
             for logDir in logDirs:
-                logDirName = o.system.fs.getBaseName(logDir)
+                logDirName = j.system.fs.getBaseName(logDir)
                 gid2, nid2, pid2 = self._extractIdsFromLogDirName(logDirName)
 
                 if (gid == None or gid == gid2) \
                     and (nid == None or nid == nid2) \
-                    and (pid == None or pid == pid2):
+                        and (pid == None or pid == pid2):
                     filteredLogDirs.add(logDir)
 
         return filteredLogDirs
@@ -160,13 +160,13 @@ class LogHandlerDB:
         filteredLogFilePaths = set()
 
         for logDir in logDirs:
-            logFilePaths = o.system.fs.listFilesInDir(logDir)
+            logFilePaths = j.system.fs.listFilesInDir(logDir)
 
             for logFilePath in logFilePaths:
-                logFileName = o.system.fs.getBaseName(logFilePath)
+                logFileName = j.system.fs.getBaseName(logFilePath)
                 period = int(logFileName.split('.')[0])
                 periodInTimeWindow = self._periodInTimeWindow(period, fromEpoch,
-                    toEpoch)
+                                                              toEpoch)
 
                 if periodInTimeWindow:
                     filteredLogFilePaths.add(logFilePath)
@@ -186,7 +186,7 @@ class LogHandlerDB:
         logDirs = self._findLogDirsByIds(gid, nid, pid)
 
         return self._findInLogDirs(logDirs, fromDateTime, toDateTime,
-            categories, levels)
+                                   categories, levels)
 
     def findByIdCombinations(self, idCombinations=None, fromDateTime=None, toDateTime=None, categories=None, levels=None):
         idCombinations = idCombinations or list()
@@ -194,7 +194,7 @@ class LogHandlerDB:
         logDirs = self._findLogDirsByIdCombinations(idCombinations)
 
         return self._findInLogDirs(logDirs, fromDateTime, toDateTime,
-            categories, levels)
+                                   categories, levels)
 
     def _findInLogDirs(self, logDirs, fromDateTime=None, toDateTime=None, categories=None, levels=None):
         fromEpoch = self._transformDateTimeToEpoch(fromDateTime)
@@ -215,7 +215,7 @@ class LogHandlerDB:
                     logEntryIsValid = True
                 except RuntimeError:
                     logEntryIsValid = False
-                    o.logger.log('Couln\'t decode log entry "%s"' % logEntry)
+                    j.logger.log('Couln\'t decode log entry "%s"' % logEntry)
 
                 if logEntryIsValid:
                     timeOk = self._timeInTimeWindow(time, fromEpoch, toEpoch)
@@ -246,7 +246,7 @@ class LogHandlerDB:
 
     def pm_getLogDir(self, gid, nid, pid):
         logDirName = self.pm_getLogDirName(gid, nid, pid)
-        return o.system.fs.joinPaths(self.baseLogDir, logDirName)
+        return j.system.fs.joinPaths(self.baseLogDir, logDirName)
 
     def _encodeLogEntry(self, epoch, level, category, message):
         return [epoch, level, category, message].join(',')
@@ -269,7 +269,7 @@ class LogHandlerDB:
 
         if len(ids) != 3:
             raise RuntimeError('Couldn\'t extract ids from dir name %s'
-                % dirName)
+                               % dirName)
 
         gid = int(ids[0])
         nid = int(ids[1])

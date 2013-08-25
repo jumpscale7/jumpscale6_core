@@ -1,11 +1,10 @@
-from OpenWizzy import o
+from JumpScale import j
 
-import OpenWizzy.grid.gevent
-import OpenWizzy.baselib.key_value_store
-import OpenWizzy.baselib.serializers
+import JumpScale.grid.gevent
+import JumpScale.baselib.key_value_store
+import JumpScale.baselib.serializers
 
 from .ZDaemonFactory import ZDaemonFactory
 
-o.base.loader.makeAvailable(o, 'core')
-o.core.zdaemon = ZDaemonFactory()
-
+j.base.loader.makeAvailable(j, 'core')
+j.core.zdaemon = ZDaemonFactory()

@@ -1,29 +1,30 @@
 # import socket
-from OpenWizzy import o
+from JumpScale import j
 
 
 class LogTargetOSIS(object):
+
     """
     Forwards incoming logRecords to osis
     attached to loghandler on openwizzy
     """
+
     def __init__(self):
         self.name = "LogToOSIS"
-        from OpenWizzy.core.Shell import ipshellDebug,ipshell
+        from JumpScale.core.Shell import ipshellDebug, ipshell
         print "DEBUG NOW logtargetosis"
         ipshell()
-        
 
     def checkTarget(self):
         """
         check status of target, if ok return True
         for std out always True
         """
-        if self.serverip<>None:
-            if o.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
+        if self.serverip <> None:
+            if j.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
                 return False
             self.esclient = o.clients.elasticsearch.get(self._serverip, 9200)
-            # o.logger.elasticsearchtarget=True
+            # j.logger.elasticsearchtarget=True
 
     def __str__(self):
         """ string representation of a LogTargetServer to ES"""
@@ -40,8 +41,8 @@ class LogTargetOSIS(object):
         try:
             self.esclient.index(index="clusterlog", doc_type="logrecord", ttl="14d", replication="async", doc=logobject.toJson())
         except Exception, e:
-            print "Could not log to elasticsearch server, log:\n%s"%logobject
-            print "error was %s"%e
+            print "Could not log to elasticsearch server, log:\n%s" % logobject
+            print "error was %s" % e
 
     def close(self):
         """
@@ -49,13 +50,12 @@ class LogTargetOSIS(object):
         """
 
     def logbatch(self, batch):
-        from OpenWizzy.core.Shell import ipshellDebug,ipshell
+        from JumpScale.core.Shell import ipshellDebug, ipshell
         print "DEBUG NOW logbatch"
         ipshell()
-        
 
     def list(self, categoryPrefix="", levelMin=0, levelMax=5, job=0, parentjob=0, private=False, nritems=500):
-        from OpenWizzy.core.Shell import ipshellDebug,ipshell
+        from JumpScale.core.Shell import ipshellDebug, ipshell
         print "DEBUG NOW implement list using osisclient search functionality"
         ipshell()
         return result

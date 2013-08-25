@@ -2,13 +2,14 @@ import errno
 import signal
 import time
 
-from OpenWizzy import o
+from JumpScale import j
 from utils import printInDebugMode
 from server import MessageServer
 
+
 class MessageServerConfig(object):
 
-    def __init__(self, name, address=None, forwardAddresses=None,storeLocally=True):
+    def __init__(self, name, address=None, forwardAddresses=None, storeLocally=True):
         self._name = name
         address = address or '127.0.0.1:7777'
         self._address = self._completeAddress(address)
@@ -52,51 +53,51 @@ class MessageServerManager(object):
     _SCRIPT_FILE_NAME = 'server.py'
     _START_TIMEOUT = _STOP_TIMEOUT = 5  # Measurement in seconds.
 
-    def __init__(self, name, address=None, forwardAddresses=None, store=True,echo=False):
+    def __init__(self, name, address=None, forwardAddresses=None, store=True, echo=False):
         self._name = name
         self._address = address
         self.forwardAddresses = forwardAddresses
-        self.storeLocal= store
-        self.echo=False
+        self.storeLocal = store
+        self.echo = False
 
         pidFileName = 'message_server_%s.pid' % self._name
-        self._pidFile = o.system.fs.joinPaths(o.dirs.pidDir, pidFileName)
+        self._pidFile = j.system.fs.joinPaths(j.dirs.pidDir, pidFileName)
 
     @classmethod
     def createFromConfig(cls, config):
         return MessageServerManager(config.name, config.address,
-            config.forwardAddresses, config.storeLocally)
+                                    config.forwardAddresses, config.storeLocally)
 
     def getStartCommand(cls):
         return self._createStartCommand()
-    
-    def start(self, force=False,inprocess=False):
 
-        if inprocess:            
-            server = MessageServer(self._address, self.storeLocal, self._pidFile,self.echo)
-        
+    def start(self, force=False, inprocess=False):
+
+        if inprocess:
+            server = MessageServer(self._address, self.storeLocal, self._pidFile, self.echo)
+
             for address in self.forwardAddresses:
                 client = MessageServerClient(address)
                 server.forwardClients.add(client)
-        
-            server.start()        
+
+            server.start()
             return
-        
+
         if self.isRunning and not force:
             printInDebugMode('Cannot start message server, already running')
             return
 
         command = self._createStartCommand()
-        
+
         printInDebugMode('Starting message server with command: %s' % command)
 
-        o.system.process.runDaemon(command)
+        j.system.process.runDaemon(command)
 
         remainingSeconds = self._START_TIMEOUT
         time.sleep(5)
         while not self.isRunning:
             printInDebugMode('Waiting %d more seconds for message server to be'
-                ' started' % remainingSeconds)
+                             ' started' % remainingSeconds)
 
             time.sleep(1)
             remainingSeconds -= 1
@@ -120,13 +121,13 @@ class MessageServerManager(object):
 
         printInDebugMode('Stopping message server')
 
-        o.system.process.kill(pid, sig=stopSignal)
+        j.system.process.kill(pid, sig=stopSignal)
 
         remainingSeconds = self._STOP_TIMEOUT
 
         while self.isRunning:
             printInDebugMode('Waiting %d more seconds for message server to be'
-                ' stopped' % remainingSeconds)
+                             ' stopped' % remainingSeconds)
 
             time.sleep(1)
             remainingSeconds -= 1
@@ -134,7 +135,7 @@ class MessageServerManager(object):
             if not remainingSeconds:
                 raise RuntimeError('Failed to stop message server')
 
-        o.system.fs.remove(self._pidFile)
+        j.system.fs.remove(self._pidFile)
 
         printInDebugMode('Stopped message server')
 
@@ -148,12 +149,12 @@ class MessageServerManager(object):
         try:
             pid = self._getPidFromPidFile()
         except (IOError, ValueError), error:
-            o.logger.exception('Can\'t get pid from pid file (error: %s)'
-                % error)
+            j.logger.exception('Can\'t get pid from pid file (error: %s)'
+                               % error)
             return False
 
-        status = o.system.process.checkProcessForPid(pid,
-            self._SCRIPT_PROCESS_NAME)
+        status = j.system.process.checkProcessForPid(pid,
+                                                     self._SCRIPT_PROCESS_NAME)
 
         # status == 0 => server running
         # status == 1 => server not running
@@ -161,14 +162,14 @@ class MessageServerManager(object):
 
     @property
     def pid(self):
-        if o.system.fs.exists(self._pidFile):
+        if j.system.fs.exists(self._pidFile):
             return self._getPidFromPidFile()
         else:
             return None
 
     def _createStartCommand(self):
-        moduleFile = o.system.fs.getParent(__file__)
-        serverFile = o.system.fs.joinPaths(moduleFile, self._SCRIPT_FILE_NAME)
+        moduleFile = j.system.fs.getParent(__file__)
+        serverFile = j.system.fs.joinPaths(moduleFile, self._SCRIPT_FILE_NAME)
         pieces = [self._SCRIPT_PROCESS_NAME, serverFile]
 
         pieces.append('-a %s' % self._address)
@@ -186,21 +187,21 @@ class MessageServerManager(object):
 
     def _getPidFromPidFile(self, safe=False):
         try:
-            pidStr = o.system.fs.fileGetContents(self._pidFile)
+            pidStr = j.system.fs.fileGetContents(self._pidFile)
         except IOError, error:
             if error.errno == errno.ENOENT:
                 raise IOError('Could\'t get message server pid, pid file'
-                    ' doesn\'t exists')
+                              ' doesn\'t exists')
             else:
                 raise IOError('Could\'t get message server pid (error: %s)'
-                    % error)
+                              % error)
 
         try:
             pid = int(pidStr.strip())
         except ValueError, error:
             message = 'Could\'t get message server pid, invalid pid file' \
                 ' contents (error: %s)' % error
-            o.logger.log(message)
+            j.logger.log(message)
             raise ValueError(message)
 
         return pid
@@ -209,10 +210,10 @@ class MessageServerManager(object):
 class MessageServerManagerFactory(object):
 
     _CONFIG_EXTENSION = 'cfg'
-    _CONFIG_BASE_DIR = o.system.fs.joinPaths(o.dirs.cfgDir, 'messageserver')
+    _CONFIG_BASE_DIR = j.system.fs.joinPaths(j.dirs.cfgDir, 'messageserver')
 
     def create(self, name, address=None, forwardAddresses=None,
-        storeLocally=False):
+               storeLocally=False):
         '''
         Creates a new configuration and creates a new  message server manager
         instance from it.
@@ -235,10 +236,10 @@ class MessageServerManagerFactory(object):
 
         if name in self.list():
             raise RuntimeError('Couln\'t create server manager, name "%s"'
-                ' already in use' % name)
+                               ' already in use' % name)
 
         config = MessageServerConfig(name, address, forwardAddresses,
-            storeLocally)
+                                     storeLocally)
         self._storeConfig(config)
 
         return MessageServerManager.createFromConfig(config)
@@ -253,14 +254,14 @@ class MessageServerManagerFactory(object):
 
         if name not in self.list():
             raise RuntimeError('Couln\'t delete server manager, no'
-                ' configuration found for name %s' % name)
+                               ' configuration found for name %s' % name)
 
         config = self._loadConfig(name)
         server = MessageServerManager.createFromConfig(config)
 
         if server.isRunning:
             raise RuntimeError('Couln\'t delete management object, server'
-                ' still running')
+                               ' still running')
 
         self._deleteConfig(name)
 
@@ -278,7 +279,7 @@ class MessageServerManagerFactory(object):
 
         if name not in self.list():
             raise RuntimeError('Couln\'t get server manager, no configuration'
-                ' found for name %s' % name)
+                               ' found for name %s' % name)
 
         config = self._loadConfig(name)
 
@@ -292,18 +293,18 @@ class MessageServerManagerFactory(object):
         @rtype: set()
         '''
 
-        if not o.system.fs.exists(self._CONFIG_BASE_DIR):
+        if not j.system.fs.exists(self._CONFIG_BASE_DIR):
             return set()
 
         configFilter = '*.%s' % self._CONFIG_EXTENSION
-        configFiles = o.system.fs.listFilesInDir(self._CONFIG_BASE_DIR,
-            filter=configFilter)
+        configFiles = j.system.fs.listFilesInDir(self._CONFIG_BASE_DIR,
+                                                 filter=configFilter)
 
         names = set()
         extensionLength = len(self._CONFIG_EXTENSION) + 1
 
         for configFile in configFiles:
-            fileName = o.system.fs.getBaseName(configFile)
+            fileName = j.system.fs.getBaseName(configFile)
             fileName = fileName[:-extensionLength]
             names.add(fileName)
 
@@ -311,11 +312,11 @@ class MessageServerManagerFactory(object):
 
     def _deleteConfig(self, name):
         configPath = self._getConfigPath(name)
-        o.system.fs.remove(configPath)
+        j.system.fs.remove(configPath)
 
     def _loadConfig(self, name):
         iniConfigPath = self._getConfigPath(name)
-        iniConfig = o.tools.inifile.open(iniConfigPath)
+        iniConfig = j.tools.inifile.open(iniConfigPath)
 
         address = iniConfig.getValue('main', 'address')
 
@@ -330,15 +331,15 @@ class MessageServerManagerFactory(object):
         storeLocally = storeLocallyStr.lower() == 'true'
 
         return MessageServerConfig(name, address, forwardAddresses,
-            storeLocally)
+                                   storeLocally)
 
     def _getConfigPath(self, name):
         fileName = '%s.%s' % (name, self._CONFIG_EXTENSION)
-        return o.system.fs.joinPaths(self._CONFIG_BASE_DIR, fileName)
+        return j.system.fs.joinPaths(self._CONFIG_BASE_DIR, fileName)
 
     def _storeConfig(self, config):
         iniConfigPath = self._getConfigPath(config.name)
-        iniConfig = o.tools.inifile.new(iniConfigPath)
+        iniConfig = j.tools.inifile.new(iniConfigPath)
 
         iniConfig.addSection('main')
         iniConfig.setParam('main', 'address', config.address)

@@ -1,16 +1,15 @@
 
-def main(q,args,params,tags,tasklet):
-   
-	event=args["event"]
-	esclient=q.core.grid.esclient
+def main(q, args, params, tags, tasklet):
 
-	from pylabs.Shell import ipshellDebug,ipshell
-	print "DEBUG NOW elastic search store event"
-	ipshell()
+    event = args["event"]
+    esclient = q.core.grid.esclient
 
-	return params
+    from pylabs.Shell import ipshellDebug, ipshell
+    print "DEBUG NOW elastic search store event"
+    ipshell()
+
+    return params
 
 
-def match(q,args,params,tags,tasklet):
-    return False  
-
+def match(q, args, params, tags, tasklet):
+    return False

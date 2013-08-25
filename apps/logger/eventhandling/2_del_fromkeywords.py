@@ -1,15 +1,14 @@
 
-def main(q,args,params,tags,tasklet):
-   
-	ignore=['keyboardinterrupt']
-	for item in ignore:
-		if args["eco"].errormessage.find("item")<>-1:
-			params.stop=True
-			return params
+def main(q, args, params, tags, tasklet):
 
-	return params
+    ignore = ['keyboardinterrupt']
+    for item in ignore:
+        if args["eco"].errormessage.find("item") <> -1:
+            params.stop = True
+            return params
+
+    return params
 
 
-def match(q,args,params,tags,tasklet):
+def match(q, args, params, tags, tasklet):
     return True
-

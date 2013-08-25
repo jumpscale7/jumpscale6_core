@@ -1,11 +1,12 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from MasterObjects import *
 from Master import *
 
-class Empty():
-	pass
 
-o.core.master=Empty()
-o.core.master=MasterServerFactory()
-o.core.master.models=MasterObjectsFactory()
+class Empty():
+    pass
+
+j.core.master = Empty()
+j.core.master = MasterServerFactory()
+j.core.master.models = MasterObjectsFactory()

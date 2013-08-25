@@ -1,9 +1,9 @@
-from OpenWizzy import o
-import OpenWizzy.grid.osis
+from JumpScale import j
+import JumpScale.grid.osis
 
-o.application.appname = "osisserver"
-o.application.start()
+j.application.appname = "osisserver"
+j.application.start()
 
-o.core.osis.startDaemon(overwriteImplementation=False)
+j.core.osis.startDaemon(overwriteImplementation=False)
 
-o.application.stop()
+j.application.stop()

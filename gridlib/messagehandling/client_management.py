@@ -73,7 +73,7 @@ class MessageServerClient(object):
 
         if self._isConnected:
             printInDebugMode('Can\'t connect to %s, already connected'
-                % self._address)
+                             % self._address)
             return
 
         printInDebugMode('Connecting to %s' % self._address)
@@ -88,7 +88,7 @@ class MessageServerClient(object):
 
         if not self._isConnected:
             printInDebugMode('Can\'t disconnect from %s, already disconnected'
-                % self._address)
+                             % self._address)
             return
 
         printInDebugMode('Disconnecting from %s' % self._address)
@@ -128,17 +128,17 @@ class MessageServerClient(object):
                 printInDebugMode('''\
 Failed to send message to %(address)s in %(attempts)d attempt(s)'
 Retrying to send message to %(address)s in %(interval)d seconds'''
-            % {'address': self._address, 'attempts': attempt,
-            'interval': interval})
+                                 % {'address': self._address, 'attempts': attempt,
+                                    'interval': interval})
 
                 gevent.sleep(interval)
 
         if isSucces:
             printInDebugMode('Successfully sent message to %s in %d attempt(s)'
-                % (self._address, attempt))
+                             % (self._address, attempt))
         else:
             printInDebugMode('Failed to send message to %s in %d attempt(s)'
-                % (self._address, attempt))
+                             % (self._address, attempt))
 
         return isSucces
 
@@ -197,7 +197,7 @@ Retrying to send message to %(address)s in %(interval)d seconds'''
         except Exception, e:
             self._disconnect()
             printInDebugMode('Couldn\'t send message, unexpected exception'
-                ' while sending to server: %s' % e)
+                             ' while sending to server: %s' % e)
 
         result = None
 
@@ -209,12 +209,12 @@ Retrying to send message to %(address)s in %(interval)d seconds'''
         except Timeout, timeoutException:
             if timeoutException == timeout:
                 printInDebugMode('Couldn\'t send message, server response timed'
-                    ' out after %d seconds' % receiveTimeout)
+                                 ' out after %d seconds' % receiveTimeout)
 
             self._disconnect()
         except Exception, e:
             printInDebugMode('Couldn\'t send message, unexpected exception'
-                ' while receiving response from server: %s' % e)
+                             ' while receiving response from server: %s' % e)
             self._disconnect()
         finally:
             timeout.cancel()
@@ -232,6 +232,7 @@ Retrying to send message to %(address)s in %(interval)d seconds'''
 
 
 class MessageServerClientFactory(object):
+
     def get(self, address):
         '''
         Gets an message server client.

@@ -1,15 +1,15 @@
-from OpenWizzy import o
-# import OpenWizzy.grid
+from JumpScale import j
+# import JumpScale.grid
 # import zmq
 import gevent
 import gevent.monkey
 import zmq.green as zmq
 import time
 from gevent import queue as queue
-import OpenWizzy.baselib.serializers
+import JumpScale.baselib.serializers
 import inspect
 
-GeventLoop=o.core.gevent.getGeventLoopClass()
+GeventLoop = j.core.gevent.getGeventLoopClass()
 
 # class DaemonCMDS(object):
 #     def __init__(self, daemon):
@@ -26,45 +26,44 @@ GeventLoop=o.core.gevent.getGeventLoopClass()
 
 class ZDaemon(GeventLoop):
 
-    def __init__(self, port=4444,name="",nrCmdGreenlets=50,sslorg="",ssluser="",sslkeyvaluestor=None):
+    def __init__(self, port=4444, name="", nrCmdGreenlets=50, sslorg="", ssluser="", sslkeyvaluestor=None):
         gevent.monkey.patch_socket()
         GeventLoop.__init__(self)
 
-        self.name=name
+        self.name = name
 
-        if sslkeyvaluestor==None:
-            from OpenWizzy.baselib.ssl.SSL import SSL
-            sslkeyvaluestor=SSL().getSSLHandler(sslkeyvaluestor)    
+        if sslkeyvaluestor == None:
+            from JumpScale.baselib.ssl.SSL import SSL
+            sslkeyvaluestor = SSL().getSSLHandler(sslkeyvaluestor)
 
-        self.daemon=o.servers.base.getDaemon(name="unknown",sslorg="",ssluser="",sslkeyvaluestor=None)
+        self.daemon = j.servers.base.getDaemon(name="unknown", sslorg="", ssluser="", sslkeyvaluestor=None)
 
         # self.ports = [] #is for datachannel
         # self.sockets = {} #is for datachannel
         # self.watchdog = {}  # active ports are in this list
 
-        self.port=port
+        self.port = port
 
-        self.nrCmdGreenlets=nrCmdGreenlets
+        self.nrCmdGreenlets = nrCmdGreenlets
 
-        self.key=""
+        self.key = ""
 
-    def setCMDsInterface(self,cmdInterfaceClass,category=""):
-        self.daemon.setCMDsInterface(cmdInterfaceClass,category)
+    def setCMDsInterface(self, cmdInterfaceClass, category=""):
+        self.daemon.setCMDsInterface(cmdInterfaceClass, category)
 
     def repCmdServer(self):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
-            cmd,informat,returnformat,data,sessionid = cmdsocket.recv_multipart()
+            cmd, informat, returnformat, data, sessionid = cmdsocket.recv_multipart()
 
-            result = self.daemon.processRPCUnSerialized(cmd,informat,returnformat,data,sessionid)
+            result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, data, sessionid)
 
             cmdsocket.send_multipart(result)
 
     def cmdGreenlet(self):
-        #Nonblocking, e.g the osis server contains a broker which queus internally the messages.
+        # Nonblocking, e.g the osis server contains a broker which queus internally the messages.
         self.cmdcontext = zmq.Context()
-
 
         frontend = self.cmdcontext.socket(zmq.ROUTER)
         backend = self.cmdcontext.socket(zmq.DEALER)
@@ -82,34 +81,31 @@ class ZDaemon(GeventLoop):
         for i in range(self.nrCmdGreenlets):
             workers.append(gevent.spawn(self.repCmdServer))
 
-
-        o.logger.log("init cmd channel on port:%s for daemon:%s"%(self.port,self.name), level=5, category="zdaemon.init") 
-
+        j.logger.log("init cmd channel on port:%s for daemon:%s" % (self.port, self.name), level=5, category="zdaemon.init")
 
         while True:
             socks = dict(poller.poll())
             if socks.get(frontend) == zmq.POLLIN:
-                parts=frontend.recv_multipart()
-                parts.append(parts[0]) #add session id at end
-                backend.send_multipart([parts[0]]+parts)
+                parts = frontend.recv_multipart()
+                parts.append(parts[0])  # add session id at end
+                backend.send_multipart([parts[0]] + parts)
 
             if socks.get(backend) == zmq.POLLIN:
                 parts = backend.recv_multipart()
-                frontend.send_multipart( parts[1:]) #@todo dont understand why I need to remove first part of parts?
+                frontend.send_multipart(parts[1:])  # @todo dont understand why I need to remove first part of parts?
 
-
-    def start(self,mainloop=None):
+    def start(self, mainloop=None):
         self.schedule("cmdGreenlet", self.cmdGreenlet)
         self.startClock()
 
         print "start"
-        if mainloop<>None:
+        if mainloop <> None:
             mainloop()
         else:
             while True:
                 gevent.sleep(100)
 
-    ##UNFINISHED CODE FOR DATACHANNEL (still duplicate code inside) ################################
+    # UNFINISHED CODE FOR DATACHANNEL (still duplicate code inside) ################################
 
     # def datachannelStart(self):
     #     self.schedule("returok", self.datachannelReturnok)
@@ -140,7 +136,7 @@ class ZDaemon(GeventLoop):
     #     """
     #     while True:
     #         self.socket.send(str(self.counter))
-    #         #print "send"
+    # print "send"
     #         gevent.sleep(5)
 
     # def getfreeportAndSchedule(self, name, method, **args):
@@ -163,12 +159,12 @@ class ZDaemon(GeventLoop):
     #             return found
     #         gevent.sleep(0.01)
 
-    #     o.errorconditionhandler.raiseOperationalCritical(msgpub="Cannot open port nr %s for client daemon."%found,
+    #     j.errorconditationhandler.raiseOperationalCritical(msgpub="Cannot open port nr %s for client daemon."%found,
     #                                                      message="", category="grid.startup", die=False, tags="")
     #     return 0
 
     # def watchdogCheck(self):
-    #     # ports without activity are closed
+    # ports without activity are closed
     #     while True:
     #         gevent.sleep(100)
     #         for port in self.ports:
@@ -193,7 +189,7 @@ class ZDaemon(GeventLoop):
     # def watchdogReset(self):
     #     while True:
     #         gevent.sleep(10)
-    #         self.watchdog = {}  # reset watchdog table
+    # self.watchdog = {}  # reset watchdog table
 
 
-    # ###############################################################
+    #

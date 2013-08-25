@@ -1,20 +1,20 @@
-from OpenWizzy import o
-import OpenWizzy.grid
+from JumpScale import j
+import JumpScale.grid
 import time
 
-o.application.appname = "testlogger"
-o.application.start()
+j.application.appname = "testlogger"
+j.application.start()
 
-o.logger.addLogTargetElasticSearch()
+j.logger.addLogTargetElasticSearch()
 
-nr=10000
-start=time.time()
-print "start perftest for %s"%nr
+nr = 10000
+start = time.time()
+print "start perftest for %s" % nr
 for i in range(nr):
-    o.logger.log(message="this is a log message, with id %s"%i, level=5, category='my.category')
+    j.logger.log(message="this is a log message, with id %s" % i, level=5, category='my.category')
 
-stop=time.time()
-nritems=nr/(stop-start)
-print "nritems per sec:%s"%nritems
+stop = time.time()
+nritems = nr / (stop - start)
+print "nritems per sec:%s" % nritems
 
-o.application.stop()
+j.application.stop()

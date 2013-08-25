@@ -1,33 +1,34 @@
-from OpenWizzy import o
+from JumpScale import j
 
 
-o.application.appname = "osisclient"
-o.application.start()
+j.application.appname = "osisclient"
+j.application.start()
 
-client=o.core.osis.getClient()
-#getNameIDsInfo
+client = j.core.osis.getClient()
+# getNameIDsInfo
 
 # eco=q.errorconditionhandler.getErrorConditionObject(msg="this is error",msgpub="pubmessage",category="a.cat")
 # client.set("system","errorcondition",eco,key=eco.guid)
 # print client.get("system","errorcondition",eco.guid)
 
+
 def testSet():
     for i in range(10):
-        obj=o.core.grid.zobjects.getZNodeObject(name="test%s"%i)
-        key,new,changed=client.set("system","znode",obj)
+        obj = j.core.grid.zobjects.getZNodeObject(name="test%s" % i)
+        key, new, changed = client.set("system", "znode", obj)
 
-    obj=client.get("system","znode",key)
+    obj = client.get("system", "znode", key)
 
     print obj
 
 # namespacename=client.createNamespace(name="broker_",forCoreObjects=True,incrementName=True)
 client.listNamespaces()
 
-from pylabs.Shell import ipshellDebug,ipshell
+from pylabs.Shell import ipshellDebug, ipshell
 print "DEBUG NOW mainosisclient"
 ipshell()
 
-o.application.stop()
+j.application.stop()
 
 #@todo (P2) create test suite on znode (auto tests)
 #@todo (P2) patch pyelasticsearch to work well in gevent so it does not block (monkey patching of socket)

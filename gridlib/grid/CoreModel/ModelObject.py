@@ -2,9 +2,9 @@ import struct
 
 
 class ModelObject():
-    def __init__(self, ddict={}):
-        self.__dict__=ddict
 
+    def __init__(self, ddict={}):
+        self.__dict__ = ddict
 
     def getCategory(self):
         return self.category
@@ -31,7 +31,7 @@ class ModelObject():
 
     def getIDs(self):
         if self.guid:
-            return struct.unpack("<HHH",self.guid)
+            return struct.unpack("<HHH", self.guid)
         else:
             return None
 
@@ -43,8 +43,7 @@ class ModelObject():
 
     def getMessage(self):
         #[$objecttype,$objectversion,guid,$object=data]
-        return [13,1,self.guid,self.__dict__]
+        return [13, 1, self.guid, self.__dict__]
 
     def getSerializable(self):
         return self.__dict__.copy()
-

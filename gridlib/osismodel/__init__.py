@@ -1,6 +1,5 @@
-from OpenWizzy import o
-import OpenWizzy.baselib.code
+from JumpScale import j
+import JumpScale.baselib.code
 from .OSIS import OSIS
-o.base.loader.makeAvailable(o, 'core')
-o.core.osismodel = OSIS()
-
+j.base.loader.makeAvailable(j, 'core')
+j.core.osismodel = OSIS()

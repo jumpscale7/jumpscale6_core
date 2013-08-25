@@ -1,28 +1,28 @@
-from OpenWizzy import o
-import OpenWizzy.grid.grid
+from JumpScale import j
+import JumpScale.grid.grid
 
 import time
 import gevent
 import sys
 
-o.application.appname = "brokertest"
-o.application.start()
+j.application.appname = "brokertest"
+j.application.start()
 
-o.core.grid.init()
+j.core.grid.init()
 
-def test(name,color):
-    o.logger.log("this is test log of a job", level=3, category="a.cat")
+
+def test(name, color):
+    j.logger.log("this is test log of a job", level=3, category="a.cat")
     # raise RuntimeError("testerror")
-    return name+" "+color
+    return name + " " + color
 
-client=o.core.grid.getZWorkerClient(ipaddr="127.0.0.1")
+client = j.core.grid.getZWorkerClient(ipaddr="127.0.0.1")
 
-result1=client.do(test,name="hallo",color="red",executorrole="worker.1")
+result1 = client.do(test, name="hallo", color="red", executorrole="worker.1")
 for i in range(10):
-    result2=client.do(test,name="hallo",color="red",executorrole="*")
+    result2 = client.do(test, name="hallo", color="red", executorrole="*")
 
-print "agent1 executed%s"%result1
+print "agent1 executed%s" % result1
 
 
-
-o.application.stop()
+j.application.stop()

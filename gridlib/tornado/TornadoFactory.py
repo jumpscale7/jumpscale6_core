@@ -1,12 +1,12 @@
-from OpenWizzy import o
+from JumpScale import j
 
 
 class TornadoFactory():
 
-    def getServer(self,port,sslorg=None,ssluser=None,sslkeyvaluestor=None):
-        """        
+    def getServer(self, port, sslorg=None, ssluser=None, sslkeyvaluestor=None):
+        """
         HOW TO USE:
-        daemon=o.servers.tornado.getServer(port=4444)
+        daemon=j.servers.tornado.getServer(port=4444)
 
         class MyCommands():
             def __init__(self,daemon):
@@ -25,17 +25,15 @@ class TornadoFactory():
 
         """
         from .TornadoServer import TornadoServer
-        return TornadoServer('',port, ssluser=ssluser, sslorg=sslorg, sslkeyvaluestor=sslkeyvaluestor)
+        return TornadoServer('', port, ssluser=ssluser, sslorg=sslorg, sslkeyvaluestor=sslkeyvaluestor)
 
-    def getClient(self,addr,port,category="core",org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
+    def getClient(self, addr, port, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[]):
         from .TornadoClient import TornadoClient
-        return TornadoClient(addr=addr,port=port,category=category,org=org,user=user,passwd=passwd,ssl=ssl,roles=roles)
+        return TornadoClient(addr=addr, port=port, category=category, org=org, user=user, passwd=passwd, ssl=ssl, roles=roles)
 
-    def initSSL4Server(self,organization,serveruser,sslkeyvaluestor=None):
+    def initSSL4Server(self, organization, serveruser, sslkeyvaluestor=None):
         """
         use this to init your ssl keys for the server (they can be used over all transports)
         """
-        import OpenWizzy.grid.serverbase
-        o.servers.base.initSSL4Server(organization,serveruser,sslkeyvaluestor)        
-
-
+        import JumpScale.grid.serverbase
+        j.servers.base.initSSL4Server(organization, serveruser, sslkeyvaluestor)

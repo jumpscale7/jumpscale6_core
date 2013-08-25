@@ -1,7 +1,7 @@
 
-from OpenWizzy import o
+from JumpScale import j
 
-o.base.loader.makeAvailable(o, 'core')
+j.base.loader.makeAvailable(j, 'core')
 
 from . import grid
 from . import zdaemon

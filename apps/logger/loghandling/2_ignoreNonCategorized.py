@@ -1,11 +1,11 @@
 
-def main(q,args,params,tags,tasklet):
-   
-	if args.logobj.category=="":
-		params.stop=True
+def main(q, args, params, tags, tasklet):
 
-	return params
+    if args.logobj.category == "":
+        params.stop = True
 
-def match(q,args,params,tags,tasklet):
+    return params
+
+
+def match(q, args, params, tags, tasklet):
     return True
-

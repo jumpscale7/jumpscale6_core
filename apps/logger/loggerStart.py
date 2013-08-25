@@ -1,13 +1,12 @@
-from OpenWizzy import o
-import OpenWizzy.grid.grid
-import OpenWizzy.grid.osis
+from JumpScale import j
+import JumpScale.grid.grid
+import JumpScale.grid.osis
 
-o.application.appname = "logger"
-o.application.start()
-
-
-
-o.core.grid.startLocalLogger()
+j.application.appname = "logger"
+j.application.start()
 
 
-o.application.stop()
+j.core.grid.startLocalLogger()
+
+
+j.application.stop()

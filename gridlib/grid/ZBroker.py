@@ -1,10 +1,10 @@
 #
-##  Paranoid Pirate queue
+# Paranoid Pirate queue
 #
 #   Author: Daniel Lundin <dln(at)eintr(dot)org>
 #   Author: Kristof Incubaid BVBA Belgium
 #
-from OpenWizzy import o
+from JumpScale import j
 
 import time
 import copy
@@ -16,19 +16,21 @@ from ..gevent.GeventLoop import GeventLoop
 from BrokerMainActions import BrokerMainActions
 
 from ..zdaemon.ZDaemon import ZDaemon
-import OpenWizzy.grid.grid
+import JumpScale.grid.grid
 
-ujson = o.db.serializers.getSerializerType('j')
+ujson = j.db.serializers.getSerializerType('j')
+
 
 class ZBroker(ZDaemon):
+
     def __init__(self):
-        ZDaemon.__init__(self,port=5554)
-        self.workers = {}#key = worker.id = process.id (process id of worker which is unique) also called workerid, value is the set of roles
+        ZDaemon.__init__(self, port=5554)
+        self.workers = {}  # key = worker.id = process.id (process id of worker which is unique) also called workerid, value is the set of roles
         self.role2workers = {}
         self.role2workersAvailable = {}
         self.activeJobs = {}
 
-        self.actions={}
+        self.actions = {}
 
         self.addCMDsInterface(BrokerMainActions)
 
@@ -55,10 +57,10 @@ class ZBroker(ZDaemon):
 
         self.heartbeat_at = time.time() + self.HEARTBEAT_INTERVAL
 
-        if o.core.grid.id==None:
-            raise RuntimeError("Could not find grid id at o.core.grid.id, means grid not configured?")
+        if j.core.grid.id == None:
+            raise RuntimeError("Could not find grid id at j.core.grid.id, means grid not configured?")
 
-    def registerRole4NewWorker(self, workerid, rolestr):        
+    def registerRole4NewWorker(self, workerid, rolestr):
         rolestr = str(rolestr).lower()
         if rolestr not in self.role2workers:
             self.role2workers[rolestr] = []
@@ -73,36 +75,36 @@ class ZBroker(ZDaemon):
 
     def start(self):
 
-        o.logger.consoleloglevel=7
+        j.logger.consoleloglevel = 7
 
-        port=o.core.grid.config.getInt("broker.osis.port")
-        ip=o.core.grid.config.get("broker.osis.ip")
-        nsid=o.core.grid.config.getInt("broker.id")
-        
-        osisclient=o.core.osis.getClient(ip,port)
-        if nsid==0:
-            nsname,nsid=osisclient.createNamespace(name="broker_",template="coreobjects", incrementName=True)
-            o.core.grid.config.set("broker.id",nsid)
+        port = j.core.grid.config.getInt("broker.osis.port")
+        ip = j.core.grid.config.get("broker.osis.ip")
+        nsid = j.core.grid.config.getInt("broker.id")
+
+        osisclient = j.core.osis.getClient(ip, port)
+        if nsid == 0:
+            nsname, nsid = osisclient.createNamespace(name="broker_", template="coreobjects", incrementName=True)
+            j.core.grid.config.set("broker.id", nsid)
         else:
-            if not osisclient.existsNamespace("broker_%s"%nsid):
-                #namespace does not exist yet on server
-                nsname,nsid=osisclient.createNamespace(name="broker_",template="coreobjects", incrementName=True,nsid=nsid)
-                o.core.grid.config.set("broker.id",nsid)
+            if not osisclient.existsNamespace("broker_%s" % nsid):
+                # namespace does not exist yet on server
+                nsname, nsid = osisclient.createNamespace(name="broker_", template="coreobjects", incrementName=True, nsid=nsid)
+                j.core.grid.config.set("broker.id", nsid)
 
-        self.id=nsid
+        self.id = nsid
 
-        self.osis_node=o.core.osis.getClientForCategory("broker_%s"%nsid,"node",ip,port)
-        # self.osis_job=o.core.osis.getClientForCategory("broker_%s"%nsid,"job",ip,port)
-        self.osis_process=o.core.osis.getClientForCategory("broker_%s"%nsid,"process",ip,port)
-        self.osis_application=o.core.osis.getClientForCategory("broker_%s"%nsid,"applicationtype",ip,port)
-        self.osis_action=o.core.osis.getClientForCategory("broker_%s"%nsid,"action",ip,port)
+        self.osis_node = j.core.osis.getClientForCategory("broker_%s" % nsid, "node", ip, port)
+        # self.osis_job=j.core.osis.getClientForCategory("broker_%s"%nsid,"job",ip,port)
+        self.osis_process = j.core.osis.getClientForCategory("broker_%s" % nsid, "process", ip, port)
+        self.osis_application = j.core.osis.getClientForCategory("broker_%s" % nsid, "applicationtype", ip, port)
+        self.osis_action = j.core.osis.getClientForCategory("broker_%s" % nsid, "action", ip, port)
 
-        o.core.grid.init(broker=self) #makes sure we dont connect over ip
+        j.core.grid.init(broker=self)  # makes sure we dont connect over ip
 
         self.schedule("cmdGreenlet", self.cmdGreenlet)
         self.startClock()
 
-        o.logger.log("broker started", level=3, category="grid.broker")        
+        j.logger.log("broker started", level=3, category="grid.broker")
 
         while True:
             # if self.hasWorkers() > 0:
@@ -114,13 +116,13 @@ class ZBroker(ZDaemon):
 
             socks = dict(poller.poll(500000))  # wait for 5 seconds
 
-            ##############
+            #
             # Handle worker activity on backend
             if socks.get(self.backend) == zmq.POLLIN:
                 # print "activity on backend (workers)"
 
                 frames = self.backend.recv_multipart()
-                
+
                 if not frames:
                     break
 
@@ -132,7 +134,7 @@ class ZBroker(ZDaemon):
                 else:
                     # print "reply from worker:%s"%msg
                     # msg here is what returns from worker
-                    
+
                     job = ujson.loads(msg[1])
 
                     if job["parent"] == 0:
@@ -140,7 +142,7 @@ class ZBroker(ZDaemon):
                         self.frontend.send_multipart([msg[0], "", msg[1]])
                     else:
                         # keep track of other parts which need to come
-                        from OpenWizzy.core.Shell import ipshell
+                        from JumpScale.core.Shell import ipshell
                         print "DEBUG NOW other parts"
                         ipshell()
 
@@ -156,22 +158,21 @@ class ZBroker(ZDaemon):
                         self.backend.send_multipart(msg)
                     self.heartbeat_at = self.now + self.HEARTBEAT_INTERVAL
 
-            ##############
+            #
             # receive job from client
             if socks.get(self.frontend) == zmq.POLLIN:
                 # print "activity on frontend (client)"
                 frames = self.frontend.recv_multipart()
                 if not frames:
                     break
-                data = frames[2]  #is serialized job
+                data = frames[2]  # is serialized job
                 try:
                     job = ujson.loads(data)
                 except:
-                    raise RuntimeError("Could not decode msg,%s"%data)
+                    raise RuntimeError("Could not decode msg,%s" % data)
                 self.processJob(job, client=frames[0])
 
     def processJob(self, job, client):
-
 
         role = str(job["executorrole"])
 
@@ -179,25 +180,23 @@ class ZBroker(ZDaemon):
             workers = self.workers.keys()
         else:
             if self.role2workersAvailable.has_key(role):
-                workers=self.role2workersAvailable[role]
+                workers = self.role2workersAvailable[role]
             else:
-                workers=[]
+                workers = []
 
-
-        if len(workers)==1:
-            worker=workers[0]
-        elif len(workers)==0:
-            #could not find workers to execute jog
-            job["state"]="workernotfound"
-            job["result"]="could not find worker to execute work, no workers known which comply to role"
+        if len(workers) == 1:
+            worker = workers[0]
+        elif len(workers) == 0:
+            # could not find workers to execute jog
+            job["state"] = "workernotfound"
+            job["result"] = "could not find worker to execute work, no workers known which comply to role"
             self.frontend.send_multipart([str(client), "", ujson.dumps(job)])
             return
         else:
-            workerid=o.base.idgenerator.generateRandomInt(0,len(workers)-1)
-            worker=workers[workerid]
+            workerid = j.base.idgenerator.generateRandomInt(0, len(workers) - 1)
+            worker = workers[workerid]
 
         job["wpid"] = worker
         self.activeJobs[job["guid"]] = job
 
         self.backend.send_multipart([str(worker), str(client), ujson.dumps(job)])
-

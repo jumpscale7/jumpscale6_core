@@ -1,62 +1,63 @@
-from OpenWizzy import o
+from JumpScale import j
 
 from Daemon import Daemon
 import time
 import struct
 
+
 class ServerBaseFactory():
 
-    def getDaemon(self, name="unknown",sslorg=None,ssluser=None,sslkeyvaluestor=None):
+    def getDaemon(self, name="unknown", sslorg=None, ssluser=None, sslkeyvaluestor=None):
         """
 
         is the basis for every daemon we create which can be exposed over e.g. zmq or sockets or http
 
 
-        daemon=o.servers.base.getDaemon()
+        daemon=j.servers.base.getDaemon()
 
         class MyCommands():
             def __init__(self,daemon):
                 self.daemon=daemon
 
             #session always needs to be there
-		    def pingcmd(self,session=session):
-		        return "pong"
+                    def pingcmd(self,session=session):
+                        return "pong"
 
-		    def echo(self,msg="",session=session):
-		        return msg
+                    def echo(self,msg="",session=session):
+                        return msg
 
         daemon.setCMDsInterface(MyCommands,category="optional")  #pass as class not as object !!! chose category if only 1 then can leave ""
 
         #now you need to pass this to a protocol server, its not usable by itself
 
         """
-        
-        zd=Daemon(name=name)
+
+        zd = Daemon(name=name)
         if ssluser:
-            from OpenWizzy.baselib.ssl.SSL import SSL
-            zd.ssluser=ssluser
-            zd.sslorg=sslorg
-            zd.keystor=SSL().getSSLHandler(sslkeyvaluestor)
+            from JumpScale.baselib.ssl.SSL import SSL
+            zd.ssluser = ssluser
+            zd.sslorg = sslorg
+            zd.keystor = SSL().getSSLHandler(sslkeyvaluestor)
             try:
                 zd.keystor.getPrivKey(sslorg, ssluser)
             except:
                 zd.keystor.createKeyPair(sslorg, ssluser)
         else:
-            zd.keystor=None
-            zd.ssluser=None
-            zd.sslorg=None
+            zd.keystor = None
+            zd.ssluser = None
+            zd.sslorg = None
         return zd
 
-    def initSSL4Server(self,organization,serveruser,sslkeyvaluestor=None):
-        from OpenWizzy.baselib.ssl.SSL import SSL
-        ks=SSL().getSSLHandler(sslkeyvaluestor)
+    def initSSL4Server(self, organization, serveruser, sslkeyvaluestor=None):
+        from JumpScale.baselib.ssl.SSL import SSL
+        ks = SSL().getSSLHandler(sslkeyvaluestor)
         ks.createKeyPair(organization, serveruser)
 
     def getDaemonClientClass(self):
         """
         example usage, see example for server at self.getDaemon (implement transport still)
 
-        DaemonClientClass=o.servers.base.getDaemonClientClass()
+        DaemonClientClass=j.servers.base.getDaemonClientClass()
 
         myClient(DaemonClientClass):
             def __init__(self,ipaddr="127.0.0.1",port=5555,org="myorg",user="root",passwd="1234",ssl=False,roles=[]):
@@ -88,43 +89,41 @@ class ServerBaseFactory():
 
         """
         from DaemonClient import DaemonClient
-        return DaemonClient  
+        return DaemonClient
 
-    def _serializeBinSend(self,category,cmd,data,sendformat,returnformat,sessionid):
-        lencategory=len(category)
-        lencmd=len(cmd)
-        lendata=len(data)
-        lenreturnformat=len(returnformat)
-        lensendformat=len(sendformat)
-        lensessionid=len(sessionid)
-        return struct.pack("<IIIIII",lencategory,lencmd,lendata,lensendformat,lenreturnformat,lensessionid)+category+cmd+data+sendformat+returnformat+sessionid
+    def _serializeBinSend(self, category, cmd, data, sendformat, returnformat, sessionid):
+        lencategory = len(category)
+        lencmd = len(cmd)
+        lendata = len(data)
+        lenreturnformat = len(returnformat)
+        lensendformat = len(sendformat)
+        lensessionid = len(sessionid)
+        return struct.pack("<IIIIII", lencategory, lencmd, lendata, lensendformat, lenreturnformat, lensessionid) + category + cmd + data + sendformat + returnformat + sessionid
 
-    def _unserializeBinSend(self,data):
+    def _unserializeBinSend(self, data):
         """
         return cmd,data,sendformat,returnformat,sessionid
         """
         fformat = "<IIIIII"
         size = struct.calcsize(fformat)
-        datasizes=struct.unpack(fformat,data[0:size])
+        datasizes = struct.unpack(fformat, data[0:size])
         data = data[size:]
         for size in datasizes:
             res = data[0:size]
             data = data[size:]
             yield res
 
-    def _serializeBinReturn(self,resultcode,returnformat,result):
-        lendata=len(result)
-        if resultcode==None:
-            resultcode=0
-        resultcode=int(resultcode)
-        lenreturnformat=len(returnformat)
-        return struct.pack("<III",resultcode,lenreturnformat,lendata)+returnformat+result
+    def _serializeBinReturn(self, resultcode, returnformat, result):
+        lendata = len(result)
+        if resultcode == None:
+            resultcode = 0
+        resultcode = int(resultcode)
+        lenreturnformat = len(returnformat)
+        return struct.pack("<III", resultcode, lenreturnformat, lendata) + returnformat + result
 
-    def _unserializeBinReturn(self,data):
+    def _unserializeBinReturn(self, data):
         """
         return resultcode,returnformat,result
         """
-        resultcode,lenreturnformat,lendata=struct.unpack("<III",str(data[0:12]))
-        return (resultcode,data[12:lenreturnformat+12],data[lenreturnformat+12:])
-
-
+        resultcode, lenreturnformat, lendata = struct.unpack("<III", str(data[0:12]))
+        return (resultcode, data[12:lenreturnformat + 12], data[lenreturnformat + 12:])

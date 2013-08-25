@@ -1,8 +1,8 @@
-from OpenWizzy import o
-from OpenWizzy.core.baseclasses import BaseEnumeration
+from JumpScale import j
+from JumpScale.core.baseclasses import BaseEnumeration
 
 
-IN_DEBUG_MODE = o.application.shellconfig.debug
+IN_DEBUG_MODE = j.application.shellconfig.debug
 
 
 def printInDebugMode(message):
@@ -13,11 +13,12 @@ def printInDebugMode(message):
     @type message: str
     '''
 
-    #if IN_DEBUG_MODE:
+    # if IN_DEBUG_MODE:
     print(message)
 
 if hasattr(q, 'enumerators') and not hasattr(o.enumerators, 'UjumbeMessageType'):
     class MessageServerMessageType(BaseEnumeration):
+
         def __cmp__(self, other):
             return cmp(int(self), int(other))
 

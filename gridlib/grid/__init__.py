@@ -1,4 +1,4 @@
-from OpenWizzy import o
+from JumpScale import j
 from .GridFactory import GridFactory
-o.base.loader.makeAvailable(o, 'core')
-o.core.grid = GridFactory()
+j.base.loader.makeAvailable(j, 'core')
+j.core.grid = GridFactory()

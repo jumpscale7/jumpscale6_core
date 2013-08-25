@@ -1,8 +1,7 @@
-from OpenWizzy import o
+from JumpScale import j
 
 
-from .QSocketServer import QSocketServer,QSocketServerFactory
+from .QSocketServer import QSocketServer, QSocketServerFactory
 
-o.base.loader.makeAvailable(o, 'core')
-o.system.socketserver = QSocketServerFactory()
-
+j.base.loader.makeAvailable(j, 'core')
+j.system.socketserver = QSocketServerFactory()

@@ -19,14 +19,15 @@ before any blocking operation and the ØMQ file descriptor is polled internally
 to trigger needed events.
 """
 
-import gevent_zeromo.core as zmq
+import gevent_zeromj.core as zmq
 zmq.Context = zmq._Context
 zmq.Socket = zmq._Socket
+
 
 def monkey_patch(test_suite=False):
     """
     Monkey patches `zmq.Context` and `zmq.Socket`
-    
+
     If test_suite is True, the pyzmq test suite will be patched for
     compatibility as well.
     """

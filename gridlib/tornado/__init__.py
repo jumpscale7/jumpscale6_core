@@ -1,8 +1,7 @@
-from OpenWizzy import o
+from JumpScale import j
 
 
 from .TornadoFactory import TornadoFactory
 
-o.base.loader.makeAvailable(o, 'servers')
-o.servers.tornado = TornadoFactory()
-
+j.base.loader.makeAvailable(j, 'servers')
+j.servers.tornado = TornadoFactory()

@@ -1,24 +1,24 @@
-from OpenWizzy import o
+from JumpScale import j
 import zmq.green as zmq
 import inspect
-ujson = o.db.serializers.getSerializerType('j')
+ujson = j.db.serializers.getSerializerType('j')
 from ..zdaemon.ZDaemonClient import ZDaemonClient
 
 
 class ZWorkerClient():
-    def __init__(self,ipaddr="localhost", retry=True):
-        #client to talk with broker over standard zdaemon communication channel
-        self.brokerclient=ZDaemonClient(ipaddr=ipaddr,port=5554)
 
-        self.serverEndpoint = "tcp://%s:5555"%ipaddr
-        self.requestTimeout = 100*1000  # 100 sec
+    def __init__(self, ipaddr="localhost", retry=True):
+        # client to talk with broker over standard zdaemon communication channel
+        self.brokerclient = ZDaemonClient(ipaddr=ipaddr, port=5554)
+
+        self.serverEndpoint = "tcp://%s:5555" % ipaddr
+        self.requestTimeout = 100 * 1000  # 100 sec
 
         self.actions = {}
 
         self.retry = retry
 
         self.init()
-
 
     def init(self):
 
@@ -27,18 +27,18 @@ class ZWorkerClient():
         self.log("Connecting to zserver", "zmq.client")
         self.socket = self.context.socket(zmq.REQ)
 
-        self.log("zclient connects to %s"%(self.serverEndpoint), "zmq.client")
+        self.log("zclient connects to %s" % (self.serverEndpoint), "zmq.client")
         self.socket.connect(self.serverEndpoint)
 
-        self.log("ZMQ client got as clientid: %s" % str(o.application.whoAmI), level=8, category="master.start")
+        self.log("ZMQ client got as clientid: %s" % str(j.application.whoAmI), level=8, category="master.start")
 
-        self.socket.setsockopt(zmq.IDENTITY, o.application.getWhoAmiStr())
+        self.socket.setsockopt(zmq.IDENTITY, j.application.getWhoAmiStr())
 
         self.poll = zmq.Poller()
         self.poll.register(self.socket, zmq.POLLIN)
 
     def log(self, msg, category="", level=4):
-        o.logger.log(msg, level=level, category=category)
+        j.logger.log(msg, level=level, category=category)
         # print msg
 
     def close(self):
@@ -78,17 +78,17 @@ class ZWorkerClient():
             if socks.get(self.socket) == zmq.POLLIN:
                 return self.socket.recv()
             else:
-                o.errorconditionhandler.raiseOperationalCritical(message="", category="",
-                                                                 msgpub="could not communicate with server on %s"%self.serverEndpoint, die=True, tags="")
+                j.errorconditationhandler.raiseOperationalCritical(message="", category="",
+                                                                   msgpub="could not communicate with server on %s" % self.serverEndpoint, die=True, tags="")
 
     def getjobid(self):
-        result=self.send()
+        result = self.send()
 
     def registerAction(self, action):
         """
         register action with broker if not done yet
         """
-        ukey=action.getUniqueKey()
+        ukey = action.getUniqueKey()
         if ukey in self.actions:
             return self.actions[ukey]
         else:
@@ -99,7 +99,7 @@ class ZWorkerClient():
             return action
 
     def do(self, jfunction, jname="", executorrole="*", jcategory="", jerrordescr="", jrecoverydescr="", jmaxtime=0,
-           jwait=True, masterid=0,parentid=0,allworkers=True, **args):
+           jwait=True, masterid=0, parentid=0, allworkers=True, **args):
         """
         @param allworkers if False then only one of the workers need to reply and execute the work (is of the role specified)
         """
@@ -107,44 +107,44 @@ class ZWorkerClient():
         source = inspect.getsource(jfunction)
         filepath = inspect.getabsfile(jfunction)
 
-        if jcategory == "" or jname=="":
+        if jcategory == "" or jname == "":
             methodname = source.split("\n")[0].split("def")[1].split("(")[0].strip()
             source = source.replace(methodname, "jfunc")
-            jcategory = "method.%s"%methodname
+            jcategory = "method.%s" % methodname
 
-            if jname=="":
-                jname=methodname
+            if jname == "":
+                jname = methodname
 
-        action=o.core.grid.zobjects.getZActionObject(name=jname,
-                         code=source, path=filepath,
-                         category=jcategory, errordescr=jerrordescr,
-                         recoverydescr=jrecoverydescr, maxtime=jmaxtime)
+        action = j.core.grid.zobjects.getZActionObject(name=jname,
+                                                       code=source, path=filepath,
+                                                       category=jcategory, errordescr=jerrordescr,
+                                                       recoverydescr=jrecoverydescr, maxtime=jmaxtime)
 
         action = self.registerAction(action)
 
-        job = o.core.grid.zobjects.getZJobObject(executorrole=executorrole, actionid=action.id, args=args,jidmaster=masterid,jidparent=parentid,allworkers=allworkers)
-        
-        returnjob = self.send(ujson.dumps(job.__dict__))
-        returnjob=ujson.loads(returnjob)
-        job = o.core.grid.zobjects.getZJobObject(ddict=returnjob)
+        job = j.core.grid.zobjects.getZJobObject(
+            executorrole=executorrole, actionid=action.id, args=args, jidmaster=masterid, jidparent=parentid, allworkers=allworkers)
 
-        if job.state=="workernotfound":
-            o.errorconditionhandler.raiseOperationalCritical(msgpub="Could not find worker to execute work.",message="work not executed was: %s"%job,category="worker.execute",die=True,tags="jobguid:%s"%job.guid)
-        elif job.state=="error":
-            msg="Error in worker execution of %s. Job guid was:%s.\nError was:%s."%(jname,job.guid,job.errordescr)
-            o.errorconditionhandler.raiseBug(message=msg,category="worker.client",tags="jobguid:%s"%job.guid)
-        elif job.state=="ok":
+        returnjob = self.send(ujson.dumps(job.__dict__))
+        returnjob = ujson.loads(returnjob)
+        job = j.core.grid.zobjects.getZJobObject(ddict=returnjob)
+
+        if job.state == "workernotfound":
+            j.errorconditationhandler.raiseOperationalCritical(
+                msgpub="Could not find worker to execute work.", message="work not executed was: %s" % job, category="worker.execute", die=True, tags="jobguid:%s" % job.guid)
+        elif job.state == "error":
+            msg = "Error in worker execution of %s. Job guid was:%s.\nError was:%s." % (jname, job.guid, job.errordescr)
+            j.errorconditationhandler.raiseBug(message=msg, category="worker.client", tags="jobguid:%s" % job.guid)
+        elif job.state == "ok":
             return job.result
         else:
-            o.errorconditionhandler.raiseBug(message="job state unknown",category="worker.client")
-            
+            j.errorconditationhandler.raiseBug(message="job state unknown", category="worker.client")
 
-    def registerWorker(self,obj,roles,instance,identity):
-        return self.brokerclient.sendcmd("registerWorker",obj=obj.__dict__,roles=roles,instance=instance,identity=identity)
+    def registerWorker(self, obj, roles, instance, identity):
+        return self.brokerclient.sendcmd("registerWorker", obj=obj.__dict__, roles=roles, instance=instance, identity=identity)
 
     def getactivejobs(self):
         return self.brokerclient.sendcmd("getactivejobs")
 
     def ping(self):
         return self.brokerclient.sendcmd("ping")
-

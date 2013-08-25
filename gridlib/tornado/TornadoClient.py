@@ -1,23 +1,24 @@
-from OpenWizzy import o
+from JumpScale import j
 
-import OpenWizzy.grid.serverbase
-DaemonClienClass=o.servers.base.getDaemonClientClass()
-
+import JumpScale.grid.serverbase
+DaemonClienClass = j.servers.base.getDaemonClientClass()
 
 
 try:
     import requests
 except:
-    o.system.installtools.execute("pip install requests")
+    j.system.installtools.execute("pip install requests")
     import requests
 
+
 class TornadoClient(DaemonClienClass):
-    def __init__(self,addr="localhost",port=9999,category="core", org="myorg",user="root",passwd="passwd",ssl=False,roles=[]):
 
-        self.timeout=60
-        self.url="http://%s:%s/rpc/"%(addr,port)
-        super(TornadoClient, self).__init__(category=category,org=org,user=user,passwd=passwd,ssl=ssl,roles=roles,defaultSerialization="m", introspect=True)
+    def __init__(self, addr="localhost", port=9999, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[]):
 
+        self.timeout = 60
+        self.url = "http://%s:%s/rpc/" % (addr, port)
+        super(TornadoClient, self).__init__(category=category, org=org, user=user,
+                                            passwd=passwd, ssl=ssl, roles=roles, defaultSerialization="m", introspect=True)
 
     def _connect(self):
         """
@@ -31,8 +32,7 @@ class TornadoClient(DaemonClienClass):
         """
         pass
 
-
-    def _sendMsg(self,category,cmd,data,sendformat="",returnformat=""):
+    def _sendMsg(self, category, cmd, data, sendformat="", returnformat=""):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -46,9 +46,6 @@ class TornadoClient(DaemonClienClass):
         """
 
         headers = {'content-type': 'application/raw'}
-        data2=o.servers.base._serializeBinSend(category,cmd,data,sendformat,returnformat,self._id)
+        data2 = j.servers.base._serializeBinSend(category, cmd, data, sendformat, returnformat, self._id)
         r = requests.post(self.url, data=data2, headers=headers)
-        return o.servers.base._unserializeBinReturn(r.content)
-
-
-
+        return j.servers.base._unserializeBinReturn(r.content)
