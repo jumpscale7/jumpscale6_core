@@ -4,6 +4,7 @@ sed -i "s/from OpenWizzy import o/from JumpScale import j/g" $1
 sed -i "s/openwizzy6/jumpscale/g" $1
 sed -i "s/jumpscale6/jumpscale/g" $1
 sed -i "s/OpenWizzy/JumpScale/g" $1
+sed -i "s/openwizzy/jumpscale/g" $1
 sed -i "s/o\.system/j\.system/g" $1
 sed -i "s/o\.apps/j\.apps/g" $1
 sed -i "s/o\.tools/j\.tools/g" $1
@@ -27,4 +28,12 @@ sed -i "s/o.enumerators/j.enumerators/g" $1
 sed -i "s/o.code/j.code/g" $1
 sed -i "s/o.html/j.html/g" $1
 sed -i "s/o.dfsio/j.dfsio/g" $1
-
+sed -i "s/o.qp/j.qp/g" $1
+sed -i "s/o.remote/j.remote/g" $1
+sed -i "s/o.develtools/j.develtools/g" $1
+sed -i "s/o.packages/j.packages/g" $1
+sed -i "s/o.owpackagetools/j.owpackagetools/g" $1
+sed -i "s/o.gui/j.gui/g" $1
+sed -i "s/o.cmdtools/j.cmdtools/g" $1
+sed -i "s/o.cloud/j.cloud/g" $1
+sed -i "s/o.transaction/j.transaction/g" $1

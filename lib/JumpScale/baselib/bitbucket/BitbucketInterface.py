@@ -10,7 +10,7 @@ class Account():
     def getRepo(self,reponame=""):
         if reponame=="":
             reponames= self.mercurialClients.keys()
-            reponame=o.console.askChoice(reponames,"Choose Repo",True)     
+            reponame=j.console.askChoice(reponames,"Choose Repo",True)     
         if self.mercurialClients.has_key(reponame):
             return self.mercurialClients[reponame]
         else:
@@ -21,7 +21,7 @@ class Account():
             reponames= self.mercurialClients.keys()
         if reponames==[]:
             reponamesAll= self.mercurialClients.keys()
-            reponames=o.console.askChoiceMultiple(reponamesAll,"Choose Repos",True)     
+            reponames=j.console.askChoiceMultiple(reponamesAll,"Choose Repos",True)     
         return reponames
 
         
@@ -34,7 +34,7 @@ class Account():
         """
         reponames=self._repoSelect(reponames,allRepos=all) 
         if pull==None:
-            pull=o.console.askYesNo("Do you want to pull first?")
+            pull=j.console.askYesNo("Do you want to pull first?")
         for reponame in reponames:
             self._push(reponame,message=message,commit=commit,addremove=addremove,checkIgnore=checkIgnore,pull=pull)
 
@@ -77,7 +77,7 @@ class BitbucketInterface():
         try:
             self.init()
         except:
-            o.console.echo("Cannot dynamically load the bitbucket instances, please call i.bitbucket.init()\n")
+            j.console.echo("Cannot dynamically load the bitbucket instances, please call i.bitbucket.init()\n")
             
     def getRepo(self,accountname="",reponame=""):
         account=self.getAccount(accountname)
@@ -89,7 +89,7 @@ class BitbucketInterface():
             if len(accounts)==1:
                 accountname=accounts[0]
             else:
-                accountname=o.console.askChoice(o.clients.bitbucket.config.list(),"Choose Bitbucket Account",True)
+                accountname=j.console.askChoice(o.clients.bitbucket.config.list(),"Choose Bitbucket Account",True)
         if not self.__dict__.has_key(accountname):
             return self._populate1account(accountname)
         else:
