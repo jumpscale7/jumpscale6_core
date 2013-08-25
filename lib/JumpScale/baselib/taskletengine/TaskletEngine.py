@@ -44,14 +44,14 @@ class Tasklet:
         else:
             if not j.core.params.isParams(params):
                 raise RuntimeError("Params need to be a params object, cannot execute tasklet: %s" % self.path)
-        if not hasattr(self.module, 'match') or self.module.match(q, i, params, service, tags, self):
+        if not hasattr(self.module, 'match') or self.module.match(j, i, params, service, tags, self):
             params = self.module.main(q, i, params, service, tags, self)
         return params
 
     def checkExecuteV2(self, args, params, tags):
         try:
-            if not hasattr(self.module, 'match') or self.module.match(o, args, params, tags, self):
-                params = self.module.main(o, args, params, tags, self)
+            if not hasattr(self.module, 'match') or self.module.match(j, args, params, tags, self):
+                params = self.module.main(j, args, params, tags, self)
         except:
             print self.module
             import traceback
@@ -66,8 +66,8 @@ class Tasklet:
 
         args = j.core.params.get(args)
 
-        if not hasattr(self.module, 'match') or self.module.match(o, args, params, actor, tags, self):
-            params = self.module.main(o, args, params, actor, tags, self)
+        if not hasattr(self.module, 'match') or self.module.match(j, args, params, actor, tags, self):
+            params = self.module.main(j, args, params, actor, tags, self)
 
         return params
 
@@ -217,7 +217,7 @@ class TaskletEngine():
             if params.get('stop') is True:
                 return params.result
             if params.get('skipstep') is not True:
-                params = tasklet.checkExecute(o, i, params, service, tags)
+                params = tasklet.checkExecute(j, i, params, service, tags)
 
         return params
 
