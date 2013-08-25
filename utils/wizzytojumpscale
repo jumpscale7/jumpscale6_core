@@ -25,6 +25,6 @@ sed -i "s/o.web/j.web/g" $1
 sed -i "s/o.console/j.console/g" $1
 sed -i "s/o.enumerators/j.enumerators/g" $1
 sed -i "s/o.code/j.code/g" $1
-sed -i "s/o.clients/j.clients/g" $1
 sed -i "s/o.html/j.html/g" $1
+sed -i "s/o.dfsio/j.dfsio/g" $1
 
