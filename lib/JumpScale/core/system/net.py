@@ -179,7 +179,7 @@ class SystemNet:
                     params += ":%s" % proxypassword
                 params += "@"
             params += proxyserver
-            if pymonkey.j.system.platformtype.isUnix():
+            if j.system.platformtype.isUnix():
                 os.environ['http_proxy'] = proxyserver
             proxy_support = urllib2.ProxyHandler()
             opener = urllib2.build_opener(proxy_support)
@@ -190,7 +190,6 @@ class SystemNet:
         Works only for Linux/Solaris systems
         @param up: only returning nics which or up
         """
-        niclist = []
         regex = ''
         output = ''
         if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
@@ -402,8 +401,8 @@ class SystemNet:
             netmaskhex = match.group('netmask')
             broadcast = match.group('broadcast')
             mask =""
-            for j in range(4):
-                mask += str(int(netmaskhex[j*2:j*2+2], 16)) + "."
+            for i in range(4):
+                mask += str(int(netmaskhex[i*2:i*2+2], 16)) + "."
             return [[ip , mask[:-1], broadcast]]
         elif j.system.platformtype.isWindows():
             import wmi

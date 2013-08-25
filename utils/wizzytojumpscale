@@ -17,4 +17,5 @@ sed -i "s/\.\.base\.loader\.makeAvailable(o/j\.base\.loader\.makeAvailable(j/g" 
 sed -i "s/o\.base/j\.base/g" $1
 sed -i "s/o\.logger/j\.logger/g" $1
 sed -i "s/o\.servers/j\.servers/g" $1
+sed -i "s/o\.clients/j\.clients/g" $1
 sed -i "s/o\.errorconditionhandler/j\.errorconditationhandler/g" $1
