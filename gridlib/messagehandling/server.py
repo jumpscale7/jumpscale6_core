@@ -233,7 +233,7 @@ pid file: %s''' % (self._address, storeLocallyStr, addressesStr, self._pid, self
             if message != 'ping':
 
                 messageType = j.core.messagehandler.getMessageType(message)
-                MessageServerMessageType = o.enumerators.MessageServerMessageType
+                MessageServerMessageType = j.enumerators.MessageServerMessageType
                 if messageType == 1:
                     self.logQueue.put(message)
                 elif messageType == 2:

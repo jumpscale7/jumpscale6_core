@@ -16,7 +16,7 @@ def printInDebugMode(message):
     # if IN_DEBUG_MODE:
     print(message)
 
-if hasattr(q, 'enumerators') and not hasattr(o.enumerators, 'UjumbeMessageType'):
+if hasattr(j, 'enumerators') and not hasattr(j.enumerators, 'UjumbeMessageType'):
     class MessageServerMessageType(BaseEnumeration):
 
         def __cmp__(self, other):

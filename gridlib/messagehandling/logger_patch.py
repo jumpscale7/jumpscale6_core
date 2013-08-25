@@ -98,7 +98,7 @@ class LoggerPatch(object):
         if level <= j.logger.maxlevel:
             logMessage = ','.join([str(level), category, message])
             packedData = j.core.messagehandler.packMessage(
-                o.enumerators.MessageServerMessageType.LOG.level, logMessage)
+                j.enumerators.MessageServerMessageType.LOG.level, logMessage)
 
             self._messageServerClient.send(packedData)
 

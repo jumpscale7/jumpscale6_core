@@ -8,7 +8,7 @@ class OSIS:
     """
 
     def __init__(self):
-        self.dict2object = o.code.dict2pymodelobject  # was dict2object
+        self.dict2object = j.code.dict2pymodelobject  # was dict2object
         self.osisInstances = {}
 
     def get(self, appname, actorname, modelname, modelClass=None, db=None, index=False, indexer=None):
