@@ -1,5 +1,5 @@
 
-def main(o, args, params, actor, tags, tasklet):
+def main(j, args, params, actor, tags, tasklet):
     params.result = None
 
     path3 = j.system.fs.joinPaths(params.path, params.dirname + ".wiki")
@@ -12,5 +12,5 @@ def main(o, args, params, actor, tags, tasklet):
     return params
 
 
-def match(o, args, params, actor, tags, tasklet):
+def match(j, args, params, actor, tags, tasklet):
     return True

@@ -1,5 +1,5 @@
 
-def main(o, args, params, actor, tags, tasklet):
+def main(j, args, params, actor, tags, tasklet):
     # create 3 types of macro dirs inside
     j.system.fs.createDir(j.system.fs.joinPaths(params.path, "wiki"))
     j.system.fs.createDir(j.system.fs.joinPaths(params.path, "preprocess"))
@@ -8,5 +8,5 @@ def main(o, args, params, actor, tags, tasklet):
     return params
 
 
-def match(o, args, params, actor, tags, tasklet):
+def match(j, args, params, actor, tags, tasklet):
     return params.dirname == ".macros"

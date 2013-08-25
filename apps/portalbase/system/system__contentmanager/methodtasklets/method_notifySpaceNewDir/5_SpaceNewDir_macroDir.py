@@ -1,5 +1,5 @@
 
-def main(o, args, params, actor, tags, tasklet):
+def main(j, args, params, actor, tags, tasklet):
     # create 3 types of macro dirs inside
     source = None
     if params.path.find(".macros/page") != -1:
@@ -17,5 +17,5 @@ def main(o, args, params, actor, tags, tasklet):
     return params
 
 
-def match(o, args, params, actor, tags, tasklet):
+def match(j, args, params, actor, tags, tasklet):
     return params.path.find(".macros") != -1
