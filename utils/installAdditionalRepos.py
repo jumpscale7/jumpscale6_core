@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 import sys
 sys.path.append('../lib')
 
-from JumpScale import *
+from JumpScale import j
 
 import JumpScale.baselib.platforms #gets access to ubuntu code
 import JumpScale.baselib.owdeveltools
@@ -17,3 +18,4 @@ if j.system.platformtype.isLinux():
 
 else:
     raise RuntimeError("JumpScale is for now only supported on ubuntu or mint.")
+j.application.stop()
