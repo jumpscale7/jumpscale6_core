@@ -174,3 +174,13 @@ class Ubuntu:
             self.initApt()        
         self.updatePackageMetadata()
         self._cache.upgrade()
+
+    def listSources(self):
+        from aptsources import sourceslist
+        return sourceslist.SourcesList()
+
+    def changeSourceUri(self, newuri):
+        src = self.listSources()
+        for entry in src.list:
+            entry.uri = newuri
+        src.save()
