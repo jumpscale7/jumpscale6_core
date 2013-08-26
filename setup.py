@@ -17,7 +17,7 @@ def get_version(package):
 
 version = get_version('lib/JumpScale')
 
-setup(name='JumpScale',
+setup(name='JumpScale-core',
       version=version,
       description='Python Automation framework',
       author='JumpScale',
@@ -34,6 +34,15 @@ setup(name='JumpScale',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'License :: FreeBSD Software License',
     ]
 )
 
+
+if __name__ == '__main__':
+    if sys.argv[-1] == 'publish':
+        os.system("python setup.py sdist upload")
+        print("You probably want to also tag the version now:")
+        print("  hg tag -a %s -m 'version %s'" % (version, version))
+        print("  hg push --tags")
+        sys.exit()
