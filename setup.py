@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 import re
 import os
 import glob
+import sys
 
 scripts = glob.glob('shellcmds/*')
 
@@ -16,16 +17,6 @@ def get_version(package):
     return re.match("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
 
 version = get_version('lib/JumpScale')
-
-
-
-if __name__ == '__main__':
-    if sys.argv[-1] == 'publish':
-        os.system("python setup.py sdist upload")
-        print("You probably want to also tag the version now:")
-        print("  hg tag -a %s -m 'version %s'" % (version, version))
-        print("  hg push --tags")
-        sys.exit()
 
 setup(name='JumpScale-core',
       version=version,
@@ -44,6 +35,6 @@ setup(name='JumpScale-core',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'License :: FreeBSD Software License',
+        'License :: OSI Approved :: BSD License',
     ]
 )
