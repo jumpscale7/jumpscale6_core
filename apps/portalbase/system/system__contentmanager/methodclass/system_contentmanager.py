@@ -368,7 +368,7 @@ class system_contentmanager(system_contentmanager_osis):
         actorname = actor
         appname = app
 
-        filesroot = j.core.portal.runningPortal.filesroot
+        filesroot = j.dirs.varDir
 
         actorloader = j.core.portal.runningPortal.actorsloader.id2object["%s__%s" % (appname, actorname)]
 
