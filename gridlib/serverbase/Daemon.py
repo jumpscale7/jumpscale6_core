@@ -27,6 +27,9 @@ class DaemonCMDS(object):
         self.daemon.keystor.setPubKey(organization, user, pubkey)
         return ""
 
+    def listCategories(self, session):
+        return self.daemon.cmdsInterfaces.keys()
+
     def getpubkeyserver(self, session):
         return self.daemon.keystor.getPubKey(self.daemon.sslorg, self.daemon.ssluser, returnAsString=True)
 

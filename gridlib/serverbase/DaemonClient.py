@@ -24,18 +24,25 @@ class Session():
     __str__ = __repr__
 
 
-class DaemonClientCmd():
+class SimpleClient(object):
+    def __init__(self, client):
+        self._client = client
 
-    def __init__(self, category="core", org="myorg", user="root", passwd="passwd", ssl=False, encrkey="", reset=False, roles=[], transport=None, defaultSerialization="m"):
+
+class DaemonClient(object):
+
+    def __init__(self, org="myorg", user="root", passwd="passwd", ssl=False, encrkey="", reset=False, roles=[], transport=None, defaultSerialization="m"):
         """
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
+        end = 4294967295  # 4bytes max nr
+        self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
+            1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
         self.retry = True
         self.blocksize = 8 * 1024 * 1024
         self.key = encrkey
         self.user = user
         self.org = org
-        self.category = category
         self.passwd = passwd
         self.ssl = ssl
         self.roles = roles
@@ -44,7 +51,7 @@ class DaemonClientCmd():
         self.transport = transport
         self.pubkeyserver = None
         self.defaultSerialization = defaultSerialization
-        self.transport._connect()
+        self.transport.connect(self._id)
         self.initSession(reset, ssl)
 
     def encrypt(self, message):
@@ -90,7 +97,7 @@ class DaemonClientCmd():
             publickey = ""
             passwd = self.passwd
 
-        session = Session(id=self.transport._id, organization=self.org, user=self.user, passwd=passwd,
+        session = Session(id=self._id, organization=self.org, user=self.user, passwd=passwd,
                           encrkey=encrkey, netinfo=j.system.net.getNetworkInfo(), roles=self.roles)
         # ser=j.db.serializers.getMessagePack()
         # sessiondictstr=ser.dumps(session.__dict__)
@@ -115,15 +122,13 @@ class DaemonClientCmd():
         if returnformat == None:
             returnformat = self.defaultSerialization
 
-        category = category or self.category  # prioritize passed argument fallback to client default
-
         rawdata = data
         if sendformat <> "":
             ser = j.db.serializers.get(sendformat, key=self.key)
             data = ser.dumps(data)
 
         # self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
-        parts = self.transport._sendMsg(category, cmd, data, sendformat, returnformat)
+        parts = self.transport.sendMsg(category, cmd, data, sendformat, returnformat)
         returncode = parts[0]
 
         if returncode in ('1', '3'):
@@ -140,7 +145,7 @@ class DaemonClientCmd():
                 msg = "Authentication error on server.\n"
                 raise RuntimeError(msg)
         elif returncode == '2':
-            msg = "execution error on server on %s:%s.\n Could not find method:%s\n" % (self.ipaddr, self.port, cmd)
+            msg = "execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             j.errorconditionhandler.raiseBug(msgpub=msg, message="", category="rpc.exec")
         elif str(returncode) != "0":
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
@@ -165,8 +170,50 @@ class DaemonClientCmd():
 
     def reset(self):
         # Socket is confused. Close and remove it.
-        self.transport._close()
-        self.transport._connect()
+        self.transport.close()
+        self.transport.connect(self._id)
+
+
+    def getCmdClient(self, category):
+        if category == "*":
+            categories = self.sendcmd(category='core', cmd='listCategories')
+            cl = SimpleClient(self)
+            for category in categories:
+                setattr(cl, category, self._getCmdClient(category))
+            return cl
+        else:
+            return self._getCmdClient(category)
+
+
+    def _getCmdClient(self, category):
+        client = SimpleClient(self)
+        methodspecs = self.sendcmd(category='core', cmd='introspect', cat=category)
+        for key, spec in methodspecs.iteritems():
+            # print "key:%s spec:%s"%(key,spec)
+            strmethod = """
+class Klass(object):
+    def __init__(self, client, category):
+        self._client = client
+        self._category = category
+
+    def method(%s):
+        '''%s'''
+        return self._client.sendcmd(cmd="%s", category=self._category, %s)
+"""
+            Klass = None
+            args = ["%s=%s" % (x, x) for x in spec['args'][0][1:]]
+            params_spec = spec['args'][0]
+            if spec['args'][3]:
+                params_spec = list(spec['args'][0])
+                for cnt, default in enumerate(spec['args'][3]):
+                    cnt += 1
+                    params_spec[-cnt] += "=%r" % default
+            params = ', '.join(params_spec)
+            strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
+            exec(strmethod)
+            klass = Klass(self, category)
+            setattr(client, key, klass.method)
+        return client
 
     def sendcmd(self, cmd, sendformat=None, returnformat=None, category=None, **args):
         """
@@ -196,59 +243,23 @@ class DaemonClientCmd():
         print "nr items per sec: %s" % nritems
 
 
-class DaemonClient(object):
 
-    def __init__(self, category="core", org="myorg", user="root", passwd="passwd", ssl=False, introspect=True, reset=False, roles=[], defaultSerialization="m"):
-        end = 4294967295  # 4bytes max nr
-        self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
-            1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
-        self._client = DaemonClientCmd(category=category, org=org, user=user, passwd=passwd, ssl=ssl,
-                                       reset=reset, roles=roles, transport=self, defaultSerialization=defaultSerialization)
-        if introspect:
-            self._loadMethods()
 
-    def _loadMethods(self):
-        methodspecs = self._client.sendcmd(category='core', cmd='introspect', cat=self._client.category)
-        for key, spec in methodspecs.iteritems():
-            # print "key:%s spec:%s"%(key,spec)
-            strmethod = """
-class Klass(object):
-    def __init__(self, client):
-        self._client = client
+class Transport(object):
 
-    def method(%s):
-        '''%s'''
-        return self._client.sendcmd("%s", %s)
-"""
-            Klass = None
-            args = ["%s=%s" % (x, x) for x in spec['args'][0][1:]]
-            params_spec = spec['args'][0]
-            if spec['args'][3]:
-                params_spec = list(spec['args'][0])
-                for cnt, default in enumerate(spec['args'][3]):
-                    cnt += 1
-                    params_spec[-cnt] += "=%r" % default
-            params = ', '.join(params_spec)
-            strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
-            exec(strmethod)
-            klass = Klass(self._client)
-            setattr(self, key, klass.method)
-
-    # TRANSPORT IMPLEMENTATION
-    #
-    def _connect(self):
+    def connect(self, sessionid=None):
         """
         everwrite this method in implementation to init your connection to server (the transport layer)
         """
         raise RuntimeError("not implemented")
 
-    def _close(self):
+    def close(self):
         """
         close the connection (reset all required)
         """
         raise RuntimeError("not implemented")
 
-    def _sendMsg(self, cmd, data, sendformat="m", returnformat="m"):
+    def sendMsg(self, category, cmd, data, sendformat="m", returnformat="m"):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -262,3 +273,5 @@ class Klass(object):
         """
         raise RuntimeError("not implemented")
         # send message, retry if needed, retrieve message
+
+

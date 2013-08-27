@@ -1,34 +1,26 @@
 from JumpScale import j
 import JumpScale.baselib.serializers
 import zmq
-import struct
 import JumpScale.grid.serverbase
-DaemonClienClass = j.servers.base.getDaemonClientClass()
+from JumpScale.grid.serverbase.DaemonClient import Transport
 
 
-class ZDaemonClient(DaemonClienClass):
-
-    def __init__(self, addr="localhost", port=9999, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[]):
+class ZDaemonTransport(Transport):
+    def __init__(self, addr="localhost", port=9999):
 
         self._timeout = 60
         self._addr = addr
         self._port = port
-        super(ZDaemonClient, self).__init__(category=category, org=org, user=user,
-                                            passwd=passwd, ssl=ssl, roles=roles, defaultSerialization="m", introspect=True)
+        self._id = None
 
-    def _connect(self):
+    def connect(self, sessionid):
         """
         everwrite this method in implementation to init your connection to server (the transport layer)
         """
+        self._id = sessionid
         self._init()
 
-    def _close(self):
-        """
-        close the connection (reset all required)
-        """
-        pass
-
-    def _sendMsg(self, category, cmd, data, sendformat="", returnformat=""):
+    def sendMsg(self, category, cmd, data, sendformat="", returnformat=""):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -69,7 +61,7 @@ class ZDaemonClient(DaemonClienClass):
         self._poll = zmq.Poller()
         self._poll.register(self._cmdchannel, zmq.POLLIN)
 
-    def _close(self):
+    def close(self):
         try:
             self._cmdchannel.setsockopt(zmq.LINGER, 0)
             self._cmdchannel.close()
@@ -83,9 +75,4 @@ class ZDaemonClient(DaemonClienClass):
             pass
 
         self._context.term()
-
-    def _reset(self):
-        # Socket is confused. Close and remove it.
-        self._close()
-        self._init()
 

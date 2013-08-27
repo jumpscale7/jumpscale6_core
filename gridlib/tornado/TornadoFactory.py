@@ -28,8 +28,11 @@ class TornadoFactory():
         return TornadoServer('', port, ssluser=ssluser, sslorg=sslorg, sslkeyvaluestor=sslkeyvaluestor)
 
     def getClient(self, addr, port, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[]):
-        from .TornadoClient import TornadoClient
-        return TornadoClient(addr=addr, port=port, category=category, org=org, user=user, passwd=passwd, ssl=ssl, roles=roles)
+        from .TornadoTransport import TornadoTransport
+        from JumpScale.grid.serverbase.DaemonClient import DaemonClient
+        trans = TornadoTransport(addr, port)
+        cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
+        return cl.getCmdClient(category)
 
     def initSSL4Server(self, organization, serveruser, sslkeyvaluestor=None):
         """

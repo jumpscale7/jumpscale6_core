@@ -1,13 +1,11 @@
 
 from JumpScale import j
-
-cl = j.core.zdaemon.getZDaemonClientClass()
-
+import JumpScale.grid.zdaemon
 
 class OSISClient():
 
     def __init__(self, ipaddr, port=5544):
-        self.client = cl(addr=ipaddr, port=5544, category="osis")
+        self.client = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=5544, category="osis")
         self._init()
 
     def _init(self):

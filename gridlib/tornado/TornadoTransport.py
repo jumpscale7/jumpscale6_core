@@ -1,7 +1,7 @@
 from JumpScale import j
 
 import JumpScale.grid.serverbase
-DaemonClienClass = j.servers.base.getDaemonClientClass()
+from JumpScale.grid.serverbase.DaemonClient import Transport
 
 
 try:
@@ -11,28 +11,26 @@ except:
     import requests
 
 
-class TornadoClient(DaemonClienClass):
-
-    def __init__(self, addr="localhost", port=9999, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[]):
+class TornadoTransport(Transport):
+    def __init__(self, addr="localhost", port=9999):
 
         self.timeout = 60
         self.url = "http://%s:%s/rpc/" % (addr, port)
-        super(TornadoClient, self).__init__(category=category, org=org, user=user,
-                                            passwd=passwd, ssl=ssl, roles=roles, defaultSerialization="m", introspect=True)
+        self._id = None
 
-    def _connect(self):
+    def connect(self, sessionid=None):
         """
         everwrite this method in implementation to init your connection to server (the transport layer)
         """
-        pass
+        self._id = sessionid
 
-    def _close(self):
+    def close(self):
         """
         close the connection (reset all required)
         """
         pass
 
-    def _sendMsg(self, category, cmd, data, sendformat="", returnformat=""):
+    def sendMsg(self, category, cmd, data, sendformat="", returnformat=""):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 

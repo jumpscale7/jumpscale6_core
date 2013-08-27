@@ -36,10 +36,7 @@ class ZDaemonFactory():
         zd = ZDaemon(port=port, name=name, nrCmdGreenlets=nrCmdGreenlets, sslorg=sslorg, ssluser=ssluser, sslkeyvaluestor=sslkeyvaluestor)
         return zd
 
-    def getZDaemonCMDS(self):
-        return ZDaemonCMDS
-
-    def getZDaemonClient(self, ipaddr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, reset=False):
+    def getZDaemonClient(self, ipaddr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, category="core" ):
         """
         example usage, see example for server at self.getZDaemon
 
@@ -48,9 +45,11 @@ class ZDaemonFactory():
                 print client.echo("Hello World.")
 
         """
-        from ZDaemonClient import ZDaemonClient
-        cl = ZDaemonClient(ipaddr=ipaddr, port=port, org=org, user=user, passwd=passwd, ssl=ssl, reset=reset)
-        return cl
+        from .ZDaemonTransport import ZDaemonTransport
+        from JumpScale.grid.serverbase.DaemonClient import DaemonClient
+        trans = ZDaemonTransport(ipaddr, port)
+        cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
+        return cl.getCmdClient(category)
 
     def getZDaemonAgent(self, ipaddr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, reset=False, roles=[]):
         """
@@ -67,24 +66,6 @@ class ZDaemonFactory():
         cl = ZDaemonAgent(ipaddr=ipaddr, port=port, org=org, user=user, passwd=passwd, ssl=ssl, reset=reset, roles=roles)
 
         return cl
-
-    def getZDaemonClientClass(self):
-        """
-        example usage, see example for server at self.getZDaemon
-        when using as class can add methods to the client to make e.g. usage easier for consumer
-
-        ZDaemonClientClass=j.core.zdaemon.getZDaemonClientClass()
-
-        myClient(ZDaemonClientClass):
-            def __init__(self,ipaddr="127.0.0.1",port=5555,org="myorg",user="root",passwd="1234",ssl=False,reset=False):
-                ZDaemonClientClass.__init__(self,ipaddr=ipaddr,port=port,user=user,passwd=passwd,ssl=ssl,reset=reset)
-
-        client=myClient()
-        print client.echo("atest")
-
-        """
-        from ZDaemonClient import ZDaemonClient
-        return ZDaemonClient
 
     def initSSL4Server(self, organization, serveruser, sslkeyvaluestor=None):
         """
