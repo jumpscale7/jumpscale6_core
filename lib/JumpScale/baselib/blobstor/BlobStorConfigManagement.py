@@ -1,6 +1,6 @@
 
 from JumpScale.core.config.IConfigBase import ConfigManagementItem, GroupConfigManagement, SingleConfigManagement
-from JumpScale.core.config.QConfigBase import ConfiguredItem, ConfiguredItemGroup
+from JumpScale.core.config.JConfigBase import ConfiguredItem, ConfiguredItemGroup
 from JumpScale.core.config.ConfigLib import ItemGroupClass, ItemSingleClass
 
 class BlobStorConfigManagementItem(ConfigManagementItem):
