@@ -36,7 +36,7 @@ class ZDaemonFactory():
         zd = ZDaemon(port=port, name=name, nrCmdGreenlets=nrCmdGreenlets, sslorg=sslorg, ssluser=ssluser, sslkeyvaluestor=sslkeyvaluestor)
         return zd
 
-    def getZDaemonClient(self, ipaddr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, category="core" ):
+    def getZDaemonClient(self, addr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, category="core" ):
         """
         example usage, see example for server at self.getZDaemon
 
@@ -47,7 +47,7 @@ class ZDaemonFactory():
         """
         from .ZDaemonTransport import ZDaemonTransport
         from JumpScale.grid.serverbase.DaemonClient import DaemonClient
-        trans = ZDaemonTransport(ipaddr, port)
+        trans = ZDaemonTransport(addr, port)
         cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
         return cl.getCmdClient(category)
 

@@ -4,8 +4,8 @@ import JumpScale.grid.zdaemon
 
 class OSISClient():
 
-    def __init__(self, ipaddr, port=5544):
-        self.client = j.core.zdaemon.getZDaemonClient(ipaddr=ipaddr, port=5544, category="osis")
+    def __init__(self, addr, port=5544):
+        self.client = j.core.zdaemon.getZDaemonClient(addr=addr, port=5544, category="osis")
         self._init()
 
     def _init(self):
