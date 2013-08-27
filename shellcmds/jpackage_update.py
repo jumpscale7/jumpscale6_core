@@ -1,12 +1,12 @@
 import sys
 sys.path.insert(0,"lib")
 
-from JumpScale import *
+from JumpScale import j
 
-j.application.appname = "jspackage"
+j.application.appname = "jpackage"
 j.application.start()
 
-import JumpScale.baselib.jspackages
+import JumpScale.baselib.jpackages
 
 j.packages.updateMetaData(force=True)
 

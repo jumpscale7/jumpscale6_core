@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0,"lib")
 
-from JumpScale import *
+from JumpScale import j
 
 j.application.appname = "jslink"
 j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
@@ -9,7 +9,7 @@ j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jump
 j.application.shellconfig.interactive=True
 
 import JumpScale.baselib.platforms #gets access to ubuntu code
-import JumpScale.baselib.owdeveltools
+import JumpScale.baselib.jsdeveltools
 
 
 if j.system.platformtype.isLinux():

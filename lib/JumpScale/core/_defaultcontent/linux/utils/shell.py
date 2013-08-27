@@ -71,9 +71,9 @@ def main():
         FIRSTRUN_PARAMNAME = "qshell_firstrun"
 
         #if not mainCfg.checkParam("main", FIRSTRUN_PARAMNAME) or mainCfg.getBooleanValue("main", FIRSTRUN_PARAMNAME) == True:
-        #    q.action.start('Retrieving QPackage information from '
+        #    q.action.start('Retrieving JPackage information from '
         #                   'package servers')
-        #    i.qpackages.updateQPackageList()
+        #    i.jpackages.updateJPackageList()
         #    q.action.stop()
         #    mainCfg.setParam("main", FIRSTRUN_PARAMNAME, False)
         #    mainCfg.write()
@@ -84,13 +84,13 @@ def main():
         else:
             q.logger.consoleloglevel=2
 
-        # Run QPackage configure tasklets if any registered
-        #from pylabs.qpackages.client.QPackageConfigure import QPackageConfigure
-        #qpackageconfigure = QPackageConfigure()
-        #qpackageconfigure.reconfigure()
+        # Run JPackage configure tasklets if any registered
+        #from pylabs.jpackages.client.JPackageConfigure import JPackageConfigure
+        #jpackageconfigure = JPackageConfigure()
+        #jpackageconfigure.reconfigure()
 
 
-        # Run QPackage4 configure tasklets if needed
+        # Run JPackage4 configure tasklets if needed
         q.qp._runPendingReconfigeFiles()
         sys.path.append(q.system.fs.joinPaths(q.dirs.baseDir, 'var', 'tests'))
         from pylabs.Shell import Shell

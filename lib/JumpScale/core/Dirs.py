@@ -98,7 +98,7 @@ class Dirs(object):
         self.logDir = os.path.join(self.varDir,"log")
         self._createDir(self.logDir)
 
-        self.packageDir = os.path.join(self.varDir,"jspackages")
+        self.packageDir = os.path.join(self.varDir,"jpackages")
         self._createDir(self.packageDir)
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
@@ -121,7 +121,7 @@ class Dirs(object):
         self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
         self._createDir(self.hrdDir)
 
-        self.configsDir = os.path.join(self.baseDir,"cfg","owconfig")
+        self.configsDir = os.path.join(self.baseDir,"cfg","jsconfig")
         self._createDir(self.configsDir)
 
 

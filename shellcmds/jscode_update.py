@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0,"lib")
 
-from JumpScale import *
+from JumpScale import j
 
 j.application.appname = "jsupdate"
 j.application.start()

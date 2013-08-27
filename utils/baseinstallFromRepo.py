@@ -4,7 +4,7 @@ sys.path.insert(0,'../lib')
 from JumpScale import j
 
 import JumpScale.baselib.platforms #gets access to ubuntu code
-import JumpScale.baselib.owdeveltools
+import JumpScale.baselib.jsdeveltools
 
 do=j.system.installtools
 

@@ -1,12 +1,12 @@
 import sys
 sys.path.insert(0,"lib")
 
-from JumpScale import *
+from JumpScale import j
 
-j.application.appname = "owpackage"
+j.application.appname = "jpackages"
 j.application.start()
 
-import JumpScale.baselib.jspackages
+import JumpScale.baselib.jpackages
 
 print "upload package to blobstor"
 

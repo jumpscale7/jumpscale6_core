@@ -7,7 +7,7 @@ j.application.appname = "jsext"
 j.application.shellconfig.interactive = True
 
 import JumpScale.baselib.platforms #gets access to ubuntu code
-import JumpScale.baselib.owdeveltools
+import JumpScale.baselib.jsdeveltools
 
 do=j.system.installtools
 

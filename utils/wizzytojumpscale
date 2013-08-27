@@ -32,7 +32,7 @@ sed -i "s/o.qp/j.qp/g" $1
 sed -i "s/o.remote/j.remote/g" $1
 sed -i "s/o.develtools/j.develtools/g" $1
 sed -i "s/o.packages/j.packages/g" $1
-sed -i "s/o.owpackagetools/j.owpackagetools/g" $1
+sed -i "s/o.owpackagetools/j.jpackagetools/g" $1
 sed -i "s/o.gui/j.gui/g" $1
 sed -i "s/o.cmdtools/j.cmdtools/g" $1
 sed -i "s/o.cloud/j.cloud/g" $1

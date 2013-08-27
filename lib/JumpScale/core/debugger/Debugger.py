@@ -203,7 +203,7 @@ def set_trace(frame=None, frame_idx=0):
 from JumpScale.core.config import ConfigManagementItem, ItemSingleClass
 
 class jumpscaleDebuggerConfigurationItem(ConfigManagementItem):
-    '''QConfig item class for the configuration of the debugger subsystem'''
+    '''JConfig item class for the configuration of the debugger subsystem'''
     CONFIGTYPE = 'jumpscale_debugger'
     DESCRIPTION = 'jumpscale Debugger'
     KEYS={"type":"Debugger type"}

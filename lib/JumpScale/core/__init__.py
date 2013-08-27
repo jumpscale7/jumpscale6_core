@@ -239,7 +239,7 @@ from . import shellconfig
 from . import console
 from . import gui
 
-import JumpScale.baselib.owdeveltools
+import JumpScale.baselib.jsdeveltools
 
 #reinit whoAmI after dirs are loaded
 j.application.initWhoAmI()

@@ -2,7 +2,7 @@
 from JumpScale import j
 from JumpScale.baselib.inifile.IniFile import IniFile
 
-class QConfig():
+class JConfig():
     """
     jumpscale singleton class available under j.config
     Meant for non interactive access to configuration items
@@ -27,7 +27,7 @@ class QConfig():
         """
         List all configuration types available.
         """
-        qconfigPath = j.system.fs.joinPaths(j.dirs.cfgDir, "owconfig")
+        jconfigPath = j.system.fs.joinPaths(j.dirs.cfgDir, "jsconfig")
         if not j.system.fs.exists(j.dirs.configsDir):
             return []
         fullpaths = j.system.fs.listFilesInDir(j.dirs.configsDir)
