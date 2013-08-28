@@ -327,9 +327,9 @@ DefaultRoot                    ~
         dest="%s/shellcmds"%j.dirs.baseDir
         self._do.symlink(src,dest)
 
-        for item in j.system.fs.listFilesInDir(dest,filter="*.py"):
-            target="%s/%s"%(dest,j.system.fs.getBaseName(item))
-            path="/usr/bin/%s"%j.system.fs.getBaseName(item)
+        for item in j.system.fs.listFilesInDir(dest):
+            path="%s/%s"%(dest,j.system.fs.getBaseName(item))
+            target="/usr/bin/%s"%j.system.fs.getBaseName(item)
             j.system.fs.symlink(path, target, True)
             cmd='chmod 777 %s'%path
             j.system.process.execute(cmd)
