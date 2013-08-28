@@ -8,7 +8,7 @@ def main(j,args,params,tags,tasklet):
     
     #recipe.add(coderepoConnection, sourcePath, destinationPath, branch='')
     ##recipe.add(repo,"apps/proposalmaker","/tmp/testdirRemove")  #when outside of sandbox use e.g. /qbase3/... (start with / )
-    recipe.add(repo,"apps/proposalmaker","apps/testdirRemove")  #this will copy inside the sandbox
+    #recipe.add(repo,"apps/proposalmaker","apps/testdirRemove")  #this will copy inside the sandbox
     
     params.result=recipe  #remember for further usage
     

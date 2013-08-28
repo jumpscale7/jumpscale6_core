@@ -2,7 +2,7 @@ def main(j,args,params,tags,tasklet):
    
     #install the required files onto the system
     # can happen by e.g. installing a debian package e.g. by
-    ## j.system.platformtype.ubuntu.install(packagename)
+    ## j.system.platform.ubuntu.install(packagename)
     # can happen by copying files from the jpackages included files (they come from the bundle) e.g. by
     
     args.qp.copyFiles() #  will copy files to sandbox
