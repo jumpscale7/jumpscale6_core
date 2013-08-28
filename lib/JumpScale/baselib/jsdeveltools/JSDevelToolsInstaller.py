@@ -328,9 +328,9 @@ DefaultRoot                    ~
         self._do.symlink(src,dest)
 
         for item in j.system.fs.listFilesInDir(dest,filter="*.py"):
-            C="python %s/%s $@"%(dest,j.system.fs.getBaseName(item))
-            path="/usr/bin/%s"%j.system.fs.getBaseName(item).replace(".py","")
-            j.system.fs.writeFile(path,C)
+            target="%s/%s"%(dest,j.system.fs.getBaseName(item))
+            path="/usr/bin/%s"%j.system.fs.getBaseName(item)
+            j.system.fs.symlink(path, target, True)
             cmd='chmod 777 %s'%path
             j.system.process.execute(cmd)
 
