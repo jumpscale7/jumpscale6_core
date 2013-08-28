@@ -1000,7 +1000,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeExport(update=update)
-        self.actions.code.export()
+        self.actions.code_export()
         j.action.stop(False)
 
     def codeUpdate(self, dependencies=False, force=False):
@@ -1014,7 +1014,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeUpdate(force=force)
-        self.actions.code.update()
+        self.actions.code_update()
         j.action.stop(False)
 
     def codeCommit(self, dependencies=False, push=False):
@@ -1028,7 +1028,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeCommit(push=push)
-        self.actions.code.commit()
+        self.actions.code_commit()
         if push:
             self.codePush(dependencies)
         j.action.stop(False)
@@ -1067,8 +1067,8 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.package(platform=platform)
-        self.actions.code.update()
-        recipe = params.recipe
+        recipe = self.actions.code_getRecipe()
+        self.actions.code_update()
         identities = recipe.identify()
         cfg = self._getConfig()
         cfg.setIdentities(platform, identities, write=True)
@@ -1245,7 +1245,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeImport()
-        self.actions.code.importt()
+        self.actions.code_importt()
         cfg = self._getConfig()
         cfg.clearIdentities(write=True)
         j.action.stop(False)
@@ -1261,7 +1261,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codePush(merge=merge)
-        self.actions.code.push(merge=merge)
+        self.actions.code_push(merge=merge)
         j.action.stop(False)
 
     def codeLink(self, dependencies=None, update=None, force=False):
@@ -1286,7 +1286,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             for dep in deps:
                 dep.codeLink(update=update,force=force)            
 
-        self.actions.code.push(force=force)
+        self.actions.code_push(force=force)
         j.action.stop(False)
 
     def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
