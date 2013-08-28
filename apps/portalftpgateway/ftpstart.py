@@ -12,7 +12,7 @@ if j.system.net.waitConnectionTest("127.0.0.1", 80, 15) == False or j.system.net
     raise RuntimeError(msg)
 print "* appserver & webserver started."
 
-client = j.core.portal.getPortalClient("127.0.0.1", 9999, "1234")
+client = j.core.portal.getPortalClient("127.0.0.1", 80, "1234")
 
 contentmanager = client.getActor("system", "contentmanager", instance=0)
 usermanager = client.getActor("system", "usermanager", instance=0)
