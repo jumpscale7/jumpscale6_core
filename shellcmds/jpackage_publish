@@ -1,3 +1,4 @@
+#!python
 import sys
 sys.path.insert(0,"lib")
 
@@ -8,6 +9,6 @@ j.application.start()
 
 import JumpScale.baselib.jpackages
 
-j.packagesi.createNewPackage()
+j.packagesi.publishAll()
 
 j.application.stop()
