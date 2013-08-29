@@ -10,12 +10,15 @@ class JSDevelToolsInstaller:
         self.passwd=""
 
     def getCredentialsJumpScaleRepo(self):
-        j.application.shellconfig.interactive=True
-        self.login=j.console.askString("JumpScale Repo Login, if unknown press enter")
+        self.login="*"
+        self.passwd="*"
+
+        if j.application.shellconfig.interactive:
+            self.login=j.console.askString("JumpScale Repo Login, if unknown press enter")
+            self.passwd=j.console.askPassword("JumpScale Repo Passwd, if unknown press enter", False)
         if self.login=="":
             self.login="*"
             
-        self.passwd=j.console.askPassword("JumpScale Repo Passwd, if unknown press enter", False)
         if self.passwd=="":
             self.passwd="*"
 
@@ -30,7 +33,6 @@ class JSDevelToolsInstaller:
             return "https://%s:%s@bitbucket.org/jumpscale/%s"%(self.login,self.passwd,name)
 
     def _getJSRepo(self,name):
-        j.application.shellconfig.interactive=True
         self._checkCredentials()
         cl=j.clients.mercurial.getClient("%s/jumpscale/%s/"%(j.dirs.codeDir,name), remoteUrl=self._getRemoteJSURL(name))
         cl.pullupdate()
