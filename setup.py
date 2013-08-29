@@ -27,6 +27,7 @@ setup(name='JumpScale-core',
 
       packages = find_packages('lib'),
       package_dir = {'':'lib'},
+      include_package_data = True,
       scripts=scripts,
 
       download_url='http://pypi.python.org/pypi/JumpScale/',
