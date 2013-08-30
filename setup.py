@@ -18,16 +18,28 @@ def get_version(package):
 
 version = get_version('lib/JumpScale')
 
+
+
+def list_files(basedir='.', subdir='.'):
+    package_data = []
+    basedir_length = len(basedir)
+    for dirpath, dirs, files in os.walk(os.path.join(basedir,subdir)):
+        for file in files:
+            package_data.append(os.path.join(dirpath[basedir_length+1:],file))
+    return package_data
+            
+
 setup(name='JumpScale-core',
       version=version,
       description='Python Automation framework',
       author='JumpScale',
       author_email='info@jumpscale.org',
       url='http://www.jumpscale.org',
-
+      license='FreeBSD',
       packages = find_packages('lib'),
       package_dir = {'':'lib'},
       include_package_data = True,
+      package_data = {'JumpScale':list_files(basedir='lib/JumpScale','core/_defaultcontent')},
       scripts=scripts,
 
       download_url='http://pypi.python.org/pypi/JumpScale/',
