@@ -32,7 +32,7 @@ class ZBroker(ZDaemon):
 
         self.actions = {}
 
-        self.addCMDsInterface(BrokerMainActions)
+        self.setCMDsInterface(BrokerMainActions)
 
         self.HEARTBEAT_LIVENESS = 3     # 3..5 is reasonable
         self.HEARTBEAT_INTERVAL = 1.0   # Seconds
@@ -77,19 +77,19 @@ class ZBroker(ZDaemon):
 
         j.logger.consoleloglevel = 7
 
-        port = j.core.grid.config.getInt("broker.osis.port")
-        ip = j.core.grid.config.get("broker.osis.ip")
-        nsid = j.core.grid.config.getInt("broker.id")
+        port = j.core.grid.config.getInt("grid.broker.port")
+        ip = j.core.grid.config.get("grid.broker.ip")
+        nsid = j.core.grid.config.getInt("grid.broker.id")
 
         osisclient = j.core.osis.getClient(ip, port)
         if nsid == 0:
             nsname, nsid = osisclient.createNamespace(name="broker_", template="coreobjects", incrementName=True)
-            j.core.grid.config.set("broker.id", nsid)
+            j.core.grid.config.set("grid.broker.id", nsid)
         else:
             if not osisclient.existsNamespace("broker_%s" % nsid):
                 # namespace does not exist yet on server
                 nsname, nsid = osisclient.createNamespace(name="broker_", template="coreobjects", incrementName=True, nsid=nsid)
-                j.core.grid.config.set("broker.id", nsid)
+                j.core.grid.config.set("grid.broker.id", nsid)
 
         self.id = nsid
 

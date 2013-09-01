@@ -11,10 +11,8 @@ from ..zdaemon.ZDaemon import ZDaemon
 
 # from ..zdaemon.ZDaemonClient import ZDaemon
 
-ZDaemonCMDS = j.core.zdaemon.getZDaemonCMDS()
 
-
-class ZLoggerCMDS(ZDaemonCMDS):
+class ZLoggerCMDS(object):
 
     def __init__(self, daemon):
         self.daemon = daemon
@@ -43,7 +41,7 @@ class ZLogger(ZDaemon):
 
     def __init__(self, port=4444):
         ZDaemon.__init__(self, port=port, name="logger")
-        self.setCMDsInterface(ZLoggerCMDS)
+        self.setCMDsInterface(ZLoggerCMDS, category='logger')
         self.init()
 
     def init(self):

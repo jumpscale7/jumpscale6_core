@@ -1,9 +1,6 @@
 from JumpScale import j
 
-ZDaemonCMDS = j.core.zdaemon.getZDaemonCMDS()  # get base class which needs to be used as basis for commands
-
-
-class BrokerMainActions(ZDaemonCMDS):
+class BrokerMainActions(object):
 
     def __init__(self, broker):
 
