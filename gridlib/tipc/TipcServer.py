@@ -24,10 +24,13 @@ class TipcServer(object):
         print 'server started, addr:', self.socket.getsockname()
         while True:
             data, addr = self.socket.recvfrom(66000)
-            category, cmd, cmddata, informat, returnformat, sessionid = j.servers.base._unserializeBinSend(data)
-            resultcode, returnformat, result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, cmddata, sessionid, category=category)
-            returndata = j.servers.base._serializeBinReturn(resultcode, returnformat, result)
+            returndata = self.handleData(data, addr)
             self.socket.sendto(returndata, addr)
+
+    def handleData(self, data, addr):
+        category, cmd, cmddata, informat, returnformat, sessionid = j.servers.base._unserializeBinSend(data)
+        resultcode, returnformat, result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, cmddata, sessionid, category=category)
+        return j.servers.base._serializeBinReturn(resultcode, returnformat, result)
 
     def addCMDsInterface(self, MyCommands, category=""):
         self.daemon.addCMDsInterface(MyCommands, category)
