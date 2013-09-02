@@ -3,7 +3,6 @@ import functools
 from JumpScale import j
 from .logtargets.LogTargetFS import LogTargetFS
 from .logtargets.LogTargetStdOut import LogTargetStdOut
-from .logtargets.LogTargetElasticSearch import LogTargetElasticSearch
 import re
 import sys
 import traceback
@@ -183,6 +182,7 @@ class LogHandler(object):
         self.logTargetAdd(LogTargetStdOut())
 
     def addLogTargetElasticSearch(self):
+        from .logtargets.LogTargetElasticSearch import LogTargetElasticSearch
         self.logTargetAdd(LogTargetElasticSearch('localhost'))
 
     def addLogTargetLocalFS(self):
