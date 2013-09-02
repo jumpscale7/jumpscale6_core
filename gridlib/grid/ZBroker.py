@@ -25,6 +25,7 @@ class ZBroker(ZDaemon):
 
     def __init__(self):
         ZDaemon.__init__(self, port=5554)
+        self.daemon.broker = self
         self.workers = {}  # key = worker.id = process.id (process id of worker which is unique) also called workerid, value is the set of roles
         self.role2workers = {}
         self.role2workersAvailable = {}
@@ -32,7 +33,7 @@ class ZBroker(ZDaemon):
 
         self.actions = {}
 
-        self.setCMDsInterface(BrokerMainActions)
+        self.setCMDsInterface(BrokerMainActions, category='broker')
 
         self.HEARTBEAT_LIVENESS = 3     # 3..5 is reasonable
         self.HEARTBEAT_INTERVAL = 1.0   # Seconds

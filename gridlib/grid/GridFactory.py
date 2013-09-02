@@ -124,7 +124,7 @@ class GridFactory():
         """
 
         if broker <> None:
-            self.brokerClient = broker.cmdsInterfaces[0]
+            self.brokerClient = broker.daemon.cmdsInterfaces['broker'][0]
             return True
 
         brokerip = self.config.get("grid.broker.ip")

@@ -2,10 +2,9 @@ from JumpScale import j
 
 class BrokerMainActions(object):
 
-    def __init__(self, broker):
-
-        self.broker = broker
-        self.daemon = self.broker
+    def __init__(self, daemon):
+        self.daemon = daemon
+        self.broker = daemon.broker
         self.methods = {}
         self.applicationtypes = {}
 

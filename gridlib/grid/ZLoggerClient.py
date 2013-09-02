@@ -1,20 +1,21 @@
 from JumpScale import j
-from ..zdaemon.ZDaemonClient import ZDaemonClient
+from ..zdaemon.ZDaemonTransport import ZDaemonTransport
+from ..serverbase.DaemonClient import DaemonClient
 
-
-class ZLoggerClient(ZDaemonClient):
+class ZLoggerClient(object):
 
     def __init__(self, ipaddr="localhost", port=4444):
+        trans = ZDaemonTransport(ipaddr, port)
+        self.client = DaemonClient(org='org', user='root', passwd='1234', transport=trans)
 
-        ZDaemonClient.__init__(self, ipaddr=ipaddr, port=port, datachannel=False, ssl=False)
-
+    @j.logger.nologger
     def log(self, logobject):
 
         # logmessage = "1%s"%logmessage
         args = {}
         args["log"] = logobject.__dict__
 
-        self.sendMsgOverCMDChannel("log", data=args, sendformat="m", returnformat="")
+        self.client.sendMsgOverCMDChannel("log", data=args, sendformat="m", returnformat="", category="logger")
 
     def logECO(self, eco):
         """
@@ -23,4 +24,4 @@ class ZLoggerClient(ZDaemonClient):
         eco.type = str(eco.type)
         args = {}
         args["eco"] = eco.__dict__
-        self.sendMsgOverCMDChannel("logeco", data=args, sendformat="m", returnformat="")
+        self.client.sendMsgOverCMDChannel("logeco", data=args, sendformat="m", returnformat="", category="logger")

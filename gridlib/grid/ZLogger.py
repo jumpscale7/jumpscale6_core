@@ -16,6 +16,7 @@ class ZLoggerCMDS(object):
 
     def __init__(self, daemon):
         self.daemon = daemon
+        self.logger = daemon.logger
 
     def logeco(self, eco, session):
         """
@@ -23,14 +24,14 @@ class ZLoggerCMDS(object):
         """
         eco["epoch"] = self.daemon.now
         eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
-        self.daemon.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
+        self.logger.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
 
     def log(self, log, session):
         log = j.logger.getLogObjectFromDict(log)
-        self.daemon.loghandlingTE.executeV2(logobj=log)
+        self.logger.loghandlingTE.executeV2(logobj=log)
 
-    def logbatch(self, logbatch, session):
-        self.daemon.loghandlingBatchedTE.executeV2(logbatch=logbatch)
+    def logbatch(self, localegbatch, session):
+        self.logger.loghandlingBatchedTE.executeV2(logbatch=logbatch)
 
 
 class Dummy():
@@ -41,6 +42,7 @@ class ZLogger(ZDaemon):
 
     def __init__(self, port=4444):
         ZDaemon.__init__(self, port=port, name="logger")
+        self.daemon.logger = self
         self.setCMDsInterface(ZLoggerCMDS, category='logger')
         self.init()
 
