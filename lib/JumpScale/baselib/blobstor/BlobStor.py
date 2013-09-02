@@ -29,7 +29,7 @@ class BlobType(BaseEnumeration):
     def _initItems(cls):
         cls.registerItem('log')
         cls.registerItem('varia')
-        cls.registerItem('opackage')
+        cls.registerItem('jpackage')
         cls.finishItemRegistration()
 
 
@@ -54,7 +54,7 @@ class BlobStor:
             return 'file://' + self.config["localpath"] + "/%s/" % self.namespace
         else:
             uri = ""
-            for proto in ("ftp", "http"):
+            for proto in ("http", "ftp"):
                 if self.config[proto] != "":
                     uri = self.config[proto]
                     break
