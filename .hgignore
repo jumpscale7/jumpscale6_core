@@ -23,3 +23,4 @@ page\/form_.*\/5_form.*\.py$
 syntax: glob
 /donotuse/
 *donotuse*
+*\.egg-info
