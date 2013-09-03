@@ -22,9 +22,9 @@ class ZLoggerCMDS(object):
         """
         log eco object (as dict)
         """
-        eco["epoch"] = self.daemon.now
+        eco["epoch"] = time.time()
         eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
-        self.logger.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
+        self.logger.eventhandlingTE.executeV2(eco=eco, history=self.logger.eventsMemLog)
 
     def log(self, log, session):
         log = j.logger.getLogObjectFromDict(log)

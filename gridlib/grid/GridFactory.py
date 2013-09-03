@@ -118,11 +118,17 @@ class GridFactory():
         else:
             return False
 
+    def getZBrokerClient(self, addr="127.0.0.1", port=5554, org="myorg", user="root", passwd="1234", ssl=False, category="broker"):
+        from ..zdaemon.ZDaemonTransport import ZDaemonTransport
+        from JumpScale.grid.serverbase.DaemonClient import DaemonClient
+        trans = ZDaemonTransport(addr, port)
+        cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
+        return cl.getCmdClient(category)
+
     def isbrokerActive(self, die=True, broker=None):
         """
         @param broker, if given then another connection will be made to the broker
         """
-
         if broker <> None:
             self.brokerClient = broker.daemon.cmdsInterfaces['broker'][0]
             return True
@@ -134,7 +140,7 @@ class GridFactory():
         active = j.system.net.tcpPortConnectionTest(brokerip, int(brokerport))
 
         if active:
-            self.brokerClient = ZBrokerClient(ipaddr=brokerip, port=brokerport)
+            self.brokerClient = self.getZBrokerClient(addr=brokerip, port=brokerport)
             pong = self.brokerClient.ping()
             if pong == "pong":
                 return True

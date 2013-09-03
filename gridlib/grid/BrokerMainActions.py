@@ -8,13 +8,13 @@ class BrokerMainActions(object):
         self.methods = {}
         self.applicationtypes = {}
 
-    def getactivejobs(self):
+    def getactivejobs(self, session=None):
         return self.broker.activeJobs
 
-    def ping(self):
+    def ping(self, session=None):
         return "pong"
 
-    def registerNode(self, obj):
+    def registerNode(self, obj, session=None):
         obj["gid"] = j.core.grid.id
         print '#####registernode'
         print obj
@@ -25,7 +25,7 @@ class BrokerMainActions(object):
 
         return id, self.broker.id
 
-    def registerProcess(self, obj):
+    def registerProcess(self, obj, session=None):
         obj["gid"] = j.core.grid.id
         print '#####registerprocess'
         print obj
@@ -34,7 +34,7 @@ class BrokerMainActions(object):
         gid, bid, id = guid.split("_")
         return id
 
-    def registerApplication(self, name, description="", pid=0):
+    def registerApplication(self, name, description="", pid=0, session=None):
         zappl = j.core.grid.zobjects.getZApplicationObject(name=name, description=description)
         zappl.bid = self.broker.id
         print '#####appl'
@@ -53,18 +53,18 @@ class BrokerMainActions(object):
             zappl = self.applicationtypes[key]
         return zappl.id
 
-    def registerAction(self, action):
+    def registerAction(self, action, session=None):
         guid, new, changed = self.broker.osis_action.set(action)
         gid, bid, id = guid.split("_")
         self.broker.actions[int(id)] = action
         return id
 
-    def getAction(self, actionid):
+    def getAction(self, actionid, session=None):
         if not self.broker.actions.has_key(actionid):
             j.errorconditionhandler.raiseBug(message="could not find action with id %s" % actionid, category="broker.actions")
         return self.broker.actions[actionid]
 
-    def registerWorker(self, obj, roles, instance, identity):
+    def registerWorker(self, obj, roles, instance, identity, session=None):
         workerprocess = j.core.grid.zobjects.getZProcessObject(ddict=obj)
         self.broker.workers[identity] = [instance, roles]
 
