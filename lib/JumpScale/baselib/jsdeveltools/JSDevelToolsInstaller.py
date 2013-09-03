@@ -309,32 +309,7 @@ DefaultRoot                    ~
 
     def link2code(self):
 
-        pythpath="/usr/lib/python2.7/"
-        if not j.system.fs.exists(pythpath):
-            raise RuntimeError("Could not find python 2.7 env on %s"%pythpath)
-
-        owdir="%s/JumpScale"%pythpath
-        self._do.createdir(owdir)
-
-        libDir="/opt/code/jumpscale/jumpscale_core/lib/JumpScale"
-
-        self._do.copydeletefirst("%s/__init__.py"%libDir,"%s/__init__.py"%owdir)
-        srcdir=libDir
-        for item in ["base","baselib","core"]:
-            self._do.symlink("%s/%s"%(srcdir,item),"%s/%s"%(owdir,item))  
-
         self._do.createdir("%s/%s"%(j.dirs.baseDir,"apps"))
-
-        src="%s/../../shellcmds"%libDir
-        dest="%s/shellcmds"%j.dirs.baseDir
-        self._do.symlink(src,dest)
-
-        for item in j.system.fs.listFilesInDir(dest):
-            path="%s/%s"%(dest,j.system.fs.getBaseName(item))
-            target="/usr/bin/%s"%j.system.fs.getBaseName(item)
-            j.system.fs.symlink(path, target, True)
-            cmd='chmod 777 %s'%path
-            j.system.process.execute(cmd)
 
         self.linkJumpScaleLibs()
 
