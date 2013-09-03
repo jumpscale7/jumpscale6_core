@@ -443,7 +443,6 @@ class GeventWebserver:
 
     def router(self, environ, start_response):
         path = environ["PATH_INFO"].lstrip("/")
-        path = path.replace("wiki/wiki", "wiki")
         if path == "" or path.rstrip("/") == "wiki":
             path == "wiki/system"
         print "path:%s" % path
@@ -494,7 +493,7 @@ class GeventWebserver:
             path = path[15:]
             return self.processor_restext(environ, start_response, path, human=False, ctx=ctx)
 
-        if path.find("wiki") == 0:
+        if path.find("wiki/") == 0:
             # is page in wiki
             path = path[5:].strip("/")
 
