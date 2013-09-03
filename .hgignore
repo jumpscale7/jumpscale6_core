@@ -24,3 +24,5 @@ syntax: glob
 *donotuse*
 apps/appserver6Base/wiki/Docs/.files/img/testimages3/*
 *build/*
+*\.egg-info
+
