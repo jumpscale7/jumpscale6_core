@@ -3,15 +3,25 @@ import sys
 sys.path.insert(0,"lib")
 
 from JumpScale import j
+import argparse
 
 j.application.appname = "jpackages"
 j.application.start()
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-u','--package',required=False, help='Name of jpackage to be installed')
+args = parser.parse_args()
+
 import JumpScale.baselib.jpackages
 
 print "upload package to blobstor"
-
-package=j.packagesi.find()
+if args.package:
+	package = j.packages.find(args.package)
+	if package:
+		package = package[0]
+else:
+	package=j.packagesi.find()
 package.install()
 
 
