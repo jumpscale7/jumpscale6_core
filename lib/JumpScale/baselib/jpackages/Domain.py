@@ -301,6 +301,15 @@ class Domain():
         # self._updateMetadataTmpLocation() Where will the tmp repo get updated??
 
         j.logger.log("2) Updating buildNumbers in metadata and uploading files", 1)
+
+        # If we are here and the network drops out
+        # What is the result? The tasklets of the last buildNr have changed without incrementing the buildNr
+        # Next time we run this the meta data no longer changed and we dont increment the metaNr as a result of it
+        #@feedback kristof: this is no issue, above will happen again in next run, the metadata was not uploaded yet so no issue
+
+        j.logger.log("3) Commiting and uploadind metadata with updated buildNumbers", 1)
+        self.publishMetadata(commitMessage=commitMessage)
+
         deletedPackagesMetaData = self.getJPackageTuplesWithDeletedMetadata()
         modifiedPackagesMetaData = self.getJPackageTuplesWithModifiedMetadata()
         modifiedPackagesFiles = self.getJPackageTuplesWithModifiedFiles()
@@ -329,14 +338,7 @@ class Domain():
                 jpackagesActiveObject = j.packages.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
                 #jpackagesActiveObject._compress(overwriteIfExists=True)
                 jpackagesActiveObject.upload()
-
-        # If we are here and the network drops out
-        # What is the result? The tasklets of the last buildNr have changed without incrementing the buildNr
-        # Next time we run this the meta data no longer changed and we dont increment the metaNr as a result of it
-        #@feedback kristof: this is no issue, above will happen again in next run, the metadata was not uploaded yet so no issue
-
-        j.logger.log("3) Commiting and uploadind metadata with updated buildNumbers", 1)
-        self.publishMetadata(commitMessage=commitMessage)
+        
 
         # Only do this after complete success!
         # If something goes wrong we know which files where modified
