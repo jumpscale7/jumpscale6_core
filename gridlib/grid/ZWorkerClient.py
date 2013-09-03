@@ -2,14 +2,13 @@ from JumpScale import j
 import zmq.green as zmq
 import inspect
 ujson = j.db.serializers.getSerializerType('j')
-from ..zdaemon.ZDaemonClient import ZDaemonClient
 
 
 class ZWorkerClient():
 
     def __init__(self, ipaddr="localhost", retry=True):
         # client to talk with broker over standard zdaemon communication channel
-        self.brokerclient = ZDaemonClient(ipaddr=ipaddr, port=5554)
+        self.brokerclient = j.core.grid.getZBrokerClient(addr=ipaddr, port=5554, org="myorg", user="root", passwd="1234", ssl=False, category="broker")
 
         self.serverEndpoint = "tcp://%s:5555" % ipaddr
         self.requestTimeout = 100 * 1000  # 100 sec
@@ -92,7 +91,7 @@ class ZWorkerClient():
         if ukey in self.actions:
             return self.actions[ukey]
         else:
-            id = self.brokerclient.sendcmd("registerAction", action=action.__dict__)
+            id = self.brokerclient.registerAction(action=action.__dict__)
             action.id = id
             action.getSetGuid()
             self.actions[ukey] = action
@@ -141,10 +140,10 @@ class ZWorkerClient():
             j.errorconditionhandler.raiseBug(message="job state unknown", category="worker.client")
 
     def registerWorker(self, obj, roles, instance, identity):
-        return self.brokerclient.sendcmd("registerWorker", obj=obj.__dict__, roles=roles, instance=instance, identity=identity)
+        return self.brokerclient.registerWorker(obj=obj.__dict__, roles=roles, instance=instance, identity=identity)
 
     def getactivejobs(self):
-        return self.brokerclient.sendcmd("getactivejobs")
+        return self.brokerclient.getactivejobs()
 
     def ping(self):
-        return self.brokerclient.sendcmd("ping")
+        return self.brokerclient.ping()
