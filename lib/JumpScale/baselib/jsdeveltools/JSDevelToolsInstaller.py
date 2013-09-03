@@ -134,7 +134,7 @@ class JSDevelToolsInstaller:
         name="jumpscale_portal"        
         self._getJSRepo(name)
         dest="%s/portal"%(j.dirs.libDir)
-        self._do.symlink("%s/jumpscale/%s/portallib"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/jumpscale/%s/lib/JumpScale/portal"%(j.dirs.codeDir,name),dest)
         self._do.symlink("%s/jumpscale/%s/apps/portalbase"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/portalbase")
         self._do.symlink("%s/jumpscale/%s/apps/portalftpgateway"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/portalftpgateway")
 
