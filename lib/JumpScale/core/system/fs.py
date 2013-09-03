@@ -958,8 +958,7 @@ class SystemFS:
         if target[-1]=="/":
             target=target[:-1]
 
-        # if (overwriteTarget and self.isLink(target)):
-        if overwriteTarget and self.exists(target):
+        if overwriteTarget and (self.exists(target) or self.isLink(target)):
             if self.isLink(target):
                 self.unlink(target)
             elif self.isDir(target):
