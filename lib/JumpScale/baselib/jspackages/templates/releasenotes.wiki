@@ -1,3 +1,0 @@
-h2. $(qp.name) $(qp.version)
-
-* 30-10-2011 changed ... to ...
