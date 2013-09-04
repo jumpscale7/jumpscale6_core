@@ -41,6 +41,12 @@ class JSDevelToolsInstaller:
         do=j.develtools.installer
 
         do.execute("curl https://bitbucket.org/incubaid/develtools/raw/default/sublimetext/install.sh | sh")
+
+    def preparePlatform(self):
+        if j.system.platform.ubuntu.check(False):
+            self.preparePlatformUbuntu()
+        else:
+            raise RuntimeError("This platform is not supported")
         
 
     def preparePlatformUbuntu(self):
