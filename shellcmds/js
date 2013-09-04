@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 from JumpScale import j
-
-j.application.appname = "jsshell"
-j.application.start()
-
-j.application.shellconfig.interactive=True
+j.application.start("jsshell")
 
 from IPython import embed
 embed()

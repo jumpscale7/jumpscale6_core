@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 from JumpScale import j
-
-j.application.appname = "jspush"
-j.application.start()
-
+j.application.start("jspush")
 import JumpScale.baselib.mercurial
-j.application.shellconfig.interactive=True
 
 for item in j.system.fs.listDirsInDir("/opt/code/jumpscale"):
     print "update/merge/commit/push for %s"%item
@@ -14,3 +10,4 @@ for item in j.system.fs.listDirsInDir("/opt/code/jumpscale"):
     cl.commit()
     cl.push()
 
+j.application.stop()

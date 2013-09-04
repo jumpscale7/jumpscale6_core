@@ -106,10 +106,10 @@ class JSDevelToolsInstaller:
         """
         name="jumpscale_grid"        
         self._getJSRepo(name)
-        dest="%s/grid"%(j.dirs.libDir)
-        self._do.symlink("%s/jumpscale/%s/lib/JumpScale/grid"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/jumpscale/%s/apps/broker"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/broker")
-        self._do.symlink("%s/jumpscale/%s/apps/logger"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/logger")
+        codedir = j.system.fs.joinPaths(j.dirs.codeDir, 'jumpscale', name)
+        self._do.execute("cd %s; python setup.py develop" % codedir)
+        self._do.symlink("%s/apps/broker"%(codedir),"/opt/jumpscale/apps/broker")
+        self._do.symlink("%s/apps/logger"%(codedir),"/opt/jumpscale/apps/logger")
 
         osisdir="/opt/jumpscale/apps/osis/"
 
