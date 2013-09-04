@@ -4,8 +4,6 @@ import argparse
 
 j.application.appname = "worker"
 
-j.application.shellconfig.interactive = True
-
 #import sys
 # port=sys.argv[1]
 # key=sys.argv[2]

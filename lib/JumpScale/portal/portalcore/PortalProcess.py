@@ -619,7 +619,6 @@ class PortalProcess():
             MAINLOOP = gevent.greenlet.Greenlet(self.mainLoop)
             MAINLOOP.start()
 
-        j.application.shellconfig.interactive = False
         self.started = True
 
         if self.tcpserver != None:

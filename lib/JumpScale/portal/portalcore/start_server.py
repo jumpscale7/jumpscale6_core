@@ -26,8 +26,6 @@ if __name__ == "__main__":
     j.application.appname = "appserver6"
     j.application.start()
 
-    j.application.shellconfig.interactive = True
-
     # Make sure the enumerator is loaded
     j.db.keyvaluestore
 
