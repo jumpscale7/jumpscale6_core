@@ -5,3 +5,4 @@ j.application.start("jsshell")
 from IPython import embed
 embed()
 
+j.application.stop()
