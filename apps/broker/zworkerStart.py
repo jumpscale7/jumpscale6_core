@@ -42,3 +42,5 @@ else:
     raise RuntimeError("Format needs to be: 'python zworker.py 127.0.0.1 5556 4 roles1,roles2,roles.sub.1,system'")
 
 j.core.grid.startZWorker(addr=addr, port=port, instance=instance, roles=roles)
+
+j.application.stop()
