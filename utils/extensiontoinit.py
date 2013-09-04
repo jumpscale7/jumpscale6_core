@@ -1,15 +1,6 @@
 #!/usr/bin/env python
 from ConfigParser import ConfigParser
 
-tmp = """
-from JumpScale import j
-j.base.loader.makeAvailable(j, '%(location)s')
-
-from .%(modulename)s import %(classname)s
-j.%(location)s.%(hook)s = %(classname)s()
-
-"""
-
 cfg = ConfigParser()
 cfg.read('extension.cfg')
 imports = ["from JumpScale import j"]
