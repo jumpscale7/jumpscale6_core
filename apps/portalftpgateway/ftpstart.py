@@ -114,3 +114,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+j.application.stop()
