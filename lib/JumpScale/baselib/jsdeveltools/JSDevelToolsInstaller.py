@@ -107,7 +107,7 @@ class JSDevelToolsInstaller:
         name="jumpscale_grid"        
         self._getJSRepo(name)
         dest="%s/grid"%(j.dirs.libDir)
-        self._do.symlink("%s/jumpscale/%s/gridlib"%(j.dirs.codeDir,name),dest)
+        self._do.symlink("%s/jumpscale/%s/lib/JumpScale/grid"%(j.dirs.codeDir,name),dest)
         self._do.symlink("%s/jumpscale/%s/apps/broker"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/broker")
         self._do.symlink("%s/jumpscale/%s/apps/logger"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/logger")
 
