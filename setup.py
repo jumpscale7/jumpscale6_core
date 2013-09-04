@@ -3,24 +3,22 @@
 
 from setuptools import setup, find_packages
 
-packages = ['JumpScale.grid']
-packages += ["JumpScale.grid.%s" % x for x in find_packages('gridlib')]
-
 setup(name='JumpScale Grid',
       version='6.0.0',
       description='Python Automation framework',
       author='JumpScale',
-      author_email='info@openwizzy.org',
-      url='http://www.openwizzy.org',
+      author_email='info@jumpscale.org',
+      url='http://www.jumpscale.org',
 
-      packages=packages,
-      package_dir={'JumpScale.grid': 'gridlib'},
+      packages=find_packages('lib'),
+      package_dir = {'': 'lib'},
+      namespace_packages = ['JumpScale'],
 
       download_url='http://pypi.python.org/pypi/JumpScale/',
       install_requires=[],
       classifiers=[
-      'Intended Audience :: Developers',
-      'Operating System :: OS Independent',
-      'Programming Language :: Python',
-      ]
-      )
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+    ]
+)
