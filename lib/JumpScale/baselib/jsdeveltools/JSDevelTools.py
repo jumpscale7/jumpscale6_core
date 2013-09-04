@@ -59,7 +59,6 @@ class JSDevelTools:
         print "* started all required systems"
 
     def startPortalByobu(self, path=None):
-        j.application.shellconfig.interactive=True
         name="owbackend"
         self.startBackendByobu(["ftpgw","portal"],name=name)
 

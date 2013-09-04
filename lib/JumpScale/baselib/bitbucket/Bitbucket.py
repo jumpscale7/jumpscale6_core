@@ -162,12 +162,10 @@ class Bitbucket:
         config=self._accountGetConfig(accountName)
         login=config["login"]
         if login.find("@login")<>-1:
-            j.application.shellconfig.interactive=True
             login=j.gui.dialog.askString("  \nLogin for bitbucket account %s"%accountName)
             self.config.configure(accountName,{'login': login})
         passwd=config["passwd"]
         if passwd.find("@passwd")<>-1:
-            j.application.shellconfig.interactive=True
             passwd=j.gui.dialog.askString("  \nPassword for bitbucket account %s"%accountName)
             '''
             @todo should use a password entry dialog, but the line below does not work
