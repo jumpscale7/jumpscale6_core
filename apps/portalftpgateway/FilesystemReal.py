@@ -258,10 +258,6 @@ class FilesystemReal(FilesystemBase):
         """Return a string representing the path to which a
         symbolic link points.
         """
-        from pylabs.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW readlink not implemented"
-        ipshell()
-
         path = self.ftp2fs(path)
         return os.readlink(path)
 

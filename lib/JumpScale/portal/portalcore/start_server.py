@@ -20,11 +20,11 @@ if __name__ == "__main__":
         messageHandler = args.messagehandler
 
     # Importing q before the arg parsing seems to mess up its error handling
-    from JumpScale.core.InitBase import q
+    from JumpScale import j
+    import JumpScale.portal
     from Appserver6 import Appserver6
 
-    j.application.appname = "appserver6"
-    j.application.start()
+    j.application.start("appserver6")
 
     # Make sure the enumerator is loaded
     j.db.keyvaluestore

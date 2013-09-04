@@ -113,9 +113,7 @@ class UserManager():
             try:
                 obj = model.get(id=id)
             except:
-                from pylabs.Shell import ipshellDebug, ipshell
                 print "ERROR in usermanager extension, could not remember user because GUID %s does not exists" % guid
                 print "can temporarly resolve by destroing the user mgmt db: do:  model.destroy(), this is a temp hack"  # @todo fix hack
-                ipshell()
 
             j.core.portal.runningPortal.webserver.userKeyToName[obj.secret] = obj.id

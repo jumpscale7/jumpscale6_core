@@ -291,9 +291,7 @@ class InfoMgr():
         result dict() 
         
         """
-        from pylabs.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW getInfo1hFromTo"
-        ipshell()
+        pass
 
     def getInfo5Min(self, id, start=0, stop=0, epoch2human=False):
         """
@@ -333,6 +331,4 @@ class InfoMgr():
         result list(list) 
         
         """
-        from pylabs.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW getInfo1h"
-        ipshell()
+        pass

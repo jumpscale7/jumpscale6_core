@@ -2,8 +2,6 @@ from JumpScale.core.InitBase import *
 
 import argparse
 
-j.application.appname = "worker"
-
 #import sys
 # port=sys.argv[1]
 # key=sys.argv[2]
@@ -20,7 +18,7 @@ args = parser.parse_args()
 
 socketserver = j.system.socketserver.get(int(args.port), str(args.secret))
 
-j.application.start()
+j.application.start("worker")
 
 
 def handledata(data):

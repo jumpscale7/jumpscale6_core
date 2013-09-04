@@ -2,8 +2,7 @@ import time
 from JumpScale import j
 import JumpScale.portal
 
-j.application.appname = "appserver6_test"
-j.application.start()
+j.application.start("appserver6_test")
 
 j.logger.disable()
 

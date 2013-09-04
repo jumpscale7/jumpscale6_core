@@ -443,6 +443,4 @@ class FilesystemBase(object):
                 # print "FACT:%s" % factstring+" "+basename
                 yield "%s %s\r\n" % (factstring, basename)
         except Exception as err:
-            from pylabs.Shell import ipshellDebug, ipshell
-            print "DEBUG NOW error in format MLSD"
-            ipshell()
+            print err

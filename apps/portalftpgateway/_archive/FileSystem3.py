@@ -151,9 +151,6 @@ class AbstractedFS(object):
             path = path + os.sep
         if path[0:len(root)] == root:
             return True
-        from pylabs.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW validpath is not valid"
-        ipshell()
 
         return False
 
@@ -542,7 +539,7 @@ class RootFilesystem(AbstractedFS):
         self._cwd = "/"
 
     def mkdir(self, path):
-        j.system.fs.createDir(pathr)
+        j.system.fs.createDir(path)
         raise RuntimeError("not implemented")
 
     def rmdir(self, path):
@@ -558,9 +555,7 @@ class RootFilesystem(AbstractedFS):
         return
 
     def stat(self, path):
-        from pylabs.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW stat"
-        ipshell()
+        return
 
     def lstat(self, path):
         return self.stat(path)

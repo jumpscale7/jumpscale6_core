@@ -2861,10 +2861,7 @@ class FTPHandler(asynchat.async_chat):
             else:
                 self.respond('550 No such file or directory %s.' % ftppath)
         else:
-            # print "* no change FS not good"
-            from pylabs.Shell import ipshellDebug, ipshell
-            print "DEBUG NOW NO change FS in ftp_CWD"
-            ipshell()
+             print "* no change FS not good"
 
         try:
             self.fs.chdir(ftppath)

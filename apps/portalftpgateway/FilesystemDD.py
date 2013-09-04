@@ -27,9 +27,6 @@ class FilesystemDD(FilesystemBase):
         """List the content of a directory."""
         path1 = self.ftp2fs(path)
         # print "listdir:%s:%s" %(path,path1)
-        from pylabs.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW listdir"
-        ipshell()
 
         items = [item for item in os.listdir(path1) if not self._ignorePath(item)]
         return items
@@ -78,9 +75,6 @@ class FilesystemDD(FilesystemBase):
         """Change the current directory."""
         path = self.ftp2fs(ftppath)
         json = self.fsmanager.getdirobject(path)
-        from pylabs.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW chdir"
-        ipshell()
 
         print "chdir for fs %s_%s : %s" % (self.ttype, self.name, path)
         try:
