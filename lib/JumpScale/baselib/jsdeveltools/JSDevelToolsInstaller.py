@@ -137,15 +137,15 @@ class JSDevelToolsInstaller:
         checkout the jumpscale portal repo & link to python 2.7 to make it available for the developer
         an example portal will also be installed in /opt/jumpscale/apps/exampleportal
         """
-        name="jumpscale_portal"        
-        self._getJSRepo(name)
-        dest="%s/portal"%(j.dirs.libDir)
-        self._do.symlink("%s/jumpscale/%s/lib/JumpScale/portal"%(j.dirs.codeDir,name),dest)
-        self._do.symlink("%s/jumpscale/%s/apps/portalbase"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/portalbase")
-        self._do.symlink("%s/jumpscale/%s/apps/portalftpgateway"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/portalftpgateway")
-
+        name="jumpscale_portal"
         j.system.platform.ubuntu.install("redis-server")
         j.system.platform.ubuntu.install("curlftpfs")
+        self._getJSRepo(name)
+        codedir = j.system.fs.joinPaths(j.dirs.codeDir, 'jumpscale', name)
+        self._do.execute("cd %s; python setup.py develop" % codedir)
+        self._do.symlink("%s/apps/portalbase"%(codedir),"/opt/jumpscale/apps/portalbase")
+        self._do.symlink("%s/apps/portalftpgateway"%(codedir),"/opt/jumpscale/apps/portalftpgateway")
+
 
         portaldir="/opt/jumpscale/apps/exampleportal/"
 

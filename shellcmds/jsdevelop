@@ -11,14 +11,11 @@ do=j.system.installtools
 
 j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
 
+j.develtools.installer.preparePlatform()
 if j.system.platformtype.isLinux():
-    j.system.platform.ubuntu.check()
-    j.develtools.installer.preparePlatformUbuntu()
     j.develtools.installer.deployExamplesLibsGridPortal()
     j.develtools.installer.deployDFS_IO()
     j.develtools.installer.link2code()
 
-else:
-    raise RuntimeError("JumpScale is for now only supported on ubuntu or mint.")
 
 j.application.stop()
