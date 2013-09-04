@@ -2,8 +2,7 @@ from JumpScale import j
 import JumpScale.grid
 import time
 
-j.application.appname = "testlogger"
-j.application.start()
+j.application.start("testlogger")
 
 j.logger.addLogTargetElasticSearch()
 

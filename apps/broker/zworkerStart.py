@@ -8,8 +8,7 @@ from JumpScale import j
 import JumpScale.grid.grid
 import sys
 
-j.application.appname = "zworker"
-j.application.start()
+j.application.start("zworker")
 
 j.logger.consoleloglevel = 3
 

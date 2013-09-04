@@ -1,8 +1,8 @@
 from JumpScale import j
 import JumpScale.grid
 import JumpScale.grid.osis
-j.application.appname = "zbroker"
-j.application.start()
+
+j.application.start("zbroker")
 
 j.core.grid.startBroker()
 

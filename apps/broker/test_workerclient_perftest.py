@@ -5,8 +5,7 @@ import time
 import gevent
 import sys
 
-j.application.appname = "brokertest"
-j.application.start()
+j.application.start("brokertest")
 
 j.core.grid.init()
 

@@ -1,8 +1,7 @@
 from JumpScale import j
 import JumpScale.grid.osis
 
-j.application.appname = "osisserver"
-j.application.start()
+j.application.start("osisserver")
 
 j.core.osis.startDaemon(overwriteImplementation=False)
 

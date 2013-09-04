@@ -2,8 +2,8 @@ from JumpScale import j
 import JumpScale.grid
 import JumpScale.baselib.hrd
 import JumpScale.baselib.screen
-j.application.appname = "startworkers"
-j.application.start()
+
+j.application.start("startworkers")
 
 j.dirs.appDir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps')
 

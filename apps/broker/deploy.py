@@ -1,19 +1,13 @@
-from pylabs.InitBase import *
+from JumpScale import j
+import JumpScale.lib.remote.cluster.ClusterFactory
 
+j.application.start("deply")
 
-q.application.appname = "deply"
-q.application.start()
-
-cl = q.remote.cluster.create("test", "test", ["192.168.80.13"], "rooter")
+cl = j.remote.cluster.create("test", "test", ["192.168.80.13"], "rooter")
 
 # cl.sshtest()
 
 cl.ubuntuPackageUpdateUpgrade()
-
-from pylabs.Shell import ipshellDebug, ipshell
-print "DEBUG NOW main"
-ipshell()
-
 
 cl.qbaseInstallReset(devel=True)
 
@@ -23,8 +17,4 @@ cl.qbaseInstallReset(devel=True)
 
 cl.getConsoles()
 
-from pylabs.Shell import ipshellDebug, ipshell
-print "DEBUG NOW main"
-ipshell()
-
-q.application.stop()
+j.application.stop()

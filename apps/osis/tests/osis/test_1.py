@@ -2,7 +2,6 @@ import unittest
 import re
 import time
 from JumpScale import j
-from pylabs.Shell import ipshellDebug, ipshell
 import random
 client = j.core.osis.getClient()
 

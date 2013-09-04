@@ -1,8 +1,6 @@
 from JumpScale import j
 
-
-j.application.appname = "osisclient"
-j.application.start()
+j.application.start("osisclient")
 
 client = j.core.osis.getClient()
 # getNameIDsInfo
@@ -23,10 +21,6 @@ def testSet():
 
 # namespacename=client.createNamespace(name="broker_",forCoreObjects=True,incrementName=True)
 client.listNamespaces()
-
-from pylabs.Shell import ipshellDebug, ipshell
-print "DEBUG NOW mainosisclient"
-ipshell()
 
 j.application.stop()
 

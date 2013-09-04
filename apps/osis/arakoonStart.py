@@ -1,7 +1,6 @@
 from JumpScale import j
 
-j.application.appname = "arakoonstarttest"
-j.application.start()
+j.application.start("arakoonstarttest")
 
 arakoonInstance = q.manage.servers.arakoon.new("anInstanceName")
 
