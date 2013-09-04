@@ -16,6 +16,7 @@ class CodeGenerator:
 
     def __init__(self):
         self.codepath = j.system.fs.joinPaths(j.dirs.varDir, "code")
+        self._target = 'server'
         self.generated = {}  # will have classname inside
         self.classes = {}  # key is name as generated in _getCodeLocation
         j.system.fs.createDir(self.codepath)
@@ -23,6 +24,12 @@ class CodeGenerator:
             sys.path.append(self.codepath)
         j.system.fs.writeFile(j.system.fs.joinPaths(self.codepath, "__init__.py"), "")
         self.appdir = j.system.fs.getcwd()
+
+    def setTarget(self, target):
+        '''
+        Sets the target to generate for server or client
+        '''
+        self._target = target
 
     def removeFromMem(self, appname, actor):
         appname = appname.lower()
@@ -158,7 +165,8 @@ class CodeGenerator:
         # path is location in a var dir where code will be generated, is always overwritten
         # if not self.generated.has_key(name):
         if spec.type == "model" and type == "pymodel":
-            cg = CodeGeneratorModel(spec, typecheck, dieInGenCode, codepath=codepath, writeForm=False)
+            writeForm = self._target == 'server'
+            cg = CodeGeneratorModel(spec, typecheck, dieInGenCode, codepath=codepath, writeForm=writeForm)
         # elif spec.type=="model" and type=="whoosh":
         #     cg=CodeGeneratorWhoosh(spec,typecheck,dieInGenCode)
         elif spec.type == "enumeration":

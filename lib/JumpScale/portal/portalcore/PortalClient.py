@@ -70,6 +70,7 @@ class PortalClient():
         actorobject = classs()
 
         modelNames = j.core.specparser.getModelNames(appname, actorname)
+        j.core.codegenerator.setTarget('client')
 
         if len(modelNames) > 0:
             actorobject.models = ModelsClass()
