@@ -1,8 +1,8 @@
 from JumpScale import j
 import JumpScale.baselib.serializers
+from JumpScale.grid.serverbase import returnCodes
 import inspect
 import time
-
 
 class Session():
 
@@ -86,20 +86,14 @@ class DaemonCMDS(object):
 class Daemon(object):
 
     def __init__(self, name=None):
-
+        j.application.shellconfig.interactive = False # make sure errorhandler does not require input we are daemon
         self.name = name
         self.cmds = {}
-
         self.cmdsInterfaces = {}
-
         self._now = 0
-
         self.sessions = {}
-
         self.key = ""
-
         self.errorconditionserializer = j.db.serializers.getSerializerType("m")
-
         self.addCMDsInterface(DaemonCMDS, "core")
 
     def getTime(self):
@@ -158,12 +152,10 @@ class Daemon(object):
 
             if ffunction == None:
                 # means could not find method
-                return "2", "", None
+                return returnCodes.METHOD_NOT_FOUND, "", None
 
             self.cmds[cmdkey] = ffunction
 
-        # takessession = 'session' in inspect.getargspec(ffunction).args
-        # DO NOT DO THIS THIS IS SLOW !
         try:
             if inputisdict:
                 data['session'] = session
@@ -177,9 +169,9 @@ class Daemon(object):
             eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
             j.errorconditionhandler.processErrorConditionObject(eco)
             result = self.errorconditionserializer.dumps(eco.__dict__)
-            return "3", "", result
+            return returnCodes.ERROR, "", result
 
-        return "0", returnformat, result
+        return returnCodes.OK, returnformat, result
 
     def processRPCUnSerialized(self, cmd, informat, returnformat, data, sessionid, category=""):
         """
@@ -201,7 +193,7 @@ class Daemon(object):
             else:
                 error = "Authentication  or Session error, session not known with id:%s" % sessionid
                 eco = j.errorconditionhandler.getErrorConditionObject(msg=error)
-                return "3", "", self.errorconditionserializer.dumps(eco.__dict__)
+                return returnCodes.AUTHERROR, "", self.errorconditionserializer.dumps(eco.__dict__)
 
         if informat <> "":
             ser = j.db.serializers.get(informat, key=self.key)

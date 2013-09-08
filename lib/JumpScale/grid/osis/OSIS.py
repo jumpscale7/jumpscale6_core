@@ -29,7 +29,7 @@ class OSIS:
         if self.osisInstances.has_key(fullname):
             return self.osisInstances[fullname]
         j.errorconditionhandler.raiseBug(
-            message="cannot find osis local instance for namespaceid:%s & categoryid:%s" % (namespaceid, categoryid), category="osis.valueerror")
+            message="cannot find osis local instance for namespaceid:%s & categoryid:%s" % (namespaceid, categoryid), die=False, category="osis.valueerror")
 
     def getFromName(self, namespaceName, categoryName):
         namespaceid = self.namespaceName2namespaceId[namespaceName]

@@ -1,0 +1,4 @@
+OK = '\x00'
+AUTHERROR = '\x01'
+METHOD_NOT_FOUND = '\x02'
+ERROR = '\x03'

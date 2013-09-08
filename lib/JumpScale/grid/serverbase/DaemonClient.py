@@ -1,10 +1,10 @@
 from JumpScale import j
 import JumpScale.baselib.serializers
+from JumpScale.grid.serverbase.Exceptions import AuthenticationError, MethodNotFoundException
+from JumpScale.grid.serverbase import returnCodes
 import time
 import struct
-import math
 from random import randrange
-
 
 class Session():
 
@@ -104,7 +104,7 @@ class DaemonClient(object):
         self.key = session.encrkey
         self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__, ssl=ssl, returnformat="")
 
-    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=1, maxretry=2, category=None):
+    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, category=None):
         """
         cmd is command on server (is asci text)
         data is any to be serialized data
@@ -131,23 +131,20 @@ class DaemonClient(object):
         parts = self.transport.sendMsg(category, cmd, data, sendformat, returnformat)
         returncode = parts[0]
 
-        if returncode in ('1', '3'):
+        if returncode == returnCodes.AUTHERROR:
             if retry < maxretry:
                 print "session lost"
 
-                if returncode == '3':
-                    self.initSession()
-                else:
-                    self.reset()
+                self.initSession()
                 retry += 1
                 return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat, returnformat, retry, maxretry, category)
             else:
                 msg = "Authentication error on server.\n"
-                raise RuntimeError(msg)
-        elif returncode == '2':
-            msg = "execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
-            j.errorconditionhandler.raiseBug(msgpub=msg, message="", category="rpc.exec")
-        elif str(returncode) != "0":
+                raise AuthenticationError(msg)
+        elif returncode == returnCodes.METHOD_NOT_FOUND:
+            msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
+            raise MethodNotFoundException(msg)
+        if str(returncode) != returnCodes.OK:
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
             ddict = s.loads(parts[2])
             eco = j.errorconditionhandler.getErrorConditionObject(ddict)
