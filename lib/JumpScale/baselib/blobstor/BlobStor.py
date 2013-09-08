@@ -2,21 +2,6 @@ from JumpScale import j
 from JumpScale.core.baseclasses import BaseEnumeration
 from BlobStorConfigManagement import BlobStorConfigManagement
 
-class BlobStorType(BaseEnumeration):
-    """
-    BlobStor type
-    """
-
-    def __init__(self, value=None):
-        self.value = value
-
-    @classmethod
-    def _initItems(cls):
-        cls.registerItem('local')
-        cls.registerItem('httpftp')
-        cls.finishItemRegistration()
-
-
 class BlobType(BaseEnumeration):
     """
     Blob type
@@ -49,12 +34,14 @@ class BlobStor:
         self.namespace = self.config["namespace"]
         self.name = name
 
-    def _getDestination(self):
+    def _getDestination(self, destproto=None):
+        if not destproto:
+            destproto = ('http', 'ftp')
         if self.config["type"] == "local":
             return 'file://' + self.config["localpath"] + "/%s/" % self.namespace
         else:
             uri = ""
-            for proto in ("ftp", "http"):
+            for proto in destproto:
                 if self.config.get(proto, "").strip() != "":
                     uri = self.config[proto]
                     break
@@ -165,7 +152,7 @@ class BlobStor:
 
     def _put(self, blobstor, metadata, tmpfile):
         hashh = metadata.hash
-        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(), hashh[0:2], hashh[2:4])
+        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(('ftp',)), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
             targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
         else:
