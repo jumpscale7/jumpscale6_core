@@ -148,7 +148,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.actions = None
 
     def loadActions(self):
-
         if self.actions <> None:
             return
 
@@ -1070,9 +1069,16 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         recipe = self.actions.code_getRecipe()
         self.actions.code_update()
         identities = recipe.identify()
-        cfg = self._getConfig()
-        cfg.setIdentities(platform, identities, write=True)
+        self.setIdentities(platform, identities)
+        self.actions.code_package(platform=platform)
         j.action.stop(False)
+
+    def setIdentities(self, platform, identifies):
+        hrd = self.hrd.getHrd().getHRD('qp.name')
+        for repokey, revision in identifies.iteritems():
+            hrdkey = "qp.repositories.%s.%s" % (platform, repokey)
+            hrd.set(hrdkey, revision)
+        hrd.write()
 
     def compile(self,dependencies=False):
         self.loadActions()

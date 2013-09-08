@@ -54,8 +54,8 @@ class BlobStor:
             return 'file://' + self.config["localpath"] + "/%s/" % self.namespace
         else:
             uri = ""
-            for proto in ("http", "ftp"):
-                if self.config[proto] != "":
+            for proto in ("ftp", "http"):
+                if self.config.get(proto, "").strip() != "":
                     uri = self.config[proto]
                     break
             if uri == "":

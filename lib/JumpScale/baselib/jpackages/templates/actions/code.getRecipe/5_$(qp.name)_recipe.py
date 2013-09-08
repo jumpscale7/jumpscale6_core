@@ -6,7 +6,7 @@ def main(j,args,params,tags,tasklet):
     recipe=j.packages.getCodeManagementRecipe()
     #repo=j.clients.bitbucket.getRepoConnection("incubaid","pyapps-5.1-businessplanner")
     
-    #recipe.add(coderepoConnection, sourcePath, destinationPath, branch='')
+    #recipe.add(repo, sourcePath, destinationPath, branch='')
     ##recipe.add(repo,"apps/proposalmaker","/tmp/testdirRemove")  #when outside of sandbox use e.g. /qbase3/... (start with / )
     #recipe.add(repo,"apps/proposalmaker","apps/testdirRemove")  #this will copy inside the sandbox
     

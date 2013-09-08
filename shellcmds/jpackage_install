@@ -17,6 +17,10 @@ if args.package:
         package = package[0]
 else:
     package=j.packagesi.find()
-package.install()
 
+if not package:
+    print "Could not find package with name %s" % args.package
+    j.application.stop(1)
+
+package.install()
 j.application.stop()

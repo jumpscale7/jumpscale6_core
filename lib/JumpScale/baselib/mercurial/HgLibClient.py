@@ -5,6 +5,7 @@ sys.path.append(j.system.fs.joinPaths(j.dirs.getLibPath(),"baselib","mercurial")
 import hglib
 import JumpScale.baselib.codetools
 import os
+import hashlib
         
 class HgLibClient:    
 
@@ -69,6 +70,26 @@ class HgLibClient:
             
         #make sure we have the branchname which has been specified on the local repo            
         self.checkbranch()
+        self.reponame, self.repokey = self._getRepoNameAndKey()
+
+    def _getRepoNameAndKey(self):
+        path = self.basedir
+
+        def getNameAndKeyFromPath(p):
+            name = os.path.basename(p.rstrip(os.path.sep))
+            unique = hashlib.sha1(p).hexdigest()
+            return name, "%s_%s" % (name, unique)
+
+        if path.startswith(j.dirs.codeDir):
+            subPath = path[len(j.dirs.codeDir):].strip(os.path.sep)
+            parts = subPath.split(os.path.sep)
+            if len(parts) != 2:
+                return getNameAndKeyFromPath(path)
+
+            user, name = parts
+            return name, "%s_%s" % (user, name)
+        else:
+            return getNameAndKeyFromPath(path)
        
     def isInitialized(self):
         return j.system.fs.exists(j.system.fs.joinPaths(self.basedir,".hg"))
