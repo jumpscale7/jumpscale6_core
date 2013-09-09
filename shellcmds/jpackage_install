@@ -7,10 +7,10 @@ import JumpScale.baselib.jpackages
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-u','--package',required=False, help='Name of jpackage to be installed')
+parser.add_argument('-r','--reinstall', action='store_true', required=False, help='Name of jpackage to be installed')
 args = parser.parse_args()
 
 
-print "upload package to blobstor"
 if args.package:
     package = j.packages.find(args.package)
     if package:
@@ -22,5 +22,5 @@ if not package:
     print "Could not find package with name %s" % args.package
     j.application.stop(1)
 
-package.install()
+package.install(reinstall=args.reinstall)
 j.application.stop()
