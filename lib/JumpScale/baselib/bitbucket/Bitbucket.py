@@ -148,7 +148,7 @@ class Bitbucket:
 
     def _accountGetConfig(self,accountName=""):
         if accountName not in self.config.list():
-            j.console.echo("Did not find account name %s for bitbucket, will ask for information for this account")
+            j.console.echo("Did not find account name %s for bitbucket, will ask for information for this account" % accountName)
             self.config.add(accountName)
 
         return self.config.getConfig(accountName)
@@ -310,9 +310,7 @@ class BitbucketConnection(object):
                                                                                                          accountConfig['passwd'],repoName)
         resultcode,content,object= self._execCurl(cmd)
         if resultcode>0:
-            from JumpScale.core.Shell import ipshell
             print "DEBUG NOW addrepo bitbucket"
-            ipshell()
         return object
 
 

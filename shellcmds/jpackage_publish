@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from JumpScale import j
 j.application.start("jpackage")
-import JumpScale.baselib.jpackages
+from JumpScale.baselib import cmdutils
 
-j.packagesi.publishAll()
+package, args = cmdutils.getJPackage()
+package.publish(args.message, package.domain)
 j.application.stop()

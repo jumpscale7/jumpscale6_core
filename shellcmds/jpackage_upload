@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 from JumpScale import j
 j.application.start("jpackage")
-import JumpScale.baselib.jpackages
+from JumpScale.baselib import cmdutils
 
 print "upload package to blobstor"
-package=j.packagesi.find()
-if package<>None:
-    package.upload()
-else:
-    raise RuntimeError("Could not find package.")
-
+package, args = cmdutils.getJPackage()
+package.upload()
 j.application.stop()
