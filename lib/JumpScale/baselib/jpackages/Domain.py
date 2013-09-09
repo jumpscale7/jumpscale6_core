@@ -280,31 +280,7 @@ class Domain():
         if not commitMessage:
             commitMessage = j.console.askString('please enter a commit message')
 
-        # If the mercurial source for this domain is not trunck
-        # we build the corresponding package for each modified package in the trunck repo
-        # We update its buildnumber by two
-        # We upload the alternative repo
-        # But we don't have the means to do this
-        # we should minimize the time to commit, this minimizes the change of concurrent modification errors!
-        # This is why bundles are uploaded afterwards
-        # @type source DomainSource
-
         j.logger.log("1) Updating buildNumbers in metadata and uploading files", 1)
-
-        # The build numbers are not modified, but we already committed?
-        # How does this work again?
-        # Tmp is not updated here?
-        # This is actually an update and merge
-        self.updateMetadata(commitMessage=commitMessage)  #makes sure metadata from tmp & active repo is updated
-
-        # self._updateMetadataTmpLocation() Where will the tmp repo get updated??
-
-        # If we are here and the network drops out
-        # What is the result? The tasklets of the last buildNr have changed without incrementing the buildNr
-        # Next time we run this the meta data no longer changed and we dont increment the metaNr as a result of it
-        #@feedback kristof: this is no issue, above will happen again in next run, the metadata was not uploaded yet so no issue
-
-        j.logger.log("2) Updating buildNumbers in metadata and uploading files", 1)
         deletedPackagesMetaData = self.getJPackageTuplesWithDeletedMetadata()
         modifiedPackagesMetaData = self.getJPackageTuplesWithModifiedMetadata()
         modifiedPackagesFiles = self.getJPackageTuplesWithModifiedFiles()
@@ -335,7 +311,8 @@ class Domain():
                 jpackagesActiveObject.upload()
         
 
-        j.logger.log("3) Commiting and uploadind metadata with updated buildNumbers", 1)
+        j.logger.log("2) Commiting and uploadind metadata with updated buildNumbers", 1)
+        self.updateMetadata(commitMessage=commitMessage)  #makes sure metadata from tmp & active repo is updated
         self.publishMetadata(commitMessage=commitMessage)
 
         # Only do this after complete success!
