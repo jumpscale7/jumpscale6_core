@@ -5,8 +5,10 @@ j.application.start("jpackages")
 from JumpScale.baselib import cmdutils
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-r', '--reinstall', required=False, action='store_true', help='Reinstall found package')
+parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
 package, args = cmdutils.getJPackage(parser)
 
-package.install(reinstall=args.reinstall)
+package.package()
+package.upload()
+j.packages.publish(args.message, package.domain)
 j.application.stop()

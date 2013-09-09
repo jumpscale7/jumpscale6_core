@@ -293,7 +293,10 @@ syntax: regexp
                                 else:
                                     j.system.fs.removeFile(j.system.fs.joinPaths(self.basedir,path))
                     elif action == "AddRemove":
-                        self.addremove(message="commit missing owpackage files, addremove")
+                        message = "commit missing jpackage files, addremove"
+                        if commitMessage:
+                            message = commitMessage
+                        self.addremove(message=message)
                     elif action == "Abort":
                         self._raise("Cannot update repo because there are files which are not added or removed yet to local repo." )                    
                 

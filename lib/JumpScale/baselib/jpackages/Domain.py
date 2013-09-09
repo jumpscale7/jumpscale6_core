@@ -295,21 +295,16 @@ class Domain():
         # How does this work again?
         # Tmp is not updated here?
         # This is actually an update and merge
-
         self.updateMetadata(commitMessage=commitMessage)  #makes sure metadata from tmp & active repo is updated
 
         # self._updateMetadataTmpLocation() Where will the tmp repo get updated??
-
-        j.logger.log("2) Updating buildNumbers in metadata and uploading files", 1)
 
         # If we are here and the network drops out
         # What is the result? The tasklets of the last buildNr have changed without incrementing the buildNr
         # Next time we run this the meta data no longer changed and we dont increment the metaNr as a result of it
         #@feedback kristof: this is no issue, above will happen again in next run, the metadata was not uploaded yet so no issue
 
-        j.logger.log("3) Commiting and uploadind metadata with updated buildNumbers", 1)
-        self.publishMetadata(commitMessage=commitMessage)
-
+        j.logger.log("2) Updating buildNumbers in metadata and uploading files", 1)
         deletedPackagesMetaData = self.getJPackageTuplesWithDeletedMetadata()
         modifiedPackagesMetaData = self.getJPackageTuplesWithModifiedMetadata()
         modifiedPackagesFiles = self.getJPackageTuplesWithModifiedFiles()
@@ -339,6 +334,9 @@ class Domain():
                 #jpackagesActiveObject._compress(overwriteIfExists=True)
                 jpackagesActiveObject.upload()
         
+
+        j.logger.log("3) Commiting and uploadind metadata with updated buildNumbers", 1)
+        self.publishMetadata(commitMessage=commitMessage)
 
         # Only do this after complete success!
         # If something goes wrong we know which files where modified
@@ -416,9 +414,9 @@ class Domain():
                   
             #self.bitbucketclient.checkoutMerge    
             if force:
-                self.bitbucketclient.pull(self.bitbucketreponame,update=True,merge=False,checkIgnore=False,force=True)   
+                self.bitbucketclient.pull(self.bitbucketreponame,message=commitMessage,update=True,merge=False,checkIgnore=False,force=True)   
             else:
-                self.bitbucketclient.pull(self.bitbucketreponame,update=True,merge=True,checkIgnore=False,force=False)   
+                self.bitbucketclient.pull(self.bitbucketreponame,message=commitMessage,update=True,merge=True,checkIgnore=False,force=False)   
        
             #link code to right metadata location
             sourcepath = self.getMetadataDir()

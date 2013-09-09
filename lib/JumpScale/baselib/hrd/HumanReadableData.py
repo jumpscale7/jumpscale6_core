@@ -216,6 +216,7 @@ class HRD():
     def _set(self,key,value):
         out=""
         comment="" 
+        keyfound = False
         for line in j.system.fs.fileGetContents(self._path).split("\n"):
             line=line.strip()
             if line=="" or line[0]=="#":
@@ -230,12 +231,17 @@ class HRD():
                     line2=line
                 key2,value2=line2.split("=",1)
                 if key2.lower().strip()==key:
+                    keyfound = True
                     if comment<>"":
                         line="%s=%s #%s"%(key,value,comment)
                     else:
                         line="%s=%s"%(key,value)
             comment=""
             out+=line+"\n"
+
+        out = out.strip('\n') + '\n'
+        if not keyfound:
+            out+="%s=%s\n" % (key, value)
 
         j.system.fs.writeFile(self._path,out)
 

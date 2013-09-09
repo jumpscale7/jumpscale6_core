@@ -1078,7 +1078,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         for repokey, revision in identifies.iteritems():
             hrdkey = "qp.repositories.%s.%s" % (platform, repokey)
             hrd.set(hrdkey, revision)
-        hrd.write()
 
     def compile(self,dependencies=False):
         self.loadActions()
