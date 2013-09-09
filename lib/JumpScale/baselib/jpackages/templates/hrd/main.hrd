@@ -20,9 +20,3 @@ qp.bundles=
 
 ##dependencies which are required for building, same syntax as before
 #qp.builddependency.1= 
-
-
-
-
-
-
