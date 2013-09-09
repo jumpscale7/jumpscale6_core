@@ -138,7 +138,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.supportedPlatforms = self.hrd.getList("qp.supportedplatforms")
         self.bundles = self.hrd.getDict("qp.bundles") #dict with key platformkey and val the hash of bundle
         
-        # self.processDependencies()  #@todo P1
+        self.processDependencies()
 
         j.packages.getDomainObject(self.domain)
 
@@ -228,15 +228,24 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd.set("qp.supportedplatforms",self.supportedPlatforms)
         self.hrd.set("qp.bundles",self.bundles)
 
-        return #@todo P1 implement
-        for dependency in self.dependencies:
-            self._addDependencyToCfgFile(dependency.domain, dependency.name, dependency.supportedPlatforms,
+        for idx, dependency in enumerate(self.dependencies):
+            self._addDependencyToHRD(idx, dependency.domain, dependency.name, dependency.supportedPlatforms,
                                          minversion=dependency.minversion,
                                          maxversion=dependency.maxversion,
-                                         dependencytype=dependency.dependencytype,
-                                         write=False)
+                                         dependencytype=dependency.dependencytype)
 
+    def _addDependencyToHRD(self, idx, domain, name, supportedplatforms, minversion, maxversion, dependencytype):
+        hrd = self.hrd.getHrd().getHRD('qp.name')
+        basekey = 'qp.dependency.%s.%%s' % idx
+        def setValue(name, value):
+            hrd.set(basekey % name, value)
 
+        setValue('domain', domain)
+        setValue('name', name)
+        setValue('supportedplatforms', supportedplatforms)
+        setValue('minversion', minversion)
+        setValue('maxversion', maxversion)
+        setValue('dependencytype', dependencytype)
 
     def addActiveHrdFile(self,name,content):
         activehrd=self.getPathActiveHRD()
@@ -250,9 +259,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
 
     def processDependencies(self):
-        self.dependencies = [] #@todo implement
-        #@todo implement
-        return
+        self.dependencies = []
 
         def depFromInfo(dependencyInfo):
             dep = DependencyDef4()
@@ -260,21 +267,37 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             dep.domain = dependencyInfo["domain"]
             dep.minversion = dependencyInfo["minversion"]
             dep.maxversion = dependencyInfo["maxversion"]
-            dep.supportedPlatforms = dependencyInfo["supported_platforms"]
+            dep.supportedPlatforms = dependencyInfo["supportedplatforms"]
+            dep.dependencytype = j.enumerators.DependencyType4.getByName(dependencyInfo['dependencytype'])
             return dep
 
-        for dependencyInfo in cfg.getRuntimeDependencies():
+        addedstuff = set()
+        for key in self.hrd.prefix('qp.dependency'):
+            parts = key.split('.')
+            if parts[2] in addedstuff:
+                continue
+            key = "%s.%%s" % (".".join(parts[:3]))
+            dependencyInfo = dict()
+            for depkey in ('name', 'domain', 'minversion', 'maxversion', 'dependencytype'):
+                dependencyInfo[depkey] = self.hrd.get(key % depkey)
+                
+            dependencyInfo['supportedplatforms'] = self.hrd.getList(key % 'supportedplatforms')
             dep = depFromInfo(dependencyInfo)
-            dep.dependencytype = j.enumerators.DependencyType4.RUNTIME
+            addedstuff.add(parts[2])
             self.dependencies.append(dep)
 
-        for dependencyInfo in cfg.getBuildDependencies():
-            dep = depFromInfo(dependencyInfo)
-            dep.dependencytype = j.enumerators.DependencyType4.BUILD
-            self.dependencies.append(dep)
 
-        self.requiredblobs = cfg.getRequiredBlobs()
+        #self.requiredblobs = cfg.getRequiredBlobs() #TODO P1
 
+    def addDependency(self, domain, name, supportedplatforms, minversion, maxversion, dependencytype):
+        dep = DependencyDef4()
+        dep.name = name
+        dep.domain = domain
+        dep.minversion = minversion
+        dep.maxversion = maxversion
+        dep.supportedPlatforms = supportedplatforms
+        dep.dependencytype = j.enumerators.DependencyType4.getByName(dependencytype)
+        self.dependencies.append(dep)
 
 #############################################################################
 ####################################  GETS  #################################

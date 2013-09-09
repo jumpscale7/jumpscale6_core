@@ -118,6 +118,12 @@ class HRDPos():
         res=self.get(key)
         return res.split(",")
 
+    def prefix(self, key):
+        key = self._normalizeKey(key)
+        for knownkey in self.__dict__.keys():
+            if knownkey.startswith(key):
+                yield knownkey.replace('_', '.')
+
     def getDict(self,key):
         res=self.get(key)
         res2={}
@@ -262,6 +268,11 @@ class HRD():
     def _fixPath(self):
         self._path=self._path.replace(":","")
         self._path=self._path.replace("  "," ")
+
+    def prefix(self, key):
+        for knownkey in self.__dict__.keys():
+            if knownkey.startswith(key):
+                yield knownkey
 
     def get(self,key,checkExists=False):
         key=key.lower()
@@ -449,15 +460,24 @@ class HumanReadableDataTree():
             return False
         return hrd.exists(key)
 
-    def get(self,key,position="",checkExists=False):
+    def prefix(self, key, position=None):
+        if position is None:
+            hrds = [self.getHrd(x) for x in self.positions.keys() ]
+        else:
+            hrds = [ self.getHrd(position) ]
+        for hrd in hrds:
+            for newkey in hrd.prefix(key):
+                yield newkey
+
+    def get(self,key,position="",checkExists=False,defaultval=False):
         hrd=self.getHrd(position,checkExists=checkExists)
         if checkExists:
             if hrd==False:
-                return False
+                return defaultval
         val=hrd.get(key,checkExists=checkExists)
         if checkExists:
             if val==False:
-                return False
+                return defaultval
         return val
 
     def getInt(self,key,position=""):
