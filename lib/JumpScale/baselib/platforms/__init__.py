@@ -10,5 +10,7 @@ except ImportError:
 
 if platformid in ('Ubuntu', 'LinuxMint'):
     from .ubuntu.Ubuntu import Ubuntu
-    j.system.platform.ubuntu=Ubuntu()
+    ubuntu = Ubuntu()
+    j.system.platform.ubuntu = ubuntu
+    j.system.platform.packages = ubuntu
 

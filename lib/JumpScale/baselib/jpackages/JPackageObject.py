@@ -281,7 +281,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for depkey in ('name', 'domain', 'minversion', 'maxversion', 'dependencytype'):
                 dependencyInfo[depkey] = self.hrd.get(key % depkey)
                 
-            dependencyInfo['supportedplatforms'] = self.hrd.getList(key % 'supportedplatforms')
+            dependencyInfo['supportedplatforms'] = [ j.enumerators.PlatformType.getByName(x) for x in  self.hrd.getList(key % 'supportedplatforms') ]
             dep = depFromInfo(dependencyInfo)
             addedstuff.add(parts[2])
             self.dependencies.append(dep)
@@ -469,8 +469,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             j.console.echo(padding + prefix + '--' + str(self) + end)
 
         if not encountered:
-            for x in range(len(self.dependencies)): # go over my dependencies
-                dep = self.dependencies[x]
+            for idx, dep in enumerate(self.dependencies): # go over my dependencies
                 found = False
                 if dep.dependencytype == dependencytype or dependencytype == None:
                     for plat in dep.supportedPlatforms:
@@ -489,8 +488,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                     # If platform is generic, than we look for a package supporting generic?
                     # Thus we look for a package supporting all platforms? Or do we look for packages supporting any of the enumerated platforms?
                     # We need the do the latter, so the definition of findNewest should reflect this!
-                    depjpackages = j.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform, returnNoneIfNotFound=True)
-                    if not depjpackages:
+                    depjpackage = dep.getPackage(platform=platform, returnNoneIfNotFound=True)
+                    if not depjpackage:
                         self._log('dependency ' + str(dep) + ' could not be resolved for package ' + str(self))
 
                         raise RuntimeError('\
@@ -500,16 +499,16 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
                                                                                            'qpDepDomain': dep.domain})
 
 
-                    childEncountered = str(depjpackages) in depsfound
+                    childEncountered = str(depjpackage) in depsfound
                     childDeptsFound  = depsfound
                     if not childEncountered:
-                        depsfound.add(str(depjpackages))
-                        depsfoundToReturn.append(depjpackages)
+                        depsfound.add(str(depjpackage))
+                        depsfoundToReturn.append(depjpackage)
                     if printTree:
                         #childDeptsFound = set(depsfound)
                         pass
                     if recursive:
-                        depsfoundToReturn.extend(depjpackages.pm_getDependencies(dependencytype, platform,recursive, childDeptsFound,depjpackages, depth + 1, printTree, childPadding, x == len(self.dependencies) - 1, childEncountered))
+                        depsfoundToReturn.extend(depjpackage.pm_getDependencies(dependencytype, platform,recursive, childDeptsFound,depjpackage, depth + 1, printTree, childPadding, idx == len(self.dependencies) - 1, childEncountered))
         return depsfoundToReturn #only returns the new ones
 
 

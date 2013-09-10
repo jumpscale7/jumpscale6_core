@@ -12,6 +12,8 @@ class DependencyType4(BaseEnumeration):
 
 DependencyType4.registerItem('runtime')
 DependencyType4.registerItem('build')
+DependencyType4.registerItem('native')
+DependencyType4.registerItem('python')
 DependencyType4.finishItemRegistration()
 
 
