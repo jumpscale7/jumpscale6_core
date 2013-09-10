@@ -38,7 +38,7 @@ class JPackageClient():
         return JPackageMetadataScanner()
 
     def _renew(self):
-        j.packages = JPackageClient6()
+        j.packages.jumpscale = JPackageClient()
 
     def checkProtectedDirs(self,redo=True,checkInteractive=True):
         """
@@ -110,7 +110,7 @@ class JPackageClient():
         """
         supportedPlatforms=[str(item) for item in supportedPlatforms]
         # Create one in the repo
-        if not domain in j.packages.getDomainNames():
+        if not domain in j.packages.jumpscale.getDomainNames():
             raise RuntimeError('Provided domain is nonexistent on this system')
         if self.getDomainObject(domain).metadataFromTgz:
             raise RuntimeError('The meta data for domain ' + domain + ' is coming from a tgz, you cannot create new packages in it.')
@@ -520,7 +520,7 @@ class JPackageClient():
             j.system.fs.removeDirTree(metadataPath)
         else:
             if j.application.shellconfig.interactive:
-                domainnames=j.console.askChoiceMultiple(j.packages.getDomainNames())
+                domainnames=j.console.askChoiceMultiple(j.packages.jumpscale.getDomainNames())
             else:
                 domainnames=self.getDomainNames()
             for domainName in domainnames:
@@ -557,7 +557,7 @@ class JPackageClient():
                     j.system.fs.copyDirTree(item, j.system.fs.joinPaths(metadataTo,dirname), keepsymlinks=False, eraseDestination=True)
         else:
             if j.application.shellconfig.interactive:
-                domainnames=j.console.askChoiceMultiple(j.packages.getDomainNames())
+                domainnames=j.console.askChoiceMultiple(j.packages.jumpscale.getDomainNames())
             else:
                 domainnames=self.getDomainNames()
             for domainName in domainnames:
@@ -581,7 +581,7 @@ class JPackageClient():
            
         else:
             if j.application.shellconfig.interactive:
-                domainnames=j.console.askChoiceMultiple(j.packages.getDomainNames())
+                domainnames=j.console.askChoiceMultiple(j.packages.jumpscale.getDomainNames())
             else:
                 domainnames=self.getDomainNames()
             for domainName in domainnames:
@@ -593,10 +593,10 @@ class JPackageClient():
         @param commitMessage: string - The commit message you want to assign to the publish
         """
         if domain=="":
-            for domain in j.packages.getDomainNames():
+            for domain in j.packages.jumpscale.getDomainNames():
                 self.publish( commitMessage=commitMessage,domain=domain)
         else:
-            domainobject=j.packages.getDomainObject(domain)
+            domainobject=j.packages.jumpscale.getDomainObject(domain)
             domainobject.publish(commitMessage=commitMessage)
 
 
@@ -739,7 +739,7 @@ class JPackageClient():
         g.graph_attr['ratio']=1.3
     
         #Generate the graph
-        for pack in j.packages.getJPackageObjects():
+        for pack in j.packages.jumpscale.getJPackageObjects():
             dn= 'cluster_'+pack.domain
             s= g.add_subgraph(name = dn)
             s.add_node(_getPackageTagName(pack))
@@ -764,7 +764,7 @@ class JPackageClient():
                 linkedNodes.append(n)
      
         #Add the domain name to the graph
-        for pack in j.packages.getJPackageObjects():
+        for pack in j.packages.jumpscale.getJPackageObjects():
             n=pack.domain
             dn= 'cluster_'+pack.domain       
     

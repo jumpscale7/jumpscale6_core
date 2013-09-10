@@ -140,7 +140,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         
         self.processDependencies()
 
-        j.packages.getDomainObject(self.domain)
+        j.packages.jumpscale.getDomainObject(self.domain)
 
         self.blobstorRemote = None
         self.blobstorLocal = None
@@ -162,7 +162,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.actions = ActionManager(self)
         
-        do = j.packages.getDomainObject(self.domain)
+        do = j.packages.jumpscale.getDomainObject(self.domain)
         if do.blobstorremote.strip() <> "":
             self.blobstorRemote = j.clients.blobstor.get(do.blobstorremote)
 
@@ -194,13 +194,13 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         else:
             do = True
         if do:
-            path = j.packages.getDataPath(self.domain, self.name, self.version)
+            path = j.packages.jumpscale.getDataPath(self.domain, self.name, self.version)
             j.system.fs.removeDirTree(path)
-            path = j.packages.getMetadataPath(self.domain, self.name,self.version)
+            path = j.packages.jumpscale.getMetadataPath(self.domain, self.name,self.version)
             j.system.fs.removeDirTree(path)
-            path = j.packages.getQPActionsPath(self.domain, self.name,self.version)
+            path = j.packages.jumpscale.getQPActionsPath(self.domain, self.name,self.version)
             j.system.fs.removeDirTree(path)
-            for f in j.system.fs.listFilesInDir(j.packages.getBundlesPath()):
+            for f in j.system.fs.listFilesInDir(j.packages.jumpscale.getBundlesPath()):
                 baseName = j.system.fs.getBaseName(f)
                 if baseName.split('__')[0] == self.name and baseName.split('__')[1] == self.version:
                     j.system.fs.deleteFile(f)
@@ -328,7 +328,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         This is a heavy operation and might take some time
         """
         ##self.assertAccessable()
-        return [p for p in j.packages.getJPackageObjects() if self in p.getDependencies(recursive=recursive, platform=platform)]
+        return [p for p in j.packages.jumpscale.getJPackageObjects() if self in p.getDependencies(recursive=recursive, platform=platform)]
 
 
     def getState(self):
@@ -360,19 +360,19 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         Return absolute pathname of the package's metadatapath
         """
-        return j.packages.getQPActionsPath(self.domain, self.name, self.version)
+        return j.packages.jumpscale.getQPActionsPath(self.domain, self.name, self.version)
 
     def getPathActiveHRD(self):
         """
         Return absolute path to active hrd of package
         """
-        return j.packages.getQPActiveHRDPath(self.domain, self.name, self.version)
+        return j.packages.jumpscale.getQPActiveHRDPath(self.domain, self.name, self.version)
 
     def getPathMetadata(self):
         """
         Return absolute pathname of the package's metadatapath active
         """
-        return j.packages.getMetadataPath(self.domain, self.name, self.version)
+        return j.packages.jumpscale.getMetadataPath(self.domain, self.name, self.version)
 
 
     def getPathFiles(self):
@@ -380,7 +380,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Return absolute pathname of the jpackages's filespath
         """
         ##self.assertAccessable()
-        return j.packages.getDataPath(self.domain, self.name, self.version)
+        return j.packages.jumpscale.getDataPath(self.domain, self.name, self.version)
 
 
     def getPathFilesPlatform(self, platform):
@@ -435,7 +435,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                                         # Do this without try catch
                                         # pass boolean to findnewest that it should return None instead of fail
             try:
-                j.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform)
+                j.packages.jumpscale.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform)
             except Exception, e:
                 print str(e)
                 broken.append(dep)
@@ -691,7 +691,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         Check if files are modified in the JPackage metadata
         """
         ##self.assertAccessable()
-        return self in j.packages.getDomainObject(self.domain).getJPackageTuplesWithModifiedMetadata()
+        return self in j.packages.jumpscale.getDomainObject(self.domain).getJPackageTuplesWithModifiedMetadata()
 
     def isInstalled(self):
         """
@@ -816,7 +816,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         #self.checkProtectedDirs(redo=True,checkInteractive=True)
         action="install"
 
-        if j.packages._actionCheck(self,action):
+        if j.packages.jumpscale._actionCheck(self,action):
             return True
 
 
@@ -1207,7 +1207,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
                 continue
 
             with open(path) as f:
-                cfg = j.packages.pm_getJPackageConfig(f)
+                cfg = j.packages.jumpscale.pm_getJPackageConfig(f)
                 buildNr = cfg.getBuildNumber()
 
             for r in result:
@@ -1242,7 +1242,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         for nodeId in nodeIds:
             content = hgc.cat(nodeId, subPath)
             with contextlib.closing(StringIO(content)) as f:
-                cfg = j.packages.pm_getJPackageConfig(f)
+                cfg = j.packages.jumpscale.pm_getJPackageConfig(f)
                 yield nodeId, cfg
 
     def _getCfgSubPath(self, qualitylevel):
@@ -1333,7 +1333,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             for dep in deps:
                 dep.download(dependencies=False, destinationDirectory=destinationDirectory,allplatforms=allplatforms,expand=expand)
 
-        j.packages.getDomainObject(self.domain)
+        j.packages.jumpscale.getDomainObject(self.domain)
 
         self._log('Downloading bundles for package ' + str(self))
         state = self.getState()
@@ -1392,7 +1392,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self._log('Begin Uploading bundles for package ' + str(self) + ' ... (Please wait)')
         self.loadActions()
 
-        j.packages.getDomainObject(self.domain)
+        j.packages.jumpscale.getDomainObject(self.domain)
 
         updateBuildnr = False
         foundAnyPlatform = False
@@ -1527,7 +1527,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         Set in the corresponding jpackages's state file if reconfiguration is needed
         """
         self.getState().setIsPendingReconfiguration(True)
-        j.packages._setHasPackagesPendingConfiguration(True)
+        j.packages.jumpscale._setHasPackagesPendingConfiguration(True)
 
     def isPendingReconfiguration(self):
         """
@@ -1551,10 +1551,10 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         @type actionCaching: boolean
         """
         if actionCaching:
-            if j.packages._actionCheck(self, action):
+            if j.packages.jumpscale._actionCheck(self, action):
                 return True
 
-            j.packages._actionSet(self, action)
+            j.packages.jumpscale._actionSet(self, action)
 
         #process all dependencies
         state = self.getState()
@@ -1579,7 +1579,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         @return: domain object for this Q-Package
         @rtype: Domain.Domain
         """
-        return j.packages.getDomainObject(self.domain)
+        return j.packages.jumpscale.getDomainObject(self.domain)
 
     def _raiseError(self,message):
         ##self.assertAccessable()
@@ -1599,7 +1599,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
     def __cmp__(self,other):
         if other == None or other=="":
             return False
-        return self.name == other.name and str(self.domain) == str(other.domain) and j.packages._getVersionAsInt(self.version) == j.packages._getVersionAsInt(other.version)
+        return self.name == other.name and str(self.domain) == str(other.domain) and j.packages.jumpscale._getVersionAsInt(self.version) == j.packages.jumpscale._getVersionAsInt(other.version)
 
     def __repr__(self):
         return self.__str__()

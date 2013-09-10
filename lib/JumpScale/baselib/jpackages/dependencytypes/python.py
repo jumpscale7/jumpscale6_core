@@ -3,5 +3,6 @@ from . import AbstractPackage
 
 class Package(AbstractPackage):
     def install(self, *args, **kwargs):
-        j.packages.native.install(self.name)
+        # TODO do something with versions
+        j.packages.python.install(self.name)
 

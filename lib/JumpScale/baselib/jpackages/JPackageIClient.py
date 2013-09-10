@@ -11,17 +11,17 @@ class JPackageIClient():
     """
     
     def __init__(self):
-        self.checkProtectedDirs=j.packages.checkProtectedDirs
+        self.checkProtectedDirs=j.packages.jumpscale.checkProtectedDirs
 
     def getPackagesWithBrokenDependencies(self):
-        return [p for p in j.packages.find('*') if len(p.getBrokenDependencies()) > 0]
+        return [p for p in j.packages.jumpscale.find('*') if len(p.getBrokenDependencies()) > 0]
                     
     def getPackage(self,domain,name,version):
         """
         Get an interactive JPackage Object,
         the underlying JPackage object can be obtained from myInteractivePackageObject.jpackages
         """
-        return JPackageIObject(j.packages.get(domain,name,version))
+        return JPackageIObject(j.packages.jumpscale.get(domain,name,version))
     
     # builds the required directory structure
     # When repo is not None a default codemanagement tasklet is generated
@@ -33,8 +33,8 @@ class JPackageIClient():
         install.py, configure.py, package.py, codemanagement.py, backup.py, startstop.py
         After editing these files to their correct content the new package can be published using aPackage.quickPublish()
         """
-        domain  = j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
-        j.packages.getDomainObject(domain)._ensureDomainCanBeUpdated()
+        domain  = j.console.askChoice(j.packages.jumpscale.getDomainNames(), "Please select a domain")
+        j.packages.jumpscale.getDomainObject(domain)._ensureDomainCanBeUpdated()
 
         name    = j.console.askString("Please provide a name")
         version = j.console.askString("Please provide a version","1.0")
@@ -42,7 +42,7 @@ class JPackageIClient():
         supportedPlatforms = None
         while not supportedPlatforms:
             supportedPlatforms = j.console.askChoiceMultiple(j.enumerators.PlatformType.ALL, 'Please enumerate the supported platforms')
-        qp      = j.packages.createNewJPackage(domain, name, version, descr, supportedPlatforms)
+        qp      = j.packages.jumpscalec.reateNewJPackage(domain, name, version, descr, supportedPlatforms)
         res = JPackageIObject(qp)
         self._attachLastPackages([res])
         return res
@@ -54,7 +54,7 @@ class JPackageIClient():
         """
         if not name:
             name = j.console.askString("Please provide the name or part of the name of the package to search for (e.g *extension* -> lots of extensions)")
-        res = [JPackageIObject(p) for p in j.packages.find(domain=domain, name=name, version=version, platform=platform)]
+        res = [JPackageIObject(p) for p in j.packages.jumpscale.find(domain=domain, name=name, version=version, platform=platform)]
         if not res:
             j.console.echo('No packages found, did you forget i.qp.updateMetadataAll()?')
         return res
@@ -104,8 +104,8 @@ class JPackageIClient():
         prints out the current configuration.
         more concrete this prints out all bundles sources and the repository for each domain.
         '''
-        for d in j.packages.getDomainNames():
-            j.console.echo('Domain: ' + str(j.packages.getDomainObject(d)))
+        for d in j.packages.jumpscale.getDomainNames():
+            j.console.echo('Domain: ' + str(j.packages.jumpscale.getDomainObject(d)))
         j.console.echo('These configurations can be altered by manually editing the file:')
         j.console.echo('sources.cfg under /opt/qbase6/cfg/jpackages/ ')
         
@@ -163,10 +163,10 @@ class JPackageIClient():
         The install packages that have a buildnr that has been outdated our reinstall, thust updating them to the latest build.
         '''
         # update all meta information:
-        j.packages.updateMetaData()
+        j.packages.jumpscale.updateMetaData()
         # iterate over all install packages and install them
         # only when they are outdated will they truly install
-        for p in j.packages.getInstalledPackages():
+        for p in j.packages.jumpscale.getInstalledPackages():
             p.install()
     
     def updateMetaDataAll(self,force=False):
@@ -175,14 +175,14 @@ class JPackageIClient():
         This used to be called updateJPackage list
         @param is force True then local changes will be lost if any
         """
-        j.packages.updateMetaData("",force)
+        j.packages.jumpscale.updateMetaData("",force)
 
     def mergeMetaDataAll(self,):
         """
         Tries to merge the metadata information of all jpackages with info on remote repo.
         This used to be called updateJPackage list
         """        
-        j.packages.mergeMetaData("")        
+        j.packages.jumpscalemergeMetaData("")        
         
     def updateMetaDataForDomain(self,domainName=""):
         """
@@ -190,8 +190,8 @@ class JPackageIClient():
         This used to be called updateJPackage list
         """
         if domainName=="":
-            domainName = j.console.askChoice(j.packages.getDomainNames(), "Please choose a domain")
-        j.packages.getDomainObject(domainName).updateMetadata("")
+            domainName = j.console.askChoice(j.packages.jumpscale.getDomainNames(), "Please choose a domain")
+        j.packages.jumpscale.getDomainObject(domainName).updateMetadata("")
 
     def publishAll(self, commitMessage=None):
         """
@@ -199,7 +199,7 @@ class JPackageIClient():
         """
         if not commitMessage:
             commitMessage = j.console.askString('please enter a commit message')
-        for domain in j.packages.getDomainNames():
+        for domain in j.packages.jumpscale.getDomainNames():
             self.publishDomain(domain, commitMessage=commitMessage)
 
     def publishDomain(self, domain="", commitMessage=None):
@@ -212,9 +212,9 @@ class JPackageIClient():
         new bundles are created and uploaded to the blobstor server
         """
         if domain=="":
-            domain=j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
-        j.packages.getDomainObject(domain)._ensureDomainCanBeUpdated()
-        j.packages.getDomainObject(domain).publish(commitMessage=commitMessage)
+            domain=j.console.askChoice(j.packages.jumpscale.getDomainNames(), "Please select a domain")
+        j.packages.jumpscale.getDomainObject(domain)._ensureDomainCanBeUpdated()
+        j.packages.jumpscale.getDomainObject(domain).publish(commitMessage=commitMessage)
 
     def publishMetaDataAsTarGz(self, domains=[]):
         """
@@ -222,6 +222,6 @@ class JPackageIClient():
         After this the that uptain there metadata as a tar can download the latest metadata.
         """
         if domains==[]:
-            domains=j.console.askChoiceMultiple(j.packages.getDomainNames(), "Please select a domain")
+            domains=j.console.askChoiceMultiple(j.packages.jumpscale.getDomainNames(), "Please select a domain")
         for domain in domains:
-            j.packages.publishMetaDataAsTarGz(domain=domain)
+            j.packages.jumpscale.publishMetaDataAsTarGz(domain=domain)

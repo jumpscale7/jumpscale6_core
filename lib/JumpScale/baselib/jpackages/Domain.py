@@ -287,10 +287,10 @@ class Domain():
         for jpackagesActive in modifiedPackages:
             if jpackagesActive in deletedPackagesMetaData:
                 j.logger.log("Deleting files of package " + str(jpackagesActive), 1)
-                j.system.fs.removeDirTree(j.packages.getDataPath(*jpackagesActive))
+                j.system.fs.removeDirTree(j.packages.jumpscale.getDataPath(*jpackagesActive))
             else:
             #if jpackagesActive in newPackagesMetaData or jpackagesActive in modifiedPackagesMetaData:
-                jpackagesActiveObject = j.packages.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
+                jpackagesActiveObject = j.packages.jumpscale.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
                 j.logger.log("For jpackages: " + str(jpackagesActiveObject), 1)
                 j.logger.log("current numbers : " + jpackagesActiveObject.reportNumbers(), 1)
                 # Update build number
@@ -306,7 +306,7 @@ class Domain():
 
             # At this point we may be
             if jpackagesActive in modifiedPackagesFiles:
-                jpackagesActiveObject = j.packages.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
+                jpackagesActiveObject = j.packages.jumpscale.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
                 #jpackagesActiveObject._compress(overwriteIfExists=True)
                 jpackagesActiveObject.upload()
         
@@ -318,7 +318,7 @@ class Domain():
         # Only do this after complete success!
         # If something goes wrong we know which files where modified
         for jpackagesActive in modifiedPackagesFiles:
-            jpackagesActiveObject = j.packages.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
+            jpackagesActiveObject = j.packages.jumpscale.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
             jpackagesActiveObject._resetPreparedForUpdatingFiles()
     
     
@@ -404,7 +404,7 @@ class Domain():
             j.action.stop()
         else:
             repoUrl        = self.metadataDownload
-            targetTarDir   = j.packages.getMetaTarPath(self.domainname)
+            targetTarDir   = j.packages.jumpscale.getMetaTarPath(self.domainname)
             targetTarFileName = ("metadata_qp5"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
             remoteTarPath  = j.system.fs.joinPaths(repoUrl, targetTarFileName)  #@todo P3 needs to work with new tar filenames corresponding to qualitylevels
  
@@ -457,7 +457,7 @@ class Domain():
             id = hg.id()            
             j.system.fs.writeFile(revisionTxt, id) #this to remember from which revision the tgz has been created
             
-        targetTarDir  = j.packages.getMetaTarPath(self.domainname)
+        targetTarDir  = j.packages.jumpscale.getMetaTarPath(self.domainname)
         targetTarFileName = ("metadata_qp5"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
         targetTarPath = j.system.fs.joinPaths(targetTarDir, targetTarFileName)
         
@@ -490,14 +490,14 @@ class Domain():
         Returns the lastest buildnumber
         Buildnr comes from default tip of mercurial repo
         """        
-        jpackages=j.packages.get(domain,name,version,"default",fromTmp=True)
+        jpackages=j.packages.jumpscale.get(domain,name,version,"default",fromTmp=True)
         return jpackages.buildNr
 
     def getJPackages(self):
         """
         Returns a list of all jpackages of the currently active domain
         """
-        return j.packages.find(domain=self.domainname)
+        return j.packages.jumpscale.find(domain=self.domainname)
     
     
     def switchQualityLevel(self, qlevel):

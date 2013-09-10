@@ -3,5 +3,5 @@ from JumpScale import j
 j.application.start("jpackage")
 import JumpScale.baselib.jpackages
 
-j.packages.updateMetaData(force=True)
+j.packages.jumpscale.updateMetaData(force=True)
 j.application.stop()

@@ -79,7 +79,7 @@ class QPModel():
         self.name=name
         self.path=path
         
-        domainnameList=[domain.domainname for domain in j.packages.domains if domain.bitbucketreponame==bitbucketreponame]
+        domainnameList=[domain.domainname for domain in j.packages.jumpscale.domains if domain.bitbucketreponame==bitbucketreponame]
         if len(domainnameList)>0:
             self.domain=domainnameList[0]
         else:
@@ -128,7 +128,7 @@ class QPModel():
                 #if self.qualitylevel=="unstable":
                     #if j.application.shellconfig.interactive:
                         #if j.console.askYesNo("Package %s_%s has a recipe but no bundle. Do you want to package and upload the bundle?" % (self.name, self.version)):
-                            #result=j.packages.find(self.domain,self.name,self.version)
+                            #result=j.packages.jumpscale.find(self.domain,self.name,self.version)
                             #if not result:
                                 #raise RuntimeError("Found no Q-Package %s in %s with version %s" % (self.name, self.domain, self.version))
                             #elif len(result)==1:
@@ -162,7 +162,7 @@ class QPModel():
         self.scanner.raiseError("%s %s %s %s: %s" % (self.domain,self.name,self.qualitylevel,self.version,message))
 
     def getQPobject(self):
-        return j.packages.find(self.name,self.domain,self.version)
+        return j.packages.jumpscale.find(self.name,self.domain,self.version)
 
     def _loadModule(self,path):
         '''Load the Python module from disk using a random name'''

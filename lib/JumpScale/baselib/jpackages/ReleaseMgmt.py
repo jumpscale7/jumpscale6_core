@@ -34,7 +34,7 @@ def compareDependencyFiles(file1, file2):
 
 class ReleaseMgmt():
     """
-    @qlocation = j.packages.releasemgmt
+    @qlocation = j.packages.jumpscale.releasemgmt
     """
 
 
@@ -114,7 +114,7 @@ class ReleaseMgmt():
         for str in strlist:
             pckfound = False
             pckattributes = str.split('|')
-            pckfoundlist = j.packages.find(name=pckattributes[1],domain=pckattributes[0], version=pckattributes[2])
+            pckfoundlist = j.packages.jumpscale.find(name=pckattributes[1],domain=pckattributes[0], version=pckattributes[2])
             for pck in pckfoundlist:
                 if repr(pck.buildNr) == pckattributes[3]:
                     addedpackagelist.append(pck)
@@ -166,9 +166,9 @@ class ReleaseMgmt():
         tar = tarfile.open(name=tarpath, mode='w:gz')
         try:   
             for domain in domainlist:
-                domainobject = j.packages.getDomainObject(domain)
+                domainobject = j.packages.jumpscale.getDomainObject(domain)
                 metadatabranchfile = domainobject.metadataBranch + '.branch.tgz'
-                metadatatarfile = j.system.fs.joinPaths(j.packages.getMetaTarPath(domain), metadatabranchfile)
+                metadatatarfile = j.system.fs.joinPaths(j.packages.jumpscale.getMetaTarPath(domain), metadatabranchfile)
                 domaindir = j.system.fs.joinPaths(tempDir, domain)
                 if j.system.fs.exists(metadatatarfile):
                     j.system.fs.copyFile(metadatatarfile, domaindir)

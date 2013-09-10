@@ -3,7 +3,7 @@ def main(j,args,params,tags,tasklet):
     #create codemgmt recipe
     #a codemanagement recipe is used to define where the code from the code repo needs to go to
     
-    recipe=j.packages.getCodeManagementRecipe()
+    recipe=j.packages.jumpscale.getCodeManagementRecipe()
     #repo=j.clients.bitbucket.getRepoConnection("incubaid","pyapps-5.1-businessplanner")
     
     #recipe.add(repo, sourcePath, destinationPath, branch='')
