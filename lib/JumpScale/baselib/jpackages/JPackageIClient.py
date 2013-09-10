@@ -42,7 +42,7 @@ class JPackageIClient():
         supportedPlatforms = None
         while not supportedPlatforms:
             supportedPlatforms = j.console.askChoiceMultiple(j.enumerators.PlatformType.ALL, 'Please enumerate the supported platforms')
-        qp      = j.packages.jumpscalec.reateNewJPackage(domain, name, version, descr, supportedPlatforms)
+        qp      = j.packages.jumpscale.createNewJPackage(domain, name, version, descr, supportedPlatforms)
         res = JPackageIObject(qp)
         self._attachLastPackages([res])
         return res

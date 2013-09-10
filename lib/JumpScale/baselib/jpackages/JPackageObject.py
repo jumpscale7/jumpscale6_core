@@ -135,7 +135,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.export = self.hrd.getBool("qp.export")
         self.autobuild = self.hrd.getBool("qp.autobuild")
         self.taskletsChecksum = self.hrd.get("qp.taskletschecksum")
-        self.supportedPlatforms = self.hrd.getList("qp.supportedplatforms")
+        self.supportedPlatforms = [j.enumerators.PlatformType.getByName(p) for p in self.hrd.getList("qp.supportedplatforms")]
         self.bundles = self.hrd.getDict("qp.bundles") #dict with key platformkey and val the hash of bundle
         
         self.processDependencies()
