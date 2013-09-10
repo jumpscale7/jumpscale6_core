@@ -921,6 +921,9 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         @param destination: destination of the files, default is the sandbox
         """
+        return self.copyFileParts("", destination)
+
+    def copyFileParts(self, subdir, destination=""):
         _jpackagesDir = self.getPathFiles()
 
         self._log('Syncing %s to sandbox' % _jpackagesDir)
@@ -929,6 +932,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             destination = j.dirs.baseDir
         for platformDir in platformDirsToCopy:
             self._log('Syncing files in <%s>' % platformDir)
+            platformDir = j.system.fs.joinPaths(platformDir, subdir)
             self._copyFilesTo(platformDir, destination)
 
     def _copyFilesTo(self, sourceDir, destination):
