@@ -129,22 +129,7 @@ class BasePMExtension(object):
         print msg
         j.errorconditionhandler.raiseBug(msg,pythonTraceBack=tb,category="extensions.load")
         
-        if jumpscale.qshellconfig.__dict__.has_key("debug") and not jumpscale.qshellconfig.debug:
-            print 'To see a full error report, check your logserver or run Q-Shell using debug mode'
-            # Reset TTY
-            # We need to reset our TTY to the settings it had before
-            # launching the ipython shell, which uses readline which
-            # can put our TTY in raw mode, which gets funky if we get
-            # back into $(getent passwd `whoami` | cut -d: -f7)
-            try:
-                import termios
-                termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, __IPYTHON__.tty_settings)
-            except:
-                pass
-
-            j.application.stop()
-        else:
-            j.application.stop()
+        j.application.stop()
 
     def _loadClassModule(self):
         """Load the class module for this extension"""

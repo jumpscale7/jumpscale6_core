@@ -233,7 +233,6 @@ class ErrorConditionHandler():
         
         if self.lastAction<>"":
             j.logger.log("Last action done before error was %s" % self.lastAction)
-            message="%s\n%s\n" % (message,"Last action done before error was: %s" % self.lastAction)
         
         self._dealWithRunningAction()      
                 
