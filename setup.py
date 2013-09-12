@@ -12,6 +12,8 @@ setup(name='JumpScale Portal',
 
       packages=find_packages('lib'),
       package_dir = {'': 'lib'},
+      include_package_data=True,
+      zip_safe = False,
       namespace_packages = ['JumpScale'],
 
       download_url='http://pypi.python.org/pypi/JumpScale/',
@@ -22,4 +24,3 @@ setup(name='JumpScale Portal',
         'Programming Language :: Python',
     ]
 )
-
