@@ -946,6 +946,10 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             # Create the ancestors
             j.system.fs.createDir(j.system.fs.getDirName(file))
 
+
+        if j.system.fs.isFile(sourceDir):
+            j.system.fs.copyFile(sourceDir, destination)
+
         if sourceDir [-1] != '/':
             sourceDir = sourceDir + '/'
         prefixHiddenFile = sourceDir + '_'
