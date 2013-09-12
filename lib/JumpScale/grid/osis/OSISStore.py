@@ -39,7 +39,7 @@ class OSISStore(object):
             import pyelasticsearch
             try:
                 self.elasticsearch.create_index(self.getIndexName())
-            except pyelasticsearch.IndexAlreadyExistsError:
+            except pyelasticsearch.exceptions.ElasticHttpError:
                 pass
         else:
             self.elasticsearch = None
