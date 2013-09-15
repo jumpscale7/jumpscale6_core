@@ -452,13 +452,13 @@ class Console:
             
 
     def _askChoice(self, choicearray, descr=None, sort=False):
-        if j.application.shellconfig.interactive<>True:
-            raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         if not choicearray:
             return None
         if len(choicearray) == 1:
             self.echo("Found exactly one choice: %s"%(choicearray[0]))
             return choicearray[0]
+        if j.application.shellconfig.interactive<>True:
+            raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         descr = descr or "\nMake a selection please: "
         if sort:
             choicearray.sort()
