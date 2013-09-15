@@ -72,11 +72,11 @@ class JSDevelTools:
         name="owbackend"
         self.startBackendByobu(["ftpgw","portal"],name=name)
 
-        items=j.system.fs.listFilesInDir("/opt/jumpscale/apps",True,filter="appserver.cfg")
-        items=[item.split("/cfg")[0] for item in items]
-        items=[item.replace("/opt/jumpscale/apps/","") for item in items]
-        items=[item for item in items if item.find("examples")==-1 and item.find("portalbase") == -1]
         if not path: #to enable startPortal to work non-interactively as well
+            items=j.system.fs.listFilesInDir("/opt/jumpscale/apps",True,filter="appserver.cfg")
+            items=[item.split("/cfg")[0] for item in items]
+            items=[item.replace("/opt/jumpscale/apps/","") for item in items]
+            items=[item for item in items if item.find("examples")==-1 and item.find("portalbase") == -1]
             print "select which portal you would like to start."
             path=j.console.askChoice(items)
         if path==None:
