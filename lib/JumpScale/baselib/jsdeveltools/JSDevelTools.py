@@ -27,6 +27,7 @@ class JSDevelTools:
         j.system.platform.screen.createSession(name,screens)
 
         #start elastic search if needed
+        print '* Starting elasticsearch'
         if not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
             cmd="/etc/init.d/elasticsearch restart"
             j.system.process.execute(cmd)
@@ -35,28 +36,37 @@ class JSDevelTools:
             j.system.net.waitConnectionTest("127.0.0.1",9200,30)
 
         #start osis
+        print '* Starting osis'
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","osis")
         cmd="cd %s;python osisServerStart.py"%path
         j.system.platform.screen.executeInScreen(name,"osis",cmd,wait=1)
+        if not j.system.net.waitConnectionTest('localhost', 5544, 30):
+            raise RuntimeError("Failed to start osis server")
+
 
         #start broker
+        print '* Starting broker'
         pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
         cmd="cd %s;python zbrokerStart.py"%pathb
         j.system.platform.screen.executeInScreen(name,"broker",cmd,wait=1)
+        if not j.system.net.waitConnectionTest('localhost', 5555, 30):
+            raise RuntimeError("Failed to start broker daemon")
+
 
         #start logger
+        print '* Starting logger'
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","logger")
         cmd="cd %s;python loggerStart.py"%path
         j.system.platform.screen.executeInScreen(name,"logger",cmd,wait=1)
+        if not j.system.net.waitConnectionTest('localhost', 4444, 30):
+            raise RuntimeError("Failed to start logger server")
 
+        print '* Starting workers'
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
         for worker in range(1,nrworkers+1):
             roles="system,worker.%s"%worker
             cmd="cd %s;python zworkerStart.py %s %s %s %s"%(path,"127.0.0.1",5556,worker,roles)
             j.system.platform.screen.executeInScreen(name,"w%s"%worker,cmd,wait=1)
-
-
-        print "* started all required systems"
 
     def startPortalByobu(self, path=None):
         name="owbackend"
@@ -65,18 +75,24 @@ class JSDevelTools:
         items=j.system.fs.listFilesInDir("/opt/jumpscale/apps",True,filter="appserver.cfg")
         items=[item.split("/cfg")[0] for item in items]
         items=[item.replace("/opt/jumpscale/apps/","") for item in items]
-        items=[item for item in items if item.find("examples")==-1]
-        items=[item for item in items if item.find("portalbase")==-1]
+        items=[item for item in items if item.find("examples")==-1 and item.find("portalbase") == -1]
         if not path: #to enable startPortal to work non-interactively as well
             print "select which portal you would like to start."
             path=j.console.askChoice(items)
         if path==None:
-            raise RuntimeError("Could not find a portal, please copy a portan in /opt/jumpscale/apps/")
+            raise RuntimeError("Could not find a portal, please copy a portal in /opt/jumpscale/apps/")
+
+        print '* Starting portal'
         cmd="cd /opt/jumpscale/apps/%s;python start_appserver.py"%(path)
         j.system.platform.screen.executeInScreen(name,"portal",cmd,wait=1)
+        if not j.system.net.waitConnectionTest('localhost', 9999, 30):
+            raise RuntimeError("Failed to start portal")
 
         #start ftp
+        print '* Starting ftpgw'
         pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","portalftpgateway")
         cmd="cd %s;python ftpstart.py"%pathb
         j.system.platform.screen.executeInScreen(name,"ftpgw",cmd,wait=1)
+        if not j.system.net.waitConnectionTest('localhost', 21, 30):
+            raise RuntimeError("Failed to start ftp")
 
