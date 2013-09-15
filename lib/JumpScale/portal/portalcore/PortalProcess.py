@@ -337,6 +337,8 @@ class PortalProcess():
         configtemplate = self._replaceVar(configtemplate)
 
         if local:
+            varnginx = j.system.fs.joinPaths(j.dirs.varDir, 'nginx')
+            j.system.fs.createDir(varnginx)
             if j.system.platformtype.isWindows():
 
                 apppath = self._replaceVar(ini.getValue("nginx", "apppath")).replace("\\", "/")
