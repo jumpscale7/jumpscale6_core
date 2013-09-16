@@ -137,7 +137,7 @@ class Ubuntu:
         if self._cache==None:
             self.initApt()
         import apt.debfile
-        deb = apt.debfile.DebPackage(path)
+        deb = apt.debfile.DebPackage(path, cache=self._cache)
         deb.install()
 
     def remove(self, packagename):
