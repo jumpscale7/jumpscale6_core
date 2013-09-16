@@ -45,7 +45,10 @@ class OSISClient():
         """
         if key none then key will be given by server
         """
-        data = value.getSerializable()
+        if isinstance(value, str):
+            data = value
+        else:
+            data = value.getSerializable()
         namespaceid, catid = self._getIds(namespace, category)
         if compress:
             value = j.db.serializers.lzma.dumps(data)

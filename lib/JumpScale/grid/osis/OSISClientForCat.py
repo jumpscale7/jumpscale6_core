@@ -23,22 +23,22 @@ class OSISClientForCat():
         # value=self.client.sendcmd("set",namespaceid=self.namespaceid,catid=self.catid,key=key,value=value,compress=compress)
         return value
 
-    def get(self, namespace, category, key, compress=False):
+    def get(self, key, compress=False):
         value = self.client.get(namespaceid=self.namespaceid, catid=self.catid, key=key, compress=compress)
         # value=self.client.sendcmd("get",namespaceid=self.namespaceid,catid=self.catid,key=key,compress=compress)
         if compress:
             value = j.db.serializers.lzma.loads(value)
         return value
 
-    def delete(self, namespace, category, key):
+    def delete(self, key):
         return self.client.delete(namespaceid=self.namespaceid, catid=self.catid, key=key)
 
-    def destroy(self, namespace, category):
+    def destroy(self):
         return self.client.destroy(namespaceid=self.namespaceid, catid=self.catid)
 
-    def list(self, namespace, category, prefix=""):
+    def list(self, prefix=""):
         return self.client.list(namespaceid=self.namespaceid, catid=self.catid, prefix=prefix)
 
-    def search(self, namespace, category, query, start=0, size=10):
+    def search(self, query, start=0, size=10):
         return self.client.search(namespaceid=self.namespaceid, catid=self.catid, query=query,
                                   start=start, size=size)
