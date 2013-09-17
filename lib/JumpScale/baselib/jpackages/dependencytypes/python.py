@@ -3,6 +3,15 @@ from . import AbstractPackage
 
 class Package(AbstractPackage):
     def install(self, *args, **kwargs):
-        # TODO do something with versions
-        j.packages.python.install(self.name)
+        minversion = self.minversion
+        maxversion = self.maxversion
+        version = []
+        if minversion:
+        	version.append('>=%s' % minversion)
+        if maxversion:
+        	version.append('<=%s' % maxversion)
+
+        version = ','.join(version)
+
+        j.packages.python.install(self.name, version)
 
