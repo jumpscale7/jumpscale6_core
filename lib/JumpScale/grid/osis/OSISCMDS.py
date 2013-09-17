@@ -9,9 +9,7 @@ class OSISCMDS(object):
 
     def getNameIDsInfoAll(self, session=None):
         ids = [self.osis.namespaceId2namespaceName,
-               self.osis.categoryId2categoryName,
-               self.osis.namespaceName2namespaceId,
-               self.osis.categoryName2categoryId]
+               self.osis.namespaceName2namespaceId]
         return ids
 
     def createNamespace(self, name=None, incrementName=False, nsid=0, template=None, session=None):

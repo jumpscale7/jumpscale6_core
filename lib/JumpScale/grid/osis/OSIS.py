@@ -10,9 +10,7 @@ class OSIS:
     def __init__(self):
         self.osisInstances = {}  # key is namespaceid_categoryid
         self.namespaceId2namespaceName = {}
-        self.categoryId2categoryName = {}
         self.namespaceName2namespaceId = {}
-        self.categoryName2categoryId = {}
         self.db = None  # default db
         self.elasticsearch = None  # default elastic search connection
         self.loadCoreHRD()
@@ -32,8 +30,7 @@ class OSIS:
             message="cannot find osis local instance for namespaceid:%s & categoryid:%s" % (namespaceid, categoryid), die=False, category="osis.valueerror")
 
     def getFromName(self, namespaceName, categoryName):
-        namespaceid = self.namespaceName2namespaceId[namespaceName]
-        categoryid = self.categoryName2categoryId[categoryName]
+        namespaceid, categoryid = self.namespaceName2namespaceId[namespaceName][categoryName]
         return self.get(namespaceid, categoryid)
 
     def incrementNamespaceId(self):
@@ -166,8 +163,8 @@ class OSIS:
                 hrdNameSpace.set("namespace.name", namespacename)
 
             namespaceid = hrdNameSpace.getInt("namespace.id")
-            self.namespaceId2namespaceName[namespaceid] = namespacename
-            self.namespaceName2namespaceId[namespacename] = namespaceid
+            self.namespaceId2namespaceName[namespaceid] = {'_namespace': namespacename}
+            self.namespaceName2namespaceId[namespacename] = {'_namespace': namespaceid}
 
             if template <> None:
                 hrdNameSpace.set("namespace.type", template)
@@ -185,8 +182,8 @@ class OSIS:
                 if hrdCat.get("category.name") == "":
                     hrdCat.set("category.name", catname)
 
-                self.categoryId2categoryName[catid] = catname
-                self.categoryName2categoryId[catname] = catid
+                self.namespaceId2namespaceName[namespaceid][catid] = namespacename, catname
+                self.namespaceName2namespaceId[namespacename][catname] = namespaceid, catid
 
                 key = "%s_%s" % (namespaceid, catid)
 

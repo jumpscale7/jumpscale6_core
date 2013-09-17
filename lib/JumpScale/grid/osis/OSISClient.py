@@ -9,37 +9,27 @@ class OSISClient():
         self._init()
 
     def _init(self):
-        self.namespaceId2namespaceName, self.categoryId2categoryName,\
-            self.namespaceName2namespaceId, self.categoryName2categoryId = self.client.getNameIDsInfoAll()
+        self.namespaceId2namespaceName, self.namespaceName2namespaceId = self.client.getNameIDsInfoAll()
             #@todo once in future will have to fetch more specific now fetch all is huge when grid grows (do caching on namespace per namespace basis)
 
         self._namespaceCategoryCache = {}
+        for namespacename, categorymap in self.namespaceName2namespaceId.iteritems():
+            for categoryname, ids in categorymap.iteritems():
+                key = "%s_%s" % (namespacename, categoryname)
+                self._namespaceCategoryCache[key] = ids
 
     def _getIds(self, namespace, category):
+        if j.basetype.integer.check(namespace) and j.basetype.integer.check(category):
+            return namespace, category
         key = "%s_%s" % (namespace, category)
-        if self._namespaceCategoryCache.has_key(key):
-            return self._namespaceCategoryCache[key]
-        else:
-            if j.basetype.integer.check(namespace):
-                namespaceid = namespace
-            else:
-                if not self.namespaceName2namespaceId.has_key(namespace):
-                    self._init()  # fetch new namespaces if miss
-                    if not self.namespaceName2namespaceId.has_key(namespace):
-                        raise RuntimeError("Could not find namespace with name %s" % namespace)
-                namespaceid = self.namespaceName2namespaceId[namespace]
-
-            if j.basetype.integer.check(category):
-                catid = category
-            else:
-                if not self.categoryName2categoryId.has_key(category):
-                    self._init()  # fetch new categories if miss
-                    if not self.categoryName2categoryId.has_key(category):
-                        raise RuntimeError("Could not find category with name %s" % category)
-                catid = self.categoryName2categoryId[category]
-
-            self._namespaceCategoryCache[key] = (namespaceid, catid)
-            return self._namespaceCategoryCache[key]
+        ids = self._namespaceCategoryCache.get(key)
+        if not ids:
+            # maybe category is new lets try to refetch
+            self._init()
+            ids = self._namespaceCategoryCache.get(key)
+            if not ids:
+                raise RuntimeError("Could not find category [%s] in namepsace [%s]" % (category, namespace))
+        return ids 
 
     def set(self, namespace, category, value, key=None, compress=False):
         """
