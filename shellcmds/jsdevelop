@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from JumpScale import j
+
 j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
 import JumpScale.baselib.platforms #gets access to ubuntu code
 import JumpScale.baselib.jsdeveltools

@@ -13,6 +13,8 @@ class Ubuntu:
             #we dont wont qshell to break, self.check will take of this
             return
         apt.apt_pkg.init()
+        if not apt.apt_pkg.__dict__.has_key("Config"):
+            apt.apt_pkg.Config=apt.apt_pkg.Configuration
         apt.apt_pkg.Config.set("APT::Install-Recommends", "0")
         apt.apt_pkg.Config.set("APT::Install-Suggests", "0")
         self._cache = apt.Cache()
