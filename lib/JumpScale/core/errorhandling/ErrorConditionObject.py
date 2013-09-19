@@ -1,5 +1,5 @@
 import copy
-
+import unicodedata
 from JumpScale import j
 import traceback
 
@@ -78,6 +78,15 @@ class ErrorConditionObject():
             self.tags=""
             self.type=int(type) #j.enumerators.ErrorConditionType
 
+    def toAscii(self):
+        def _toAscii(s):
+            return unicodedata.normalize('NFKD', unicode(s)).encode('ascii','ignore') 
+
+        self.errormessage=_toAscii(self.errormessage)
+        self.errormessagePub=_toAscii(self.errormessagePub)
+        self.backtrace=_toAscii(self.backtrace)
+
+
     def __str__(self):
         if j.basetype.integer.check(self.type):
             ttype=str(j.enumerators.ErrorConditionType.getByLevel(int(self.type)))
@@ -90,7 +99,8 @@ class ErrorConditionObject():
         content+="type/level: %s/%s\n" % (ttype,level)
         content+="%s\n" % self.errormessage
         if self.errormessagePub<>"":
-            content+="errorpub: %s\n" % self.errormessagePub
+            content+="errorpub: %s\n" % self.errormessagePub        
+
         return content
             
     __repr__=__str__
