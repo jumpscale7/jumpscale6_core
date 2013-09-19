@@ -948,7 +948,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         if sourceDir [-1] != '/':
             sourceDir = sourceDir + '/'
-        prefixHiddenFile = sourceDir + '_'
+        prefixHiddenFile = sourceDir + '.hg'
 
         if j.system.fs.isDir(sourceDir):
             files = j.system.fs.walk(sourceDir, recurse=True, return_folders=True, followSoftlinks=False)

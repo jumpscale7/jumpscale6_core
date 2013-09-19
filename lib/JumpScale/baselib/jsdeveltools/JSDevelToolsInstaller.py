@@ -84,17 +84,10 @@ class JSDevelToolsInstaller:
         checkout the jumpscale libs repo & link to python 2.7 to make it available for the developer
         """        
         name="jumpscale_lib"
-        if not linkonly:
+        if (not linkonly):
             self._getJSRepo(name)
-        jumpscalelib = "%s/jumpscale/%s"%(j.dirs.codeDir,name)
-        if not j.system.fs.exists(jumpscalelib):
-            return
-        for item in [item for item in j.system.fs.listDirsInDir(jumpscalelib,dirNameOnly=True) if item[0]<>"."]:
-            src="%s/jumpscale/%s/%s"%(j.dirs.codeDir,name,item)
-            dest="%s/lib/%s"%(j.dirs.libDir,item)
-            self._do.symlink(src,dest)
-        dest="%s/lib/__init__.py"%(j.dirs.libDir)
-        j.system.fs.writeFile(dest,"")
+        codedir = j.system.fs.joinPaths(j.dirs.codeDir, 'jumpscale', name)
+        self._do.execute("cd %s; python setup.py develop" % codedir)
 
     def linkJumpScaleLibs(self):
         self.deployJumpScaleLibs(True)
@@ -316,7 +309,5 @@ DefaultRoot                    ~
     def link2code(self):
 
         self._do.createdir("%s/%s"%(j.dirs.baseDir,"apps"))
-
-        self.linkJumpScaleLibs()
 
 
