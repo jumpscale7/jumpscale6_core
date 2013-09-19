@@ -155,7 +155,8 @@ class JSDevelToolsInstaller:
         name="dfs_io_core"     
         self._getJSRepo(name)
         dest="%s/dfs_io"%(j.dirs.libDir)
-        self._do.symlink("%s/jumpscale/%s/ow6libs/dfs_io"%(j.dirs.codeDir,name),dest)
+        codedir = j.system.fs.joinPaths(j.dirs.codeDir, 'jumpscale', name)
+        self._do.execute("cd %s; python setup.py develop" % codedir)
         self._do.symlink("%s/jumpscale/%s/apps/dfs_io"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/dfs_io")
 
     def deployPuppet(self):
