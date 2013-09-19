@@ -46,7 +46,7 @@ class Ubuntu:
         self.check()
         import lsb_release
         result=lsb_release.get_distro_information()        
-        return result["CODENAME"].lower().strip(),result["DESCRIPTION"],result["ID"].lower().strip(),int(result["RELEASE"]),
+        return result["CODENAME"].lower().strip(),result["DESCRIPTION"],result["ID"].lower().strip(),result["RELEASE"],
 
     def createUser(self,name,passwd,home=None,creategroup=True):
         import JumpScale.lib.cuisine
