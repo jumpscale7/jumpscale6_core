@@ -268,7 +268,7 @@ class ErrorConditionHandler():
         now there would be no further processing appart from priting the errorcondition object (eco)
 
         """
-
+        errorConditionObject.toAscii()
         if self.checkErrorIgnore(errorConditionObject):
             return
 

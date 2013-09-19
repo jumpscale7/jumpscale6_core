@@ -13,8 +13,12 @@ class Ubuntu:
             #we dont wont qshell to break, self.check will take of this
             return
         apt.apt_pkg.init()
-        apt.apt_pkg.Config.set("APT::Install-Recommends", "0")
-        apt.apt_pkg.Config.set("APT::Install-Suggests", "0")
+        #@todo error, interface changed on ubuntu 13.10
+        try:
+            apt.apt_pkg.Config.set("APT::Install-Recommends", "0")
+            apt.apt_pkg.Config.set("APT::Install-Suggests", "0")
+        except:
+            pass
         self._cache = apt.Cache()
 
     def check(self, die=True):
@@ -42,7 +46,7 @@ class Ubuntu:
         self.check()
         import lsb_release
         result=lsb_release.get_distro_information()        
-        return result["CODENAME"].lower().strip(),result["DESCRIPTION"],result["ID"].lower().strip(),int(result["RELEASE"]),
+        return result["CODENAME"].lower().strip(),result["DESCRIPTION"],result["ID"].lower().strip(),result["RELEASE"],
 
     def createUser(self,name,passwd,home=None,creategroup=True):
         import JumpScale.lib.cuisine
@@ -137,7 +141,7 @@ class Ubuntu:
         if self._cache==None:
             self.initApt()
         import apt.debfile
-        deb = apt.debfile.DebPackage(path)
+        deb = apt.debfile.DebPackage(path, cache=self._cache)
         deb.install()
 
     def remove(self, packagename):

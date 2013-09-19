@@ -63,8 +63,8 @@ class BlobStor:
 
         try:
             resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key}))
-            resultGz = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key})) or \
-                     j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key}))
+            resultGz = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key})) or \
+                       j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key}))
         except Exception, e:
             j.console.echo("Error in cloudsystem: %s" % e)
             raise RuntimeError("Could not check existence of key %s in blobstor %s in namespace %s, there was error.\n%s" % (key, self.name, self.namespace, e))

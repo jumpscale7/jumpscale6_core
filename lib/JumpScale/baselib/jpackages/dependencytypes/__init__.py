@@ -1,5 +1,5 @@
 class AbstractPackage(object):
-    def __init__(self, name, minversion, maxversion):
+    def __init__(self, name, minversion='', maxversion=''):
         self.name = name
         self.minversion = minversion
         self.maxversion = maxversion

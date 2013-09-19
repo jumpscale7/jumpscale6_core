@@ -151,6 +151,7 @@ class HRDPos():
         return float(res)
 
     def exists(self,key):
+        key=key.replace(".","_")        
         key=key.lower()
         return self.__dict__.has_key(key)
 
