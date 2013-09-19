@@ -72,7 +72,7 @@ class HttpFS(object):
             if error.code == 404:
                 return False
             else:
-                raise error
+                raise
 
         return True
 
