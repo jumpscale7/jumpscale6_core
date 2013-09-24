@@ -26,6 +26,8 @@ class JPackageClient():
         # can't ask username here
         # because jumpscale is not interactive yet
         # So we ask the username/passwd lazy in the domain object
+        # j.packages.markConfigurationPending=self._runPendingReconfigeFiles
+        j.packages.runConfigurationPending=self._runPendingReconfigeFiles
         self.reloadconfig()
         self.resetState()
 

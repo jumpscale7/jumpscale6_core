@@ -844,6 +844,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             j.system.fs.createDir(dest)
             j.system.fs.copyDirTree(src,dest) 
 
+            
             self.hrd.applyOnDir(self.metadataPath,changeContent=False)
             
             self.hrd.add2tree(src,position="active") 

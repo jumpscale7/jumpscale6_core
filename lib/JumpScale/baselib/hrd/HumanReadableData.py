@@ -58,24 +58,26 @@ class HumanReadableDataFactory:
 
 class HRDPos():
     def __init__(self,treeposition,tree):
-        self._key2hrd={}
-        self._hrds={}
+        self._key2hrd={}  #key to position (does not work when new keys in e.g. set)
+        self._hrds={} #id of hrd(file) to the hrd
         self._tree=tree
         self._treeposition=  treeposition  
 
-    def set(self,key,value,persistent=True):
+    def set(self,key,value,persistent=True,position=""):
 
         key2=self._normalizeKey(key)
         # print "set:'%s':'%s'"%(key,value)        
         self.__dict__[key2]=value
         if persistent==True:
-            hrd=self.getHRD(key)
+            hrd=self.getHRD(key,position)
             hrd.set(key,value,persistent)
             print "set in hrdpos %s in hrdfile %s: %s %s"%(self._treeposition,hrd._path,key,value)
 
-    def getHRD(self,key):
+    def getHRD(self,key,position=""):
         key=key.replace(".","_")
         if not self._key2hrd.has_key(key):
+            if len(self._hrds.keys())==1:
+                return self._hrds[0]
             j.errorconditionhandler.raiseBug(message="Cannot find hrd on position '%s'"%(self._treeposition),category="osis.gethrd")
         return self._hrds[self._key2hrd[key]]
 
@@ -384,6 +386,25 @@ class HumanReadableDataTree():
             self.path=None
         if content<>"":
             self.add2treeFromContent(content)
+
+    def checkValidity(self,template):
+        """
+        @param template is example hrd which will be used to check against, if params not found will be added to existing hrd and error will be thrown to allow user to configure settings
+        """
+        error=False
+        for line in template.split("\n"):
+            if line.find("=")<>-1:
+                items=line.split("=")
+                if len(items)>2:
+                    raise RuntimeError("in template only 1 = per line")
+                key=items[0].strip()
+                defvalue=items[1].strip()
+                if not self.exists(key):
+                    error=True
+                    self.set(key,defvalue)
+        if error:
+            raise RuntimeError("Config file was not complete, please change the default values of config file at location %s"%self.path)
+
 
     def getPosition(self,startpath,curpath,position=""):  
         position=position.strip("/")
