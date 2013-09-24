@@ -6,6 +6,7 @@ import argparse
 def getJPackage(parser=None):
     parser = parser or argparse.ArgumentParser()
     parser.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
+    parser.add_argument('-m','--message',required=False, help='Commit message')
     parser.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
     parser.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
     args = parser.parse_args()
