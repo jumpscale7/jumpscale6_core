@@ -18,9 +18,3 @@ class DependencyDef4(BaseType):
     def __repr__(self):
         return self.__str__()
 
-    def getPackage(self, platform, returnNoneIfNotFound):
-        if self.dependencytype in (DependencyType4.RUNTIME, DependencyType4.BUILD):
-            return j.packages.findNewest(domain=self.domain, name=self.name, minversion=self.minversion, maxversion=self.maxversion, platform=platform, returnNoneIfNotFound=returnNoneIfNotFound)
-        else:
-            module = importlib.import_module('JumpScale.baselib.jpackages.dependencytypes.%s' % self.dependencytype)
-            return module.Package(self.name, self.minversion, self.maxversion)

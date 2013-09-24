@@ -496,7 +496,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                     # If platform is generic, than we look for a package supporting generic?
                     # Thus we look for a package supporting all platforms? Or do we look for packages supporting any of the enumerated platforms?
                     # We need the do the latter, so the definition of findNewest should reflect this!
-                    depjpackage = dep.getPackage(platform=platform, returnNoneIfNotFound=True)
+                    depjpackage = j.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform, returnNoneIfNotFound=True)
                     if not depjpackage:
                         self._log('dependency ' + str(dep) + ' could not be resolved for package ' + str(self))
 
