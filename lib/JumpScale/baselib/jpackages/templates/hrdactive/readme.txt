@@ -1,5 +1,5 @@
-put hrd in here which will be copied to 
-$vardir/active/$domain/$qpname/$qpversion/
+put hrd in here which will be copied to (smart copied, only new template entries will be populated)
+$jumpscaledir/cfg/hrd/
 
-when any of the actions are started this hrd is also loaded under position active
+
 

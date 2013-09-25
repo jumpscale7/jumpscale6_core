@@ -8,10 +8,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
 package, args = cmdutils.getJPackage(parser)
 
-j.packages.jumpscale.updateMetaData(package.domain)
+j.packages.updateMetaData(package.domain)
 package.package()
 package.upload()
 if not args.message:
 	args.message = 'Building JPackage "%s"' % package.name
-j.packages.jumpscale.publish(args.message, package.domain)
+j.packages.publish(args.message, package.domain)
 j.application.stop()

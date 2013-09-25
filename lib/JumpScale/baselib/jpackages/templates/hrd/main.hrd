@@ -1,6 +1,6 @@
-
-qp.name=test
-qp.version=1.0
+qp.domain=@ASK name:name descr:give__name__of__jpackage type:dropdown dropdownvals:{{[item.domainname for item in j.packages.domains]}}
+qp.name=@ASK name:name descr:give__name__of__jpackage type:str default:1.0
+qp.version=@ASK name:version descr:give__version__of__jpackage__e.g.__1.0.0 type:str default:1.0
 qp.autobuild=0
 qp.debug=0
 
