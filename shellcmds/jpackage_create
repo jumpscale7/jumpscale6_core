@@ -3,5 +3,5 @@ from JumpScale import j
 j.application.start('jpackage')
 import JumpScale.baselib.jpackages
 
-j.packages.ijumpscale.createNewPackage()
+j.packages.create()
 j.application.stop()

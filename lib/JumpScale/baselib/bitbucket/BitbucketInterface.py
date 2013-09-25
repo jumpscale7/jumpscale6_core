@@ -74,16 +74,14 @@ class BitbucketInterface():
     """
     
     def __init__(self):
-        try:
-            self.init()
-        except:
-            j.console.echo("Cannot dynamically load the bitbucket instances, please call i.bitbucket.init()\n")
+        self._init=False
             
     def getRepo(self,accountname="",reponame=""):
         account=self.getAccount(accountname)
         return account.getRepo(reponame)
         
     def getAccount(self,accountname=""):
+        self.init()
         if accountname=="":
             accounts= o.clients.bitbucket.config.list()
             if len(accounts)==1:
@@ -110,10 +108,13 @@ class BitbucketInterface():
         return  self.__dict__[account]
         
     def init(self):
-        accounts=o.clients.bitbucket.config.list()
-        for account in accounts:
-            self._populate1account(account)
-                
+        print "INIT BITBUCKET"
+        if self._init==False:
+            accounts=o.clients.bitbucket.config.list()
+            for account in accounts:
+                self._populate1account(account)
+            self._init=True
+                    
             
             
             

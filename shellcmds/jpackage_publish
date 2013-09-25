@@ -4,5 +4,5 @@ j.application.start("jpackage")
 from JumpScale.baselib import cmdutils
 
 package, args = cmdutils.getJPackage()
-j.packages.jumpscale.publish(args.message, package.domain)
+j.packages.publish(args.message, package.domain)
 j.application.stop()
