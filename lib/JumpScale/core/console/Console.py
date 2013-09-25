@@ -286,6 +286,7 @@ class Console:
             question += " (max. %d)" % maxValue
 
         if not defaultValue == None:
+            defaultValue=int(defaultValue)
             question += " [%d]" % defaultValue
         question += ": "
 

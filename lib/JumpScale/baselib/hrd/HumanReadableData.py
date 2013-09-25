@@ -4,17 +4,16 @@ class HumanReadableDataFactory:
     def __init__(self):
         pass
 
-    def getHRDTree(self,path="",content=""):
+    def getHRD(self,path="",content=""):
         """
         @param path
         """
-        return HumanReadableDataTree(path,content)
+        if content<>"":
+            return HRD(content=content)            
+        if j.system.fs.isDir(path):
+            return HumanReadableDataTree(path,content)
 
-    def getHRDFromContent(self,content=""):
-        """
-        @param path
-        """
-        return HRD(content=content)
+        return HRD(path=path)        
 
 
     def replaceVarsInText(self,content,hrdtree,position=""):
@@ -182,8 +181,9 @@ class HRD():
         self._path=path
         self._tree=tree
         self._treeposition=  treeposition
-        if content:
-            self.process(content)
+        if content=="":
+            content=j.system.fs.fileGetContents(path)
+        self.process(content)
 
     def _serialize(self,value):
         if j.basetype.string.check(value):
@@ -326,7 +326,68 @@ class HRD():
         content=j.system.fs.fileGetContents(self._path)
         self.process(content)
 
+    def _ask(self,name,value):
+        value=value.replace("@ASK","").strip()
+        tags=j.core.tags.getObject(value)
+        if tags.tagExists("name"):
+            name=tags.tagGet("name")
+        if tags.tagExists("type"):
+            ttype=tags.tagGet("type").strip().lower()
+            if ttype=="string":
+                ttype="str"
+        else:
+            ttype="str"
+        if tags.tagExists("descr"):
+            descr=tags.tagGet("descr")
+        else:
+            descr="Please provide value for %s"%name
+
+        descr=descr.replace("__"," ")
+        descr=descr.replace("\\n","\n")
+
+        if tags.tagExists("default"):
+            default=tags.tagGet("default")
+        else:
+            default=""
+
+        if ttype=="str":
+            result=j.console.askString(question=descr, defaultparam=default, regex=None)
+
+        elif ttype=="float":
+            result=j.console.askString(question=descr, defaultparam=default, regex=None)
+            #check getFloat
+            try:
+                result=float(result)
+            except:
+                raise RuntimeError("Please provide float.")
+            result=str(result)
+        
+        elif ttype=="int":
+            result=str(j.console.askInteger(question=descr, defaultValue=default))
+
+        elif ttype=="bool":
+            result=j.console.askYesNo()
+            if result:
+                result=1
+            else:
+                result=0
+
+        elif ttype=="dropdown":
+            if tags.tagExists("dropdownvals"):
+                dropdownvals=tags.tagGet("dropdownvals")
+            else:
+                raise RuntimeError("When type is dropdown in ask, then dropdownvals needs to be specified as well.")
+            choicearray=dropdownvals.split(",")
+            result=j.console.askChoice(choicearray, descr=descr, sort=True)
+
+        else:
+            raise RuntimeError("Input type:%s is invalid (only: bool,int,str,string,dropdown,float)")
+
+        return result
+        
+
     def process(self,content):
+        content=j.codetools.executor.eval(content)
         for line in content.split("\n"):
             line=line.strip()
             if line=="" or line[0]=="#":
@@ -338,7 +399,11 @@ class HRD():
                 key,value=line.split("=",1)
                 key=key.strip().lower()
                 value=value.strip()
-                self.set(key,value,persistent=False)
+                if value.find("@ASK")<>-1:
+                    value=self._ask(key,value)                
+                    self.set(key,value,persistent=True)
+                else:
+                    self.set(key,value,persistent=False)
 
 
     def getPath(self,key):

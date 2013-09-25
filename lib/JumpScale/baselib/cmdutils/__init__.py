@@ -6,11 +6,10 @@ import argparse
 def getJPackage(parser=None):
     parser = parser or argparse.ArgumentParser()
     parser.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
-    parser.add_argument('-m','--message',required=False, help='Commit message')
     parser.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
     parser.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
     args = parser.parse_args()
-    package = j.packages.jumpscale.find(args.name, args.domain, args.version)
+    package = j.packages.find(args.name, args.domain, args.version)
     if len(package) == 0:
         print "Could not find package with name '%s' in domain '%s' with version '%s'" % (args.name, args.domain, args.version)
         j.application.stop(1)

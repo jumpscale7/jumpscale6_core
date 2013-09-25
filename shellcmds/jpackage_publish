@@ -2,7 +2,11 @@
 from JumpScale import j
 j.application.start("jpackage")
 from JumpScale.baselib import cmdutils
+import argparse
 
-package, args = cmdutils.getJPackage()
-j.packages.jumpscale.publish(args.message, package.domain)
+parser = argparse.ArgumentParser()
+parser.add_argument('-m','--message',required=False, help='Commit message')
+
+package, args = cmdutils.getJPackage(parser)
+j.packages.publish(args.message, package.domain)
 j.application.stop()

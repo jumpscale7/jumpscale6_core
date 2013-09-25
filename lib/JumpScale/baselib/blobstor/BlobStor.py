@@ -165,7 +165,25 @@ class BlobStor:
             j.system.fs.copyFile(tmpfile, targetFileNameTgz)
         else:
             #@todo P1 need to create the required dir (do directly with FTP)
-            j.cloud.system.fs.copyFile('file://' + tmpfile, targetFileNameTgz)
+            try:
+                j.cloud.system.fs.copyFile('file://' + tmpfile, targetFileNameTgz)
+            except Exception,e:
+                if str(e).find("Failed to login on ftp server")<>-1:
+                    if j.application.shellconfig.interactive:
+                        print "Could not login to FTP server for blobstor, please give your login details."
+                        login=j.console.askString("login")
+                        passwd=j.console.askString("passwd")
+                        config=j.config.getInifile("blobstor")
+                        ftpurl=config.getValue(blobstor.name,"ftp")
+                        if ftpurl.find("@")<>-1:
+                            end=ftpurl.split("@")[1].strip()
+                        else:
+                            end=ftpurl.split("//")[1].strip()
+                        ftpurl="ftp://%s:%s@%s"%(login,passwd,end)
+                        config.setParam(blobstor.name,"ftp",ftpurl)
+                        self._put(blobstor, metadata, tmpfile)
+                j.errorconditionhandler.processPythonExceptionObject(e)
+                
         j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
 
     def put(self, path, type="", expiration=0, tags="", blobstores=[], prevkey=None):
