@@ -20,7 +20,7 @@ class OSIS:
         if not j.system.fs.exists(idpath):
             idcontent = "namespace.lastid=10"  # start at 10
             j.system.fs.writeFile(idpath, idcontent)
-        self.corehrd = j.core.hrd.getHRDTree("cfg")
+        self.corehrd = j.core.hrd.getHRD("cfg")
 
     def get(self, namespaceid, categoryid):
         fullname = "%s_%s" % (namespaceid, categoryid)
