@@ -7,6 +7,6 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-m','--message',required=False, help='Commit message')
 
-package, args = cmdutils.getJPackage()
+package, args = cmdutils.getJPackage(parser)
 j.packages.publish(args.message, package.domain)
 j.application.stop()
