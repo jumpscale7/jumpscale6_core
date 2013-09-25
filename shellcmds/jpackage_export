@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+from JumpScale import j
+import argparse
+j.application.start("jpackages")
+from JumpScale.baselib import cmdutils
+
+parser = argparse.ArgumentParser()
+package, args = cmdutils.getJPackage(parser)
+
+package.codeExport()
+j.application.stop()

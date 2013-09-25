@@ -16,7 +16,6 @@ from JumpScale.core.baseclasses.dirtyflaggingmixin import DirtyFlaggingMixin
 from DependencyDef4 import DependencyDef4
 from JPackageStateObject import JPackageStateObject
 #from JumpScale.core.sync.Sync import SyncLocal
-from JPackageIObject import JPackageIObject
 from ActionManager import ActionManager
 
 JPACKAGE_CFG = "jpackages.cfg"
@@ -130,7 +129,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd=j.core.hrd.getHRD(hrddir)
         self._clear()
         self.buildNr = self.hrd.getInt("qp.buildnr")
-        self.debug = self.hrd.getBool("qp.debug")
         self.export = self.hrd.getBool("qp.export")
         self.autobuild = self.hrd.getBool("qp.autobuild")
         self.taskletsChecksum = self.hrd.get("qp.taskletschecksum")
@@ -146,14 +144,36 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.actions = None
 
+        self._getState()        
+
+        self.debug=self.state.debugMode
+
+        # 
+
+    def _loadActiveHrd(self):
+        """
+        match hrd templates with active ones, add entries where needed
+        """
+        hrdtemplatesPath=j.system.fs.joinPaths(self.metadataPath,"hrdactive")
+        for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
+            base=j.system.fs.getBaseName(item)
+            if base[0]<>"_":
+                templ=j.system.fs.fileGetContents(item)                
+                actbasepath=j.system.fs.joinPaths(j.dirs.hrdDir,base)
+                if not j.system.fs.exists(actbasepath):
+                    #means there is no hrd, put empty file
+                    print "notexist"
+                    j.system.fs.writeFile(actbasepath,"")
+                hrd=j.core.hrd.getHRD(actbasepath)
+                hrd.checkValidity(templ)
+
     def loadActions(self):
         if self.actions <> None:
             return
 
-        self.hrd.add2tree(j.system.fs.joinPaths(j.dirs.cfgDir,"hrd"))        
+        self._loadActiveHrd()
 
-        j.system.fs.createDir(self.getPathActiveHRD())
-        self.hrd.add2tree(self.getPathActiveHRD(),position="active") 
+        self.hrd.add2tree(j.system.fs.joinPaths(j.dirs.cfgDir,"hrd"))        
         
         j.system.fs.copyDirTree(j.system.fs.joinPaths(self.metadataPath,"actions"),self.getPathActions())        
         
@@ -169,14 +189,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.blobstorLocal = j.clients.blobstor.get(do.blobstorlocal)
 
     def getDebugMode(self):
-        return self.getState().debugMode
+        return self.state.debugMode
 
     def setDebugMode(self):
-        self.getState().setDebugMode()
+        self.state.setDebugMode()
         print self.getDebugMode()
 
     def removeDebugMode(self):
-        self.getState().setDebugMode(mode=0)
+        self.state.setDebugMode(mode=0)
         print self.getDebugMode()
 
 ###############################################################
@@ -219,7 +239,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         
         #cfg.setChecksums(self.bundles, write=False)  #@todo !!!!!!!!!!!
 
-        self.hrd.set("qp.debug",self.debug)
         self.hrd.set("qp.buildnr",self.buildNr)        
         self.hrd.set("qp.export",self.export)
         self.hrd.set("qp.autobuild",self.autobuild)
@@ -246,11 +265,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         setValue('maxversion', maxversion)
         setValue('dependencytype', dependencytype)
 
-    def addActiveHrdFile(self,name,content):
-        activehrd=self.getPathActiveHRD()
-        j.system.fs.createDir(activehrd)
-        j.system.fs.writeFile(filename=j.system.fs.joinPaths(activehrd,"%s.hrd"%name),contents=content)
-        self.hrd.add2tree(activehrd,position="active")         
 
 ##################################################################################################
 ###################################  CONFIG FILE HANDLING  #######################################
@@ -306,7 +320,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         Return true if package has been prepared
         """
-        prepared = self.getState().prepared
+        prepared = self.state.prepared
         if prepared == 1:
             return True
         return False
@@ -327,10 +341,11 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         This is a heavy operation and might take some time
         """
         ##self.assertAccessable()
+        platform=self._getPackageInteractive(platform)
         return [p for p in j.packages.getJPackageObjects() if self in p.getDependencies(recursive=recursive, platform=platform)]
 
 
-    def getState(self):
+    def _getState(self):
         ##self.assertAccessable()
         """
         from dir get [qbase]/cfg/jpackages/state/$jpackagesdomain_$jpackagesname_$jpackagesversion.state
@@ -344,7 +359,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         * lastexpandedbuildNr  (means expanded from tgz into jpackages dir)
         @return a JpackageStateObject
         """
-        return JPackageStateObject(self)
+        self.state=JPackageStateObject(self)
 
     def getVersionAsInt(self):
         """
@@ -360,12 +375,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Return absolute pathname of the package's metadatapath
         """
         return j.packages.getQPActionsPath(self.domain, self.name, self.version)
-
-    def getPathActiveHRD(self):
-        """
-        Return absolute path to active hrd of package
-        """
-        return j.packages.getQPActiveHRDPath(self.domain, self.name, self.version)
 
     def getPathMetadata(self):
         """
@@ -387,6 +396,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Return absolute pathname of the jpackages's filespath
         """
         ##self.assertAccessable()
+        platform=self._getPackageInteractive(platform)
         path =  j.system.fs.joinPaths(self.getPathFiles(), str(platform))
         return path
 
@@ -421,14 +431,13 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Return the latetst installed buildnumber
         """
         ##self.assertAccessable()
-        return self.getState().lastinstalledbuildnr
+        return self.state.lastinstalledbuildnr
 
     def getBrokenDependencies(self, platform=None):
         """
         Return a list of dependencies that cannot be resolved
         """
-        if platform==None:
-            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform=self._getPackageInteractive(platform)
         broken = []
         for dep in self.dependencies:   # go over my dependencies
                                         # Do this without try catch
@@ -518,34 +527,28 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         @param platform see j.enumerators.PlatformType....
         """
-        if platform == None:
-            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
-
+        platform=self._getPackageInteractive(platform)
         self.pm_getDependencies(None, platform, recursive=True, printTree=True)
 
     def getBuildDependencyTree(self, platform=None):
         """
         Return the Build dependencies for the JPackage
         """
-        if platform == None:
-            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform=self._getPackageInteractive(platform)
         self.pm_getDependencies(j.enumerators.DependencyType4.BUILD, platform, recursive=True, printTree=True)
 
     def getRuntimeDependencyTree(self, platform=None):
         """
         Return the runtime dependencies for the JPackage, will not recurse into the dependencies
         """
-        if platform == None:
-            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
-
+        platform=self._getPackageInteractive(platform)
         self.pm_getDependencies(j.enumerators.DependencyType4.RUNTIME, platform, recursive=True, printTree=True)
 
     def getDependencies(self, platform=None, recursive=True):
         """
         Return the Build dependencies for the JPackage
         """
-        if platform == None:
-            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform=self._getPackageInteractive(platform)
         res = self.pm_getDependencies(None, platform,recursive)
         res.sort()
         return res
@@ -554,8 +557,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Return the Build dependencies for the JPackage
         """
-        if platform == None:
-            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform=self._getPackageInteractive(platform)
         if recursive == None:
             recursive = j.console.askYesNo( "Recursive?")
         res = self.pm_getDependencies(j.enumerators.DependencyType4.BUILD, platform, recursive)
@@ -566,8 +568,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Return the runtime dependencies for the JPackage, will not recurse into the dependencies
         """
-        if platform == None:
-            platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform=self._getPackageInteractive(platform)
         if recursive == None:
             recursive = j.console.askYesNo( "Recursive?")
         res = self.pm_getDependencies(j.enumerators.DependencyType4.RUNTIME, platform, recursive)
@@ -601,76 +602,76 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
                 qualitylevels[qualitylevel] = info
         return qualitylevels
 
-    def promote(self, buildNr, fromQl, toQl, force=False):
-        """
-        Promote the build with number `buildNr` from quality level `fromQl` to
-        quality level `toQl`. If the build number on `toQl` is higher than the
-        build number on `fromQl`, a ValueError will be raised, unless `force` is
-        passed as True. If there is no build with number `buildNr` on `fromQl`,
-        a ValueError will be raised.
+    # def promote(self, buildNr, fromQl, toQl, force=False):
+    #     """
+    #     Promote the build with number `buildNr` from quality level `fromQl` to
+    #     quality level `toQl`. If the build number on `toQl` is higher than the
+    #     build number on `fromQl`, a ValueError will be raised, unless `force` is
+    #     passed as True. If there is no build with number `buildNr` on `fromQl`,
+    #     a ValueError will be raised.
 
-        @param buildNr: build number to promote
-        @type buildNr: int
-        @param fromQl: quality level the files should be taken from
-        @type fromQl: string
-        @param toQl: quality level the files should be copied to
-        @type toQl: string
-        @param force: promote even of toQl is on a higher quality level
-        @type force: boolean
-        """
-        domain = self._getDomainObject()
-        hgc = domain.mercurialclient
+    #     @param buildNr: build number to promote
+    #     @type buildNr: int
+    #     @param fromQl: quality level the files should be taken from
+    #     @type fromQl: string
+    #     @param toQl: quality level the files should be copied to
+    #     @type toQl: string
+    #     @param force: promote even of toQl is on a higher quality level
+    #     @type force: boolean
+    #     """
+    #     domain = self._getDomainObject()
+    #     hgc = domain.mercurialclient
 
-        def getDestPath(p):
-            parts = p.split(os.path.sep)
-            parts[0] = toQl
-            return os.path.sep.join(parts)
+    #     def getDestPath(p):
+    #         parts = p.split(os.path.sep)
+    #         parts[0] = toQl
+    #         return os.path.sep.join(parts)
 
-        def copy(repo, filectx):
-            subPath = filectx.path()
-            destSubPath = getDestPath(subPath)
-            destPath = j.system.fs.joinPaths(repo.root, destSubPath)
-            destDir = j.system.fs.getDirName(destPath)
-            if not j.system.fs.isDir(destDir):
-                j.system.fs.createDir(destDir)
-            data = filectx.data()
-            with open(destPath, 'w') as f:
-                f.write(data)
+    #     def copy(repo, filectx):
+    #         subPath = filectx.path()
+    #         destSubPath = getDestPath(subPath)
+    #         destPath = j.system.fs.joinPaths(repo.root, destSubPath)
+    #         destDir = j.system.fs.getDirName(destPath)
+    #         if not j.system.fs.isDir(destDir):
+    #             j.system.fs.createDir(destDir)
+    #         data = filectx.data()
+    #         with open(destPath, 'w') as f:
+    #             f.write(data)
 
-        nodeId = None
-        for candidateNodeId, cfg in self._iterCfgHistory(fromQl):
-            n = cfg.getBuildNumber()
-            if n == buildNr:
-                nodeId = candidateNodeId
-            # We want the *first* metadata commit with a certain build number.
-            # So we break only when the buildnumber becomes smaller thant the
-            # build number that we we want to promote.
-            if n < buildNr:
-                break
+    #     nodeId = None
+    #     for candidateNodeId, cfg in self._iterCfgHistory(fromQl):
+    #         n = cfg.getBuildNumber()
+    #         if n == buildNr:
+    #             nodeId = candidateNodeId
+    #         # We want the *first* metadata commit with a certain build number.
+    #         # So we break only when the buildnumber becomes smaller thant the
+    #         # build number that we we want to promote.
+    #         if n < buildNr:
+    #             break
 
-        if not nodeId:
-            raise ValueError("No build with number %s was found on quality "
-                "level %s" % (buildNr, fromQl))
+    #     if not nodeId:
+    #         raise ValueError("No build with number %s was found on quality "
+    #             "level %s" % (buildNr, fromQl))
 
-        try:
-            toCfg = self._getConfig(toQl)
-            toBuildNr = toCfg.getBuildNumber()
-            if toBuildNr >= buildNr and not force:
-                raise ValueError("Build number on the target quality level is "
-                    "%s, which is greater than or equal to the argument build "
-                    "number %s; if you are sure you want to promote down, "
-                    "pass the force argument as True" % (toBuildNr, buildNr))
-        except LookupError:
-            j.logger.exception("There is no Q-Package config file on quality "
-                    "level %s yet" % toQl, 5)
+    #     try:
+    #         toCfg = self._getConfig(toQl)
+    #         toBuildNr = toCfg.getBuildNumber()
+    #         if toBuildNr >= buildNr and not force:
+    #             raise ValueError("Build number on the target quality level is "
+    #                 "%s, which is greater than or equal to the argument build "
+    #                 "number %s; if you are sure you want to promote down, "
+    #                 "pass the force argument as True" % (toBuildNr, buildNr))
+    #     except LookupError:
+    #         j.logger.exception("There is no Q-Package config file on quality "
+    #                 "level %s yet" % toQl, 5)
 
-        toPath = domain.getJPackageMetadataDir(toQl, self.name, self.version)
-        j.system.fs.removeDirTree(toPath)
-        j.system.fs.createDir(toPath)
-        subPath1 = os.path.sep.join([fromQl, self.name, self.version, "**", "*"])
-        subPath2 = os.path.sep.join([fromQl, self.name, self.version, "*"])
-        subPaths = [subPath1, subPath2]
-        hgc.walk(nodeId, subPaths, copy)
+    #     toPath = domain.getJPackageMetadataDir(toQl, self.name, self.version)
+    #     j.system.fs.removeDirTree(toPath)
+    #     j.system.fs.createDir(toPath)
+    #     subPath1 = os.path.sep.join([fromQl, self.name, self.version, "**", "*"])
+    #     subPath2 = os.path.sep.join([fromQl, self.name, self.version, "*"])
+    #     subPaths = [subPath1, subPath2]
+    #     hgc.walk(nodeId, subPaths, copy)
 
 #############################################################################
 ################################  CHECKS  ###################################
@@ -681,7 +682,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         Check if files are modified in the JPackage files
         """
         ##self.assertAccessable()
-        if self.getState().prepared == 1:
+        if self.state.prepared == 1:
             return True
         return False
 
@@ -697,7 +698,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         Check if the JPackage is installed
         """
         ##self.assertAccessable()
-        return self.getState().lastinstalledbuildnr != -1
+        return self.state.lastinstalledbuildnr != -1
 
     def supportsPlatform(self, platform):
         """
@@ -720,6 +721,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Reinstall the package
         """
+        
         self.actions.install()
 
     def export(self, url):
@@ -728,9 +730,9 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         @param url: where to back up to, e.g. : ftp://login:passwd@10.10.1.1/myroot/
         """
+        
         self.actions.export(url=url)
         self._log('export to %s '%(url))
-
 
     def importt(self, url):
         """
@@ -738,6 +740,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         @param url: location of the backup, e.g. : ftp://login:passwd@10.10.1.1/myroot/
         """
+        
         self.actions.importt(url=url)
         self._log('import from %s '%(url))
 
@@ -745,6 +748,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Start the JPackage, run the start tasklet(s)
         """
+        
         self.actions.start()
         self._log('start')
 
@@ -752,6 +756,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Stop the JPackage, run the stop tasklet(s)
         """
+        
         self.actions.stop()
         self._log('stop')
 
@@ -760,6 +765,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Restart the JPackage
         """
+        
         self.stop()
         self.start()
 
@@ -767,6 +773,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Check if application installed is running for jpackages
         """
+        
         self.loadActions()
         self.actions.isrunning()
         self._log('isrunning')
@@ -797,6 +804,12 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             return False
 
 
+    def reinstall(self, dependencies=False, download=True):
+        """
+        Reinstall the JPackage by running its install tasklet, best not to use dependancies reinstall 
+        """        
+        self.install(dependencies=dependencies, download=download, reinstall=True)
+
     def install(self, dependencies=True, download=True, reinstall=False):
         """
         Install the JPackage
@@ -805,6 +818,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         @param download:     if True, bundles of package will be downloaded too
         @param reinstall:    if True, package will be reinstalled
         """
+        
         self.loadActions()
         #hostPlatformSupported = self._isPlatformSupported(hostPlatform)
 
@@ -820,7 +834,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
 
         # If I am already installed assume my dependencies are also installed
-        if self.buildNr <> -1 and self.buildNr <= self.getState().lastinstalledbuildnr and not reinstall:
+        if self.buildNr <> -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
             self._log('already installed')
             return # Nothing to do
 
@@ -836,31 +850,22 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         if download and self.debug <> True:
             self.download(dependencies=False)
 
-        if self.debug or reinstall or self.buildNr > self.getState().lastinstalledbuildnr:
-
-            src=j.system.fs.joinPaths(self.getPathMetadata(),"hrdactive")
-            dest=j.system.fs.joinPaths(self.getPathActiveHRD())
-            j.system.fs.createDir(dest)
-            j.system.fs.copyDirTree(src,dest) 
-
+        if reinstall or self.buildNr > self.state.lastinstalledbuildnr:
             
-            self.hrd.add2tree(src,position="active") 
+            if self.debug == False:
+                #print 'really installing ' + str(self)
+                self._log('installing')
+                if self.state.checkNoCurrentAction == False:
+                    raise RuntimeError ("jpackages is in inconsistent state, ...")                
 
+                self.actions.install()
+                self.state.setLastInstalledBuildNr(self.buildNr)
+            else:
+                #only the link functionality for now
+                self._log('install for debug (link)')
+                self.codeLink(dependencies=dependencies, update=True, force=True)
 
-        if self.debug <> True and reinstall or self.buildNr > self.getState().lastinstalledbuildnr:
-            #print 'really installing ' + str(self)
-            self._log('installing')
-            if self.getState().checkNoCurrentAction == False:
-                raise RuntimeError ("jpackages is in inconsistent state, ...")                
-
-            self.actions.install()
-            self.getState().setLastInstalledBuildNr(self.buildNr)
-        elif self.debug:
-            #only the link functionality for now
-            self.codeLink(dependencies=False, update=True, force=True)
-
-
-        # q.extensions.pm_sync()
+            self.configure()
 
         j.action.stop(False)
 
@@ -873,6 +878,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         # Make sure there are no longer installed packages that depend on me
         ##self.assertAccessable()
+        
         self.loadActions()
         if unInstallDependingFirst:
             for p in self.getDependingInstalledPackages():
@@ -882,7 +888,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         tag = "install"
         action = "uninstall"
-        state = self.getState()
+        state = self.state
         if state.checkNoCurrentAction == False:
             raise RuntimeError ("jpackages is in inconsistent state, ...")
         self._log('uninstalling' + str(self))
@@ -900,11 +906,11 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         Files do not aways come from code repo, they can also come from jpackages repo only
         """
         j.system.fs.createDir(self.getPathFiles())
-        if  self.getState().prepared <> 1:
+        if  self.state.prepared <> 1:
             if not self.isNew():
                 self.download(suppressErrors=suppressErrors)
                 self._expand(suppressErrors=suppressErrors)
-            self.getState().setPrepared(1)
+            self.state.setPrepared(1)
 
     def isNew(self):
         # We are new when our files have not yet been committed
@@ -989,12 +995,12 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         else:
             self._log('Directory <%s> does not exist' % sourceDir)
 
-
     def configure(self, dependencies=False):
         """
         Configure the JPackage after installation, via the configure tasklet(s)
         """
         self._log('configure')
+        
         self.loadActions()
         j.action.start('Configuring %s' % str(self), 'Failed to configure %s' % str(self))
         if dependencies:
@@ -1002,7 +1008,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             for dep in deps:
                 dep.configure()
         self.actions.configure()
-        self.getState().setIsPendingReconfiguration(False)
+        self.state.setIsPendingReconfiguration(False)
         j.action.stop(False)
 
     def codeExport(self, dependencies=False, update=None):
@@ -1011,6 +1017,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         code recipe is being used
         only the sections in the recipe which are relevant to you will be used
         """
+        
         self.loadActions()
         j.action.start('Export %s\n' % str(self), 'Failed to export code for %s' % str(self))
         if dependencies == None:
@@ -1030,9 +1037,10 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Update code from code repo (get newest code)
         """
+        
         self.loadActions()
         j.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
-        j.clients.mercurial.statusClearAll()
+        # j.clients.mercurial.statusClearAll()
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
@@ -1044,6 +1052,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         update code from code repo (get newest code)
         """
+        
         self.loadActions()
         j.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
         j.clients.mercurial.statusClearAll()
@@ -1056,7 +1065,19 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             self.codePush(dependencies)
         j.action.stop(False)
 
-    def package(self, platform=j.enumerators.PlatformType.GENERIC, dependencies=False):
+
+    def _getPackageInteractive(self,platform):
+        if platform == None and len(self.supportedPlatforms) == 1:
+            platform = self.supportedPlatforms[0]
+        
+        if platform==None and j.application.shellconfig.interactive:
+            platform = j.gui.dialog.askChoice("Select platform. If multiple platforms please quit, is not supported.", j.enumerators.PlatformType.GENERIC)
+        
+        if platform==None:
+            platform=j.enumerators.PlatformType.GENERIC
+
+    
+    def package(self, platform=None, dependencies=False):
         """
         Package code from the sandbox system into files section of jpackages
         Only 1 platform may be supported in this jpackages at the same time!!!
@@ -1070,9 +1091,11 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         @param dependencies: whether or not to package the dependencies
         @type dependencies: boolean
         """
+        
+
+        platform=self._getPackageInteractive(platform)
+        
         self.loadActions()
-        if platform == None:
-            raise RuntimeError("Cannot package because platform not specified")
 
         params = j.core.params.get()
         params.jpackages = self
@@ -1098,12 +1121,16 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         j.action.stop(False)
 
     def setIdentities(self, platform, identifies):
+
+        platform=self._getPackageInteractive(platform)
+
         hrd = self.hrd.getHrd().getHRD('qp.name')
         for repokey, revision in identifies.iteritems():
             hrdkey = "qp.repositories.%s.%s" % (platform, repokey)
             hrd.set(hrdkey, revision)
 
     def compile(self,dependencies=False):
+        
         self.loadActions()
         params = j.core.params.get()
         params.jpackages = self
@@ -1268,6 +1295,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         WARNING: As we cannot be sure where this code comes from, all identity
         information will be removed when this method is used!
         """
+        
         self.loadActions()
         j.action.start('Import %s' % str(self), 'Failed to import code for %s back to local repo' % str(self))
         if dependencies:
@@ -1283,6 +1311,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Push code to repo (be careful this can brake code of other people)
         """
+        
         self.loadActions()
         j.action.start('Push %s' % str(self), 'Failed to push code for %s' % str(self))
         j.clients.mercurial.statusClearAll()
@@ -1299,14 +1328,22 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         @param force: if True, do an update which removes the changes (when using as install method should be True)
         """
+        
         self.loadActions()
-        j.clients.mercurial.statusClearAll()
+        # j.clients.mercurial.statusClearAll()
 
         if dependencies is None:
-            dependencies = j.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
+            if j.application.shellconfig.interactive:
+                dependencies = j.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
+            else:
+                raise RuntimeError("Need to specify arg 'depencies' (true or false) when non interactive")
+
 
         if update is None:
-            update = j.gui.dialog.askYesNo("Do you want to update your code before linking?", True)
+            if j.application.shellconfig.interactive:
+                update = j.gui.dialog.askYesNo("Do you want to update your code before linking?", True)
+            else:
+                raise RuntimeError("Need to specify arg 'update' (true or false) when non interactive")
 
         if update:
             self.codeUpdate(dependencies, force=force)
@@ -1315,10 +1352,11 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             for dep in deps:
                 dep.codeLink(update=update,force=force)            
 
-        self.actions.code_push(force=force)
+        self.actions.code_link(force=force)
+        # self.actions.code_push(force=force)  #@todo was this before, was pushing content
         j.action.stop(False)
 
-    def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
+    def download(self, dependencies=None, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
         """
         Download the jpackages & expand
         Download the required blobs as well (as defined in qpackge.cfg dir)
@@ -1328,6 +1366,12 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         #param destinationDirectory: allows you to overwrite the default destination (opt/qbase/var/jpackages/files/...)
         """
+
+        if dependencies==None and j.application.shellconfig.interactive:
+            dependencies = j.console.askYesNo("Do you want the bundles of all depending packages to be downloaded too?")
+        else:
+            dependencies=True
+        
         self.loadActions()
         j.action.start('Downloading %s' % str(self), 'Failed to download %s' % str(self))
         if dependencies:
@@ -1338,7 +1382,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         j.packages.getDomainObject(self.domain)
 
         self._log('Downloading bundles for package ' + str(self))
-        state = self.getState()
+        state = self.state
 
         downloadDestinationDirectory = destinationDirectory
 
@@ -1386,12 +1430,64 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         else:
             return None
 
+
+    def backup(self,url=None,dependencies=False):
+        """
+        Make a backup for this package by running its backup tasklet.
+        """
+        
+        if url==None:
+            url = j.console.askString("Url to backup to?")
+        else:
+            raise RuntimeError("url needs to be specified")
+
+        self.loadActions()
+        params = j.core.params.get()
+        params.jpackages = self
+        params.url=url
+        j.action.start('Backup %s' % str(self))
+        if dependencies:
+            deps = self.getDependencies(platform=j.system.platformtype)
+            for dep in deps:
+                dep.backup(url=url)
+        self.actions.backup()
+        j.action.stop(False)
+
+    def restore(self,url=None,dependencies=False):
+        """
+        Make a restore for this package by running its restore tasklet.
+        """
+        
+        if url==None:
+            url = j.console.askString("Url to restore to?")
+        else:
+            raise RuntimeError("url needs to be specified")
+
+        self.loadActions()
+        params = j.core.params.get()
+        params.jpackages = self
+        params.url=url
+        j.action.start('restore %s' % str(self))
+        if dependencies:
+            deps = self.getDependencies(platform=j.system.platformtype)
+            for dep in deps:
+                dep.restore(url=url)
+        self.actions.restore()
+        j.action.stop(False)
+
+        
+
+    def packageupload(self, platform=None):
+        self.package(platform)
+        self.upload()
+
     # upload the bundle
     def upload(self, remote=True, local=True):
         """
         Upload jpackages to Blobstor, default remote and local
         """
         self._log('Begin Uploading bundles for package ' + str(self) + ' ... (Please wait)')
+        
         self.loadActions()
 
         j.packages.getDomainObject(self.domain)
@@ -1528,14 +1624,14 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Set in the corresponding jpackages's state file if reconfiguration is needed
         """
-        self.getState().setIsPendingReconfiguration(True)
+        self.state.setIsPendingReconfiguration(True)
         j.packages._setHasPackagesPendingConfiguration(True)
 
     def isPendingReconfiguration(self):
         """
         Check if the JPackage needs reconfiguration
         """
-        if self.getState().getIsPendingReconfiguration() == 1:
+        if self.state.getIsPendingReconfiguration() == 1:
             return True
         return False
 
@@ -1559,16 +1655,75 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             j.packages._actionSet(self, action)
 
         #process all dependencies
-        state = self.getState()
+        state = self.state
         if dependencies:
             deps = self.getDependencies(recursive=True)
             for dep in deps:
                 dep.executeAction(action,tags,  dependencies,params=params)
-        state = self.getState()
+        state = self.state
         self._log('executing jpackages action ' + tags + ' ' + action)
         state.setCurrentAction(tags, action)
         self.actions.execute(action, tags=tags, params=params) #tags are not used today
-        self.getState().setCurrentActionIsDone()
+        self.state.setCurrentActionIsDone()
+
+#########################################################################
+####################### SHOW ############################################
+
+    def showDependencies(self):
+        """
+        Return all dependencies of the JPackage.
+        See also: addDependency and removeDependency
+        """
+        
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
+        self._printList(self.getDependencies(platform, recursive))
+        
+    def showBuildDependencies(self):
+        """
+        Return the build dependencies of the JPackage.
+        See also: addDependency and removeDependency
+        """
+        
+        ##self.assertAccessable()
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
+        self._printList(self.getBuildDependencies(platform, recursive))
+        
+    def showRuntimeDependencies(self):
+        """
+        Return the runtime dependencies of the JPackage.
+        See also: addDependency and removeDependency
+        """
+        
+        ##self.assertAccessable()
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
+        self._printList(self.getRuntimeDependencies(platform, recursive))
+    
+    def showDependingInstalledPackages(self):
+        """
+        Show which jpackages have this jpackages as dependency.
+        Do this only for the installed jpackages.
+        """
+        
+        ##self.assertAccessable()
+        recursive = j.console.askYesNo("Recursive?")
+        self._printList(self.getDependingInstalledPackages(recursive))
+
+    def showDependingPackages(self):
+        """
+        Show which jpackages have this jpackages as dependency.
+        """
+
+        ##self.assertAccessable()
+        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        recursive = j.console.askYesNo("Recursive?")
+        self._printList(self.getDependingPackages(recursive, platform))
+
+    def _printList(self, arr):
+        for item in arr:
+            j.console.echo(item)        
 
 
 #########################################################################
@@ -1614,7 +1769,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         return JPackageIObject(self)
 
     def _resetPreparedForUpdatingFiles(self):
-        self.getState().setPrepared(0)
+        self.state.setPrepared(0)
 
     def __str__(self):
         return "JPackage %s %s %s" % (self.domain, self.name, self.version)

@@ -9,24 +9,32 @@ class JSDevelToolsInstaller:
         self.login=""
         self.passwd=""
 
-    def initMercurial(self,login=None,password=None):
+    def initMercurial(self,login=None,password=None,force=False):
         if j.system.platform.ubuntu.check():
-            j.system.platform.ubuntu.checkInstall(["mercurial"],"hg")
-            j.system.platform.ubuntu.checkInstall(["meld"],"meld")
+            
+            config=j.clients.bitbucket._config
 
             path="/root/.hgrc"
-            if not j.system.fs.exists(path):
+            if force or not j.system.fs.exists(path) or "jumpscale" not in config.list():
 
+                j.system.platform.ubuntu.checkInstall(["mercurial"],"hg")
+                j.system.platform.ubuntu.checkInstall(["meld"],"meld")
 
                 if login==None:
-                    login=j.console.askString("JumpScale Repo Login, if unknown press enter")
-                if password==None and login<>"":
+                    login=j.console.askString("JumpScale Repo Login, if unknown press enter","*")
+                if password==None and login<>"*":
                     password=j.console.askPassword("JumpScale Repo Password.")
+                else:
+                    password="*"
+
+                if "jumpscale" not in config.list():
+                    config.add("jumpscale",{"passwd":str(password),"login":login})
+                else:
+                    config.configure("jumpscale",{"passwd":str(password),"login":login})
                 
                 hgrc="""
 [ui]
 username = $login
-password = $password
 verbose=True
 
 [extensions]
@@ -36,24 +44,23 @@ hgext.extdiff=
 cmd.meld=
         """
                 hgrc=hgrc.replace("$login",login)
-                hgrc=hgrc.replace("$password",password)
-                j.system.fs.writeFile(path,hgrc)
+
+                if not j.system.fs.exists(path):
+                    j.system.fs.writeFile(path,hgrc)
 
 
     def getCredentialsJumpScaleRepo(self):
-        self.initHGRC()
+        config=j.clients.bitbucket._config
+        if "jumpscale" not in config.list():
+            self.initMercurial()
 
-        self.login="*"
-        self.passwd="*"
+        config=config.getConfig("jumpscale")
+        self.login=config["login"]
+        self.passwd=config["passwd"]
 
-        if j.application.shellconfig.interactive:
-            self.login=j.console.askString("JumpScale Repo Login, if unknown press enter")
-            self.passwd=j.console.askPassword("JumpScale Repo Passwd, if unknown press enter", False)
-        if self.login=="":
-            self.login="*"
-            
-        if self.passwd=="":
-            self.passwd="*"
+
+    def setCredentialsJumpScaleRepo(self):
+        self.initMercurial(force=True)
 
     def _checkCredentials(self):
         if self.passwd=="" or self.login=="":
@@ -71,9 +78,10 @@ cmd.meld=
         cl.pullupdate()
 
     def installSublimeTextUbuntu(self):
-        do=j.develtools.installer
-
-        do.execute("curl https://bitbucket.org/incubaid/develtools/raw/default/sublimetext/install.sh | sh")
+        from IPython import embed
+        print "DEBUG NOW install jpackage sublime_text, @todo"
+        embed()
+        
 
     def preparePlatform(self):
         if j.system.platform.ubuntu.check(False):
@@ -340,8 +348,8 @@ DefaultRoot                    ~
         symlink("/opt/jpackagesftp","/home/jpackages/jpackages")
 
 
-    def link2code(self):
+    # def link2code(self):
 
-        self._do.createdir("%s/%s"%(j.dirs.baseDir,"apps"))
+    #     self._do.createdir("%s/%s"%(j.dirs.baseDir,"apps"))
 
 

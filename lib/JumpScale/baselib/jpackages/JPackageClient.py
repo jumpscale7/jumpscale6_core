@@ -27,7 +27,6 @@ class JPackageClient():
         # because jumpscale is not interactive yet
         # So we ask the username/passwd lazy in the domain object
         # j.packages.markConfigurationPending=self._runPendingReconfigeFiles
-        j.packages.runConfigurationPending=self._runPendingReconfigeFiles
         self.reloadconfig()
         self.resetState()
 
@@ -373,9 +372,36 @@ class JPackageClient():
             raise RuntimeError("Did not find jpackages with criteria domain:%s, name:%s, minversion:%s, maxversion:%s, platform:%s" % (domain,name,minversion,maxversion,platform))
         return result[0]
 
-    def find(self, name="", domain="", version="", platform=j.enumerators.PlatformType.GENERIC):
+
+    def findByName(self,name):
+        '''
+        name is part of jpackage, if none found return None, if more than 1 found raise error, name is part of name
+        '''
+        if name.find("*")==-1:
+            name+="*"
+        return self.find(name=name)
+    
+    def find(self, name="", domain="" , version="", platform=j.enumerators.PlatformType.GENERIC,onlyone=False):
+        """ 
+        
         """
-        returns list of found jpackages
+        if name=="":
+            name = j.console.askString("Please provide the name or part of the name of the package to search for (e.g *extension* -> lots of extensions)")
+
+        res = self._find(domain=domain, name=name, version=version, platform=platform)
+        if not res:
+            j.console.echo('No packages found, did you forget i.qp.updateMetadataAll()?')
+        
+        if onlyone:
+            if len(res) > 1:
+                res = [j.console.askChoice(res, "Multiple packages found, please choose one")]
+
+        return res
+
+    def _find(self, name="", domain="", version="", platform=j.enumerators.PlatformType.GENERIC):
+        """
+        Tries to find a package based on the provided criteria
+        You may also use a wildcard to provide the name or domain (*partofname*)
         @param domain:  string - The name of jpackages domain, when using * means partial name
         @param name:    string - The name of the jpackages you are looking for
         @param version: string - The version of the jpackages you are looking for
@@ -446,6 +472,8 @@ class JPackageClient():
         packageObjects = [self.get(*p) for p in self._getJPackageTuples()]
         return [p for p in packageObjects if hasPlatform(p) and (domain == None or p.domain == domain)]
 
+    def getPackagesWithBrokenDependencies(self):
+        return [p for p in j.packages.find('*') if len(p.getBrokenDependencies()) > 0]
 
 ############################################################
 ########  CHECK ON ALREADY EXECUTED ACTIONS  ###############
@@ -480,6 +508,43 @@ class JPackageClient():
 
     def init(self):
         pass
+
+    def updateAll(self):
+        '''
+        Updates all installed jpackages to the latest builds.
+        The latest meta information is retrieved from the repository and based on this information,
+        The install packages that have a buildnr that has been outdated our reinstall, thust updating them to the latest build.
+        '''
+        # update all meta information:
+        self.updateMetaData()
+        # iterate over all install packages and install them
+        # only when they are outdated will they truly install
+        for p in self.getInstalledPackages():
+            p.install()
+    
+    def updateMetaDataAll(self,force=False):
+        """
+        Updates the metadata information of all jpackages
+        This used to be called updateJPackage list
+        @param is force True then local changes will be lost if any
+        """
+        self.updateMetaData("",force)
+
+    def mergeMetaDataAll(self,):
+        """
+        Tries to merge the metadata information of all jpackages with info on remote repo.
+        This used to be called updateJPackage list
+        """        
+        j.packages.mergeMetaData("")        
+        
+    def updateMetaDataForDomain(self,domainName=""):
+        """
+        Updates the meta information of specific domain
+        This used to be called updateJPackage list
+        """
+        if domainName=="":
+            domainName = j.console.askChoice(j.packages.getDomainNames(), "Please choose a domain")
+        j.packages.getDomainObject(domainName).updateMetadata("")        
 
     def updateMetaData(self,domain="",force=False):
         """
@@ -587,9 +652,16 @@ class JPackageClient():
    
     def publishMetaDataAsTarGz(self, domain="",qualityLevel=None):
         """
-        Updates the metadata for all domains (if no domain specified), makes a tar from it and uploads the tar to the jpackages server so tar based clients can now use the latest packages
+        Compresses the meta data of a domain into a tar and upload that tar to the bundleUpload server.
+        After this the that uptain there metadata as a tar can download the latest metadata.
         """
-        if domain<>"":
+        if domains==[]:
+            domains=j.console.askChoiceMultiple(j.packages.getDomainNames(), "Please select a domain")
+
+        if len(domains)>1:
+            for domain in domains:
+                self.publishMetaDataAsTarGz(domain=domain,qualityLevel=qualityLevel)
+        else:
             j.logger.log("Push metadata information for jpackages domain %s to reposerver." % domain, 1)
             if qualityLevel=="all":
                 for ql in self._getQualityLevels(domain):
@@ -599,14 +671,6 @@ class JPackageClient():
                 d = self.getDomainObject(domain,qualityLevel=qualityLevel)
                 d.publishMetaDataAsTarGz()
            
-        else:
-            if j.application.shellconfig.interactive:
-                domainnames=j.console.askChoiceMultiple(j.packages.getDomainNames())
-            else:
-                domainnames=self.getDomainNames()
-            for domainName in domainnames:
-                self.publishMetaDataAsTarGz(domainName,qualityLevel=qualityLevel)
-
     def publish(self, commitMessage,domain=""):
         """
         Publishes all domains' bundles & metadata (if no domain specified)
@@ -618,6 +682,29 @@ class JPackageClient():
         else:
             domainobject=j.packages.getDomainObject(domain)
             domainobject.publish(commitMessage=commitMessage)
+
+    def publishAll(self, commitMessage=None):
+        """
+        Publish metadata & bundles for all domains, for more informartion see publishDomain
+        """
+        if not commitMessage:
+            commitMessage = j.console.askString('please enter a commit message')
+        for domain in j.packages.getDomainNames():
+            self.publishDomain(domain, commitMessage=commitMessage)
+
+    def publishDomain(self, domain="", commitMessage=None):
+        """
+        Publish metadata & bundles for a domain. 
+        To publish a domain means to make your local changes to the corresponding domain available to other users.
+        A domain can be changed in the following ways: a new package is created in it, a package in it is modified, a package in it is deleted.
+        To make the changes available to others the new metadata is uploaded to the mercurial servers and for the packages whos files 
+        have been modified,
+        new bundles are created and uploaded to the blobstor server
+        """
+        if domain=="":
+            domain=j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
+        self.getDomainObject(domain)._ensureDomainCanBeUpdated()
+        self.getDomainObject(domain).publish(commitMessage=commitMessage)
 
 
 ##########################################################
@@ -649,7 +736,7 @@ class JPackageClient():
 
         return False
 
-    def _runPendingReconfigeFiles(self):
+    def runConfigurationPending(self):
         if not self._hasPackagesPendingConfiguration():
             return
 

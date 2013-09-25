@@ -181,8 +181,6 @@ class HRD():
         self._path=path
         self._tree=tree
         self._treeposition=  treeposition
-        if content=="":
-            content=j.system.fs.fileGetContents(path)
         self.process(content)
 
     def _serialize(self,value):
@@ -319,6 +317,7 @@ class HRD():
         return float(res)
 
     def exists(self,key):
+        key=key.replace(".","_")
         key=key.lower()
         return self.__dict__.has_key(key)
 
@@ -386,7 +385,29 @@ class HRD():
         return result
         
 
-    def process(self,content):
+    def checkValidity(self,template):
+        """
+        @param template is example hrd which will be used to check against, if params not found will be added to existing hrd and error will be thrown to allow user to configure settings
+        """
+        error=False
+        for line in template.split("\n"):
+            if line.find("=")<>-1:
+                items=line.split("=")
+                if len(items)>2:
+                    raise RuntimeError("in template only 1 = per line")
+                key=items[0].strip()
+                defvalue=items[1].strip()
+                if not self.exists(key):
+                    error=True
+                    self.set(key,defvalue)
+        if error and j.application.shellconfig.interactive==False:
+            raise RuntimeError("Config file was not complete, please change the default values of config file at location %s"%self._path)
+        else:
+            self.process()
+
+    def process(self,content=""):
+        if content=="":
+            content=j.system.fs.fileGetContents(self._path)
         content=j.codetools.executor.eval(content)
         for line in content.split("\n"):
             line=line.strip()
@@ -452,23 +473,7 @@ class HumanReadableDataTree():
         if content<>"":
             self.add2treeFromContent(content)
 
-    def checkValidity(self,template):
-        """
-        @param template is example hrd which will be used to check against, if params not found will be added to existing hrd and error will be thrown to allow user to configure settings
-        """
-        error=False
-        for line in template.split("\n"):
-            if line.find("=")<>-1:
-                items=line.split("=")
-                if len(items)>2:
-                    raise RuntimeError("in template only 1 = per line")
-                key=items[0].strip()
-                defvalue=items[1].strip()
-                if not self.exists(key):
-                    error=True
-                    self.set(key,defvalue)
-        if error:
-            raise RuntimeError("Config file was not complete, please change the default values of config file at location %s"%self.path)
+
 
 
     def getPosition(self,startpath,curpath,position=""):  

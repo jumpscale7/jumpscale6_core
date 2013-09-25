@@ -95,6 +95,7 @@ class JPackageStateObject():
         '''
         self.debugMode = mode
         self._save()
+        
     def getDebugMode(self):
         return self.debugMode
     

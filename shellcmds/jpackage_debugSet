@@ -7,5 +7,5 @@ from JumpScale.baselib import cmdutils
 parser = argparse.ArgumentParser()
 package, args = cmdutils.getJPackage(parser)
 
-package.debug()
+package.setDebugMode()
 j.application.stop()
