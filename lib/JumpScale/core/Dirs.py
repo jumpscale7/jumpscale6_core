@@ -198,7 +198,7 @@ class Dirs(object):
             utilssource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","utils")
             j.system.fs.copyDirTree(binsource,bindest)
             j.system.fs.copyDirTree(utilssource,utilsdest)
-            j.system.fs.copyDirTree(cfgsource,cfgdest)
+            j.system.fs.copyDirTree(cfgsource,cfgdest,overwriteFiles=False)
             ipythondir = j.system.fs.joinPaths(os.environ['HOME'], '.ipython')
             j.system.fs.removeDirTree(ipythondir)
 

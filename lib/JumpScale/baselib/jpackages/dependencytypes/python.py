@@ -13,5 +13,5 @@ class Package(AbstractPackage):
 
         version = ','.join(version)
 
-        j.packages.python.install(self.name, version)
+        j.system.platform.python.install(self.name, version)
 
