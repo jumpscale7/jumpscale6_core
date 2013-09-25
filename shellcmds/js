@@ -2,7 +2,7 @@
 from JumpScale import j
 import JumpScale.baselib.jpackages
 
-j.packages._runPendingReconfigeFiles()
+#j.packages._runPendingReconfigeFiles()
 j.application.start("jsshell")
 
 from IPython import embed
