@@ -49,7 +49,7 @@ class ZLogger(ZDaemon):
     def init(self):
 
         if j.system.fs.exists(path="cfg"):
-            self.hrd = j.core.hrd.getHRDTree("cfg")
+            self.hrd = j.core.hrd.getHRD("cfg")
         else:
             self.hrd = None
 

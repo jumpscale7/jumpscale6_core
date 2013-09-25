@@ -65,7 +65,7 @@ class OSIS:
         path = j.system.fs.joinPaths(self.path, name)
         if id <> None:
             self._initDefaultContent(overwriteHRD=False, namespacename=name)
-            hrd = j.core.hrd.getHRDTree(path)
+            hrd = j.core.hrd.getHRD(path)
             hrd.set("namespace.id", id)
 
         self.init(path=self.path, overwriteHRD=False, namespacename=name, template=template)
@@ -94,7 +94,7 @@ class OSIS:
         if catid <> None:
             self._initDefaultContent(overwriteHRD=False, overwriteTasklets=False, namespacename=namespacename)
             catpath = j.system.fs.joinPaths(self.path, namespacename, name)
-            hrd = j.core.hrd.getHRDTree(catpath)
+            hrd = j.core.hrd.getHRD(catpath)
             hrd.set("category.id", catid)
         self.init(path=self.path, overwriteHRD=False, overwriteImplementation=False, namespacename=namespacename)
 
