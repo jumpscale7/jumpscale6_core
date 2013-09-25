@@ -9,7 +9,40 @@ class JSDevelToolsInstaller:
         self.login=""
         self.passwd=""
 
+    def initMercurial(self,login=None,password=None):
+        if j.system.platform.ubuntu.check():
+            j.system.platform.ubuntu.checkInstall(["mercurial"],"hg")
+            j.system.platform.ubuntu.checkInstall(["meld"],"meld")
+
+            path="/root/.hgrc"
+            if not j.system.fs.exists(path):
+
+
+                if login==None:
+                    login=j.console.askString("JumpScale Repo Login, if unknown press enter")
+                if password==None and login<>"":
+                    password=j.console.askPassword("JumpScale Repo Password.")
+                
+                hgrc="""
+[ui]
+username = $login
+password = $password
+verbose=True
+
+[extensions]
+hgext.extdiff=
+
+[extdiff]
+cmd.meld=
+        """
+                hgrc=hgrc.replace("$login",login)
+                hgrc=hgrc.replace("$password",password)
+                j.system.fs.writeFile(path,hgrc)
+
+
     def getCredentialsJumpScaleRepo(self):
+        self.initHGRC()
+
         self.login="*"
         self.passwd="*"
 
