@@ -497,7 +497,7 @@ class Domain():
         """
         Returns a list of all jpackages of the currently active domain
         """
-        return j.packages.find(domain=self.domainname)
+        return j.packages._find(domain=self.domainname)
     
     
     def switchQualityLevel(self, qlevel):
