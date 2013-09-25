@@ -12,6 +12,6 @@ j.packages.updateMetaData(package.domain)
 package.package()
 package.upload()
 if not args.message:
-	args.message = 'Building JPackage "%s"' % package.name
+    args.message = 'Building JPackage "%s"' % package.name
 j.packages.publish(args.message, package.domain)
 j.application.stop()

@@ -390,7 +390,7 @@ class JPackageClient():
 
         res = self._find(domain=domain, name=name, version=version, platform=platform)
         if not res:
-            j.console.echo('No packages found, did you forget i.qp.updateMetadataAll()?')
+            j.console.echo('No packages found, did you forget to run jpackage_update?')
         
         if onlyone:
             if len(res) > 1:
