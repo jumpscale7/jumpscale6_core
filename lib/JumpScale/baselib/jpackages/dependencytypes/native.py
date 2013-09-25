@@ -3,5 +3,5 @@ from . import AbstractPackage
 
 class Package(AbstractPackage):
     def install(self, *args, **kwargs):
-        j.packages.native.install(self.name)
+         j.system.platform.ubuntu.install(self.name)
 
