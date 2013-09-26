@@ -1075,6 +1075,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         
         if platform==None:
             platform=j.enumerators.PlatformType.GENERIC
+        return platform
 
     
     def package(self, platform=None, dependencies=False):
