@@ -10,6 +10,5 @@ j.develtools.installer.preparePlatform()
 if j.system.platformtype.isLinux():
     j.develtools.installer.deployExamplesLibsGridPortal()
     j.develtools.installer.deployDFS_IO()
-    j.develtools.installer.link2code()
 
 j.application.stop()
