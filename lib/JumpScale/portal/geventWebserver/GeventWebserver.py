@@ -963,18 +963,19 @@ class GeventWebserver:
         return j.code.object2yaml({"result": content})
 
     def getMimeType(self, contenttype, format_types):
+        supported_types = ["text/plain", "text/html", "application/yaml", "application/json"]
         CONTENT_TYPES = {
-            "application/json": j.db.serializers.getSerializerType('j').dumps,
-            "application/yaml": self._resultyamlSerializer,
             "text/plain": str,
-            "text/html": self._text2htmlSerializer
+            "text/html": self._text2htmlSerializer,
+            "application/yaml": self._resultyamlSerializer,
+            "application/json": j.db.serializers.getSerializerType('j').dumps
         }
 
         if not contenttype:
             serializer = format_types["text"]["serializer"]
             return CONTENT_TYPE_HTML, serializer
         else:
-            mimeType = mimeparse.best_match(CONTENT_TYPES.keys(), contenttype)
+            mimeType = mimeparse.best_match(supported_types, contenttype)
             serializer = CONTENT_TYPES[mimeType]
             return mimeType, serializer
 
