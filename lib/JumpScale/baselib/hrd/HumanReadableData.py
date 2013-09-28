@@ -61,7 +61,8 @@ class HRDPos():
         self._key2hrd={}  #key to position (does not work when new keys in e.g. set)
         self._hrds={} #id of hrd(file) to the hrd
         self._tree=tree
-        self._treeposition=  treeposition  
+        self._treeposition=  treeposition
+        self.changed=False
 
     def set(self,key,value,persistent=True,position=""):
 
@@ -183,6 +184,15 @@ class HRD():
         self._tree=tree
         self._treeposition=  treeposition
         self.process(content)
+        self.changed=False
+
+    def _markChanged(self):
+        self.changed=True
+        if self._tree<>None:
+            self._tree.changed=True
+        # if self._treeposition<>None:
+        #     self._treeposition.changed=True
+
 
     def _serialize(self,value):
         if j.basetype.string.check(value):
@@ -327,10 +337,13 @@ class HRD():
         self.process(content)
 
     def _ask(self,name,value):
+        self._markChanged()
         value=value.replace("@ASK","").strip()
         tags=j.core.tags.getObject(value)
+
         if tags.tagExists("name"):
             name=tags.tagGet("name")
+
         if tags.tagExists("type"):
             ttype=tags.tagGet("type").strip().lower()
             if ttype=="string":
@@ -341,6 +354,8 @@ class HRD():
             descr=tags.tagGet("descr")
         else:
             descr="Please provide value for %s"%name
+
+        name=name.replace("__"," ")
 
         descr=descr.replace("__"," ")
         descr=descr.replace("\\n","\n")
@@ -366,6 +381,8 @@ class HRD():
             result=str(j.console.askInteger(question=descr, defaultValue=default))
 
         elif ttype=="bool":
+            if descr<>"":
+                print descr
             result=j.console.askYesNo()
             if result:
                 result=1
@@ -473,8 +490,7 @@ class HumanReadableDataTree():
             self.path=None
         if content<>"":
             self.add2treeFromContent(content)
-
-
+        self.changed=False
 
 
     def getPosition(self,startpath,curpath,position=""):  

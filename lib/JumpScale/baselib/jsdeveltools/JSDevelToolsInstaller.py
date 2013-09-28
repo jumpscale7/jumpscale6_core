@@ -220,12 +220,12 @@ cmd.meld=
     def initJumpscaleUser(self,passwd):
         home="/home/jumpscale"
         name="jumpscale"
-        import JumpScale.lib.cuisine
+        import JumpScale.lib.remote.cuisine
         
         homeexists=j.system.fs.exists(home)
 
         j.system.platform.ubuntu.createUser(name,passwd,home=home)
-        c=j.tools.cuisine.api       
+        c=j.remote.cuisine.api       
 
         if not homeexists:
             c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
@@ -309,9 +309,9 @@ DefaultRoot                    ~
 """
         j.system.fs.writeFile("/etc/proftpd/proftpd.conf", C)
 
-        import JumpScale.lib.cuisine
+        import JumpScale.lib.remote.cuisine
 
-        c=j.tools.cuisine.api
+        c=j.remote.cuisine.api
         c.dir_ensure(ftphome,owner=ftpname,group=ftpname,mode=770,recursive=True)
 
         j.system.platform.ubuntu.addUser2Group(ftpname,"jumpscale")

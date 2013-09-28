@@ -72,6 +72,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.taskletsChecksum=""    
         self.bundles={}
         
+        self.configchanged=False
+
         self.metadataPath=self.getPathMetadata()
         
         self.description=""
@@ -166,6 +168,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                     j.system.fs.writeFile(actbasepath,"")
                 hrd=j.core.hrd.getHRD(actbasepath)
                 hrd.checkValidity(templ)
+                if hrd.changed:
+                    #a configure change has happened
+                    self.configchanged=True
+                    #also needs to reload the config object on the application object
+                    j.application.initWhoAmI() #will load that underneath
+
 
     def loadActions(self):
         if self.actions <> None:
@@ -865,6 +873,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
                 self._log('install for debug (link)')
                 self.codeLink(dependencies=dependencies, update=True, force=True)
 
+        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr > self.state.lastinstalledbuildnr:
             self.configure()
 
         j.action.stop(False)
@@ -1008,7 +1017,8 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             for dep in deps:
                 dep.configure()
         self.actions.configure()
-        self.state.setIsPendingReconfiguration(False)
+        # self.state.setIsPendingReconfiguration(False)
+        j.application.initWhoAmI() #makes sure hrd gets reloaded to application.config object
         j.action.stop(False)
 
     def codeExport(self, dependencies=False, update=None):

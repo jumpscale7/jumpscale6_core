@@ -192,6 +192,8 @@ class ErrorConditionHandler():
         except:
             print "ERROR in trying to get backtrace"
         
+        # errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level)
+
         try:
             errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level)
             errorobject.category=cat
