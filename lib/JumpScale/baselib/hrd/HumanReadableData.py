@@ -578,6 +578,17 @@ class HumanReadableDataTree():
             for newkey in hrd.prefix(key):
                 yield newkey
 
+    def getItemsFromPrefix(self, prefix, position=None):
+        if position is None:
+            hrds = [self.getHrd(x) for x in self.positions.keys() ]
+        else:
+            hrds = [ self.getHrd(position) ]
+        result=[]
+        for hrd in hrds:
+            for newkey in hrd.prefix(prefix):
+                result.append(hrd.get(newkey))
+        return result
+
     def get(self,key,position="",checkExists=False,defaultval=False):
         hrd=self.getHrd(position,checkExists=checkExists)
         if checkExists:

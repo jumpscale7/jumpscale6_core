@@ -512,7 +512,7 @@ class JPackageMetadataScanner():
                 jpackages.download()
                 
                 
-    def _getPlatformChildrenRecursively(self, platformName):
+    def _getPlatformChildrenRecursively(self, platform):
         '''
         Gets the children of a platform in a recursive way
         
@@ -521,24 +521,11 @@ class JPackageMetadataScanner():
         
         @return: a list with platform names
         @rtype: List
-        '''
-        
-        platform = j.enumerators.PlatformType.getByName(platformName)
-        
-        children = platform.getChildren()
-        childrenNames = list()
-        
-        for child in children:
-            childName = str(child)
-            childrenNames.append(childName)
-        
-            childChildrenNames = self._getPlatformChildrenRecursively(childName)
-            childrenNames.extend(childChildrenNames)
-            
-        return childrenNames
+        '''            
+        return j.system.platformtype.getChildren(platform)
     
     
-    def _getPlatformParentRecursively(self, platformName):
+    def _getPlatformParentRecursively(self, platform):
         '''
         Gets the parents of a platform in a recursive way
         
@@ -547,20 +534,8 @@ class JPackageMetadataScanner():
         
         @return: a list with platform names
         @rtype: List
-        '''
-        
-        platform = j.enumerators.PlatformType.getByName(platformName)
-        
-        parentNames = list()
-        
-        while platform.parent:
-            parentName = str(platform.parent)
-            parentNames.append(parentName)
-            
-            platform = platform.parent
-            
-        return parentNames
-        
+        '''                
+        return j.system.platformtype.getParents(platform)
 
     def _getSupportedPlatformsFromConfig(self, config):
         '''

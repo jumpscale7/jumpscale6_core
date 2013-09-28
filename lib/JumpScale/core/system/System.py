@@ -14,7 +14,6 @@ except:
     
 import time,socket,random,tempfile
 from JumpScale import j
-from JumpScale.core.enumerators.PlatformType import PlatformType
 #from JumpScale.core.Vars import Vars
 from JumpScale.core.system.fs import SystemFS
 from JumpScale.core.system.string import String
@@ -118,7 +117,6 @@ class System:
         Binds currently running L{jumpscale.enumerators.PlatformType.PlatformType}
         and initializes the C{fs}, C{net} and C{process} attributes.
         '''
-        self._qPlatformType=PlatformType.findPlatformType()
         self.platformtype=self._qPlatformType
         self.fs = SystemFS()
         self.net = SystemNet()

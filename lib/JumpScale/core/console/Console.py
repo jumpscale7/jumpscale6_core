@@ -16,7 +16,7 @@ class Console:
     self.reformat=False #if True will make sure message fits nicely on screen    
     """
     def __init__(self):
-        self.width=120
+        self.width=240
         self.indent=0 #current indentation of messages send to console
 
     def rawInputPerChar(self,callback,params):
@@ -86,27 +86,28 @@ class Console:
         if maxMessageLength<5:
             raise RuntimeError("Cannot format message for screen, not enough width\nwidht:%s prefixwidth:%s maxlengthstatustype:%s" % (width,len(prefix),maxMessageLength))
         
-        #wrap the lines to fit on screen
-        def reformat(line):
-            if len(line)>0:
-                endlf=line[-1]=="\n"
-            else:
-                endlf=False
-            if len(line)>maxMessageLength:
-                line=string.join(textwrap.wrap(line,maxMessageLength),"\n")
-                if endlf:
-                    line=line+"\n"
-            return line
-        lines=message.split("\n")                
-        lines=[reformat(line) for line in lines]
-        linesstr=string.join(lines,"\n")
-        lines=linesstr.split("\n")
-        
-        indent=len(prefix)
-        lines[0]="%s%s"%(prefix,lines[0])
-        for linenr in range(1,len(lines)):
-            lines[linenr]= '%s%s' % (' ' * indent,lines[linenr])
-        return string.join(lines,"\n")
+        out=[]
+        r=0
+        for line in message.split("\n"):
+            first=True
+            if len(line)>maxMessageLength-4:
+                r=1
+            while len(line)>maxMessageLength-4:
+                if not first:
+                    line+="    "
+                    first=False
+                out.append(line[:maxMessageLength-3])
+                line=line[maxMessageLength-4:]
+            if line<>"":
+                out.append(line)
+            if r==1:
+                from IPython import embed
+                print "DEBUG NOW ooooooooooo"
+                embed()
+                
+        return "\n".join(out)+"\n"
+
+
     
     
     def echo(self, msg,indent=None,withStar=False,prefix="",log=False,lf=True):

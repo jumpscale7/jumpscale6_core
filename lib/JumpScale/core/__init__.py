@@ -223,6 +223,10 @@ from . import base
 from . import baseclasses
 from JumpScale.core.baseclasses.BaseEnumeration import enumerations
 j.enumerators=enumerations
+
+from PlatformTypes import PlatformTypes
+j.system.platformtype=PlatformTypes()
+
 from . import pmtypes
 pmtypes.register_types()
 j.basetype=pmtypes.register_types()

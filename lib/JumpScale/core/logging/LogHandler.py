@@ -164,6 +164,7 @@ class LogHandler(object):
     def reset(self):
         self.maxlevel = 6
         self.consoleloglevel = 2
+        self.consolelogCategories=[]
         self.lastmessage = ""
         # self.lastloglevel=0
         self.logs = []
@@ -250,17 +251,25 @@ class LogHandler(object):
         if not self.enabled:
             return
 
+        if level < (self.consoleloglevel + 1):
+
+            if self.consolelogCategories<>[]:
+                for consolecat in self.consolelogCategories:
+                    if log.category.find(consolecat)<>-1:
+                        ccat=log.category
+                        while len(ccat)<25:
+                            ccat+=" "
+                        ccat=ccat[0:25]
+                        j.console.echo("%s :: %s"%(ccat,log.message), log=False)
+                        break
+            else:
+                j.console.echo(str(log), log=False)
+        
         if self.clientdaemontarget != False:
             self.clientdaemontarget.log(log)
 
-            if level < (self.consoleloglevel + 1):
-                j.console.echo(str(log), log=False)
-            return
-
         else:
             # print "level:%s %s" % (level,message)
-            if level < (self.consoleloglevel + 1):
-                j.console.echo(str(log), log=False)
 
             if self.nolog:
                 return

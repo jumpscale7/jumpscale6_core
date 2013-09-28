@@ -3,7 +3,6 @@ from JumpScale import j
 from JPackageObject import JPackageObject
 from Domain import Domain
 from CodeManagementRecipe import CodeManagementRecipe
-from JumpScale.core.enumerators.PlatformType import PlatformType
 
 class JPackageClient():
     sourcesFile = None
@@ -29,6 +28,12 @@ class JPackageClient():
         # j.packages.markConfigurationPending=self._runPendingReconfigeFiles
         self.reloadconfig()
         self.resetState()
+        self.enableConsoleLogging()
+
+    def enableConsoleLogging(self):
+        j.logger.consoleloglevel=6
+        j.logger.consolelogCategories.append("jpackage")
+        j.logger.consolelogCategories.append("blobstor")
 
     def getJPackageMetadataScanner(self):
         """
@@ -100,14 +105,14 @@ class JPackageClient():
                 self.domains.append(Domain(domainname=domain))
 
 
-    def create(self, domain="", name="", version="1.0", description="", supportedPlatforms=[j.enumerators.PlatformType.LINUX]):
+    def create(self, domain="", name="", version="1.0", description="", supportedPlatforms=None):
         """
         Creates a new jpackages4, this includes all standard tasklets, a config file and a description.wiki file
         @param domain:      string - The domain the new jpackages should reside in
         @param name:        string - The name of the new jpackages
         @param version:     string - The version of the new jpackages
         @param description: string - The description of the new jpackages (is stored in the description.wiki file)
-        @param supportedPlatforms  [j.enumerators.PlatformType.LINUX,...] other examples WIN,LINUX32,LINUX64
+        @param supportedPlatforms  ["linux",...] other examples win,win32,linux64 see j.system.platformtype
         """
 
         if j.application.shellconfig.interactive:
@@ -117,9 +122,9 @@ class JPackageClient():
             name    = j.console.askString("Please provide a name")
             version = j.console.askString("Please provide a version","1.0")
             descr   = j.console.askString("Please provide a description","")
-            supportedPlatforms = None
+
             while not supportedPlatforms:
-                supportedPlatforms = j.console.askChoiceMultiple(j.enumerators.PlatformType.ALL, 'Please enumerate the supported platforms')
+                supportedPlatforms = j.console.askChoiceMultiple(j.system.platform.getPlatforms(), 'Please enumerate the supported platforms')
 
         if domain=="" or name=="":
             raise RuntimeError("domain or name at least needs to be specified")
@@ -328,7 +333,7 @@ class JPackageClient():
 ##########################  FIND  ##########################
 ############################################################
 
-    def findNewest(self, name="", domain="", minversion="",maxversion="",platform=j.enumerators.PlatformType.GENERIC, returnNoneIfNotFound=False):
+    def findNewest(self, name="", domain="", minversion="",maxversion="",platform=None, returnNoneIfNotFound=False):
         """
         Find the newest jpackages which matches the criteria
         If more than 1 jpackages matches -> error
@@ -381,7 +386,7 @@ class JPackageClient():
             name+="*"
         return self.find(name=name)
     
-    def find(self, name="", domain="" , version="", platform=j.enumerators.PlatformType.GENERIC,onlyone=False):
+    def find(self, name="", domain="" , version="", platform=None,onlyone=False):
         """ 
         
         """
@@ -398,7 +403,7 @@ class JPackageClient():
 
         return res
 
-    def _find(self, name="", domain="", version="", platform=j.enumerators.PlatformType.GENERIC):
+    def _find(self, name="", domain="", version="", platform=None):
         """
         Tries to find a package based on the provided criteria
         You may also use a wildcard to provide the name or domain (*partofname*)
@@ -463,7 +468,7 @@ class JPackageClient():
                         res.append([domainName,packagename,version])
         return res
 
-    def getJPackageObjects(self, platform=j.enumerators.PlatformType.GENERIC, domain=None):
+    def getJPackageObjects(self, platform=None, domain=None):
         """
         Returns a list of jpackages objects for specified platform & domain
         """

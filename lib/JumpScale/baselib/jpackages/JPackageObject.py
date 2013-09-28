@@ -11,7 +11,6 @@ except ImportError:
 import inspect
 from JumpScale import j
 from JumpScale.core.baseclasses import BaseType
-from JumpScale.core.enumerators.PlatformType import PlatformType
 from JumpScale.core.baseclasses.dirtyflaggingmixin import DirtyFlaggingMixin
 from DependencyDef4 import DependencyDef4
 from JPackageStateObject import JPackageStateObject
@@ -57,7 +56,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @param version: The version of the JPackage
         """
 
-        ##j.logger.log('Initializing the JPackage Object %s - %s - %s'%(domain, name, version), 6)
         #checks on correctness of the parameters
         if not domain:
             raise ValueError('The domain parameter cannot be empty or None')
@@ -84,6 +82,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self._init()
 
+    def check(self):
+        if not self.supportsPlatform():
+            raise RuntimeError("Could not find platform:%s in supported platforms:%s"%(platform,self.supportedplatforms))
 
     def _init(self):
         if self.__init==False:
@@ -134,7 +135,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.export = self.hrd.getBool("qp.export")
         self.autobuild = self.hrd.getBool("qp.autobuild")
         self.taskletsChecksum = self.hrd.get("qp.taskletschecksum")
-        self.supportedPlatforms = [j.enumerators.PlatformType.getByName(p) for p in self.hrd.getList("qp.supportedplatforms")]
+        self.supportedPlatforms = self.hrd.getList("qp.supportedplatforms")
         self.bundles = self.hrd.getDict("qp.bundles") #dict with key platformkey and val the hash of bundle
         
         self.processDependencies()
@@ -164,7 +165,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 actbasepath=j.system.fs.joinPaths(j.dirs.hrdDir,base)
                 if not j.system.fs.exists(actbasepath):
                     #means there is no hrd, put empty file
-                    print "notexist"
+                    self._log("did not find active hrd for %s, will now put there"%actbasepath,category="init")
                     j.system.fs.writeFile(actbasepath,"")
                 hrd=j.core.hrd.getHRD(actbasepath)
                 hrd.checkValidity(templ)
@@ -178,6 +179,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def loadActions(self):
         if self.actions <> None:
             return
+
+        self.check()
 
         self._loadActiveHrd()
 
@@ -201,11 +204,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
     def setDebugMode(self):
         self.state.setDebugMode()
-        print self.getDebugMode()
+        self._log("set debug mode",category="init")
 
     def removeDebugMode(self):
         self.state.setDebugMode(mode=0)
-        print self.getDebugMode()
+        self._log("remove debug mode",category="init")
+
 
 ###############################################################
 ############  MAIN OBJECT METHODS (DELETE, ...)  ##############
@@ -240,7 +244,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @param new: True if we are saving a new Q-Package, used to ensure backwards compatibility
         @type new: boolean
         """      
-        self._log('saving jpackages data to ' + self.metadataPath)
+        self._log('saving jpackages data to ' + self.metadataPath,category="save")
 
         if self.buildNr == "":
             self._raiseError("buildNr cannot be empty")
@@ -302,7 +306,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for depkey in ('name', 'domain', 'minversion', 'maxversion', 'dependencytype'):
                 dependencyInfo[depkey] = self.hrd.get(key % depkey)
                 
-            dependencyInfo['supportedplatforms'] = [ j.enumerators.PlatformType.getByName(x) for x in  self.hrd.getList(key % 'supportedplatforms') ]
+            dependencyInfo['supportedplatforms'] = self.hrd.getList(key % 'supportedplatforms')
             dep = depFromInfo(dependencyInfo)
             addedstuff.add(parts[2])
             self.dependencies.append(dep)
@@ -343,7 +347,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             raise RuntimeError("No depending packages present")
         [p for p in self.getDependingPackages(recursive=recursive) if p.isInstalled()]
 
-    def getDependingPackages(self, recursive=False, platform=j.enumerators.PlatformType.GENERIC):
+    def getDependingPackages(self, recursive=False, platform=None):
         """
         Return the packages that are dependent on this package
         This is a heavy operation and might take some time
@@ -399,14 +403,57 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return j.packages.getDataPath(self.domain, self.name, self.version)
 
 
-    def getPathFilesPlatform(self, platform):
+    def getPathFilesPlatform(self, platform=None):
         """
         Return absolute pathname of the jpackages's filespath
+        if not given then will be: j.system.platformtype
         """
         ##self.assertAccessable()
+        if platform==None:
+            platform=j.system.platformtype
         platform=self._getPackageInteractive(platform)
         path =  j.system.fs.joinPaths(self.getPathFiles(), str(platform))
         return path
+
+    def getPathFilesPlatformForSubDir(self, subdir,platform=None):
+        """
+        Return absolute pathnames of the jpackages's filespath for platform or parent of platform if it does not exist in lowest level
+        if platform not given then will be: j.system.platformtype
+        the subdir will be used to check upon if found in one of the dirs, if never found will raise error
+        all matching results are returned
+        """
+        ##self.assertAccessable()
+        platformorg=platform
+        result=[]
+        if platform==None:
+            platform=j.system.platformtype
+        from IPython import embed
+        print "DEBUG NOW getPathFilesPlatformForSubDir"
+        embed()
+        
+        platform=self._getPackageInteractive(platform)
+        path2=""
+        while str(platform) <> "" and platform<>None:
+            # print platform
+            path =  j.system.fs.joinPaths(self.getPathFiles(), str(platform),subdir)
+            if j.system.fs.exists(path):
+                result.append(path)
+                break
+            if platform <> None:
+                platform=platform.parent
+        if len(result)==0:
+            raise RuntimeError("Could not find subdir %s for platform %s for package %s"%(subdir,platformorg,self))
+        return result
+
+    def copyPythonLibs(self,remove=False):
+        """
+        will look in platform dirs of qpackage to find "site-packages" dir (starting from lowest platform type e.g. linux64, then parents of platform)
+        each dir "site-packages" found in one of the site-packages dir will be copied to the local site packages dir
+        """
+        # j.system.platform.python.getSitePackagePathLocal
+        for path in self.getPathFilesPlatformForSubDir("site-packages"):
+            self._log("copy python lib to %s"%path,category="libinstall")
+            j.system.platform.python.copyLibToLocalSitePackagesDir(path,remove=remove)
 
 
     def getPathSourceCode(self):
@@ -415,24 +462,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         raise NotImplementedError()
         #return j.system.fs.joinPaths(j.dirs.varDir, 'src', self.name, self.version)
-
-
-    def getBundlePlatforms(self):
-        """
-        Return the list of platforms on which the bundle can be installed.
-        """
-
-        platforms = list()
-
-        for supportedPlatform in self.supportedPlatforms:
-            platform = supportedPlatform
-            platform = j.enumerators.PlatformType.__dict__[(str(platform).upper())]
-            
-            while platform != None:
-                platforms.append(platform)
-                platform = platform.parent
-
-        return list(set(platforms))
 
     def getHighestInstalledBuildNr(self):
         """
@@ -458,17 +487,16 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return broken
 
 
-    def pm_getDependencies(self, dependencytype=None, platform=j.enumerators.PlatformType.GENERIC, recursive=False, depsfound=None, parent=None, depth=0, printTree=False, padding='', isLast=False, encountered=False):
+    def pm_getDependencies(self, platform=None, recursive=False, depsfound=None, parent=None, depth=0, printTree=False, padding='', isLast=False, encountered=False):
         """
         Return the dependencies for the JPackage
 
         @param depsfound [[$domain,$name,$version]]
         @return [[parent,jpackagesObject]]
         """
-        if j.enumerators.DependencyType4.check(dependencytype) == False and dependencytype <> None:
-            raise RuntimeError("parameter dependencytype in get dependencies needs to be of type: j.enumerators.DependencyType4, now %s" % dependencytype)
-        if j.enumerators.PlatformType.check(platform) == False and platform <> None:
-            raise RuntimeError("parameter platform in get dependencies needs to be of type: j.enumerators.PlatformType, now %s" % platform)
+
+        #@todo removed first argument which was depenencytype (dont want to do that any longer)
+
         depsfoundToReturn = []
 
         if depsfound == None:
@@ -533,7 +561,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Return the Build dependencies for the JPackage
 
-        @param platform see j.enumerators.PlatformType....
+        @param platform see j.system.platformtype....
         """
         platform=self._getPackageInteractive(platform)
         self.pm_getDependencies(None, platform, recursive=True, printTree=True)
@@ -708,18 +736,15 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         ##self.assertAccessable()
         return self.state.lastinstalledbuildnr != -1
 
-    def supportsPlatform(self, platform):
+    def supportsPlatform(self):
         """
         Check if a JPackage can be installed on a platform
         """
-        if not platform:
-            return True
+        relevant=j.system.platformtype.getMyRelevantPlatforms()
         for supportedPlatform in self.supportedPlatforms:
-            if platform.has_parent(supportedPlatform):
+            if supportedPlatform in relevant:
                 return True
-        # To be complete we should check if we support all children of the platform
-        # Then to we support the platform.. these situation may occur in the packages
-
+        return False
 
 #############################################################################
 #################################  ACTIONS  ################################
@@ -793,7 +818,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         supported platform their parents in account.
 
         @param platform: platform to check
-        @type platform: j.enumerators.PlatformType
+        @type platform: j.system.platformtype
 
         @return: flag that indicates if the given platform is supported
         @rtype: Boolean
@@ -1077,14 +1102,15 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
 
     def _getPackageInteractive(self,platform):
+
         if platform == None and len(self.supportedPlatforms) == 1:
             platform = self.supportedPlatforms[0]
         
         if platform==None and j.application.shellconfig.interactive:
-            platform = j.gui.dialog.askChoice("Select platform. If multiple platforms please quit, is not supported.", j.enumerators.PlatformType.GENERIC)
+            platform = j.gui.dialog.askChoice("Select platform.",self.supportedPlatforms ,str(None))
         
         if platform==None:
-            platform=j.enumerators.PlatformType.GENERIC
+            platform=None
         return platform
 
     
@@ -1492,11 +1518,29 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.package(platform)
         self.upload()
 
+    def getBundlePlatforms(self):
+        result=[]
+        for platform in j.system.platformtype.getMyRelevantPlatforms():
+            pathFilesForPlatform = self.getPathFilesPlatform(platform)
+            if j.system.fs.exists(pathFilesForPlatform):
+                result.append(platform)
+        return result
+
+    def getBundleDirs(self):
+        result=[]
+        for platform in j.system.platformtype.getMyRelevantPlatforms():
+            pathFilesForPlatform = self.getPathFilesPlatform(platform)
+            if j.system.fs.exists(pathFilesForPlatform):
+                result.append(pathFilesForPlatform)
+        return result
+        
+
     # upload the bundle
     def upload(self, remote=True, local=True):
         """
         Upload jpackages to Blobstor, default remote and local
         """
+        
         self._log('Begin Uploading bundles for package ' + str(self) + ' ... (Please wait)')
         
         self.loadActions()
@@ -1509,9 +1553,11 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         if j.system.fs.exists(j.system.fs.joinPaths(self.metadataPath, "blob.info")):
             j.system.fs.removeFile(j.system.fs.joinPaths(self.metadataPath, "blob.info"))
 
-        for platform in self.getBundlePlatforms():
+        for platform in self.getBundleDirs():
             # self.getBundleKey(platform) #hash as stored in config file
             pathFilesForPlatform = self.getPathFilesPlatform(platform)
+
+            self._log("Upload jpackage files:%s"%pathFilesForPlatform,category="upload")
 
             foundAnyPlatform = True
 
@@ -1538,6 +1584,10 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
                 updateBuildnr = True
                 self.bundles[str(platform)] = key
                 path = self._getBlobInfoPath(platform)
+                from IPython import embed
+                print "DEBUG NOW hhhhhhhh"
+                embed()
+                
                 j.system.fs.writeFile(path, descr)
                 self.save()
                 self._log('Successfully uploaded bundles for package ' + str(self) )
@@ -1686,7 +1736,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         See also: addDependency and removeDependency
         """
         
-        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
         recursive = j.console.askYesNo("Recursive?")
         self._printList(self.getDependencies(platform, recursive))
         
@@ -1697,7 +1747,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         
         ##self.assertAccessable()
-        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
         recursive = j.console.askYesNo("Recursive?")
         self._printList(self.getBuildDependencies(platform, recursive))
         
@@ -1708,7 +1758,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         
         ##self.assertAccessable()
-        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
         recursive = j.console.askYesNo("Recursive?")
         self._printList(self.getRuntimeDependencies(platform, recursive))
     
@@ -1728,7 +1778,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
 
         ##self.assertAccessable()
-        platform = j.console.askChoice(j.enumerators.PlatformType.ALL, "Please select a platform")
+        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
         recursive = j.console.askYesNo("Recursive?")
         self._printList(self.getDependingPackages(recursive, platform))
 
@@ -1760,9 +1810,10 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         Clear all properties except domain, name, and version
         """
         self.tags = []
-        self.supportedPlatforms = []
+        self.supportedPlatforms=[]
         self.buildNr = 0
         self.dependencies = []
+
 
     def __cmp__(self,other):
         if other == None or other=="":
@@ -1788,9 +1839,9 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
     def __eq__(self, other):
         return str(self) == str(other)
 
-    def _log(self, mess):
-        j.logger.log(str(self) + ':' + mess, 3)
-        print str(self) + ':' + mess
+    def _log(self, mess,category="generic"):
+        j.logger.log(str(self) + ':' + mess, 3,category="jpackage.%s"%category)
+        # print str(self) + ':' + mess
 
     def reportNumbers(self):
         #return ' metaNr:' + str(self.metaNr) + ' bundleNr:' + str(self.bundleNr) + ' buildNr:' + str(self.buildNr)

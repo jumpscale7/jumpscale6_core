@@ -2,13 +2,7 @@ from JumpScale import j
 
 # from OpenSSL import crypto
 import os
-try:
-    import M2Crypto as m2c
-except:
-    if j.system.platform.ubuntu.check():
-        j.system.platform.ubuntu.install("python-m2crypto")
-    import M2Crypto as m2c
-
+import M2Crypto as m2c
 import textwrap
 
 # PASSWD="apasswd_now2easy"

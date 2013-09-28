@@ -3,7 +3,6 @@ from JumpScale import j
 import JumpScale.core.system
 
 ##__all__ = ['PlatformType', 'AppStatusType', 'ErrorconditionLevel', 'LogLevel', 'MessageType', 'ActionStatus', 'SeverityType', 'AppStatusType', 'JobStatusType', 'REST']
-from JumpScale.core.enumerators.PlatformType import PlatformType
 ##from JumpScale.core.enumerators.SeverityType import SeverityType
 from JumpScale.core.enumerators.AppStatusType import AppStatusType
 from JumpScale.core.enumerators.ErrorConditionLevel import ErrorConditionLevel
@@ -16,7 +15,6 @@ class Empty():
 
 j.enumerators=Empty()
 
-j.enumerators.PlatformType=PlatformType
 j.enumerators.AppStatusType=AppStatusType
 j.enumerators.ErrorConditionLevel=ErrorConditionLevel
 j.enumerators.ErrorConditionType=ErrorConditionType

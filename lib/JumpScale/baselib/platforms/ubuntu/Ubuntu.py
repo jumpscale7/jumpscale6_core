@@ -5,6 +5,7 @@ class Ubuntu:
         self._aptupdated = False
         self._checked = False
         self._cache=None
+        self.installedPackageNames=[]
 
     def initApt(self):
         try:
@@ -20,6 +21,8 @@ class Ubuntu:
         except:
             pass
         self._cache = apt.Cache()
+        self.aptCache=self._cache
+        self.apt=apt
 
     def check(self, die=True):
         """
@@ -145,16 +148,20 @@ class Ubuntu:
         deb.install()
 
     def remove(self, packagename):
+        j.logger.log("ubuntu remove package:%s"%packagename,category="ubuntu.remove")
         self.check()
         if self._cache==None:
             self.initApt()        
         pkg = self._cache[packagename]
         if pkg.is_installed:
             pkg.mark_delete()
+        if packagename in self.installedPackageNames:
+            self.installedPackageNames.pop(self.installedPackageNames.index(packagename))
         self._cache.commit()
         self._cache.clear()
 
     def startService(self, servicename):
+        j.logger.log("start service on ubuntu for:%s"%servicename,category="ubuntu.start")  #@todo P1 add log statements for all other methods of this class
         self._service(servicename, 'start')
 
     def stopService(self, servicename):
@@ -342,6 +349,53 @@ esac
             self.initApt()        
         self.updatePackageMetadata()
         self._cache.upgrade()
+
+    def getPackageNamesRepo(self):        
+        return self._cache.keys()
+
+    def getPackageNamesInstalled(self):
+        if self.installedPackageNames==[]:            
+            result=[]
+            for key in self.getPackageNamesRepo():
+                p=self._cache[key]
+                if p.installed:
+                    self.installedPackageNames.append(p.name)
+        return self.installedPackageNames
+
+    def getPackage(self,name):
+        return self._cache[name]
+
+    def findPackagesRepo(self,packagename):
+        packagename=packagename.lower().strip().replace("_","").replace("_","")
+        if self._cache==None:
+            self.initApt()        
+        result=[]
+        for item in self.getPackageNamesRepo():
+            item2=item.replace("_","").replace("_","").lower()
+            if item2.find(packagename)<>-1:
+                result.append(item)
+        return result
+
+    def findPackagesInstalled(self,packagename):
+        packagename=packagename.lower().strip().replace("_","").replace("_","")
+        if self._cache==None:
+            self.initApt()        
+        result=[]
+        for item in self.getPackageNamesInstalled():
+            item2=item.replace("_","").replace("_","").lower()
+            if item2.find(packagename)<>-1:
+                result.append(item)
+        return result
+
+
+    def find1packageInstalled(self,packagename):
+        j.logger.log("find 1 package in ubuntu",6,category="ubuntu.find")
+        res=self.findPackagesInstalled(packagename)
+        if len(res)==1:
+            return res[0]
+        elif len(res)>1:
+            raise RuntimeError("Found more than 1 package for %s"%packagename)
+        raise RuntimeError("Could not find package %s"%packagename)
 
     def listSources(self):
         from aptsources import sourceslist

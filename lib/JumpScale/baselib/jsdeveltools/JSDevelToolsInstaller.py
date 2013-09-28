@@ -78,10 +78,8 @@ cmd.meld=
         cl.pullupdate()
 
     def installSublimeTextUbuntu(self):
-        from IPython import embed
-        print "DEBUG NOW install jpackage sublime_text, @todo"
-        embed()
-        
+        p=j.packages.get("jpackagesbase","sublimetext","3.0")
+        p.install()
 
     def preparePlatform(self):
         if j.system.platform.ubuntu.check(False):
@@ -90,26 +88,18 @@ cmd.meld=
             raise RuntimeError("This platform is not supported")
         
 
-    def preparePlatformUbuntu(self):
+    def preparePlatformUbuntu(self,reinstall=False):
         j.system.platform.ubuntu.check()
-        do=j.system.installtools
 
         print "Updating metadata"
         j.system.platform.ubuntu.updatePackageMetadata()
 
-        debpackages = ('python2.7','nginx', 'curl', 'mc', 'ssh', 'mercurial', 'python-gevent', 'python-simplejson', 'python-numpy',
-                        'byobu', 'python-apt','ipython','python-pip','python-imaging','python-requests',"python-paramiko","gcc",
-                        "g++","python-dev","python-mhash","python-snappy","python-beaker","python-mimeparse","python-m2crypto",
-                        "openjdk-7-jre")
-
-        for name in debpackages:
-            print "check install %s"%name
-            j.system.platform.ubuntu.install(name)
-
-        j.system.platform.ubuntu.remove('python-zmq')
-        pypackages = ('urllib3', 'ujson', 'blosc', 'pylzma','circus', 'msgpack-python>=0.3.0', 'pyzmq==13.0.2')
-        pypackages = [ '"%s"' % x for x in pypackages ]
-        do.execute("pip install %s" % ' '.join(pypackages))
+        print "install python package"
+        p=j.packages.get("jpackagesbase","python","2.7")
+        if reinstall:
+            p.reinstall()
+        else:
+            p.install()
 
     def deployExampleCode(self):
         """

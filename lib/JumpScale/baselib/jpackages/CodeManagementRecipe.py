@@ -3,7 +3,7 @@ from JumpScale import j
 
 class _RecipeItem:
     '''Ingredient of a CodeRecipe'''
-    def __init__(self, coderepoConnection, source, destination,platform=j.enumerators.PlatformType.GENERIC):
+    def __init__(self, coderepoConnection, source, destination,platform=None):
         self.coderepoConnection = coderepoConnection
         self.source = source
         self.destination=destination
@@ -196,7 +196,7 @@ class CodeManagementRecipe:
         self.items = []
 
 
-    def add(self, coderepoConnection, sourcePath, destinationPath,platform=j.enumerators.PlatformType.GENERIC):
+    def add(self, coderepoConnection, sourcePath, destinationPath,platform=None):
         '''Add a source (ingredient) to the recipe
         '''
         self.items.append(_RecipeItem(coderepoConnection, sourcePath, destinationPath,platform))

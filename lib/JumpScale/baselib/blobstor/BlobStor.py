@@ -239,20 +239,20 @@ class BlobStor:
 
         #if hashh==prevkey or self.exists(hashh):
         if self.exists(hashh):
-            j.console.echo("No need to upload to blobstor:%s, have already done so." % self.namespace)
+            j.logger.log("No need to upload %s to blobstor:%s/%s, have already done so." % (path,self.name,self.namespace),category="blobstor.upload",level=5)
             #return hashh,descr,anyPutDone
         else:
             self._put(self, metadata, tmpfile)
             anyPutDone = True
-            j.logger.log('Successfully uploaded blob: ' + path)
+            j.logger.log('Successfully uploaded blob: ' + path,category="blobstor.upload",level=5)
 
         for blobstor in blobstores:
             if blobstor.exists(hashh):
-                j.console.echo("No need to upload to blobstor:%s, have already done so." % blobstor.namespace)
+                j.logger.log("No need to upload %s to blobstor:%s/%s, have already done so." % (path,blobstor.name,self.namespace),category="blobstor.upload",level=5)
             else:
                 self._put(blobstor, metadata, tmpfile)
                 anyPutDone = True
-                j.logger.log('Successfully uploaded blob: ' + path)
+                j.logger.log("Successfully uploaded %s to blobstor:%s/%s" % (path,blobstor.name,self.namespace) ,category="blobstor.upload",level=5)
 
         j.system.fs.remove(tmpfile)
         return hashh, descr, anyPutDone
