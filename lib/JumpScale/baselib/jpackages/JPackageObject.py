@@ -146,12 +146,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         try:
             self.descrChecksum = self.hrd.get("qp.descrchecksum")
         except:
-            self.hrd.set("qp.descrchecksum","")
+            hrd = self.hrd.getHrd("").getHRD("qp.name")
+            hrd.set("qp.descrchecksum","")
             self.descrChecksum = self.hrd.get("qp.descrchecksum")
         try:
             self.hrdChecksum = self.hrd.get("qp.hrdchecksum")
         except:
-            self.hrd.set("qp.hrdchecksum","")
+            hrd = self.hrd.getHrd("").getHRD("qp.name")
+            hrd.set("qp.hrdchecksum","")
             self.hrdChecksum = self.hrd.get("qp.hrdchecksum")
 
         self.supportedPlatforms = self.hrd.getList("qp.supportedplatforms")

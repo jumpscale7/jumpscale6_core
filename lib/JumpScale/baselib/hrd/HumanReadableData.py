@@ -79,12 +79,19 @@ class HRDPos():
             hrd.set(key,value,persistent)
 
     def getHRD(self,key,position=""):
+        if len(self._hrds.keys())==1:
+            return self._hrds[0]
         key=key.replace(".","_")
-        if not self._key2hrd.has_key(key):
-            if len(self._hrds.keys())==1:
-                return self._hrds[0]
-            j.errorconditionhandler.raiseBug(message="Cannot find hrd on position '%s'"%(self._treeposition),category="osis.gethrd")
+        if key not in self._key2hrd:
+            self._reloadCache()
+            if key not in self._key2hrd:
+                j.errorconditionhandler.raiseBug(message="Cannot find hrd on position '%s'"%(self._treeposition),category="osis.gethrd")
         return self._hrds[self._key2hrd[key]]
+
+    def _reloadCache(self):
+        self._key2hrd = dict()
+        for pos, hrd in self._hrds.iteritems():
+            self.addHrdItem(hrd, pos)
 
     def addHrdItem(self,hrd,hrdpos):
         self._hrds[hrdpos]=hrd
@@ -97,10 +104,12 @@ class HRDPos():
 
     def get(self,key,checkExists=False):
         key=self._normalizeKey(key)        
-        if not self.__dict__.has_key(key):
-            if checkExists:
-                return False
-            raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
+        if key not in self.__dict__:
+            self._reloadCache()
+            if key not in self.__dict__:
+                if checkExists:
+                    return False
+                raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
 
         val=self.__dict__[key]
 
