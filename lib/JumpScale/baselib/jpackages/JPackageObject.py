@@ -430,39 +430,27 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         ##self.assertAccessable()
         if platform==None:
-            platform=j.system.platformtype
+            platform=j.system.platformtype.myplatform
         platform=self._getPackageInteractive(platform)
         path =  j.system.fs.joinPaths(self.getPathFiles(), str(platform))
         return path
 
-    def getPathFilesPlatformForSubDir(self, subdir,platform=None):
+    def getPathFilesPlatformForSubDir(self, subdir):
         """
         Return absolute pathnames of the jpackages's filespath for platform or parent of platform if it does not exist in lowest level
         if platform not given then will be: j.system.platformtype
         the subdir will be used to check upon if found in one of the dirs, if never found will raise error
         all matching results are returned
         """
-        ##self.assertAccessable()
-        platformorg=platform
         result=[]
-        if platform==None:
-            platform=j.system.platformtype
-        from IPython import embed
-        print "DEBUG NOW getPathFilesPlatformForSubDir"
-        embed()
-        
-        platform=self._getPackageInteractive(platform)
-        path2=""
-        while str(platform) <> "" and platform<>None:
+        for possibleplatform in j.system.platformtype.getMyRelevantPlatforms():
             # print platform
-            path =  j.system.fs.joinPaths(self.getPathFiles(), str(platform),subdir)
+            path =  j.system.fs.joinPaths(self.getPathFiles(), possibleplatform,subdir)
+            #print path
             if j.system.fs.exists(path):
                 result.append(path)
-                break
-            if platform <> None:
-                platform=platform.parent
         if len(result)==0:
-            raise RuntimeError("Could not find subdir %s for platform %s for package %s"%(subdir,platformorg,self))
+            raise RuntimeError("Could not find subdir %s in files dirs for '%s'"%(subdir,self))
         return result
 
     def copyPythonLibs(self,remove=False):
@@ -473,8 +461,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         # j.system.platform.python.getSitePackagePathLocal
         for path in self.getPathFilesPlatformForSubDir("site-packages"):
             self.log("copy python lib to %s"%path,category="libinstall")
+            self.log("Copy python lib:%s to site packages"%path,category="copylib")
             j.system.platform.python.copyLibToLocalSitePackagesDir(path,remove=remove)
-
 
     def getPathSourceCode(self):
         """
@@ -891,8 +879,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             self.log('already installed')
             return # Nothing to do
 
-        j.action.start('Installing %s' % str(self), 'Failed to install %s' % str(self))
-
         if dependencies:            
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
@@ -920,8 +906,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr > self.state.lastinstalledbuildnr:
             self.configure()
-
-        j.action.stop(False)
 
 
     def uninstall(self, unInstallDependingFirst=False):
@@ -1056,7 +1040,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.log('configure')
         
         self.loadActions()
-        j.action.start('Configuring %s' % str(self), 'Failed to configure %s' % str(self))
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
@@ -1064,7 +1047,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.actions.configure()
         # self.state.setIsPendingReconfiguration(False)
         j.application.initWhoAmI() #makes sure hrd gets reloaded to application.config object
-        j.action.stop(False)
 
     def codeExport(self, dependencies=False, update=None):
         """
@@ -1074,7 +1056,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         
         self.loadActions()
-        j.action.start('Export %s\n' % str(self), 'Failed to export code for %s' % str(self))
+        self.log('CodeExport')
         if dependencies == None:
             j.gui.dialog.askYesNo(" Do you want to link the dependencies?", False)
         if update == None:
@@ -1086,22 +1068,19 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             for dep in deps:
                 dep.codeExport(update=update)
         self.actions.code_export()
-        j.action.stop(False)
 
     def codeUpdate(self, dependencies=False, force=False):
         """
         Update code from code repo (get newest code)
         """
-        
+        self.log('CodeUpdate')
         self.loadActions()
-        j.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
         # j.clients.mercurial.statusClearAll()
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codeUpdate(force=force)
         self.actions.code_update()
-        j.action.stop(False)
 
     def codeCommit(self, dependencies=False, push=False):
         """
@@ -1109,7 +1088,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         
         self.loadActions()
-        j.action.start('Update %s' % str(self), 'Failed to update code for %s' % str(self))
+        self.log('CodeCommit')
         j.clients.mercurial.statusClearAll()
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
@@ -1118,7 +1097,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.actions.code_commit()
         if push:
             self.codePush(dependencies)
-        j.action.stop(False)
 
 
     def _getPackageInteractive(self,platform):
@@ -1157,7 +1135,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         params = j.core.params.get()
         params.jpackages = self
         params.platform = platform
-        j.action.start('Package %s' % str(self), 'Failed to package code for %s back to jpackages files section.' % str(self))
+        self.log('Package')
         # Disable action caching:
         # If a user packages for 2 different platforms in the same qshell
         # instance, the second call is just ignored, which is not desired
@@ -1175,7 +1153,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         identities = recipe.identify()
         self.setIdentities(platform, identities)
         self.actions.code_package(platform=platform)
-        j.action.stop(False)
 
     def setIdentities(self, platform, identifies):
 
@@ -1191,13 +1168,12 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.loadActions()
         params = j.core.params.get()
         params.jpackages = self
-        j.action.start('Compiling %s' % str(self))
+        self.log('Compile')
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.compile()
         self.actions.compile()
-        j.action.stop(False)
 
     @property
     def identities(self):
@@ -1220,7 +1196,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         @rtype: dict(PlatformType, BlobStor.BlobMetadata)
         """
         info = {}
-        for platform in self.getBundlePlatforms():
+        for platform in j.system.platformtype.getMyRelevantPlatforms() :
             path = self._getBlobInfoPath(platform)
             if j.system.fs.isFile(path):
                 description = j.clients.blobstor.parse(path)
@@ -1354,7 +1330,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         
         self.loadActions()
-        j.action.start('Import %s' % str(self), 'Failed to import code for %s back to local repo' % str(self))
+        j.log("CodeImport")
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
@@ -1362,7 +1338,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.actions.code_importt()
         cfg = self._getConfig()
         cfg.clearIdentities(write=True)
-        j.action.stop(False)
 
     def codePush(self, dependencies=False, merge=True):
         """
@@ -1370,14 +1345,13 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         
         self.loadActions()
-        j.action.start('Push %s' % str(self), 'Failed to push code for %s' % str(self))
+        j.log("CodePush")
         j.clients.mercurial.statusClearAll()
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.codePush(merge=merge)
         self.actions.code_push(merge=merge)
-        j.action.stop(False)
 
     def codeLink(self, dependencies=None, update=None, force=False):
         """
@@ -1388,7 +1362,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         
         self.loadActions()
         # j.clients.mercurial.statusClearAll()
-
+        j.log("CodeLink")
         if dependencies is None:
             if j.application.shellconfig.interactive:
                 dependencies = j.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
@@ -1411,7 +1385,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         self.actions.code_link(force=force)
         # self.actions.code_push(force=force)  #@todo was this before, was pushing content
-        j.action.stop(False)
+
 
     def download(self, dependencies=None, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
         """
@@ -1430,7 +1404,6 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             dependencies=True
         
         self.loadActions()
-        j.action.start('Downloading %s' % str(self), 'Failed to download %s' % str(self))
         if dependencies:
             deps = self.getDependencies(recursive=True)
             for dep in deps:
@@ -1439,50 +1412,50 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         j.packages.getDomainObject(self.domain)
 
         self.log('Downloading bundles.')
-        state = self.state
 
         downloadDestinationDirectory = destinationDirectory
 
-        try:
-            j.system.fs.removeDirTree(self.getPathFiles())
-        except:
-            pass
-        j.system.fs.createDir(self.getPathFiles())
-
-        for platform in self.getBundlePlatforms():
+        for platform in j.system.platformtype.getMyRelevantPlatforms():
             
             checksum = self.getBundleKey(platform)
-            self.log("bundle key found:%s for platform:%s"%(checksum,platform))
+            
             if checksum == None:
                 #no checksum found in config file, probably since it uses different platform
                 continue
 
+            self.log("bundle key found:%s for platform:%s"%(checksum,platform),category="download",level=6)
+
             if destinationDirectory == None:
                 downloadDestinationDirectory = j.system.fs.joinPaths(self.getPathFiles(), str(platform))
-
-
-            if state.downloadedBlobStorKeys.has_key(platform) and state.downloadedBlobStorKeys[platform] == checksum:
-                self.log("No need to download, already there.")
+            
+            if self.state.downloadedBlobStorKeys.has_key(platform) and self.state.downloadedBlobStorKeys[platform] == checksum:
+                self.log("No need to download/expand for platform '%s', already there."%platform,level=5)
                 continue
 
             if not self.blobstorLocal.exists(checksum):
-                self.blobstorRemote.copyToOtherBlocStor(checksum, self.blobstorLocal)
+                self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
 
             if expand:
+                self.log("expand platform:%s"%platform,category="download")
+                j.system.fs.removeDirTree(downloadDestinationDirectory)
+                j.system.fs.createDir(downloadDestinationDirectory)
                 self.blobstorLocal.download(checksum, downloadDestinationDirectory)
+                self.state.downloadedBlobStorKeys[platform] = checksum
+                self.state.save()
 
         #@todo need to check why this is needed
         # #download the required blobs
         # for checksum in self.requiredblobs.itervalues():
-        #     self.blobstorRemote.copyToOtherBlocStor(checksum, self.blobstorLocal)
+        #     self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
 
-        j.action.stop(False)
         return True
 
 
     def getBundleKey(self,platform):
         platform=str(platform)
         if self.bundles.has_key(platform):
+            if self.bundles[platform]=="":
+                return None
             return self.bundles[platform]
         else:
             return None
@@ -1502,13 +1475,12 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         params = j.core.params.get()
         params.jpackages = self
         params.url=url
-        j.action.start('Backup %s' % str(self))
+        self.log('Backup')
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.backup(url=url)
         self.actions.backup()
-        j.action.stop(False)
 
     def restore(self,url=None,dependencies=False):
         """
@@ -1519,34 +1491,20 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             url = j.console.askString("Url to restore to?")
         else:
             raise RuntimeError("url needs to be specified")
-
+        self.log('restore')
         self.loadActions()
         params = j.core.params.get()
         params.jpackages = self
         params.url=url
-        j.action.start('restore %s' % str(self))
         if dependencies:
             deps = self.getDependencies(platform=j.system.platformtype)
             for dep in deps:
                 dep.restore(url=url)
-        self.actions.restore()
-        j.action.stop(False)
-
-        
+        self.actions.restore()        
 
     def packageupload(self, platform=None):
         self.package(platform)
         self.upload()
-
-    def getBundlePlatforms(self):
-        result=[]
-        for platform in j.system.platformtype.getMyRelevantPlatforms():
-            if platform=="":
-                continue
-            pathFilesForPlatform = self.getPathFilesPlatform(platform)
-            if j.system.fs.exists(pathFilesForPlatform):
-                result.append(platform)
-        return result
 
     def getBundleDirs(self):
         result=[]
@@ -1556,8 +1514,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             pathFilesForPlatform = self.getPathFilesPlatform(platform)
             if j.system.fs.exists(pathFilesForPlatform):
                 result.append(pathFilesForPlatform)
-        return result
-        
+        return result        
 
     # upload the bundle
     def upload(self, remote=True, local=True):
@@ -1576,7 +1533,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             j.system.fs.remove(j.system.fs.joinPaths(self.metadataPath, "blob.info"))
 
 
-        for platform in self.getBundlePlatforms():
+        for platform in self.j.system.platformtype.getMyRelevantPlatforms():
             # self.getBundleKey(platform) #hash as stored in config file
             pathFilesForPlatform = self.getPathFilesPlatform(platform)
 
@@ -1755,14 +1712,12 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             j.packages._actionSet(self, action)
 
         #process all dependencies
-        state = self.state
         if dependencies:
             deps = self.getDependencies(recursive=True)
             for dep in deps:
                 dep.executeAction(action,tags,  dependencies,params=params)
-        state = self.state
         self.log('executing jpackages action ' + tags + ' ' + action)
-        state.setCurrentAction(tags, action)
+        self.state.setCurrentAction(tags, action)
         self.actions.execute(action, tags=tags, params=params) #tags are not used today
         self.state.setCurrentActionIsDone()
 

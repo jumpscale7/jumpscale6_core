@@ -179,6 +179,11 @@ class LogHandler(object):
         self.clientdaemontarget = False
         self.order = 0
 
+    def addConsoleLogCategory(self,category):
+        category=category.lower()
+        if category not in self.consolelogCategories:
+            self.consolelogCategories.append(category)
+
     def addLogTargetStdOut(self):
         self.logTargetAdd(LogTargetStdOut())
 

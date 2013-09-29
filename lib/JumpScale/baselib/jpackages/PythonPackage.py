@@ -5,24 +5,27 @@ class PythonPackage(object):
         self._checked=False
         self._usrPathCache=[]
         self._pythonPathCache=[]
+        # j.logger.addConsoleLogCategory("python")
 
     def clearcache(self):
-        print "CLEARCACHE"
+        j.logger.log("Clear pathscache for /usr & python packages.",level=5,category="python.package")
         self.__init__()
 
     def _getPythonPathNames(self):
-        print "getpython path names"
+        
         if self._pythonPathCache==[]:
+            j.logger.log("getpython path names and cache.",level=5,category="python.package")
             for path in j.application.config.getItemsFromPrefix("python.paths"):
                 for item in j.system.fs.listFilesAndDirsInDir(path,recursive=True):
                     item=item.lower()
                     self._pythonPathCache.append(item)   
-            self._pythonPathCache.sort()    
+            self._pythonPathCache.sort()  
         return  self._pythonPathCache
 
     def _getUsrPathNames(self):
-        print "getpython path names"
+        
         if self._usrPathCache==[]:
+            j.logger.log("get /usr path names and cache.",level=5,category="python.package")
             for path in j.application.config.getItemsFromPrefix("python.paths"):
                 for item in j.system.fs.listFilesAndDirsInDir(path,recursive=True):
                     item=item.lower()

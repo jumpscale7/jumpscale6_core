@@ -49,15 +49,21 @@ class PlatformTypes():
         self.myplatform=self._getPlatform()
 
     def getMyRelevantPlatforms(self):
-        result=self.platformParents[self.myplatform]
-        result.append(self.myplatform)
+        result=self.getParents(self.myplatform)
+        if self.myplatform not in result:
+            result.append(self.myplatform)
         return result
 
     def getPlatforms(self):
         return self.platformParents.keys()
 
     def getParents(self,name):
-        return self.platformParents[name]
+        result=self.platformParents[name]
+        try:
+            result.pop(result.index(""))
+        except:
+            pass
+        return result
 
     def getChildren(self,name):
         raise NotImplemented("getchildren not implemented")
