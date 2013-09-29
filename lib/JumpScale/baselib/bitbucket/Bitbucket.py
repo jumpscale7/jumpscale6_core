@@ -272,7 +272,7 @@ class BitbucketConnection(object):
         j.system.fs.writeFile(self.lastactionstatusFile,"%s::%s\n" % (name,status),append=True)
         
     def lastactionstatusClear(self):
-        j.system.fs.removeFile(self.lastactionstatusFile)
+        j.system.fs.remove(self.lastactionstatusFile)
         self._init()
                 
                 
@@ -346,7 +346,7 @@ class BitbucketConnection(object):
         cmd+=" > %s" % resultTmpfile 
         resultcode, content = j.system.process.execute(cmd, False, True)
         content = j.system.fs.fileGetContents(resultTmpfile )
-        j.system.fs.removeFile(resultTmpfile)
+        j.system.fs.remove(resultTmpfile)
         if resultcode > 0:
             j.errorconditionhandler.raiseError("Cannot addrepo. Cannot execute \n%s" %cmd)
         try:
@@ -469,8 +469,8 @@ class BitbucketConnection(object):
 
         # TODO - MNour: Add error checking and handling.
         content = j.system.fs.fileGetContents(resultTmpfile )
-        j.system.fs.removeFile(resultTmpfile)
-        #j.system.fs.removeFile(headerTmpfile)
+        j.system.fs.remove(resultTmpfile)
+        #j.system.fs.remove(headerTmpfile)
 
         try:
             object = json.loads(content) if content else dict()

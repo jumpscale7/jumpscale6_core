@@ -69,8 +69,8 @@ class KeyStor():
 
 
         if path=="":
-            j.system.fs.removeFile(p1)
-            j.system.fs.removeFile(p2)
+            j.system.fs.remove(p1)
+            j.system.fs.remove(p2)
 
             self.db.set(organization,"private_%s"%user,priv)
             self.db.set(organization,"public_%s"%user,pub)
@@ -99,7 +99,7 @@ class KeyStor():
                 key=m2c.RSA.load_key(p1,empty_callback)
         except:
             raise RuntimeError("Cannot load key:%s"%cachekey)
-        j.system.fs.removeFile(p1)
+        j.system.fs.remove(p1)
         self.keys[cachekey]=key
         return key
 

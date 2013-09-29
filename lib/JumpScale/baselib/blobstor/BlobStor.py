@@ -124,7 +124,7 @@ class BlobStor:
         if keepTempFile == False:
             # when blobstore type is remote, clean up temporary file
             if self.config['type'] == 'remote':
-                j.system.fs.removeFile(tmpfile)
+                j.system.fs.remove(tmpfile)
         else:
             return tmpfile, metadata
 
@@ -141,14 +141,14 @@ class BlobStor:
             hashh, filesdescr = j.tools.hash.hashDir(destination)
         return metadata.hash == hashh
 
-    def copyToOtherBlocStor(self, key, blobstor):
+    def copyToOtherBlobStor(self, key, blobstor):
         if True or not blobstor.exists(key):
             tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
             self._put(blobstor, metadata, tmpfile)
             if not self.config['type'] == 'local':
                 j.system.fs.remove(tmpfile)
         else:
-            j.logger.log("No need to download %s to blobstor, because is already there" % key, 6)
+            j.clients.blobstor.log("No need to download '%s' to blobstor, because is already there" % key, "download")
 
     def _put(self, blobstor, metadata, tmpfile):
         hashh = metadata.hash
@@ -170,7 +170,7 @@ class BlobStor:
             except Exception,e:
                 if str(e).find("Failed to login on ftp server")<>-1:
                     if j.application.shellconfig.interactive:
-                        print "Could not login to FTP server for blobstor, please give your login details."
+                        j.console.echo("Could not login to FTP server for blobstor, please give your login details.")
                         login=j.console.askString("login")
                         passwd=j.console.askString("passwd")
                         config=j.config.getInifile("blobstor")
@@ -210,6 +210,12 @@ class BlobStor:
         else:
             hashh, filesdescr = j.tools.hash.hashDir(path)
 
+        if hashh=="":
+            #means empty dir
+            return "", "", False
+
+        j.clients.blobstor.log("Path:'%s' Hash:%s" % (path,hashh),category="upload",level=5)
+
         tmpfile = j.system.fs.getTempFileName()
 
         if filetype == "file":
@@ -239,20 +245,21 @@ class BlobStor:
 
         #if hashh==prevkey or self.exists(hashh):
         if self.exists(hashh):
-            j.logger.log("No need to upload %s to blobstor:%s/%s, have already done so." % (path,self.name,self.namespace),category="blobstor.upload",level=5)
+            j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,self.name,self.namespace),category="upload",level=5)
+
             #return hashh,descr,anyPutDone
         else:
             self._put(self, metadata, tmpfile)
             anyPutDone = True
-            j.logger.log('Successfully uploaded blob: ' + path,category="blobstor.upload",level=5)
+            j.clients.blobstor.log('Successfully uploaded blob: ' + path,category="upload",level=5)
 
         for blobstor in blobstores:
             if blobstor.exists(hashh):
-                j.logger.log("No need to upload %s to blobstor:%s/%s, have already done so." % (path,blobstor.name,self.namespace),category="blobstor.upload",level=5)
+                j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,blobstor.name,self.namespace),category="upload",level=5)
             else:
                 self._put(blobstor, metadata, tmpfile)
                 anyPutDone = True
-                j.logger.log("Successfully uploaded %s to blobstor:%s/%s" % (path,blobstor.name,self.namespace) ,category="blobstor.upload",level=5)
+                j.clients.blobstor.log("Successfully uploaded '%s' to blobstor:'%s/%s'" % (path,blobstor.name,self.namespace) ,category="upload",level=5)
 
         j.system.fs.remove(tmpfile)
         return hashh, descr, anyPutDone
@@ -279,6 +286,10 @@ class BlobMetadata():
 
 
 class BlobStorFactory:
+    def __init__(self):
+        self.logenable=True
+        self.loglevel=5    
+
     def get(self, name=""):
         return BlobStor(name)
 
@@ -295,3 +306,7 @@ class BlobStorFactory:
             rawDescription = f.read()
         description = BlobMetadata(rawDescription, None)
         return description
+
+    def log(self,msg,category="",level=5):
+        if level<self.loglevel+1 and self.logenable:
+            j.logger.log(msg,category="blobstor.%s"%category,level=level)

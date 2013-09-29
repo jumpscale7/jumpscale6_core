@@ -3,7 +3,12 @@ import JumpScale.baselib.codeexecutor
 
 class HumanReadableDataFactory:
     def __init__(self):
-        pass
+        self.logenable=True
+        self.loglevel=5
+
+    def log(self,msg,category="",level=5):
+        if level<self.loglevel+1 and self.logenable:
+            j.logger.log(msg,category="hrd.%s"%category,level=level)
 
     def getHRD(self,path="",content=""):
         """
@@ -19,7 +24,7 @@ class HumanReadableDataFactory:
 
     def replaceVarsInText(self,content,hrdtree,position=""):
         items=j.codetools.regex.findAll(r"\$\([\w.]*\)",content)
-        
+        j.core.hrd.log("replace vars in hrdtree:%s"%hrdtree.path,"replacevar",7)
         if len(items)>0:
             for item in items:
                 # print "look for : %s"%item
@@ -72,7 +77,6 @@ class HRDPos():
         if persistent==True:
             hrd=self.getHRD(key,position)
             hrd.set(key,value,persistent)
-            print "set in hrdpos %s in hrdfile %s: %s %s"%(self._treeposition,hrd._path,key,value)
 
     def getHRD(self,key,position=""):
         key=key.replace(".","_")
@@ -92,7 +96,7 @@ class HRDPos():
         return str(key).lower().replace(".","_")
 
     def get(self,key,checkExists=False):
-        key=self._normalizeKey(key)
+        key=self._normalizeKey(key)        
         if not self.__dict__.has_key(key):
             if checkExists:
                 return False
@@ -108,6 +112,9 @@ class HRDPos():
                 val2=self.get(item2)
                 val=val.replace(item,val2)
                 self.set(key,val,persistent=False)
+
+        j.core.hrd.log("get in hrd:%s '%s':'%s'"%(self._tree.path,key,val),category="get",level=6)
+
         return val
 
     def getBool(self,key):
@@ -229,6 +236,7 @@ class HRD():
         if persistent==True:
             value=self._serialize(value)
             self._set(key,value)
+            j.core.hrd.log("set in hrd:%s '%s':'%s'"%(self._path,key,value),category="set")
             # print "set in hrd itself: %s %s"%(key,value)
 
     def _set(self,key,value):
@@ -297,7 +305,9 @@ class HRD():
         val= self.__dict__[key2]
 
         content=self._unserialize(val)
-        return str(content).strip()
+        val=str(content).strip()
+        j.core.hrd.log("hrd:%s get '%s':'%s'"%(self._path,key,val))
+        return val
 
     def getBool(self,key):
         res=self.get(key)
@@ -492,7 +502,6 @@ class HumanReadableDataTree():
             self.add2treeFromContent(content)
         self.changed=False
 
-
     def getPosition(self,startpath,curpath,position=""):  
         position=position.strip("/")
         # curpath=j.system.fs.getDirName(curpath+"/")
@@ -531,7 +540,8 @@ class HumanReadableDataTree():
         hrdposObject=self.positions[treeposition]
 
         for pathfound in paths:
-            j.logger.log("Add hrd %s from %s to position:'%s'" % (pathfound,startpath,treeposition), level=9, category="hrd.load")
+
+            j.core.hrd.log("Add hrd %s to position:'%s'" % (pathfound,treeposition), level=7, category="load")
                         
             hrd=HRD(pathfound,treeposition,self)
             hrd.read()
@@ -655,10 +665,9 @@ class HumanReadableDataTree():
     def set(self,key,val,position=""):
         hrd=self.getHrd(position)
         hrd.set(key,val,persistent=True)
-        print "hrdset: %s %s"%(key,val)
 
     def applyOnDir(self,path,position="",filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
-        print "apply on dir: %s in position:%s"%(path,position)
+        j.core.hrd.log("hrd:%s apply on dir:%s in position:%s"%(self.path,path,position),category="apply")
         
         items=j.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
         for item in items:
@@ -671,6 +680,7 @@ class HumanReadableDataTree():
                 self.applyOnFile(item2,position=position)
 
     def applyOnFile(self,path,position=""):
+        j.core.hrd.log("hrd:%s apply on file:%s in position:%s"%(self.path,path,position),category="apply")
         content=j.system.fs.fileGetContents(path)
         content=j.core.hrd.replaceVarsInText(content,self,position)
         j.system.fs.writeFile(path,content)

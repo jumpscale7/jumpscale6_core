@@ -22,7 +22,7 @@ class AutoCreateIniFile(IniFile):
         IniFile.__init__(self, path, create=create)
 
     def remove(self):
-        j.system.fs.removeFile(self._pmd_path)
+        j.system.fs.remove(self._pmd_path)
 
 class ConfigSection(BaseType):
     def __init__(self, config, name):

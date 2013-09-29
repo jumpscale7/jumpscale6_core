@@ -61,7 +61,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
 
         if self.exists(category, key):
             storePath = self._getStorePath(category, key)
-            j.system.fs.removeFile(storePath)
+            j.system.fs.remove(storePath)
 
             # Remove all empty directories up to the base of the store being the
             # directory with the store name (4 deep).

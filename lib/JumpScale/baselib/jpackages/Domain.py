@@ -465,12 +465,12 @@ class Domain():
 
         j.system.fs.targzCompress(self.metadatadir, targetTarPath, pathRegexExcludes=['.*\/\.hg\/.*'])
         
-        j.system.fs.removeFile(revisionTxt)    
+        j.system.fs.remove(revisionTxt)    
         
         remoteTarDir  = self.metadataUpload
         j.logger.log("Uploading tar file for jpackages metadata" + targetTarPath + " to location " + remoteTarDir)
         j.cloud.system.fs.copyFile('file://' +  targetTarPath, 'file://' +  remoteTarDir + "/")        
-        j.system.fs.removeFile(targetTarPath)
+        j.system.fs.remove(targetTarPath)
     
 
     def _isTrackingFile(self, file):

@@ -208,7 +208,7 @@ syntax: regexp
         files  = j.system.fs.listFilesInDir(self.basedir, recursive=True)
         for file in files:
             if file[-1] == '~': # if backupfile
-                j.system.fs.removeFile(file)
+                j.system.fs.remove(file)
         self._removeRedundantFiles()
         rules = self.status()
         modified=[]
@@ -291,7 +291,7 @@ syntax: regexp
                                 if j.system.fs.isDir(j.system.fs.joinPaths(self.basedir,path)):
                                     j.system.fs.removeDir(j.system.fs.joinPaths(self.basedir,path))
                                 else:
-                                    j.system.fs.removeFile(j.system.fs.joinPaths(self.basedir,path))
+                                    j.system.fs.remove(j.system.fs.joinPaths(self.basedir,path))
                     elif action == "AddRemove":
                         message = "commit missing jpackage files, addremove"
                         if commitMessage:
@@ -498,7 +498,7 @@ syntax: regexp
         dirs2delete=[]
         def process(args, path):
             if path[-4:].lower()==".pyc" or path[-4:].lower()==".pyo" or path[-4:].lower()==".pyw" or path[-1]=="~":
-                j.system.fs.removeFile(path)
+                j.system.fs.remove(path)
             if path.find("/.cache")<>-1 and path.find("/.hg/")==-1:
                 dirs2delete.append(path)
         j.system.fswalker.walk(self.basedir,process,"",True,True) 

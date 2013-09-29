@@ -30,6 +30,14 @@ class JPackageClient():
         self.resetState()
         self.enableConsoleLogging()
 
+        self.logenable=True
+        self.loglevel=5
+
+    def log(self,msg,category="",level=5):
+        if level<self.loglevel+1 and self.logenable:
+            j.logger.log(msg,category="jpackage.%s"%category,level=level)        
+
+
     def enableConsoleLogging(self):
         j.logger.consoleloglevel=6
         j.logger.consolelogCategories.append("jpackage")

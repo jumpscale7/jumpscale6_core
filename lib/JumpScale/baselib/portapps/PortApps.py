@@ -113,9 +113,9 @@ class PortApps(j.code.classGetBase()):
     def reset(self):
         self.killall()
         destcfg=j.system.fs.joinPaths(j.dirs.cfgDir,"portappslist.cfg")
-        j.system.fs.removeFile(destcfg)
+        j.system.fs.remove(destcfg)
         destcfg=j.system.fs.joinPaths(j.dirs.varDir,"portapps.data")
-        j.system.fs.removeFile(destcfg)
+        j.system.fs.remove(destcfg)
         appsdir=j.system.fs.joinPaths(j.dirs.baseDir,"portapps")
         j.system.fs.removeDirTree(appsdir)
         self.update()

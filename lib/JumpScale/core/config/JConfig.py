@@ -21,7 +21,7 @@ class JConfig():
         return ini.getFileAsDict()
     
     def remove(self, configtype):
-        j.system.fs.removeFile(self._buildPath(configtype))
+        j.system.fs.remove(self._buildPath(configtype))
         
     def list(self):
         """

@@ -192,7 +192,7 @@ class LogTargetFS(object):
                     for filepath in files:
                         if j.system.fs.exists(filepath):
                             try:
-                                j.system.fs.removeFile(filepath)
+                                j.system.fs.remove(filepath)
                             except Exception as ex:
                                 pass  # We don't want to fail on logging
 

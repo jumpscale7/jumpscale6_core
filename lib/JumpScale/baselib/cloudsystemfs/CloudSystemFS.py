@@ -17,14 +17,14 @@ class CloudSystemFS:
         tempfile = j.system.fs.getTmpFilePath()
         self.copyFile(url, 'file://' + tempfile)
         content = j.system.fs.fileGetContents(tempfile)
-        j.system.fs.removeFile(tempfile)
+        j.system.fs.remove(tempfile)
         return content
 
     def writeFile(self, url, content):
         tempfile = j.system.fs.getTmpFilePath()
         j.system.fs.writeFile(tempfile, content)
         self.copyFile('file://' + tempfile, url)
-        j.system.fs.removeFile(tempfile)
+        j.system.fs.remove(tempfile)
 
     """
     set of library actions which are used in cloud
@@ -274,7 +274,7 @@ class CloudSystemFS:
 
         if copy:
             self.copyFile(outputFileName,destinationpath,tempdir=tempdir)
-            j.system.fs.removeFile(tmp_outputFileName)
+            j.system.fs.remove(tmp_outputFileName)
         else:
             destination.cleanup()
 
@@ -315,7 +315,7 @@ class CloudSystemFS:
         j.cmdtools.disktools.qemu_img.convert(tmp_inputFileName, format, destinationpath, 'raw', compressTargetImage=compressImage)
 
         if not protocol == "file" and not protocol == "smb" and not protocol == "cifs":
-            j.system.fs.removeFile(tmp_inputFileName)
+            j.system.fs.remove(tmp_inputFileName)
         elif protocol == "smb" or protocol == "cifs":
             src_fs.cleanup()
 

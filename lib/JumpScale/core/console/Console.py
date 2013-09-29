@@ -16,7 +16,7 @@ class Console:
     self.reformat=False #if True will make sure message fits nicely on screen    
     """
     def __init__(self):
-        self.width=240
+        self.width=230
         self.indent=0 #current indentation of messages send to console
 
     def rawInputPerChar(self,callback,params):
@@ -87,27 +87,22 @@ class Console:
             raise RuntimeError("Cannot format message for screen, not enough width\nwidht:%s prefixwidth:%s maxlengthstatustype:%s" % (width,len(prefix),maxMessageLength))
         
         out=[]
-        r=0
         for line in message.split("\n"):
-            first=True
-            if len(line)>maxMessageLength-4:
-                r=1
-            while len(line)>maxMessageLength-4:
-                if not first:
-                    line+="    "
-                    first=False
-                out.append(line[:maxMessageLength-3])
-                line=line[maxMessageLength-4:]
-            if line<>"":
-                out.append(line)
-            if r==1:
-                from IPython import embed
-                print "DEBUG NOW ooooooooooo"
-                embed()
-                
+            if line=="":
+                continue
+            linelength=maxMessageLength
+            linelength2=maxMessageLength-4
+            prepend=""
+            while len(line)>linelength:                
+                linenow="%s%s"%(prepend,line[:linelength])
+                out.append(linenow)
+                line=line[linelength:]
+                linelength=linelength2 #room for prepend for next round
+                prepend="    "
+            linenow="%s%s"%(prepend,line[:linelength])
+            out.append(linenow)
+
         return "\n".join(out)+"\n"
-
-
     
     
     def echo(self, msg,indent=None,withStar=False,prefix="",log=False,lf=True):

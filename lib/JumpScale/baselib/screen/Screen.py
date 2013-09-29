@@ -64,15 +64,15 @@ rm -f %s
             if resultcode=="":
                 resultcode=0
             resultcode=int(resultcode)       
-            j.system.fs.removeFile(ppath)
+            j.system.fs.remove(ppath)
             if resultcode>0:
                 raise RuntimeError("Could not execute %s in screen %s:%s, errorcode was %s" % (cmd,sessionname,screenname,resultcode))
         else:
             j.console.echo("Execution of %s  did not return, maybe interactive, in screen %s:%s." % (cmd,sessionname,screenname))
 	if j.system.fs.exists(ppath):
-	    j.system.fs.removeFile(ppath)
+	    j.system.fs.remove(ppath)
 	if j.system.fs.exists(ppathscript):
-	    j.system.fs.removeFile(ppathscript)      
+	    j.system.fs.remove(ppathscript)      
 	    
     def getSessions(self):
         cmd="%s -ls" % self.screencmd

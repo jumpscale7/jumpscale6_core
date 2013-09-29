@@ -43,7 +43,7 @@ class _RecipeItem:
                         answer = j.gui.dialog.askYesNo(
                             'Export location %s exists. Do you want the file to be removed before exporting?' % codeOnSystem)
                         if answer:
-                            j.system.fs.removeFile(codeOnSystem)
+                            j.system.fs.remove(codeOnSystem)
 
                 else:
                     raise RuntimeError('Export location %s exists' % codeOnSystem)
@@ -168,7 +168,7 @@ class _RecipeItem:
         """ Remove a destionation file or directory."""
         isFile = j.system.fs.isFile
         isDir = j.system.fs.isDir
-        removeFile = j.system.fs.removeFile
+        removeFile = j.system.fs.remove
         removeDirTree = j.system.fs.removeDirTree
         exists = j.system.fs.exists
 

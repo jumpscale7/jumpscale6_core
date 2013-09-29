@@ -88,7 +88,7 @@ class IniFile(object):
 
     def __del__(self):
         if self.__inifilepath and self.__removeWhenDereferenced:
-            j.system.fs.removeFile(self.__inifilepath)
+            j.system.fs.remove(self.__inifilepath)
 
     def __readFile(self):
         #content=j.system.fs.fileGetContents(self.__inifilepath)
