@@ -49,7 +49,7 @@ class Application:
         """
 
         self.loadConfig()
-        if self.config != None:
+        if self.config != None and self.config.exists('node.id'):
             nodeid = self.config.getInt("node.id")
             gridid = self.config.getInt("grid.id")
             j.logger.log("gridid:%s,nodeid:%s"%(gridid, nodeid), level=3, category="application.startup")
@@ -69,9 +69,9 @@ class Application:
         return "_".join([str(item) for item in self.whoAmI])
 
     def loadConfig(self):
-        path = j.system.fs.joinPaths(j.dirs.cfgDir, "hrd", "node.hrd")
+        path = j.system.fs.joinPaths(j.dirs.cfgDir, "hrd")
         if j.system.fs.exists(path=path):
-            self.config = j.core.hrd.getHRD(path=j.system.fs.joinPaths(j.dirs.cfgDir, "hrd"))
+            self.config = j.core.hrd.getHRD(path=path)
 
 
     def start(self,name=None,basedir="/opt/jumpscale",appdir="."):

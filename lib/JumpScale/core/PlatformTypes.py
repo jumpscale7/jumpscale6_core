@@ -45,14 +45,10 @@ class PlatformTypes():
         self.addPlatform("vista",parent="win")
         self.addPlatform("win2008_64",parent="win64")
         self.addPlatform("win2012_64",parent="win64")
-        # self._platformFinishParents()
         self.myplatform=self._getPlatform()
 
     def getMyRelevantPlatforms(self):
-        result=self.getParents(self.myplatform)
-        if self.myplatform not in result:
-            result.append(self.myplatform)
-        return result
+        return self.platformParents[str(self.myplatform).lower()]
 
     def getPlatforms(self):
         return self.platformParents.keys()
@@ -72,24 +68,20 @@ class PlatformTypes():
         # print "TRY addparent: %s %s"%(name,parent)
         name=name.lower()
         parent=parent.lower()
-        if not self.platformParents.has_key(name):
-            self.platformParents[name]=[]
+        if name not in self.platformParents:
+            self.platformParents[name]=[name]
+        if not parent or name == parent:
+            return
         if parent not in self.platformParents[name]:
-            # print "addparent: %s %s"%(name,parent)
             self.platformParents[name].append(parent)
-        if parent<>"" and self.platformParents.has_key(parent):
+        if parent in self.platformParents:
             for parentofparent in self.platformParents[parent]:
-                self.addPlatform(name,parentofparent)
+                if parentofparent != parent:
+                    self.addPlatform(name,parentofparent)
         else:
             if parent<>"":
                 raise RuntimeError("Could not find parent %s in tree, probably order of insertion not ok."%parent)
 
-    # def _platformFinishParents(self):
-    #     print "FINISH"
-    #     for key in self.platformParents.keys():
-    #         parents=self.platformParents[key]
-    #         for parent in parents:
-    #             self.addPlatform(parent,key)
 
     def _getPlatform(self):
 
