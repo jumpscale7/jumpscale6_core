@@ -87,7 +87,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
     def log(self,msg,category="",level=5):
         if level<self.loglevel+1 and self.logenable:
-            j.packages.log("%s: msg"%self,category="hrd.%s"%category,level=level)        
+            j.packages.log("%s:%s"%(self,msg),category="hrd.%s"%category,level=level)        
 
 
     def check(self):
@@ -143,6 +143,17 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.export = self.hrd.getBool("qp.export")
         self.autobuild = self.hrd.getBool("qp.autobuild")
         self.taskletsChecksum = self.hrd.get("qp.taskletschecksum")
+        try:
+            self.descrChecksum = self.hrd.get("qp.descrchecksum")
+        except:
+            self.hrd.set("qp.descrchecksum","")
+            self.descrChecksum = self.hrd.get("qp.descrchecksum")
+        try:
+            self.hrdChecksum = self.hrd.get("qp.hrdchecksum")
+        except:
+            self.hrd.set("qp.hrdchecksum","")
+            self.hrdChecksum = self.hrd.get("qp.hrdchecksum")
+
         self.supportedPlatforms = self.hrd.getList("qp.supportedplatforms")
         self.bundles = self.hrd.getDict("qp.bundles") #dict with key platformkey and val the hash of bundle
         
@@ -192,11 +203,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self._loadActiveHrd()
 
-        self.hrd.add2tree(j.system.fs.joinPaths(j.dirs.cfgDir,"hrd"))        
-        
         j.system.fs.copyDirTree(j.system.fs.joinPaths(self.metadataPath,"actions"),self.getPathActions())        
         
-        self.hrd.applyOnDir(self.getPathActions(),"") #make sure params are filled in in actions dir
+        #apply apackage hrd data on actions active
+        self.hrd.applyOnDir(self.getPathActions()) #make sure params are filled in in actions dir
+        #apply hrd configu from system on actions active
+        j.application.config.applyOnDir(self.getPathActions())
 
         self.actions = ActionManager(self)
         
@@ -261,6 +273,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd.set("qp.export",self.export)
         self.hrd.set("qp.autobuild",self.autobuild)
         self.hrd.set("qp.taskletschecksum",self.taskletsChecksum)
+        self.hrd.set("qp.hrdchecksum",self.hrdChecksum)
+        self.hrd.set("qp.descrchecksum",self.descrChecksum)
         self.hrd.set("qp.supportedplatforms",self.supportedPlatforms)
         self.hrd.set("qp.bundles",self.bundles)
 
@@ -1598,14 +1612,37 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             else:
                 self.log("No file change for platform:%s"%platform,level=5,category="upload" )
 
-        taskletsChecksum, descr2 = j.tools.hash.hashDir(j.system.fs.joinPaths(self.metadataPath, "actions"))
+        actionsdir=j.system.fs.joinPaths(self.metadataPath, "actions")
+        j.system.fs.removeIrrelevantFiles(actionsdir)
+        taskletsChecksum, descr2 = j.tools.hash.hashDir(actionsdir)
+        hrddir=j.system.fs.joinPaths(self.metadataPath, "hrdactive")
+        hrdChecksum, descr2 = j.tools.hash.hashDir(hrddir)
+        descrdir=j.system.fs.joinPaths(self.metadataPath, "documentation")
+        descrChecksum, descr2 = j.tools.hash.hashDir(descrdir)
+
+        if descrChecksum <> self.descrChecksum:
+            self.log("Descr change, upgrade buildnr.",level=5,category="buildnr")
+            #buildnr needs to go up
+            updateBuildnr = True
+            self.descrChecksum = descrChecksum
+        else:
+            self.log("Descr did not change.",level=7,category="buildnr")
+
         if taskletsChecksum <> self.taskletsChecksum:
             self.log("Actions change, upgrade buildnr.",level=5,category="buildnr")
             #buildnr needs to go up
             updateBuildnr = True
             self.taskletsChecksum = taskletsChecksum
         else:
-            self.log("Actions did not change.",level=7,category="buildnr")
+            self.log("Actions did not change.",level=7,category="buildnr")            
+
+        if hrdChecksum <> self.hrdChecksum:
+            self.log("Active HRD change, upgrade buildnr.",level=5,category="buildnr")
+            #buildnr needs to go up
+            updateBuildnr = True
+            self.hrdChecksum = hrdChecksum
+        else:
+            self.log("Active HRD did not change.",level=7,category="buildnr")
 
         if  updateBuildnr:
             self.buildNr += 1
