@@ -1533,7 +1533,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             j.system.fs.remove(j.system.fs.joinPaths(self.metadataPath, "blob.info"))
 
 
-        for platform in self.j.system.platformtype.getMyRelevantPlatforms():
+        for platform in j.system.platformtype.getMyRelevantPlatforms():
             # self.getBundleKey(platform) #hash as stored in config file
             pathFilesForPlatform = self.getPathFilesPlatform(platform)
 
