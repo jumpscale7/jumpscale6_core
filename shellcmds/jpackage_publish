@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 from JumpScale import j
+import argparse
 j.application.start("jpackage")
 from JumpScale.baselib import cmdutils
 
-package, args = cmdutils.getJPackage()
+parser = argparse.ArgumentParser()
+parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
+package, args = cmdutils.getJPackage(parser)
 j.packages.publish(args.message, package.domain)
 j.application.stop()

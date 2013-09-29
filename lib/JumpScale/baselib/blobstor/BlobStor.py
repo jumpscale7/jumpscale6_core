@@ -24,15 +24,17 @@ class BlobStor:
     """
 
     def __init__(self, name):
-        config = BlobStorConfigManagement()
-        
-        if name not in config.list():
-            raise RuntimeError("Cannot find blobstor connection with name %s" % name)
-        else:
-            configitem = config.getConfig(name)
-        self.config = configitem
-        self.namespace = self.config["namespace"]
         self.name = name
+        self.loadConfig()
+        self.namespace = self.config["namespace"]
+
+    def loadConfig(self):
+        config = BlobStorConfigManagement()
+        if self.name not in config.list():
+            raise RuntimeError("Cannot find blobstor connection with name %s" % self.name)
+        else:
+            configitem = config.getConfig(self.name)
+        self.config = configitem
 
     def _getDestination(self, destproto=None):
         if not destproto:
@@ -172,7 +174,7 @@ class BlobStor:
                     if j.application.shellconfig.interactive:
                         j.console.echo("Could not login to FTP server for blobstor, please give your login details.")
                         login=j.console.askString("login")
-                        passwd=j.console.askString("passwd")
+                        passwd=j.console.askPassword("passwd", False)
                         config=j.config.getInifile("blobstor")
                         ftpurl=config.getValue(blobstor.name,"ftp")
                         if ftpurl.find("@")<>-1:
@@ -181,7 +183,8 @@ class BlobStor:
                             end=ftpurl.split("//")[1].strip()
                         ftpurl="ftp://%s:%s@%s"%(login,passwd,end)
                         config.setParam(blobstor.name,"ftp",ftpurl)
-                        self._put(blobstor, metadata, tmpfile)
+                        blobstor.reloadConfig()
+                        return self._put(blobstor, metadata, tmpfile)
                 j.errorconditionhandler.processPythonExceptionObject(e)
                 
         j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
