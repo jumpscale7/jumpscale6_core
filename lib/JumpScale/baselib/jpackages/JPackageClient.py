@@ -132,7 +132,7 @@ class JPackageClient():
             descr   = j.console.askString("Please provide a description","")
 
             while not supportedPlatforms:
-                supportedPlatforms = j.console.askChoiceMultiple(j.system.platform.getPlatforms(), 'Please enumerate the supported platforms')
+                supportedPlatforms = j.console.askChoiceMultiple(j.system.platformtype.getPlatforms(), 'Please enumerate the supported platforms')
 
         if domain=="" or name=="":
             raise RuntimeError("domain or name at least needs to be specified")
