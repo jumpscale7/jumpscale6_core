@@ -92,15 +92,11 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 
         self.__init=False
 
-        self.logenable=True
-        self.loglevel=5
-
         self._init()
 
     def log(self,msg,category="",level=5):
-        if level<self.loglevel+1 and self.logenable:
-            j.packages.log("%s:%s"%(self,msg),category="hrd.%s"%category,level=level)        
-
+        if level<j.packages.loglevel+1 and j.packages.logenable:
+            j.packages.log("%s:%s"%(self,msg),category=category,level=level)        
 
     def check(self):
         if not self.supportsPlatform():
