@@ -269,7 +269,7 @@ class PortalProcess():
 
             # check redis installed
             if not j.system.platformtype.isWindows():
-                j.system.platform.ubuntu.checkInstall(["python-redis", "redis-server"], "redis-server")
+                j.system.platform.ubuntu.checkInstall(["python-redis", "redis-server"], "redis-server")  #@todo P1 put in jpackage
         else:
             self.rediscfg = None
 
