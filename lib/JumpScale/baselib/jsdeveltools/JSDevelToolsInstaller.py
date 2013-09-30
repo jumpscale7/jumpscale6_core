@@ -78,7 +78,7 @@ cmd.meld=
         cl.pullupdate()
 
     def installSublimeTextUbuntu(self):
-        p=j.packages.get("jpackagesbase","sublimetext","3.0")
+        p=j.packages.get("jumpscale","sublimetext","3.0")
         p.install()
 
     def preparePlatform(self):
@@ -95,7 +95,7 @@ cmd.meld=
         j.system.platform.ubuntu.updatePackageMetadata()
 
         print "install python package"
-        p=j.packages.get("jpackagesbase","python","2.7")
+        p=j.packages.get("jumpscale","python","2.7")
         if reinstall:
             p.reinstall()
         else:

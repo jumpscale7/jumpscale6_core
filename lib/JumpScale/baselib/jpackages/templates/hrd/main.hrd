@@ -18,7 +18,7 @@ qp.bundles=
 
 ##dependencies
 #qp.dependency.1.name = processmanager
-#qp.dependency.1.domain = jpackagesbase
+#qp.dependency.1.domain = jumpscale
 #qp.dependency.1.minversion= 1
 #qp.dependency.1.maxversion= 2
 
