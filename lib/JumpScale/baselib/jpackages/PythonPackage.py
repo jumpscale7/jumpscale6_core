@@ -95,14 +95,14 @@ class PythonPackage(object):
         self.check()
         return j.application.config.get("python.paths.local.sitepackages")
 
-    def copyLibsToLocalSitePackagesDir(self,rootpath):
+    def copyLibsToLocalSitePackagesDir(self,rootpath,remove=True):
         """
         list all dirs in specified path and for each dir call
         self.copyLibToLocalSitePackagesDir
         """
         self.check()
         for item in j.system.fs.listDirsInDir(rootpath):
-            self.copyLibToLocalSitePackagesDir(item)
+            self.copyLibToLocalSitePackagesDir(item,remove=remove)
 
     def copyLibToLocalSitePackagesDir(self,path,remove=True):
         """
@@ -111,6 +111,7 @@ class PythonPackage(object):
         does this for 1 lib, so the dir needs to be the library by itself
         """
         self.check()
+        
         sitepackagepath=self.getSitePackagePathLocal()
         base=j.system.fs.getBaseName(path)
         dest=j.system.fs.joinPaths(sitepackagepath,base)

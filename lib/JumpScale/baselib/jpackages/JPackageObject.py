@@ -12,7 +12,6 @@ import inspect
 from JumpScale import j
 from JumpScale.core.baseclasses import BaseType
 from JumpScale.core.baseclasses.dirtyflaggingmixin import DirtyFlaggingMixin
-from DependencyDef4 import DependencyDef4
 from JPackageStateObject import JPackageStateObject
 #from JumpScale.core.sync.Sync import SyncLocal
 from ActionManager import ActionManager
@@ -21,6 +20,19 @@ JPACKAGE_CFG = "jpackages.cfg"
 BUILD_NR = "build_nr"
 QUALITY_LEVEL = "quality_level"
 IDENTITIES = "identities"
+
+class DependencyDef():
+    def __init__(self,name,domain,minversion=None,maxversion=None):
+        self.name=name
+        self.domain=domain
+        self.minversion=minversion
+        self.maxversion=maxversion
+
+    def __str__(sel):
+        return str(self.__dict__)
+
+    __repr__=__str__
+
 
 class JPackageObject(BaseType, DirtyFlaggingMixin):
     """
@@ -159,8 +171,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.supportedPlatforms = self.hrd.getList("qp.supportedplatforms")
         self.bundles = self.hrd.getDict("qp.bundles") #dict with key platformkey and val the hash of bundle
         
-        self.processDependencies()
-
         j.packages.getDomainObject(self.domain)
 
         self.blobstorRemote = None
@@ -281,23 +291,18 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd.set("qp.bundles",self.bundles)
 
         for idx, dependency in enumerate(self.dependencies):
-            self._addDependencyToHRD(idx, dependency.domain, dependency.name, dependency.supportedPlatforms,
-                                         minversion=dependency.minversion,
-                                         maxversion=dependency.maxversion,
-                                         dependencytype=dependency.dependencytype)
+            self._addDependencyToHRD(idx, dependency.domain, dependency.name,minversion=dependency.minversion,maxversion=dependency.maxversion)
 
-    def _addDependencyToHRD(self, idx, domain, name, supportedplatforms, minversion, maxversion, dependencytype):
-        hrd = self.hrd.getHrd().getHRD('qp.name')
+    def _addDependencyToHRD(self, idx, domain, name, minversion, maxversion):
+        hrd = self.hrd
         basekey = 'qp.dependency.%s.%%s' % idx
         def setValue(name, value):
             hrd.set(basekey % name, value)
 
         setValue('domain', domain)
         setValue('name', name)
-        setValue('supportedplatforms', supportedplatforms)
         setValue('minversion', minversion)
         setValue('maxversion', maxversion)
-        setValue('dependencytype', dependencytype)
 
 
 ##################################################################################################
@@ -305,46 +310,55 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 ##################################################################################################
 
 
-    def processDependencies(self):
-        self.dependencies = []
+    def loadDependencies(self):
+        if self.dependencies==[]:
+            self.dependencyDefs = []
 
-        def depFromInfo(dependencyInfo):
-            dep = DependencyDef4()
-            dep.name = dependencyInfo["name"]
-            dep.domain = dependencyInfo["domain"]
-            dep.minversion = dependencyInfo["minversion"]
-            dep.maxversion = dependencyInfo["maxversion"]
-            dep.supportedPlatforms = dependencyInfo["supportedplatforms"]
-            dep.dependencytype = j.enumerators.DependencyType4.getByName(dependencyInfo['dependencytype'])
-            return dep
+            addedstuff = set()
+            for key in self.hrd.prefix('qp.dependency'):
+                parts = key.split('.')
+                if parts[2] in addedstuff:
+                    continue
+                key = "%s.%%s" % (".".join(parts[:3]))
 
-        addedstuff = set()
-        for key in self.hrd.prefix('qp.dependency'):
-            parts = key.split('.')
-            if parts[2] in addedstuff:
-                continue
-            key = "%s.%%s" % (".".join(parts[:3]))
-            dependencyInfo = dict()
-            for depkey in ('name', 'domain', 'minversion', 'maxversion', 'dependencytype'):
-                dependencyInfo[depkey] = self.hrd.get(key % depkey)
-                
-            dependencyInfo['supportedplatforms'] = self.hrd.getList(key % 'supportedplatforms')
-            dep = depFromInfo(dependencyInfo)
-            addedstuff.add(parts[2])
-            self.dependencies.append(dep)
+                if not self.hrd.exists(key % 'minversion'):
+                    self.hrd.set(key % 'minversion',"")
+                if not self.hrd.exists(key % 'maxversion'):
+                    self.hrd.set(key % 'maxversion',"")
+                   
+                dependencyDef=DependencyDef(self.hrd.get(key % 'name'),
+                    self.hrd.get(key % 'domain'),
+                    self.hrd.get(key % 'minversion'),
+                    self.hrd.get(key % 'maxversion'))
 
+                addedstuff.add(parts[2])
+                self.dependencyDefs.append(dependencyDef)
 
-        #self.requiredblobs = cfg.getRequiredBlobs() #TODO P1
+            for dependcyDef in self.dependencyDefs:
 
+                package=j.packages.findNewest(dependcyDef.domain,dependcyDef.name,\
+                    minversion=dependencyDef.minversion,maxversion=dependencyDef.maxversion,platform=j.system.platformtype.myplatform)
+
+                if package not in self.dependencies:
+                    self.dependencies.append(package)
+
+                for deppack in package.getDependencies():
+                    if deppack not in self.dependencies:
+                        self.dependencies.append(deppack)                
+        
     def addDependency(self, domain, name, supportedplatforms, minversion, maxversion, dependencytype):
         dep = DependencyDef4()
         dep.name = name
         dep.domain = domain
         dep.minversion = minversion
         dep.maxversion = maxversion
-        dep.supportedPlatforms = supportedplatforms
-        dep.dependencytype = j.enumerators.DependencyType4.getByName(dependencytype)
-        self.dependencies.append(dep)
+        # dep.supportedPlatforms = supportedplatforms
+        # dep.dependencytype = j.enumerators.DependencyType4.getByName(dependencytype)
+        self.dependencyDefs.append(dep)
+        self.save()
+        self.dependencies=[]
+        self.loadDependencies()
+        
 
 #############################################################################
 ####################################  GETS  #################################
@@ -369,14 +383,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             raise RuntimeError("No depending packages present")
         [p for p in self.getDependingPackages(recursive=recursive) if p.isInstalled()]
 
-    def getDependingPackages(self, recursive=False, platform=None):
+    def getDependingPackages(self, recursive=False):
         """
         Return the packages that are dependent on this package
         This is a heavy operation and might take some time
         """
-        ##self.assertAccessable()
-        platform=self._getPackageInteractive(platform)
-        return [p for p in j.packages.getJPackageObjects() if self in p.getDependencies(recursive=recursive, platform=platform)]
+        return [p for p in j.packages.getJPackageObjects() if self in p.getDependencies()]
 
 
     def _getState(self):
@@ -462,9 +474,15 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         # j.system.platform.python.getSitePackagePathLocal
         for path in self.getPathFilesPlatformForSubDir("site-packages"):
-            self.log("copy python lib to %s"%path,category="libinstall")
+            # self.log("copy python lib to %s"%path,category="libinstall")
             self.log("Copy python lib:%s to site packages"%path,category="copylib")
-            j.system.platform.python.copyLibToLocalSitePackagesDir(path,remove=remove)
+            j.system.platform.python.copyLibsToLocalSitePackagesDir(path,remove=remove)
+
+
+    def installUbuntuDebs(self):
+        for path in self.getPathFilesPlatformForSubDir("debs"):
+            for item in j.system.fs.listFilesInDir(path,filter="*.deb"):
+                j.system.platform.ubuntu.installDebFile(item)            
 
     def getPathSourceCode(self):
         """
@@ -479,6 +497,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         ##self.assertAccessable()
         return self.state.lastinstalledbuildnr
+
+
 
     def getBrokenDependencies(self, platform=None):
         """
@@ -497,227 +517,25 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return broken
 
 
-    def pm_getDependencies(self, platform=None, recursive=False, depsfound=None, parent=None, depth=0, printTree=False, padding='', isLast=False, encountered=False):
-        """
-        Return the dependencies for the JPackage
-
-        @param depsfound [[$domain,$name,$version]]
-        @return [[parent,jpackagesObject]]
-        """
-
-        #@todo removed first argument which was depenencytype (dont want to do that any longer)
-
-        depsfoundToReturn = []
-
-        if depsfound == None:
-            depsfound = set()
-
-        childPadding = ''
-        if printTree: # print myself
-            end = ''
-            # The dependencies my children visit do not affect the dependency i visit
-            # but my children cannot decent into dependency I already decented into
-            end = '*'      if encountered            else ''
-            prefix = '\''  if isLast else '|'
-            childPadding = padding + (' ' if isLast else '|') + '   '
-            j.console.echo(padding + prefix + '--' + str(self) + end)
-
-        if not encountered:
-            for idx, dep in enumerate(self.dependencies): # go over my dependencies
-                found = False
-                if dep.dependencytype == dependencytype or dependencytype == None:
-                    for plat in dep.supportedPlatforms:
-                        #print str(plat) + '.hasParent(' + str(platform) + ')'
-                        if plat.has_parent(platform):
-                            found = True
-                        #@DEBUG please review this change
-                        if platform.has_parent(plat):
-                            found = True
-
-                if found:
-                    #dependenciesAlreadyFound=[d for parent,d in depsfound]
-                    # If We encounter an exception keep printing the tree
-                    # so we can see all missing packages in one go
-
-                    # If platform is generic, than we look for a package supporting generic?
-                    # Thus we look for a package supporting all platforms? Or do we look for packages supporting any of the enumerated platforms?
-                    # We need the do the latter, so the definition of findNewest should reflect this!
-                    depjpackage = j.packages.findNewest(domain=dep.domain, name=dep.name, minversion=dep.minversion, maxversion=dep.maxversion, platform=platform, returnNoneIfNotFound=True)
-                    if not depjpackage:
-                        self.log('dependency ' + str(dep) + ' could not be resolved for package ' + str(self))
-
-                        raise RuntimeError('\
-Could not find the %(qpDepName)s jpackages which is a dependency of the %(qpName)s jpackages, \
-updating the metadata for the %(qpDepDomain)s jpackages domain might resolve this issue' % {'qpName': self.name,
-                                                                                           'qpDepName': dep.name,
-                                                                                           'qpDepDomain': dep.domain})
-
-
-                    childEncountered = str(depjpackage) in depsfound
-                    childDeptsFound  = depsfound
-                    if not childEncountered:
-                        depsfound.add(str(depjpackage))
-                        depsfoundToReturn.append(depjpackage)
-                    if printTree:
-                        #childDeptsFound = set(depsfound)
-                        pass
-                    if recursive:
-                        depsfoundToReturn.extend(depjpackage.pm_getDependencies(dependencytype, platform,recursive, childDeptsFound,depjpackage, depth + 1, printTree, childPadding, idx == len(self.dependencies) - 1, childEncountered))
-        return depsfoundToReturn #only returns the new ones
-
 
 
     def getDependencyTree(self, platform=None):
         """
-        Return the Build dependencies for the JPackage
+        Return the dependencies for the JPackage
 
-        @param platform see j.system.platformtype....
+        @param platform see j.system.platformtype....        
         """
+        self.loadDependencies()
         platform=self._getPackageInteractive(platform)
         self.pm_getDependencies(None, platform, recursive=True, printTree=True)
 
-    def getBuildDependencyTree(self, platform=None):
+
+    def getDependencies(self):
         """
-        Return the Build dependencies for the JPackage
+        Return the dependencies for the JPackage
         """
-        platform=self._getPackageInteractive(platform)
-        self.pm_getDependencies(j.enumerators.DependencyType4.BUILD, platform, recursive=True, printTree=True)
-
-    def getRuntimeDependencyTree(self, platform=None):
-        """
-        Return the runtime dependencies for the JPackage, will not recurse into the dependencies
-        """
-        platform=self._getPackageInteractive(platform)
-        self.pm_getDependencies(j.enumerators.DependencyType4.RUNTIME, platform, recursive=True, printTree=True)
-
-    def getDependencies(self, platform=None, recursive=True):
-        """
-        Return the Build dependencies for the JPackage
-        """
-        platform=self._getPackageInteractive(platform)
-        res = self.pm_getDependencies(None, platform,recursive)
-        res.sort()
-        return res
-
-    def getBuildDependencies(self, platform=None, recursive=False):
-        """
-        Return the Build dependencies for the JPackage
-        """
-        platform=self._getPackageInteractive(platform)
-        if recursive == None:
-            recursive = j.console.askYesNo( "Recursive?")
-        res = self.pm_getDependencies(j.enumerators.DependencyType4.BUILD, platform, recursive)
-        res.sort()
-        return res
-
-    def getRuntimeDependencies(self, platform=None, recursive=False):
-        """
-        Return the runtime dependencies for the JPackage, will not recurse into the dependencies
-        """
-        platform=self._getPackageInteractive(platform)
-        if recursive == None:
-            recursive = j.console.askYesNo( "Recursive?")
-        res = self.pm_getDependencies(j.enumerators.DependencyType4.RUNTIME, platform, recursive)
-        res.sort()
-        return res
-
-    def getQualityLevels(self, force=False):
-        """
-        Get a dict with quality levels as keys and the build numbers on those
-        levels as values.
-
-        @return: a dict with quality levels as keys and build numbers as values
-        @rtype: dict(str, int)
-        """
-        domain = self._getDomainObject()
-
-        def getQualityLevelInfo(cfg):
-            buildNr = cfg.getBuildNumber()
-            identities = cfg.getIdentities()
-            return {
-                    BUILD_NR: buildNr,
-                    IDENTITIES: identities
-                    }
-
-        qualitylevels = {}
-        for qualitylevel in domain.getQualityLevels():
-            cfgPath = self._getConfigPath(qualitylevel)
-            if j.system.fs.exists(cfgPath):
-                cfg = self._getConfig(qualitylevel)
-                info = getQualityLevelInfo(cfg)
-                qualitylevels[qualitylevel] = info
-        return qualitylevels
-
-    # def promote(self, buildNr, fromQl, toQl, force=False):
-    #     """
-    #     Promote the build with number `buildNr` from quality level `fromQl` to
-    #     quality level `toQl`. If the build number on `toQl` is higher than the
-    #     build number on `fromQl`, a ValueError will be raised, unless `force` is
-    #     passed as True. If there is no build with number `buildNr` on `fromQl`,
-    #     a ValueError will be raised.
-
-    #     @param buildNr: build number to promote
-    #     @type buildNr: int
-    #     @param fromQl: quality level the files should be taken from
-    #     @type fromQl: string
-    #     @param toQl: quality level the files should be copied to
-    #     @type toQl: string
-    #     @param force: promote even of toQl is on a higher quality level
-    #     @type force: boolean
-    #     """
-    #     domain = self._getDomainObject()
-    #     hgc = domain.mercurialclient
-
-    #     def getDestPath(p):
-    #         parts = p.split(os.path.sep)
-    #         parts[0] = toQl
-    #         return os.path.sep.join(parts)
-
-    #     def copy(repo, filectx):
-    #         subPath = filectx.path()
-    #         destSubPath = getDestPath(subPath)
-    #         destPath = j.system.fs.joinPaths(repo.root, destSubPath)
-    #         destDir = j.system.fs.getDirName(destPath)
-    #         if not j.system.fs.isDir(destDir):
-    #             j.system.fs.createDir(destDir)
-    #         data = filectx.data()
-    #         with open(destPath, 'w') as f:
-    #             f.write(data)
-
-    #     nodeId = None
-    #     for candidateNodeId, cfg in self._iterCfgHistory(fromQl):
-    #         n = cfg.getBuildNumber()
-    #         if n == buildNr:
-    #             nodeId = candidateNodeId
-    #         # We want the *first* metadata commit with a certain build number.
-    #         # So we break only when the buildnumber becomes smaller thant the
-    #         # build number that we we want to promote.
-    #         if n < buildNr:
-    #             break
-
-    #     if not nodeId:
-    #         raise ValueError("No build with number %s was found on quality "
-    #             "level %s" % (buildNr, fromQl))
-
-    #     try:
-    #         toCfg = self._getConfig(toQl)
-    #         toBuildNr = toCfg.getBuildNumber()
-    #         if toBuildNr >= buildNr and not force:
-    #             raise ValueError("Build number on the target quality level is "
-    #                 "%s, which is greater than or equal to the argument build "
-    #                 "number %s; if you are sure you want to promote down, "
-    #                 "pass the force argument as True" % (toBuildNr, buildNr))
-    #     except LookupError:
-    #         j.logger.exception("There is no Q-Package config file on quality "
-    #                 "level %s yet" % toQl, 5)
-
-    #     toPath = domain.getJPackageMetadataDir(toQl, self.name, self.version)
-    #     j.system.fs.removeDirTree(toPath)
-    #     j.system.fs.createDir(toPath)
-    #     subPath1 = os.path.sep.join([fromQl, self.name, self.version, "**", "*"])
-    #     subPath2 = os.path.sep.join([fromQl, self.name, self.version, "*"])
-    #     subPaths = [subPath1, subPath2]
-    #     hgc.walk(nodeId, subPaths, copy)
+        self.loadDependencies()
+        return self.dependencies
 
 #############################################################################
 ################################  CHECKS  ###################################
@@ -746,11 +564,14 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         ##self.assertAccessable()
         return self.state.lastinstalledbuildnr != -1
 
-    def supportsPlatform(self):
+    def supportsPlatform(self,platform=None):
         """
         Check if a JPackage can be installed on a platform
         """
-        relevant=j.system.platformtype.getMyRelevantPlatforms()
+        if platform==None:
+            relevant=j.system.platformtype.getMyRelevantPlatforms()
+        else:
+            relevant=j.system.platformtype.getParents(platform)
         for supportedPlatform in self.supportedPlatforms:
             if supportedPlatform in relevant:
                 return True
@@ -834,6 +655,8 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         @rtype: Boolean
         '''
 
+        #@todo P1 no longer working use new j.system.platformtype
+
         supportedPlatformPool = list()
 
         for platform in self.supportedPlatforms:
@@ -882,7 +705,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
             return # Nothing to do
 
         if dependencies:            
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.install(dependencies, download, reinstall)
 
@@ -959,25 +782,32 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         cfgPath = j.system.fs.joinPaths(self.metadataPath, JPACKAGE_CFG)
         return not domainObject._isTrackingFile(cfgPath)
 
-    def copyFiles(self, destination=""):
+    def copyFiles(self, subdir="",destination="",applyhrd=False):
         """
         Copy the files from package dirs (/opt/qbase5/var/jpackages/...) to their proper location in the sandbox.
 
         @param destination: destination of the files, default is the sandbox
         """
-        return self.copyFileParts("", destination)
+        if subdir=="":
+            raise RuntimeError("A subdir needs to be specified, is dir underneath platform dir.") #done for safety, jpackages have to be adjusted
 
-    def copyFileParts(self, subdir, destination=""):
-        _jpackagesDir = self.getPathFiles()
+        if destination=="":
+            raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
 
-        self.log('Syncing %s to sandbox' % _jpackagesDir)
-        platformDirsToCopy = self._getPlatformDirsToCopy()
-        if destination == "":
-            destination = j.dirs.baseDir
-        for platformDir in platformDirsToCopy:
-            self.log('Syncing files in <%s>' % platformDir)
-            platformDir = j.system.fs.joinPaths(platformDir, subdir)
-            self._copyFilesTo(platformDir, destination)
+        for path in self.getPathFilesPlatformForSubDir(subdir):
+            # self.log("copy python lib to %s"%path,category="libinstall")
+            self.log("Copy files from %s to %s"%(path,destination),category="copy")
+
+            if applyhrd:
+                tmpdir=j.system.fs.getTmpDirPath()
+                j.system.fs.copyDirTree(path,tmpdir)
+                j.application.config.applyOnDir(tmpdir)
+                self._copyFilesTo(tmpdir, destination)
+                j.system.fs.removeDirTree(tmpdir)
+            else:
+                self._copyFilesTo(path, destination)
+                
+
 
     def _copyFilesTo(self, sourceDir, destination):
         """
@@ -1043,7 +873,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         
         self.loadActions()
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.configure()
         self.actions.configure()
@@ -1066,7 +896,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         if update:
             self.codeUpdate(dependencies)
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.codeExport(update=update)
         self.actions.code_export()
@@ -1079,7 +909,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.loadActions()
         # j.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.codeUpdate(force=force)
         self.actions.code_update()
@@ -1093,7 +923,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.log('CodeCommit')
         j.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.codeCommit(push=push)
         self.actions.code_commit()
@@ -1147,7 +977,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         # time would be a non-op, which is again not desired. So we disable the
         # action caching for this action.
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.package(platform=platform)
         recipe = self.actions.code_getRecipe()
@@ -1172,7 +1002,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         params.jpackages = self
         self.log('Compile')
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.compile()
         self.actions.compile()
@@ -1334,7 +1164,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         self.loadActions()
         j.log("CodeImport")
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.codeImport()
         self.actions.code_importt()
@@ -1350,7 +1180,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         j.log("CodePush")
         j.clients.mercurial.statusClearAll()
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.codePush(merge=merge)
         self.actions.code_push(merge=merge)
@@ -1381,7 +1211,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         if update:
             self.codeUpdate(dependencies, force=force)
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.codeLink(update=update,force=force)            
 
@@ -1407,7 +1237,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         
         self.loadActions()
         if dependencies:
-            deps = self.getDependencies(recursive=True)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.download(dependencies=False, destinationDirectory=destinationDirectory,allplatforms=allplatforms,expand=expand)
 
@@ -1479,7 +1309,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         params.url=url
         self.log('Backup')
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.backup(url=url)
         self.actions.backup()
@@ -1499,7 +1329,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         params.jpackages = self
         params.url=url
         if dependencies:
-            deps = self.getDependencies(platform=j.system.platformtype)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.restore(url=url)
         self.actions.restore()        
@@ -1715,7 +1545,7 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
 
         #process all dependencies
         if dependencies:
-            deps = self.getDependencies(recursive=True)
+            deps = self.getDependencies()
             for dep in deps:
                 dep.executeAction(action,tags,  dependencies,params=params)
         self.log('executing jpackages action ' + tags + ' ' + action)
@@ -1730,53 +1560,21 @@ updating the metadata for the %(qpDepDomain)s jpackages domain might resolve thi
         """
         Return all dependencies of the JPackage.
         See also: addDependency and removeDependency
-        """
-        
-        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
-        recursive = j.console.askYesNo("Recursive?")
-        self._printList(self.getDependencies(platform, recursive))
-        
-    def showBuildDependencies(self):
-        """
-        Return the build dependencies of the JPackage.
-        See also: addDependency and removeDependency
-        """
-        
-        ##self.assertAccessable()
-        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
-        recursive = j.console.askYesNo("Recursive?")
-        self._printList(self.getBuildDependencies(platform, recursive))
-        
-    def showRuntimeDependencies(self):
-        """
-        Return the runtime dependencies of the JPackage.
-        See also: addDependency and removeDependency
-        """
-        
-        ##self.assertAccessable()
-        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
-        recursive = j.console.askYesNo("Recursive?")
-        self._printList(self.getRuntimeDependencies(platform, recursive))
-    
+        """        
+        self._printList(self.getDependencies())
+            
     def showDependingInstalledPackages(self):
         """
         Show which jpackages have this jpackages as dependency.
         Do this only for the installed jpackages.
         """
-        
-        ##self.assertAccessable()
-        recursive = j.console.askYesNo("Recursive?")
-        self._printList(self.getDependingInstalledPackages(recursive))
+        self._printList(self.getDependingInstalledPackages())
 
     def showDependingPackages(self):
         """
         Show which jpackages have this jpackages as dependency.
         """
-
-        ##self.assertAccessable()
-        platform = j.console.askChoice(j.system.platformtype.getPlatforms(), "Please select a platform")
-        recursive = j.console.askYesNo("Recursive?")
-        self._printList(self.getDependingPackages(recursive, platform))
+        self._printList(self.getDependingPackages())
 
     def _printList(self, arr):
         for item in arr:

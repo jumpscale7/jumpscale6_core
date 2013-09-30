@@ -1,5 +1,5 @@
 from JumpScale import j
-import os
+import os,sys
 import atexit
 import struct
 from JumpScale.core.enumerators import AppStatusType
@@ -64,6 +64,12 @@ class Application:
         else:
             self._whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=os.getpid(), bid=0)
             self._whoAmIBytestr = struct.pack("<hhh", self._whoAmI.pid, self._whoAmI.nid, self._whoAmI.gid)
+
+        if self.config.exists("python.paths.local.sitepackages"):
+            sitepath=self.config.get("python.paths.local.sitepackages")            
+            if sitepath not in sys.path:
+                sys.path.append(sitepath)
+        
 
     def getWhoAmiStr(self):
         return "_".join([str(item) for item in self.whoAmI])

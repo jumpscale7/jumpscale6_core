@@ -341,7 +341,7 @@ class JPackageClient():
 ##########################  FIND  ##########################
 ############################################################
 
-    def findNewest(self, name="", domain="", minversion="",maxversion="",platform=None, returnNoneIfNotFound=False):
+    def findNewest(self, domain="",name="", minversion="",maxversion="",platform=None, returnNoneIfNotFound=False):
         """
         Find the newest jpackages which matches the criteria
         If more than 1 jpackages matches -> error
@@ -353,12 +353,17 @@ class JPackageClient():
         @param platform:   string - Which platform the jpackages must run on
         @param returnNoneIfNotFound: boolean - if true, will return None object if no jpackages have been found
         """
-        results=self.find(domain=domain,name=name,platform=platform)
+        results0=self.find(domain=domain,name=name)
+        results=[]
+        for item in results0:    
+            if item.supportsPlatform(platform=None):
+                results.append(item)
+
         namefound=""
         domainfound=""
         if minversion=="":
             minversion="0"
-        if maxversion=="":
+        if maxversion=="" or maxversion=="0":
             maxversion="100.100.100"
         #look for duplicates
         for qp in results:
@@ -376,7 +381,8 @@ class JPackageClient():
             if returnNoneIfNotFound:
                 return None
             raise RuntimeError("Did not find jpackages with criteria domain:%s, name:%s, platform:%s (independant from version)" % (domain,name,platform))
-        # filter packages so they ly between min and max version bounds
+
+        # filter packages so they are between min and max version bounds
         result=[qp for qp in results if self._getVersionAsInt(minversion)<=self._getVersionAsInt(qp.version)<=self._getVersionAsInt(maxversion)]
         result.sort(lambda qp1, qp2: - int(self._getVersionAsInt(qp1.version) - self._getVersionAsInt(qp2.version)))
         if not result:
@@ -394,14 +400,14 @@ class JPackageClient():
             name+="*"
         return self.find(name=name)
     
-    def find(self, name="", domain="" , version="", platform=None,onlyone=False):
+    def find(self, domain="",name="" , version="", platform=None,onlyone=False):
         """ 
         
         """
         if name=="":
             name = j.console.askString("Please provide the name or part of the name of the package to search for (e.g *extension* -> lots of extensions)")
 
-        res = self._find(domain=domain, name=name, version=version, platform=platform)
+        res = self._find(domain=domain, name=name, version=version)
         if not res:
             j.console.echo('No packages found, did you forget to run jpackage_update?')
         
@@ -411,7 +417,7 @@ class JPackageClient():
 
         return res
 
-    def _find(self, name="", domain="", version="", platform=None):
+    def _find(self, domain="",name="", version=""):
         """
         Tries to find a package based on the provided criteria
         You may also use a wildcard to provide the name or domain (*partofname*)
@@ -419,7 +425,7 @@ class JPackageClient():
         @param name:    string - The name of the jpackages you are looking for
         @param version: string - The version of the jpackages you are looking for
         """
-        j.logger.log("Find jpackages domain:%s name:%s version:%s platform:%s" %(domain,name,version,platform))
+        j.logger.log("Find jpackages domain:%s name:%s version:%s" %(domain,name,version))
         #work with some functional methods works faster than doing the check everytime
         def findPartial(pattern,text):
             pattern=pattern.replace("*","")
@@ -452,10 +458,13 @@ class JPackageClient():
                 versionFindMethod=findPartial
             else:
                 versionFindMethod=findFull
+
         result=[]
         for p_domain, p_name, p_version in self._getJPackageTuples():
+            # print (p_domain, p_name, p_version)
             if domainFindMethod(domain,p_domain) and nameFindMethod(name,p_name) and versionFindMethod(version,p_version):
                 result.append([p_domain, p_name, p_version])
+
         result2=[]
         for item in result:
                 result2.append(self.get(item[0],item[1], item[2]))
