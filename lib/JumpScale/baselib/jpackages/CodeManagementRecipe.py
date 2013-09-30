@@ -10,14 +10,14 @@ class _RecipeItem:
         self.platform=platform
         
         # determine supported platforms 
-        hostPlatform = j.system.platformtype
+        hostPlatform = j.system.platformtype.myplatform
         supportedPlatforms = list()
-                    
-        while hostPlatform != None:
-            supportedPlatforms.append(hostPlatform)
-            hostPlatform = hostPlatform.parent
-            
-        self._isPlatformSupported = self.platform in supportedPlatforms
+
+        supportedPlatforms = j.system.platformtype.getParents(hostPlatform)
+        if not platform:
+            self._isPlatformSupported = hostPlatform in supportedPlatforms
+        else:
+            self._isPlatformSupported = self.platform in supportedPlatforms
 
     def exportToSystem(self):
         '''
