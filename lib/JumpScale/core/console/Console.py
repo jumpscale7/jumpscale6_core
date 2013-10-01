@@ -23,7 +23,7 @@ class Console:
         """
         when typing, char per char will be returned
         """
-        j.system.platformtype.ubuntu.check()
+        j.system.platform.ubuntu.check()
         import termios
         fd = sys.stdin.fileno()
 
