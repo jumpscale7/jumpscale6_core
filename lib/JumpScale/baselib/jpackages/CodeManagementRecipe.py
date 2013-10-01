@@ -3,11 +3,12 @@ from JumpScale import j
 
 class _RecipeItem:
     '''Ingredient of a CodeRecipe'''
-    def __init__(self, coderepoConnection, source, destination,platform=None):
+    def __init__(self, coderepoConnection, source, destination,platform=None, systemdest=None):
         self.coderepoConnection = coderepoConnection
         self.source = source
         self.destination=destination
         self.platform=platform
+        self.systemdest = systemdest or j.dirs.baseDir
         
         # determine supported platforms 
         hostPlatform = j.system.platformtype.myplatform
@@ -26,7 +27,7 @@ class _RecipeItem:
         '''
 
         if self._isPlatformSupported:
-            codeOnSystem=j.system.fs.pathNormalize(self.destination,j.dirs.baseDir) 
+            codeOnSystem=j.system.fs.pathNormalize(self.destination, self.systemdest) 
             locationInRepo=j.system.fs.joinPaths(self.coderepoConnection.basedir,self.source)
                         
             if j.system.fs.exists(codeOnSystem):
@@ -83,7 +84,7 @@ class _RecipeItem:
     #def commit(self, message):
         #self.coderepoConnection.message()     
         
-    def codeToFiles(self, jpackages, platform):
+    def codeToFiles(self, jpackage, platform):
         """
         copy code from repo's (using the recipes) to the file location
         example /opt/qbase5/var/jpackages/files/jpackages/trac/0.12/generic/
@@ -100,7 +101,7 @@ class _RecipeItem:
         else:
             destSuffix = self.destination
         
-        platformFilesPath = jpackages.getPathFilesPlatform(self.platform)
+        platformFilesPath = jpackage.getPathFilesPlatform(self.platform)
         dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
         
         if j.system.fs.isFile(src):
@@ -151,7 +152,7 @@ class _RecipeItem:
         '''
         if self._isPlatformSupported:
             source = j.system.fs.joinPaths(self.coderepoConnection.basedir, self.source)
-            destination = j.system.fs.pathNormalize(self.destination, j.dirs.baseDir)
+            destination = j.system.fs.pathNormalize(self.destination, self.systemdest)
             if j.system.fs.isLink(destination):
                 j.system.fs.removeDirTree(destination)   
             else:

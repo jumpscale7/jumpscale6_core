@@ -1190,7 +1190,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         
         self.loadActions()
         # j.clients.mercurial.statusClearAll()
-        j.log("CodeLink")
+        self.log("CodeLink")
         if dependencies is None:
             if j.application.shellconfig.interactive:
                 dependencies = j.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
