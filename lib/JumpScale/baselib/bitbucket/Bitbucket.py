@@ -162,20 +162,25 @@ class Bitbucket:
         config=self._accountGetConfig(accountName)
         login=config["login"]
         if login.find("@login")<>-1:
-            login=j.gui.dialog.askString("  \nLogin for bitbucket account %s"%accountName)
+            if j.application.shellconfig.interactive:
+                login=j.gui.dialog.askString("  \nLogin for bitbucket account %s"%accountName)
+            else:
+                login = ""
             self.config.configure(accountName,{'login': login})
         passwd=config["passwd"]
         if passwd.find("@passwd")<>-1:
-            passwd=j.gui.dialog.askPassword("  \nPassword for bitbucket account %s"%accountName, confirm=False)
-            '''
-            @todo should use a password entry dialog, but the line below does not work
-            passwd=j.gui.dialog.askPassword("  \nPassword for bitbucket account %s"%accountName)
-            '''
+            if j.application.shellconfig.interactive:
+                passwd=j.gui.dialog.askPassword("  \nPassword for bitbucket account %s"%accountName, confirm=False)
+            else:
+                passwd = ""
             self.config.configure(accountName,{'passwd': passwd})
-            
-        if login=="" or passwd=="":
+        
+        if j.application.shellconfig.interactive and (login=="" or passwd==""):
             self.accountsReview(accountName)
-        url=" https://%s:%s@bitbucket.org/%s/" % (login,passwd,accountName)
+        if login and passwd and login not in ('hg', 'ssh'):
+            url=" https://%s:%s@bitbucket.org/%s/" % (login,passwd,accountName)
+        else:
+            url=" ssh://hg@bitbucket.org/%s/" % (accountName)
         return url,login,passwd
 
     def getBitbucketConnection(self, accountName ):
