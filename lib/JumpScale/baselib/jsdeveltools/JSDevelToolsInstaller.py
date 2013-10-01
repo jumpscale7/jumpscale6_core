@@ -94,8 +94,11 @@ cmd.meld=
         print "Updating metadata"
         j.system.platform.ubuntu.updatePackageMetadata()
 
+        print "Updating jpackages metadata"
+        j.packages.updateMetaData(force=True)
+
         print "install python package"
-        p=j.packages.get("jumpscale","python","2.7")
+        p=j.packages.get("jumpscale","base","2.7")
         if reinstall:
             p.reinstall()
         else:
