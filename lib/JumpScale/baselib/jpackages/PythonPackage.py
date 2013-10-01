@@ -39,7 +39,7 @@ class PythonPackage(object):
         if not j.application.config.exists("python.paths.local.sitepackages"):
             print "need to deploy python package jpackage"
             p=j.packages.get("jumpscale","base","2.7")
-            p.reinstall()
+            p.install()
         self._checked=True
 
     def install(self, name, version=None):
