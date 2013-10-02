@@ -45,6 +45,7 @@ class PlatformTypes():
         self.addPlatform("vista",parent="win")
         self.addPlatform("win2008_64",parent="win64")
         self.addPlatform("win2012_64",parent="win64")
+        self.addPlatform("cloudscaler_compute", parent="ubuntu")
         self.myplatform=self._getPlatform()
 
     def getMyRelevantPlatforms(self):
@@ -94,6 +95,7 @@ class PlatformTypes():
             info = lsb_release.get_distro_information()['ID'].lower()
 
             bits = _useELFtrick("/sbin/init")
+            
             if bits == 32:
                 if info == 'ubuntu':
                     _platform = "ubuntu32"
@@ -108,6 +110,11 @@ class PlatformTypes():
                     _platform = "mint64"
                 else:
                     _platform = "linux64"
+            #hrd check is not possible at the moment via hrd tools(not loaded yet)
+            hrd = os.path.join(j.dirs.hrdDir, 'cloudscalers_compute_1.0.hrd')
+            if j.system.fs.exists(hrd):
+                _platform = 'cloudscaler_compute'
+
 
             # if os.path.exists("/proc/vmware"):
             #     _platform = PlatformType.ESX
