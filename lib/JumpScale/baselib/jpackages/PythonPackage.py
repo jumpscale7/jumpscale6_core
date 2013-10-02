@@ -124,7 +124,7 @@ class PythonPackage(object):
             self.remove(base)
         j.logger.log("copy python lib from %s to %s"%(path,dest),5,category="python.install")
         if j.system.fs.isFile(path):
-            j.system.fs.copyFile(path, dest, createDirIfNeeded=True, skipProtectedDirs=False, overwriteFile=True)
+            j.system.fs.copyFile(path, dest, createDirIfNeeded=True, skipProtectedDirs=False, overwriteFiles=True)
         else:
-            j.system.fs.copyDirTree(path,dest, keepsymlinks=False, eraseDestination=True, skipProtectedDirs=False, overwriteFile=True)
+            j.system.fs.copyDirTree(path,dest, keepsymlinks=False, eraseDestination=True, skipProtectedDirs=False, overwriteFiles=True)
 
