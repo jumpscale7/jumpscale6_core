@@ -369,13 +369,13 @@ class Console:
         maxchoice=20
         
         if len(choicearray)>maxchoice and j.system.platformtype.isLinux():
-            descr2 = "%s\nMake a selection please, start typing, we will try to do auto completion.\n     ? prints the list, * turns on wildcard search." % descr
+            descr2 = "%s\nMake a selection please, start typing, we will try to do auto completion.\n     ? prints the list." % descr
             self.echo(descr2)
             print
             print "        ",
             if sort:
                 choicearray.sort()
-            wildcard=False
+            wildcard=True
             chars=""
             params=[wildcard,chars]
             def process(char, params):
@@ -385,11 +385,7 @@ class Console:
                 wildcard, chars = params
                 #print (char,"","")
                 sys.stdout.write(char)
-                if char=="*":
-                    params=[True,chars] #set wildcard
-                    return True,[],params
-                else:
-                    chars="%s%s" %(chars,char)
+                chars="%s%s" %(chars,char)
                 result=[]
                 for rawChoice in choicearray:
                     # We need to keep the 'raw' choices, so the end result is
@@ -397,7 +393,7 @@ class Console:
                     # choicearray element.
                     choice=str(rawChoice)
                     choice=choice.lower()
-                    if wildcard and choice.find(chars)<>-1:
+                    if wildcard and choice.find(chars.lower())<>-1:
                         result.append(rawChoice)
                     #print "%s %s %s %s" % (wildcard,choice,chars,choice.find(chars))
                     if not wildcard and choice.find(chars)==0:
