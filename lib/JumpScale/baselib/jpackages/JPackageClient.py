@@ -209,7 +209,7 @@ class JPackageClient():
         """
         Returns a list of all currently installed packages on your system
         """
-        return [p for p in self.getJPackageObjects() if p.isInstalled()]
+        return [p for p in self.getJPackageObjects(j.system.platformtype.myplatform) if p.isInstalled()]
 
     def getPackagesWithBrokenDependencies(self):
         """
@@ -485,12 +485,12 @@ class JPackageClient():
                         res.append([domainName,packagename,version])
         return res
 
-    def getJPackageObjects(self, platform=None, domain=None):
+    def getJPackageObjects(self, platform='generic', domain=None):
         """
         Returns a list of jpackages objects for specified platform & domain
         """
         def hasPlatform(package):
-            return any([supported.has_parent(platform) for supported in package.supportedPlatforms])
+            return any([supported in j.system.platformtype.getParents(platform) for supported in package.supportedPlatforms])
         packageObjects = [self.get(*p) for p in self._getJPackageTuples()]
         return [p for p in packageObjects if hasPlatform(p) and (domain == None or p.domain == domain)]
 
