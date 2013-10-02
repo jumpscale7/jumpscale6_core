@@ -3,6 +3,7 @@ from JumpScale import j
 from JPackageObject import JPackageObject
 from Domain import Domain
 from CodeManagementRecipe import CodeManagementRecipe
+from JumpScale.baselib import platforms
 
 class JPackageClient():
     sourcesFile = None
