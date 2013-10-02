@@ -97,11 +97,11 @@ class PythonPackage(object):
 
     def copyLibsToLocalSitePackagesDir(self,rootpath,remove=True):
         """
-        list all dirs in specified path and for each dir call
+        list all files and dirs in specified path and for each one call
         self.copyLibToLocalSitePackagesDir
         """
         self.check()
-        for item in j.system.fs.listDirsInDir(rootpath):
+        for item in j.system.fs.listFilesAndDirsInDir(rootpath):
             self.copyLibToLocalSitePackagesDir(item,remove=remove)
 
     def copyLibToLocalSitePackagesDir(self,path,remove=True):
@@ -118,5 +118,8 @@ class PythonPackage(object):
         if remove:
             self.remove(base)
         j.logger.log("copy python lib from %s to %s"%(path,dest),5,category="python.install")
-        j.system.fs.copyDirTree(path,dest, keepsymlinks=False, eraseDestination=True, skipProtectedDirs=False, overwriteFiles=True)
+        if j.system.fs.isFile(path):
+            j.system.fs.copyFile(path, dest, createDirIfNeeded=True, skipProtectedDirs=False, overwriteFiles=True)
+        else:
+            j.system.fs.copyDirTree(path,dest, keepsymlinks=False, eraseDestination=True, skipProtectedDirs=False, overwriteFiles=True)
 
