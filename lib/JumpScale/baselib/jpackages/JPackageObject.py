@@ -784,8 +784,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         @param destination: destination of the files, default is the sandbox
         """
-        if subdir=="":
-            raise RuntimeError("A subdir needs to be specified, is dir underneath platform dir.") #done for safety, jpackages have to be adjusted
+        # if subdir=="":
+        #     raise RuntimeError("A subdir needs to be specified, is dir underneath platform dir.") #done for safety, jpackages have to be adjusted
 
         if destination=="":
             raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
@@ -940,7 +940,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return platform
 
     
-    def package(self, platform=None, dependencies=False):
+    def build(self, platform=None, dependencies=False):
         """
         Package code from the sandbox system into files section of jpackages
         Only 1 platform may be supported in this jpackages at the same time!!!
@@ -1330,7 +1330,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.restore(url=url)
         self.actions.restore()        
 
-    def packageupload(self, platform=None):
+    def buildupload(self, platform=None):
         self.package(platform)
         self.upload()
 

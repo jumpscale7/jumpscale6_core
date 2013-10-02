@@ -104,83 +104,46 @@ cmd.meld=
         else:
             p.install()
 
-    def deployExampleCode(self):
+    def deployExampleCode(self,debug=True):
         """
         checkout example code repo & link examples to sandbox on /opt/jumpscale/apps/examples
         """
-        name="jumpscale_examples"
-        self._getJSRepo(name)
-        self._do.symlink("%s/jumpscale/%s/prototypes"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/prototypes")
-        self._do.symlink("%s/jumpscale/%s/examples"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/examples")
+        p=j.packages.get("jumpscale","jsexamples","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install()
 
-    def deployJumpScaleLibs(self,linkonly=False):
+    def deployJumpScaleLibs(self,debug=True):
         """
         checkout the jumpscale libs repo & link to python 2.7 to make it available for the developer
         """        
-        name="jumpscale_lib"
-        if (not linkonly):
-            self._getJSRepo(name)
-        codedir = j.system.fs.joinPaths(j.dirs.codeDir, 'jumpscale', name)
-        self._do.execute("cd %s; python setup.py develop" % codedir)
+        p=j.packages.get("jumpscale","libs","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install()
 
     def linkJumpScaleLibs(self):
         self.deployJumpScaleLibs(True)
 
-
-    def deployJumpScaleGrid(self):
+    def deployJumpScaleGrid(self,debug=True):
         """
         checkout the jumpscale grid repo & link to python 2.7 to make it available for the developer
         """
-        name="jumpscale_grid"        
-        self._getJSRepo(name)
-        codedir = j.system.fs.joinPaths(j.dirs.codeDir, 'jumpscale', name)
-        self._do.execute("cd %s; python setup.py develop" % codedir)
-        self._do.symlink("%s/apps/broker"%(codedir),"/opt/jumpscale/apps/broker")
-        self._do.symlink("%s/apps/logger"%(codedir),"/opt/jumpscale/apps/logger")
+        p=j.packages.get("jumpscale","osis","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install()
 
-        osisdir="/opt/jumpscale/apps/osis/"
-
-        do=self._do
-
-        if not  j.system.fs.exists(osisdir):
-            do.copytreedeletefirst("%s/jumpscale/%s/apps/osis"%(j.dirs.codeDir,name),osisdir)
-
-        for item in [item for item in j.system.fs.listDirsInDir("/opt/code/jumpscale/jumpscale_grid/apps/osis/logic",dirNameOnly=True) if item[0]<>"."]:
-            src="/opt/code/jumpscale/jumpscale_grid/apps/osis/logic/%s"%(item)
-            dest="%s/logic/%s"%(osisdir,item)
-            self._do.symlink(src,dest)
-
-        src="/opt/code/jumpscale/jumpscale_grid/apps/osis/_templates/"
-        dest="%s/_templates"%(osisdir)
-        self._do.symlink(src,dest)
-
-        if not j.system.fs.exists(path="/etc/init.d/elasticsearch"):
-            print "download / install elasticsearch"
-            self._do.download("https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.3.deb","/tmp/elasticsearch.deb")
-            self._do.execute("cd /tmp; dpkg -E -i elasticsearch.deb")
-
-    def deployJumpScalePortal(self):
+    def deployJumpScalePortal(self,debug=True):
         """
         checkout the jumpscale portal repo & link to python 2.7 to make it available for the developer
         an example portal will also be installed in /opt/jumpscale/apps/exampleportal
         """
-        name="jumpscale_portal"
-        j.system.platform.ubuntu.install("redis-server")
-        j.system.platform.ubuntu.install("curlftpfs")
-        self._getJSRepo(name)
-        codedir = j.system.fs.joinPaths(j.dirs.codeDir, 'jumpscale', name)
-        self._do.execute("cd %s; python setup.py develop" % codedir)
-        self._do.symlink("%s/apps/portalbase"%(codedir),"/opt/jumpscale/apps/portalbase")
-        self._do.symlink("%s/apps/portalftpgateway"%(codedir),"/opt/jumpscale/apps/portalftpgateway")
+        p=j.packages.get("jumpscale","portal","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install()
 
-
-        portaldir="/opt/jumpscale/apps/exampleportal/"
-
-        if not  j.system.fs.exists(portaldir):
-            src="/opt/code/jumpscale/jumpscale_examples/examples/exampleportal"
-            self._do.copytreedeletefirst(src,portaldir)        
-
-        self._do.execute("pip install pyelasticsearch mimeparse beaker")
 
     def deployDFS_IO(self):
         """
@@ -209,140 +172,4 @@ cmd.meld=
         self.deployJumpScaleLibs()
         self.deployJumpScaleGrid()
         self.deployJumpScalePortal()
-
-    def initJumpscaleUser(self,passwd):
-        home="/home/jumpscale"
-        name="jumpscale"
-        import JumpScale.lib.remote.cuisine
-        
-        homeexists=j.system.fs.exists(home)
-
-        j.system.platform.ubuntu.createUser(name,passwd,home=home)
-        c=j.remote.cuisine.api       
-
-        if not homeexists:
-            c.dir_ensure(home,owner=name,group=name,mode=770,recursive=True)
-
-        if j.system.fs.exists("/root/.hgrc"):
-            C=j.system.fs.fileGetContents("/root/.hgrc")
-            C2=""
-
-            for line in C.split("\n"):
-                if line.find("[trusted]")<>-1:
-                    break
-                C2+="%s\n"%line
-
-            C2+="[trusted]\n"
-            C2+="users = jumpscale\n\n"
-
-            j.system.fs.writeFile("/root/.hgrc",C2)
-        
-
-    def deployFTPServer4jpackages(self,passwd,jumpscalepasswd):
-        # import JumpScale.lib.psutil
-        self.initJumpscaleUser(jumpscalepasswd)
-
-        j.system.platform.ubuntu.install("proftpd-basic")
-
-        ftphome="/opt/jpackagesftp"
-        ftpname="jpackages"
-
-        j.system.fs.createDir("/opt/jpackagesftp")
-
-        j.system.platform.ubuntu.createUser(ftpname,passwd,home="/home/%s"%ftpname)
-        j.system.platform.ubuntu.createUser("ftp","1234")#j.base.idgenerator.generateGUID(),home="/home/ftp")
-        j.system.platform.ubuntu.createGroup("proftpd")
-        j.system.platform.ubuntu.addUser2Group("proftpd","proftpd")
-
-        C="""
-
-ServerName          "ProFTPD Default Installation"
-ServerType          standalone
-DefaultServer       on
-Port                21
-Umask               022
-MaxInstances        30
-
-RequireValidShell   no
-
-User                proftpd
-Group               proftpd
-
-#DefaultRoot /opt/jpackagesftp
-
-#TransferLog /var/log/proftpd/xferlog
-SystemLog   /var/log/proftpd/proftpd.log
-
-DefaultRoot                    ~
-
-<Anonymous ~ftp>
-    User ftp
-    Group j.
-
-    UserAlias anonymous ftp
-
-    DirFakeMode 0440
-
-    <Limit WRITE STOR MKD RMD DELE RNTO>
-      DenyAll
-    </Limit>
-
-</Anonymous>
-
-<Directory />
-  AllowOverwrite  on
-
-    <Limit WRITE STOR MKD RMD DELE RNTO>
-        DenyUser ftp
-    </Limit>
-
-</Directory>
-
-
-"""
-        j.system.fs.writeFile("/etc/proftpd/proftpd.conf", C)
-
-        import JumpScale.lib.remote.cuisine
-
-        c=j.remote.cuisine.api
-        c.dir_ensure(ftphome,owner=ftpname,group=ftpname,mode=770,recursive=True)
-
-        j.system.platform.ubuntu.addUser2Group(ftpname,"jumpscale")
-        j.system.platform.ubuntu.addUser2Group(ftpname,"ftp")
-        j.system.platform.ubuntu.addUser2Group(ftpname,"proftpd")
-        j.system.platform.ubuntu.addUser2Group("jumpscale","proftpd")
-        j.system.platform.ubuntu.addUser2Group("jumpscale","ftp")
-
-        self._do.execute("/etc/init.d/proftpd restart")
-
-        self._do.createdir("/opt/code")
-        self._do.createdir("/opt/jumpscale")
-
-        def symlink(src,dest):
-            try:
-                j.system.fs.remove(dest)
-            except Exception,e:
-                if str(e).find("could not be removed")<>-1:
-                    cmd="umount %s"%dest
-                    try:
-                        self._do.execute(cmd)
-                    except:
-                        pass
-                
-            j.system.fs.createDir(dest)
-            cmd="mount --bind %s %s"%(src,dest)
-            self._do.execute(cmd)
-
-
-        symlink("/opt/code","/home/jumpscale/code")
-        symlink("/opt/jumpscale","/home/jumpscale/jumpscale")
-        symlink("/opt/jpackagesftp","/home/jumpscale/jpackages")
-        symlink("/opt/jpackagesftp","/home/ftp/jpackages")
-        symlink("/opt/jpackagesftp","/home/jpackages/jpackages")
-
-
-    # def link2code(self):
-
-    #     self._do.createdir("%s/%s"%(j.dirs.baseDir,"apps"))
-
 

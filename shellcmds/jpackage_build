@@ -1,17 +1,10 @@
 #!/usr/bin/env python
 from JumpScale import j
-import argparse
 j.application.start("jpackages")
 from JumpScale.baselib import cmdutils
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
-package, args = cmdutils.getJPackage(parser)
+package, args = cmdutils.getJPackage()
 
-j.packages.updateMetaData(package.domain)
-package.package()
-package.upload()
-if not args.message:
-    args.message = 'Building JPackage "%s"' % package.name
-j.packages.publish(args.message, package.domain)
+package.build()
+
 j.application.stop()
