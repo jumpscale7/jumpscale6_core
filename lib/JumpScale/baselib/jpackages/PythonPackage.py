@@ -1,4 +1,5 @@
 from JumpScale import j
+import re
 
 class PythonPackage(object):
     def __init__(self):
@@ -68,13 +69,11 @@ class PythonPackage(object):
                 if item2.find("python")<>-1 or item2.find("py")==0:
                     #found python package installed through aptget, remove
                     j.system.platform.ubuntu.remove(item)
-                    ok=True
-            if res<>[] and ok==False:
-                from IPython import embed
-                print "DEBUG NOW remove python package, debug, found no python package but something else"
-                print "package:%s"%name
-                print "found packages on ubuntu which match name:\n%s"%res
-                embed()            
+
+            for item, version in j.system.platform.python.list():
+                if item.lower() == name2:
+                    j.system.process.execute("pip uninstall -y %s" % item)
+
             
             #get paths from python out of config
             # print "FIND TO REMOVE:%s"%name2
@@ -90,6 +89,12 @@ class PythonPackage(object):
                 # print "remove %s from python dir:%s"%(name,path)
             if clearcache:
                 self.clearcache()
+
+    def list(self):
+        exitcode, output = j.system.process.execute("pip list")
+        rec = re.compile("^(?P<name>[\w-]+)\s+\((?P<version>[\w\.]+)\)", re.M)
+        return rec.findall(output)
+
 
     def getSitePackagePathLocal(self):
         self.check()

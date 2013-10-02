@@ -183,7 +183,7 @@ class BlobStor:
                             end=ftpurl.split("//")[1].strip()
                         ftpurl="ftp://%s:%s@%s"%(login,passwd,end)
                         config.setParam(blobstor.name,"ftp",ftpurl)
-                        blobstor.reloadConfig()
+                        blobstor.loadConfig()
                         return self._put(blobstor, metadata, tmpfile)
                 j.errorconditionhandler.processPythonExceptionObject(e)
                 

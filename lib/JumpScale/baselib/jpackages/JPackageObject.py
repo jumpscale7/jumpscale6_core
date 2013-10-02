@@ -784,8 +784,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         @param destination: destination of the files, default is the sandbox
         """
-        # if subdir=="":
-        #     raise RuntimeError("A subdir needs to be specified, is dir underneath platform dir.") #done for safety, jpackages have to be adjusted
 
         if destination=="":
             raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
