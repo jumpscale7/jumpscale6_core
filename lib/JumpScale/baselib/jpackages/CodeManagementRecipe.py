@@ -197,10 +197,10 @@ class CodeManagementRecipe:
         self.items = []
 
 
-    def add(self, coderepoConnection, sourcePath, destinationPath,platform=None):
+    def add(self, coderepoConnection, sourcePath, destinationPath,platform=None, systemdest=None):
         '''Add a source (ingredient) to the recipe
         '''
-        self.items.append(_RecipeItem(coderepoConnection, sourcePath, destinationPath,platform))
+        self.items.append(_RecipeItem(coderepoConnection, sourcePath, destinationPath,platform, systemdest))
 
     def export(self):
         '''Export all items from VCS to the system sandbox or other location specifed'''
