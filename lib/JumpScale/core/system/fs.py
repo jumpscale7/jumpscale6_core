@@ -356,7 +356,7 @@ class SystemFS:
 
                 if keepsymlinks and j.system.fs.isLink(srcname):
                     linkto = j.system.fs.readlink(srcname)
-                    j.system.fs.symlink(linkto, dstname, overwriteDestination)
+                    j.system.fs.symlink(linkto, dstname, overwriteFiles)
                 elif j.system.fs.isDir(srcname):
                     j.system.fs.copyDirTree(srcname, dstname, keepsymlinks, eraseDestination,skipProtectedDirs=skipProtectedDirs,overwriteFiles=overwriteFiles )
                 else:

@@ -725,7 +725,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 self.log('install for debug (link)')
                 self.codeLink(dependencies=dependencies, update=True, force=True)
 
-        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr > self.state.lastinstalledbuildnr:
+        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
             self.configure()
 
 
