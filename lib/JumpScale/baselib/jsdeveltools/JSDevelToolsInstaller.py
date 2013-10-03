@@ -108,7 +108,7 @@ cmd.meld=
         """
         checkout example code repo & link examples to sandbox on /opt/jumpscale/apps/examples
         """
-        p=j.packages.get("jumpscale","jsexamples","1.0")
+        p=j.packages.get("jumpscale","jumpscale_examples","1.0")
         if debug:
             p.setDebugMode()
         p.install()

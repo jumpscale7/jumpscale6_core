@@ -126,5 +126,5 @@ class PythonPackage(object):
         if j.system.fs.isFile(path):
             j.system.fs.copyFile(path, dest, createDirIfNeeded=True, skipProtectedDirs=False, overwriteFile=True)
         else:
-            j.system.fs.copyDirTree(path,dest, keepsymlinks=False, eraseDestination=True, skipProtectedDirs=False, overwriteFiles=True)
+            j.system.fs.copyDirTree(path,dest, keepsymlinks=False, eraseDestination=remove, skipProtectedDirs=False, overwriteFiles=True)
 
