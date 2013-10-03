@@ -28,7 +28,7 @@ class DependencyDef():
         self.minversion=minversion
         self.maxversion=maxversion
 
-    def __str__(sel):
+    def __str__(self):
         return str(self.__dict__)
 
     __repr__=__str__
@@ -337,12 +337,16 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 package=j.packages.findNewest(dependcyDef.domain,dependcyDef.name,\
                     minversion=dependencyDef.minversion,maxversion=dependencyDef.maxversion,platform=j.system.platformtype.myplatform)
 
-                if package not in self.dependencies:
-                    self.dependencies.append(package)
+                if package in self.dependencies:
+                    self.dependencies.remove(package)
+                self.dependencies.append(package)
 
-                for deppack in package.getDependencies():
-                    if deppack not in self.dependencies:
-                        self.dependencies.append(deppack)                
+                for deppack in reversed(package.getDependencies()):
+                    if deppack in self.dependencies:
+                        self.dependencies.remove(deppack)
+                    self.dependencies.append(deppack)
+
+            self.dependencies.reverse()
         
     def addDependency(self, domain, name, supportedplatforms, minversion, maxversion, dependencytype):
         dep = DependencyDef4()
@@ -682,36 +686,27 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @param download:     if True, bundles of package will be downloaded too
         @param reinstall:    if True, package will be reinstalled
         """
-        
-        self.loadActions()
-        #hostPlatformSupported = self._isPlatformSupported(hostPlatform)
 
-        #if not hostPlatformSupported:
-        #   raise RuntimeError('JPackage %(jPackageName)s doesn\'t support the host platform %(platformName)s'
-        #                       % {'jPackageName': str(self), 'platformName': hostPlatform})
+        # If I am already installed assume my dependencies are also installed
+        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
+            self.log('already installed')
+            return # Nothing to do
 
-        #self.checkProtectedDirs(redo=True,checkInteractive=True)
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.install(False, download, reinstall)
+        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+
         action="install"
 
         if self.debug:
             self.log('install for debug (link)')
-            return self.codeLink(dependencies=dependencies, update=True, force=True)
+            return self.codeLink(dependencies=False, update=True, force=True)
 
         if j.packages._actionCheck(self,action):
             return True
 
-        # If I am already installed assume my dependencies are also installed
-        if self.buildNr <> -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
-            self.log('already installed')
-            return # Nothing to do
-
-        if dependencies:            
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.install(dependencies, download, reinstall)
-            self.loadActions(True) #reload actions to make sure new hrdactive are applied
-
-        action = "install"
         if download:
             self.download(dependencies=False)
 
