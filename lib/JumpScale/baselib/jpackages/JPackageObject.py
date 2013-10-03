@@ -100,7 +100,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
     def check(self):
         if not self.supportsPlatform():
-            raise RuntimeError("Could not find platform:%s in supported platforms:%s"%(platform,self.supportedplatforms))
+            raise RuntimeError("Only those platforms are supported by this package %s your system supports the following platforms: %s" % (str(self.supportedPlatforms), str(j.system.platformtype.getMyRelevantPlatforms())))
 
     def _init(self):
         if self.__init==False:
