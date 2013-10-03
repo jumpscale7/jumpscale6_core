@@ -203,8 +203,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                     j.application.initWhoAmI() #will load that underneath
 
 
-    def loadActions(self):
-        if self.actions <> None:
+    def loadActions(self, force=False):
+        if self.actions <> None and not force:
             return
 
         self.check()
@@ -704,8 +704,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             deps = self.getDependencies()
             for dep in deps:
                 dep.install(dependencies, download, reinstall)
+            self.loadActions(True) #reload actions to make sure new hrdactive are applied
 
-        tag = "install"
         action = "install"
         if download and self.debug <> True:
             self.download(dependencies=False)
