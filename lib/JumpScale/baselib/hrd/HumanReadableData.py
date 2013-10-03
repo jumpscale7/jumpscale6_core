@@ -437,6 +437,7 @@ class HRD():
                 if not self.exists(key):
                     error=True
                     self.set(key,defvalue)
+                    self.changed = True
         if error and j.application.shellconfig.interactive==False:
             raise RuntimeError("Config file was not complete, please change the default values of config file at location %s"%self._path)
         else:
@@ -457,6 +458,7 @@ class HRD():
                 key,value=line.split("=",1)
                 key=key.strip().lower()
                 value=value.strip()
+                self.changed = True
                 if value.find("@ASK")<>-1:
                     value=self._ask(key,value)                
                     self.set(key,value,persistent=True)
