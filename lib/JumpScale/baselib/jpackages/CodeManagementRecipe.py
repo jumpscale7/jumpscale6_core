@@ -8,7 +8,7 @@ class _RecipeItem:
         self.source = source
         self.destination=destination
         self.platform=platform
-        self.systemdest = systemdest or j.dirs.baseDir
+        self.systemdest = systemdest or j.system.fs.joinPaths(j.dirs.baseDir, destination)
         
         # determine supported platforms 
         hostPlatform = j.system.platformtype.myplatform
@@ -152,7 +152,7 @@ class _RecipeItem:
         '''
         if self._isPlatformSupported:
             source = j.system.fs.joinPaths(self.coderepoConnection.basedir, self.source)
-            destination = j.system.fs.pathNormalize(self.destination, self.systemdest)
+            destination = self.systemdest
             if j.system.fs.isLink(destination):
                 j.system.fs.removeDirTree(destination)   
             else:
