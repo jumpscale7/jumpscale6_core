@@ -211,6 +211,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self._loadActiveHrd()
 
+        if j.system.fs.isDir(self.getPathActions()):
+            j.system.fs.removeDirTree(self.getPathActions())
         j.system.fs.copyDirTree(j.system.fs.joinPaths(self.metadataPath,"actions"),self.getPathActions())        
         
         #apply apackage hrd data on actions active
