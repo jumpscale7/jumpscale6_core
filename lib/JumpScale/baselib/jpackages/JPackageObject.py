@@ -691,9 +691,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         #self.checkProtectedDirs(redo=True,checkInteractive=True)
         action="install"
 
+        if self.debug:
+            self.log('install for debug (link)')
+            return self.codeLink(dependencies=dependencies, update=True, force=True)
+
         if j.packages._actionCheck(self,action):
             return True
-
 
         # If I am already installed assume my dependencies are also installed
         if self.buildNr <> -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
@@ -707,23 +710,17 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.loadActions(True) #reload actions to make sure new hrdactive are applied
 
         action = "install"
-        if download and self.debug <> True:
+        if download:
             self.download(dependencies=False)
 
         if reinstall or self.buildNr > self.state.lastinstalledbuildnr:
-            
-            if self.debug == False:
-                #print 'really installing ' + str(self)
-                self.log('installing')
-                if self.state.checkNoCurrentAction == False:
-                    raise RuntimeError ("jpackages is in inconsistent state, ...")                
+            #print 'really installing ' + str(self)
+            self.log('installing')
+            if self.state.checkNoCurrentAction == False:
+                raise RuntimeError ("jpackages is in inconsistent state, ...")                
 
-                self.actions.install()
-                self.state.setLastInstalledBuildNr(self.buildNr)
-            else:
-                #only the link functionality for now
-                self.log('install for debug (link)')
-                self.codeLink(dependencies=dependencies, update=True, force=True)
+            self.actions.install()
+            self.state.setLastInstalledBuildNr(self.buildNr)
 
         if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
             self.configure()
@@ -1207,7 +1204,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.codeLink(update=update,force=force)            
+                dep.codeLink(dependencies=False, update=update,force=force)            
 
         self.actions.code_link(force=force)
         # self.actions.code_push(force=force)  #@todo was this before, was pushing content
