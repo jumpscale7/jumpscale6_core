@@ -45,7 +45,7 @@ class PlatformTypes():
         self.addPlatform("vista",parent="win")
         self.addPlatform("win2008_64",parent="win64")
         self.addPlatform("win2012_64",parent="win64")
-        self.addPlatform("cloudscaler_compute", parent="ubuntu")
+        self.addPlatform("cloudscaler_compute", parent="ubuntu64")
         self.myplatform=self._getPlatform()
 
     def getMyRelevantPlatforms(self):
