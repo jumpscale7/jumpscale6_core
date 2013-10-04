@@ -813,11 +813,6 @@ class SpecParserFactory():
                 if returntype not in ["list","dict"]:
                     returntype="enum"
             if result==False:
-                from JumpScale.core.Shell import ipshell
-                print "DEBUG NOW cannot find spec in getSpecFromTypeStr"
-                print "Cannot find spec for app:%s, actor:%s, with typestr:%s" % (appname,actorname,typestr)
-                ipshell()
-
                 raise RuntimeError("Cannot find spec for app:%s, actor:%s, with typestr:%s" % (appname,actorname,typestr))
             else:
                 spec=result
