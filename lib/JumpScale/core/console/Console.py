@@ -424,7 +424,7 @@ class Console:
                         self.echo("\nNo results start with '%s', start over please" %
                                 chars)
                     print "        ",
-                    wildcard=False
+                    wildcard=True
                     chars=""
                     params=[wildcard,chars]
 
