@@ -633,12 +633,12 @@ class SystemNet:
         start = time.time()
         pingsucceeded = False
         while time.time() - start < pingtimeout:
-            if j.system.platformtype.isSolaris():
-                #ping -c 1 IP 1
-                #Last 1 is timeout in seconds
-                exitcode, output = j.system.process.execute(
-                                    'ping -c 1 %s 1' % ip, False, False)
-            elif j.system.platformtype.isLinux():
+            # if j.system.platformtype.isSolaris():
+            #     #ping -c 1 IP 1
+            #     #Last 1 is timeout in seconds
+            #     exitcode, output = j.system.process.execute(
+            #                         'ping -c 1 %s 1' % ip, False, False)
+            if j.system.platformtype.isLinux():
                 #ping -c 1 -W 1 IP
                 exitcode, output = j.system.process.execute(
                                     'ping -c 1 -W 1 -w 1 %s' % ip, False, False)

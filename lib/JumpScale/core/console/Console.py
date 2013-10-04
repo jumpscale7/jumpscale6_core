@@ -492,12 +492,14 @@ class Console:
             nr=nr+1
             self.echo("   %s: %s" % (nr, section))
         self.echo("")
-        results = self.askIntegers("   Select Nr, use comma separation if more e.g. \"1,4\", 0 is all",
+        results = self.askIntegers("   Select Nr, use comma separation if more e.g. \"1,4\", * is all, 0 is None",
                                    "Invalid choice, please try again",
                                    min=0,
                                    max=len(choicearray))
-        if results==[0]:
+        if results==["*"]:
             return choicearray
+        elif results==[0]:
+            return []
         else:
             return [choicearray[i-1] for i in results]
 
@@ -570,4 +572,49 @@ class Console:
         pass
         
     def hideOutput(self):
-        pass        
+        pass    
+
+    def showArray(self,array,header=True):
+        choices=self._array2list(array,header)
+        out=""
+        for line in choices:
+            out+="%s\n"%line
+        print out
+        return out
+
+    def _array2list(self,array,header=True):
+        def pad(s,length):
+            while len(s)<length:
+                s+=" "
+            return s
+
+        length={}
+        for row in array:
+            for x in range(len(row)):
+                row[x]=str(row[x])
+                if not length.has_key(x):
+                    length[x]=0
+                if length[x]<len(row[x]):
+                    length[x]=len(row[x])
+
+        choices=[]
+        for row in array:
+            line=""
+            for x in range(len(row)):
+                line+="| %s |"%pad(row[x],length[x])
+            if line.strip()<>"":
+                line=line.replace("||","|")
+                choices.append(line)
+        choices.sort()
+        return choices
+
+
+    def askArrayRow(self,array,header=True,descr="",returncol=0):
+        choices=self._array2list(array,header)
+        result=self.askChoiceMultiple(choices,descr="")
+        results=[]
+        for item in result:
+            results.append(item.split("|")[returncol+1])
+        return [item.strip(" ") for item in results]
+        
+
