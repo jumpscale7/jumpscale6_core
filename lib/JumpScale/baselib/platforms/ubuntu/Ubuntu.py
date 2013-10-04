@@ -18,8 +18,11 @@ class Ubuntu:
             cfg = apt.apt_pkg.Config
         else:
             cfg = apt.apt_pkg.Configuration
-        cfg.set("APT::Install-Recommends", "0")
-        cfg.set("APT::Install-Suggests", "0")
+        try:
+            cfg.set("APT::Install-Recommends", "0")
+            cfg.set("APT::Install-Suggests", "0")
+        except:
+            pass
         self._cache = apt.Cache()
         self.aptCache=self._cache
         self.apt=apt

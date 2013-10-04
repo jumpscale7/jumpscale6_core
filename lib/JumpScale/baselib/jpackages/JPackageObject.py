@@ -146,6 +146,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if not j.system.fs.exists(hrddir):  
             self.init()
         self.hrd=j.core.hrd.getHRD(hrddir)
+            
         self._clear()
         self.buildNr = self.hrd.getInt("qp.buildnr")
         self.export = self.hrd.getBool("qp.export")

@@ -3,7 +3,7 @@ from JumpScale import j
 j.application.start("jspush")
 import JumpScale.baselib.mercurial
 
-for subdir in ["jumpscale","incubaid","dfsio_blobstore"]:
+for subdir in ["jumpscale","incubaid"]:
     if j.system.fs.exists("/opt/code/%s"%subdir):
         
         for item in j.system.fs.listDirsInDir("/opt/code/%s"%subdir):

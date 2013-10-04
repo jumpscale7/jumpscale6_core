@@ -91,6 +91,10 @@ class PythonPackage(object):
                 self.clearcache()
 
     def list(self):
+        from IPython import embed
+        print "DEBUG NOW ooo"
+        embed()
+        
         exitcode, output = j.system.process.execute("pip list")
         rec = re.compile("^(?P<name>[\w-]+)\s+\((?P<version>[\w\.]+)\)", re.M)
         return rec.findall(output)

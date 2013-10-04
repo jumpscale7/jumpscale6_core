@@ -553,7 +553,7 @@ class SystemFS:
         if root=="":
             root=self.getcwd()
         path=self.pathClean(path)
-        if path[0]<>os.sep:
+        if len(path)>0 and path[0]<>os.sep:
             path=self.joinPaths(root,path)
         return path
 
