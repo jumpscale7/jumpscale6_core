@@ -14,10 +14,13 @@ class Ubuntu:
             #we dont wont qshell to break, self.check will take of this
             return
         apt.apt_pkg.init()
-        #@todo error, interface changed on ubuntu 13.10
+        if hasattr(apt.apt_pkg, 'Config'):
+            cfg = apt.apt_pkg.Config
+        else:
+            cfg = apt.apt_pkg.Configuration
         try:
-            apt.apt_pkg.Config.set("APT::Install-Recommends", "0")
-            apt.apt_pkg.Config.set("APT::Install-Suggests", "0")
+            cfg.set("APT::Install-Recommends", "0")
+            cfg.set("APT::Install-Suggests", "0")
         except:
             pass
         self._cache = apt.Cache()

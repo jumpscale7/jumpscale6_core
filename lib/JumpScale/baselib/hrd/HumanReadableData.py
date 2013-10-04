@@ -95,7 +95,7 @@ class HRDPos():
 
     def addHrdItem(self,hrd,hrdpos):
         self._hrds[hrdpos]=hrd
-        for key in [item for item in hrd.__dict__.keys() if item[0]<>"_"]:
+        for key in [item for item in hrd.__dict__.keys() if (len(item)>0 and item[0]<>"_") ]:
             self.__dict__[key]=hrd.__dict__[key]
             self._key2hrd[key]=hrdpos
 

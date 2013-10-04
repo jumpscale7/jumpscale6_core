@@ -7,6 +7,6 @@ from JumpScale.baselib import cmdutils
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--reinstall', required=False, action='store_true', help='Reinstall found package')
 package, args = cmdutils.getJPackage(parser)
-
-package.install(reinstall=args.reinstall)
+dependencies = not args.reinstall or not package.isInstalled()
+package.install(dependencies=dependencies, reinstall=args.reinstall)
 j.application.stop()

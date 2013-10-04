@@ -3,10 +3,13 @@ from JumpScale import j
 j.application.start("jscommit")
 import JumpScale.baselib.mercurial
 
+for subdir in ["jumpscale","incubaid"]:
+    if j.system.fs.exists("/opt/code/%s"%subdir):
+        
+        for item in j.system.fs.listDirsInDir("/opt/code/%s"%subdir):
 
-for item in j.system.fs.listDirsInDir("/opt/code/jumpscale"):
-    print "update/merge/commit/push for %s"%item
-    cl=j.clients.mercurial.getClient(item)
-    cl.commit()
+            print "update/merge/commit/push for %s"%item
+            cl=j.clients.mercurial.getClient(item)
+            cl.commit()
 
 j.application.stop()
