@@ -91,7 +91,9 @@ class PythonPackage(object):
                 self.clearcache()
 
     def list(self):
-        exitcode, output = j.system.process.execute("pip list")
+        exitcode, output = j.system.process.execute("pip list", dieOnNonZeroExitCode=False)
+        if exitcode != 0:
+            return list()
         rec = re.compile("^(?P<name>[\w-]+)\s+\((?P<version>[\w\.]+)\)", re.M)
         return rec.findall(output)
 
