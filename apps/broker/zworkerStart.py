@@ -34,11 +34,11 @@ if len(sys.argv) == 5:
         roles = sys.argv[4].split(",")
 elif len(sys.argv) == 1:
     addr = "localhost"
-    port = 5556
+    port = 6556
     instance = 1
     roles = ["*"]
 else:
-    raise RuntimeError("Format needs to be: 'python zworker.py 127.0.0.1 5556 4 roles1,roles2,roles.sub.1,system'")
+    raise RuntimeError("Format needs to be: 'python zworker.py 127.0.0.1 6556 4 roles1,roles2,roles.sub.1,system'")
 
 j.core.grid.startZWorker(addr=addr, port=port, instance=instance, roles=roles)
 

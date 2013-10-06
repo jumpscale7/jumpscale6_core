@@ -118,7 +118,7 @@ class GridFactory():
         else:
             return False
 
-    def getZBrokerClient(self, addr="127.0.0.1", port=5554, org="myorg", user="root", passwd="1234", ssl=False, category="broker"):
+    def getZBrokerClient(self, addr="127.0.0.1", port=6554, org="myorg", user="root", passwd="1234", ssl=False, category="broker"):
         from ..zdaemon.ZDaemonTransport import ZDaemonTransport
         from JumpScale.grid.serverbase.DaemonClient import DaemonClient
         trans = ZDaemonTransport(addr, port)
@@ -156,17 +156,7 @@ class GridFactory():
         else:
             return False
 
-    def configureBroker(self, domain="adomain.com", osisip="localhost", osisport=5544, brokerid=0):
-        """
-        @osisnsid = 0 means it will be filled in with unique id coming from osis (a new namespace will be created)
-        """
-        C = "broker.domain=%s\n" % domain
-        C += "broker.osis.ip=%s\n" % osisip
-        C += "broker.osis.port=%s\n" % osisport
-        C += "broker.id=%s\n" % brokerid
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.cfgDir, "grid"))
-        path = j.system.fs.joinPaths(j.dirs.cfgDir, "grid", "broker.hrd")
-        j.system.fs.writeFile(path, contents=C)
+
 
     def registerNode(self):
         j.logger.log("Register node to broker", level=4, category="grid.startup")
@@ -185,29 +175,29 @@ class GridFactory():
 
         return nid, bid
 
-    def configureNode(self, gridid=0, name="", roles=[], brokerip="localhost", brokerport="5554"):
-        """
-        create base config files for the node
-        """
-        if name == "":
-            # look for hostname
-            name = j.system.net.getHostname()
+    # def configureNode(self, gridid=0, name="", roles=[], brokerip="localhost", brokerport="6554"):
+    #     """
+    #     create base config files for the node
+    #     """
+    #     if name == "":
+    #         # look for hostname
+    #         name = j.system.net.getHostname()
 
-        C = "node.name=%s\n" % name
-        if j.basetype.list.check(roles):
-            roles = ",".join(roles)
-        C += "node.roles=%s\n" % roles
-        C += "node.id=0\n"
-        C += "node.machineguid=\n"
-        C += "grid.id=%s\n" % gridid
-        C += "grid.broker.ip=%s\n" % brokerip
-        C += "grid.broker.port=%s\n" % brokerport
-        C += "grid.broker.id=0\n"
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.cfgDir, "grid"))
-        path = j.system.fs.joinPaths(j.dirs.cfgDir, "grid", "node.hrd")
-        j.system.fs.writeFile(path, contents=C)
-        j.application.initWhoAmI()
-        self._loadConfig()
+    #     C = "node.name=%s\n" % name
+    #     if j.basetype.list.check(roles):
+    #         roles = ",".join(roles)
+    #     C += "node.roles=%s\n" % roles
+    #     C += "node.id=0\n"
+    #     C += "node.machineguid=\n"
+    #     C += "grid.id=%s\n" % gridid
+    #     C += "grid.broker.ip=%s\n" % brokerip
+    #     C += "grid.broker.port=%s\n" % brokerport
+    #     C += "grid.broker.id=0\n"
+    #     j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.cfgDir, "grid"))
+    #     path = j.system.fs.joinPaths(j.dirs.cfgDir, "grid", "node.hrd")
+    #     j.system.fs.writeFile(path, contents=C)
+    #     j.application.initWhoAmI()
+    #     self._loadConfig()
 
     def startBroker(self):
         from ZBroker import ZBroker
@@ -224,7 +214,7 @@ class GridFactory():
         from ZLoggerClient import ZLoggerClient
         return ZLoggerClient(ipaddr=ipaddr, port=port)
 
-    def startZWorker(self, addr="localhost", port=5555, instance=0, roles=["*"]):
+    def startZWorker(self, addr="localhost", port=6555, instance=0, roles=["*"]):
         """
         #@todo doc
         """

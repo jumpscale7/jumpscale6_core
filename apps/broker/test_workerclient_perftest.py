@@ -21,7 +21,7 @@ GeventLoop = j.core.gevent.getGeventLoopClass()
 
 class WorkerClientTest(GeventLoop):
 
-    def __init__(self, server="localhost", port=5555, instance=1, nrtests=1):
+    def __init__(self, server="localhost", port=6555, instance=1, nrtests=1):
         GeventLoop.__init__(self)
         self.schedule("timer", self._timer)
         self.instance = instance
@@ -67,11 +67,11 @@ if len(sys.argv) == 5:
     nrtests = int(sys.argv[4])
 elif len(sys.argv) == 1:
     addr = "127.0.0.1"
-    port = 5555
+    port = 6555
     instance = 1
     nrtests = 1000
 else:
-    raise RuntimeError("Format needs to be: 'python zclientest.py localhost 5555 1 1000'")
+    raise RuntimeError("Format needs to be: 'python zclientest.py localhost 6555 1 1000'")
 
 
 testclient = WorkerClientTest(addr, port, instance, nrtests)
