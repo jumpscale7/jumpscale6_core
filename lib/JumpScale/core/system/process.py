@@ -1535,12 +1535,14 @@ class SystemProcess:
                 match = co.search(line)
                 if not match:
                     continue
-                gd = match.groupdict()
+                gd = match.groupdict()                
+                # print line
+                # print gd["cmd"]
                 if isinstance(process, int) and gd['pid'] == process:
                     pids.append(gd['pid'])
                 elif isinstance(process, (str,unicode)) and  process in gd['cmd']:
                     pids.append(gd['pid'])
-
+            pids=[int(item) for item in pids]
             return pids
         else:
              raise NotImplementedError("getProcessPid is only implemented for unix")
@@ -1610,6 +1612,24 @@ class SystemProcess:
                 os.environ[varnames[i]] = str(varvalues[i]).strip()
         except Exception, e:
             raise RuntimeError(e)
+
+    def getPidsByPort(self, port):
+        """
+        Returns pid of the process that is listening on the given port
+        """
+        name=self.getProcessByPort(port)
+        pids=j.system.process.getProcessPid(name)
+        return pids
+
+    def killProcessByName(self,name):
+        pids=self.getProcessPid(name)
+        for pid in pids:
+            kill(pid)
+
+    def killProcessByPort(self,port):
+        for pid in self.getPidsByPort(port):
+            kill(pid)
+
 
     def getProcessByPort(self, port):
         """

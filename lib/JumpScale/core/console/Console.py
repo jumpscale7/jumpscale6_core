@@ -365,16 +365,29 @@ class Console:
             parts = clean(f())
         return parts
 
-    def askChoice(self,choicearray, descr=None, sort=False):
+    def askChoice(self,choicearray, descr=None, sort=True):
+        """
+        @param choicearray is list or dict, when dict key needs to be the object to return, the value of the dics is the string representation
+        """
         maxchoice=20
+
+        #check items are strings or not, if not need to create dictionary
+        if isinstance(choicearray, (tuple, list)):
+            isstr=True
+            for item in choicearray:
+                if not j.basetype.string.check(item):
+                    isstr=False
+            if isstr==False:
+                choicearrayNew={}
+                for item in choicearray:
+                    choicearrayNew[item]=str(item)
+                choicearray=choicearrayNew
         
         if len(choicearray)>maxchoice and j.system.platformtype.isLinux():
             descr2 = "%s\nMake a selection please, start typing, we will try to do auto completion.\n     ? prints the list." % descr
             self.echo(descr2)
             print
             print "        ",
-            if sort:
-                choicearray.sort()
             wildcard=True
             chars=""
             params=[wildcard,chars]
@@ -427,10 +440,11 @@ class Console:
                     wildcard=True
                     chars=""
                     params=[wildcard,chars]
-
+            
             if len(choicearray2)==1 and not choicearray2==["99999"]:
                 wildcard, chars = params
-                sys.stdout.write(choicearray2[0][len(chars):])
+                sys.stdout.write(str(choicearray2[0])[len(chars):])
+                    
             if choicearray2==["99999"]:
                 self.echo("\n")
                 for choice in choicearray:
@@ -444,7 +458,7 @@ class Console:
             return self._askChoice(choicearray, descr, sort)
             
 
-    def _askChoice(self, choicearray, descr=None, sort=False):
+    def _askChoice(self, choicearray, descr=None, sort=True):
         if not choicearray:
             return None
         if len(choicearray) == 1:
@@ -453,8 +467,9 @@ class Console:
         if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         descr = descr or "\nMake a selection please: "
+
         if sort:
-            choicearray.sort()
+            choicearrayStr.sort()
 
         self.echo(descr)
         if isinstance(choicearray, dict):

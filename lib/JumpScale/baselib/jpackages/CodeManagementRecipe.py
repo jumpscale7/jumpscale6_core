@@ -153,8 +153,9 @@ class _RecipeItem:
         if self._isPlatformSupported:
             source = j.system.fs.joinPaths(self.coderepoConnection.basedir, self.source)
             destination = self.systemdest
+            print "link:%s to %s"%(source,destination)
             if j.system.fs.isLink(destination):
-                j.system.fs.removeDirTree(destination)   
+                j.system.fs.remove(destination)   
             else:
                 if j.system.fs.exists(destination):
                     if j.application.shellconfig.interactive:                            
@@ -164,6 +165,7 @@ class _RecipeItem:
     
                 self._removeDest(destination)
             j.system.fs.symlink(source, destination)        
+                
         
     def _removeDest(self, dest):
         """ Remove a destionation file or directory."""

@@ -263,19 +263,18 @@ class SystemFS:
             if self.getFileExtension(path) in ext:
                 self.remove(path)
 
-    def remove(self, path,onlyIfExists=True):
+    def remove(self, path):
         """Remove a File
         @param path: string (File path required to be removed
         """
-        if path[-1]==os.sep:
-            path=path[:-1]
         self.log('Remove file with path: %s'%path,6)
+        if len(path)>0 and path[-1]==os.sep:
+            path=path[:-1]        
         if path is None:
             raise TypeError('Not enough parameters passed to system.fs.removeFile: %s'%path)
-        if not j.system.fs.exists(path):
-            if onlyIfExists==False:
-                raise RuntimeError("Path: %s does not exist in system.fs.removeFile"%path)
-        else:
+        if os.path.islink(path):
+            os.unlink(path)
+        if self.exists(path):
             try:
                 os.remove(path)
             except:
@@ -935,15 +934,15 @@ class SystemFS:
             raise IOError('%s does not exist'%source)
         shutil.move(source, destin)
 
-    def exists(self, path):
+    def exists(self, path,followlinks=True):
         """Check if the specified path exists
         @param path: string
         @rtype: boolean (True if path refers to an existing path, False for broken symcolic links)
         """
         if path is None:
             raise TypeError('Path is not passed in system.fs.exists')
-        if os.path.exists(path):
-            if self.isLink(path):
+        if os.path.exists(path) or os.path.islink(path):
+            if self.isLink(path) and followlinks:
                 #self.log('path %s exists' % str(path.encode("utf-8")),8)
                 return self.exists(self.readlink(path))
             else:

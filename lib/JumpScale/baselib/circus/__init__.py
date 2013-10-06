@@ -1,7 +1,9 @@
 from JumpScale import j
 
-from .Circus import Circus
+from .CircusCL import CircusCL
+from .CircusManager import CircusManager
 
-j.base.loader.makeAvailable(j, 'tools')
+j.base.loader.makeAvailable(j, 'tools.circus')
 
-j.tools.circus=Circus()
+j.tools.circus.client=CircusCL()
+j.tools.circus.manager=CircusManager()

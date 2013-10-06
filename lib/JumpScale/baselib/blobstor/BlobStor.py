@@ -107,7 +107,7 @@ class BlobStor:
                 raise RuntimeError("Could not download %s, have tried 5 times, could be file is corrupt" % source)
 
             if self.config['type'] == 'local':
-                # when blobstore type is local, don't copy the tgz file, that would be a waste of resources
+                # when blobstor type is local, don't copy the tgz file, that would be a waste of resources
                 tmpfile = targetFileNameTgz[len('file://'):]
             else:
                 tmpfile = j.system.fs.getTempFileName()
@@ -124,7 +124,7 @@ class BlobStor:
                 j.system.fs.targzUncompress(tmpfile, destination, removeDestinationdir=True)
 
         if keepTempFile == False:
-            # when blobstore type is remote, clean up temporary file
+            # when blobstor type is remote, clean up temporary file
             if self.config['type'] == 'remote':
                 j.system.fs.remove(tmpfile)
         else:
@@ -189,7 +189,7 @@ class BlobStor:
                 
         j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
 
-    def put(self, path, type="", expiration=0, tags="", blobstores=[], prevkey=None):
+    def put(self, path, type="", expiration=0, tags="", blobstors=[], prevkey=None):
         """
         put file or directory to blobstor
         @param expiration in hours
@@ -256,7 +256,7 @@ class BlobStor:
             anyPutDone = True
             j.clients.blobstor.log('Successfully uploaded blob: ' + path,category="upload",level=5)
 
-        for blobstor in blobstores:
+        for blobstor in blobstors:
             if blobstor.exists(hashh):
                 j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,blobstor.name,self.namespace),category="upload",level=5)
             else:

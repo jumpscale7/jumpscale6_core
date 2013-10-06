@@ -686,6 +686,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @param dependencies: if True, all dependencies will be installed too
         @param download:     if True, bundles of package will be downloaded too
         @param reinstall:    if True, package will be reinstalled
+
+        when dependencies the reinstall will not be asked for there
+
         """
 
         # If I am already installed assume my dependencies are also installed
@@ -696,7 +699,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.install(False, download, reinstall)
+                dep.install(False, download, reinstall=False)
         self.loadActions(True) #reload actions to make sure new hrdactive are applied
 
         action="install"
@@ -1372,11 +1375,11 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             plchecksum = self.getBundleKey(platform)
 
             if local and remote and self.blobstorRemote <> None and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathFilesForPlatform, blobstores=[self.blobstorRemote], prevkey=plchecksum)
+                key, descr, uploadedAnything = self.blobstorLocal.put(pathFilesForPlatform, blobstors=[self.blobstorRemote], prevkey=plchecksum)
             elif local and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathFilesForPlatform, blobstores=[], prevkey=plchecksum)
+                key, descr, uploadedAnything = self.blobstorLocal.put(pathFilesForPlatform, blobstors=[], prevkey=plchecksum)
             elif remote and self.blobstorRemote <> None:
-                key, descr, uploadedAnything = self.blobstorRemote.put(pathFilesForPlatform, blobstores=[], prevkey=plchecksum)
+                key, descr, uploadedAnything = self.blobstorRemote.put(pathFilesForPlatform, blobstors=[], prevkey=plchecksum)
             else:
                 raise RuntimeError("need to upload to local or remote")
 

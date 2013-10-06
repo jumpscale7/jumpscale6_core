@@ -49,7 +49,7 @@ class JSDevelTools:
         pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
         cmd="cd %s;python zbrokerStart.py"%pathb
         j.system.platform.screen.executeInScreen(name,"broker",cmd,wait=1)
-        if not j.system.net.waitConnectionTest('localhost', 5555, 30):
+        if not j.system.net.waitConnectionTest('localhost', 6555, 30):
             raise RuntimeError("Failed to start broker daemon")
 
 
@@ -65,7 +65,7 @@ class JSDevelTools:
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
         for worker in range(1,nrworkers+1):
             roles="system,worker.%s"%worker
-            cmd="cd %s;python zworkerStart.py %s %s %s %s"%(path,"127.0.0.1",5556,worker,roles)
+            cmd="cd %s;python zworkerStart.py %s %s %s %s"%(path,"127.0.0.1",6556,worker,roles)
             j.system.platform.screen.executeInScreen(name,"w%s"%worker,cmd,wait=1)
 
     def startPortalByobu(self, path=None):

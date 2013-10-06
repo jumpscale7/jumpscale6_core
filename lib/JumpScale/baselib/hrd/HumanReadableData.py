@@ -431,7 +431,7 @@ class HRD():
             if line.find("=")<>-1:
                 items=line.split("=")
                 if len(items)>2:
-                    raise RuntimeError("in template only 1 = per line")
+                    raise RuntimeError("in template only 1 '=' sign' per line")
                 key=items[0].strip()
                 defvalue=items[1].strip()
                 if not self.exists(key):

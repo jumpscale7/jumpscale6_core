@@ -300,7 +300,7 @@ class JPackageMetadataScanner():
     
     def copyBundlesToLocalBlobStor(self,remoteBlobStor=None,localBlobStor=None):
         """
-        @param remoteBlobStor & localBlobStor, if none then "qplocal" & "qpremote" configured blobstores are used
+        @param remoteBlobStor & localBlobStor, if none then "qplocal" & "qpremote" configured blobstors are used
         """
         if remoteBlobStor==None:
             remoteBlobStor=j.clients.blobstor.get("qpremote")
