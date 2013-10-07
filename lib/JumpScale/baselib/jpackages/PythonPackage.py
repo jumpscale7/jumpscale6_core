@@ -91,7 +91,6 @@ class PythonPackage(object):
                 self.clearcache()
 
     def list(self):
-        
         exitcode, output = j.system.process.execute("pip list",dieOnNonZeroExitCode=False)
         if exitcode>0:
             print "WARNING CMD 'PIP LIST' IS GIVING ERRORS, PLEASE CHECK, IMPORTANT"        

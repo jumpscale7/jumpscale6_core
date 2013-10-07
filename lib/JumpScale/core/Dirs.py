@@ -201,6 +201,7 @@ class Dirs(object):
             j.system.fs.copyDirTree(cfgsource,cfgdest,overwriteFiles=False)
             ipythondir = j.system.fs.joinPaths(os.environ['HOME'], '.ipython')
             j.system.fs.removeDirTree(ipythondir)
+            j.packages.reloadconfig()
 
             
     def __str__(self):
