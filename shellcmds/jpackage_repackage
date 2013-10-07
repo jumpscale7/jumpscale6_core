@@ -6,12 +6,14 @@ from JumpScale.baselib import cmdutils
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
+parser.add_argument('-l', '--local', dest="local", default=False, action="store_true", required=False, help='Only repackage locally')
 package, args = cmdutils.getJPackage(parser)
 
 j.packages.updateMetaData(package.domain)
 package.build()
-package.upload()
 if not args.message:
     args.message = 'Building JPackage "%s"' % package.name
-j.packages.publish(args.message, package.domain)
+package.upload(remote=not args.local)
+if not args.local:
+    j.packages.publish(args.message, package.domain)
 j.application.stop()
