@@ -469,7 +469,7 @@ class Console:
         descr = descr or "\nMake a selection please: "
 
         if sort:
-            choicearrayStr.sort()
+            choicearray.sort()
 
         self.echo(descr)
         if isinstance(choicearray, dict):
