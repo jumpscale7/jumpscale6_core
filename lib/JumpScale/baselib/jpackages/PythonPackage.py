@@ -91,17 +91,9 @@ class PythonPackage(object):
                 self.clearcache()
 
     def list(self):
-<<<<<<< local
-        
-        exitcode, output = j.system.process.execute("pip list",dieOnNonZeroExitCode=False)
-        if exitcode>0:
-            print "WARNING CMD 'PIP LIST' IS GIVING ERRORS, PLEASE CHECK, IMPORTANT"
-        
-=======
         exitcode, output = j.system.process.execute("pip list", dieOnNonZeroExitCode=False)
         if exitcode != 0:
             return list()
->>>>>>> other
         rec = re.compile("^(?P<name>[\w-]+)\s+\((?P<version>[\w\.]+)\)", re.M)
         return rec.findall(output)
 
