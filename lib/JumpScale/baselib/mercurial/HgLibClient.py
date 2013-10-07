@@ -305,7 +305,7 @@ syntax: regexp
                     self._raise("Cannot update repo because files are deleted on filesystem which should not be.")
                 if result["nottracked"] and not addRemoveUntrackedFiles:
                     self._raise("Cannot update repo because there are files which are not added or removed yet to local repo.")
-                self.addremove(message="add remove untracked files for %s" % commitMessage,commit=False)
+                self.addremove(message="add remove untracked files for %s" % commitMessage)
             
         result=self.getModifiedFiles()   
         if any([result["added"], result["removed"], result["modified"]]):
