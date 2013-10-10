@@ -438,9 +438,7 @@ class HRD():
                     error=True
                     self.set(key,defvalue)
                     self.changed = True
-        if error and j.application.shellconfig.interactive==False:
-            raise RuntimeError("Config file was not complete, please change the default values of config file at location %s"%self._path)
-        else:
+        if error:
             self.process()
 
     def process(self,content=""):
@@ -460,7 +458,10 @@ class HRD():
                 value=value.strip()
                 self.changed = True
                 if value.find("@ASK")<>-1:
-                    value=self._ask(key,value)                
+                    if not j.application.shellconfig.interactive:
+                        raise RuntimeError("Can ask key %s interactively. Config file was not complete, please change the default values of config file at location %s"% (key, self._path))
+
+                    value=self._ask(key,value)
                     self.set(key,value,persistent=True)
                 else:
                     self.set(key,value,persistent=False)
