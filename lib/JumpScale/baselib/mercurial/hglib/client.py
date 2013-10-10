@@ -43,7 +43,7 @@ class hgclient(object):
 
     def __init__(self, path, encoding, configs, connect=True):
         self._args = [hglib.HGPATH, 'serve', '--cmdserver', 'pipe',
-                '--config', 'ui.interactive=True']
+                '--config', 'ui.interactive=False']
         if path:
             self._args += ['-R', path]
         if configs:
