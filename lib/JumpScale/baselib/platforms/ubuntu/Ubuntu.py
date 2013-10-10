@@ -176,9 +176,9 @@ class Ubuntu:
 
     def serviceEnableStartAtBoot(self, servicename):
         self.check()
-        j.system.process.execute("update-rc.d -f %s add" % servicename)
+        j.system.process.execute("update-rc.d -f %s defaults" % servicename)
 
-    def serviceInstall(self, servicename,daemonpath):
+    def serviceInstall(self, servicename, daemonpath, args=''):
         """
         @param daemonpath : path to deamon to start e.g. /usr/local/bin/supervisord
         """
@@ -194,9 +194,9 @@ class Ubuntu:
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Description of the service"
-NAME=${name}
-DAEMON=${daemonpath}
-DAEMON_ARGS=""
+NAME="${name}"
+DAEMON="${daemonpath}"
+DAEMON_ARGS="${daemonargs}"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
@@ -322,17 +322,19 @@ case "$1" in
   *)
     #echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
     echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
-    exit 3
+    exit 1
     ;;
 esac
 
-:
+exit 0
 
 """
         initdscript=initdscript.replace("${name}",servicename)
         initdscript=initdscript.replace("${daemonpath}",daemonpath)
+        initdscript=initdscript.replace("${daemonargs}", args)
 
-        j.system.fs.writeFile("/etc/init.d/%s"%servicename,initdscript)
+        j.system.fs.writeFile("/etc/init.d/%s" % servicename, initdscript)
+        j.system.process.execute("chmod +x /etc/init.d/%s" % servicename)
 
         self.serviceEnableStartAtBoot(servicename)
 

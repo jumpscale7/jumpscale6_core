@@ -5,7 +5,7 @@ class CircusManager:
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup', 'server.ini')
 
-    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=False):
+    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True):
         servercfg = j.tools.inifile.open(self._configpath)
         sectionname = "watcher:%s" % name
         if servercfg.checkSection(sectionname):
