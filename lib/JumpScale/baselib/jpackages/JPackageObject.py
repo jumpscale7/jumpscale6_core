@@ -809,6 +809,11 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @param sourceDir: directory to copy files from
         @param destination: directory to copy files to
         """
+        if self.debug:
+            return #do not copy files when debug, need to be improved with next remark
+
+        #remove links first, otherwise code gets overwritten
+
         def createAncestors(file):
             # Create the ancestors
             j.system.fs.createDir(j.system.fs.getDirName(file))
