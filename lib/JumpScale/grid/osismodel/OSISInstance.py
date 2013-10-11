@@ -72,7 +72,7 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
         self.remoteOSISClient.delete(self.actorname, self.modelname, id)
         return
 
-    def find(self, query, start=0, size=None):
+    def find(self, query, start=0, size=10):
         return self.remoteOSISClient.search(self.actorname, self.modelname, query, start, size)
 
     def list(self):
@@ -210,9 +210,9 @@ class OSISInstance(OSISInstanceNoDB):
         if self.indexer <> None:
             self.indexer.optimize()
 
-    def find(self, query, start=0, size=None):
+    def find(self, query, start=0, size=10):
         if self.indexer <> None:
-            return self.indexer.find(query, start, size)
+            return self.indexer.find(query, start=0, size=10)
         else:
             raise RuntimeError("Cannot find indexer")
 

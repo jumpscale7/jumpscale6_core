@@ -125,15 +125,11 @@ class OSISStore(object):
         result = self.elasticsearch.delete(index, 'json', key)
         return result
 
-    def find(self, query, start=0, size=None):
+    def find(self, query, start=0, size=10):
         query = json.loads(query)
-        
         index = '%s_%s' % (self.hrd.category_name, self.hrd.namespace_id)
-        if size:
-            result = self.elasticsearch.search(query=query, index=index, es_from=start,
+        result = self.elasticsearch.search(query=query, index=index, es_from=start,
                                            size=size)
-        else:
-            result = self.elasticsearch.search(query=query, index=index, es_from=0, size=100000)
         if not isinstance(result, dict):
             result = result()
         return {'result': result['hits']['hits'],

@@ -60,7 +60,7 @@ class ServerBaseFactory():
         DaemonClientClass=j.servers.base.getDaemonClientClass()
 
         myClient(DaemonClientClass):
-            def __init__(self,ipaddr="127.0.0.1",port=6555,org="myorg",user="root",passwd="1234",ssl=False,roles=[]):
+            def __init__(self,ipaddr="127.0.0.1",port=5555,org="myorg",user="root",passwd="1234",ssl=False,roles=[]):
                 self.init(org=org,user=user,passwd=passwd,ssl=ssl,roles=roles)
 
             def _connect(self):

@@ -68,7 +68,7 @@ class OSISClient():
         result = self.listNamespaces(namespacename)
         return len(result) == 1
 
-    def search(self, namespace, category, query, start=0, size=None):
+    def search(self, namespace, category, query, start=0, size=10):
         if j.basetype.dictionary.check(query):
             query = j.db.serializers.ujson.dumps(query)
         namespaceid, catid = self._getIds(namespace, category)
