@@ -110,7 +110,7 @@ cmd.meld=
         p=j.packages.get("jumpscale","jumpscale_examples","1.0")
         if debug:
             p.setDebugMode()
-        p.install(reinstall=True)
+        p.reinstall()
 
     def deployJumpScaleLibs(self,debug=True):
         """
@@ -119,19 +119,23 @@ cmd.meld=
         p=j.packages.get("jumpscale","libs","1.0")
         if debug:
             p.setDebugMode()
-        p.install()
+        p.reinstall()
 
     def linkJumpScaleLibs(self):
         self.deployJumpScaleLibs(True)
 
-    def deployJumpScaleGrid(self,debug=True):
+    def deployJumpScaleGridMaster(self,debug=True):
         """
         checkout the jumpscale grid repo & link to python 2.7 to make it available for the developer
         """
         p=j.packages.get("jumpscale","osis","1.0")
         if debug:
             p.setDebugMode()
-        p.install()
+        p.reinstall()
+        p=j.packages.get("jumpscale","grid","1.0")
+        if debug:
+            p.setDebugMode()
+        p.reinstall()
 
     def deployJumpScalePortal(self,debug=True):
         """
@@ -141,7 +145,7 @@ cmd.meld=
         p=j.packages.get("jumpscale","portal","1.0")
         if debug:
             p.setDebugMode()
-        p.install()
+        p.reinstall()
 
     def linkJumpScaleBase(self,debug=True):
         """
@@ -178,6 +182,6 @@ cmd.meld=
         self.linkJumpScaleBase()
         self.deployExampleCode()
         self.deployJumpScaleLibs()
-        self.deployJumpScaleGrid()
+        self.deployJumpScaleGridMaster()
         self.deployJumpScalePortal()
 

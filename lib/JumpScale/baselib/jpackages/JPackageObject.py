@@ -844,8 +844,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                             break
 
                 if _copy:
-                    self.log("Copying <%s>" % destinationFile)
-
+                    self.log("Copying <%s>" % destinationFile,level=8)
                     createAncestors(destinationFile)
                     if j.system.fs.isLink( file ) :
                         j.system.fs.symlink(os.readlink( file ), destinationFile, overwriteTarget=True )
