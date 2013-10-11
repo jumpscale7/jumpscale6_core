@@ -19,6 +19,20 @@ def get_version(package):
 version = get_version('lib/JumpScale')
 
 
+def clean():
+    import os
+    for r,d,f in os.walk("/usr"):
+        for path in f:
+	    match=False
+	    if path.startswith("jscode") or path.startswith("jpackage") or path.startswith("jspackage") or path.startswith("jsdevelop") or path.startswith("jsreinstall"):
+	        match=True
+	    if path in ["js" or "jsshell"]:
+	        match=True	    
+	    if match:
+	        print "remove:%s" % os.path.join(r,path)
+	        os.remove(os.path.join(r,path))
+
+clean()
 
 def list_files(basedir='.', subdir='.'):
     package_data = []
