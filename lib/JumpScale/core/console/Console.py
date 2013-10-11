@@ -468,7 +468,7 @@ class Console:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         descr = descr or "\nMake a selection please: "
 
-        if sort:
+        if sort and isinstance(choicearray, (tuple, list)):
             choicearray.sort()
 
         self.echo(descr)

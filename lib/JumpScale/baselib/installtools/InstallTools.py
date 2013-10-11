@@ -261,7 +261,7 @@ class InstallTools():
     def getTmpPath(self,filename):
         return "%s/%s"%(self.TMP,filename)
 
-    def downloadPylabsCore(self,dest):
+    def downloadJumpScaleCore(self,dest):
         #csid=getLastChangeSetBitbucket()        
         self.download ("https://bitbucket.org/jumpscale/jumpscale-core/get/default.tar.gz","%s/pl6core.tgz"%self.TMP)
         self.expand("%s/pl6core.tgz"%self.TMP,dest)
@@ -319,7 +319,7 @@ class InstallTools():
     def installBaseMinimal(self):
         pldir="%s/plcore"   % self.TMP
         shutil.rmtree(pldir,True)
-        self.downloadPylabsCore(pldir)
+        self.downloadJumpScaleCore(pldir)
         pldir=os.path.join(pldir,os.listdir(pldir)[0])
         
         self.copytreedeletefirst(os.path.join(pldir,"qself.BASE6","cfg"),"%s/cfg/" % self.BASE)

@@ -251,7 +251,7 @@ j.application.initWhoAmI()
 
 # from extensions.PMExtensions import PMExtensions
 
-# from JumpScale.core.Pylabs import Pylabs
+# from JumpScale.core.JumpScale import JumpScale
 
 # class InteractiveExtensions(PMExtensionsGroup):
 #     def __init__(self):

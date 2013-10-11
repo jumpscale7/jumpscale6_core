@@ -10,6 +10,8 @@ import hashlib
 class HgLibClient:    
 
     _configs = ['ui.merge=internal:merge']
+
+
     def __init__(self, hgbasedir, remoteUrl="", branchname="default", cleandir=None):
         """
         @param base dir where local hgrepository will be stored
@@ -24,7 +26,7 @@ class HgLibClient:
             branchname = 'default'
         self.branchname = branchname
 
-        self._log("Init hgclient: basedir:%s remoteurl:%s " %(hgbasedir,remoteUrl))
+        self._log("mercurial remoteurl:%s"%(remoteUrl),category="config")
         
         if (not isinstance(hgbasedir, basestring) or not isinstance(remoteUrl, basestring))\
          or (branchname and not isinstance(branchname, basestring)):
@@ -170,9 +172,9 @@ syntax: regexp
         return False
 
     
-    def _log(self, message, level=5):
-        message="hglclient, repo:%s \n%s" % (self.basedir,message)
-        j.logger.log(message, level)
+    def _log(self, message, level=5,category=""):
+        message="repo:%s  %s" % (self.basedir,message)
+        j.clients.mercurial.log(message,category,level)
 
     def _raise(self, message):        
         message="ERROR hgclient: %s\nPlease fix the merurial local repo manually and restart failed mercurial action.\nRepo is %s" % (message, self.basedir)
@@ -379,12 +381,12 @@ syntax: regexp
             #self.updatemerge(commitMessage="switch branch",ignorechanges=False,addRemoveUntrackedFiles=False,trymerge=True, release=branchname)
         
     def pullupdate(self, force=False):
-        self._log("pullupdate %s" % (self.basedir))
+        self._log("pullupdate %s" % (self.basedir),category="pullupdate")
         self.pull()    
         self.update(force=force)
 
     def _clone(self):
-        self._log("clone %s" % (self.basedir))
+        self._log("clone %s" % (self.basedir),category="clone")
         self.client = hglib.clone(self.remoteUrl, self.basedir, branch=self.branchname, configs=self._configs)
         self.client.open()
         self.verify()

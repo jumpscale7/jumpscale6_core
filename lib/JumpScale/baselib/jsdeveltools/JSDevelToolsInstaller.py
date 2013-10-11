@@ -51,8 +51,7 @@ cmd.meld=
 
     def getCredentialsJumpScaleRepo(self):
         config=j.clients.bitbucket._config
-        if "jumpscale" not in config.list():
-            self.initMercurial()
+        self.initMercurial()
 
         config=config.getConfig("jumpscale")
         self.login=config["login"]
@@ -111,7 +110,7 @@ cmd.meld=
         p=j.packages.get("jumpscale","jumpscale_examples","1.0")
         if debug:
             p.setDebugMode()
-        p.install()
+        p.install(reinstall=True)
 
     def deployJumpScaleLibs(self,debug=True):
         """
@@ -144,6 +143,15 @@ cmd.meld=
             p.setDebugMode()
         p.install()
 
+    def linkJumpScaleBase(self,debug=True):
+        """
+        checkout the jumpscale portal repo & link to python 2.7 to make it available for the developer
+        an example portal will also be installed in /opt/jumpscale/apps/exampleportal
+        """
+        p=j.packages.findNewest("jumpscale","core")
+        if debug:
+            p.setDebugMode()
+        p.codeLink(dependencies=False, update=True,force=True)
 
     def deployDFS_IO(self):
         """
@@ -156,10 +164,9 @@ cmd.meld=
         self._do.execute("cd %s; python setup.py develop" % codedir)
         self._do.symlink("%s/jumpscale/%s/apps/dfs_io"%(j.dirs.codeDir,name),"/opt/jumpscale/apps/dfs_io")
 
-    def deployPuppet(self):
-        import JumpScale.lib.puppet
-        j.tools.puppet.install()
-
+    # def deployPuppet(self):
+    #     import JumpScale.lib.puppet
+    #     j.tools.puppet.install()
 
     def deployExamplesLibsGridPortal(self):
         """
@@ -168,6 +175,7 @@ cmd.meld=
         self.deployJumpScaleGrid()
         self.deployJumpScalePortal()
         """
+        self.linkJumpScaleBase()
         self.deployExampleCode()
         self.deployJumpScaleLibs()
         self.deployJumpScaleGrid()

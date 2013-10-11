@@ -3,7 +3,7 @@ import socket
 
 
 DEFAULT_PORT = 9998
-class LogTargetToPylabsLogConsole(object):
+class LogTargetToJumpScaleLogConsole(object):
     """Forwards incoming logRecords to TCP-server"""
     def __init__(self, serverip="localhost", serverport=DEFAULT_PORT):
         self.connected = False
@@ -28,14 +28,14 @@ class LogTargetToPylabsLogConsole(object):
     def __eq__(self, other):
         if not other:
             return False
-        if not isinstance(other, LogTargetToPylabsLogConsole):
+        if not isinstance(other, LogTargetToJumpScaleLogConsole):
             return False
 
         return (self._server_real_ip == other._server_real_ip) and (self._serverport == other._serverport)
 
     def __str__(self):
         """ string representation of a LogTargetServer """
-        return 'LogTargetToPylabsLogConsole logging to %s:%d' % (str(self._serverip), self._serverport)
+        return 'LogTargetToJumpScaleLogConsole logging to %s:%d' % (str(self._serverip), self._serverport)
 
     __repr__ = __str__
 

@@ -94,7 +94,10 @@ class LogUtils(object):
 class LogItem(object):
     def __init__(self, message="", category="", tags="", level=5, jid=0, parentjid=0, masterjid=0, private=False, epoch=0):
         self.message = message.strip().replace("\r\n", "/n").replace("\n", "/n")
-        self.level = int(level)
+        try:
+            self.level = int(level)
+        except:
+            self.level=5
         self.category = category.replace(".", "_")
         if j.application.whoAmI:
             self.gid = j.application.whoAmI.gid
@@ -228,8 +231,8 @@ class LogHandler(object):
             inifile.setParam("main", "lastlogcleanup", 0)
         self._lastcleanuptime = int(inifile.getValue("main", "lastlogcleanup"))
         self.nolog = False
-        from logtargets.LogTargetToPylabsLogConsole import LogTargetToPylabsLogConsole
-        self.logTargetAdd(LogTargetToPylabsLogConsole())
+        from logtargets.LogTargetToJumpScaleLogConsole import LogTargetToJumpScaleLogConsole
+        self.logTargetAdd(LogTargetToJumpScaleLogConsole())
 
     def checktargets(self):
         """

@@ -278,8 +278,8 @@ class PMExtensions:
         """
         @param rootpaths, locations for extensions
         """
-        #if isinstance(hook_base_object, PMExtensionsGroup)==False or not isinstance(hook_base_object, Pylabs):
-            #raise RuntimeError("Cannot init pmextensions, because hook_base_object given is not of type PMExtensionsGroup or Pylabs(q)")
+        #if isinstance(hook_base_object, PMExtensionsGroup)==False or not isinstance(hook_base_object, JumpScale):
+            #raise RuntimeError("Cannot init pmextensions, because hook_base_object given is not of type PMExtensionsGroup or JumpScale(q)")
         self.hook_base_object = hook_base_object
         self.hook_base_name = hook_base_name
 

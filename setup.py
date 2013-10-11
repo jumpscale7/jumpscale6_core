@@ -20,7 +20,7 @@ version = get_version('lib/JumpScale')
 
 
 def clean():
-    import os
+    print "CLEAN"
     for r,d,f in os.walk("/usr"):
         for path in f:
 	    match=False

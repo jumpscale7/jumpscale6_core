@@ -15,7 +15,7 @@ class MessageType(BaseEnumeration):
     - pymodel update message 
     - rpc message 
     more info see: 
-    - http://www.jumpscale.org/display/PM/Pylabs+Messages
+    - http://www.jumpscale.org/display/PM/JumpScale+Messages
     - http://www.jumpscale.org/display/PM/MessageTypes
     """
 

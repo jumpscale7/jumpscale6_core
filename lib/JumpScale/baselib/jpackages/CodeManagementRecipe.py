@@ -146,7 +146,7 @@ class _RecipeItem:
             raise RuntimeError("Platform is not supported.")
 
         
-    def linkToSystem(self):
+    def linkToSystem(self,force=False):
         '''
         link parts of the coderepo to the destination and put this  entry in the protected dirs section so data cannot be overwritten by jpackages
         '''
@@ -157,7 +157,7 @@ class _RecipeItem:
             if j.system.fs.isLink(destination):
                 j.system.fs.remove(destination)   
             else:
-                if j.system.fs.exists(destination):
+                if j.system.fs.exists(destination) and force==False:
                     if j.application.shellconfig.interactive:                            
                         if not j.gui.dialog.askYesNo("\nDo you want to overwrite %s" % destination, True):
                             j.gui.dialog.message("Not overwriting %s, it will not be linked" % destination)
@@ -209,9 +209,9 @@ class CodeManagementRecipe:
         for item in self.items:
             item.exportToSystem()
             
-    def link(self):
+    def link(self,force=False):
         for item in self.items:
-            item.linkToSystem()    
+            item.linkToSystem(force=force)    
             
     def importFromSystem(self,jpackages):
         """

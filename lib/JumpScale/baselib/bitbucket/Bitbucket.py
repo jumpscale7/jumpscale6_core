@@ -48,7 +48,7 @@ class BitbucketPermission(BaseEnumeration):
 
 class Bitbucket:
     """
-    Bitbucket client enables administrators and developers leveraging Bitbucket services through PyLabs
+    Bitbucket client enables administrators and developers leveraging Bitbucket services through JumpScale
 
     @property accounts = account on bitbucket e.g. despieg, value is array of mercurial repo's
     """
@@ -65,6 +65,12 @@ class Bitbucket:
         j.system.fs.createDir(self.codedir)
         self.config=BitbucketConfigManagement()
         self.connections={}
+        j.logger.consolelogCategories.append("bitbucket")
+
+    def log(self,msg,category="",level=5):
+        category="bitbucket.%s"%category
+        category=category.rstrip(".")
+        j.logger.log(msg,category=category,level=level)
 
 
     def _init(self,force=False):
@@ -528,7 +534,9 @@ class BitbucketConnection(object):
         #if self.bitbucketclients.has_key(repoName):
             #return self.bitbucketclients[repoName]
         #@todo P2 cache the connections but also use branchnames
+        
         self.bitbucket_client._init()
+
         if repoName=="":
             repoName=self.findRepoFromBitbucket(repoName)       
         if repoName=="":
@@ -544,8 +552,10 @@ class BitbucketConnection(object):
         if j.system.fs.exists(hgrcpath):
             editor=j.codetools.getTextFileEditor(hgrcpath)
             editor.replace1Line("default=%s" % url,["default *=.*"])
-                        
+        
+        j.clients.bitbucket.log("try to init mercurial client:%s on path:%s"%(repoName,self.getRepoPathLocal(repoName)),category="getclient")
         cl = j.clients.mercurial.getClient("%s/%s/%s/" % (j.dirs.codeDir,self.accountName,repoName), url, branchname=branch)
+        j.clients.bitbucket.log("mercurial client inited for repo:%s"%repoName,category="getclient")
         self.bitbucketclients[repoName]=cl
         return cl
 

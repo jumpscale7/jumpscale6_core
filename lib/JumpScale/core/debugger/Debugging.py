@@ -1,7 +1,7 @@
 from JumpScale import j
 
 class Debugging:
-    """Pylabs debugging tools"""
+    """JumpScale debugging tools"""
 
     def printTraceBack(self, message='No error message supplied'):
         j.logger.exception(message, 1)

@@ -254,7 +254,7 @@ class LogTargetFS(object):
 #    """
 # (MANDATORY) CONFIGTYPE and DESCRIPTION
 #    CONFIGTYPE = "logtargetfs"
-#    DESCRIPTION = "Pylabs Filesystem Logtarget"
+#    DESCRIPTION = "JumpScale Filesystem Logtarget"
 #    KEYS ={"logrotate_enable":"",
 #           "logrotate_number_of_lines":"",
 #           "logrotate_time":"",

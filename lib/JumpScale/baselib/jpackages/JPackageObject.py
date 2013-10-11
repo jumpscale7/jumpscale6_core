@@ -704,11 +704,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         action="install"
 
-        if self.debug:
-            self.log('install for debug (link)')
-            return self.codeLink(dependencies=False, update=True, force=True)
-
         if j.packages._actionCheck(self,action):
+            #check if that action has already been executed if yes return true
             return True
 
         if download:
@@ -725,6 +722,10 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
             self.configure()
+
+        if self.debug:
+            self.log('install for debug (link)')
+            self.codeLink(dependencies=False, update=True, force=True)
 
 
     def uninstall(self, unInstallDependingFirst=False):
@@ -1242,6 +1243,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         for platform in j.system.platformtype.getMyRelevantPlatforms():
             
             checksum = self.getBundleKey(platform)
+
+            # print "C: %s %s" %(platform,checksum)
             
             if checksum == None:
                 #no checksum found in config file, probably since it uses different platform

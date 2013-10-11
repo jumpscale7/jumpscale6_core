@@ -9,6 +9,6 @@ do=j.system.installtools
 j.develtools.installer.preparePlatform()
 if j.system.platformtype.isLinux():
     j.develtools.installer.deployExamplesLibsGridPortal()
-    j.develtools.installer.deployDFS_IO()
+    # j.develtools.installer.deployDFS_IO()
 
 j.application.stop()

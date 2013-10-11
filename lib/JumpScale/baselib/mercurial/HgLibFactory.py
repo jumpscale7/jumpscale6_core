@@ -1,6 +1,11 @@
 from HgLibClient import HgLibClient
+from JumpScale import j
+
 
 class HgLibFactory:
+    def __init__(self):
+        j.logger.consolelogCategories.append("bitbucket")
+
     def getClient(self, hgbasedir, remoteUrl="", branchname="", cleandir=False):
         """
         return a mercurial tool which you can help to manipulate a hg repository
@@ -11,3 +16,8 @@ class HgLibFactory:
         if not isinstance(cleandir, bool):
             raise ValueError("cleandir needs to be boolean")
         return HgLibClient(hgbasedir, remoteUrl, branchname=branchname, cleandir=cleandir)
+
+    def log(self,msg,category="",level=5):
+        category="mercurial.%s"%category
+        category=category.rstrip(".")
+        j.logger.log(msg,category=category,level=level)
