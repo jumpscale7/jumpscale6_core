@@ -166,7 +166,6 @@ class RequestContext(object):
 class GeventWebserver:
 
     def __init__(self, port, secret, wwwroot="", filesroot="", cfgdir=""):
-
         self.port = int(port)
         self.secret = secret
         self.app_actor_dict = {}
@@ -198,9 +197,8 @@ class GeventWebserver:
         self.schedule1min = {}
         self.schedule15min = {}
         self.schedule60min = {}
-        
-        self._init()
 
+        self._init()
 
     def _init(self):
 

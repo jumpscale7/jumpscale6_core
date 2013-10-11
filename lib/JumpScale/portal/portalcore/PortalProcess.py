@@ -206,8 +206,6 @@ class PortalProcess():
         else:
             self.webserver = None
 
-
-
         self._greenLetsPath = j.system.fs.joinPaths(j.dirs.varDir, "portal_greenlets", self.wsport)
         j.system.fs.createDir(self._greenLetsPath)
         sys.path.append(self._greenLetsPath)
