@@ -1208,6 +1208,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if update:
             self.codeUpdate(dependencies, force=force)
+        else:
+            self.actions.code_getRecipe()
+
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:

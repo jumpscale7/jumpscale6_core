@@ -308,6 +308,10 @@ class SystemFS:
 
         if newdir == '' or newdir == None:
             raise TypeError('The newdir-parameter of system.fs.createDir() is None or an empty string.')
+
+        if self.isLink(newdir):
+            self.unlink(newdir)
+
         if self.isDir(newdir):
             self.log('Directory trying to create: [%s] already exists' % toStr(newdir), 8)
         else:
@@ -320,6 +324,7 @@ class SystemFS:
                 except OSError, e:
                     if e.errno != os.errno.EEXIST: #File exists
                         raise
+                    
             self.log('Created the directory [%s]' % toStr(newdir), 8)
 
     def copyDirTree(self, src, dst, keepsymlinks = False, eraseDestination = False, skipProtectedDirs=False, overwriteFiles=True):
