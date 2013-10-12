@@ -6,7 +6,11 @@ def main(j,args,params,tags,tasklet):
 
     recipe=qp.actions.code_getRecipe()
 
-    recipe.package(qp, args.platform)
+    # platform=args.platform
+    # platform="generic"
+    platform=j.console.askChoice(j.system.platformtype.getPlatforms(),descr="choose which platform you want to package for")
+
+    recipe.package(qp, platform)
     #this is the standard used package function, can overrule to do custom work
     
     return params

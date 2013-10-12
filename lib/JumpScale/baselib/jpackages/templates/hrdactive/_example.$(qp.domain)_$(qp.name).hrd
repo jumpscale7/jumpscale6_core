@@ -1,5 +1,5 @@
 ##when @ASK then there needs to be a value, will ask for it when needed, if not possible to ask will fail
-#qp.installed.path=@ASK
+
 ##next line will ask when install  (types are: int,str,bool,float)
 #this.isatest.var=@ASK name:var descr:this_is_a_test_\n_give_name type:str default:something
 

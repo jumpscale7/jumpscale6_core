@@ -713,6 +713,14 @@ class SystemFS:
         elif j.system.platformtype.isWindows():
             raise RuntimeError('Cannot readLink on windows')
 
+    def removeLinks(self,path):
+        """
+        find all links & remove
+        """
+        items=self._listAllInDir(path=path, recursive=True, followSymlinks=False,listSymlinks=True)
+        items=[item for item in items[0] if j.system.fs.isLink(item)]
+        for item in items:
+            j.system.fs.unlink(item)        
 
     def _listInDir(self, path,followSymlinks=True):
         """returns array with dirs & files in directory
@@ -782,14 +790,16 @@ class SystemFS:
         return filesreturn
 
 
-    def _listAllInDir(self, path, recursive, filter, minmtime, maxmtime,depth,type="df", case_sensitivity='os',exclude=[],followSymlinks=True,listSymlinks=True):
-
-        dircontent = self._listInDir(path)
-        filesreturn = []
+    def _listAllInDir(self, path, recursive, filter=None, minmtime=None, maxmtime=None,depth=None,type="df", case_sensitivity='os',exclude=[],followSymlinks=True,listSymlinks=True):
+        """
         # There are 3 possible options for case-sensitivity for file names
         # 1. `os`: the same behavior as the OS
         # 2. `sensitive`: case-sensitive comparison
         # 3. `insensitive`: case-insensitive comparison
+        """
+        dircontent = self._listInDir(path)
+        filesreturn = []
+
         if case_sensitivity.lower() == 'sensitive':
             matcher = fnmatch.fnmatchcase
         elif case_sensitivity.lower() == 'insensitive':
@@ -937,7 +947,7 @@ class SystemFS:
     def exists(self, path,followlinks=True):
         """Check if the specified path exists
         @param path: string
-        @rtype: boolean (True if path refers to an existing path, False for broken symcolic links)
+        @rtype: boolean (True if path refers to an existing path)
         """
         if path is None:
             raise TypeError('Path is not passed in system.fs.exists')

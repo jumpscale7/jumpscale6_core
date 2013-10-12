@@ -3,12 +3,13 @@ from JumpScale import j
 
 class _RecipeItem:
     '''Ingredient of a CodeRecipe'''
-    def __init__(self, coderepoConnection, source, destination,platform=None, systemdest=None):
+    def __init__(self, coderepoConnection, source, destination,platform=None, systemdest=None,type=None):
         self.coderepoConnection = coderepoConnection
         self.source = source
         self.destination=destination
         self.platform=platform
         self.systemdest = systemdest or j.system.fs.joinPaths(j.dirs.baseDir, destination)
+        self.type=type
         
         # determine supported platforms 
         hostPlatform = j.system.platformtype.myplatform
@@ -20,43 +21,35 @@ class _RecipeItem:
         else:
             self._isPlatformSupported = self.platform in supportedPlatforms
 
-    def exportToSystem(self):
+    def _log(self,message,category="",level=5):
+        message="recipeitem:%s-%s  %s" % (self.source,self.destination,message)
+        category="recipeitem.%s"%category
+        category=category.rstrip(".")
+        j.packages.log(message,category,level)     
+
+    def exportToSystem(self,force=True):
         '''
         Copy files from coderepo to destination, without metadata of coderepo
         This is only done when the recipe item is relevant for our platform
         '''
+        self._log("export to system.","export")
 
         if self._isPlatformSupported:
-            codeOnSystem=j.system.fs.pathNormalize(self.destination, self.systemdest) 
-            locationInRepo=j.system.fs.joinPaths(self.coderepoConnection.basedir,self.source)
-                        
-            if j.system.fs.exists(codeOnSystem):
-                if j.application.shellconfig.interactive:
-                    # In interactive mode, ask whether destination can be removed
-
-                    if j.system.fs.isDir(codeOnSystem):
-                        answer = j.gui.dialog.askYesNo(
-                            'Export location %s exists. Do you want the folder to be removed before exporting?' % codeOnSystem)
-                        if answer:
-                            j.system.fs.removeDirTree(codeOnSystem)
-
-                    elif j.system.fs.isFile(codeOnSystem):
-                        answer = j.gui.dialog.askYesNo(
-                            'Export location %s exists. Do you want the file to be removed before exporting?' % codeOnSystem)
-                        if answer:
-                            j.system.fs.remove(codeOnSystem)
-
-                else:
-                    raise RuntimeError('Export location %s exists' % codeOnSystem)
-
-            if j.system.fs.isFile(locationInRepo):
-                destDir = j.system.fs.getDirName(codeOnSystem)
-                j.system.fs.createDir(destDir)
-                if not j.system.fs.exists(codeOnSystem):
-                    j.system.fs.copyFile(locationInRepo, codeOnSystem)
-            elif j.system.fs.isDir(locationInRepo):
-                if not j.system.fs.exists(codeOnSystem):
-                    j.system.fs.copyDirTree(locationInRepo, codeOnSystem)            
+            source = j.system.fs.joinPaths(self.coderepoConnection.basedir, self.source)
+            destination = self.systemdest
+            print "export:%s to %s"%(source,destination)
+            if j.system.fs.isLink(destination):
+                j.system.fs.remove(destination)   
+            else:
+                if j.system.fs.exists(destination) and force==False:
+                    if j.application.shellconfig.interactive:                            
+                        if not j.gui.dialog.askYesNo("\nDo you want to overwrite %s" % destination, True):
+                            j.gui.dialog.message("Not overwriting %s, item will not be exported" % destination)
+                            return        
+    
+                self._removeDest(destination)  
+            j.system.fs.copyDirTree(source, destination)
+                             
         
     #def importt(self):
         ##@todo check is not a link (IMPORTANT)
@@ -90,6 +83,8 @@ class _RecipeItem:
         example /opt/qbase5/var/jpackages/files/jpackages/trac/0.12/generic/
         this is done per platform
         """
+
+        self._log("code to files for %s for platform:%s"%(jpackage,platform),category="codetofiles")
         
         if not self.coderepoConnection:
             raise RuntimeError("Cannot  copy code to files because no repo is defined")                    
@@ -101,7 +96,7 @@ class _RecipeItem:
         else:
             destSuffix = self.destination
         
-        platformFilesPath = jpackage.getPathFilesPlatform(self.platform)
+        platformFilesPath = jpackage.getPathFilesPlatform(platform)
         dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
         
         if j.system.fs.isFile(src):
@@ -119,6 +114,7 @@ class _RecipeItem:
         this packages from existing system and will only work for specified platform
         import from system to files
         """
+        self._log("import from system.","import")
         if self._isPlatformSupported:
             if self.coderepoConnection:
                 raise RuntimeError("Cannot import from system because, qp code recipe is used for a coderepo, coderepo should be None")            
@@ -150,6 +146,10 @@ class _RecipeItem:
         '''
         link parts of the coderepo to the destination and put this  entry in the protected dirs section so data cannot be overwritten by jpackages
         '''
+        self._log("link to system",category="link")
+        
+        if self.type=="config":
+            return self.exportToSystem()
         if self._isPlatformSupported:
             source = j.system.fs.joinPaths(self.coderepoConnection.basedir, self.source)
             destination = self.systemdest
@@ -199,10 +199,10 @@ class CodeManagementRecipe:
         self.items = []
 
 
-    def add(self, coderepoConnection, sourcePath, destinationPath,platform=None, systemdest=None):
+    def add(self, coderepoConnection, sourcePath, destinationPath,platform=None, systemdest=None,type=None):
         '''Add a source (ingredient) to the recipe
         '''
-        self.items.append(_RecipeItem(coderepoConnection, sourcePath, destinationPath,platform, systemdest))
+        self.items.append(_RecipeItem(coderepoConnection, sourcePath, destinationPath,platform, systemdest,type=type))
 
     def export(self):
         '''Export all items from VCS to the system sandbox or other location specifed'''

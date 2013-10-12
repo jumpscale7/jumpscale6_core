@@ -367,7 +367,8 @@ class Console:
 
     def askChoice(self,choicearray, descr=None, sort=True):
         """
-        @param choicearray is list or dict, when dict key needs to be the object to return, the value of the dics is the string representation
+        @param choicearray is list or dict, when dict key needs to be the object to return, 
+               the value of the dics is what needs to be returned, the key is the str representation
         """
         maxchoice=20
 
@@ -380,7 +381,7 @@ class Console:
             if isstr==False:
                 choicearrayNew={}
                 for item in choicearray:
-                    choicearrayNew[item]=str(item)
+                    choicearrayNew[str(item)]=item
                 choicearray=choicearrayNew
         
         if len(choicearray)>maxchoice and j.system.platformtype.isLinux():
@@ -473,8 +474,15 @@ class Console:
 
         self.echo(descr)
         if isinstance(choicearray, dict):
-            valuearray = choicearray.keys()
-            choicearray = choicearray.values()
+            keys=choicearray.keys()
+            keys.sort()
+            valuearray=[]
+            choicearray2=[]
+            for key in keys:
+                valuearray.append(choicearray[key])
+                choicearray2.append(key)
+            choicearray=choicearray2
+            
         elif isinstance(choicearray[0], (tuple, list)):
             valuearray = [ x[0] for x in choicearray ]
             choicearray = [ x[1] for x in choicearray ]

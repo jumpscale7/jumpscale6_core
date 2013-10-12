@@ -725,7 +725,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if self.debug:
             self.log('install for debug (link)')
-            self.codeLink(dependencies=False, update=True, force=True)
+            self.codeLink(dependencies=False, update=False, force=True)
 
 
     def uninstall(self, unInstallDependingFirst=False):
@@ -813,6 +813,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             return #do not copy files when debug, need to be improved with next remark
 
         #remove links first, otherwise code gets overwritten
+        j.system.fs.removeLinks(destination)
 
         def createAncestors(file):
             # Create the ancestors

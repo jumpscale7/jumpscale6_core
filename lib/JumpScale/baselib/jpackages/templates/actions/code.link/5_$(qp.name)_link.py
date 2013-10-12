@@ -6,7 +6,7 @@ def main(j,args,params,tags,tasklet):
 
     recipe=qp.actions.code_getRecipe()
 
-    recipe.link()
+    recipe.link(force=args.force)
     #this is the standard used function, can overrule to do custom work
     
     return params
