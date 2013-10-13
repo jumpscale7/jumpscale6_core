@@ -14,11 +14,13 @@ def main(j, args, params, tags, tasklet):
     page.addHeading(package.name, 2)
     info = ('domain', 'version', 'buildNr', 'description', 'taskletsChecksum')
     for i in info:
-        page.addHTML('%s: %s' % (i, getattr(package, i)))
+        page.addHTML('%s: %s' % (i.capitalize(), getattr(package, i)))
 
     page.addHTML('Dependencies:')
-    for dep in package.getDependencies():
-        page.addLink(dep.name, '/system/JPackageShow?domain=%s&name=%s&version=%s' % (dep.domain, dep.name, dep.version))
+    dependencies = sorted(package.getDependencies(), key=lambda x: x.name)
+    for dep in dependencies:
+        href = '/system/JPackageShow?domain=%s&name=%s&version=%s' % (dep.domain, dep.name, dep.version)
+        page.addBullet("<a href='%s'>%s</a>" % (href, dep.name))
 
     page.addHTML('Supported platforms: %s' % ', '.join([x for x in package.supportedPlatforms]))
 

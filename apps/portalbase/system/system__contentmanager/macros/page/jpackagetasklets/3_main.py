@@ -11,7 +11,7 @@ def main(j, args, params, tags, tasklet):
     else:
         package = j.packages.findNewest(domain, name)
     
-    page.addHeading("JPackage '%s' Tasklets" % package.name, 2)
+    page.addHeading('Metadata', 2)
     page.addExplorer(package.getPathMetadata())
 
     params.result = page

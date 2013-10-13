@@ -4,8 +4,10 @@ def main(j, args, params, tags, tasklet):
 
     def _getDomainPackages(d):
         page.addHeading(d.domainname, 2)
-        for p in d.getJPackages():
-            page.addLink(p.name, '/system/JPackageShow?domain=%s&name=%s&version=%s' % (d.domainname, p.name, p.version))
+        packages = sorted(d.getJPackages(), key=lambda x: x.name)
+        for p in packages:
+            href = '/system/JPackageShow?domain=%s&name=%s&version=%s' % (d.domainname, p.name, p.version)
+            page.addBullet("<a href='%s'>%s</a>" % (href, p.name))
 
     domain = args.tags.tagGet('domain', '')
     if not domain:
