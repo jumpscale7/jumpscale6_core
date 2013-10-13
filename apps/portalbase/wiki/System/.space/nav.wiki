@@ -6,6 +6,7 @@ Groups:/system/groups
 Actors:/system/actors
 ActorsDocs:/system/actorsdocs
 Spaces:/system/spaces
+JPackages:/system/jpackages
 Stats:/system/stats
 Logs:/system/logs
 AccessOverview:/system/overviewaccess
