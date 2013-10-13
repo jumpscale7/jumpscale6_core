@@ -51,32 +51,17 @@ class _RecipeItem:
             j.system.fs.copyDirTree(source, destination)
                              
         
-    #def importt(self):
-        ##@todo check is not a link (IMPORTANT)
-        #codeOnSystem=j.system.fs.pathNormalize(self.destination,j.dirs.baseDir) 
-        #locationInRepo=j.system.fs.joinPaths(self.coderepoConnection.basedir,self.source)
-        #if j.system.fs.exists(locationInRepo):
-            #if j.application.shellconfig.interactive:                            
-                #if j.gui.dialog.askYesNo("\ndo you want to overwrite %s" % locationInRepo,True)==False:
-                    #return
-        #j.system.fs.removeDirTree(locationInRepo)
-        #j.system.fs.copyDirTree(codeOnSystem, locationInRepo)        
-        
-    #def pullupdate(self,force=False, commitMessage=""):
-        #self.coderepoConnection.pullupdate(force, commitMessage)
-        
-    #def pullmerge(self, commitMessage=""):
-        #self.coderepoConnection.pullmerge( commitMessage)
-    
-    #def pushcommit(self,commitMessage="",ignorechanges=False,addRemoveUntrackedFiles=False,trymerge=True):
-        #self.coderepoConnection.pushcommit(commitMessage,ignorechanges,addRemoveUntrackedFiles,trymerge)
+    def _copy(self, src, dest):
+        if j.system.fs.isFile(src):
+            destDir = j.system.fs.getDirName(dest)
+            j.system.fs.createDir(destDir)
+            j.system.fs.copyFile(src, dest)
+        elif j.system.fs.isDir(src):            
+            j.system.fs.copyDirTree(src, dest)
+        else:
+            raise RuntimeError("Cannot handle destination %s %s\n Did you codecheckout your code already? Code was not found to package." % (src, dest))
 
-    #def push(self):
-        #self.coderepoConnection.push()        
 
-    #def commit(self, message):
-        #self.coderepoConnection.message()     
-        
     def codeToFiles(self, jpackage, platform):
         """
         copy code from repo's (using the recipes) to the file location
@@ -98,15 +83,8 @@ class _RecipeItem:
         
         platformFilesPath = jpackage.getPathFilesPlatform(platform)
         dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
-        
-        if j.system.fs.isFile(src):
-            destDir = j.system.fs.getDirName(dest)
-            j.system.fs.createDir(destDir)
-            j.system.fs.copyFile(src, dest)
-        elif j.system.fs.isDir(src):            
-            j.system.fs.copyDirTree(src, dest)
-        else:
-            raise RuntimeError("Cannot handle destination %s %s\n Did you codecheckout your code already? Code was not found to package." % (src, dest))
+
+        self._copy(src, dest)
 
         
     def importFromSystem(self, jpackages):
@@ -130,17 +108,9 @@ class _RecipeItem:
             dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
             
             self._removeDest(dest)
-            if j.system.fs.isFile(src):
-                destDir = j.system.fs.getDirName(dest)
-                j.system.fs.createDir(destDir)
-                j.system.fs.copyFile(src, dest)
-            elif j.system.fs.isDir(src):
-                j.system.fs.copyDirTree(src, dest)
-            else:
-                raise RuntimeError("Cannot handle destination %s %s\n Did you codecheckout your code already? Code was not found to package." % (src, dest))
+            self._copy(src, dest)
         else:
             raise RuntimeError("Platform is not supported.")
-
         
     def linkToSystem(self,force=False):
         '''
@@ -220,13 +190,13 @@ class CodeManagementRecipe:
         for item in self.items:
             item.importFromSystem(jpackages)                
 
-    def package(self, jpackages, platform):
+    def package(self, jpackage, platform):
         # clean up files
-        filesPath = jpackages.getPathFiles()        
+        filesPath = jpackage.getPathFiles()        
         j.system.fs.removeDirTree(filesPath)
         
         for item in self.items:
-            item.codeToFiles(jpackages, platform)           
+            item.codeToFiles(jpackage, platform)
         
     def push(self):
         for item in self.items:
