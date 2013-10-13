@@ -3,10 +3,10 @@ from JumpScale import j
 
 class CircusManager:
     def __init__(self):
-        self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup', 'server.ini')
+        self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
 
     def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True):
-        servercfg = j.tools.inifile.open(self._configpath)
+        servercfg = self._getIniFile(name)
         sectionname = "watcher:%s" % name
         if servercfg.checkSection(sectionname):
             servercfg.removeSection(sectionname)
@@ -18,12 +18,25 @@ class CircusManager:
         servercfg.addParam(sectionname, 'priority', priority)
         servercfg.addParam(sectionname, 'autostart', autostart)
 
+    def _getIniFile(self, name):
+        inipath = j.system.fs.joinPaths(self._configpath, name + ".ini")
+        return j.tools.inifile.open(inipath)
+
     def removeProcess(self,name):
-        servercfg = j.tools.inifile.open(self._configpath)
-        sectionname = "[watcher:%s]" % name
-        if servercfg.checkSection(sectionname):
-            servercfg.removeSection(sectionname)
+        servercfg = self._getIniFile(name)
+        if j.system.fs.exists(servercfg):
+            j.system.fs.remove(servercfg)
         j.tools.circus.client.rm(name=name)
+
+    def status(self, process=None):
+        """
+        get status of process if not process is given return status of circus
+        """
+        status = j.tools.circus.client.status()
+        if process:
+            return status['statuses'].get(process, 'notfound')
+        else:
+            return status['status']
 
     def apply(self):
         """
@@ -33,9 +46,7 @@ class CircusManager:
         j.tools.circus.client.reloadconfig()
 
     def listProcesses(self):
-        servercfg = j.tools.inifile.open(self._configpath)
-        items = [section.split(':', 1)[1] for section in servercfg.getSections() if section.startswith('watcher')]
-        return items
+        return j.tools.circus.client.listWatchers()
 
     def startProcess(self, name):
         j.system.installtools.execute("circusctl start %s" % name)
