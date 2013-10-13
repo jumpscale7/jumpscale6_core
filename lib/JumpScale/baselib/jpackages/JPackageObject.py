@@ -799,7 +799,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 j.system.fs.removeDirTree(tmpdir)
             else:
                 self._copyFilesTo(path, destination)
-                
 
 
     def _copyFilesTo(self, sourceDir, destination):
@@ -811,9 +810,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         if self.debug:
             return #do not copy files when debug, need to be improved with next remark
-
-        #remove links first, otherwise code gets overwritten
-        j.system.fs.removeLinks(destination)
 
         def createAncestors(file):
             # Create the ancestors
@@ -1217,7 +1213,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.codeLink(dependencies=False, update=update,force=force)            
 
         self.actions.code_link(force=force)
-        # self.actions.code_push(force=force)  #@todo was this before, was pushing content
 
 
     def download(self, dependencies=None, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
