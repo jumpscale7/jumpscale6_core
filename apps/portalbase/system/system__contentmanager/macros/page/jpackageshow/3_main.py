@@ -12,6 +12,7 @@ def main(j, args, params, tags, tasklet):
         package = j.packages.findNewest(domain, name)
     
     page.addHeading(package.name, 2)
+    page.addHTML('Installed: %s' % (package.isInstalled()))
     info = ('domain', 'version', 'buildNr', 'description', 'taskletsChecksum')
     for i in info:
         page.addHTML('%s: %s' % (i.capitalize(), getattr(package, i)))

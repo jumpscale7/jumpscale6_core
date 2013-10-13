@@ -7,7 +7,8 @@ def main(j, args, params, tags, tasklet):
         packages = sorted(d.getJPackages(), key=lambda x: x.name)
         for p in packages:
             href = '/system/JPackageShow?domain=%s&name=%s&version=%s' % (d.domainname, p.name, p.version)
-            page.addBullet("<a href='%s'>%s</a>" % (href, p.name))
+            icon = 'icon-ok' if p.isInstalled() else 'icon-remove'
+            page.addBullet("<a href='%s'><i class='%s'></i> %s</a>" % (href, icon, p.name), attributes="class='nav nav-list'")
 
     domain = args.tags.tagGet('domain', '')
     if not domain:
