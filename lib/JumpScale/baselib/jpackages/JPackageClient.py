@@ -2,6 +2,14 @@ import math
 from JumpScale import j
 from JPackageObject import JPackageObject
 from Domain import Domain
+try:
+    import JumpScale.baselib.circus
+except:
+    pass
+try:
+    import JumpScale.baselib.expect
+except:
+    pass
 from CodeManagementRecipe import CodeManagementRecipe
 from JumpScale.baselib import platforms
 

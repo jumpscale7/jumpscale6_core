@@ -1,37 +1,3 @@
-# <License type="Sun Cloud BSD" version="2.2">
-#
-# Copyright (c) 2005-2009, Sun Microsystems, Inc.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or
-# without modification, are permitted provided that the following
-# conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in
-#    the documentation and/or other materials provided with the
-#    distribution.
-#
-# 3. Neither the name Sun Microsystems, Inc. nor the names of other
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY SUN MICROSYSTEMS, INC. "AS IS" AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SUN MICROSYSTEMS, INC. OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# </License>
 
 import os
 import subprocess
@@ -175,7 +141,7 @@ class Popen(subprocess.Popen):
                     fcntl.fcntl(conn, fcntl.F_SETFL, flags)
 
 
-class QExpectTool:
+class ExpectTool:
     @staticmethod
     def new(cmd=None):
 	'''Create a new Expect session
@@ -184,12 +150,12 @@ class QExpectTool:
 	@type cmd: string
 	
 	@returns: Expect session
-	@rtype jumpscale.cmdline.QExpect.QExpect
+	@rtype jumpscale.cmdline.Expect.Expect
 	'''	
-	return QExpect(cmd=cmd or '')
+	return Expect(cmd=cmd or '')
 	
 
-class QExpect:
+class Expect:
     _p=None      #popen process
     error=False
     _lastsend=""
@@ -202,7 +168,10 @@ class QExpect:
     _waitTokens=[] #list of tokens where we wait on when executing
 
     def __init__(self,cmd=""):
+        j.logger.addConsoleLogCategory("expect")
         PIPE = subprocess.PIPE
+        self._prompt=""
+
         if not cmd:
             if cmd=="" and sys.platform.startswith('win'):
                 cmd = 'cmd'
@@ -212,8 +181,18 @@ class QExpect:
             self._p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             
         elif cmd and cmd != 'ssh' and not sys.platform.startswith('win'):
-            self._expect = pexpect.spawn(cmd)
-            
+            self.pexpect = pexpect.spawn(cmd)
+            if cmd=="sh":
+                self.expect("#")
+                self.setPrompt()
+                self.prompt()
+
+        self.enableCleanString()
+
+    def log(self,message,category="",level=5):
+        category="expect.%s"%category
+        category=category.strip(".")
+        j.logger.log(message,category=category,level=level)            
 
     def enableCleanString(self):
         """
@@ -297,25 +276,33 @@ class QExpect:
 
     def receive(self):
         """
-        Receive standard out & standard error and returns them as out,error
-        This function also remembers these data for later usage in the 
-        classes C{_out} & C{_error}.
+        Receive standard out, stderror if available
+        return stdout,stderror
         """
+
         if j.system.platformtype.isWindows():
             out=self.receiveOut()
             err=self.receiveError()
-            return out,err
-        
-        elif j.system.platformtype.isLinux() and not self._expect:
-            return self._pxssh.before
+            return out,err        
 
-        elif j.system.platformtype.isUnix() and self._expect:
+        elif j.system.platformtype.isUnix() and self.pexpect:
             
-            if self._expect.match:
-                return '%s%s'%(self._expect.after, self._expect.buffer)
-            
+            if self.pexpect.match:
+                # out='%s%s'%(self.pexpect.after, self.pexpect.buffer)
+                out=self.pexpect.before
+                out=self._cleanStr(out)
+                return out,""
             else:
-                return self._expect.before
+                before=self.pexpect.before                
+                before=self._cleanStr(before)
+                return str(before),""
+
+        elif j.system.platformtype.isLinux() and not self.pexpect:
+
+            return str(self._pxssh).before,""
+
+
+        o.errorconditionhandler.raiseBug(message="should never come here, unsupported platform",category="expect.receive")
         
     def receivePrint(self):
         """
@@ -324,9 +311,13 @@ class QExpect:
         classes C{_out} & C{_error}.
         """
         out,err=self.receive()
-        self.pprint()
+        print out
+        if err<>"":
+            print "ERROR:"
+            print err
 
-    def receiveOut(self):
+
+    def _receiveOut(self): #windows only
         """
         Receive standard out and return. This information is stored for later usage 
         in the class C{_out}.
@@ -338,7 +329,9 @@ class QExpect:
         j.logger.log("stdout:%s" % out, 9)
         return out
 
-    def receiveError(self):
+        #@todo P2 not right,can never work, needs to check if expect or popen or, ...
+
+    def _receiveError(self): #windows only
         """
         Receive standard error and return. This information is stored for later usage 
         in the class C{_error}.
@@ -348,6 +341,8 @@ class QExpect:
             err=self._cleanStr(err)
         self._add2lastError(err)
         return err
+
+        #@todo P2 not right,can never work, needs to check if expect or popen or, ... 
 
     def pprint(self):
         """
@@ -360,40 +355,40 @@ class QExpect:
         else:
             j.console.echo(out)
 
-    def _receive(self,checkError=False):
-        #stdin=self._stdin
-        #stdout=self._stdout
-        t=.1
-        e=1
-        tr=5
-        p=self._p
-        if tr < 1:
-            tr = 1
-        x = time.time()+t
-        y = []
-        r = ''
-        pr = p.recv
-        #check error
-        if checkError:
-            pr = p.recv_err
-        while time.time() < x or r:
-            r = pr()
-            if r is None:
-                if e:
-                    raise Exception("Exception occured")
-                else:
-                    break
-            elif r:
-                y.append(r)
-            else:
-                time.sleep(max((x-time.time())/tr, 0))
-        returnval=''.join(y)
-        returnval=returnval.replace("\\n","\n")
-        returnval=returnval.replace("\\r","\r")
-        returnval=self._cleanStr(returnval)
-        if returnval<>"" and checkError:
-            self.error=True
-        return returnval
+    # def _receive(self,checkError=False):
+    #     #stdin=self._stdin
+    #     #stdout=self._stdout
+    #     t=.1
+    #     e=1
+    #     tr=5
+    #     p=self._p
+    #     if tr < 1:
+    #         tr = 1
+    #     x = time.time()+t
+    #     y = []
+    #     r = ''
+    #     pr = p.recv
+    #     #check error
+    #     if checkError:
+    #         pr = p.recv_err
+    #     while time.time() < x or r:
+    #         r = pr()
+    #         if r is None:
+    #             if e:
+    #                 raise Exception("Exception occured")
+    #             else:
+    #                 break
+    #         elif r:
+    #             y.append(r)
+    #         else:
+    #             time.sleep(max((x-time.time())/tr, 0))
+    #     returnval=''.join(y)
+    #     returnval=returnval.replace("\\n","\n")
+    #     returnval=returnval.replace("\\r","\r")
+    #     returnval=self._cleanStr(returnval)
+    #     if returnval<>"" and checkError:
+    #         self.error=True
+    #     return returnval
 
     def _cleanStr(self,s):
         """
@@ -451,21 +446,24 @@ class QExpect:
                 found=True
         return found
 
-    def send(self, data):
+    def send(self, data="",newline=True):
         """
         Send a command to shell.
         After sending a command, one of the receive functions must be called to 
         check for the result on C{stdout} or C{stderr}.
         """
-        j.logger.log("Executor send: %s" % data, 9)
+        self.log("send: %s" % data,category="send")
         self._lastsend=data
         self._lastOutput=""
         self._lastError=""
         
         if j.system.platformtype.isUnix():
-            if self._expect:
-                if self._expect.sendline(data):
-                    return
+            if self.pexpect:
+                if newline:
+                    data=data.rstrip("\n")
+                    return self.pexpect.sendline(data)
+                else:
+                    return self.pexpect.send(data)
             
         if j.system.platformtype.isWindows():
             data=data+"\r\n"
@@ -481,16 +479,73 @@ class QExpect:
             elif j.system.platformtype.isLinux():
                 self._pxssh.sendline(data)
 
-    def prompt(self, timeout=20):
+    # def read(self):
+    #     o=self.pexpect.read_nonblocking()
+    #     out=""
+    #     while o<>"":
+    #         print o,
+    #         o=self.pexpect.read_nonblocking()
+    #         out+=o
+    #     return out
+
+
+    def setPrompt(self,prompt="#.#.#"):
+        self.send("PS1='%s'"%prompt)
+        self._prompt=prompt
+        self.prompt()
+
+    def executeSequence(self,sequence,cmd):
+        """
+        sequence=[[regex1,tosend,stepname,timeout],...]
+        timeout is optional, also stepname is optional
+        at end it waits for prompt
+        """
+        self.send(cmd)
+        out=""
+        m=len(sequence)
+        nr=0
+        for item in sequence:
+            nr+=1
+            if len(item)==2:
+                regex=item[0]
+                tosend=item[1]
+                stepname=nr
+                timeout=10
+            elif len(item)==3:
+                regex=item[0]
+                tosend=item[1]
+                stepname=item[2]
+                timeout=10
+            elif len(item)==4:
+                regex=item[0]
+                tosend=item[1]
+                stepname=item[2]
+                timeout=item[3]
+            else:                
+                raise RuntimeError("Error in syntax sequence,\n%s"%sequence)
+            
+            result=self.expect([regex,self._prompt],timeout=timeout)
+            if result==0 or nr==m:
+                o=self.receive()[0]
+                o+="\nSTEP: %s: %s\n%s\n"%(nr,stepname,o)
+                out+="%s\n"%o
+                print o
+                self.send(tosend,False)
+
+            elif result==False:
+                raise RuntimeError("Timeout in execution of sequence.\nError:\n%s"%o)
+            else:
+                raise RuntimeError("Error in execution of sequence.\nError:\n%s"%o)
+        return self.prompt()
+
+
+    def prompt(self, timeout=5):
         """Expect the prompt. 
         
         Return C{True} if the prompt was matched.
         Returns C{False} if there was a time out.
         """
-        if j.system.platformtype.isLinux():
-            self._pxssh.prompt()
-        else:
-            raise RuntimeError('pexpect/pxssh module not supported on this platform')
+        self.expect(self._prompt,timeout=timeout)
 
     def _removeFirstLine(self,text):
         lines=text.splitlines()
@@ -502,13 +557,22 @@ class QExpect:
                 cleanstr=cleanstr+line+"\n"
         return cleanstr
 
+    def execShellCmd(self,cmd,timeout=30):
+        """
+        execute a command and wait on the prompt
+        """
+        self.send(cmd)
+        self.prompt(timeout=timeout)
+        out,err= self.receive()        
+        return out
+
     def do(self,data,timeout=30):
         """
         This function is a combination of the functions C{send}, C{receive} and C{print}.
 
         The first line is also removed (this is the echo from what has been sent).
         Use this if you quickly want to execute something from the command line.
-        """
+        """        
         self.send(data)
         self.wait(timeout)
         self._lastOutput=self._removeFirstLine(self._lastOutput)
@@ -557,9 +621,9 @@ class QExpect:
 
         @param timeoutval: time in seconds we maximum will wait
         """
-        j.logger.log("Waiting for receive with timeout:%s " % (timeoutval), 7)
+        self.log("wait: %s sec" % timeoutval,category="wait")
         timeout=False
-        starttime=j.system.getTimeEpoch()
+        starttime=j.base.time.getTimeEpoch()
         r="" #full return
         returnpart="" #one time return after receive
         done=False #status param
@@ -567,11 +631,12 @@ class QExpect:
         self._timeout=False
         while(timeout==False and done==False):
             returnpart,err=self.receive()
+            print returnpart
             tokenfound=self._checkForTokens(returnpart)
             #j.logger.log("tokenfound:%s"%tokenfound)
             returnpart=self._ignoreLinesBasedOnFilter(returnpart)
             r= r+returnpart
-            curtime=j.system.getTimeEpoch()
+            curtime=j.base.time.getTimeEpoch()
             j.logger.log("TimeoutCheck on waitreceive: %s %s %s" % (curtime,starttime,timeoutval),8)
             if(curtime-starttime>timeoutval):
                 j.logger.log("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend,timeoutval), 6)
@@ -585,30 +650,29 @@ class QExpect:
             self._timeout=True
         return tokenfound,r,timeout
     
-    def expect(self, outputToExpect):
+    def expect(self, outputToExpect,timeout=2):
         """
         Pexpect expect method wrapper
         usage: Excuting a command that expects user input, this method can be used to 
         expect the question asked then send the answer
         Example:
-        qexpect = j.tools.expect.new('passwd')
-        if qexpect.expect('Enter new'):
-            qexpect.send('newPasswd')
+        Expect = j.tools.expect.new('passwd')
+        if Expect.expect('Enter new'):
+            Expect.send('newPasswd')
             
-            if qexpect.expect('Retype new'):
-                qexpect.send('anotherPasswd')
+            if Expect.expect('Retype new'):
+                Expect.send('anotherPasswd')
                 
-                if qexpect.expect('passwords do not match'):
-                    j.console.echo(qexpect.receive())
+                if Expect.expect('passwords do not match'):
+                    j.console.echo(Expect.receive())
         else:
-            j.console.echo(qexpect.receive())
+            j.console.echo(Expect.receive())
         
         """
         j.logger.log('Expect %s '%outputToExpect, 7)
         
         try:
-            self._expect.expect(outputToExpect, 2)
-            return True
+            return self.pexpect.expect(outputToExpect, timeout=timeout)
         except:
             j.logger.log('Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive()), 7)
         return False

@@ -16,6 +16,9 @@ def main(j,args,params,tags,tasklet):
     #shortcut to some usefull install tools
     #do=j.system.installtools
 
+    #make sure app starts by using circus, make sure circus jpackage is installed (normally it is (-:))
+    #j.tools.circus.manager.addProcess(name, cmd, args='', warmup_delay=0, numprocesses=1, priority=0, autostart=True)
+
     #configuration is not done in this step !!!!!
     
     params.result=True #return True if result ok

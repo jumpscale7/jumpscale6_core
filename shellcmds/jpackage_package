@@ -5,6 +5,6 @@ from JumpScale.baselib import cmdutils
 
 package, args = cmdutils.getJPackage()
 
-package.build()
+package.package()
 
 j.application.stop()

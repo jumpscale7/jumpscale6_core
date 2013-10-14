@@ -50,19 +50,19 @@ class CircusCL():
         result=self.client.call({'command': 'list', 'properties': {}})
         return result["watchers"]
 
-    def add2(self,name="",cmd=""):
-        cmd=self._cmds["add"]
-        msg=cmd.make_message(name=name,cmd=cmd)
-        return self.client.call(msg)
+    # def add2(self,name="",cmd=""):
+    #     cmd=self._cmds["add"]
+    #     msg=cmd.make_message(name=name,cmd=cmd)
+    #     return self.client.call(msg)
 
-    def rm2(self,name=""):
-        cmd=self._cmds["rm"]
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
+    # def rm2(self,name=""):
+    #     cmd=self._cmds["rm"]
+    #     from IPython import embed
+    #     print "DEBUG NOW ooo"
+    #     embed()
         
-        msg=cmd.make_message(name)
-        return self.client.call(msg)
+    #     msg=cmd.make_message(name)
+    #     return self.client.call(msg)
 
 
 

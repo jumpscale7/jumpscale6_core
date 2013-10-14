@@ -83,8 +83,21 @@ class _RecipeItem:
         
         platformFilesPath = jpackage.getPathFilesPlatform(platform)
         dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
+<<<<<<< local
+        
+        if j.system.fs.isFile(src):
+            destDir = j.system.fs.getDirName(dest)
+            j.system.fs.createDir(destDir)
+            j.system.fs.copyFile(src, dest)
+        elif j.system.fs.isDir(src):   
+            self._removeDest(dest)
+            j.system.fs.copyDirTree(src, dest)
+        else:
+            raise RuntimeError("Cannot handle destination %s %s\n Did you codecheckout your code already? Code was not found to package." % (src, dest))
+=======
 
         self._copy(src, dest)
+>>>>>>> other
 
         
     def importFromSystem(self, jpackages):
@@ -192,9 +205,16 @@ class CodeManagementRecipe:
 
     def package(self, jpackage, platform):
         # clean up files
+<<<<<<< local
+        # filesPath = jpackages.getPathFiles()
+        # j.system.fs.removeDirTree(filesPath)
+        ##DO TNO REMOVE, TOO DANGEROUS HAPPENS NOW PER ITEM
+
+=======
         filesPath = jpackage.getPathFiles()        
         j.system.fs.removeDirTree(filesPath)
         
+>>>>>>> other
         for item in self.items:
             item.codeToFiles(jpackage, platform)
         
@@ -223,18 +243,18 @@ class CodeManagementRecipe:
             #item.pullupdate(force=force)    
             repoconnection.commit()                
 
-    def identify(self):
-        repoconnections = self._getRepoConnections()
-        identities = {}
-        for repoconnection in repoconnections:
-            identity = repoconnection.identify()
-            key = repoconnection.repokey
-            if not key:
-                raise ValueError("Repository %s has no valid repokey" %
-                        repoconnection)
-            identities[key] = identity
+    # def identify(self):
+    #     repoconnections = self._getRepoConnections()
+    #     identities = {}
+    #     for repoconnection in repoconnections:
+    #         identity = repoconnection.identify()
+    #         key = repoconnection.repokey
+    #         if not key:
+    #             raise ValueError("Repository %s has no valid repokey" %
+    #                     repoconnection)
+    #         identities[key] = identity
 
-        return identities
+    #     return identities
 
     def _getRepoConnections(self):
         repoconnections = []

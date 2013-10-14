@@ -1,12 +1,16 @@
 from JumpScale import j
 
-
 class CircusManager:
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
 
+<<<<<<< local
+    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True,shell=True,workingdir=None):
+        servercfg = j.tools.inifile.open(self._configpath)
+=======
     def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True):
         servercfg = self._getIniFile(name)
+>>>>>>> other
         sectionname = "watcher:%s" % name
         if servercfg.checkSection(sectionname):
             servercfg.removeSection(sectionname)
@@ -17,6 +21,29 @@ class CircusManager:
         servercfg.addParam(sectionname, 'numprocesses', numprocesses)
         servercfg.addParam(sectionname, 'priority', priority)
         servercfg.addParam(sectionname, 'autostart', autostart)
+        if workingdir<>None:
+            servercfg.addParam(sectionname, 'workingdir', workingdir)
+        servercfg.addParam(sectionname, 'shell', autostart)
+        #check name is no service yet and if then remove
+
+        for item in j.system.fs.listFilesInDir("/etc/init.d"):
+            itembase=j.system.fs.getBaseName(item)
+            if itembase.lower().find(name)<>-1:
+                #found process in init.d
+                j.system.process.execute("/etc/init.d/%s stop"%itembase)
+                j.system.fs.remove(item)
+
+        for item in j.system.fs.listFilesInDir("/etc/init"):
+            itembase=j.system.fs.getBaseName(item)
+            if itembase.lower().find(name)<>-1:
+                #found process in init
+                j.system.process.execute("stop %s"%itembase)
+                j.system.fs.remove(item)
+
+        servercfg.write()
+
+        j.tools.circus.manager.apply()
+
 
     def _getIniFile(self, name):
         inipath = j.system.fs.joinPaths(self._configpath, name + ".ini")

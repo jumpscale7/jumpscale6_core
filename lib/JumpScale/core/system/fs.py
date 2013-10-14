@@ -722,6 +722,8 @@ class SystemFS:
         """
         find all links & remove
         """
+        if not self.exists(path):
+            return
         items=self._listAllInDir(path=path, recursive=True, followSymlinks=False,listSymlinks=True)
         items=[item for item in items[0] if j.system.fs.isLink(item)]
         for item in items:

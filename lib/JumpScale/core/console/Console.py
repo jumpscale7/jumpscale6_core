@@ -370,7 +370,7 @@ class Console:
         @param choicearray is list or dict, when dict key needs to be the object to return, 
                the value of the dics is what needs to be returned, the key is the str representation
         """
-        maxchoice=20
+        maxchoice=25
 
         #check items are strings or not, if not need to create dictionary
         if isinstance(choicearray, (tuple, list)):
@@ -401,7 +401,12 @@ class Console:
                 sys.stdout.write(char)
                 chars="%s%s" %(chars,char)
                 result=[]
-                for rawChoice in choicearray:
+                if isinstance(choicearray, dict):
+                    choicearray3=choicearray.values()
+                else:
+                    choicearray3=choicearray
+
+                for rawChoice in choicearray3:
                     # We need to keep the 'raw' choices, so the end result is
                     # not a str()'d, lower()'d version of the original
                     # choicearray element.
@@ -409,6 +414,7 @@ class Console:
                     choice=choice.lower()
                     if wildcard and choice.find(chars.lower())<>-1:
                         result.append(rawChoice)
+                        
                     #print "%s %s %s %s" % (wildcard,choice,chars,choice.find(chars))
                     if not wildcard and choice.find(chars)==0:
                         result.append(rawChoice)

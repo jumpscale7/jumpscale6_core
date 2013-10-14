@@ -16,10 +16,12 @@ from JPackageStateObject import JPackageStateObject
 #from JumpScale.core.sync.Sync import SyncLocal
 from ActionManager import ActionManager
 
+
+
 JPACKAGE_CFG = "jpackages.cfg"
 BUILD_NR = "build_nr"
 QUALITY_LEVEL = "quality_level"
-IDENTITIES = "identities"
+# IDENTITIES = "identities"
 
 class DependencyDef():
     def __init__(self,name,domain,minversion=None,maxversion=None):
@@ -938,7 +940,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return platform
 
     
-    def build(self, platform=None, dependencies=False):
+    def package(self, platform=None, dependencies=False,update=False):
         """
         Package code from the sandbox system into files section of jpackages
         Only 1 platform may be supported in this jpackages at the same time!!!
@@ -953,7 +955,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @type dependencies: boolean
         """
         
-
         platform=self._getPackageInteractive(platform)
         
         self.loadActions()
@@ -975,19 +976,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for dep in deps:
                 dep.package(platform=platform)
         recipe = self.actions.code_getRecipe()
-        self.actions.code_update()
-        identities = recipe.identify()
-        self.setIdentities(platform, identities)
+        if update:
+            self.actions.code_update()
         self.actions.code_package(platform=platform)
-
-    def setIdentities(self, platform, identifies):
-
-        platform=self._getPackageInteractive(platform)
-
-        hrd = self.hrd.getHrd().getHRD('qp.name')
-        for repokey, revision in identifies.iteritems():
-            hrdkey = "qp.repositories.%s.%s" % (platform, repokey)
-            hrd.set(hrdkey, revision)
 
     def compile(self,dependencies=False):
         
@@ -1000,14 +991,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for dep in deps:
                 dep.compile()
         self.actions.compile()
-
-    @property
-    def identities(self):
-        """
-        Identities of the commits this Q-Package was packaged from, by platform
-        """
-        cfg = self._getConfig()
-        return cfg.getIdentities()
 
     def getBlobInfo(self):
         """
@@ -1036,72 +1019,72 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def _getBlobInfoPath(self, platform):
         return j.system.fs.joinPaths(self.metadataPath, "blob_%s.info"%platform)
 
-    def getBuilds(self, qualitylevels):
-        """
-        Get build information for the argument quality levels.
+    # def getBuilds(self, qualitylevels):
+    #     """
+    #     Get build information for the argument quality levels.
 
-        The build information will be like this:
-        [
-            {
-                "build_nr": 42,
-                "identities": <identity information>,
-                "quality_level": 'unstable',
-                "node": '2ebf20ee306ddd97783c6476b9a903ae2171785b'
-            },
-            {
-                "build_nr": 43,
-                "identities": <identity information>,
-                "quality_level": 'unstable',
-                "node": '5572ac5c5db49534def6a579c0e94db175e478de'
-            },
-            {
-                "build_nr": 42,
-                "identities": <identity information>,
-                "quality_level": 'testing',
-                "node": '5242fe4e393acf9a613d12994a99962e4882a109'
-            },
-            ...
-        ]
+    #     The build information will be like this:
+    #     [
+    #         {
+    #             "build_nr": 42,
+    #             "identities": <identity information>,
+    #             "quality_level": 'unstable',
+    #             "node": '2ebf20ee306ddd97783c6476b9a903ae2171785b'
+    #         },
+    #         {
+    #             "build_nr": 43,
+    #             "identities": <identity information>,
+    #             "quality_level": 'unstable',
+    #             "node": '5572ac5c5db49534def6a579c0e94db175e478de'
+    #         },
+    #         {
+    #             "build_nr": 42,
+    #             "identities": <identity information>,
+    #             "quality_level": 'testing',
+    #             "node": '5242fe4e393acf9a613d12994a99962e4882a109'
+    #         },
+    #         ...
+    #     ]
 
-        The node value is the ID of the Mercurial commit in which the metadata
-        was updated.
+    #     The node value is the ID of the Mercurial commit in which the metadata
+    #     was updated.
 
-        @param qualitylevels: quality levels for the domain, in order
-        @type qualitylevels:
-        @return: build information for the argument quality levels
-        @rtype: list(dict(string, object))
-        """
-        if not qualitylevels:
-            raise ValueError("At least one quality level is required")
+    #     @param qualitylevels: quality levels for the domain, in order
+    #     @type qualitylevels:
+    #     @return: build information for the argument quality levels
+    #     @rtype: list(dict(string, object))
+    #     """
+    #     if not qualitylevels:
+    #         raise ValueError("At least one quality level is required")
 
-        def getInfo(ql, cfg):
-            identities = cfg.getIdentities()
-            buildNr = cfg.getBuildNumber()
-            return {
-                BUILD_NR: buildNr,
-                QUALITY_LEVEL: ql,
-                IDENTITIES: identities,
-                }
+    #     def getInfo(ql, cfg):
+    #         identities = cfg.getIdentities()
+    #         buildNr = cfg.getBuildNumber()
+    #         return {
+    #             BUILD_NR: buildNr,
+    #             QUALITY_LEVEL: ql,
+    #             IDENTITIES: identities,
+    #             }
 
-        result = []
-        unstableQualitylevel = qualitylevels[0]
-        for nodeId, cfg in self._iterCfgHistory(unstableQualitylevel):
-            info = getInfo(unstableQualitylevel, cfg)
-            result.append(info)
+    #     result = []
+    #     unstableQualitylevel = qualitylevels[0]
+    #     for nodeId, cfg in self._iterCfgHistory(unstableQualitylevel):
+    #         info = getInfo(unstableQualitylevel, cfg)
+    #         result.append(info)
 
-        for ql in qualitylevels[1:]:
-            path = self._getConfigPath(ql)
-            if not j.system.fs.isFile(path):
-                continue
+    #     for ql in qualitylevels[1:]:
+    #         path = self._getConfigPath(ql)
+    #         if not j.system.fs.isFile(path):
+    #             continue
 
-            with open(path) as f:
-                cfg = j.packages.pm_getJPackageConfig(f)
-                buildNr = cfg.getBuildNumber()
+    #         with open(path) as f:
+    #             cfg = j.packages.pm_getJPackageConfig(f)
+    #             buildNr = cfg.getBuildNumber()
 
-            for r in result:
-                if r[BUILD_NR] <= buildNr:
-                    r[QUALITY_LEVEL] = ql
-        return result
+    #         for r in result:
+    #             if r[BUILD_NR] <= buildNr:
+    #                 r[QUALITY_LEVEL] = ql
+    #     return result
 
     def _iterCfgHistory(self, qualitylevel):
         """
@@ -1332,7 +1315,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.restore(url=url)
         self.actions.restore()        
 
-    def buildupload(self, platform=None):
+    def packageupload(self, platform=None):
         self.package(platform)
         self.upload()
 
