@@ -2,7 +2,7 @@ from JumpScale import j
 
 class CircusManager:
     def __init__(self):
-        self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
+        self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup','server.ini')
 
     def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True,shell=True,workingdir=None):
         servercfg = j.tools.inifile.open(self._configpath)
