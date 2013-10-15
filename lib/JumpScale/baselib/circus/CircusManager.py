@@ -44,8 +44,11 @@ class CircusManager:
         inipath = j.system.fs.joinPaths(self._configpath, name + ".ini")
         return j.tools.inifile.open(inipath)
 
+    def _getIniFilePath(self, name):
+        return j.system.fs.joinPaths(self._configpath, name + ".ini")
+
     def removeProcess(self,name):
-        servercfg = self._getIniFile(name)
+        servercfg = self._getIniFilePath(name)
         if j.system.fs.exists(servercfg):
             j.system.fs.remove(servercfg)
         j.tools.circus.client.rm(name=name)
