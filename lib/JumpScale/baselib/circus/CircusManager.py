@@ -18,7 +18,7 @@ class CircusManager:
         servercfg.addParam(sectionname, 'autostart', autostart)
         if workingdir<>None:
             servercfg.addParam(sectionname, 'workingdir', workingdir)
-        servercfg.addParam(sectionname, 'shell', autostart)
+        servercfg.addParam(sectionname, 'shell', shell)
         #check name is no service yet and if then remove
 
         for item in j.system.fs.listFilesInDir("/etc/init.d"):
