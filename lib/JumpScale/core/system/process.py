@@ -1548,6 +1548,20 @@ class SystemProcess:
              raise NotImplementedError("getProcessPid is only implemented for unix")
 
 
+    def getMyProcessObject(self):
+        import psutil
+        myprocess=[p for p in psutil.get_process_list() if p.pid==j.application.whoAmI.pid][0]
+        return myprocess
+
+    def getSimularProcesses(self):
+        import psutil
+        myprocess=self.getMyProcessObject()
+        result=[]
+        for item in psutil.get_process_list():
+            if item.cmdline==myprocess.cmdline:
+                result.append(item)
+        return result
+
 
     def checkProcess(self, process, min=1):
         """
