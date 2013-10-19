@@ -29,7 +29,8 @@ class TipcServer(object):
 
     def handleData(self, data, addr):
         category, cmd, cmddata, informat, returnformat, sessionid = j.servers.base._unserializeBinSend(data)
-        resultcode, returnformat, result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, cmddata, sessionid, category=category)
+        resultcode, returnformat, result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, cmddata, \
+            sessionid, category=category)
         return j.servers.base._serializeBinReturn(resultcode, returnformat, result)
 
     def addCMDsInterface(self, MyCommands, category=""):

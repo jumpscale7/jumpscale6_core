@@ -7,23 +7,6 @@ import JumpScale.grid.serverbase
 import time
 
 
-class JobHandler():
-
-    def __init__(self):
-        self.work = {}
-
-    def wait(self, org, user):
-        print "wait:%s" % user
-        key = "%s_%s" % (org, user)
-        while not self.work.has_key(key):
-            time.sleep(1)
-        return self.work[key]
-
-    def scheduleJob(self, org, user, job):
-        key = "%s_%s" % (org, user)
-        self.work[key] = 1
-
-
 class MainHandlerRPC(tornado.web.RequestHandler):
 
     """
@@ -35,6 +18,7 @@ class MainHandlerRPC(tornado.web.RequestHandler):
 
     def post(self):
         data = self.request.body
+        
         category, cmd, data2, informat, returnformat, sessionid = j.servers.base._unserializeBinSend(data)
         resultcode, returnformat, result = self.server.daemon.processRPCUnSerialized(cmd, informat, returnformat, data2, sessionid, category=category)
         data3 = j.servers.base._serializeBinReturn(resultcode, returnformat, result)
@@ -48,28 +32,28 @@ class MainHandlerRPC(tornado.web.RequestHandler):
         self.flush()
 
 
-class MainHandlerGetWork(tornado.web.RequestHandler):
+# class MainHandlerGetWork(tornado.web.RequestHandler):
 
-    """
-    processes the incoming web requests
-    """
+#     """
+#     processes the incoming web requests
+#     """
 
-    def initialize(self, server):
-        self.server = server
+#     def initialize(self, server):
+#         self.server = server
 
-    @tornado.web.asynchronous
-    def get(self):
-        print 'Request via GET', self
-        from IPython import embed
-        print "DEBUG NOW get"
-        embed()
+#     @tornado.web.asynchronous
+#     def get(self):
+#         print 'Request via GET', self
+#         from IPython import embed
+#         print "DEBUG NOW get"
+#         embed()
 
-    def wait(self, nrsec):
-        self.server.ioloop.add_timeout(self.server.ioloop.time() + 10, self.done)
+#     def wait(self, nrsec):
+#         self.server.ioloop.add_timeout(self.server.ioloop.time() + 10, self.done)
 
-    def done(self):
-        self.write("YES WORKED")
-        self.finish()
+#     def done(self):
+#         self.write("YES WORKED")
+#         self.finish()
 
 
 class TornadoServer():
@@ -82,15 +66,15 @@ class TornadoServer():
         self.addr = addr
         self.key = "1234"
         self.nr = 0
-        self.jobhandler = JobHandler()
+        # self.jobhandler = JobHandler()
         self.daemon = j.servers.base.getDaemon(sslorg=sslorg, ssluser=ssluser, sslkeyvaluestor=sslkeyvaluestor)
-        self.application = tornado.web.Application([(r"/getwork/", MainHandlerGetWork, dict(server=self)), ])
         self.application = tornado.web.Application([(r"/rpc/", MainHandlerRPC, dict(server=self)), ])
         self.type = "tornado"
 
     def start(self):
         print "started on %s" % self.port
         self.application.listen(self.port)
+
         self.ioloop = tornado.ioloop.IOLoop.instance()
         self.ioloop.start()
 

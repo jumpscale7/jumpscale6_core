@@ -1,17 +1,12 @@
 from JumpScale import j
-
+import time
 import JumpScale.grid.serverbase
 from JumpScale.grid.serverbase.DaemonClient import Transport
 
 
-try:
-    import requests
-except:
-    j.system.installtools.execute("pip install requests")
-    import requests
+import requests
 
-
-class TornadoTransport(Transport):
+class GeventWSTransport(Transport):
     def __init__(self, addr="localhost", port=9999):
 
         self.timeout = 60
@@ -30,7 +25,7 @@ class TornadoTransport(Transport):
         """
         pass
 
-    def sendMsg(self, category, cmd, data, sendformat="", returnformat=""):
+    def sendMsg(self, category, cmd, data, sendformat="", returnformat="",retry=False):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -45,7 +40,18 @@ class TornadoTransport(Transport):
 
         headers = {'content-type': 'application/raw'}
         data2 = j.servers.base._serializeBinSend(category, cmd, data, sendformat, returnformat, self._id)
-        r = requests.post(self.url, data=data2, headers=headers)
+        if retry:
+            r=None
+            while r==None:
+                try:
+                    r = requests.post(self.url, data=data2, headers=headers,timeout=600)
+                except Exception,e:
+                    print "retry connection to %s"%self.url
+                    time.sleep(5)
+        else:
+            r = requests.post(self.url, data=data2, headers=headers,timeout=600)
+
+                    
         if r.ok==False:
             eco=j.errorconditionhandler.getErrorConditionObject(msg='error 500 from webserver', msgpub='', \
                 category='tornado.transport')

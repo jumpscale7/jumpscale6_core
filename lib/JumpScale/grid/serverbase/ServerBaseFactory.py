@@ -116,14 +116,14 @@ class ServerBaseFactory():
     def _serializeBinReturn(self, resultcode, returnformat, result):
         lendata = len(result)
         if resultcode == None:
-            resultcode = 0
-        resultcode = int(resultcode)
+            resultcode = '\x00'
         lenreturnformat = len(returnformat)
-        return struct.pack("<III", resultcode, lenreturnformat, lendata) + returnformat + result
+        return resultcode+struct.pack("<II", lenreturnformat, lendata) + returnformat + result
 
     def _unserializeBinReturn(self, data):
         """
         return resultcode,returnformat,result
         """
-        resultcode, lenreturnformat, lendata = struct.unpack("<III", str(data[0:12]))
-        return (resultcode, data[12:lenreturnformat + 12], data[lenreturnformat + 12:])
+        resultcode=data[0]
+        lenreturnformat, lendata = struct.unpack("<II", str(data[1:9]))
+        return (resultcode, data[9:lenreturnformat + 9], data[lenreturnformat + 9:])

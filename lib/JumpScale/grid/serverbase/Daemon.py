@@ -203,7 +203,17 @@ class Daemon(object):
         returnformat = parts[1]  # return format as comes back from processRPC
         if returnformat <> "":  # is
             returnser = j.db.serializers.get(returnformat, key=encrkey)
-            data = self.encrypt(returnser.dumps(parts[2]), session)
+            error=0
+            try:
+                data = self.encrypt(returnser.dumps(parts[2]), session)
+            except:
+                error=1
+            if error==1:
+                try:
+                    data = self.encrypt(returnser.dumps(parts[2].__dict__), session)
+                except:
+                    eco = j.errorconditionhandler.getErrorConditionObject(msg="could not serialize result from %s"%cmd)
+                    return 98, "", self.errorconditionserializer.dumps(eco.__dict__)
         else:
             data = parts[2]
 

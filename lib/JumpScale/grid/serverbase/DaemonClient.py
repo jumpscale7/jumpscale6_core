@@ -17,6 +17,7 @@ class Session():
         self.netinfo = netinfo
         self.start = int(time.time())
         self.roles = roles
+        self.agentid=j.application.getWhoAmiStr()
 
     def __repr__(self):
         return str(self.__dict__)
@@ -31,13 +32,17 @@ class SimpleClient(object):
 
 class DaemonClient(object):
 
-    def __init__(self, org="myorg", user="root", passwd="passwd", ssl=False, encrkey="", reset=False, roles=[], transport=None, defaultSerialization="m"):
+    def __init__(self, org="myorg", user="root", passwd="passwd", ssl=False, encrkey="", reset=False, roles=[], transport=None, defaultSerialization="m",id=None):
         """
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
-        end = 4294967295  # 4bytes max nr
-        self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
-            1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
+        if id<>None:
+            self._id=id
+        else:
+            end = 4294967295  # 4bytes max nr
+            self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
+                1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
+
         self.retry = True
         self.blocksize = 8 * 1024 * 1024
         self.key = encrkey
@@ -45,6 +50,10 @@ class DaemonClient(object):
         self.org = org
         self.passwd = passwd
         self.ssl = ssl
+        if roles==[]:
+            roles=j.application.config.get("node.roles").split(",")
+            roles=[item.strip().lower() for item in roles]
+
         self.roles = roles
         self.keystor = None
         self.key = None
@@ -207,7 +216,10 @@ class Klass(object):
                     params_spec[-cnt] += "=%r" % default
             params = ', '.join(params_spec)
             strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
-            exec(strmethod)
+            try:
+                exec(strmethod)
+            except Exception,e:
+                raise RuntimeError("could not exec the client method, error:%s, code was:%s"%(e,strmethod))
             klass = Klass(self, category)
             setattr(client, key, klass.method)
         return client

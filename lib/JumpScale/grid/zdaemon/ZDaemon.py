@@ -7,6 +7,7 @@ import zmq.green as zmq
 import time
 from gevent import queue as queue
 import JumpScale.baselib.serializers
+import JumpScale.grid.serverbase
 import inspect
 
 GeventLoop = j.core.gevent.getGeventLoopClass()
@@ -23,6 +24,7 @@ class ZDaemon(GeventLoop):
         if sslkeyvaluestor == None:
             from JumpScale.baselib.ssl.SSL import SSL
             sslkeyvaluestor = SSL().getSSLHandler(sslkeyvaluestor)
+
 
         self.daemon = j.servers.base.getDaemon(name="unknown", sslorg="", ssluser="", sslkeyvaluestor=None)
 

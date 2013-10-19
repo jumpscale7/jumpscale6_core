@@ -18,13 +18,14 @@ class ZDaemonFactory():
             def __init__(self,daemon):
                 self.daemon=daemon
 
-                    def pingcmd(self,session=None):
-                        return "pong"
+            def pingcmd(self,session=None):
+                return "pong"
 
-                    def echo(self,msg="",session=None):
-                        return msg
+            def echo(self,msg="",session=None):
+                return msg
 
-        #remark always need to add **args in method because user & returnformat are passed as params which can be used in method
+        #remark always need to add **args in method because user & returnformat are passed as params which can 
+          be used in method
 
         zd.setCMDsInterface(MyCommands)  #pass as class not as object !!!
         zd.start()
