@@ -53,7 +53,9 @@ setup(name='JumpScale-core',
       packages = find_packages('lib'),
       package_dir = {'':'lib'},
       include_package_data = True,
-      package_data = {'JumpScale':list_files(basedir='lib/JumpScale',subdir='core/_defaultcontent')},
+      package_data = {'JumpScale':list_files(basedir='lib/JumpScale',subdir='core/_defaultcontent') +
+                                  list_files(basedir='lib/JumpScale',subdir='baselib/jpackages/templates')
+                     },
       scripts=scripts,
 
       download_url='http://pypi.python.org/pypi/JumpScale/',
