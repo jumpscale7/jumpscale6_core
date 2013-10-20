@@ -1,3 +1,5 @@
 {{jpackageshow}}
 
 {{jpackagetasklets}}
+
+{{jpackageblob}}
