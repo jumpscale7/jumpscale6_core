@@ -26,14 +26,6 @@ class JSDevelTools:
 
         j.system.platform.screen.createSession(name,screens)
 
-        #start elastic search if needed
-        print '* Starting elasticsearch'
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
-            import JumpScale.baselib.circus
-            j.tools.circus.manager.startProcess('elasticsearch')
-            #wait for 30 sec on start
-            j.system.net.waitConnectionTest("127.0.0.1",9200,30)
-
         #start osis
         print '* Starting osis'
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","osis")
