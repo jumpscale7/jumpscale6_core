@@ -147,6 +147,12 @@ cmd.meld=
             p.setDebugMode()
         p.reinstall()
 
+    def deployJumpScaleBroker(self, debug=True):
+        p=j.packages.get("jumpscale","broker","1.0")
+        if debug:
+            p.setDebugMode()
+        p.reinstall()
+
     def linkJumpScaleBase(self,debug=True):
         """
         checkout the jumpscale portal repo & link to python 2.7 to make it available for the developer
@@ -184,4 +190,5 @@ cmd.meld=
         self.deployJumpScaleLibs()
         self.deployJumpScaleGridMaster()
         self.deployJumpScalePortal()
+        self.deployJumpScaleBroker()
 
