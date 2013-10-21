@@ -1,6 +1,7 @@
 from JumpScale import j
 
 import JumpScale.baselib.screen
+import JumpScale.baselib.circus
 
 class JSDevelTools:
 
@@ -29,8 +30,7 @@ class JSDevelTools:
         #start elastic search if needed
         print '* Starting elasticsearch'
         if not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
-            cmd="/etc/init.d/elasticsearch restart"
-            j.system.process.execute(cmd)
+            j.tools.circus.manager.startProcess('elasticsearch')
 
             #wait for 30 sec on start
             j.system.net.waitConnectionTest("127.0.0.1",9200,30)
