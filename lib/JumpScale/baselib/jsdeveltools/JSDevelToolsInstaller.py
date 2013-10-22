@@ -161,7 +161,7 @@ cmd.meld=
         p=j.packages.findNewest("jumpscale","core")
         if debug:
             p.setDebugMode()
-        p.codeLink(dependencies=False, update=True,force=True)
+        p.install(reinstall=True)
 
     def deployDFS_IO(self):
         """
