@@ -99,7 +99,7 @@ cmd.meld=
         print "install python package"
         p=j.packages.get("jumpscale","base","2.7")
         if reinstall:
-            p.reinstall()
+            p.install(reinstall=True)
         else:
             p.install()
 
@@ -110,7 +110,7 @@ cmd.meld=
         p=j.packages.get("jumpscale","jumpscale_examples","1.0")
         if debug:
             p.setDebugMode()
-        p.reinstall()
+        p.install(reinstall=True)
 
     def deployJumpScaleLibs(self,debug=True):
         """
@@ -119,7 +119,7 @@ cmd.meld=
         p=j.packages.get("jumpscale","libs","1.0")
         if debug:
             p.setDebugMode()
-        p.reinstall()
+        p.install(reinstall=True)
 
     def linkJumpScaleLibs(self):
         self.deployJumpScaleLibs(True)
@@ -131,11 +131,11 @@ cmd.meld=
         p=j.packages.get("jumpscale","osis","1.0")
         if debug:
             p.setDebugMode()
-        p.reinstall()
+        p.install(reinstall=True)
         p=j.packages.get("jumpscale","grid","1.0")
         if debug:
             p.setDebugMode()
-        p.reinstall()
+        p.install(reinstall=True)
 
     def deployJumpScalePortal(self,debug=True):
         """
@@ -145,13 +145,13 @@ cmd.meld=
         p=j.packages.get("jumpscale","portal","1.0")
         if debug:
             p.setDebugMode()
-        p.reinstall()
+        p.install(reinstall=True)
 
     def deployJumpScaleBroker(self, debug=True):
         p=j.packages.get("jumpscale","broker","1.0")
         if debug:
             p.setDebugMode()
-        p.reinstall()
+        p.install(reinstall=True)
 
     def linkJumpScaleBase(self,debug=True):
         """
