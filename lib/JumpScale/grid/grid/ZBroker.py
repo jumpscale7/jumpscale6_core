@@ -46,8 +46,8 @@ class ZBroker(ZDaemon):
 
         self.frontend = self.context.socket(zmq.ROUTER)  # ROUTER
         self.backend = self.context.socket(zmq.ROUTER)  # ROUTER
-        self.frontend.bind("tcp://*:5555")  # For clients
-        self.backend.bind("tcp://*:5556")  # For workers
+        self.frontend.bind("tcp://*:5651")  # For clients
+        self.backend.bind("tcp://*:5650")  # For workers
 
         self.poll_workers = zmq.Poller()
         self.poll_workers.register(self.backend, zmq.POLLIN)

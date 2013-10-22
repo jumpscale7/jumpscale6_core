@@ -10,7 +10,7 @@ class ZWorkerClient():
         # client to talk with broker over standard zdaemon communication channel
         self.brokerclient = j.core.grid.getZBrokerClient(addr=ipaddr, port=5554, org="myorg", user="root", passwd="1234", ssl=False, category="broker")
 
-        self.serverEndpoint = "tcp://%s:5555" % ipaddr
+        self.serverEndpoint = "tcp://%s:5651" % ipaddr
         self.requestTimeout = 100 * 1000  # 100 sec
 
         self.actions = {}

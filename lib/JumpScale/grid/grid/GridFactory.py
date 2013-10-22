@@ -224,7 +224,7 @@ class GridFactory():
         from ZLoggerClient import ZLoggerClient
         return ZLoggerClient(ipaddr=ipaddr, port=port)
 
-    def startZWorker(self, addr="localhost", port=5555, instance=0, roles=["*"]):
+    def startZWorker(self, addr="localhost", port=5651, instance=0, roles=["*"]):
         """
         #@todo doc
         """

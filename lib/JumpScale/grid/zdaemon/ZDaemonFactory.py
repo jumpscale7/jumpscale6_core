@@ -12,7 +12,7 @@ class ZDaemonFactory():
         is a generic usable zmq daemon which has a data & cmd channel (data channel not completely implemented for now)
 
 
-        zd=j.core.zdaemon.getZDaemon(port=5555,nrCmdGreenlets=50)
+        zd=j.core.zdaemon.getZDaemon(port=5651,nrCmdGreenlets=50)
 
         class MyCommands():
             def __init__(self,daemon):
@@ -37,11 +37,11 @@ class ZDaemonFactory():
         zd = ZDaemon(port=port, name=name, nrCmdGreenlets=nrCmdGreenlets, sslorg=sslorg, ssluser=ssluser, sslkeyvaluestor=sslkeyvaluestor)
         return zd
 
-    def getZDaemonClient(self, addr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, category="core" ):
+    def getZDaemonClient(self, addr="127.0.0.1", port=5651, org="myorg", user="root", passwd="1234", ssl=False, category="core" ):
         """
         example usage, see example for server at self.getZDaemon
 
-        client=j.core.zdaemon.getZDaemonClient(ipaddr="127.0.0.1",port=5555,login="root",passwd="1234",ssl=False)
+        client=j.core.zdaemon.getZDaemonClient(ipaddr="127.0.0.1",port=5651,login="root",passwd="1234",ssl=False)
 
                 print client.echo("Hello World.")
 
@@ -52,11 +52,11 @@ class ZDaemonFactory():
         cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
         return cl.getCmdClient(category)
 
-    def getZDaemonAgent(self, ipaddr="127.0.0.1", port=5555, org="myorg", user="root", passwd="1234", ssl=False, reset=False, roles=[]):
+    def getZDaemonAgent(self, ipaddr="127.0.0.1", port=5651, org="myorg", user="root", passwd="1234", ssl=False, reset=False, roles=[]):
         """
         example usage, see example for server at self.getZDaemon
 
-        agent=j.core.zdaemon.getZDaemonAgent(ipaddr="127.0.0.1",port=5555,login="root",passwd="1234",ssl=False,roles=["*"])
+        agent=j.core.zdaemon.getZDaemonAgent(ipaddr="127.0.0.1",port=5651,login="root",passwd="1234",ssl=False,roles=["*"])
         agent.start()
 
         @param roles describes which roles the agent can execute e.g. node.1,hypervisor.virtualbox.1,*
