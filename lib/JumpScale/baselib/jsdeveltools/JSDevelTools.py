@@ -34,6 +34,14 @@ class JSDevelTools:
         if not j.system.net.waitConnectionTest('localhost', 5544, 30):
             raise RuntimeError("Failed to start osis server")
 
+        #start logger
+        print '* Starting logger'
+        path=j.system.fs.joinPaths("/opt/jumpscale/apps","logger")
+        cmd="cd %s;python loggerStart.py"%path
+        j.system.platform.screen.executeInScreen(name,"logger",cmd,wait=1)
+        if not j.system.net.waitConnectionTest('localhost', 4444, 30):
+            raise RuntimeError("Failed to start logger server")
+
 
         #start broker
         print '* Starting broker'
@@ -43,14 +51,6 @@ class JSDevelTools:
         if not j.system.net.waitConnectionTest('localhost', 6555, 30):
             raise RuntimeError("Failed to start broker daemon")
 
-
-        #start logger
-        print '* Starting logger'
-        path=j.system.fs.joinPaths("/opt/jumpscale/apps","logger")
-        cmd="cd %s;python loggerStart.py"%path
-        j.system.platform.screen.executeInScreen(name,"logger",cmd,wait=1)
-        if not j.system.net.waitConnectionTest('localhost', 4444, 30):
-            raise RuntimeError("Failed to start logger server")
 
         print '* Starting workers'
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
