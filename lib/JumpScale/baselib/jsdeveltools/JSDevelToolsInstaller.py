@@ -185,7 +185,8 @@ cmd.meld=
         self.deployJumpScaleGrid()
         self.deployJumpScalePortal()
         """
-        self.linkJumpScaleBase()
+        #core needs to be installed first (seperate process), then install everything else
+        #self.linkJumpScaleBase()
         self.deployExampleCode()
         self.deployJumpScaleLibs()
         self.deployJumpScaleGridMaster()
