@@ -48,7 +48,7 @@ class JSDevelTools:
         pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
         cmd="cd %s;python zbrokerStart.py"%pathb
         j.system.platform.screen.executeInScreen(name,"broker",cmd,wait=1)
-        if not j.system.net.waitConnectionTest('localhost', 6555, 30):
+        if not j.system.net.waitConnectionTest('localhost', 5554, 30):
             raise RuntimeError("Failed to start broker daemon")
 
 
