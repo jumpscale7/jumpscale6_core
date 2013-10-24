@@ -13,7 +13,7 @@ j.core.grid.configureBroker(domain='adomain.com', osisip='localhost', osisport=5
                             #give a unique brokerid can also do automatically but will be confusing
    # if we are master then this needs to be configured, if only participant in grid then not
 
-j.develtools.startPortalByobu()
+j.develtools.startPortalByobu('portalbase')
 
 # make sure node is registered to grid (once done is not needed any more afterwards)
 # j.core.grid.init()
