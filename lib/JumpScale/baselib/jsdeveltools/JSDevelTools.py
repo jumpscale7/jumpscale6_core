@@ -34,6 +34,12 @@ class JSDevelTools:
         if not j.system.net.waitConnectionTest('localhost', 5544, 30):
             raise RuntimeError("Failed to start osis server")
 
+        #start broker
+        print '* Starting broker'
+        pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
+        cmd="cd %s;python zbrokerStart.py"%pathb
+        j.system.platform.screen.executeInScreen(name,"broker",cmd,wait=1)
+
         #start logger
         print '* Starting logger'
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","logger")
@@ -41,16 +47,6 @@ class JSDevelTools:
         j.system.platform.screen.executeInScreen(name,"logger",cmd,wait=1)
         if not j.system.net.waitConnectionTest('localhost', 4444, 30):
             raise RuntimeError("Failed to start logger server")
-
-
-        #start broker
-        print '* Starting broker'
-        pathb=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
-        cmd="cd %s;python zbrokerStart.py"%pathb
-        j.system.platform.screen.executeInScreen(name,"broker",cmd,wait=1)
-        if not j.system.net.waitConnectionTest('localhost', 5554, 30):
-            raise RuntimeError("Failed to start broker daemon")
-
 
         print '* Starting workers'
         path=j.system.fs.joinPaths("/opt/jumpscale/apps","broker")
