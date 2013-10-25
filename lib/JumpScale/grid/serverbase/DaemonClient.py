@@ -17,7 +17,7 @@ class Session():
         self.netinfo = netinfo
         self.start = int(time.time())
         self.roles = roles
-        self.agentid=j.application.getWhoAmiStr()
+        self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.bid,j.application.whoAmI.nid)
 
     def __repr__(self):
         return str(self.__dict__)
@@ -113,7 +113,7 @@ class DaemonClient(object):
         self.key = session.encrkey
         self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__, ssl=ssl, returnformat="")
 
-    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, category=None):
+    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, category=None,die=False):
         """
         cmd is command on server (is asci text)
         data is any to be serialized data
@@ -162,7 +162,8 @@ class DaemonClient(object):
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
             print "*** error in client to zdaemon ***"
             # print eco
-            j.errorconditionhandler.raiseOperationalCritical(msgpub="", message=msg, category="rpc.exec", die=True, tags="ecoguid:%s" % eco.guid)
+            j.errorconditionhandler.raiseOperationalCritical(msgpub="", message=msg, category="rpc.exec", die=die, tags="ecoguid:%s" % eco.guid)
+            raise RuntimeError(str(eco))
 
         returnformat = parts[1]
         if returnformat <> "":

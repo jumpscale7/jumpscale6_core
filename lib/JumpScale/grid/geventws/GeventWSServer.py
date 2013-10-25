@@ -16,7 +16,8 @@ class GeventWSServer():
         self.nr = 0
         # self.jobhandler = JobHandler()
         self.daemon = j.servers.base.getDaemon(sslorg=sslorg, ssluser=ssluser, sslkeyvaluestor=sslkeyvaluestor)
-        self.application = WSGIServer(('', self.port), self.rpcRequest)
+        self.server = WSGIServer(('', self.port), self.rpcRequest)
+        
         self.type = "geventws"
 
     def responseRaw(self,data,start_response):
@@ -52,7 +53,7 @@ class GeventWSServer():
 
     def start(self):
         print "started on %s" % self.port
-        self.application.serve_forever()
+        self.server.serve_forever()
 
     def addCMDsInterface(self, MyCommands, category=""):
         self.daemon.addCMDsInterface(MyCommands, category)

@@ -167,6 +167,7 @@ class Daemon(object):
             eco.level = 2
             # print eco
             eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
+            eco.errormessage = "ERROR IN RPC CALL:\n"+ eco.errormessage
             j.errorconditionhandler.processErrorConditionObject(eco)
             result = self.errorconditionserializer.dumps(eco.__dict__)
             return returnCodes.ERROR, "", result

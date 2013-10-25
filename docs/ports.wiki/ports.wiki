@@ -1,0 +1,16 @@
+
+
+circusd
+circus statd
+circus web : 8080
+
+zbroker
+zlogger local
+osis
+
+agentcontroller
+
+elastic search backend
+elastic search http
+
+
