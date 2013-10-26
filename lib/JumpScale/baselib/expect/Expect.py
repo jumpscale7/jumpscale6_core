@@ -187,6 +187,9 @@ class Expect:
                 self.setPrompt()
                 self.prompt()
 
+        elif cmd=='ssh':
+            self._pxssh = pxssh.pxssh()
+
         self.enableCleanString()
 
     def log(self,message,category="",level=5):
@@ -676,3 +679,13 @@ class Expect:
         except:
             j.logger.log('Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive()), 7)
         return False
+
+    def executeStep(self,cmd,toexpect,errormsg="",timeout=1):
+        self.send(cmd)
+        result=self.expect(toexpect)
+        if j.basetype.boolean.check(result):
+            if result==False:
+                if errormsg=="":
+                    errormsg="error in expect flow, was waiting for '%s'"%toexpect
+                raise RuntimeError(errormsg)
+        return self.receive()
