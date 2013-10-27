@@ -405,7 +405,7 @@ class Domain():
         else:
             repoUrl        = self.metadataDownload
             targetTarDir   = j.packages.getMetaTarPath(self.domainname)
-            targetTarFileName = ("metadata_qp5"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
+            targetTarFileName = ("metadata_jp"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
             remoteTarPath  = j.system.fs.joinPaths(repoUrl, targetTarFileName)  #@todo P3 needs to work with new tar filenames corresponding to qualitylevels
  
             j.logger.log("Getting meta data from a tar: %s" % remoteTarPath, 1)
@@ -458,7 +458,7 @@ class Domain():
             j.system.fs.writeFile(revisionTxt, id) #this to remember from which revision the tgz has been created
             
         targetTarDir  = j.packages.getMetaTarPath(self.domainname)
-        targetTarFileName = ("metadata_qp5"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
+        targetTarFileName = ("metadata_jp"+'_'+self.domainname+'_'+self.qualitylevel+'.tgz')
         targetTarPath = j.system.fs.joinPaths(targetTarDir, targetTarFileName)
         
         j.logger.log("Building tar file from " + self.metadatadir + " to location " + targetTarPath)

@@ -102,7 +102,7 @@ class System:
     @type: number
     '''
 
-    _qPlatformType=None
+    _jPlatformType=None
     '''PlatformType of currently running platform
 
     @type: L{jumpscale.enumerators.PlatformType.PlatformType}
@@ -117,7 +117,7 @@ class System:
         Binds currently running L{jumpscale.enumerators.PlatformType.PlatformType}
         and initializes the C{fs}, C{net} and C{process} attributes.
         '''
-        self.platformtype=self._qPlatformType
+        self.platformtype=self._jPlatformType
         self.fs = SystemFS()
         self.net = SystemNet()
         self.string=String()

@@ -28,7 +28,7 @@ sed -i "s/o.enumerators/j.enumerators/g" $1
 sed -i "s/o.code/j.code/g" $1
 sed -i "s/o.html/j.html/g" $1
 sed -i "s/o.dfsio/j.dfsio/g" $1
-sed -i "s/o.qp/j.qp/g" $1
+sed -i "s/o.qp/j.jp/g" $1
 sed -i "s/o.remote/j.remote/g" $1
 sed -i "s/o.develtools/j.develtools/g" $1
 sed -i "s/o.packages/j.packages/g" $1

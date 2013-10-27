@@ -979,15 +979,15 @@ class BitbucketConnection(object):
         j.system.fs.copyDirTree(source, destination)      
         return destination
     
-    def exportAllFromQpackages(self, allVersions=False, qualityLevels=[], codeDir = '/opt/code3'):
-        scanner = j.packages.getQPackageMetadataScanner()
+    def exportAllFromJpackages(self, allVersions=False, qualityLevels=[], codeDir = '/opt/code'):
+        scanner = j.packages.getJPackageMetadataScanner()
         scanner.scan(allVersions, qualityLevels)
         repos = []
         for item in scanner.getRecipeItemsAsLists():
-            qpname = item[1]
+            jpname = item[1]
             branch = item[3]
-            if not [qpname, branch] in repos:
-                repos.append([qpname, branch])
+            if not [jpname, branch] in repos:
+                repos.append([jpname, branch])
         for repo in repos:
             exportRepo(repo[0], repo[1], codeDir)
  

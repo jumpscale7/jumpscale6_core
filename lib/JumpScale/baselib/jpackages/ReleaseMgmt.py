@@ -174,7 +174,7 @@ class ReleaseMgmt():
                     j.system.fs.copyFile(metadatatarfile, domaindir)
                 else:
                     failed = True
-                    raise RuntimeError('Metadata tarfile %s does not exist for domain %s. Run i.qp.updateMetaDataAll() first' % (metadatatarfile, domain))
+                    raise RuntimeError('Metadata tarfile %s does not exist for domain %s. Run i.jp.updateMetaDataAll() first' % (metadatatarfile, domain))
                 tar.add(name=domaindir, arcname=domain, recursive=True)
                 j.system.fs.removeDirTree(domaindir, onlyLogWarningOnRemoveError=True)
         finally:

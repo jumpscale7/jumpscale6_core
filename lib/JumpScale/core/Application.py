@@ -8,7 +8,7 @@ from collections import namedtuple
 WhoAmI = namedtuple('WhoAmI', 'gid bid pid nid')
 
 #@todo Need much more protection: cannot change much of the state (e.g. dirs) once the app is running!
-#@todo Need to think through - when do we update the qpidfile (e.g. only when app is started ?)
+#@todo Need to think through - when do we update the jpidfile (e.g. only when app is started ?)
 #@todo can we make this a singleton? Then need to change __init__ to avoid clearing the content
 #@todo need to implement QApplication.getVar()
 

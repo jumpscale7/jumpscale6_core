@@ -152,19 +152,19 @@ class JPackageClient():
             raise RuntimeError('Provided domain is nonexistent on this system')
         if self.getDomainObject(domain).metadataFromTgz:
             raise RuntimeError('The meta data for domain ' + domain + ' is coming from a tgz, you cannot create new packages in it.')
-        qp      = JPackageObject(domain, name, version)
-        #qp.prepareForUpdatingFiles(suppressErrors=True)
-        qp.supportedPlatforms = supportedPlatforms
-        qp.description=description
-        qp.save()
-        j.system.fs.createDir(qp.getPathFiles())
-        j.system.fs.createDir(j.system.fs.joinPaths(qp.getPathFiles(),"generic"))
+        jp      = JPackageObject(domain, name, version)
+        #jp.prepareForUpdatingFiles(suppressErrors=True)
+        jp.supportedPlatforms = supportedPlatforms
+        jp.description=description
+        jp.save()
+        j.system.fs.createDir(jp.getPathFiles())
+        j.system.fs.createDir(j.system.fs.joinPaths(jp.getPathFiles(),"generic"))
         for pl in supportedPlatforms:
-            j.system.fs.createDir(j.system.fs.joinPaths(qp.getPathFiles(),"%s"%pl))
+            j.system.fs.createDir(j.system.fs.joinPaths(jp.getPathFiles(),"%s"%pl))
 
-        qp.hrd.applyOnDir(qp.metadataPath,changeContent=False)
+        jp.hrd.applyOnDir(jp.metadataPath,changeContent=False)
 
-        return qp
+        return jp
 
 
 ############################################################
@@ -263,7 +263,7 @@ class JPackageClient():
 ###################  GET PATH FUNCTIONS  ###################
 ############################################################
 
-    def getQPActionsPath(self,domain,name,version,fromtmp=False):
+    def getJPActionsPath(self,domain,name,version,fromtmp=False):
         """
         Returns the metadatapath for the provided jpackages
         if fromtmp is True, then tmp directorypath will be returned
@@ -280,7 +280,7 @@ class JPackageClient():
             return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,version,"actions")
 
 
-    def getQPActiveHRDPath(self,domain,name,version,fromtmp=False):
+    def getJPActiveHRDPath(self,domain,name,version,fromtmp=False):
         """
         Returns the metadatapath for the provided jpackages
         if fromtmp is True, then tmp directorypath will be returned
@@ -375,15 +375,15 @@ class JPackageClient():
         if maxversion=="" or maxversion=="0":
             maxversion="100.100.100"
         #look for duplicates
-        for qp in results:
+        for jp in results:
             if namefound=="":
-                namefound=qp.name
+                namefound=jp.name
             if domainfound=="":
-                domainfound=qp.domain
-            if qp.domain<>domainfound or qp.name<>namefound:
+                domainfound=jp.domain
+            if jp.domain<>domainfound or jp.name<>namefound:
                 packagesStr="\n"
-                for qp2 in results:
-                    packagesStr="    %s\n" % str(qp2)
+                for jp2 in results:
+                    packagesStr="    %s\n" % str(jp2)
                 raise RuntimeError("Found more than 1 jpackages matching the criteria.\n %s" % packagesStr)
         #check for version match
         if len(results)==0:
@@ -392,8 +392,8 @@ class JPackageClient():
             raise RuntimeError("Did not find jpackages with criteria domain:%s, name:%s, platform:%s (independant from version)" % (domain,name,platform))
 
         # filter packages so they are between min and max version bounds
-        result=[qp for qp in results if self._getVersionAsInt(minversion)<=self._getVersionAsInt(qp.version)<=self._getVersionAsInt(maxversion)]
-        result.sort(lambda qp1, qp2: - int(self._getVersionAsInt(qp1.version) - self._getVersionAsInt(qp2.version)))
+        result=[jp for jp in results if self._getVersionAsInt(minversion)<=self._getVersionAsInt(jp.version)<=self._getVersionAsInt(maxversion)]
+        result.sort(lambda jp1, jp2: - int(self._getVersionAsInt(jp1.version) - self._getVersionAsInt(jp2.version)))
         if not result:
             if returnNoneIfNotFound:
                 return None
@@ -845,7 +845,7 @@ class JPackageClient():
 
     def makeDependencyGraph(self):
         '''
-        Creates a graphical visualization of all dependencies between the QPackackages of all domains.
+        Creates a graphical visualization of all dependencies between the JPackackages of all domains.
         This helps to quickly view and debug the dependencies and avoid errors.
         The target audience are the developers of accross groups and domains that depend on each others packages.
         
