@@ -36,6 +36,14 @@ class DNSMasq(object):
         te.save()
         self.restart()
 
+    def configureIPRange(self, startIP, endIP, netmask):
+        '''dhcp-range=192.168.0.50,192.168.0.150,255.255.255.0,12h'''
+        content = 'dhcp-range=%s,%s,%s' % (startIP, endIP, netmask)
+        te = j.codetools.getTextFileEditor(self._configfile)
+        te.appendLine(content)
+        te.save()
+        self.restart()
+
     def restart(self):
         """Restarts dnsmasq"""
         j.system.process.execute('/etc/init.d/dnsmasq restart')
