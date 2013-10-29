@@ -37,7 +37,7 @@ class DNSMasq(object):
         self.restart()
 
     def configureIPRange(self, startIP, endIP, netmask):
-        '''dhcp-range=192.168.0.50,192.168.0.150,255.255.255.0,12h'''
+        '''Configures IP range for a dhcp-host'''
         content = 'dhcp-range=%s,%s,%s' % (startIP, endIP, netmask)
         te = j.codetools.getTextFileEditor(self._configfile)
         te.appendLine(content)
