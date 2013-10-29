@@ -4,7 +4,7 @@ class CircusManager:
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
 
-    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True,shell=False,workingdir=None):
+    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True,shell=False,workingdir=None, send_hup=False):
         servercfg = self._getIniFile(name)
         sectionname = "watcher:%s" % name
         if servercfg.checkSection(sectionname):
@@ -16,6 +16,7 @@ class CircusManager:
         servercfg.addParam(sectionname, 'numprocesses', numprocesses)
         servercfg.addParam(sectionname, 'priority', priority)
         servercfg.addParam(sectionname, 'autostart', autostart)
+        servercfg.addParam(sectionname, 'send_hup', send_hup)
         if workingdir<>None:
             servercfg.addParam(sectionname, 'workingdir', workingdir)
         servercfg.addParam(sectionname, 'shell', shell)
@@ -74,10 +75,13 @@ class CircusManager:
         return j.tools.circus.client.listWatchers()
 
     def startProcess(self, name):
-        j.system.installtools.execute("circusctl start %s" % name)
+        j.tools.circus.client.startWatcher(name)
 
     def stopProcess(self, name):
-        j.system.installtools.execute("circusctl stop %s" % name)
+        j.tools.circus.client.stopWatcher(name)
 
     def restartProcess(self, name):
-        j.system.installtools.execute("circusctl restart %s" % name)
+        j.tools.circus.client.restartWatcher(name)
+
+    def reloadProcess(self, name):
+        j.tools.circus.client.reloadWatcher(name)
