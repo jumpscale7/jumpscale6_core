@@ -788,7 +788,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if destination=="":
             raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
-
         for path in self.getPathFilesPlatformForSubDir(subdir):
             # self.log("copy python lib to %s"%path,category="libinstall")
             self.log("Copy files from %s to %s"%(path,destination),category="copy")
@@ -1139,7 +1138,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         
         self.loadActions()
-        j.log("CodeImport")
+        self.log("CodeImport")
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
