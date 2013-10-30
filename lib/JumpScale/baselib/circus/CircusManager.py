@@ -6,7 +6,7 @@ def checkPort(*args, **kwargs):
     portstr = watcher.env.get('WAIT_FOR_PORT')
     if portstr:
         port = int(portstr)
-        return j.system.net.waitConnectionTest('localhost', port, 30)
+        return j.system.net.waitConnectionTest('localhost', port, 20)
     else:
         raise RuntimeError('Environment variable WAIT_FOR_PORT is not set')
 

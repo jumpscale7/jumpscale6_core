@@ -1,4 +1,4 @@
-from JumpScale import j
+cafrom JumpScale import j
 import circus
 from circus import commands
 from circus.client import CircusClient
@@ -7,7 +7,7 @@ import types
 class CircusCL():
 
     def __init__(self):
-        self.client=CircusClient()
+        self.client=CircusClient(timeout=20)
         self._cmds={}
         self.getCommands()
 
