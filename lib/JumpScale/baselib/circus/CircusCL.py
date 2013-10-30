@@ -1,4 +1,4 @@
-cafrom JumpScale import j
+from JumpScale import j
 import circus
 from circus import commands
 from circus.client import CircusClient
