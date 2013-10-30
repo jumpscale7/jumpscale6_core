@@ -1,10 +1,20 @@
 from JumpScale import j
+import os
+
+def checkPort(*args, **kwargs):
+    watcher = kwargs['watcher']
+    portstr = watcher.env.get('WAIT_FOR_PORT')
+    if portstr:
+        port = int(portstr)
+        return j.system.net.waitConnectionTest('localhost', port, 20)
+    else:
+        raise RuntimeError('Environment variable WAIT_FOR_PORT is not set')
 
 class CircusManager:
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
 
-    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True,shell=False,workingdir=None, send_hup=False):
+    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True, shell=False, workingdir=None, before_start=None, after_start=None, send_hup=False, **kwargs):
         servercfg = self._getIniFile(name)
         sectionname = "watcher:%s" % name
         if servercfg.checkSection(sectionname):
@@ -17,9 +27,15 @@ class CircusManager:
         servercfg.addParam(sectionname, 'priority', priority)
         servercfg.addParam(sectionname, 'autostart', autostart)
         servercfg.addParam(sectionname, 'send_hup', send_hup)
-        if workingdir<>None:
-            servercfg.addParam(sectionname, 'workingdir', workingdir)
+        if workingdir:
+            servercfg.addParam(sectionname, 'working_dir', workingdir)
+        if before_start:
+            servercfg.addParam(sectionname, 'hooks.before_start', before_start)
+        if after_start:
+            servercfg.addParam(sectionname, 'hooks.after_start', after_start)
         servercfg.addParam(sectionname, 'shell', shell)
+        for k, v in kwargs.iteritems():
+            servercfg.addParam(sectionname, k, v)
         #check name is no service yet and if then remove
 
         for item in j.system.fs.listFilesInDir("/etc/init.d"):
@@ -38,8 +54,19 @@ class CircusManager:
 
         servercfg.write()
 
-        j.tools.circus.manager.apply()
+    def addEnv(self, name, env_vars):
+        '''Adds [env] section
+        name: watcher name
+        env_vars: environment vars to set
+        '''
+        servercfg = self._getIniFile(name)
+        sectionname = "env:%s" % name
+        if not servercfg.checkSection(sectionname):
+            servercfg.addSection(sectionname)
+        for k, v in env_vars.iteritems():
+            servercfg.addParam(sectionname, k, v)
 
+        servercfg.write()
 
     def _getIniFile(self, name):
         inipath = j.system.fs.joinPaths(self._configpath, name + ".ini")
