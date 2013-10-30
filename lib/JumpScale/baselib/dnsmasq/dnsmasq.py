@@ -32,6 +32,10 @@ class DNSMasq(object):
         else:
             cmd = 'dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
         j.tools.circus.manager.addProcess(self._circusname, cmd, send_hup=True)
+        j.tools.circus.manager.apply()
+        j.tools.circus.manager.startProcess(self._circusname)
+
+
     
     def _checkFile(self, filename):
         if not j.system.fs.exists(filename):
