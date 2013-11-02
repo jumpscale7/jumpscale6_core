@@ -2,7 +2,7 @@ def main(j,args,params,tags,tasklet):
    
     #link info into local repo
 
-    qp=args.qp
+    qp=args.jp
 
     recipe=qp.actions.code_getRecipe()
 

@@ -2,7 +2,10 @@
 from JumpScale import j
 j.application.start("jpackages")
 from JumpScale.baselib import cmdutils
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
+package, args = cmdutils.getJPackage(parser)
 
-package, args = cmdutils.getJPackage()
-package.removeDebugMode()
+package.removeDebugMode(dependencies=args.all)
 j.application.stop()

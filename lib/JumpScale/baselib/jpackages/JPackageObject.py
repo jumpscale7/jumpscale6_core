@@ -235,11 +235,26 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def getDebugMode(self):
         return self.state.debugMode
 
-    def setDebugMode(self):
+    def setDebugMode(self,dependencies=False):
+
+        #process all dependencies
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.setDebugMode()
+
         self.state.setDebugMode()
         self.log("set debug mode",category="init")
 
-    def removeDebugMode(self):
+    def removeDebugMode(self,dependencies=False):
+
+        #process all dependencies
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.removeDebugMode()
+
+
         self.state.setDebugMode(mode=0)
         self.log("remove debug mode",category="init")
 
@@ -812,8 +827,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if self.debug:
             return #do not copy files when debug, need to be improved with next remark
 
-        if len(j.system.fs.listLinksInDir(destination))>0:
-            raise RuntimeError("cannot copy files to %s because links found in destination dir.\n Change jpackage to copy subdirs to more specific destinations."%destination)
+        # if len(j.system.fs.listLinksInDir(destination))>0:
+        #     raise RuntimeError("cannot copy files to %s because links found in destination dir.\n Change jpackage to copy subdirs to more specific destinations."%destination)
 
         # if j.system.fs.checkLinksExistAndPointTo(destination,"/opt/code"):
         #     raise RuntimeError("cannot copy files to %s because links found in destination pointing to /opt/code."%destination)
@@ -1339,10 +1354,21 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return result        
 
     # upload the bundle
-    def upload(self, remote=True, local=True):
+    def upload(self, remote=True, local=True,dependencies=False,actionCaching=True):
         """
         Upload jpackages to Blobstor, default remote and local
         """
+
+        if actionCaching:
+            if j.packages._actionCheck(self, "upload"):
+                return True
+            j.packages._actionSet(self, "upload")
+
+        #process all dependencies
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.upload(remote=remote,local=local,dependencies=dependencies)
                
         self.loadActions()
 
@@ -1530,7 +1556,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if actionCaching:
             if j.packages._actionCheck(self, action):
                 return True
-
             j.packages._actionSet(self, action)
 
         #process all dependencies

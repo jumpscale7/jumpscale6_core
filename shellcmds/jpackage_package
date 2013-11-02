@@ -2,7 +2,7 @@
 from JumpScale import j
 j.application.start("jpackages")
 from JumpScale.baselib import cmdutils
-
+import argparse
 package, args = cmdutils.getJPackage()
 
 package.package()

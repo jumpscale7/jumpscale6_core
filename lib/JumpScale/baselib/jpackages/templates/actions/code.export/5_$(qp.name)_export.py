@@ -1,7 +1,7 @@
 def main(j,args,params,tags,tasklet):
    
     #checkout code from codemgmt recipe
-    qp=args.qp
+    qp=args.jp
 
     recipe=qp.actions.code_getRecipe()
 
