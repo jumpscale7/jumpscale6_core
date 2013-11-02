@@ -812,6 +812,16 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if self.debug:
             return #do not copy files when debug, need to be improved with next remark
 
+        if len(j.system.fs.listLinksInDir(destination))>0:
+            raise RuntimeError("cannot copy files to %s because links found in destination dir.\n Change jpackage to copy subdirs to more specific destinations."%destination)
+
+        # if j.system.fs.checkLinksExistAndPointTo(destination,"/opt/code"):
+        #     raise RuntimeError("cannot copy files to %s because links found in destination pointing to /opt/code."%destination)
+
+        #remove links first, otherwise code gets overwritten
+        #TOO DANGEROUS
+# -       j.system.fs.removeLinks(destination)
+
         def createAncestors(file):
             # Create the ancestors
             j.system.fs.createDir(j.system.fs.getDirName(file))
