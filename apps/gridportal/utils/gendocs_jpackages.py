@@ -2,7 +2,7 @@ from JumpScale import j
 
 j.application.start("gendocs")
 
-outpath="/opt/jpackagedocs"
+outpath="/opt/jumpscale/apps/gridportal/jpackagedocs"
 
 class JPdata():
     def __init__(self):
@@ -35,6 +35,31 @@ class JPdata():
             if domain.packages.has_key(key):
                 return domain.packages[key]
         raise RuntimeError("Cannot find package: %s"%key)
+
+    def checkWriteAll(self,path):
+        self.writeJPackageInfo(path)
+        self.checkErrors(path)
+        self.writeHrdList(path)
+
+    def checkErrors(self,path):
+        self.checkDuplicateFiles(path)
+
+    def checkDuplicateFiles(path):
+        params={}
+        params["errors"]=[]
+        def check(jp,params):
+            
+            return params
+        params=data.walk(check,params)
+
+
+    def writeJPackageInfo(self,path):
+        params={}
+        params["path"]=path
+        def write(jp,params):
+            jp.writeJPackageInfo(params["path"])
+            return params
+        params=data.walk(write,params)
 
     def writeHrdList(self,path):
 
@@ -139,8 +164,52 @@ class JPackage():
         out2 +="{{code:\n%s\n}}\n\n"%content
         return out2
 
+    def getDoc(self):
+        path="%s/%s/%s"%(self.path,"hrd","main.hrd")
+        if not j.system.fs.exists(path):
+            raise RuntimeError("Could not find main.hrd : %s"%path)
+
+        pathdescr="%s/%s"%(self.path,"description.wiki")
+        if not j.system.fs.exists(path):
+            raise RuntimeError("Could not find %s"%path)
+
+        hrd=j.core.hrd.getHRD(path)
+
+        if hrd.get("jp.name")<>self.name:
+            hrd.set("jp.name",self.name)
+        if hrd.get("jp.domain")<>self.domain:
+            hrd.set("jp.domain",self.domain)
+
+        from IPython import embed
+        print "DEBUG NOW getdoc"
+        embed()
+        
+
+        out2 ="h2. %s\n\n"%self.getKeyTitle()
+        out2 +="h3. %s\n\n"%info
+        for param in ["name","domain","version","buildnr","supportedplatforms"]:
+            out2 += "|%s|%s|\n" % (param,hrd.get(param))
+
+        out2 +="\n%s\n\n"%j.system.fs.fileGetContents(pathdescr)
+
+        out2 +="h3. more info\n\n"
+        out2 += "* [/jpackages/listfiles?jpkey=%s]\n"%self.getKey()
+        out2 += "* [/jpackages/reinstall?jpkey=%s]\n"%self.getKey()
+        out2 += "* [/jpackages/hrd?jpkey=%s]\n"%self.getKey()
+        
+        return out2
+
+    def writeJPackageInfo(self,path):
+        doc=self.getDoc()
+
+
+    def getBlobFiles(self):
+        path="%s/%s"%(self.path,"blob_generic.info")
+        if not j.system.fs.exists(path):
+            raise RuntimeError("Could not find blob_generic.info for %s"%self)
+        
+
     def listActiveHrd(self):
-        content=j.system.fs.fileGetContents(hrdfile)
         path="%s/%s"%(self.path,"hrdactive")
         if not j.system.fs.exists(path):
             j.system.fs.createDir(path)
@@ -197,6 +266,7 @@ for jpackagedir in jpackagedirs:
         ql=j.system.fs.getDirName(hrdfile,levelsUp=3)
         if ql=="unstable":
             domain=j.system.fs.getDirName(hrdfile,levelsUp=4)
+            domain=domain.lstrip("jp_")
             packagename=j.system.fs.getDirName(hrdfile,levelsUp=2)
             version=j.system.fs.getDirName(hrdfile,levelsUp=1)
             path=j.system.fs.getParent(hrdfile)
@@ -205,7 +275,7 @@ for jpackagedir in jpackagedirs:
             print jp.getKeyTitle()
             jp.writeHrdDoc(outpath)
 
-data.writeHrdList(outpath)
+data.checkWriteAll(outpath)
 
 
 from IPython import embed
