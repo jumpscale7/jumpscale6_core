@@ -122,20 +122,20 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         
         self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
-        if self.hrd.get("qp.domain",checkExists=True)<>self.domain:
-            self.hrd.set("qp.domain",self.domain)
-        if self.hrd.get("qp.name",checkExists=True)<>self.name:
-            self.hrd.set("qp.name",self.name)
-        if self.hrd.get("qp.version",checkExists=True)<>self.version:                
-            self.hrd.set("qp.version",self.version)    
+        if self.hrd.get("jp.domain",checkExists=True)<>self.domain:
+            self.hrd.set("jp.domain",self.domain)
+        if self.hrd.get("jp.name",checkExists=True)<>self.name:
+            self.hrd.set("jp.name",self.name)
+        if self.hrd.get("jp.version",checkExists=True)<>self.version:                
+            self.hrd.set("jp.version",self.version)    
         
-        descr=self.hrd.get("qp.description",checkExists=True)
+        descr=self.hrd.get("jp.description",checkExists=True)
         if descr<>False and descr<>"":
             self.description=descr
         if descr<>self.description:                
-            self.hrd.set("qp.description",self.description)                      
+            self.hrd.set("jp.description",self.description)                      
 
-        self.supportedPlatforms=self.hrd.getList("qp.supportedplatforms")
+        self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
 
         for platform in self.supportedPlatforms:
             j.system.fs.createDir(self.getPathFilesPlatform(platform))        
@@ -150,25 +150,25 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd=j.core.hrd.getHRD(hrddir)
             
         self._clear()
-        self.buildNr = self.hrd.getInt("qp.buildnr")
-        self.export = self.hrd.getBool("qp.export")
-        self.autobuild = self.hrd.getBool("qp.autobuild")
-        self.taskletsChecksum = self.hrd.get("qp.taskletschecksum")
+        self.buildNr = self.hrd.getInt("jp.buildnr")
+        self.export = self.hrd.getBool("jp.export")
+        self.autobuild = self.hrd.getBool("jp.autobuild")
+        self.taskletsChecksum = self.hrd.get("jp.taskletschecksum")
         try:
-            self.descrChecksum = self.hrd.get("qp.descrchecksum")
+            self.descrChecksum = self.hrd.get("jp.descrchecksum")
         except:
-            hrd = self.hrd.getHrd("").getHRD("qp.name")
-            hrd.set("qp.descrchecksum","")
-            self.descrChecksum = self.hrd.get("qp.descrchecksum")
+            hrd = self.hrd.getHrd("").getHRD("jp.name")
+            hrd.set("jp.descrchecksum","")
+            self.descrChecksum = self.hrd.get("jp.descrchecksum")
         try:
-            self.hrdChecksum = self.hrd.get("qp.hrdchecksum")
+            self.hrdChecksum = self.hrd.get("jp.hrdchecksum")
         except:
-            hrd = self.hrd.getHrd("").getHRD("qp.name")
-            hrd.set("qp.hrdchecksum","")
-            self.hrdChecksum = self.hrd.get("qp.hrdchecksum")
+            hrd = self.hrd.getHrd("").getHRD("jp.name")
+            hrd.set("jp.hrdchecksum","")
+            self.hrdChecksum = self.hrd.get("jp.hrdchecksum")
 
-        self.supportedPlatforms = self.hrd.getList("qp.supportedplatforms")
-        self.bundles = self.hrd.getDict("qp.bundles") #dict with key platformkey and val the hash of bundle
+        self.supportedPlatforms = self.hrd.getList("jp.supportedplatforms")
+        self.bundles = self.hrd.getDict("jp.bundles") #dict with key platformkey and val the hash of bundle
         
         j.packages.getDomainObject(self.domain)
 
@@ -262,7 +262,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             j.system.fs.removeDirTree(path)
             path = j.packages.getMetadataPath(self.domain, self.name,self.version)
             j.system.fs.removeDirTree(path)
-            path = j.packages.getQPActionsPath(self.domain, self.name,self.version)
+            path = j.packages.getJPActionsPath(self.domain, self.name,self.version)
             j.system.fs.removeDirTree(path)
             for f in j.system.fs.listFilesInDir(j.packages.getBundlesPath()):
                 baseName = j.system.fs.getBaseName(f)
@@ -282,21 +282,21 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if self.buildNr == "":
             self._raiseError("buildNr cannot be empty")
 
-        self.hrd.set("qp.buildnr",self.buildNr)        
-        self.hrd.set("qp.export",self.export)
-        self.hrd.set("qp.autobuild",self.autobuild)
-        self.hrd.set("qp.taskletschecksum",self.taskletsChecksum)
-        self.hrd.set("qp.hrdchecksum",self.hrdChecksum)
-        self.hrd.set("qp.descrchecksum",self.descrChecksum)
-        self.hrd.set("qp.supportedplatforms",self.supportedPlatforms)
-        self.hrd.set("qp.bundles",self.bundles)
+        self.hrd.set("jp.buildnr",self.buildNr)        
+        self.hrd.set("jp.export",self.export)
+        self.hrd.set("jp.autobuild",self.autobuild)
+        self.hrd.set("jp.taskletschecksum",self.taskletsChecksum)
+        self.hrd.set("jp.hrdchecksum",self.hrdChecksum)
+        self.hrd.set("jp.descrchecksum",self.descrChecksum)
+        self.hrd.set("jp.supportedplatforms",self.supportedPlatforms)
+        self.hrd.set("jp.bundles",self.bundles)
 
         for idx, dependency in enumerate(self.dependencies):
             self._addDependencyToHRD(idx, dependency.domain, dependency.name,minversion=dependency.minversion,maxversion=dependency.maxversion)
 
     def _addDependencyToHRD(self, idx, domain, name, minversion, maxversion):
         hrd = self.hrd
-        basekey = 'qp.dependency.%s.%%s' % idx
+        basekey = 'jp.dependency.%s.%%s' % idx
         def setValue(name, value):
             hrd.set(basekey % name, value)
 
@@ -316,7 +316,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.dependencyDefs = []
 
             addedstuff = set()
-            for key in self.hrd.prefix('qp.dependency'):
+            for key in self.hrd.prefix('jp.dependency'):
                 parts = key.split('.')
                 if parts[2] in addedstuff:
                     continue
@@ -425,7 +425,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         Return absolute pathname of the package's metadatapath
         """
-        return j.packages.getQPActionsPath(self.domain, self.name, self.version)
+        return j.packages.getJPActionsPath(self.domain, self.name, self.version)
 
     def getPathMetadata(self):
         """
@@ -474,7 +474,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
     def copyPythonLibs(self,remove=False):
         """
-        will look in platform dirs of qpackage to find "site-packages" dir (starting from lowest platform type e.g. linux64, then parents of platform)
+        will look in platform dirs of jpackage to find "site-packages" dir (starting from lowest platform type e.g. linux64, then parents of platform)
         each dir "site-packages" found in one of the site-packages dir will be copied to the local site packages dir
         """
         # j.system.platform.python.getSitePackagePathLocal
@@ -788,7 +788,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if destination=="":
             raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
-
         for path in self.getPathFilesPlatformForSubDir(subdir):
             # self.log("copy python lib to %s"%path,category="libinstall")
             self.log("Copy files from %s to %s"%(path,destination),category="copy")
@@ -1139,7 +1138,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         
         self.loadActions()
-        j.log("CodeImport")
+        self.log("CodeImport")
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -1201,7 +1200,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def download(self, dependencies=None, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
         """
         Download the jpackages & expand
-        Download the required blobs as well (as defined in qpackge.cfg dir)
+        Download the required blobs as well (as defined in jpackge.cfg dir)
 
         [requiredblobs]
         blob1= ...

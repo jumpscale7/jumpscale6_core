@@ -91,7 +91,7 @@ def main():
 
 
         # Run JPackage4 configure tasklets if needed
-        q.qp._runPendingReconfigeFiles()
+        q.jp._runPendingReconfigeFiles()
         sys.path.append(q.system.fs.joinPaths(q.dirs.baseDir, 'var', 'tests'))
         from JumpScale.Shell import Shell
         

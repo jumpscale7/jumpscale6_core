@@ -1,24 +1,24 @@
-qp.domain=
-qp.name=
-qp.version=
-qp.autobuild=0
+jp.domain=
+jp.name=
+jp.version=
+jp.autobuild=0
 
 #supported platforms linux, linux32, linux64, win32, win64, win
-qp.supportedplatforms=
-qp.description=!(../description.wiki)
-qp.buildnr=-1
+jp.supportedplatforms=
+jp.description=!(../description.wiki)
+jp.buildnr=-1
 
-qp.taskletschecksum=
-qp.descrchecksum=
-qp.hrdchecksum=
+jp.taskletschecksum=
+jp.descrchecksum=
+jp.hrdchecksum=
 
-qp.export=0
+jp.export=0
 
-qp.bundles=
+jp.bundles=
 
 ##dependencies
-#qp.dependency.1.name = processmanager
-#qp.dependency.1.domain = jumpscale
-#qp.dependency.1.minversion= 1
-#qp.dependency.1.maxversion= 2
+#jp.dependency.1.name = processmanager
+#jp.dependency.1.domain = jumpscale
+#jp.dependency.1.minversion= 1
+#jp.dependency.1.maxversion= 2
 

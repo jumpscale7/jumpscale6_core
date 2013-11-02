@@ -94,7 +94,7 @@ class _RecipeItem:
         self._log("import from system.","import")
         if self._isPlatformSupported:
             if self.coderepoConnection:
-                raise RuntimeError("Cannot import from system because, qp code recipe is used for a coderepo, coderepo should be None")            
+                raise RuntimeError("Cannot import from system because, jp code recipe is used for a coderepo, coderepo should be None")            
 
             if self.destination.startswith('/'):
                 src = self.destination                        

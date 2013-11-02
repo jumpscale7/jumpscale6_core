@@ -8,10 +8,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
 parser.add_argument('-l', '--local', dest="local", default=False, action="store_true", required=False, help='Only repackage locally')
 parser.add_argument('-p', '--publish', dest="publish", default=False, action="store_true", required=False, help='Publish metadata')
+parser.add_argument('--merge', dest="merge", default=False, action="store_true", required=False, help='Merge existing content of jpackage files with recipe if ommited clean existing content.')
 package, args = cmdutils.getJPackage(parser)
 
-# j.packages.updateMetaData(package.domain)
-package.package()
+j.packages.updateMetaData(package.domain)
+if not args.merge:
+    j.system.fs.removeDirTree(package.getPathFiles())
+package.package(update=True)
 if not args.message:
     args.message = 'Building JPackage "%s"' % package.name
 package.upload(remote=not args.local)

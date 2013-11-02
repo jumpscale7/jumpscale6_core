@@ -1,5 +1,5 @@
-h2. $(qp.name) $(qp.version)
+h2. $(jp.name) $(jp.version)
 
-$(qp.description)
+$(jp.description)
 
 #@todo fill in description

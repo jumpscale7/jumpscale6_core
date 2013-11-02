@@ -26,7 +26,9 @@ class TextFileEditor:
     def existsLine(self,pattern):
         """
         return True if pattern found (regex) False if not
-        """        
+        """
+        if not self.content:
+            return False        
         return j.codetools.regex.findOne(pattern,self.content)<>""
                 
     
@@ -123,11 +125,14 @@ class TextFileEditor:
         
         
     def appendLine(self,line):
-        if self.content[-1]<>"\n":
-            self.content+="\n"
-        self.content+="%s" %line
-        if self.content[-1]<>"\n":
-            self.content+="\n"
+        if not self.content:
+            self.content = "%s" % line
+        else:
+            if self.content[-1]<>"\n":
+                self.content+="\n"
+            self.content+="%s" %line
+            if self.content[-1]<>"\n":
+                self.content+="\n"
 
     def setSection(self,sectionName,content):
         """

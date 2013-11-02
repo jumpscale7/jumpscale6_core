@@ -47,14 +47,14 @@ class DuplicateFilesResult(object):
             if len(packages) > 1:
                 j.console.echo("%s" % filePath)
                 j.console.echo("Available in:")
-                for qp in packages:
-                    name = "%s %s %s %s" % (qp.qualitylevel, qp.domain,
-                            qp.name, qp.version)
+                for jp in packages:
+                    name = "%s %s %s %s" % (jp.qualitylevel, jp.domain,
+                            jp.name, jp.version)
                     j.console.echo(name, indent=4)
                 j.console.echo("")
 
 
-class QPModel():
+class JPModel():
     """
     this is a data model for jpackages which can be  used to manipulate the repo
     """
@@ -161,7 +161,7 @@ class QPModel():
     def raiseError(self,message):
         self.scanner.raiseError("%s %s %s %s: %s" % (self.domain,self.name,self.qualitylevel,self.version,message))
 
-    def getQPobject(self):
+    def getJPobject(self):
         return j.packages.find(self.name,self.domain,self.version)
 
     def _loadModule(self,path):
@@ -300,14 +300,14 @@ class JPackageMetadataScanner():
     
     def copyBundlesToLocalBlobStor(self,remoteBlobStor=None,localBlobStor=None):
         """
-        @param remoteBlobStor & localBlobStor, if none then "qplocal" & "qpremote" configured blobstors are used
+        @param remoteBlobStor & localBlobStor, if none then "jplocal" & "jpremote" configured blobstors are used
         """
         if remoteBlobStor==None:
-            remoteBlobStor=j.clients.blobstor.get("qpremote")
+            remoteBlobStor=j.clients.blobstor.get("jpremote")
         if localBlobStor==None:
-            localBlobStor=j.clients.blobstor.get("qpremote")
-        qps=self.getAllJpackages()
-        for qp in qps:
+            localBlobStor=j.clients.blobstor.get("jpremote")
+        jps=self.getAllJpackages()
+        for jp in jps:
             from JumpScale.core.Shell import ipshell
             print "DEBUG NOW "
             ipshell()
@@ -315,24 +315,24 @@ class JPackageMetadataScanner():
             remoteBlobStor.copyToOtherBlocStor(key,localBlobStor)
     
     def getRecipeItemsAsLists(self):
-        qps=self.getAllJpackages()
+        jps=self.getAllJpackages()
         result=[]
-        for qp in qps:
-            if qp.coderecipe<>None and qp.coderecipe<>False:
-                for item in qp.coderecipe.items:
+        for jp in jps:
+            if jp.coderecipe<>None and jp.coderecipe<>False:
+                for item in jp.coderecipe.items:
                     bbaccount=item.coderepoConnection[0]
                     bbrepo=item.coderepoConnection[1]
                     branch=item.coderepoConnection[2]
                     basedir=j.system.fs.joinPaths(j.dirs.codeDir,bbaccount,bbrepo)
                     source = j.system.fs.joinPaths(basedir, item.source)
                     destination = j.system.fs.pathNormalize(item.destination, j.dirs.baseDir)                            
-                    result.append([qp.qualitylevel,qp.name,qp.version,branch,source,destination])
+                    result.append([jp.qualitylevel,jp.name,jp.version,branch,source,destination])
         return result
 
-    def _addJpackage(self,qualitylevel,qp):
+    def _addJpackage(self,qualitylevel,jp):
         if not self.jpackages.has_key(qualitylevel):
             self.jpackages[qualitylevel]=[]
-        self.jpackages[qualitylevel].append(qp)
+        self.jpackages[qualitylevel].append(jp)
 
     def raiseError(self,msg):
         j.console.echo("ERROR:: %s" % msg)
@@ -358,7 +358,7 @@ class JPackageMetadataScanner():
         for dirPath in dirPaths:
             _, _, dirName = dirPath.rpartition('/')
             
-            if dirName.startswith('qp5'):
+            if dirName.startswith('jp'):
                 domainDirPaths.append(dirPath)
         
         #@todo P1 implement all versions behaviour
@@ -404,21 +404,21 @@ class JPackageMetadataScanner():
                     bitbucketreponame=pathPieces[3]
         
                     if not packageNames or name in packageNames:
-                        qpModel = QPModel(qualitylevel, name, version,
+                        jpModel = JPModel(qualitylevel, name, version,
                                 bitbucketreponame, path, self)
-                        self._addJpackage(qualityLevel, qpModel)
+                        self._addJpackage(qualityLevel, jpModel)
         
         #the scan is now completed we can now start doing our checks & manipulations
                                 
     def detectDuplicateRecipeItemEntries(self,qualityLevels=None):
         qualityLevels = qualityLevels if qualityLevels is not None else []
-        qps=self.getAllJpackages(qualityLevels)
+        jps=self.getAllJpackages(qualityLevels)
         result= dict()
         duplicateResult = dict()
         destinations = []
-        for qp in qps:
-            if qp.coderecipe<>None and qp.coderecipe<>False:
-                for item in qp.coderecipe.items:
+        for jp in jps:
+            if jp.coderecipe<>None and jp.coderecipe<>False:
+                for item in jp.coderecipe.items:
                     bbaccount=item.coderepoConnection[0]
                     bbrepo=item.coderepoConnection[1]
                     branch=item.coderepoConnection[2]
@@ -426,14 +426,14 @@ class JPackageMetadataScanner():
                     source = j.system.fs.joinPaths(basedir, item.source)
                     destination = j.system.fs.pathNormalize(item.destination, j.dirs.baseDir)
                     if not destination in result.keys():
-                        result[destination] = [qp.qualitylevel,qp.name,qp.version, qp.coderecipe.path]
+                        result[destination] = [jp.qualitylevel,jp.name,jp.version, jp.coderecipe.path]
                         destinations.append(destination)
                     else:
-                        duplicateResult[destination] = [qp.qualitylevel,qp.name,qp.version,qp.coderecipe.path,result[destination]]
+                        duplicateResult[destination] = [jp.qualitylevel,jp.name,jp.version,jp.coderecipe.path,result[destination]]
                         j.console.echo("Duplicate entry found: ")
                         j.console.echo("%s -> %s" % (source,destination))
                         j.console.echo("Available in:")
-                        j.console.echo("%s" % (qp.coderecipe.path))
+                        j.console.echo("%s" % (jp.coderecipe.path))
                         j.console.echo("%s\n\n" % (result[destination][3]))
         for destination in destinations:
             for destination2 in destinations:
@@ -468,7 +468,7 @@ class JPackageMetadataScanner():
         @rtype: DuplicateFilesResult
         """
         qualityLevels = qualityLevels if qualityLevels is not None else []
-        qps=self.getAllJpackages(qualityLevels)
+        jps=self.getAllJpackages(qualityLevels)
         result = dict()
 
         if download and j.application.shellconfig.interactive:
@@ -477,17 +477,17 @@ class JPackageMetadataScanner():
         if download:
             self.downloadAllJPackages(qualityLevels)
 
-        qps = self.getAllJpackages(qualityLevels)
-        for qp in qps:
-            jpackages = qp.getQPobject()
+        jps = self.getAllJpackages(qualityLevels)
+        for jp in jps:
+            jpackages = jp.getJPobject()
             if jpackages:
                 jpackages=jpackages[0]
-                #info = [qp.qualitylevel, qp.name, qp.version, jpackages.getPathFiles()]
-                info = qp
+                #info = [jp.qualitylevel, jp.name, jp.version, jpackages.getPathFiles()]
+                info = jp
                 files = j.system.fs.listFilesInDir(jpackages.getPathFiles(), recursive=True)
                 for entry in files:
                     entry = entry.replace(jpackages.getPathFiles(),'')
-                    for platform in qp.supportedplatforms:
+                    for platform in jp.supportedplatforms:
                         entry = entry.replace('/' + platform,'')
 
                     entry = entry.strip()
@@ -504,9 +504,9 @@ class JPackageMetadataScanner():
 
     def downloadAllJPackages(self, qualityLevels=None):
         qualityLevels = qualityLevels if qualityLevels is not None else []
-        qps = self.getAllJpackages(qualityLevels)
-        for qp in qps:
-            jpackages = qp.getQPobject()
+        jps = self.getAllJpackages(qualityLevels)
+        for jp in jps:
+            jpackages = jp.getJPobject()
             if jpackages:
                 jpackages=jpackages[0]
                 jpackages.download()
@@ -595,15 +595,14 @@ class JPackageMetadataScanner():
         for jPackageModel in jPackageModels:
             if jPackageModel.coderecipe != False:            
             
-                qpName = jPackageModel.name
-                qpPath = jPackageModel.path                            
-                qpConfigPath = j.system.fs.joinPaths(qpPath, 'jpackages.cfg')
+                jpName = jPackageModel.name
+                jpPath = jPackageModel.path                            
+                jpConfigPath = j.system.fs.joinPaths(jpPath, 'jpackages.cfg')
                     
-                if not j.system.fs.exists(qpConfigPath):
-                    raise RuntimeError('Could\'t find %(jPackageName)s jpackages config file at %(qpConfigPath)s' % {'jPackageName': jPackageModel.name,
-                                                                                                                    'qpConfigPath': qpConfigPath})
+                if not j.system.fs.exists(jpConfigPath):
+                    raise RuntimeError('Could\'t find %(jPackageName)s jpackages config file at %(jpConfigPath)s' % {'jPackageName': jPackageModel.name, 'jpConfigPath': jpConfigPath})
                 
-                config = j.tools.inifile.open(qpConfigPath)
+                config = j.tools.inifile.open(jpConfigPath)
                             
                 supportedPlatforms = self._getSupportedPlatformsFromConfig(config)
                 supportedPlatform = list(set(supportedPlatforms))
@@ -650,33 +649,33 @@ class JPackageMetadataScanner():
                         platformConflicts[bundledPlatform]['isBundled'] = 'yes'
                         
                 if platformConflicts:
-                    qpInfo = {'name': qpName,
-                              'configPath': qpConfigPath,
+                    jpInfo = {'name': jpName,
+                              'configPath': jpConfigPath,
                               'hasRecipe': jPackageModel.coderecipe}
                     
-                    self._printPlatformConflicts(qpInfo, platformConflicts)
+                    self._printPlatformConflicts(jpInfo, platformConflicts)
             
             
-    def _printPlatformConflicts(self, qpInfo, qpConflicts):
+    def _printPlatformConflicts(self, jpInfo, jpConflicts):
         '''
         Prints a jpackages its platform conflicts
         
-        @param qpInfo: dict containing relevant jpackages info
-        @type qpInfo: Dictionary
+        @param jpInfo: dict containing relevant jpackages info
+        @type jpInfo: Dictionary
         
-        @param qpConflicts: dict of platform conflicts
-        @type qpConflicts: Dictionary
+        @param jpConflicts: dict of platform conflicts
+        @type jpConflicts: Dictionary
         '''
         
         j.console.echo('\n\n')
-        j.console.echo('name:   %(name)s' % qpInfo)
-        j.console.echo('config: %(configPath)s' % qpInfo)
+        j.console.echo('name:   %(name)s' % jpInfo)
+        j.console.echo('config: %(configPath)s' % jpInfo)
         
         j.console.echo('recipe: yes')            
         j.console.echo('\n')
         j.console.echo('platform        supported    bundled')
         
-        for platformName, conflictDetails in qpConflicts.iteritems():
+        for platformName, conflictDetails in jpConflicts.iteritems():
             whiteSpaceA =  (16 - len(platformName)) * ' '
             whiteSpaceB =  (13 - len(conflictDetails['isSupported'])) * ' '
             
@@ -701,15 +700,15 @@ class JPackageMetadataScanner():
         jPackageModels = self.getAllJpackages(qualityLevels)
                 
         for jPackageModel in jPackageModels:
-            qpName = jPackageModel.name
-            qpPath = jPackageModel.path                            
-            qpConfigPath = j.system.fs.joinPaths(qpPath, 'jpackages.cfg')
+            jpName = jPackageModel.name
+            jpPath = jPackageModel.path                            
+            jpConfigPath = j.system.fs.joinPaths(jpPath, 'jpackages.cfg')
                 
-            if not j.system.fs.exists(qpConfigPath):
-                raise RuntimeError('Could\'t find %(jPackageName)s jpackages config file at %(qpConfigPath)s' % {
-                    'jPackageName': jPackageModel.name, 'qpConfigPath': qpConfigPath})
+            if not j.system.fs.exists(jpConfigPath):
+                raise RuntimeError('Could\'t find %(jPackageName)s jpackages config file at %(jpConfigPath)s' % {
+                    'jPackageName': jPackageModel.name, 'jpConfigPath': jpConfigPath})
             
-            config = j.tools.inifile.open(qpConfigPath)
+            config = j.tools.inifile.open(jpConfigPath)
                         
             supportedPlatforms = self._getSupportedPlatformsFromConfig(config)
             
@@ -745,26 +744,26 @@ class JPackageMetadataScanner():
                     'platformName': duplicatePlatform})
                     
             if conflicts:
-                qpInfo = {'name': qpName,
-                          'configPath': qpConfigPath}
+                jpInfo = {'name': jpName,
+                          'configPath': jpConfigPath}
                 
-                self._printConfigConflicts(qpInfo, conflicts)
+                self._printConfigConflicts(jpInfo, conflicts)
                 
                         
-    def _printConfigConflicts(self, qpInfo, qpConflicts):
+    def _printConfigConflicts(self, jpInfo, jpConflicts):
         '''
         Prints a jpackages its config conflicts
         
-        @param qpInfo: dict containing relevant jpackages info
-        @type qpInfo: Dictionary
+        @param jpInfo: dict containing relevant jpackages info
+        @type jpInfo: Dictionary
         
-        @param qpConflicts: list of config conflicts
-        @type qpConflicts: List
+        @param jpConflicts: list of config conflicts
+        @type jpConflicts: List
         '''
         
         j.console.echo('\n\n')
-        j.console.echo('name:   %(name)s' % qpInfo)
-        j.console.echo('config: %(configPath)s' % qpInfo)
+        j.console.echo('name:   %(name)s' % jpInfo)
+        j.console.echo('config: %(configPath)s' % jpInfo)
         
-        for qpConflict in qpConflicts:
-            j.console.echo(qpConflict)
+        for jpConflict in jpConflicts:
+            j.console.echo(jpConflict)

@@ -1,4 +1,4 @@
-h2. $(qp.name) $(qp.version)
+h2. $(jp.name) $(jp.version)
 
 Documentation about jpackage, multiple files can be put on this location and used as wiki
 (for now confluence style docs used)

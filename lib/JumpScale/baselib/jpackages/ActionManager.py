@@ -21,7 +21,7 @@ class ActionManager:
     def _getActionMethod(self,name):    
         C="""
 def method(self,**args):
-    args["qp"]=self._jpackages
+    args["jp"]=self._jpackages
     te=self._taskletEngines["{name}"]
     result=te.executeV2(**args)
     return result
