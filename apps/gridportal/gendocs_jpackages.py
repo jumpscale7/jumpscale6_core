@@ -2,8 +2,7 @@ from JumpScale import j
 
 j.application.start("gendocs")
 
-
-outpath="jpackagedocs"
+outpath="/opt/jpackagedocs"
 
 class JPdata():
     def __init__(self):
