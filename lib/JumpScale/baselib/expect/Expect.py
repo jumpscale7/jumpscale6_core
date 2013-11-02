@@ -682,7 +682,7 @@ class Expect:
 
     def executeStep(self,cmd,toexpect,errormsg="",timeout=1):
         self.send(cmd)
-        result=self.expect(toexpect)
+        result=self.expect(toexpect,timeout=timeout)
         if j.basetype.boolean.check(result):
             if result==False:
                 if errormsg=="":

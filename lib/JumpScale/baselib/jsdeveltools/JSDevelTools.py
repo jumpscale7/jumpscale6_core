@@ -55,9 +55,14 @@ class JSDevelTools:
             cmd="cd %s;python zworkerStart.py %s %s %s %s"%(path,"127.0.0.1",6556,worker,roles)
             j.system.platform.screen.executeInScreen(name,"w%s"%worker,cmd,wait=1)
 
-    def startPortalByobu(self, path=None):
+    def startPortalByobu(self, path=None,addscreens=[]):
         name="owbackend"
-        self.startBackendByobu(["ftpgw","portal"],name=name)
+        if "ftpgw" not in addscreens:
+            addscreens.append("ftpgw")
+        if "portal" not in addscreens:
+            addscreens.append("portal")
+
+        self.startBackendByobu(addscreens,name=name)
 
         if not path: #to enable startPortal to work non-interactively as well
             items=j.system.fs.listFilesInDir("/opt/jumpscale/apps",True,filter="appserver.cfg")
@@ -83,3 +88,9 @@ class JSDevelTools:
         if not j.system.net.waitConnectionTest('localhost', 21, 30):
             raise RuntimeError("Failed to start ftp")
 
+    def startGridPortalAgentControllerByobu(self, path=None):
+        nragents=1
+        addscreens=["agentcontroller"]
+        for i in nragents:
+            addscreens.append("agent%s"%i+1)
+        self.startPortalByobu(addscreens=addscreens)
