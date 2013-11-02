@@ -7,7 +7,7 @@ j.application.start("startworkers")
 
 j.dirs.appDir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps')
 
-j.core.grid.configureNode(gridid=5, name="", roles=["atestmachine.1", "all"], brokerip="localhost", brokerport="6554")
+j.core.grid.configureNode(gridid=5, name="", roles=["atestmachine.1", "all"], brokerip="localhost", brokerport="5651")
 
 j.core.grid.configureBroker(domain='adomain.com', osisip='localhost', osisport=5544, brokerid=1)
                             #give a unique brokerid can also do automatically but will be confusing

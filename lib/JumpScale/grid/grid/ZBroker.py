@@ -24,7 +24,7 @@ ujson = j.db.serializers.getSerializerType('j')
 class ZBroker(ZDaemon):
 
     def __init__(self):
-        ZDaemon.__init__(self, port=5554)
+        ZDaemon.__init__(self)
         self.daemon.broker = self
         self.workers = {}  # key = worker.id = process.id (process id of worker which is unique) also called workerid, value is the set of roles
         self.role2workers = {}
@@ -78,8 +78,8 @@ class ZBroker(ZDaemon):
 
         j.logger.consoleloglevel = 7
 
-        port = j.core.grid.config.getInt("grid.broker.port")
-        ip = j.core.grid.config.get("grid.broker.ip")
+        port = j.core.grid.config.getInt("osis.port")
+        ip = j.core.grid.config.get("osis.ip")
         nsid = j.core.grid.config.getInt("grid.broker.id")
 
         osisclient = j.core.osis.getClient(ip, port)

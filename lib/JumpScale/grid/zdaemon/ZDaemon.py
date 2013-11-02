@@ -15,7 +15,7 @@ GeventLoop = j.core.gevent.getGeventLoopClass()
 
 class ZDaemon(GeventLoop):
 
-    def __init__(self, port=4444, name="", nrCmdGreenlets=50, sslorg="", ssluser="", sslkeyvaluestor=None):
+    def __init__(self, port=None, name="", nrCmdGreenlets=50, sslorg="", ssluser="", sslkeyvaluestor=None):
         gevent.monkey.patch_socket()
         GeventLoop.__init__(self)
 
@@ -33,6 +33,9 @@ class ZDaemon(GeventLoop):
         # self.watchdog = {}  # active ports are in this list
 
         self.port = port
+
+        if port==None:
+            raise RuntimeError("Port cannot be none")
 
         self.nrCmdGreenlets = nrCmdGreenlets
 
@@ -85,10 +88,11 @@ class ZDaemon(GeventLoop):
                 frontend.send_multipart(parts[1:])  # @todo dont understand why I need to remove first part of parts?
 
     def start(self, mainloop=None):
+        print "starting %s"%self.name
         self.schedule("cmdGreenlet", self.cmdGreenlet)
         self.startClock()
 
-        print "start"
+        print "start %s on port:%s"%(self.name,self.port)
         if mainloop <> None:
             mainloop()
         else:

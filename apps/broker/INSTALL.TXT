@@ -1,4 +1,4 @@
 execute in shell
-owextend
+jsdevel
 
 will install all required

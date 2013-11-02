@@ -29,7 +29,7 @@ class OSISFactory:
         start deamon
         """
         osis = self.getLocal(path, overwriteHRD, overwriteImplementation, namespacename)
-        zd = j.core.zdaemon.getZDaemon(port=port)
+        zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
         zd.setCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
         zd.daemon.cmdsInterfaces["osis"][-1].osis = osis  # is the first instance of the cmd interface
 
