@@ -1,4 +1,4 @@
-
+    
 from JumpScale import j
 
 
@@ -39,6 +39,6 @@ class OSISClientForCat():
     def list(self, prefix=""):
         return self.client.list(namespaceid=self.namespaceid, catid=self.catid, prefix=prefix)
 
-    def search(self, query, start=0, size=10):
+    def search(self, query, start=0, size=None):
         return self.client.search(namespaceid=self.namespaceid, catid=self.catid, query=query,
                                   start=start, size=size)

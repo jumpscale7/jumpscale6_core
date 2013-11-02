@@ -43,7 +43,7 @@ class OSISCMDS(object):
         oi = self.osis.get(namespaceid, catid)
         return oi.delete(key=key)
 
-    def search(self, namespaceid, catid, query, start=0, size=10, session=None):
+    def search(self, namespaceid, catid, query, start=0, size=None, session=None):
         oi = self.osis.get(namespaceid, catid)
         result = oi.find(query, start, size)
         return result
