@@ -9,10 +9,11 @@ import hashlib
         
 class HgLibClient:    
 
-    _configs = ['ui.merge=internal:merge']
+    # _configs = ['ui.merge=internal:merge']  @todo is this ok to remove? (kds)
+    _configs = []
 
 
-    def __init__(self, hgbasedir, remoteUrl="", branchname="default", cleandir=None):
+    def __init__(self, hgbasedir, remoteUrl="", branchname=None, cleandir=None):
         """
         @param base dir where local hgrepository will be stored
         @param remote url of hg repository, can be empty if local repo is created
@@ -26,7 +27,8 @@ class HgLibClient:
             branchname = 'default'
         self.branchname = branchname
 
-        self._log("mercurial remoteurl:%s"%(remoteUrl),category="config")
+        if remoteUrl<>"":
+            self._log("mercurial remoteurl:%s"%(remoteUrl),category="config")
         
         if (not isinstance(hgbasedir, basestring) or not isinstance(remoteUrl, basestring))\
          or (branchname and not isinstance(branchname, basestring)):
@@ -35,10 +37,14 @@ class HgLibClient:
         if not self.isInitialized() and not self.remoteUrl:
             raise RuntimeError(".hg not found and remote url is not supplied")
 
+        ##use branchname from hg itself
+        # branchmarker=j.system.fs.joinPaths(self.basedir,".branch")
+        # if j.system.fs.exists(branchmarker):
+        #     #found branch marker
+        #     self.branchname=j.system.fs.fileGetContents(j.system.fs.joinPaths(self.basedir,".branch"))/replace("\n","").strip()
+
         if j.system.fs.exists(self.basedir) and not self.isInitialized():
             if len(j.system.fs.listFilesInDir(self.basedir,recursive=True))==0:
-                if self.branchname==None:
-                    self.branchname=j.console.askString("Which branch do you want to clone, if empty will be the tip (trunk)","")
                 self._clone()
             else:
                 #did not find the mercurial dir
@@ -56,22 +62,12 @@ class HgLibClient:
             
         elif not j.system.fs.exists(self.basedir):
             j.system.fs.createDir(self.basedir)
-            if self.branchname == None:
-                if j.application.shellconfig.interactive:
-                    self.branchname = j.console.askString("Which branch do you want to clone?", "default")
-                else:
-                    self.branchname = "default"
             self._clone()
         else:
             self.client = hglib.open(self.basedir, configs=self._configs)
             self.remoteUrl = self.getUrl()
-            if not branchname:
-                self.branchname = self.getbranchname()
-           
-                
+            self.branchname = self.getbranchname()                
             
-        #make sure we have the branchname which has been specified on the local repo            
-        self.checkbranch()
         self.reponame, self.repokey = self._getRepoNameAndKey()
 
     def _getRepoNameAndKey(self):
