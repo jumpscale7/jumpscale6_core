@@ -10,3 +10,4 @@ category.indexttl = $(namespace.indexttl)
 
 category.type= $(namespace.type)
 
+category.name=

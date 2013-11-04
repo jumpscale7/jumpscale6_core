@@ -1,10 +1,8 @@
 from JumpScale import j
-import struct
 
-from ZBase import ZBase
+OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 
-
-class ZNode(ZBase):
+class Node(OsisBaseObject):
 
     """
     identifies a node in the grid
@@ -13,19 +11,16 @@ class ZNode(ZBase):
 
     def __init__(self, ddict={}, roles=[], name="", netaddr={}, machineguid="", id=0):
         if ddict <> {}:
-            self.__dict__ = ddict
+            self.load(ddict)
         else:
+            self.init("node","1.0")
             self.id = id
             self.gid = 0
             self.name = name
             self.roles = roles
             self.netaddr = netaddr
             self.guid = None
-            self.sguid = None
             self.machineguid = machineguid
-
-    def getCategory(self):
-        return "znode"
 
     def getUniqueKey(self):
         """
@@ -46,23 +41,3 @@ class ZNode(ZBase):
         self.guid = "%s_%s" % (self.gid, self.id)
         return self.guid
 
-    def getIDs(self):
-        """
-        return (gid,id)
-        gid=grid id
-        id=unique int id for obj
-        """
-        return struct.unpack("<HH", self.sguid)
-
-    def getGuidParts(self):
-        return ["gid", "id"]
-
-    def getObjectType(self):
-        return 10
-
-    def getVersion(self):
-        return 1
-
-    def getMessage(self):
-        #[$objecttype,$objectversion,guid,$object=data]
-        return [10, 1, self.sguid, self.__dict__]
