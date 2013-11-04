@@ -80,7 +80,7 @@ class HRDPos():
 
     def getHRD(self,key,position=""):
         if len(self._hrds.keys())==1:
-            return self._hrds[0]
+            return self._hrds[self._hrds.keys()[0]]
         key=key.replace(".","_")
         if key not in self._key2hrd:
             self._reloadCache()

@@ -67,7 +67,6 @@ class ErrorConditionObject():
             self.appname=j.application.appname #name as used by application
             self.gid = j.application.whoAmI.gid
             self.nid = j.application.whoAmI.nid
-            self.bid = j.application.whoAmI.bid
             if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
                 self.aid = j.core.grid.aid
             self.pid = j.application.whoAmI.pid

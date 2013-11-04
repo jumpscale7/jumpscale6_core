@@ -19,6 +19,7 @@ class SerializersFactory():
             p=pickle
             r=bin (means is not object (r=raw))
             l=log
+            d=dict (check if there is a dict to object, if yes use that dict, removes the private properties (starting with _))
 
          example serializationstr "mcb" would mean first use messagepack serialization then compress using blosc then encrypt (key will be used)
 
@@ -74,6 +75,11 @@ class SerializersFactory():
                 from .SerializerUJson import SerializerUJson
                 j.db.serializers.ujson = SerializerUJson()
                 self.types[type]=j.db.serializers.ujson
+
+            elif type=="d":
+                from .SerializerDict import SerializerDict
+                j.db.serializers.dict = SerializerDict()
+                self.types[type]=j.db.serializers.dict
 
             elif type=="l":
                 from .SerializerLZMA import SerializerLZMA

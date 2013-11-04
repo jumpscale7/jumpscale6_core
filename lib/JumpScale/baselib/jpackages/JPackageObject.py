@@ -235,26 +235,11 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def getDebugMode(self):
         return self.state.debugMode
 
-    def setDebugMode(self,dependencies=False):
-
-        #process all dependencies
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.setDebugMode()
-
+    def setDebugMode(self):
         self.state.setDebugMode()
         self.log("set debug mode",category="init")
 
-    def removeDebugMode(self,dependencies=False):
-
-        #process all dependencies
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.removeDebugMode()
-
-
+    def removeDebugMode(self):
         self.state.setDebugMode(mode=0)
         self.log("remove debug mode",category="init")
 
@@ -706,7 +691,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         when dependencies the reinstall will not be asked for there
 
-        """
+        """        
 
         # If I am already installed assume my dependencies are also installed
         if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
@@ -826,16 +811,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         if self.debug:
             return #do not copy files when debug, need to be improved with next remark
-
-        # if len(j.system.fs.listLinksInDir(destination))>0:
-        #     raise RuntimeError("cannot copy files to %s because links found in destination dir.\n Change jpackage to copy subdirs to more specific destinations."%destination)
-
-        # if j.system.fs.checkLinksExistAndPointTo(destination,"/opt/code"):
-        #     raise RuntimeError("cannot copy files to %s because links found in destination pointing to /opt/code."%destination)
-
-        #remove links first, otherwise code gets overwritten
-        #TOO DANGEROUS
-# -       j.system.fs.removeLinks(destination)
 
         def createAncestors(file):
             # Create the ancestors
@@ -1236,7 +1211,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if dependencies==None and j.application.shellconfig.interactive:
             dependencies = j.console.askYesNo("Do you want the bundles of all depending packages to be downloaded too?")
         else:
-            dependencies=True
+            dependencies=dependencies
         
         self.loadActions()
         if dependencies:
@@ -1354,21 +1329,10 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return result        
 
     # upload the bundle
-    def upload(self, remote=True, local=True,dependencies=False,actionCaching=True):
+    def upload(self, remote=True, local=True):
         """
         Upload jpackages to Blobstor, default remote and local
         """
-
-        if actionCaching:
-            if j.packages._actionCheck(self, "upload"):
-                return True
-            j.packages._actionSet(self, "upload")
-
-        #process all dependencies
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.upload(remote=remote,local=local,dependencies=dependencies)
                
         self.loadActions()
 
@@ -1556,6 +1520,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if actionCaching:
             if j.packages._actionCheck(self, action):
                 return True
+
             j.packages._actionSet(self, action)
 
         #process all dependencies

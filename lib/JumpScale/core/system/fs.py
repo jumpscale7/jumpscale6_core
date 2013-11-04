@@ -744,40 +744,6 @@ class SystemFS:
         else:
             raise RuntimeError("Specified path: %s does not exist in system.fs.listDir"% path)
 
-    def listLinksInDir(self,path,dirsOnly=True):
-        """
-        list all links in dir, works recursive
-        """
-        #@todo error: dirstOnly = False does not work, think error in walker
-        def checkLink(path,arg,stat,dest):
-            if j.system.fs.isLink(path):
-                if dirsOnly:
-                    if j.system.fs.isDir(path):
-                        arg.append(path)
-                else:
-                    arg.append(path)
-            
-        links=[]
-        walker=j.base.fswalker.get()
-
-        callbackFunctions={}
-        callbackFunctions["L"]=checkLink
-        walker.walk(path, callbackFunctions=callbackFunctions, arg=links, callbackMatchFunctions={}, followlinks=False)
-
-        return links
-
-    def checkLinksExistAndPointTo(self,path,dest="/opt/code"):
-        """
-        only works for dirs
-        if links are found which point to dest or path underneath dest then will return True otherwise False
-        """
-        links=self.listLinksInDir(path)
-        for link in links:
-            if os.path.realpath(link).find(dest)==0:
-                return True
-        return False
-            
-
     def listFilesInDir(self, path, recursive=False, filter=None, minmtime=None, maxmtime=None,depth=None, case_sensitivity='os',exclude=[],followSymlinks=True):
         """Retrieves list of files found in the specified directory
         @param path:       directory path to search in
@@ -1123,7 +1089,6 @@ class SystemFS:
 
     def isLink(self, path,checkJunction=False):
         """Check if the specified path is a link
-        works for dir & file
         @param path: string
         @rtype: boolean (True if the specified path is a link)
         """

@@ -3,7 +3,7 @@ from JumpScale import j
 try:
     import regex
 except:
-    print "COULD NOT IMPORT REGEX, PLEASE INSTALL"
+    pass
 
 class REGEXTOOL():
 

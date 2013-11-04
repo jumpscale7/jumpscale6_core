@@ -2,7 +2,7 @@ def main(j,args,params,tags,tasklet):
    
     #package code from codemgmt recipe
 
-    qp=args.jp
+    qp=args.qp
 
     recipe=qp.actions.code_getRecipe()
 
