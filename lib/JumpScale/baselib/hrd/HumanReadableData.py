@@ -428,6 +428,9 @@ class HRD():
         """
         error=False
         for line in template.split("\n"):
+            line=line.strip()
+            if line=="" or line[0]=="#":
+                continue
             if line.find("=")<>-1:
                 items=line.split("=")
                 if len(items)>2:

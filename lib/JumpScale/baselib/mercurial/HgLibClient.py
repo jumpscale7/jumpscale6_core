@@ -399,10 +399,10 @@ syntax: regexp
             if self.getbranchname() != self.branchname:
                 force=False
                 if j.application.shellconfig.interactive:
-                    if j.gui.dialog.askYesNo("\nBranchnames conflict for repo, qshell mercurial client has branchname: %s and branchname on filesystem: %s\nThis might result in loosing code changes. \nDo you want to continue, this will pull & update to the branch?" % (self.branchname,self.getbranchname())):
+                    if j.gui.dialog.askYesNo("\nBranchnames conflict for repo, jshell mercurial client has branchname: %s and branchname on filesystem: %s\nThis might result in loosing code changes. \nDo you want to continue, this will pull & update to the branch?" % (self.branchname,self.getbranchname())):
                         self.pullupdate(force=True)
                 if not force:
-                    self._raise("Branchnames conflict for repo, qshell mercurial client has branchname: %s and branchname on filesystem: %s" % (self.branchname,self.getbranchname()))
+                    self._raise("Branchnames conflict for repo, jshell mercurial client has branchname: %s and branchname on filesystem: %s" % (self.branchname,self.getbranchname()))
 
                 
     def getbranches(self):

@@ -324,7 +324,7 @@ class InstallTools():
         
         self.copytreedeletefirst(os.path.join(pldir,"qself.BASE6","cfg"),"%s/cfg/" % self.BASE)
         if not self.TYPE=="WIN":
-            self.copydeletefirst(os.path.join(pldir,"qself.BASE6","qshell"),"%s/qshell" % self.BASE)
+            self.copydeletefirst(os.path.join(pldir,"qself.BASE6","jshell"),"%s/jshell" % self.BASE)
         self.copytreedeletefirst(os.path.join(pldir,"core"),"%s/lib/jumpscale" % self.BASE)
         #writefile("%s/lib/jumpscale/core/__init__.py"%self.BASE,"")
         self.copytreedeletefirst(os.path.join(pldir,"extensions","core"),"%s/lib/jumpscaleextensions/core" % self.BASE)

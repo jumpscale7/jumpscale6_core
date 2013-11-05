@@ -148,7 +148,7 @@ class ConfigFileManager():
                     else:
                         value= j.console.askPassword(description)
                 else: 
-                    raise Exception("Parameter not configured yet in config file: %s, section:%s , param:%s. Please fix. \nTIP You can also put qshell in interactive mode (j.application.shellconfig.interactive=True):" %(self._configType,section,paramName))
+                    raise Exception("Parameter not configured yet in config file: %s, section:%s , param:%s. Please fix. \nTIP You can also put jshell in interactive mode (j.application.shellconfig.interactive=True):" %(self._configType,section,paramName))
                 if value=="":
                     value=defaultValue
             maincfg.setParam(section,paramName,value)

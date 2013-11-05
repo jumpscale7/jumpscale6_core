@@ -146,7 +146,7 @@ class ErrorConditionObject():
         try:
             k="%s"%k
             v="%s"%v
-            if k in ["re","q","jumpscale","pprint","qexec","qshell","Shell","__doc__","__file__","__name__","__package__","i","main","page"]:
+            if k in ["re","q","jumpscale","pprint","qexec","jshell","Shell","__doc__","__file__","__name__","__package__","i","main","page"]:
                 return False
             if v.find("<module")<>-1:
                 return False

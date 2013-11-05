@@ -62,13 +62,13 @@ def main():
         ns['q'] = q
         ns['i'] = i
         
-        q.application.appname = 'qshell'
-        q.qshellconfig.interactive=True
+        q.application.appname = 'jshell'
+        q.jshellconfig.interactive=True
         q.application.start()
 
         # First time Q-Shell is loaded: automatically update list of Q-Packages available on the server.
         mainCfg = q.config.getInifile("main")
-        FIRSTRUN_PARAMNAME = "qshell_firstrun"
+        FIRSTRUN_PARAMNAME = "jshell_firstrun"
 
         #if not mainCfg.checkParam("main", FIRSTRUN_PARAMNAME) or mainCfg.getBooleanValue("main", FIRSTRUN_PARAMNAME) == True:
         #    q.action.start('Retrieving JPackage information from '
@@ -78,7 +78,7 @@ def main():
         #    mainCfg.setParam("main", FIRSTRUN_PARAMNAME, False)
         #    mainCfg.write()
 
-        q.qshellconfig.interactive=True
+        q.jshellconfig.interactive=True
         if options.debug:
             q.logger.consoleloglevel=8
         else:

@@ -963,11 +963,11 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         params.platform = platform
         self.log('Package')
         # Disable action caching:
-        # If a user packages for 2 different platforms in the same qshell
+        # If a user packages for 2 different platforms in the same jshell
         # instance, the second call is just ignored, which is not desired
         # behaviour.
         # Also, when a user packages once, then sees a need to update his/her
-        # code, and then packages again in the same qshell, again the second
+        # code, and then packages again in the same jshell, again the second
         # time would be a non-op, which is again not desired. So we disable the
         # action caching for this action.
         if dependencies:
