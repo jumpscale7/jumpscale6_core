@@ -1,6 +1,6 @@
 h1. Debug
 
-Open a qshell session inside itself, to help debug the page itself.
+Open a jshell session inside itself, to help debug the page itself.
 
 {{code:
 \{\{debug\}\}
