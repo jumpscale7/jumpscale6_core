@@ -1,10 +1,5 @@
 from JumpScale import j
 
-from CoreModel.ZNode import ZNode
-from CoreModel.ZJob import ZJob
-from CoreModel.ZAction import ZAction
-from CoreModel.ZApplication import ZApplication
-from CoreModel.ZProcess import ZProcess
 from CoreModel.ModelObject import ModelObject
 
 #from ZBrokerClient import ZBrokerClient
@@ -13,24 +8,6 @@ import time
 
 
 class ZCoreModelsFactory():
-
-    def getZNodeObject(self, ddict={}, roles=[], name="", netaddr={}, machineguid="", id=0):
-        """
-        @ddict is to directly transform an dict obj to this object = faster, if not given then use the other properties
-        """
-        return ZNode(ddict, roles, name, netaddr, machineguid)
-
-    def getZJobObject(self, ddict={}, executorrole="", actionid=0, args={}, jidmaster=0, jidparent=0, allworkers=True):
-        return ZJob(ddict, executorrole, actionid, args=args, jidmaster=jidmaster, jidparent=jidparent, allworkers=allworkers)
-
-    def getZActionObject(self, ddict={}, name="", code="", md5="", path="", category="", errordescr="", recoverydescr="", maxtime=0):
-        return ZAction(ddict, name, code, md5, path, category, errordescr, recoverydescr, maxtime)
-
-    def getZApplicationObject(self, ddict={}, name="", description=""):
-        return ZApplication(ddict, name, description)
-
-    def getZProcessObject(self, ddict={}, name="", description="", type="", instance=0, systempid=0):
-        return ZProcess(ddict, name, description, type, instance, systempid)
 
     def getModelObject(self, ddict={}):
         return ModelObject(ddict)
