@@ -421,7 +421,6 @@ class HRD():
 
         return result
         
-
     def checkValidity(self,template):
         """
         @param template is example hrd which will be used to check against, if params not found will be added to existing hrd and error will be thrown to allow user to configure settings
