@@ -13,7 +13,7 @@ class mainclass(OSISStore):
         new,changed,obj=self.setObjIds(obj)
         if changed:
             print "OBJECT CHANGED WRITE"
-            self.db.set(self.dbprefix,key=obj.guid,value=self.serialize(obj.__dict__))
+            self.db.set(self.dbprefix,key=obj.guid,value=ujson.dumps(obj.__dict__))
             self.index(obj)
         return [obj.guid,new,changed]
 
@@ -30,7 +30,6 @@ class mainclass(OSISStore):
             raise RuntimeError("ukey cannot be empty, the obj send needs to return an nonempty obj.getUniqueKey()")
         changed=False
         new=False
-        id=0
         
         if self.db.exists(self.dbprefix_incr, ukey):
             print "ukey exists"

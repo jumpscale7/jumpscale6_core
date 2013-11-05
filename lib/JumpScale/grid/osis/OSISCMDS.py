@@ -198,6 +198,9 @@ class OSISCMDS(object):
                 hrdCat = hrd.getHrd("%s/%s" % (namespacename, catname))
                 catpath = j.system.fs.joinPaths(namespacepath, catname)
 
+                if hrdCat.get("namespace.name") <>namespacename:
+                    hrdCat.set("namespace.name", namespacename)
+
                 if hrdCat.get("category.name") <>catname:
                     hrdCat.set("category.name", catname)
 

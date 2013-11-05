@@ -9,18 +9,19 @@ class Node(OsisBaseObject):
     @param netaddr = {mac:[ip1,ip2]}
     """
 
-    def __init__(self, ddict={}, roles=[], name="", netaddr={}, machineguid="", id=0):
+    def __init__(self, ddict={}):
         if ddict <> {}:
             self.load(ddict)
         else:
             self.init("node","1.0")
-            self.id = id
+            self.id = 0
             self.gid = 0
-            self.name = name
-            self.roles = roles
-            self.netaddr = netaddr
+            self.name = ""
+            self.roles = []
+            self.netaddr = None
             self.guid = None
-            self.machineguid = machineguid
+            self.machineguid = ""
+            self.ipaddr=[]
 
     def getUniqueKey(self):
         """
@@ -35,9 +36,24 @@ class Node(OsisBaseObject):
         self.gid = int(self.gid)
         self.id = int(self.id)
 
-        if self.gid == None:
-            self.gid = q.grid.id
         # self.sguid=struct.pack("<HH",self.gid,self.id)
         self.guid = "%s_%s" % (self.gid, self.id)
+
         return self.guid
+
+    def initFromLocalNodeInfo(self):
+        """
+        get ipaddr info & gid & nid from local config
+        """
+
+        self.machineguid = j.application.getUniqueMachineId().replace(":", "")
+        self.roles= j.application.config.get("grid.node.roles").split(",")
+
+        self.ipaddr=[item for item in j.system.net.getIpAddresses() if item <>"127.0.0.1"]        
+        
+        self.netaddr=j.system.net.getNetworkInfo()
+
+        self.gid=j.application.config.getInt("grid.id")
+        if self.gid==0:
+            raise RuntimeError("grid id cannot be 0")
 

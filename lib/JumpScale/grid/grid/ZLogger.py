@@ -9,8 +9,7 @@ import time
 from gevent import queue as queue
 from ..zdaemon.ZDaemon import ZDaemon
 
-# from ..zdaemon.ZDaemonClient import ZDaemon
-
+import JumpScale.grid.osis
 
 class ZLoggerCMDS(object):
 
@@ -55,18 +54,22 @@ class ZLogger(ZDaemon):
 
         j.core.grid.logger = Dummy()
 
+        #OSIS INit
+        OSISclient = j.core.osis.getClient()
+
+        #make sure system namespace exists
+        OSISclient.createNamespace(name="system",template="coreobjects",incrementName=False)
+
+        OSISclientLogger=j.core.osis.getClientForCategory(OSISclient,"logger","log")
+        OSISclientEco=j.core.osis.getClientForCategory(OSISclient,"system","eco")
+
         path = "loghandling"
         if j.system.fs.exists(path=path):
             self.loghandlingTE = j.core.taskletengine.get(path)
             path = "loghandlingbatched"
             self.loghandlingBatchedTE = j.core.taskletengine.get(path)
             j.core.grid.logger.elasticsearch = None
-            if self.hrd.getInt("logger.elasticsearch.enable") == 1:
-                j.core.grid.logger.elasticsearch = j.core.grid.getLogTargetElasticSearch(serverip=self.hrd.get("logger.elasticsearch.ip"))
-            j.core.grid.logger.osis = None
-            if self.hrd.getInt("logger.osis.enable") == 1:
-                j.core.grid.logger.osis = j.core.osis.getClientForCategory(
-                    "logger", "log", ipaddr=self.hrd.get("logger.osis.ip"), port=self.hrd.getInt("logger.osis.port"))
+            j.core.grid.logger.osis = OSISclientLogger
         else:
             self.loghandlingTE = None
 
@@ -74,23 +77,7 @@ class ZLogger(ZDaemon):
         if j.system.fs.exists(path=path):
             self.eventhandlingTE = j.core.taskletengine.get(path)
             self.eventsMemLog = {}
-            if self.hrd.getInt("logger.osis.enable") == 1:
-                j.core.grid._loadConfig()
-                bid = j.core.grid.config.getInt("grid.broker.id")
-                counter = 1
-                stop = False
-                while bid == 0 and stop == False:
-                    bid = j.core.grid.config.getInt("grid.broker.id")
-                    counter += 1
-                    time.sleep(1)
-                    j.core.grid._loadConfig()
-                    print "wait for identification of broker id, comes from 'grid.broker.id' in hrd config for node."
-                    if counter > 30:
-                        stop = True
-                if bid == 0:
-                    j.errorconditionhandler.raiseBug(message="grid.broker.id cannot be 0 when starting logger", category="grid.init")
-                j.core.grid.logger.osiseco = j.core.osis.getClientForCategory(
-                    "broker_%s" % bid, "eco", ipaddr=self.hrd.get("logger.osis.ip"), port=self.hrd.getInt("logger.osis.port"))
+            j.core.grid.logger.osiseco = OSISclientEco
         else:
             self.eventhandlingTE = None
 

@@ -6,7 +6,7 @@ class LogTargetElasticSearch(object):
 
     """
     Forwards incoming logRecords to elastic search
-    attached to loghandler on openwizzy
+    attached to loghandler on jumpscale
     """
 
     def __init__(self, serverip=None, esclient=None):
