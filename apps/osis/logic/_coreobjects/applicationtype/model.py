@@ -8,7 +8,7 @@ class ApplicationType(OsisBaseObject):
     identifies type of application
     """
 
-    def __init__(self, ddict={}, name="",description="",gid=0, id=0):
+    def __init__(self, ddict={}, name="",description="",type="",gid=0):
         if ddict <> {}:
             self.load(ddict)
         else:
@@ -17,6 +17,8 @@ class ApplicationType(OsisBaseObject):
             self.gid = gid
             self.name = name
             self.description = description
+            self.type = type
+
 
     def getUniqueKey(self):
         """

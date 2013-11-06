@@ -1,8 +1,9 @@
 from JumpScale import j
 
 from CoreModel.ModelObject import ModelObject
-
+import JumpScale.grid.osis
 #from ZBrokerClient import ZBrokerClient
+from collections import namedtuple
 
 import time
 
@@ -31,7 +32,7 @@ class GridFactory():
             raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart jshell")
 
         self.id = self.config.getInt("grid.id")
-        self.nid = self.config.getInt("grid.nid")
+        self.nid = self.config.getInt("grid.node.id")
 
         if test:
 
@@ -42,10 +43,9 @@ class GridFactory():
                 j.errorconditionhandler.raiseInputError(msgpub="Grid needs grid node id (grid.nid) to be filled in in grid config file", message="", category="", die=True)
 
 
-    def init(self, broker=None):
+    def init(self,description="",instance=1):
         """
         """
-
         self._loadConfig(test=False)
 
         # make sure we only log to stdout
@@ -58,43 +58,49 @@ class GridFactory():
         if not j.system.net.waitConnectionTest(self.masterip,5544,10):
             raise RuntimeError("Could not connect to master osis")
 
+        self.gridOsisClient=j.core.osis.getClient(self.masterip)
+
         if self.nid == 0:
             jp=j.packages.findNewest("jumpscale","grid_node")
             jp.configure()
             self.nid = j.core.grid.config.getInt("grid.nid")
 
+            self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
+
             self._loadConfig()
 
-        from IPython import embed
-        print "DEBUG NOW init grid"
-        embed()
+        self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
-        #register application
-        self.aid = self.brokerClient.registerApplication(name=j.application.appname, description="", pid=j.application.whoAmI[2])
+        clientprocess=j.core.osis.getClientForCategory(self.gridOsisClient,"system","process")
 
-        self.processobject = j.core.grid.zobjects.getZProcessObject()
-        self.processobject.systempid = j.application.whoAmI[2]
+        clientapplication=j.core.osis.getClientForCategory(self.gridOsisClient,"system","applicationtype")
 
-        if self.processobject.name == "":
-            self.processobject.name = j.application.appname
+        obj=clientapplication.new(name=j.application.appname,gid=j.application.whoAmI.gid,type="js",description=description)
+        key,new,changed=clientapplication.set(obj)
+        obj=clientapplication.get(key)
+        aid=obj.id
 
-        self.pid = self.brokerClient.registerProcess(obj=self.processobject.__dict__)
+        obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,nid=j.application.whoAmI.nid,\
+            systempid=j.application.systempid,\
+            aid=aid,instance=instance)
+        key,new2,changed2=clientprocess.set(obj2)
+        obj=clientprocess.get(key)
+        pid=obj.id
 
-        self.processobject.id = self.pid
-        self.processobject.getSetGuid()
+        self.pid = pid
+        self.processObject=obj
 
-        self.processobject.lastJobId = 0
-
-        j.application.initWhoAmI(grid=True)
+        WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
+        j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=pid)
 
         j.logger.consoleloglevel = 5
         j.logger.setLogTargetLogForwarder()
 
-    def getLocalIPAccessibleBybroker(self):
-        return j.system.net.getReachableIpAddress(self.config.get("grid.broker.ip"), 555)
+    def getLocalIPAccessibleByGridMaster(self):
+        return j.system.net.getReachableIpAddress(self.config.get("grid.master.ip"), 5544)
 
-    def isbrokerLocal(self):
-        broker = self.config.get("grid.broker.ip")
+    def isGridMasterLocal(self):
+        broker = self.config.get("grid.master.ip")
         if broker.find("localhost") != -1 or broker.find("127.0.0.1") != -1:
             return True
         else:
@@ -161,7 +167,7 @@ class GridFactory():
         from ZWorkerClient import ZWorkerClient
         return ZWorkerClient(ipaddr=ipaddr)
 
-    def getZLoggerClient(self, ipaddr="localhost", port=4444):
+    def getZLoggerClient(self, ipaddr="localhost", port=4443):
         from ZLoggerClient import ZLoggerClient
         return ZLoggerClient(ipaddr=ipaddr, port=port)
 

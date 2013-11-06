@@ -15,10 +15,10 @@ class ECO(OsisBaseObject):
         else:
             self.init("eco","1.0")
 
-            if guid=="":
-                self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes
-            else:
-                self.guid=guid
+            # if guid=="":
+            #     self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes
+            # else:
+            self.guid=guid
 
             self.errormessage=errormessage
             self.errormessagePub=errormessagePub
@@ -51,3 +51,4 @@ class ECO(OsisBaseObject):
                 self.epoch=epoch
 
             self.type=int(type) #j.enumerators.ErrorConditionType                       
+

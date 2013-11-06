@@ -17,7 +17,7 @@ class Session():
         self.netinfo = netinfo
         self.start = int(time.time())
         self.roles = roles
-        self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.bid,j.application.whoAmI.nid)
+        self.agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
 
     def __repr__(self):
         return str(self.__dict__)

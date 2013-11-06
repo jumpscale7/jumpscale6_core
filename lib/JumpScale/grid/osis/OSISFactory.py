@@ -14,6 +14,7 @@ class OSISFactory:
 
     def __init__(self):
         self.osisConnections = {}
+        self.osisConnectionsCat={}
 
     def getLocal(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None):
         """
@@ -48,7 +49,11 @@ class OSISFactory:
         client=j.core.osis.getClient("localhost",port=5544,user="root",passwd="rooter",ssl=False)
         client4node=j.core.osis.getClientForCategory(client,"system","node")
         """        
-        return OSISClientForCat(client, namespace, category)
+        key = "%s_%s_%s_%s" % (client._client.transport._addr, client._client.transport._port,namespace,category)
+        if self.osisConnectionsCat.has_key(key):
+            return self.osisConnectionsCat[key]
+        self.osisConnectionsCat[key]= OSISClientForCat(client, namespace, category)
+        return self.osisConnectionsCat[key]
 
     def getOsisBaseObjectClass(self):
         return OSISBaseObject

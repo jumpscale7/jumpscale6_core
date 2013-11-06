@@ -149,6 +149,7 @@ class OSISStore(object):
             except:
                 pass
             data = obj.__dict__
+            
             if self.indexTTL <> "":
                 self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=self.indexTTL, replication="async")
             else:

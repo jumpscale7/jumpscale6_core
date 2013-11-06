@@ -27,7 +27,7 @@ class ZLoggerCMDS(object):
 
     def log(self, log, session):
         log = j.logger.getLogObjectFromDict(log)
-        self.logger.loghandlingTE.executeV2(logobj=log)
+        log=self.logger.loghandlingTE.executeV2(logobj=log,logger=self.daemon.logger)
 
     def logbatch(self, localegbatch, session):
         self.logger.loghandlingBatchedTE.executeV2(logbatch=logbatch)
@@ -95,26 +95,27 @@ class ZLogger(ZDaemon):
             gevent.sleep(0.1)
             i = 0
             while i < 500 and self.logQueue.empty() == False:
-                msg = self.logQueue.get()
-                if self.loghandlingTE != None:
-                    obj = j.logger.getLogObjectFromDict(j.db.serializers.getSerializerType('j').loads(msg))
-                    if int(obj.order) == 0:
-                        key = "%s_%s_%s" % (obj.gid, obj.bid, obj.pid)
-                        if key not in self.ids:
-                            self.ids[key] = 0
-                        self.ids[key] += 1
-                        obj.order = self.ids[key]
-                    if obj.epoch == 0:
-                        obj.epoch = self.now
-                    obj = self.loghandlingTE.executeV2(logobj=obj)
-                    if obj <> None:
-                        batch.append(obj.__dict__)
+                obj = self.logQueue.get()
+                                                
+                if int(obj.order) == 0:
+                    key = "%s_%s" % (obj.gid, obj.pid)
+                    if key not in self.ids:
+                        self.ids[key] = 0
+                    self.ids[key] += 1
+                    obj.order = self.ids[key]
+                if obj.epoch == 0:
+                    obj.epoch = self.now
+                # obj = self.loghandlingTE.executeV2(logobj=obj)
+                # if obj <> None:
+                batch.append(obj.__dict__)
+
                 i += 1
             if batch != []:
                 self.loghandlingBatchedTE.executeV2(logbatch=batch)
                 batch = []
-            # FOR DEBUG PURPOSES:
-            newqueuesize = self.logQueue.qsize()
-            if newqueuesize != queuesize:
-                print "Queuesize: %s" % newqueuesize
-                queuesize = newqueuesize
+
+            # # FOR DEBUG PURPOSES:
+            # newqueuesize = self.logQueue.qsize()
+            # if newqueuesize != queuesize:
+            #     print "Queuesize: %s" % newqueuesize
+            #     queuesize = newqueuesize

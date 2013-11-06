@@ -16,7 +16,7 @@ class mainclass(OSISStore):
     def set(self,key,value):
         docs = []
         for logobject in ujson.loads(value):
-            logobject["id"] = "%s_%s_%s_%s"%(logobject["gid"], logobject["bid"], logobject["pid"], logobject["order"])            
+            logobject["id"] = "%s_%s_%s"%(logobject["gid"], logobject["pid"], logobject["order"])            
             docs.append(logobject)
 
         print "batch:%s"%len(docs)            

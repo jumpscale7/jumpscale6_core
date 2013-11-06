@@ -8,7 +8,3 @@ class mainclass(parentclass):
     def __init__(self):
         pass
 
-
-    def getObject(self,ddict={}):
-        obj=j.core.grid.zobjects.getZProcessObject(ddict=ddict)
-        return obj

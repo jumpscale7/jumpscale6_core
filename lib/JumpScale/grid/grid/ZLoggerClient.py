@@ -4,7 +4,7 @@ from ..serverbase.DaemonClient import DaemonClient
 
 class ZLoggerClient(object):
 
-    def __init__(self, ipaddr="localhost", port=4444):
+    def __init__(self, ipaddr="localhost", port=4443):
         trans = ZDaemonTransport(ipaddr, port)
         self.client = DaemonClient(org='org', user='root', passwd='1234', transport=trans)
 

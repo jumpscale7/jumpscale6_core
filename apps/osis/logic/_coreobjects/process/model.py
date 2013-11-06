@@ -8,18 +8,16 @@ class Process(OsisBaseObject):
     unique process
     """
 
-    def __init__(self, ddict={}, gid=0,aid=0,nid=0,name="",type="",description="",instance="",systempid=0, id=0):
+    def __init__(self, ddict={}, gid=0,aid=0,nid=0,name="",instance="",systempid=0, id=0):
         if ddict <> {}:
             self.load(ddict)
         else:
             self.init("process","1.0")
             self.id = 0
             self.gid = gid
-            self.aid = aid  # application id which is unique per broker, application type  (is a type not a specific instance of an app)
+            self.aid = aid  # application id is unique per grid
             self.nid = nid
             self.name = name
-            self.type = type
-            self.description = description
             self.instance = instance
             self.systempid = systempid  # system process id (PID) at this point
             self.guid = None
