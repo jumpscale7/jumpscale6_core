@@ -203,7 +203,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                     #a configure change has happened
                     self.configchanged=True
                     #also needs to reload the config object on the application object
-                    j.application.initWhoAmI() #will load that underneath
+                    j.application.loadConfig() #will load that underneath
 
 
     def loadActions(self, force=False):
@@ -873,7 +873,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.configure()
         self.actions.configure()
         # self.state.setIsPendingReconfiguration(False)
-        j.application.initWhoAmI() #makes sure hrd gets reloaded to application.config object
+        j.application.loadConfig() #makes sure hrd gets reloaded to application.config object
 
     def codeExport(self, dependencies=False, update=None):
         """

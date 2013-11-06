@@ -271,10 +271,12 @@ class ErrorConditionHandler():
 
         """
         errorConditionObject.toAscii()
+
+
         if self.checkErrorIgnore(errorConditionObject):
             return
-
-        print errorConditionObject
+        
+        print errorConditionObject        
 
         if j.logger.clientdaemontarget:
             j.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)

@@ -362,12 +362,13 @@ class SystemNet:
         """
         returns {macaddr_name:[ipaddr,ipaddr],...}
         """ 
-        netaddr={}       
+        netaddr={}
         nics=self.getNics()
         for nic in nics:
             mac=self.getMacAddress(nic)
             ips=[item[0] for item in self.getIpAddress(nic)]
-            netaddr["%s_%s"%(mac,nic.lower())]=ips            
+            if nic.lower()<>"lo":
+                netaddr[mac]=[nic.lower(),",".join(ips)]
         return  netaddr
 
     def getIpAddress(self, interface):
