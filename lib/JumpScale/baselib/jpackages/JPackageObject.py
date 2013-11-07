@@ -235,11 +235,23 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def getDebugMode(self):
         return self.state.debugMode
 
-    def setDebugMode(self):
+    def setDebugMode(self,dependencies=False):
+
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.setDebugMode(dependencies=False)
+
         self.state.setDebugMode()
         self.log("set debug mode",category="init")
 
-    def removeDebugMode(self):
+    def removeDebugMode(self,dependencies=False):
+
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.removeDebugMode(dependencies=False)
+
         self.state.setDebugMode(mode=0)
         self.log("remove debug mode",category="init")
 
@@ -1329,12 +1341,18 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return result        
 
     # upload the bundle
-    def upload(self, remote=True, local=True):
+    def upload(self, remote=True, local=True,dependencies=False):
         """
         Upload jpackages to Blobstor, default remote and local
         """
                
         self.loadActions()
+
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.upload(dependencies=False, remote=remote,local=local)
+
 
         j.packages.getDomainObject(self.domain)
 

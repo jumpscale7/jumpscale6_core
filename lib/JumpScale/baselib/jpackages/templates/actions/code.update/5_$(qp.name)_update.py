@@ -2,9 +2,9 @@ def main(j,args,params,tags,tasklet):
    
     #update info into local repo
     
-    qp=args.qp
+    jp=args.jp
 
-    recipe=qp.actions.code_getRecipe()
+    recipe=jp.actions.code_getRecipe()
 
     if args.has_key("force"):
         recipe.update(args.force)
