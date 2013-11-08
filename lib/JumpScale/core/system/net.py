@@ -35,6 +35,23 @@ class SystemNet:
             now=j.base.time.getTimeEpoch()
         return False
 
+    def waitConnectionTestStopped(self,ipaddr,port,timeout):
+        """
+        will test that port is not active
+        will return false if not successfull (timeout)
+        """
+        j.logger.log("test tcp connection to '%s' on port %s"%(ipaddr,port))
+        if ipaddr.strip()=="localhost":
+            ipaddr="127.0.0.1"
+        port=int(port)
+        start=j.base.time.getTimeEpoch()
+        now=start
+        while now<start+timeout:
+            if j.system.net.tcpPortConnectionTest(ipaddr,port)==False:
+                return True
+            now=j.base.time.getTimeEpoch()
+        return False
+
 
     def checkListenPort(self, port):
         """

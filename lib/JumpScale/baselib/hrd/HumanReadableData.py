@@ -23,6 +23,9 @@ class HumanReadableDataFactory:
 
 
     def replaceVarsInText(self,content,hrdtree,position=""):
+        if content=="":
+            return content
+            
         items=j.codetools.regex.findAll(r"\$\([\w.]*\)",content)
         j.core.hrd.log("replace vars in hrdtree:%s"%hrdtree.path,"replacevar",7)
         if len(items)>0:
@@ -696,6 +699,7 @@ class HumanReadableDataTree():
     def applyOnFile(self,path,position=""):
         j.core.hrd.log("hrd:%s apply on file:%s in position:%s"%(self.path,path,position),category="apply")
         content=j.system.fs.fileGetContents(path)
+
         content=j.core.hrd.replaceVarsInText(content,self,position)
         j.system.fs.writeFile(path,content)
 

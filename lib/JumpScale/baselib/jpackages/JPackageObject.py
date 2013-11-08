@@ -625,28 +625,53 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.actions.importt(url=url)
         self.log('import from %s '%(url))
 
-    def start(self):
+    def start(self,dependencies=False):
         """
         Start the JPackage, run the start tasklet(s)
         """
-        
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.start(False)
+        self.loadActions(True)        
         self.actions.start()
         self.log('start')
 
-    def stop(self):
+    def stop(self,dependencies=False):
         """
         Stop the JPackage, run the stop tasklet(s)
         """
-        
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.stop(False)
+        self.loadActions(True)        
         self.actions.stop()
         self.log('stop')
 
 
-    def restart(self):
+    def monitor(self,dependencies=False,result=True):
+        """
+        Stop the JPackage, run the stop tasklet(s)
+        """
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                result=result & dep.monitor(False,result)
+        self.loadActions(True)        
+        result=result&self.actions.monitor()
+        return result
+
+    def restart(self,dependencies=False):
         """
         Restart the JPackage
-        """
-        
+        """        
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.restart(False)
+        self.loadActions(True)
+
         self.stop()
         self.start()
 
