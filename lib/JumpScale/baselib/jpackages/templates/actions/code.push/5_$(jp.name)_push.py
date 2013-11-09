@@ -4,8 +4,7 @@ def main(j,args,params,tags,tasklet):
 
     jp=args.jp
 
-    recipe=jp.actions.code_getRecipe()
-
+    recipe=jp.getCodeMgmtRecipe()
     recipe.push()
     #this is the standard used push function, can overrule to do custom work
        

@@ -1,15 +1,47 @@
 
 from JumpScale import j
 
-class _RecipeItem:
+class RecipeItem:
     '''Ingredient of a CodeRecipe'''
-    def __init__(self, coderepoConnection, source, destination,platform=None, systemdest=None,type=None):
-        self.coderepoConnection = coderepoConnection
-        self.source = source
-        self.destination=destination
+    def __init__(self, repoinfo,source, destination,platform="generic",type="base",tags=""):
+        """
+        @param types sitepackages, root, base, etc, tmp,bin
+        @param tagslabels: e.g. config as str
+        """
+        self.repoinfo=repoinfo
+        self.source = source.strip().strip("/")
+
+        self.destination=destination.strip().strip("/")
+        if self.destination=="":
+            self.destination=self.source
+
+        if platform=="":
+            platform="generic"
+
         self.platform=platform
-        self.systemdest = systemdest or j.system.fs.joinPaths(j.dirs.baseDir, destination)
-        self.type=type
+
+        self.type=type.lower().strip()
+
+        if self.type=="sitepackages":
+            base=j.application.config.get("python.paths.local.sitepackages")
+            self.systemdest = j.system.fs.joinPaths(base, self.destination)
+        elif self.type=="root":
+            self.systemdest = destination
+        elif self.type=="base":
+            self.systemdest = j.system.fs.joinPaths(j.dirs.baseDir, self.destination)
+        elif self.type=="etc":
+            base="/etc"
+            self.systemdest = j.system.fs.joinPaths(base, self.destination)
+        elif self.type=="tmp":
+            self.systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, self.destination)
+        elif self.type=="bin":
+            base=j.application.config.get("bin.local")
+            self.systemdest = j.system.fs.joinPaths(base, self.destination)
+        else:
+            base=j.application.config.applyOnContent(self.type)
+            self.systemdest = j.system.fs.joinPaths(base, self.destination)
+        
+        self.tags=j.core.tags.getObject(tags)
         
         # determine supported platforms 
         hostPlatform = j.system.platformtype.myplatform
@@ -27,6 +59,14 @@ class _RecipeItem:
         category=category.rstrip(".")
         j.packages.log(message,category,level)     
 
+    def getSource(self):
+        account=self.repoinfo.get("jp.code.account")
+        repo=self.repoinfo.get("jp.code.repo")
+        ttype=self.repoinfo.get("jp.code.type")
+        if ttype<>"bitbucket":
+            raise RuntimeError("only bitbucket repo's supported.")        
+        return j.system.fs.joinPaths(j.dirs.codeDir,account,repo,self.source)
+
     def exportToSystem(self,force=True):
         '''
         Copy files from coderepo to destination, without metadata of coderepo
@@ -35,7 +75,7 @@ class _RecipeItem:
         self._log("export to system.","export")
 
         if self._isPlatformSupported:
-            source = j.system.fs.joinPaths(self.coderepoConnection.basedir, self.source)
+            source = self.getSource()
             destination = self.systemdest
             print "export:%s to %s"%(source,destination)
             if j.system.fs.isLink(destination):
@@ -46,12 +86,15 @@ class _RecipeItem:
                         if not j.gui.dialog.askYesNo("\nDo you want to overwrite %s" % destination, True):
                             j.gui.dialog.message("Not overwriting %s, item will not be exported" % destination)
                             return        
-    
-                self._removeDest(destination)  
+                # self._removeDest(destination)  
+                #@todo
             j.system.fs.copyDirTree(source, destination)
                              
         
     def _copy(self, src, dest):
+        if not j.system.fs.exists(src):
+            raise RuntimeError("Cannot find:%s for recipeitem:%s"%(src,self))
+        
         if j.system.fs.isFile(src):
             destDir = j.system.fs.getDirName(dest)
             j.system.fs.createDir(destDir)
@@ -61,55 +104,43 @@ class _RecipeItem:
         else:
             raise RuntimeError("Cannot handle destination %s %s\n Did you codecheckout your code already? Code was not found to package." % (src, dest))
 
-
-    def codeToFiles(self, jpackage, platform):
+    def codeToFiles(self, jpackage):
         """
-        copy code from repo's (using the recipes) to the file location
-        example /opt/qbase5/var/jpackages/files/jpackages/trac/0.12/generic/
-        this is done per platform
+        copy code from repo's (using the recipes) to the file location for packaging
+        this is done per platform as specified in recipe, if not specified then generic
         """
 
-        self._log("code to files for %s for platform:%s"%(jpackage,platform),category="codetofiles")
-        
-        if not self.coderepoConnection:
-            raise RuntimeError("Cannot  copy code to files because no repo is defined")                    
-
-        src=j.system.fs.joinPaths(self.coderepoConnection.basedir,self.source)
-
-        if self.destination.startswith('/'):
-            destSuffix = self.destination[1:]                
-        else:
-            destSuffix = self.destination
-        
-        platformFilesPath = jpackage.getPathFilesPlatform(platform)
-        dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
+        self._log("package code to files for %s"%(jpackage),category="codetofiles")        
+        src = self.getSource()        
+        platformFilesPath = jpackage.getPathFilesPlatform(self.platform)
+        dest = j.system.fs.joinPaths(platformFilesPath, "cr_%s"%self.type ,self.destination)
+        self._removeDest(dest)
         self._copy(src, dest)
-
         
-    def importFromSystem(self, jpackages):
-        """
-        this packages from existing system and will only work for specified platform
-        import from system to files
-        """
-        self._log("import from system.","import")
-        if self._isPlatformSupported:
-            if self.coderepoConnection:
-                raise RuntimeError("Cannot import from system because, jp code recipe is used for a coderepo, coderepo should be None")            
+    # def importFromSystem(self, jpackages):
+    #     """
+    #     this packages from existing system and will only work for specified platform
+    #     import from system to files
+    #     """
+    #     self._log("import from system.","import")
+    #     if self._isPlatformSupported:
+    #         if self.coderepoConnection:
+    #             raise RuntimeError("Cannot import from system because, jp code recipe is used for a coderepo, coderepo should be None")            
 
-            if self.destination.startswith('/'):
-                src = self.destination                        
-                destSuffix = self.destination[1:]                
-            else:
-                src = j.system.fs.pathNormalize(self.destination,j.dirs.baseDir) 
-                destSuffix = self.destination
+    #         if self.destination.startswith('/'):
+    #             src = self.destination                        
+    #             destSuffix = self.destination[1:]                
+    #         else:
+    #             src = j.system.fs.pathNormalize(self.destination,j.dirs.baseDir) 
+    #             destSuffix = self.destination
             
-            platformFilesPath = jpackages.getPathFilesPlatform(self.platform)
-            dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
+    #         platformFilesPath = jpackages.getPathFilesPlatform(self.platform)
+    #         dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
             
-            self._removeDest(dest)
-            self._copy(src, dest)
-        else:
-            raise RuntimeError("Platform is not supported.")
+    #         self._removeDest(dest)
+    #         self._copy(src, dest)
+    #     else:
+    #         raise RuntimeError("Platform is not supported.")
         
     def linkToSystem(self,force=False):
         '''
@@ -154,7 +185,7 @@ class _RecipeItem:
             raise RuntimeError("Cannot remove destination of unknown type '%s'" % dest)
 
     def __str__(self):
-        return "%s from:%s to:%s" %(self.coderepoConnection,self.source,self.destination)
+        return "from:%s to:%s type:%s platf:%s tags:%s" %(self.source,self.destination,self.type,self.platform,self.tags)
     
     def __repr__(self):
         return self.__str__()
@@ -162,16 +193,46 @@ class _RecipeItem:
 
 class CodeManagementRecipe:
     '''
-    Recipe providing guidelines how to cook a JPackage from source code in
+    Recipe providing guidelines how to cook a JPackage from source code in a repo, is populated from a config file
     '''
-    def __init__(self):
+    def __init__(self,hrdpath,configpath):
+        self.configpath=configpath
+        self.hrd=j.core.hrd.getHRD(hrdpath)
         self.items = []
+        self._process()
 
+    def _getSource(self,source):
+        account=self.hrd.get("jp.code.account")
+        repo=self.hrd.get("jp.code.repo")
+        ttype=self.hrd.get("jp.code.type")
+        if ttype<>"bitbucket":
+            raise RuntimeError("only bitbucket repo's supported.")        
+        return j.system.fs.joinPaths(j.dirs.codeDir,account,repo,source)
 
-    def add(self, coderepoConnection, sourcePath, destinationPath,platform=None, systemdest=None,type=None):
-        '''Add a source (ingredient) to the recipe
-        '''
-        self.items.append(_RecipeItem(coderepoConnection, sourcePath, destinationPath,platform, systemdest,type=type))
+    def _process(self):
+        content=j.system.fs.fileGetContents(self.configpath)
+        for line in content.split("\n"):
+            line=line.strip()
+            if line=="" or line[0]=="#":
+                continue
+            splitted= line.split("|")
+            if len(splitted)<>5:
+                raise RuntimeError("error in coderecipe config file: %s on line:%s"%(self.configpath,line))
+            splitted=[item.strip() for item in splitted]
+            source,dest,platform,ttype,tags=splitted
+            if source.find("*")<>-1:
+                source=source.replace("*","")
+                source2=self._getSource(source)
+                for item in j.system.fs.listFilesInDir(source2,recursive=False):
+                    item=j.system.fs.getBaseName(item)                    
+                    source3="%s/%s"%(source,item)
+                    source3=source3.replace("//","/")
+                    # print "*%s*"%source3
+                    item=RecipeItem(self.hrd,source=source3, destination=dest,platform=platform,type=ttype,tags=tags)
+                    self.items.append(item)                                                
+            else:
+                item=RecipeItem(self.hrd,source=source, destination=dest,platform=platform,type=ttype,tags=tags)
+                self.items.append(item)
 
     def export(self):
         '''Export all items from VCS to the system sandbox or other location specifed'''
@@ -189,14 +250,15 @@ class CodeManagementRecipe:
         for item in self.items:
             item.importFromSystem(jpackages)                
 
-    def package(self, jpackage, platform):
+    def package(self, jpackage,*args,**kwargs):
         # clean up files
         # filesPath = jpackages.getPathFiles()
         # j.system.fs.removeDirTree(filesPath)
         ##DO TNO REMOVE, TOO DANGEROUS HAPPENS NOW PER ITEM
 
         for item in self.items:
-            item.codeToFiles(jpackage, platform)
+            item.codeToFiles(jpackage)
+
         
     def push(self):
         for item in self.items:

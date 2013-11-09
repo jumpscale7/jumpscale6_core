@@ -10,7 +10,7 @@ try:
     import JumpScale.baselib.expect
 except:
     pass
-from CodeManagementRecipe import CodeManagementRecipe
+    
 from JumpScale.baselib import platforms
 
 class JPackageClient():
@@ -174,9 +174,6 @@ class JPackageClient():
 ############################################################
 ##################  GET FUNCTIONS  #########################
 ############################################################
-
-    def getCodeManagementRecipe(self):
-        return CodeManagementRecipe()
 
     def get(self, domain, name, version):
         """

@@ -201,6 +201,7 @@ class HRDPos():
 class HRD():
     def __init__(self,path="",treeposition="",tree=None,content=""):
         self._path=path
+        self.path=self._path
         self._tree=tree
         self._treeposition=  treeposition
         self.process(content)
@@ -486,6 +487,30 @@ class HRD():
 
     def setDict(self,dictObject):
         self.__dict__.update(dictObject)
+
+    def applyOnDir(self,path,filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
+        j.core.hrd.log("hrd:%s apply on dir:%s "%(self._path,path),category="apply")
+        
+        items=j.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
+        for item in items:
+            if changeFileName:
+                item2=j.core.hrd.replaceVarsInText(item,self)
+                if item2<>item:
+                     j.system.fs.renameFile(item,item2)
+                    
+            if changeContent:
+                self.applyOnFile(item2)
+
+    def applyOnFile(self,path):
+        j.core.hrd.log("hrd:%s apply on file:%s"%(self.path,path),category="apply")
+        content=j.system.fs.fileGetContents(path)
+
+        content=j.core.hrd.replaceVarsInText(content,self)
+        j.system.fs.writeFile(path,content)
+
+    def applyOnContent(self,content):
+        content=j.core.hrd.replaceVarsInText(content,self)
+        return content
 
     def __repr__(self):
         # parts = ["path:%s"%self._path]

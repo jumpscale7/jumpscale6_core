@@ -1,16 +1,12 @@
 def main(j,args,params,tags,tasklet):
    
-    #update info into local repo
-    
+    #link info into local repo
+
     jp=args.jp
 
-    recipe=jp.actions.code_getRecipe()
+    recipe=jp.getCodeMgmtRecipe()
 
-    if args.has_key("force"):
-        recipe.update(args.force)
-    else:
-        recipe.update()
-
+    recipe.link(force=args.force)
     #this is the standard used function, can overrule to do custom work
     
     return params

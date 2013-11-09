@@ -97,11 +97,7 @@ class JPdata():
         def checkF(jp,params):
             items=jp.getBlobFiles()
             if items<>[]:
-                from IPython import embed
-                print "DEBUG NOW ooo"
-                embed()
-
-            return params
+                return params
         params=self.walk(checkF,params)
 
     # def writeJPackageInfo(self,path):

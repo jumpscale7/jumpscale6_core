@@ -3,7 +3,7 @@ def main(j,args,params,tags,tasklet):
     #checkout code from codemgmt recipe
     jp=args.jp
 
-    recipe=jp.actions.code_getRecipe()
+    recipe=jp.getCodeMgmtRecipe()
 
     recipe.export()
     #this is the standard used export function, can overrule to do custom work

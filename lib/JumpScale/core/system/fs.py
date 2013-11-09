@@ -327,7 +327,7 @@ class SystemFS:
                     
             self.log('Created the directory [%s]' % toStr(newdir), 8)
 
-    def copyDirTree(self, src, dst, keepsymlinks = False, eraseDestination = False, skipProtectedDirs=False, overwriteFiles=True):
+    def copyDirTree(self, src, dst, keepsymlinks = False, eraseDestination = False, skipProtectedDirs=False, overwriteFiles=True,applyHrdOnDestPaths=None):
         """Recursively copy an entire directory tree rooted at src.
         The dst directory may already exist; if not,
         it will be created as well as missing parent directories
@@ -345,13 +345,22 @@ class SystemFS:
             raise TypeError('Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s '% (src, dst))
         if j.system.fs.isDir(src):
             names = os.listdir(src)
+
+            if applyHrdOnDestPaths<>None:
+                dst=applyHrdOnDestPaths.applyOnContent(dst)    
+
             if not j.system.fs.exists(dst):
                 self.createDir(dst,skipProtectedDirs=skipProtectedDirs)
 
             errors = []
             for name in names:
+                if applyHrdOnDestPaths<>None:
+                    name2=applyHrdOnDestPaths.applyOnContent(name)
+                else:
+                    name2=name
+
                 srcname = j.system.fs.joinPaths(src, name)
-                dstname = j.system.fs.joinPaths(dst, name)
+                dstname = j.system.fs.joinPaths(dst, name2)
                 if eraseDestination and self.exists( dstname ):
                     if self.isDir( dstname , False ) :
                         self.removeDirTree( dstname )
@@ -362,7 +371,7 @@ class SystemFS:
                     linkto = j.system.fs.readlink(srcname)
                     j.system.fs.symlink(linkto, dstname, overwriteFiles)
                 elif j.system.fs.isDir(srcname):
-                    j.system.fs.copyDirTree(srcname, dstname, keepsymlinks, eraseDestination,skipProtectedDirs=skipProtectedDirs,overwriteFiles=overwriteFiles )
+                    j.system.fs.copyDirTree(srcname, dstname, keepsymlinks, eraseDestination,skipProtectedDirs=skipProtectedDirs,overwriteFiles=overwriteFiles,applyHrdOnDestPaths=applyHrdOnDestPaths )
                 else:
                     self.copyFile(srcname, dstname ,createDirIfNeeded=False,skipProtectedDirs=skipProtectedDirs,overwriteFile=overwriteFiles)
         else:

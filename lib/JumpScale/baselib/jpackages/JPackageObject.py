@@ -16,24 +16,24 @@ from JPackageStateObject import JPackageStateObject
 #from JumpScale.core.sync.Sync import SyncLocal
 from ActionManager import ActionManager
 
-
+from CodeManagementRecipe import CodeManagementRecipe
 
 JPACKAGE_CFG = "jpackages.cfg"
 BUILD_NR = "build_nr"
 QUALITY_LEVEL = "quality_level"
 # IDENTITIES = "identities"
 
-class DependencyDef():
-    def __init__(self,name,domain,minversion=None,maxversion=None):
-        self.name=name
-        self.domain=domain
-        self.minversion=minversion
-        self.maxversion=maxversion
+# class DependencyDef():
+#     def __init__(self,name,domain,minversion=None,maxversion=None):
+#         self.name=name
+#         self.domain=domain
+#         self.minversion=minversion
+#         self.maxversion=maxversion
 
-    def __str__(self):
-        return str(self.__dict__)
+#     def __str__(self):
+#         return str(self.__dict__)
 
-    __repr__=__str__
+#     __repr__=__str__
 
 
 class JPackageObject(BaseType, DirtyFlaggingMixin):
@@ -47,7 +47,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     name    = j.basetype.string(doc='Name of the JPackage should be lowercase', allow_none=False)
     version = j.basetype.string(doc='Version of a string', allow_none=False)
 
-
     buildNr  = j.basetype.integer(doc='Build number of the JPackage', allow_none=False, default=0)
     #bundleNr = j.basetype.integer(doc='Build number of the Bundle', allow_none=False, default=0)
     #metaNr   = j.basetype.integer(doc='Build number of the MetaData', allow_none=False, default=0)
@@ -57,7 +56,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     supportedPlatforms = j.basetype.list(doc='List of PlatformTypes', allow_none=False, default=list())
     tags               = j.basetype.list(doc='list of tags describing the JPackage', allow_none=True, default=list())
     description        = j.basetype.string(doc='Description of the JPackage, can be larger than the description in the VList4', allow_none=True, flag_dirty=True, default='')
-    dependencies       = j.basetype.list(doc='List of DependencyDefinitions for this JPackage', allow_none=True, default=list())
     #guid               = j.basetype.string(doc='Unique global id', allow_none=False, flag_dirty=True, default='')
     #lastModified       = j.basetype.float(doc='When was this package last modified (time.time)', allow_none=False, flag_dirty=True, default='')
 
@@ -91,6 +89,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.description=""
         
         self.metadata=None
+
+        self.dependencies=[] #key = domain_packagename
+        self.dependenciesNames={}
                 
         self.__init=False
 
@@ -106,19 +107,21 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
     def _init(self):
         if self.__init==False:
+            self.clean()
             self.load()
+            self.init()
         self.__init=True
 
     def init(self):
 
         #create defaults for new jpackages
         hrddir=j.system.fs.joinPaths(self.metadataPath,"hrd")
-        if not j.system.fs.exists(hrddir):  
-            new=True
-            extpath=inspect.getfile(self.__init__)
-            extpath=j.system.fs.getDirName(extpath)
-            src=j.system.fs.joinPaths(extpath,"templates")
-            j.system.fs.copyDirTree(src,self.metadataPath)              
+        
+        extpath=inspect.getfile(self.__init__)
+        extpath=j.system.fs.getDirName(extpath)
+        src=j.system.fs.joinPaths(extpath,"templates")
+
+        j.system.fs.copyDirTree(src,self.metadataPath, overwriteFiles=False,applyHrdOnDestPaths=self.hrd)              
         
         self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
@@ -138,8 +141,25 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
 
         for platform in self.supportedPlatforms:
-            j.system.fs.createDir(self.getPathFilesPlatform(platform))        
+            j.system.fs.createDir(self.getPathFilesPlatform(platform))
 
+    def clean(self):
+        for item in [".quarantine",".tmb"]:
+        # for item in [".quarantine",".tmb",'actions/code.getRecipe']:
+            path=j.system.fs.joinPaths(self.getPathMetadata(),item)
+            # print "remove:%s"%path
+            j.system.fs.removeDirTree(path)
+        for item in [".quarantine",".tmb"]:
+            path=j.system.fs.joinPaths(self.getPathFiles(),item)
+            j.system.fs.removeDirTree(path)
+            # print "remove:%s"%path
+
+        for item in j.system.fs.listFilesInDir(self.getPathMetadata(),filter="*.info"):
+            j.system.fs.remove(item)
+
+        for item in j.system.fs.listFilesInDir(self.getPathMetadata(),recursive=True):
+            if item.find("$(")<>-1:
+                j.system.fs.remove(item)
 
     def load(self,hrdDir=None,position=""):                
 
@@ -181,7 +201,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.debug=self.state.debugMode
 
-        # 
+    def getCodeMgmtRecipe(self):
+        hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
+        if not j.system.fs.exists(path=hrdpath):
+            self.init()
+        recipepath=j.system.fs.joinPaths(self.getPathMetadata(),"coderecipe.cfg")
+        if not j.system.fs.exists(path=recipepath):
+            self.init()
+        return CodeManagementRecipe(hrdpath,recipepath)
 
     def _loadActiveHrd(self):
         """
@@ -211,8 +238,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             return
 
         self.check()
-
-        self._loadActiveHrd()
 
         if j.system.fs.isDir(self.getPathActions()):
             j.system.fs.removeDirTree(self.getPathActions())
@@ -324,45 +349,45 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
 
     def loadDependencies(self):
+        
         if self.dependencies==[]:
-            self.dependencyDefs = []
 
-            addedstuff = set()
+            ids = {}
             for key in self.hrd.prefix('jp.dependency'):
-                parts = key.split('.')
-                if parts[2] in addedstuff:
-                    continue
-                key = "%s.%%s" % (".".join(parts[:3]))
-
-                if not self.hrd.exists(key % 'minversion'):
+                try:
+                    ids[int(key.split('.')[2])]=1
+                except:
+                    raise RuntimeError("Error in jpackage hrd:%s"%self)
+            
+            #walk over found id's
+            for id in ids.keys():
+                key="jp.dependency.%s.%%s"%id
+                if not self.hrd.exists('minversion'):
                     self.hrd.set(key % 'minversion',"")
                 if not self.hrd.exists(key % 'maxversion'):
                     self.hrd.set(key % 'maxversion',"")
                    
-                dependencyDef=DependencyDef(self.hrd.get(key % 'name'),
-                    self.hrd.get(key % 'domain'),
-                    self.hrd.get(key % 'minversion'),
-                    self.hrd.get(key % 'maxversion'))
+                name=self.hrd.get(key % 'name')
+                domain=self.hrd.get(key % 'domain')
+                minversion=self.hrd.get(key % 'minversion')
+                maxversion=self.hrd.get(key % 'maxversion')
 
-                addedstuff.add(parts[2])
-                self.dependencyDefs.append(dependencyDef)
+                deppack=j.packages.findNewest(domain,name,\
+                    minversion=minversion,maxversion=maxversion) #,platform=j.system.platformtype.myplatformdeppack.loadDependencies()
 
-            for dependcyDef in self.dependencyDefs:
+                deppackKey="%s__%s"%(deppack.domain,deppack.name)
+                self.dependenciesNames[deppackKey]=deppack
 
-                package=j.packages.findNewest(dependcyDef.domain,dependcyDef.name,\
-                    minversion=dependencyDef.minversion,maxversion=dependencyDef.maxversion,platform=j.system.platformtype.myplatform)
+                #now deps of deps
+                deppack.loadDependencies()
+                for deppack2 in deppack.dependencies:
+                    deppackKey2="%s__%s"%(deppack2.domain,deppack2.name)
+                    self.dependenciesNames[deppackKey2]=deppack2
 
-                if package in self.dependencies:
-                    self.dependencies.remove(package)
-                self.dependencies.append(package)
+            for jp in self.dependenciesNames.itervalues():
+                self.dependencies.append(jp)
 
-                for deppack in reversed(package.getDependencies()):
-                    if deppack in self.dependencies:
-                        self.dependencies.remove(deppack)
-                    self.dependencies.append(deppack)
 
-            self.dependencies.reverse()
-        
     def addDependency(self, domain, name, supportedplatforms, minversion, maxversion, dependencytype):
         dep = DependencyDef4()
         dep.name = name
@@ -371,7 +396,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         dep.maxversion = maxversion
         # dep.supportedPlatforms = supportedplatforms
         # dep.dependencytype = j.enumerators.DependencyType4.getByName(dependencytype)
-        self.dependencyDefs.append(dep)
+        # self.dependencyDefs.append(dep)
         self.save()
         self.dependencies=[]
         self.loadDependencies()
@@ -536,15 +561,15 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
 
 
-    def getDependencyTree(self, platform=None):
-        """
-        Return the dependencies for the JPackage
+    # def getDependencyTree(self, platform=None):
+    #     """
+    #     Return the dependencies for the JPackage
 
-        @param platform see j.system.platformtype....        
-        """
-        self.loadDependencies()
-        platform=self._getPackageInteractive(platform)
-        self.pm_getDependencies(None, platform, recursive=True, printTree=True)
+    #     @param platform see j.system.platformtype....        
+    #     """
+    #     self.loadDependencies()
+    #     platform=self._getPackageInteractive(platform)
+    #     self.pm_getDependencies(None, platform, recursive=True, printTree=True)
 
 
     def getDependencies(self):
@@ -711,7 +736,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         else:
             return False
 
-
     def reinstall(self, dependencies=False, download=True):
         """
         Reinstall the JPackage by running its install tasklet, best not to use dependancies reinstall 
@@ -740,7 +764,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for dep in deps:
                 dep.install(False, download, reinstall=False)
         self.loadActions(True) #reload actions to make sure new hrdactive are applied
-
+        self._loadActiveHrd()
         action="install"
 
         if j.packages._actionCheck(self,action):
@@ -902,8 +926,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Configure the JPackage after installation, via the configure tasklet(s)
         """
         self.log('configure')
-        
         self.loadActions()
+        self._loadActiveHrd()
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -976,28 +1000,18 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return platform
 
     
-    def package(self, platform=None, dependencies=False,update=False):
+    def package(self, dependencies=False,update=False):
         """
-        Package code from the sandbox system into files section of jpackages
-        Only 1 platform may be supported in this jpackages at the same time!!!
+        copy files from code recipe's and also manually copied files in the files sections
 
-        After the package action, the identities of the checked out commits of
-        all repositories that were used in the recipe are saved to the
-        jpackages.cfg file under the section 'repositories_PLATFORM'.
-
-        @param platform: platform to package for
-        @type platform: PlatformType
         @param dependencies: whether or not to package the dependencies
         @type dependencies: boolean
         """
-        
-        platform=self._getPackageInteractive(platform)
-        
+                
         self.loadActions()
 
         params = j.core.params.get()
         params.jpackages = self
-        params.platform = platform
         self.log('Package')
         # Disable action caching:
         # If a user packages for 2 different platforms in the same jshell
@@ -1010,11 +1024,22 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.package(platform=platform)
-        recipe = self.actions.code_getRecipe()
+                dep.package()
         if update:
             self.actions.code_update()
-        self.actions.code_package(platform=platform)
+        self.actions.code_package()
+
+        for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
+            pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
+            for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
+                pathttype=j.system.fs.joinPaths(pathplatform,ttype)
+
+                md5,llist=j.tools.hash.hashDir(pathttype)
+                out="%s\n"%md5
+                out+=llist
+                dest=j.system.fs.joinPaths(self.getPathMetadata(),"files","%s___%s.info"%(platform,ttype))
+                j.system.fs.createDir(j.system.fs.getDirName(dest))
+                j.system.fs.writeFile(dest,out)
 
     def compile(self,dependencies=False):
         
@@ -1233,6 +1258,33 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.actions.code_link(force=force)
 
+
+    def code_getRecipe(self):
+        self.loadActions()
+        return self.actions.code_getRecipe()
+
+    def getCodeLocationsFromRecipe(self):
+        items=[]
+        for item in self.code_getRecipe().items:
+            item.systemdest
+            path=j.system.fs.joinPaths(item.coderepoConnection.basedir,item.source)
+            if j.system.fs.isFile(path):
+                path=j.system.fs.getDirName(path)
+            items.append(path)
+            
+        items.sort()
+        result=[]
+        for x in range(len(items)):
+            if x>1:
+                previtem=items[x-1]
+            else:
+                previtem="willnotfindthis"
+            item=items[x]
+            if not item.find(previtem)==0:
+                if item not in result:
+                    result.append(item) 
+        
+        return result
 
     def download(self, dependencies=None, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
         """
@@ -1630,6 +1682,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.supportedPlatforms=[]
         self.buildNr = 0
         self.dependencies = []
+        self.dependenciesNames = {}
 
 
     def __cmp__(self,other):
