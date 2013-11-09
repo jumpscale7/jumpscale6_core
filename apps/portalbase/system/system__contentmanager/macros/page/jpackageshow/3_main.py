@@ -13,7 +13,7 @@ def main(j, args, params, tags, tasklet):
     
     page.addHeading(package.name, 2)
     page.addHTML('Installed: %s' % (package.isInstalled()))
-    info = ('domain', 'version', 'buildNr', 'description', 'taskletsChecksum')
+    info = ('domain', 'version', 'buildNr', 'description')
     for i in info:
         page.addHTML('%s: %s' % (i.capitalize(), getattr(package, i)))
 

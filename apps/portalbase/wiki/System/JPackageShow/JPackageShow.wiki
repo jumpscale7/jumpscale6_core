@@ -1,5 +1,9 @@
 {{jpackageshow}}
 
-{{jpackagetasklets}}
+h2. Description
+
+{{jpackagedescr}}
+
+{{jpackagebrowser}}
 
 {{jpackageblob}}

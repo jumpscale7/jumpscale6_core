@@ -67,7 +67,7 @@ class PortalManage():
 
 
 
-    # def start(self,secret,nrworkers=1,nrservers=0,extraScreens=[],console=False,jshell=False,isMessageServer=False,dbtype="fs"):
+    # def start(self,secret,nrworkers=1,nrservers=0,extraScreens=[],console=False,qshell=False,isMessageServer=False,dbtype="fs"):
         #"""
         # return an Portal  local env, this will start
         #- appserver master process (wich is also the local messagehandler)
@@ -103,8 +103,8 @@ class PortalManage():
             # screens.append("appserver")
             # if console:
                 # screens.append("console")
-            # if jshell:
-                # screens.append("jshell")
+            # if qshell:
+                # screens.append("qshell")
             # screens.append("logger")
             # screens.extend(extraScreens)
             # j.system.platformtype.screen.createSession("appserver6",screens)
@@ -118,9 +118,9 @@ class PortalManage():
                 # ARUGMENTS TO START SCRIPT
                 #cmd="python %s/start_server.py -p %s -s %s -w %s -d %s" % (extpath,port, secret, nrworkers, dbtype)
                 # j.system.platformtype.screen.executeInScreen("appserver6","server%s"%str(nr+1),cmd)
-            # if jshell:
-                # j.system.platformtype.screen.executeInScreen("appserver6","jshell","/opt/qbase5/jshell")
-            #j.system.platformtype.screen.executeInScreen("appserver6","logger","/opt/qbase5/jshell -l")
+            # if qshell:
+                # j.system.platformtype.screen.executeInScreen("appserver6","qshell","/opt/qbase5/qshell")
+            #j.system.platformtype.screen.executeInScreen("appserver6","logger","/opt/qbase5/qshell -l")
 
             #cmd = "python %s/start_server.py -p %s -s %s -w %s -d %s" % (extpath, 9000, secret, nrworkers, dbtype)
             # if not isMessageServer:

@@ -11,8 +11,7 @@ def main(j, args, params, tags, tasklet):
     else:
         package = j.packages.findNewest(domain, name)
     
-    page.addHeading('Metadata', 2)
-    page.addExplorer(package.getPathMetadata())
+    page.addExplorer(package.getPathMetadata(),readonly=False, tree=True)
 
     params.result = page
     return params
