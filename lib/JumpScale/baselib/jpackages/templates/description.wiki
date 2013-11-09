@@ -1,5 +1,2 @@
-h2. $(jp.name) $(jp.version)
-
-$(jp.description)
 
 #@todo fill in description

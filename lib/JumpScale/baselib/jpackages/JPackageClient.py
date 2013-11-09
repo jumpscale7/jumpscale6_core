@@ -41,6 +41,10 @@ class JPackageClient():
 
         self.logenable=True
         self.loglevel=5
+        self.errors=[]
+
+    def reportError(self,msg):
+        self.errors.append(msg)
 
     def log(self,msg,category="",level=5):
         if level<self.loglevel+1 and self.logenable:

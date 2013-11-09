@@ -33,8 +33,7 @@ class HumanReadableDataFactory:
                 # print "look for : %s"%item
                 item2=item.strip(" ").strip("$").strip(" ").strip("(").strip(")")
 
-                if position<>"":
-                
+                if position<>"":                
                     newcontent=hrdtree.get(item2,position=position,checkExists=True)
                 else:
                     newcontent=hrdtree.get(item2,checkExists=True)
@@ -42,6 +41,8 @@ class HumanReadableDataFactory:
                 # print "nc:%s"%newcontent
                 if newcontent<>False:
                     content=content.replace(item,newcontent)
+                # else:
+                #     print "notfound:%s"%item
         return content
 
     def getHRDFromOsisObject(self,osisobj,prefixRootObjectType=True):
@@ -702,6 +703,10 @@ class HumanReadableDataTree():
 
         content=j.core.hrd.replaceVarsInText(content,self,position)
         j.system.fs.writeFile(path,content)
+
+    def applyOnContent(self,content,position=""):
+        content=j.core.hrd.replaceVarsInText(content,self,position)
+        return content
 
     def __repr__(self):
         parts = []
