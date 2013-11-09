@@ -38,6 +38,7 @@ class OSISFactory:
         if self.osisConnections.has_key(key):
             return self.osisConnections[key]
         # self.osisConnections[key] = OSISClient(ipaddr, port)
+        j.logger.log("get client to osis")
         self.osisConnections[key] = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=port, category="osis",\
             user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j")
         return self.osisConnections[key]
