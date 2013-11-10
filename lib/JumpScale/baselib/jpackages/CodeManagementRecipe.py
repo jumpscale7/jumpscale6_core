@@ -80,15 +80,18 @@ class RecipeItem:
             print "export:%s to %s"%(source,destination)
             if j.system.fs.isLink(destination):
                 j.system.fs.remove(destination)   
+                j.dirs.removeProtectedDir(destination)
             else:
                 if j.system.fs.exists(destination) and force==False:
                     if j.application.shellconfig.interactive:                            
                         if not j.gui.dialog.askYesNo("\nDo you want to overwrite %s" % destination, True):
                             j.gui.dialog.message("Not overwriting %s, item will not be exported" % destination)
                             return        
-                # self._removeDest(destination)  
-                #@todo
-            j.system.fs.copyDirTree(source, destination)
+                self._removeDest(destination)  
+            if j.system.fs.isFile(source):
+                j.system.fs.copyFile(source, destination,skipProtectedDirs=True)
+            else:
+                j.system.fs.copyDirTree(source, destination,skipProtectedDirs=True)
                              
         
     def _copy(self, src, dest):
@@ -97,10 +100,10 @@ class RecipeItem:
         
         if j.system.fs.isFile(src):
             destDir = j.system.fs.getDirName(dest)
-            j.system.fs.createDir(destDir)
-            j.system.fs.copyFile(src, dest)
+            j.system.fs.createDir(destDir,skipProtectedDirs=True)
+            j.system.fs.copyFile(src, dest,skipProtectedDirs=True)
         elif j.system.fs.isDir(src):            
-            j.system.fs.copyDirTree(src, dest)
+            j.system.fs.copyDirTree(src, dest,skipProtectedDirs=True)
         else:
             raise RuntimeError("Cannot handle destination %s %s\n Did you codecheckout your code already? Code was not found to package." % (src, dest))
 
@@ -151,21 +154,41 @@ class RecipeItem:
         if self.type=="config":
             return self.exportToSystem()
         if self._isPlatformSupported:
-            source = j.system.fs.joinPaths(self.coderepoConnection.basedir, self.source)
+            source = self.getSource()        
             destination = self.systemdest
-            print "link:%s to %s"%(source,destination)
-            if j.system.fs.isLink(destination):
-                j.system.fs.remove(destination)   
+
+            if self.tags.labelExists("config"):
+                print "CONFIG:%s"%self
+                self.exportToSystem(force=force)
             else:
-                if j.system.fs.exists(destination) and force==False:
-                    if j.application.shellconfig.interactive:                            
-                        if not j.gui.dialog.askYesNo("\nDo you want to overwrite %s" % destination, True):
-                            j.gui.dialog.message("Not overwriting %s, it will not be linked" % destination)
-                            return        
-    
-                self._removeDest(destination)
-            j.system.fs.symlink(source, destination)        
-                
+                print "link:%s to %s"%(source,destination)
+                if j.system.fs.isLink(destination):
+                    j.system.fs.remove(destination)   
+                else:
+                    if j.system.fs.exists(destination) and force==False:
+                        if j.application.shellconfig.interactive:                            
+                            if not j.gui.dialog.askYesNo("\nDo you want to overwrite %s" % destination, True):
+                                j.gui.dialog.message("Not overwriting %s, it will not be linked" % destination)
+                                return        
+        
+                    self._removeDest(destination)
+                j.system.fs.symlink(source, destination)
+                j.dirs.addProtectedDir(destination)
+
+    def unlinkSystem(self,force=False):
+        '''
+        unlink the system, remove the links and copy the content instead
+        '''
+        self._log("unlink system",category="link")
+        
+        if self.type=="config":
+            return 
+
+        if j.system.fs.isLink(self.systemdest):
+            j.system.fs.remove(self.systemdest)
+            j.dirs.removeProtectedDir(self.systemdest)
+
+        self.exportToSystem(force=force)
         
     def _removeDest(self, dest):
         """ Remove a destionation file or directory."""
@@ -230,6 +253,14 @@ class CodeManagementRecipe:
                     # print "*%s*"%source3
                     item=RecipeItem(self.hrd,source=source3, destination=dest,platform=platform,type=ttype,tags=tags)
                     self.items.append(item)                                                
+                for item in j.system.fs.listDirsInDir(source2,recursive=False):
+                    item=j.system.fs.getBaseName(item+"/")                    
+                    source3="%s/%s"%(source,item)
+                    source3=source3.replace("//","/")
+                    source3=source3.replace("//","/")
+                    # print "*%s*"%source3
+                    item=RecipeItem(self.hrd,source=source3, destination=dest,platform=platform,type=ttype,tags=tags)
+                    self.items.append(item) 
             else:
                 item=RecipeItem(self.hrd,source=source, destination=dest,platform=platform,type=ttype,tags=tags)
                 self.items.append(item)
@@ -242,13 +273,17 @@ class CodeManagementRecipe:
     def link(self,force=False):
         for item in self.items:
             item.linkToSystem(force=force)    
-            
-    def importFromSystem(self,jpackages):
-        """
-        go from system to files section
-        """
+
+    def unlink(self,force=False):
         for item in self.items:
-            item.importFromSystem(jpackages)                
+            item.unlinkSystem(force=force)    
+
+    # def importFromSystem(self,jpackages):
+    #     """
+    #     go from system to files section
+    #     """
+    #     for item in self.items:
+    #         item.importFromSystem(jpackages)                
 
     def package(self, jpackage,*args,**kwargs):
         # clean up files

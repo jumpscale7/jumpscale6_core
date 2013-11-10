@@ -21,6 +21,8 @@ class HumanReadableDataFactory:
 
         return HRD(path=path)        
 
+    def _normalizeKey(self,key):
+        return str(key).lower().replace(".","_")
 
     def replaceVarsInText(self,content,hrdtree,position=""):
         if content=="":
@@ -75,7 +77,7 @@ class HRDPos():
 
     def set(self,key,value,persistent=True,position=""):
 
-        key2=self._normalizeKey(key)
+        key2=j.core.hrd._normalizeKey(key)
         # print "set:'%s':'%s'"%(key,value)        
         self.__dict__[key2]=value
         if persistent==True:
@@ -103,11 +105,8 @@ class HRDPos():
             self.__dict__[key]=hrd.__dict__[key]
             self._key2hrd[key]=hrdpos
 
-    def _normalizeKey(self,key):
-        return str(key).lower().replace(".","_")
-
     def get(self,key,checkExists=False):
-        key=self._normalizeKey(key)        
+        key=j.core.hrd._normalizeKey(key)        
         if key not in self.__dict__:
             self._reloadCache()
             if key not in self.__dict__:
@@ -142,8 +141,9 @@ class HRDPos():
         return res.split(",")
 
     def prefix(self, key):
-        key = self._normalizeKey(key)
+        key = j.core.hrd._normalizeKey(key)
         for knownkey in self.__dict__.keys():
+            # print "prefix: %s - %s"%(knownkey,key)
             if knownkey.startswith(key):
                 yield knownkey.replace('_', '.')
 
@@ -304,9 +304,11 @@ class HRD():
         self._path=self._path.replace("  "," ")
 
     def prefix(self, key):
+        key = j.core.hrd._normalizeKey(key)
         for knownkey in self.__dict__.keys():
+            # print "prefix: %s - %s"%(knownkey,key)
             if knownkey.startswith(key):
-                yield knownkey
+                yield knownkey.replace('_', '.')
 
     def get(self,key,checkExists=False):
         key=key.lower()

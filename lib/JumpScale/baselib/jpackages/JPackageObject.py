@@ -356,9 +356,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for key in self.hrd.prefix('jp.dependency'):
                 try:
                     ids[int(key.split('.')[2])]=1
-                except:
+                except Exception,e:
                     raise RuntimeError("Error in jpackage hrd:%s"%self)
-            
+
             #walk over found id's
             for id in ids.keys():
                 key="jp.dependency.%s.%%s"%id
@@ -742,6 +742,34 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """        
         self.install(dependencies=dependencies, download=download, reinstall=True)
 
+    def prepare(self, dependencies=True):
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.install(False, download, reinstall=False)
+        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+        self._loadActiveHrd()
+
+        action="prepare"
+        if j.packages._actionCheck(self,action):
+            return
+
+        self.actions.prepare()
+
+    def copyfiles(self, dependencies=True):
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.install(False, download, reinstall=False)
+        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+        self._loadActiveHrd()
+
+        action="prepare"
+        if j.packages._actionCheck(self,action):
+            return
+
+        self.actions.prepare()
+
     def install(self, dependencies=True, download=True, reinstall=False):
         """
         Install the JPackage
@@ -765,11 +793,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.install(False, download, reinstall=False)
         self.loadActions(True) #reload actions to make sure new hrdactive are applied
         self._loadActiveHrd()
-        action="install"
+        
 
-        if j.packages._actionCheck(self,action):
+        action="install"
+        if not j.packages._actionCheck(self,action):
             #check if that action has already been executed if yes return true
-            return True
+            pass
 
         if download:
             self.download(dependencies=False)
@@ -840,7 +869,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         cfgPath = j.system.fs.joinPaths(self.metadataPath, JPACKAGE_CFG)
         return not domainObject._isTrackingFile(cfgPath)
 
-    def copyFiles(self, subdir="",destination="",applyhrd=False):
+    def _copyFiles(self, subdir="",destination="",applyhrd=False):
         """
         Copy the files from package dirs (/opt/qbase5/var/jpackages/...) to their proper location in the sandbox.
 
@@ -1223,7 +1252,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.codePush(merge=merge)
         self.actions.code_push(merge=merge)
 
-    def codeLink(self, dependencies=None, update=None, force=False):
+    def codeLink(self, dependencies=False, update=False, force=False):
         """
         Link code from local repo to right locations in sandbox
 
@@ -1248,8 +1277,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if update:
             self.codeUpdate(dependencies, force=force)
-        else:
-            self.actions.code_getRecipe()
 
         if dependencies:
             deps = self.getDependencies()
@@ -1257,31 +1284,27 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.codeLink(dependencies=False, update=update,force=force)            
 
         self.actions.code_link(force=force)
-
-
-    def code_getRecipe(self):
-        self.loadActions()
-        return self.actions.code_getRecipe()
+      
 
     def getCodeLocationsFromRecipe(self):
         items=[]
-        for item in self.code_getRecipe().items:
+        for item in self.getCodeMgmtRecipe().items:
             item.systemdest
-            path=j.system.fs.joinPaths(item.coderepoConnection.basedir,item.source)
+            path=item.getSource()
             if j.system.fs.isFile(path):
                 path=j.system.fs.getDirName(path)
             items.append(path)
             
         items.sort()
         result=[]
-        for x in range(len(items)):
-            if x>1:
-                previtem=items[x-1]
-            else:
-                previtem="willnotfindthis"
+        previtem="willnotfindthis"
+        for x in range(len(items)):                
             item=items[x]
+            # print "previtem:%s now:%s"%(previtem,item)
             if not item.find(previtem)==0:
+                previtem=item
                 if item not in result:
+                    # print "append"
                     result.append(item) 
         
         return result

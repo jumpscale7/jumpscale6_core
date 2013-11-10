@@ -225,13 +225,15 @@ class SystemFS:
                 if self.exists(to):
                     #print "did not write file %s "% to
                     return
-            if not (skipProtectedDirs and j.dirs.checkInProtectedDir(to)):
-                try:
-                    shutil.copy(fileFrom, to)
-                    self.log("Copy file from %s to %s" % (fileFrom,to),6)
-                except Exception,e:
-                    raise RuntimeError("Could not copy file from %s to %s, error %s" % (fileFrom,to,e))
-            return
+            if skipProtectedDirs:
+                if j.dirs.checkInProtectedDir(to):
+                    self.log("did not copyFile from:%s to:%s because in protected dir"%(fileFrom,to))
+                    return
+            try:
+                shutil.copy(fileFrom, to)
+                self.log("Copy file from %s to %s" % (fileFrom,to),6)
+            except Exception,e:
+                raise RuntimeError("Could not copy file from %s to %s, error %s" % (fileFrom,to,e))                
         else:
             raise RuntimeError("Can not copy file, file: %s does not exist in system.fs.copyFile" % ( fileFrom ) )
 
@@ -304,6 +306,7 @@ class SystemFS:
             raise RuntimeError("Cannot use file notation here")
         self.log('Creating directory if not exists %s' % toStr(newdir), 8)
         if skipProtectedDirs and j.dirs.checkInProtectedDir(newdir):
+            self.log("did not create dir:%s because in protected dir"%newdir)
             return
 
         if newdir == '' or newdir == None:
