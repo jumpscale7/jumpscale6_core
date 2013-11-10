@@ -251,15 +251,17 @@ class CodeManagementRecipe:
                     source3="%s/%s"%(source,item)
                     source3=source3.replace("//","/")
                     # print "*%s*"%source3
-                    item=RecipeItem(self.hrd,source=source3, destination=dest,platform=platform,type=ttype,tags=tags)
+                    idest = j.system.fs.joinPaths(dest, item)
+                    item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags)
                     self.items.append(item)                                                
                 for item in j.system.fs.listDirsInDir(source2,recursive=False):
                     item=j.system.fs.getBaseName(item+"/")                    
+                    idest = j.system.fs.joinPaths(dest, item)
                     source3="%s/%s"%(source,item)
                     source3=source3.replace("//","/")
                     source3=source3.replace("//","/")
                     # print "*%s*"%source3
-                    item=RecipeItem(self.hrd,source=source3, destination=dest,platform=platform,type=ttype,tags=tags)
+                    item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags)
                     self.items.append(item) 
             else:
                 item=RecipeItem(self.hrd,source=source, destination=dest,platform=platform,type=ttype,tags=tags)
