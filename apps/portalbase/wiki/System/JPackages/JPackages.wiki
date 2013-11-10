@@ -1,1 +1,7 @@
+@usedefault
 {{jpackageslist}}
+
+h2. hrd overview
+
+* [hrdparams sorted|/jpackagedocs/hrdlist]
+* [hrdparams listed per jpackage|/jpackagedocs/hrdlistPerPackage]

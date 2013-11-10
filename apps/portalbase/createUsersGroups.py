@@ -9,8 +9,6 @@ j.core.appserver6.loadActorsInProcess()
 usermanager = j.apps.system.usermanager
 
 usermanager.usercreate("despiegk", "1234", "", "all,admin", "kristof@despiegeleer.com,kristof@incubaid.com", 0)
-usermanager.usercreate("desmedt", "1234", "", "all,admin", "kristof@despiegeleer.com,kristof@incubaid.com", 0)
-usermanager.usercreate("dewolft", "1234", "", "all,admin", "kristof@despiegeleer.com,kristof@incubaid.com", 0)
 usermanager.usercreate("guest", "1234", "", "guest", "kristof@incubaid.com", 0)
 
 

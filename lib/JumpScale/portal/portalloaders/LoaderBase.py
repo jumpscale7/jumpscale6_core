@@ -171,7 +171,7 @@ class LoaderBase():
             ini.addParam('admin', 'reset', '1')
             ini.addSection('guest')
             ini.addParam('guest', 'passwd', '')
-            ini.addParam('guest', 'groups', 'guest')
+            ini.addParam('guest', 'groups', 'guests')
             ini.addParam('guest', 'reset', '1')
 
         lba.processUsers(j.core.portal.runningPortal.cfgdir)

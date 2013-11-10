@@ -375,8 +375,8 @@ class Confluence2HTML():
                 stars, line = unorderedItem.foundSubitems
                 level = len(stars)
                 line = self.processDefs(line, doc, page)
+                ulAttributes = '' #@todo weird, was below page.addBUllet??? what is point?
                 page.addBullet(line, level, attributes=ulAttributes)
-                ulAttributes = ''
                 continue
 
             numberedItem = j.codetools.regex.getRegexMatch("^\*(#+) (.+?)$", line)

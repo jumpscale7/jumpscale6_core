@@ -11,8 +11,11 @@ def main(j, args, params, tags, tasklet):
     else:
         package = j.packages.findNewest(domain, name)
     
-    page.addHeading('Metadata', 2)
-    page.addExplorer(package.getPathMetadata())
+    page.addHeading("Code editors for %s:%s"%(package.domain,package.name), 2)
+
+    for path in package.getCodeLocationsFromRecipe():
+        page.addHeading("%s"%path, 3)
+        page.addExplorer(path,readonly=False, tree=True,height=300)
 
     params.result = page
     return params
