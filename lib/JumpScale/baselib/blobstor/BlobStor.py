@@ -191,7 +191,7 @@ class BlobStor:
                 
         j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
 
-    def put(self, path, type="", expiration=0, tags="", blobstors=[], prevkey=None):
+    def put(self, path, type="", expiration=0, tags="", blobstors=[]):
         """
         put file or directory to blobstor
         @param expiration in hours
@@ -248,7 +248,6 @@ class BlobStor:
 
         metadata = BlobMetadata(descr, hashh)
 
-        #if hashh==prevkey or self.exists(hashh):
         if self.exists(hashh):
             j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,self.name,self.namespace),category="upload",level=5)
 

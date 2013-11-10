@@ -140,6 +140,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
 
+        j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
+
         for platform in self.supportedPlatforms:
             j.system.fs.createDir(self.getPathFilesPlatform(platform))
 
@@ -170,7 +172,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd=j.core.hrd.getHRD(hrddir)
             
         self._clear()
-        self.buildNr = self.hrd.getInt("jp.buildnr")
+        self.buildNr = self.hrd.getInt("jp.buildNr")
         self.export = self.hrd.getBool("jp.export")
         self.autobuild = self.hrd.getBool("jp.autobuild")
         self.taskletsChecksum = self.hrd.get("jp.taskletschecksum")
@@ -319,7 +321,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if self.buildNr == "":
             self._raiseError("buildNr cannot be empty")
 
-        self.hrd.set("jp.buildnr",self.buildNr)        
+        self.hrd.set("jp.buildNr",self.buildNr)        
         self.hrd.set("jp.export",self.export)
         self.hrd.set("jp.autobuild",self.autobuild)
         self.hrd.set("jp.taskletschecksum",self.taskletsChecksum)
@@ -538,9 +540,39 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Return the latetst installed buildnumber
         """
         ##self.assertAccessable()
-        return self.state.lastinstalledbuildnr
+        return self.state.lastinstalledbuildNr
 
+    def buildNrIncrement(self):
+        buildNr=0
+        for ql in self.getQualityLevels():
+            path=self.getMetadataPathQualityLevel(ql)
+            path= j.system.fs.joinPaths(path,"hrd","main.hrd")
+            buildNr2=j.core.hrd.getHRD(path).getInt("jp.buildNr")
+            if buildNr2>buildNr:
+                buildNr=buildNr2
+       
+        buildNr+=1
+        self.buildNr=buildNr
+        self.save()
+        return self.buildNr
+            
+    def getMetadataPathQualityLevel(self,ql):
+        path=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", self.domain)
+        if not j.system.fs.isLink(path):
+            raise RuntimeError("%s needs to be link"%path)
+        jpackagesdir=j.system.fs.getParent(j.system.fs.readlink(path))
+        path= j.system.fs.joinPaths(jpackagesdir,ql,self.name,self.version)
+        if not j.system.fs.exists(path=path):         
+            raise RuntimeError("Cannot find ql dir on %s"%path)
+        return path
 
+    def getQualityLevels(self):
+        path=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", self.domain)
+        if not j.system.fs.isLink(path):
+            raise RuntimeError("%s needs to be link"%path)
+        jpackagesdir=j.system.fs.getParent(j.system.fs.readlink(path))
+        ql=[item for item in j.system.fs.listDirsInDir(jpackagesdir,False,True) if item<>".hg"]
+        return ql
 
     def getBrokenDependencies(self, platform=None):
         """
@@ -557,19 +589,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 print str(e)
                 broken.append(dep)
         return broken
-
-
-
-
-    # def getDependencyTree(self, platform=None):
-    #     """
-    #     Return the dependencies for the JPackage
-
-    #     @param platform see j.system.platformtype....        
-    #     """
-    #     self.loadDependencies()
-    #     platform=self._getPackageInteractive(platform)
-    #     self.pm_getDependencies(None, platform, recursive=True, printTree=True)
 
 
     def getDependencies(self):
@@ -604,7 +623,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Check if the JPackage is installed
         """
         ##self.assertAccessable()
-        return self.state.lastinstalledbuildnr != -1
+        return self.state.lastinstalledbuildNr != -1
 
     def supportsPlatform(self,platform=None):
         """
@@ -783,7 +802,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """        
 
         # If I am already installed assume my dependencies are also installed
-        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
+        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildNr and not reinstall:
             self.log('already installed')
             return # Nothing to do
 
@@ -803,7 +822,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if download:
             self.download(dependencies=False)
 
-        if reinstall or self.buildNr > self.state.lastinstalledbuildnr:
+        if reinstall or self.buildNr > self.state.lastinstalledbuildNr:
             #print 'really installing ' + str(self)
             self.log('installing')
             if self.state.checkNoCurrentAction == False:
@@ -812,7 +831,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.actions.install()
             self.state.setLastInstalledBuildNr(self.buildNr)
 
-        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
+        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildNr:
             self.configure()
 
         if self.debug:
@@ -1028,7 +1047,71 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             platform=None
         return platform
 
-    
+    def getBlobInfo(self,platform,ttype):
+        """
+        @return blobkey,[[md5,path],...]
+        """
+        path=j.system.fs.joinPaths(self.getPathMetadata(),"files","%s___%s.info"%(platform,ttype))
+        if j.system.fs.exists(path):
+            content=j.system.fs.fileGetContents(path)
+            splitted=content.split("\n")
+            key=splitted[0].strip()
+            result=[]
+            splitted=splitted[1:]
+            for item in splitted:
+                item=item.strip()
+                if item=="":
+                    continue
+                result.append([item.strip() for item in item.split("|")])
+            return key,result
+        else:
+            return None,[]
+
+    def getBlobItemPaths(self,platform,ttype,blobitempath):
+        """
+        translates the item as shown in the blobinfo to the corresponding paths (jpackageFilesPath,destpathOnSystem)
+        """
+        platform=platform.lower().strip()
+        ttype=ttype.lower().strip()
+        if ttype.find("cr_")==0:
+            ttype=ttype[3:]
+
+        if ttype=="sitepackages":
+            base=j.application.config.get("python.paths.local.sitepackages")
+            systemdest = j.system.fs.joinPaths(base, blobitempath)
+        elif ttype=="root":
+            systemdest = "/%s"%destination.lstrip("/")
+        elif ttype=="base":
+            systemdest = j.system.fs.joinPaths(j.dirs.baseDir, blobitempath)
+        elif ttype=="etc":
+            base="/etc"
+            systemdest = j.system.fs.joinPaths(base, blobitempath)
+        elif ttype=="tmp":
+            systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, blobitempath)
+        elif ttype=="bin":
+            base=j.application.config.get("bin.local")
+            systemdest = j.system.fs.joinPaths(base, blobitempath)
+        else:
+            base=j.application.config.applyOnContent(ttype)
+            if base==ttype:
+                raise RuntimeError("Could not find ttype")
+            systemdest = j.system.fs.joinPaths(base, blobitempath)
+        filespath=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype,blobitempath)
+        return (filespath,systemdest)
+
+    def getBlobPlatformTypes(self):
+        """
+        @return [[platform,ttype],...]
+        """
+        result=[]
+        path=j.system.fs.joinPaths(self.getPathMetadata(),"files")
+        infofiles=[j.system.fs.getBaseName(item) for item in j.system.fs.listFilesInDir(path,False) if item.find("___")<>-1]
+        for item in infofiles:
+            platform,ttype=item.split("___")
+            ttype=ttype.replace(".info","")
+            result.append([platform,ttype])
+        return result
+
     def package(self, dependencies=False,update=False):
         """
         copy files from code recipe's and also manually copied files in the files sections
@@ -1058,17 +1141,75 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.actions.code_update()
         self.actions.code_package()
 
+        newbuildNr=0
+
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
                 pathttype=j.system.fs.joinPaths(pathplatform,ttype)
-
+                j.system.fs.removeIrrelevantFiles(pathttype)
                 md5,llist=j.tools.hash.hashDir(pathttype)
+                if llist=="":
+                    continue
                 out="%s\n"%md5
                 out+=llist
-                dest=j.system.fs.joinPaths(self.getPathMetadata(),"files","%s___%s.info"%(platform,ttype))
-                j.system.fs.createDir(j.system.fs.getDirName(dest))
-                j.system.fs.writeFile(dest,out)
+
+                oldkey,olditems=self.getBlobInfo(platform,ttype)
+                if oldkey<>md5:
+                    if newbuildNr==0:
+                        newbuildNr=self.buildNrIncrement()
+
+                    dest=j.system.fs.joinPaths(self.getPathMetadata(),"files","%s___%s.info"%(platform,ttype))
+                    j.system.fs.createDir(j.system.fs.getDirName(dest))
+                    j.system.fs.writeFile(dest,out)
+
+                    dest=j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory","%s___%s.info"%(platform,ttype))
+                    out="%s | %s | %s | %s\n"%(j.base.time.getLocalTimeHR(),j.base.time.getTimeEpoch(),newbuildNr,md5)
+                    j.system.fs.writeFile(dest, out, append=True)
+                    self.log("Uploaded changed bundle for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
+                else:
+                    self.log("No file change for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
+
+        actionsdir=j.system.fs.joinPaths(self.metadataPath, "actions")
+        j.system.fs.removeIrrelevantFiles(actionsdir)
+        taskletsChecksum, descr2 = j.tools.hash.hashDir(actionsdir)
+        hrddir=j.system.fs.joinPaths(self.metadataPath, "hrdactive")
+        hrdChecksum, descr2 = j.tools.hash.hashDir(hrddir)
+        descrdir=j.system.fs.joinPaths(self.metadataPath, "documentation")
+        descrChecksum, descr2 = j.tools.hash.hashDir(descrdir)
+
+        if descrChecksum <> self.descrChecksum:
+            self.log("Descr change.",level=5,category="buildNr")
+            #buildNr needs to go up
+            if newbuildNr==0:
+                newbuildNr=self.buildNrIncrement()
+            self.descrChecksum = descrChecksum
+        else:
+            self.log("Descr did not change.",level=7,category="buildNr")
+
+        if taskletsChecksum <> self.taskletsChecksum:
+            self.log("Actions change.",level=5,category="buildNr")
+            #buildNr needs to go up
+            if newbuildNr==0:
+                newbuildNr=self.buildNrIncrement()
+            self.taskletsChecksum = taskletsChecksum
+        else:
+            self.log("Actions did not change.",level=7,category="buildNr")            
+
+        if hrdChecksum <> self.hrdChecksum:
+            self.log("Active HRD change.",level=5,category="buildNr")
+            #buildNr needs to go up
+            if newbuildNr==0:
+                newbuildNr=self.buildNrIncrement()
+            self.hrdChecksum = hrdChecksum
+        else:
+            self.log("Active HRD did not change.",level=7,category="buildNr")
+
+        if newbuildNr<>0:
+            self.log("new buildNr is:%s"%self.buildNr)
+            self.save()
+            self.load()
+
 
     def compile(self,dependencies=False):
         
@@ -1081,100 +1222,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for dep in deps:
                 dep.compile()
         self.actions.compile()
-
-    def getBlobInfo(self):
-        """
-        Get information about the blobs of this Q-Package
-
-        For each platform that has a blob, the BlobMetadata for that platform will be returned.
-
-        If this package still has the legacy 'blob.info', the platform will be
-        named 'blob', with the parsed blob.info file as value.
-
-        @return: information about the blobs of this Q-Package
-        @rtype: dict(PlatformType, BlobStor.BlobMetadata)
-        """
-        info = {}
-        for platform in j.system.platformtype.getMyRelevantPlatforms() :
-            path = self._getBlobInfoPath(platform)
-            if j.system.fs.isFile(path):
-                description = j.clients.blobstor.parse(path)
-                info[platform] = description
-        legacyBlobPath = j.system.fs.joinPaths(self.metadataPath,
-                "blob.info")
-        if j.system.fs.isFile(legacyBlobPath):
-            info['blob'] = j.clients.blobstor.parse(legacyBlobPath)
-        return info
-
-    def _getBlobInfoPath(self, platform):
-        return j.system.fs.joinPaths(self.metadataPath, "blob_%s.info"%platform)
-
-    # def getBuilds(self, qualitylevels):
-    #     """
-    #     Get build information for the argument quality levels.
-
-    #     The build information will be like this:
-    #     [
-    #         {
-    #             "build_nr": 42,
-    #             "identities": <identity information>,
-    #             "quality_level": 'unstable',
-    #             "node": '2ebf20ee306ddd97783c6476b9a903ae2171785b'
-    #         },
-    #         {
-    #             "build_nr": 43,
-    #             "identities": <identity information>,
-    #             "quality_level": 'unstable',
-    #             "node": '5572ac5c5db49534def6a579c0e94db175e478de'
-    #         },
-    #         {
-    #             "build_nr": 42,
-    #             "identities": <identity information>,
-    #             "quality_level": 'testing',
-    #             "node": '5242fe4e393acf9a613d12994a99962e4882a109'
-    #         },
-    #         ...
-    #     ]
-
-    #     The node value is the ID of the Mercurial commit in which the metadata
-    #     was updated.
-
-    #     @param qualitylevels: quality levels for the domain, in order
-    #     @type qualitylevels:
-    #     @return: build information for the argument quality levels
-    #     @rtype: list(dict(string, object))
-    #     """
-    #     if not qualitylevels:
-    #         raise ValueError("At least one quality level is required")
-
-    #     def getInfo(ql, cfg):
-    #         identities = cfg.getIdentities()
-    #         buildNr = cfg.getBuildNumber()
-    #         return {
-    #             BUILD_NR: buildNr,
-    #             QUALITY_LEVEL: ql,
-    #             IDENTITIES: identities,
-    #             }
-
-    #     result = []
-    #     unstableQualitylevel = qualitylevels[0]
-    #     for nodeId, cfg in self._iterCfgHistory(unstableQualitylevel):
-    #         info = getInfo(unstableQualitylevel, cfg)
-    #         result.append(info)
-
-    #     for ql in qualitylevels[1:]:
-    #         path = self._getConfigPath(ql)
-    #         if not j.system.fs.isFile(path):
-    #             continue
-
-    #         with open(path) as f:
-    #             cfg = j.packages.pm_getJPackageConfig(f)
-    #             buildNr = cfg.getBuildNumber()
-
-    #         for r in result:
-    #             if r[BUILD_NR] <= buildNr:
-    #                 r[QUALITY_LEVEL] = ql
-    #     return result
 
     def _iterCfgHistory(self, qualitylevel):
         """
@@ -1220,23 +1267,23 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return j.system.fs.joinPaths(qualitylevel, self.name,
                 self.version, JPACKAGE_CFG)
 
-    def codeImport(self, dependencies=False):
-        """
-        Import code back from system to local repo
+    # def codeImport(self, dependencies=False):
+    #     """
+    #     Import code back from system to local repo
 
-        WARNING: As we cannot be sure where this code comes from, all identity
-        information will be removed when this method is used!
-        """
+    #     WARNING: As we cannot be sure where this code comes from, all identity
+    #     information will be removed when this method is used!
+    #     """
         
-        self.loadActions()
-        self.log("CodeImport")
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.codeImport()
-        self.actions.code_importt()
-        cfg = self._getConfig()
-        cfg.clearIdentities(write=True)
+    #     self.loadActions()
+    #     self.log("CodeImport")
+    #     if dependencies:
+    #         deps = self.getDependencies()
+    #         for dep in deps:
+    #             dep.codeImport()
+    #     self.actions.code_importt()
+    #     cfg = self._getConfig()
+    #     cfg.clearIdentities(write=True)
 
     def codePush(self, dependencies=False, merge=True):
         """
@@ -1375,14 +1422,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return True
 
 
-    def getBundleKey(self,platform):
-        platform=str(platform)
-        if self.bundles.has_key(platform):
-            if self.bundles[platform]=="":
-                return None
-            return self.bundles[platform]
-        else:
-            return None
+    # def getBundleKey(self,platform):
+    #     platform=str(platform)
+    #     if self.bundles.has_key(platform):
+    #         if self.bundles[platform]=="":
+    #             return None
+    #         return self.bundles[platform]
+    #     else:
+    #         return None
 
 
     def backup(self,url=None,dependencies=False):
@@ -1426,26 +1473,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.restore(url=url)
         self.actions.restore()        
 
-    def packageupload(self, platform=None):
-        self.package(platform)
-        self.upload()
 
-    def getBundleDirs(self):
-        result=[]
-        for platform in j.system.platformtype.getMyRelevantPlatforms():
-            if platform=="":
-                continue            
-            pathFilesForPlatform = self.getPathFilesPlatform(platform)
-            if j.system.fs.exists(pathFilesForPlatform):
-                result.append(pathFilesForPlatform)
-        return result        
-
-    # upload the bundle
     def upload(self, remote=True, local=True,dependencies=False):
         """
         Upload jpackages to Blobstor, default remote and local
+        Does always a jp.package() first
         """
-               
         self.loadActions()
 
         if dependencies:
@@ -1453,114 +1486,32 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for dep in deps:
                 dep.upload(dependencies=False, remote=remote,local=local)
 
+        self.package(dependencies=dependencies)
 
-        j.packages.getDomainObject(self.domain)
+        for platform,ttype in self.getBlobPlatformTypes():
+            key0,blobitems=self.getBlobInfo(platform,ttype)
 
-        updateBuildnr = False
-        foundAnyPlatform = False
-        #delete blob.info (not used anymore)
-        if j.system.fs.exists(j.system.fs.joinPaths(self.metadataPath, "blob.info")):
-            j.system.fs.remove(j.system.fs.joinPaths(self.metadataPath, "blob.info"))
+            pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
-
-        for platform in j.system.platformtype.getMyRelevantPlatforms():
-            # self.getBundleKey(platform) #hash as stored in config file
-            pathFilesForPlatform = self.getPathFilesPlatform(platform)
-
-            self.log("Upload platform:'%s' files:'%s'"%(platform,pathFilesForPlatform),category="upload")
-
-            foundAnyPlatform = True
-
-            if not j.system.fs.exists(pathFilesForPlatform):
-                path = self._getBlobInfoPath(platform)
-                j.system.fs.remove(path)
-                continue
-
-            j.system.fs.removeIrrelevantFiles(pathFilesForPlatform)
-
-            plchecksum = self.getBundleKey(platform)
-
+            self.log("Upload platform:'%s', type:'%s' files:'%s'"%(platform,ttype,pathttype),category="upload")
+        
             if local and remote and self.blobstorRemote <> None and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathFilesForPlatform, blobstors=[self.blobstorRemote], prevkey=plchecksum)
+                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[self.blobstorRemote])
             elif local and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathFilesForPlatform, blobstors=[], prevkey=plchecksum)
+                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[])
             elif remote and self.blobstorRemote <> None:
-                key, descr, uploadedAnything = self.blobstorRemote.put(pathFilesForPlatform, blobstors=[], prevkey=plchecksum)
+                key, descr, uploadedAnything = self.blobstorRemote.put(pathttype, blobstors=[])
             else:
                 raise RuntimeError("need to upload to local or remote")
 
-            if plchecksum<>key and descr<>"":
-                updateBuildnr = True
-                self.bundles[str(platform)] = key
-                path = self._getBlobInfoPath(platform)
-                j.system.fs.writeFile(path, descr)
-                self.save()
-                self.log("Uploaded changed bundle for platform:%s"%platform,level=5,category="upload" )
-            else:
-                self.log("No file change for platform:%s"%platform,level=5,category="upload" )
+            # if uploadedAnything:
+            #     self.log("Uploaded blob for %s:%s:%s to blobstor."%(self,platform,ttype))
+            # else:
+            #     self.log("Blob for %s:%s:%s was already on blobstor, no need to upload."%(self,platform,ttype))
 
-        actionsdir=j.system.fs.joinPaths(self.metadataPath, "actions")
-        j.system.fs.removeIrrelevantFiles(actionsdir)
-        taskletsChecksum, descr2 = j.tools.hash.hashDir(actionsdir)
-        hrddir=j.system.fs.joinPaths(self.metadataPath, "hrdactive")
-        hrdChecksum, descr2 = j.tools.hash.hashDir(hrddir)
-        descrdir=j.system.fs.joinPaths(self.metadataPath, "documentation")
-        descrChecksum, descr2 = j.tools.hash.hashDir(descrdir)
+            if key0<>key:
+                raise RuntimeError("Corruption in upload for %s"%self)
 
-        if descrChecksum <> self.descrChecksum:
-            self.log("Descr change, upgrade buildnr.",level=5,category="buildnr")
-            #buildnr needs to go up
-            updateBuildnr = True
-            self.descrChecksum = descrChecksum
-        else:
-            self.log("Descr did not change.",level=7,category="buildnr")
-
-        if taskletsChecksum <> self.taskletsChecksum:
-            self.log("Actions change, upgrade buildnr.",level=5,category="buildnr")
-            #buildnr needs to go up
-            updateBuildnr = True
-            self.taskletsChecksum = taskletsChecksum
-        else:
-            self.log("Actions did not change.",level=7,category="buildnr")            
-
-        if hrdChecksum <> self.hrdChecksum:
-            self.log("Active HRD change, upgrade buildnr.",level=5,category="buildnr")
-            #buildnr needs to go up
-            updateBuildnr = True
-            self.hrdChecksum = hrdChecksum
-        else:
-            self.log("Active HRD did not change.",level=7,category="buildnr")
-
-        if  updateBuildnr:
-            self.buildNr += 1
-            self.save()
-
-        if foundAnyPlatform == False:
-            self.log('No platform found for upload' )
-            
-        self.load()
-
-
-
-#    def _copyFilesToSandbox(self):          #Todo: function still being used???
-#        ##
-#        ##Copy Files from package dir to sandbox
-#        ##@param dirName: name of the directory to copy
-#        ##
-#        _jpackagesDir = self.getPathFiles()
-#
-#        j.logger.log('Syncing %s to sandbox' % _jpackagesDir, 5)
-#        platformDirsToCopy = self._getPlatformDirsToCopy()
-#        print 'platformDirsToCopy: ' + str(platformDirsToCopy)
-#        if False:
-#            try:
-#                t = 1/0
-#            except:
-#                import traceback
-#                print '\n'.join(traceback.format_stack())
-#        for platformDir in platformDirsToCopy:
-#            j.logger.log('Syncing files in <%s>'%platformDir, 5)
-#            self._copyFilesTo(platformDir, j.dirs.baseDir)
     def _getPlatformDirsToCopy(self):
         """
         Return a list of platform related directories to be copied in sandbox
