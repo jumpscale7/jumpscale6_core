@@ -742,7 +742,7 @@ function copyText$id() {
 	    'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
 	    'cut', 'paste','extract', 'archive', 'help',
-	    'resize', 'sort'
+	    'resize', 'sort', 'edit'
 	    ],"""
             dircmd = "'reload', 'back', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
             filecmd = "'getfile', '|','open', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
