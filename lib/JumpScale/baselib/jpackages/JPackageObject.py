@@ -1404,9 +1404,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             
             key="%s_%s"%(platform,ttype)
 
-            # if self.state.downloadedBlobStorKeys.has_key(key) and self.state.downloadedBlobStorKeys[key] == checksum:
-            #     self.log("No need to download/expand for platform_type:'%s', already there."%key,level=5)
-            #     continue
+            if self.state.downloadedBlobStorKeys.has_key(key) and self.state.downloadedBlobStorKeys[key] == checksum:
+                self.log("No need to download/expand for platform_type:'%s', already there."%key,level=5)
+                continue
 
             if not self.blobstorLocal.exists(checksum):
                 self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
