@@ -34,8 +34,14 @@ class CircusManager:
         if after_start:
             servercfg.addParam(sectionname, 'hooks.after_start', after_start)
         servercfg.addParam(sectionname, 'shell', shell)
-        for k, v in kwargs.iteritems():
-            servercfg.addParam(sectionname, k, v)
+        defaults = {'stdout_stream.class': 'FileStream',
+                    'stdout_stream.filename': '%s.log' % name,
+                    'stdout_stream.refresh_time': '0.3',
+                    'stdout_stream.max_bytes': '%s' % (1024**2*10), #10MB
+                    'stdout_stream.backup_count': '5'}
+        for k, v in defaults.iteritems():
+            if v is not None:
+                servercfg.addParam(sectionname, k, v)
         #check name is no service yet and if then remove
 
         for item in j.system.fs.listFilesInDir("/etc/init.d"):
