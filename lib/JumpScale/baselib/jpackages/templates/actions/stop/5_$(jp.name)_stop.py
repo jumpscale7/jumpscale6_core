@@ -5,7 +5,7 @@ def main(j,args,params,tags,tasklet):
     
     # import JumpScale.baselib.circus
     # args.jp.log("start osis")
-    # j.tools.circus.manager.stopProcess('osis')
+    # j.tools.startupmanager.stopProcess('osis')
 
     # args.jp.log("test if osis got started by doing a port test")
     # if j.system.net.waitConnectionTestStopped("127.0.0.1",5544,5)==False:

@@ -10,11 +10,11 @@ def main(j,args,params,tags,tasklet):
     # kwargs = {'stdout_stream.class': 'FileStream', 'stdout_stream.filename': j.system.fs.joinPaths(j.dirs.logDir, 'osis.log'),
     #           'stdout_stream.time_format': '%Y-%m-%d %H:%M:%S', 'stdout_stream.max_bytes': 104857600,
     #           'stdout_stream.backup_count': 3}
-    # j.tools.circus.manager.addProcess('osis', cmd, args2, priority=2, workingdir=workingdir, before_start='JumpScale.baselib.circus.CircusManager.checkPort', **kwargs)
+    # j.tools.startupmanager.addProcess('osis', cmd, args2, priority=2, workingdir=workingdir, before_start='JumpScale.baselib.circus.CircusManager.checkPort', **kwargs)
 
     # env_vars = {'WAIT_FOR_PORT': 9200}
-    # j.tools.circus.manager.addEnv('osis', env_vars)
-    # j.tools.circus.manager.apply()
+    # j.tools.startupmanager.addEnv('osis', env_vars)
+    # j.tools.startupmanager.apply()
     
     # args.jp.start()
 

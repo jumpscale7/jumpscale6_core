@@ -170,6 +170,41 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 if item.find("$(")<>-1:
                     j.system.fs.remove(item)
 
+        for item in j.system.fs.listDirsInDir("%s/actions"%self.getPathMetadata(),recursive=False):
+            
+            action=j.system.fs.getBaseName(item)
+            action2=""
+            if action=="configure":
+                action2="configure"                
+            if action=="monitor":
+                action2="monitor"
+            if action=="install":
+                action2="postinstall"
+            if action=="prepare":
+                action2="prepare"
+
+            if action2=="":
+                continue
+
+            files=j.system.fs.listFilesInDir(item)
+            if len(files)>1:
+                raise RuntimeError("do only support 1 file in %s"%item)
+            content=j.system.fs.fileGetContents(files[0])
+            state="start"
+            out=""
+            for line in content.split("\n"):
+                if state=="body":
+                    if line.find("def")==0:
+                        state=="done"
+                    else:
+                        out+="%s\n"%line
+                if state=="start" and line.find("main")<>-1:
+                    state="body"
+
+            path="%s/actions/_%s.py"%(self.getPathMetadata(),action2)
+            j.system.fs.writeFile(path,out)
+
+
     def load(self,hrdDir=None,position=""):                
 
         #create defaults for new jpackages

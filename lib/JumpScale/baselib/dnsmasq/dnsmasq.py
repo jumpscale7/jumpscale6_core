@@ -21,7 +21,7 @@ class DNSMasq(object):
             self._circusname = 'dnsmasq_%s' % (namespace)
         else: 
             self._circusname = 'dnsmasq'
-        if self._circusname not in j.tools.circus.manager.listProcesses():
+        if self._circusname not in j.tools.startupmanager.listProcesses():
             self.addToCircus()
         self._configured = True
 
@@ -31,9 +31,9 @@ class DNSMasq(object):
             cmd = 'ip netns exec %(namespace)s dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'namespace':self._namespace,'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
         else:
             cmd = 'dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
-        j.tools.circus.manager.addProcess(self._circusname, cmd, send_hup=True)
-        j.tools.circus.manager.apply()
-        j.tools.circus.manager.startProcess(self._circusname)
+        j.tools.startupmanager.addProcess(self._circusname, cmd, send_hup=True)
+        j.tools.startupmanager.apply()
+        j.tools.startupmanager.startProcess(self._circusname)
 
 
     
@@ -70,9 +70,9 @@ class DNSMasq(object):
         """Restarts dnsmasq"""
         if not self._configured:
             raise Exception('Please run first setConfigPath to select the correct paths')
-        j.tools.circus.manager.restartProcess(self._circusname)
+        j.tools.startupmanager.restartProcess(self._circusname)
 
     def reload(self):
         if not self._configured:
             raise Exception("Please run first setConfigPath to select the correct paths")
-        j.tools.circus.manager.reloadProcess(self._circusname)
+        j.tools.startupmanager.reloadProcess(self._circusname)

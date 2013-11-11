@@ -238,6 +238,7 @@ from . import errorhandling
 import JumpScale.baselib.platforms
 import JumpScale.core.config
 import JumpScale.baselib.hrd
+import JumpScale.baselib.startupmanager
 
 from . import shellconfig
 from . import console
