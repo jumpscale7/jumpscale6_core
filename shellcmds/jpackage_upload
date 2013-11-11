@@ -6,7 +6,9 @@ import argparse
 print "upload package to blobstor"
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
-package, args = cmdutils.getJPackage(parser)
 
-package.upload(dependencies=args.all)
+packages, args = cmdutils.getJPackage(parser,installed=True)
+for package in packages:
+    package.upload(dependencies=args.all)
+
 j.application.stop()

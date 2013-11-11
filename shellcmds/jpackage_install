@@ -8,14 +8,18 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--reinstall', required=False, action='store_true', help='Reinstall found package')
 parser.add_argument('-s', '--single', required=False, action='store_true', help='Do not install dependencies')
 parser.add_argument('--debug', required=False, action='store_true', help='Sets debug_mode for package')
-package, args = cmdutils.getJPackage(parser)
-dependencies = not args.reinstall or not package.isInstalled()
 
-if args.single:
-	dependencies=False
-	
-if args.debug:
-    package.setDebugMode()
+packages, args = cmdutils.getJPackage(parser)
+for package in packages:
 
-package.install(dependencies=dependencies, reinstall=args.reinstall)
+    dependencies = not args.reinstall or not package.isInstalled()
+
+    if args.single:
+        dependencies=False
+        
+    if args.debug:
+        package.setDebugMode()
+
+    package.install(dependencies=dependencies, reinstall=args.reinstall)
+
 j.application.stop()

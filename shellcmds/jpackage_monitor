@@ -5,12 +5,16 @@ from JumpScale.baselib import cmdutils
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
-package, args = cmdutils.getJPackage(parser)
 
+packages, args = cmdutils.getJPackage(parser,installed=True)
+result=[]
+for package in packages:
+    if package.monitor(dependencies=args.all)==True:
+        result.append("OK    :%s"%package)
+    else:
+        result.append("ERROR :%s"%package)
 
-if package.monitor(dependencies=args.all)==True:
-    print "monitor test was ok"
-else:
-    print "ERROR, monitoring failed"
+print "\n\nMONITORING RESULTS:"
+print "\n".join(result)
 
 j.application.stop()

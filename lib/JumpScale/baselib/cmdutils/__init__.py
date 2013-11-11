@@ -3,23 +3,36 @@ import JumpScale.baselib.jpackages #load jpackages
 import argparse
 
 
-def getJPackage(parser=None):
+def getJPackage(parser=None,installed=None,domain=None):
+    if installed:
+        domain=""
     parser = parser or argparse.ArgumentParser()
     parser.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
     parser.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
     parser.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
+
     args = parser.parse_args()
-    package = j.packages.find(name=args.name, domain=args.domain, version=args.version)
+
+    if args.domain<>None:
+        domain=args.domain
+
+    if args.name==None:
+        args.name=""
+    package = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
+
 
     if len(package) == 0:
-        print "Could not find package with name '%s' in domain '%s' with version '%s'" % (args.name, args.domain, args.version)
+        if installed:
+            print "Could not find package with name '%s' in domain '%s' with version '%s' which is installed." % (args.name, domain, args.version)
+        else:
+            print "Could not find package with name '%s' in domain '%s' with version '%s'" % (args.name, domain, args.version)
         j.application.stop(1)
     elif len(package) > 1:
         if not j.application.shellconfig.interactive:
             print "Found multiple packages %s" % (package)
             j.application.stop(1)
         else:
-            package = j.console.askChoice(package, "Multiple packages found. Select one:")
+            package = j.console.askChoiceMultiple(package, "Multiple packages found. Select:")
     else:
         package = package[0]
 
