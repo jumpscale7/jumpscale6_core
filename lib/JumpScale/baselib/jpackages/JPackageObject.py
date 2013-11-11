@@ -774,7 +774,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """                
         self.install(dependencies=dependencies, download=download, reinstall=True)
 
-    def prepare(self, dependencies=True):
+    def prepare(self, dependencies=True, download=True):
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -788,7 +788,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.actions.prepare()
 
-    def copyfiles(self, dependencies=True):
+    def copyfiles(self, dependencies=True, download=True):
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
