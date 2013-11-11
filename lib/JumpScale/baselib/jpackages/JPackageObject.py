@@ -802,15 +802,15 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 pathttype=j.system.fs.joinPaths(pathplatform,ttype)
                 j.system.fs.removeIrrelevantFiles(pathttype)
 
-        tmp,destination=self.getBlobItemPaths(platform,ttype,"")
+                tmp,destination=self.getBlobItemPaths(platform,ttype,"")
 
-        if ttype in ["etc"]:
-            applyhrd=True
-        else:
-            applyhrd=True
+                if ttype in ["etc"]:
+                    applyhrd=True
+                else:
+                    applyhrd=True
 
-        self.log("copy files from:%s to:%s"%(pathttype,destination))
-        self._copyFiles(pathttype,destination,applyhrd=applyhrd)
+                self.log("copy files from:%s to:%s"%(pathttype,destination))
+                self._copyFiles(pathttype,destination,applyhrd=applyhrd)
 
 
 
