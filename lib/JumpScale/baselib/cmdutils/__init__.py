@@ -29,9 +29,9 @@ def getJPackage(parser=None,installed=None,domain=None):
         j.application.stop(1)
     elif len(packages) > 1:
         if not j.application.shellconfig.interactive:
-            print "Found multiple packages %s" % (package)
+            print "Found multiple packages %s" % (packages)
             j.application.stop(1)
         else:
-            packages = j.console.askChoiceMultiple(package, "Multiple packages found. Select:")
+            packages = j.console.askChoiceMultiple(packages, "Multiple packages found. Select:")
 
-        return packages, args
+    return packages, args
