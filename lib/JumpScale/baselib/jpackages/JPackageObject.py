@@ -92,6 +92,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.dependencies=[] #key = domain_packagename
         self.dependenciesNames={}
+
+        self.hrd=None
                 
         self.__init=False
 
@@ -107,9 +109,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
     def _init(self):
         if self.__init==False:
-            self.clean()
-            self.load()
+            self.clean()            
             self.init()
+            self.load()
         self.__init=True
 
     def init(self):
@@ -120,6 +122,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         extpath=inspect.getfile(self.__init__)
         extpath=j.system.fs.getDirName(extpath)
         src=j.system.fs.joinPaths(extpath,"templates")
+
+        if self.hrd==None:
+            content="jp.domain=%s\n"%self.domain
+            content+="jp.name=%s\n"%self.name
+            content+="jp.version=%s\n"%self.version
+            self.hrd=j.core.hrd.getHRD(content=content)
 
         j.system.fs.copyDirTree(src,self.metadataPath, overwriteFiles=False,applyHrdOnDestPaths=self.hrd)              
         
@@ -157,20 +165,21 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             j.system.fs.removeDirTree(path)
             # print "remove:%s"%path
 
-        for item in j.system.fs.listFilesInDir(self.getPathMetadata(),filter="*.info"):
-            j.system.fs.remove(item)
-
-        for item in j.system.fs.listFilesInDir(self.getPathMetadata(),recursive=True):
-            if item.find("$(")<>-1:
+        if j.system.fs.exists(self.getPathMetadata()):
+            for item in j.system.fs.listFilesInDir(self.getPathMetadata(),filter="*.info"):
                 j.system.fs.remove(item)
+
+            for item in j.system.fs.listFilesInDir(self.getPathMetadata(),recursive=True):
+                if item.find("$(")<>-1:
+                    j.system.fs.remove(item)
 
     def load(self,hrdDir=None,position=""):                
 
         #create defaults for new jpackages
-        hrddir=j.system.fs.joinPaths(self.metadataPath,"hrd")
-        if not j.system.fs.exists(hrddir):  
+        hrdpath=j.system.fs.joinPaths(self.metadataPath,"hrd","main.hrd")
+        if not j.system.fs.exists(hrdpath):  
             self.init()
-        self.hrd=j.core.hrd.getHRD(hrddir)
+        self.hrd=j.core.hrd.getHRD(hrdpath)
             
         self._clear()
         self.buildNr = self.hrd.getInt("jp.buildNr")
@@ -343,7 +352,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd.set("jp.hrdchecksum",self.hrdChecksum)
         self.hrd.set("jp.descrchecksum",self.descrChecksum)
         self.hrd.set("jp.supportedplatforms",self.supportedPlatforms)
-        self.hrd.set("jp.bundles",self.bundles)
+        # self.hrd.set("jp.bundles",self.bundles)
 
         # for idx, dependency in enumerate(self.dependencies):
         #     self._addDependencyToHRD(idx, dependency.domain, dependency.name,minversion=dependency.minversion,maxversion=dependency.maxversion)
