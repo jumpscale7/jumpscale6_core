@@ -141,6 +141,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
 
         j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
+        j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"files"))
 
         for platform in self.supportedPlatforms:
             j.system.fs.createDir(self.getPathFilesPlatform(platform))
@@ -190,7 +191,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.hrdChecksum = self.hrd.get("jp.hrdchecksum")
 
         self.supportedPlatforms = self.hrd.getList("jp.supportedplatforms")
-        self.bundles = self.hrd.getDict("jp.bundles") #dict with key platformkey and val the hash of bundle
+
+        #for backwards compatibility
+        try:
+            self.bundles = self.hrd.getDict("jp.bundles") #dict with key platformkey and 
+        except:
+            pass
         
         j.packages.getDomainObject(self.domain)
 
@@ -236,6 +242,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
 
     def loadActions(self, force=False):
+        print "loadactions:%s"%self
         if self.actions <> None and not force:
             return
 
@@ -258,6 +265,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if do.blobstorlocal.strip() <> "":
             self.blobstorLocal = j.clients.blobstor.get(do.blobstorlocal)
+
+        if self.blobstorRemote ==None or   self.blobstorLocal==None:
+            from IPython import embed
+            print "DEBUG NOW ooooooooooooo"
+            embed()
+
+        print "loadactionsdone:%s"%self
+            
 
     def getDebugMode(self):
         return self.state.debugMode
@@ -330,8 +345,8 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd.set("jp.supportedplatforms",self.supportedPlatforms)
         self.hrd.set("jp.bundles",self.bundles)
 
-        for idx, dependency in enumerate(self.dependencies):
-            self._addDependencyToHRD(idx, dependency.domain, dependency.name,minversion=dependency.minversion,maxversion=dependency.maxversion)
+        # for idx, dependency in enumerate(self.dependencies):
+        #     self._addDependencyToHRD(idx, dependency.domain, dependency.name,minversion=dependency.minversion,maxversion=dependency.maxversion)
 
     def _addDependencyToHRD(self, idx, domain, name, minversion, maxversion):
         hrd = self.hrd
@@ -646,7 +661,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         Reinstall the package
         """
-        
+        self.loadActions()
         self.actions.install()
 
     def export(self, url):
@@ -655,7 +670,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         @param url: where to back up to, e.g. : ftp://login:passwd@10.10.1.1/myroot/
         """
-        
+        self.loadActions()
         self.actions.export(url=url)
         self.log('export to %s '%(url))
 
@@ -665,7 +680,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         @param url: location of the backup, e.g. : ftp://login:passwd@10.10.1.1/myroot/
         """
-        
+        self.loadActions()
         self.actions.importt(url=url)
         self.log('import from %s '%(url))
 
@@ -715,7 +730,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             for dep in deps:
                 dep.restart(False)
         self.loadActions(True)
-
         self.stop()
         self.start()
 
@@ -758,7 +772,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def reinstall(self, dependencies=False, download=True):
         """
         Reinstall the JPackage by running its install tasklet, best not to use dependancies reinstall 
-        """        
+        """                
         self.install(dependencies=dependencies, download=download, reinstall=True)
 
     def prepare(self, dependencies=True):
@@ -1105,11 +1119,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         result=[]
         path=j.system.fs.joinPaths(self.getPathMetadata(),"files")
+        if not j.system.fs.exists(path=path):
+            self.init()
         infofiles=[j.system.fs.getBaseName(item) for item in j.system.fs.listFilesInDir(path,False) if item.find("___")<>-1]
         for item in infofiles:
             platform,ttype=item.split("___")
             ttype=ttype.replace(".info","")
-            result.append([platform,ttype])
+            if ttype<>"":
+                result.append([platform,ttype])
         return result
 
     def package(self, dependencies=False,update=False):
@@ -1422,14 +1439,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         return True
 
 
-    # def getBundleKey(self,platform):
-    #     platform=str(platform)
-    #     if self.bundles.has_key(platform):
-    #         if self.bundles[platform]=="":
-    #             return None
-    #         return self.bundles[platform]
-    #     else:
-    #         return None
+    def getBundleKey(self,platform):
+        platform=str(platform)
+        if self.bundles.has_key(platform):
+            if self.bundles[platform]=="":
+                return None
+            return self.bundles[platform]
+        else:
+            return None
 
 
     def backup(self,url=None,dependencies=False):
@@ -1479,19 +1496,23 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Upload jpackages to Blobstor, default remote and local
         Does always a jp.package() first
         """
-        self.loadActions()
+        self.loadActions(force=True)
 
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.upload(dependencies=False, remote=remote,local=local)
+                dep.upload(remote=remote,local=local,dependencies=False)
 
         self.package(dependencies=dependencies)
+        self.loadActions(force=True)
 
         for platform,ttype in self.getBlobPlatformTypes():
             key0,blobitems=self.getBlobInfo(platform,ttype)
 
             pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
+
+            if not j.system.fs.exists(pathttype):
+                raise RuntimeError("Could not find files section:%s, check the files directory in your jpackages metadata dir, maybe there is a .info file which is wrong & does not exist here."%pathttype)
 
             self.log("Upload platform:'%s', type:'%s' files:'%s'"%(platform,ttype,pathttype),category="upload")
         
