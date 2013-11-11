@@ -394,13 +394,14 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
                 #now deps of deps
                 deppack.loadDependencies()
-                for deppack2 in deppack.dependencies:
+                self.dependencies.append(deppack)
+                for deppack2 in reversed(deppack.dependencies):
+                    if deppack2 in self.dependencies:
+                        self.dependencies.remove(deppack2)
+                    self.dependencies.append(deppack2)
                     deppackKey2="%s__%s"%(deppack2.domain,deppack2.name)
                     self.dependenciesNames[deppackKey2]=deppack2
-
-            for jp in self.dependenciesNames.itervalues():
-                self.dependencies.append(jp)
-
+            self.dependencies.reverse()
 
     def addDependency(self, domain, name, supportedplatforms, minversion, maxversion, dependencytype):
         dep = DependencyDef4()
