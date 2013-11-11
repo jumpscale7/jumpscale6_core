@@ -8,7 +8,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
 
 packages, args = cmdutils.getJPackage(parser,installed=True)
-for package in packages:
-    package.publish(args.message,package.domain)
+domains = {p.domain for p in packages}
+for domain in domains:
+    j.packages.publish(args.message,domain)
 
 j.application.stop()
