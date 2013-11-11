@@ -18,6 +18,10 @@ def getJPackage(parser=None,installed=None,domain=None):
 
     if args.name==None:
         args.name=""
+    else:
+        if domain==None:
+            domain=""
+
     packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
 
 
