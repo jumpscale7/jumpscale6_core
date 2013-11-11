@@ -47,8 +47,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     name    = j.basetype.string(doc='Name of the JPackage should be lowercase', allow_none=False)
     version = j.basetype.string(doc='Version of a string', allow_none=False)
 
-    buildNr  = j.basetype.integer(doc='Build number of the JPackage', allow_none=False, default=0)
-    #bundleNr = j.basetype.integer(doc='Build number of the Bundle', allow_none=False, default=0)
     #metaNr   = j.basetype.integer(doc='Build number of the MetaData', allow_none=False, default=0)
 
     #should be readonly
@@ -80,7 +78,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.version = version
         self.buildNr=-1
         self.taskletsChecksum=""    
-        self.bundles={}
         
         self.configchanged=False
 
@@ -201,12 +198,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.supportedPlatforms = self.hrd.getList("jp.supportedplatforms")
 
-        #for backwards compatibility
-        try:
-            self.bundles = self.hrd.getDict("jp.bundles") #dict with key platformkey and 
-        except:
-            pass
-        
+     
         j.packages.getDomainObject(self.domain)
 
         self.blobstorRemote = None
@@ -313,11 +305,11 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
     def delete(self):
         """
-        Delete all bundles, metadata, files of the jpackages
+        Delete all metadata, files of the jpackages
         """
         self._init()
         if j.application.shellconfig.interactive:
-            do = j.gui.dialog.askYesNo("Are you sure you want to remove %s_%s_%s, all bundles, metadata & files will be removed" % (self.domain, self.name, self.version))
+            do = j.gui.dialog.askYesNo("Are you sure you want to remove %s_%s_%s, all metadata & files will be removed" % (self.domain, self.name, self.version))
         else:
             do = True
         if do:
@@ -327,10 +319,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             j.system.fs.removeDirTree(path)
             path = j.packages.getJPActionsPath(self.domain, self.name,self.version)
             j.system.fs.removeDirTree(path)
-            for f in j.system.fs.listFilesInDir(j.packages.getBundlesPath()):
-                baseName = j.system.fs.getBaseName(f)
-                if baseName.split('__')[0] == self.name and baseName.split('__')[1] == self.version:
-                    j.system.fs.deleteFile(f)
+            
             #@todo over ftp try to delete the targz file (less urgent), check with other quality levels to make sure we don't delete files we should not delete
 
     def save(self, new=False):
@@ -352,7 +341,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.hrd.set("jp.hrdchecksum",self.hrdChecksum)
         self.hrd.set("jp.descrchecksum",self.descrChecksum)
         self.hrd.set("jp.supportedplatforms",self.supportedPlatforms)
-        # self.hrd.set("jp.bundles",self.bundles)
 
         # for idx, dependency in enumerate(self.dependencies):
         #     self._addDependencyToHRD(idx, dependency.domain, dependency.name,minversion=dependency.minversion,maxversion=dependency.maxversion)
@@ -1193,7 +1181,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                     dest=j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory","%s___%s.info"%(platform,ttype))
                     out="%s | %s | %s | %s\n"%(j.base.time.getLocalTimeHR(),j.base.time.getTimeEpoch(),newbuildNr,md5)
                     j.system.fs.writeFile(dest, out, append=True)
-                    self.log("Uploaded changed bundle for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
+                    self.log("Uploaded changed for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
                 else:
                     self.log("No file change for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
 
@@ -1236,7 +1224,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.log("new buildNr is:%s"%self.buildNr)
             self.save()
             self.load()
-
 
     def compile(self,dependencies=False):
         
@@ -1383,19 +1370,13 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         
         return result
 
-    def download(self, dependencies=None, destinationDirectory=None, suppressErrors=False, allplatforms=False,expand=True):
+    def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False):
         """
         Download the jpackages & expand
-        Download the required blobs as well (as defined in jpackge.cfg dir)
-
-        [requiredblobs]
-        blob1= ...
-
-        #param destinationDirectory: allows you to overwrite the default destination (opt/qbase/var/jpackages/files/...)
         """
 
         if dependencies==None and j.application.shellconfig.interactive:
-            dependencies = j.console.askYesNo("Do you want the bundles of all depending packages to be downloaded too?")
+            dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
         else:
             dependencies=dependencies
         
@@ -1407,56 +1388,37 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         j.packages.getDomainObject(self.domain)
 
-        self.log('Downloading bundles.')
+        self.log('Downloading.')
 
-        downloadDestinationDirectory = destinationDirectory
-
-        for platform in j.system.platformtype.getMyRelevantPlatforms():
+        for platform,ttype in self.getBlobPlatformTypes():
             
-            checksum = self.getBundleKey(platform)
+            if destinationDirectory==None:
+                downloadDestinationDirectory=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
+            else:
+                downloadDestinationDirectory = destinationDirectory
 
-            # print "C: %s %s" %(platform,checksum)
             
-            if checksum == None:
-                #no checksum found in config file, probably since it uses different platform
-                continue
+            checksum,files=self.getBlobInfo(platform,ttype)
 
-            self.log("bundle key found:%s for platform:%s"%(checksum,platform),category="download",level=6)
-
-            if destinationDirectory == None:
-                downloadDestinationDirectory = j.system.fs.joinPaths(self.getPathFiles(), str(platform))
+            self.log("key found:%s for platform:%s type:%s"%(checksum,platform,ttype),category="download",level=6)
             
-            if self.state.downloadedBlobStorKeys.has_key(platform) and self.state.downloadedBlobStorKeys[platform] == checksum:
-                self.log("No need to download/expand for platform '%s', already there."%platform,level=5)
-                continue
+            key="%s_%s"%(platform,ttype)
+
+            # if self.state.downloadedBlobStorKeys.has_key(key) and self.state.downloadedBlobStorKeys[key] == checksum:
+            #     self.log("No need to download/expand for platform_type:'%s', already there."%key,level=5)
+            #     continue
 
             if not self.blobstorLocal.exists(checksum):
                 self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
 
-            if expand:
-                self.log("expand platform:%s"%platform,category="download")
-                j.system.fs.removeDirTree(downloadDestinationDirectory)
-                j.system.fs.createDir(downloadDestinationDirectory)
-                self.blobstorLocal.download(checksum, downloadDestinationDirectory)
-                self.state.downloadedBlobStorKeys[platform] = checksum
-                self.state.save()
-
-        #@todo need to check why this is needed
-        # #download the required blobs
-        # for checksum in self.requiredblobs.itervalues():
-        #     self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
+            self.log("expand platform_type:%s"%key,category="download")
+            j.system.fs.removeDirTree(downloadDestinationDirectory)
+            j.system.fs.createDir(downloadDestinationDirectory)
+            self.blobstorLocal.download(checksum, downloadDestinationDirectory)
+            self.state.downloadedBlobStorKeys[key] = checksum
+            self.state.save()
 
         return True
-
-
-    def getBundleKey(self,platform):
-        platform=str(platform)
-        if self.bundles.has_key(platform):
-            if self.bundles[platform]=="":
-                return None
-            return self.bundles[platform]
-        else:
-            return None
 
 
     def backup(self,url=None,dependencies=False):
@@ -1720,5 +1682,4 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         # print str(self) + ':' + mess
 
     def reportNumbers(self):
-        #return ' metaNr:' + str(self.metaNr) + ' bundleNr:' + str(self.bundleNr) + ' buildNr:' + str(self.buildNr)
         return ' buildNr:' + str(self.buildNr)

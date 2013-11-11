@@ -26,7 +26,6 @@ class JPackageClient():
         """
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metadata"))
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "files"))
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "bundles"))
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metatars"))
         self.domains=[]
         self._metadatadirTmp=j.system.fs.joinPaths(j.dirs.varDir,"tmp","jpackages","md")
@@ -191,24 +190,7 @@ class JPackageClient():
         self._getcache[key]=JPackageObject(domain, name, version)
         return self._getcache[key]
 
-    def downloadAllBundles(self,die=True):
-        """
-        Downloads all bundles from all packages in all domains from the repos
-        """
-        for package in self.getJPackageObjects():
-            if die==False:
-                try:
-                    package.download(allplatforms=True)
-                except:
-                    j.console.echo("could not download package %s" % package.name)
-            else:
-                package.download()
                     
-                
-    def copyAllBundlesToNewStorageLocation(self,path,die=True,appendDescr=True):
-        for package in self.getJPackageObjects():
-            package.copyBundleToNewStorageLocation(path,die=die,appendDescr=appendDescr)
-
     def exists(self,domain,name,version):
         """
         Checks whether the jpackages's metadata path is currently present on your system
@@ -320,18 +302,8 @@ class JPackageClient():
     def getMetaTarPath(self, domainName):
         """
         Returns the metatarsdatapath for the provided domain
-        This is the place where the .tgz bundles are stored for each domain
         """
         return j.system.fs.joinPaths(j.dirs.packageDir, "metatars", domainName)
-
-    # This is a name inconsitency with jpackages.getPathFiles
-    #                                          .getPathBundles
-    # Put Path in front or in back, but not both?
-    def getBundlesPath(self):
-        """
-        Returns the bundlesdatapath where all bundles are stored for all different domains
-        """
-        return j.system.fs.joinPaths(j.dirs.packageDir, "bundles")
 
 
 ############################################################
