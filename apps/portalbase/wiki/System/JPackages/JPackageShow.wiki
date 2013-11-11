@@ -1,11 +1,14 @@
 @usedefault
 {{jpackageshow}}
 
-h2. links
+h2. explorers
 
 |[JPackage Code Editors|/system/JPackageCodeEditors?domain=$$domain&name=$$name&version=$$version]|
 |[JPackage Browser|/system/JPackageBrowser?domain=$$domain&name=$$name&version=$$version]|
 |[JPackage Files|/system/JPackageFiles?domain=$$domain&name=$$name&version=$$version]|
+
+h2. links
+
 |[JPackage Blobs|/system/JPackageBlobs?domain=$$domain&name=$$name&version=$$version]|
 
 h2. actions
