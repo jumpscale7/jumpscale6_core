@@ -464,7 +464,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         from dir get [qbase]/cfg/jpackages/state/$jpackagesdomain_$jpackagesname_$jpackagesversion.state
         is a inifile with following variables
-        * lastinstalledbuildNr
+        * lastinstalledbuildnr
         * lastaction
         * lasttag
         * lastactiontime  epoch of last time an action was done
@@ -535,16 +535,16 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             raise RuntimeError("Could not find subdir %s in files dirs for '%s'"%(subdir,self))
         return result
 
-    def copyPythonLibs(self,remove=False):
-        """
-        will look in platform dirs of jpackage to find "site-packages" dir (starting from lowest platform type e.g. linux64, then parents of platform)
-        each dir "site-packages" found in one of the site-packages dir will be copied to the local site packages dir
-        """
-        # j.system.platform.python.getSitePackagePathLocal
-        for path in self.getPathFilesPlatformForSubDir("site-packages"):
-            # self.log("copy python lib to %s"%path,category="libinstall")
-            self.log("Copy python lib:%s to site packages"%path,category="copylib")
-            j.system.platform.python.copyLibsToLocalSitePackagesDir(path,remove=remove)
+    # def copyPythonLibs(self,remove=False):
+    #     """
+    #     will look in platform dirs of jpackage to find "site-packages" dir (starting from lowest platform type e.g. linux64, then parents of platform)
+    #     each dir "site-packages" found in one of the site-packages dir will be copied to the local site packages dir
+    #     """
+    #     # j.system.platform.python.getSitePackagePathLocal
+    #     for path in self.getPathFilesPlatformForSubDir("site-packages"):
+    #         # self.log("copy python lib to %s"%path,category="libinstall")
+    #         self.log("Copy python lib:%s to site packages"%path,category="copylib")
+    #         j.system.platform.python.copyLibsToLocalSitePackagesDir(path,remove=remove)
 
 
     def installUbuntuDebs(self):
@@ -564,7 +564,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Return the latetst installed buildnumber
         """
         ##self.assertAccessable()
-        return self.state.lastinstalledbuildNr
+        return self.state.lastinstalledbuildnr
 
     def buildNrIncrement(self):
         buildNr=0
@@ -647,7 +647,9 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         Check if the JPackage is installed
         """
         ##self.assertAccessable()
-        return self.state.lastinstalledbuildNr != -1
+
+        
+        return self.state.lastinstalledbuildnr != -1
 
     def supportsPlatform(self,platform=None):
         """
@@ -806,11 +808,23 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         self.loadActions(True) #reload actions to make sure new hrdactive are applied
         self._loadActiveHrd()
 
-        action="prepare"
-        if j.packages._actionCheck(self,action):
-            return
+        for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
+            pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
+            for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
+                pathttype=j.system.fs.joinPaths(pathplatform,ttype)
+                j.system.fs.removeIrrelevantFiles(pathttype)
 
-        self.actions.prepare()
+        tmp,destination=self.getBlobItemPaths(platform,ttype,"")
+
+        if ttype in ["etc"]:
+            applyhrd=True
+        else:
+            applyhrd=True
+
+        self.log("copy files from:%s to:%s"%(pathttype,destination))
+        self._copyFiles(pathttype,destination,applyhrd=applyhrd)
+
+
 
     def install(self, dependencies=True, download=True, reinstall=False):
         """
@@ -825,7 +839,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """        
 
         # If I am already installed assume my dependencies are also installed
-        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildNr and not reinstall:
+        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
             self.log('already installed')
             return # Nothing to do
 
@@ -845,16 +859,19 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         if download:
             self.download(dependencies=False)
 
-        if reinstall or self.buildNr > self.state.lastinstalledbuildNr:
+        if reinstall or self.buildNr > self.state.lastinstalledbuildnr:
             #print 'really installing ' + str(self)
             self.log('installing')
             if self.state.checkNoCurrentAction == False:
                 raise RuntimeError ("jpackages is in inconsistent state, ...")                
 
+            self.prepare(dependencies=dependencies)
+            self.copyfiles(dependencies=dependencies)
+
             self.actions.install()
             self.state.setLastInstalledBuildNr(self.buildNr)
 
-        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildNr:
+        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
             self.configure()
 
         if self.debug:
@@ -911,86 +928,70 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         cfgPath = j.system.fs.joinPaths(self.metadataPath, JPACKAGE_CFG)
         return not domainObject._isTrackingFile(cfgPath)
 
-    def _copyFiles(self, subdir="",destination="",applyhrd=False):
+    def _copyFiles(self, subdir,destination,applyhrd=False):
         """
-        Copy the files from package dirs (/opt/qbase5/var/jpackages/...) to their proper location in the sandbox.
+        Copy the files from package dirs (/opt/js/var/jpackages/...) to their proper location in the sandbox.
 
-        @param destination: destination of the files, default is the sandbox
+        @param destination: destination of the files
         """
 
         if destination=="":
             raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
         for path in self.getPathFilesPlatformForSubDir(subdir):
-            # self.log("copy python lib to %s"%path,category="libinstall")
             self.log("Copy files from %s to %s"%(path,destination),category="copy")
-
+            j.system.fs.createDir(destination,skipProtectedDirs=True)
             if applyhrd:
                 tmpdir=j.system.fs.getTmpDirPath()
                 j.system.fs.copyDirTree(path,tmpdir)
                 j.application.config.applyOnDir(tmpdir)
-                self._copyFilesTo(tmpdir, destination)
+                j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
                 j.system.fs.removeDirTree(tmpdir)
             else:
-                self._copyFilesTo(path, destination)
+                j.system.fs.copyDirTree(path, destination,skipProtectedDirs=True)
 
 
-    def _copyFilesTo(self, sourceDir, destination):
-        """
-        Copy Files
+    # def _copyFilesTo(self, sourceDir, destination):
+    #     """
+    #     Copy Files
 
-        @param sourceDir: directory to copy files from
-        @param destination: directory to copy files to
-        """
-        if self.debug:
-            return #do not copy files when debug, need to be improved with next remark
+    #     @param sourceDir: directory to copy files from
+    #     @param destination: directory to copy files to
+    #     """
+    #     if self.debug:
+    #         return #do not copy files when debug, need to be improved with next remark
 
-        def createAncestors(file):
-            # Create the ancestors
-            j.system.fs.createDir(j.system.fs.getDirName(file))
+    #     def createAncestors(file):
+    #         # Create the ancestors
+    #         j.system.fs.createDir(j.system.fs.getDirName(file))
 
-        if sourceDir [-1] != '/':
-            sourceDir = sourceDir + '/'
-        prefixHiddenFile = sourceDir + '.hg'
+    #     if sourceDir [-1] != '/':
+    #         sourceDir = sourceDir + '/'
+    #     prefixHiddenFile = sourceDir + '.hg'
 
-        if j.system.fs.isDir(sourceDir):
-            files = j.system.fs.walk(sourceDir, recurse=True, return_folders=True, followSoftlinks=False)
-            for file in files:
-                # Remove hidden files and directories:
-                if file.find(prefixHiddenFile) == 0 :
-                    continue
-                destinationFile = j.system.fs.joinPaths(destination, file[len(sourceDir):])
-                _copy = True
+    #     if j.system.fs.isDir(sourceDir):
+    #         files = j.system.fs.walk(sourceDir, recurse=True, return_folders=True, followSoftlinks=False)
+    #         for file in files:
+    #             # Remove hidden files and directories:
+    #             if file.find(prefixHiddenFile) == 0 :
+    #                 continue
+    #             destinationFile = j.system.fs.joinPaths(destination, file[len(sourceDir):])
+    #             _copy = True
 
-                if destinationFile in j.dirs.protectedDirs:
-                    j.console.echo( "Skipping %s because it's protected" % destinationFile)
-                    _copy = False
+    #             if destinationFile in j.dirs.protectedDirs:
 
-                if _copy:
-                    for protectedDir in j.dirs.protectedDirs:
-                        # Add a '/' if needed, so we don't accidentally filter
-                        # out /home/jumpscale if /home/p is protected
-                        if protectedDir and protectedDir[-1] != os.path.sep:
-                            protectedDir = protectedDir + os.path.sep
+    #             if _copy:
+    #                 self.log("Copying <%s>" % destinationFile,level=8)
+    #                 createAncestors(destinationFile)
+    #                 if j.system.fs.isLink( file ) :
+    #                     j.system.fs.symlink(os.readlink( file ), destinationFile, overwriteTarget=True )
+    #                 elif j.system.fs.isDir (file) :
+    #                     j.system.fs.createDir(destinationFile )
+    #                 else:
+    #                     j.system.fs.copyFile(file, destinationFile)
 
-                        if destinationFile.startswith(protectedDir):
-                            j.console.echo( "Skipping %s because %s is protected" % (
-                                        destinationFile, protectedDir))
-                            _copy = False
-                            break
-
-                if _copy:
-                    self.log("Copying <%s>" % destinationFile,level=8)
-                    createAncestors(destinationFile)
-                    if j.system.fs.isLink( file ) :
-                        j.system.fs.symlink(os.readlink( file ), destinationFile, overwriteTarget=True )
-                    elif j.system.fs.isDir (file) :
-                        j.system.fs.createDir(destinationFile )
-                    else:
-                        j.system.fs.copyFile(file, destinationFile)
-
-            self.log('Syncing done')
-        else:
-            self.log('Directory <%s> does not exist' % sourceDir)
+    #         self.log('Syncing done')
+    #     else:
+    #         self.log('Directory <%s> does not exist' % sourceDir)
 
     def configure(self, dependencies=False):
         """
