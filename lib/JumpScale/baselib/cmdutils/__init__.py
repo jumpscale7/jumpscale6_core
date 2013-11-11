@@ -18,22 +18,20 @@ def getJPackage(parser=None,installed=None,domain=None):
 
     if args.name==None:
         args.name=""
-    package = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
+    packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
 
 
-    if len(package) == 0:
+    if len(packages) == 0:
         if installed:
             print "Could not find package with name '%s' in domain '%s' with version '%s' which is installed." % (args.name, domain, args.version)
         else:
             print "Could not find package with name '%s' in domain '%s' with version '%s'" % (args.name, domain, args.version)
         j.application.stop(1)
-    elif len(package) > 1:
+    elif len(packages) > 1:
         if not j.application.shellconfig.interactive:
             print "Found multiple packages %s" % (package)
             j.application.stop(1)
         else:
-            package = j.console.askChoiceMultiple(package, "Multiple packages found. Select:")
-    else:
-        package = package[0]
+            packages = j.console.askChoiceMultiple(package, "Multiple packages found. Select:")
 
-    return package, args
+        return packages, args
