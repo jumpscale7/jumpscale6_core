@@ -12,7 +12,7 @@ class ActionManager:
         self._jpackage=jp
         self._actions={}
 
-        for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions()):
+        for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions(), filter='*.py'):
             name=j.system.fs.getBaseName(path)
             if name[0]=="_":
                 continue

@@ -133,9 +133,6 @@ class JPackageObject():
             if self.supportedPlatforms==[]:
                 raise RuntimeError("supported platforms cannot be empty")
                 
-            j.system.fs.listFilesInDir(self.getPathFiles())
-
-
             j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
             j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"files"))
 
