@@ -165,7 +165,7 @@ abstract class elFinderVolumeDriver {
 		// library to crypt/uncrypt files names (not implemented)
 		'cryptLib'        => '',
 		// how to detect files mimetypes. (auto/internal/finfo/mime_content_type)
-		'mimeDetect'      => 'auto',
+		'mimeDetect'      => 'internal',
 		// mime.types file path (for mimeDetect==internal)
 		'mimefile'        => '',
 		// directory for thumbnails

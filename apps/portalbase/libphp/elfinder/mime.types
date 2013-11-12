@@ -405,7 +405,7 @@ text/enriched
 text/html html htm
 text/htmlh
 text/mathml mml
-text/plain txt asc wiki spec
+text/plain txt asc wiki spec hrd cfg info
 text/rdf rdf
 text/rfc822-headers
 text/richtext rtx
@@ -508,4 +508,3 @@ application/vnd.openxmlformats-officedocument.presentationml.presentation pptx
 application/vnd.openxmlformats-officedocument.presentationml.template potx
 application/vnd.openxmlformats-officedocument.presentationml.slideshow ppsx
 application/vnd.ms-powerpoint.addin.macroEnabled.12 ppam
-text/plain hrd cfg info
