@@ -298,7 +298,7 @@ class PageHTML(Page):
                 raise RuntimeError("Could not find action %s" % action)
         self.addList([row])
 
-    def addCodeBlock(self, code, template="python", path="", edit=False, exitpage=True, spacename='', pagename=''):
+    def addCodeBlock(self, code, template="python", path="", edit=True, exitpage=True, spacename='', pagename=''):
         """
         @todo define types of templates supported
         @template e.g. python

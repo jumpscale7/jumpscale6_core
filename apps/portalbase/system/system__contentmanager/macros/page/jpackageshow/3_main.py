@@ -9,7 +9,14 @@ def main(j, args, params, tags, tasklet):
     if version:
         package = j.packages.find(domain, name, version)[0]
     else:
-        package = j.packages.findNewest(domain, name)
+        if domain and name:
+            package = j.packages.findNewest(domain, name)
+        else:
+            returnpath = "/system/jpackages"
+            returncontent = "<script>window.open('%s', '_self', '');</script>" % returnpath
+            page.addHTML(returncontent)
+            params.result = page
+            return params
     
     page.addHeading(package.name, 2)
     page.addHTML('Installed: %s' % (package.isInstalled()))

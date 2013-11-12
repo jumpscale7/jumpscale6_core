@@ -508,3 +508,4 @@ application/vnd.openxmlformats-officedocument.presentationml.presentation pptx
 application/vnd.openxmlformats-officedocument.presentationml.template potx
 application/vnd.openxmlformats-officedocument.presentationml.slideshow ppsx
 application/vnd.ms-powerpoint.addin.macroEnabled.12 ppam
+text/plain hrd cfg info
