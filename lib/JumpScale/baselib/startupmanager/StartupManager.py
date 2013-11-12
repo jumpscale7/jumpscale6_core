@@ -10,39 +10,41 @@ import os
 #     else:
 #         raise RuntimeError('Environment variable WAIT_FOR_PORT is not set')
 
+class Process:
+    def __init__(self):
+        self.p
+
 class StartupManager:
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
 
-    def addProcess(self, name, cmd, args="", warmup_delay=0, numprocesses=1, priority=0, autostart=True, shell=False, workingdir=None, before_start=None, after_start=None, send_hup=False, **kwargs):
-        servercfg = self._getIniFile(name)
-        sectionname = "watcher:%s" % name
-        if servercfg.checkSection(sectionname):
-            servercfg.removeSection(sectionname)
-        servercfg.addSection(sectionname)
-        servercfg.addParam(sectionname, 'cmd', cmd)
-        servercfg.addParam(sectionname, 'args', args)
-        servercfg.addParam(sectionname, 'warmup_delay', warmup_delay)
-        servercfg.addParam(sectionname, 'numprocesses', numprocesses)
-        servercfg.addParam(sectionname, 'priority', priority)
-        servercfg.addParam(sectionname, 'autostart', autostart)
-        servercfg.addParam(sectionname, 'send_hup', send_hup)
-        if workingdir:
-            servercfg.addParam(sectionname, 'working_dir', workingdir)
-        if before_start:
-            servercfg.addParam(sectionname, 'hooks.before_start', before_start)
-        if after_start:
-            servercfg.addParam(sectionname, 'hooks.after_start', after_start)
-        servercfg.addParam(sectionname, 'shell', shell)
-        # defaults = {'stdout_stream.class': 'FileStream',
-        #             'stdout_stream.filename': '%s.log' % name,
-        #             'stdout_stream.refresh_time': '0.3',
-        #             'stdout_stream.max_bytes': '%s' % (1024**2*10), #10MB
-        #             'stdout_stream.backup_count': '5'}
-        # for k, v in defaults.iteritems():
-        #     if v is not None:
-        #         servercfg.addParam(sectionname, k, v)
-        #check name is no service yet and if then remove
+    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir=None,jpackage=None,domain=""):
+
+        envstr=""
+        for key in env.keys():
+            envstr+="%s:%s,"%(key,env[key])
+        envstr=envstr.rstrip(",")
+
+        hrd="process.name=%s\n"%name
+        if domain=="" and jpackage<>None:
+            domain=jpackage.domain
+        hrd="process.domain=%s\n"%domain
+        hrd+="process.cmd=%s\n"%cmd
+        hrd+="process.args=%s\n"%args
+        hrd+="process.env=%s\n"%envstr
+        hrd+="process.numprocesses=%s\n"%numprocesses
+        hrd+="process.priority=%s\n"%priority
+        hrd+="process.workingdir=%s\n"%workingdir
+        if jpackage==None:
+            hrd+="process.jpackage.domain=\n"
+            hrd+="process.jpackage.name=\n"
+            hrd+="process.jpackage.version=\n"
+        else:
+            hrd+="process.jpackage.domain=%s\n"%jpackage.domain
+            hrd+="process.jpackage.name=%s\n"%jpackage.name
+            hrd+="process.jpackage.version=%s\n"%jpackage.version
+
+        j.system.fs.writeFile(filename=j.system.fs.joinPaths(self._configpath ,"%s__%s.hrd"%(domain,name)),contents=hrd)
 
         for item in j.system.fs.listFilesInDir("/etc/init.d"):
             itembase=j.system.fs.getBaseName(item)
@@ -59,6 +61,18 @@ class StartupManager:
                 j.system.fs.remove(item)
 
         servercfg.write()
+
+    def load(self):
+        for path in j.system.fs.listFilesInDir(self._configpath , recursive=False):
+            domain,name=j.system.fs.getBaseName(path).replace(".hrd","").split("__")
+
+
+
+    def startJPackage(self,jpackage):
+        from IPython import embed
+        print "DEBUG NOW startjpackage"
+        embed()
+        
 
     def addEnv(self, name, env_vars):
         '''Adds [env] section

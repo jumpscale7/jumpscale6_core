@@ -14,6 +14,8 @@ class ActionManager:
 
         for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions()):
             name=j.system.fs.getBaseName(path)
+            if name[0]=="_":
+                continue
             name=name[:-3]
             content=j.system.fs.fileGetContents(path)
             try:

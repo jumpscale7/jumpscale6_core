@@ -201,8 +201,6 @@ class JPackageObject():
             # else:
             #     process(files[0],"")
 
-
-
     def load(self,hrdDir=None,position=""):                
 
         #create defaults for new jpackages
@@ -386,7 +384,6 @@ class JPackageObject():
         setValue('minversion', minversion)
         setValue('maxversion', maxversion)
 
-
 ##################################################################################################
 ###################################  DEPENDENCY HANDLING  #######################################
 ##################################################################################################
@@ -460,6 +457,9 @@ class JPackageObject():
             return True
         return False
 
+    def getKey(self):
+        return "%s|%s|%s"%(self.domain,self.name,self.version)
+
     def getDependingInstalledPackages(self, recursive=False):
         """
         Return the packages that are dependent on this packages and installed on this machine
@@ -476,7 +476,6 @@ class JPackageObject():
         This is a heavy operation and might take some time
         """
         return [p for p in j.packages.getJPackageObjects() if self in p.getDependencies()]
-
 
     def _getState(self):
         ##self.assertAccessable()
@@ -515,14 +514,12 @@ class JPackageObject():
         """
         return j.packages.getMetadataPath(self.domain, self.name, self.version)
 
-
     def getPathFiles(self):
         """
         Return absolute pathname of the jpackages's filespath
         """
         ##self.assertAccessable()
         return j.packages.getDataPath(self.domain, self.name, self.version)
-
 
     def getPathFilesPlatform(self, platform=None):
         """
@@ -615,7 +612,6 @@ class JPackageObject():
                 print str(e)
                 broken.append(dep)
         return broken
-
 
     def getDependencies(self):
         """
