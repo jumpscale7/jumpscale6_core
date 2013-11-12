@@ -272,7 +272,7 @@ class JPackageObject():
                     j.application.loadConfig() #will load that underneath
 
     def loadActions(self, force=False):
-        print "loadactions:%s"%self
+        # print "loadactions:%s"%self
         if self.actions <> None and not force:
             return
 
@@ -301,7 +301,7 @@ class JPackageObject():
             print "DEBUG NOW ooooooooooooo"
             embed()
 
-        print "loadactionsdone:%s"%self
+        # print "loadactionsdone:%s"%self
             
     def getDebugMode(self):
         return self.state.debugMode
@@ -839,7 +839,6 @@ class JPackageObject():
         else:
             return False
 
-
 #############################################################################
 #################################  ACTIONS  ################################
 #############################################################################
@@ -1100,6 +1099,7 @@ class JPackageObject():
                 dep.configure(dependencies=False)
 
         self.actions.install_configure()
+        self.actions.process_configure()
         # self.state.setIsPendingReconfiguration(False)
         j.application.loadConfig() #makes sure hrd gets reloaded to application.config object
 

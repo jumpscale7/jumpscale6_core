@@ -316,7 +316,7 @@ class HRD():
         if not self.__dict__.has_key(key2):
             if checkExists:
                 return False
-            raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
+            raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self.path))
 
         val= self.__dict__[key2]
 

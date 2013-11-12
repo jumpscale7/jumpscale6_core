@@ -8,7 +8,7 @@ class ActionManager:
     """
 
     def __init__(self,jp):
-        print "init actions for %s"%jp
+        # print "init actions for %s"%jp
         self._jpackage=jp
         self._actions={}
 
