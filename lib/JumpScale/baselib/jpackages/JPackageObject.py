@@ -4,7 +4,7 @@
 #     pass
 
 import os
-
+import time
 # try:
 #     from cStringIO import StringIO
 # except ImportError:
@@ -112,6 +112,8 @@ class JPackageObject():
 
             #for easy development, overwrite specific implementations
             # j.system.fs.copyDirTree(src+"/actions/",self.getPathMetadata()+"/actions/", overwriteFiles=True)
+            j.system.fs.copyFile(src+"/actions/process.depcheck.py",self.getPathMetadata()+"/actions/process.depcheck.py")
+            
             
             self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
@@ -1410,7 +1412,7 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.upload(remote=remote, local=local,dependencies=dependencies)
+                dep.upload(remote=remote, local=local,dependencies=False)
 
         self.actions.upload()
 
@@ -1448,6 +1450,57 @@ class JPackageObject():
 
             if key0<>key:
                 raise RuntimeError("Corruption in upload for %s"%self)
+
+    def waitUp(self, timeout=60,dependencies=False):        
+        self.loadActions()
+        if dependencies:
+            deps = self.getDependencies()
+        else:
+            deps=[]
+
+        start=j.base.time.getTimeEpoch()
+        now=start
+        while now<start+timeout:
+            result=True
+            for dep in deps:
+                result=result & dep.actions.monitor_up_net()
+                result=result & dep.actions.monitor_up_local()
+            result=result & self.actions.monitor_up_net()
+            result=result & self.actions.monitor_up_local()
+            if result:
+                return True
+            time.sleep(0.5)
+            print "waitup:%s"%self
+            now=j.base.time.getTimeEpoch()
+        raise RuntimeError("Timeout on waitup for jp:%s"%self)
+
+    def processDepCheck(self, timeout=60,dependencies=False):
+        #check for dependencies for process to start
+        self.loadActions()
+        if dependencies:
+            deps = self.getDependencies()
+        else:
+            deps=[]            
+            
+        start=j.base.time.getTimeEpoch()
+        now=start
+        while now<start+timeout:
+            result=True
+            for dep in deps:
+                r=dep.actions.process_depcheck()
+                if r==None:
+                    r=False
+                result=result & r
+            r=self.actions.process_depcheck()
+            if r==None:
+                r=False
+            result=result & r
+            if result:
+                return True
+            time.sleep(0.5)
+            print "processdepcheck:%s"%self
+            now=j.base.time.getTimeEpoch()
+        raise RuntimeError("Timeout on check process dependencies for jp:%s"%self)
 
 
 

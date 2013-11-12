@@ -32,6 +32,7 @@ class SystemNet:
         while now<start+timeout:
             if j.system.net.tcpPortConnectionTest(ipaddr,port):
                 return True
+            time.sleep(0.1)
             now=j.base.time.getTimeEpoch()
         return False
 

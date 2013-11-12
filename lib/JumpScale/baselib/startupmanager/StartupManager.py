@@ -1,6 +1,6 @@
 from JumpScale import j
 import os
-
+import JumpScale.baselib.screen
 # def checkPort(*args, **kwargs):
 #     watcher = kwargs['watcher']
 #     portstr = watcher.env.get('WAIT_FOR_PORT')
@@ -12,6 +12,7 @@ import os
 
 class ProcessDef:
     def __init__(self, hrd):
+        self.start=hrd.get("process.start")
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
         self.cmd=hrd.get("process.cmd")
@@ -25,18 +26,18 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.domain")
         self.jpackage_version=hrd.get("process.jpackage.domain")
 
-    def start(self):
-        from IPython import embed
-        print "DEBUG NOW start"
-        embed()
-        
+    def startdo(self,timeout=60):
+        jp=j.packages.find(self.domain,self.name)[0]
+        jp.processDepCheck(timeout=timeout)
+        if self.workingdir<>"":
+            j.system.platform.screen.executeInScreen(self.domain,self.name,"cd %s"%self.workingdir,wait=0)
+        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,wait=0)
+
     def __str__(self):
         return str(self.__dict__)
 
     __repr__ = __str__
 
-
-        
 
 class StartupManager:
     def __init__(self):
@@ -44,13 +45,28 @@ class StartupManager:
         self.processdefs={}
         self.__init=False
 
+    def init(self):
+        """
+        start base for byobu
+        """
+        for domain in self.getDomains():
+            screens=[item.name for item in self.getProcessDefs(domain=domain)]
+            j.system.platform.screen.createSession(domain,screens)
+      
+    def reset(self):
+        self.load()
+        #kill remainders
+        for item in ["byobu","screen"]:
+            cmd="killall %s"%item
+            j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
+        self.init()
+
     def _init(self):
         if self.__init==False:
             self.load()
             self.__init=True
 
-    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir=None,jpackage=None,domain="",ports=[]):
-        self._init()
+    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir=None,jpackage=None,domain="",ports=[],start=True):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -68,6 +84,9 @@ class StartupManager:
         hrd+="process.numprocesses=%s\n"%numprocesses
         hrd+="process.priority=%s\n"%priority
         hrd+="process.workingdir=%s\n"%workingdir
+        if start:
+            start=1
+        hrd+="process.start=%s\n"%start
         pstring=""
         for port in ports:
             pstring+="%s,"%port
@@ -99,22 +118,57 @@ class StartupManager:
                 j.system.process.execute("stop %s"%itembase)
                 j.system.fs.remove(item)
 
-
     def _getKey(self,domain,name):
         return "%s__%s"%(domain,name)
 
     def load(self):
+        self.processdefs={}
         for path in j.system.fs.listFilesInDir(self._configpath , recursive=False,filter="*.hrd"):
             domain,name=j.system.fs.getBaseName(path).replace(".hrd","").split("__")
             key="%s__%s"%(domain,name)
             self.processdefs[key]=ProcessDef(j.core.hrd.getHRD(path))
 
+    def getProcessDefs(self,domain=None,name=None):
+        self._init()        
+        resultOrder={}
+        for pd in self.processdefs.itervalues():
+            # print "find:%s"%pd
+            found=True
+            if domain<>None:
+                found=found and pd.domain==domain
+            if name<>None:
+                found=found and pd.name==name
+            if found:
+                if not resultOrder.has_key(pd.priority):
+                    resultOrder[pd.priority]=[]
+                resultOrder[pd.priority].append(pd)
 
-    def startJPackage(self,jpackage):
-        from IPython import embed
-        print "DEBUG NOW startjpackage"
-        embed()
-        
+        prioritys=resultOrder.keys()
+        prioritys.sort()
+        result=[]
+        for priority in prioritys:
+            # print priority
+            result+=resultOrder[priority]
+
+        return result
+
+    def getDomains(self):
+        result=[]
+        for pd in self.processdefs.itervalues():
+            if pd.domain not in result:
+                result.append(pd.domain)
+        return result
+
+    def startJPackage(self,jpackage,timeout=60):
+        for pd in self.getProcessDefs(jpackage.domain,jpackage.name):
+            pd.startdo()
+
+    def startAll(self):        
+        for pd in self.getProcessDefs():
+            if pd.start:
+                "start:%s"%pd
+                pd.startdo()
+
 
     def removeProcess(self,name):
         servercfg = self._getIniFilePath(name)
@@ -136,13 +190,7 @@ class StartupManager:
             return status['status']
 
     def apply(self):
-        """
-        make sure circus knows about it
-        """
-        from IPython import embed
-        print "DEBUG NOW apply"
-        embed()
-        
+        pass #nothing needed any more, was for circus
 
     def listProcesses(self):
         from IPython import embed
