@@ -109,6 +109,9 @@ class JPackageObject():
                 self.hrd=j.core.hrd.getHRD(content=content)
 
             j.system.fs.copyDirTree(src,self.getPathMetadata(), overwriteFiles=False) #do never put this on true
+
+            #for easy development, overwrite specific implementations
+            j.system.fs.copyDirTree(src+"/actions/",self.getPathMetadata()+"/actions/", overwriteFiles=True)
             
             self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
@@ -150,13 +153,13 @@ class JPackageObject():
             j.system.fs.removeDirTree(path)
             # print "remove:%s"%path
 
-        if j.system.fs.exists(self.getPathMetadata()):
-            for item in j.system.fs.listFilesInDir(self.getPathMetadata(),filter="*.info"):
-                j.system.fs.remove(item)
+        # if j.system.fs.exists(self.getPathMetadata()):
+        #     for item in j.system.fs.listFilesInDir(self.getPathMetadata(),filter="*.info"):
+        #         j.system.fs.remove(item)
 
-            for item in j.system.fs.listFilesInDir(self.getPathMetadata(),recursive=True):
-                if item.find("$(")<>-1:
-                    j.system.fs.remove(item)
+            # for item in j.system.fs.listFilesInDir(self.getPathMetadata(),recursive=True):
+            #     if item.find("$(")<>-1:
+            #         j.system.fs.remove(item)
 
         # for item in j.system.fs.listDirsInDir("%s/actions"%self.getPathMetadata(),recursive=False):
         #     j.system.fs.removeDirTree(item)            
@@ -1211,8 +1214,6 @@ class JPackageObject():
                 
         self.loadActions()
 
-        params = j.core.params.get()
-        params.jpackages = self
         self.log('Package')
         # Disable action caching:
         # If a user packages for 2 different platforms in the same jshell
@@ -1327,7 +1328,7 @@ class JPackageObject():
             for dep in deps:
                 dep.download(dependencies=False, destinationDirectory=destinationDirectory,allplatforms=allplatforms,expand=expand)
 
-        self.actions.download(destination=destinationDirectory)
+        self.actions.install_download()
 
     def _download(self,destinationDirectory=None):
 
@@ -1425,9 +1426,7 @@ class JPackageObject():
         Upload jpackages to Blobstor, default remote and local
         Does always a jp.package() first
         """
-        self.loadActions(force=True)
-
-        self.package(dependencies=dependencies)
+        self.package(dependencies=False)
         self.loadActions(force=True)
 
         for platform,ttype in self.getBlobPlatformTypes():

@@ -14,6 +14,7 @@ class ActionManager:
 
         for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions()):
             name=j.system.fs.getBaseName(path)
+            name=name[:-3]
             content=j.system.fs.fileGetContents(path)
             try:
                 exec(content)
@@ -26,7 +27,7 @@ class ActionManager:
 
             self._actions[name]=main
             name2=name.replace(".","_")
-            self.__dict__[name]=self._getActionMethod(name)
+            self.__dict__[name2]=self._getActionMethod(name)
         
     def _getActionMethod(self,name):    
         C="""

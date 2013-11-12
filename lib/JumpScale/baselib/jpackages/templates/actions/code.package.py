@@ -3,5 +3,5 @@
 
 def main(jp):
     recipe=jp.getCodeMgmtRecipe()
-    recipe.package()
+    recipe.package(jp)
 
