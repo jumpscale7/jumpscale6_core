@@ -59,11 +59,11 @@ h3. test3
 @col 4
 h3. test5
 
-{{gallery: picturedir:testimages3 | title:demo}}
+{{gallery: picturedir: | title:demo}}
 @colend
 @col 8
 h3. test6
-{{gallery: picturedir:testimages3 | title:demo}}
+{{gallery: picturedir: | title:demo}}
 @colend
 @rowend
 
@@ -90,11 +90,11 @@ h3. test3
 @col 4
 h3. test5
 
-{{gallery: picturedir:testimages3 | title:demo}}
+{{gallery: picturedir: | title:demo}}
 @colend
 @col 8
 h3. test6
-{{gallery: picturedir:testimages3 | title:demo}}
+{{gallery: picturedir: | title:demo}}
 @colend
 @rowend
 

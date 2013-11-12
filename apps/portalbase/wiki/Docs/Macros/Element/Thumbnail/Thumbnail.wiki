@@ -13,20 +13,20 @@ The thumbnail macro has a 3 parameters
 h2. Demos
 
 {{code:
-{{thumbnail:.files/img/testimages3/test1.jpg}}
+{{thumbnail:.files/img/tiger.jpg}}
 }}
 
-{{thumbnail:.files/img/testimages3/test1.jpg}}
+{{thumbnail:.files/img/tiger.jpg}}
 
 {{code:
-{{thumbnail:.files/img/testimages3/test1.jpg 200x100}}
+{{thumbnail:.files/img/tiger.jpg 200x100}}
 }}
 
-{{thumbnail:.files/img/testimages3/test1.jpg 200x100}}
+{{thumbnail:.files/img/tiger.jpg 200x100}}
 
 {{code:
-{{thumbnail:.files/img/testimages3/test1.jpg 500x200 exact_size}}
+{{thumbnail:.files/img/tiger.jpg 500x200 exact_size}}
 }}
 
-{{thumbnail:.files/img/testimages3/test1.jpg 500x200 exact_size}}
+{{thumbnail:.files/img/tiger.jpg 500x200 exact_size}}
 

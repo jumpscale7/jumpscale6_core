@@ -1,5 +1,7 @@
 h1. Container
 
+Adds the given content to the page.
+
 {{code:
 {{container: 1234}}
 }}

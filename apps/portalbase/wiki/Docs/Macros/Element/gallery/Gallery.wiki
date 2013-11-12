@@ -24,9 +24,9 @@ h2. Demo
 If you write this in your page
 
 {{code:
-{{gallery: picturedir:testimages3 | title:demo | thumb_size:300x200}}
+{{gallery: picturedir: | title:demo | thumb_size:300x200}}
 }}
 
 This will be the result
 
-{{gallery: picturedir:testimages3 | title:demo | thumb_size:300x200}}
+{{gallery: picturedir: | title:demo | thumb_size:300x200}}
