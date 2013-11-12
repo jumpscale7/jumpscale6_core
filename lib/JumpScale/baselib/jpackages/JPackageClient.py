@@ -341,11 +341,12 @@ class JPackageClient():
         @param platform:   string - Which platform the jpackages must run on
         @param returnNoneIfNotFound: boolean - if true, will return None object if no jpackages have been found
         """
-        results0=self.find(domain=domain,name=name)
-        results=[]
-        for item in results0:    
-            if item.supportsPlatform(platform=None):
-                results.append(item)
+        results=self.find(domain=domain,name=name)
+
+        # results=[]
+        # for item in results0:    
+        #     if item.supportsPlatform(platform=None):
+        #         results.append(item)
 
         namefound=""
         domainfound=""

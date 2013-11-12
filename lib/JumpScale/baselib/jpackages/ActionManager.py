@@ -7,26 +7,44 @@ class ActionManager:
     the action manager is responsible for executing the actions linked to a jpackages
     """
 
-    def __init__(self,jpackages):
-        self._jpackages=jpackages
-        self.__te = None
-        self._path=self._jpackages.getPathActions()
-        self._taskletEngines={}
+    def __init__(self,jp):
+        print "init actions for %s"%jp
+        self._jpackage=jp
+        self._actions={}
 
-        for item in j.system.fs.listDirsInDir(self._path,dirNameOnly=True):
-            item2=item.replace(".","_")
-            self._taskletEngines[item2]=j.core.taskletengine.get(j.system.fs.joinPaths(self._path,item))
-            self.__dict__[item2]=self._getActionMethod(item2)
+        for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions()):
+            name=j.system.fs.getBaseName(path)
+            content=j.system.fs.fileGetContents(path)
+            try:
+                exec(content)
+            except Exception as e:
+                msg="Could not load action.script:%s\n" % path
+                msg+="Error was:%s\n" % e
+                # print msg
+                j.errorconditionhandler.raiseInputError(msgpub="",message=msg,category="jpackages.actions.load",tags="",die=True)
+                continue
+
+            self._actions[name]=main
+            name2=name.replace(".","_")
+            self.__dict__[name]=self._getActionMethod(name)
         
     def _getActionMethod(self,name):    
         C="""
-def method(self,**args):
-    args["jp"]=self._jpackages
-    te=self._taskletEngines["{name}"]
-    result=te.executeV2(**args)
-    return result
-        """
+def method(self{args}):
+    return self._actions['{name}'](self._jpackage{args})"""
 
+        args=""
+
+        if name=="code.link" or name=="code.update":
+            args=",force=False"
+
+        elif name=="data.export" or name=="data.import":
+            args=",url=None"       
+
+        elif name=="monitor.up.net":
+            args=",ipaddr='localhost'"       
+
+        C=C.replace("{args}",args)
         C=C.replace("{name}",name)
         exec(C)
         return MethodType(method, self, ActionManager)

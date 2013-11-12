@@ -1,61 +1,36 @@
-try:
-    import contextlib
-except:
-    pass
+# try:
+#     import contextlib
+# except:
+#     pass
+
 import os
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+# try:
+#     from cStringIO import StringIO
+# except ImportError:
+#     from StringIO import StringIO
+
 import inspect
+
 from JumpScale import j
-from JumpScale.core.baseclasses import BaseType
-from JumpScale.core.baseclasses.dirtyflaggingmixin import DirtyFlaggingMixin
+
 from JPackageStateObject import JPackageStateObject
 #from JumpScale.core.sync.Sync import SyncLocal
 from ActionManager import ActionManager
 
 from CodeManagementRecipe import CodeManagementRecipe
 
-JPACKAGE_CFG = "jpackages.cfg"
-BUILD_NR = "build_nr"
-QUALITY_LEVEL = "quality_level"
-# IDENTITIES = "identities"
 
-# class DependencyDef():
-#     def __init__(self,name,domain,minversion=None,maxversion=None):
-#         self.name=name
-#         self.domain=domain
-#         self.minversion=minversion
-#         self.maxversion=maxversion
-
-#     def __str__(self):
-#         return str(self.__dict__)
-
-#     __repr__=__str__
-
-
-class JPackageObject(BaseType, DirtyFlaggingMixin):
+class JPackageObject():
     """
     Data representation of a JPackage, should contain all information contained in the jpackages.cfg
     """
-    # All this information represents the package as in the repo..
-    # the already install package may have different dependencies,
-    # may have a higher build number
-    domain  = j.basetype.string(doc='The domain this JPackage belongs to', allow_none=True, default=None)
-    name    = j.basetype.string(doc='Name of the JPackage should be lowercase', allow_none=False)
-    version = j.basetype.string(doc='Version of a string', allow_none=False)
 
-    #metaNr   = j.basetype.integer(doc='Build number of the MetaData', allow_none=False, default=0)
-
-    #should be readonly
-    # @todo check why this should be read only because this class provides public methods that alter these lists which doesn't make sense
-    supportedPlatforms = j.basetype.list(doc='List of PlatformTypes', allow_none=False, default=list())
-    tags               = j.basetype.list(doc='list of tags describing the JPackage', allow_none=True, default=list())
-    description        = j.basetype.string(doc='Description of the JPackage, can be larger than the description in the VList4', allow_none=True, flag_dirty=True, default='')
-    #guid               = j.basetype.string(doc='Unique global id', allow_none=False, flag_dirty=True, default='')
-    #lastModified       = j.basetype.float(doc='When was this package last modified (time.time)', allow_none=False, flag_dirty=True, default='')
+    # @property
+    # def actions(self):
+    #     if self._actions==None:
+    #         self._actions=ActionManager(self)
+    #     return self._actions
 
     def __init__(self, domain, name, version):
         """
@@ -66,6 +41,15 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @param version: The version of the JPackage
         """
 
+        self.supportedPlatforms=[]
+        self.domain=domain
+        self.name=name
+        self.version=version
+        self.supportedPlatforms=[]
+        self.tags=[]
+        self.description=""
+
+
         #checks on correctness of the parameters
         if not domain:
             raise ValueError('The domain parameter cannot be empty or None')
@@ -73,24 +57,20 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             raise ValueError('The name parameter cannot be empty or None')
         if not version:
             raise ValueError('The version parameter cannot be empty or None')
-        self.domain = domain
-        self.name = name
-        self.version = version
+
         self.buildNr=-1
         self.taskletsChecksum=""    
         
         self.configchanged=False
-
-        self.metadataPath=self.getPathMetadata()
-        
-        self.description=""
-        
+              
         self.metadata=None
 
         self.dependencies=[] #key = domain_packagename
         self.dependenciesNames={}
 
         self.hrd=None
+
+        self.actions=None
                 
         self.__init=False
 
@@ -114,42 +94,50 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def init(self):
 
         #create defaults for new jpackages
-        hrddir=j.system.fs.joinPaths(self.metadataPath,"hrd")
+        hrddir=j.system.fs.joinPaths(self.getPathMetadata(),"hrd")
+
+        if True or not j.system.fs.exists(hrddir):
         
-        extpath=inspect.getfile(self.__init__)
-        extpath=j.system.fs.getDirName(extpath)
-        src=j.system.fs.joinPaths(extpath,"templates")
+            extpath=inspect.getfile(self.__init__)
+            extpath=j.system.fs.getDirName(extpath)
+            src=j.system.fs.joinPaths(extpath,"templates")
 
-        if self.hrd==None:
-            content="jp.domain=%s\n"%self.domain
-            content+="jp.name=%s\n"%self.name
-            content+="jp.version=%s\n"%self.version
-            self.hrd=j.core.hrd.getHRD(content=content)
+            if self.hrd==None:
+                content="jp.domain=%s\n"%self.domain
+                content+="jp.name=%s\n"%self.name
+                content+="jp.version=%s\n"%self.version
+                self.hrd=j.core.hrd.getHRD(content=content)
 
-        j.system.fs.copyDirTree(src,self.metadataPath, overwriteFiles=False,applyHrdOnDestPaths=self.hrd)              
-        
-        self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
+            j.system.fs.copyDirTree(src,self.getPathMetadata(), overwriteFiles=False) #do never put this on true
+            
+            self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
-        if self.hrd.get("jp.domain",checkExists=True)<>self.domain:
-            self.hrd.set("jp.domain",self.domain)
-        if self.hrd.get("jp.name",checkExists=True)<>self.name:
-            self.hrd.set("jp.name",self.name)
-        if self.hrd.get("jp.version",checkExists=True)<>self.version:                
-            self.hrd.set("jp.version",self.version)    
-        
-        descr=self.hrd.get("jp.description",checkExists=True)
-        if descr<>False and descr<>"":
-            self.description=descr
-        if descr<>self.description:                
-            self.hrd.set("jp.description",self.description)                      
+            if self.hrd.get("jp.domain",checkExists=True)<>self.domain:
+                self.hrd.set("jp.domain",self.domain)
+            if self.hrd.get("jp.name",checkExists=True)<>self.name:
+                self.hrd.set("jp.name",self.name)
+            if self.hrd.get("jp.version",checkExists=True)<>self.version:                
+                self.hrd.set("jp.version",self.version)    
+            
+            descr=self.hrd.get("jp.description",checkExists=True)
+            if descr<>False and descr<>"":
+                self.description=descr
+            if descr<>self.description:                
+                self.hrd.set("jp.description",self.description)                      
 
-        self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
+            self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
 
-        j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
-        j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"files"))
+            if self.supportedPlatforms==[]:
+                raise RuntimeError("supported platforms cannot be empty")
+                
+            j.system.fs.listFilesInDir(self.getPathFiles())
 
-        for platform in self.supportedPlatforms:
-            j.system.fs.createDir(self.getPathFilesPlatform(platform))
+
+            j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
+            j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"files"))
+
+            for platform in self.supportedPlatforms:
+                j.system.fs.createDir(self.getPathFilesPlatform(platform))
 
     def clean(self):
         for item in [".quarantine",".tmb"]:
@@ -170,45 +158,52 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 if item.find("$(")<>-1:
                     j.system.fs.remove(item)
 
-        for item in j.system.fs.listDirsInDir("%s/actions"%self.getPathMetadata(),recursive=False):
-            
-            action=j.system.fs.getBaseName(item)
-            action2=""
-            if action=="configure":
-                action2="configure"                
-            if action=="monitor":
-                action2="monitor"
-            if action=="install":
-                action2="postinstall"
-            if action=="prepare":
-                action2="prepare"
+        # for item in j.system.fs.listDirsInDir("%s/actions"%self.getPathMetadata(),recursive=False):
+        #     j.system.fs.removeDirTree(item)            
+            # action=j.system.fs.getBaseName(item)
+            # action2=""
+            # if action=="configure":
+            #     action2="configure"                
+            # if action=="monitor":
+            #     action2="monitor"
+            # if action=="install":
+            #     action2="postinstall"
+            # if action=="prepare":
+            #     action2="prepare"
 
-            if action2=="":
-                continue
+            # if action2=="":
+            #     continue
 
-            files=j.system.fs.listFilesInDir(item)
-            if len(files)>1:
-                raise RuntimeError("do only support 1 file in %s"%item)
-            content=j.system.fs.fileGetContents(files[0])
-            state="start"
-            out=""
-            for line in content.split("\n"):
-                if state=="body":
-                    if line.find("def")==0:
-                        state=="done"
-                    else:
-                        out+="%s\n"%line
-                if state=="start" and line.find("main")<>-1:
-                    state="body"
+            # def process(path,incr):
+            #     content=j.system.fs.fileGetContents(path)
+            #     state="start"
+            #     out=""
+            #     for line in content.split("\n"):
+            #         if state=="body":
+            #             if line.find("def")==0:
+            #                 state=="done"
+            #             else:
+            #                 out+="%s\n"%line
+            #         if state=="start" and line.find("main")<>-1:
+            #             state="body"
 
-            path="%s/actions/_%s.py"%(self.getPathMetadata(),action2)
-            j.system.fs.writeFile(path,out)
+            #     path="%s/actions/_%s%s.py"%(self.getPathMetadata(),action2,incr)
+            #     j.system.fs.writeFile(path,out)
+
+            # files=j.system.fs.listFilesInDir(item,filter="*.py")
+            # if len(files)>1:
+            #     #raise RuntimeError("do only support 1 file in %s"%item)
+            #     for i in range(len(files)):
+            #         process(files[i],i+1)
+            # else:
+            #     process(files[0],"")
+
 
 
     def load(self,hrdDir=None,position=""):                
 
         #create defaults for new jpackages
-        hrdpath=j.system.fs.joinPaths(self.metadataPath,"hrd","main.hrd")
+        hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","main.hrd")
         if not j.system.fs.exists(hrdpath):  
             self.init()
         self.hrd=j.core.hrd.getHRD(hrdpath)
@@ -233,7 +228,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         self.supportedPlatforms = self.hrd.getList("jp.supportedplatforms")
 
-     
         j.packages.getDomainObject(self.domain)
 
         self.blobstorRemote = None
@@ -258,7 +252,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         match hrd templates with active ones, add entries where needed
         """
-        hrdtemplatesPath=j.system.fs.joinPaths(self.metadataPath,"hrdactive")
+        hrdtemplatesPath=j.system.fs.joinPaths(self.getPathMetadata(),"hrdactive")
         for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
             base=j.system.fs.getBaseName(item)
             if base[0]<>"_":
@@ -276,7 +270,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                     #also needs to reload the config object on the application object
                     j.application.loadConfig() #will load that underneath
 
-
     def loadActions(self, force=False):
         print "loadactions:%s"%self
         if self.actions <> None and not force:
@@ -286,7 +279,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         if j.system.fs.isDir(self.getPathActions()):
             j.system.fs.removeDirTree(self.getPathActions())
-        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.metadataPath,"actions"),self.getPathActions())        
+        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"actions"),self.getPathActions())        
         
         #apply apackage hrd data on actions active
         self.hrd.applyOnDir(self.getPathActions()) #make sure params are filled in in actions dir
@@ -309,7 +302,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
         print "loadactionsdone:%s"%self
             
-
     def getDebugMode(self):
         return self.state.debugMode
 
@@ -364,7 +356,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         @param new: True if we are saving a new Q-Package, used to ensure backwards compatibility
         @type new: boolean
         """      
-        self.log('saving jpackages data to ' + self.metadataPath,category="save")
+        self.log('saving jpackages data to ' + self.getPathMetadata(),category="save")
 
         if self.buildNr == "":
             self._raiseError("buildNr cannot be empty")
@@ -393,7 +385,7 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 
 
 ##################################################################################################
-###################################  CONFIG FILE HANDLING  #######################################
+###################################  DEPENDENCY HANDLING  #######################################
 ##################################################################################################
 
 
@@ -559,23 +551,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             raise RuntimeError("Could not find subdir %s in files dirs for '%s'"%(subdir,self))
         return result
 
-    # def copyPythonLibs(self,remove=False):
-    #     """
-    #     will look in platform dirs of jpackage to find "site-packages" dir (starting from lowest platform type e.g. linux64, then parents of platform)
-    #     each dir "site-packages" found in one of the site-packages dir will be copied to the local site packages dir
-    #     """
-    #     # j.system.platform.python.getSitePackagePathLocal
-    #     for path in self.getPathFilesPlatformForSubDir("site-packages"):
-    #         # self.log("copy python lib to %s"%path,category="libinstall")
-    #         self.log("Copy python lib:%s to site packages"%path,category="copylib")
-    #         j.system.platform.python.copyLibsToLocalSitePackagesDir(path,remove=remove)
-
-
-    def installUbuntuDebs(self):
-        for path in self.getPathFilesPlatformForSubDir("debs"):
-            for item in j.system.fs.listFilesInDir(path,filter="*.deb"):
-                j.system.platform.ubuntu.installDebFile(item)            
-
     def getPathSourceCode(self):
         """
         Return absolute path to where this package's source can be extracted to
@@ -645,443 +620,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
         """
         self.loadDependencies()
         return self.dependencies
-
-#############################################################################
-################################  CHECKS  ###################################
-#############################################################################
-
-    def hasModifiedFiles(self):
-        """
-        Check if files are modified in the JPackage files
-        """
-        ##self.assertAccessable()
-        if self.state.prepared == 1:
-            return True
-        return False
-
-    def hasModifiedMetaData(self):
-        """
-        Check if files are modified in the JPackage metadata
-        """
-        ##self.assertAccessable()
-        return self in j.packages.getDomainObject(self.domain).getJPackageTuplesWithModifiedMetadata()
-
-    def isInstalled(self):
-        """
-        Check if the JPackage is installed
-        """
-        ##self.assertAccessable()
-
-        
-        return self.state.lastinstalledbuildnr != -1
-
-    def supportsPlatform(self,platform=None):
-        """
-        Check if a JPackage can be installed on a platform
-        """
-        if platform==None:
-            relevant=j.system.platformtype.getMyRelevantPlatforms()
-        else:
-            relevant=j.system.platformtype.getParents(platform)
-        for supportedPlatform in self.supportedPlatforms:
-            if supportedPlatform in relevant:
-                return True
-        return False
-
-#############################################################################
-#################################  ACTIONS  ################################
-#############################################################################
-
-    def update(self):
-        """
-        Reinstall the package
-        """
-        self.loadActions()
-        self.actions.install()
-
-    def export(self, url):
-        """
-        Create export, run the export tasklet(s)
-
-        @param url: where to back up to, e.g. : ftp://login:passwd@10.10.1.1/myroot/
-        """
-        self.loadActions()
-        self.actions.export(url=url)
-        self.log('export to %s '%(url))
-
-    def importt(self, url):
-        """
-        Restore a backup, run, the restore tasklet(s)
-
-        @param url: location of the backup, e.g. : ftp://login:passwd@10.10.1.1/myroot/
-        """
-        self.loadActions()
-        self.actions.importt(url=url)
-        self.log('import from %s '%(url))
-
-    def start(self,dependencies=False):
-        """
-        Start the JPackage, run the start tasklet(s)
-        """
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.start(False)
-        self.loadActions(True)        
-        self.actions.start()
-        self.log('start')
-
-    def stop(self,dependencies=False):
-        """
-        Stop the JPackage, run the stop tasklet(s)
-        """
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.stop(False)
-        self.loadActions(True)        
-        self.actions.stop()
-        self.log('stop')
-
-
-    def monitor(self,dependencies=False,result=True):
-        """
-        Stop the JPackage, run the stop tasklet(s)
-        """
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                result=result & dep.monitor(False,result)
-        self.loadActions(True)        
-        result=result&self.actions.monitor()
-        return result
-
-    def restart(self,dependencies=False):
-        """
-        Restart the JPackage
-        """        
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.restart(False)
-        self.loadActions(True)
-        self.stop()
-        self.start()
-
-    def isrunning(self):
-        """
-        Check if application installed is running for jpackages
-        """
-        
-        self.loadActions()
-        self.actions.isrunning()
-        self.log('isrunning')
-
-
-    def _isHostPlatformSupported(self, platform):
-        '''
-        Checks if a given platform is supported, the checks takes the
-        supported platform their parents in account.
-
-        @param platform: platform to check
-        @type platform: j.system.platformtype
-
-        @return: flag that indicates if the given platform is supported
-        @rtype: Boolean
-        '''
-
-        #@todo P1 no longer working use new j.system.platformtype
-
-        supportedPlatformPool = list()
-
-        for platform in self.supportedPlatforms:
-            while platform != None:
-                supportedPlatformPool.append(platform)
-                platform = platform.parent
-
-        if platform in supportedPlatformPool:
-            return True
-        else:
-            return False
-
-    def reinstall(self, dependencies=False, download=True):
-        """
-        Reinstall the JPackage by running its install tasklet, best not to use dependancies reinstall 
-        """                
-        self.install(dependencies=dependencies, download=download, reinstall=True)
-
-    def prepare(self, dependencies=True, download=True):
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.install(False, download, reinstall=False)
-        self.loadActions(True) #reload actions to make sure new hrdactive are applied
-        self._loadActiveHrd()
-
-        action="prepare"
-        if j.packages._actionCheck(self,action):
-            return
-
-        self.actions.prepare()
-
-    def copyfiles(self, dependencies=True, download=True):
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.install(False, download, reinstall=False)
-        self.loadActions(True) #reload actions to make sure new hrdactive are applied
-        self._loadActiveHrd()
-
-        for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
-            pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
-            for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
-                pathttype=j.system.fs.joinPaths(pathplatform,ttype)
-                j.system.fs.removeIrrelevantFiles(pathttype)
-
-                tmp,destination=self.getBlobItemPaths(platform,ttype,"")
-
-                if ttype in ["etc"]:
-                    applyhrd=True
-                else:
-                    applyhrd=True
-
-                self.log("copy files from:%s to:%s"%(pathttype,destination))
-                self._copyFiles(pathttype,destination,applyhrd=applyhrd)
-
-
-
-    def install(self, dependencies=True, download=True, reinstall=False):
-        """
-        Install the JPackage
-
-        @param dependencies: if True, all dependencies will be installed too
-        @param download:     if True, bundles of package will be downloaded too
-        @param reinstall:    if True, package will be reinstalled
-
-        when dependencies the reinstall will not be asked for there
-
-        """        
-
-        # If I am already installed assume my dependencies are also installed
-        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
-            self.log('already installed')
-            return # Nothing to do
-
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.install(False, download, reinstall=False)
-        self.loadActions(True) #reload actions to make sure new hrdactive are applied
-        self._loadActiveHrd()
-        
-
-        action="install"
-        if not j.packages._actionCheck(self,action):
-            #check if that action has already been executed if yes return true
-            pass
-
-        if download:
-            self.download(dependencies=False)
-
-        if reinstall or self.buildNr > self.state.lastinstalledbuildnr:
-            #print 'really installing ' + str(self)
-            self.log('installing')
-            if self.state.checkNoCurrentAction == False:
-                raise RuntimeError ("jpackages is in inconsistent state, ...")                
-
-            self.prepare(dependencies=dependencies)
-            self.copyfiles(dependencies=dependencies)
-
-            self.actions.install()
-            self.state.setLastInstalledBuildNr(self.buildNr)
-
-        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
-            self.configure()
-
-        if self.debug:
-            self.log('install for debug (link)')
-            self.codeLink(dependencies=False, update=False, force=True)
-
-
-    def uninstall(self, unInstallDependingFirst=False):
-        """
-        Remove the JPackage from the sandbox. In case dependent JPackages are installed, the JPackage is not removed.
-
-        @param unInstallDependingFirst: remove first dependent JPackages
-        """
-        # Make sure there are no longer installed packages that depend on me
-        ##self.assertAccessable()
-        
-        self.loadActions()
-        if unInstallDependingFirst:
-            for p in self.getDependingInstalledPackages():
-                p.uninstall(True)
-        if self.getDependingInstalledPackages(True):
-            raise RuntimeError('Other package on the system dependend on this one, uninstall them first!')
-
-        tag = "install"
-        action = "uninstall"
-        state = self.state
-        if state.checkNoCurrentAction == False:
-            raise RuntimeError ("jpackages is in inconsistent state, ...")
-        self.log('uninstalling' + str(self))
-        self.actions.uninstall()
-        state.setLastInstalledBuildNr(-1)
-
-    def isUninstallable(self):
-        # Does no work since we cannot look inside a package..
-        return True
-        #return self._hasTasklet('uninstall')
-
-    def prepareForUpdatingFiles(self, suppressErrors=False):
-        """
-        After this command the operator can change the files of the jpackages.
-        Files do not aways come from code repo, they can also come from jpackages repo only
-        """
-        j.system.fs.createDir(self.getPathFiles())
-        if  self.state.prepared <> 1:
-            if not self.isNew():
-                self.download(suppressErrors=suppressErrors)
-                self._expand(suppressErrors=suppressErrors)
-            self.state.setPrepared(1)
-
-    def isNew(self):
-        # We are new when our files have not yet been committed
-        # check if our jpackages.cfg file in the repo is in the ignored or added categories
-        domainObject = self._getDomainObject()
-        cfgPath = j.system.fs.joinPaths(self.metadataPath, JPACKAGE_CFG)
-        return not domainObject._isTrackingFile(cfgPath)
-
-    def _copyFiles(self, subdir,destination,applyhrd=False):
-        """
-        Copy the files from package dirs (/opt/js/var/jpackages/...) to their proper location in the sandbox.
-
-        @param destination: destination of the files
-        """
-
-        if destination=="":
-            raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
-        for path in self.getPathFilesPlatformForSubDir(subdir):
-            self.log("Copy files from %s to %s"%(path,destination),category="copy")
-            j.system.fs.createDir(destination,skipProtectedDirs=True)
-            if applyhrd:
-                tmpdir=j.system.fs.getTmpDirPath()
-                j.system.fs.copyDirTree(path,tmpdir)
-                j.application.config.applyOnDir(tmpdir)
-                j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
-                j.system.fs.removeDirTree(tmpdir)
-            else:
-                j.system.fs.copyDirTree(path, destination,skipProtectedDirs=True)
-
-
-    # def _copyFilesTo(self, sourceDir, destination):
-    #     """
-    #     Copy Files
-
-    #     @param sourceDir: directory to copy files from
-    #     @param destination: directory to copy files to
-    #     """
-    #     if self.debug:
-    #         return #do not copy files when debug, need to be improved with next remark
-
-    #     def createAncestors(file):
-    #         # Create the ancestors
-    #         j.system.fs.createDir(j.system.fs.getDirName(file))
-
-    #     if sourceDir [-1] != '/':
-    #         sourceDir = sourceDir + '/'
-    #     prefixHiddenFile = sourceDir + '.hg'
-
-    #     if j.system.fs.isDir(sourceDir):
-    #         files = j.system.fs.walk(sourceDir, recurse=True, return_folders=True, followSoftlinks=False)
-    #         for file in files:
-    #             # Remove hidden files and directories:
-    #             if file.find(prefixHiddenFile) == 0 :
-    #                 continue
-    #             destinationFile = j.system.fs.joinPaths(destination, file[len(sourceDir):])
-    #             _copy = True
-
-    #             if destinationFile in j.dirs.protectedDirs:
-
-    #             if _copy:
-    #                 self.log("Copying <%s>" % destinationFile,level=8)
-    #                 createAncestors(destinationFile)
-    #                 if j.system.fs.isLink( file ) :
-    #                     j.system.fs.symlink(os.readlink( file ), destinationFile, overwriteTarget=True )
-    #                 elif j.system.fs.isDir (file) :
-    #                     j.system.fs.createDir(destinationFile )
-    #                 else:
-    #                     j.system.fs.copyFile(file, destinationFile)
-
-    #         self.log('Syncing done')
-    #     else:
-    #         self.log('Directory <%s> does not exist' % sourceDir)
-
-    def configure(self, dependencies=False):
-        """
-        Configure the JPackage after installation, via the configure tasklet(s)
-        """
-        self.log('configure')
-        self.loadActions()
-        self._loadActiveHrd()
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.configure()
-        self.actions.configure()
-        # self.state.setIsPendingReconfiguration(False)
-        j.application.loadConfig() #makes sure hrd gets reloaded to application.config object
-
-    def codeExport(self, dependencies=False, update=None):
-        """
-        Export code to right locations in sandbox or on system
-        code recipe is being used
-        only the sections in the recipe which are relevant to you will be used
-        """
-        
-        self.loadActions()
-        self.log('CodeExport')
-        if dependencies == None:
-            j.gui.dialog.askYesNo(" Do you want to link the dependencies?", False)
-        if update == None:
-            j.gui.dialog.askYesNo(" Do you want to update your code before exporting?", True)
-        if update:
-            self.codeUpdate(dependencies)
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.codeExport(update=update)
-        self.actions.code_export()
-
-    def codeUpdate(self, dependencies=False, force=False):
-        """
-        Update code from code repo (get newest code)
-        """
-        self.log('CodeUpdate')
-        self.loadActions()
-        # j.clients.mercurial.statusClearAll()
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.codeUpdate(force=force)
-        self.actions.code_update()
-
-    def codeCommit(self, dependencies=False, push=False):
-        """
-        update code from code repo (get newest code)
-        """
-        
-        self.loadActions()
-        self.log('CodeCommit')
-        j.clients.mercurial.statusClearAll()
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.codeCommit(push=push)
-        self.actions.code_commit()
-        if push:
-            self.codePush(dependencies)
-
 
     def _getPackageInteractive(self,platform):
 
@@ -1163,6 +701,506 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 result.append([platform,ttype])
         return result
 
+    def getCodeLocationsFromRecipe(self):
+        items=[]
+        for item in self.getCodeMgmtRecipe().items:
+            item.systemdest
+            path=item.getSource()
+            if j.system.fs.isFile(path):
+                path=j.system.fs.getDirName(path)
+            items.append(path)
+            
+        items.sort()
+        result=[]
+        previtem="willnotfindthis"
+        for x in range(len(items)):                
+            item=items[x]
+            # print "previtem:%s now:%s"%(previtem,item)
+            if not item.find(previtem)==0:
+                previtem=item
+                if item not in result:
+                    # print "append"
+                    result.append(item) 
+        
+        return result
+
+    def _getPlatformDirsToCopy(self):
+        """
+        Return a list of platform related directories to be copied in sandbox
+        """
+
+        platformDirs = list()
+        platform = j.system.platformtype
+
+        _jpackagesDir = self.getPathFiles()
+
+        platformSpecificDir = j.system.fs.joinPaths(_jpackagesDir, str(platform), '')
+
+        if j.system.fs.isDir(platformSpecificDir):
+            platformDirs.append(platformSpecificDir)
+
+        genericDir = j.system.fs.joinPaths(_jpackagesDir, 'generic', '')
+
+        if j.system.fs.isDir(genericDir):
+            platformDirs.append(genericDir)
+
+        if platform.isUnix():
+            unixDir = j.system.fs.joinPaths(_jpackagesDir, 'unix', '')
+            if j.system.fs.isDir(unixDir):
+                platformDirs.append(unixDir)
+
+            if platform.isSolaris():
+                sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'solaris', '')
+            elif platform.isLinux():
+                sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'linux', '')
+            elif platform.isDarwin():
+                sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'darwin', '')
+
+        elif platform.isWindows():
+            sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'win', '')
+
+        if j.system.fs.isDir(sourceDir):
+            if not str(sourceDir) in platformDirs:
+                platformDirs.append(sourceDir)
+
+        return platformDirs
+
+
+#############################################################################
+################################  CHECKS  ###################################
+#############################################################################
+
+    def hasModifiedFiles(self):
+        """
+        Check if files are modified in the JPackage files
+        """
+        ##self.assertAccessable()
+        if self.state.prepared == 1:
+            return True
+        return False
+
+    def hasModifiedMetaData(self):
+        """
+        Check if files are modified in the JPackage metadata
+        """
+        ##self.assertAccessable()
+        return self in j.packages.getDomainObject(self.domain).getJPackageTuplesWithModifiedMetadata()
+
+    def isInstalled(self):
+        """
+        Check if the JPackage is installed
+        """
+        ##self.assertAccessable()
+        
+        return self.state.lastinstalledbuildnr != -1
+
+    def isNew(self):
+        # We are new when our files have not yet been committed
+        # check if our jpackages.cfg file in the repo is in the ignored or added categories
+        domainObject = self._getDomainObject()
+        cfgPath = j.system.fs.joinPaths(self.getPathMetadata(), JPACKAGE_CFG)
+        return not domainObject._isTrackingFile(cfgPath)
+
+    def supportsPlatform(self,platform=None):
+        """
+        Check if a JPackage can be installed on a platform
+        """
+        if platform==None:
+            relevant=j.system.platformtype.getMyRelevantPlatforms()
+        else:
+            relevant=j.system.platformtype.getParents(platform)
+        for supportedPlatform in self.supportedPlatforms:
+            if supportedPlatform in relevant:
+                return True
+        return False
+
+    def _isHostPlatformSupported(self, platform):
+        '''
+        Checks if a given platform is supported, the checks takes the
+        supported platform their parents in account.
+
+        @param platform: platform to check
+        @type platform: j.system.platformtype
+
+        @return: flag that indicates if the given platform is supported
+        @rtype: Boolean
+        '''
+
+        #@todo P1 no longer working use new j.system.platformtype
+
+        supportedPlatformPool = list()
+
+        for platform in self.supportedPlatforms:
+            while platform != None:
+                supportedPlatformPool.append(platform)
+                platform = platform.parent
+
+        if platform in supportedPlatformPool:
+            return True
+        else:
+            return False
+
+
+#############################################################################
+#################################  ACTIONS  ################################
+#############################################################################
+
+    def start(self,dependencies=False):
+        """
+        Start the JPackage, run the start tasklet(s)
+        """
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.start(False)
+        self.loadActions(True)        
+        self.actions.process_start()
+        self.log('start')
+
+    def stop(self,dependencies=False):
+        """
+        Stop the JPackage, run the stop tasklet(s)
+        """
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.stop(False)
+        self.loadActions(True)        
+        self.actions.process_stop()
+        self.log('stop')
+
+    def kill(self,dependencies=False):
+        """
+        Stop the JPackage, run the stop tasklet(s)
+        """
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.kill(False)
+        self.loadActions(True)        
+        self.actions.process_kill()
+        self.log('stop')
+
+    def monitor_up_local(self,dependencies=False,result=True):
+        """
+        Stop the JPackage, run the stop tasklet(s)
+        """
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                result=result & dep.monitor(False,result)
+        self.loadActions(True)        
+        result=result&self.actions.monitor_up_local()
+        return result
+
+    def monitor_up_net(self,ipaddr="localhost",dependencies=False,result=True):
+        """
+        Stop the JPackage, run the stop tasklet(s)
+        """
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                result=result & dep.monitor(False,result)
+        self.loadActions(True)        
+        result=result&self.actions.monitor_up_net(ipaddr=ipaddr)
+        return result
+
+    def restart(self,dependencies=False):
+        """
+        Restart the JPackage
+        """        
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.restart(False)
+        self.loadActions(True)
+        self.stop()
+        self.start()
+
+    def isrunning(self,dependencies=False,ipaddr="localhost"):
+        """
+        Check if application installed is running for jpackages
+        """
+        self.monitor_up_local(dependencies=dependencies)
+        self.monitor_up_net(dependencies=dependencies,ipaddr=ipaddr)
+        self.log('isrunning')
+
+    def reinstall(self, dependencies=False, download=True):
+        """
+        Reinstall the JPackage by running its install tasklet, best not to use dependancies reinstall 
+        """                
+        self.install(dependencies=dependencies, download=download, reinstall=True)
+
+    def prepare(self, dependencies=True, download=True):
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.install(False, download, reinstall=False)
+        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+        self._loadActiveHrd()
+
+        action="prepare"
+        if j.packages._actionCheck(self,action):
+            return
+
+        self.actions.prepare()
+
+    def copyfiles(self, dependencies=True, download=True):
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.copyfiles(dependencies=False, download=download)
+        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+        self._loadActiveHrd()
+
+        action="copyfiles"
+        if j.packages._actionCheck(self,action):
+            return
+
+        self.actions.install_copy()        
+
+    def _copyfiles(self):
+
+        for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
+            pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
+            for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
+                pathttype=j.system.fs.joinPaths(pathplatform,ttype)
+                j.system.fs.removeIrrelevantFiles(pathttype)
+
+                tmp,destination=self.getBlobItemPaths(platform,ttype,"")
+
+                if ttype in ["etc"]:
+                    applyhrd=True
+                else:
+                    applyhrd=True
+
+                self.log("copy files from:%s to:%s"%(pathttype,destination))
+                self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
+
+    def __copyFiles(self, subdir,destination,applyhrd=False):
+        """
+        Copy the files from package dirs (/opt/js/var/jpackages/...) to their proper location in the sandbox.
+
+        @param destination: destination of the files
+        """
+
+        if destination=="":
+            raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
+        for path in self.getPathFilesPlatformForSubDir(subdir):
+            self.log("Copy files from %s to %s"%(path,destination),category="copy")
+            j.system.fs.createDir(destination,skipProtectedDirs=True)
+            if applyhrd:
+                tmpdir=j.system.fs.getTmpDirPath()
+                j.system.fs.copyDirTree(path,tmpdir)
+                j.application.config.applyOnDir(tmpdir)
+                j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
+                j.system.fs.removeDirTree(tmpdir)
+            else:
+                j.system.fs.copyDirTree(path, destination,skipProtectedDirs=True)
+
+    def install(self, dependencies=True, download=True, reinstall=False):
+        """
+        Install the JPackage
+
+        @param dependencies: if True, all dependencies will be installed too
+        @param download:     if True, bundles of package will be downloaded too
+        @param reinstall:    if True, package will be reinstalled
+
+        when dependencies the reinstall will not be asked for there
+
+        """        
+
+        # If I am already installed assume my dependencies are also installed
+        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
+            self.log('already installed')
+            return # Nothing to do
+
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.install(False, download, reinstall=False)
+        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+        self._loadActiveHrd()
+        
+
+        action="install"
+        if not j.packages._actionCheck(self,action):
+            #check if that action has already been executed if yes return true
+            pass
+
+        if download:
+            self.download(dependencies=False)
+
+        if reinstall or self.buildNr > self.state.lastinstalledbuildnr:
+            #print 'really installing ' + str(self)
+            self.log('installing')
+            if self.state.checkNoCurrentAction == False:
+                raise RuntimeError ("jpackages is in inconsistent state, ...")                
+
+            self.prepare(dependencies=False)
+            self.copyfiles(dependencies=False)
+
+            self.actions.install_post()
+
+            self.state.setLastInstalledBuildNr(self.buildNr)
+
+        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
+            self.configure(dependencies=False)
+
+        if self.debug:
+            self.log('install for debug (link)')
+            self.codeLink(dependencies=False, update=False, force=True)
+
+    def uninstall(self, unInstallDependingFirst=False):
+        """
+        Remove the JPackage from the sandbox. In case dependent JPackages are installed, the JPackage is not removed.
+
+        @param unInstallDependingFirst: remove first dependent JPackages
+        """
+        # Make sure there are no longer installed packages that depend on me
+        ##self.assertAccessable()
+        
+        self.loadActions()
+        if unInstallDependingFirst:
+            for p in self.getDependingInstalledPackages():
+                p.uninstall(True)
+        if self.getDependingInstalledPackages(True):
+            raise RuntimeError('Other package on the system dependend on this one, uninstall them first!')
+
+        tag = "install"
+        action = "uninstall"
+        state = self.state
+        if state.checkNoCurrentAction == False:
+            raise RuntimeError ("jpackages is in inconsistent state, ...")
+        self.log('uninstalling' + str(self))
+        self.actions.uninstall()
+        state.setLastInstalledBuildNr(-1)
+
+    def prepareForUpdatingFiles(self, suppressErrors=False):
+        """
+        After this command the operator can change the files of the jpackages.
+        Files do not aways come from code repo, they can also come from jpackages repo only
+        """
+        j.system.fs.createDir(self.getPathFiles())
+        if  self.state.prepared <> 1:
+            if not self.isNew():
+                self.download(suppressErrors=suppressErrors)
+                self._expand(suppressErrors=suppressErrors)
+            self.state.setPrepared(1)
+
+    def configure(self, dependencies=False):
+        """
+        Configure the JPackage after installation, via the configure tasklet(s)
+        """
+        self.log('configure')
+        self.loadActions()
+        self._loadActiveHrd()
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.configure(dependencies=False)
+
+        self.actions.install_configure()
+        # self.state.setIsPendingReconfiguration(False)
+        j.application.loadConfig() #makes sure hrd gets reloaded to application.config object
+
+    def codeExport(self, dependencies=False, update=None):
+        """
+        Export code to right locations in sandbox or on system
+        code recipe is being used
+        only the sections in the recipe which are relevant to you will be used
+        """
+        
+        self.loadActions()
+        self.log('CodeExport')
+        if dependencies == None:
+            j.gui.dialog.askYesNo(" Do you want to link the dependencies?", False)
+        if update == None:
+            j.gui.dialog.askYesNo(" Do you want to update your code before exporting?", True)
+        if update:
+            self.codeUpdate(dependencies)
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.codeExport(dependencies=False,update=update)
+        self.actions.code_export()
+
+    def codeUpdate(self, dependencies=False, force=False):
+        """
+        Update code from code repo (get newest code)
+        """
+        self.log('CodeUpdate')
+        self.loadActions()
+        # j.clients.mercurial.statusClearAll()
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.codeUpdate(dependencies=False,force=force)
+        self.actions.code_update()
+
+    def codeCommit(self, dependencies=False, push=False):
+        """
+        update code from code repo (get newest code)
+        """
+        
+        self.loadActions()
+        self.log('CodeCommit')
+        j.clients.mercurial.statusClearAll()
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.codeCommit(dependencies=False,push=push)
+        self.actions.code_commit()
+        if push:
+            self.codePush(dependencies)
+
+    def codePush(self, dependencies=False, merge=True):
+        """
+        Push code to repo (be careful this can brake code of other people)
+        """
+        
+        self.loadActions()
+        j.log("CodePush")
+        j.clients.mercurial.statusClearAll()
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.codePush(merge=merge)
+        self.actions.code_push(merge=merge)
+
+    def codeLink(self, dependencies=False, update=False, force=False):
+        """
+        Link code from local repo to right locations in sandbox
+
+        @param force: if True, do an update which removes the changes (when using as install method should be True)
+        """
+        
+        self.loadActions()
+        # j.clients.mercurial.statusClearAll()
+        self.log("CodeLink")
+        if dependencies is None:
+            if j.application.shellconfig.interactive:
+                dependencies = j.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
+            else:
+                raise RuntimeError("Need to specify arg 'depencies' (true or false) when non interactive")
+
+
+        if update is None:
+            if j.application.shellconfig.interactive:
+                update = j.gui.dialog.askYesNo("Do you want to update your code before linking?", True)
+            else:
+                raise RuntimeError("Need to specify arg 'update' (true or false) when non interactive")
+
+        if update:
+            self.codeUpdate(dependencies, force=force)
+
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.codeLink(dependencies=False, update=update,force=force)            
+
+        self.actions.code_link(force=force)
+      
     def package(self, dependencies=False,update=False):
         """
         copy files from code recipe's and also manually copied files in the files sections
@@ -1221,12 +1259,12 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 else:
                     self.log("No file change for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
 
-        actionsdir=j.system.fs.joinPaths(self.metadataPath, "actions")
+        actionsdir=j.system.fs.joinPaths(self.getPathMetadata(), "actions")
         j.system.fs.removeIrrelevantFiles(actionsdir)
         taskletsChecksum, descr2 = j.tools.hash.hashDir(actionsdir)
-        hrddir=j.system.fs.joinPaths(self.metadataPath, "hrdactive")
+        hrddir=j.system.fs.joinPaths(self.getPathMetadata(), "hrdactive")
         hrdChecksum, descr2 = j.tools.hash.hashDir(hrddir)
-        descrdir=j.system.fs.joinPaths(self.metadataPath, "documentation")
+        descrdir=j.system.fs.joinPaths(self.getPathMetadata(), "documentation")
         descrChecksum, descr2 = j.tools.hash.hashDir(descrdir)
 
         if descrChecksum <> self.descrChecksum:
@@ -1273,139 +1311,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.compile()
         self.actions.compile()
 
-    def _iterCfgHistory(self, qualitylevel):
-        """
-        Iterate the history of the configuration file of this Q-Package on
-        `qualitylevel`. For each JPackageConfig object, yield the node ID the
-        configuration file version was committed on, and the JPackageConfig
-        instance.
-
-        Iterators are *NOT* supposed to edit the JPackageConfig file! This
-        iterator is for read-only purposes.
-
-        Also, the config file can only be used during the iteration step it is
-        yielded!
-
-        @param qualitylevel: quality level of the config file
-        @type qualitylevel: string
-        @return: iterator
-        @rtype: iterator
-        """
-        domain = self._getDomainObject()
-        hgc = domain.mercurialclient
-
-        subPath = self._getCfgSubPath(qualitylevel)
-        nodeIds = hgc.getFileChangeNodes(subPath)
-
-        for nodeId in nodeIds:
-            content = hgc.cat(nodeId, subPath)
-            with contextlib.closing(StringIO(content)) as f:
-                cfg = j.packages.pm_getJPackageConfig(f)
-                yield nodeId, cfg
-
-    def _getCfgSubPath(self, qualitylevel):
-        """
-        Get the path of the jpackages.cfg file for this Q-Package on the argument
-        qualitylevel. The returned path will be relative the the metadata
-        repository root.
-
-        @param qualitylevel: qualitylevel the package should be on
-        @type qualitylevel: string
-        @return: path of the jpackages.cfg file for `qualitylevel`
-        @rtype: string
-        """
-        return j.system.fs.joinPaths(qualitylevel, self.name,
-                self.version, JPACKAGE_CFG)
-
-    # def codeImport(self, dependencies=False):
-    #     """
-    #     Import code back from system to local repo
-
-    #     WARNING: As we cannot be sure where this code comes from, all identity
-    #     information will be removed when this method is used!
-    #     """
-        
-    #     self.loadActions()
-    #     self.log("CodeImport")
-    #     if dependencies:
-    #         deps = self.getDependencies()
-    #         for dep in deps:
-    #             dep.codeImport()
-    #     self.actions.code_importt()
-    #     cfg = self._getConfig()
-    #     cfg.clearIdentities(write=True)
-
-    def codePush(self, dependencies=False, merge=True):
-        """
-        Push code to repo (be careful this can brake code of other people)
-        """
-        
-        self.loadActions()
-        j.log("CodePush")
-        j.clients.mercurial.statusClearAll()
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.codePush(merge=merge)
-        self.actions.code_push(merge=merge)
-
-    def codeLink(self, dependencies=False, update=False, force=False):
-        """
-        Link code from local repo to right locations in sandbox
-
-        @param force: if True, do an update which removes the changes (when using as install method should be True)
-        """
-        
-        self.loadActions()
-        # j.clients.mercurial.statusClearAll()
-        self.log("CodeLink")
-        if dependencies is None:
-            if j.application.shellconfig.interactive:
-                dependencies = j.gui.dialog.askYesNo("Do you want to link the dependencies?", False)
-            else:
-                raise RuntimeError("Need to specify arg 'depencies' (true or false) when non interactive")
-
-
-        if update is None:
-            if j.application.shellconfig.interactive:
-                update = j.gui.dialog.askYesNo("Do you want to update your code before linking?", True)
-            else:
-                raise RuntimeError("Need to specify arg 'update' (true or false) when non interactive")
-
-        if update:
-            self.codeUpdate(dependencies, force=force)
-
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.codeLink(dependencies=False, update=update,force=force)            
-
-        self.actions.code_link(force=force)
-      
-
-    def getCodeLocationsFromRecipe(self):
-        items=[]
-        for item in self.getCodeMgmtRecipe().items:
-            item.systemdest
-            path=item.getSource()
-            if j.system.fs.isFile(path):
-                path=j.system.fs.getDirName(path)
-            items.append(path)
-            
-        items.sort()
-        result=[]
-        previtem="willnotfindthis"
-        for x in range(len(items)):                
-            item=items[x]
-            # print "previtem:%s now:%s"%(previtem,item)
-            if not item.find(previtem)==0:
-                previtem=item
-                if item not in result:
-                    # print "append"
-                    result.append(item) 
-        
-        return result
-
     def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False):
         """
         Download the jpackages & expand
@@ -1421,6 +1326,10 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             deps = self.getDependencies()
             for dep in deps:
                 dep.download(dependencies=False, destinationDirectory=destinationDirectory,allplatforms=allplatforms,expand=expand)
+
+        self.actions.download(destination=destinationDirectory)
+
+    def _download(self,destinationDirectory=None):
 
         j.packages.getDomainObject(self.domain)
 
@@ -1455,7 +1364,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             self.state.save()
 
         return True
-
 
     def backup(self,url=None,dependencies=False):
         """
@@ -1498,18 +1406,26 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
                 dep.restore(url=url)
         self.actions.restore()        
 
-
     def upload(self, remote=True, local=True,dependencies=False):
+        if dependencies==None and j.application.shellconfig.interactive:
+            dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
+        else:
+            dependencies=dependencies
+        
+        self.loadActions()
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.upload(remote=remote, local=local,dependencies=dependencies)
+
+        self.actions.upload()
+
+    def _upload(self, remote=True, local=True):
         """
         Upload jpackages to Blobstor, default remote and local
         Does always a jp.package() first
         """
         self.loadActions(force=True)
-
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.upload(remote=remote,local=local,dependencies=False)
 
         self.package(dependencies=dependencies)
         self.loadActions(force=True)
@@ -1541,47 +1457,71 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
             if key0<>key:
                 raise RuntimeError("Corruption in upload for %s"%self)
 
-    def _getPlatformDirsToCopy(self):
-        """
-        Return a list of platform related directories to be copied in sandbox
-        """
 
-        platformDirs = list()
-        platform = j.system.platformtype
 
-        _jpackagesDir = self.getPathFiles()
+###################################################################################
 
-        platformSpecificDir = j.system.fs.joinPaths(_jpackagesDir, str(platform), '')
+    # def _iterCfgHistory(self, qualitylevel):
+    #     """
+    #     Iterate the history of the configuration file of this Q-Package on
+    #     `qualitylevel`. For each JPackageConfig object, yield the node ID the
+    #     configuration file version was committed on, and the JPackageConfig
+    #     instance.
 
-        if j.system.fs.isDir(platformSpecificDir):
-            platformDirs.append(platformSpecificDir)
+    #     Iterators are *NOT* supposed to edit the JPackageConfig file! This
+    #     iterator is for read-only purposes.
 
-        genericDir = j.system.fs.joinPaths(_jpackagesDir, 'generic', '')
+    #     Also, the config file can only be used during the iteration step it is
+    #     yielded!
 
-        if j.system.fs.isDir(genericDir):
-            platformDirs.append(genericDir)
+    #     @param qualitylevel: quality level of the config file
+    #     @type qualitylevel: string
+    #     @return: iterator
+    #     @rtype: iterator
+    #     """
+    #     domain = self._getDomainObject()
+    #     hgc = domain.mercurialclient
 
-        if platform.isUnix():
-            unixDir = j.system.fs.joinPaths(_jpackagesDir, 'unix', '')
-            if j.system.fs.isDir(unixDir):
-                platformDirs.append(unixDir)
+    #     subPath = self._getCfgSubPath(qualitylevel)
+    #     nodeIds = hgc.getFileChangeNodes(subPath)
 
-            if platform.isSolaris():
-                sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'solaris', '')
-            elif platform.isLinux():
-                sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'linux', '')
-            elif platform.isDarwin():
-                sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'darwin', '')
+    #     for nodeId in nodeIds:
+    #         content = hgc.cat(nodeId, subPath)
+    #         with contextlib.closing(StringIO(content)) as f:
+    #             cfg = j.packages.pm_getJPackageConfig(f)
+    #             yield nodeId, cfg
 
-        elif platform.isWindows():
-            sourceDir = j.system.fs.joinPaths(_jpackagesDir, 'win', '')
+    # def _getCfgSubPath(self, qualitylevel):
+    #     """
+    #     Get the path of the jpackages.cfg file for this Q-Package on the argument
+    #     qualitylevel. The returned path will be relative the the metadata
+    #     repository root.
 
-        if j.system.fs.isDir(sourceDir):
-            if not str(sourceDir) in platformDirs:
-                platformDirs.append(sourceDir)
+    #     @param qualitylevel: qualitylevel the package should be on
+    #     @type qualitylevel: string
+    #     @return: path of the jpackages.cfg file for `qualitylevel`
+    #     @rtype: string
+    #     """
+    #     return j.system.fs.joinPaths(qualitylevel, self.name,
+    #             self.version, JPACKAGE_CFG)
 
-        return platformDirs
+    # def codeImport(self, dependencies=False):
+    #     """
+    #     Import code back from system to local repo
 
+    #     WARNING: As we cannot be sure where this code comes from, all identity
+    #     information will be removed when this method is used!
+    #     """
+        
+    #     self.loadActions()
+    #     self.log("CodeImport")
+    #     if dependencies:
+    #         deps = self.getDependencies()
+    #         for dep in deps:
+    #             dep.codeImport()
+    #     self.actions.code_importt()
+    #     cfg = self._getConfig()
+    #     cfg.clearIdentities(write=True)
 
 ########################################################################
 #########################  RECONFIGURE  ################################
@@ -1606,30 +1546,30 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
 ###############################  TASKLETS  ##################################
 #############################################################################
 
-    def executeAction(self, action, tags, dependencies=False, params=None,
-            actionCaching=True):
-        """
-        Execute tasklets of specific jpackages
+    # def executeAction(self, action, tags, dependencies=False, params=None,
+    #         actionCaching=True):
+    #     """
+    #     Execute tasklets of specific jpackages
 
-        @param action is "install", "codeManagement","configure","package","backup", ...
-        @param actionCaching: can be used to disable the action caching
-        @type actionCaching: boolean
-        """
-        if actionCaching:
-            if j.packages._actionCheck(self, action):
-                return True
+    #     @param action is "install", "codeManagement","configure","package","backup", ...
+    #     @param actionCaching: can be used to disable the action caching
+    #     @type actionCaching: boolean
+    #     """
+    #     if actionCaching:
+    #         if j.packages._actionCheck(self, action):
+    #             return True
 
-            j.packages._actionSet(self, action)
+    #         j.packages._actionSet(self, action)
 
-        #process all dependencies
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.executeAction(action,tags,  dependencies,params=params)
-        self.log('executing jpackages action ' + tags + ' ' + action)
-        self.state.setCurrentAction(tags, action)
-        self.actions.execute(action, tags=tags, params=params) #tags are not used today
-        self.state.setCurrentActionIsDone()
+    #     #process all dependencies
+    #     if dependencies:
+    #         deps = self.getDependencies()
+    #         for dep in deps:
+    #             dep.executeAction(action,tags,  dependencies,params=params)
+    #     self.log('executing jpackages action ' + tags + ' ' + action)
+    #     self.state.setCurrentAction(tags, action)
+    #     self.actions.execute(action, tags=tags, params=params) #tags are not used today
+    #     self.state.setCurrentActionIsDone()
 
 #########################################################################
 ####################### SHOW ############################################
@@ -1657,7 +1597,6 @@ class JPackageObject(BaseType, DirtyFlaggingMixin):
     def _printList(self, arr):
         for item in arr:
             j.console.echo(item)        
-
 
 #########################################################################
 #######################  SUPPORTING FUNCTIONS  ##########################
