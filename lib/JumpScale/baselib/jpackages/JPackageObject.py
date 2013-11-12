@@ -946,7 +946,7 @@ class JPackageObject():
         if j.packages._actionCheck(self,action):
             return
 
-        self.actions.prepare()
+        self.actions.install_prepare()
 
     def copyfiles(self, dependencies=True, download=True):
         if dependencies:
