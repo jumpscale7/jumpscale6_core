@@ -1484,18 +1484,17 @@ class JPackageObject():
             
         start=j.base.time.getTimeEpoch()
         now=start
+
         while now<start+timeout:
             result=True
             for dep in deps:
                 r=dep.actions.process_depcheck()
-                if r==None:
-                    r=False
-                result=result & r
+                if r == False:
+                    result = False
             r=self.actions.process_depcheck()
-            if r==None:
-                r=False
-            result=result & r
-            if result:
+            if r == False:
+                result = False
+            if result != False:
                 return True
             time.sleep(0.5)
             print "processdepcheck:%s"%self

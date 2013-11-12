@@ -1,14 +1,6 @@
 from JumpScale import j
 import os
 import JumpScale.baselib.screen
-# def checkPort(*args, **kwargs):
-#     watcher = kwargs['watcher']
-#     portstr = watcher.env.get('WAIT_FOR_PORT')
-#     if portstr:
-#         port = int(portstr)
-#         return j.system.net.waitConnectionTest('localhost', port, 20)
-#     else:
-#         raise RuntimeError('Environment variable WAIT_FOR_PORT is not set')
 
 class ProcessDef:
     def __init__(self, hrd):
@@ -26,11 +18,20 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.domain")
         self.jpackage_version=hrd.get("process.jpackage.domain")
 
-    def startdo(self,timeout=60):
+    def _ensureDomain(self):
+        sessions = [ s[1] for s in j.system.platform.screen.getSessions() ]
+        if self.domain not in sessions:
+            j.system.platform.screen.createSession(self.domain, [self.name])
+
+    def startdo(self, timeout=60):
+        self._ensureDomain()
         jp=j.packages.find(self.domain,self.name)[0]
         jp.processDepCheck(timeout=timeout)
-        if self.workingdir<>"":
+        if self.workingdir:
             j.system.platform.screen.executeInScreen(self.domain,self.name,"cd %s"%self.workingdir,wait=0)
+        for key, value in self.env.iteritems():
+            cmd = "export %s=%s" % (key, value)
+            j.system.platform.screen.executeInScreen(self.domain,self.name,cmd, wait=0)
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,wait=0)
 
     def __str__(self):
@@ -66,7 +67,7 @@ class StartupManager:
             self.load()
             self.__init=True
 
-    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir=None,jpackage=None,domain="",ports=[],start=True):
+    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir='',jpackage=None,domain="",ports=[],start=True):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -129,7 +130,7 @@ class StartupManager:
             self.processdefs[key]=ProcessDef(j.core.hrd.getHRD(path))
 
     def getProcessDefs(self,domain=None,name=None):
-        self._init()        
+        self._init()
         resultOrder={}
         for pd in self.processdefs.itervalues():
             # print "find:%s"%pd
@@ -163,12 +164,11 @@ class StartupManager:
         for pd in self.getProcessDefs(jpackage.domain,jpackage.name):
             pd.startdo()
 
-    def startAll(self):        
+    def startAll(self):
         for pd in self.getProcessDefs():
             if pd.start:
                 "start:%s"%pd
                 pd.startdo()
-
 
     def removeProcess(self,name):
         servercfg = self._getIniFilePath(name)
@@ -177,7 +177,6 @@ class StartupManager:
         from IPython import embed
         print "DEBUG NOW removeprocess"
         embed()
-        
 
     def status(self, process=None):
         """
@@ -193,12 +192,24 @@ class StartupManager:
         pass #nothing needed any more, was for circus
 
     def listProcesses(self):
-        from IPython import embed
-        print "DEBUG NOW listProcesses"
-        embed()
+        files = j.system.fs.listFilesInDir(self._configpath, filter='*.hrd')
+        result = list()
+        for file_ in files:
+            file_ = j.system.fs.getBaseName(file_)
+            file_ = os.path.splitext(file_)[0]
+            result.append(file_)
+        return result
 
-    def startProcess(self, domain,name):
-        j.tools.circus.client.startWatcher(name)
+    def _getJPackage(self, domain, name):
+        jps = j.packages.find(domain, name, installed=True)
+        if not jps:
+            raise RuntimeError('Could not find installed jpackage with domain %s and name %s' % (domain, name))
+        return jps[0]
+
+
+    def startProcess(self, domain, name):
+        jp = self._getJPackage(domain, name)
+        self.startJPackage(jp)
 
     def stopProcess(self, domain,name):
         j.tools.circus.client.stopWatcher(name)
