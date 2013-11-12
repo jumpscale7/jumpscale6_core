@@ -1,4 +1,5 @@
 from JumpScale import j
+import imp
 
 from types import MethodType
 
@@ -17,17 +18,9 @@ class ActionManager:
             if name[0]=="_":
                 continue
             name=name[:-3]
-            content=j.system.fs.fileGetContents(path)
-            try:
-                exec(content)
-            except Exception as e:
-                msg="Could not load action.script:%s\n" % path
-                msg+="Error was:%s\n" % e
-                # print msg
-                j.errorconditionhandler.raiseInputError(msgpub="",message=msg,category="jpackages.actions.load",tags="",die=True)
-                continue
-
-            self._actions[name]=main
+            modname = "jpactions_%s" % j.tools.hash.md5_string(path)
+            module = imp.load_source(modname, path)
+            self._actions[name]= module.main
             name2=name.replace(".","_")
             self.__dict__[name2]=self._getActionMethod(name)
         
