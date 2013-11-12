@@ -900,13 +900,12 @@ function copyText$id() {
 
         # if self.pagemirror4jscss<>None:
         #     self.pagemirror4jscss.jsHead+=jsHead
-
         if self.documentReadyFunctions != []:
             CC = "$(document).ready(function() {\n"
             for f in self.documentReadyFunctions:
                 CC += "%s\n" % f
             CC += "} );\n"
-            self.addJS(jsContent=CC)
+            jsHead += "<script type='text/javascript'>" + CC + "</script>"
 
         return '<!DOCTYPE html>\n<html>\n \
         <head>\n%s\n</head>\n \
