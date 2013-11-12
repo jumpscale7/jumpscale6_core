@@ -111,7 +111,7 @@ class JPackageObject():
             j.system.fs.copyDirTree(src,self.getPathMetadata(), overwriteFiles=False) #do never put this on true
 
             #for easy development, overwrite specific implementations
-            j.system.fs.copyDirTree(src+"/actions/",self.getPathMetadata()+"/actions/", overwriteFiles=True)
+            # j.system.fs.copyDirTree(src+"/actions/",self.getPathMetadata()+"/actions/", overwriteFiles=True)
             
             self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 

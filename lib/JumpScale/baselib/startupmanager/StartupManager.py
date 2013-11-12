@@ -10,16 +10,26 @@ import os
 #     else:
 #         raise RuntimeError('Environment variable WAIT_FOR_PORT is not set')
 
-class Process:
-    def __init__(self):
-        self.p
+class ProcessDef:
+    def __init__(self, hrd):
+        from IPython import embed
+        print "DEBUG NOW hrdload"
+        embed()
+        
 
 class StartupManager:
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
+        self.processdefs={}
+        self._init=False
+
+    def _init(self):
+        if self._init==False:
+            self.load()
+            self._init=True
 
     def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir=None,jpackage=None,domain=""):
-
+        self._init()
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -65,8 +75,8 @@ class StartupManager:
     def load(self):
         for path in j.system.fs.listFilesInDir(self._configpath , recursive=False):
             domain,name=j.system.fs.getBaseName(path).replace(".hrd","").split("__")
-
-
+            key="%s__%s"%(domain,name)
+            j.processdefs[key]=ProcessDef(j.core.hrd.getHRD(path))
 
     def startJPackage(self,jpackage):
         from IPython import embed
