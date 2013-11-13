@@ -42,9 +42,6 @@ jQuery(document).ready(function($) {
   function linkifyGID(val) {
       return "<a id='gid' href='#' onclick='filterfunction(event, "+val+", this.id)'>"+ val.toString() +"</a>"
   };
-  function linkifyBID(val) {
-      return "<a id='bid' href='#' onclick='filterfunction(event, "+val+", this.id)'>"+ val.toString() +"</a>"
-  };
   function linkifyNID(val) {
       return "<a id='nid' href='#' onclick='filterfunction(event, "+val+", this.id)'>"+ val.toString() +"</a>"
   };
@@ -80,7 +77,6 @@ jQuery(document).ready(function($) {
                       {field: "level"},
                       {field: "message"},
                       {field: "gid", formatter: linkifyGID},
-                      {field: "bid", formatter: linkifyBID},
                       {field: "nid", formatter: linkifyNID},
                       {field: "pid", formatter: linkifyPID},
                       {field: "aid", formatter: linkifyAID}
