@@ -4,7 +4,7 @@ import JumpScale.baselib.screen
 
 class ProcessDef:
     def __init__(self, hrd):
-        self.start=hrd.get("process.start")
+        self.autostart=hrd.get("process.autostart")
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
         self.cmd=hrd.get("process.cmd")
@@ -18,13 +18,15 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.domain")
         self.jpackage_version=hrd.get("process.jpackage.domain")
 
-    def _ensureDomain(self):
+    def _ensure(self):
         sessions = [ s[1] for s in j.system.platform.screen.getSessions() ]
         if self.domain not in sessions:
             j.system.platform.screen.createSession(self.domain, [self.name])
+        if self.name not in j.system.platform.screen.listWindows(self.domain):
+            j.system.platform.screen.createWindow(self.domain, self.name)
 
-    def startdo(self, timeout=60):
-        self._ensureDomain()
+    def start(self, timeout=60):
+        self._ensure()
         jp=j.packages.find(self.domain,self.name)[0]
         jp.processDepCheck(timeout=timeout)
         if self.workingdir:
@@ -33,6 +35,9 @@ class ProcessDef:
             cmd = "export %s=%s" % (key, value)
             j.system.platform.screen.executeInScreen(self.domain,self.name,cmd, wait=0)
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,wait=0)
+
+    def stop(self):
+        j.system.platform.screen.killWindow(self.domain, self.name)
 
     def __str__(self):
         return str(self.__dict__)
@@ -53,7 +58,7 @@ class StartupManager:
         for domain in self.getDomains():
             screens=[item.name for item in self.getProcessDefs(domain=domain)]
             j.system.platform.screen.createSession(domain,screens)
-      
+
     def reset(self):
         self.load()
         #kill remainders
@@ -67,7 +72,7 @@ class StartupManager:
             self.load()
             self.__init=True
 
-    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir='',jpackage=None,domain="",ports=[],start=True):
+    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir='',jpackage=None,domain="",ports=[],autostart=True):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -85,9 +90,9 @@ class StartupManager:
         hrd+="process.numprocesses=%s\n"%numprocesses
         hrd+="process.priority=%s\n"%priority
         hrd+="process.workingdir=%s\n"%workingdir
-        if start:
-            start=1
-        hrd+="process.start=%s\n"%start
+        if autostart:
+            autostart=1
+        hrd+="process.autostart=%s\n"%autostart
         pstring=""
         for port in ports:
             pstring+="%s,"%port
@@ -162,13 +167,17 @@ class StartupManager:
 
     def startJPackage(self,jpackage,timeout=60):
         for pd in self.getProcessDefs(jpackage.domain,jpackage.name):
-            pd.startdo()
+            pd.start()
+
+    def stopJPackage(self,jpackage,timeout=60):
+        for pd in self.getProcessDefs(jpackage.domain,jpackage.name):
+            pd.stop()
 
     def startAll(self):
         for pd in self.getProcessDefs():
-            if pd.start:
+            if pd.autostart:
                 "start:%s"%pd
-                pd.startdo()
+                pd.start()
 
     def removeProcess(self,name):
         servercfg = self._getIniFilePath(name)
@@ -212,7 +221,8 @@ class StartupManager:
         self.startJPackage(jp)
 
     def stopProcess(self, domain,name):
-        j.tools.circus.client.stopWatcher(name)
+        jp = self._getJPackage(domain, name)
+        self.stopJPackage(jp) 
 
     def restartProcess(self, domain,name):
         j.tools.circus.client.restartWatcher(name)

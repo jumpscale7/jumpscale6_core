@@ -1,15 +1,4 @@
-# try:
-#     import contextlib
-# except:
-#     pass
-
-import os
 import time
-# try:
-#     from cStringIO import StringIO
-# except ImportError:
-#     from StringIO import StringIO
-
 import inspect
 
 from JumpScale import j
@@ -660,11 +649,11 @@ class JPackageObject():
         if ttype.find("cr_")==0:
             ttype=ttype[3:]
 
-        if ttype=="sitepackages":
+        if ttype in ('sitepackages', 'site-packages'):
             base=j.application.config.get("python.paths.local.sitepackages")
             systemdest = j.system.fs.joinPaths(base, blobitempath)
         elif ttype=="root":
-            systemdest = "/%s"%destination.lstrip("/")
+            systemdest = "/%s"%blobitempath.lstrip("/")
         elif ttype=="base":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir, blobitempath)
         elif ttype=="etc":
@@ -964,13 +953,14 @@ class JPackageObject():
                 pathttype=j.system.fs.joinPaths(pathplatform,ttype)
                 j.system.fs.removeIrrelevantFiles(pathttype)
 
-                tmp,destination=self.getBlobItemPaths(platform,ttype,"")
-
                 if ttype in ["etc"]:
                     applyhrd=True
                 else:
                     applyhrd=True
+                if ttype == 'debs':
+                    continue #TODO shoudl we install them from here?
 
+                tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                 self.log("copy files from:%s to:%s"%(pathttype,destination))
                 self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
 
