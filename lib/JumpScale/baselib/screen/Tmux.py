@@ -23,6 +23,7 @@ class Tmux:
                 j.system.process.execute("tmux new-window -t '%s' -n '%s'" % (sessionname, screen))
 
     def executeInScreen(self,sessionname,screenname,cmd,wait=0):
+        self.createWindow(sessionname, screenname)
         ppath=j.system.fs.getTmpFilePath()
         ppathscript=j.system.fs.getTmpFilePath()
         script="""
