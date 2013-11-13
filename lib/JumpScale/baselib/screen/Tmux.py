@@ -1,8 +1,5 @@
 from JumpScale import j
-import re
-import os
 import time
-import pexpect
 class Tmux:
     
     def __init__(self):
