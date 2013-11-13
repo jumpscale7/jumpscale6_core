@@ -1,5 +1,8 @@
 from JumpScale import j
+import re
+import os
 import time
+import pexpect
 class Screen:
     
     def __init__(self):
@@ -16,21 +19,15 @@ class Screen:
         self.killSession(sessionname)
         if len(screens)<1:
             raise RuntimeError("Cannot create screens, need at least 1 screen specified")
-        screens.reverse()
         #-dmS means detatch & create 1 screen session 
         cmd="%s -dmS '%s'"%(self.screencmd,sessionname)
         j.system.process.execute(cmd)
+        self._do(sessionname, ['title', screens[0]], '0')
         # now add the other screens to it
-        for i in range(len(screens)-1):
-            cmd="%s -S '%s' -X screen" % (self.screencmd,sessionname)
-            j.system.process.execute(cmd)
-        screens.reverse()
-        teller=0
-        for screenname in screens: 
-            cmd="%s -S '%s' -p%s -X title %s" % (self.screencmd,sessionname,teller,screenname)
-            teller+=1
-            j.system.process.execute(cmd)
-        
+        if len(screens) > 1:
+            for screen in screens[1:]:
+                self._do(sessionname, ["screen", "-t", screen])
+
     def executeInScreen(self,sessionname,screenname,cmd,wait=0):
         ppath=j.system.fs.getTmpFilePath()
         ppathscript=j.system.fs.getTmpFilePath()
@@ -101,7 +98,74 @@ rm -f %s
         sessions=self.getSessions()
         for pid,name in sessions:
             print "%s %s" % (pid,name)
-            
+
+    def _do(self, session, cmd, window=None):
+        scrcmd = [self.screencmd, '-S', session]
+        if window:
+            scrcmd += ['-p', window]
+        scrcmd += ['-X']
+        scrcmd += cmd
+        return pexpect.spawn(scrcmd[0], scrcmd[1:]).wait()
+
+    def listWindows(self, session, attemps=5):
+        tmpfolder = j.system.fs.getTmpDirPath()
+        fl = j.system.fs.joinPaths(tmpfolder, '%n %t %W')
+        self._do(session, ['log', 'off'])
+        self._do(session, ['logfile', fl])
+        with self.attached(session):
+            self._do(session, ['log', 'on'])
+            self._do(session, ['log', 'off'])
+        # somehow this keeps screen bussy which makes it ignore incomming commands
+        time.sleep(1)
+        files = j.system.fs.listFilesInDir(tmpfolder)
+        j.system.fs.removeDirTree(tmpfolder)
+        if not files:
+            attemps -= 1
+            if attemps <=0:
+                raise RuntimeError('Failed to get windows')
+            return self.listWindows(session, attemps)
+        output = files[0]
+        output = j.system.fs.getBaseName(output)
+        lst = re.split('(\d+)\s', output)
+        if lst:
+            lst = lst[1:]
+        result = dict()
+        for idx, data in enumerate(lst[::2]):
+            result[int(lst[idx*2])] = lst[idx*2+1].strip()
+        return result
+
+    def createWindow(self, session, name):
+        if session not in dict(self.getSessions()).values():
+            return self.createSession(session, [name])
+        windows = self.listWindows(session)
+        if name not in windows.values():
+            self._do(session, ['screen', '-t', name] )
+
+    def windowExists(self, session, name):
+        if session in dict(self.getSessions()).values():
+            if name in self.listWindows(session).values():
+                return True
+        return False
+
+    def attached(self, session):
+        class Active(object):
+            def __init__(s, session):
+                s.session = session
+                s.proc = None
+
+            def __enter__(s):
+                s.proc = pexpect.spawn(self.screencmd, ['-x', session])
+
+            def __exit__(s, *args):
+                if s.proc:
+                    s.proc.terminate()
+        return Active(session)
+
+    def killWindow(self, session, name):
+        if self.windowExists(session, name):
+            with self.attached(session):
+                self._do(session, ['kill'], name)
+
     def killSessions(self):
         #@todo P1 is there no nicer way of cleaning screens
         cmd="screen -wipe" 
