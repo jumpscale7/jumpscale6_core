@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #configure the application to no longer autostart
     

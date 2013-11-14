@@ -27,7 +27,7 @@ class ActionManager:
     def _getActionMethod(self,name):    
         C="""
 def method(self{args}):
-    return self._actions['{name}'](self._jpackage{args})"""
+    return self._actions['{name}'](j,self._jpackage{args})"""
 
         args=""
 

@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #start the application (only relevant for server apps)
     jp.log("start $(jp.name)")

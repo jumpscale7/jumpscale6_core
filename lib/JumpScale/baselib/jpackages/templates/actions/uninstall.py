@@ -1,3 +1,3 @@
-def main(jp):
+def main(j,jp):
    
     jp._uninstall()

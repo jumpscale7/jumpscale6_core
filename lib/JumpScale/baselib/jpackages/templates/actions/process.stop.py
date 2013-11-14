@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #stop the application (only relevant for server apps)
     

@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #check dependencies for process to start e.g. can I reach local or remote app
 

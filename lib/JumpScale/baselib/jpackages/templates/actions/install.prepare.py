@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #prepare the platform before copying the files
 

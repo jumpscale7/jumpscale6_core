@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #copying of files is not done in this step
     # the order is:

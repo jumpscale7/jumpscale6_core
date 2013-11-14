@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #configure the application to autostart
     

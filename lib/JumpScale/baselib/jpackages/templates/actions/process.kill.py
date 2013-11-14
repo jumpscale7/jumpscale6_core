@@ -1,4 +1,4 @@
-def main(jp):
+def main(j,jp):
    
     #kill the process
     jp.log("kill $(jp.name)")

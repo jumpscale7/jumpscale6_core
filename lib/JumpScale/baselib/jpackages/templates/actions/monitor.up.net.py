@@ -1,4 +1,4 @@
-def main(jp,ipaddr):
+def main(j,jp,ipaddr):
    
     #monitor the app if it is performing well, this is for the remote tests
 
