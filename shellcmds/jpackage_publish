@@ -7,7 +7,7 @@ from JumpScale.baselib import cmdutils
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--message', required=False, help='Commit message to publish package')
 
-packages, args = cmdutils.getJPackage(parser,installed=True)
+packages, args = cmdutils.getJPackage(parser,installed=False)
 domains = {p.domain for p in packages}
 for domain in domains:
     j.packages.publish(args.message,domain)
