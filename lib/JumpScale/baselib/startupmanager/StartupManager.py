@@ -2,6 +2,8 @@ from JumpScale import j
 import os
 import JumpScale.baselib.screen
 
+DEFAULT_TIMEOUT = 60
+
 class ProcessDef:
     def __init__(self, hrd):
         self.autostart=hrd.get("process.autostart")
@@ -25,7 +27,7 @@ class ProcessDef:
         if self.name not in j.system.platform.screen.listWindows(self.domain):
             j.system.platform.screen.createWindow(self.domain, self.name)
 
-    def start(self, timeout=60):
+    def start(self, timeout=DEFAULT_TIMEOUT):
         self._ensure()
         jp=j.packages.find(self.domain,self.name)[0]
         jp.processDepCheck(timeout=timeout)
@@ -35,8 +37,12 @@ class ProcessDef:
             cmd = "export %s=%s" % (key, value)
             j.system.platform.screen.executeInScreen(self.domain,self.name,cmd, wait=0)
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,wait=0)
+        for port in self.ports:
+            port = int(port)
+            if not j.system.net.waitConnectionTest('localhost', port, timeout):
+                raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s' % (self.name, port, timeout))
 
-    def stop(self):
+    def stop(self, timeout=DEFAULT_TIMEOUT):
         j.system.platform.screen.killWindow(self.domain, self.name)
 
     def __str__(self):
@@ -46,6 +52,8 @@ class ProcessDef:
 
 
 class StartupManager:
+    DEFAULT_DOMAIN = 'generic'
+
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
         self.processdefs={}
@@ -62,7 +70,7 @@ class StartupManager:
     def reset(self):
         self.load()
         #kill remainders
-        for item in ["byobu","screen"]:
+        for item in ["byobu","tmux"]:
             cmd="killall %s"%item
             j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
         self.init()
@@ -79,9 +87,11 @@ class StartupManager:
         envstr=envstr.rstrip(",")
 
         hrd="process.name=%s\n"%name
-        
-        if domain=="" and not jpackage==None:
-            domain=jpackage.domain
+        if not domain:
+            if jpackage:
+                domain = jpackage.domain
+            else:
+                domain = StartupManager.DEFAULT_DOMAIN
 
         hrd+="process.domain=%s\n"%domain
         hrd+="process.cmd=%s\n"%cmd
@@ -108,7 +118,7 @@ class StartupManager:
             hrd+="process.jpackage.name=%s\n"%jpackage.name
             hrd+="process.jpackage.version=%s\n"%jpackage.version
 
-        j.system.fs.writeFile(filename=j.system.fs.joinPaths(self._configpath ,"%s__%s.hrd"%(domain,name)),contents=hrd)
+        j.system.fs.writeFile(filename=self._getHRDPath(domain, name),contents=hrd)
 
         for item in j.system.fs.listFilesInDir("/etc/init.d"):
             itembase=j.system.fs.getBaseName(item)
@@ -123,15 +133,19 @@ class StartupManager:
                 #found process in init
                 j.system.process.execute("stop %s"%itembase)
                 j.system.fs.remove(item)
+        self.load()
 
     def _getKey(self,domain,name):
         return "%s__%s"%(domain,name)
+
+    def _getHRDPath(self, domain, name):
+        return j.system.fs.joinPaths(self._configpath ,"%s.hrd"%(self._getKey(domain,name)))
 
     def load(self):
         self.processdefs={}
         for path in j.system.fs.listFilesInDir(self._configpath , recursive=False,filter="*.hrd"):
             domain,name=j.system.fs.getBaseName(path).replace(".hrd","").split("__")
-            key="%s__%s"%(domain,name)
+            key=self._getKey(domain,name)
             self.processdefs[key]=ProcessDef(j.core.hrd.getHRD(path))
 
     def getProcessDefs(self,domain=None,name=None):
@@ -154,40 +168,29 @@ class StartupManager:
                 result.append(pd.domain)
         return result
 
-    def startJPackage(self,jpackage,timeout=60):
-        for pd in self.getProcessDefs(jpackage.domain,jpackage.name):
-            pd.start()
+    def startJPackage(self,jpackage,timeout=DEFAULT_TIMEOUT):
+        self.startProcess(jpackage.domain, jpackage.name, timeout)
 
-    def stopJPackage(self,jpackage,timeout=60):
-        for pd in self.getProcessDefs(jpackage.domain,jpackage.name):
-            pd.stop()
+    def stopJPackage(self,jpackage,timeout=DEFAULT_TIMEOUT):
+        self.stopProcess(jpackage.domain, jpackage.name, timeout)
 
     def startAll(self):
         for pd in self.getProcessDefs():
             if pd.autostart:
-                "start:%s"%pd
                 pd.start()
 
-    def removeProcess(self,name):
-        servercfg = self._getIniFilePath(name)
+    def removeProcess(self,domain, name):
+        self.stopProcess(domain, name)
+        servercfg = self._getHRDPath(domain, name)
         if j.system.fs.exists(servercfg):
             j.system.fs.remove(servercfg)
-        from IPython import embed
-        print "DEBUG NOW removeprocess"
-        embed()
+        self.load()
 
-    def status(self, process=None):
+    def getStatus(self, domain, name):
         """
-        get status of process if not process is given return status of circus
+        get status of process if not process is given return status
         """
-        status = j.tools.circus.client.status()
-        if process:
-            return status['statuses'].get(process, 'notfound')
-        else:
-            return status['status']
-
-    def apply(self):
-        pass #nothing needed any more, was for circus
+        return j.system.platform.screen.windowExists(domain, name)
 
     def listProcesses(self):
         files = j.system.fs.listFilesInDir(self._configpath, filter='*.hrd')
@@ -205,16 +208,14 @@ class StartupManager:
         return jps[0]
 
 
-    def startProcess(self, domain, name):
-        jp = self._getJPackage(domain, name)
-        self.startJPackage(jp)
+    def startProcess(self, domain, name, timeout=DEFAULT_TIMEOUT):
+        for pd in self.getProcessDefs(domain, name):
+            pd.start(timeout)
 
-    def stopProcess(self, domain,name):
-        jp = self._getJPackage(domain, name)
-        self.stopJPackage(jp) 
+    def stopProcess(self, domain,name, timeout=DEFAULT_TIMEOUT):
+        for pd in self.getProcessDefs(domain, name):
+            pd.stop(timeout)
 
     def restartProcess(self, domain,name):
-        j.tools.circus.client.restartWatcher(name)
-
-    def reloadProcess(self, domain,name):
-        j.tools.circus.client.reloadWatcher(name)
+        self.stopProcess(domain, name)
+        self.startProcess(domain, name)
