@@ -13,8 +13,10 @@ parser.add_argument('--merge', dest="merge", default=False, action="store_true",
 
 
 packages, args = cmdutils.getJPackage(parser,installed=True)
+domains = { jp.domain for jp in packages }
 
-j.packages.updateMetaData(package.domain)
+for domain in domains:
+    j.packages.updateMetaData(domain)
 
 
 for package in packages:
@@ -26,5 +28,5 @@ for package in packages:
     package.upload(remote=not args.local)
     if args.publish:
         j.packages.publish(args.message, package.domain)
-        
+
 j.application.stop()
