@@ -136,27 +136,16 @@ class StartupManager:
 
     def getProcessDefs(self,domain=None,name=None):
         self._init()
-        resultOrder={}
-        for pd in self.processdefs.itervalues():
-            # print "find:%s"%pd
-            found=True
-            if domain<>None:
-                found=found and pd.domain==domain
-            if name<>None:
-                found=found and pd.name==name
-            if found:
-                if not resultOrder.has_key(pd.priority):
-                    resultOrder[pd.priority]=[]
-                resultOrder[pd.priority].append(pd)
+        def processFilter(process):
+            if domain and process.domain != domain:
+                return False
+            if name and process.name != name:
+                return False
+            return True
 
-        prioritys=resultOrder.keys()
-        prioritys.sort()
-        result=[]
-        for priority in prioritys:
-            # print priority
-            result+=resultOrder[priority]
-
-        return result
+        processes = filter(processFilter, self.processdefs.values())
+        processes.sort(key=lambda pd: pd.priority)
+        return processes
 
     def getDomains(self):
         result=[]
