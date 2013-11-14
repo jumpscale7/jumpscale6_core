@@ -23,8 +23,8 @@ class Grid(OsisBaseObject):
         """
         get ipaddr info & gid & nid from local config
         """
-        self.ipaddr=[item for item in j.system.net.getIpAddresses() if item <>"127.0.0.1"]        
-        self.id=if j.application.config.getInt("gridmaster.grid.id")
+        self.ipaddr=[item for item in j.system.net.getIpAddresses() if item <>"127.0.0.1"]
+        self.id= j.application.config.getInt("gridmaster.grid.id")
 
         if j.application.config.getInt("grid.node.id")==0:
             #register the own masternode to the grid
