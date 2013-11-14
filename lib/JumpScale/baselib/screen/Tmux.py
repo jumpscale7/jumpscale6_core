@@ -1,5 +1,6 @@
 from JumpScale import j
 import time
+import os
 class Tmux:
     
     def __init__(self):
@@ -22,53 +23,67 @@ class Tmux:
             for screen in screens[1:]:
                 j.system.process.execute("tmux new-window -t '%s' -n '%s'" % (sessionname, screen))
 
-    def executeInScreen(self,sessionname,screenname,cmd,wait=0):
-        self.createWindow(sessionname, screenname)
+    def executeInScreen(self,sessionname,screenname,cmd,wait=0, cwd=None, env=None, newscr=False):
+        """
+        @param sessionname Name of the tmux session
+        @type sessionname str
+        @param screenname Name of the window in the session
+        @type screenname str
+        @param cmd command to execute
+        @type cmd str
+        @param wait time to wait for output
+        @type wait int
+        @param cwd workingdir for command only in new screen see newscr
+        @type cwd str
+        @param env environment variables for cmd onlt in new screen see newscr
+        @type env dict
+        @param newscr run process in newly created window usefull for checking status
+        @type newscr bool
+        """
+        env = env or dict()
+        envstr = ""
+        for name, value in env.iteritems():
+            envstr += "export %s=%s\n" % (name, value)
         ppath=j.system.fs.getTmpFilePath()
-        ppathscript=j.system.fs.getTmpFilePath()
+        scriptfile = j.system.fs.getTmpFilePath()
+        workdir = ""
+        if cwd:
+            workdir = "cd %s" % cwd
         script="""
 #!/bin/sh
 #set -x
 
-check_errs()
-{
-  # Function. Parameter 1 is the return code
-  # Para. 2 is text to display on failure.
-  if [ "${1}" -ne "0" ]; then
-    echo "ERROR # ${1} : ${2}"
-    echo ${1} > %s    
-    # as a bonus, make our script exit with the right error code.
-    exit ${1}
-  fi
-}
-
-%s
-check_errs $? 
-rm -f %s
-    """ %(ppath,cmd,ppathscript)
-        j.system.fs.writeFile(ppathscript,script)
-        pane = self._getPane(sessionname, screenname)
-        if wait<>0:
-            cmd2="tmux send-keys -t '%s' '%s;echo $?>%s\n'" % (pane,cmd,ppath)
+%(env)s
+%(cwd)s
+%(cmd)s
+echo "$?" > %(out)s
+rm $0
+    """ % {'env': envstr, 'cwd': workdir, 'cmd': cmd, 'out': ppath}
+        j.system.fs.writeFile(scriptfile, script)
+        os.chmod(scriptfile, 0755)
+        if newscr:
+            self.killWindow(sessionname, screenname)
+            if sessionname not in dict(self.getSessions()).values():
+                cmd2 = "tmux new-session -d -s '%s'" % sessionname
+            else:
+                cmd2 = "tmux new-window -t '%s'" % sessionname
+            cmd2 += " -n '%s' '%s'" % (screenname, scriptfile)
         else:
+            self.createWindow(sessionname, screenname)
+            pane = self._getPane(sessionname, screenname)
             cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,cmd)
 
         j.system.process.execute(cmd2)  
         time.sleep(wait)
-        if j.system.fs.exists(ppath):
+        if wait and j.system.fs.exists(ppath):
             resultcode=j.system.fs.fileGetContents(ppath).strip()
-            if resultcode=="":
-                resultcode=0
-            resultcode=int(resultcode)       
             j.system.fs.remove(ppath)
-            if resultcode>0:
+            if not resultcode or int(resultcode)>0:
                 raise RuntimeError("Could not execute %s in screen %s:%s, errorcode was %s" % (cmd,sessionname,screenname,resultcode))
-        else:
+        elif wait:
             j.console.echo("Execution of %s  did not return, maybe interactive, in screen %s:%s." % (cmd,sessionname,screenname))
         if j.system.fs.exists(ppath):
             j.system.fs.remove(ppath)
-        if j.system.fs.exists(ppathscript):
-            j.system.fs.remove(ppathscript)      
 
     def getSessions(self):
         cmd = 'tmux list-sessions -F "#{session_name}"'

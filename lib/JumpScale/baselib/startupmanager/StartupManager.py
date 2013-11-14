@@ -31,12 +31,7 @@ class ProcessDef:
         self._ensure()
         jp=j.packages.find(self.domain,self.name)[0]
         jp.processDepCheck(timeout=timeout)
-        if self.workingdir:
-            j.system.platform.screen.executeInScreen(self.domain,self.name,"cd %s"%self.workingdir,wait=0)
-        for key, value in self.env.iteritems():
-            cmd = "export %s=%s" % (key, value)
-            j.system.platform.screen.executeInScreen(self.domain,self.name,cmd, wait=0)
-        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,wait=0)
+        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env, newscr=True)
         for port in self.ports:
             port = int(port)
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
