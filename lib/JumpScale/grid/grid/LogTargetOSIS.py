@@ -6,7 +6,7 @@ class LogTargetOSIS(object):
 
     """
     Forwards incoming logRecords to osis
-    attached to loghandler on openwizzy
+    attached to loghandler on jumpscale
     """
 
     def __init__(self):
@@ -23,11 +23,11 @@ class LogTargetOSIS(object):
         if self.serverip <> None:
             if j.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
                 return False
-            self.esclient = j.clients.elasticsearch.get(self._serverip, 9200)
-            # j.logger.elasticsearchtarget=True
+            #@todo need to implement
+
 
     def __str__(self):
-        """ string representation of a LogTargetServer to ES"""
+        """ string representation of a LogTargetServer to osis"""
         return 'LogTargetLogServer logging to osis'
 
     __repr__ = __str__

@@ -319,17 +319,17 @@ class MessageHandler:
             pdb.Pdb().set_trace(None)
             # pdb.pm()
 
-    def sendSignal(self, signalcategory, openwizzytags=None):
-        if openwizzytags == None:
-            openwizzytags = ""
-        self.sendMessage(self.data2Message(2, "%s,%s" % (signalcategory, openwizzytags)), 3)
+    def sendSignal(self, signalcategory, jumpscaletags=None):
+        if jumpscaletags == None:
+            jumpscaletags = ""
+        self.sendMessage(self.data2Message(2, "%s,%s" % (signalcategory, jumpscaletags)), 3)
 
     def sendErrorConditionObject(self, errorConditionObject):
         """
-        send errorcondtion object from openwizzy 6 to local logserver
+        send errorcondtion object from jumpscale 6 to local logserver
         """
         self.sendMessage(self.getErrorConditionMessage(errorConditionObject), 3)
 
     def sendStat(self, category, stat):
-        msg = "%s,%s" % (signalcategory, openwizzytags)
+        msg = "%s,%s" % (signalcategory, jumpscaletags)
         self.sendMessage(self.data2Message(5, msg), 3)

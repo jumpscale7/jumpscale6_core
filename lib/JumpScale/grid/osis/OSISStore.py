@@ -1,12 +1,12 @@
 from JumpScale import j
 import copy
-import json
+json=j.db.serializers.getSerializerType("j")
 
 
 class OSISStore(object):
 
     """
-    Defeault object implementation
+    Default object implementation (is for one specific namespace_category)
     """
 
     def init(self, path, hrd):
@@ -22,11 +22,14 @@ class OSISStore(object):
 
         self.db = self._getDB()
 
-        self.dbprefix = "%s_%s" % (self.hrd.getInt("namespace.id"), self.hrd.getInt("category.id"))
-        self.dbprefix_incr = "%s_incr" % (self.dbprefix)
-        # self.namespace=str(self.hrd.getInt("namespace.id"))
-        # self.category=str(self.hrd.getInt("category.id"))
+        self.namespace = self.hrd.get("namespace.name")
         self.categoryname = self.hrd.get("category.name")
+
+        if self.namespace=="" or self.categoryname=="":
+            raise RuntimeError("namespace & category cannot be empty")
+
+        self.dbprefix = "%s_%s" % (self.namespace, self.categoryname)
+        self.dbprefix_incr = "%s_incr" % (self.dbprefix)
 
         indexEnabled = self.hrd.getInt("category.index") == 1
         elasticsearchEnabled = self.hrd.getInt("category.elasticsearch") == 1
@@ -51,6 +54,31 @@ class OSISStore(object):
 
         self.indexTTL = self.hrd.get("category.indexttl")
 
+        self.objectclass=None
+
+    def _getModelClass(self):
+        if self.objectclass==None:
+
+            path=j.system.fs.joinPaths(self.path, "model.py")
+            if j.system.fs.exists(path):
+                klass= j.system.fs.fileGetContents(path)
+            else:
+                self.objectclass= ""
+                # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
+
+            name=""
+
+            for line in klass.split("\n"):
+                if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
+                    name=line.split("(")[0].lstrip("class ")
+            if name=="":
+                raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
+            exec(klass)
+            resultclass=eval(name)
+            self.objectclass=resultclass
+
+        return self.objectclass
+
     def _getDB(self):
         if j.core.osis.db == None:
             j.errorconditionhandler.raiseBug(message="osis needs to have a temp db connection", category="osis.init")
@@ -68,28 +96,41 @@ class OSISStore(object):
         return self.db.get(self.dbprefix, key)
 
     def getObject(self, ddict={}):
-        obj = j.core.grid.zobjects.getZNodeObject(ddict=ddict)
+        klass=self._getModelClass()
+        if klass=="":
+            return ddict            
+        obj = klass(ddict=ddict)
         return obj
 
     def set(self, key, value):
         obj = self.getObject(value)
-        if self.db.exists(self.dbprefix_incr, obj.guid):
-            changed = True
-            new = False
-        else:
-            changed = False
-            new = True
-        value = obj.__dict__
+
+        if self.tasklets.has_key("set_pre"):
+            from IPython import embed
+            print "DEBUG NOW setpre tasklets"
+            embed()
+            
+            self.tasklets["set_pre"].executeV2()
+
         self.db.set(self.dbprefix, key=obj.guid, value=value)
-        self.index(obj)
-        return [obj.guid, new, changed]
+
+        if self.tasklets.has_key("set_post"):
+            from IPython import embed
+            print "DEBUG NOW set_post tasklets"
+            embed()
+            self.tasklets["set_post"].executeV2()
+
+        if obj<>value:
+            #means there is a model found
+            self.index(obj)
+
+        return [None, None, None]
 
     def getIndexName(self):
         """
         return name of index in elastic search, depends on properies of object
         """
-        index = '%s_%s' % (self.hrd.category_name, self.hrd.namespace_id)
-        return index
+        return self.dbprefix
 
     def index(self, obj):
         """
@@ -108,6 +149,7 @@ class OSISStore(object):
             except:
                 pass
             data = obj.__dict__
+            
             if self.indexTTL <> "":
                 self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=self.indexTTL, replication="async")
             else:
@@ -173,8 +215,3 @@ class OSISStore(object):
             obj = self.get(id)
             self.index(obj)
 
-    def serialize(self, obj):
-        return j.db.serializers.getSerializerType('j').dumps(obj)
-
-    def unserialize(self, obj):
-        return j.db.serializers.getSerializerType('j').loads(obj)

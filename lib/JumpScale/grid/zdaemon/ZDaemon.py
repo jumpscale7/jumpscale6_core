@@ -25,7 +25,6 @@ class ZDaemon(GeventLoop):
             from JumpScale.baselib.ssl.SSL import SSL
             sslkeyvaluestor = SSL().getSSLHandler(sslkeyvaluestor)
 
-
         self.daemon = j.servers.base.getDaemon(name="unknown", sslorg="", ssluser="", sslkeyvaluestor=None)
 
         # self.ports = [] #is for datachannel

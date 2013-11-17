@@ -9,3 +9,5 @@ namespace.elasticsearch = 1
 namespace.indexttl=
 
 namespace.type=coreobject
+
+namespace.name=
