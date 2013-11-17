@@ -165,8 +165,6 @@ class JPackageClient():
         for pl in supportedPlatforms:
             j.system.fs.createDir(j.system.fs.joinPaths(jp.getPathFiles(),"%s"%pl))
 
-        jp.hrd.applyOnDir(jp.getPathMetadata(), changeContent=False)
-
         return jp
 
 

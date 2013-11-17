@@ -199,6 +199,11 @@ class JPackageObject():
             
         self._clear()
         self.buildNr = self.hrd.getInt("jp.buildNr")
+        if not self.hrd.exists("jp.process.tcpports"):
+            self.hrd.set("jp.process.tcpports","")
+        if not self.hrd.exists("jp.process.startuptime"):
+            self.hrd.set("jp.process.startuptime","30")            
+        self.startupTime = self.hrd.getInt("jp.process.startuptime")
         self.export = self.hrd.getBool("jp.export")
         self.autobuild = self.hrd.getBool("jp.autobuild")
         self.taskletsChecksum = self.hrd.get("jp.taskletschecksum")
@@ -943,26 +948,33 @@ class JPackageObject():
         if j.packages._actionCheck(self,action):
             return
 
-        self.actions.install_copy()        
+        if self.debug ==True:
+            self._copyfiles(doCodeRecipe=False)
+            self.codeLink(dependencies=False, update=False, force=False)
+        else:        
+            self.actions.install_copy()        
 
-    def _copyfiles(self):
-
+    def _copyfiles(self,doCodeRecipe=True):
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
-                pathttype=j.system.fs.joinPaths(pathplatform,ttype)
-                j.system.fs.removeIrrelevantFiles(pathttype)
-
-                if ttype in ["etc"]:
-                    applyhrd=True
+                # print "type:%s,%s"%(ttype,ttype.find("cr_"))
+                if doCodeRecipe==False and ttype.find("cr_")==0:
+                    continue #skip the coderecipe folders
                 else:
-                    applyhrd=True
-                if ttype == 'debs':
-                    continue #TODO shoudl we install them from here?
+                    pathttype=j.system.fs.joinPaths(pathplatform,ttype)
+                    j.system.fs.removeIrrelevantFiles(pathttype)
 
-                tmp,destination=self.getBlobItemPaths(platform,ttype,"")
-                self.log("copy files from:%s to:%s"%(pathttype,destination))
-                self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
+                    if ttype in ["etc"]:
+                        applyhrd=True
+                    else:
+                        applyhrd=True
+                    if ttype == 'debs':
+                        continue #TODO shoudl we install them from here?, yes
+
+                    tmp,destination=self.getBlobItemPaths(platform,ttype,"")
+                    self.log("copy files from:%s to:%s"%(pathttype,destination))
+                    self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
 
     def __copyFiles(self, subdir,destination,applyhrd=False):
         """
@@ -985,7 +997,7 @@ class JPackageObject():
             else:
                 j.system.fs.copyDirTree(path, destination,skipProtectedDirs=True)
 
-    def install(self, dependencies=True, download=True, reinstall=False):
+    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False):
         """
         Install the JPackage
 
@@ -1005,7 +1017,7 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.install(False, download, reinstall=False)
+                dep.install(False, download, reinstall=reinstalldeps)
         self.loadActions(True) #reload actions to make sure new hrdactive are applied
         self._loadActiveHrd()
         
@@ -1463,6 +1475,32 @@ class JPackageObject():
             print "waitup:%s"%self
             now=j.base.time.getTimeEpoch()
         raise RuntimeError("Timeout on waitup for jp:%s"%self)
+
+    def waitDown(self, timeout=60,dependencies=False):        
+        self.loadActions()
+        if dependencies:
+            deps = self.getDependencies()
+        else:
+            deps=[]
+
+        start=j.base.time.getTimeEpoch()
+        now=start
+        while now<start+timeout:
+            result=True
+            for dep in deps:
+                result=result and not(dep.actions.monitor_up_net()) and not(dep.actions.monitor_up_local())
+            result=result and not(self.actions.monitor_up_net()) and not(self.actions.monitor_up_local())
+
+
+            if result:
+                return True
+
+            time.sleep(0.5)
+            print "waitdown:%s"%self
+            now=j.base.time.getTimeEpoch()
+
+        raise RuntimeError("Timeout on waitdown for jp:%s"%self)
+
 
     def processDepCheck(self, timeout=60,dependencies=False):
         #check for dependencies for process to start

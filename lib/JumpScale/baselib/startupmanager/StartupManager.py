@@ -2,8 +2,6 @@ from JumpScale import j
 import os
 import JumpScale.baselib.screen
 
-DEFAULT_TIMEOUT = 60
-
 class ProcessDef:
     def __init__(self, hrd):
         self.autostart=hrd.get("process.autostart")
@@ -23,22 +21,31 @@ class ProcessDef:
     def _ensure(self):
         sessions = [ s[1] for s in j.system.platform.screen.getSessions() ]
         if self.domain not in sessions:
+            print "create session for %s"%self.name
             j.system.platform.screen.createSession(self.domain, [self.name])
         if self.name not in j.system.platform.screen.listWindows(self.domain):
+            print "create window for %s"%self.name
             j.system.platform.screen.createWindow(self.domain, self.name)
 
-    def start(self, timeout=DEFAULT_TIMEOUT):
+    def start(self, timeout=20):
         self._ensure()
         jp=j.packages.find(self.domain,self.name)[0]
+        print "check process dependency for %s"%self.name
         jp.processDepCheck(timeout=timeout)
+        print "start process %s"%self.name
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env, newscr=True)
         for port in self.ports:
             port = int(port)
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
                 raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s' % (self.name, port, timeout))
 
-    def stop(self, timeout=DEFAULT_TIMEOUT):
+    def stop(self, timeout=20):
         j.system.platform.screen.killWindow(self.domain, self.name)
+        from IPython import embed
+        print "DEBUG NOW stop"
+        embed()
+        
+
 
     def __str__(self):
         return str(self.__dict__)
@@ -163,16 +170,39 @@ class StartupManager:
                 result.append(pd.domain)
         return result
 
-    def startJPackage(self,jpackage,timeout=DEFAULT_TIMEOUT):
-        self.startProcess(jpackage.domain, jpackage.name, timeout)
+    def startJPackage(self,jpackage,timeout=None):
+        if timeout==None:
+            timeout=startupTime
+        for pd in self.getProcessDefs4JPackage(jpackage):
+            pd.start(timeout)
 
-    def stopJPackage(self,jpackage,timeout=DEFAULT_TIMEOUT):
-        self.stopProcess(jpackage.domain, jpackage.name, timeout)
+    def stopJPackage(self,jpackage,timeout=20):        
+        for pd in self.getProcessDefs4JPackage(jpackage):
+            pd.stop(timeout)
+
+    def existsJPackage(self,jpackage):
+        return len(self.getProcessDefs4JPackage(jpackage))>0
+
+    def getProcessDefs4JPackage(self,jpackage):
+        result=[]
+        for pd in self.getProcessDefs():
+            if pd.jpackage_name==jpackage.name and pd.jpackage_domain==jpackage.domain:
+                result.append(pd)
+        return result
+
+        
 
     def startAll(self):
         for pd in self.getProcessDefs():
             if pd.autostart:
                 pd.start()
+
+    def restartAll(self):
+        for pd in self.getProcessDefs():
+            if pd.autostart:
+                pd.stop()
+                pd.start()
+
 
     def removeProcess(self,domain, name):
         self.stopProcess(domain, name)
