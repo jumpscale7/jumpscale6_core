@@ -233,11 +233,11 @@ class StartupManager:
         return jps[0]
 
 
-    def startProcess(self, domain, name, timeout=DEFAULT_TIMEOUT):
+    def startProcess(self, domain, name, timeout=20):
         for pd in self.getProcessDefs(domain, name):
             pd.start(timeout)
 
-    def stopProcess(self, domain,name, timeout=DEFAULT_TIMEOUT):
+    def stopProcess(self, domain,name, timeout=20):
         for pd in self.getProcessDefs(domain, name):
             pd.stop(timeout)
 
