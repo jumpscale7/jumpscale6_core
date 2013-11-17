@@ -9,6 +9,4 @@ class mainclass(parentclass):
         pass
 
 
-    def getObject(self,ddict={}):
-        obj=j.core.grid.zobjects.getZNodeObject(ddict=ddict)
-        return obj
+      	

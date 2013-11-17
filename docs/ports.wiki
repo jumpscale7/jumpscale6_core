@@ -14,5 +14,8 @@ agentcontroller
 
 elasticsearch 9200
 
+agentcontroller 4444
+
+
 
 

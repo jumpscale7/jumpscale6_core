@@ -3,6 +3,10 @@ import re
 import time
 from JumpScale import j
 import random
+
+
+import JumpScale.grid.osis
+
 client = j.core.osis.getClient()
 
 

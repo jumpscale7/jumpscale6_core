@@ -10,7 +10,7 @@ class IndexerWhoosh:
         if j.system.platformtype.isLinux():
             path = j.system.fs.joinPaths(j.dirs.baseDir, "lib", "python2.7", "site-packages", "whoosh")
             if not j.system.fs.exists(path):  # @todo use ext dir pm_extensionpath property
-                j.system.fs.symlink("/opt/qbase6/lib/openwizzyextensions/core/osis/whoosh", path)
+                j.system.fs.symlink("/opt/qbase6/lib/jumpscaleextensions/core/osis/whoosh", path)
 
         self.appname, self.actorname, self.modelname = name.split("_")
         self.indexdef = j.core.codegenerator.getClassWhoosh(self.appname, self.actorname, self.modelname)()

@@ -17,7 +17,7 @@ class Session():
         self.netinfo = netinfo
         self.start = int(time.time())
         self.roles = roles
-        self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.bid,j.application.whoAmI.nid)
+        self.agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
 
     def __repr__(self):
         return str(self.__dict__)
@@ -32,7 +32,8 @@ class SimpleClient(object):
 
 class DaemonClient(object):
 
-    def __init__(self, org="myorg", user="root", passwd="passwd", ssl=False, encrkey="", reset=False, roles=[], transport=None, defaultSerialization="m",id=None):
+    def __init__(self, org="myorg", user="root", passwd="passwd", ssl=False, encrkey="", reset=False, roles=[], \
+        transport=None, defaultSerialization="m",id=None):
         """
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
@@ -50,9 +51,9 @@ class DaemonClient(object):
         self.org = org
         self.passwd = passwd
         self.ssl = ssl
-        if roles==[]:
-            roles=j.application.config.get("node.roles").split(",")
-            roles=[item.strip().lower() for item in roles]
+        # if roles==[]:
+        #     roles=j.application.config.get("node.roles").split(",")
+        #     roles=[item.strip().lower() for item in roles]
 
         self.roles = roles
         self.keystor = None
@@ -181,7 +182,7 @@ class DaemonClient(object):
         self.transport.connect(self._id)
 
 
-    def getCmdClient(self, category):
+    def getCmdClient(self, category,sendformat="m", returnformat="m"):
         if category == "*":
             categories = self.sendcmd(category='core', cmd='listCategories')
             cl = SimpleClient(self)
@@ -189,10 +190,10 @@ class DaemonClient(object):
                 setattr(cl, category, self._getCmdClient(category))
             return cl
         else:
-            return self._getCmdClient(category)
+            return self._getCmdClient(category,sendformat,returnformat)
 
 
-    def _getCmdClient(self, category):
+    def _getCmdClient(self, category,sendformat="m", returnformat="m"):
         client = SimpleClient(self)
         methodspecs = self.sendcmd(category='core', cmd='introspect', cat=category)
         for key, spec in methodspecs.iteritems():
@@ -205,8 +206,10 @@ class Klass(object):
 
     def method(%s):
         '''%s'''
-        return self._client.sendcmd(cmd="%s", category=self._category, %s)
+        return self._client.sendcmd(cmd="%s", category=self._category, %s,sendformat="${sendformat}",returnformat="${returnformat}")
 """
+            strmethod=strmethod.replace("${sendformat}",sendformat)
+            strmethod=strmethod.replace("${returnformat}",returnformat)
             Klass = None
             args = ["%s=%s" % (x, x) for x in spec['args'][0][1:]]
             params_spec = spec['args'][0]

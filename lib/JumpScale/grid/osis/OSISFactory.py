@@ -1,8 +1,7 @@
 from JumpScale import j
-from OSIS import OSIS
-from OSISClient import OSISClient
 from OSISCMDS import OSISCMDS
 from OSISClientForCat import OSISClientForCat
+from OSISBaseObject import OSISBaseObject
 import random
 import imp
 import sys
@@ -15,37 +14,50 @@ class OSISFactory:
 
     def __init__(self):
         self.osisConnections = {}
+        self.osisConnectionsCat={}
 
     def getLocal(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None):
         """
         create local instance starting from path
         """
-        osis = OSIS()
-        osis.init(path, overwriteHRD, overwriteImplementation, namespacename)
+        osis=OSISCMDS()
+        osis.init()
         return osis
 
     def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None, port=5544):
         """
         start deamon
         """
-        osis = self.getLocal(path, overwriteHRD, overwriteImplementation, namespacename)
         zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
         zd.setCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
-        zd.daemon.cmdsInterfaces["osis"][-1].osis = osis  # is the first instance of the cmd interface
-
+        zd.daemon.cmdsInterfaces["osis"][-1].init()
         zd.start()
 
-    def getClient(self, ipaddr="localhost", port=5544):
+    def getClient(self, ipaddr="localhost", port=5544,user="root",passwd="rooter",ssl=False):
         key = "%s_%s" % (ipaddr, port)
         if self.osisConnections.has_key(key):
             return self.osisConnections[key]
-        self.osisConnections[key] = OSISClient(ipaddr, port)
+        # self.osisConnections[key] = OSISClient(ipaddr, port)
+        j.logger.log("get client to osis")
+        self.osisConnections[key] = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=port, category="osis",\
+            user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j")
         return self.osisConnections[key]
 
-    def getClientForCategory(self, namespace, category, ipaddr="localhost", port=5544):
-        client = self.getClient(ipaddr, port)
-        namespaceid, catid = client._getIds(namespace, category)
-        return OSISClientForCat(client, namespaceid, catid)
+    def getClientForCategory(self, client,namespace, category):
+        """
+        how to use
+
+        client=j.core.osis.getClient("localhost",port=5544,user="root",passwd="rooter",ssl=False)
+        client4node=j.core.osis.getClientForCategory(client,"system","node")
+        """        
+        key = "%s_%s_%s_%s" % (client._client.transport._addr, client._client.transport._port,namespace,category)
+        if self.osisConnectionsCat.has_key(key):
+            return self.osisConnectionsCat[key]
+        self.osisConnectionsCat[key]= OSISClientForCat(client, namespace, category)
+        return self.osisConnectionsCat[key]
+
+    def getOsisBaseObjectClass(self):
+        return OSISBaseObject
 
     def getOsisImplementationParentClass(self, namespacename):
         """

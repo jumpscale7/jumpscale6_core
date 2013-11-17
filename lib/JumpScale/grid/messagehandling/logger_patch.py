@@ -103,7 +103,7 @@ class LoggerPatch(object):
             self._messageServerClient.send(packedData)
 
     def _monkeyPatchLogger(self):
-        '''Monkey patches the qshell logger.'''
+        '''Monkey patches the jshell logger.'''
 
         j.logger.cleanup = _doNothing
         j.logger.cleanupLogsOnFilesystem = _doNothing

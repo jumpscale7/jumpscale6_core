@@ -1,6 +1,7 @@
 from JumpScale import j
 
 j.application.start("osisclient")
+j.application.initGrid()
 
 client = j.core.osis.getClient()
 # getNameIDsInfo
@@ -10,17 +11,34 @@ client = j.core.osis.getClient()
 # print client.get("system","errorcondition",eco.guid)
 
 
-def testSet():
+def testSet(client):
     for i in range(10):
-        obj = j.core.grid.zobjects.getZNodeObject(name="test%s" % i)
-        key, new, changed = client.set("system", "znode", obj)
+        obj = client.new()
+        obj.name="test%s" % i
+        obj.machineguid="guid_%s"%i
+        key, new, changed = client.set(obj)
 
-    obj = client.get("system", "znode", key)
+    obj = client.get(key)
 
     print obj
 
-# namespacename=client.createNamespace(name="broker_",forCoreObjects=True,incrementName=True)
-client.listNamespaces()
+    return obj
+
+client.createNamespace(name="testcoreobjects",template="coreobjects",incrementName=False)
+
+print client.listNamespaces()
+
+clientnode=j.core.osis.getClientForCategory(client,"testcoreobjects","node")
+
+obj=testSet(clientnode)
+
+
+
+from IPython import embed
+print "DEBUG NOW main in test script osis"
+embed()
+
+
 
 j.application.stop()
 

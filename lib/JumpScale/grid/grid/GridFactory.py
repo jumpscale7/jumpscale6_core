@@ -1,36 +1,14 @@
 from JumpScale import j
 
-from CoreModel.ZNode import ZNode
-from CoreModel.ZJob import ZJob
-from CoreModel.ZAction import ZAction
-from CoreModel.ZApplication import ZApplication
-from CoreModel.ZProcess import ZProcess
 from CoreModel.ModelObject import ModelObject
-
+import JumpScale.grid.osis
 #from ZBrokerClient import ZBrokerClient
+from collections import namedtuple
 
 import time
 
 
 class ZCoreModelsFactory():
-
-    def getZNodeObject(self, ddict={}, roles=[], name="", netaddr={}, machineguid="", id=0):
-        """
-        @ddict is to directly transform an dict obj to this object = faster, if not given then use the other properties
-        """
-        return ZNode(ddict, roles, name, netaddr, machineguid)
-
-    def getZJobObject(self, ddict={}, executorrole="", actionid=0, args={}, jidmaster=0, jidparent=0, allworkers=True):
-        return ZJob(ddict, executorrole, actionid, args=args, jidmaster=jidmaster, jidparent=jidparent, allworkers=allworkers)
-
-    def getZActionObject(self, ddict={}, name="", code="", md5="", path="", category="", errordescr="", recoverydescr="", maxtime=0):
-        return ZAction(ddict, name, code, md5, path, category, errordescr, recoverydescr, maxtime)
-
-    def getZApplicationObject(self, ddict={}, name="", description=""):
-        return ZApplication(ddict, name, description)
-
-    def getZProcessObject(self, ddict={}, name="", description="", type="", instance=0, systempid=0):
-        return ZProcess(ddict, name, description, type, instance, systempid)
 
     def getModelObject(self, ddict={}):
         return ModelObject(ddict)
@@ -41,78 +19,88 @@ class GridFactory():
     def __init__(self):
         self.brokerClient = None
         self.zobjects = ZCoreModelsFactory()
-        self._id = None
+        self.id = None
+        self.nid=None
         self.config = None
-        self._bid = None
 
-    def _loadConfig(self):
+    def _loadConfig(self,test=True):
         if not j.application.__dict__.has_key("config"):
-            raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart qshell")
+            raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart jshell")
         self.config = j.application.config
 
         if self.config == None:
-            raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart qshell")
+            raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart jshell")
 
         self.id = self.config.getInt("grid.id")
-        self.bid = self.config.getInt("grid.broker.id")
-        if self._id == 0:
-            j.errorconditionhandler.raiseInputError(msgpub="Grid needs grid id to be filled in in grid config file", message="", category="", die=True)
+        self.nid = self.config.getInt("grid.node.id")
 
-    def init(self, broker=None):
+        if test:
+
+            if self.id == 0:
+                j.errorconditionhandler.raiseInputError(msgpub="Grid needs grid id to be filled in in grid config file", message="", category="", die=True)
+
+            if self.nid == 0:
+                j.errorconditionhandler.raiseInputError(msgpub="Grid needs grid node id (grid.nid) to be filled in in grid config file", message="", category="", die=True)
+
+
+    def init(self,description="",instance=1):
         """
         """
-        self._loadConfig()
+        self._loadConfig(test=False)
 
         # make sure we only log to stdout
         j.logger.logTargets = []
 
         j.logger.consoleloglevel = 6
 
-        self.nodeobject = j.core.grid.zobjects.getZNodeObject()
+        self.masterip=j.application.config.get("grid.master.ip")
 
-        while not self.isbrokerActive(die=False, broker=broker):
-            print "Cannot connect to broker, will try again in 1 sec."
-            time.sleep(1)
+        if not j.system.net.waitConnectionTest(self.masterip,5544,10):
+            raise RuntimeError("Could not connect to master osis")
 
-        self.nid = j.core.grid.config.getInt("node.id")
-        if self.bid == 0 or self.nid == 0 or j.core.grid.config.get("node.machineguid") == "":
-            if broker <> None:
-                nodeid2 = 0
-                bid2 = broker.id
-            else:
-                nodeid2, bid2 = self.registerNode()
-            if self.nid == 0:
-                self.config.set("node.id", nodeid2)
-                self.nid = int(nodeid2)
-            if self.bid == 0:
-                self.config.set("grid.broker.id", bid2)
-                self.bid = int(bid2)
+        self.gridOsisClient=j.core.osis.getClient(self.masterip)
 
-        self.aid = self.brokerClient.registerApplication(name=j.application.appname, description="", pid=j.application.whoAmI[2])
+        if self.nid == 0:
+            jp=j.packages.findNewest("jumpscale","grid_node")
+            jp.configure()
+            self.nid = j.core.grid.config.getInt("grid.nid")
 
-        self.processobject = j.core.grid.zobjects.getZProcessObject()
-        self.processobject.systempid = j.application.whoAmI[2]
+            self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
-        if self.processobject.name == "":
-            self.processobject.name = j.application.appname
+            self._loadConfig()
 
-        self.pid = self.brokerClient.registerProcess(obj=self.processobject.__dict__)
+        self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
-        self.processobject.id = self.pid
-        self.processobject.getSetGuid()
+        clientprocess=j.core.osis.getClientForCategory(self.gridOsisClient,"system","process")
 
-        self.processobject.lastJobId = 0
+        clientapplication=j.core.osis.getClientForCategory(self.gridOsisClient,"system","applicationtype")
 
-        j.application.initWhoAmI(grid=True)
+        obj=clientapplication.new(name=j.application.appname,gid=j.application.whoAmI.gid,type="js",description=description)
+        key,new,changed=clientapplication.set(obj)
+        obj=clientapplication.get(key)
+        aid=obj.id
+
+        obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,nid=j.application.whoAmI.nid,\
+            systempid=j.application.systempid,\
+            aid=aid,instance=instance)
+        key,new2,changed2=clientprocess.set(obj2)
+        obj=clientprocess.get(key)
+        pid=obj.id
+
+        self.pid = pid
+        self.processObject=obj
+
+        WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
+        j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=pid)
 
         j.logger.consoleloglevel = 5
         j.logger.setLogTargetLogForwarder()
 
-    def getLocalIPAccessibleBybroker(self):
-        return j.system.net.getReachableIpAddress(self.config.get("grid.broker.ip"), 555)
+    def getLocalIPAccessibleByGridMaster(self):
+        return j.system.net.getReachableIpAddress(self.config.get("grid.master.ip"), 5544)
 
-    def isbrokerLocal(self):
-        broker = self.config.get("grid.broker.ip")
+    def isGridMasterLocal(self):
+        broker = self.config.get("grid.master.ip")
         if broker.find("localhost") != -1 or broker.find("127.0.0.1") != -1:
             return True
         else:
@@ -168,47 +156,6 @@ class GridFactory():
         path = j.system.fs.joinPaths(j.dirs.cfgDir, "grid", "broker.hrd")
         j.system.fs.writeFile(path, contents=C)
 
-    def registerNode(self):
-        j.logger.log("Register node to broker", level=4, category="grid.startup")
-
-        self.nodeobject.machineguid = j.application.getUniqueMachineId().replace(":", "")
-        znode = self.nodeobject
-        j.core.grid.config.set("node.machineguid", znode.machineguid)
-        roles = self.config.get("node.roles").split(",")
-        name = self.config.get("node.name")
-        netaddr = j.system.net.getNetworkInfo()
-        znode.netaddr = netaddr
-        znode.name = name
-        znode.roles = roles
-        nid, bid = self.brokerClient.registerNode(znode.__dict__)
-        j.logger.log("NodeId=%s,BrokerId=%s" % (nid, bid), level=3, category="grid.startup")
-
-        return nid, bid
-
-    def configureNode(self, gridid=0, name="", roles=[], brokerip="localhost", brokerport="5554"):
-        """
-        create base config files for the node
-        """
-        if name == "":
-            # look for hostname
-            name = j.system.net.getHostname()
-
-        C = "node.name=%s\n" % name
-        if j.basetype.list.check(roles):
-            roles = ",".join(roles)
-        C += "node.roles=%s\n" % roles
-        C += "node.id=0\n"
-        C += "node.machineguid=\n"
-        C += "grid.id=%s\n" % gridid
-        C += "grid.broker.ip=%s\n" % brokerip
-        C += "grid.broker.port=%s\n" % brokerport
-        C += "grid.broker.id=0\n"
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.cfgDir, "grid"))
-        path = j.system.fs.joinPaths(j.dirs.cfgDir, "grid", "node.hrd")
-        j.system.fs.writeFile(path, contents=C)
-        j.application.initWhoAmI()
-        self._loadConfig()
-
     def startBroker(self):
         from ZBroker import ZBroker
         self._loadConfig()
@@ -220,7 +167,7 @@ class GridFactory():
         from ZWorkerClient import ZWorkerClient
         return ZWorkerClient(ipaddr=ipaddr)
 
-    def getZLoggerClient(self, ipaddr="localhost", port=4444):
+    def getZLoggerClient(self, ipaddr="localhost", port=4443):
         from ZLoggerClient import ZLoggerClient
         return ZLoggerClient(ipaddr=ipaddr, port=port)
 
