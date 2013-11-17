@@ -41,8 +41,8 @@ class ZDaemonTransport(Transport):
         res = j.system.net.waitConnectionTest(self._addr, self._port, 10)
 
         if res == False:
-            msg = "Could not find a running server instance  on %s:%s" % (self._addr, self._port)
-            raise RuntimeError("s")
+            msg = "Could not find a running server instance on %s:%s" % (self._addr, self._port)
+            raise RuntimeError(msg)
             j.errorconditionhandler.raiseOperationalCritical(msgpub=msg, message="", category="zdaemonclient.init", die=True)
         j.logger.log("server is reachable on %s on port %s" % (self._addr, self._port), level=4, category='zdaemon.client.init')
 

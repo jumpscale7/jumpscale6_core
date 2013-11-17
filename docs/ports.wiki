@@ -1,13 +1,10 @@
 
 
-circusd
-circus statd
-circus web : 8080
-
 osis 5544
 
 zbroker 5651  #for clients
 zbroker 5650  #for workers
+
 zlogger 4443
 
 agentcontroller 
@@ -15,6 +12,12 @@ agentcontroller
 elasticsearch 9200
 
 agentcontroller 4444
+
+gridportal 9900
+
+nginx 80
+
+
 
 
 

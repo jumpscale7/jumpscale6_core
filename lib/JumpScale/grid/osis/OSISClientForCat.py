@@ -20,7 +20,13 @@ class OSISClientForCat():
                     name=line.split("(")[0].lstrip("class ")
             if name=="":
                 raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
-            exec(klass)
+            try:
+                exec(klass)
+            except Exception,e:
+                from IPython import embed
+                print "DEBUG NOW error in _getModelClass, OSISClientForCat"
+                embed()
+                
             resultclass=eval(name)
             self.objectclass=resultclass
 
