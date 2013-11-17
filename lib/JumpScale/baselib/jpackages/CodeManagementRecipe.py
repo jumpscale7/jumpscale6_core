@@ -1,7 +1,7 @@
 
 from JumpScale import j
 
-class RecipeItem:
+class RecipeItem(object):
     '''Ingredient of a CodeRecipe'''
     def __init__(self, repoinfo,source, destination,platform="generic",type="base",tags=""):
         """
@@ -219,6 +219,7 @@ class CodeManagementRecipe:
     Recipe providing guidelines how to cook a JPackage from source code in a repo, is populated from a config file
     '''
     def __init__(self,hrdpath,configpath):
+        self._repoconnection = None
         self.configpath=configpath
         self.hrd=j.core.hrd.getHRD(hrdpath)
         self.items = []
@@ -305,42 +306,37 @@ class CodeManagementRecipe:
         return self.pullupdate(force=force)
     
     def pullupdate(self,force=False):
-        repoconnections = self._getRepoConnections()
-        for repoconnection in repoconnections:
-            #item.pullupdate(force=force)    
-            repoconnection.pullupdate()
+        repoconnection = self._getRepoConnection()
+        repoconnection.pullupdate()
 
     def pullmerge(self):
-        repoconnections = self._getRepoConnections()
-        for repoconnection in repoconnections:
-            #item.pullupdate(force=force)    
-            repoconnection.pullmerge()        
+        repoconnection = self._getRepoConnection()
+        repoconnection.pullmerge()        
             
     def commit(self):
-        repoconnections = self._getRepoConnections()
-        for repoconnection in repoconnections:
-            #item.pullupdate(force=force)    
-            repoconnection.commit()                
+        repoconnection = self._getRepoConnection()
+        repoconnection.commit()                
 
-    # def identify(self):
-    #     repoconnections = self._getRepoConnections()
-    #     identities = {}
-    #     for repoconnection in repoconnections:
-    #         identity = repoconnection.identify()
-    #         key = repoconnection.repokey
-    #         if not key:
-    #             raise ValueError("Repository %s has no valid repokey" %
-    #                     repoconnection)
-    #         identities[key] = identity
 
-    #     return identities
+    def _getSource(self, source):
+        con = self._getRepoConnection()
+        return j.system.fs.joinPaths(con.basedir, source)
 
-    def _getRepoConnections(self):
-        repoconnections = []
-        for item in self.items:
-            if item.coderepoConnection not in repoconnections:
-                repoconnections.append(item.coderepoConnection)
-        return repoconnections
+    def _getRepoConnection(self):
+        if self._repoconnection:
+            return self._repoconnection
+        account=self.hrd.get("jp.code.account")
+        repo=self.hrd.get("jp.code.repo")
+        branch=self.hrd.get("jp.code.branch")
+        ttype=self.hrd.get("jp.code.type")
+        if ttype == "bitbucket":
+            branch = branch or 'default'
+            self._repoconnection = j.clients.bitbucket.getRepoConnection(account, repo, branch)
+            return self._repoconnection
+        elif ttype == "github":
+            pass
+        else:
+            raise RuntimeError("Connection of type %s not supported" % ttype)
 
     def isDestinationClean(self):
         '''Check whether the final destination is clean (means do the folders exist)
