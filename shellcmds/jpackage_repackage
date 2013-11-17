@@ -12,7 +12,7 @@ parser.add_argument('--merge', dest="merge", default=False, action="store_true",
 
 
 
-packages, args = cmdutils.getJPackage(parser,installed=True)
+packages, args = cmdutils.getJPackage(parser,installed=False)
 domains = { jp.domain for jp in packages }
 
 for domain in domains:
