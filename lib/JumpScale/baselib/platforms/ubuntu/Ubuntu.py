@@ -11,7 +11,7 @@ class Ubuntu:
         try:
             import apt
         except ImportError:
-            #we dont wont qshell to break, self.check will take of this
+            #we dont wont jshell to break, self.check will take of this
             return
         apt.apt_pkg.init()
         if hasattr(apt.apt_pkg, 'Config'):

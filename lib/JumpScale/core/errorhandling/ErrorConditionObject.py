@@ -67,7 +67,6 @@ class ErrorConditionObject():
             self.appname=j.application.appname #name as used by application
             self.gid = j.application.whoAmI.gid
             self.nid = j.application.whoAmI.nid
-            self.bid = j.application.whoAmI.bid
             if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
                 self.aid = j.core.grid.aid
             self.pid = j.application.whoAmI.pid
@@ -76,7 +75,7 @@ class ErrorConditionObject():
 
             self.epoch= j.base.time.getTimeEpoch()
             self.tags=""
-            self.type=int(type) #j.enumerators.ErrorConditionType
+            self.type=int(type) #j.enumerators.ErrorConditionType            
 
     def toAscii(self):
         def _toAscii(s):
@@ -147,7 +146,7 @@ class ErrorConditionObject():
         try:
             k="%s"%k
             v="%s"%v
-            if k in ["re","q","jumpscale","pprint","qexec","qshell","Shell","__doc__","__file__","__name__","__package__","i","main","page"]:
+            if k in ["re","q","jumpscale","pprint","qexec","jshell","Shell","__doc__","__file__","__name__","__package__","i","main","page"]:
                 return False
             if v.find("<module")<>-1:
                 return False

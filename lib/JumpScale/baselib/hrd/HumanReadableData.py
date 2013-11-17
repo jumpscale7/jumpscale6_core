@@ -21,8 +21,13 @@ class HumanReadableDataFactory:
 
         return HRD(path=path)        
 
+    def _normalizeKey(self,key):
+        return str(key).lower().replace(".","_")
 
     def replaceVarsInText(self,content,hrdtree,position=""):
+        if content=="":
+            return content
+            
         items=j.codetools.regex.findAll(r"\$\([\w.]*\)",content)
         j.core.hrd.log("replace vars in hrdtree:%s"%hrdtree.path,"replacevar",7)
         if len(items)>0:
@@ -30,8 +35,7 @@ class HumanReadableDataFactory:
                 # print "look for : %s"%item
                 item2=item.strip(" ").strip("$").strip(" ").strip("(").strip(")")
 
-                if position<>"":
-                
+                if position<>"":                
                     newcontent=hrdtree.get(item2,position=position,checkExists=True)
                 else:
                     newcontent=hrdtree.get(item2,checkExists=True)
@@ -39,6 +43,8 @@ class HumanReadableDataFactory:
                 # print "nc:%s"%newcontent
                 if newcontent<>False:
                     content=content.replace(item,newcontent)
+                # else:
+                #     print "notfound:%s"%item
         return content
 
     def getHRDFromOsisObject(self,osisobj,prefixRootObjectType=True):
@@ -71,7 +77,7 @@ class HRDPos():
 
     def set(self,key,value,persistent=True,position=""):
 
-        key2=self._normalizeKey(key)
+        key2=j.core.hrd._normalizeKey(key)
         # print "set:'%s':'%s'"%(key,value)        
         self.__dict__[key2]=value
         if persistent==True:
@@ -80,7 +86,7 @@ class HRDPos():
 
     def getHRD(self,key,position=""):
         if len(self._hrds.keys())==1:
-            return self._hrds[0]
+            return self._hrds[self._hrds.keys()[0]]
         key=key.replace(".","_")
         if key not in self._key2hrd:
             self._reloadCache()
@@ -99,11 +105,8 @@ class HRDPos():
             self.__dict__[key]=hrd.__dict__[key]
             self._key2hrd[key]=hrdpos
 
-    def _normalizeKey(self,key):
-        return str(key).lower().replace(".","_")
-
     def get(self,key,checkExists=False):
-        key=self._normalizeKey(key)        
+        key=j.core.hrd._normalizeKey(key)        
         if key not in self.__dict__:
             self._reloadCache()
             if key not in self.__dict__:
@@ -138,8 +141,9 @@ class HRDPos():
         return res.split(",")
 
     def prefix(self, key):
-        key = self._normalizeKey(key)
+        key = j.core.hrd._normalizeKey(key)
         for knownkey in self.__dict__.keys():
+            # print "prefix: %s - %s"%(knownkey,key)
             if knownkey.startswith(key):
                 yield knownkey.replace('_', '.')
 
@@ -197,6 +201,7 @@ class HRDPos():
 class HRD():
     def __init__(self,path="",treeposition="",tree=None,content=""):
         self._path=path
+        self.path=self._path
         self._tree=tree
         self._treeposition=  treeposition
         self.process(content)
@@ -299,9 +304,11 @@ class HRD():
         self._path=self._path.replace("  "," ")
 
     def prefix(self, key):
+        key = j.core.hrd._normalizeKey(key)
         for knownkey in self.__dict__.keys():
+            # print "prefix: %s - %s"%(knownkey,key)
             if knownkey.startswith(key):
-                yield knownkey
+                yield knownkey.replace('_', '.')
 
     def get(self,key,checkExists=False):
         key=key.lower()
@@ -309,7 +316,7 @@ class HRD():
         if not self.__dict__.has_key(key2):
             if checkExists:
                 return False
-            raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
+            raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self.path))
 
         val= self.__dict__[key2]
 
@@ -421,13 +428,15 @@ class HRD():
 
         return result
         
-
     def checkValidity(self,template):
         """
         @param template is example hrd which will be used to check against, if params not found will be added to existing hrd and error will be thrown to allow user to configure settings
         """
         error=False
         for line in template.split("\n"):
+            line=line.strip()
+            if line=="" or line[0]=="#":
+                continue
             if line.find("=")<>-1:
                 items=line.split("=")
                 if len(items)>2:
@@ -480,6 +489,30 @@ class HRD():
 
     def setDict(self,dictObject):
         self.__dict__.update(dictObject)
+
+    def applyOnDir(self,path,filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
+        j.core.hrd.log("hrd:%s apply on dir:%s "%(self._path,path),category="apply")
+        
+        items=j.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
+        for item in items:
+            if changeFileName:
+                item2=j.core.hrd.replaceVarsInText(item,self)
+                if item2<>item:
+                     j.system.fs.renameFile(item,item2)
+                    
+            if changeContent:
+                self.applyOnFile(item2)
+
+    def applyOnFile(self,path):
+        j.core.hrd.log("hrd:%s apply on file:%s"%(self.path,path),category="apply")
+        content=j.system.fs.fileGetContents(path)
+
+        content=j.core.hrd.replaceVarsInText(content,self)
+        j.system.fs.writeFile(path,content)
+
+    def applyOnContent(self,content):
+        content=j.core.hrd.replaceVarsInText(content,self)
+        return content
 
     def __repr__(self):
         # parts = ["path:%s"%self._path]
@@ -694,8 +727,13 @@ class HumanReadableDataTree():
     def applyOnFile(self,path,position=""):
         j.core.hrd.log("hrd:%s apply on file:%s in position:%s"%(self.path,path,position),category="apply")
         content=j.system.fs.fileGetContents(path)
+
         content=j.core.hrd.replaceVarsInText(content,self,position)
         j.system.fs.writeFile(path,content)
+
+    def applyOnContent(self,content,position=""):
+        content=j.core.hrd.replaceVarsInText(content,self,position)
+        return content
 
     def __repr__(self):
         parts = []

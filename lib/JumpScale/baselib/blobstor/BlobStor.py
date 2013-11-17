@@ -64,12 +64,14 @@ class BlobStor:
         targetDirPath = j.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
 
         try:
-            resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key}))
+            resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key})) #@todo gives error when source not found, need other method
             resultGz = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key})) or \
                        j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key}))
         except Exception, e:
-            j.console.echo("Error in cloudsystem: %s" % e)
-            raise RuntimeError("Could not check existence of key %s in blobstor %s in namespace %s, there was error.\n%s" % (key, self.name, self.namespace, e))
+            if str(e).find("Name or service not known")<>-1:
+                raise RuntimeError("Check network connection to %s"%j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key}))
+            msg="Could not check existence of key %s in blobstor %s in namespace %s, there was error:\n%s" % (key, self.name, self.namespace,e)
+            raise RuntimeError(msg)
         return resultMeta and resultGz
 
     def getMetadata(self, key):
@@ -189,7 +191,7 @@ class BlobStor:
                 
         j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
 
-    def put(self, path, type="", expiration=0, tags="", blobstors=[], prevkey=None):
+    def put(self, path, type="", expiration=0, tags="", blobstors=[]):
         """
         put file or directory to blobstor
         @param expiration in hours
@@ -246,7 +248,6 @@ class BlobStor:
 
         metadata = BlobMetadata(descr, hashh)
 
-        #if hashh==prevkey or self.exists(hashh):
         if self.exists(hashh):
             j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,self.name,self.namespace),category="upload",level=5)
 

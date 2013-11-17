@@ -100,8 +100,8 @@ class LogItem(object):
             self.level=5
         self.category = category.replace(".", "_")
         if j.application.whoAmI:
+            
             self.gid = j.application.whoAmI.gid
-            self.bid = j.application.whoAmI.bid
             self.nid = j.application.whoAmI.nid
             self.pid = j.application.whoAmI.pid
             if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
@@ -115,8 +115,8 @@ class LogItem(object):
         self.masterjid = int(masterjid)
         self.epoch = int(epoch) or j.base.time.getTimeEpoch()
         j.logger.order += 1
-        if j.logger.order > 100000:
-            j.logger.order = 1
+        # if j.logger.order > 10000:
+        #     j.logger.order = 1
         self.order = j.logger.order
         if private == True or int(private) == 1:
             self.private = 1
@@ -202,12 +202,12 @@ class LogHandler(object):
         there will be only logging to stdout (if q.loghandler.consoleloglevel set properly)
         & to the LogForwarder
         """
-        from logtargets.LogTargetClientDaemon import LogTargetClientDaemon
+        from logtargets.LogTargetLogForwarder import LogTargetLogForwarder
         self.logs=[]
         self.inlog=False
         self.logTargets=[]
         self.order=0
-        self.clientdaemontarget =LogTargetClientDaemon(serverip)
+        self.clientdaemontarget =LogTargetLogForwarder(serverip)
 
     def disable(self):
         self.enabled = False

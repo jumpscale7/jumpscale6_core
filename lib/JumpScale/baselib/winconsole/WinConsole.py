@@ -118,7 +118,7 @@ $tabs
         self.tabs=[]
         self.tabCmd=[]
         self.addTab("console","","")
-        self.addTab("qshell","","qshell.bat")
+        self.addTab("jshell","","jshell.bat")
 
 
     def writeConfig(self):

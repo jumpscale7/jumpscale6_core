@@ -10,7 +10,7 @@ try:
     import JumpScale.baselib.expect
 except:
     pass
-from CodeManagementRecipe import CodeManagementRecipe
+    
 from JumpScale.baselib import platforms
 
 class JPackageClient():
@@ -26,7 +26,6 @@ class JPackageClient():
         """
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metadata"))
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "files"))
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "bundles"))
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metatars"))
         self.domains=[]
         self._metadatadirTmp=j.system.fs.joinPaths(j.dirs.varDir,"tmp","jpackages","md")
@@ -41,6 +40,10 @@ class JPackageClient():
 
         self.logenable=True
         self.loglevel=5
+        self.errors=[]
+
+    def reportError(self,msg):
+        self.errors.append(msg)
 
     def log(self,msg,category="",level=5):
         if level<self.loglevel+1 and self.logenable:
@@ -171,9 +174,6 @@ class JPackageClient():
 ##################  GET FUNCTIONS  #########################
 ############################################################
 
-    def getCodeManagementRecipe(self):
-        return CodeManagementRecipe()
-
     def get(self, domain, name, version):
         """
         Returns a jpackages 
@@ -190,24 +190,7 @@ class JPackageClient():
         self._getcache[key]=JPackageObject(domain, name, version)
         return self._getcache[key]
 
-    def downloadAllBundles(self,die=True):
-        """
-        Downloads all bundles from all packages in all domains from the repos
-        """
-        for package in self.getJPackageObjects():
-            if die==False:
-                try:
-                    package.download(allplatforms=True)
-                except:
-                    j.console.echo("could not download package %s" % package.name)
-            else:
-                package.download()
                     
-                
-    def copyAllBundlesToNewStorageLocation(self,path,die=True,appendDescr=True):
-        for package in self.getJPackageObjects():
-            package.copyBundleToNewStorageLocation(path,die=die,appendDescr=appendDescr)
-
     def exists(self,domain,name,version):
         """
         Checks whether the jpackages's metadata path is currently present on your system
@@ -219,6 +202,12 @@ class JPackageClient():
         Returns a list of all currently installed packages on your system
         """
         return [p for p in self.getJPackageObjects(j.system.platformtype.myplatform) if p.isInstalled()]
+
+    def getDebugPackages(self):
+        """
+        Returns a list of all currently installed packages on your system
+        """
+        return [p for p in self.getJPackageObjects(j.system.platformtype.myplatform) if int(p.state.debugMode)==1]
 
     def getPackagesWithBrokenDependencies(self):
         """
@@ -319,18 +308,8 @@ class JPackageClient():
     def getMetaTarPath(self, domainName):
         """
         Returns the metatarsdatapath for the provided domain
-        This is the place where the .tgz bundles are stored for each domain
         """
         return j.system.fs.joinPaths(j.dirs.packageDir, "metatars", domainName)
-
-    # This is a name inconsitency with jpackages.getPathFiles
-    #                                          .getPathBundles
-    # Put Path in front or in back, but not both?
-    def getBundlesPath(self):
-        """
-        Returns the bundlesdatapath where all bundles are stored for all different domains
-        """
-        return j.system.fs.joinPaths(j.dirs.packageDir, "bundles")
 
 
 ############################################################
@@ -362,11 +341,12 @@ class JPackageClient():
         @param platform:   string - Which platform the jpackages must run on
         @param returnNoneIfNotFound: boolean - if true, will return None object if no jpackages have been found
         """
-        results0=self.find(domain=domain,name=name)
-        results=[]
-        for item in results0:    
-            if item.supportsPlatform(platform=None):
-                results.append(item)
+        results=self.find(domain=domain,name=name)
+
+        # results=[]
+        # for item in results0:    
+        #     if item.supportsPlatform(platform=None):
+        #         results.append(item)
 
         namefound=""
         domainfound=""
@@ -409,16 +389,27 @@ class JPackageClient():
             name+="*"
         return self.find(name=name)
     
-    def find(self, domain="",name="" , version="", platform=None,onlyone=False):
+    def find(self, domain=None,name=None , version="", platform=None,onlyone=False,installed=None):
         """ 
-        
+        @domain, if none will ask for domain
+
         """
-        if name=="":
+        if domain==None:
+            domains=j.console.askChoiceMultiple(j.packages.getDomainNames())
+            result=[]
+            for domain in domains:
+                result+=self.find(domain=domain,name=name , version=version, platform=platform,onlyone=onlyone,installed=installed)
+            return result
+
+        if name==None:
             name = j.console.askString("Please provide the name or part of the name of the package to search for (e.g *extension* -> lots of extensions)")
 
         res = self._find(domain=domain, name=name, version=version)
         if not res:
             j.console.echo('No packages found, did you forget to run jpackage_update?')
+
+        if installed==True:
+            res=[item for item in res if item.isInstalled()]
         
         if onlyone:
             if len(res) > 1:
@@ -494,13 +485,17 @@ class JPackageClient():
                         res.append([domainName,packagename,version])
         return res
 
-    def getJPackageObjects(self, platform='generic', domain=None):
+    def getJPackageObjects(self, platform=None, domain=None):
         """
         Returns a list of jpackages objects for specified platform & domain
         """
+        packageObjects = [self.get(*p) for p in self._getJPackageTuples()]
+        if platform==None:
+            return [p for p in packageObjects if (domain == None or p.domain == domain)]
+
         def hasPlatform(package):
             return any([supported in j.system.platformtype.getParents(platform) for supported in package.supportedPlatforms])
-        packageObjects = [self.get(*p) for p in self._getJPackageTuples()]
+
         return [p for p in packageObjects if hasPlatform(p) and (domain == None or p.domain == domain)]
 
     def getPackagesWithBrokenDependencies(self):

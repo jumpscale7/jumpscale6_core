@@ -5,7 +5,7 @@ import struct
 from JumpScale.core.enumerators import AppStatusType
 from collections import namedtuple
 
-WhoAmI = namedtuple('WhoAmI', 'gid bid nid pid')
+WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
 
 #@todo Need much more protection: cannot change much of the state (e.g. dirs) once the app is running!
 #@todo Need to think through - when do we update the jpidfile (e.g. only when app is started ?)
@@ -23,53 +23,52 @@ class Application:
         self._calledexit = False
         self.skipTraceback = False
 
-        self._whoAmIBytestr = None
-        self._whoAmI = None
+        self.whoAmIBytestr = None
+        self.whoAmI = WhoAmI(0,0,0)
 
         self.config = None
 
-    @property
-    @j.logger.nologger
-    def whoAmI(self):
-        if not self._whoAmI:
-            self.initWhoAmI()
-        return self._whoAmI
+        self.gridinit=False
 
-    @property
-    @j.logger.nologger
-    def whoAmIBytestr(self):
-        if not self._whoAmIBytestr:
-            self.initWhoAmI()
-        return self._whoAmIBytestr
-
-    def initWhoAmI(self,grid=False):
+    def initWhoAmI(self):
         """
         when in grid:
-            is gid,bid,nid,pid
+            is gid,nid,pid
         """
 
-        self.loadConfig()
-        if self.config != None and self.config.exists('node.id'):
-            nodeid = self.config.getInt("node.id")
-            gridid = self.config.getInt("grid.id")
-            j.logger.log("gridid:%s,nodeid:%s"%(gridid, nodeid), level=3, category="application.startup")
-        else:
-            gridid = 0
-            nodeid = 0
+        if not self.whoAmIBytestr:
 
-        if grid:
-            self._whoAmI = WhoAmI(gid=j.core.grid.processobject.gid,bid=j.core.grid.processobject.bid,\
-                nid=j.core.grid.processobject.nid,pid=j.core.grid.processobject.id)
-            self._whoAmIBytestr = struct.pack("<hhhh", self._whoAmI.pid,self._whoAmI.nid, self._whoAmI.bid, self._whoAmI.gid)
-        else:
-            self._whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=os.getpid(), bid=0)
-            self._whoAmIBytestr = struct.pack("<hhh", self._whoAmI.pid, self._whoAmI.nid, self._whoAmI.gid)
+            self.loadConfig()
+            
+            if self.config != None and self.config.exists('grid.node.id'):
+                nodeid = self.config.getInt("grid.node.id")
+                gridid = self.config.getInt("grid.id")
+                j.logger.log("gridid:%s,nodeid:%s"%(gridid, nodeid), level=3, category="application.startup")
+            else:
+                gridid = 0
+                nodeid = 0
 
-        if self.config.exists("python.paths.local.sitepackages"):
-            sitepath=self.config.get("python.paths.local.sitepackages")            
-            if sitepath not in sys.path:
-                sys.path.append(sitepath)
-        
+            self.systempid=os.getpid()
+
+            self.whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=self.systempid)
+
+            self.whoAmIBytestr = struct.pack("<hhh", self.whoAmI.pid, self.whoAmI.nid, self.whoAmI.gid)
+
+            if self.config.exists("python.paths.local.sitepackages"):
+                sitepath=self.config.get("python.paths.local.sitepackages")            
+                if sitepath not in sys.path:
+                    sys.path.append(sitepath)
+
+
+            # if gridid<>0:
+            #     import JumpScale.grid
+            #     j.core.grid.init()
+
+
+    def initGrid(self):
+        import JumpScale.grid
+        j.core.grid.init()
+        self.gridinit=True
 
     def getWhoAmiStr(self):
         return "_".join([str(item) for item in self.whoAmI])
@@ -104,7 +103,7 @@ class Application:
         # Set state
         self.state = AppStatusType.RUNNING
 
-        self.initWhoAmI()
+        # self.initWhoAmI()
 
         j.logger.log("Application %s started" % self.appname, level=8, category="jumpscale.app")
 
@@ -133,11 +132,11 @@ class Application:
         except:
             pass
 
-        # Write exitcode
-        if self.writeExitcodeOnExit:
-            exitcodefilename = j.system.fs.joinPaths(j.dirs.tmpDir, 'qapplication.%d.exitcode'%os.getpid())
-            j.logger.log("Writing exitcode to %s" % exitcodefilename, 5)
-            j.system.fs.writeFile(exitcodefilename, str(exitcode))
+        # # Write exitcode
+        # if self.writeExitcodeOnExit:
+        #     exitcodefilename = j.system.fs.joinPaths(j.dirs.tmpDir, 'qapplication.%d.exitcode'%os.getpid())
+        #     j.logger.log("Writing exitcode to %s" % exitcodefilename, 5)
+        #     j.system.fs.writeFile(exitcodefilename, str(exitcode))
 
         # Closing the LogTargets
         j.logger.close()
@@ -147,6 +146,13 @@ class Application:
 
         self._calledexit = True  # exit will raise an exception, this will bring us to _exithandler
                               # to remember that this is correct behaviour we set this flag
+
+        #tell gridmaster the process stopped
+        if self.gridinit:
+            client=j.core.grid.gridOsisClient
+            clientprocess=j.core.osis.getClientForCategory(client,"system","process")
+            j.core.grid.processObject.epochstop=j.base.time.getTimeEpoch()
+            clientprocess.set(j.core.grid.processObject)
         sys.exit(exitcode)
 
     def _exithandler(self):

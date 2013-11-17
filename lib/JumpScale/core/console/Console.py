@@ -338,10 +338,6 @@ class Console:
         @return: the input numbers
         @rtype: list<number>
         """
-        def f():
-            s = self.askString(question)
-            return s.split(",")
-
         def clean(l):
             try:
                 return [int(i.strip()) for i in l if i.strip() != ""]
@@ -359,7 +355,12 @@ class Console:
         def invalid(l):
             return len(l) == 0 or (not all_between(l, min, max))
 
-        parts = clean(f())
+        s = self.askString(question)
+        if s.find("*")<>-1:
+            return ["*"]
+        s=s.split(",")
+
+        parts = clean(s)
         while invalid(parts):
             self.echo(invalid_message)
             parts = clean(f())
@@ -525,6 +526,7 @@ class Console:
                                    "Invalid choice, please try again",
                                    min=0,
                                    max=len(choicearray))
+
         if results==["*"]:
             return choicearray
         elif results==[0]:

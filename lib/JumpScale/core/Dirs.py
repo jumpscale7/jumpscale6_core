@@ -148,6 +148,23 @@ class Dirs(object):
 
         self.getLibPath()
 
+        self.loadProtectedDirs()
+
+        self.deployDefaultFilesInSandbox()
+        self.__initialized = True
+        return True
+
+
+    def getLibPath(self):
+        parent = j.system.fs.getParent
+        self.libDir=parent(parent(__file__))
+        self.libDir=os.path.abspath(self.libDir).rstrip("/")
+        return self.libDir
+
+    def getPathOfRunningFunction(self,function):
+        return inspect.getfile(function)
+
+    def loadProtectedDirs(self):
         protectedDirsDir = os.path.join(self.cfgDir, 'debug', 'protecteddirs')
         if not os.path.exists(protectedDirsDir):
             self._createDir(protectedDirsDir)
@@ -159,21 +176,44 @@ class Dirs(object):
             for _dir in _dirs:
                 _dir = _dir.replace('\n', '').strip()
                 if j.system.fs.isDir(_dir):
-                    _protectedDirsList.append(j.system.fs.pathNormalize(_dir))
+                    # npath=j.system.fs.pathNormalize(_dir)
+                    if _dir not in _protectedDirsList:
+                        _protectedDirsList.append(_dir)
         self.protectedDirs = _protectedDirsList
 
-        self.deployDefaultFilesInSandbox()
-        self.__initialized = True
-        return True
 
-    def getLibPath(self):
-        parent = j.system.fs.getParent
-        self.libDir=parent(parent(__file__))
-        self.libDir=os.path.abspath(self.libDir).rstrip("/")
-        return self.libDir
+    def addProtectedDir(self,path,name="main"):
+        if j.system.fs.isDir(path):
+            path=j.system.fs.pathNormalize(path)
+            configfile=os.path.join(self.cfgDir, 'debug', 'protecteddirs',"%s.cfg"%name)
+            if not j.system.fs.exists(configfile):
+                j.system.fs.writeFile(configfile,"")
+            content=j.system.fs.fileGetContents(configfile)
+            if path not in content.split("\n"):
+                content+="%s\n"%path
+                j.system.fs.writeFile(configfile,content)
+            self.loadProtectedDirs()
 
-    def getPathOfRunningFunction(self,function):
-        return inspect.getfile(function)
+    def removeProtectedDir(self,path):
+        path=j.system.fs.pathNormalize(path)
+        protectedDirsDir = os.path.join(self.cfgDir, 'debug', 'protecteddirs')
+        _listOfCfgFiles = j.system.fs.listFilesInDir(protectedDirsDir, filter='*.cfg')
+        for _cfgFile in _listOfCfgFiles:
+            _cfg = open(_cfgFile, 'r')
+            _dirs = _cfg.readlines()
+            out=""
+            found=False
+            for _dir in _dirs:
+                _dir = _dir.replace('\n', '').strip()
+                if _dir==path:
+                    #found, need to remove
+                    found=True
+                else:
+                    out+="%s\n"%_dir
+            if found:
+                j.system.fs.writeFile(_cfgFile,out)
+                self.loadProtectedDirs()
+
 
     def checkInProtectedDir(self,path):
         path=j.system.fs.pathNormalize(path)

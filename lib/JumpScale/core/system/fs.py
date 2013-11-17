@@ -225,13 +225,15 @@ class SystemFS:
                 if self.exists(to):
                     #print "did not write file %s "% to
                     return
-            if not (skipProtectedDirs and j.dirs.checkInProtectedDir(to)):
-                try:
-                    shutil.copy(fileFrom, to)
-                    self.log("Copy file from %s to %s" % (fileFrom,to),6)
-                except Exception,e:
-                    raise RuntimeError("Could not copy file from %s to %s, error %s" % (fileFrom,to,e))
-            return
+            if skipProtectedDirs:
+                if j.dirs.checkInProtectedDir(to):
+                    raise RuntimeError("did not copyFile from:%s to:%s because in protected dir"%(fileFrom,to))
+                    return
+            try:
+                shutil.copy(fileFrom, to)
+                self.log("Copy file from %s to %s" % (fileFrom,to),6)
+            except Exception,e:
+                raise RuntimeError("Could not copy file from %s to %s, error %s" % (fileFrom,to,e))                
         else:
             raise RuntimeError("Can not copy file, file: %s does not exist in system.fs.copyFile" % ( fileFrom ) )
 
@@ -304,6 +306,7 @@ class SystemFS:
             raise RuntimeError("Cannot use file notation here")
         self.log('Creating directory if not exists %s' % toStr(newdir), 8)
         if skipProtectedDirs and j.dirs.checkInProtectedDir(newdir):
+            raise RuntimeError("did not create dir:%s because in protected dir"%newdir)
             return
 
         if newdir == '' or newdir == None:
@@ -327,7 +330,7 @@ class SystemFS:
                     
             self.log('Created the directory [%s]' % toStr(newdir), 8)
 
-    def copyDirTree(self, src, dst, keepsymlinks = False, eraseDestination = False, skipProtectedDirs=False, overwriteFiles=True):
+    def copyDirTree(self, src, dst, keepsymlinks = False, eraseDestination = False, skipProtectedDirs=False, overwriteFiles=True,applyHrdOnDestPaths=None):
         """Recursively copy an entire directory tree rooted at src.
         The dst directory may already exist; if not,
         it will be created as well as missing parent directories
@@ -345,13 +348,22 @@ class SystemFS:
             raise TypeError('Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s '% (src, dst))
         if j.system.fs.isDir(src):
             names = os.listdir(src)
+
+            if applyHrdOnDestPaths<>None:
+                dst=applyHrdOnDestPaths.applyOnContent(dst)    
+
             if not j.system.fs.exists(dst):
                 self.createDir(dst,skipProtectedDirs=skipProtectedDirs)
 
             errors = []
             for name in names:
+                if applyHrdOnDestPaths<>None:
+                    name2=applyHrdOnDestPaths.applyOnContent(name)
+                else:
+                    name2=name
+
                 srcname = j.system.fs.joinPaths(src, name)
-                dstname = j.system.fs.joinPaths(dst, name)
+                dstname = j.system.fs.joinPaths(dst, name2)
                 if eraseDestination and self.exists( dstname ):
                     if self.isDir( dstname , False ) :
                         self.removeDirTree( dstname )
@@ -362,7 +374,7 @@ class SystemFS:
                     linkto = j.system.fs.readlink(srcname)
                     j.system.fs.symlink(linkto, dstname, overwriteFiles)
                 elif j.system.fs.isDir(srcname):
-                    j.system.fs.copyDirTree(srcname, dstname, keepsymlinks, eraseDestination,skipProtectedDirs=skipProtectedDirs,overwriteFiles=overwriteFiles )
+                    j.system.fs.copyDirTree(srcname, dstname, keepsymlinks, eraseDestination,skipProtectedDirs=skipProtectedDirs,overwriteFiles=overwriteFiles,applyHrdOnDestPaths=applyHrdOnDestPaths )
                 else:
                     self.copyFile(srcname, dstname ,createDirIfNeeded=False,skipProtectedDirs=skipProtectedDirs,overwriteFile=overwriteFiles)
         else:
@@ -744,40 +756,6 @@ class SystemFS:
         else:
             raise RuntimeError("Specified path: %s does not exist in system.fs.listDir"% path)
 
-    def listLinksInDir(self,path,dirsOnly=True):
-        """
-        list all links in dir, works recursive
-        """
-        #@todo error: dirstOnly = False does not work, think error in walker
-        def checkLink(path,arg,stat,dest):
-            if j.system.fs.isLink(path):
-                if dirsOnly:
-                    if j.system.fs.isDir(path):
-                        arg.append(path)
-                else:
-                    arg.append(path)
-            
-        links=[]
-        walker=j.base.fswalker.get()
-
-        callbackFunctions={}
-        callbackFunctions["L"]=checkLink
-        walker.walk(path, callbackFunctions=callbackFunctions, arg=links, callbackMatchFunctions={}, followlinks=False)
-
-        return links
-
-    def checkLinksExistAndPointTo(self,path,dest="/opt/code"):
-        """
-        only works for dirs
-        if links are found which point to dest or path underneath dest then will return True otherwise False
-        """
-        links=self.listLinksInDir(path)
-        for link in links:
-            if os.path.realpath(link).find(dest)==0:
-                return True
-        return False
-            
-
     def listFilesInDir(self, path, recursive=False, filter=None, minmtime=None, maxmtime=None,depth=None, case_sensitivity='os',exclude=[],followSymlinks=True):
         """Retrieves list of files found in the specified directory
         @param path:       directory path to search in
@@ -1123,7 +1101,6 @@ class SystemFS:
 
     def isLink(self, path,checkJunction=False):
         """Check if the specified path is a link
-        works for dir & file
         @param path: string
         @rtype: boolean (True if the specified path is a link)
         """

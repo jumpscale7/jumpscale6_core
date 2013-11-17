@@ -6,7 +6,7 @@ class HgLibFactory:
     def __init__(self):
         j.logger.consolelogCategories.append("bitbucket")
 
-    def getClient(self, hgbasedir, remoteUrl="", branchname="", cleandir=False):
+    def getClient(self, hgbasedir, remoteUrl="", branchname=None, cleandir=False):
         """
         return a mercurial tool which you can help to manipulate a hg repository
         @param base dir where local hgrepository will be stored

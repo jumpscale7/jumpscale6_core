@@ -181,14 +181,14 @@ def generateRegisterItem():
 
         cls._pm_enumeration_items[itemname] = instance
 
-        #Internal, used for filtering in qshell
+        #Internal, used for filtering in jshell
         setattr(instance, '_pm_enumeration_hidden', True)
         setattr(instance, '_pm_enumeration_name', itemname)
 
         #Set attribute on class
         setattr(cls, attrname, instance)
 
-    #Internal, used for filtering in qshell
+    #Internal, used for filtering in jshell
     #This removes MyEnu.FOO.registerItem, since this should not be visible
     registerItem._pm_enumeration_hidden = True
 
@@ -224,7 +224,7 @@ def generateFinishItemRegistration():
         del cls.finishItemRegistration
         del cls.registerItem
 
-    #Internal, used for filtering in qshell
+    #Internal, used for filtering in jshell
     finishItemRegistration._pm_enumeration_hidden = True
 
     return finishItemRegistration
