@@ -43,11 +43,6 @@ class ProcessDef:
 
     def stop(self, timeout=20):
         j.system.platform.screen.killWindow(self.domain, self.name)
-        from IPython import embed
-        print "DEBUG NOW stop"
-        embed()
-        
-
 
     def __str__(self):
         return str(self.__dict__)
@@ -174,9 +169,7 @@ class StartupManager:
                 result.append(pd.domain)
         return result
 
-    def startJPackage(self,jpackage,timeout=None):
-        if timeout==None:
-            timeout=startupTime
+    def startJPackage(self,jpackage,timeout=20):
         for pd in self.getProcessDefs4JPackage(jpackage):
             pd.start(timeout)
 
