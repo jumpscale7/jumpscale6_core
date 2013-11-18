@@ -26,7 +26,7 @@ class Grid(OsisBaseObject):
         self.ipaddr=[item for item in j.system.net.getIpAddresses() if item <>"127.0.0.1"]
         self.id= j.application.config.getInt("gridmaster.grid.id")
 
-        if j.application.config.getInt("grid.node.id")==0:
+        if not j.application.config.exists("grid.node.id"):
             #register the own masternode to the grid
             jp=j.packages.findNewest("jumpscale","grid_node")
             jp.configure()
