@@ -17,6 +17,7 @@ class ProcessDef:
         self.jpackage_domain=hrd.get("process.jpackage.domain")
         self.jpackage_name=hrd.get("process.jpackage.domain")
         self.jpackage_version=hrd.get("process.jpackage.domain")
+        self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
 
     def _ensure(self):
         sessions = [ s[1] for s in j.system.platform.screen.getSessions() ]
@@ -34,6 +35,7 @@ class ProcessDef:
         jp.processDepCheck(timeout=timeout)
         print "start process %s"%self.name
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env, newscr=True)
+        j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
         for port in self.ports:
             port = int(port)
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
@@ -55,11 +57,13 @@ class ProcessDef:
 
 class StartupManager:
     DEFAULT_DOMAIN = 'generic'
+    LOGDIR = j.system.fs.joinPaths(j.dirs.logDir, 'startupmanager')
 
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
         self.processdefs={}
         self.__init=False
+        j.system.fs.createDir(StartupManager.LOGDIR)
 
     def init(self):
         """

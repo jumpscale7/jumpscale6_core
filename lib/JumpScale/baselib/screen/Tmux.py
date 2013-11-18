@@ -115,6 +115,11 @@ rm $0
         if name not in windows.values():
             j.system.process.execute("tmux new-window -t '%s' -n '%s'" % (session, name))
 
+    def logWindow(self, session, name, filename):
+        pane = self._getPane(session, name)
+        cmd = "tmux pipe-pane -t '%s' 'exec cat >> %s'" % (pane, filename)
+        j.system.process.execute(cmd)
+
     def windowExists(self, session, name):
         if session in dict(self.getSessions()).values():
             if name in self.listWindows(session).values():
