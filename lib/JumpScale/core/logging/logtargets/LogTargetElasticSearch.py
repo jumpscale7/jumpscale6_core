@@ -1,7 +1,5 @@
 # import socket
 from JumpScale import j
-import JumpScale.baselib.elasticsearch
-
 
 class LogTargetElasticSearch(object):
     """
@@ -31,6 +29,7 @@ class LogTargetElasticSearch(object):
         if self._serverip:
             if j.system.net.tcpPortConnectionTest(self._serverip, 9200) == False:
                 return False
+            import JumpScale.baselib.elasticsearch
             self.esclient = j.clients.elasticsearch.get(self._serverip, 9200)
             # j.logger.elasticsearchtarget=True
 
