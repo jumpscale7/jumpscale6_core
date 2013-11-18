@@ -15,8 +15,8 @@ class ProcessDef:
         self.workingdir=hrd.get("process.workingdir")
         self.ports=hrd.getList("process.ports")
         self.jpackage_domain=hrd.get("process.jpackage.domain")
-        self.jpackage_name=hrd.get("process.jpackage.domain")
-        self.jpackage_version=hrd.get("process.jpackage.domain")
+        self.jpackage_name=hrd.get("process.jpackage.name")
+        self.jpackage_version=hrd.get("process.jpackage.version")
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
 
     def _ensure(self):
@@ -187,8 +187,6 @@ class StartupManager:
                 result.append(pd)
         return result
 
-        
-
     def startAll(self):
         for pd in self.getProcessDefs():
             if pd.autostart:
@@ -199,7 +197,6 @@ class StartupManager:
             if pd.autostart:
                 pd.stop()
                 pd.start()
-
 
     def removeProcess(self,domain, name):
         self.stopProcess(domain, name)
@@ -212,7 +209,15 @@ class StartupManager:
         """
         get status of process if not process is given return status
         """
-        return j.system.platform.screen.windowExists(domain, name)
+        processlives = j.system.platform.screen.windowExists(domain, name)
+        if processlives:
+            for processdef in self.getProcessDefs(domain, name):
+                for port in processdef.ports:
+                    port = int(port)
+                    if not j.system.net.checkListenPort(port):
+                        return False
+        return processlives
+
 
     def listProcesses(self):
         files = j.system.fs.listFilesInDir(self._configpath, filter='*.hrd')
