@@ -117,7 +117,7 @@ rm $0
 
     def logWindow(self, session, name, filename):
         pane = self._getPane(session, name)
-        cmd = "tmux pipe-pane -t '%s' 'exec cat >> %s'" % (pane, filename)
+        cmd = "tmux pipe-pane -t '%s' 'tee -a \"%s\" | jslogpipe -n \"%s\"'" % (pane, filename, '%s_%s' % (session, name))
         j.system.process.execute(cmd)
 
     def windowExists(self, session, name):
