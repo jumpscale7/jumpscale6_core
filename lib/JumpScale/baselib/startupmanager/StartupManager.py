@@ -37,6 +37,8 @@ class ProcessDef:
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env, newscr=True)
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
         for port in self.ports:
+            if not port or not port.isdigit():
+                continue
             port = int(port)
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
                 raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s' % (self.name, port, timeout))
@@ -108,6 +110,9 @@ class StartupManager:
         pstring=""
         for port in ports:
             pstring+="%s,"%port
+        if jpackage and jpackage.hrd.exists('jp.process.tcpports'):
+            for port in jpackage.hrd.getList('jp.process.tcpports'):
+                pstring+="%s,"%port
         pstring=pstring.rstrip(",")
 
         hrd+="process.ports=%s\n"%pstring
