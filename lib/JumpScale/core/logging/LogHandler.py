@@ -109,6 +109,7 @@ class LogItem(object):
             else:
                 self.aid = 0
 
+        self.appname = j.application.appname
         self.tags = str(tags).strip().replace("\r\n", "/n").replace("\n", "/n").replace("|", "/|")
         self.jid = int(jid)
         self.parentjid = int(parentjid)
