@@ -162,7 +162,7 @@ class LoaderBase():
 
     def _getSystemLoaderForUsersGroups(self):
         lba = LoaderBaseObject("")
-        userspath = j.system.fs.joinPaths(j.core.portal.runningPortal.cfgdir, 'users')
+        userspath = j.system.fs.joinPaths(j.core.portal.runningPortal.cfgdir, 'users.cfg')
         if not j.system.fs.exists(userspath):
             ini = j.config.getInifile(userspath)
             ini.addSection('admin')
