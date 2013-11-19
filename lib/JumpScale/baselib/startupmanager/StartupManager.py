@@ -56,6 +56,7 @@ class StartupManager:
 
     def __init__(self):
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
+        j.system.fs.createDir(self._configpath)
         self.processdefs={}
         self.__init=False
         j.system.fs.createDir(StartupManager.LOGDIR)
