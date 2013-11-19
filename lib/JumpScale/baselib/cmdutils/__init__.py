@@ -39,3 +39,9 @@ def getJPackage(parser=None,installed=None,domain=None):
             packages = j.console.askChoiceMultiple(packages, "Multiple packages found. Select:")
 
     return packages, args
+
+def getProcess(parser=None):
+    parser = parser or argparse.ArgumentParser()
+    parser.add_argument('-d', '--domain', help='Process domain name')
+    parser.add_argument('-n', '--name', help='Process name')
+    return parser.parse_args()

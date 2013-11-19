@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+j.application.start("jsprocess_restart")
+
+opt = cmdutils.getProcess()
+j.tools.startupmanager.restartProcess(opt.domain, opt.name)
+
+j.application.stop()
