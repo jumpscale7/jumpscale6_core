@@ -4,7 +4,7 @@ import os
 class Tmux:
     
     def __init__(self):
-        self.screencmd="byobu"
+        self.screencmd="tmux"
     
     def createSession(self,sessionname,screens):
         """
@@ -12,8 +12,6 @@ class Tmux:
         @screens is list with nr of screens required in session and their names (is [$screenname,...])
         """
         j.system.platform.ubuntu.checkInstall("tmux","tmux")
-        j.system.platform.ubuntu.checkInstall("byobu","byobu")
-        j.system.process.execute("byobu-select-backend  tmux")
         self.killSession(sessionname)
         if len(screens)<1:
             raise RuntimeError("Cannot create screens, need at least 1 screen specified")
