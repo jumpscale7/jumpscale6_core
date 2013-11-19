@@ -170,7 +170,7 @@ class OSISStore(object):
     def find(self, query, start=0, size=None):
         query = json.loads(query)
         
-        index = '%s_%s' % (self.hrd.category_name, self.hrd.namespace_id)
+        index = self.getIndexName()
         if size:
             result = self.elasticsearch.search(query=query, index=index, es_from=start,
                                            size=size)

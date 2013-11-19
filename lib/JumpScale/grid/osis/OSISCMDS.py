@@ -28,8 +28,10 @@ class OSISCMDS(object):
         result = oi.find(query, start, size)
         return result
 
-    def list(self, namespace, categoryname, prefix, session=None):
+    def list(self, namespace, categoryname, prefix=None, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if prefix==None:
+            return oi.list()
         return oi.list(prefix)
 
     def echo(self, msg="", session=None):
