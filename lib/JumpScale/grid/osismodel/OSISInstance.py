@@ -59,7 +59,7 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
     def set(self, obj):
         value = self._getObj(obj)
         id = getattr(value, 'id', None)
-        key, new, changed = self.remoteOSISClient.set(self.actorname, self.modelname, value, id)
+        key, new, changed = self.remoteOSISClient.set(self.actorname, self.modelname, id, value)
         return key
 
     def get(self, guid=None, id=None):
