@@ -12,6 +12,7 @@ import time
 
 from MacroExecutor import MacroExecutorPage, MacroExecutorWiki, MacroExecutorPreprocess
 import mimeparse
+import mimetypes
 
 BLOCK_SIZE = 4096
 
@@ -443,8 +444,6 @@ class GeventWebserver:
 
     def router(self, environ, start_response):
         path = environ["PATH_INFO"].lstrip("/")
-        if path == "" or path.rstrip("/") == "wiki":
-            path == "wiki/system"
         print "path:%s" % path
 
         if path.find("favicon.ico") != -1:
@@ -484,61 +483,57 @@ class GeventWebserver:
         if not is_session:
             return session
         user = session['user']
+        pathparts = path.split('/')
+        match = pathparts[0]
+        path = ""
+        if len(pathparts) > 1:
+            path = "/".join(pathparts[1:])
 
-        if path.startswith("restmachine/"):
-            path = path[12:]
+        if match == "restmachine":
             return self.processor_rest(environ, start_response, path, human=False, ctx=ctx)
 
-        if path.find("restextmachine/") == 0:
-            path = path[15:]
+        elif match == "restextmachine":
             return self.processor_restext(environ, start_response, path, human=False, ctx=ctx)
 
-        if path.find("wiki/") == 0:
-            # is page in wiki
-            path = path[5:].strip("/")
-
-            space, pagename = self.path2spacePagename(path)
-            self.log(ctx, user, path, space, pagename)
-            return [str(self.returnDoc(ctx, start_response, space, pagename, {}))]
-
-        elif path.find("rest/") == 0:
-            path = path[5:]
+        elif match == "rest":
             space, pagename = self.path2spacePagename(path.strip("/"))
             self.log(ctx, user, path, space, pagename)
             return self.processor_rest(environ, start_response, path, ctx=ctx)
 
-        elif path.find("restext/") == 0:
-            path = path[8:]
+        elif match == "restext":
             space, pagename = self.path2spacePagename(path.strip("/"))
             self.log(ctx, user, path, space, pagename)
             return self.processor_restext(environ, start_response, path,
                                           ctx=ctx)
-
-        elif path.find("ping/") == 0:
+        elif match == "ping":
             status = '200 OK'
             headers = [
                 ('Content-Type', "text/html"),
             ]
             start_response(status, headers)
-            return ["ping"]
+            return ["pong"]
 
-        elif path.find("files/") == 0:
-            path = path[6:]
+        elif match == "files":
             self.log(ctx, user, path)
             return self.processor_page(environ, start_response, self.filesroot, path, prefix="files")
 
-        elif path.find("specs/") == 0:
-            path = path[6:]
+        elif match == "specs":
             return self.processor_page(environ, start_response, "specs", path, prefix="specs")
-        elif path.find("appservercode/") == 0:
-            path = path[14:]
+
+        elif match == "appservercode":
             return self.processor_page(environ, start_response, "code", path, prefix="code", webprefix="appservercode")
-        elif path.find("lib/") == 0:
-            path = path[4:]
-            return self.processor_page(environ, start_response, self.libpath, path, prefix="", webprefix="lib", index=False)
+
+        elif match == "lib":
+            print self.libpath
+            return self.processor_page(environ, start_response, self.libpath, path, prefix="lib")
+
         else:
-            ctx.params["path"] = path
-            return [str(self.returnDoc(ctx, start_response, "system", "PageNotFound"))]
+            if match != "wiki":
+                path = '/'.join(pathparts)
+            ctx.params["path"] = '/'.join(pathparts)
+            space, pagename = self.path2spacePagename(path)
+            self.log(ctx, user, path, space, pagename)
+            return [str(self.returnDoc(ctx, start_response, space, pagename, {}))]
 
     def returnDoc(self, ctx, start_response, space, docname, extraParams={}):
         doc, params = self.getDoc(space, docname, ctx, params=ctx.params)
@@ -641,9 +636,17 @@ class GeventWebserver:
 
         contenttype = "text/html"
         content = ""
+        headers = list()
+        ext = path.split(".")[-1].lower()
+        contenttype = mimetypes.guess_type(pathfull)[0]
 
         if path == "favicon.ico":
             pathfull = "wiki/System/favicon.ico"
+
+        if not j.system.fs.exists(pathfull) and j.system.fs.exists(pathfull + '.gz') and 'gzip' in environ.get('HTTP_ACCEPT_ENCODING'):
+            pathfull += ".gz"
+            headers.append(('Vary', 'Accept-Encoding'))
+            headers.append(('Content-Encoding', 'gzip'))
 
         if not j.system.fs.exists(pathfull):
             print "error"
@@ -651,43 +654,25 @@ class GeventWebserver:
             start_response("404 Not found", headers)
             return ["path %s not found" % path]
 
-        ext = path.split(".")[-1].lower()
         size = os.path.getsize(pathfull)
 
-        if ext == "html":
-            contenttype = "text/html"
-        elif ext == "wiki":
+        if ext == "wiki":
             contenttype = "text/html"
             # return formatWikiContent(pathfull,start_response)
             return formatContent(contenttype, pathfull, "python", start_response)
         elif ext == "py":
             contenttype = "text/html"
             return formatContent(contenttype, pathfull, "python", start_response)
-        elif ext == "jpg" or ext == "jpeg":
-            contenttype = "image/jpeg"
-        elif ext == "png":
-            contenttype = "image/png"
-        elif ext == "gif":
-            contenttype = "image/gif"
-        elif ext == "ico":
-            contenttype = "image/ico"
-        elif ext == "css":
-            contenttype = "text/css"
         elif ext == "spec":
             contenttype = "text/html"
             return formatContent(contenttype, pathfull, "python", start_response)
-        elif ext == "js":
-            contenttype = "application/x-javascript"
-        else:
-            contenttype = "binary/octet-stream"
+
         # print contenttype
 
         status = '200 OK'
 
-        headers = [
-            ('Content-Type', contenttype),
-            ("Content-length", str(size)),
-        ]
+        headers.append(('Content-Type', contenttype))
+        headers.append(("Content-length", str(size)))
 
         start_response(status, headers)
 
