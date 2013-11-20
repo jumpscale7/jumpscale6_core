@@ -78,6 +78,8 @@ class OSISFactory:
         while modname in sys.modules:
             modname = generate_module_name()
 
+        print path
+
         module = imp.load_source(modname, path)
         # find main classname of module
         # classes=[item for item in module.__dict__.keys() if (item<>"q" and item[0]<>"_")]
