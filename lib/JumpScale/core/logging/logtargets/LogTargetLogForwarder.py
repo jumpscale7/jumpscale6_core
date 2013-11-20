@@ -7,8 +7,12 @@ class LogTargetLogForwarder():
     """Forwards incoming logRecords to localclientdaemon"""
     def __init__(self, serverip=None):
         self.connected = False
-        if serverip==None:
-            serverip="127.0.0.1"
+        self.enabled = False
+        if not serverip:
+            serverip = j.application.config.get("grid.master.ip")
+            if not serverip:
+                self.enable = False
+                return
         self.serverip = serverip
         self.checkTarget()
 

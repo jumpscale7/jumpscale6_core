@@ -299,6 +299,8 @@ class LogHandler(object):
                 for logtarget in self.logTargets:
                     if (hasattr(logtarget, 'maxlevel') and level > logtarget.maxlevel):
                         continue
+                    if (hasattr(logtarget, 'enabled') and not logtarget.enabled):
+                        continue
                     logtarget.log(log)
 
     def exception(self, message, level=5):

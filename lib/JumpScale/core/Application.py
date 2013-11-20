@@ -106,6 +106,10 @@ class Application:
         # self.initWhoAmI()
 
         j.logger.log("Application %s started" % self.appname, level=8, category="jumpscale.app")
+        #adding log handlers
+        if self.appname != "logger": #exclude the logserver itself
+            j.logger.setLogTargetLogForwarder()
+
 
     def stop(self, exitcode=0):
 
