@@ -54,6 +54,7 @@ rm -f %s
         j.system.fs.writeFile(ppathscript,script)
         if wait<>0:
             cmd2="%s -S %s -p %s -X stuff '%s;echo $?>%s\n'" % (self.screencmd,sessionname,screenname,cmd,ppath)
+            
         else:
             cmd2="%s -S %s -p %s -X stuff '%s\n'" % (self.screencmd,sessionname,screenname,cmd)
 

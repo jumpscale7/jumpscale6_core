@@ -35,7 +35,6 @@ class JPackageClient():
         # So we ask the username/passwd lazy in the domain object
         # j.packages.markConfigurationPending=self._runPendingReconfigeFiles
         self.reloadconfig()
-        self.resetState()
         self.enableConsoleLogging()
 
         self.logenable=True
@@ -102,7 +101,6 @@ class JPackageClient():
         """
         Reload all jpackages config data from disk
         """
-        self.resetState()
         cfgpath=j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')
 
         if not j.system.fs.exists(cfgpath):
@@ -385,7 +383,7 @@ class JPackageClient():
         '''
         if name.find("*")==-1:
             name+="*"
-        return self.find(name=name)
+        return self.find(name=name,domain="")
     
     def find(self, domain=None,name=None , version="", platform=None,onlyone=False,installed=None):
         """ 
@@ -499,32 +497,6 @@ class JPackageClient():
     def getPackagesWithBrokenDependencies(self):
         return [p for p in j.packages.find('*') if len(p.getBrokenDependencies()) > 0]
 
-############################################################
-########  CHECK ON ALREADY EXECUTED ACTIONS  ###############
-############################################################
-
-    def _actionGetName(self,jpackagesObject,action):
-        return "%s_%s_%s_%s" % (\
-                    jpackagesObject.domain,jpackagesObject.name,jpackagesObject.version,action)        
-
-    def resetState(self):
-        """
-        make sure that previous actions on jpackages are not remembered, re-execute all actions
-        """
-        self._activeActions={}
-
-    def _actionCheck(self,jpackagesObject,action):
-        """
-        check if that action has already been executed if yes return true
-        """
-        return self._activeActions.has_key(self._actionGetName(jpackagesObject,action))
-
-    def _actionSet(self,jpackagesObject,action):
-        """
-        set that the action has already been executed
-        """
-        self._activeActions[self._actionGetName(jpackagesObject,action)]=True
-
 
 ############################################################
 #################  UPDATE / PUBLISH  #######################
@@ -569,6 +541,21 @@ class JPackageClient():
         if domainName=="":
             domainName = j.console.askChoice(j.packages.getDomainNames(), "Please choose a domain")
         j.packages.getDomainObject(domainName).updateMetadata("")        
+
+
+    def linkMetaData(self,domain=""):
+        """
+        Does an link of the meta information repo for each domain
+        """
+        self.resetState()
+        if domain<>"":
+            j.logger.log("link metadata information for jpackages domain %s" % domain, 1)
+            d=self.getDomainObject(domain)
+            d.linkMetadata()
+        else:
+            domainnames=self.getDomainNames()            
+            for domainName in domainnames:
+                self.linkMetaData(domainName)
 
     def updateMetaData(self,domain="",force=False):
         """

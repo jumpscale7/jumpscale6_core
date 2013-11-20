@@ -4,11 +4,12 @@ def main(j,jp,ipaddr):
 
     test=True
 
-    #test 1
-    ##test =test & j.system.net.tcpPortConnectionTest(ipaddr, 5544)
+    #can use this to test remotely 
+
+    for port in jp.tcpPorts:
+        test =test & j.system.net.tcpPortConnectionTest(ipaddr, port)
 
     #test 2
     ##e.g. an http test
-
 
     return test    

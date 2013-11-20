@@ -1,6 +1,7 @@
 from JumpScale import j
 import os
 import JumpScale.baselib.screen
+import time
 
 class ProcessDef:
     def __init__(self, hrd):
@@ -10,7 +11,6 @@ class ProcessDef:
         self.cmd=hrd.get("process.cmd")
         self.args=hrd.get("process.args")
         self.env=hrd.getDict("process.env")
-        self.numprocesses=hrd.getInt("process.numprocesses")
         self.priority=hrd.getInt("process.priority")
         self.workingdir=hrd.get("process.workingdir")
         self.ports=hrd.getList("process.ports")
@@ -18,6 +18,8 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
+        self.pid=0
+        self.processobject=None
 
     def _ensure(self):
         sessions = [ s[1] for s in j.system.platform.screen.getSessions() ]
@@ -30,12 +32,18 @@ class ProcessDef:
 
     def start(self, timeout=20):
         self._ensure()
+        if self.isRunning():
+            print "no need to start %s, already started."%self
+            return
         jp=j.packages.find(self.domain,self.name)[0]
         print "check process dependency for %s"%self.name
         jp.processDepCheck(timeout=timeout)
         print "start process %s"%self.name
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env, newscr=True)
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
+
+        pid=self.getPid(timeout=5)
+
         for port in self.ports:
             if not port or not port.isdigit():
                 continue
@@ -43,11 +51,110 @@ class ProcessDef:
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
                 raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s' % (self.name, port, timeout))
 
+        return pid
+
+    def getProcessObject(self):
+        pid=self.getPid()
+        return self.processobject
+
+    def getPid(self,timeout=5,ifNoPidFail=True):
+        if self.pid==0:
+            cmd="tmux lsp -a -t j%s -F#{pane_pid},#{window_name}"%self.domain
+            exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=True)
+            pid=0
+            for line in output.split("\n"):
+                line=line.strip()
+                if line=="":
+                    continue
+                pid2,name=line.split(",")
+                if name==self.name:
+                    pid=int(pid2)
+
+            if pid==0:
+                if ifNoPidFail:
+                    raise RuntimeError("Could not start %s, pid was not found"%self)
+                else:
+                    # print "no pid found in cmd:%s"%cmd
+                    return 0
+                #@todo show errorlog
+
+            pr=j.system.process.getProcessObject(pid)
+            
+
+            def check():
+                pid=None
+                children=pr.get_children()
+                if len(children)>0:
+                    if len(children)>1:
+                        raise RuntimeError("Can max have 1 child")
+                    child=children[0]
+
+                    if j.system.process.isPidAlive(child.pid):
+                        pid=child.pid
+                        self.pid=pid
+                        self.processobject=j.system.process.getProcessObject(pid)
+                        # print "FOUND:%s"%self.pid
+                        return self.pid
+                    else:
+                        # print "pid not alive for %s"%self
+                        return 0
+                # print "none"
+                return None
+
+            if timeout==0:
+                timeout=0.1
+
+            pid=None
+            start=j.base.time.getTimeEpoch()            
+            now=start
+            while now<start+timeout and pid==None:
+                pid=check()
+                # print "timecheck:%s"%pid
+                time.sleep(0.05)
+                now=j.base.time.getTimeEpoch()
+
+            if ifNoPidFail==False:
+                if pid==None:
+                    pid=0
+                return pid
+
+            if pid>0:
+                return pid
+            
+            raise RuntimeError("Timeout on wait for chilprocess for tmux for processdef:%s"%self)
+            
+        print "cache"
+        return self.pid
+
+    def isRunning(self):
+        pid=self.getPid(timeout=0,ifNoPidFail=False)
+        if pid==0:
+            return False
+        test=j.system.process.isPidAlive(pid)
+        if test==False:
+            return False
+
+        for port in self.ports:
+            port = int(port)
+            if not j.system.net.checkListenPort(port):
+                return False
+
+        return True
+
     def stop(self, timeout=20):
-        j.system.platform.screen.killWindow(self.domain, self.name)
+        pid=self.getPid(timeout=0,ifNoPidFail=False)
+        
+        if pid==0:
+            return 
+
+        pr=self.getProcessObject()
+        pr.kill()
+        
+        if j.system.process.isPidAlive(self.getPid()):
+            j.system.platform.screen.killWindow(self.domain, self.name)
 
     def __str__(self):
-        return str(self.__dict__)
+        return str("Process: %s_%s"%(self.domain,self.name))
 
     __repr__ = __str__
 
@@ -211,19 +318,20 @@ class StartupManager:
             j.system.fs.remove(servercfg)
         self.load()
 
+    def getStatus4JPackage(self,jpackage):
+        result=True
+        for pd in self.getProcessDefs4JPackage(jpackage):
+            result=result and self.getStatus(pd.domain,pd.name)
+        return result
+
     def getStatus(self, domain, name):
         """
-        get status of process if not process is given return status
+        get status of process, True if status ok
         """
-        processlives = j.system.platform.screen.windowExists(domain, name)
-        if processlives:
-            for processdef in self.getProcessDefs(domain, name):
-                for port in processdef.ports:
-                    port = int(port)
-                    if not j.system.net.checkListenPort(port):
-                        return False
-        return processlives
-
+        result=True
+        for processdef in self.getProcessDefs(domain, name):
+            result=result & processdef.isRunning()
+        return result
 
     def listProcesses(self):
         files = j.system.fs.listFilesInDir(self._configpath, filter='*.hrd')

@@ -3,5 +3,16 @@ from JumpScale import j
 j.application.start("jpackage")
 import JumpScale.baselib.jpackages
 
-j.packages.updateMetaData(force=True)
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-l', '--link', required=False, action='store_true', help='just relink the quality levels, do not update')
+args = parser.parse_args()
+
+if args.link:
+    j.packages.linkMetaData()
+else:
+    j.packages.updateMetaData(force=True)
+    
 j.application.stop()

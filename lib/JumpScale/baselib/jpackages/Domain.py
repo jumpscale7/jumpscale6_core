@@ -369,6 +369,11 @@ class Domain():
                     
         return modifiedPackages, mess
     
+    def linkMetadata(self):
+        sourcepath = self.getMetadataDir()
+        destpath=j.system.fs.joinPaths(j.dirs.packageDir,"metadata",self.domainname)
+        j.system.fs.createDir(sourcepath)            
+        j.system.fs.symlink(sourcepath,destpath,True)
 
     def updateMetadata(self, commitMessage="",force=False, accessCode=''):
         """

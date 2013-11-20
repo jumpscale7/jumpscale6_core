@@ -15,12 +15,6 @@ class JPackageObject():
     Data representation of a JPackage, should contain all information contained in the jpackages.cfg
     """
 
-    # @property
-    # def actions(self):
-    #     if self._actions==None:
-    #         self._actions=ActionManager(self)
-    #     return self._actions
-
     def __init__(self, domain, name, version):
         """
         Initialization of the JPackage
@@ -204,6 +198,8 @@ class JPackageObject():
         if not self.hrd.exists("jp.process.startuptime"):
             self.hrd.set("jp.process.startuptime","30")            
         self.startupTime = self.hrd.getInt("jp.process.startuptime")
+        self.tcpPorts = [int(item) for item in self.hrd.getList("jp.process.tcpports") if item<>""]
+
         self.export = self.hrd.getBool("jp.export")
         self.autobuild = self.hrd.getBool("jp.autobuild")
         self.taskletsChecksum = self.hrd.get("jp.taskletschecksum")
@@ -266,6 +262,7 @@ class JPackageObject():
 
     def loadActions(self, force=False):
         # print "loadactions:%s"%self
+
         if self.actions <> None and not force:
             return
 
@@ -281,7 +278,7 @@ class JPackageObject():
         j.application.config.applyOnDir(self.getPathActions())
 
         self.actions = ActionManager(self)
-        
+
         do = j.packages.getDomainObject(self.domain)
         if do.blobstorremote.strip() <> "":
             self.blobstorRemote = j.clients.blobstor.get(do.blobstorremote)
@@ -844,7 +841,7 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.start(False)
-        self.loadActions(True)        
+        self.loadActions()        
         self.actions.process_start()
         self.log('start')
 
@@ -856,7 +853,7 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.stop(False)
-        self.loadActions(True)        
+        self.loadActions()        
         self.actions.process_stop()
         self.log('stop')
 
@@ -868,11 +865,11 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.kill(False)
-        self.loadActions(True)        
+        self.loadActions()        
         self.actions.process_kill()
         self.log('stop')
 
-    def monitor_up_local(self,dependencies=False,result=True):
+    def monitor(self,dependencies=False,result=True):
         """
         Stop the JPackage, run the stop tasklet(s)
         """
@@ -880,11 +877,12 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 result=result & dep.monitor(False,result)
-        self.loadActions(True)        
+        self.loadActions()        
+        print "monitor for: %s"%self
         result=result&self.actions.monitor_up_local()
         return result
 
-    def monitor_up_net(self,ipaddr="localhost",dependencies=False,result=True):
+    def monitor_net(self,ipaddr="localhost",dependencies=False,result=True):
         """
         Stop the JPackage, run the stop tasklet(s)
         """
@@ -892,7 +890,7 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 result=result & dep.monitor(False,result)
-        self.loadActions(True)        
+        self.loadActions()        
         result=result&self.actions.monitor_up_net(ipaddr=ipaddr)
         return result
 
@@ -904,7 +902,7 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.restart(False)
-        self.loadActions(True)
+        self.loadActions()
         self.stop()
         self.start()
 
@@ -912,8 +910,8 @@ class JPackageObject():
         """
         Check if application installed is running for jpackages
         """
-        self.monitor_up_local(dependencies=dependencies)
-        self.monitor_up_net(dependencies=dependencies,ipaddr=ipaddr)
+        self.monitor(dependencies=dependencies)
+        # self.monitor_up_net(dependencies=dependencies,ipaddr=ipaddr)
         self.log('isrunning')
 
     def reinstall(self, dependencies=False, download=True):
@@ -927,12 +925,8 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.install(False, download, reinstall=False)
-        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+        self.loadActions() #reload actions to make sure new hrdactive are applied
         self._loadActiveHrd()
-
-        action="prepare"
-        if j.packages._actionCheck(self,action):
-            return
 
         self.actions.install_prepare()
 
@@ -941,12 +935,9 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.copyfiles(dependencies=False, download=download)
-        self.loadActions(True) #reload actions to make sure new hrdactive are applied
-        self._loadActiveHrd()
 
-        action="copyfiles"
-        if j.packages._actionCheck(self,action):
-            return
+        self.loadActions() #reload actions to make sure new hrdactive are applied
+        self._loadActiveHrd()
 
         if self.debug ==True:
             self._copyfiles(doCodeRecipe=False)
@@ -1018,14 +1009,8 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.install(False, download, reinstall=reinstalldeps)
-        self.loadActions(True) #reload actions to make sure new hrdactive are applied
+        self.loadActions() #reload actions to make sure new hrdactive are applied
         self._loadActiveHrd()
-        
-
-        action="install"
-        if not j.packages._actionCheck(self,action):
-            #check if that action has already been executed if yes return true
-            pass
 
         if download:
             self.download(dependencies=False)
@@ -1465,9 +1450,9 @@ class JPackageObject():
         while now<start+timeout:
             result=True
             for dep in deps:
-                result=result & dep.actions.monitor_up_net()
+                # result=result & dep.actions.monitor_up_net()
                 result=result & dep.actions.monitor_up_local()
-            result=result & self.actions.monitor_up_net()
+            # result=result & self.actions.monitor_up_net()
             result=result & self.actions.monitor_up_local()
             if result:
                 return True
@@ -1614,34 +1599,6 @@ class JPackageObject():
             return True
         return False
 
-#############################################################################
-###############################  TASKLETS  ##################################
-#############################################################################
-
-    # def executeAction(self, action, tags, dependencies=False, params=None,
-    #         actionCaching=True):
-    #     """
-    #     Execute tasklets of specific jpackages
-
-    #     @param action is "install", "codeManagement","configure","package","backup", ...
-    #     @param actionCaching: can be used to disable the action caching
-    #     @type actionCaching: boolean
-    #     """
-    #     if actionCaching:
-    #         if j.packages._actionCheck(self, action):
-    #             return True
-
-    #         j.packages._actionSet(self, action)
-
-    #     #process all dependencies
-    #     if dependencies:
-    #         deps = self.getDependencies()
-    #         for dep in deps:
-    #             dep.executeAction(action,tags,  dependencies,params=params)
-    #     self.log('executing jpackages action ' + tags + ' ' + action)
-    #     self.state.setCurrentAction(tags, action)
-    #     self.actions.execute(action, tags=tags, params=params) #tags are not used today
-    #     self.state.setCurrentActionIsDone()
 
 #########################################################################
 ####################### SHOW ############################################

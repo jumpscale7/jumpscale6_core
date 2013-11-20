@@ -1553,6 +1553,14 @@ class SystemProcess:
         myprocess=[p for p in psutil.get_process_list() if p.pid==j.application.whoAmI.pid][0]
         return myprocess
 
+    def getProcessObject(self,pid):
+        import psutil
+        for process in psutil.get_process_list():
+            if process.pid==pid:
+                return process
+        raise RuntimeError("Could not find process with pid:%s"%pid)
+
+
     def getSimularProcesses(self):
         import psutil
         myprocess=self.getMyProcessObject()

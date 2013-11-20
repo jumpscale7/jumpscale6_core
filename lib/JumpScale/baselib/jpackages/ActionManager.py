@@ -12,6 +12,7 @@ class ActionManager:
         # print "init actions for %s"%jp
         self._jpackage=jp
         self._actions={}
+        self._done={}
 
         for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions(), filter='*.py'):
             name=j.system.fs.getBaseName(path)
@@ -23,11 +24,31 @@ class ActionManager:
             self._actions[name]= module.main
             name2=name.replace(".","_")
             self.__dict__[name2]=self._getActionMethod(name)
+
+    def clear(self):
+        self._done={}
         
-    def _getActionMethod(self,name):    
-        C="""
+    def _getActionMethod(self,name):
+        found=False
+        for item in ["kill","start","stop","monitor"]:
+            if name.find(item)<>-1:
+                found=True
+        if found==True:
+            C="""
 def method(self{args}):
-    return self._actions['{name}'](j,self._jpackage{args})"""
+    result=self._actions['{name}'](j,self._jpackage{args})
+    return result"""
+
+        else:
+            C="""
+def method(self{args}):
+    key="%s_%s_{name}"%(self._jpackage.domain,self._jpackage.name)
+    if self._done.has_key(key):
+        print "already executed %s"%key
+        return True
+    result=self._actions['{name}'](j,self._jpackage{args})
+    self._done[key]=True
+    return result"""
 
         args=""
 
