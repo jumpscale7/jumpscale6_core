@@ -11,7 +11,7 @@ class mainclass(OSISStore):
 
     def set(self, key, value):
         id = value['id']
-        if self.db.exists(self.dbprefix, id) and id != 0:
+        if id and self.db.exists(self.dbprefix, id):
             orig = self.get(id)
             orig.update(value)
             value = orig
