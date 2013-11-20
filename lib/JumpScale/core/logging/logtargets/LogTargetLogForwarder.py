@@ -1,6 +1,5 @@
 # import socket
 from JumpScale import j
-import JumpScale.grid
 import time
 
 class LogTargetLogForwarder():
@@ -9,7 +8,8 @@ class LogTargetLogForwarder():
         self.connected = False
         self.enabled = False
         if not serverip:
-            serverip = j.application.config.get("grid.master.ip")
+            if j.application.config.exists('grid.master.ip'):
+                serverip = j.application.config.get("grid.master.ip")
             if not serverip:
                 self.enable = False
                 return
@@ -26,6 +26,8 @@ class LogTargetLogForwarder():
             print "will be waiting for 10 sec if I an reach local logger."
         if j.system.net.waitConnectionTest(self.serverip,4443,10)==False:
             raise RuntimeError("Could not reach local logserver")
+
+        import JumpScale.grid
         self.loggerClient=j.core.grid.getZLoggerClient(ipaddr=self.serverip)
         self.enabled=True
         j.logger.clientdaemontarget=self

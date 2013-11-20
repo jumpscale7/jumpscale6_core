@@ -208,7 +208,7 @@ class LogHandler(object):
         self.inlog=False
         self.logTargets=[]
         self.order=0
-        self.clientdaemontarget =LogTargetLogForwarder(serverip)
+        self.clientdaemontarget = LogTargetLogForwarder(serverip)
 
     def disable(self):
         self.enabled = False
@@ -274,7 +274,7 @@ class LogHandler(object):
             else:
                 j.console.echo(str(log), log=False)
         
-        if self.clientdaemontarget != False:
+        if self.clientdaemontarget != False and self.clientdaemontarget.enabled:
             self.clientdaemontarget.log(log)
 
         else:

@@ -278,7 +278,7 @@ class ErrorConditionHandler():
         
         print errorConditionObject        
 
-        if j.logger.clientdaemontarget:
+        if j.logger.clientdaemontarget and j.logger.clientdaemontarget.enabled:
             j.logger.clientdaemontarget.loggerClient.logECO(errorConditionObject)
         # else:
         #     j.logger.log(str(errorConditionObject), j.enumerators.LogLevel.OPERATORMSG)
