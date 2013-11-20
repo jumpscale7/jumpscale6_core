@@ -184,8 +184,13 @@ class GeventWebserver:
             'session.type': 'file',
             'session.data_dir': '%s' % j.system.fs.joinPaths(j.dirs.varDir, "beakercache")
         }
+        cfg = j.system.fs.joinPaths(self.cfgdir, 'appserver.cfg')
+        ini = j.tools.inifile.open(cfg)
+        listenip = '127.0.0.1'
+        if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
+            listenip = ini.getValue('main', 'listenip')
         self.router = SessionMiddleware(self.router, session_opts)
-        self.webserver = WSGIServer(('127.0.0.1', self.port), self.router)
+        self.webserver = WSGIServer((listenip, self.port), self.router)
 
         wwwroot = wwwroot.replace("\\", "/")
         while len(wwwroot) > 0 and wwwroot[-1] == "/":
