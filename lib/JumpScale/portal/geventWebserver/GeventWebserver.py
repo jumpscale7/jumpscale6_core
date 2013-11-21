@@ -450,6 +450,9 @@ class GeventWebserver:
     def router(self, environ, start_response):
         path = environ["PATH_INFO"].lstrip("/")
         print "path:%s" % path
+        pathparts = path.split('/')
+        if pathparts[0] == 'wiki':
+            pathparts = pathparts[1:]
 
         if path.find("favicon.ico") != -1:
             return self.processor_page(environ, start_response, self.filesroot, "favicon.ico", prefix="")
@@ -459,8 +462,7 @@ class GeventWebserver:
         ctx.params = self._getParamsFromEnv(environ, ctx)
 
         if path.find("images/") == 0:
-            path = path[8:]
-            space, image = path.split("/", 1)
+            space, image = pathparts[1:3]
             spaceObject = self.getSpace(space)
             image = image.lower()
             if image in spaceObject.docprocessor.images:
@@ -475,9 +477,6 @@ class GeventWebserver:
             return self.processor_page(environ, start_response, self.filesroot, path, prefix="files/")
 
         if path.find(".files") != -1:
-            pathparts = path.split('/')
-            if pathparts[0] == 'wiki':
-                pathparts = pathparts[1:]
             user = "None"
             self.log(ctx, user, path)
             space = pathparts[0].lower()
@@ -491,7 +490,6 @@ class GeventWebserver:
         if not is_session:
             return session
         user = session['user']
-        pathparts = path.split('/')
         match = pathparts[0]
         path = ""
         if len(pathparts) > 1:
@@ -536,8 +534,7 @@ class GeventWebserver:
             return self.processor_page(environ, start_response, self.libpath, path, prefix="lib")
 
         else:
-            if match != "wiki":
-                path = '/'.join(pathparts)
+            path = '/'.join(pathparts)
             ctx.params["path"] = '/'.join(pathparts)
             space, pagename = self.path2spacePagename(path)
             self.log(ctx, user, path, space, pagename)
