@@ -12,7 +12,9 @@ def main(j, args, params, tags, tasklet):
 
     message = "%s on %s successful" % (action, name)
 
-    if hasattr(package, action):
+    if action == 'update':
+        package.install()
+    elif hasattr(package, action):
         getattr(package, action)()
     else:
         message = "%s on %s failed" % (action, name)
