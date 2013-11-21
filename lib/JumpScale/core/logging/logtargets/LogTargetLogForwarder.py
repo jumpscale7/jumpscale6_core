@@ -44,6 +44,16 @@ class LogTargetLogForwarder():
 
     __repr__ = __str__
 
+    def logECO(self, eco):
+        if self.enabled:
+            if not self.checkTarget():
+                return
+
+            try:
+                self.loggerClient.logECO(eco)
+            except:
+                print 'Failed to log in %s' % self
+                self.connected = False
 
     def log(self, log):
         """
