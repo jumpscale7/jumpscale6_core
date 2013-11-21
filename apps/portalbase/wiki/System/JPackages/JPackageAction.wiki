@@ -1,5 +1,5 @@
 @usedefault
 h2. Action:$$action on $$domain/$$name ($$version)
 
-{{jpackageaction: action=$$action}}
+{{jpackageaction: action=$$action domain=$$domain name=$$name version=$$version}}
 
