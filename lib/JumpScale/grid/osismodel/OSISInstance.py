@@ -75,8 +75,8 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
     def find(self, query, start=0, size=None):
         return self.remoteOSISClient.search(self.actorname, self.modelname, query, start, size)
 
-    def list(self):
-        return self.remoteOSISClient.list(self.actorname, self.modelname)
+    def list(self, prefix=None):
+        return self.remoteOSISClient.list(self.actorname, self.modelname, prefix)
 
 
 class OSISInstance(OSISInstanceNoDB):
