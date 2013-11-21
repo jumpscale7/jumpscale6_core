@@ -475,10 +475,13 @@ class GeventWebserver:
             return self.processor_page(environ, start_response, self.filesroot, path, prefix="files/")
 
         if path.find(".files") != -1:
+            pathparts = path.split('/')
+            if pathparts[0] == 'wiki':
+                pathparts = pathparts[1:]
             user = "None"
             self.log(ctx, user, path)
-            space = path.split("/")[1].lower()
-            path = "/".join(path.split("/")[3:])
+            space = pathparts[0].lower()
+            path = "/".join(pathparts[2:])
             sploader = self.spacesloader.getSpaceFromId(space)
             filesroot = j.system.fs.joinPaths(sploader.model.path, ".files")
             return self.processor_page(environ, start_response, filesroot, path, prefix="")
