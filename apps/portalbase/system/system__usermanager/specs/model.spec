@@ -1,4 +1,4 @@
-[rootmodel:user] #@index
+[rootmodel:user] @dbtype:fs
     """
     user
     """
@@ -8,7 +8,8 @@
     prop:emails list(str),,list email addresses #@list
     prop:groups list(str),, [groupname] #@list
 
-[rootmodel:group] #@index
+[rootmodel:group] @dbtype:fs
+    """
     """
     group of users
     """
