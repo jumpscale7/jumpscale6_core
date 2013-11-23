@@ -12,7 +12,7 @@ for package in packages:
     if package.monitor(dependencies=args.all)==True:
         result.append("OK    :%s"%package)
     else:
-        result.append("DOWN :%s"%package)
+        result.append("ERROR :%s"%package)
 
 print "\n\nMONITORING RESULTS:"
 print "\n".join(result)

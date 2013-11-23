@@ -197,8 +197,9 @@ class SystemFS:
         self.loglevel=5
 
     def log(self,msg,level=5,category=""):
+        # print msg
         if level<self.loglevel+1 and self.logenable:
-            j.logger.log(msg,category="hrd.%s"%category,level=level)    
+            j.logger.log(msg,category="system.fs.%s"%category,level=level)
 
     def copyFile(self, fileFrom, to ,createDirIfNeeded=False,skipProtectedDirs=False,overwriteFile=True):
         """Copy file
@@ -223,7 +224,6 @@ class SystemFS:
                 self.createDir(target_folder)
             if overwriteFile==False:
                 if self.exists(to):
-                    #print "did not write file %s "% to
                     return
             if skipProtectedDirs:
                 if j.dirs.checkInProtectedDir(to):
@@ -231,7 +231,7 @@ class SystemFS:
                     return
             try:
                 shutil.copy(fileFrom, to)
-                self.log("Copy file from %s to %s" % (fileFrom,to),6)
+                self.log("Copied file from %s to %s" % (fileFrom,to),6)
             except Exception,e:
                 raise RuntimeError("Could not copy file from %s to %s, error %s" % (fileFrom,to,e))                
         else:
@@ -323,7 +323,8 @@ class SystemFS:
                 self.createDir(head)
             if tail:
                 try:
-                    newDir = os.mkdir(newdir)
+                    os.mkdir(newdir)
+                    # print "mkdir:%s"%newdir
                 except OSError, e:
                     if e.errno != os.errno.EEXIST: #File exists
                         raise
@@ -348,15 +349,13 @@ class SystemFS:
             raise TypeError('Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s '% (src, dst))
         if j.system.fs.isDir(src):
             names = os.listdir(src)
-
-            if applyHrdOnDestPaths<>None:
-                dst=applyHrdOnDestPaths.applyOnContent(dst)    
-
+ 
             if not j.system.fs.exists(dst):
                 self.createDir(dst,skipProtectedDirs=skipProtectedDirs)
 
             errors = []
             for name in names:
+                #is only for the name
                 if applyHrdOnDestPaths<>None:
                     name2=applyHrdOnDestPaths.applyOnContent(name)
                 else:
@@ -374,8 +373,10 @@ class SystemFS:
                     linkto = j.system.fs.readlink(srcname)
                     j.system.fs.symlink(linkto, dstname, overwriteFiles)
                 elif j.system.fs.isDir(srcname):
+                    #print "1:%s %s"%(srcname,dstname)
                     j.system.fs.copyDirTree(srcname, dstname, keepsymlinks, eraseDestination,skipProtectedDirs=skipProtectedDirs,overwriteFiles=overwriteFiles,applyHrdOnDestPaths=applyHrdOnDestPaths )
                 else:
+                    #print "2:%s %s"%(srcname,dstname)
                     self.copyFile(srcname, dstname ,createDirIfNeeded=False,skipProtectedDirs=skipProtectedDirs,overwriteFile=overwriteFiles)
         else:
             raise RuntimeError('Source path %s in system.fs.copyDirTree is not a directory'% src)

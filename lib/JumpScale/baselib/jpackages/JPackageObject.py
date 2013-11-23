@@ -69,7 +69,7 @@ class JPackageObject():
 
     def _init(self):
         if self.__init==False:
-            self.clean()            
+            self.clean()
             self.init()
             self.load()
         self.__init=True
@@ -79,8 +79,8 @@ class JPackageObject():
         #create defaults for new jpackages
         hrddir=j.system.fs.joinPaths(self.getPathMetadata(),"hrd")
 
-        if True or not j.system.fs.exists(hrddir):
-        
+        if True or not j.system.fs.exists(hrddir): #@todo first True statement needs to go
+
             extpath=inspect.getfile(self.__init__)
             extpath=j.system.fs.getDirName(extpath)
             src=j.system.fs.joinPaths(extpath,"templates")
@@ -95,9 +95,8 @@ class JPackageObject():
 
             #for easy development, overwrite specific implementations
             # j.system.fs.copyDirTree(src+"/actions/",self.getPathMetadata()+"/actions/", overwriteFiles=True)
-            j.system.fs.copyFile(src+"/actions/process.depcheck.py",self.getPathMetadata()+"/actions/process.depcheck.py")
-            
-            
+            #j.system.fs.copyFile(src+"/actions/process.depcheck.py",self.getPathMetadata()+"/actions/process.depcheck.py")
+
             self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
             if self.hrd.get("jp.domain",checkExists=True)<>self.domain:
@@ -106,7 +105,7 @@ class JPackageObject():
                 self.hrd.set("jp.name",self.name)
             if self.hrd.get("jp.version",checkExists=True)<>self.version:                
                 self.hrd.set("jp.version",self.version)    
-            
+
             descr=self.hrd.get("jp.description",checkExists=True)
             if descr<>False and descr<>"":
                 self.description=descr
@@ -117,7 +116,7 @@ class JPackageObject():
 
             if self.supportedPlatforms==[]:
                 raise RuntimeError("supported platforms cannot be empty")
-                
+
             j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
             j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"files"))
 
@@ -187,16 +186,16 @@ class JPackageObject():
 
         #create defaults for new jpackages
         hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","main.hrd")
-        if not j.system.fs.exists(hrdpath):  
+        if not j.system.fs.exists(hrdpath):
             self.init()
         self.hrd=j.core.hrd.getHRD(hrdpath)
-            
+
         self._clear()
         self.buildNr = self.hrd.getInt("jp.buildNr")
         if not self.hrd.exists("jp.process.tcpports"):
             self.hrd.set("jp.process.tcpports","")
         if not self.hrd.exists("jp.process.startuptime"):
-            self.hrd.set("jp.process.startuptime","30")            
+            self.hrd.set("jp.process.startuptime","30")
         self.startupTime = self.hrd.getInt("jp.process.startuptime")
         self.tcpPorts = [int(item) for item in self.hrd.getList("jp.process.tcpports") if item<>""]
 
@@ -225,7 +224,7 @@ class JPackageObject():
 
         self.actions = None
 
-        self._getState()        
+        self._getState()
 
         self.debug=self.state.debugMode
 
@@ -263,15 +262,19 @@ class JPackageObject():
     def loadActions(self, force=False):
         # print "loadactions:%s"%self
 
+        force=True #@todo need more checks, now for first release do always
+
         if self.actions <> None and not force:
             return
+
+        self._loadActiveHrd()
 
         self.check()
 
         if j.system.fs.isDir(self.getPathActions()):
             j.system.fs.removeDirTree(self.getPathActions())
         j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"actions"),self.getPathActions())        
-        
+
         #apply apackage hrd data on actions active
         self.hrd.applyOnDir(self.getPathActions()) #make sure params are filled in in actions dir
         #apply hrd configu from system on actions active
@@ -304,6 +307,7 @@ class JPackageObject():
                 dep.setDebugMode(dependencies=False)
 
         self.state.setDebugMode()
+        self.load()
         self.log("set debug mode",category="init")
 
     def removeDebugMode(self,dependencies=False):
@@ -926,7 +930,6 @@ class JPackageObject():
             for dep in deps:
                 dep.install(False, download, reinstall=False)
         self.loadActions() #reload actions to make sure new hrdactive are applied
-        self._loadActiveHrd()
 
         self.actions.install_prepare()
 
@@ -937,13 +940,12 @@ class JPackageObject():
                 dep.copyfiles(dependencies=False, download=download)
 
         self.loadActions() #reload actions to make sure new hrdactive are applied
-        self._loadActiveHrd()
 
         if self.debug ==True:
             self._copyfiles(doCodeRecipe=False)
-            self.codeLink(dependencies=False, update=False, force=False)
-        else:        
-            self.actions.install_copy()        
+            self.codeLink(dependencies=False, update=False, force=True)
+        else:
+            self.actions.install_copy()
 
     def _copyfiles(self,doCodeRecipe=True):
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
@@ -959,34 +961,35 @@ class JPackageObject():
                     if ttype in ["etc"]:
                         applyhrd=True
                     else:
-                        applyhrd=True
+                        applyhrd=False
                     if ttype == 'debs':
                         continue #TODO shoudl we install them from here?, yes
 
                     tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                     self.log("copy files from:%s to:%s"%(pathttype,destination))
                     self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
+                    
 
-    def __copyFiles(self, subdir,destination,applyhrd=False):
+    def __copyFiles(self, path,destination,applyhrd=False):
         """
         Copy the files from package dirs (/opt/js/var/jpackages/...) to their proper location in the sandbox.
 
         @param destination: destination of the files
         """
-
         if destination=="":
-            raise RuntimeError("A destination needs to be specified.") #done for safety, jpackages have to be adjusted
-        for path in self.getPathFilesPlatformForSubDir(subdir):
-            self.log("Copy files from %s to %s"%(path,destination),category="copy")
-            j.system.fs.createDir(destination,skipProtectedDirs=True)
-            if applyhrd:
-                tmpdir=j.system.fs.getTmpDirPath()
-                j.system.fs.copyDirTree(path,tmpdir)
-                j.application.config.applyOnDir(tmpdir)
-                j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
-                j.system.fs.removeDirTree(tmpdir)
-            else:
-                j.system.fs.copyDirTree(path, destination,skipProtectedDirs=True)
+            raise RuntimeError("A destination needs to be specified.") #done for safety, jpackage action scripts have to be adjusted
+
+        print "pathplatform:%s"%path
+    #    self.log("Copy files from %s to %s"%(path,destination),category="copy")
+        j.system.fs.createDir(destination,skipProtectedDirs=True)
+        if applyhrd:
+            tmpdir=j.system.fs.getTmpDirPath()
+            j.system.fs.copyDirTree(path,tmpdir)
+            j.application.config.applyOnDir(tmpdir)
+            j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
+            j.system.fs.removeDirTree(tmpdir)
+        else:
+            j.system.fs.copyDirTree(path, destination,skipProtectedDirs=True)
 
     def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False):
         """
@@ -1010,7 +1013,6 @@ class JPackageObject():
             for dep in deps:
                 dep.install(False, download, reinstall=reinstalldeps)
         self.loadActions() #reload actions to make sure new hrdactive are applied
-        self._loadActiveHrd()
 
         if download:
             self.download(dependencies=False)
@@ -1078,7 +1080,6 @@ class JPackageObject():
         """
         self.log('configure')
         self.loadActions()
-        self._loadActiveHrd()
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
