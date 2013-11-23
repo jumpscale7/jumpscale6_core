@@ -147,11 +147,11 @@ cmd.meld=
             p.setDebugMode()
         p.install(reinstall=True)
 
-    def deployJumpScaleBroker(self, debug=True):
-        p=j.packages.get("jumpscale","broker","1.0")
-        if debug:
-            p.setDebugMode()
-        p.install(reinstall=True)
+    # def deployJumpScaleBroker(self, debug=True):
+    #     p=j.packages.get("jumpscale","broker","1.0")
+    #     if debug:
+    #         p.setDebugMode()
+    #     p.install(reinstall=True)
 
     def linkJumpScaleBase(self,debug=True):
         """
@@ -191,5 +191,5 @@ cmd.meld=
         self.deployJumpScaleLibs()
         self.deployJumpScaleGridMaster()
         self.deployJumpScalePortal()
-        self.deployJumpScaleBroker()
+        # self.deployJumpScaleBroker()
 
