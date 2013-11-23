@@ -561,7 +561,7 @@ class JPackageClient():
         """
         Does an update of the meta information repo for each domain
         """
-        self.resetState()
+        # self.resetState()
         if domain<>"":
             j.logger.log("Update metadata information for jpackages domain %s" % domain, 1)
             d=self.getDomainObject(domain)
