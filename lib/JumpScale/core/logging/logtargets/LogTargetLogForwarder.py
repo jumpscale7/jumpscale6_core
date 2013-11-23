@@ -10,7 +10,7 @@ class LogTargetLogForwarder():
     def __init__(self, serverip=None):
         self._lastcheck = 0
         self.connected = False
-        self.enabled = True
+        self.enabled = False
         if not serverip:
             if j.application.config.exists('grid.master.ip'):
                 serverip = j.application.config.get("grid.master.ip")
