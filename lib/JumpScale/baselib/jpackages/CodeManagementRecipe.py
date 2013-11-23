@@ -270,10 +270,12 @@ class CodeManagementRecipe:
 
     def export(self):
         '''Export all items from VCS to the system sandbox or other location specifed'''
+        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.exportToSystem()
             
     def link(self,force=False):
+        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.linkToSystem(force=force)    
 
@@ -293,16 +295,18 @@ class CodeManagementRecipe:
         # filesPath = jpackages.getPathFiles()
         # j.system.fs.removeDirTree(filesPath)
         ##DO TNO REMOVE, TOO DANGEROUS HAPPENS NOW PER ITEM
-
+        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.codeToFiles(jpackage)
 
         
     def push(self):
+        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.push()       
             
     def update(self,force=False):        
+        repoconnection = self._getRepoConnection()
         return self.pullupdate(force=force)
     
     def pullupdate(self,force=False):
@@ -331,10 +335,11 @@ class CodeManagementRecipe:
         ttype=self.hrd.get("jp.code.type")
         if ttype == "bitbucket":
             branch = branch or 'default'
+            print "getrepo connection: %s %s %s"%(account, repo, branch)
             self._repoconnection = j.clients.bitbucket.getRepoConnection(account, repo, branch)
             return self._repoconnection
-        elif ttype == "github":
-            pass
+        # elif ttype == "github":
+        #     pass
         else:
             raise RuntimeError("Connection of type %s not supported" % ttype)
 
