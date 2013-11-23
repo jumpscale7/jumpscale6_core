@@ -59,7 +59,7 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
     def set(self, obj):
         value = self._getObj(obj)
         id = getattr(value, 'id', None)
-        key, new, changed = self.remoteOSISClient.set(self.actorname, self.modelname, value, id)
+        key, new, changed = self.remoteOSISClient.set(self.actorname, self.modelname, id, value.getSerializable())
         return key
 
     def get(self, guid=None, id=None):
@@ -75,8 +75,8 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
     def find(self, query, start=0, size=None):
         return self.remoteOSISClient.search(self.actorname, self.modelname, query, start, size)
 
-    def list(self):
-        return self.remoteOSISClient.list(self.actorname, self.modelname)
+    def list(self, prefix=None):
+        return self.remoteOSISClient.list(self.actorname, self.modelname, prefix)
 
 
 class OSISInstance(OSISInstanceNoDB):
