@@ -1815,4 +1815,4 @@ class SystemFS:
             #todo find better alternative for windows
         else:
             cmd = "tar xzf '%s' -C '%s'" % (sourceFile, destinationdir)
-            j.system.process.execute(cmd)
+            j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
