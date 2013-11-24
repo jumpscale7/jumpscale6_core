@@ -136,7 +136,7 @@ rm $0
         except KeyError:
             return # window does nt exist
         cmd = "tmux kill-window -t '%s'" % pane
-        j.system.process.execute(cmd)
+        j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
 
     def killSessions(self):
         cmd="tmux kill-server"
