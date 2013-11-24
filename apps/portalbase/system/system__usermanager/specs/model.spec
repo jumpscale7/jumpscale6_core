@@ -10,7 +10,6 @@
 
 [rootmodel:group] @dbtype:fs
     """
-    """
     group of users
     """
     prop:id str,,is unique id =name 
