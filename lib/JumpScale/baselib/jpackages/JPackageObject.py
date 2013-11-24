@@ -1214,8 +1214,52 @@ class JPackageObject():
             self.actions.code_update()
         self.actions.code_package()
 
-        newbuildNr=0
+        newbuildNr = False
 
+        newblobinfo = self._caculateBlobInfo()
+
+
+        actionsdir=j.system.fs.joinPaths(self.getPathMetadata(), "actions")
+        j.system.fs.removeIrrelevantFiles(actionsdir)
+        taskletsChecksum, descr2 = j.tools.hash.hashDir(actionsdir)
+        hrddir=j.system.fs.joinPaths(self.getPathMetadata(), "hrdactive")
+        hrdChecksum, descr2 = j.tools.hash.hashDir(hrddir)
+        descrdir=j.system.fs.joinPaths(self.getPathMetadata(), "documentation")
+        descrChecksum, descr2 = j.tools.hash.hashDir(descrdir)
+
+        if descrChecksum <> self.descrChecksum:
+            self.log("Descr change.",level=5,category="buildNr")
+            #buildNr needs to go up
+            newbuildNr = True
+            self.descrChecksum = descrChecksum
+        else:
+            self.log("Descr did not change.",level=7,category="buildNr")
+
+        if taskletsChecksum <> self.taskletsChecksum:
+            self.log("Actions change.",level=5,category="buildNr")
+            #buildNr needs to go up
+            newbuildNr = True
+            self.taskletsChecksum = taskletsChecksum
+        else:
+            self.log("Actions did not change.",level=7,category="buildNr")            
+
+        if hrdChecksum <> self.hrdChecksum:
+            self.log("Active HRD change.",level=5,category="buildNr")
+            #buildNr needs to go up
+            newbuildNr = True
+            self.hrdChecksum = hrdChecksum
+        else:
+            self.log("Active HRD did not change.",level=7,category="buildNr")
+
+        if newbuildNr or newblobinfo:
+            if newbuildNr:
+                self.buildNrIncrement()
+            self.log("new buildNr is:%s"%self.buildNr)
+            self.save()
+            self.load()
+
+    def _caculateBlobInfo(self):
+        result = False
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
@@ -1229,59 +1273,21 @@ class JPackageObject():
 
                 oldkey,olditems=self.getBlobInfo(platform,ttype)
                 if oldkey<>md5:
-                    if newbuildNr==0:
-                        newbuildNr=self.buildNrIncrement()
+                    if not result:
+                        self.buildNrIncrement()
+                    result = True
 
                     dest=j.system.fs.joinPaths(self.getPathMetadata(),"files","%s___%s.info"%(platform,ttype))
                     j.system.fs.createDir(j.system.fs.getDirName(dest))
                     j.system.fs.writeFile(dest,out)
 
                     dest=j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory","%s___%s.info"%(platform,ttype))
-                    out="%s | %s | %s | %s\n"%(j.base.time.getLocalTimeHR(),j.base.time.getTimeEpoch(),newbuildNr,md5)
+                    out="%s | %s | %s | %s\n"%(j.base.time.getLocalTimeHR(),j.base.time.getTimeEpoch(),self.buildNr,md5)
                     j.system.fs.writeFile(dest, out, append=True)
                     self.log("Uploaded changed for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
                 else:
                     self.log("No file change for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
-
-        actionsdir=j.system.fs.joinPaths(self.getPathMetadata(), "actions")
-        j.system.fs.removeIrrelevantFiles(actionsdir)
-        taskletsChecksum, descr2 = j.tools.hash.hashDir(actionsdir)
-        hrddir=j.system.fs.joinPaths(self.getPathMetadata(), "hrdactive")
-        hrdChecksum, descr2 = j.tools.hash.hashDir(hrddir)
-        descrdir=j.system.fs.joinPaths(self.getPathMetadata(), "documentation")
-        descrChecksum, descr2 = j.tools.hash.hashDir(descrdir)
-
-        if descrChecksum <> self.descrChecksum:
-            self.log("Descr change.",level=5,category="buildNr")
-            #buildNr needs to go up
-            if newbuildNr==0:
-                newbuildNr=self.buildNrIncrement()
-            self.descrChecksum = descrChecksum
-        else:
-            self.log("Descr did not change.",level=7,category="buildNr")
-
-        if taskletsChecksum <> self.taskletsChecksum:
-            self.log("Actions change.",level=5,category="buildNr")
-            #buildNr needs to go up
-            if newbuildNr==0:
-                newbuildNr=self.buildNrIncrement()
-            self.taskletsChecksum = taskletsChecksum
-        else:
-            self.log("Actions did not change.",level=7,category="buildNr")            
-
-        if hrdChecksum <> self.hrdChecksum:
-            self.log("Active HRD change.",level=5,category="buildNr")
-            #buildNr needs to go up
-            if newbuildNr==0:
-                newbuildNr=self.buildNrIncrement()
-            self.hrdChecksum = hrdChecksum
-        else:
-            self.log("Active HRD did not change.",level=7,category="buildNr")
-
-        if newbuildNr<>0:
-            self.log("new buildNr is:%s"%self.buildNr)
-            self.save()
-            self.load()
+        return result
 
     def compile(self,dependencies=False):
         
@@ -1409,8 +1415,8 @@ class JPackageObject():
         Upload jpackages to Blobstor, default remote and local
         Does always a jp.package() first
         """
-        self.package(dependencies=False)
         self.loadActions(force=True)
+        self._caculateBlobInfo()
 
         for platform,ttype in self.getBlobPlatformTypes():
             key0,blobitems=self.getBlobInfo(platform,ttype)
