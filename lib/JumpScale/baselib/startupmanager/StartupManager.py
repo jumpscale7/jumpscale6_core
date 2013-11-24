@@ -2,6 +2,8 @@ from JumpScale import j
 import os
 import JumpScale.baselib.screen
 import time
+import threading
+# import Queue
 
 class ProcessDef:
     def __init__(self, hrd):
@@ -20,37 +22,56 @@ class ProcessDef:
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
         self.pid=0
         self.processobject=None
+        self._nameLong=self.name
+        while len(self._nameLong)<20:
+            self._nameLong+=" "
 
     def _ensure(self):
         sessions = [ s[1] for s in j.system.platform.screen.getSessions() ]
         if self.domain not in sessions:
-            print "create session for %s"%self.name
+            self.log("session create START")
             j.system.platform.screen.createSession(self.domain, [self.name])
+            self.log("session create OK")
         if self.name not in j.system.platform.screen.listWindows(self.domain):
-            print "create window for %s"%self.name
+            self.log("window create START")
             j.system.platform.screen.createWindow(self.domain, self.name)
+            self.log("window create OK")
 
-    def start(self, timeout=20):
+    def log(self,msg):
+
+        print "%s: %s"%(self._nameLong,msg)
+
+    def start(self, timeout=100):
         self._ensure()
         if self.isRunning():
-            print "no need to start %s, already started."%self
+            self.log("no need to start, already started.")
             return
-        jp=j.packages.find(self.domain,self.name)[0]
-        print "check process dependency for %s"%self.name
+        try:
+            jp=j.packages.find(self.domain,self.name)[0]
+        except Exception,e:
+            raise RuntimeError("COULD NOT FIND JPACKAGE:%s:%s"%(self.domain,self.name))
+            
+        self.log("process dependency CHECK")
         jp.processDepCheck(timeout=timeout)
-        print "start process %s"%self.name
+        self.log("process dependency OK")
+        self.log("start process")
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env, newscr=True)
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
+        self.log("pid get")
         pid=self.getPid(timeout=5)
+        self.log("pid: %s"%pid)
 
         for port in self.ports:
             if not port or not port.isdigit():
                 continue
             port = int(port)
+            self.log("port check:%s START"%port)
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
                 raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s' % (self.name, port, timeout))
+            self.log("port check:%s DONE"%port)
 
+        self.log("*** STARTED ***")
         return pid
 
     def getProcessObject(self):
@@ -123,7 +144,6 @@ class ProcessDef:
             
             raise RuntimeError("Timeout on wait for chilprocess for tmux for processdef:%s"%self)
             
-        print "cache"
         return self.pid
 
     def isRunning(self):
@@ -300,10 +320,27 @@ class StartupManager:
                 result.append(pd)
         return result
 
+    def _start(self,j,pd):
+        # print "thread start:%s"%pd
+        try:
+            pd.start()
+        except Exception,e:
+            print "********** ERROR **********"
+            print pd
+            print e
+            print "********** ERROR **********"
+        # print "thread started:%s"%pd
+
     def startAll(self):
-        for pd in self.getProcessDefs():
+        # q = Queue.Queue()
+        for pd in self.getProcessDefs():          
             if pd.autostart:
-                pd.start()
+                t = threading.Thread(target=self._start, args = (j,pd))
+                t.daemon = True
+                t.start()                  
+                # pd.start()
+        while True:
+            time.sleep(0.1)
 
     def restartAll(self):
         for pd in self.getProcessDefs():

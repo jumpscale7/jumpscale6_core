@@ -132,10 +132,32 @@ cmd.meld=
         if debug:
             p.setDebugMode()
         p.install(reinstall=True)
+
+        p=j.packages.get("jumpscale","grid_master","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install(reinstall=True)
+
         p=j.packages.get("jumpscale","grid","1.0")
         if debug:
             p.setDebugMode()
         p.install(reinstall=True)
+
+
+        p=j.packages.get("jumpscale","logger","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install(reinstall=True)
+
+
+        p=j.packages.get("jumpscale","grid_portal","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install(reinstall=True)
+
+        j.tools.startupmanager.reset()
+        j.tools.startupmanager.startAll()        
+
 
     def deployJumpScalePortal(self,debug=True):
         """

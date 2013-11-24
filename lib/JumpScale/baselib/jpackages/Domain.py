@@ -396,6 +396,7 @@ class Domain():
                   
             #self.bitbucketclient.checkoutMerge    
             if force:
+                print "FORCE METADATA UPDATE"
                 self.bitbucketclient.pull(self.bitbucketreponame,message=commitMessage,update=True,merge=False,checkIgnore=False,force=True)   
             else:
                 self.bitbucketclient.pull(self.bitbucketreponame,message=commitMessage,update=True,merge=True,checkIgnore=False,force=False)   
