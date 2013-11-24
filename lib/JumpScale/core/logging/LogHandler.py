@@ -206,7 +206,6 @@ class LogHandler(object):
         from logtargets.LogTargetLogForwarder import LogTargetLogForwarder
         self.logs=[]
         self.inlog=False
-        self.logTargets=[]
         self.order=0
         self.clientdaemontarget = LogTargetLogForwarder(serverip)
 
