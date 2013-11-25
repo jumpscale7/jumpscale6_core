@@ -61,7 +61,7 @@ rm $0
         os.chmod(scriptfile, 0755)
         if newscr:
             self.killWindow(sessionname, screenname)
-            if sessionname not in dict(self.getSessions()).values():
+            if sessionname not in self.getSessionNames():
                 cmd2 = "tmux new-session -d -s '%s'" % sessionname
             else:
                 cmd2 = "tmux new-window -t '%s'" % sessionname
@@ -89,7 +89,21 @@ rm $0
         if exitcode != 0:
             output = ""
         return [ (None, name) for name in output.split() ]
-        
+
+    def getSessionNames(self):
+        return [ x[1] for x in self.getSessions() ]
+
+    def getPid(self, session, name):
+        cmd = 'tmux list-panes -t "%s" -F "#{pane_pid};#{window_name}"' % session
+        exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
+        if exitcode:
+            return None
+        for line in output.split():
+            pid, windowname = line.split(';')
+            if windowname == name:
+                return int(pid)
+        return None
+
     def listSessions(self):
         sessions=self.getSessions()
         for pid,name in sessions:
@@ -107,7 +121,7 @@ rm $0
         return result
 
     def createWindow(self, session, name):
-        if session not in dict(self.getSessions()).values():
+        if session not in self.getSessionNames():
             return self.createSession(session, [name])
         windows = self.listWindows(session)
         if name not in windows.values():
@@ -119,7 +133,7 @@ rm $0
         j.system.process.execute(cmd)
 
     def windowExists(self, session, name):
-        if session in dict(self.getSessions()).values():
+        if session in self.getSessionNames():
             if name in self.listWindows(session).values():
                 return True
         return False

@@ -63,23 +63,13 @@ class ProcessDef:
         return pid
 
     def getProcessObject(self):
-        pid=self.getPid()
+        self.getPid()
         return self.processobject
 
     def getPid(self,timeout=5,ifNoPidFail=True):
         if self.pid==0:
-            cmd="tmux lsp -a -t j%s -F#{pane_pid},#{window_name}"%self.domain
-            exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=True)
-            pid=0
-            for line in output.split("\n"):
-                line=line.strip()
-                if line=="":
-                    continue
-                pid2,name=line.split(",")
-                if name==self.name:
-                    pid=int(pid2)
-
-            if pid==0:
+            pid = j.system.platform.screen.getPid(self.domain, self.name)
+            if not pid:
                 if ifNoPidFail:
                     raise RuntimeError("Could not start %s, pid was not found"%self)
                 else:
@@ -88,7 +78,6 @@ class ProcessDef:
                 #@todo show errorlog
 
             pr=j.system.process.getProcessObject(pid)
-            
 
             def check():
                 pid=None
@@ -114,7 +103,7 @@ class ProcessDef:
                 timeout=0.1
 
             pid=None
-            start=j.base.time.getTimeEpoch()            
+            start=j.base.time.getTimeEpoch()
             now=start
             while now<start+timeout and pid==None:
                 pid=check()
