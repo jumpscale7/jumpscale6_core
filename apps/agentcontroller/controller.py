@@ -132,7 +132,8 @@ class ControllerCMDS():
 
     def _clean(self,similarProcessPIDs,session):
         print similarProcessPIDs        
-        pid=int(session.id.split("_")[3])
+        pid=int(session.id.split("_")[2])
+        
         similarProcessPIDs.pop(similarProcessPIDs.index(pid))
         if self.agent2sessions.has_key(session.agentid):
             for sessionkey in self.agent2sessions[session.agentid]:

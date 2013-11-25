@@ -19,7 +19,8 @@ class Agent():
         self.client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user="user1", passwd="1234", \
             category="agent",id=id)
 
-        self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.bid,j.application.whoAmI.nid)
+
+        self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid)
         
 
         print "agent: %s"%self.agentid

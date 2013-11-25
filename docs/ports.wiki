@@ -7,8 +7,6 @@ zbroker 5650  #for workers
 
 zlogger 4443
 
-agentcontroller 
-
 elasticsearch 9200
 
 agentcontroller 4444

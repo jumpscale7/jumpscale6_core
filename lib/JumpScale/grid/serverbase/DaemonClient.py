@@ -220,6 +220,7 @@ class Klass(object):
                     params_spec[-cnt] += "=%r" % default
             params = ', '.join(params_spec)
             strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
+            strmethod=strmethod.replace(", ,",",")
             try:
                 exec(strmethod)
             except Exception,e:
