@@ -26,23 +26,11 @@ class ProcessDef:
         while len(self._nameLong)<20:
             self._nameLong+=" "
 
-    def _ensure(self):
-        sessions = [ s[1] for s in j.system.platform.screen.getSessions() ]
-        if self.domain not in sessions:
-            self.log("session create START")
-            j.system.platform.screen.createSession(self.domain, [self.name])
-            self.log("session create OK")
-        if self.name not in j.system.platform.screen.listWindows(self.domain):
-            self.log("window create START")
-            j.system.platform.screen.createWindow(self.domain, self.name)
-            self.log("window create OK")
-
     def log(self,msg):
 
         print "%s: %s"%(self._nameLong,msg)
 
     def start(self, timeout=100):
-        self._ensure()
         if self.isRunning():
             self.log("no need to start, already started.")
             return
