@@ -372,8 +372,6 @@ class PortalProcess():
 
             else:
                 j.system.platform.ubuntu.check()
-                j.system.platform.ubuntu.checkInstall(["php5-cgi"], "php-cgi")
-                j.system.platform.ubuntu.checkInstall("nginx", "nginx")
 
                 j.system.fs.remove("/etc/nginx/sites-enabled/default")
 
