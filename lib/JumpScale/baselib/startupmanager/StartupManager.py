@@ -47,7 +47,7 @@ class ProcessDef:
             self.log("no need to start, already started.")
             return
         try:
-            jp=j.packages.find(self.domain,self.name)[0]
+            jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
         except Exception,e:
             raise RuntimeError("COULD NOT FIND JPACKAGE:%s:%s"%(self.domain,self.name))
             
@@ -328,6 +328,10 @@ class StartupManager:
             print "********** ERROR **********"
             print pd
             print e
+            from IPython import embed
+            print "DEBUG NOW oooo"
+            embed()
+            
             print "********** ERROR **********"
         # print "thread started:%s"%pd
 
