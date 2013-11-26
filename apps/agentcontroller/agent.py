@@ -4,6 +4,8 @@ import time
 
 import JumpScale.grid.geventws
 
+import Queue
+
 j.application.start("agent")
 
 j.logger.consoleloglevel = 2
@@ -30,6 +32,10 @@ class Agent():
         self.serverurl=self.client._client.transport.url
 
         self.register()
+
+        self.client.schedule(self.flushLogs)
+
+        self.queue = Queue.Queue()
 
     def register(self):
         ok=False
@@ -65,6 +71,7 @@ class Agent():
                     print "CACHEMISS"
                     jscript=self.client.getJumpscriptFromKey(jscriptid)
                     try:
+                        self.queueLogs('Job started')
                         exec(jscript["source"])
                         self.actions[jscriptid]=(action,jscript)
                         #result is method action
@@ -72,6 +79,7 @@ class Agent():
                         msg="could not compile jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                             jscript["source"],e)
                         eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
+                        self.queueLogs(msg)
                         self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     
                 eco=None
@@ -81,11 +89,23 @@ class Agent():
                     msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                         jscript["source"],e)
                     eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
+                    self.queueLogs(msg)
                     self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     continue
                 
                 print "notify work completed"
                 self.client.notifyWorkCompleted(result=result,eco=None)
+
+    def queueLogs(self, message, jid=0):
+        #queue saving logs
+        log = {'message': message, 'category': 'agent', 'jid':jid, 'parentjid': self.agentid}
+        self.queue.put(log)
+
+    def flushLogs(self):
+        logs = []
+        for i in range(0, self.queue.qsize()):
+            logs.append(self.queue.get(block=False))
+        return logs
 
 agent=Agent()
 agent.start()

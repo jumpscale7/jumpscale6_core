@@ -138,7 +138,7 @@ class ControllerCMDS():
         if self.agent2sessions.has_key(session.agentid):
             for sessionkey in self.agent2sessions[session.agentid]:
                 session=self.sessions[sessionkey]
-                pidinmem=int(session.id.split("_")[3])
+                pidinmem=int(session.id.split("_")[2])
                 print "pidinmem:%s for agent:%s"%(pidinmem,session.agentid)
                 if pidinmem not in similarProcessPIDs:
                     #session no longer valid, remove
@@ -423,6 +423,12 @@ class ControllerCMDS():
                 result=[item.__dict__ for item in self.workqueue[session.agentid]]
         return result
 
+    def schedule(self, ffunction):
+        logs = self.daemon.schedule('agent_logger', ffunction).value()
+        for logdict in logs:
+            log = j.logger.getLogObjectFromDict(logdict)
+            j.logger.log(log)
+            print log
 
 # will reinit for testing everytime, not really needed
 # j.servers.geventws.initSSL4Server("myorg", "controller1")
