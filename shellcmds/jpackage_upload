@@ -2,9 +2,8 @@
 from JumpScale import j
 j.application.start("jpackage")
 from JumpScale.baselib import cmdutils
-import argparse
 print "upload package to blobstor"
-parser = argparse.ArgumentParser()
+parser = cmdutils.ArgumentParser()
 parser.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
 
 packages, args = cmdutils.getJPackage(parser,installed=False)

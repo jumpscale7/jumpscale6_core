@@ -1,12 +1,21 @@
 from JumpScale import j
 import JumpScale.baselib.jpackages #load jpackages
 import argparse
+import sys
 
+class ArgumentParser(argparse.ArgumentParser):
+    def exit(self, status=0, message=None):
+        if message:
+           self._print_message(message, sys.stderr) 
+        if j.application.state == j.enumerators.AppStatusType.RUNNING:
+            j.application.stop(status)
+        else:
+            sys.exit(status)
 
 def getJPackage(parser=None,installed=None,domain=None):
     if installed:
         domain=""
-    parser = parser or argparse.ArgumentParser()
+    parser = parser or ArgumentParser()
     parser.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
     parser.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
     parser.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
@@ -41,7 +50,7 @@ def getJPackage(parser=None,installed=None,domain=None):
     return packages, args
 
 def getProcess(parser=None):
-    parser = parser or argparse.ArgumentParser()
+    parser = parser or ArgumentParser()
     parser.add_argument('-d', '--domain', help='Process domain name')
     parser.add_argument('-n', '--name', help='Process name')
     return parser.parse_args()

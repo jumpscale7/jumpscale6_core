@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 from JumpScale import j
-import argparse
 j.application.start("jpackages")
 from JumpScale.baselib import cmdutils
 
-parser = argparse.ArgumentParser()
+parser = cmdutils.ArgumentParser()
 parser.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
 
 packages, args = cmdutils.getJPackage(parser,installed=True)

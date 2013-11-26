@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 from JumpScale import j
-import argparse
 j.application.start("jpackages")
 from JumpScale.baselib import cmdutils
 
-parser = argparse.ArgumentParser()
+parser = cmdutils.ArgumentParser()
 parser.add_argument('-r', '--reinstall', required=False, action='store_true', help='Reinstall found package')
 parser.add_argument('-s', '--single', required=False, action='store_true', help='Do not install dependencies')
 parser.add_argument('--debug', required=False, action='store_true', help='Sets debug_mode for package')

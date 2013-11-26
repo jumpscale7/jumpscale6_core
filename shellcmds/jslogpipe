@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import argparse
+from JumpScale.baselib import cmdutils
 import sys
 
-parser = argparse.ArgumentParser()
+parser = cmdutils.ArgumentParser()
 parser.add_argument('-n', '--name', help='Application name to log under')
 parser.add_argument('-l', '--level', default=1, type=int,  help='Log level to use')
 parser.add_argument('-c', '--category', default='stdout', help='Category used for logging')
