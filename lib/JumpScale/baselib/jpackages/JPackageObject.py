@@ -947,8 +947,21 @@ class JPackageObject():
         else:
             self.actions.install_copy()
 
+    def installDebs(self):
+        for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
+            if platform not in j.system.platformtype.getMyRelevantPlatforms():
+                continue
+            pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
+            for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
+                if ttype == 'debs':
+                    fullpath = j.system.fs.joinPaths(pathplatform, ttype)
+                    for file_ in sorted(j.system.fs.listFilesInDir(fullpath)):
+                        j.system.platform.ubuntu.installDebFile(file_)
+
     def _copyfiles(self,doCodeRecipe=True):
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
+            if platform not in j.system.platformtype.getMyRelevantPlatforms():
+                continue
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
                 # print "type:%s,%s"%(ttype,ttype.find("cr_"))
@@ -963,12 +976,11 @@ class JPackageObject():
                     else:
                         applyhrd=False
                     if ttype == 'debs':
-                        continue #TODO shoudl we install them from here?, yes
+                        continue # this needs to be handled by package by runnig jp.installDebs
 
                     tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                     self.log("copy files from:%s to:%s"%(pathttype,destination))
                     self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
-                    
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """
