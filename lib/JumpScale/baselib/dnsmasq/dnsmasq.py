@@ -18,23 +18,22 @@ class DNSMasq(object):
         self._configfile = j.system.fs.joinPaths(self._configdir, 'dnsmasq.conf')
         if namespace:
             self._namespace = namespace
-            self._circusname = 'dnsmasq_%s' % (namespace)
+            self._startupmanagername = 'dnsmasq_%s' % (namespace)
         else: 
-            self._circusname = 'dnsmasq'
-        if self._circusname not in j.tools.startupmanager.listProcesses():
-            self.addToCircus()
+            self._startupmanagername = 'dnsmasq'
+        startname = '%s__%s' % ('generic', self._startupmanagername)
+        if startname not in j.tools.startupmanager.listProcesses():
+            self.addToStartupManager()
         self._configured = True
 
     
-    def addToCircus(self):
+    def addToStartupManager(self):
         if self._namespace:
             cmd = 'ip netns exec %(namespace)s dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'namespace':self._namespace,'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
         else:
             cmd = 'dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
-        j.tools.startupmanager.addProcess(self._circusname, cmd, send_hup=True)
-        j.tools.startupmanager.apply()
-        j.tools.startupmanager.startProcess(self._circusname)
-
+        j.tools.startupmanager.addProcess(self._startupmanagername, cmd)
+        j.tools.startupmanager.startProcess('generic', self._startupmanagername)
 
     
     def _checkFile(self, filename):
@@ -70,7 +69,7 @@ class DNSMasq(object):
         """Restarts dnsmasq"""
         if not self._configured:
             raise Exception('Please run first setConfigPath to select the correct paths')
-        j.tools.startupmanager.restartProcess(self._circusname)
+        j.tools.startupmanager.restartProcess('generic', self._startupmanagername)
 
     def reload(self):
         if not self._configured:
