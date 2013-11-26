@@ -6,6 +6,8 @@ import JumpScale.grid.geventws
 
 import Queue
 
+import threading
+
 j.application.start("agent")
 
 j.logger.consoleloglevel = 2
@@ -21,7 +23,6 @@ class Agent():
         self.client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user="user1", passwd="1234", \
             category="agent",id=id)
 
-
         self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid)
         
 
@@ -33,9 +34,13 @@ class Agent():
 
         self.register()
 
-        self.client.schedule(self.flushLogs)
-
         self.queue = Queue.Queue()
+
+        queueThread = threading.Thread(name='logThread', target=self.queueLogs, args=['logging started'])
+        queueThread.daemon = True
+        queueThread.start()
+        self.scheduler(2)
+
 
     def register(self):
         ok=False
@@ -98,14 +103,19 @@ class Agent():
 
     def queueLogs(self, message, jid=0):
         #queue saving logs
-        log = {'message': message, 'category': 'agent', 'jid':jid, 'parentjid': self.agentid}
+        log = {'message': message, 'category': 'agent', 'jid':jid}
         self.queue.put(log)
 
     def flushLogs(self):
         logs = []
-        for i in range(0, self.queue.qsize()):
+        while not self.queue.empty():
             logs.append(self.queue.get(block=False))
-        return logs
+        self.client.log(logs)
+
+    def scheduler(self, interval):
+        self.flushLogs()
+        t = threading.Timer(interval, self.scheduler, args=[interval])
+        t.start()
 
 agent=Agent()
 agent.start()

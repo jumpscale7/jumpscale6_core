@@ -85,6 +85,7 @@ class ControllerCMDS():
 
         self.adminpasswd = "1234"
 
+
     def _adminAuth(self,user,passwd):
         if (user=="admin" and passwd==self.adminpasswd)==False:
             raise RuntimeError("permission denied")
@@ -423,12 +424,10 @@ class ControllerCMDS():
                 result=[item.__dict__ for item in self.workqueue[session.agentid]]
         return result
 
-    def schedule(self, ffunction):
-        logs = self.daemon.schedule('agent_logger', ffunction).value()
+    def log(self, logs, session=None):
+        #TODO use logItems instead of dicts for timestamps
         for logdict in logs:
-            log = j.logger.getLogObjectFromDict(logdict)
-            j.logger.log(log)
-            print log
+            j.logger.log(message=logdict['message'], category=logdict['category'], jid=logdict['jid'])
 
 # will reinit for testing everytime, not really needed
 # j.servers.geventws.initSSL4Server("myorg", "controller1")
