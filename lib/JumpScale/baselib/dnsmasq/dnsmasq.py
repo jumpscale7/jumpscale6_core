@@ -69,6 +69,7 @@ class DNSMasq(object):
         """Restarts dnsmasq"""
         if not self._configured:
             raise Exception('Please run first setConfigPath to select the correct paths')
+        j.tools.startupmanager.load()
         j.tools.startupmanager.restartProcess('generic', self._startupmanagername)
 
     def reload(self):
