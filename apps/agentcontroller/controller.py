@@ -1,12 +1,10 @@
 
 from JumpScale import j
-
 import JumpScale.grid.geventws
 import gevent
 from gevent.event import Event
 import copy
 import JumpScale.grid.osis
-from gevent import monkey; monkey.patch_all(); monkey.patch_select(aggressive=True)
 
 j.application.start("agentcontroller")
 
@@ -289,7 +287,7 @@ class ControllerCMDS():
         jobs=[]
         if self.roles2agents.has_key(role):
             for agentid in self.roles2agents[role]:
-                job = self.jobclient.new(session=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
+                job = self.jobclient.new(sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
                 self.workqueue[agentid].append(job)
                 self.jobs[job.id]=job
                 jobs.append(job.id)
@@ -301,7 +299,7 @@ class ControllerCMDS():
                     self.agent2freeSessions[agentid][sessionid].set()
 
             if len(jobs)>1:
-                jobgroup= self.jobclient.new(session=None, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
+                jobgroup= self.jobclient.new(sessionid=None, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
                 jobgroup.children=jobs
                 self.jobs[jobgroup.id]=jobgroup
                 for childid in jobs:
