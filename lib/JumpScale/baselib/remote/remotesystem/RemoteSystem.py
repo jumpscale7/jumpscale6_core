@@ -7,7 +7,7 @@ try:
     import paramiko
 except:
     try:
-        j.system.platformtype.ubuntu.install("python-paramiko")
+        j.system.platform.ubuntu.install("python-paramiko")
     except Exception as e:
         print "Could not install python-paramiko, this only works on ubuntu, please install it."
 import paramiko

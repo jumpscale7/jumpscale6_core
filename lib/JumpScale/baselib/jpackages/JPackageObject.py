@@ -1197,6 +1197,13 @@ class JPackageObject():
             for dep in deps:
                 dep.codeLink(dependencies=False, update=update,force=force)            
 
+        hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
+        codehrd=j.core.hrd.getHRD(hrdpath)
+        account=codehrd.get("jp.code.account")
+        repo=codehrd.get("jp.code.repo")
+        if account=="" or repo=="":
+            return
+
         self.actions.code_link(force=force)
       
     def package(self, dependencies=False,update=False):

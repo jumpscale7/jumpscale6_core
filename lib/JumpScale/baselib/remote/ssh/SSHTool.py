@@ -22,6 +22,6 @@ class SSHTool:
             from remote.ssh.SSHClient import SSHClient
         except:
             from JumpScale import j
-            j.system.platformtype.ubuntu.install("python-paramiko")
+            j.system.platform.ubuntu.install("python-paramiko")
         from remote.ssh.SSHClient import SSHClient
         return SSHClient(host, username, password, timeout)

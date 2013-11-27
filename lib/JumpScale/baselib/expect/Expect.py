@@ -34,7 +34,7 @@ if sys.platform.startswith('sun') or sys.platform.startswith('linux'):
         print "did not find pexpect"
         j.system.platformtype.isLinux()
         try:
-            j.system.platformtype.ubuntu.install("python-pexpect")
+            j.system.platform.ubuntu.install("python-pexpect")
         except:
             pass
 

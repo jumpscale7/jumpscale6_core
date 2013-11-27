@@ -80,7 +80,7 @@ class Replicator():
 
         if not j.system.fs.exists("/opt/qbase3/lib/libgamin-1.so.0"):
             # means gamin not installed
-            j.system.platformtype.ubuntu.installFileMonitor()
+            j.system.platform.ubuntu.installFileMonitor()
         sys.path.append("/usr/lib/pymodules/python2.6/")
         import gamin
 
