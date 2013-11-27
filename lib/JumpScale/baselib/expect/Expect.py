@@ -249,17 +249,17 @@ class Expect:
     def login(self,remote,passwd,seedpasswd):
         #login over ssh
         self.send("ssh root@%s"%remote)
-        result=self.expect("password:")
+        result=self.expect("password:",timeout=10)
       
         if result=="E":
             print "did not see passwd"
-            result=self.expect("continue connecting")
+            result=self.expect("continue connecting",timeout=5)
             
             if result==0:
                 print "saw confirmation ssh key"
                 print "send yes for ssh key"
                 self.send("yes\n")
-                result=self.expect("password:")
+                result=self.expect("password:",timeout=5)
             else:
                 raise RuntimeError("Could not login with std passwd nor with seedpasswd, did not get passwd str")
 

@@ -188,7 +188,7 @@ class StartupManager:
             self.load()
             self.__init=True
 
-    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=0, shell=False, workingdir='',jpackage=None,domain="",ports=[],autostart=True):
+    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False, workingdir='',jpackage=None,domain="",ports=[],autostart=True):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -305,29 +305,41 @@ class StartupManager:
             print "********** ERROR **********"
             print pd
             print e
-            from IPython import embed
-            print "DEBUG NOW oooo"
-            embed()
-            
             print "********** ERROR **********"
         # print "thread started:%s"%pd
 
     def startAll(self):
-        # q = Queue.Queue()
-        for pd in self.getProcessDefs():          
-            if pd.autostart:
-                t = threading.Thread(target=self._start, args = (j,pd))
-                t.daemon = True
-                t.start()                  
-                # pd.start()
-        while True:
-            time.sleep(0.1)
-
-    def restartAll(self):
+        l=self.getProcessDefs()
+        for item in l:
+            print "will start: %s %s"%(item.priority,item.name)
+        
         for pd in self.getProcessDefs():
-            if pd.autostart:
-                pd.stop()
-                pd.start()
+            # pd.start()
+            pd.start()
+
+
+    # def startAll(self):
+    #     # q = Queue.Queue()
+    #     started=[]
+    #     for pd in self.getProcessDefs():          
+    #         if pd.autostart:
+    #             t = threading.Thread(target=self._start, args = (j,pd))
+    #             t.daemon = True
+    #             started.append(t)
+    #             t.start()                  
+    #             # pd.start()
+    #     while True:
+    #         time.sleep(10)
+    #         from IPython import embed
+    #         print "DEBUG NOW ooo"
+    #         embed()
+            
+
+    # def restartAll(self):
+    #     for pd in self.getProcessDefs():
+    #         if pd.autostart:
+    #             pd.stop()
+    #             pd.start()
 
     def removeProcess(self,domain, name):
         self.stopProcess(domain, name)
