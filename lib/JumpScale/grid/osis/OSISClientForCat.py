@@ -50,14 +50,14 @@ class OSISClientForCat():
     def get(self, key):
         value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
         value=json.loads(value)
-
-        if value.has_key("_type"):
+        if isinstance(value, dict) and value.has_key("_type"):
             value["_type"]
             klass=self._getModelClass()
             obj=klass()
             obj.load(value)
-
-        return obj
+            return obj
+        else:
+            return value
 
     def delete(self, key):
         return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
