@@ -118,9 +118,7 @@ class ProcessDef:
 
             if pid>0:
                 return pid
-            
             raise RuntimeError("Timeout on wait for chilprocess for tmux for processdef:%s"%self)
-            
         return self.pid
 
     def isRunning(self):
@@ -140,15 +138,13 @@ class ProcessDef:
 
     def stop(self, timeout=20):
         pid=self.getPid(timeout=0,ifNoPidFail=False)
-        
-        if pid==0:
-            return 
+        if not pid:
+            return
 
-        pr=self.getProcessObject()
-        pr.kill()
-        
-        if j.system.process.isPidAlive(self.getPid()):
-            j.system.platform.screen.killWindow(self.domain, self.name)
+        if self.processobject and self.processobject.is_running():
+            self.processobject.kill()
+            if self.processobject.is_running():
+                j.system.platform.screen.killWindow(self.domain, self.name)
 
     def __str__(self):
         return str("Process: %s_%s"%(self.domain,self.name))
