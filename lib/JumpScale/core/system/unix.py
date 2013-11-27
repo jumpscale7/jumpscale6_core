@@ -329,7 +329,7 @@ class UnixSystem:
         j.logger.log('Change root to %s' % path, 5)
         os.chroot(path)
 
-    def addSystemUser(self, username, groupname=None, shell=None):
+    def addSystemUser(self, username, groupname=None, shell=None, homedir=None):
         '''Add a user to the system
 
         Note: you should be root to run this python command.
@@ -352,6 +352,8 @@ class UnixSystem:
                 options.append("-g %s" %(groupname))
             if shell:
                 options.append("-s %s" % shell)
+            if homedir:
+                options.append("-d '%s'" % homedir)
             command = "%s %s %s" % (command, " ".join(options), username)
             exitCode, stdout, stderr = j.system.process.run(command, stopOnError=False)
 
@@ -608,4 +610,3 @@ class UnixSystem:
         if result==0 and len(out)>5:
             return True
         return False
-        
