@@ -387,15 +387,17 @@ class JPackageObject():
         
         if self.dependencies==[]:
 
-            ids = {}
+            ids = set()
             for key in self.hrd.prefix('jp.dependency'):
                 try:
-                    ids[int(key.split('.')[2])]=1
-                except Exception,e:
+                    ids.add(int(key.split('.')[2]))
+                except Exception:
                     raise RuntimeError("Error in jpackage hrd:%s"%self)
 
+            ids = list(ids)
+            ids.sort(reverse=True)
             #walk over found id's
-            for id in ids.keys():
+            for id in ids:
                 key="jp.dependency.%s.%%s"%id
                 if not self.hrd.exists('minversion'):
                     self.hrd.set(key % 'minversion',"")
