@@ -55,7 +55,7 @@ class Ubuntu:
         return result["CODENAME"].lower().strip(),result["DESCRIPTION"],result["ID"].lower().strip(),result["RELEASE"],
 
     def createUser(self,name,passwd,home=None,creategroup=True):
-        import JumpScale.lib.remote.cuisine
+        import JumpScale.baselib.remote.cuisine
         c=j.remote.cuisine.api
 
         if home==None:
@@ -72,12 +72,12 @@ class Ubuntu:
             c.dir_ensure(home,owner=name,group=name)
 
     def createGroup(self,name):
-        import JumpScale.lib.remote.cuisine
+        import JumpScale.baselib.remote.cuisine
         c=j.remote.cuisine.api
         c.group_ensure(name)
 
     def addUser2Group(self,group,user):
-        import JumpScale.lib.remote.cuisine
+        import JumpScale.baselib.remote.cuisine
         c=j.remote.cuisine.api
         c.group_user_ensure(group, user)
 

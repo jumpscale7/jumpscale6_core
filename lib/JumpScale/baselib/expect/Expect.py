@@ -246,28 +246,91 @@ class Expect:
         self._lastOutput=""
         self._lastError=""
 
-    def login(self, ip, login, password, login_timeout=15):
-        """Log the user into the given server
+    def login(self,remote,passwd,seedpasswd):
+        #login over ssh
+        self.send("ssh root@%s"%remote)
+        result=self.expect("password:")
+      
+        if result=="E":
+            print "did not see passwd"
+            result=self.expect("continue connecting")
+            
+            if result==0:
+                print "saw confirmation ssh key"
+                print "send yes for ssh key"
+                self.send("yes\n")
+                result=self.expect("password:")
+            else:
+                raise RuntimeError("Could not login with std passwd nor with seedpasswd, did not get passwd str")
 
-        By default the prompt is rather optimistic and should be considered more of 
-        an example. It is better to try to match the prompt as exactly as possible to prevent
-        any false matches by server strings such as a "Message Of The Day" or something. 
+        if result<>"E":
+            #we saw passwd
+            self.send(passwd)
+            result=self.expect("#")
+            if result=="E":
+                result=self.expect("Permission denied")
+                if result<>"E" and seedpasswd<>"":
+                    print "permission denied, will try to use seedpasswd"
+                    self.send(seedpasswd)
+                    result=self.expect("#")
+                    if result=="E":
+                        raise RuntimeError("could not login with std passwd nor with seedpasswd")
+                    print "seedpasswd worked"
 
-        The closer you can make the original_prompt match your real prompt the better. 
-        A timeout causes not necessarily the login to fail.
+                    print "change passwd"
+                    self.send("passwd")
+                    result=self.expect("password:")
+                    if result=="E":
+                        raise RuntimeError("did not get passwd prompt.")
+                    self.send(passwd)
+                    result=self.expect("password:")
+                    if result=="E":
+                        raise RuntimeError("did not get passwd prompt.")
+                    self.send(passwd)
+                    result=self.expect("#")
+                    if result=="E":
+                        raise RuntimeError("could not change passwd")    
+                    return 
+                else:
+                    raise RuntimeError("Could not login did not see permission denied.") 
+            else:
+                return 
 
-        In case of a time out we assume that the prompt was so weird that we could not match  
-        it. We still try to reset the prompt to something more unique. 
-        
-        If that still fails then we return False.
-        """
-        if not j.system.platformtype.isLinux():
-            raise RuntimeError('pexpect/pxssh not supported on this platform')
-
-        if not self._pxssh.login(ip, login, password, login_timeout=login_timeout):
-            raise ValueError('Could not connect to %s, check either login/password are not correct or host is not reacheable over SSH.'%ip)
+        if result<>"E":
+            #we saw passwd
+            self.send(passwd)
+            result=self.expect("#")
+            if result=="E":
+                raise RuntimeError("could not login") 
+            return
         else:
-            j.logger.log('SSH %s@%s session login successful' % (login, ip), 6)
+            #did not see passwd again
+            raise RuntimeError("Did not see passwd request, could not login")
+
+        return
+
+    # def login(self, ip, login, password, login_timeout=15):
+    #     """Log the user into the given server
+
+    #     By default the prompt is rather optimistic and should be considered more of 
+    #     an example. It is better to try to match the prompt as exactly as possible to prevent
+    #     any false matches by server strings such as a "Message Of The Day" or something. 
+
+    #     The closer you can make the original_prompt match your real prompt the better. 
+    #     A timeout causes not necessarily the login to fail.
+
+    #     In case of a time out we assume that the prompt was so weird that we could not match  
+    #     it. We still try to reset the prompt to something more unique. 
+        
+    #     If that still fails then we return False.
+    #     """
+    #     if not j.system.platformtype.isLinux():
+    #         raise RuntimeError('pexpect/pxssh not supported on this platform')
+
+    #     if not self._pxssh.login(ip, login, password, login_timeout=login_timeout):
+    #         raise ValueError('Could not connect to %s, check either login/password are not correct or host is not reacheable over SSH.'%ip)
+    #     else:
+    #         j.logger.log('SSH %s@%s session login successful' % (login, ip), 6)
 
     def logout(self):
         """This sends exit. If there are stopped jobs then this sends exit twice.
@@ -668,11 +731,16 @@ class Expect:
         else:
             j.console.echo(Expect.receive())
         
+        @return 'E' when error
+
         """
         j.logger.log('Expect %s '%outputToExpect, 7)
         
         try:
-            return self.pexpect.expect(outputToExpect, timeout=timeout)
+            result=self.pexpect.expect(outputToExpect, timeout=timeout)
+            return result
         except:
-            j.logger.log('Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive()), 7)
-        return False
+            msg='Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive())
+            print msg
+            j.logger.log(msg, 7)
+        return "E"
