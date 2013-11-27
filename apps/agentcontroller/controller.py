@@ -175,7 +175,6 @@ class ControllerCMDS():
 
         print "register done:%s"%session.id
 
-
     def _markSessionFree(self,session):
         self.agent2freeSessions[session.agentid][session.id]=Event()
         return self.agent2freeSessions[session.agentid][session.id]
@@ -314,7 +313,6 @@ class ControllerCMDS():
             job2.__dict__.pop("event")
             return job2
 
-
     def waitJumpscript(self,jobid,session):
         """
         @return returncode,result
@@ -339,7 +337,6 @@ class ControllerCMDS():
             print "timeout on execution"
             job.__dict__.pop("event")
             return job.__dict__
-
 
     def getWork(self, session=None):
         """
@@ -369,7 +366,6 @@ class ControllerCMDS():
             #because of timeout max wait is 2 min
             self._unmarkSessionFree(session)
             print "timeout"
-
 
     def notifyWorkCompleted(self,result=None,eco=None,session=None):
         # print "notifyworkcompleted"
@@ -401,7 +397,6 @@ class ControllerCMDS():
         # print job.
         return
         
-
     def getScheduledWork(self,agentid,session=None):
         """
         list all work scheduled for 1 agent
@@ -432,6 +427,34 @@ class ControllerCMDS():
         for logdict in logs:
             j.logger.log(message=logdict['message'], category=logdict['category'], jid=logdict['jid'])
 
+    def listSessions(self,session=None):
+        result=[]
+        sessionresult={}
+        for sessionid in self.sessions.keys():
+            session=self.sessions[sessionid]
+            
+            sessionresult["roles"]=session.roles
+            sessionresult["netinfo"]=session.netinfo
+            sessionresult["organization"]=session.organization
+            sessionresult["agentid"]=session.agentid
+            sessionresult["id"]=session.id
+            sessionresult["user"]=session.user
+            sessionresult["start"]=session.start
+            sessionresult["lastpoll"]=self.sessionsUpdateTime[session.id]
+            if self.activeJobSessions.has_key(session.id):
+                sessionresult["activejob"]=self.activeJobSessions[session.id].id
+            else:
+                sessionresult["activejob"]=None
+            result.append(sessionresult)
+        return result
+
+    def listJobs(self):
+        """
+        list all jobs waiting for which roles, show for each role which agents should be answering
+        also list jobs which are running and running in which sessions
+        """
+        pass
+
 # will reinit for testing everytime, not really needed
 # j.servers.geventws.initSSL4Server("myorg", "controller1")
 
@@ -446,3 +469,4 @@ daemon.start()
 
 
 j.application.stop()
+
