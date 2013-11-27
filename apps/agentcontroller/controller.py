@@ -5,6 +5,8 @@ import JumpScale.grid.geventws
 import gevent
 from gevent.event import Event
 import copy
+import JumpScale.grid.osis
+from gevent import monkey; monkey.patch_all(); monkey.patch_select(aggressive=True)
 
 j.application.start("agentcontroller")
 
@@ -40,27 +42,27 @@ class Jumpscript():
 
     __str__ = __repr__
 
-class Job():
-    def __init__(self, sessionid,jsname, jsorganization, roles,args,timeout,jscriptid):
-        self.id= j.base.idgenerator.generateGUID()
-        self.jsname = jsname
-        self.jsorganization=jsorganization
-        self.roles=roles
-        self.args=args
-        self.timeout=timeout
-        self.result=None
-        self.sessionid=sessionid
-        self.jscriptid=jscriptid
-        self.event=None
-        self.children=[]
-        self.childrenActive={}
-        self.parent=None
-        self.resultcode=None
+# class Job():
+#     def __init__(self, sessionid,jsname, jsorganization, roles,args,timeout,jscriptid):
+#         self.id= j.base.idgenerator.generateGUID()
+#         self.jsname = jsname
+#         self.jsorganization=jsorganization
+#         self.roles=roles
+#         self.args=args
+#         self.timeout=timeout
+#         self.result=None
+#         self.sessionid=sessionid
+#         self.jscriptid=jscriptid
+#         self.event=None
+#         self.children=[]
+#         self.childrenActive={}
+#         self.parent=None
+#         self.resultcode=None
 
-    def __repr__(self):
-        return str(self.__dict__)
+#     def __repr__(self):
+#         return str(self.__dict__)
 
-    __str__ = __repr__
+#     __str__ = __repr__
 
 class ControllerCMDS():
 
@@ -84,6 +86,9 @@ class ControllerCMDS():
         self.agent2freeSessions={} #key is agent, val is dict of sessions free to be used
 
         self.adminpasswd = "1234"
+        
+        self.osisclient = j.core.osis.getClient()
+        self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
 
 
     def _adminAuth(self,user,passwd):
@@ -284,7 +289,7 @@ class ControllerCMDS():
         jobs=[]
         if self.roles2agents.has_key(role):
             for agentid in self.roles2agents[role]:
-                job=Job(session.id,name,organization,role,args,timeout,jscriptid=action.id)
+                job = self.jobclient.new(session=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
                 self.workqueue[agentid].append(job)
                 self.jobs[job.id]=job
                 jobs.append(job.id)
@@ -296,7 +301,7 @@ class ControllerCMDS():
                     self.agent2freeSessions[agentid][sessionid].set()
 
             if len(jobs)>1:
-                jobgroup=Job(None,name,organization,role,args,timeout,jscriptid=action.id)
+                jobgroup= self.jobclient.new(session=None, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
                 jobgroup.children=jobs
                 self.jobs[jobgroup.id]=jobgroup
                 for childid in jobs:

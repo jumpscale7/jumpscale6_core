@@ -6,6 +6,7 @@ import time
 
 import JumpScale.grid.geventws
 
+
 j.application.start("agentcontrollertest")
 
 j.logger.consoleloglevel = 2

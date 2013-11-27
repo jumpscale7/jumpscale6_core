@@ -8,7 +8,7 @@ class Job(OsisBaseObject):
     identifies a job in the grid
     """
 
-    def __init__(self, ddict={}):
+    def __init__(self, ddict={}, jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None):
         if ddict <> {}:
             self.load(ddict)
         else:
