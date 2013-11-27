@@ -1,4 +1,5 @@
 from JumpScale import j
+import signal
 
 class DNSMasq(object):
 
@@ -32,7 +33,7 @@ class DNSMasq(object):
             cmd = 'ip netns exec %(namespace)s dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'namespace':self._namespace,'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
         else:
             cmd = 'dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
-        j.tools.startupmanager.addProcess(self._startupmanagername, cmd)
+        j.tools.startupmanager.addProcess(self._startupmanagername, cmd, reload_signal=signal.SIGHUP)
         j.tools.startupmanager.startProcess('generic', self._startupmanagername)
 
     
@@ -53,7 +54,7 @@ class DNSMasq(object):
         contents += ',%s\n' % ipaddress
         te.appendReplaceLine('.*%s.*' % macaddress, contents)
         te.save()
-        self.restart()
+        self.reload()
 
     def removeHost(self, macaddress):
         """Removes a dhcp-host entry from dnsmasq.conf file"""
@@ -63,7 +64,7 @@ class DNSMasq(object):
         te = j.codetools.getTextFileEditor(self._hosts)
         te.deleteLines('.*%s.*' % macaddress)
         te.save()
-        self.restart()
+        self.reload()
 
     def restart(self):
         """Restarts dnsmasq"""

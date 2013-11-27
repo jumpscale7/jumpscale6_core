@@ -14,6 +14,9 @@ class ProcessDef:
         self.args=hrd.get("process.args")
         self.env=hrd.getDict("process.env")
         self.priority=hrd.getInt("process.priority")
+        self.reload_signal=0
+        if hrd.exists('process.reloadsignal'):
+            self.reload_signal = hrd.getInt("process.reloadsignal")
         self.workingdir=hrd.get("process.workingdir")
         self.ports=hrd.getList("process.ports")
         self.jpackage_domain=hrd.get("process.jpackage.domain")
@@ -27,7 +30,6 @@ class ProcessDef:
             self._nameLong+=" "
 
     def log(self,msg):
-
         print "%s: %s"%(self._nameLong,msg)
 
     def start(self, timeout=100):
@@ -146,6 +148,14 @@ class ProcessDef:
             if self.processobject.is_running():
                 j.system.platform.screen.killWindow(self.domain, self.name)
 
+    def reload(self):
+        if self.reload_signal:
+            self.getPid()
+            self.processobject.send_signal(self.reload_signal)
+        else:
+            self.stop()
+            self.start()
+
     def __str__(self):
         return str("Process: %s_%s"%(self.domain,self.name))
 
@@ -163,28 +173,19 @@ class StartupManager:
         self.__init=False
         j.system.fs.createDir(StartupManager.LOGDIR)
 
-    def init(self):
-        """
-        start base for byobu
-        """
-        for domain in self.getDomains():
-            screens=[item.name for item in self.getProcessDefs(domain=domain)]
-            j.system.platform.screen.createSession(domain,screens)
-
     def reset(self):
         self.load()
         #kill remainders
         for item in ["byobu","tmux"]:
             cmd="killall %s"%item
             j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
-        self.init()
 
     def _init(self):
         if self.__init==False:
             self.load()
             self.__init=True
 
-    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False, workingdir='',jpackage=None,domain="",ports=[],autostart=True):
+    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False, workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -202,6 +203,7 @@ class StartupManager:
         hrd+="process.args=%s\n"%args
         hrd+="process.env=%s\n"%envstr
         hrd+="process.numprocesses=%s\n"%numprocesses
+        hrd+="process.reloadsignal=%s\n"%reload_signal
         hrd+="process.priority=%s\n"%priority
         hrd+="process.workingdir=%s\n"%workingdir
         if autostart:
@@ -386,3 +388,8 @@ class StartupManager:
     def restartProcess(self, domain,name):
         self.stopProcess(domain, name)
         self.startProcess(domain, name)
+
+    def reloadProcess(self, domain, name):
+        for pd in self.getProcessDefs(domain, name):
+            pd.reload()
+
