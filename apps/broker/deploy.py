@@ -1,5 +1,5 @@
 from JumpScale import j
-import JumpScale.lib.remote.cluster.ClusterFactory
+import JumpScale.baselib.remote.cluster.ClusterFactory
 
 j.application.start("deply")
 
