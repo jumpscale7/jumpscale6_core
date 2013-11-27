@@ -21,16 +21,16 @@ print client.listSessions()
 
 
 
-# print "start test"
-# for i in range(1):
-#     job=client.executeJumpscript("opencode","dummy","node",args={"msg":"amessage"},timeout=60,wait=True)
-# # resultcode,result=client.waitJumpscript(jobid)
+print "start test"
+for i in range(1):
+    job=client.executeJumpscript("opencode","dummy","node",args={"msg":"amessage"},timeout=60,wait=True)
+# resultcode,result=client.waitJumpscript(jobid)
 
-# if job["resultcode"]>0:
-#     eco= j.errorconditionhandler.getErrorConditionObject(ddict=job["result"])
-#     j.errorconditionhandler.processErrorConditionObject(eco)
-# else:
-#     print "result:%s"%job["result"]
+if job["resultcode"]>0:
+    eco= j.errorconditionhandler.getErrorConditionObject(ddict=job["result"])
+    j.errorconditionhandler.processErrorConditionObject(eco)
+else:
+    print "result:%s"%job["result"]
 
 
 j.application.stop()

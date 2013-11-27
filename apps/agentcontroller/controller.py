@@ -452,12 +452,35 @@ class ControllerCMDS():
             result.append(sessionresult)
         return result
 
-    def listJobs(self):
+    def listJobs(self, session=None):
         """
         list all jobs waiting for which roles, show for each role which agents should be answering
         also list jobs which are running and running in which sessions
         """
-        pass
+        result = []
+        jobresult = {}
+
+        for jobid in self.jobs.keys():
+            job = self.jobs[jobid]
+            jobresult['id'] = jobid
+            jobresult['jsname'] = job.jsname
+            jobresult['jsorganization'] = job.jsorganization
+            jobresult['roles'] = job.roles
+            jobresult['args'] = job.args
+            jobresult['timeout'] = job.timeout
+            jobresult['result'] = job.result
+            jobresult['sessionid'] = job.sessionid
+            jobresult['jscriptid'] = job.jscriptid
+            jobresult['children'] = job.children
+            jobresult['childrenActive'] = job.childrenActive
+            jobresult['parent'] = job.parent
+            jobresult['resultcode'] = job.resultcode
+            if self.activeJobSessions.has_key(session.id):
+                jobresult["isactive"] == jobid in self.activeJobSessions[session.id]
+            else:
+                jobresult["isactive"] = False
+            result.append(jobresult)
+        return result
 
 # will reinit for testing everytime, not really needed
 # j.servers.geventws.initSSL4Server("myorg", "controller1")
