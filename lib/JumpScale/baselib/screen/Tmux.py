@@ -15,7 +15,10 @@ class Tmux:
         self.killSession(sessionname)
         if len(screens)<1:
             raise RuntimeError("Cannot create screens, need at least 1 screen specified")
-        j.system.process.execute("%s new-session -d -s %s -n %s" % (self.screencmd, sessionname, screens[0]))
+
+        env = os.environ.copy()
+        env.pop('TMUX', None)
+        j.system.process.run("%s new-session -d -s %s -n %s" % (self.screencmd, sessionname, screens[0]), env=env)
         # now add the other screens to it
         if len(screens) > 1:
             for screen in screens[1:]:
@@ -71,7 +74,9 @@ rm $0
             pane = self._getPane(sessionname, screenname)
             cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,cmd)
 
-        j.system.process.execute(cmd2)  
+        env = os.environ.copy()
+        env.pop('TMUX', None)
+        j.system.process.run(cmd2, env=env)  
         time.sleep(wait)
         if wait and j.system.fs.exists(ppath):
             resultcode=j.system.fs.fileGetContents(ppath).strip()
@@ -82,7 +87,6 @@ rm $0
             j.console.echo("Execution of %s  did not return, maybe interactive, in screen %s:%s." % (cmd,sessionname,screenname))
         if j.system.fs.exists(ppath):
             j.system.fs.remove(ppath)
-
     def getSessions(self):
         cmd = 'tmux list-sessions -F "#{session_name}"'
         exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
