@@ -51,9 +51,10 @@ class DaemonClient(object):
         self.org = org
         self.passwd = passwd
         self.ssl = ssl
-        # if roles==[]:
-        #     roles=j.application.config.get("node.roles").split(",")
-        #     roles=[item.strip().lower() for item in roles]
+
+        if roles==[]:
+            roles=j.application.config.get("grid.node.roles").split(",")
+            roles=[item.strip().lower() for item in roles]            
 
         self.roles = roles
         self.keystor = None

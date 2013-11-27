@@ -149,6 +149,10 @@ class ControllerCMDS():
                     self._removeSession(session.id)
 
     def register(self, similarProcessPIDs,session):
+
+        print "new session:"
+        print session
+
         self._clean(similarProcessPIDs,session)
         self.sessions[session.id]=session
         self.session2agent[session.id]=session.agentid
