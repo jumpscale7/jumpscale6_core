@@ -295,10 +295,7 @@ class LogHandler(object):
                 if len(self.logs) > 100:
                     self.logs = self.logs[-50:]
 
-                # log to logtargets
-
-                print self.logTargets
-                
+                # log to logtargets                
                 for logtarget in self.logTargets:
                     if (hasattr(logtarget, 'maxlevel') and level > logtarget.maxlevel):
                         continue
