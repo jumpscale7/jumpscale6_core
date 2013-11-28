@@ -285,8 +285,7 @@ class ErrorConditionHandler():
             return
 
         if j.logger.logTargetLogForwarder and j.logger.logTargetLogForwarder.enabled:
-            print "logtargeton"
-            # print errorConditionObject        
+            print errorConditionObject
             j.logger.logTargetLogForwarder.logECO(errorConditionObject)
         else:
             print errorConditionObject
