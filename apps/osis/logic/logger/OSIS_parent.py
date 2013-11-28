@@ -19,7 +19,7 @@ class mainclass(OSISStore):
             logobject["id"] = "%s_%s_%s"%(logobject["gid"], logobject["pid"], logobject["order"])            
             docs.append(logobject)
 
-        print "batch:%s"%len(docs)            
+        # print "batch:%s"%len(docs)            
         #self.elasticsearch.bulk_index(index="clusterlog_%s_%s"%(logobject["bid"],logobject["gid"]), doc_type="json", docs=docs, id_field="id")                        
         self.elasticsearch.bulk_index(index="clusterlog", doc_type="json", docs=docs, id_field="id")                        
         return ["",True,True]

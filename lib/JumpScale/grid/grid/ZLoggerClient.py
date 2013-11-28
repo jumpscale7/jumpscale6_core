@@ -12,8 +12,15 @@ class ZLoggerClient(object):
     def log(self, logobject):
 
         # logmessage = "1%s"%logmessage
-        args = {}
-        args["log"] = logobject.__dict__
+        
+        if j.basetype.dictionary.check(logobject):
+            args = {}
+            args["log"] = logobject
+        else:
+            args = {}
+            args["log"] = logobject.__dict__
+
+        # print args["log"] 
 
         self.client.sendMsgOverCMDChannel("log", data=args, sendformat="m", returnformat="", category="logger")
 

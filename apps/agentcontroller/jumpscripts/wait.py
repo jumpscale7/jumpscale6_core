@@ -24,10 +24,7 @@ def action(msg):
         time.sleep(0.3)
     # raise RuntimeError("test")
     msg="sleep done for %s"%msg
-    from IPython import embed
-    print "DEBUG NOW ppp"
-    embed()
-    
+
     j.logger.log("somework %s %s"%(msg,i))
     print msg
     return msg

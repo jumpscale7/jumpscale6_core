@@ -501,7 +501,8 @@ class ControllerCMDS():
         return result
 
     def log(self, logs, session=None):
-        pass        
+        for log in logs:
+            j.logger.logTargetLogForwarder.log(log)                        
             
 
     def listSessions(self,session=None):
