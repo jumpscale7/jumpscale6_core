@@ -11,10 +11,39 @@ import threading
 j.application.start("agent")
 
 j.logger.consoleloglevel = 2
+j.logger.maxlevel=7
+
+class LogHandler():
+
+    def __init__(self,agent):
+        self.agent=agent
+        self.queue = Queue.Queue()
+        self.jid=None
+
+    def log(self,logitem):
+        logitem.jid=self.jid
+        self.queue.put(logitem.__dict__)
+
+    def flushLogs(self):
+        print "flush"
+        logs = []
+        while not self.queue.empty():
+            logs.append(self.queue.get(block=False))
+        self.agent.client.log(logs)
+
+    def start(self, interval=5):
+        print "log thread started, will flush each %s sec"%interval
+        t = threading.Timer(interval, self.flushLogs)
+        t.start()        
+
 
 class Agent():
 
     def __init__(self):
+
+        self.loghandler=LogHandler(self)
+        j.logger.logTargets=[]
+        j.logger.logTargetLogForwarder=False
 
         self.similarProcessPIDs=[process.pid for process in j.system.process.getSimularProcesses()]
         
@@ -24,7 +53,9 @@ class Agent():
             category="agent",id=id,timeout=36000)
 
         self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid)
-        
+
+        j.logger.logTargetAdd(self.loghandler)
+        self.loghandler.start()        
 
         print "agent: %s"%self.agentid
 
@@ -34,13 +65,9 @@ class Agent():
 
         self.register()
 
-        self.queue = Queue.Queue()
-
-        queueThread = threading.Thread(name='logThread', target=self.queueLogs, args=['logging started'])
-        queueThread.daemon = True
-        queueThread.start()
-        self.scheduler(2)
-
+        j.logger.logTargetLogForwarder=False
+        j.logger.log("test")
+        
 
     def register(self):
 
@@ -68,7 +95,8 @@ class Agent():
                 
             if havework<>None and ok:
                 # print "HAVEWORK"
-                jscriptid,args=havework
+                jscriptid,args,jid=havework
+                self.loghandler.jid=jid
                 
                 #eval action code, if not ok send error back, cache the evalled action
                 if self.actions.has_key(jscriptid):
@@ -77,46 +105,38 @@ class Agent():
                     print "CACHEMISS"
                     jscript=self.client.getJumpscriptFromKey(jscriptid)
                     try:
-                        self.queueLogs('Job started')
+                        self.log('Job started')
                         exec(jscript["source"])
+                        # print jscript["source"]
                         self.actions[jscriptid]=(action,jscript)
                         #result is method action
                     except Exception,e:
                         msg="could not compile jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                             jscript["source"],e)
                         eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
-                        self.queueLogs(msg)
+                        self.log(msg)
                         self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     
                 eco=None
+
                 try:
                     result=action(**args)
                 except Exception,e:
                     msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                         jscript["source"],e)
                     eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
-                    self.queueLogs(msg)
+                    self.log(msg)
                     self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     continue
                 
                 print "notify work completed"
                 self.client.notifyWorkCompleted(result=result,eco=None)
 
-    def queueLogs(self, message, jid=0):
-        #queue saving logs
-        log = {'message': message, 'category': 'agent', 'jid':jid}
-        self.queue.put(log)
+    def log(self, message, category="agent.exec",level=5):
+        #queue saving logs        
+        j.logger.log(message,category=category,level=level)
 
-    def flushLogs(self):
-        logs = []
-        while not self.queue.empty():
-            logs.append(self.queue.get(block=False))
-        self.client.log(logs)
 
-    def scheduler(self, interval):
-        self.flushLogs()
-        t = threading.Timer(interval, self.scheduler, args=[interval])
-        t.start()
 
 agent=Agent()
 agent.start()

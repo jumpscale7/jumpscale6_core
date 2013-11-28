@@ -423,7 +423,7 @@ class ControllerCMDS():
                     job=self.workqueue[session.agentid].pop()
                     self.activeJobSessions[session.id]=job
                     timeout.cancel()
-                    return (job.jscriptid,job.args)
+                    return (job.jscriptid,job.args,job.id)
                 #else no work wait for x time (to support long polling) to see if there is activity for this session
                 event=self._markSessionFree(session)
                 print "wait for event for agent:id %s"%session.agentid

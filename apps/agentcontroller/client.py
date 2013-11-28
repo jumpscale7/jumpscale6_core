@@ -25,13 +25,13 @@ for i in range(10):
 
 
 
-<<<<<<< local
     # if job["resultcode"]>0:
     #     eco= j.errorconditionhandler.getErrorConditionObject(ddict=job["result"])
     #     j.errorconditionhandler.processErrorConditionObject(eco)
     # else:
     #     print "result:%s"%job["result"]
-=======
+
+j.application.stop()
 
 print "start test"
 for i in range(1):
@@ -43,7 +43,5 @@ if job["resultcode"]>0:
     j.errorconditionhandler.processErrorConditionObject(eco)
 else:
     print "result:%s"%job["result"]
->>>>>>> other
 
 
-j.application.stop()
