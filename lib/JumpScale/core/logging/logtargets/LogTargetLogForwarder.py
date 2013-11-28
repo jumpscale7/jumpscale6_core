@@ -100,7 +100,7 @@ class LogTargetLogForwarder():
 
             try:
                 self.loggerClient.log(log)
-            except:
-                print 'Failed to log in %s' % self
+            except Exception,e:                
+                print 'Failed to log in %s,error:%s' % (self,e)
                 self.connected = False
 
