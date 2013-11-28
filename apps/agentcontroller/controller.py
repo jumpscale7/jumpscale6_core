@@ -67,6 +67,7 @@ class Job():
         self.timeStart=self.db.timeStart
         self.timeStop=self.db.timeStop
         self.lock=self.db.lock
+        self.lockduration=self.db.lockduration
 
     def save(self):
         self.controller.jobclient.set(self.db)
@@ -88,9 +89,11 @@ class Locks():
 
     def checkLock(self,agentid,type):
         if not self.locks.has_key(agentid):
+            # print "lock:noagentid"
             return False
 
-        if not self.locks[agentid].has_key(agentid):
+        if not self.locks[agentid].has_key(type):
+            # print "lock:notype"
             return False
 
         maxduration,starttime=self.locks[agentid][type]
@@ -115,6 +118,9 @@ class Locks():
 class ControllerCMDS():
 
     def __init__(self, daemon):
+
+        j.application.initGrid()
+        
         self.daemon = daemon
         self.jumpscripts = {}
         self.jumpscriptsFromKeys = {}
@@ -417,10 +423,22 @@ class ControllerCMDS():
         timeout.start()
         try:
             while True:
+                print 1
                 if len(self.workqueue[session.agentid])>0:
                     #check locking
 
-                    job=self.workqueue[session.agentid].pop()
+                    job=self.workqueue[session.agentid][-1]
+                    if job.lock<>"":
+                        if self.locks.checkLock(session.agentid,job.lock)==False:
+                            #not set yet can execute
+                            job=self.workqueue[session.agentid].pop()
+                            self.locks.addLock(session.agentid,job.lock,job.lockduration)
+                        else:
+                            job=None
+                            gevent.sleep(0.1)
+                            continue
+                    else:
+                        job=self.workqueue[session.agentid].pop()
                     self.activeJobSessions[session.id]=job
                     timeout.cancel()
                     return (job.jscriptid,job.args,job.id)

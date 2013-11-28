@@ -13,6 +13,7 @@ class mainclass(OSISStore):
         new,changed,obj=self.setObjIds(obj)
         if changed:
             print "OBJECT CHANGED WRITE"
+            # print obj
             self.db.set(self.dbprefix,key=obj.guid,value=ujson.dumps(obj.__dict__))
             self.index(obj)
         return [obj.guid,new,changed]

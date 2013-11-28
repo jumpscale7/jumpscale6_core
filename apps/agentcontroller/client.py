@@ -35,7 +35,7 @@ j.application.stop()
 
 print "start test"
 for i in range(1):
-    job=client.executeJumpscript("opencode","dummy","node",args={"msg":"amessage"},timeout=60,wait=True)
+    job=client.executeJumpscript("opencode","dummy","node",args={"msg":"amessage"},timeout=60,wait=True,lock="alock")
 # resultcode,result=client.waitJumpscript(jobid)
 
 if job["resultcode"]>0:

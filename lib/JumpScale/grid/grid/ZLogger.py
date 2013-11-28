@@ -54,6 +54,8 @@ class ZLogger(ZDaemon):
 
         j.core.grid.logger = Dummy()
 
+        j.application.initGrid()
+
         #OSIS INit
         OSISclient = j.core.osis.getClient()
 

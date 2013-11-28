@@ -46,6 +46,7 @@ class GridFactory():
     def init(self,description="",instance=1):
         """
         """
+        print "init grid"
         self._loadConfig(test=False)
 
         # make sure we only log to stdout
@@ -65,11 +66,11 @@ class GridFactory():
             jp.configure()
             self.nid = j.core.grid.config.getInt("grid.nid")
 
-            self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
+            # self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
             self._loadConfig()
 
-        self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
+        # self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
         clientprocess=j.core.osis.getClientForCategory(self.gridOsisClient,"system","process")
 
@@ -78,7 +79,7 @@ class GridFactory():
         obj=clientapplication.new(name=j.application.appname,gid=j.application.whoAmI.gid,type="js",description=description)
         key,new,changed=clientapplication.set(obj)
         obj=clientapplication.get(key)
-        aid=obj.id
+        aid=obj.id        
 
         obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,nid=j.application.whoAmI.nid,\
             systempid=j.application.systempid,\
@@ -94,7 +95,10 @@ class GridFactory():
         j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=pid)
 
         j.logger.consoleloglevel = 5
-        j.logger.setLogTargetLogForwarder()
+
+        if j.application.appname<>"logger":
+            print "set logtarget forwarder"
+            j.logger.setLogTargetLogForwarder()
 
     def getLocalIPAccessibleByGridMaster(self):
         return j.system.net.getReachableIpAddress(self.config.get("grid.master.ip"), 5544)

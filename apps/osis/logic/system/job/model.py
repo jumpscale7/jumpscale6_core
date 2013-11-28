@@ -8,7 +8,7 @@ class Job(OsisBaseObject):
     identifies a job in the grid
     """
 
-    def __init__(self, ddict={}, jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None,lock=""):
+    def __init__(self, ddict={}, jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None,lock="",lockduration=3600):
         if ddict <> {}:
             self.load(ddict)
         else:
@@ -30,7 +30,8 @@ class Job(OsisBaseObject):
             self.state="SCHEDULED" #SCHEDULED,STARTED,ERROR,OK,NOWORK
             self.timeStart=j.base.time.getTimeEpoch()
             self.timeStop=0
-            self.lock=lock            
+            self.lock=lock
+            self.lockduration=lockduration
 
     def getUniqueKey(self):
         """
