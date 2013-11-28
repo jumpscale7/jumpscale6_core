@@ -180,7 +180,7 @@ class LogHandler(object):
         self.logTargets = []
         self.inlog = False
         self.enabled = True
-        self.clientdaemontarget = False
+        self.logTargetLogForwarder = False
         self.order = 0
 
     def addConsoleLogCategory(self,category):
@@ -207,7 +207,7 @@ class LogHandler(object):
         self.logs=[]
         self.inlog=False
         self.order=0
-        self.clientdaemontarget = LogTargetLogForwarder(serverip)
+        self.logTargetLogForwarder = LogTargetLogForwarder(serverip)
 
     def disable(self):
         self.enabled = False
@@ -273,8 +273,8 @@ class LogHandler(object):
             else:
                 j.console.echo(str(log), log=False)
         
-        if self.clientdaemontarget != False and self.clientdaemontarget.enabled:
-            self.clientdaemontarget.log(log)
+        if self.logTargetLogForwarder != False and self.logTargetLogForwarder.enabled:
+            self.logTargetLogForwarder.log(log)
 
         else:
             # print "level:%s %s" % (level,message)

@@ -58,25 +58,33 @@ class ErrorConditionHandler():
             self.halt()
 
         
-    def raiseOperationalCritical(self, message, category="",msgpub="",die=True,tags=""):
+    def raiseOperationalCritical(self, message="", category="",msgpub="",die=True,tags="",eco=None):
         """
         use this to raise an operational issue about the system
         @param message is message we want to use for operators
         @param msgpub is message we want to show to endcustomers (can include a solution)
         @param category is a dot notation to give category for the error condition
         """
-        
-        eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=1,\
+        if eco==None:
+            eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=1,\
                                          type=j.enumerators.ErrorConditionType.OPERATIONS)
-        eco.tags=tags
+            eco.tags=tags
+        else:
+            eco.type=j.enumerators.ErrorConditionType.OPERATIONS
+            eco.level=1
+
         self.processErrorConditionObject(eco)    
         if die:
             self.halt()        
     
-    def raiseOperationalWarning(self, message="", category="",msgpub="",tags=""):
-        eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=2,\
+    def raiseOperationalWarning(self, message="", category="",msgpub="",tags="",eco=None):
+        if eco<>None:
+            eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=2,\
                                          type=j.enumerators.ErrorConditionType.OPERATIONS)
-        eco.tags=tags
+            eco.tags=tags
+        else:
+            eco.type=j.enumerators.ErrorConditionType.OPERATIONS
+            eco.level=1
         self.processErrorConditionObject(eco)
         
     def raiseInputError(self, message="", category="input",msgpub="",die=False ,backtrace="",tags=""):
@@ -270,16 +278,18 @@ class ErrorConditionHandler():
         now there would be no further processing appart from priting the errorcondition object (eco)
 
         """
+        
         errorConditionObject.toAscii()
-
 
         if self.checkErrorIgnore(errorConditionObject):
             return
-        
-        print errorConditionObject        
 
-        if j.logger.clientdaemontarget and j.logger.clientdaemontarget.enabled:
-            j.logger.clientdaemontarget.logECO(errorConditionObject)
+        if j.logger.logTargetLogForwarder and j.logger.logTargetLogForwarder.enabled:
+            print "logtargeton"
+            # print errorConditionObject        
+            j.logger.logTargetLogForwarder.logECO(errorConditionObject)
+        else:
+            print errorConditionObject
         # else:
         #     j.logger.log(str(errorConditionObject), j.enumerators.LogLevel.OPERATORMSG)
 

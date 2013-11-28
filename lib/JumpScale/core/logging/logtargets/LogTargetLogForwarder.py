@@ -25,14 +25,21 @@ class LogTargetLogForwarder():
         self._logqueue = DropQueue(QUEUESIZE)
         self._ecoqueue = DropQueue(QUEUESIZE)
         self.connected = False
-        self.enabled = False
+
+        if j.application.appname=="osisserver":
+            self.enabled = False
+        else:
+            self.enabled = True
         if not serverip:
             if j.application.config.exists('grid.master.ip'):
                 serverip = j.application.config.get("grid.master.ip")
+                if serverip=="":
+                    raise RuntimeError("grid.master.ip found but not filled in")
             if not serverip:
                 self.enabled = False
                 return
         self.serverip = serverip
+        self.loggerClient=None
         self.checkTarget()
 
     def checkTarget(self):
@@ -49,8 +56,9 @@ class LogTargetLogForwarder():
             return self.connected
 
         import JumpScale.grid
-        self.loggerClient=j.core.grid.getZLoggerClient(ipaddr=self.serverip)
-        j.logger.clientdaemontarget=self
+        if self.loggerClient==None:
+            self.loggerClient=j.core.grid.getZLoggerClient(ipaddr=self.serverip)
+            j.logger.logTargetLogForwarder=self
         self._processQueue(self._logqueue, self.log)
         self._processQueue(self._ecoqueue, self.logECO)
         return self.connected
@@ -70,6 +78,7 @@ class LogTargetLogForwarder():
     __repr__ = __str__
 
     def logECO(self, eco):
+
         if self.enabled:
             if not self.checkTarget():
                 self._ecoqueue.put(eco)
