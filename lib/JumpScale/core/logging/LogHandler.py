@@ -252,12 +252,13 @@ class LogHandler(object):
         """
         send to all log targets
         """
+        # print "log: enabled:%s level:%s %s"%(self.enabled,level,message)
+
         if not self.enabled:
             return
             
         log = LogItem(message=message, level=level, category=category, tags=tags, jid=jid, parentjid=parentjid,masterjid=masterjid, private=private)
-        if not self.enabled:
-            return
+
 
         if level < (self.consoleloglevel + 1):
 
@@ -291,10 +292,13 @@ class LogHandler(object):
                     j.transaction.activeTransaction.logs.append(log)
 
                 self.logs.append(log)
-                if len(self.logs) > 500:
-                    self.logs = self.logs[-250:]
+                if len(self.logs) > 100:
+                    self.logs = self.logs[-50:]
 
                 # log to logtargets
+
+                print self.logTargets
+                
                 for logtarget in self.logTargets:
                     if (hasattr(logtarget, 'maxlevel') and level > logtarget.maxlevel):
                         continue
