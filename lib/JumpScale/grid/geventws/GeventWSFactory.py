@@ -27,10 +27,11 @@ class GeventWSFactory():
         from .GeventWSServer import GeventWSServer
         return GeventWSServer('', port, ssluser=ssluser, sslorg=sslorg, sslkeyvaluestor=sslkeyvaluestor)
 
-    def getClient(self, addr, port, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[],id=None):
+    def getClient(self, addr, port, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[],id=None,timeout=60):
         from .GeventWSTransport import GeventWSTransport
         from JumpScale.grid.serverbase.DaemonClient import DaemonClient
         trans = GeventWSTransport(addr, port)
+        trans.timeout=timeout
 
         cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans,id=id)
         return cl.getCmdClient(category)

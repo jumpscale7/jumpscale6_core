@@ -6,20 +6,32 @@ import time
 
 import JumpScale.grid.geventws
 
+import sys
 
 j.application.start("agentcontrollertest")
 
-j.logger.consoleloglevel = 2
-
+j.logger.consoleloglevel = 5
 
 client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user="admin", passwd="1234", \
     roles=["system.1", "hypervisor.1"],category="agent")
 
+# print client.listSessions()
 
-print client.listSessions()
+print "start test"
+for i in range(10):
+    print i
+    job=client.executeJumpscript("opencode","wait","node",args={"msg":"test:%s"%i},timeout=60,wait=False,lock="test")
+    # resultcode,result=client.waitJumpscript(job.id)
 
 
 
+<<<<<<< local
+    # if job["resultcode"]>0:
+    #     eco= j.errorconditionhandler.getErrorConditionObject(ddict=job["result"])
+    #     j.errorconditionhandler.processErrorConditionObject(eco)
+    # else:
+    #     print "result:%s"%job["result"]
+=======
 
 print "start test"
 for i in range(1):
@@ -31,6 +43,7 @@ if job["resultcode"]>0:
     j.errorconditionhandler.processErrorConditionObject(eco)
 else:
     print "result:%s"%job["result"]
+>>>>>>> other
 
 
 j.application.stop()

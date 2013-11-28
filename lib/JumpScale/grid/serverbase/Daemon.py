@@ -195,10 +195,14 @@ class Daemon(object):
                 error = "Authentication  or Session error, session not known with id:%s" % sessionid
                 eco = j.errorconditionhandler.getErrorConditionObject(msg=error)
                 return returnCodes.AUTHERROR, "", self.errorconditionserializer.dumps(eco.__dict__)
+        try:
+            if informat <> "":
+                ser = j.db.serializers.get(informat, key=self.key)
+                data = ser.loads(data)
+        except Exception,e:
+            eco=j.errorconditionhandler.parsePythonErrorObject(e)
+            return returnCodes.SERIALIZATIONERRORIN, "", self.errorconditionserializer.dumps(eco.__dict__)
 
-        if informat <> "":
-            ser = j.db.serializers.get(informat, key=self.key)
-            data = ser.loads(data)
 
         parts = self.processRPC(cmd, data, returnformat=returnformat, session=session, category=category)
         returnformat = parts[1]  # return format as comes back from processRPC
@@ -214,7 +218,7 @@ class Daemon(object):
                     data = self.encrypt(returnser.dumps(parts[2].__dict__), session)
                 except:
                     eco = j.errorconditionhandler.getErrorConditionObject(msg="could not serialize result from %s"%cmd)
-                    return 98, "", self.errorconditionserializer.dumps(eco.__dict__)
+                    return returnCodes.SERIALIZATIONERROROUT, "", self.errorconditionserializer.dumps(eco.__dict__)
         else:
             data = parts[2]
 

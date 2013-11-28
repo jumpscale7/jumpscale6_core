@@ -48,10 +48,11 @@ class ZDaemon(GeventLoop):
         cmdsocket.connect("inproc://cmdworkers")
         while True:
             category, cmd, informat, returnformat, data, sessionid = cmdsocket.recv_multipart()
-
+            # print "startrpc"
             result = self.daemon.processRPCUnSerialized(cmd, informat, returnformat, data, sessionid, category)
-
+            # print "stoprpc"
             cmdsocket.send_multipart(result)
+            # print 'senddonerpc'
 
     def cmdGreenlet(self):
         # Nonblocking, e.g the osis server contains a broker which queus internally the messages.
@@ -78,13 +79,19 @@ class ZDaemon(GeventLoop):
         while True:
             socks = dict(poller.poll())
             if socks.get(frontend) == zmq.POLLIN:
+                # print "FRONTwait"
                 parts = frontend.recv_multipart()
+                # print "FRONT:%s"%parts                
                 parts.append(parts[0])  # add session id at end
                 backend.send_multipart([parts[0]] + parts)
+                # print "FRONTSEND"
 
             if socks.get(backend) == zmq.POLLIN:
+                # print "BACKwait"
                 parts = backend.recv_multipart()
+                # print "BACK:%s"%parts
                 frontend.send_multipart(parts[1:])  # @todo dont understand why I need to remove first part of parts?
+                # print "BACKSEND"
 
     def start(self, mainloop=None):
         print "starting %s"%self.name

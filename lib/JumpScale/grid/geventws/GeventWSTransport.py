@@ -25,7 +25,7 @@ class GeventWSTransport(Transport):
         """
         pass
 
-    def sendMsg(self, category, cmd, data, sendformat="", returnformat="",retry=False):
+    def sendMsg(self, category, cmd, data, sendformat="", returnformat="",retry=True):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -40,21 +40,34 @@ class GeventWSTransport(Transport):
 
         headers = {'content-type': 'application/raw'}
         data2 = j.servers.base._serializeBinSend(category, cmd, data, sendformat, returnformat, self._id)
+        start=j.base.time.getTimeEpoch()
         if retry:
             r=None
             while r==None:
+                now=j.base.time.getTimeEpoch()
+                if now>start+self.timeout:
+                    break
                 try:
-                    r = requests.post(self.url, data=data2, headers=headers,timeout=600)
+                    r = requests.post(self.url, data=data2, headers=headers,timeout=60)
                 except Exception,e:
-                    print "retry connection to %s"%self.url
-                    time.sleep(5)
-        else:
-            r = requests.post(self.url, data=data2, headers=headers,timeout=600)
+                    if str(e).find("Connection refused")<>-1:
+                        print "retry connection to %s"%self.url
+                        time.sleep(1)
+                    else:
+                        raise RuntimeError("error to send msg to %s,error was %s"%(self.url,e))
 
+        else:
+            r = requests.post(self.url, data=data2, headers=headers,timeout=60)
+
+
+        if r==None:
+            eco=j.errorconditionhandler.getErrorConditionObject(msg='timeout on request to %s'%self.url, msgpub='', \
+                category='tornado.transport')
+            return "4","m",j.db.serializers.msgpack.dumps(eco.__dict__)
                     
         if r.ok==False:
-            eco=j.errorconditionhandler.getErrorConditionObject(msg='error 500 from webserver', msgpub='', \
+            eco=j.errorconditionhandler.getErrorConditionObject(msg='error 500 from webserver on %s'%self.url, msgpub='', \
                 category='tornado.transport')
-            return 99,"m",j.db.serializers.msgpack.dumps(eco.__dict__)
+            return "6","m",j.db.serializers.msgpack.dumps(eco.__dict__)
 
         return j.servers.base._unserializeBinReturn(r.content)

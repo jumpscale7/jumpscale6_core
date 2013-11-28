@@ -40,27 +40,77 @@ class Jumpscript():
 
     __str__ = __repr__
 
-# class Job():
-#     def __init__(self, sessionid,jsname, jsorganization, roles,args,timeout,jscriptid):
-#         self.id= j.base.idgenerator.generateGUID()
-#         self.jsname = jsname
-#         self.jsorganization=jsorganization
-#         self.roles=roles
-#         self.args=args
-#         self.timeout=timeout
-#         self.result=None
-#         self.sessionid=sessionid
-#         self.jscriptid=jscriptid
-#         self.event=None
-#         self.children=[]
-#         self.childrenActive={}
-#         self.parent=None
-#         self.resultcode=None
+class Job():
+    def __init__(self, controller,sessionid,jsname, jsorganization, roles,args,timeout,jscriptid,lock):
 
-#     def __repr__(self):
-#         return str(self.__dict__)
+        self.event=None
+        self.controller=controller
 
-#     __str__ = __repr__
+        self.db=self.controller.jobclient.new(sessionid=sessionid, jsorganization=jsorganization, roles=roles, \
+            args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
+            jsname=jsname)
+
+        self.id= self.db.id
+        self.jsname = self.db.jsname
+        self.jsorganization=self.db.jsorganization
+        self.roles=self.db.roles
+        self.args=self.db.args
+        self.timeout=self.db.timeout
+        self.result=self.db.result
+        self.sessionid=self.db.sessionid
+        self.jscriptid=self.db.jscriptid
+        self.children=self.db.children
+        self.childrenActive=self.db.childrenActive
+        self.parent=self.db.parent
+        self.resultcode=self.db.resultcode
+        self.state=self.db.state
+        self.timeStart=self.db.timeStart
+        self.timeStop=self.db.timeStop
+        self.lock=self.db.lock
+
+    def save(self):
+        self.controller.jobclient.set(self.db)
+
+    def __repr__(self):
+        return str(self.db.__dict__)
+
+    __str__ = __repr__
+
+
+class Locks():
+    def __init__(self):
+        self.locks = {}
+
+    def addLock(self,agentid,type,maxduration):
+        if not self.locks.has_key(agentid):
+            self.locks[agentid]={}
+        self.locks[agentid][type]=[maxduration,j.base.time.getTimeEpoch()]
+
+    def checkLock(self,agentid,type):
+        if not self.locks.has_key(agentid):
+            return False
+
+        if not self.locks[agentid].has_key(agentid):
+            return False
+
+        maxduration,starttime=self.locks[agentid][type]
+        if j.base.time.getTimeEpoch()>starttime+maxduration:
+            self.locks[agentid].pop(type)
+            return False
+        return True
+
+    def removeOldLocks(self):
+        now=j.base.time.getTimeEpoch()
+        for agentid in self.locks.keys():
+            for type in self.locks[agentid].keys():
+                maxduration,starttime=self.locks[agentid][type]
+                if now>starttime+maxduration:
+                    self.locks[agentid].pop(type)
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    __str__ = __repr__
 
 class ControllerCMDS():
 
@@ -87,6 +137,8 @@ class ControllerCMDS():
         
         self.osisclient = j.core.osis.getClient()
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
+
+        self.locks = Locks()
 
 
     def _adminAuth(self,user,passwd):
@@ -157,6 +209,7 @@ class ControllerCMDS():
         self.sessions[session.id]=session
         self.session2agent[session.id]=session.agentid
         roles=session.roles
+
         for role in roles:
             self._setRole2Agent(role,session.agentid)
             compl=""
@@ -184,9 +237,7 @@ class ControllerCMDS():
         return self.agent2freeSessions[session.agentid][session.id]
     def _unmarkSessionFree(self,session):
         if not self.agent2freeSessions.has_key(session.agentid):
-            from IPython import embed
-            print "DEBUG NOW bug in _unmarksessionfree of agentcontroller, need to fix"
-            embed()
+            raise RuntimeError("bug in _unmarkSessionFree in agentcontroller, sessionfree needs to have agentid")
             
         if self.agent2freeSessions[session.agentid].has_key(session.id):
             self.agent2freeSessions[session.agentid].pop(session.id)
@@ -277,7 +328,7 @@ class ControllerCMDS():
                 result.append([t.organization, t.name, t.category, t.descr])
         return result
 
-    def executeJumpscript(self, organization, name, role, args={},all=False, timeout=600,session=None,wait=True):
+    def executeJumpscript(self, organization, name, role, args={},all=False, timeout=600,session=None,wait=True,lock=""):
         """
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
@@ -288,9 +339,12 @@ class ControllerCMDS():
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         jobs=[]
-        if self.roles2agents.has_key(role):
+        if self.roles2agents.has_key(role):            
+            
             for agentid in self.roles2agents[role]:
-                job = self.jobclient.new(sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
+                job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, \
+                    jscriptid=action.id,lock=lock,jsname=name)
+                job.save()
                 self.workqueue[agentid].append(job)
                 self.jobs[job.id]=job
                 jobs.append(job.id)
@@ -302,20 +356,31 @@ class ControllerCMDS():
                     self.agent2freeSessions[agentid][sessionid].set()
 
             if len(jobs)>1:
-                jobgroup= self.jobclient.new(sessionid=None, jsorganization=organization, roles=role, args=args, timeout=timeout, jscriptid=action.id)
+                jobgroup= Job(self,sessionid=None, jsorganization=organization, roles=role, args=args, timeout=timeout, \
+                    jscriptid=action.id,lock=lock,jsname=name)
                 jobgroup.children=jobs
+                for jobchild in jobs:
+                    jobgroup.db.children.append(jobchild.id)
                 self.jobs[jobgroup.id]=jobgroup
                 for childid in jobs:
                     child=self.jobs[childid]
                     child.parent=jobgroup
+                    child.db.parent=jobgroup.id
                 job=jobgroup
+                job.save()
 
             if wait:
                 return self.waitJumpscript(job.id,session)
 
-            job2=copy.copy(job)
-            job2.__dict__.pop("event")
-            return job2
+            return job.db.__dict__
+        else:
+            print "nothingtodo"
+            job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, \
+                    jscriptid=action.id,lock=lock,jsname=name)
+            job.state="NOWORK"
+            job.timeStop=job.timeStart
+            job.save()            
+            return job.db.__dict__
 
     def waitJumpscript(self,jobid,session):
         """
@@ -348,12 +413,13 @@ class ControllerCMDS():
         """
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         # gevent.spawn(greenletGetWork,session=session)
-
         timeout = gevent.Timeout(30)
         timeout.start()
         try:
             while True:
                 if len(self.workqueue[session.agentid])>0:
+                    #check locking
+
                     job=self.workqueue[session.agentid].pop()
                     self.activeJobSessions[session.id]=job
                     timeout.cancel()
@@ -365,11 +431,11 @@ class ControllerCMDS():
                 #if we get here there is someone asking something to do, unmark the session, go into while to return next job
                 self._unmarkSessionFree(session)
 
-        except:
+        except:# Exception,e:
             timeout.cancel()
             #because of timeout max wait is 2 min
             self._unmarkSessionFree(session)
-            print "timeout"
+            print "timeout (if too fast timeouts then error in getWork while loop)"
 
     def notifyWorkCompleted(self,result=None,eco=None,session=None):
         # print "notifyworkcompleted"
@@ -379,12 +445,20 @@ class ControllerCMDS():
             raise RuntimeError("Could not notify job completed for session:%s"%session.id)
         
         job= self.activeJobSessions.pop(session.id)
+        job.db.timeStop=self.sessionsUpdateTime[session.id]
 
         if eco<>None:
-            job.result=eco
-            job.resultcode=2
+            job.db.result=eco.__dict__
+            job.db.resultcode=2
+            job.db.state="ERROR"
         else:   
-            job.result=result
+            #@todo need to check result is basic type combo (dict, list, str, bool, ...)
+            job.db.result=result
+            job.db.resultcode=0
+            job.db.state="OK"
+
+        job.save()
+        
         
         #now need to return it to the client who asked for the work 
         if job.parent<>None:
@@ -393,8 +467,8 @@ class ControllerCMDS():
                 #all children executed
                 job.parent.event.set()
         
-        # if job.event<>None:
-        job.event.set()
+        if job.event<>None:
+            job.event.set()
 
         print "completed job"
         # print "result was.\n"

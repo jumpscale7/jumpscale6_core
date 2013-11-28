@@ -41,8 +41,9 @@ class DaemonClient(object):
             self._id=id
         else:
             end = 4294967295  # 4bytes max nr
-            self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
-                1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
+            # self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
+            #     1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
+            self._id="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid)
 
         self.retry = True
         self.blocksize = 8 * 1024 * 1024
@@ -56,6 +57,15 @@ class DaemonClient(object):
             roles=j.application.config.get("grid.node.roles").split(",")
             roles=[item.strip().lower() for item in roles]            
 
+        if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:
+            raise RuntimeError("gid or nid cannot be 0, see grid.hrd file in main config of jumpscale hrd dir")
+
+        roles2=[]
+        for role in roles:
+            role+=".%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+            roles2.append(role)
+
+        roles=roles2
         self.roles = roles
         self.keystor = None
         self.key = None
@@ -114,6 +124,7 @@ class DaemonClient(object):
         # sessiondictstr=ser.dumps(session.__dict__)
         self.key = session.encrkey
         self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__, ssl=ssl, returnformat="")
+        print "registered session"
 
     def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, category=None,die=False):
         """
@@ -141,11 +152,10 @@ class DaemonClient(object):
         # self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
         parts = self.transport.sendMsg(category, cmd, data, sendformat, returnformat)
         returncode = parts[0]
-
+        # print "return:%s"%returncode
         if returncode == returnCodes.AUTHERROR:
             if retry < maxretry:
                 print "session lost"
-
                 self.initSession()
                 retry += 1
                 return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat, returnformat, retry, maxretry, category)
@@ -156,16 +166,18 @@ class DaemonClient(object):
             msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             raise MethodNotFoundException(msg)
         if str(returncode) != returnCodes.OK:
+            
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
             ddict = s.loads(parts[2])
             eco = j.errorconditionhandler.getErrorConditionObject(ddict)
+            eco.category="rpc.exec"
             msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
-            print "*** error in client to zdaemon ***"
-            # print eco
-            j.errorconditionhandler.raiseOperationalCritical(msgpub="", message=msg, category="rpc.exec", die=die, tags="ecoguid:%s" % eco.guid)
-            raise RuntimeError(str(eco))
+            # print "*** error in client to zdaemon ***"
+            # print eco            
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco)
+            # raise RuntimeError(str(eco))
 
         returnformat = parts[1]
         if returnformat <> "":

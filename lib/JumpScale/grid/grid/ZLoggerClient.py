@@ -24,4 +24,5 @@ class ZLoggerClient(object):
         eco.type = str(eco.type)
         args = {}
         args["eco"] = eco.__dict__
+        print "log eco:%s"%eco
         self.client.sendMsgOverCMDChannel("logeco", data=args, sendformat="m", returnformat="", category="logger")

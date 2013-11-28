@@ -21,7 +21,7 @@ class Agent():
         id=j.application.getWhoAmiStr()
 
         self.client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user="user1", passwd="1234", \
-            category="agent",id=id)
+            category="agent",id=id,timeout=36000)
 
         self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid)
         
@@ -43,6 +43,7 @@ class Agent():
 
 
     def register(self):
+
         ok=False
         while ok==False:
             try:
