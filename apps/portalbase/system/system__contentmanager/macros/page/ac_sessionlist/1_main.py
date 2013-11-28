@@ -13,9 +13,9 @@ def main(j, args, params, tags, tasklet):
         status = 'Active' if session["activejob"] else 'Inactive'
         started = datetime.datetime.fromtimestamp(session["start"]).strftime('%Y-%m-%d %H:%M:%S')
         polled = datetime.datetime.fromtimestamp(session["lastpoll"]).strftime('%Y-%m-%d %H:%M:%S')
-        rows.append([session['id'], session['roles'], session["netinfo"], session["organization"], session["agentid"], session["user"], started, polled, status])
+        rows.append(["%s__/Docs/ACSession?sessionid=%s" % (session['id'], session['id']), session['roles'], session["netinfo"], session["organization"], session["agentid"], session["user"], started, polled, status])
 
-    page.addList(rows, header) #TODO make agentid a link to agent
+    page.addList(rows, header, linkcolumns=[0]) #TODO make agentid a link to agent
 
     params.result = page
     return params

@@ -5,22 +5,22 @@ def main(j, args, params, tags, tasklet):
 
     page = args.page
     p = args.requestContext.params
-    jobid = p["jobid"]
+    sessionid = p["sessionid"]
 
     client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user="admin", passwd="1234",category="agent")
     
-    jobs = client.listJobs()
-    for job in jobs:
-        if job['id'] == jobid:
+    sessions = client.listSessions()
+    for session in sessions:
+        if session['id'] == sessionid:
             break
 
     bullets = []
-    for k,v in job.iteritems():
+    for k,v in session.iteritems():
         if k == 'id':
             continue
         bullets.append('%s : %s' % (k,v))
 
-    page.addHeading("ID: %s" % jobid, 5)
+    page.addHeading("ID: %s" % sessionid, 5)
     page.addBullets(bullets)
 
     params.result = page

@@ -13,9 +13,9 @@ def main(j, args, params, tags, tasklet):
         status = 'Active' if job["isactive"] else 'Inactive'
     #     started = datetime.datetime.fromtimestamp(session["start"]).strftime('%Y-%m-%d %H:%M:%S')
     #     polled = datetime.datetime.fromtimestamp(session["lastpoll"]).strftime('%Y-%m-%d %H:%M:%S')
-        rows.append([job['id'], job['roles'], job["jsname"], job["jscriptid"], job["jsorganization"], job["args"], job["timeout"], job['sessionid'], job['children'], status])
+        rows.append(["%s__/Docs/ACJob?jobid=%s" % (job['id'], job['id']), job['roles'], job["jsname"], job["jscriptid"], job["jsorganization"], job["args"], job["timeout"], job['sessionid'], job['children'], status])
 
-    page.addList(rows, header) #TODO make agentid a link to agent
+    page.addList(rows, header, linkcolumns=[0]) #TODO make agentid a link to agent
 
     params.result = page
     return params

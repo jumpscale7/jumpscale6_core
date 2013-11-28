@@ -190,10 +190,6 @@ class PageHTML(Page):
                 headers = [""] + headers
             if l != len(headers):
                 #raise RuntimeError("Cannot process headers, wrong nr of cols")
-                from JumpScale.core.Shell import ipshellDebug, ipshell
-                print "DEBUG NOW Cannot process headers, wrong nr of cols"
-                ipshell()
-
                 print "Cannot process headers, wrong nr of cols"
                 self.addMessage("ERROR header wrong nr of cols:%s" % headers)
                 headers = []
