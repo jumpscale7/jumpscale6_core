@@ -501,9 +501,8 @@ class ControllerCMDS():
         return result
 
     def log(self, logs, session=None):
-        #TODO use logItems instead of dicts for timestamps
-        for logdict in logs:
-            j.logger.log(message=logdict['message'], category=logdict['category'], jid=logdict['jid'])
+        pass        
+            
 
     def listSessions(self,session=None):
         result=[]

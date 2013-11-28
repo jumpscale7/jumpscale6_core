@@ -18,7 +18,7 @@ class LogHandler():
     def __init__(self,agent):
         self.agent=agent
         self.queue = Queue.Queue()
-        self.jid=None
+        self.jid=0
 
     def log(self,logitem):
         logitem.jid=self.jid
@@ -34,7 +34,10 @@ class LogHandler():
     def start(self, interval=5):
         print "log thread started, will flush each %s sec"%interval
         t = threading.Timer(interval, self.flushLogs)
-        t.start()        
+        t.start()  
+
+    def close(self):
+        pass
 
 
 class Agent():
