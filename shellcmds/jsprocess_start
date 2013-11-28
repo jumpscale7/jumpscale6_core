@@ -5,6 +5,7 @@ from JumpScale.baselib import cmdutils
 j.application.start("jsprocess_start")
 
 opt = cmdutils.getProcess()
+
 j.tools.startupmanager.startProcess(opt.domain, opt.name)
 
 j.application.stop()

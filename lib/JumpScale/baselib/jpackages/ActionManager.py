@@ -21,7 +21,14 @@ class ActionManager:
             name=name[:-3]
             modname = "jpactions_%s" % j.tools.hash.md5_string(path)
             module = imp.load_source(modname, path)
-            self._actions[name]= module.main
+            try:
+                self._actions[name]= module.main
+            except Exception,e:
+                print e
+                from IPython import embed
+                print "DEBUG NOW ooo"
+                embed()
+                
             name2=name.replace(".","_")
             self.__dict__[name2]=self._getActionMethod(name)
 

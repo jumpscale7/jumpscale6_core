@@ -675,7 +675,7 @@ class JPackageObject():
         else:
             base=j.application.config.applyOnContent(ttype)
             if base==ttype:
-                raise RuntimeError("Could not find ttype")
+                raise RuntimeError("Could not find ttype:%s for %s, needs to be root,base,etc,bin,deb"%(ttype,self))
             systemdest = j.system.fs.joinPaths(base, blobitempath)
         filespath=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype,blobitempath)
         return (filespath,systemdest)
@@ -979,7 +979,6 @@ class JPackageObject():
                         applyhrd=False
                     if ttype == 'debs':
                         continue # this needs to be handled by package by runnig jp.installDebs
-
                     tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                     self.log("copy files from:%s to:%s"%(pathttype,destination))
                     self.__copyFiles(pathttype,destination,applyhrd=applyhrd)

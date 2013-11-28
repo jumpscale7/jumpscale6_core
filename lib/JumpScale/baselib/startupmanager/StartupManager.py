@@ -33,6 +33,7 @@ class ProcessDef:
         print "%s: %s"%(self._nameLong,msg)
 
     def start(self, timeout=100):
+        # self.logToStartupLog("***START***")
         if self.isRunning():
             self.log("no need to start, already started.")
             return
@@ -45,12 +46,18 @@ class ProcessDef:
         jp.processDepCheck(timeout=timeout)
         self.log("process dependency OK")
         self.log("start process")
-        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env, newscr=True)
+        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env)#, newscr=True)
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
+        time.sleep(2)#need to wait because maybe error did not happen yet (is not the nicest method, but dont know how we can do else?) kds
+
         self.log("pid get")
-        pid=self.getPid(timeout=5)
+
+        pid=self.getPid(timeout=5,ifNoPidFail=False)
         self.log("pid: %s"%pid)
+
+        if pid==0:
+            raise RuntimeError("Could not start process:%s an error occured:\n%s"%(self,self.getStartupLog()))
 
         for port in self.ports:
             if not port or not port.isdigit():
@@ -58,11 +65,35 @@ class ProcessDef:
             port = int(port)
             self.log("port check:%s START"%port)
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
-                raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s' % (self.name, port, timeout))
+                raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s, startuplog:\n%s' % (self.name, port, timeout,self.getStartupLog()))
             self.log("port check:%s DONE"%port)
+
+        if not self.isRunning():
+            raise RuntimeError("Could not start process:%s an error occured:\n%s"%(self,self.getStartupLog()))
 
         self.log("*** STARTED ***")
         return pid
+
+    def getStartupLog(self):
+        if j.system.fs.exists(self.logfile):
+            content=j.system.fs.fileGetContents(self.logfile)
+            return content
+            ##was not needed, tmux starts new log
+            # nr=0
+            # laststartnr=0
+            # for line in content.split("\n"):
+            #     if line.find("***START***")<>-1:
+            #         laststartnr=nr
+            #     nr+=1
+
+            # if laststartnr==0:
+            #     raise RuntimeError("there is no started section in log for tmux")
+
+            # content="\n".join(content.split("\n")[laststartnr:])
+
+        else:
+            content=""
+        return content        
 
     def getProcessObject(self):
         self.getPid()
@@ -120,11 +151,13 @@ class ProcessDef:
 
             if pid>0:
                 return pid
+            
             raise RuntimeError("Timeout on wait for chilprocess for tmux for processdef:%s"%self)
         return self.pid
 
     def isRunning(self):
         pid=self.getPid(timeout=0,ifNoPidFail=False)
+
         if pid==0:
             return False
         test=j.system.process.isPidAlive(pid)
@@ -132,9 +165,10 @@ class ProcessDef:
             return False
 
         for port in self.ports:
-            port = int(port)
-            if not j.system.net.checkListenPort(port):
-                return False
+            if port<>None and port.strip()<>"":
+                port = int(port)
+                if not j.system.net.checkListenPort(port):
+                    return False
 
         return True
 
@@ -167,6 +201,8 @@ class StartupManager:
     LOGDIR = j.system.fs.joinPaths(j.dirs.logDir, 'startupmanager')
 
     def __init__(self):
+        j.logger.logTargetLogForwarder=False
+        
         self._configpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'startup')
         j.system.fs.createDir(self._configpath)
         self.processdefs={}

@@ -229,7 +229,7 @@ class ErrorConditionHandler():
         @tb : can be a python data object or a Event
         """
         
-        #print "jumpscale EXCEPTIONHOOK"
+        print "jumpscale EXCEPTIONHOOK"
         
         if self.inException:
             print "ERROR IN EXCEPTION HANDLING ROUTINES, which causes recursive errorhandling behaviour."
@@ -337,7 +337,7 @@ class ErrorConditionHandler():
                     pass
             return "less"
 
-        if j.application.shellconfig.interactive:
+        if False and j.application.shellconfig.interactive:
             #if j.application.shellconfig.debug:
                 #print "###ERROR: BACKTRACE"
                 #print errorConditionObject.backtrace

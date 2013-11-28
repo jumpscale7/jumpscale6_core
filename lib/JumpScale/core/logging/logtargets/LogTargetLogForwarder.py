@@ -29,7 +29,9 @@ class LogTargetLogForwarder():
         if j.application.appname=="osisserver":
             self.enabled = False
         else:
-            self.enabled = True
+            #do not put on on, too dangerous, to many apps cannot & should not use it, only when in grid mode we should
+            self.enabled = False
+
         if not serverip:
             if j.application.config.exists('grid.master.ip'):
                 serverip = j.application.config.get("grid.master.ip")

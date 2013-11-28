@@ -28,7 +28,7 @@ class Application:
 
         self.config = None
 
-        self.gridinit=False
+        self.gridInitialized=False
 
     def initWhoAmI(self):
         """
@@ -66,9 +66,10 @@ class Application:
 
 
     def initGrid(self):
-        import JumpScale.grid
-        j.core.grid.init()
-        self.gridinit=True
+        if not self.gridInitialized:
+            import JumpScale.grid
+            j.core.grid.init()
+            self.gridInitialized=True
 
     def getWhoAmiStr(self):
         return "_".join([str(item) for item in self.whoAmI])
@@ -106,10 +107,7 @@ class Application:
 
         # self.initWhoAmI()
 
-        j.logger.log("Application %s started" % self.appname, level=8, category="jumpscale.app")
-        #adding log handlers
-        if self.appname != "logger": #exclude the logserver itself
-            j.logger.setLogTargetLogForwarder()
+        j.logger.log("***Application started***: %s" % self.appname, level=8, category="jumpscale.app")
 
 
     def stop(self, exitcode=0):
@@ -153,7 +151,7 @@ class Application:
                               # to remember that this is correct behaviour we set this flag
 
         #tell gridmaster the process stopped
-        if self.gridinit:
+        if self.gridInitialized:
             client=j.core.grid.gridOsisClient
             clientprocess=j.core.osis.getClientForCategory(client,"system","process")
             j.core.grid.processObject.epochstop=j.base.time.getTimeEpoch()

@@ -402,7 +402,7 @@ class SystemFS:
                 else:
                     self.log('Trying to remove Directory tree with path: %s' % path)
                     shutil.rmtree(path)
-
+                    
                 self.log('Directory tree with path: %s is successfully removed' % path)
             else:
                 raise ValueError("Specified path: %s is not a Directory in system.fs.removeDirTree" % path)

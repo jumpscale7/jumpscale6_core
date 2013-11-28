@@ -24,7 +24,7 @@ class Tmux:
             for screen in screens[1:]:
                 j.system.process.execute("tmux new-window -t '%s' -n '%s'" % (sessionname, screen))
 
-    def executeInScreen(self,sessionname,screenname,cmd,wait=0, cwd=None, env=None, newscr=False):
+    def executeInScreen(self,sessionname,screenname,cmd,wait=0, cwd=None, env=None):
         """
         @param sessionname Name of the tmux session
         @type sessionname str
@@ -38,41 +38,45 @@ class Tmux:
         @type cwd str
         @param env environment variables for cmd onlt in new screen see newscr
         @type env dict
-        @param newscr run process in newly created window usefull for checking status
-        @type newscr bool
         """
         env = env or dict()
         envstr = ""
         for name, value in env.iteritems():
             envstr += "export %s=%s\n" % (name, value)
-        ppath=j.system.fs.getTmpFilePath()
-        scriptfile = j.system.fs.getTmpFilePath()
-        workdir = ""
-        if cwd:
-            workdir = "cd %s" % cwd
-        script="""
-#!/bin/sh
-#set -x
+        # ppath=j.system.fs.getTmpFilePath()
+        # scriptfile = j.system.fs.getTmpFilePath()
+        # workdir = ""
+        # if cwd:
+        #     workdir = "cd %s" % cwd
+#         script="""
+# #!/bin/sh
+# #set -x
 
-%(env)s
-%(cwd)s
-%(cmd)s
-echo "$?" > %(out)s
-rm $0
-    """ % {'env': envstr, 'cwd': workdir, 'cmd': cmd, 'out': ppath}
-        j.system.fs.writeFile(scriptfile, script)
-        os.chmod(scriptfile, 0755)
-        if newscr:
-            self.killWindow(sessionname, screenname)
-            if sessionname not in self.getSessionNames():
-                cmd2 = "tmux new-session -d -s '%s'" % sessionname
-            else:
-                cmd2 = "tmux new-window -t '%s'" % sessionname
-            cmd2 += " -n '%s' '%s'" % (screenname, scriptfile)
-        else:
-            self.createWindow(sessionname, screenname)
-            pane = self._getPane(sessionname, screenname)
-            cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,cmd)
+# %(env)s
+# %(cwd)s
+# %(cmd)s
+# echo "$?" > %(out)s
+# rm $0
+#     """ % {'env': envstr, 'cwd': workdir, 'cmd': cmd, 'out': ppath}
+#         j.system.fs.writeFile(scriptfile, script)
+#         os.chmod(scriptfile, 0755)
+#         if newscr:
+#             self.killWindow(sessionname, screenname)
+#             if sessionname not in self.getSessionNames():
+#                 cmd2 = "tmux new-session -d -s '%s'" % sessionname
+#             else:
+#                 cmd2 = "tmux new-window -t '%s'" % sessionname
+#             # cmd2 += " -n '%s' '%s'" % (screenname, scriptfile)
+#         else:
+        self.createWindow(sessionname, screenname)
+        pane = self._getPane(sessionname, screenname)
+        # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,"echo ***STARTED***")
+
+        if envstr<>"":
+            cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,envstr)
+        #go to right directory
+        # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,")
+        cmd2="tmux send-keys -t '%s' '%s;%s\n'" % (pane,"cd %s"%cwd,cmd)
 
         env = os.environ.copy()
         env.pop('TMUX', None)
@@ -85,8 +89,9 @@ rm $0
                 raise RuntimeError("Could not execute %s in screen %s:%s, errorcode was %s" % (cmd,sessionname,screenname,resultcode))
         elif wait:
             j.console.echo("Execution of %s  did not return, maybe interactive, in screen %s:%s." % (cmd,sessionname,screenname))
-        if j.system.fs.exists(ppath):
-            j.system.fs.remove(ppath)
+        # if j.system.fs.exists(ppath):
+        #     j.system.fs.remove(ppath)
+
     def getSessions(self):
         cmd = 'tmux list-sessions -F "#{session_name}"'
         exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
@@ -98,7 +103,8 @@ rm $0
         return [ x[1] for x in self.getSessions() ]
 
     def getPid(self, session, name):
-        cmd = 'tmux list-panes -t "%s" -F "#{pane_pid};#{window_name}"' % session
+        cmd = 'tmux list-panes -t "%s" -F "#{pane_pid};#{window_name}" -a' % session
+        
         exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
         if exitcode:
             return None
