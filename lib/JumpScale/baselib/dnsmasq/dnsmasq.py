@@ -76,4 +76,5 @@ class DNSMasq(object):
     def reload(self):
         if not self._configured:
             raise Exception("Please run first setConfigPath to select the correct paths")
-        j.tools.startupmanager.reloadProcess(self._circusname)
+        j.tools.startupmanager.load()
+        j.tools.startupmanager.reloadProcess('generic', self._startupmanagername)
