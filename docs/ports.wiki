@@ -11,6 +11,8 @@ elasticsearch 9200
 
 agentcontroller 4444
 
+processmanager 4445
+
 gridportal 9900
 
 nginx 80

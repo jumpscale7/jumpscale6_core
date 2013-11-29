@@ -2,14 +2,15 @@ from gevent import monkey; monkey.patch_all(aggressive=False)
 from JumpScale import j
 from gevent.pywsgi import WSGIServer
 import JumpScale.grid.serverbase
-
+import time
+import gevent
 
 class GeventWSServer():
 
     def __init__(self, addr, port, sslorg=None, ssluser=None, sslkeyvaluestor=None):
         """
         @param handler is passed as a class
-        """
+        """        
         self.port = port
         self.addr = addr
         self.key = "1234"
@@ -19,6 +20,54 @@ class GeventWSServer():
         self.server = WSGIServer(('', self.port), self.rpcRequest)
         
         self.type = "geventws"
+
+        self.greenlets = {}
+        self.now = 0
+        self.fiveMinuteId=0
+        self.hourId=0
+        self.dayId=0
+
+    def startClock(self,obj=None):
+
+        self.schedule("timer", self._timer)
+        self.schedule("timer2", self._timer2)
+
+        if obj<>None:
+            obj.now=self.now
+            obj.fiveMinuteId=self.fiveMinuteId
+            obj.hourId=self.hourId
+            obj.dayId=self.dayId
+
+
+    def _timer(self):
+        """
+        will remember time every 1 sec
+        """
+        # lfmid = 0
+
+        while True:
+            self.now = time.time()
+            print "timer"
+            gevent.sleep(1)
+
+    def _timer2(self):
+        """
+        will remember time every 1 sec
+        """
+        # lfmid = 0
+
+        while True:
+            self.fiveMinuteId=j.base.time.get5MinuteId(self.now )
+            self.hourId=j.base.time.getHourId(self.now )
+            self.dayId=j.base.time.getDayId(self.now )
+            print "timer2"
+            gevent.sleep(200)            
+
+    def schedule(self, name, ffunction, **args):
+        self.greenlets[name] = gevent.greenlet.Greenlet(ffunction, **args)
+        self.greenlets[name].start()
+        return self.greenlets[name]
+
 
     def responseRaw(self,data,start_response):
         start_response('200 OK', [('Content-Type', 'text/plain')])
