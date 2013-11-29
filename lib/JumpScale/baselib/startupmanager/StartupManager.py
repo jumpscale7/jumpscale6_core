@@ -5,9 +5,43 @@ import time
 import threading
 # import Queue
 
+# class MonitorStat:
+#     def __init__(self,pd):
+#         self._pd=pd
+#         self.cpu=0
+#         self.running=False
+#         self.mem=0
+#         self.db={} #key=type, val={$time:$val}
+
+
+#     def set(self,type,val,epoch=0):
+#         if epoch==0:
+#             epoch=j.base.time.getTimeEpoch()
+#         if not self.db.has_key(type):
+#             self.db[type]={}
+#         self.db[type][epoch]=float(val)
+#         tot=0.0
+#         for ttime in self.db[type].keys():
+#             if ttime<epoch-300:
+#                 self.db[type].pop(ttime)
+#             else:
+#                 tot+=self.db[type][ttime]
+
+
+
+#     def __str__(self):
+#         out=""
+#         for key in self.__dict__:
+#             if key[0]<>"_":
+#                 out="%s:%s"%(key,self.__dict__[key])
+
+#     __repr__ = __str__
+
+
 class ProcessDef:
-    def __init__(self, hrd):
+    def __init__(self, hrd,path):
         self.autostart=hrd.get("process.autostart")
+        self.path=path
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
         self.cmd=hrd.get("process.cmd")
@@ -24,10 +58,15 @@ class ProcessDef:
         self.jpackage_version=hrd.get("process.jpackage.version")
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
         self.pid=0
-        self.processobject=None
         self._nameLong=self.name
         while len(self._nameLong)<20:
             self._nameLong+=" "
+        self.lastCheck=0
+        self.lastMeasurements={}
+        
+
+    def getJSPid(self):
+        return "g%s.n%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,self.name)
 
     def log(self,msg):
         print "%s: %s"%(self._nameLong,msg)
@@ -70,7 +109,8 @@ class ProcessDef:
 
         if not self.isRunning():
             raise RuntimeError("Could not start process:%s an error occured:\n%s"%(self,self.getStartupLog()))
-
+        
+        self.getStatInfo()
         self.log("*** STARTED ***")
         return pid
 
@@ -96,8 +136,7 @@ class ProcessDef:
         return content        
 
     def getProcessObject(self):
-        self.getPid()
-        return self.processobject
+        return j.system.process.getProcessObject(self.getPid())
 
     def getPid(self,timeout=5,ifNoPidFail=True):
         if self.pid==0:
@@ -172,6 +211,76 @@ class ProcessDef:
 
         return True
 
+    def getStatInfo(self,epoch=0,format="dict"):
+        """
+        @format dict or txt
+        """
+        
+        result={}
+        if j.system.process.isPidAlive(self.pid):
+            p=self.getProcessObject()
+
+            out=""
+            result["cpu.percent"]=p.get_cpu_percent()
+            
+            result["process.nrconnections"]=len(p.get_connections())
+
+            rss,vms=p.get_memory_info()
+            result["memory.rss"]=round(rss/1024/1024,1)
+            result["memory.vms"]=round(rss/1024/1024,1)
+
+            a,b=p.get_num_ctx_switches()
+            result["process.contentswitches"]=a+b
+
+            openfiles=len(p.get_open_files())
+            result["process.openfiles"]=openfiles
+
+
+            if self.lastCheck<>0:
+
+                user,system=p.get_cpu_times()
+                result["cpu.time.user"]=user
+                result["cpu.time.system"]=system
+
+                read_count,write_count,read_bytes,write_bytes=p.get_io_counters()
+
+                nrsec=time.time()-self.lastCheck
+                result["io.read.count"]=(read_count-self.lastMeasurements["read_count"])/nrsec
+                result["io.write.count"]=(write_count-self.lastMeasurements["write_count"])/nrsec
+                result["io.read.bytes"]=((read_bytes-self.lastMeasurements["read_bytes"])/1024)/nrsec
+                result["io.write.bytes"]=((write_bytes-self.lastMeasurements["write_bytes"])/1024)/nrsec
+    
+            else:
+                result["cpu.time.user"]=0
+                result["cpu.time.system"]=0
+                result["io.read.count"]=0
+                result["io.write.count"]=0
+                result["io.read.bytes"]=0
+                result["io.write.bytes"]=0
+                if self.lastMeasurements=={}:
+                    read_count,write_count,read_bytes,write_bytes=p.get_io_counters()
+                    self.lastMeasurements["read_count"]=read_count
+                    self.lastMeasurements["write_count"]=write_count
+                    self.lastMeasurements["read_bytes"]=read_bytes
+                    self.lastMeasurements["write_bytes"]=write_bytes
+
+
+            if epoch==0:
+                self.lastCheck=time.time()
+            else:
+                self.lastCheck=epoch
+
+        if format=="txt":
+            jspid=self.getJSPid()
+            out=""
+            keys=result.keys()
+            keys.sort()
+            for key in keys:
+                out+="%s.%s %s\n"%(jspid,key,result[key])
+            result=out
+
+        return result
+
     def stop(self, timeout=20):
         pid=self.getPid(timeout=0,ifNoPidFail=False)
         if not pid:
@@ -182,6 +291,14 @@ class ProcessDef:
             if self.processobject.is_running():
                 j.system.platform.screen.killWindow(self.domain, self.name)
 
+    def disable(self):
+        hrd=j.core.hrd.getHRD(self.path)
+        hrd.set("process.autostart",0)
+
+    def enable(self):
+        hrd=j.core.hrd.getHRD(self.path)
+        hrd.set("process.autostart",1)
+
     def reload(self):
         if self.reload_signal:
             self.getPid()
@@ -191,7 +308,7 @@ class ProcessDef:
             self.start()
 
     def __str__(self):
-        return str("Process: %s_%s"%(self.domain,self.name))
+        return str("Process: %s_%s\n"%(self.domain,self.name))
 
     __repr__ = __str__
 
@@ -291,7 +408,7 @@ class StartupManager:
         for path in j.system.fs.listFilesInDir(self._configpath , recursive=False,filter="*.hrd"):
             domain,name=j.system.fs.getBaseName(path).replace(".hrd","").split("__")
             key=self._getKey(domain,name)
-            self.processdefs[key]=ProcessDef(j.core.hrd.getHRD(path))
+            self.processdefs[key]=ProcessDef(j.core.hrd.getHRD(path),path=path)
 
     def getProcessDefs(self,domain=None,name=None):
         self._init()
@@ -420,6 +537,18 @@ class StartupManager:
     def stopProcess(self, domain,name, timeout=20):
         for pd in self.getProcessDefs(domain, name):
             pd.stop(timeout)
+
+    def disableProcess(self, domain,name, timeout=20):
+        for pd in self.getProcessDefs(domain, name):
+            pd.disable()
+
+    def enableProcess(self, domain,name, timeout=20):
+        for pd in self.getProcessDefs(domain, name):
+            pd.enable()
+
+    def monitorProcess(self, domain,name, timeout=20):
+        for pd in self.getProcessDefs(domain, name):
+            pd.monitor()
 
     def restartProcess(self, domain,name):
         self.stopProcess(domain, name)

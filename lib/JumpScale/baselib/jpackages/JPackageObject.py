@@ -290,9 +290,7 @@ class JPackageObject():
             self.blobstorLocal = j.clients.blobstor.get(do.blobstorlocal)
 
         if self.blobstorRemote ==None or   self.blobstorLocal==None:
-            from IPython import embed
-            print "DEBUG NOW ooooooooooooo"
-            embed()
+            raise RuntimeError("DEBUG NOW blobstorremote or blobstorlocal needs to be available")
 
         # print "loadactionsdone:%s"%self
             
@@ -1442,6 +1440,7 @@ class JPackageObject():
             key0,blobitems=self.getBlobInfo(platform,ttype)
 
             pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
+
 
             if not j.system.fs.exists(pathttype):
                 raise RuntimeError("Could not find files section:%s, check the files directory in your jpackages metadata dir, maybe there is a .info file which is wrong & does not exist here."%pathttype)

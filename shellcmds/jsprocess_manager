@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+from JumpScale import j
+
+import JumpScale.grid.geventws
+import gevent
+from gevent.event import Event
+# import JumpScale.baselib.statmanager
+import JumpScale.baselib.graphite
+
+j.application.start("jsprocess_manager")
+
+j.logger.consoleloglevel = 5
+
+class MgrCmds():
+
+    def __init__(self, daemon):
+        self.daemon = daemon
+        self.manager=j.tools.startupmanager
+        self.monitorProcess()
+
+    def authenticate(self, user, login, **args):
+        return True  # will authenticall all (is std)
+
+    # def reset(self, **args):
+    #     return self.manager.reset()
+
+    def getDomains(self,**args):
+        return self.manager.getDomains()
+
+    def startJPackage(self,jpackage,timeout=20,**args):
+        return self.manager.startJPackage(jpackage,timeout)
+
+    def stopJPackage(self,jpackage,timeout=20,**args):        
+        return self.manager.stopJPackage(jpackage,timeout)
+
+    def existsJPackage(self,jpackage,**args):
+        return self.manager.existsJPackage(jpackage)
+
+    def startAll(self,**args):
+        return self.manager.startAll()
+
+    def removeProcess(self,domain, name,**args):
+        return self.manager.removeProcess(domain, name)
+
+    def getStatus4JPackage(self,jpackage,**args):
+        return self.manager.getStatus4JPackage(jpackage)
+
+    def getStatus(self, domain, name,**args):
+        """
+        get status of process, True if status ok
+        """
+        return self.manager.getStatus( domain, name)
+
+    def listProcesses(self,**args):
+        return self.manager.listProcesses()
+
+    def startProcess(self, domain="", name="", timeout=20,**args):
+        return self.manager.startProcess( domain, name, timeout)
+
+    def stopProcess(self, domain,name, timeout=20,**args):
+        return self.manager.stopProcess(domain,name, timeout)
+
+    def disableProcess(self, domain,name, timeout=20,**args):
+        return self.manager.stopProcess( domain,name, timeout)
+
+    def enableProcess(self, domain,name, timeout=20,**args):
+        return self.manager.enableProcess( domain,name, timeout)
+
+    def monitorProcess(self, domain="",name="",**args):
+        monitorinfo=""
+        for pd in self.manager.getProcessDefs(domain,name):
+            result= pd.getStatInfo(format="txt")
+            monitorinfo+="%s\n"%result
+        print monitorinfo
+        j.clients.graphite.send(monitorinfo)
+
+        # j.system.statmanager.addInfo(monitorinfo)
+
+    def restartProcess(self, domain,name,**args):
+        return self.manager.restartProcess( domain,name)
+
+    def reloadProcess(self, domain, name,**args):
+        return self.manager.reloadProcess( domain,name)
+
+
+    def loop(self):
+        """
+        loop 20 sec
+        """
+        while True:
+            print "monitor"
+            self.monitorProcess()
+            gevent.sleep(20)
+
+    def loop2(self):
+        """
+        loop 120 sec
+        """
+
+        while True:
+            self.startProcess()
+            gevent.sleep(120)
+
+daemon = j.servers.geventws.getServer(port=4445)
+
+daemon.addCMDsInterface(MgrCmds, category="processmanager")  # pass as class not as object !!! chose category if only 1 then can leave ""
+
+cmds=daemon.daemon.cmdsInterfaces["processmanager"][0]
+
+# daemon.startClock()
+
+daemon.schedule("loop",cmds.loop)
+daemon.schedule("loop2",cmds.loop2)
+
+daemon.start()
+
+j.application.stop()
