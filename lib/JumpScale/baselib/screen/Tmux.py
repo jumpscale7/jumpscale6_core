@@ -24,7 +24,7 @@ class Tmux:
             for screen in screens[1:]:
                 j.system.process.execute("tmux new-window -t '%s' -n '%s'" % (sessionname, screen))
 
-    def executeInScreen(self,sessionname,screenname,cmd,wait=0, cwd=None, env=None):
+    def executeInScreen(self,sessionname,screenname,cmd,wait=0, cwd=None, env=None,user="root"):
         """
         @param sessionname Name of the tmux session
         @type sessionname str
@@ -76,7 +76,12 @@ class Tmux:
             cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,envstr)
         #go to right directory
         # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,")
-        cmd2="tmux send-keys -t '%s' '%s;%s\n'" % (pane,"cd %s"%cwd,cmd)
+        if user<>"root":
+            cmd="cd %s;%s"%(cwd,cmd)
+            sudocmd="sudo -u %s -c '%s'"%(user,cmd)
+            cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,sudocmd)
+        else:
+            cmd2="tmux send-keys -t '%s' '%s;%s\n'" % (pane,"cd %s"%cwd,cmd)
 
         env = os.environ.copy()
         env.pop('TMUX', None)

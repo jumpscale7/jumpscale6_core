@@ -407,6 +407,16 @@ class JPackageClient():
         if installed==True:
             res=[item for item in res if item.isInstalled()]
         
+        #sort jpackages
+        tosortmeta={}        
+        for item in res:
+            tosortmeta["%s_%s"%(item.name,item.domain)]=item
+        tosort=tosortmeta.keys()
+        tosort.sort()
+        res=[]
+        for sortedkey in tosort:
+            res.append(tosortmeta[sortedkey])
+
         if onlyone:
             if len(res) > 1:
                 res = [j.console.askChoice(res, "Multiple packages found, please choose one")]

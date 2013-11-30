@@ -44,6 +44,10 @@ class ProcessDef:
         self.path=path
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
+        
+        self.user=hrd.get("process.user",checkExists=True)
+        if self.user==False:
+            self.user="root"
         self.cmd=hrd.get("process.cmd")
         self.args=hrd.get("process.args")
         self.env=hrd.getDict("process.env")
@@ -85,18 +89,20 @@ class ProcessDef:
         jp.processDepCheck(timeout=timeout)
         self.log("process dependency OK")
         self.log("start process")
-        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env)#, newscr=True)
+        j.system.fs.remove(self.logfile)
+        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
         time.sleep(2)#need to wait because maybe error did not happen yet (is not the nicest method, but dont know how we can do else?) kds
 
         self.log("pid get")
 
-        pid=self.getPid(timeout=5,ifNoPidFail=False)
+        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=1)
+
         self.log("pid: %s"%pid)
 
         if pid==0:
-            raise RuntimeError("Could not start process:%s an error occured:\n%s"%(self,self.getStartupLog()))
+            raise RuntimeError("Could not start process:%s, getpid did not return, an error occured:\n%s"%(self,self.getStartupLog()))
 
         for port in self.ports:
             if not port or not port.isdigit():
@@ -118,36 +124,34 @@ class ProcessDef:
         if j.system.fs.exists(self.logfile):
             content=j.system.fs.fileGetContents(self.logfile)
             return content
-            ##was not needed, tmux starts new log
-            # nr=0
-            # laststartnr=0
-            # for line in content.split("\n"):
-            #     if line.find("***START***")<>-1:
-            #         laststartnr=nr
-            #     nr+=1
-
-            # if laststartnr==0:
-            #     raise RuntimeError("there is no started section in log for tmux")
-
-            # content="\n".join(content.split("\n")[laststartnr:])
-
         else:
             content=""
         return content        
 
     def getProcessObject(self):
-        return j.system.process.getProcessObject(self.getPid())
+        self.processobject=j.system.process.getProcessObject(self.getPid(self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=0)))
+        return self.processobject
 
-    def getPid(self,timeout=5,ifNoPidFail=True):
+    def getPid(self,timeout=0,ifNoPidFail=True,timeouttmux=0):
         if self.pid==0:
-            pid = j.system.platform.screen.getPid(self.domain, self.name)
-            if not pid:
+
+            #first check screen is already there with window, max waiting 1 sec
+            start=time.time()
+            now=0
+            pid=None
+            while pid==None and now<start+timeouttmux:
+                pid = j.system.platform.screen.getPid(self.domain, self.name)
+                if pid<>None:
+                    break
+                print "sleep get pid through tmux timeout"
+                time.sleep(0.2)
+                now=time.time()
+
+            if pid==None:
                 if ifNoPidFail:
-                    raise RuntimeError("Could not start %s, pid was not found"%self)
+                    raise RuntimeError("Pid was not found for %s, because window not found."%self)
                 else:
-                    # print "no pid found in cmd:%s"%cmd
                     return 0
-                #@todo show errorlog
 
             pr=j.system.process.getProcessObject(pid)
 
@@ -162,7 +166,6 @@ class ProcessDef:
                     if j.system.process.isPidAlive(child.pid):
                         pid=child.pid
                         self.pid=pid
-                        self.processobject=j.system.process.getProcessObject(pid)
                         # print "FOUND:%s"%self.pid
                         return self.pid
                     else:
@@ -175,13 +178,13 @@ class ProcessDef:
                 timeout=0.1
 
             pid=None
-            start=j.base.time.getTimeEpoch()
-            now=start
-            while now<start+timeout and pid==None:
+            start=time.time()
+            now=0
+            while pid==None and now<start+timeout:
                 pid=check()
                 # print "timecheck:%s"%pid
-                time.sleep(0.05)
-                now=j.base.time.getTimeEpoch()
+                time.sleep(0.1)
+                now=time.time()
 
             if ifNoPidFail==False:
                 if pid==None:
@@ -195,7 +198,7 @@ class ProcessDef:
         return self.pid
 
     def isRunning(self):
-        pid=self.getPid(timeout=0,ifNoPidFail=False)
+        pid=self.getPid(ifNoPidFail=False)
 
         if pid==0:
             return False
@@ -283,13 +286,31 @@ class ProcessDef:
 
     def stop(self, timeout=20):
         pid=self.getPid(timeout=0,ifNoPidFail=False)
-        if not pid:
-            return
-
-        if self.processobject and self.processobject.is_running():
+        if pid<>0 and self.getProcessObject() and self.processobject.is_running():
             self.processobject.kill()
-            if self.processobject.is_running():
-                j.system.platform.screen.killWindow(self.domain, self.name)
+            start=time.time()
+            now=0
+            while now<start+timeout:
+                if self.processobject.is_running()==False:
+                    print "isdown:%s"%self
+                    break
+                time.sleep(0.05)
+                now=j.base.time.getTimeEpoch()
+
+        j.system.platform.screen.killWindow(self.domain, self.name)
+
+        start=time.time()
+        now=0
+        windowdown=False
+        while windowdown==False and now<start+2:
+            if j.system.platform.screen.windowExists(self.domain, self.name)==False:
+                windowdown=True
+                break
+            time.sleep(0.1)
+            now=j.base.time.getTimeEpoch()
+
+        if windowdown==False:
+            raise RuntimeError("Window was not down yet within 2 sec for %s"%self)
 
     def disable(self):
         hrd=j.core.hrd.getHRD(self.path)
@@ -338,7 +359,8 @@ class StartupManager:
             self.load()
             self.__init=True
 
-    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False, workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0):
+    def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False,\
+        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root"):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -359,6 +381,7 @@ class StartupManager:
         hrd+="process.reloadsignal=%s\n"%reload_signal
         hrd+="process.priority=%s\n"%priority
         hrd+="process.workingdir=%s\n"%workingdir
+        hrd+="process.user=%s\n"%user
         if autostart:
             autostart=1
         hrd+="process.autostart=%s\n"%autostart
@@ -436,6 +459,7 @@ class StartupManager:
 
     def stopJPackage(self,jpackage,timeout=20):        
         for pd in self.getProcessDefs4JPackage(jpackage):
+            print "stop:%s"%pd
             pd.stop(timeout)
 
     def existsJPackage(self,jpackage):

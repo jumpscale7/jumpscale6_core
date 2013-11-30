@@ -104,7 +104,7 @@ class JPackageObject():
             if self.hrd.get("jp.name",checkExists=True)<>self.name:
                 self.hrd.set("jp.name",self.name)
             if self.hrd.get("jp.version",checkExists=True)<>self.version:                
-                self.hrd.set("jp.version",self.version)    
+                self.hrd.set("jp.version",self.version)
 
             descr=self.hrd.get("jp.description",checkExists=True)
             if descr<>False and descr<>"":
@@ -905,10 +905,20 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.restart(False)
-        self.loadActions()
-        self.stop()
-        self.start()
+                dep.stop(False)
+        self.loadActions()        
+        self.actions.process_stop()
+        self.actions.process_start()
+        self.log('stop')
+
+
+        # if dependencies:
+        #     deps = self.getDependencies()
+        #     for dep in deps:
+        #         dep.restart(False)
+        # self.loadActions()
+        # self.stop()
+        # self.start()
 
     def isrunning(self,dependencies=False,ipaddr="localhost"):
         """
@@ -1039,6 +1049,8 @@ class JPackageObject():
 
             self.actions.install_post()
 
+            if self.buildNr==-1:
+                self.buildNr=0
             self.state.setLastInstalledBuildNr(self.buildNr)
 
         if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
@@ -1487,7 +1499,10 @@ class JPackageObject():
             now=j.base.time.getTimeEpoch()
         raise RuntimeError("Timeout on waitup for jp:%s"%self)
 
-    def waitDown(self, timeout=60,dependencies=False):        
+    def waitDown(self, timeout=60,dependencies=False):  
+        self.log("waitdown: not implemented")
+        return True
+
         self.loadActions()
         if dependencies:
             deps = self.getDependencies()
@@ -1705,11 +1720,6 @@ class JPackageObject():
 
     def __eq__(self, other):
         return str(self) == str(other)
-
-    
-        
-        j.packages.log(str(self) + ':' + mess, category,level=level)
-        # print str(self) + ':' + mess
 
     def reportNumbers(self):
         return ' buildNr:' + str(self.buildNr)
