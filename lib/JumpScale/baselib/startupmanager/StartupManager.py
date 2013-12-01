@@ -133,69 +133,62 @@ class ProcessDef:
         return self.processobject
 
     def getPid(self,timeout=0,ifNoPidFail=True,timeouttmux=0):
-        if self.pid==0:
+        #first check screen is already there with window, max waiting 1 sec
+        start=time.time()
+        now=0
+        pid=None
+        while pid==None and now<start+timeouttmux:
+            pid = j.system.platform.screen.getPid(self.domain, self.name)
+            if pid<>None:
+                break
+            print "sleep get pid through tmux timeout"
+            time.sleep(0.2)
+            now=time.time()
 
-            #first check screen is already there with window, max waiting 1 sec
-            start=time.time()
-            now=0
+        if pid==None:
+            if ifNoPidFail:
+                raise RuntimeError("Pid was not found for %s, because window not found."%self)
+            else:
+                return 0
+
+        pr=j.system.process.getProcessObject(pid)
+
+        def check():
             pid=None
-            while pid==None and now<start+timeouttmux:
-                pid = j.system.platform.screen.getPid(self.domain, self.name)
-                if pid<>None:
-                    break
-                print "sleep get pid through tmux timeout"
-                time.sleep(0.2)
-                now=time.time()
+            children=pr.get_children()
+            if len(children)>0:
+                if len(children)>1:
+                    raise RuntimeError("Can max have 1 child")
+                child=children[0]
 
-            if pid==None:
-                if ifNoPidFail:
-                    raise RuntimeError("Pid was not found for %s, because window not found."%self)
+                if child.is_running():
+                    pid=child.pid
+                    self.pid=pid
+                    return self.pid
                 else:
                     return 0
+            return None
 
-            pr=j.system.process.getProcessObject(pid)
+        if timeout==0:
+            timeout=0.1
 
-            def check():
-                pid=None
-                children=pr.get_children()
-                if len(children)>0:
-                    if len(children)>1:
-                        raise RuntimeError("Can max have 1 child")
-                    child=children[0]
+        pid=None
+        start=time.time()
+        now=0
+        while pid==None and now<start+timeout:
+            pid=check()
+            # print "timecheck:%s"%pid
+            time.sleep(0.1)
+            now=time.time()
 
-                    if j.system.process.isPidAlive(child.pid):
-                        pid=child.pid
-                        self.pid=pid
-                        # print "FOUND:%s"%self.pid
-                        return self.pid
-                    else:
-                        # print "pid not alive for %s"%self
-                        return 0
-                # print "none"
-                return None
+        if ifNoPidFail==False:
+            if pid==None:
+                pid=0
+            return pid
 
-            if timeout==0:
-                timeout=0.1
-
-            pid=None
-            start=time.time()
-            now=0
-            while pid==None and now<start+timeout:
-                pid=check()
-                # print "timecheck:%s"%pid
-                time.sleep(0.1)
-                now=time.time()
-
-            if ifNoPidFail==False:
-                if pid==None:
-                    pid=0
-                return pid
-
-            if pid>0:
-                return pid
-            
-            raise RuntimeError("Timeout on wait for chilprocess for tmux for processdef:%s"%self)
-        return self.pid
+        if pid>0:
+            return pid
+        raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
     def isRunning(self):
         pid=self.getPid(ifNoPidFail=False)

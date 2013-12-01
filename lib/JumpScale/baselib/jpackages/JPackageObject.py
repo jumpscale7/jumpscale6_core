@@ -906,7 +906,7 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.stop(False)
-        self.loadActions()        
+        self.loadActions()
         self.actions.process_stop()
         self.actions.process_start()
         self.log('stop')
@@ -1489,9 +1489,9 @@ class JPackageObject():
             result=True
             for dep in deps:
                 # result=result & dep.actions.monitor_up_net()
-                result=result & dep.actions.monitor_up_local()
+                result &= dep.actions.monitor_up_local()
             # result=result & self.actions.monitor_up_net()
-            result=result & self.actions.monitor_up_local()
+            result &= self.actions.monitor_up_local()
             if result:
                 return True
             time.sleep(0.5)
@@ -1514,9 +1514,8 @@ class JPackageObject():
         while now<start+timeout:
             result=True
             for dep in deps:
-                result=result and not(dep.actions.monitor_up_net()) and not(dep.actions.monitor_up_local())
-            result=result and not(self.actions.monitor_up_net()) and not(self.actions.monitor_up_local())
-
+                result &= not(dep.actions.monitor_up_net())
+            result &= not(self.actions.monitor_up_net())
 
             if result:
                 return True
