@@ -30,7 +30,7 @@ class LogTargetLogForwarder():
             self.enabled = False
         else:
             #do not put on on, too dangerous, to many apps cannot & should not use it, only when in grid mode we should
-            self.enabled = False
+            self.enabled = True
 
         if not serverip:
             if j.application.config.exists('grid.master.ip'):
