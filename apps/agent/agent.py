@@ -68,7 +68,6 @@ class Agent():
 
         self.register()
 
-        j.logger.logTargetLogForwarder=False
         j.logger.log("test")
         
 

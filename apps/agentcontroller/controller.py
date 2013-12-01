@@ -423,7 +423,6 @@ class ControllerCMDS():
         timeout.start()
         try:
             while True:
-                print 1
                 if len(self.workqueue[session.agentid])>0:
                     #check locking
 
@@ -519,6 +518,8 @@ class ControllerCMDS():
         return result
 
     def log(self, logs, session=None):
+        if not j.logger.logTargets:
+            j.logger.addLogTargetElasticSearch()
         for log in logs:
             j.logger.logTargetLogForwarder.log(log)                        
             
@@ -529,6 +530,7 @@ class ControllerCMDS():
         for sessionid in self.sessions.keys():
             session=self.sessions[sessionid]
             
+            sessionresult["id"]=sessionid
             sessionresult["roles"]=session.roles
             sessionresult["netinfo"]=session.netinfo
             sessionresult["organization"]=session.organization
