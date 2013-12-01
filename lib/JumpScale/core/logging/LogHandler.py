@@ -92,7 +92,7 @@ class LogUtils(object):
 
 
 class LogItem(object):
-    def __init__(self, message="", category="", tags="", level=5, jid=0, parentjid=0, masterjid=0, private=False, epoch=0):
+    def __init__(self, message="", category="", tags="", level=5, jid="", parentjid="", masterjid="", private=False, epoch=0):
         self.message = message.strip().replace("\r\n", "/n").replace("\n", "/n")
         try:
             self.level = int(level)
@@ -111,9 +111,9 @@ class LogItem(object):
 
         self.appname = j.application.appname
         self.tags = str(tags).strip().replace("\r\n", "/n").replace("\n", "/n").replace("|", "/|")
-        self.jid = int(jid)
-        self.parentjid = int(parentjid)
-        self.masterjid = int(masterjid)
+        self.jid = str(jid)
+        self.parentjid = str(parentjid)
+        self.masterjid = str(masterjid)
         self.epoch = int(epoch) or j.base.time.getTimeEpoch()
         j.logger.order += 1
         # if j.logger.order > 10000:
@@ -248,7 +248,7 @@ class LogHandler(object):
                     target.enabled = False
         self.cleanup()
 
-    def log(self, message, level=5, category="", tags="", jid=0, parentjid=0,masterjid=0, private=False):
+    def log(self, message, level=5, category="", tags="", jid="", parentjid="",masterjid="", private=False):
         """
         send to all log targets
         """
