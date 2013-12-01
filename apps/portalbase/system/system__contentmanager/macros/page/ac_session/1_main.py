@@ -5,6 +5,8 @@ def main(j, args, params, tags, tasklet):
 
     page = args.page
     p = args.requestContext.params
+    if not p.has_key("sessionid"):
+        return
     sessionid = p["sessionid"]
 
     client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user="admin", passwd="1234",category="agent")
