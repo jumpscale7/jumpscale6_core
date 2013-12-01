@@ -518,8 +518,9 @@ class ControllerCMDS():
         return result
 
     def log(self, logs, session=None):
-        if not j.logger.logTargets:
-            j.logger.addLogTargetElasticSearch()
+        if not j.logger.logTargetLogForwarder:
+            j.logger.setLogTargetLogForwarder()
+        j.logger.logTargetLogForwarder.enabled = True
         for log in logs:
             j.logger.logTargetLogForwarder.log(log)                        
             

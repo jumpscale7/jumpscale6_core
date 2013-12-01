@@ -13,31 +13,48 @@ j.application.start("agent")
 j.logger.consoleloglevel = 2
 j.logger.maxlevel=7
 
+LOGCATEGORY = 'agent_exec'
+
 class LogHandler():
 
     def __init__(self,agent):
         self.agent=agent
         self.queue = Queue.Queue()
-        self.jid=0
+        self.jid=""
+        self._running = False
 
     def log(self,logitem):
         logitem.jid=self.jid
+        if not logitem.category:
+            logitem.category = LOGCATEGORY
         self.queue.put(logitem.__dict__)
 
     def flushLogs(self):
-        print "flush"
         logs = []
         while not self.queue.empty():
             logs.append(self.queue.get(block=False))
-        self.agent.client.log(logs)
+        if logs:
+            self.agent.client.log(logs)
 
     def start(self, interval=5):
+        self._running = True
+        class MyFlush(threading.Thread):
+            def run(s):
+                while self._running:
+                    time.sleep(interval)
+                    self.flushLogs()
         print "log thread started, will flush each %s sec"%interval
-        t = threading.Timer(interval, self.flushLogs)
-        t.start()  
+        self._t = MyFlush()
+        self._t.start()  
+
+    def stop(self):
+        self._running = False
+
+    def __exit__(self):
+        self._running = False
 
     def close(self):
-        pass
+        self.stop()
 
 
 class Agent():
@@ -68,7 +85,7 @@ class Agent():
 
         self.register()
 
-        j.logger.log("test")
+        self.log("test", category='agent')
         
 
     def register(self):
@@ -96,7 +113,6 @@ class Agent():
                     continue
                 
             if havework<>None and ok:
-                # print "HAVEWORK"
                 jscriptid,args,jid=havework
                 self.loghandler.jid=jid
                 
@@ -134,7 +150,7 @@ class Agent():
                 print "notify work completed"
                 self.client.notifyWorkCompleted(result=result,eco=None)
 
-    def log(self, message, category="agent.exec",level=5):
+    def log(self, message, category=LOGCATEGORY,level=5):
         #queue saving logs        
         j.logger.log(message,category=category,level=level)
 
