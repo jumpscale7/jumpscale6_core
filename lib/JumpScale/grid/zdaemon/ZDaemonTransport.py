@@ -32,11 +32,11 @@ class ZDaemonTransport(Transport):
             2= method not found
             2+ any other error
         """
-        # print "send:%s"%self._port
+        print "send:%s %s %s"%(category,cmd,self._port)
         self._cmdchannel.send_multipart([category, cmd, sendformat, returnformat, data])
-        # print "sendok:%s"%self._port        
+        print "sendok:%s"%self._port        
         result=self._cmdchannel.recv_multipart()
-        # print "returnok:%s"%self._port
+        print "returnok:%s"%self._port
         return result
 
     def _init(self):
@@ -60,10 +60,11 @@ class ZDaemonTransport(Transport):
         #     print "IPC channel opened to client daemon"
         # else:
         self._cmdchannel.connect("tcp://%s:%s" % (self._addr, self._port))
-        print "TCP channel opened to %s:%s with id:%s" % (self._addr, self._port,self._id)
+        print "TCP channel open to %s:%s with id:%s" % (self._addr, self._port,self._id)
 
         self._poll = zmq.Poller()
         self._poll.register(self._cmdchannel, zmq.POLLIN)
+        print "TCP channel OK"
 
     def close(self):
         try:

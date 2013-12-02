@@ -39,7 +39,7 @@ class DaemonCMDS(object):
         """
         # ser=j.db.serializers.getMessagePack()
         # sessiondictstr=ser.loads(data)
-
+        print "register session:%s "%session
         session = Session(sessiondata)
 
         if ssl:
@@ -50,6 +50,7 @@ class DaemonCMDS(object):
             raise RuntimeError("Cannot Authenticate User:%s" % session.user)
 
         self.daemon.sessions[session.id] = session
+        print "OK"
 
         return "OK"
 

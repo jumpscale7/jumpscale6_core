@@ -37,6 +37,7 @@ class DaemonClient(object):
         """
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
+        print "init daemon client:%s %s %s"%(transport._addr,transport._port,",".join(roles))
         if id<>None:
             self._id=id
         else:
@@ -57,8 +58,8 @@ class DaemonClient(object):
             roles=j.application.config.get("grid.node.roles").split(",")
             roles=[item.strip().lower() for item in roles]            
 
-        if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:
-            raise RuntimeError("gid or nid cannot be 0, see grid.hrd file in main config of jumpscale hrd dir")
+        # if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:
+        #     raise RuntimeError("gid or nid cannot be 0, see grid.hrd file in main config of jumpscale hrd dir")
 
         roles2=[]
         for role in roles:
@@ -72,8 +73,11 @@ class DaemonClient(object):
         self.transport = transport
         self.pubkeyserver = None
         self.defaultSerialization = defaultSerialization
+        print "connect transport"
         self.transport.connect(self._id)
+        print "transport ok"
         self.initSession(reset, ssl)
+        print "init session"
 
     def encrypt(self, message):
         if self.ssl:
@@ -89,7 +93,7 @@ class DaemonClient(object):
             return message
 
     def initSession(self, reset=False, ssl=False):
-
+        print "initsession"
         if ssl:
             from JumpScale.baselib.ssl.SSL import SSL
             self.keystor = SSL().getSSLHandler()
