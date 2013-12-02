@@ -314,8 +314,7 @@ class ProcessDef:
         hrd.set("process.autostart",1)
 
     def reload(self):
-        if self.reload_signal:
-            self.getPid()
+        if self.reload_signal and self.getProcessObject():
             self.processobject.send_signal(self.reload_signal)
         else:
             self.stop()
