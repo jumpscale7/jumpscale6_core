@@ -94,7 +94,7 @@ cmd.meld=
         j.system.platform.ubuntu.updatePackageMetadata()
 
         print "Updating jpackages metadata"
-        j.packages.updateMetaData(force=True)
+        # j.packages.updateMetaData(force=True)
 
         print "install python package"
         p=j.packages.get("jumpscale","base","2.7")
@@ -128,26 +128,41 @@ cmd.meld=
         """
         checkout the jumpscale grid repo & link to python 2.7 to make it available for the developer
         """
-        p=j.packages.get("jumpscale","osis","1.0")
-        if debug:
-            p.setDebugMode()
+        p=j.packages.findNewest("jumpscale","elasticsearch")
         p.install(reinstall=True)
-
-        p=j.packages.get("jumpscale","grid_master","1.0")
-        if debug:
-            p.setDebugMode()
-        p.install(reinstall=True)
+        p.start()
 
         p=j.packages.get("jumpscale","grid","1.0")
         if debug:
             p.setDebugMode()
         p.install(reinstall=True)
 
+        p=j.packages.get("jumpscale","osis","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install(reinstall=True)
+        p.start()
+
+        p=j.packages.get("jumpscale","grid_master","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install(reinstall=True)
+        do=j.system.installtools
+        do.execute('/etc/init.d/avahi-daemon start')
+        p.start()
+
+        p=j.packages.get("jumpscale","grid_node","1.0")
+        if debug:
+            p.setDebugMode()
+        p.install(reinstall=True)
+
+
 
         p=j.packages.get("jumpscale","logger","1.0")
         if debug:
             p.setDebugMode()
         p.install(reinstall=True)
+        p.start()
 
 
         p=j.packages.get("jumpscale","grid_portal","1.0")
