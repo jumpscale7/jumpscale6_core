@@ -24,6 +24,7 @@ class LogTargetLogForwarder():
         self._lastcheck = 0
         self._logqueue = DropQueue(QUEUESIZE)
         self._ecoqueue = DropQueue(QUEUESIZE)
+        self._batchqueue = DropQueue(QUEUESIZE)
         self.connected = False
 
         if j.application.appname=="osisserver":
@@ -80,7 +81,6 @@ class LogTargetLogForwarder():
     __repr__ = __str__
 
     def logECO(self, eco):
-
         if self.enabled:
             if not self.checkTarget():
                 self._ecoqueue.put(eco)
@@ -102,6 +102,22 @@ class LogTargetLogForwarder():
 
             try:
                 self.loggerClient.log(log)
+            except Exception,e:                
+                print 'Failed to log in %s,error:%s' % (self,e)
+                self.connected = False
+
+
+    def logBatch(self, batch):
+        """
+        forward the already encoded message to the target destination
+        """
+        if self.enabled:
+            if not self.checkTarget():
+                self._batchqueue.put(batch)
+                return
+
+            try:
+                self.loggerClient.logbatch(batch)
             except Exception,e:                
                 print 'Failed to log in %s,error:%s' % (self,e)
                 self.connected = False
