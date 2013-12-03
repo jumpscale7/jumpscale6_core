@@ -12,6 +12,8 @@ class GeventWSTransport(Transport):
         self.timeout = 60
         self.url = "http://%s:%s/rpc/" % (addr, port)
         self._id = None
+        self._addr = addr
+        self._port = port
 
     def connect(self, sessionid=None):
         """
