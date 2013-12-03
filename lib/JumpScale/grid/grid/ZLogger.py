@@ -29,7 +29,7 @@ class ZLoggerCMDS(object):
         log = j.logger.getLogObjectFromDict(log)
         log=self.logger.loghandlingTE.executeV2(logobj=log,logger=self.daemon.logger)
 
-    def logbatch(self, localegbatch, session):
+    def logbatch(self, logbatch, session):
         self.logger.loghandlingBatchedTE.executeV2(logbatch=logbatch)
 
 

@@ -427,15 +427,10 @@ class ControllerCMDS():
                     #check locking
 
                     job=self.workqueue[session.agentid][-1]
-                    if job.lock<>"":
-                        if self.locks.checkLock(session.agentid,job.lock)==False:
-                            #not set yet can execute
-                            job=self.workqueue[session.agentid].pop()
-                            self.locks.addLock(session.agentid,job.lock,job.lockduration)
-                        else:
-                            job=None
-                            gevent.sleep(0.1)
-                            continue
+                    if job.lock and not self.locks.checkLock(session.agentid,job.lock):
+                        #not set yet can execute
+                        job=self.workqueue[session.agentid].pop()
+                        self.locks.addLock(session.agentid,job.lock,job.lockduration)
                     else:
                         job=self.workqueue[session.agentid].pop()
                     self.activeJobSessions[session.id]=job
@@ -521,8 +516,7 @@ class ControllerCMDS():
         if not j.logger.logTargetLogForwarder:
             j.logger.setLogTargetLogForwarder()
         j.logger.logTargetLogForwarder.enabled = True
-        for log in logs:
-            j.logger.logTargetLogForwarder.log(log)                        
+        j.logger.logTargetLogForwarder.logBatch(logs)
             
 
     def listSessions(self,session=None):

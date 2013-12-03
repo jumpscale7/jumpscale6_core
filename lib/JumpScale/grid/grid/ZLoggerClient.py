@@ -33,3 +33,13 @@ class ZLoggerClient(object):
         args["eco"] = eco.__dict__
         print "log eco:%s"%eco
         self.client.sendMsgOverCMDChannel("logeco", data=args, sendformat="m", returnformat="", category="logger")
+
+    def logbatch(self, logs):
+        args = dict()
+        batch = list()
+        for log in logs:
+            if not isinstance(log, dict):
+                log = log.__dict__
+            batch.append(log)
+        args['logbatch'] = batch
+        self.client.sendMsgOverCMDChannel("logbatch", data=args, sendformat="m", returnformat="", category="logger")
