@@ -79,19 +79,13 @@ class ZDaemon(GeventLoop):
         while True:
             socks = dict(poller.poll())
             if socks.get(frontend) == zmq.POLLIN:
-                # print "FRONTwait"
                 parts = frontend.recv_multipart()
-                # print "FRONT:%s"%parts                
                 parts.append(parts[0])  # add session id at end
                 backend.send_multipart([parts[0]] + parts)
-                # print "FRONTSEND"
 
             if socks.get(backend) == zmq.POLLIN:
-                # print "BACKwait"
                 parts = backend.recv_multipart()
-                # print "BACK:%s"%parts
                 frontend.send_multipart(parts[1:])  # @todo dont understand why I need to remove first part of parts?
-                # print "BACKSEND"
 
     def start(self, mainloop=None):
         print "starting %s"%self.name

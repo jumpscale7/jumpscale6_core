@@ -32,11 +32,8 @@ class ZDaemonTransport(Transport):
             2= method not found
             2+ any other error
         """
-        print "send:%s %s %s"%(category,cmd,self._port)
         self._cmdchannel.send_multipart([category, cmd, sendformat, returnformat, data])
-        print "sendok:%s"%self._port        
         result=self._cmdchannel.recv_multipart()
-        print "returnok:%s"%self._port
         return result
 
     def _init(self):

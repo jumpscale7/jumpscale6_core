@@ -3,7 +3,7 @@ import JumpScale.baselib.serializers
 from JumpScale.grid.serverbase.Exceptions import AuthenticationError, MethodNotFoundException
 from JumpScale.grid.serverbase import returnCodes
 import time
-import struct
+import uuid
 from random import randrange
 
 class Session():
@@ -44,7 +44,8 @@ class DaemonClient(object):
             end = 4294967295  # 4bytes max nr
             # self._id = struct.pack("<III", j.base.idgenerator.generateRandomInt(
             #     1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
-            self._id="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid)
+            random = uuid.uuid4()
+            self._id="%s_%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid, random)
 
         self.retry = True
         self.blocksize = 8 * 1024 * 1024
