@@ -68,6 +68,10 @@ def install_jscore():
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/bitbucket.cfg", "/opt/jumpscale/cfg/jsconfig/bitbucket.cfg")
     print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","/opt/jumpscale/cfg/jpackages/sources.cfg")
     print cuapi.run("jpackage_update")
+    try:
+        print cuapi.run("jscode_update")
+    except:
+        pass    
     print cuapi.run("jpackage_install -n core -r --debug")
 
 def install_grid():
@@ -101,6 +105,7 @@ def install_grid():
     print cuapi.run("jsprocess_start")
 
 def install_desktop():
+    names=[""]
     for name in names:
         print c.run("jpackage_install -n %s -r --debug"%name)
 
@@ -108,6 +113,7 @@ def install_desktop():
 # prepare_platform()
 install_jscore()
 install_grid()
+# install_desktop
 
 # print c.run("")
 
