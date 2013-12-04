@@ -18,38 +18,41 @@ def main(j, args, params, tags, tasklet):
     for result in results:
         data.append(result['count'])
         t = datetime.datetime.fromtimestamp(result['term'])
-        header = t.strftime('%Y-%m-%d %H:%M:%S')
+        header = t.strftime('%d/%m %H:%M')
         result['header'] = header
         headers.append(header)
 
     page.addJS("/lib/jquery.facetview.js")
-    C = """
+    C = r"""
 <script type="text/javascript">
 jQuery(document).ready(function($) {
+  function pad(num) {
+    var s = "0" + num;
+    return s.substr(s.length-2);
+  };
+
   function epochToStr(val) {
     var date = new Date(val * 1000);
-    return date.toDateString() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+    return pad(date.getDay()) + "/" + pad(date.getMonth()) + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
 
   };
   window.filterfunction = function(event, val, filtertype){
-    event.preventDefault();
+    event.defaultPrevented = true;
     if ($('a.facetview_filterchoice[rel='+filtertype+'][href='+val+']').length > 0) {
       if ($('.facetview_filterselected[rel='+filtertype+'][href='+val+']').length == 0){
         $('a.facetview_filterchoice[rel='+filtertype+'][href='+val+']').click();
       }
     }
   };
-  function linkifyGID(val) {
-      return "<a id='gid' href='#' onclick='filterfunction(event, "+val+", this.id)'>"+ val.toString() +"</a>"
-  };
-  function linkifyNID(val) {
-      return "<a id='nid' href='#' onclick='filterfunction(event, "+val+", this.id)'>"+ val.toString() +"</a>"
-  };
-  function linkifyPID(val) {
-      return "<a id='pid' href='#' onclick='filterfunction(event, "+val+", this.id)'>"+ val.toString() +"</a>"
-  };
-  function linkifyAID(val) {
-      return "<a id='aid' href='#' onclick='filterfunction(event, "+val+", this.id)'>"+ val.toString() +"</a>"
+  function linkify(id) {
+      return function(val) { 
+          var ancor = $("<a>");
+          ancor.attr('id', id);
+          ancor.attr('href', '#');
+          ancor.attr('onclick', "filterfunction(event, '"+ val +"', this.id)");
+          ancor.text(val.toString());
+          return ancor[0].outerHTML;
+      };
   };
   var hostname = window.location.href.split('/')[2]
   $('.facet-view-simple').facetview({
@@ -67,6 +70,7 @@ jQuery(document).ready(function($) {
         {'field': 'category', 'display': 'Category'},
         {'field': 'level', 'display': 'LVL'},
         {'field': 'message', 'display': 'Message'},
+        {'field': 'jid', 'display': 'JID'},
         {'field': 'gid', 'display': 'GID'},
         {'field': 'nid', 'display': 'NID'},
         {'field': 'pid', 'display': 'PID'},
@@ -77,10 +81,11 @@ jQuery(document).ready(function($) {
                       {field: "category"},
                       {field: "level"},
                       {field: "message"},
-                      {field: "gid", formatter: linkifyGID},
-                      {field: "nid", formatter: linkifyNID},
-                      {field: "pid", formatter: linkifyPID},
-                      {field: "aid", formatter: linkifyAID}
+                      {field: "jid", formatter: linkify('jid')},
+                      {field: "gid", formatter: linkify('gid')},
+                      {field: "nid", formatter: linkify('nid')},
+                      {field: "pid", formatter: linkify('pid')},
+                      {field: "aid", formatter: linkify('aid')}
                       ]],
     paging: {
       size: 10
