@@ -106,15 +106,15 @@ def install_grid():
     print cuapi.run("jsprocess_start")
 
 def install_desktop():
-    names=[""]
+    names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway"]
     for name in names:
-        print c.run("jpackage_install -n %s -r --debug"%name)
+        print c.run("jpackage_install -n %s"%name)
 
 
-prepare_platform()
-install_jscore()
-install_grid()
-# install_desktop
+# prepare_platform()
+# install_jscore()
+# install_grid()
+install_desktop
 
 # print c.run("")
 
