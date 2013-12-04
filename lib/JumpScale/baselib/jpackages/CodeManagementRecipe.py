@@ -158,6 +158,7 @@ class RecipeItem(object):
             source = self.getSource()        
             destination = self.systemdest
 
+
             if self.tags.labelExists("config"):
                 print "CONFIG:%s"%self
                 self.exportToSystem(force=force)
