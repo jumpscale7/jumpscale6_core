@@ -23,9 +23,15 @@ class JPackageClient():
     """
     def __init__(self):
         """
+        
         """
+        if j.application.config.exists("jumpscale.paths.jpackages.files"):
+            self.packageDirFiles=j.application.config.get("jumpscale.paths.jpackages.files")
+        else:
+            self.packageDirFiles=j.system.fs.joinPaths(j.dirs.packageDir, "files")
+
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metadata"))
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "files"))
+        j.system.fs.createDir(self.packageDirFiles)
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metatars"))
         self.domains=[]
         self._metadatadirTmp=j.system.fs.joinPaths(j.dirs.varDir,"tmp","jpackages","md")
@@ -299,7 +305,8 @@ class JPackageClient():
         @param name:    string - The name of the jpackages
         @param version: string - The version of the jpackages
         """
-        return j.system.fs.joinPaths(j.dirs.packageDir, "files", domain,name,version)
+
+        return j.system.fs.joinPaths(self.packageDirFiles, domain,name,version)
 
     def getMetaTarPath(self, domainName):
         """

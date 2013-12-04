@@ -64,6 +64,7 @@ class JPackageObject():
             j.packages.log("%s:%s"%(self,msg),category=category,level=level)        
 
     def check(self):
+        return
         if not self.supportsPlatform():
             raise RuntimeError("Only those platforms are supported by this package %s your system supports the following platforms: %s" % (str(self.supportedPlatforms), str(j.system.platformtype.getMyRelevantPlatforms())))
 
@@ -1331,7 +1332,7 @@ class JPackageObject():
                 dep.compile()
         self.actions.compile()
 
-    def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False):
+    def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False,force=False):
         """
         Download the jpackages & expand
         """
@@ -1349,7 +1350,7 @@ class JPackageObject():
 
         self.actions.install_download()
 
-    def _download(self,destinationDirectory=None):
+    def _download(self,destinationDirectory=None,force=False):
 
         j.packages.getDomainObject(self.domain)
 
@@ -1369,12 +1370,14 @@ class JPackageObject():
             
             key="%s_%s"%(platform,ttype)
 
-            if self.state.downloadedBlobStorKeys.has_key(key) and self.state.downloadedBlobStorKeys[key] == checksum:
-                self.log("No need to download/expand for platform_type:'%s', already there."%key,level=5)
-                continue
-
             if not self.blobstorLocal.exists(checksum):
                 self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
+
+            force=True
+
+            if force==False and self.state.downloadedBlobStorKeys.has_key(key) and self.state.downloadedBlobStorKeys[key] == checksum:
+                self.log("No need to download/expand for platform_type:'%s', already there."%key,level=5)
+                continue
 
             self.log("expand platform_type:%s"%key,category="download")
             j.system.fs.removeDirTree(downloadDestinationDirectory)
