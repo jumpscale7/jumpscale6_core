@@ -150,6 +150,7 @@ class RecipeItem(object):
         link parts of the coderepo to the destination and put this  entry in the protected dirs section so data cannot be overwritten by jpackages
         '''
         self._log("link to system",category="link")
+        force=True #@todo will have to change, now always true
         
         if self.type=="config":
             return self.exportToSystem()

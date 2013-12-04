@@ -88,21 +88,25 @@ def install_grid():
 
     print cuapi.run("jpackage_install -n elasticsearch -r")
     print cuapi.run("jpackage_install -n osis -r --debug")
-    print cuapi.run("jpackage_start -n elasticsearch")
-    print cuapi.run("jpackage_start -n osis")
+    print cuapi.run("jsprocess_start")
     print cuapi.run("jpackage_install -n grid -r --debug")
     print cuapi.run("jpackage_install -n grid_master -r --debug")
     print cuapi.run("jpackage_install -n grid_node -r --debug")
+    print cuapi.run("jpackage_install -n logger -r --debug")
+    print cuapi.run("jsprocess_start")
     print cuapi.run("jpackage_install -n grid_portal -r --debug")
     print cuapi.run("jpackage_install -n portal -r --debug")
+    print cuapi.run("jpackage_install -n agentcontroller -r --debug")
+    print cuapi.run("jpackage_install -n agent -r --debug")
+    print cuapi.run("jsprocess_start")
 
-def installsgolinuxBackend():
+def install_desktop():
     for name in names:
         print c.run("jpackage_install -n %s -r --debug"%name)
 
 
 # prepare_platform()
-# install_jscore()
+install_jscore()
 install_grid()
 
 # print c.run("")
