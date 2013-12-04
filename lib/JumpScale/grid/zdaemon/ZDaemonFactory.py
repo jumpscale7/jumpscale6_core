@@ -38,7 +38,7 @@ class ZDaemonFactory():
         return zd
 
     def getZDaemonClient(self, addr="127.0.0.1", port=5651, org="myorg", user="root", passwd="1234", ssl=False, category="core",\
-        sendformat=None, returnformat=None ):
+            sendformat="m", returnformat="m" ):
         """
         example usage, see example for server at self.getZDaemon
 
