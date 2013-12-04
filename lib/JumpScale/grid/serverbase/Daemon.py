@@ -212,7 +212,7 @@ class Daemon(object):
             error=0
             try:
                 data = self.encrypt(returnser.dumps(parts[2]), session)
-            except:
+            except Exception,e:
                 error=1
             if error==1:
                 try:

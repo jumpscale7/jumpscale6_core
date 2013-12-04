@@ -21,7 +21,8 @@ print "start test"
 for i in range(10):
     print i
     job=client.executeJumpscript("opencode","wait","node",args={"msg":"test:%s"%i},timeout=60,wait=False,lock="test")
-    # resultcode,result=client.waitJumpscript(job.id)
+    job=client.waitJumpscript(job["id"])
+    print job
 
 
 
