@@ -213,9 +213,9 @@ class SystemNet:
         if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
             exitcode,output = j.system.process.execute("ip l", outputToStdout=False)
             if not up:
-                regex = "^\d+:\s(?P<name>[\w\d]*):.*$"
+                regex = "^\d+:\s(?P<name>[\w\d\-]*):.*$"
             else:
-                regex = "^\d+:\s(?P<name>[\w\d]*):\s<.*UP.*>.*$"
+                regex = "^\d+:\s(?P<name>[\w\d\-]*):\s<.*UP.*>.*$"
             return list(set(re.findall(regex,output,re.MULTILINE)))
         elif j.system.platformtype.isSolaris():
             exitcode,output = j.system.process.execute("ifconfig -a", outputToStdout=False)
