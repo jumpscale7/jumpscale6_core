@@ -97,7 +97,7 @@ class ProcessDef:
 
         self.log("pid get")
 
-        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=1)
+        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=5)
 
         self.log("pid: %s"%pid)
 
