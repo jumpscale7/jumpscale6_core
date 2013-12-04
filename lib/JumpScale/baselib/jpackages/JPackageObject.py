@@ -1177,7 +1177,7 @@ class JPackageObject():
                 dep.codePush(merge=merge)
         self.actions.code_push(merge=merge)
 
-    def codeLink(self, dependencies=False, update=False, force=False):
+    def codeLink(self, dependencies=False, update=False, force=True):
         """
         Link code from local repo to right locations in sandbox
 

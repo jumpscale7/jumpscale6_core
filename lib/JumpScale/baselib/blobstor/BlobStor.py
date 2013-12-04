@@ -292,10 +292,14 @@ class BlobMetadata():
 class BlobStorFactory:
     def __init__(self):
         self.logenable=True
-        self.loglevel=5    
+        self.loglevel=5
+        self.blobstorCache={} 
 
     def get(self, name=""):
-        return BlobStor(name)
+        if self.blobstorCache.has_key(name):
+            return self.blobstorCache[name]
+        self.blobstorCache[name]= BlobStor(name)
+        return self.blobstorCache[name]
 
     def parse(self, path):
         """
