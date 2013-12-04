@@ -64,6 +64,7 @@ def install_jscore():
         pass
     print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
     print cuapi.dir_ensure("/opt/jumpscale/cfg/jsconfig/", True)    
+    print cuapi.dir_ensure("/opt/jumpscale/cfg/jpackages/", True)
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/blobstor.cfg","/opt/jumpscale/cfg/jsconfig/blobstor.cfg" )
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/bitbucket.cfg", "/opt/jumpscale/cfg/jsconfig/bitbucket.cfg")
     print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","/opt/jumpscale/cfg/jpackages/sources.cfg")
@@ -110,7 +111,7 @@ def install_desktop():
         print c.run("jpackage_install -n %s -r --debug"%name)
 
 
-# prepare_platform()
+prepare_platform()
 install_jscore()
 install_grid()
 # install_desktop
