@@ -404,14 +404,12 @@ class ControllerCMDS():
             job.event=Event()
             job.event.wait()            
             timeout.cancel()
-            job.__dict__.pop("event")
-            return job.__dict__
+            return job.db.__dict__
         except:
             timeout.cancel()
             job.resultcode=1
             print "timeout on execution"
-            job.__dict__.pop("event")
-            return job.__dict__
+            return job.db.__dict__
 
     def getWork(self, session=None):
         """

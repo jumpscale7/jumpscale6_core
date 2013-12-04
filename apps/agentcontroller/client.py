@@ -36,7 +36,11 @@ j.application.stop()
 print "start test"
 for i in range(1):
     job=client.executeJumpscript("opencode","dummy","node",args={"msg":"amessage"},timeout=60,wait=True,lock="alock")
-# resultcode,result=client.waitJumpscript(jobid)
+    from IPython import embed
+    print "DEBUG NOW id"
+    embed()
+    
+    resultcode,result=client.waitJumpscript(job.id)
 
 if job["resultcode"]>0:
     eco= j.errorconditionhandler.getErrorConditionObject(ddict=job["result"])
