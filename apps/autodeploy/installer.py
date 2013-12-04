@@ -43,6 +43,8 @@ passwd
 """
 print help
 
+result=j.console.askChoiceMultiple(["platform","core","grid","desktop"])
+
 cuapi = j.remote.cuisine.api
 j.remote.cuisine.fabric.env["password"]=passwd
 cuapi.connect(remote)
@@ -82,6 +84,7 @@ def install_grid():
 
     
     hrd.set("grid.id",options.gridnr)
+    hrd.set("system.superadmin.passwd",passwd)
     hrd.set("gridmaster.grid.id",options.gridnr)
     hrd.set("elasticsearch.cluster.name","cl_%s"%options.gridnr)
 
@@ -108,13 +111,22 @@ def install_grid():
 def install_desktop():
     names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway","sublimetext"]
     for name in names:
-        print c.run("jpackage_install -n %s"%name)
+        print cuapi.run("jpackage_install -n %s"%name)
 
 
-prepare_platform()
-install_jscore()
-install_grid()
-install_desktop
+
+
+if "platform" in result:
+    prepare_platform()
+
+if "core" in result:
+    install_jscore()
+
+if "grid" in result:
+    install_grid()
+
+if "desktop" in result:
+    install_desktop()
 
 # print c.run("")
 
