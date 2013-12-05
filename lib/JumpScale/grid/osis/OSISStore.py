@@ -39,11 +39,10 @@ class OSISStore(object):
         if elasticsearchEnabled:
         # put on None if no elastic search
             self.elasticsearch = self._getElasticSearch()
-            import pyelasticsearch
-            try:
+            status = self.elasticsearch.status()
+            indexname = self.getIndexName()
+            if indexname not in status['indices'].keys():
                 self.elasticsearch.create_index(self.getIndexName())
-            except pyelasticsearch.exceptions.ElasticHttpError:
-                pass
         else:
             self.elasticsearch = None
             if indexEnabled:
