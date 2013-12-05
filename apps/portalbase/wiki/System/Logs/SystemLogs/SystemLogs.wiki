@@ -1,13 +1,9 @@
 {{cssstyle
 .span2 {display:none !important;}
-}}
-
-{{cssstyle
 .span3 {width: 17% !important;}
-}}
-
-{{cssstyle
-.span9 {width: 80% !important;}
+#facetview_rightcol.span9 { width: 80%; }
+.row-fluid .span10 { width: 100%; }
+.btn-group { margin: 0 5px 21px 0; }
 }}
 
 h2. System Logs

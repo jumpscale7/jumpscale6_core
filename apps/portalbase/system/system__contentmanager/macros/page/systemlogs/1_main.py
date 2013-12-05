@@ -45,7 +45,9 @@ jQuery(document).ready(function($) {
     }
   };
   function linkify(id) {
-      return function(val) { 
+      return function(val, inFilter) { 
+          if (inFilter)
+            return val;
           var ancor = $("<a>");
           ancor.attr('id', id);
           ancor.attr('href', '#');
@@ -54,6 +56,20 @@ jQuery(document).ready(function($) {
           return ancor[0].outerHTML;
       };
   };
+
+  function formatJID(val) {
+      if (!val) {
+        return "";
+      }
+      var ancor = $("<a>");
+      ancor.attr('id', 'jid');
+      ancor.attr('href', '#');
+      ancor.attr('title', val.toString())
+      ancor.attr('onclick', "filterfunction(event, '"+ val +"', this.id)");
+      ancor.text(val.toString().substring(0, 5) + "...");
+      return ancor[0].outerHTML;
+  };
+
   var hostname = window.location.href.split('/')[2]
   $('.facet-view-simple').facetview({
     search_url: 'http://'+hostname+':9200/clusterlog/_search?',
@@ -81,7 +97,7 @@ jQuery(document).ready(function($) {
                       {field: "category"},
                       {field: "level"},
                       {field: "message"},
-                      {field: "jid", formatter: linkify('jid')},
+                      {field: "jid", formatter: formatJID},
                       {field: "gid", formatter: linkify('gid')},
                       {field: "nid", formatter: linkify('nid')},
                       {field: "pid", formatter: linkify('pid')},
@@ -93,6 +109,19 @@ jQuery(document).ready(function($) {
   });
 
 });
+
+// Put ellipsis on the 'message' column
+setInterval(function() {
+
+  $('#facetview_results tr').each(function() {
+      var elt = $(this);
+      elt.find('td:nth(4)').css('white-space', 'nowrap')
+                              .css('overflow', 'hidden')
+                              .css('text-overflow', 'ellipsis')
+                              .css('max-width', '299px')
+                              .attr('title', elt.text());
+    });
+  }, 500)
 
   </script>
 
