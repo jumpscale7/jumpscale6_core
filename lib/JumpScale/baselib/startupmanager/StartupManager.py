@@ -55,6 +55,9 @@ class ProcessDef:
         self.reload_signal=0
         if hrd.exists('process.reloadsignal'):
             self.reload_signal = hrd.getInt("process.reloadsignal")
+        self.stopcmd = None
+        if hrd.exists('process.stopcmd'):
+            self.stopcmd = hrd.get("process.stopcmd")
         self.workingdir=hrd.get("process.workingdir")
         self.ports=hrd.getList("process.ports")
         self.jpackage_domain=hrd.get("process.jpackage.domain")
@@ -280,7 +283,10 @@ class ProcessDef:
     def stop(self, timeout=20):
         pid=self.getPid(timeout=0,ifNoPidFail=False)
         if pid<>0 and self.getProcessObject() and self.processobject.is_running():
-            self.processobject.kill()
+            if not self.stopcmd:
+                self.processobject.kill()
+            else:
+                j.system.process.execute(self.stopcmd)
             start=time.time()
             now=0
             while now<start+timeout:
@@ -352,7 +358,7 @@ class StartupManager:
             self.__init=True
 
     def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False,\
-        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root"):
+        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -367,6 +373,8 @@ class StartupManager:
 
         hrd+="process.domain=%s\n"%domain
         hrd+="process.cmd=%s\n"%cmd
+        if stopcmd:
+            hrd+="process.stopcmd=%s\n"%stopcmd
         hrd+="process.args=%s\n"%args
         hrd+="process.env=%s\n"%envstr
         hrd+="process.numprocesses=%s\n"%numprocesses
