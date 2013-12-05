@@ -12,7 +12,7 @@ class Job(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.id= j.base.idgenerator.generateGUID()
+            self.id= j.base.idgenerator.generateGUID().replace('-', '')
             self.jsname = jsname
             self.jsorganization=jsorganization
             self.roles=roles

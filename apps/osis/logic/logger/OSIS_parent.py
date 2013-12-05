@@ -25,19 +25,19 @@ class mainclass(OSISStore):
         return ["",True,True]
 
     def get(self,key):
-        o.errorconditionhandler.raiseBug(message="osis get for log not implemented",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis get for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
     def exists(self,key):
-        o.errorconditionhandler.raiseBug(message="osis exists for log not implemented",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis exists for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
     def find(self,query, start = 0, size = 10):
-        o.errorconditionhandler.raiseBug(message="osis find for log not implemented",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis find for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
     def destroyindex(self):
-        o.errorconditionhandler.raiseBug(message="osis destroyindex for log not implemented",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis destroyindex for log not implemented",category="osis.notimplemented")
         #work with elastic search only  
 
     def destroy(self):
@@ -50,14 +50,14 @@ class mainclass(OSISStore):
     #NOT IMPLEMENTED METHODS WHICH WILL NEVER HAVE TO BE IMPLEMENTED
 
     def setObjIds(self,**args):
-        o.errorconditionhandler.raiseBug(message="osis method setObjIds is not relevant for logger namespace",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis method setObjIds is not relevant for logger namespace",category="osis.notimplemented")
 
     def rebuildindex(self,**args):
-        o.errorconditionhandler.raiseBug(message="osis method rebuildindex is not relevant for logger namespace",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis method rebuildindex is not relevant for logger namespace",category="osis.notimplemented")
 
     def list(self,**args):
-        o.errorconditionhandler.raiseBug(message="osis method list is not relevant for logger namespace",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis method list is not relevant for logger namespace",category="osis.notimplemented")
 
     def removeFromIndex(self,**args):
-        o.errorconditionhandler.raiseBug(message="osis method removeFromIndex is not relevant for logger namespace",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis method removeFromIndex is not relevant for logger namespace",category="osis.notimplemented")
 
