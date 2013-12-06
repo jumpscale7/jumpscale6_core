@@ -115,8 +115,6 @@ def install_desktop():
         print cuapi.run("jpackage_install -n %s"%name)
 
 
-
-
 if "platform" in result:
     prepare_platform()
 

@@ -40,10 +40,6 @@ from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 
-from JumpScale import j
-
-j.application.appname = "autostarter"
-j.application.start()
 
 def main():
     # Instantiate a dummy authorizer for managing 'virtual' users
@@ -52,11 +48,8 @@ def main():
     # Define a new user having full r/w permissions and a read-only
     # anonymous user
 
-    # root="/opt/jpackagesftp/"
-    # root="/mnt/wd"
-
-    root= j.application.config.get("blobserver.paths.root")
-
+    root="/opt/jpackagesftp/"
+    root="/mnt/wd"
 
     authorizer.add_user('jpackages', 'rooter', root, perm='elradfmwM')
     # authorizer.add_anonymous(os.getcwd())
