@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# $Id: authorizers.py 1238 2013-11-26 15:27:59Z g.rodola $
+# $Id: authorizers.py 1171 2013-02-19 10:13:09Z g.rodola $
 
 #  ======================================================================
 #  Copyright (C) 2007-2013 Giampaolo Rodola' <g.rodola@gmail.com>
@@ -45,10 +45,10 @@ interact with UNIX and Windows password database.
 """
 
 
-import errno
 import os
-import sys
 import warnings
+import errno
+import sys
 
 from pyftpdlib._compat import PY3, unicode, getcwdu
 
@@ -56,7 +56,7 @@ from pyftpdlib._compat import PY3, unicode, getcwdu
 __all__ = ['DummyAuthorizer',
            #'BaseUnixAuthorizer', 'UnixAuthorizer',
            #'BaseWindowsAuthorizer', 'WindowsAuthorizer',
-           ]
+          ]
 
 
 # ===================================================================
@@ -65,7 +65,6 @@ __all__ = ['DummyAuthorizer',
 
 class AuthorizerError(Exception):
     """Base class for authorizer exceptions."""
-
 
 class AuthenticationFailed(Exception):
     """Exception raised when authentication fails for any reason."""
@@ -98,7 +97,7 @@ class DummyAuthorizer(object):
         self.user_table = {}
 
     def add_user(self, username, password, homedir, perm='elr',
-                 msg_login="Login successful.", msg_quit="Goodbye."):
+                    msg_login="Login successful.", msg_quit="Goodbye."):
         """Add a user to the virtual users table.
 
         AuthorizerError exceptions raised on error conditions such as
@@ -235,8 +234,8 @@ class DummyAuthorizer(object):
             if self._issubpath(path, dir):
                 if recursive:
                     return perm in operm
-                if (path == dir or os.path.dirname(path) == dir
-                        and not os.path.isdir(path)):
+                if (path == dir) or (os.path.dirname(path) == dir \
+                and not os.path.isdir(path)):
                     return perm in operm
 
         return perm in self.user_table[username]['perm']
@@ -258,9 +257,7 @@ class DummyAuthorizer(object):
         for p in perm:
             if p not in self.read_perms + self.write_perms:
                 raise ValueError('no such permission %r' % p)
-            if (username == 'anonymous'
-                    and p in self.write_perms
-                    and not warned):
+            if (username == 'anonymous') and (p in self.write_perms) and not warned:
                 warnings.warn("write permissions assigned to anonymous user.",
                               RuntimeWarning)
                 warned = 1
@@ -277,7 +274,6 @@ def replace_anonymous(callable):
     methods as first argument with the actual user used to handle
     anonymous sessions.
     """
-
     def wrapper(self, username, *args, **kwargs):
         if username == 'anonymous':
             username = self.anonymous_user or username
@@ -326,10 +322,9 @@ class _Base(object):
         """Overrides the options specified in the class constructor
         for a specific user.
         """
-        if (not password and not homedir and not perm and not msg_login
-                and not msg_quit):
-            raise AuthorizerError(
-                "at least one keyword argument must be specified")
+        if not password and not homedir and not perm and not msg_login \
+        and not msg_quit:
+            raise AuthorizerError("at least one keyword argument must be specified")
         if self.allowed_users and username not in self.allowed_users:
             raise AuthorizerError('%s is not an allowed user' % username)
         if self.rejected_users and username in self.rejected_users:
@@ -344,12 +339,11 @@ class _Base(object):
         if username in self._dummy_authorizer.user_table:
             # re-set parameters
             del self._dummy_authorizer.user_table[username]
-        self._dummy_authorizer.add_user(username,
-                                        password or "",
-                                        homedir or getcwdu(),
-                                        perm or "",
-                                        msg_login or "",
-                                        msg_quit or "")
+        self._dummy_authorizer.add_user(username, password or "",
+                                                  homedir or getcwdu(),
+                                                  perm or "",
+                                                  msg_login or "",
+                                                  msg_quit or "")
         if homedir is None:
             self._dummy_authorizer.user_table[username]['home'] = ""
 
@@ -391,9 +385,7 @@ class _Base(object):
 
 # Note: requires python >= 2.5
 try:
-    import crypt
-    import pwd
-    import spwd
+    import pwd, spwd, crypt
 except ImportError:
     pass
 else:
@@ -497,6 +489,7 @@ else:
         def has_perm(self, username, perm, path=None):
             return perm in self.get_perms(username)
 
+
     class UnixAuthorizer(_Base, BaseUnixAuthorizer):
         """A wrapper on top of BaseUnixAuthorizer providing options
         to specify what users should be allowed to login, per-user
@@ -521,12 +514,12 @@ else:
         # --- public API
 
         def __init__(self, global_perm="elradfmw",
-                     allowed_users=None,
-                     rejected_users=None,
-                     require_valid_shell=True,
-                     anonymous_user=None,
-                     msg_login="Login successful.",
-                     msg_quit="Goodbye."):
+                           allowed_users=None,
+                           rejected_users=None,
+                           require_valid_shell=True,
+                           anonymous_user=None,
+                           msg_login="Login successful.",
+                           msg_quit="Goodbye."):
             """Parameters:
 
              - (string) global_perm:
@@ -672,11 +665,7 @@ except ImportError:
         pass
 # Note: requires pywin32 extension
 try:
-    import pywintypes
-    import win32api
-    import win32con
-    import win32net
-    import win32security
+    import win32security, win32net, pywintypes, win32con, win32api
 except ImportError:
     pass
 else:
@@ -734,7 +723,7 @@ else:
             """
             try:
                 sid = win32security.ConvertSidToStringSid(
-                    win32security.LookupAccountName(None, username)[0])
+                        win32security.LookupAccountName(None, username)[0])
             except pywintypes.error:
                 err = sys.exc_info()[1]
                 raise AuthorizerError(err)
@@ -770,6 +759,7 @@ else:
         def has_perm(self, username, perm, path=None):
             return perm in self.get_perms(username)
 
+
     class WindowsAuthorizer(_Base, BaseWindowsAuthorizer):
         """A wrapper on top of BaseWindowsAuthorizer providing options
         to specify what users should be allowed to login, per-user
@@ -790,14 +780,13 @@ else:
 
         # --- public API
 
-        def __init__(self,
-                     global_perm="elradfmw",
-                     allowed_users=None,
-                     rejected_users=None,
-                     anonymous_user=None,
-                     anonymous_password=None,
-                     msg_login="Login successful.",
-                     msg_quit="Goodbye."):
+        def __init__(self, global_perm="elradfmw",
+                           allowed_users=None,
+                           rejected_users=None,
+                           anonymous_user=None,
+                           anonymous_password=None,
+                           msg_login="Login successful.",
+                           msg_quit="Goodbye."):
             """Parameters:
 
              - (string) global_perm:
