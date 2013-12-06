@@ -989,10 +989,11 @@ class JPackageObject():
                     else:
                         applyhrd=False
                     if ttype == 'debs':
-                        continue # this needs to be handled by package by runnig jp.installDebs
+                        continue
                     tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                     self.log("copy files from:%s to:%s"%(pathttype,destination))
                     self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
+            self.installDebs()
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """
