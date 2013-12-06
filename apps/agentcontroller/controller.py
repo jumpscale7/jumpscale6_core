@@ -5,7 +5,7 @@ import gevent
 from gevent.event import Event
 import copy
 import JumpScale.grid.osis
-
+import json
 j.application.start("agentcontroller")
 
 j.logger.consoleloglevel = 2
@@ -458,7 +458,7 @@ class ControllerCMDS():
         job.db.timeStop=self.sessionsUpdateTime[session.id]
 
         if eco<>None:
-            job.db.result=eco.__dict__
+            job.db.result=json.dumps(eco)
             job.db.resultcode=2
             job.db.state="ERROR"
         else:   
