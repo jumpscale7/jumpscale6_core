@@ -67,7 +67,7 @@ def install_jscore():
     print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
     print cuapi.dir_ensure("/opt/jumpscale/cfg/jsconfig/", True)    
     print cuapi.dir_ensure("/opt/jumpscale/cfg/jpackages/", True)
-    print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/blobstor.cfg","/opt/jumpscale/cfg/jsconfig/blobstor.cfg" )
+    print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/blobstor.cfg","cfg/jsconfig/blobstor.cfg")
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/bitbucket.cfg", "/opt/jumpscale/cfg/jsconfig/bitbucket.cfg")
     print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","/opt/jumpscale/cfg/jpackages/sources.cfg")
     print cuapi.run("jpackage_update")
@@ -109,6 +109,7 @@ def install_grid():
     print cuapi.run("jsprocess_start")
 
 def install_desktop():
+
     names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway","sublimetext"]
     for name in names:
         print cuapi.run("jpackage_install -n %s"%name)
