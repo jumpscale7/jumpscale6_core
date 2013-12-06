@@ -463,7 +463,7 @@ class ControllerCMDS():
             job.db.state="ERROR"
         else:   
             #@todo need to check result is basic type combo (dict, list, str, bool, ...)
-            job.db.result=result
+            job.db.result=json.dumps(result)
             job.db.resultcode=0
             job.db.state="OK"
 
