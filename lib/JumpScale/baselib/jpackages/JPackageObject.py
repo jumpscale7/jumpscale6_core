@@ -1014,7 +1014,7 @@ class JPackageObject():
             j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
             j.system.fs.removeDirTree(tmpdir)
         else:
-            j.system.fs.copyDirTree(path, destination,skipProtectedDirs=True)
+            j.system.fs.copyDirTree(path, destination,keepsymlinks=True,skipProtectedDirs=True)
 
     def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False):
         """
