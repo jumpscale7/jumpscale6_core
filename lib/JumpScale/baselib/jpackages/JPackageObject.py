@@ -137,6 +137,7 @@ class JPackageObject():
 
         j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
         j.system.fs.remove("%s/actions/code.link.py"%self.getPathMetadata())
+        j.system.fs.remove("%s/actions/upload.py"%self.getPathMetadata())
         
 
         # if j.system.fs.exists(self.getPathMetadata()):
@@ -1441,7 +1442,7 @@ class JPackageObject():
                 dep.restore(url=url)
         self.actions.restore()        
 
-    def upload(self, remote=True, local=True,dependencies=False):
+    def upload(self, remote=True, local=True,dependencies=False,onlycode=False):
         if dependencies==None and j.application.shellconfig.interactive:
             dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
         else:
@@ -1451,26 +1452,31 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.upload(remote=remote, local=local,dependencies=False)
+                dep.upload(remote=remote, local=local,dependencies=False,onlycode=onlycode)
 
-        self.actions.upload()
+        self.actions.upload(onlycode=onlycode)
 
-    def _upload(self, remote=True, local=True):
+    def _upload(self, remote=True, local=True,onlycode=False):
         """
         Upload jpackages to Blobstor, default remote and local
         Does always a jp.package() first
         """
+
         self.loadActions(force=True)
         self._caculateBlobInfo()
 
         for platform,ttype in self.getBlobPlatformTypes():
+
             key0,blobitems=self.getBlobInfo(platform,ttype)
 
             pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
-
             if not j.system.fs.exists(pathttype):
                 raise RuntimeError("Could not find files section:%s, check the files directory in your jpackages metadata dir, maybe there is a .info file which is wrong & does not exist here."%pathttype)
+
+            if ttype[0:3]<>"cr_" and onlycode:
+                print "no need to upload (onlycode option):%s %s %s"%(self,platform,ttype)
+                continue
 
             self.log("Upload platform:'%s', type:'%s' files:'%s'"%(platform,ttype,pathttype),category="upload")
         

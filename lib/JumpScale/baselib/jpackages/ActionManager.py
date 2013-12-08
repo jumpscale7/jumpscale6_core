@@ -64,9 +64,13 @@ def method(self{args}):
             args=",force=True"
             args2=",force=force"
 
-        if name=="install.download":
+        elif name=="install.download":
             args=",expand=True,nocode=False"
             args2=",expand=expand,nocode=nocode"
+
+        elif name=="upload":
+            args=",onlycode=False"
+            args2=",onlycode=onlycode"
 
         elif name=="data.export" or name=="data.import":
             args=",url=None"       
