@@ -1335,7 +1335,7 @@ class JPackageObject():
                 dep.compile()
         self.actions.compile()
 
-    def download(self, dependencies=False, destinationDirectory=None, suppressErrors=False, allplatforms=False,force=False):
+    def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False):
         """
         Download the jpackages & expand
         """
@@ -1349,11 +1349,11 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.download(dependencies=False, destinationDirectory=destinationDirectory,allplatforms=allplatforms,expand=expand)
+                dep.download(dependencies=False, destination=destination,allplatforms=allplatforms,expand=expand)
 
         self.actions.install_download()
 
-    def _download(self,destinationDirectory=None,force=False):
+    def _download(self,destination=None,force=False):
 
         j.packages.getDomainObject(self.domain)
 
@@ -1361,10 +1361,10 @@ class JPackageObject():
 
         for platform,ttype in self.getBlobPlatformTypes():
             
-            if destinationDirectory==None:
-                downloadDestinationDirectory=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
+            if destination==None:
+                downloaddestination=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
             else:
-                downloadDestinationDirectory = destinationDirectory
+                downloaddestination = destination
 
             
             checksum,files=self.getBlobInfo(platform,ttype)
@@ -1383,9 +1383,9 @@ class JPackageObject():
                 continue
 
             self.log("expand platform_type:%s"%key,category="download")
-            j.system.fs.removeDirTree(downloadDestinationDirectory)
-            j.system.fs.createDir(downloadDestinationDirectory)
-            self.blobstorLocal.download(checksum, downloadDestinationDirectory)
+            j.system.fs.removeDirTree(downloaddestination)
+            j.system.fs.createDir(downloaddestination)
+            self.blobstorLocal.download(checksum, downloaddestination)
             self.state.downloadedBlobStorKeys[key] = checksum
             self.state.save()
 
