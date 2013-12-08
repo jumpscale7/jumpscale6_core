@@ -40,34 +40,46 @@ jQuery(document).ready(function($) {
     event.defaultPrevented = true;
     if ($('a.facetview_filterchoice[rel='+filtertype+'][href='+val+']').length > 0) {
       if ($('.facetview_filterselected[rel='+filtertype+'][href='+val+']').length == 0){
-        $('a.facetview_filterchoice[rel='+filtertype+'][href='+val+']').click();
+        $('a.facetview_filterchoice[rel='+filtertype+'][href='+val+']')[0].click();
       }
     }
   };
   function linkify(id) {
-      return function(val, inFilter) { 
+      return function(val, inFilter) {
           if (inFilter)
             return val;
           var ancor = $("<a>");
           ancor.attr('id', id);
           ancor.attr('href', '#');
+          ancor.attr('title', val);
           ancor.attr('onclick', "filterfunction(event, '"+ val +"', this.id)");
-          ancor.text(val.toString());
+          ancor.html(val);
           return ancor[0].outerHTML;
       };
   };
 
-  function formatJID(val) {
+  function columnFormatter(size) {
+      return function(val, inFilter) {
+        if (inFilter) {
+            return val;
+        }
+        var container = $('<div>');
+        container.html(val);
+        container.css('max-width', size)
+                 .css('white-space', 'nowrap')
+                 .css('overflow', 'hidden')
+                 .css('text-overflow', 'ellipsis');
+
+        return container[0].outerHTML;
+      }
+  }
+
+  function formatJID(val, inFilter) {
       if (!val) {
         return "";
       }
-      var ancor = $("<a>");
-      ancor.attr('id', 'jid');
-      ancor.attr('href', '#');
-      ancor.attr('title', val.toString())
-      ancor.attr('onclick', "filterfunction(event, '"+ val +"', this.id)");
-      ancor.text(val.toString().substring(0, 5) + "...");
-      return ancor[0].outerHTML;
+      val = linkify('jid')(val, inFilter);
+      return columnFormatter('40px')(val, inFilter);
   };
 
   var hostname = window.location.href.split('/')[2]
@@ -93,10 +105,10 @@ jQuery(document).ready(function($) {
         {'field': 'aid', 'display': 'AID'},
     ],
     result_display: [[{field: "epoch", formatter: epochToStr},
-                      {field: "appname"},
-                      {field: "category"},
+                      {field: "appname", formatter: columnFormatter('90px')},
+                      {field: "category", formatter: columnFormatter('90px')},
                       {field: "level"},
-                      {field: "message"},
+                      {field: "message", formatter: columnFormatter('300px')},
                       {field: "jid", formatter: formatJID},
                       {field: "gid", formatter: linkify('gid')},
                       {field: "nid", formatter: linkify('nid')},
@@ -112,14 +124,9 @@ jQuery(document).ready(function($) {
 
 // Put ellipsis on the 'message' column
 setInterval(function() {
-
   $('#facetview_results tr').each(function() {
       var elt = $(this);
-      elt.find('td:nth(4)').css('white-space', 'nowrap')
-                              .css('overflow', 'hidden')
-                              .css('text-overflow', 'ellipsis')
-                              .css('max-width', '299px')
-                              .attr('title', elt.text());
+      elt.find('td').attr('title', elt.text());
     });
   }, 500)
 
