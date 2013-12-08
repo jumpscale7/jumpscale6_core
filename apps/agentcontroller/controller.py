@@ -4,6 +4,7 @@ import JumpScale.grid.geventws
 import gevent
 from gevent.event import Event
 import JumpScale.grid.osis
+import json
 
 j.application.start("agentcontroller")
 
@@ -455,20 +456,19 @@ class ControllerCMDS():
         if (not self.activeJobSessions.has_key(session.id)) or self.activeJobSessions[session.id]==None:
             raise RuntimeError("Could not notify job completed for session:%s"%session.id)
         
-        job= self.activeJobSessions.pop(session.id)
+        job = self.activeJobSessions.pop(session.id)
         job.db.timeStop=self.sessionsUpdateTime[session.id]
 
         if eco:
-            job.db.result=eco
             job.db.resultcode=2
             job.db.state="ERROR"
             ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
             j.errorconditionhandler.processErrorConditionObject(ecobj)
         else:
-            job.db.result=result
             job.db.resultcode=0
             job.db.state="OK"
 
+        job.db.result = {'result': json.dumps(result), 'eco': eco}
         job.save()
         
         #now need to return it to the client who asked for the work 
