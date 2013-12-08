@@ -3,7 +3,6 @@ from JumpScale import j
 import JumpScale.grid.geventws
 import gevent
 from gevent.event import Event
-import copy
 import JumpScale.grid.osis
 
 j.application.start("agentcontroller")
@@ -143,6 +142,8 @@ class ControllerCMDS():
         
         self.osisclient = j.core.osis.getClient()
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
+
+        j.logger.setLogTargetLogForwarder()
 
         self.locks = Locks()
 
@@ -457,18 +458,18 @@ class ControllerCMDS():
         job= self.activeJobSessions.pop(session.id)
         job.db.timeStop=self.sessionsUpdateTime[session.id]
 
-        if eco<>None:
-            job.db.result=eco.__dict__
+        if eco:
+            job.db.result=eco
             job.db.resultcode=2
             job.db.state="ERROR"
-        else:   
-            #@todo need to check result is basic type combo (dict, list, str, bool, ...)
+            ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
+            j.errorconditionhandler.processErrorConditionObject(ecobj)
+        else:
             job.db.result=result
             job.db.resultcode=0
             job.db.state="OK"
 
         job.save()
-        
         
         #now need to return it to the client who asked for the work 
         if job.parent<>None:
@@ -511,9 +512,6 @@ class ControllerCMDS():
         return result
 
     def log(self, logs, session=None):
-        if not j.logger.logTargetLogForwarder:
-            j.logger.setLogTargetLogForwarder()
-        j.logger.logTargetLogForwarder.enabled = True
         j.logger.logTargetLogForwarder.logBatch(logs)
             
 

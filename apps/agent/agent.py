@@ -95,7 +95,7 @@ class Agent():
             try:
                 self.client.register(similarProcessPIDs=self.similarProcessPIDs)
                 ok=True
-            except Exception,e:                
+            except Exception,e:
                 print "retry registration to %s"%self.serverurl
                 time.sleep(2)
 
@@ -125,14 +125,12 @@ class Agent():
                     try:
                         self.log('Job started')
                         exec(jscript["source"])
-                        # print jscript["source"]
                         self.actions[jscriptid]=(action,jscript)
                         #result is method action
                     except Exception,e:
                         msg="could not compile jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                             jscript["source"],e)
                         eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
-                        self.log(msg)
                         self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     
                 eco=None
@@ -143,7 +141,6 @@ class Agent():
                     msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                         jscript["source"],e)
                     eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
-                    self.log(msg)
                     self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     continue
                 
