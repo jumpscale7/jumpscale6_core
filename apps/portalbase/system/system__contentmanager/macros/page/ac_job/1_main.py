@@ -22,7 +22,7 @@ def main(j, args, params, tags, tasklet):
         if k in ('guid', 'id'):
             continue
         elif k in ('timeStop', 'timeStart'):
-            v = datetime.datetime.fromtimestamp(v).strftime('%Y-%m-%d %H:%M:%S')
+            v = datetime.datetime.fromtimestamp(v).strftime('%Y-%m-%d %H:%M:%S') if v else 'N/A'
 
         if k == 'args':
             rows.append(["<th>%s</th>" %k,"", ""])
