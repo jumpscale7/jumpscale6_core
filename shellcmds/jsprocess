@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+j.application.start("jsprocess_start")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['attach', 'list', 'status', 'start', 'stop', 'restart', 'disable', 'enable'], help='Command to perform')
+parser.add_argument("-n", '--name', help='Process name')
+parser.add_argument("-d", '--domain', help='Process domain')
+
+opts = parser.parse_args()
+if opts.action in ('list', 'status'):
+    print "%-20s %-20s %-10s %-10s" % ('DOMAIN', 'NAME', 'STATUS', 'AUTOSTART')
+    print '-'* 62
+    print
+
+pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name)
+
+if opts.action == 'attach':
+    if len(pds) != 1 or not pds[0].isRunning():
+        print 'Could not find exactly one running process %s %s' % (opts.domain, opts.name)
+        j.application.stop(1)
+    else:
+        j.system.platform.screen.attachSession(pds[0].domain, pds[0].name)
+        j.application.stop(0)
+
+for pd in pds:
+    if opts.action in ('list', 'status'):
+        status = ''
+        active = 'enabled' if pd.autostart == '1' else 'disabled'
+        if opts.action == 'status':
+            status = 'RUNNING' if pd.isRunning() else 'HALTED'
+        print "%-20s %-20s %-10s %-10s" % (pd.domain, pd.name, status, active)
+    else:
+        getattr(pd, opts.action)()
+
+j.application.stop()

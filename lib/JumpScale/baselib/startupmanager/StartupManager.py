@@ -144,7 +144,6 @@ class ProcessDef:
             pid = j.system.platform.screen.getPid(self.domain, self.name)
             if pid<>None:
                 break
-            print "sleep get pid through tmux timeout"
             time.sleep(0.2)
             now=time.time()
 

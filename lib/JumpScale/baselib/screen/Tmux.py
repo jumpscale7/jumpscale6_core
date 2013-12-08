@@ -175,5 +175,10 @@ class Tmux:
         cmd="tmux kill-session -t '%s'"  % sessionname
         j.system.process.execute(cmd,dieOnNonZeroExitCode=False) #todo checking
 
-    def attachSession(self,sessionname):
-        j.system.process.executeWithoutPipe("tmux attach - %s" % (sessionname))
+    def attachSession(self,sessionname, windowname=None):
+        if windowname:
+            pane = self._getPane(sessionname, windowname)
+            cmd="tmux select-window -t '%s'"  % pane
+            j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
+
+        j.system.process.executeWithoutPipe("tmux attach -t %s" % (sessionname))

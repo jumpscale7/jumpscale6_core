@@ -79,7 +79,6 @@ class Application:
         self.config=None
         if j.system.fs.exists(path=path):
             self.config = j.core.hrd.getHRD(path=path)
-        print "RELOADED HRD CONFIG"
 
     def start(self,name=None,basedir="/opt/jumpscale",appdir="."):
         '''Start the application
