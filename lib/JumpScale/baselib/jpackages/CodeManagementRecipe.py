@@ -334,7 +334,9 @@ class CodeManagementRecipe:
         account=self.hrd.get("jp.code.account")
         repo=self.hrd.get("jp.code.repo")
         if repo=="":
-            raise RuntimeError("Cannot load repo when repo is not filled in in code.hrd of jpackage.")
+            print "repo not filled in, so coderecipe probably not used for %s"%self
+            return 
+            # raise RuntimeError("Cannot load repo when repo is not filled in in code.hrd of jpackage.")
         branch=self.hrd.get("jp.code.branch")
         ttype=self.hrd.get("jp.code.type")
         if ttype == "bitbucket":

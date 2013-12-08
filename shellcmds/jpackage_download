@@ -6,8 +6,13 @@ print "download package to blobstor"
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
+parser.add_argument('--nocode', required=False, action='store_true', help='do not download the files which were build using the coderecipe')
+parser.add_argument('--noexpand', required=False, action='store_true', help='do not expand locally')
+
 packages, args = cmdutils.getJPackage(parser)
 
+
+
 for package in packages:
-    package.download(dependencies=args.all)
+    package.download(dependencies=args.all,nocode=nocode,expand=expand)
 j.application.stop()

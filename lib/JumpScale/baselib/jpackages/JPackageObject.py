@@ -260,7 +260,7 @@ class JPackageObject():
                     #also needs to reload the config object on the application object
                     j.application.loadConfig() #will load that underneath
 
-    def loadActions(self, force=False):
+    def loadActions(self, force=False,hrd=True):
         # print "loadactions:%s"%self
 
         force=True #@todo need more checks, now for first release do always
@@ -268,7 +268,8 @@ class JPackageObject():
         if self.actions <> None and not force:
             return
 
-        self._loadActiveHrd()
+        if hrd==True:
+            self._loadActiveHrd()
 
         self.check()
 
@@ -1187,8 +1188,7 @@ class JPackageObject():
 
         @param force: if True, do an update which removes the changes (when using as install method should be True)
         """
-        
-        self.loadActions()
+        self.loadActions(hrd=False)
         # j.clients.mercurial.statusClearAll()
         self.log("CodeLink")
         if dependencies is None:
@@ -1229,7 +1229,7 @@ class JPackageObject():
         @type dependencies: boolean
         """
                 
-        self.loadActions()
+        self.loadActions(hrd=False)
 
         self.log('Package')
         # Disable action caching:
@@ -1335,7 +1335,7 @@ class JPackageObject():
                 dep.compile()
         self.actions.compile()
 
-    def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False):
+    def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False,expand=True):
         """
         Download the jpackages & expand
         """
@@ -1345,7 +1345,7 @@ class JPackageObject():
         else:
             dependencies=dependencies
         
-        self.loadActions()
+        self.loadActions(hrd=False)
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -1438,7 +1438,7 @@ class JPackageObject():
         else:
             dependencies=dependencies
         
-        self.loadActions()
+        self.loadActions(hrd=False)
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
