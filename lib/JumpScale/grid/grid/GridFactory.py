@@ -57,7 +57,7 @@ class GridFactory():
         self.masterip=j.application.config.get("grid.master.ip")
 
         if not j.system.net.waitConnectionTest(self.masterip,5544,10):
-            raise RuntimeError("Could not connect to master osis")
+            raise RuntimeError("Could not connect to master osis:%s, maybe master changed (do 'jpackage_configure -n grid_node' to re-init.)"%self.masterip)
 
         self.gridOsisClient=j.core.osis.getClient(self.masterip)
 

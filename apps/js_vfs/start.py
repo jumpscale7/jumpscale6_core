@@ -10,14 +10,15 @@ from stat import S_IFDIR, S_IFLNK, S_IFREG
 from fuse import FUSE, FuseOSError, Operations
 from errno import ENOENT
 
+import leveldb
+
 from JumpScale import j
 
 j.application.start("fusehome")
 
 j.logger.consoleloglevel = 5
 
-class DB():
-    
+   
 
 class Passthrough(Operations):
     def __init__(self, organization,user):
@@ -27,6 +28,8 @@ class Passthrough(Operations):
         self.user=user
         self.organization=organization
         self.readonly=True
+        self.db=leveldb.DB('%s/fs.db'%self.root, create_if_missing=True)
+
 
     def _full_path(self, partial):
         if partial.startswith("/"):
