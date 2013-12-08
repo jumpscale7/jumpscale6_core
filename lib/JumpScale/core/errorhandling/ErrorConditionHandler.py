@@ -43,7 +43,7 @@ class ErrorConditionHandler():
             eco.getBacktrace()
                                   
         eco.tags=tags
-        eco.type=type=j.enumerators.ErrorConditionType.BUG
+        eco.type=j.enumerators.ErrorConditionType.BUG
         self.processErrorConditionObject(eco)
         if j.application.shellconfig.interactive:
          
@@ -65,7 +65,7 @@ class ErrorConditionHandler():
         @param msgpub is message we want to show to endcustomers (can include a solution)
         @param category is a dot notation to give category for the error condition
         """
-        if eco==None:
+        if not eco:
             eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=1,\
                                          type=j.enumerators.ErrorConditionType.OPERATIONS)
             eco.tags=tags
@@ -73,12 +73,12 @@ class ErrorConditionHandler():
             eco.type=j.enumerators.ErrorConditionType.OPERATIONS
             eco.level=1
 
-        self.processErrorConditionObject(eco)    
+        self.processErrorConditionObject(eco)
         if die:
-            self.halt()        
-    
+            self.halt()
+
     def raiseOperationalWarning(self, message="", category="",msgpub="",tags="",eco=None):
-        if eco<>None:
+        if not eco:
             eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=2,\
                                          type=j.enumerators.ErrorConditionType.OPERATIONS)
             eco.tags=tags
@@ -91,8 +91,8 @@ class ErrorConditionHandler():
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
                                          level=2,type=j.enumerators.ErrorConditionType.INPUT)
         eco.tags=tags
-        if backtrace<>"":
-            errorConditionObject.backtrace=backtrace        
+        if backtrace:
+            eco.backtrace=backtrace
         self.processErrorConditionObject(eco)
         if die:
             self.halt()
@@ -233,7 +233,7 @@ class ErrorConditionHandler():
         
         if self.inException:
             print "ERROR IN EXCEPTION HANDLING ROUTINES, which causes recursive errorhandling behaviour."
-            print errorObject
+            print pythonExceptionObject
             return 
             
         self.inException=True
