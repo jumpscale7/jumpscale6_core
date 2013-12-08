@@ -53,22 +53,32 @@ def method(self{args}):
     if self._done.has_key(key):
         print "already executed %s"%key
         return True
-    result=self._actions['{name}'](j,self._jpackage{args})
+    result=self._actions['{name}'](j,self._jpackage{args2})
     self._done[key]=True
     return result"""
 
         args=""
+        args2=""
 
         if name=="code.link" or name=="code.update":
-            args=",force=False"
+            args=",force=True"
+            args2=",force=force"
+
+        if name=="install.download":
+            args=",expand=True,nocode=False"
+            args2=",expand=expand,nocode=nocode"
 
         elif name=="data.export" or name=="data.import":
             args=",url=None"       
+            args2=",url=url"
 
         elif name=="monitor.up.net":
             args=",ipaddr='localhost'"       
+            args2=",ipaddr=ipaddr"
 
         C=C.replace("{args}",args)
+        C=C.replace("{args2}",args2)
         C=C.replace("{name}",name)
+        # print C
         exec(C)
         return MethodType(method, self, ActionManager)

@@ -135,6 +135,10 @@ class JPackageObject():
             j.system.fs.removeDirTree(path)
             # print "remove:%s"%path
 
+        j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
+        j.system.fs.remove("%s/actions/code.link.py"%self.getPathMetadata())
+        
+
         # if j.system.fs.exists(self.getPathMetadata()):
         #     for item in j.system.fs.listFilesInDir(self.getPathMetadata(),filter="*.info"):
         #         j.system.fs.remove(item)
@@ -1335,10 +1339,10 @@ class JPackageObject():
                 dep.compile()
         self.actions.compile()
 
-    def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False,expand=True):
+    def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False,expand=True,nocode=False):
         """
         Download the jpackages & expand
-        """
+        """        
 
         if dependencies==None and j.application.shellconfig.interactive:
             dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
@@ -1349,18 +1353,23 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.download(dependencies=False, destination=destination,allplatforms=allplatforms,expand=expand)
+                dep.download(dependencies=False, destination=destination,allplatforms=allplatforms,expand=expand,nocode=nocode)
 
-        self.actions.install_download()
+        self.actions.install_download(expand=expand,nocode=nocode)
 
-    def _download(self,destination=None,force=False):
-
+    def _download(self,destination=None,force=False,expand=True,nocode=False):
+        
         j.packages.getDomainObject(self.domain)
 
         self.log('Downloading.')
 
         for platform,ttype in self.getBlobPlatformTypes():
             
+            if ttype[0:3]=="cr_":
+                if nocode:
+                    print "no need to download (option nocode):%s %s"%(self,ttype)
+                    continue
+                
             if destination==None:
                 downloaddestination=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
             else:

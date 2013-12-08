@@ -12,7 +12,6 @@ parser.add_argument('--noexpand', required=False, action='store_true', help='do 
 packages, args = cmdutils.getJPackage(parser)
 
 
-
 for package in packages:
-    package.download(dependencies=args.all,nocode=nocode,expand=expand)
+    package.download(dependencies=args.all,nocode=args.nocode,expand=not(args.noexpand))
 j.application.stop()
