@@ -22,6 +22,7 @@ for i in range(10):
     print i
     job=client.executeJumpscript("opencode","wait","node",args={"msg":"test:%s"%i},timeout=60,wait=False,lock="test")
     job=client.waitJumpscript(job["id"])
+    raise RuntimeError("testerrr")
     print job
 
 
