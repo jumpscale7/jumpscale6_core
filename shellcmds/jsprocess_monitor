@@ -4,8 +4,8 @@ from JumpScale.baselib import cmdutils
 
 j.application.start("jsprocess_monitor")
 
+raise RuntimeError("to implement")
 
-
-j.tools.startupmanager.startProcess(opt.domain, opt.name)
+# j.tools.startupmanager.startProcess(opt.domain, opt.name)
 
 j.application.stop()

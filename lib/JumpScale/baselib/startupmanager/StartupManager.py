@@ -87,6 +87,9 @@ class ProcessDef:
             jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
         except Exception,e:
             raise RuntimeError("COULD NOT FIND JPACKAGE:%s:%s"%(self.domain,self.name))
+
+        if not self.autostart:
+            return
             
         self.log("process dependency CHECK")
         jp.processDepCheck(timeout=timeout)
@@ -138,7 +141,10 @@ class ProcessDef:
             print "No logs found for %s" % self
 
     def getProcessObject(self):
-        self.processobject=j.system.process.getProcessObject(self.getPid(self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=0)))
+        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=0)
+        if pid==0:
+            return None
+        self.processobject=j.system.process.getProcessObject(pid)
         return self.processobject
 
     def getPid(self,timeout=0,ifNoPidFail=True,timeouttmux=0):
@@ -221,11 +227,11 @@ class ProcessDef:
         """
         
         result={}
-        if j.system.process.isPidAlive(self.pid):
+        if self.pid<>0 and j.system.process.isPidAlive(self.pid):
             p=self.getProcessObject()
 
             out=""
-            result["cpu.percent"]=p.get_cpu_percent()
+            result["cpu.percent"]=p.get_cpu_percent(interval=0)            
             
             result["process.nrconnections"]=len(p.get_connections())
 
@@ -301,6 +307,9 @@ class ProcessDef:
                 time.sleep(0.05)
                 now=j.base.time.getTimeEpoch()
 
+        for port in self.ports:            
+            j.system.process.killProcessByPort(port)
+
         j.system.platform.screen.killWindow(self.domain, self.name)
 
         start=time.time()
@@ -319,10 +328,12 @@ class ProcessDef:
     def disable(self):
         hrd=j.core.hrd.getHRD(self.path)
         hrd.set("process.autostart",0)
+        self.autostart=False
 
     def enable(self):
         hrd=j.core.hrd.getHRD(self.path)
         hrd.set("process.autostart",1)
+        self.autostart=True
 
     def restart(self):
         self.stop()

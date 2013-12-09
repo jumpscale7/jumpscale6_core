@@ -6,6 +6,9 @@ import gevent
 from gevent.event import Event
 # import JumpScale.baselib.statmanager
 import JumpScale.baselib.graphite
+import psutil
+
+import JumpScale.baselib.stataggregator
 
 j.application.start("jsprocess_manager")
 
@@ -15,8 +18,11 @@ class MgrCmds():
 
     def __init__(self, daemon):
         self.daemon = daemon
-        self.manager=j.tools.startupmanager
+        self.manager=j.tools.startupmanager        
         self.monitorProcess()
+        self.lastMonitorResult=None
+        self.lastMonitorTime=None
+        self.aggregator=j.system.stataggregator
 
     def authenticate(self, user, login, **args):
         return True  # will authenticall all (is std)
@@ -61,18 +67,42 @@ class MgrCmds():
         return self.manager.stopProcess(domain,name, timeout)
 
     def disableProcess(self, domain,name, timeout=20,**args):
-        return self.manager.stopProcess( domain,name, timeout)
+        return self.manager.disableProcess( domain,name, timeout)
 
     def enableProcess(self, domain,name, timeout=20,**args):
         return self.manager.enableProcess( domain,name, timeout)
 
     def monitorProcess(self, domain="",name="",**args):
-        monitorinfo=""
-        for pd in self.manager.getProcessDefs(domain,name):
-            result= pd.getStatInfo(format="txt")
-            monitorinfo+="%s\n"%result
-        print monitorinfo
-        j.clients.graphite.send(monitorinfo)
+        # if not j.system.net.tcpPortConnectionTest("localhost",2003):
+        #     return
+
+        # monitorinfo=""
+        # for pd in self.manager.getProcessDefs(domain,name):
+        #     result= pd.getStatInfo(format="txt")
+        #     monitorinfo+="%s\n"%result
+        # print monitorinfo
+
+        # j.clients.graphite.send(monitorinfo)
+        
+        result={}
+        nr=0
+        for val in psutil.cpu_percent(0,True):
+            nr+=1
+            j.system.stataggregator.set("cpu.percent.%s"%nr,round(val*100,0))
+
+        nr=0
+        for cput in psutil.cpu_times(True):
+            nr+=1
+            for key in cput.__dict__.keys():
+                val=cput.__dict__[key]
+                j.system.stataggregator.set("cpu.time.%s.%s"%(key,nr),val)
+
+        # out=""
+        # keys=result.keys()
+        # keys.sort()
+        # for key in keys:
+        #     out+="%s.%s %s\n"%(jspid,key,result[key])
+
 
         # j.system.statmanager.addInfo(monitorinfo)
 
@@ -85,14 +115,14 @@ class MgrCmds():
 
     def loop(self):
         """
-        loop 20 sec
+        loop 10 sec
         """
         while True:
             print "monitor"
             self.monitorProcess()
-            gevent.sleep(20)
+            gevent.sleep(10)
 
-    def loop2(self):
+    def loop120(self):
         """
         loop 120 sec
         """
@@ -100,6 +130,32 @@ class MgrCmds():
         while True:
             self.startProcess()
             gevent.sleep(120)
+
+    def loop30(self):
+        """
+        loop 30 sec
+        """
+
+        while True:
+            j.system.stataggregator.send2carbon()
+            gevent.sleep(30)
+
+    def loopClean(self):
+        """
+        loop 0.5h 
+        """
+        while True:            
+            gevent.sleep(1800)
+            self.aggregator.clean()
+
+    def timer(self):
+        """
+        loop 0.5 sec
+        """
+
+        while True:
+            j.system.stataggregator.now=time.time()
+            gevent.sleep(0.5)
 
 daemon = j.servers.geventws.getServer(port=4445)
 
@@ -110,7 +166,12 @@ cmds=daemon.daemon.cmdsInterfaces["processmanager"][0]
 # daemon.startClock()
 
 daemon.schedule("loop",cmds.loop)
-daemon.schedule("loop2",cmds.loop2)
+# daemon.schedule("loop120",cmds.loop2) #startupmg
+daemon.schedule("loop30",cmds.loop30)
+daemon.schedule("loopClean",cmds.loopClean)
+
+
+# daemon.schedule("timer",cmds.timer)
 
 daemon.start()
 

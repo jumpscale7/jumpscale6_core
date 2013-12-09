@@ -96,17 +96,17 @@ def install_grid():
 
     print cuapi.run("jpackage_install -n elasticsearch -r")
     print cuapi.run("jpackage_install -n osis -r --debug")
-    print cuapi.run("jsprocess_start")
+    print cuapi.run("jsprocess start")
     print cuapi.run("jpackage_install -n grid -r --debug")
     print cuapi.run("jpackage_install -n grid_master -r --debug")
     print cuapi.run("jpackage_install -n grid_node -r --debug")
     print cuapi.run("jpackage_install -n logger -r --debug")
-    print cuapi.run("jsprocess_start")
+    print cuapi.run("jsprocess start")
     print cuapi.run("jpackage_install -n grid_portal -r --debug")
     print cuapi.run("jpackage_install -n portal -r --debug")
     print cuapi.run("jpackage_install -n agentcontroller -r --debug")
     print cuapi.run("jpackage_install -n agent -r --debug")
-    print cuapi.run("jsprocess_start")
+    print cuapi.run("jsprocess start")
 
 def install_desktop():
 
