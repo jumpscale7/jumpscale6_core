@@ -58,7 +58,7 @@ class MgrCmds():
         return self.manager.getStatus( domain, name)
 
     def listProcesses(self,**args):
-        return self.manager.listProcesses()
+        return [item.split("___") for item in self.manager.listProcesses()]
 
     def startProcess(self, domain="", name="", timeout=20,**args):
         return self.manager.startProcess( domain, name, timeout)
@@ -72,30 +72,89 @@ class MgrCmds():
     def enableProcess(self, domain,name, timeout=20,**args):
         return self.manager.enableProcess( domain,name, timeout)
 
-    def monitorProcess(self, domain="",name="",**args):
-        # if not j.system.net.tcpPortConnectionTest("localhost",2003):
-        #     return
+    def monitorProcess(self, domain="",name="",remember=False,**args):
+        results={}
+        for pd in self.manager.getProcessDefs(domain,name):
+            t=pd.getStatInfo()
+            t2={}
+            for key in t.keys():
+                results["processes.%s.%s.%s"%(pd.domain,pd.name,key)]=t[key]
 
-        # monitorinfo=""
-        # for pd in self.manager.getProcessDefs(domain,name):
-        #     result= pd.getStatInfo(format="txt")
-        #     monitorinfo+="%s\n"%result
-        # print monitorinfo
+        result2={}
+        for key in results.keys():
+            result2[key]=j.system.stataggregator.set(key,results[key],remember=remember)
 
-        # j.clients.graphite.send(monitorinfo)
+        return result2
+
+
+    def monitorSystem(self,remember=False,session=None):
         
-        result={}
+        results={}
         nr=0
         for val in psutil.cpu_percent(0,True):
             nr+=1
-            j.system.stataggregator.set("cpu.percent.%s"%nr,round(val*100,0))
+            results["cpu.percent.%s"%nr]=round(val,0)
 
         nr=0
         for cput in psutil.cpu_times(True):
             nr+=1
             for key in cput.__dict__.keys():
                 val=cput.__dict__[key]
-                j.system.stataggregator.set("cpu.time.%s.%s"%(key,nr),val)
+                results["cpu.time.%s.%s"%(key,nr)]=val
+
+        #disk counters
+        counters=psutil.disk_io_counters(True)
+        nr=0
+        for counterkey in counters.keys():
+            counter=counters[counterkey]
+            nr+=1
+            read_count, write_count, read_bytes, write_bytes, read_time, write_time=counter
+            results["disk.time.read.%s"%(counterkey)]=read_time
+            results["disk.time.write.%s"%(counterkey)]=write_time
+            results["disk.count.read.%s"%(counterkey)]=read_count
+            results["disk.count.write.%s"%(counterkey)]=write_count
+            results["disk.mbytes.read.%s"%(counterkey)]=round(read_bytes/1024/1024,2)
+            results["disk.mbytes.write.%s"%(counterkey)]=round(write_bytes/1024/1024,2)
+
+        #network counters
+        counters=psutil.network_io_counters(True)
+        nr=0
+        for counterkey in counters.keys():
+            counter=counters[counterkey]
+            nr+=1
+            bytes_sent, bytes_recv, packets_sent, packets_recv, errin, errout, dropin, dropout=counter
+            results["network.kbytes.recv.%s"%(counterkey)]=round(bytes_recv/1024,0)
+            results["network.kbytes.send.%s"%(counterkey)]=round(bytes_sent/1024,0)
+            results["network.packets.recv.%s"%(counterkey)]=packets_recv
+            results["network.packets.send.%s"%(counterkey)]=packets_sent
+            results["network.error.in.%s"%(counterkey)]=errin
+            results["network.error.out.%s"%(counterkey)]=errout
+            results["network.drop.in.%s"%(counterkey)]=dropin
+            results["network.drop.out.%s"%(counterkey)]=dropout
+
+        #disk freespace
+        for part in psutil.disk_partitions():
+            total,used,free,percent=psutil.disk_usage(part.mountpoint)
+            results["disk.space.free.%s"%(part.device)]=round(free/1024/1024,2)
+            results["disk.space.used.%s"%(part.device)]=round(used/1024/1024,2)
+            results["disk.space.percent.%s"%(part.device)]=percent
+
+        total,used,free,percent=psutil.phymem_usage()
+        results["memory.free"]=round(free/1024/1024,2)
+        results["memory.used"]=round(used/1024/1024,2)
+        results["memory.percent"]=percent
+
+        total,used,free,percent,sin,sout=psutil.virtmem_usage()
+        results["swap.free"]=round(free/1024/1024,2)
+        results["swap.used"]=round(used/1024/1024,2)
+        results["swap.percent"]=percent
+
+        result2={}
+        for key in results.keys():
+            result2[key]=j.system.stataggregator.set(key,results[key],remember=remember)
+
+        return result2
+
 
         # out=""
         # keys=result.keys()
@@ -113,34 +172,28 @@ class MgrCmds():
         return self.manager.reloadProcess( domain,name)
 
 
-    def loop(self):
-        """
-        loop 10 sec
-        """
-        while True:
-            print "monitor"
-            self.monitorProcess()
-            gevent.sleep(10)
 
-    def loop120(self):
+    def _loop120(self):
         """
         loop 120 sec
         """
 
         while True:
             self.startProcess()
-            gevent.sleep(120)
+            j.system.stataggregator.send2carbon()
+            gevent.sleep(12) #change to 120
 
-    def loop30(self):
+    def _loop30(self):
         """
         loop 30 sec
         """
 
         while True:
-            j.system.stataggregator.send2carbon()
+            self.monitorSystem(remember=True)
+            self.monitorProcess(remember=True)
             gevent.sleep(30)
 
-    def loopClean(self):
+    def _loopClean(self):
         """
         loop 0.5h 
         """
@@ -148,7 +201,7 @@ class MgrCmds():
             gevent.sleep(1800)
             self.aggregator.clean()
 
-    def timer(self):
+    def _timer(self):
         """
         loop 0.5 sec
         """
@@ -165,10 +218,10 @@ cmds=daemon.daemon.cmdsInterfaces["processmanager"][0]
 
 # daemon.startClock()
 
-daemon.schedule("loop",cmds.loop)
-# daemon.schedule("loop120",cmds.loop2) #startupmg
-daemon.schedule("loop30",cmds.loop30)
-daemon.schedule("loopClean",cmds.loopClean)
+# daemon.schedule("loop5",cmds.loop)
+daemon.schedule("loop120",cmds._loop120) #startupmg
+daemon.schedule("loop30",cmds._loop30)
+daemon.schedule("loopClean",cmds._loopClean)
 
 
 # daemon.schedule("timer",cmds.timer)

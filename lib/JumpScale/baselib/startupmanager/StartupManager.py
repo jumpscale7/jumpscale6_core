@@ -221,7 +221,7 @@ class ProcessDef:
 
         return True
 
-    def getStatInfo(self,epoch=0,format="dict"):
+    def getStatInfo(self):
         """
         @format dict or txt
         """
@@ -240,54 +240,22 @@ class ProcessDef:
             result["memory.vms"]=round(rss/1024/1024,1)
 
             a,b=p.get_num_ctx_switches()
-            result["process.contentswitches"]=a+b
+            result["contentswitches"]=a+b
 
             openfiles=len(p.get_open_files())
-            result["process.openfiles"]=openfiles
+            result["openfiles"]=openfiles
 
+            user,system=p.get_cpu_times()
+            result["cpu.time.user"]=user
+            result["cpu.time.system"]=system
 
-            if self.lastCheck<>0:
+            read_count,write_count,read_bytes,write_bytes=p.get_io_counters()
 
-                user,system=p.get_cpu_times()
-                result["cpu.time.user"]=user
-                result["cpu.time.system"]=system
-
-                read_count,write_count,read_bytes,write_bytes=p.get_io_counters()
-
-                nrsec=time.time()-self.lastCheck
-                result["io.read.count"]=(read_count-self.lastMeasurements["read_count"])/nrsec
-                result["io.write.count"]=(write_count-self.lastMeasurements["write_count"])/nrsec
-                result["io.read.bytes"]=((read_bytes-self.lastMeasurements["read_bytes"])/1024)/nrsec
-                result["io.write.bytes"]=((write_bytes-self.lastMeasurements["write_bytes"])/1024)/nrsec
+            result["io.read.count"]=(read_count)
+            result["io.write.count"]=(write_count)
+            result["io.read.kbytes"]=((read_bytes)/1024)
+            result["io.write.kbytes"]=((write_bytes)/1024)
     
-            else:
-                result["cpu.time.user"]=0
-                result["cpu.time.system"]=0
-                result["io.read.count"]=0
-                result["io.write.count"]=0
-                result["io.read.bytes"]=0
-                result["io.write.bytes"]=0
-                if self.lastMeasurements=={}:
-                    read_count,write_count,read_bytes,write_bytes=p.get_io_counters()
-                    self.lastMeasurements["read_count"]=read_count
-                    self.lastMeasurements["write_count"]=write_count
-                    self.lastMeasurements["read_bytes"]=read_bytes
-                    self.lastMeasurements["write_bytes"]=write_bytes
-
-
-            if epoch==0:
-                self.lastCheck=time.time()
-            else:
-                self.lastCheck=epoch
-
-        if format=="txt":
-            jspid=self.getJSPid()
-            out=""
-            keys=result.keys()
-            keys.sort()
-            for key in keys:
-                out+="%s.%s %s\n"%(jspid,key,result[key])
-            result=out
 
         return result
 
