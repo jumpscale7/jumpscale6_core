@@ -24,7 +24,7 @@ def action(msg):
         time.sleep(0.3)
     # raise RuntimeError("test")
     msg="sleep done for %s"%msg
-    j.errorconditionhandler.raiseOperationalWarning('test')
+    # j.errorconditionhandler.raiseOperationalWarning('test')
 
     j.logger.log("somework %s %s"%(msg,i))
     print msg
