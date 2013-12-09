@@ -18,6 +18,7 @@ LOGCATEGORY = 'agent_exec'
 class LogHandler():
 
     def __init__(self,agent):
+        self.enabled = True
         self.agent=agent
         self.queue = Queue.Queue()
         self.jid=""
@@ -28,6 +29,12 @@ class LogHandler():
         if not logitem.category:
             logitem.category = LOGCATEGORY
         self.queue.put(logitem.__dict__)
+
+    def logECO(self, eco):
+        eco.jid = self.jid
+        if not isinstance(eco.type, int):
+            eco.type = eco.type.level
+        self.agent.client.escalateError(eco.__dict__)
 
     def flushLogs(self):
         logs = []
@@ -76,15 +83,15 @@ class Agent():
 
         j.logger.logTargetAdd(self.loghandler)
         self.loghandler.start()        
+        # setup eco
+        if not j.logger.logTargetLogForwarder:
+            j.logger.logTargetLogForwarder = self.loghandler
 
         print "agent: %s"%self.agentid
 
         self.actions={}
-
         self.serverurl=self.client._client.transport.url
-
         self.register()
-
         self.log("test", category='agent')
         
 
@@ -130,7 +137,11 @@ class Agent():
                     except Exception,e:
                         msg="could not compile jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                             jscript["source"],e)
-                        eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
+
+                        eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                        eco.errormessage = msg
+                        eco.jid = jid
+                        eco.category = LOGCATEGORY
                         self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     
                 eco=None
@@ -140,7 +151,10 @@ class Agent():
                 except Exception,e:
                     msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                         jscript["source"],e)
-                    eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
+                    eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                    eco.errormessage = msg
+                    eco.jid = jid
+                    eco.category = LOGCATEGORY
                     self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
                     continue
                 

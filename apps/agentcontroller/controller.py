@@ -250,10 +250,10 @@ class ControllerCMDS():
         if self.agent2freeSessions[session.agentid].has_key(session.id):
             self.agent2freeSessions[session.agentid].pop(session.id)
 
-    def escalateError(self,eco):
-        from IPython import embed
-        print "DEBUG NOW eco escalate"
-        embed()        
+    def escalateError(self, eco, session=None):
+        if isinstance(eco, dict):
+            eco = j.errorconditionhandler.getErrorConditionObject(eco)
+        j.errorconditionhandler.processErrorConditionObject(eco)
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
