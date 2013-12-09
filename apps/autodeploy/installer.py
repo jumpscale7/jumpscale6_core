@@ -69,7 +69,7 @@ def install_jscore():
     print cuapi.dir_ensure("/opt/jumpscale/cfg/jpackages/", True)
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/blobstor.cfg","cfg/jsconfig/blobstor.cfg")
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/bitbucket.cfg", "/opt/jumpscale/cfg/jsconfig/bitbucket.cfg")
-    print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","/opt/jumpscale/cfg/jpackages/sources.cfg")
+    print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","cfg/jsconfig/sources.cfg")
     print cuapi.run("jpackage_update")
     try:
         print cuapi.run("jscode_update")
