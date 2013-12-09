@@ -42,7 +42,11 @@ class OSISStore(object):
             status = self.elasticsearch.status()
             indexname = self.getIndexName()
             if indexname not in status['indices'].keys():
-                self.elasticsearch.create_index(self.getIndexName())
+                import pyelasticsearch
+                try:
+                    self.elasticsearch.create_index(self.getIndexName())
+                except pyelasticsearch.IndexAlreadyExistsError:
+                    pass # we pass this cause elasticsearch can have some delays
         else:
             self.elasticsearch = None
             if indexEnabled:
