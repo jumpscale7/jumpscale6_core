@@ -131,6 +131,12 @@ class ProcessDef:
             content=""
         return content        
 
+    def showLogs(self, command='less -R'):
+        if j.system.fs.exists(self.logfile):
+            j.system.process.executeWithoutPipe("%s %s" % (command, self.logfile))
+        else:
+            print "No logs found for %s" % self
+
     def getProcessObject(self):
         self.processobject=j.system.process.getProcessObject(self.getPid(self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=0)))
         return self.processobject
@@ -318,12 +324,15 @@ class ProcessDef:
         hrd=j.core.hrd.getHRD(self.path)
         hrd.set("process.autostart",1)
 
+    def restart(self):
+        self.stop()
+        self.start()
+
     def reload(self):
         if self.reload_signal and self.getProcessObject():
             self.processobject.send_signal(self.reload_signal)
         else:
-            self.stop()
-            self.start()
+            self.restart()
 
     def __str__(self):
         return str("Process: %s_%s\n"%(self.domain,self.name))

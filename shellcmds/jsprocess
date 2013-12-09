@@ -5,7 +5,7 @@ from JumpScale.baselib import cmdutils
 j.application.start("jsprocess_start")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['attach', 'list', 'status', 'start', 'stop', 'restart', 'disable', 'enable'], help='Command to perform')
+parser.add_argument("action", choices=['logs', 'attach', 'list', 'status', 'start', 'stop', 'restart', 'disable', 'enable'], help='Command to perform')
 parser.add_argument("-n", '--name', help='Process name')
 parser.add_argument("-d", '--domain', help='Process domain')
 
@@ -17,14 +17,22 @@ if opts.action in ('list', 'status'):
 
 pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name)
 
-if opts.action == 'attach':
+# single process commands
+if opts.action in ('attach', 'logs'):
     if len(pds) != 1 or not pds[0].isRunning():
         print 'Could not find exactly one running process %s %s' % (opts.domain, opts.name)
         j.application.stop(1)
-    else:
+    elif opts.action == 'attach':
         j.system.platform.screen.attachSession(pds[0].domain, pds[0].name)
-        j.application.stop(0)
+    elif opts.action == 'logs':
+        pds[0].showLogs()
+    j.application.stop(0)
 
+if opts.action == 'restart':
+    j.tools.startupmanager.restartProcess(opts.domain, opts.name)
+    j.application.stop(0)
+
+# commands applying on list of processes
 for pd in pds:
     if opts.action in ('list', 'status'):
         status = ''
