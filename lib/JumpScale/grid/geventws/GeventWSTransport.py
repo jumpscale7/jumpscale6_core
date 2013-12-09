@@ -61,6 +61,7 @@ class GeventWSTransport(Transport):
         else:
             r = requests.post(self.url, data=data2, headers=headers,timeout=60)
 
+        # print data
 
         if r==None:
             eco=j.errorconditionhandler.getErrorConditionObject(msg='timeout on request to %s'%self.url, msgpub='', \
