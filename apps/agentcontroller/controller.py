@@ -299,7 +299,7 @@ class ControllerCMDS():
             self.jumpscripts["%s_%s" % (organization, name)] = t
             self.jumpscriptsFromKeys[t.id] = t
         
-    def getJumpscript(self, organization, name, session=None):
+    def getJumpScript(self, organization, name, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         key = "%s_%s" % (organization, name)
@@ -315,26 +315,20 @@ class ControllerCMDS():
             raise RuntimeError(message)
         return self.jumpscriptsFromKeys[jumpscriptkey]
 
-    def listJumpscripts(self, organization=None, cat=None, session=None):
+    def listJumpScripts(self, organization=None, cat=None, session=None):
         """
         @return [[org,name,category,descr],...]
         """
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
-        result = []
-        for key in self.jumpscripts.keys():
-            t = self.jumpscripts[key]
-            match = False
-            if organization == None:
-                match = True
-            else:
-                match = organization == t.organization
-            if cat != None and match:
-                match = cat == t.category
-            if match:
-                result.append([t.organization, t.name, t.category, t.descr])
-        return result
+        def myfilter(entry):
+            if organization and entry.organization != organization:
+                return False
+            if cat and entry.category != cat:
+                return False
+            return True
+        return [[t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
     def executeJumpscript(self, organization, name, role, args={},all=False, timeout=600,session=None,wait=True,lock=""):
         """
@@ -343,7 +337,7 @@ class ControllerCMDS():
         """
         self._adminAuth(session.user,session.passwd)
 
-        action = self.getJumpscript(organization, name)
+        action = self.getJumpScript(organization, name)
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         jobs=[]
@@ -538,6 +532,11 @@ class ControllerCMDS():
                 sessionresult["activejob"]=None
             result.append(sessionresult)
         return result
+
+    def getJobInfo(self, jobid, session=None):
+        job = self.jobs.get(jobid)
+        if job:
+            return job.db.__dict__
 
     def listJobs(self, session=None):
         """
