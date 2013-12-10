@@ -1,0 +1,28 @@
+
+{{title:Logs}}
+
+{{projectname:Logs}}
+
+{{find}}
+
+{{menu:
+Documentation:/Docs
+Incubaid:http://www.incubaid.com
+}}
+
+{{menuadmin_grid}}
+
+@block
+@row
+
+@col 2
+{{navigation}}
+@divend
+
+@col 10
+
+{content}
+
+@divend
+@divend
+

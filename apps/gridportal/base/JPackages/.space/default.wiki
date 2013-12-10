@@ -1,0 +1,30 @@
+
+{{title:JSPortal}}
+
+{{projectname:System}}
+
+{{find}}
+
+{{menu:
+Documentation:/Docs
+Incubaid:http://www.jumpscale.com
+}}
+
+{{menuadmin}}
+{{menuspaces}}
+
+
+@block
+@row
+
+@col 2
+{{navigation}}
+@divend
+
+@col 10
+
+{content}
+
+@divend
+@divend
+

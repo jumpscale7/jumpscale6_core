@@ -1,0 +1,3 @@
+Jobs:/gridlogs/Jobs
+Logs:/gridlogs/Logs
+Errors:/gridlogs/Logs/Errors

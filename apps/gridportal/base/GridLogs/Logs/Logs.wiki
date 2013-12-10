@@ -1,0 +1,13 @@
+{{cssstyle
+.span3 {width: 17% !important;}
+.table td {padding: 3px;}
+#facetview_rightcol.span9 { width: 80%; }
+.row-fluid .span10 { width: 100%; }
+.btn-group { margin: 0 5px 21px 0; }
+}}
+#.span2 {display:none !important;}
+
+
+h2. System Logs
+
+{{systemlogs}}
