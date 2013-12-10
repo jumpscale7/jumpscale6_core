@@ -6,6 +6,7 @@
 {{find}}
 
 {{menu:
+Documentation:/Docs
 Incubaid:http://www.incubaid.com
 }}
 

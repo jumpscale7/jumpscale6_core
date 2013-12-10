@@ -12,7 +12,7 @@ def main(j, args, params, tags, tasklet):
 
         out += "h3. Actor %s\n" % ttype.capitalize()
 
-        for actorname in actors.keys():
+        for actorname in sorted(actors.keys()):
             model = actors[actorname].model  # @todo security breach
             path = os.path.abspath(model.path)
             j.system.fs.createDir(path)
