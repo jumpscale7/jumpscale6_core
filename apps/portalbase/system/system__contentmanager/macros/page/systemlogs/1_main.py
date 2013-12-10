@@ -82,7 +82,7 @@ jQuery(document).ready(function($) {
       return columnFormatter('40px')(val, inFilter);
   };
 
-  var hostname = window.location.href.split('/')[2]
+  var hostname = window.location.hostname;
   $('.facet-view-simple').facetview({
     search_url: 'http://'+hostname+':9200/clusterlog/_search?',
     search_index: 'elasticsearch',
