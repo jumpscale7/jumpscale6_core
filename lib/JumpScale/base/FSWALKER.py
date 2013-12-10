@@ -219,7 +219,7 @@ else:
         return callbackMatchFunctions
           
     def walk(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
-        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"],pathRegexIncludes={},pathRegexExcludes={},mdserverclient=None):
+        childrenRegexExcludes=["/dev/.*","/proc/.*","/cdrom/.*","/mnt/.*","/media/.*","/run/.*","/tmp/.*"],pathRegexIncludes={},pathRegexExcludes={},mdserverclient=None):
         '''
 
         Walk through filesystem and execute a method per file and dirname if the match function selected the item
@@ -253,8 +253,9 @@ else:
         #We want to work with full paths, even if a non-absolute path is provided
         root = os.path.abspath(root)
         if not self.fs.isDir(root):
-            raise ValueError('Root path for walk should be a folder')
+            raise ValueError('Root path for walk should be a folder, now path:%s'%root)
         
+
         # print "ROOT OF WALKER:%s"%root
         if mdserverclient==None:
             self._walkFunctional(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
@@ -268,7 +269,8 @@ else:
 
         paths=self.fs.list(root)
         for path2 in paths:
-            self.log("walker path:%s"% path2)
+            path2=path2.replace("//","/")
+            # self.log("walker path:%s"% path2)
             if self.fs.isFile(path2):
                 ttype="F"
             elif self.fs.isLink(path2):
@@ -276,10 +278,10 @@ else:
             elif self.fs.isDir(path2,followlinks):
                 ttype="D"
             else:
-                raise RuntimeError("Can only detect files, dirs, links")
+                raise RuntimeError("Can only detect files, dirs, links,path was '%s'"%path2)
 
             if not callbackMatchFunctions.has_key(ttype) or (callbackMatchFunctions.has_key(ttype) and callbackMatchFunctions[ttype](path2,arg,pathRegexIncludes,pathRegexExcludes)):
-                self.log("walker filepath:%s"% path2)                
+                # self.log("walker filepath:%s"% path2)   
                 self.statsAdd(path=path2,ttype=ttype,sizeUncompressed=0,sizeCompressed=0,duplicate=False)
 
                 if callbackFunctions.has_key(ttype):
@@ -293,6 +295,8 @@ else:
                         callbackFunctions[ttype](src=path2,dest=os.path.realpath(path2),arg=arg,stat=statb)
 
             if ttype=="D":
+                if path2[-1]<>"/":
+                    path2+="/"
                 if REGEXTOOL.matchPath(path2,pathRegexIncludes.get(ttype,[]) ,childrenRegexExcludes):
                     self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
                         childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)

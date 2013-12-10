@@ -1,11 +1,12 @@
 from JumpScale import j
 from store import KeyValueStoreBase
 
-try:
-    import plyvel
-except:
-    j.base.fs.installtools.execute('apt-get install libleveldb1 libleveldb-dev -y')
-    j.base.fs.installtools.execute('pip install plyvel')
+# try:
+import plyvel
+# except:
+#     #@todo package plyvel in jpackage for base
+#     # j.base.fs.installtools.execute('apt-get install libleveldb1 libleveldb-dev -y')  
+#     j.base.fs.installtools.execute('pip install plyvel')
 
 
 class LevelDBInterface():

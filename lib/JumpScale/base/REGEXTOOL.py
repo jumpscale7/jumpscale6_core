@@ -2,7 +2,7 @@ from JumpScale import j
 
 try:
     import regex
-except:
+except:    
     pass
 
 class REGEXTOOL():
