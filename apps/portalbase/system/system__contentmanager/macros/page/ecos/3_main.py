@@ -6,21 +6,6 @@ import JumpScale.baselib.elasticsearch
 
 def main(j, args, params, tags, tasklet):
     page = args.page
-    # remoteaddr = "http://%s" % args.requestContext.env.get('REMOTE_ADDR')
-    # referer = args.requestContext.env.get('HTTP_REFERER') or remoteaddr
-    # urlinfo = urlparse.urlparse(referer)
-
-    esc = j.clients.elasticsearch.get()
-    query = {"query": {"match_all": {}}, "facets": {"tag": {"terms": {"field": "epoch", "order": "term"}}}}
-    results = esc.search(query, index='system_eco')['facets']['tag']['terms']
-    headers = []
-    data = []
-    for result in results:
-        data.append(result['count'])
-        t = datetime.datetime.fromtimestamp(result['term'])
-        header = t.strftime('%d/%m %H:%M')
-        result['header'] = header
-        headers.append(header)
 
     page.addJS("/lib/jquery.facetview.js")
     C = r"""
@@ -131,30 +116,6 @@ setInterval(function() {
 <div class="facet-view-simple"></div>
     """
 
-    onclickfunction = """
-      function onclickfunction(e, bar){
-            index = bar['index'];
-            filtertime = bar[0]['properties']['chart.labels'][index];
-            results = eval(%(results)s);
-            for (var r in results){
-              if (results[r].header == filtertime){
-                epoch = results[r].term;
-            }}
-            if ($('a.facetview_filterchoice[href="'+epoch+'"]').length > 0) {
-              if ($('.facetview_filterselected[href="'+epoch+'"]').length == 0){
-                $('a.facetview_filterchoice[href="'+epoch+'"]').click();
-
-                var obj = e.target.__object__;
-                obj.context.beginPath();
-                    obj.context.fillStyle = 'rgba(255,255,255,0.7)';
-                    obj.context.fillRect(bar['x'], bar['y'], bar['width'], bar['height']);
-                obj.context.fill();
-              }
-            }
-      }
-    """ % {'results': json.dumps(results)}
-    page.addScriptBodyJS(onclickfunction)
-    page.addBarChart("Timeline", [data], headers, 1100, 300, list(set(data)), {}, "onclickfunction")
     page.addMessage(C)
     params.result = page
     return params
