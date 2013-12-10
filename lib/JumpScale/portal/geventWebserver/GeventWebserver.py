@@ -21,6 +21,7 @@ CONTENT_TYPE_JS = 'application/javascript'
 CONTENT_TYPE_YAML = 'application/yaml'
 CONTENT_TYPE_PLAIN = 'text/plain'
 CONTENT_TYPE_HTML = 'text/html'
+CONTENT_TYPE_PNG = 'image/png'
 
 
 class GeventWebserverFactory:
@@ -186,7 +187,7 @@ class GeventWebserver:
         }
         cfg = j.system.fs.joinPaths(self.cfgdir, 'appserver.cfg')
         ini = j.tools.inifile.open(cfg)
-        listenip = '127.0.0.1'
+        listenip = '0.0.0.0'
         if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
             listenip = ini.getValue('main', 'listenip')
         self.router = SessionMiddleware(self.router, session_opts)
@@ -983,6 +984,11 @@ class GeventWebserver:
         if '_jsonp' in ctx.params:
             return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], j.db.serializers.getSerializerType('j').dumps(result))
 
+
+        if '_png' in ctx.params:
+            return CONTENT_TYPE_PNG, result
+
+
         if "CONTENT_TYPE" not in ctx.env:
             ctx.env['CONTENT_TYPE'] = CONTENT_TYPE_PLAIN
 
@@ -1001,6 +1007,7 @@ class GeventWebserver:
             return content_type, serializer(result)
 
     def processor_restext(self, env, start_response, path, human=True, ctx=False):
+        
         if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:
@@ -1012,6 +1019,7 @@ class GeventWebserver:
                 return msg
 
             success, message, params = self.restPathProcessor(path)
+
             if not success:
                 params["error"] = message
                 if human:
@@ -1070,11 +1078,14 @@ class GeventWebserver:
                     routekey = "%s_%s_%s_%s" % (requestmethod,
                                                 appname, actor, modelgroup)
             success, ctx, result = self.restRouter(env, start_response, path, paths, ctx, True, routekey, human)
+            
+
             if not success:
                 return result
             success, result = self.execute_rest_call(ctx, result, True)
             if not success:
                 return result
+            
 
             if human:
                 ctx.format = "json"
@@ -1196,7 +1207,7 @@ class GeventWebserver:
                 # j.logger.log("Responding %s" % msg, 5)
                 if contentType:
                     ctx.start_response('200 OK', [('Content-Type', contentType)])
-                print msg
+                # print msg
                 return msg
 
             success, msg, params = self.restPathProcessor(path)
@@ -1210,11 +1221,13 @@ class GeventWebserver:
                     return self.raiseError(ctx, msg)
             paths = params['paths']
 
-            success, ctx, result = self.restRouter(env, start_response, path,
+            success, ctx, routekey = self.restRouter(env, start_response, path,
                                                    paths, ctx, human=human)
             if not success:
                 return result
-            success, result = self.execute_rest_call(ctx, result)
+
+
+            success, result = self.execute_rest_call(ctx, routekey)
             if not success:
                 return result
 
