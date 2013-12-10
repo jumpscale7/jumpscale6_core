@@ -18,17 +18,88 @@ j.application.start("fusehome")
 
 j.logger.consoleloglevel = 5
 
-   
 
+class MD():
+    def __init__(self,organization,user,rootpath):
+        path=j.system.fs.joinPaths("config",organization,user,"mapping.cfg")
+        if not j.system.fs.exists(path=path):
+            raise RuntimeError("Could not find config:%s"%path)
+        C=j.system.fs.fileGetContents(path)
+        self.db=leveldb.DB('%s/fs.db'%rootpath, create_if_missing=True)
+        lines=C.split("\n")
+        lines.reverse()
+        for line in lines:
+            line=line.strip()
+            if line=="" or line[0]=="#":
+                continue
+            parts=line.split("|")
+            if len(parts)<>3:
+                raise RuntimeError("config not right syntax:%s"%line)
+            src,dest,mode=parts
+            src=src.strip()
+            dest=dest.strip()
+            mode=mode.strip()
+
+            def matchDirOrFile(path,arg):
+                return True #means will match all
+
+            def ddir(path,arg):
+                print path
+
+            def ffile(path,arg):
+                print "F:%s"%path
+
+            walker=j.base.fswalker.get()
+
+            def processfile(path,stat,arg):
+                # print "F:%s"%path
+                pass
+
+            def processdir(path,stat,arg):
+                # print "D:%s"%path
+                pass
+
+            def processlink(src,dest,stat,arg):
+                print "L:%s"%path
+
+
+            callbackFunctions={}
+            callbackFunctions["F"]=processfile
+            callbackFunctions["D"]=processdir
+            callbackFunctions["L"]=processlink
+
+            walker.walk(src,callbackFunctions)
+
+            from IPython import embed
+            print "DEBUG NOW ooo"
+            embed()
+            
+
+   
 class Passthrough(Operations):
-    def __init__(self, organization,user):
+    def __init__(self, user,backend):
         path=j.system.fs.joinPaths("/opt/home/",organization,user)
         j.system.fs.createDir(path)
         self.root=path
         self.user=user
         self.organization=organization
         self.readonly=True
-        self.db=leveldb.DB('%s/fs.db'%self.root, create_if_missing=True)
+        
+        # self.md=MD(organization,user,self.root)
+
+        path=j.system.fs.joinPaths("config",organization,user,"main.hrd")
+        if not j.system.fs.exists(path=path):
+            raise RuntimeError("Could not find config:%s"%path)
+        self.hrd=j.core.hrd.getHRD(path)
+        rootfs=self.hrd.get("rootfs")
+        if not j.system.fs.exists(rootfs):
+            raise RuntimeError("Could not find rootfs:%s"%rootfs)
+        self.rootfs=rootfs
+        from IPython import embed
+        print "DEBUG NOW id"
+        embed()
+        
+
 
 
     def _full_path(self, partial):
@@ -222,13 +293,14 @@ class Passthrough(Operations):
         return self.flush(path, fh)
 
 
-def main(mountpoint, root):
-    FUSE(Passthrough(root), mountpoint, foreground=True)
+# def main(mountpoint, backend,root):
+#     FUSE(Passthrough(root,backend), mountpoint, foreground=True)
 
 if __name__ == '__main__':
     # main(sys.argv[2], sys.argv[1])
-    organization=sys.argv[1]
-    user=sys.argv[2]
-
-    FUSE(Passthrough(organization,user), "/home", foreground=True)
+    user=sys.argv[1]
+    fusepath="/opt/fuse/%s"%user
+    j.system.fs.removeDirTree(fusepath)
+    j.system.fs.createDir(fusepath)
+    FUSE(Passthrough(user,"/opt/backend/"), fusepath, foreground=True)
 
