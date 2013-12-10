@@ -273,7 +273,7 @@ class GeventWebserver:
                         break
         if right == "*":
             right = "rwa"
-        print "right:%s" % right
+        # print "right:%s" % right
         return username, right
 
     def unloadActorFromRoutes(self, appname, actorname):
@@ -284,7 +284,7 @@ class GeventWebserver:
                 self.routes.pop(key)
 
     def getDoc(self, space, name, ctx, params={}):
-        print "getdoc:%s" % space
+        # print "getdoc:%s" % space
         space = space.lower()
         name = name.lower()
 
@@ -531,7 +531,7 @@ class GeventWebserver:
             return self.processor_page(environ, start_response, "code", path, prefix="code", webprefix="appservercode")
 
         elif match == "lib":
-            print self.libpath
+            # print self.libpath
             return self.processor_page(environ, start_response, self.libpath, path, prefix="lib")
 
         else:
@@ -1011,7 +1011,7 @@ class GeventWebserver:
         if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:
-            j.logger.log("Routing request to %s" % path, 5)
+            j.logger.log("Routing request to %s" % path, 9)
 
             def respond(contentType, msg):
                 if contentType:
@@ -1111,7 +1111,7 @@ class GeventWebserver:
         When successfull the params dict contains the path elements otherwise it
         contains if provided the actorname  and appname.
         """
-        j.logger.log("Process path %s" % path, 5)
+        j.logger.log("Process path %s" % path, 9)
         params = {}
         while path != "" and path[0] == "/":
             path = path[1:]
@@ -1142,7 +1142,7 @@ class GeventWebserver:
         """
         if not routekey:
             routekey = "%s_%s_%s" % (paths[0], paths[1], paths[2])
-        j.logger.log("Execute %s %s" % (env["REMOTE_ADDR"], routekey))
+        # j.logger.log("Execute %s %s" % (env["REMOTE_ADDR"], routekey))
         if ext:
             routes = self.routesext
         else:
@@ -1201,7 +1201,7 @@ class GeventWebserver:
         if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:
-            j.logger.log("Routing request to %s" % path, 5)
+            j.logger.log("Routing request to %s" % path, 9)
 
             def respond(contentType, msg):
                 # j.logger.log("Responding %s" % msg, 5)
