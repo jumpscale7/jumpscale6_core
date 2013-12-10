@@ -81,7 +81,7 @@ jQuery(document).ready(function($) {
       val = linkify('jid')(val, inFilter);
       return columnFormatter('40px')(val, inFilter);
   };
-  var hostname = window.location.href.split('/')[2]
+  var hostname = window.location.hostname;
   $('.facet-view-simple').facetview({
     search_url: 'http://'+hostname+':9200/system_eco/_search?',
     search_index: 'elasticsearch',
