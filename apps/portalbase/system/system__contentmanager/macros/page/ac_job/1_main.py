@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
         elif k in ('timeStop', 'timeStart'):
             v = datetime.datetime.fromtimestamp(v).strftime('%Y-%m-%d %H:%M:%S') if v else 'N/A'
 
-        if k == 'args':
+        if k in ('result', 'args'):
             rows.append(["<th>%s</th>" %k,"", ""])
             for ka, va in v.iteritems():
                 rows.append(["<th></th>", ka,va])
