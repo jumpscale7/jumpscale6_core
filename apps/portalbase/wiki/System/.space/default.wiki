@@ -1,16 +1,17 @@
 
-{{title:QWiki}}
+{{title:JSPortal}}
 
 {{projectname:System}}
 
 {{find}}
 
 {{menu:
-Documentation:/Docs
-Incubaid:http://www.incubaid.com
+Documentation:/Help
+Jumpscale:http://www.jumpscale.com
 }}
 
 {{menuadmin}}
+{{menuspaces}}
 
 
 @block

@@ -33,6 +33,9 @@ def main(j, args, params, tags, tasklet):
     for line in navStr.split("\n"):
         line = line.strip()
 
+        if line =="" or line[0]=="#":
+            continue
+
         if line != "":
             if line.find("include:") == 0:
                 name = line.replace("include:", "").strip()

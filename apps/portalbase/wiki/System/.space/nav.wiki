@@ -1,13 +1,13 @@
 
-Rest:/system/rest
+Spaces:/system/spaces
+#Rest:/system/rest
 SystemMacros:/system/systemmacros
 Users:/system/userlist
 Groups:/system/groups
-Actors:/system/actors
-ActorsDocs:/system/actorsdocs
-Spaces:/system/spaces
+#Actors:/system/actors
+API:/system/actorsdocs
 JPackages:/system/jpackages
-Stats:/system/stats
-Logs:/system/logs
+#Stats:/system/stats
+PortalLogs:/system/logs
 AccessOverview:/system/overviewaccess
 

@@ -9,6 +9,8 @@ def main(j, args, params, tags, tasklet):
 
     keyword = args.tags.tagGet('marker', "$$$menuright")
 
+
+    #todo what does this do? (4kds)
     if page.body.find(keyword) == -1:
         htmlkeyword = keyword.replace('$', '&#36;')  # prevent other macros from overwriting this keyword
         page.addMessage("**error: Cannot create page because menudropdown macro need a menu macro which has %s keyword placed inside." % htmlkeyword)

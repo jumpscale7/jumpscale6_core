@@ -1,36 +1,28 @@
 
-{{title:QWiki}}
+{{title:TestSpace}}
 
 {{projectname:TestSpace}}
 
 {{find}}
 
 {{menu:
-System:/System
-RestInterface:/rest
-Explorer:/System/Explorer
+Documentation:/Docs
+Incubaid:http://www.incubaid.com
 }}
 
-{{menudropdown: name:Admin
-Pages:/system/Pages?space=$$space
-Edit:/system/edit?space=$$space&page=$$page
-Logout:/system/login?user_logoff_=1
---------------
-Access:/system/OverviewAccess?space=$$space
-}}
+{{menuadmin}}
 
 @block
 @row
 
-@col 3
+@col 2
 {{navigation}}
 @divend
 
-@col 9
+@col 10
 
 {content}
 
 @divend
 @divend
-
 

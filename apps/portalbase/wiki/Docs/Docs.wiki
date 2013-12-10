@@ -1,4 +1,0 @@
-h1. JumpScale Documentation
-
-{{children: no-tree}}
-

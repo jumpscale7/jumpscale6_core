@@ -17,7 +17,7 @@ def main(j, args, params, tags, tasklet):
     else:
 
         for item in spaces:
-            if item[0] != "_" and item.strip() != "":
+            if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1:
                 if bullets:
                     out += "* [%s|/%s]\n" % (item, item.lower().strip("/"))
                 else:
