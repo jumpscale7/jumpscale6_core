@@ -463,7 +463,9 @@ class ControllerCMDS():
             job.db.resultcode=2
             job.db.state="ERROR"
             ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
+            print "#####ERROR ON AGENT######"
             j.errorconditionhandler.processErrorConditionObject(ecobj)
+            print "#########################"
         else:
             job.db.resultcode=0
             job.db.state="OK"
