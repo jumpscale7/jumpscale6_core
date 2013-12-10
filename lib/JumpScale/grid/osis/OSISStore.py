@@ -171,7 +171,8 @@ class OSISStore(object):
         return result
 
     def find(self, query, start=0, size=None):
-        query = json.loads(query)
+        if not isinstance(query, dict):
+            query = json.loads(query)
         
         index = self.getIndexName()
         if size:
