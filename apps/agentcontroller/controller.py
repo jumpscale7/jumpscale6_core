@@ -349,7 +349,7 @@ class ControllerCMDS():
                 job.save()
                 self.workqueue[agentid].append(job)
                 self.jobs[job.id]=job
-                jobs.append(job.id)
+                jobs.append(job)
 
                 if len(self.agent2freeSessions[agentid].keys())>0:
                     #means there are agents waiting for work
@@ -358,14 +358,15 @@ class ControllerCMDS():
                     self.agent2freeSessions[agentid][sessionid].set()
 
             if len(jobs)>1:
-                jobgroup= Job(self,sessionid=None, jsorganization=organization, roles=role, args=args, timeout=timeout, \
+                jobgroup= Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
                 jobgroup.children=jobs
                 for jobchild in jobs:
-                    jobgroup.db.children.append(jobchild.id)
+                    jobgroup.db.children.append(jobchild.db)
+                    jobgroup.db.childrenActive[jobchild.id] = jobchild.db
                 self.jobs[jobgroup.id]=jobgroup
-                for childid in jobs:
-                    child=self.jobs[childid]
+                for child in jobs:
+                    child=self.jobs[child.id]
                     child.parent=jobgroup
                     child.db.parent=jobgroup.id
                 job=jobgroup
@@ -400,12 +401,12 @@ class ControllerCMDS():
             job.event=Event()
             job.event.wait()            
             timeout.cancel()
-            return job.db.__dict__
+            return job.db.getDict()
         except:
             timeout.cancel()
             job.resultcode=1
             print "timeout on execution"
-            return job.db.__dict__
+            return job.db.getDict()
 
     def getWork(self, session=None):
         """
@@ -461,10 +462,10 @@ class ControllerCMDS():
             j.errorconditionhandler.processErrorConditionObject(ecobj)
             print "#########################"
         else:
+            eco = ''
             job.db.resultcode=0
             job.db.state="OK"
-
-        job.db.result = {'result': json.dumps(result), 'eco': eco}
+        job.db.result = json.dumps({'result': result, 'eco': eco})
         job.save()
         
         #now need to return it to the client who asked for the work 
@@ -472,6 +473,9 @@ class ControllerCMDS():
             job.parent.childrenActive.pop(job.id)
             if len(job.parent.childrenActive)==0:
                 #all children executed
+                job.parent.db.resultcode=0
+                job.parent.db.state = "OK"
+                job.parent.db.result = 0
                 job.parent.event.set()
         
         if job.event<>None:

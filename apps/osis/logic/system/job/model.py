@@ -21,7 +21,6 @@ class Job(OsisBaseObject):
             self.result=None
             self.sessionid=sessionid
             self.jscriptid=jscriptid
-            self.event=None
             self.children=[]
             self.childrenActive={}
             self.parent=None
@@ -45,3 +44,17 @@ class Job(OsisBaseObject):
         """
         self.guid = self.id
         return self.id
+
+    def getDict(self):
+        """
+        Returns a proper serializable dict from the object
+        """
+        basicdict = self.__dict__.copy()
+        basicdict['children'] = []
+        for child in self.children:
+            childdict = child.__dict__
+            basicdict['children'].append(childdict)
+        return basicdict
+            
+
+       
