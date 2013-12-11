@@ -5,9 +5,14 @@ def main(j, args, params, tags, tasklet):
 
     page.addBootstrap()
 
-    args = args.tags.getValues(app="", actor="", path="", bucket="", space="", page="", edit=False)
+    import re
+    page_match = re.search(r"page\s*:\s*([^:}]*)", args.macrostr)
+    if page_match:
+        page_name = page_match.group(1)
 
-    if args["page"] == "" and args["path"] == "":
+    args = args.tags.getValues(app="", actor="", path="", bucket="", page="", space="", edit=False)
+
+    if page_name == "" and args["path"] == "":
         page.addMessage("ERROR: path needs to be defined in: %s" % params.cmdstr)
         return params
 
@@ -18,9 +23,9 @@ def main(j, args, params, tags, tasklet):
     elif args["space"] != "":
         # look for path for bucket
         space = j.core.portal.runningPortal.webserver.getSpace(args["space"])
-        if args["page"] != "":
+        if page_name != "":
             space = j.core.portal.runningPortal.webserver.getSpace(args["space"])
-            doc = space.docprocessor.docGet(args["page"])
+            doc = space.docprocessor.docGet(page_name)
             path = doc.path
             args["edit"] = True
         else:
