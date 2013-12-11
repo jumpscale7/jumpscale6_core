@@ -57,7 +57,7 @@ class MacroExecutorBase():
 class MacroExecutorPreprocess(MacroExecutorBase):
 
     def __init__(self, macrodirs=[]):
-        self.taskletsgroup = j.core.taskletengine.getGroup(j.tools.docpreprocessor.getMacroPath())
+        self.taskletsgroup = j.core.taskletengine.getGroup()
         self.priority = {}
         for macrodir in macrodirs:
             self.taskletsgroup.addTasklets(macrodir)
@@ -91,7 +91,13 @@ class MacroExecutorPreprocess(MacroExecutorBase):
         if not paramsExtra:
             paramsExtra = {}
         if self.taskletsgroup.hasGroup(macro):
-            result, doc = self.taskletsgroup.executeV2(macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr, paramsExtra=paramsExtra, cmdstr=cmdstr)
+            result2 = self.taskletsgroup.executeV2(macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr, paramsExtra=paramsExtra, cmdstr=cmdstr)
+            try:
+                result, doc =result2
+            except:
+                taskletPath= self.taskletsgroup.taskletEngines[macro].path
+                raise RuntimeError("Cannot execute macro: %s on doc:%s, tasklet:%s, did not return (result,doc)."%(macrostr,taskletPath,doc))
+                
             if result != None:
                 if not j.basetype.string.check(result):
                     result = "***ERROR***: Could not execute macro %s on %s, did not return content as string (params.result=astring)" % (macro, doc.name)
@@ -140,7 +146,7 @@ class MacroExecutorPreprocess(MacroExecutorBase):
 class MacroExecutorPage(MacroExecutorBase):
 
     def __init__(self, macrodirs=[]):
-        self.taskletsgroup = j.core.taskletengine.getGroup(j.tools.docgenerator.getMacroPath())
+        self.taskletsgroup = j.core.taskletengine.getGroup()
         for macrodir in macrodirs:
             self.taskletsgroup.addTasklets(macrodir)
         self.taskletsgroup2 = None
@@ -202,7 +208,8 @@ class MacroExecutorWiki(MacroExecutorBase):
     def __init__(self, macrodirs):
         if len(macrodirs) == 0:
             raise RuntimeError("need to specify a macrodir, cannot be empty")
-        self.taskletsgroup = j.core.taskletengine.getGroup(macrodirs.pop())
+        
+        self.taskletsgroup = j.core.taskletengine.getGroup()
         for macrodir in macrodirs:
             self.taskletsgroup.addTasklets(macrodir)
 
