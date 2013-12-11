@@ -10,7 +10,7 @@ Documentation:/Docs
 Incubaid:http://www.incubaid.com
 }}
 
-{{menuadmin_gridlogs}}
+{{menuadmin_gridportal}}
 
 
 @block
