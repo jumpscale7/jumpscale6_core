@@ -1,29 +1,27 @@
 
 {{title:Logs}}
 
-{{projectname:Logs}}
-
 {{find}}
 
 {{menu:
-Documentation:/Docs
-Incubaid:http://www.incubaid.com
+$$$pages
+Help:/Help
 }}
 
-{{menuadmin_gridlogs}}
+
+{{menuadmin}}
+
+{{menudropdown: name:Logs class:brand marker:$$$pages
+Errors:/gridlogs/Errors
+Jobs:/gridlogs/Jobs
+Logs:/griglogs/Logs
+}}
 
 
 @block
 @row
 
-@col 2
-{{navigation}}
-@divend
-
-@col 10
-
 {content}
 
-@divend
 @divend
 

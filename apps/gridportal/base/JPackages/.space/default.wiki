@@ -1,13 +1,12 @@
 
 {{title:JSPortal}}
 
-{{projectname:System}}
+{{projectname:JPackages}}
 
 {{find}}
 
 {{menu:
-Documentation:/Docs
-Incubaid:http://www.jumpscale.com
+Help:/Help
 }}
 
 {{menuadmin}}
@@ -17,9 +16,6 @@ Incubaid:http://www.jumpscale.com
 @block
 @row
 
-@col 2
-{{navigation}}
-@divend
 
 @col 10
 

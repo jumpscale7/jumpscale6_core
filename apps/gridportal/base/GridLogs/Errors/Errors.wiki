@@ -6,7 +6,7 @@
 .row-fluid .span10 { width: 100%; }
 }}
 
-h2. ECOs
+h2. Errors
 
 {{ecos}}
 

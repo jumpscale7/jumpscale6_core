@@ -8,11 +8,11 @@ def main(j, args, params, tags, tasklet):
     params.result = ""
 
 
-    spaces = sorted(j.core.portal.runningPortal.webserver.getSpaces())
-    spacestxt=""
-    for item in spaces:
-        if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1 and item.find("test")==-1 and  item.find("gridlogs")==-1:
-            spacestxt += "%s:/%s\n" % (item, item.lower().strip("/"))
+    # spaces = sorted(j.core.portal.runningPortal.webserver.getSpaces())
+    # spacestxt=""
+    # for item in spaces:
+    #     if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1 and item.find("test")==-1:
+    #         spacestxt += "%s:/%s\n" % (item, item.lower().strip("/"))
 
 
     C = """
@@ -21,15 +21,17 @@ Edit:/system/edit?space=$$space&page=$$page
 --------------
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
+System:/system
 --------------
 errors:/gridlogs/errors
 logs:/gridlogs/logs
 jobs:/gridlogs/jobs
-grid:/grid/gridoverview
---------------
+grid:/grid/
+
+}}
 """
-    C+=spacestxt
-    C+='}}'
+    # C+=spacestxt
+    # C+='}}'
 
 #was inside
 #Reload:javascript:$.ajax({'url': '/system/ReloadSpace?name=$$space'}).done(function(){location.reload()});void(0);

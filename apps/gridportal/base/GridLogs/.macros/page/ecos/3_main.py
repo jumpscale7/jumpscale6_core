@@ -1,12 +1,8 @@
-# import urlparse
-import json
-import datetime
-import JumpScale.baselib.elasticsearch
-
-
 def main(j, args, params, tags, tasklet):
     page = args.page
 
+    page.addCSS("/lib/jquery-ui.css")
+    page.addJS("/lib/jquery-ui.js")
     page.addJS("/lib/jquery.facetview.js")
     C = r"""
 <script type="text/javascript">
@@ -93,14 +89,35 @@ jQuery(document).ready(function($) {
                       {field: "errormessage", formatter: columnFormatter('300px')},
                       {field: "gid", formatter: linkify('gid')},
                       {field: "nid", formatter: linkify('nid')},
-                      {field: "pid", formatter: linkify('pid')},
+                      {field: "pid", formatter: linkify('pid')}
                       ]],
     paging: {
-      size: 10
+      size: 30
     },
   });
 
 });
+
+  $('body').on('click', '#facetview_results tr', function(e){
+        e.preventDefault(); e.stopPropagation();
+        data = '';
+        children = $(this).children();
+        headers = ['Time: ', 'Application Name: ', 'Category: ', 'Level: ', 'Message: ', 'Group ID: ', 'Node ID: ', 'Process ID: '];
+        for (var i=0;i<children.length;i++){
+            data += headers[i] + $(children[i]).text() + '</br>';
+        }
+        $("#dialog-message").html(data);
+        $("#dialog-message").dialog({
+            modal: true,
+            draggable: true,
+            resizable: false,
+            position: ['center'],
+            width: 400
+        });
+        return false;
+   });
+
+
 
 // Put ellipsis on the 'message' column
 setInterval(function() {
@@ -114,6 +131,7 @@ setInterval(function() {
   </script>
 
 <div class="facet-view-simple"></div>
+<div id="dialog-message" style="display:none;"></div>
     """
 
     page.addMessage(C)
