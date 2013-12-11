@@ -6,8 +6,7 @@ Users:/system/userlist
 Groups:/system/groups
 #Actors:/system/actors
 API:/system/actorsdocs
-JPackages:/system/jpackages
 #Stats:/system/stats
-PortalLogs:/system/logs
+PortalLogs:/system/PortalLogs
 AccessOverview:/system/overviewaccess
 

@@ -77,10 +77,13 @@ def main(j, args, params, tags, tasklet):
             # print line
             if line.find(":") != -1:
                 name, target = line.split(":", 1)
+                line2 = "<li><a href=\"%s\">%s</a></li>" % (target, name)
+            elif line.startswith('$$$'):
+                line2 = line
             else:
                 name = line
                 target = "/%s/%s" % (args.doc.getSpaceName(), line)
-            line2 = "<li><a href=\"%s\">%s</a></li>" % (target, name)
+                line2 = "<li><a href=\"%s\">%s</a></li>" % (target, name)
             items += "%s\n" % line2
     T = T.replace("{items}", items)
 

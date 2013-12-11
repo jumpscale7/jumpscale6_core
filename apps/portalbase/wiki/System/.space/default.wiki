@@ -6,8 +6,7 @@
 {{find}}
 
 {{menu:
-Documentation:/Help
-Jumpscale:http://www.jumpscale.com
+Help:/Help
 }}
 
 {{menuadmin}}
