@@ -21,6 +21,7 @@ Edit:/system/edit?space=$$space&page=$$page
 --------------
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
+System:/system
 --------------
 errors:/gridlogs/errors
 logs:/gridlogs/logs
