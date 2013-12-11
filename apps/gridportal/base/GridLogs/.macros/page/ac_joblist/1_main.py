@@ -43,7 +43,7 @@ def main(j, args, params, tags, tasklet):
             job = job['_source']
             started = datetime.datetime.fromtimestamp(job["timeStart"]).strftime('%d/%m %H:%M')
             stopped = datetime.datetime.fromtimestamp(job["timeStop"]).strftime('%d/%m %H:%M')
-            rows.append(["%s__/System/Job?jobid=%s" % (job['id'], job['id']), job['roles'], started, stopped, job["jsname"], job["jsorganization"], job["timeout"], job['sessionid'], job['state'] ])
+            rows.append(["%s__/gridlogs/Job?jobid=%s" % (job['id'], job['id']), job['roles'], started, stopped, job["jsname"], job["jsorganization"], job["timeout"], job['sessionid'], job['state'] ])
 
     page.addList(rows, header, linkcolumns=[0], classparams='table-striped table-bordered') #TODO make agentid a link to agent
 
