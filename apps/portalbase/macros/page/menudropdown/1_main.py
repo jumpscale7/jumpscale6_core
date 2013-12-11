@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
 
     ddcode = """
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle pull-right" data-toggle="dropdown">$$name<b class="caret"></b></a>
+  <a href="#" class="dropdown-toggle pull-right $$class" data-toggle="dropdown">$$name<b class="caret"></b></a>
   <ul class="dropdown-menu">
        $$items
   </ul>
@@ -35,6 +35,7 @@ def main(j, args, params, tags, tasklet):
 
     items = ""
     name = args.tags.tagGet("name", "Admin")
+    klass = args.tags.tagGet("class", "")
     for line in args.cmdstr.split("\n"):
         line = line.strip()
         if line != "" and line[0] != "#":
@@ -51,6 +52,7 @@ def main(j, args, params, tags, tasklet):
 
     ddcode = ddcode.replace("$$items", items)
     ddcode = ddcode.replace("$$name", name)
+    ddcode = ddcode.replace("$$class", klass)
 
     page.body = page.body.replace(keyword, ddcode)
 

@@ -3,7 +3,6 @@ def main(j, args, params, tags, tasklet):
     params.merge(args)
 
     doc = params.doc
-    tags = params.tags
 
     params.result = ""
 
@@ -12,7 +11,8 @@ def main(j, args, params, tags, tasklet):
     spacestxt=""
     for item in spaces:
         if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1:
-            spacestxt += "%s:/%s\n" % (item, item.lower().strip("/"))
+            name = j.core.portal.runningPortal.webserver.getSpace(item).model.id
+            spacestxt += "%s:/%s\n" % (name, item.lower().strip("/"))
 
 
     C = """
