@@ -106,7 +106,7 @@ jQuery(document).ready(function($) {
         for (var i=0;i<children.length;i++){
             data += headers[i] + $(children[i]).text() + '</br>';
         }
-        $('<div id="dialog-message">'+data+'</div>').appendTo('body');
+        $("#dialog-message").html(data);
         $("#dialog-message").dialog({
             modal: true,
             draggable: true,
@@ -131,6 +131,7 @@ setInterval(function() {
   </script>
 
 <div class="facet-view-simple"></div>
+<div id="dialog-message" style="display:none;"></div>
     """
 
     page.addMessage(C)
