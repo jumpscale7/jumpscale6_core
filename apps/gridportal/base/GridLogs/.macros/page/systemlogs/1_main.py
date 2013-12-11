@@ -129,6 +129,7 @@ $('body').on('click', '#facetview_results tr', function(e){
 setInterval(function() {
   $('#facetview_pid').hide();
   $('#facetview_message').hide();
+  $('#facetview_epoch').hide();
 
   $('#facetview_results tr').each(function() {
       var elt = $(this);
