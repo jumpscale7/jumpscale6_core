@@ -7,6 +7,6 @@
 }}
 #.span2 {display:none !important;}
 
-h2. System Logs
+h2. Logs
 
 {{systemlogs}}

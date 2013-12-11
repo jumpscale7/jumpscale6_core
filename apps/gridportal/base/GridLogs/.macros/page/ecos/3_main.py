@@ -77,7 +77,7 @@ jQuery(document).ready(function($) {
         {'field': 'epoch', 'display': 'Time', 'size': 100},
         {'field': 'appname', 'display': 'App Name'},
         {'field': 'category', 'display': 'Category'},
-        {'field': 'level', 'display': 'LVL'},
+        {'field': 'level', 'display': 'Level'},
         {'field': 'errormessage', 'display': 'Message'},
         {'field': 'gid', 'display': 'GID'},
         {'field': 'nid', 'display': 'NID'},
@@ -103,7 +103,7 @@ jQuery(document).ready(function($) {
         e.preventDefault(); e.stopPropagation();
         data = '';
         children = $(this).children();
-        headers = ['Time: ', 'Application Name: ', 'Category: ', 'Level: ', 'Message: ', 'Group ID: ', 'Node ID: ', 'Process ID: '];
+        headers = ['Time: ', 'Application Name: ', 'Category: ', 'Level: ', 'Message: ', 'Grid ID: ', 'Node ID: ', 'Process ID: '];
         for (var i=0;i<children.length;i++){
             data += headers[i] + $(children[i]).text() + '</br>';
         }
