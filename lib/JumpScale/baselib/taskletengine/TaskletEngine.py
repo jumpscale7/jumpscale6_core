@@ -21,7 +21,7 @@ class TaskletEngineFactory():
         """
         return TaskletEngine(path)
 
-    def getGroup(self, path):
+    def getGroup(self, path=""):
         """
         tasklets are grouped per subdir of directory, each name of subdir will become a taskletengine
         """
@@ -77,13 +77,16 @@ class Tasklet:
 
 
 class TaskletEngineGroup():
-    def __init__(self, path):
+    def __init__(self, path=""):
         self.taskletEngines = {}
-        self.addTasklets(path)
+        if path<>"":
+            self.addTasklets(path)
 
     def addTasklets(self, path):
         taskletdirs = j.system.fs.listDirsInDir(path, False, True)
+        nr=0
         for taskletgroupname in taskletdirs:
+            # print "####%s######"%taskletgroupname
             self.taskletEngines[taskletgroupname.lower().strip()] = TaskletEngine(j.system.fs.joinPaths(path, taskletgroupname))
 
     def hasGroup(self, name):
