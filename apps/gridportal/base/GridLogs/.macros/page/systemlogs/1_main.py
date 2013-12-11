@@ -1,9 +1,3 @@
-# import urlparse
-import json
-import datetime
-import JumpScale.baselib.elasticsearch
-
-
 def main(j, args, params, tags, tasklet):
     page = args.page
 
@@ -75,6 +69,8 @@ jQuery(document).ready(function($) {
     resultwrap_start: '<tr>',
     resultwrap_end: '</tr>',
     display_columns: true,
+    default_freetext_fuzzify: '*',
+    enable_rangeselect: false,
     pushstate:true,
     linkify: false,
     facets: [
@@ -109,6 +105,9 @@ jQuery(document).ready(function($) {
 
 // Put ellipsis on the 'message' column
 setInterval(function() {
+  $('#facetview_pid').hide();
+  $('#facetview_message').hide();
+  
   $('#facetview_results tr').each(function() {
       var elt = $(this);
       elt.find('td').attr('title', elt.text());
