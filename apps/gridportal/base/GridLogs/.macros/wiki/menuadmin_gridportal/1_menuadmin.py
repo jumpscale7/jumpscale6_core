@@ -26,8 +26,8 @@ System:/system
 errors:/gridlogs/errors
 logs:/gridlogs/logs
 jobs:/gridlogs/jobs
-grid:/grid/gridoverview
---------------
+grid:/grid/
+
 }}
 """
     # C+=spacestxt
