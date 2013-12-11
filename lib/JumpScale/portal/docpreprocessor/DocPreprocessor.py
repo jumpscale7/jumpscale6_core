@@ -218,7 +218,7 @@ class Doc(object):
     def executeMacrosPreprocess(self):
         if self.source == "":
             self.loadFromDisk()
-
+        
         if self.preprocessor.spaceMacroexecutorPreprocessor != None:
             self.preprocessor.spaceMacroexecutorPreprocessor.execMacrosOnDoc(self)
 
@@ -238,9 +238,12 @@ class Doc(object):
         if "space" not in paramsExtra:
             paramsExtra["space"] = self.getSpaceName()
 
+
         if self.preprocessor.spaceMacroexecutorWiki != None:
             content, doc = self.preprocessor.spaceMacroexecutorWiki.execMacrosOnContent(content=self.content, doc=self, paramsExtra=paramsExtra, ctx=ctx)
-            return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=doc.content, doc=doc, paramsExtra=paramsExtra, ctx=ctx)
+            
+            return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=content, doc=doc, paramsExtra=paramsExtra, ctx=ctx)
+
         else:
             return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=self.content, doc=self, paramsExtra=paramsExtra, ctx=ctx)
 
@@ -367,6 +370,7 @@ class DocPreprocessor():
         self.macroexecutorPreprocessor = j.core.portal.runningPortal.webserver.macroexecutorPreprocessor
         self.macroexecutorPage = j.core.portal.runningPortal.webserver.macroexecutorPage
         self.macroexecutorWiki = j.core.portal.runningPortal.webserver.macroexecutorWiki
+
         self.spaceMacroexecutorPreprocessor = spaceMacroexecutorPreprocessor
         self.spaceMacroexecutorPage = spaceMacroexecutorPage
         self.spaceMacroexecutorWiki = spaceMacroexecutorWiki

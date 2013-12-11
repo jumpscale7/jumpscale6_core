@@ -41,7 +41,6 @@ def main(j, args, params,  tags, tasklet):
             msg = "**ERROR**: include %s not found in %s" % (name, tags)
             print msg
             params.result = (msg, doc)
-
             return params
 
     doc2.content = doc2.source  # make sure we restart from original source when doing the includes (only for include we do this)
@@ -59,6 +58,7 @@ def main(j, args, params,  tags, tasklet):
             params.result = ("h%s. %s\n%s" % (headinglevel, doc2.title, doc2.content), doc)
     else:
         params.result = ("", doc)
+    
 
     return params
 

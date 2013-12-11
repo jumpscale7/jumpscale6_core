@@ -3,6 +3,7 @@ import urlparse
 import pprint
 import os
 
+
 from beaker.middleware import SessionMiddleware
 
 from JumpScale import j
@@ -215,9 +216,9 @@ class GeventWebserver:
         self.bucketsloader = j.core.portalloader.getBucketsLoader()
         self.spacesloader = j.core.portalloader.getSpacesLoader()
 
-        macroPathsPreprocessor = ["system/system__contentmanager/macros/preprocess"]
-        macroPathsWiki = ["system/system__contentmanager/macros/wiki"]
-        macroPathsPage = ["system/system__contentmanager/macros/page"]
+        macroPathsPreprocessor = ["macros/preprocess"]
+        macroPathsWiki = ["macros/wiki"]
+        macroPathsPage = ["macros/page"]
 
         self.macroexecutorPreprocessor = MacroExecutorPreprocess(macroPathsPreprocessor)
         self.macroexecutorPage = MacroExecutorPage(macroPathsPage)
