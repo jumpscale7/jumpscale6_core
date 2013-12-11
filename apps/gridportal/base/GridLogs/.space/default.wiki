@@ -16,14 +16,7 @@ Incubaid:http://www.incubaid.com
 @block
 @row
 
-@col 2
-{{navigation}}
-@divend
-
-@col 10
-
 {content}
 
-@divend
 @divend
 
