@@ -14,7 +14,8 @@ Help:/Help
 {{menudropdown: name:Logs class:brand marker:$$$pages
 Errors:/gridlogs/Errors
 Jobs:/gridlogs/Jobs
-Logs:/griglogs/Logs
+Logs:/gridlogs/Logs
+ElasticSearch Management:/gridlogs/Eshead
 }}
 
 
