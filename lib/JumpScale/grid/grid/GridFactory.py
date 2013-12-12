@@ -64,7 +64,7 @@ class GridFactory():
         if self.nid == 0:
             jp=j.packages.findNewest("jumpscale","grid_node")
             jp.configure()
-            self.nid = j.core.grid.config.getInt("grid.nid")
+            self.nid = j.core.grid.config.getInt("grid.node.id")
 
             # self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
