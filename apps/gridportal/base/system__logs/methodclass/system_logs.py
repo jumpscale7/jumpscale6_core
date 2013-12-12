@@ -13,7 +13,11 @@ class system_logs(system_logs_osis):
 
     def listJobs(self, **args):
         import JumpScale.grid.osis
-        osiscl = j.core.osis.getClient()
+
+        nip = 'localhost'
+        if args.get('nip'):
+            nip = args.get('nip')
+        osiscl = j.core.osis.getClient(nip)
         client = j.core.osis.getClientForCategory(osiscl, 'system', 'job')
 
         params = {'ffrom': '', 'to': '', 'nid': '', 'gid': '',
@@ -55,4 +59,52 @@ class system_logs(system_logs_osis):
             result = j.db.serializers.ujson.loads(item['_source'].get('result', ''))
             itemdata.append(result.get('result', ''))
             aaData.append(itemdata)
+        return {'aaData': aaData}
+
+
+
+    def listNodes(self, **args):
+        import JumpScale.grid.osis
+        osiscl = j.core.osis.getClient()
+        client = j.core.osis.getClientForCategory(osiscl, 'system', 'node')
+
+        nodes = client.search("null")
+
+        aaData = list()
+        fields = ('name', 'roles', 'ipaddr', 'machineguid')
+        for item in nodes['result']:
+            itemdata = list()
+            for field in fields:
+                itemdata.append(item['_source'].get(field))
+            itemdata.append(item.get('_id'))
+            ipaddr = item['_source'].get('ipaddr')[0] if item['_source'].get('ipaddr') else ''
+            itemdata.append('<a href="/grid/node?nip=%s">link</a>' % ipaddr)
+            aaData.append(itemdata)
+
+        if not aaData:
+            aaData = [None, None, None, None, None]
+        return {'aaData': aaData}
+
+
+    def listECOs(self, **args):
+        import JumpScale.baselib.elasticsearch
+        esc = j.clients.elasticsearch.get()
+
+        nid = 1
+        if args.get('nip'):
+            nid = args.get('nid')
+        query = {"query":{"bool":{"must":[{"term":{"nid":nid}}]}}}
+        ecos = esc.search(query, index='system_eco')
+
+        aaData = list()
+        fields = ('appname', 'category', 'epoch', 'errormessage', 'jid', 'level', 'backtrace', 'nid', 'pid')
+
+        for item in ecos['hits']['hits']:
+            itemdata = list()
+            for field in fields:
+                itemdata.append(item['_source'].get(field))
+            aaData.append(itemdata)
+
+        if not aaData:
+            aaData = [None, None, None, None, None]
         return {'aaData': aaData}

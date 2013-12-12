@@ -1,28 +1,22 @@
 
-{{title:Logs}}
-
-{{projectname:Logs}}
+{{title:Grids}}
 
 {{find}}
 
 {{menu:
-Documentation:/Docs
-Incubaid:http://www.incubaid.com
+$$$pages
+Help:/Help
 }}
 
 {{menuadmin_grid}}
 
+{{menudropdown: name:Grids class:brand marker:$$$pages
+Nodes:/grid/GridNodes
+}}
+
 @block
 @row
-
-@col 2
-{{navigation}}
-@divend
-
-@col 10
 
 {content}
 
 @divend
-@divend
-
