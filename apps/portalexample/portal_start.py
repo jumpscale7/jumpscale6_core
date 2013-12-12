@@ -6,7 +6,7 @@ j.application.start("appserver6_test")
 
 j.logger.disable()
 
-j.manage.portal.startprocess()
+j.manage.portal.startprocess(port=9090)
 
 
 j.application.stop()
