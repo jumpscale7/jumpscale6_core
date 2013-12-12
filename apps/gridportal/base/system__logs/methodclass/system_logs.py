@@ -51,7 +51,7 @@ class system_logs(system_logs_osis):
             itemdata = list()
             for field in fields:
                 itemdata.append(item['_source'].get(field))
-            itemdata.append(item['_source'].get('args', {}).get('msg', ''))
+            itemdata.append('<a href=%s>%s</a>' % ('/gridlogs/job?jobid=%s' % item['_id'], item['_source'].get('args', {}).get('msg', '')))
             result = j.db.serializers.ujson.loads(item['_source'].get('result', ''))
             itemdata.append(result.get('result', ''))
             aaData.append(itemdata)

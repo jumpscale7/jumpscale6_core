@@ -1,5 +1,6 @@
 import JumpScale.grid.geventws
 import datetime
+import JumpScale.baselib.serializers
 
 def main(j, args, params, tags, tasklet):
     import json
@@ -24,9 +25,14 @@ def main(j, args, params, tags, tasklet):
         elif k in ('timeStop', 'timeStart'):
             v = datetime.datetime.fromtimestamp(v).strftime('%Y-%m-%d %H:%M:%S') if v else 'N/A'
 
-        if k in ('result', 'args'):
+        elif k == 'args':
             rows.append(["<th>%s</th>" %k,"", ""])
             for ka, va in v.iteritems():
+                rows.append(["<th></th>", ka,va])
+        elif k == 'result':
+            rows.append(["<th>%s</th>" %k,"", ""])
+            vdict = j.db.serializers.ujson.loads(v)
+            for ka, va in vdict.iteritems():
                 rows.append(["<th></th>", ka,va])
         elif k in ('children', 'childrenActive'):
             rows.append(["<th>%s</th>" %k,"", ""])
