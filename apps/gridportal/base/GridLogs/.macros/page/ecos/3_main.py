@@ -123,7 +123,7 @@ jQuery(document).ready(function($) {
 // Put ellipsis on the 'message' column
 setInterval(function() {
   $('#facetview_pid').hide();
-  $('#facetview_message').hide();
+  $('#facetview_errormessage').hide();
   $('#facetview_epoch').hide();
 
   $('#facetview_results tr').each(function() {
