@@ -1,5 +1,6 @@
 from JumpScale import j
 from system_logs_osis import system_logs_osis
+import JumpScale.baselib.serializers
 
 
 class system_logs(system_logs_osis):
@@ -51,6 +52,7 @@ class system_logs(system_logs_osis):
             for field in fields:
                 itemdata.append(item['_source'].get(field))
             itemdata.append(item['_source'].get('args', {}).get('msg', ''))
-            itemdata.append(item['_source'].get('result', {}).get('result', ''))
+            result = j.db.serializers.ujson.loads(item['_source'].get('result', ''))
+            itemdata.append(result.get('result', ''))
             aaData.append(itemdata)
         return {'aaData': aaData}
