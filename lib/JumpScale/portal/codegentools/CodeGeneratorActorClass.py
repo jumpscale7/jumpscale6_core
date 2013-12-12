@@ -210,8 +210,10 @@ self.appname="{appname}"
             method = osisMethods[methodname]
             self.addMethod(method)
 
-        # write class file
+        # write class file        
         ppath = j.system.fs.joinPaths(self.codepath, "%s_%s_osis.py" % (self.spec.appname, self.spec.actorname))
+        if j.system.fs.exists(path=ppath):
+            ppath = j.system.fs.joinPaths(self.codepath, "%s_%s_osis.gen.py" % (self.spec.appname, self.spec.actorname))
         j.system.fs.writeFile(ppath, self.getContent())
 
         # main methods
