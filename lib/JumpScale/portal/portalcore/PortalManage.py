@@ -14,7 +14,7 @@ class PortalManage():
     management class for appserver
     """
 
-    def startprocess(self, processNr=1, reset=False):
+    def startprocess(self, processNr=1, reset=False,port=8081):
         """
         """
         j.apps = Group()
@@ -49,8 +49,9 @@ class PortalManage():
         elif len(ips) == 0:
             ip = ini.getValue("main", "ipaddr")
         else:
-            ip = ",".join(ips)
-            ini.setParam('main', "ipaddr", ip)
+            pass
+            # ip = ",".join(ips)
+            # ini.setParam('main', "ipaddr", ip)
 
         PortalProcess(processNr=processNr, cfgdir=cfgdir, startdir=curdir)
 
