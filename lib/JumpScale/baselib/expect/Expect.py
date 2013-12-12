@@ -246,9 +246,13 @@ class Expect:
         self._lastOutput=""
         self._lastError=""
 
-    def login(self,remote,passwd,seedpasswd):
+    def login(self,remote,passwd,seedpasswd,initial=False):
         #login over ssh
         self.send("ssh root@%s"%remote)
+        if initial:            
+            result=self.expect("continue connecting",timeout=2)
+            self.send("yes\n")
+        
         result=self.expect("password:",timeout=10)
       
         if result=="E":
@@ -266,7 +270,7 @@ class Expect:
         if result<>"E":
             #we saw passwd
             self.send(passwd)
-            result=self.expect("#")
+            result=self.expect("#",timeout=4)            
             if result=="E":
                 result=self.expect("Permission denied")
                 if result<>"E" and seedpasswd<>"":
