@@ -10,7 +10,7 @@ h4. path
 Example
 
 {{code: 
-\{\{explorer: path:c:/data \}\}
+\{\{explorer: ppath:c:/data \}\}
 }}
 
 h4. height
@@ -49,8 +49,8 @@ Example
 h3. Example
 
 {{code: 
-\{\{explorer: path:system/system__contentmanager/macros/ readonly height:400\}\}
+\{\{explorer: ppath:system/system__contentmanager/macros/ readonly height:400\}\}
 }}
 
-{{explorer: path:system/system__contentmanager/macros/ readonly height:400}}
+{{explorer: ppath:system/system__contentmanager/macros/ readonly height:400}}
 

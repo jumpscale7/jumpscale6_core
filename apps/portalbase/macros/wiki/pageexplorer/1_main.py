@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
 
     path = path.replace(":", "+")
 
-    out = "{{explorer: path:%s height:%s key:%s %s}}" % (path, height, params.doc.getPageKey(), readonly)
+    out = "{{explorer: ppath:%s height:%s key:%s %s}}" % (path, height, params.doc.getPageKey(), readonly)
 
     params.result = (out, params.doc)
 

@@ -389,15 +389,6 @@ class PortalProcess():
 
                 j.system.process.execute("/etc/init.d/nginx reload")
 
-                for pid in j.system.process.getProcessPid("php-cgi"):
-                    j.system.process.kill(int(pid))
-
-                maincfg = j.system.fs.joinPaths(j.core.portal.getConfigTemplatesPath(), "nginx", "phpLinux.ini")
-                configtemplate2 = j.system.fs.fileGetContents(maincfg)
-                configtemplate2 = self._replaceVar(configtemplate2)
-                j.system.fs.writeFile("/etc/nginx/php.ini", configtemplate2)
-                j.system.process.executeAsync(
-                    "php-cgi", ["-b", "127.0.0.1:9000", "-c", "/opt/qbase6/apps/acloudEventHandler/libphp/php.ini"], False, False, False, False, False)
 
         else:
             pass

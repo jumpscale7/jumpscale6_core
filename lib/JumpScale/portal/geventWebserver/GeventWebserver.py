@@ -500,6 +500,9 @@ class GeventWebserver:
         if match == "restmachine":
             return self.processor_rest(environ, start_response, path, human=False, ctx=ctx)
 
+        elif match == "elfinder":
+            return self.process_elfinder(path, ctx)
+
         elif match == "restextmachine":
             return self.processor_restext(environ, start_response, path, human=False, ctx=ctx)
 
@@ -568,6 +571,30 @@ class GeventWebserver:
 
         start_response('200 OK', [('Content-Type', "text/html"), ])
         return page
+
+    def process_elfinder(self, path, ctx):
+        from JumpScale.portal.html import elFinder
+        rootpath = j.apps.system.filemanager.dbmem.cacheGet(path)
+        options = {'root': rootpath}
+        con = elFinder.connector(options)
+        params = ctx.params.copy()
+        if 'rawdata' in params:
+            from JumpScale.portal.html import multipart
+            from cStringIO import StringIO
+            ctx.env.pop('wsgi.input', None)
+            stream = StringIO(ctx.params.pop('rawdata'))
+            forms, files = multipart.parse_form_data(ctx.env, stream=stream)
+            params.update(forms)
+            for key, value in files.iteritems():
+                if key == 'upload[]':
+                    params['upload[]'] = dict()
+                    params['upload[]'][value.filename] = value.file
+        status, header, response = con.run(params)
+        status = '%s' % status
+        headers = [ (k, v) for k,v in header.iteritems() ]
+        ctx.start_response(status, headers)
+        result = j.db.serializers.getSerializerType('j').dumps(response)
+        return [result]
 
     def path2spacePagename(self, path):
 
@@ -749,7 +776,7 @@ class GeventWebserver:
                 params.update(dict(urlparse.parse_qsl(postData)))
                 return params
             else:
-                self.raiseError(ctx, "Could not deserialize posted information, only application/json format supported")
+                params['rawdata'] = postData
         return params
 
     def _getActorMethodCall(self, appname, actor, method):

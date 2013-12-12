@@ -4,8 +4,8 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     params.result = page
 
-    if args.tags.tagExists("path"):
-        path = args.tags.tagGet("path").replace("+", ":").replace("___", ":").replace("\\", "/")
+    if args.tags.tagExists("ppath"):
+        path = args.tags.tagGet("ppath").replace("+", ":").replace("___", ":").replace("\\", "/")
         if not j.system.fs.exists(path):
             page.addMessage("ERROR:could not find file %s" % path)
 

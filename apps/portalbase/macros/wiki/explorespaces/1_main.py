@@ -14,7 +14,7 @@ def main(j, args, params, tags, tasklet):
         path = os.path.abspath(model.path)
         path = path.replace(":", "___").replace("/", "\\")
 
-        out += "| [%s | /system/Explorer/?path=%s] | [Reload | /system/ReloadSpace/?name=%s]|\n" % \
+        out += "| [%s | /system/Explorer/?ppath=%s] | [Reload | /system/ReloadSpace/?name=%s]|\n" % \
             (model.id, path, model.id)
 
     params.result = (out, params.doc)
