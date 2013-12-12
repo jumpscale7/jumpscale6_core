@@ -13,10 +13,10 @@ version = "1.0"
 roles = ["*"]
 
 
-def action(msg=msg):
-	print msg
+def action(msg):
+    print msg
 
-	raise RuntimeError("test")
+    #raise RuntimeError("test")
 
     return msg
 

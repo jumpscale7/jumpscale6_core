@@ -16,7 +16,8 @@ class AgentControllerFactory(object):
         else:
             self.ipaddr=agentControllerIP
         passwd=j.application.config.get("system.superadmin.passwd")
-        self._client= j.servers.geventws.getClient(self.ipaddr, 4444, user="admin", passwd=passwd,category="agent")
+        login=j.application.config.get("system.superadmin.login")
+        self._client= j.servers.geventws.getClient(self.ipaddr, 4444, user=login, passwd=passwd,category="agent")
 
     @property
     def client(self):

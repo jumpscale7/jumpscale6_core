@@ -139,7 +139,8 @@ class ControllerCMDS():
         
         self.agent2freeSessions={} #key is agent, val is dict of sessions free to be used
 
-        self.adminpasswd = "1234"
+        self.adminpasswd = j.application.config.get('system.superadmin.passwd')
+        self.adminuser = j.application.config.get('system.superadmin.login')
         
         self.osisclient = j.core.osis.getClient()
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
@@ -150,7 +151,7 @@ class ControllerCMDS():
 
 
     def _adminAuth(self,user,passwd):
-        if (user=="admin" and passwd==self.adminpasswd)==False:
+        if user != self.adminuser or passwd != self.adminpasswd:
             raise RuntimeError("permission denied")
 
     def authenticate(self, session):
