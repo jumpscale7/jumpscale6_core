@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
     for p, pval in qsparams.iteritems():
         url += '%s=%s&' % (p, pval)
 
-    fieldnames = ('jsname', 'jsorganization', 'parent', 'roles', 'state', 'msg', 'result')
+    fieldnames = ('JSName', 'JSOrganization', 'Parent', 'Roles', 'State', 'Message', 'Result')
     page = modifier.addTableFromURL(url, fieldnames)
 
     params.result = page
