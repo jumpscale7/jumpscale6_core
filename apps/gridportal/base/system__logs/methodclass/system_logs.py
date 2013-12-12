@@ -21,7 +21,7 @@ class system_logs(system_logs_osis):
             params[p] = args.get(p)
 
         if not any(params.values()):
-            jobs = client.search("null")
+            jobs = client.search({})
         else:
             query = {'query': {'bool': {'must': list()}}}
             if params['ffrom']:
@@ -50,7 +50,7 @@ class system_logs(system_logs_osis):
             itemdata = list()
             for field in fields:
                 itemdata.append(item['_source'].get(field))
-            itemdata.append(item['_source']['args']['msg'])
-            itemdata.append(item['_source']['result']['result'])
+            itemdata.append(item['_source'].get('args', {}).get('msg', ''))
+            itemdata.append(item['_source'].get('result', {}).get('result', ''))
             aaData.append(itemdata)
         return {'aaData': aaData}
