@@ -8,7 +8,7 @@ $$$pages
 Help:/Help
 }}
 
-{{menuadmin_grid}}
+{{menuadmin}}
 
 {{menudropdown: name:Grids class:brand marker:$$$pages
 Nodes:/grid/GridNodes
