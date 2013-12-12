@@ -43,4 +43,14 @@ class system_logs(system_logs_osis):
                     query['query']['bool']['must'].append(term)
 
             jobs = client.search(query)
-        return {'result': jobs}
+
+        aaData = list()
+        fields = ('jsname', 'jsorganization', 'parent', 'roles', 'state')
+        for item in jobs['result']:
+            itemdata = list()
+            for field in fields:
+                itemdata.append(item['_source'].get(field))
+            itemdata.append(item['_source']['args']['msg'])
+            itemdata.append(item['_source']['result']['result'])
+            aaData.append(itemdata)
+        return {'aaData': aaData}
