@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("cmdosistools")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['delete','deleteall'], help='Command to perform')
+parser.add_argument("-m", '--model',help='name of model')
+parser.add_argument("-n", '--namespace', help='namespace of osis')
+
+opts = parser.parse_args()
+
+############DELETEALL
+if opts.action =='deleteall':
+    import JumpScale.baselib.elasticsearch
+    import JumpScale.grid.osis
+    es = j.clients.elasticsearch.get()
+
+
+    if j.console.askString("Are you sure to delete full osis & elasticsearch indexes, type YES")<>"YES":
+        print "did not see yes, will not continue"
+        j.application.stop()
+
+    es.delete_all_indexes()
+
+    path=j.system.fs.joinPaths(j.dirs.varDir,"db","osis")
+
+    j.system.fs.removeDirTree(path)
+
+    print "Remove code & metadata on osisserver for namespaces?"
+    cl=j.core.osis.getClient()
+    namespaces=cl.listNamespaces()
+    if "system" in namespaces:
+        namespaces.pop(namespaces.index("system"))
+    if "logger" in namespaces:
+        namespaces.pop(namespaces.index("logger"))
+    namespaces=j.console.askChoiceMultiple(namespaces)
+    for namespace in namespaces:
+        path="/opt/jumpscale/apps/osis/logic/%s"%namespace
+        j.system.fs.removeDirTree(path)
+
+    j.tools.startupmanager.restartProcess("jumpscale","osis")
+    
+############DELETE
+if opts.action =='delete':
+
+    import JumpScale.grid.osis
+    import JumpScale.baselib.elasticsearch
+    es = j.clients.elasticsearch.get()
+    cl=j.core.osis.getClient()
+
+    if opts.namespace==None:
+        print "Namespace:"
+        namespace=j.console.askChoice(cl.listNamespaces())
+    else:
+        namespace=opts.namespace.strip()
+
+    if opts.model==None:
+        print "Model:"
+        models=j.console.askChoiceMultiple(cl.listNamespaceCategories(namespace))
+    else:
+        models=opts.model.split(",")
+    
+
+    for model in models:
+        try:
+            es.delete_index(index="%s_%s"%(namespace,model))
+        except:
+            pass
+        cl.deleteNamespaceCategory(namespace,model)
+
+            
+    
+    
+    # cl.delete_all_indexes()
+
+j.application.stop()

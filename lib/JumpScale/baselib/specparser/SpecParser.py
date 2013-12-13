@@ -778,11 +778,11 @@ class SpecParserFactory():
 
         SpecDirParser(specpath,appname,actorname=actorname)
         #generate specs for model actors
-        smg=SpecModelActorsGenerator(appname,actorname,specpath)
-        smg.generate()
+        ##smg=SpecModelActorsGenerator(appname,actorname,specpath)
+        ##smg.generate()
 
         #parse again to include the just generated specs
-        SpecDirParser(specpath,appname,actorname=actorname)
+        ##SpecDirParser(specpath,appname,actorname=actorname)
 
 
     def getSpecFromTypeStr(self,appname,actorname,typestr):
