@@ -203,26 +203,27 @@ class ActorsLoader(LoaderBase):
         args["tags"] = tags
         classpath = j.system.fs.joinPaths(actorpath, "methodclass", "%s_%s.py" % (spec.appname, spec.actorname))
         modelNames = j.core.specparser.getModelNames(appname, actorname)
+        
         actorobject = j.core.codegenerator.generate(spec, "actorclass", codepath=actorpath, classpath=classpath,
-                                                    args=args, makeCopy=True)()
+                                                    args=args, makeCopy=True)()             
 
-        # create spacedir if needed
-        # create space for actor if it does not exist yet
-        ppathx = j.system.fs.joinPaths(actorpath, "space_%s__%s" % (appname, actorname))
-        if not j.system.fs.exists(ppathx):
-            j.system.fs.createDir(ppathx)
-            ppath2 = j.system.fs.joinPaths(ppathx, ".space")
-            j.system.fs.createDir(ppath2)
-            ppath2 = j.system.fs.joinPaths(ppathx, ".macros")
-            j.system.fs.createDir(ppath2)
-            ppath2 = j.system.fs.joinPaths(ppathx, "space_%s.wiki" % actorname)
-            C = """
-h3. home page for space $$space
+        # # create spacedir if needed
+        # # create space for actor if it does not exist yet
+        # ppathx = j.system.fs.joinPaths(actorpath, "space_%s__%s" % (appname, actorname))
+        # if not j.system.fs.exists(ppathx):
+        #     j.system.fs.createDir(ppathx)
+        #     ppath2 = j.system.fs.joinPaths(ppathx, ".space")
+        #     j.system.fs.createDir(ppath2)
+        #     ppath2 = j.system.fs.joinPaths(ppathx, ".macros")
+        #     j.system.fs.createDir(ppath2)
+#             ppath2 = j.system.fs.joinPaths(ppathx, "space_%s.wiki" % actorname)
+#             C = """
+# h3. home page for space $$space
 
-...
+# ...
 
-"""
-            j.system.fs.writeFile(ppath2, C)
+# """
+#             j.system.fs.writeFile(ppath2, C)
 
         if len(modelNames) > 0:
             actorobject.models = Class()
@@ -365,14 +366,15 @@ def match(j, args, params, actor, tags, tasklet):
         # load extensions
         actorobject.__dict__['extensions'] = ActorExtensionsGroup(j.system.fs.joinPaths(actorpath, "extensions"))
 
-        # load macros
-        macropath = j.system.fs.joinPaths(actorpath, "macros")
-        if j.system.fs.exists(macropath):
-            macropath2 = j.system.fs.joinPaths(macropath, "preprocess")
-            j.core.portal.runningPortal.webserver.macroexecutorPreprocessor.taskletsgroup.addTasklets(macropath2)
-            macropath2 = j.system.fs.joinPaths(macropath, "page")
-            j.core.portal.runningPortal.webserver.macroexecutorPage.taskletsgroup.addTasklets(macropath2)
-            macropath2 = j.system.fs.joinPaths(macropath, "wiki")
-            j.core.portal.runningPortal.webserver.macroexecutorWiki.taskletsgroup.addTasklets(macropath2)
+        ##ACTOR DOES NOT NEED MACROS
+        # # load macros
+        # macropath = j.system.fs.joinPaths(actorpath, "macros")
+        # if j.system.fs.exists(macropath):
+        #     macropath2 = j.system.fs.joinPaths(macropath, "preprocess")
+        #     j.core.portal.runningPortal.webserver.macroexecutorPreprocessor.taskletsgroup.addTasklets(macropath2)
+        #     macropath2 = j.system.fs.joinPaths(macropath, "page")
+        #     j.core.portal.runningPortal.webserver.macroexecutorPage.taskletsgroup.addTasklets(macropath2)
+        #     macropath2 = j.system.fs.joinPaths(macropath, "wiki")
+        #     j.core.portal.runningPortal.webserver.macroexecutorWiki.taskletsgroup.addTasklets(macropath2)
 
         return actorobject

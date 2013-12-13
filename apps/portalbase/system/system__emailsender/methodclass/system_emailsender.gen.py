@@ -1,8 +1,6 @@
 from JumpScale import j
-from system_emailsender_osis import system_emailsender_osis
 
-
-class system_emailsender(system_emailsender_osis):
+class system_emailsender(j.code.classGetBase()):
     """
     Email sender
     
@@ -12,7 +10,7 @@ class system_emailsender(system_emailsender_osis):
         self._te={}
         self.actorname="emailsender"
         self.appname="system"
-        system_emailsender_osis.__init__(self)
+        #system_emailsender_osis.__init__(self)
     
 
         pass

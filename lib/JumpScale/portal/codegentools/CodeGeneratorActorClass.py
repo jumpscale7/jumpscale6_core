@@ -23,57 +23,57 @@ class CodeGeneratorActorClass(CodeGeneratorBase):
         s += "return self._te[\"%s\"].execute4method(args,params={},actor=self)" % key
         return s
 
-    def getCodeOsisExecute(self, method):
+#     def getCodeOsisExecute(self, method):
 
-        na, modelname, methodcall = method.name.split("_", 3)
+#         na, modelname, methodcall = method.name.split("_", 3)
 
-        if methodcall == "set":
-            s = """
-return self.models.{modelname}.set(data)            
-            """
-        elif methodcall == "get":
-            s = """
-obj = self.models.{modelname}.get(id=id,guid=guid).obj2dict()
-obj.pop('_meta', None)
-return obj
-            """
-        elif methodcall == "delete":
-            s = """
-return self.models.{modelname}.delete(guid=guid, id=id)
-            """
-        elif methodcall == "list":
-            s = """
-return self.models.{modelname}.list()            
-            """
-        elif methodcall == "find":
-            s = """
-return self.models.{modelname}.find(query)            
-            """
-        elif methodcall == "new":
-            s = """
-return self.models.{modelname}.new()
-            """
-        elif methodcall == "datatables":
-            s = """
-return self.models.{modelname}.datatables() #@todo
-            """
-        elif methodcall == "create":
-            s = """
-{modelname} = self.models.{modelname}.new()
-{populatemodel}
-return self.models.{modelname}.set({modelname})
-        """
-        else:
-            raise RuntimeError("Cound not find method %s for osis.\n%s" % (methodcall, method))
+#         if methodcall == "set":
+#             s = """
+# return self.models.{modelname}.set(data)            
+#             """
+#         elif methodcall == "get":
+#             s = """
+# obj = self.models.{modelname}.get(id=id,guid=guid).obj2dict()
+# obj.pop('_meta', None)
+# return obj
+#             """
+#         elif methodcall == "delete":
+#             s = """
+# return self.models.{modelname}.delete(guid=guid, id=id)
+#             """
+#         elif methodcall == "list":
+#             s = """
+# return self.models.{modelname}.list()            
+#             """
+#         elif methodcall == "find":
+#             s = """
+# return self.models.{modelname}.find(query)            
+#             """
+#         elif methodcall == "new":
+#             s = """
+# return self.models.{modelname}.new()
+#             """
+#         elif methodcall == "datatables":
+#             s = """
+# return self.models.{modelname}.datatables() #@todo
+#             """
+#         elif methodcall == "create":
+#             s = """
+# {modelname} = self.models.{modelname}.new()
+# {populatemodel}
+# return self.models.{modelname}.set({modelname})
+#         """
+#         else:
+#             raise RuntimeError("Cound not find method %s for osis.\n%s" % (methodcall, method))
 
-        s = s.replace("{modelname}", modelname)
-        populateparams = ""
-        vs = method.vars
-        for v in method.vars:
-            newparam = """%(modelname)s.%(v)s = %(v)s\n""" % {'modelname': modelname, 'v': v.name}
-            populateparams += newparam
-        s = s.format(modelname=modelname, populatemodel=populateparams)
-        return s
+#         s = s.replace("{modelname}", modelname)
+#         populateparams = ""
+#         vs = method.vars
+#         for v in method.vars:
+#             newparam = """%(modelname)s.%(v)s = %(v)s\n""" % {'modelname': modelname, 'v': v.name}
+#             populateparams += newparam
+#         s = s.format(modelname=modelname, populatemodel=populateparams)
+#         return s
 
     def addMethod(self, method):
         spec = self.spec
@@ -111,23 +111,22 @@ return self.models.{modelname}.set({modelname})
         self.content += "\n%s" % j.code.indent(s, 1)
 
         # BODY OF METHOD
-        if method.name.find("model_") == 0:
-            if self.spec.hasTasklets:
-                s = self.getCodeTaskletExecute(method)
-                self.content += j.code.indent(s, 2)
-            else:
-                s = self.getCodeOsisExecute(method)
-                self.content += j.code.indent(s, 2)
+        # if method.name.find("model_") == 0:
+        #     if self.spec.hasTasklets:
+        #         s = self.getCodeTaskletExecute(method)
+        #         self.content += j.code.indent(s, 2)
+        #     else:
+        #         s = self.getCodeOsisExecute(method)
+        #         self.content += j.code.indent(s, 2)
+        # else:
+        if method.hasTasklets or self.spec.hasTasklets:
+            s = self.getCodeTaskletExecute(method)
+            self.content += j.code.indent(s, 2)
         else:
-            if method.hasTasklets or self.spec.hasTasklets:
-
-                s = self.getCodeTaskletExecute(method)
-                self.content += j.code.indent(s, 2)
-            else:
-                # generate when no tasklets
-                s = "#put your code here to implement this method\n"
-                s += "raise NotImplementedError (\"not implemented method %s\")" % method.name
-                self.content += j.code.indent(s, 2)
+            # generate when no tasklets
+            s = "#put your code here to implement this method\n"
+            s += "raise NotImplementedError (\"not implemented method %s\")" % method.name
+            self.content += j.code.indent(s, 2)
 
         return
 
@@ -137,7 +136,7 @@ return self.models.{modelname}.set({modelname})
 self._te={}
 self.actorname="{actorname}"
 self.appname="{appname}"
-{appname}_{actorname}_osis.__init__(self)
+#{appname}_{actorname}_osis.__init__(self)
 """
         s = s.replace("{appname}", self.spec.appname)
         s = s.replace("{actorname}", self.spec.actorname)
@@ -189,40 +188,46 @@ self.appname="{appname}"
     def generate(self):
 
         mainMethods = {}
-        osisMethods = {}
+        # osisMethods = {}
         for method in self.spec.methods:
-            if method.name.find("model_") == 0:
-                osisMethods[method.name] = method
-            else:
-                mainMethods[method.name] = method
+            # if method.name.find("model_") == 0:
+            #     osisMethods[method.name] = method
+            # else:
+            mainMethods[method.name] = method
 
         mainMethods_list = mainMethods.keys()
-        osisMethods_list = osisMethods.keys()
+        # osisMethods_list = osisMethods.keys()
         mainMethods_list.sort()
-        osisMethods_list.sort()
+        # osisMethods_list.sort()
 
         # OSIS methods
-        self.addClass(className="%s_%s_osis" % (self.spec.appname, self.spec.actorname))
+        # self.addClass(className="%s_%s_osis" % (self.spec.appname, self.spec.actorname))
 
-        self.addInitModel()
+        # self.addInitModel()
 
-        for methodname in osisMethods_list:
-            method = osisMethods[methodname]
-            self.addMethod(method)
+        # for methodname in osisMethods_list:
+        #     method = osisMethods[methodname]
+        #     self.addMethod(method)
 
-        # write class file        
-        ppath = j.system.fs.joinPaths(self.codepath, "%s_%s_osis.py" % (self.spec.appname, self.spec.actorname))
-        if j.system.fs.exists(path=ppath):
-            ppath = j.system.fs.joinPaths(self.codepath, "%s_%s_osis.gen.py" % (self.spec.appname, self.spec.actorname))
-        j.system.fs.writeFile(ppath, self.getContent())
+        # # write class file        
+        # ppath = j.system.fs.joinPaths(self.codepath, "%s_%s_osis.py" % (self.spec.appname, self.spec.actorname))
+        # if j.system.fs.exists(path=ppath):
+        #     ppath = j.system.fs.joinPaths(self.codepath, "%s_%s_osis.gen.py" % (self.spec.appname, self.spec.actorname))
+        # else:
+        #     from IPython import embed
+        #     print "DEBUG NOW opopop"
+        #     embed()
+            
+        # j.system.fs.writeFile(ppath, self.getContent())
 
         # main methods
         self.initprops = ""
         self.content = ""
 
-        bcls = "%s_%s_osis" % (self.spec.appname, self.spec.actorname)
-        extraimport = "from %s import %s\n" % (bcls, bcls)
-        self.addClass(className="%s_%s" % (self.spec.appname, self.spec.actorname), baseclass=bcls, extraImport=extraimport)
+        # bcls = "%s_%s_osis" % (self.spec.appname, self.spec.actorname)
+        # extraimport = "from %s import %s\n" % (bcls, bcls)
+        # self.addClass(className="%s_%s" % (self.spec.appname, self.spec.actorname), baseclass=bcls, extraImport=extraimport)
+        self.addClass(className="%s_%s" % (self.spec.appname, self.spec.actorname))
 
         self.addInitExtras()
 

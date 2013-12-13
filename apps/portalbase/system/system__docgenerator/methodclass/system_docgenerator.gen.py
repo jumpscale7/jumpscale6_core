@@ -1,8 +1,6 @@
 from JumpScale import j
-from system_docgenerator_osis import system_docgenerator_osis
 
-
-class system_docgenerator(system_docgenerator_osis):
+class system_docgenerator(j.code.classGetBase()):
     """
     Initializes the swagger entry point for listing the available APIs
     
@@ -12,7 +10,7 @@ class system_docgenerator(system_docgenerator_osis):
         self._te={}
         self.actorname="docgenerator"
         self.appname="system"
-        system_docgenerator_osis.__init__(self)
+        #system_docgenerator_osis.__init__(self)
     
 
         pass
