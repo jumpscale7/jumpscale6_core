@@ -13,5 +13,5 @@ tm=pc.getActor("test","taskmanager")
 tm.model_user_create("incubaid","despiegk","kristof@adomain.com,kristof2@me.com",groups="group1,group2")
 
 from IPython import embed
-print "DEBUG NOW ooo"
+print "DEBUG NOW populatedate"
 embed()

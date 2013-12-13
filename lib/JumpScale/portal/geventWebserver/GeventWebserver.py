@@ -937,6 +937,7 @@ class GeventWebserver:
         if eco.type == "":
             eco.type = "WSERROR"
 
+
         j.errorconditionhandler.processErrorConditionObject(eco)
 
         if ctx.fformat == "human" or ctx.fformat == "text":
@@ -1175,6 +1176,8 @@ class GeventWebserver:
             routes = self.routesext
         else:
             routes = self.routes
+        if routekey not in routes:
+            j.core.portal.runningPortal.activateActor(paths[0], paths[1])
         if routekey in routes:
             if human:
                 ctx.fformat = "human"
@@ -1185,11 +1188,11 @@ class GeventWebserver:
             ctx.path = routekey
             ctx.fullpath = path
             ctx.application = paths[0]
-            ctx.actor = paths[1]
+            ctx.actor = paths[1]            
             ctx.method = paths[2]
             auth = routes[routekey][5]
             resultcode, msg = self.validate(ext, auth, ctx)
-            if resultcode == False:
+            if resultcode == False:                
                 if human:
                     params = {}
                     params["error"] = "Incorrect Request: %s" % msg
@@ -1199,7 +1202,7 @@ class GeventWebserver:
                     page = self.returnDoc(ctx, start_response, "system",
                                           "restvalidationerror", extraParams=params)
                     return (False, ctx, [str(page)])
-                else:
+                else:                    
                     return (False, ctx, self.raiseError(ctx, msg))
             else:
                 return (True, ctx, routekey)
@@ -1207,9 +1210,11 @@ class GeventWebserver:
             msg = "Could not find method, path was %s" % (path)
             appname = paths[0]
             actor = paths[1]
-            page = self.getServicesInfo(appname, actor)
-            return (False, ctx, self.raiseError(ctx=ctx, msg=msg,
-                                                msginfo=str(page)))
+            if human:
+                page = self.getServicesInfo(appname, actor)
+                return (False, ctx, self.raiseError(ctx=ctx, msg=msg,msginfo=str(page)))
+            else:
+                return (False, ctx, self.raiseError(ctx=ctx, msg=msg,msginfo=""))
 
     def execute_rest_call(self, ctx, routekey, ext=False):
         if ext:
@@ -1252,7 +1257,8 @@ class GeventWebserver:
             success, ctx, routekey = self.restRouter(env, start_response, path,
                                                    paths, ctx, human=human)
             if not success:
-                return result
+                #in this case routekey is really the errormsg
+                return routekey
 
 
             success, result = self.execute_rest_call(ctx, routekey)

@@ -1,8 +1,7 @@
 from JumpScale import j
-from system_infomgr_osis import *
 
 
-class system_infomgr(system_infomgr_osis):
+class system_infomgr(j.code.classGetBase()):
 
     """
     this is an example actor
@@ -14,9 +13,6 @@ class system_infomgr(system_infomgr_osis):
         self._te = {}
         self.actorname = "infomgr"
         self.appname = "system"
-        system_infomgr_osis.__init__(self)
-
-        pass
 
     def addInfo(self, info, **args):
         """

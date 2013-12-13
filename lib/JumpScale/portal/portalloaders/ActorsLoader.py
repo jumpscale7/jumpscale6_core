@@ -90,16 +90,17 @@ class ActorLoader(LoaderBaseObject):
         return result
 
     def loadSpace(self):
-        # LOAD SPACES FOR ACTOR
-        # check if we need to load space for actor
-        sloader = j.core.portal.runningPortal.webserver.spacesloader
+        return
+        # # LOAD SPACES FOR ACTOR
+        # # check if we need to load space for actor
+        # sloader = j.core.portal.runningPortal.webserver.spacesloader
 
-        key = "space_%s__%s" % (self.model.application, self.model.actor)
-        # if not sloader.spaces.has_key(key):
-        ppath = j.system.fs.joinPaths(self.model.path, key)
-        if True or not j.system.fs.exists(ppath):  # @todo despiegk loader
-            self.activate()
-        sloader.scan(ppath)
+        # key = "space_%s__%s" % (self.model.application, self.model.actor)
+        # # if not sloader.spaces.has_key(key):
+        # ppath = j.system.fs.joinPaths(self.model.path, key)
+        # if not j.system.fs.exists(ppath):  # @todo despiegk loader
+        #     self.activate()
+        # sloader.scan(ppath)
 
 
 class ActorsLoader(LoaderBase):

@@ -564,13 +564,13 @@ class PortalProcess():
             self.epoch = time.time()
             gevent.sleep(0.1)
 
-    def _taskSchedulerTimer(self):
-        """
-        every 4 seconds check maintenance queue
-        """
-        while True:
-            gevent.sleep(5)
-            self.scheduler.check(self.epoch)
+    # def _taskSchedulerTimer(self):
+    #     """
+    #     every 4 seconds check maintenance queue
+    #     """
+    #     while True:
+    #         gevent.sleep(5)
+    #         self.scheduler.check(self.epoch)
 
     def addQGreenlet(self, appName, greenlet):
         """
@@ -600,9 +600,6 @@ class PortalProcess():
 
         TIMER = gevent.greenlet.Greenlet(self._timer)
         TIMER.start()
-
-        MQ = gevent.greenlet.Greenlet(self._taskSchedulerTimer)
-        MQ.start()
 
         if self.mainLoop != None:
             MAINLOOP = gevent.greenlet.Greenlet(self.mainLoop)
@@ -641,23 +638,14 @@ class PortalProcess():
             # for app,actorname,instance,ipaddr,port,secret in j.core.portal.gridmaplocal.datalist:
                 # j.core.portal.gridmap.set(app,actorname,instance,ipaddr,port,secret)
 
-        self.redirectErrors()
+        # self.redirectErrors()
 
         if self.webserver != None:
             self.webserver.start(reset=reset)
 
     def processErrorConditionObject(self, eco):
         print eco
-        eco2 = j.apps.system.errorconditionhandler.model_errorcondition_new()
-        eco2.appname = eco.appname
-        eco2.category = eco.category
-        eco2.descriptionpub = eco.errormessagePub
-        eco2.description = eco.errormessage
-        eco2.traceback = eco.backtrace
-        eco2.inittime = eco.epoch
-        eco2.level = eco.level
-
-        eco2 = j.apps.system.errorconditionhandler.processECO(eco2)
+        #@todo need to forward to logger
 
     def redirectErrors(self):
         j.errorconditionhandler.processErrorConditionObject = self.processErrorConditionObject  # @todo kds redirect

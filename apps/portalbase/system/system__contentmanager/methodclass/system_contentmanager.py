@@ -1,8 +1,7 @@
 from JumpScale import j
-from system_contentmanager_osis import system_contentmanager_osis
 
 
-class system_contentmanager(system_contentmanager_osis):
+class system_contentmanager(j.code.classGetBase()):
 
     """
     this actor manages all content on the wiki
@@ -15,7 +14,6 @@ class system_contentmanager(system_contentmanager_osis):
         self._te = {}
         self.actorname = "contentmanager"
         self.appname = "system"
-        system_contentmanager_osis.__init__(self)
 
     def getActors(self, **args):
         """

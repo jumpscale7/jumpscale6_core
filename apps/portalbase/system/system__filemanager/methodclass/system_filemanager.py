@@ -1,8 +1,7 @@
 from JumpScale import j
-from system_filemanager_osis import system_filemanager_osis
 
 
-class system_filemanager(system_filemanager_osis):
+class system_filemanager(j.code.classGetBase()):
 
     """
     manipulate our virtual filesystem
@@ -14,9 +13,6 @@ class system_filemanager(system_filemanager_osis):
         self._te = {}
         self.actorname = "filemanager"
         self.appname = "system"
-        system_filemanager_osis.__init__(self)
-
-        pass
 
     def dirdelete(self, path, user, recursive=True, **kwargs):
         """
