@@ -1,10 +1,9 @@
 from JumpScale import j
-from system_gridmanager_osis import system_gridmanager_osis
 import JumpScale.grid.geventws
 import JumpScale.grid.osis
 import requests
 
-class system_gridmanager(system_gridmanager_osis):
+class system_gridmanager(j.code.classGetBase()):
     """
     gateway to grid
     
@@ -14,7 +13,6 @@ class system_gridmanager(system_gridmanager_osis):
         self._te={}
         self.actorname="gridmanager"
         self.appname="system"
-        # system_gridmanager_osis.__init__(self)
         self.clients={}
         self.clientsIp={}
 
@@ -25,8 +23,7 @@ class system_gridmanager(system_gridmanager_osis):
 
     def getClient(self,nid):
         if not self.clients.has_key(nid):
-            for node in self.getNodes():
-                
+            for node in self.getNodes():                
                 if str(node["id"])==str(nid):
                     for ip in node["ipaddr"]:
                         print "test:%s"%ip
@@ -59,8 +56,8 @@ class system_gridmanager(system_gridmanager_osis):
         
         """
         result=[]
-        for node in self.osis_node.list():
-            node=self.osis_node.get("5_1")
+        for nodeid in self.osis_node.list():
+            node=self.osis_node.get(nodeid)
             r={}
             r["id"]=node.id
             r["roles"]=node.roles
@@ -87,7 +84,7 @@ class system_gridmanager(system_gridmanager_osis):
         return client.monitorProcess(domain=domain,name=name)
     
 
-    def getStat(self,statKey, **kwargs):
+    def getStat(self,statKey,width=500,height=250, **kwargs):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
@@ -101,7 +98,7 @@ class system_gridmanager(system_gridmanager_osis):
         client=self.getClient(nodeId)
         ip=self.clientsIp[nodeId] 
 
-        url="http://%s:8081/render/?width=586&height=308&target=%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=first&tz=CET"%(ip,statKey)
+        url="http://%s:8081/render/?width=%s&height=%s&target=%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=first&tz=CET"%(ip,width,height,statKey)
 
         r = requests.get(url)
 

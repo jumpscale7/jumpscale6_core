@@ -1,0 +1,5 @@
+@usedefaults
+
+H3. Stat example
+
+{{stat: key:n1.disk.mbytes.read.sda1.avg width:500 height:200}}

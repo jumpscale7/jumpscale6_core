@@ -15,7 +15,7 @@ def main(j, args, params, tags, tasklet):
 
     page.addHeading("Job ID: %s" % jobid, 5)
     query = {'query': {'bool': {'must': [{'term': {'jid': jobid}}]}}}
-    page.addLink("Logs", "/system/SystemLogs?source=%s" % json.dumps(query))
+    page.addLink("Logs", "/gridlogs/logs?source=%s" % json.dumps(query))
     page.addHeading("Details", 5)
     rows = list()
     for k,v in sorted(job.iteritems()):

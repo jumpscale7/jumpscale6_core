@@ -1,15 +1,13 @@
 from JumpScale import j
-from system_logs_osis import system_logs_osis
 import JumpScale.baselib.serializers
 
 
-class system_logs(system_logs_osis):
+class system_logs(j.code.classGetBase()):
 
     def __init__(self):
         self._te = {}
         self.actorname = "logs"
         self.appname = "system"
-        system_logs_osis.__init__(self)
 
     def listJobs(self, **args):
         import JumpScale.grid.osis

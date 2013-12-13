@@ -1,7 +1,0 @@
-{{html: <h3>Node Jobs</h3>}}
-{{ac_jobList: nip: 10.0.3.119}}
-
-{{grid_node}}
-
-{{html: <h3>Node Logs</h3>}}
-{{systemlogs}}

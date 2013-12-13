@@ -1,4 +1,5 @@
+@usedefault
+
 h2. Overview of the grid
 
-todo: show grid with its nodes & status
-todo: all monitoring info comes underneath this space
+{{nodes}}

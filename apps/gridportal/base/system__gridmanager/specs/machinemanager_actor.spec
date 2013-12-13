@@ -29,4 +29,6 @@
         get png image as binary format
         """
         var:statKey str,,e.g. n1.disk.mbytes.read.sda1.last
+        var:width int,,
+        var:height int,,
         result:binary

@@ -16,7 +16,7 @@ roles = ["*"]
 def action(msg):
     print msg
 
-    #raise RuntimeError("test")
+    # raise RuntimeError("test")
 
     return msg
 

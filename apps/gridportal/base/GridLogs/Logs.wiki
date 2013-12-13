@@ -1,3 +1,5 @@
+@usedefaults
+
 {{cssstyle
 .span3 {width: 17% !important;}
 .table td {padding: 3px;}
@@ -9,4 +11,4 @@
 
 h2. Logs
 
-{{systemlogs}}
+{{logs}}

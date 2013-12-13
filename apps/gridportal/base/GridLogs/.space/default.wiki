@@ -4,19 +4,12 @@
 {{find}}
 
 {{menu:
-$$$pages
+#$$$pages
 Help:/Help
 }}
 
 
-{{menuadmin}}
-
-{{menudropdown: name:Logs class:brand marker:$$$pages
-Errors:/gridlogs/Errors
-Jobs:/gridlogs/Jobs
-Logs:/gridlogs/Logs
-ElasticSearch Management:/gridlogs/Eshead
-}}
+{{menuadmin_gridportal}}
 
 
 @block

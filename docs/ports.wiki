@@ -17,6 +17,8 @@ gridportal 9900
 
 nginx 80
 
+graphite:8081
+
 
 
 

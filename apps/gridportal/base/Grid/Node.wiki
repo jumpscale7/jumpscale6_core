@@ -1,0 +1,11 @@
+@usedefaults
+
+h3. Node Jobs
+
+{{ac_jobList: nid:$$nid}}
+
+{{grid_node}}
+
+h4. Logs
+
+{{systemlogs}}

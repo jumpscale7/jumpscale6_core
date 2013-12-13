@@ -9,9 +9,7 @@
 Help:/Help
 }}
 
-{{menuadmin}}
-{{menuspaces}}
-
+{{menuadmin_jpackages}}
 
 @block
 @row

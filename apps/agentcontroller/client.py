@@ -22,8 +22,8 @@ client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user=login
 print "start test"
 for i in range(10):
     print i
-    job=client.executeJumpscript("opencode","wait","node",args={"msg":"test:%s"%i},timeout=60,wait=False,lock="test")
-    job=client.waitJumpscript(job["id"])
+    job=client.executeJumpscript("opencode","wait","node",args={"msg":"test:%s"%i},timeout=5,wait=True,lock="")
+    # job=client.waitJumpscript(job["id"])
     print job
 
 

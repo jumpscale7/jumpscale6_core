@@ -23,11 +23,14 @@ Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
 System:/system
 --------------
+grid:/grid
+logs_errors:/gridlogs
+jpackages:/jpackages
+--------------
 errors:/gridlogs/errors
 logs:/gridlogs/logs
 jobs:/gridlogs/jobs
-grid:/grid/
-
+agentcontroller:/gridlogs/agentcontroller
 }}
 """
     # C+=spacestxt

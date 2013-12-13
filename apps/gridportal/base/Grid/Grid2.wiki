@@ -1,17 +1,14 @@
-
 {{title:Grids}}
-
-{{find}}
 
 {{menu:
 Help:/Help
 }}
 
-{{menuadmin_grid}}
-
 @block
 @row
 
-{content}
+{{nodes}}
 
 @divend
+
+

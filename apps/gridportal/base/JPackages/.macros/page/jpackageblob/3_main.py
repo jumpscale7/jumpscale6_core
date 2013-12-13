@@ -19,6 +19,8 @@ def main(j, args, params, tags, tasklet):
         ttype = blob.split('___')[1].split('.info')[0]
         blobinfo = package.getBlobInfo(platform, ttype)
 
+        #@todo P3 not very nice, should have been a wiki macro, outputting wiki
+
         page.addHeading("Platform:%s &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Blobstor Key:%s" % (platform.capitalize(), blobinfo[0]), 5)
         page.addHTML("""<table class="table table-striped table-bordered dataTable" id="example" border="0" cellpadding="0" cellspacing="0" width="100%" aria-describedby="example_info" style="width: 100%;">""")
         page.addHTML("""<thead><tr role="row"><th role="columnheader" tabindex="0" aria-controls="example" rowspan="1" colspan="1" style="width: 70%%;" aria-sort="ascending">File (%s)</th>""" % ttype)
