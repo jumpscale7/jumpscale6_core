@@ -18,6 +18,7 @@ class ErrorConditionHandler():
         return string.join([char for char in str(text) if ((ord(char)>31 and ord(char)<127) or ord(char)==10)],"")        
         
     def setExceptHook(self):
+        import ipdb
         sys.excepthook = self.excepthook
         self.inException=False
         
@@ -278,7 +279,7 @@ class ErrorConditionHandler():
         now there would be no further processing appart from priting the errorcondition object (eco)
 
         """
-        
+
         errorConditionObject.toAscii()
 
         if self.checkErrorIgnore(errorConditionObject):

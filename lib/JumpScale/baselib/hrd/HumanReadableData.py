@@ -138,6 +138,8 @@ class HRDPos():
 
     def getList(self,key):
         res=self.get(key)
+        if key.strip()=="":
+            return []
         return res.split(",")
 
     def prefix(self, key):
@@ -334,6 +336,8 @@ class HRD():
 
     def getList(self,key):
         res=self.get(key)
+        if key.strip()=="":
+            return []
         return res.split(",")
 
     def getDict(self,key):

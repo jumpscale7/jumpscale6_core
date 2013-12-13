@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jsgrid")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['reinit'], help='Command to perform')
+# parser.add_argument("-n", '--nr', help='desktop nr')
+# parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
+# parser.add_argument('--passwd', help='password for desktop')
+
+
+
+
+opts = parser.parse_args()
+
+############PS
+if opts.action =='reinit':
+
+    j.system.process.executeWithoutPipe("osis deleteall")
+
+    packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
+    for package in packages:
+        jp=j.packages.findNewest(name=package)
+        jp.configure()
+
+# packages=["osis","logger"]
+#     for package in packages:
+#         jp=j.packages.findNewest(name=package)        
+#         jp.restart()
+
+    j.tools.startupmanager.startAll()
+
+
+
+    from IPython import embed
+    print "DEBUG NOW jsgridmain"
+    embed()
+    
+
+
+j.application.stop()

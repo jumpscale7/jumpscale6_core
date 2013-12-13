@@ -70,7 +70,7 @@ class ProcessDef:
             self._nameLong+=" "
         self.lastCheck=0
         self.lastMeasurements={}
-        
+
 
     def getJSPid(self):
         return "g%s.n%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,self.name)
@@ -260,6 +260,7 @@ class ProcessDef:
         return result
 
     def stop(self, timeout=20):
+                     
         pid=self.getPid(timeout=0,ifNoPidFail=False)
         if pid<>0 and self.getProcessObject() and self.processobject.is_running():
             if not self.stopcmd:
@@ -275,7 +276,12 @@ class ProcessDef:
                 time.sleep(0.05)
                 now=j.base.time.getTimeEpoch()
 
-        for port in self.ports:            
+        for port in self.ports:        
+            if not port or not port.isdigit():
+                continue
+            #@todo above disables below, need to check why are these ports wrongly filled in (jo)
+            if port=="" or port==None:                
+                raise RuntimeError("port cannot be none for %s"%self)    
             j.system.process.killProcessByPort(port)
 
         j.system.platform.screen.killWindow(self.domain, self.name)
@@ -492,16 +498,13 @@ class StartupManager:
     #             # pd.start()
     #     while True:
     #         time.sleep(10)
-    #         from IPython import embed
-    #         print "DEBUG NOW ooo"
-    #         embed()
             
 
-    # def restartAll(self):
-    #     for pd in self.getProcessDefs():
-    #         if pd.autostart:
-    #             pd.stop()
-    #             pd.start()
+    def restartAll(self):
+        for pd in self.getProcessDefs():
+            if pd.autostart:
+                pd.stop()
+                pd.start()
 
     def removeProcess(self,domain, name):
         self.stopProcess(domain, name)

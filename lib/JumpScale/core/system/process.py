@@ -1662,6 +1662,8 @@ class SystemProcess:
         @return: full process name
         @rtype: string
         """
+        if port==0:
+            return None
         if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
             command = "netstat -ntulp | grep ':%s '" % port
             (exitcode, output) = j.system.process.execute(command, dieOnNonZeroExitCode=False,outputToStdout=False)
@@ -1685,6 +1687,7 @@ class SystemProcess:
                     pid = pid_of_line
                 else:
                     if pid != pid_of_line:
+
                         raise RuntimeError("Found multiple pids listening to port [%s]. Error." % port)
             if pid == -1:
                 # No process found listening on this port
