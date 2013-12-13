@@ -64,14 +64,34 @@ class OSIS:
         for o in objects:
             o.rebuildindex()
 
-    def objectToText4Index(self, obj, modelSpec):
-        from JumpScale.core.Shell import ipshellDebug, ipshell
-        print "DEBUG NOW use j.codetools.object2dict4index"
-        ipshell()
+    # def objectToText4Index(self, obj, modelSpec):
+    #     from JumpScale.core.Shell import ipshellDebug, ipshell
+    #     print "DEBUG NOW use object2dict4index"
+    #     ipshell()
 
-        result = self._objectToText4Index(obj, modelSpec, root=True)
-        result = result.replace("\n", ",")
-        return result
+    #     result = self._objectToText4Index(obj, modelSpec, root=True)
+    #     result = result.replace("\n", ",")
+    #     return result
+
+    def inputNormalizeList(self,param):
+        """
+        comma separated string becomes list
+        list gets checked, if all int then returnformat=1
+        list gets checked, if all str, then returnformat=2
+        @return (returnformat,list)
+        """
+        if j.basetype.string.check(param):
+            param=[item.strip() for item in param.split(",")]
+
+        try:
+            param2=[int(item) for item in param]
+            formatt=1
+        except:
+            formatt=2
+            param2=param
+            #no int
+        return (formatt,param2)
+
 
     def _normalize(self, sstr):
         sstr = sstr.replace(",", "")

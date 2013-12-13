@@ -61,6 +61,7 @@ class OSISCMDS(object):
         else:
             raise RuntimeError("Could not authenticate administrator.")
 
+
     def createNamespace(self, name=None, incrementName=False, template=None,session=None):
         """
         @return True
@@ -114,6 +115,18 @@ class OSISCMDS(object):
         ddirs = j.system.fs.listDirsInDir(j.system.fs.joinPaths(self.path,
                                                                 namespacename), dirNameOnly=True)
         return ddirs
+
+    def deleteNamespaceCategory(self, namespacename, name,session=None):
+        """
+        """
+        if session<>None:
+            self._authenticateAdmin(session)
+        namespacepath = j.system.fs.joinPaths(self.path, namespacename)
+        if not j.system.fs.exists(path=namespacepath):
+            raise RuntimeError("Could not find namespace with name:%s"%namespacename)
+
+        j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
+        self.db.destroy(name)        
 
     def createNamespaceCategory(self, namespacename, name,session=None):
         """
