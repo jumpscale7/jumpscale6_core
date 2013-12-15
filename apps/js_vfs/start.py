@@ -74,30 +74,34 @@ class MD():
             print "DEBUG NOW ooo"
             embed()
             
+class MD2():
+    def __init__(self):
+        self.db=leveldb.DB('%s/fs.db'%rootpath, create_if_missing=True)
 
+    def 
    
 class Passthrough(Operations):
     def __init__(self, user,backend):
-        path=j.system.fs.joinPaths("/opt/home/",organization,user)
-        j.system.fs.createDir(path)
-        self.root=path
+        # path=j.system.fs.joinPaths("/opt/home/",organization,user)
+        # j.system.fs.createDir(path)
+        # self.root=path
         self.user=user
-        self.organization=organization
-        self.readonly=True
+        # self.organization=organization
+        # self.readonly=True
         
         # self.md=MD(organization,user,self.root)
 
-        path=j.system.fs.joinPaths("config",organization,user,"main.hrd")
-        if not j.system.fs.exists(path=path):
-            raise RuntimeError("Could not find config:%s"%path)
-        self.hrd=j.core.hrd.getHRD(path)
-        rootfs=self.hrd.get("rootfs")
-        if not j.system.fs.exists(rootfs):
-            raise RuntimeError("Could not find rootfs:%s"%rootfs)
-        self.rootfs=rootfs
-        from IPython import embed
-        print "DEBUG NOW id"
-        embed()
+        # path=j.system.fs.joinPaths("config",organization,user,"main.hrd")
+        # if not j.system.fs.exists(path=path):
+        #     raise RuntimeError("Could not find config:%s"%path)
+        # self.hrd=j.core.hrd.getHRD(path)
+        # rootfs=self.hrd.get("rootfs")
+        # if not j.system.fs.exists(rootfs):
+        #     raise RuntimeError("Could not find rootfs:%s"%rootfs)
+        # self.rootfs=rootfs
+        # from IPython import embed
+        # print "DEBUG NOW id"
+        # embed()
         
 
 
