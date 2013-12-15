@@ -27,10 +27,7 @@ class system_gridmanager(j.code.classGetBase()):
         nid = int(nid)
         if nid not in self.clients:
             if nid not in self._nodeMap:
-                try:
-                    self._getNode(nid)
-                except:
-                    pass # if node not found next line will crash
+                self.getNodes()
             if nid not in self._nodeMap:
                 raise RuntimeError('Could not get client for node %s!' % nid)
             for ip in self._nodeMap[nid]['ipaddr']:
@@ -38,6 +35,7 @@ class system_gridmanager(j.code.classGetBase()):
                     self.clients[nid] = j.servers.geventws.getClient(ip, 4445, org="myorg", user="admin", passwd="1234",category="processmanager")
                     self.clientsIp[nid] = ip
                     return self.clients[nid]
+            raise RuntimeError('Could not get client for node %s!' % nid)
 
         return self.clients[nid]
 
@@ -57,7 +55,7 @@ class system_gridmanager(j.code.classGetBase()):
         r["roles"]=node.roles
         r["name"]=node.name
         r["ipaddr"]=node.ipaddr
-        self._nodeMap[nid] = r
+        self._nodeMap[node.id] = r
         return r
 
     def getNodes(self, **kwargs):
@@ -66,8 +64,8 @@ class system_gridmanager(j.code.classGetBase()):
         result list(list)
         """
         result=[]
-        for nid in self.osis_node.list():
-            node = self._getNode(nid)
+        for osisid in self.osis_node.list():
+            node = self._getNode(osisid)
             result.append(node)
         return result
 
