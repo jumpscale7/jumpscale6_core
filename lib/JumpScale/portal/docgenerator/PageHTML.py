@@ -813,7 +813,8 @@ function copyText$id() {
         if dockey == None:
             dockey = j.base.byteprocessor.hashMd5(path)
         C = C.replace("$dockey", dockey)
-        j.apps.system.filemanager.dbmem.cacheSet(key=dockey, value=path)
+        db = j.db.keyvaluestore.getMemoryStore('elfinder')
+        db.cacheSet(key=dockey, value=path)
 
         self.head += C
         self.addBootstrap(jquery=False)

@@ -574,7 +574,8 @@ class GeventWebserver:
 
     def process_elfinder(self, path, ctx):
         from JumpScale.portal.html import elFinder
-        rootpath = j.apps.system.filemanager.dbmem.cacheGet(path)
+        db = j.db.keyvaluestore.getMemoryStore('elfinder')
+        rootpath = db.cacheGet(path)
         options = {'root': rootpath}
         con = elFinder.connector(options)
         params = ctx.params.copy()
