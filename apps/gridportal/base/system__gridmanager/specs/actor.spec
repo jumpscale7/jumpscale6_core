@@ -11,6 +11,25 @@
         var:name str,,optional name for process
         result:json
 
+    method:getProcessesActive
+        """     
+        ask the right processmanager on right node to get the info (this comes not from osis)
+        output all relevant info (no stat info for that we have getProcessStats)
+        """
+        var:nodeId int,,id of node (if not specified goes to all nodes and aggregates)
+        var:name str,,optional name for process name (part of process name)
+        var:domain str,,optional name for process domain (part of process domain)
+        result:json
+
+    method:getJob
+        """
+        gets relevant info of job (also logs)
+        can be used toreal time return job info
+        """
+        var:id str,,obliged id of job
+        var:includeloginfo bool,,if true fetch all logs of job & return as well
+        var:includechildren bool,,if true look for jobs which are children & return that info as well
+
     method:getNodeSystemStats
         """     
         ask the right processmanager on right node to get the information about node system
@@ -21,6 +40,7 @@
     method:getStatImage
         """     
         get png image as binary format
+        comes from right processmanager
         """
         var:statKey str,,e.g. n1.disk.mbytes.read.sda1.last
         var:width int,,
@@ -29,7 +49,7 @@
 
     method:getNodes
         """     
-        list found nodes
+        list found nodes (comes from osis)
         """
         result:list(list)
         var:gid int,,find logs for specified grid
@@ -67,6 +87,7 @@
         var:nid int,,find jobs for specified node
         var:gid int,,find jobs for specified grid
         var:parent str,,find jobs which are children of specified parent
+        var:roles str,,match on comma separated list of roles (subsets also ok e.g. kvm.  would match all roles starting with kvm.)
         var:state str,,OK;ERROR;... @todo complete
         var:jsorganization str,,
         var:jsname str,,
@@ -95,7 +116,7 @@
 
     method:getProcesses
         """     
-        list found nodes
+        list processes (comes from osis), are the grid unique processes (not integrated with processmanager yet)
         """
         var:id str,,only find 1 process entry
         var:name str,,match on text in name
@@ -108,7 +129,7 @@
 
     method:getApplications
         """     
-        list found nodes (applicationtype in osis)
+        list known application types (applicationtype in osis)
         """
         var:id str,,only find 1 process entry
         var:type str,,
@@ -120,4 +141,35 @@
         list grids
         """
         result:list(list)
+
+
+    method:getJumpscripts
+        """
+        calls internally the agentcontroller
+        return: lists the jumpscripts with main fields (organization, name, category, descr)
+        """
+        var:jsorganization str,,find jumpscripts
+        
+    method:getJumpscript
+        """
+        calls internally the agentcontroller to fetch detail for 1 jumpscript
+        """
+        var:jsorganization str,,
+        var:jsname str,,
+
+    method:getAgentControllerSessions
+        """
+        calls internally the agentcontroller
+        """
+        var:roles str,,match on comma separated list of roles (subsets also ok e.g. kvm.  would match all roles starting with kvm.)
+        var:nid int,,find for specified node (on which agents are running which have sessions with the agentcontroller)
+        var:active bool,,is session active or not
+
+
+    method:getAgentControllerActiveJobs
+        """
+        calls internally the agentcontroller
+        list jobs now running on agentcontroller
+        """
+
 

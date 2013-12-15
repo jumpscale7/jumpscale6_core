@@ -1,3 +1,5 @@
+#obsolete is now in https://bitbucket.org/jumpscale/jumpscale_grid/src/tip/apps/gridportal/base/system__gridmanager/specs/actor.spec
+
 [actor] @dbtype:mem #tasklets
     method: listJobs
         """
