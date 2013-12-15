@@ -10,73 +10,73 @@ class Group():
     pass
 
 
-class GridMap():
+# class GridMap():
 
-    def __init__(self):
-        self.data = {}  # key is "%s_%s_%s" % (appName, actorName,instance), value=[[ipaddr],port,secret]
+#     def __init__(self):
+#         self.data = {}  # key is "%s_%s_%s" % (appName, actorName,instance), value=[[ipaddr],port,secret]
 
-    def _getKey(self, appName, actorName, instance):
-        key = "%s_%s_%s" % (appName.lower().strip(), actorName.lower().strip(), instance)
-        return key
+#     def _getKey(self, appName, actorName, instance):
+#         key = "%s_%s_%s" % (appName.lower().strip(), actorName.lower().strip(), instance)
+#         return key
 
-    def set(self, appName, actorName, instance, ipaddr=None, port=None, secret=None):
-        """
-        @param ipaddr=list of ip addr []
-        """
-        key = self._getKey(appName, actorName, instance)
-        self.data[key] = [ipaddr, port, secret]
-        if not j.core.portal.runningPortal.ismaster:
-            raise RuntimeError("Can only be used local to master appserver")
+#     def set(self, appName, actorName, instance, ipaddr=None, port=None, secret=None):
+#         """
+#         @param ipaddr=list of ip addr []
+#         """
+#         key = self._getKey(appName, actorName, instance)
+#         self.data[key] = [ipaddr, port, secret]
+#         if not j.core.portal.runningPortal.ismaster:
+#             raise RuntimeError("Can only be used local to master appserver")
 
-    def get(self, appName, actorName, instance):
-        key = self._getKey(appName, actorName, instance)
-        if self.exists(appName, actorName, instance):
-            return self.data[key]
-        else:
-            raise RuntimeError("Cannot find app:%s, actor:%s, instance:%s in gridmap" % (appName, actorName, instance))
+#     def get(self, appName, actorName, instance):
+#         key = self._getKey(appName, actorName, instance)
+#         if self.exists(appName, actorName, instance):
+#             return self.data[key]
+#         else:
+#             raise RuntimeError("Cannot find app:%s, actor:%s, instance:%s in gridmap" % (appName, actorName, instance))
 
-    def exists(self, appName, actorName, instance):
-        key = self._getKey(appName, actorName, instance)
-        return key in self.data
+#     def exists(self, appName, actorName, instance):
+#         key = self._getKey(appName, actorName, instance)
+#         return key in self.data
 
 
-class GridMapLocal():
+# class GridMapLocal():
 
-    def __init__(self):
-        raise RuntimeError("gridmap not impl")
-        self.data = {}  # key is "%s_%s_%s" % (appName, actorName,instance), value=[[ipaddr],port,secret]
-        self.datalist = []
+#     def __init__(self):
+#         raise RuntimeError("gridmap not impl")
+#         self.data = {}  # key is "%s_%s_%s" % (appName, actorName,instance), value=[[ipaddr],port,secret]
+#         self.datalist = []
 
-    def _getKey(self, appName, actorName, instance):
-        key = "%s_%s_%s" % (appName.lower().strip(), actorName.lower().strip(), instance)
-        return key
+#     def _getKey(self, appName, actorName, instance):
+#         key = "%s_%s_%s" % (appName.lower().strip(), actorName.lower().strip(), instance)
+#         return key
 
-    def set(self, appName, actorName, instance):
-        """
-        @param ipaddr=list of ip addr []
-        """
-        key = self._getKey(appName, actorName, instance)
-        if j.core.portal.runningPortal == None:
-            raise RuntimeError("can only set to gridmap when appserver is known & operational")
-        ipaddr = j.core.portal.runningPortal.ipaddr
-        if ipaddr == "localhost":
-            ipaddr = "127.0.0.1"
-        port = j.core.portal.runningPortal.port
-        secret = j.core.portal.runningPortal.secret
-        if key not in self.data:
-            self.data[key] = [ipaddr, port, secret]
-            self.datalist.append([appName, actorName, instance, ipaddr, port, secret])
+#     def set(self, appName, actorName, instance):
+#         """
+#         @param ipaddr=list of ip addr []
+#         """
+#         key = self._getKey(appName, actorName, instance)
+#         if j.core.portal.runningPortal == None:
+#             raise RuntimeError("can only set to gridmap when appserver is known & operational")
+#         ipaddr = j.core.portal.runningPortal.ipaddr
+#         if ipaddr == "localhost":
+#             ipaddr = "127.0.0.1"
+#         port = j.core.portal.runningPortal.port
+#         secret = j.core.portal.runningPortal.secret
+#         if key not in self.data:
+#             self.data[key] = [ipaddr, port, secret]
+#             self.datalist.append([appName, actorName, instance, ipaddr, port, secret])
 
-    def get(self, appName, actorName, instance):
-        key = self._getKey(appName, actorName, instance)
-        if self.exists(appName, actorName, instance):
-            return self.data[key]
-        else:
-            raise RuntimeError("Cannot find app:%s, actor:%s, instance:%s in gridmap" % (appName, actorName, instance))
+#     def get(self, appName, actorName, instance):
+#         key = self._getKey(appName, actorName, instance)
+#         if self.exists(appName, actorName, instance):
+#             return self.data[key]
+#         else:
+#             raise RuntimeError("Cannot find app:%s, actor:%s, instance:%s in gridmap" % (appName, actorName, instance))
 
-    def exists(self, appName, actorName, instance):
-        key = self._getKey(appName, actorName, instance)
-        return key in self.data
+#     def exists(self, appName, actorName, instance):
+#         key = self._getKey(appName, actorName, instance)
+#         return key in self.data
 
 
 class PortalClientFactory():
@@ -87,7 +87,7 @@ class PortalClientFactory():
         self.inprocess = False
         self._appserverclients = {}
 
-    def loadActorsInProcess(self, processNr=1):
+    def loadActorsInProcess(self):
         """
         make sure all actors are loaded on j.apps...
         """
@@ -100,7 +100,7 @@ class PortalClientFactory():
         cfgdir = j.system.fs.joinPaths(j.system.fs.getcwd(), "cfg")
         curdir = j.system.fs.getcwd()
         j.system.fs.changeDir(appdir)
-        server = PortalProcess(processNr=processNr, cfgdir=cfgdir, startdir=curdir)
+        server = PortalProcess(cfgdir=cfgdir, startdir=curdir)
 
         # for actor in server.actorsloader.actors.keys():
         #     appname,actorname=actor.split("__",1)

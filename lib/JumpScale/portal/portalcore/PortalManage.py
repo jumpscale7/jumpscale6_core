@@ -14,7 +14,7 @@ class PortalManage():
     management class for appserver
     """
 
-    def startprocess(self, processNr=1, reset=False,port=8081):
+    def startprocess(self, reset=False):
         """
         """
         j.apps = Group()

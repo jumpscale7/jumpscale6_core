@@ -1,15 +1,13 @@
 from JumpScale import j
-from system_docgenerator_osis import system_docgenerator_osis
 
 
-class system_docgenerator(system_docgenerator_osis):
+class system_docgenerator(j.code.classGetBase()):
 
     def __init__(self):
         self._te = {}
         self.actorname = "docgenerator"
         self.appname = "system"
         self.host = j.core.portal.runningPortal.dns
-        system_docgenerator_osis.__init__(self)
 
     def getDocForActor(self, actorname, **args):
         actorjson = {'swaggerVersion': '1.1', 'basePath': '/',

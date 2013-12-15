@@ -1,9 +1,0 @@
-h1. DataTables_Edit
-
-View a table of models
-
-h2. Example
-{{code:
-\{\{datatables_edit: app:system actor:usermanager model:group\}\}
-}}
-{{datatables_edit: app:system actor:usermanager model:group}}

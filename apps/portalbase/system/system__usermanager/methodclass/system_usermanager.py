@@ -1,8 +1,6 @@
 from JumpScale import j
-from system_usermanager_osis import system_usermanager_osis
 
-
-class system_usermanager(system_usermanager_osis):
+class system_usermanager(j.code.classGetBase()):
 
     """
     register a user (can be done by user itself, no existing key or login/passwd is needed)
@@ -14,7 +12,6 @@ class system_usermanager(system_usermanager_osis):
         self._te = {}
         self.actorname = "usermanager"
         self.appname = "system"
-        system_usermanager_osis.__init__(self)
 
     def authenticate(self, name, secret, **args):
         """

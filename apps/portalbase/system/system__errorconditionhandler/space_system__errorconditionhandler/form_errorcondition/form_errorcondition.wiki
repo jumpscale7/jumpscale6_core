@@ -1,5 +1,0 @@
-
-h2. errorcondition
-
-{{form_errorconditionhandler_errorcondition}}
-

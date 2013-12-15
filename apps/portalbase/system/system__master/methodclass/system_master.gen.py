@@ -1,8 +1,6 @@
 from JumpScale import j
-from system_master_osis import system_master_osis
 
-
-class system_master(system_master_osis):
+class system_master(j.code.classGetBase()):
     """
     get dict of list of apps & actors
     
@@ -12,7 +10,7 @@ class system_master(system_master_osis):
         self._te={}
         self.actorname="master"
         self.appname="system"
-        system_master_osis.__init__(self)
+        #system_master_osis.__init__(self)
     
 
         pass

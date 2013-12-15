@@ -5,7 +5,6 @@ import copy
 import json
 import inspect
 
-
 class PageHTML(Page):
 
     """
@@ -698,34 +697,13 @@ function copyText$id() {
         self.addCSS("%s/elfinder/css/elfinder.min.css" % self.liblocation)
         self.addCSS("%s/elfinder/css/theme.css" % self.liblocation)
         self.addJS("%s/elfinder/js/elfinder.min.js" % self.liblocation)
-
-        def writeExplorerPHP(path, dockey):
-            path = j.system.fs.pathNormalize(path).replace("\\", "/")
-            path2 = j.system.fs.joinPaths(j.system.fs.getcwd(), "libphp", "elfinder", "connector.php").replace("\\", "/")
-            C = j.system.fs.fileGetContents(path2)
-            if j.system.platformtype.isWindows():
-                root = 'c:/qb6/apps/ishare/'
-            else:
-                root = "/opt/qbase6/apps/ishare/"
-            C = C.replace("{path}", path)
-            C = C.replace("{root}", root)
-
-            dest = j.system.fs.joinPaths(j.core.portal.runningPortal.webserver.filesroot, dockey).replace("\\", "/")
-
-            if not j.system.fs.exists(dest):
-                if j.system.fs.isLink(dest):
-                    j.system.fs.unlink(dest)
-                j.system.fs.symlink(path, dest)
-            C = C.replace("{rootdownload}", "/%s" % dockey)
-            pathout = j.system.fs.joinPaths(j.system.fs.getcwd(), "libphp", "elfinder", "connector_%s.php" % dockey).replace("\\", "/")
-            j.system.fs.writeFile(pathout, C)  # @todo need to do something here as well to have readonly behaviour
-            return "connector_%s.php" % dockey
+        self.addJS("%s/elfinder/js/proxy/elFinderSupportVer1.js" % self.liblocation)
 
         if readonly:
             commands = """
 	    commands : [
 	    'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
-	    'download', 'archive',
+	    'archive',
 	    'resize', 'sort'
 	    ],"""
 
@@ -736,7 +714,7 @@ function copyText$id() {
             commands = """
 	    commands : [
 	    'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
-	    'download', 'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
+	    'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
 	    'cut', 'paste','extract', 'archive', 'help',
 	    'resize', 'sort', 'edit'
 	    ],"""
@@ -751,9 +729,10 @@ function copyText$id() {
         var options=
         {
             defaultView : 'list',
-	        url : '/elfinder/$connector',
+	        url : '/elfinder/$dockey',
 	        height : $height,
             width : $width,
+            transport : new elFinderSupportVer1(),
 	        {commands}
 	        ui :[{tree}'path', 'stat'],
 
@@ -817,7 +796,6 @@ function copyText$id() {
 </script>
 """
         # //var elf = $('#elfinder').elfinder(options);
-        C = C.replace("$path", path)
         height = str(height)
         C = C.replace("$height", str(height))
         C = C.replace("$width", str(width))
@@ -834,8 +812,10 @@ function copyText$id() {
         C = C.replace("{filecmd}", filecmd)
         if dockey == None:
             dockey = j.base.byteprocessor.hashMd5(path)
+        C = C.replace("$dockey", dockey)
+        db = j.db.keyvaluestore.getMemoryStore('elfinder')
+        db.cacheSet(key=dockey, value=path)
 
-        C = C.replace("$connector", writeExplorerPHP(path, "key__%s" % dockey))
         self.head += C
         self.addBootstrap(jquery=False)
         self.addMessage("<div id=\"elfinder%s\"></div>" % self._explorerInstance)

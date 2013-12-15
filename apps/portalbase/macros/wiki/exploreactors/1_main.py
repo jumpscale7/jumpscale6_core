@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
             j.system.fs.createDir(path)
             path = path.replace(":", "___").replace("/", "\\") + "\\%s\\" % ttype
             # out+="|[%s | /system/Explorer/?path=%s] |[reload | /system/reloadactor/?name=%s]|\n" % (model.id,path,model.id)
-            out += "|[%s | /system/Explorer/?path=%s] |\n" % (model.id, path)
+            out += "|[%s | /system/Explorer/?ppath=%s] |\n" % (model.id, path)
 
     params.result = out
 

@@ -7,7 +7,7 @@ from CodeGeneratorActorRemote import CodeGeneratorActorRemote
 # from CodeGeneratorWhoosh import CodeGeneratorWhoosh
 from CodeGeneratorActorTasklets import CodeGeneratorActorTasklets
 from CodeGeneratorActorClass import CodeGeneratorActorClass
-from CodeGeneratorOSISTasklets import CodeGeneratorOSISTasklets
+# from CodeGeneratorOSISTasklets import CodeGeneratorOSISTasklets
 import imp
 import sys
 
@@ -176,8 +176,8 @@ class CodeGenerator:
             cg = CodeGeneratorActorLocal(spec, typecheck, dieInGenCode)
         elif spec.type == "actor" and type == "actorclass":
             cg = CodeGeneratorActorClass(spec, typecheck, dieInGenCode, codepath=codepath, args=args)
-        elif spec.type == "model" and type == "osis":
-            cg = CodeGeneratorOSISTasklets(spec, typecheck, dieInGenCode, codepath=codepath, args=args)
+        # elif spec.type == "model" and type == "osis":
+        #     cg = CodeGeneratorOSISTasklets(spec, typecheck, dieInGenCode, codepath=codepath, args=args)
         elif spec.type == "actor" and type == "actorremote":
             cg = CodeGeneratorActorRemote(spec, typecheck, dieInGenCode, instance=instance, redis=redis, wsclient=wsclient, codepath=codepath)
         elif spec.type == "actor" and type == "tasklet":
@@ -190,6 +190,7 @@ class CodeGenerator:
             raise RuntimeError(emsg + " {category:spec.generate}")
 
         code = cg.generate()
+
 
         if not returnClass:
             return
@@ -222,7 +223,7 @@ class CodeGenerator:
 
         else:
             if classpath != None:
-                result = self._import(cg.getClassName(), cg.getClassName(), path)
+                result = self._import(cg.getClassName(), cg.getClassName(), path)                    
             else:
                 result = self._import(name, cg.getClassName(), path)
 

@@ -1,4 +1,3 @@
-from system_emailsender_osis import system_emailsender_osis
 import smtplib
 from JumpScale import j
 from email.mime.text import MIMEText
@@ -6,7 +5,7 @@ from email.mime.text import MIMEText
 ujson = j.db.serializers.getSerializerType('j')
 
 
-class system_emailsender(system_emailsender_osis):
+class system_emailsender(j.code.classGetBase()):
 
     """
     Email sender
@@ -21,7 +20,6 @@ class system_emailsender(system_emailsender_osis):
         self.actorname = "emailsender"
         self.appname = "system"
         self.server = 'msp.aserver.com:25'
-        system_emailsender_osis.__init__(self)
 
     def format(self, obj, format=None):
         if not format or format not in self.output_format_mapping:

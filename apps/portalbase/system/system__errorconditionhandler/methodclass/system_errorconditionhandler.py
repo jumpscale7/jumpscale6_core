@@ -1,8 +1,6 @@
 from JumpScale import j
-from system_errorconditionhandler_osis import system_errorconditionhandler_osis
 
-
-class system_errorconditionhandler(system_errorconditionhandler_osis):
+class system_errorconditionhandler(j.code.classGetBase()):
 
     """
     errorcondition handling
@@ -14,7 +12,6 @@ class system_errorconditionhandler(system_errorconditionhandler_osis):
         self._te = {}
         self.actorname = "errorconditionhandler"
         self.appname = "system"
-        system_errorconditionhandler_osis.__init__(self)
 
         pass
 

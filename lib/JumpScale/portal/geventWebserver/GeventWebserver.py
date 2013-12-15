@@ -500,6 +500,9 @@ class GeventWebserver:
         if match == "restmachine":
             return self.processor_rest(environ, start_response, path, human=False, ctx=ctx)
 
+        elif match == "elfinder":
+            return self.process_elfinder(path, ctx)
+
         elif match == "restextmachine":
             return self.processor_restext(environ, start_response, path, human=False, ctx=ctx)
 
@@ -568,6 +571,33 @@ class GeventWebserver:
 
         start_response('200 OK', [('Content-Type', "text/html"), ])
         return page
+
+    def process_elfinder(self, path, ctx):
+        from JumpScale.portal.html import elFinder
+        db = j.db.keyvaluestore.getMemoryStore('elfinder')
+        rootpath = db.cacheGet(path)
+        options = {'root': rootpath}
+        con = elFinder.connector(options)
+        params = ctx.params.copy()
+        if 'rawdata' in params:
+            from JumpScale.portal.html import multipart
+            from cStringIO import StringIO
+            ctx.env.pop('wsgi.input', None)
+            stream = StringIO(ctx.params.pop('rawdata'))
+            forms, files = multipart.parse_form_data(ctx.env, stream=stream)
+            params.update(forms)
+            for key, value in files.iteritems():
+                if key == 'upload[]':
+                    params['upload[]'] = dict()
+                    params['upload[]'][value.filename] = value.file
+        if params.get('init') == '1':
+            params.pop('target', None)
+        status, header, response = con.run(params)
+        status = '%s' % status
+        headers = [ (k, v) for k,v in header.iteritems() ]
+        ctx.start_response(status, headers)
+        result = j.db.serializers.getSerializerType('j').dumps(response)
+        return [result]
 
     def path2spacePagename(self, path):
 
@@ -749,7 +779,7 @@ class GeventWebserver:
                 params.update(dict(urlparse.parse_qsl(postData)))
                 return params
             else:
-                self.raiseError(ctx, "Could not deserialize posted information, only application/json format supported")
+                params['rawdata'] = postData
         return params
 
     def _getActorMethodCall(self, appname, actor, method):
@@ -909,6 +939,7 @@ class GeventWebserver:
 
         if eco.type == "":
             eco.type = "WSERROR"
+
 
         j.errorconditionhandler.processErrorConditionObject(eco)
 
@@ -1148,6 +1179,8 @@ class GeventWebserver:
             routes = self.routesext
         else:
             routes = self.routes
+        if routekey not in routes:
+            j.core.portal.runningPortal.activateActor(paths[0], paths[1])
         if routekey in routes:
             if human:
                 ctx.fformat = "human"
@@ -1158,11 +1191,11 @@ class GeventWebserver:
             ctx.path = routekey
             ctx.fullpath = path
             ctx.application = paths[0]
-            ctx.actor = paths[1]
+            ctx.actor = paths[1]            
             ctx.method = paths[2]
             auth = routes[routekey][5]
             resultcode, msg = self.validate(ext, auth, ctx)
-            if resultcode == False:
+            if resultcode == False:                
                 if human:
                     params = {}
                     params["error"] = "Incorrect Request: %s" % msg
@@ -1172,7 +1205,7 @@ class GeventWebserver:
                     page = self.returnDoc(ctx, start_response, "system",
                                           "restvalidationerror", extraParams=params)
                     return (False, ctx, [str(page)])
-                else:
+                else:                    
                     return (False, ctx, self.raiseError(ctx, msg))
             else:
                 return (True, ctx, routekey)
@@ -1180,9 +1213,11 @@ class GeventWebserver:
             msg = "Could not find method, path was %s" % (path)
             appname = paths[0]
             actor = paths[1]
-            page = self.getServicesInfo(appname, actor)
-            return (False, ctx, self.raiseError(ctx=ctx, msg=msg,
-                                                msginfo=str(page)))
+            if human:
+                page = self.getServicesInfo(appname, actor)
+                return (False, ctx, self.raiseError(ctx=ctx, msg=msg,msginfo=str(page)))
+            else:
+                return (False, ctx, self.raiseError(ctx=ctx, msg=msg,msginfo=""))
 
     def execute_rest_call(self, ctx, routekey, ext=False):
         if ext:
@@ -1225,7 +1260,8 @@ class GeventWebserver:
             success, ctx, routekey = self.restRouter(env, start_response, path,
                                                    paths, ctx, human=human)
             if not success:
-                return result
+                #in this case routekey is really the errormsg
+                return routekey
 
 
             success, result = self.execute_rest_call(ctx, routekey)
