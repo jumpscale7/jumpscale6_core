@@ -58,7 +58,27 @@ class MgrCmds():
         return self.manager.getStatus( domain, name)
 
     def listProcesses(self,**args):
-        return [item.split("___") for item in self.manager.listProcesses()]
+        return [item.split("__") for item in self.manager.listProcesses()]
+
+    def getProcessesActive(self, domain=None, name=None, **kwargs):
+        result = list()
+        for pd in self.manager.getProcessDefs(domain, name):
+            item = dict()
+            item['status'] = pd.isRunning()
+            item['pid'] = pd.pid
+            item['name'] = pd.name
+            item['domain'] = pd.domain
+            item['autostart'] = pd.autostart == '1'
+            item['cmd'] = pd.cmd
+            item['args'] = pd.args
+            item['args'] = pd.args
+            item['ports'] = pd.ports
+            item['priority'] = pd.priority
+            item['workingdir'] = pd.workingdir
+            item['env'] = pd.env
+            result.append(item)
+        return result
+
 
     def startProcess(self, domain="", name="", timeout=20,**args):
         return self.manager.startProcess( domain, name, timeout)
