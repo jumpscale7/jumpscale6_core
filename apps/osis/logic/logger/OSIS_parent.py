@@ -32,9 +32,8 @@ class mainclass(OSISStore):
         j.errorconditionhandler.raiseBug(message="osis exists for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
-    def find(self,query, start = 0, size = 10):
-        j.errorconditionhandler.raiseBug(message="osis find for log not implemented",category="osis.notimplemented")
-        #work with elastic search only
+    def find(self,query, start=0, size =100):
+        return self.elasticsearch.search(index='clusterlog', query=query)
 
     def destroyindex(self):
         j.errorconditionhandler.raiseBug(message="osis destroyindex for log not implemented",category="osis.notimplemented")
