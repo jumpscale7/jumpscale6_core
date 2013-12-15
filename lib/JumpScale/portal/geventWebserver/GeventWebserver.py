@@ -590,6 +590,8 @@ class GeventWebserver:
                 if key == 'upload[]':
                     params['upload[]'] = dict()
                     params['upload[]'][value.filename] = value.file
+        if params.get('init') == '1':
+            params.pop('target', None)
         status, header, response = con.run(params)
         status = '%s' % status
         headers = [ (k, v) for k,v in header.iteritems() ]
