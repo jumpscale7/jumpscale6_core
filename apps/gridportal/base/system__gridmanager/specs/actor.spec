@@ -67,7 +67,7 @@
         var:level int,,level between 1 & 9; all levels underneath are found e.g. level 9 means all levels
         var:category str,,match on multiple categories; are comma separated
         var:text str,,match on text in body
-        var:from str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find logs from date specified  (-4d means 4 days ago)
+        var:from_ str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find logs from date specified  (-4d means 4 days ago)
         var:to str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find logs to date specified 
         var:jid int,,find logs for specified jobid
         var:nid int,,find logs for specified node
@@ -82,7 +82,7 @@
         #result:json array
         """
         var:id str,,only find 1 job entry
-        var:from str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find jobs from date specified  (-4d means 4 days ago)
+        var:from_ str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find jobs from date specified  (-4d means 4 days ago)
         var:to str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find jobs to date specified 
         var:nid int,,find jobs for specified node
         var:gid int,,find jobs for specified grid
@@ -102,7 +102,7 @@
         var:level int,,level between 1 & 3; all levels underneath are found e.g. level 3 means all levels
         var:descr str,,match on text in descr
         var:descrpub str,,match on text in descrpub
-        var:from str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find ecos from date specified  (-4d means 4 days ago)
+        var:from_ str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find ecos from date specified  (-4d means 4 days ago)
         var:to str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find ecos to date specified 
         var:nid int,,find ecos for specified node
         var:gid int,,find ecos for specified grid
@@ -123,7 +123,7 @@
         var:nid int,,find logs for specified node
         var:gid int,,find logs for specified grid        
         var:aid int,,find logs for specified application type
-        var:from str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago)
+        var:from_ str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago)
         var:to str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified 
         result:list(list)
 
