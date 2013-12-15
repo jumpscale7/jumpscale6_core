@@ -63,14 +63,14 @@ class KeyValueStoreFactory(object):
             self._cache[key] = FileSystemKeyValueStore(namespace, baseDir=baseDir,serializers=serializers)
         return self._cache[key]
 
-    def getMemoryStore(self):
+    def getMemoryStore(self, namespace=None):
         '''
         Gets a memory key value store.
 
         @return: key value store
         @rtype: MemoryKeyValueStore
         '''
-        return MemoryKeyValueStore()
+        return MemoryKeyValueStore(namespace)
 
     def getRedisStore(self, namespace='',host='localhost',port=6379,db=0,key='',serializers=None):
         '''

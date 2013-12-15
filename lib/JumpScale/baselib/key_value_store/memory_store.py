@@ -1,10 +1,14 @@
 from store import KeyValueStoreBase
 
+NAMESPACES = dict()
 
 class MemoryKeyValueStore(KeyValueStoreBase):
 
-    def __init__(self):
-        self.db = dict()
+    def __init__(self, namespace=None):
+        if namespace:
+            self.db = NAMESPACES.setdefault(namespace, dict())
+        else:
+            self.db = dict()
         KeyValueStoreBase.__init__(self)
 
     def get(self, category, key):
