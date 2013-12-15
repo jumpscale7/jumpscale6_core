@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit'], help='Command to perform')
+parser.add_argument("action", choices=['reinit','reconfigure'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
@@ -16,6 +16,20 @@ parser.add_argument("action", choices=['reinit'], help='Command to perform')
 
 
 opts = parser.parse_args()
+
+############RECONFIGURE
+if opts.action =='reconfigure':
+    packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
+    for package in packages:
+        jp=j.packages.findNewest(name=package)
+        jp.configure()
+
+    packages=["osis","logger","agentcontroller","agent"]
+    for package in packages:
+        jp=j.packages.findNewest(name=package)        
+        jp.restart()
+
+    j.tools.startupmanager.startAll()
 
 ############PS
 if opts.action =='reinit':
