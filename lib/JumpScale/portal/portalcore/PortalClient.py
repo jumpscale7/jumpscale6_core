@@ -14,9 +14,26 @@ class ModelsClass():
     pass
 
 
-class AppsClass():
-    pass
+class GroupAppsClass(object):
+    def __init__(self, client):
+        self._client = client
 
+    def __getattr__(self, appname):
+        app = AppClass(self._client, appname)
+        setattr(self, appname, app)
+        return app
+
+class AppClass(object):
+    def __init__(self, client, appname):
+        self._appname = appname
+        self._client = client
+
+    def __getattr__(self, actorname):
+        if actorname in ('__members__', '__methods__', 'trait_names', '_getAttributeNames'):
+            return object.__getattr__(self, actorname)
+        actor = self._client.getActor(self._appname, actorname)
+        setattr(self, actorname, actor)
+        return actor
 
 class PortalClient():
 
@@ -36,6 +53,9 @@ class PortalClient():
         apsp = PortalProcess()
         j.core.portal.runningPortal = apsp
         apsp.actors = {}
+
+        if "apps" not in j.__dict__:
+            j.__dict__["apps"] = GroupAppsClass(self)
 
     def getActor(self, appname, actorname, instance=0, redis=False, refresh=False):
         if appname.lower() == "system" and actorname == "manage":
@@ -78,15 +98,6 @@ class PortalClient():
             for modelName in modelNames:
                 classs = j.core.codegenerator.getClassPymodel(appname, actorname, modelName)
                 actorobject.models.__dict__[modelName] = j.core.osismodel.getNoDB(appname, actorname, modelName, classs)
-
-        if "apps" not in j.__dict__:
-            j.__dict__["apps"] = AppsClass()
-
-        if appname not in j.apps.__dict__:
-            j.apps.__dict__[appname] = AppsClass()
-
-        if actorname not in j.apps.__dict__[appname].__dict__:
-            j.apps.__dict__[appname].__dict__[actorname] = actorobject
 
         j.core.portal.runningPortal.actors[key] = actorobject
 
