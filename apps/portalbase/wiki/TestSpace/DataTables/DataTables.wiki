@@ -1,9 +1,5 @@
 h2. datatables test
 
-#{{datatables_edit: url:/restmachine/system/contentmanager/model.space.datatables}}
-
-{{datatables_edit: app:system actor:usermanager model:user}}
-
 
 {{datatables_use}}
 
@@ -12,4 +8,8 @@ h2. datatables test
 |something b|yes|city|938429374|
 |asomething|yes|city|938429374|
 |bsomething|no|city|4353454|
+
+
+this should produce a nice looking grid with sorting & filtering capabilities
+
 
