@@ -543,6 +543,12 @@ class ControllerCMDS():
         if job:
             return job.db.__dict__
 
+    def getActiveJobs(self, session=None):
+        results = list()
+        for value in self.activeJobSessions.itervalues():
+            results.append(value.db.__dict__)
+        return results
+
     def listJobs(self, session=None):
         """
         list all jobs waiting for which roles, show for each role which agents should be answering

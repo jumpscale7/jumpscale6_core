@@ -56,5 +56,11 @@ class AgentControllerFactory(object):
         @return (jobObject,logTxt)
         logTxt is formatted log (with minimimal relevant content, time not needed, level not needed)
         """
-        return self.client.getJobInfo(jobid) 
+        return self.client.getJobInfo(jobid)
+
+    def listSessions(self):
+        return self.client.listSessions()
+
+    def getActiveJobs(self):
+        return self.client.getActiveJobs()
 

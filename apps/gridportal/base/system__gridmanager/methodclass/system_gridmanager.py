@@ -330,8 +330,7 @@ class system_gridmanager(j.code.classGetBase()):
         calls internally the agentcontroller
         list jobs now running on agentcontroller
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getAgentControllerActiveJobs")
+        return j.clients.agentcontroller.getActiveJobs()
 
     def getAgentControllerSessions(self, roles, nid, active, **kwargs):
         """
@@ -340,5 +339,13 @@ class system_gridmanager(j.code.classGetBase()):
         param:nid find for specified node (on which agents are running which have sessions with the agentcontroller)
         param:active is session active or not
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getAgentControllerSessions")
+        sessions = j.clients.agentcontroller.listSessions()
+        def myfilter(session):
+            if roles and not set(roles).issubset(set(session['roles'])):
+                return False
+            if active and not session['activejob']:
+                return False
+            # TODO nid?
+            return True
+
+        return filter(myfilter, sessions)
