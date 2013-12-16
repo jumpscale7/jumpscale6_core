@@ -77,10 +77,19 @@ $fields
         return self.page
 
     def prepare4DataTables(self):
-        # self.page.addCSS("%s/datatables/dataTables.bootstrap.css"% self.liblocation)
-        # self.page.addJS("%s/datatables/TableTools.min.js"% self.liblocation)
-        # self.page.addJS("%s/datatables/dataTables.bootstrap.js"% self.liblocation)
-
-        self.page.addDocumentReadyJSfunction("$('.dataTable').dataTable();")
+        self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
+        self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
+        C = """
+         $(document).ready(function() {
+         $('.dataTable').dataTable( {
+                "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
+                "sPaginationType": "bootstrap",
+                "oLanguage": {
+                        "sLengthMenu": "_MENU_ records per page"
+                }
+        } );
+} );
+"""
+        self.page.addJS(jsContent=C, header=False)
         self.page.functionsAdded["datatables"] = True
         return self.page

@@ -180,7 +180,7 @@ class PageHTML(Page):
         @param linkcolumns has pos (starting 0) of columns which should be formatted as links  (in that column format needs to be $description__$link
         """
         if "datatables" in self.functionsAdded:
-            classparams += " display dataTable"
+            classparams += 'cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered display dataTable'
         if len(rows) == 0:
             return False
         l = len(rows[0])
