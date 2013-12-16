@@ -10,6 +10,8 @@ class system_docgenerator(j.code.classGetBase()):
         self.host = j.core.portal.runningPortal.dns
 
     def getDocForActor(self, actorname, **args):
+        apppart, actorpart = actorname.split('__')
+        j.core.portal.runningPortal.actorsloader.getActor(apppart, actorpart)
         actorjson = {'swaggerVersion': '1.1', 'basePath': '/',
                      'resourcePath': '/%s' % actorname, 'apis': []}
         routes = j.core.portal.runningPortal.webserver.routes
