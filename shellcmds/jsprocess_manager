@@ -33,6 +33,33 @@ class MgrCmds():
     def getDomains(self,**args):
         return self.manager.getDomains()
 
+    def listJPackages(self, domain=None, **args):
+        if not domain:
+            packages = j.packages.getInstalledPackages()
+        else:
+             dobj = j.packages.getDomainObject(domain)
+             packages = dobj.getJPackages()
+        result = list()
+        fields = ('name', 'domain', 'version')
+        for package in packages:
+            if package.isInstalled():
+                pdict = dict()
+                for field in fields:
+                    pdict[field] = getattr(package, field)
+                result.append(pdict)
+        return result
+
+    def getJPackage(self, domain, name, **args):
+        package = j.packages.findNewest(domain, name, returnNoneIfNotFound=True)
+        result = dict()
+        fields = ('buildNr', 'debug', 'dependencies','domain',
+                  'name', 'startupTime', 'supportedPlatforms',
+                  'taskletsChecksum', 'tcpPorts', 'version')
+        if package:
+            for field in fields:
+                result[field] = getattr(package, field)
+        return result
+
     def startJPackage(self,jpackage,timeout=20,**args):
         return self.manager.startJPackage(jpackage,timeout)
 
