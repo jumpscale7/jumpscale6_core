@@ -315,7 +315,7 @@ class Doc(object):
             line2 = match2.split(".", 1)[1].strip()
 
             if match2.find("=") != -1:
-                print "ignore image %s beause wrong format" % match2
+                print "ignore image %s because of wrong format" % match2
                 continue
 
             if line2.find(" ") != -1:

@@ -22,7 +22,6 @@ def main(j, args, params, tags, tasklet):
     $(function () {
         window.swaggerUi = new SwaggerUi({
                 discoveryUrl:"/restmachine/system/docgenerator/prepareCatalog?actors=%s&format=jsonraw",
-                apiKey:"special-key",
                 dom_id:"swagger-ui-container",
                 supportHeaderParams: false,
                 supportedSubmitMethods: ['get', 'post', 'put'],
