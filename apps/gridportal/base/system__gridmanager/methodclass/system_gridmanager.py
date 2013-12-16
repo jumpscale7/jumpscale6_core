@@ -22,6 +22,12 @@ class system_gridmanager(j.code.classGetBase()):
 
         osis = j.core.osis.getClient(j.application.config.get("grid.master.ip"), passwd=self.passwd)
         self.osis_node = j.core.osis.getClientForCategory(osis,"system","node")
+        self.osis_job = j.core.osis.getClientForCategory(osis,"system","job")
+        self.osis_eco = j.core.osis.getClientForCategory(osis,"system","eco")
+        self.osis_process = j.core.osis.getClientForCategory(osis,"system","process")
+        self.osis_application = j.core.osis.getClientForCategory(osis,"system","applicationtype")
+        self.osis_grid = j.core.osis.getClientForCategory(osis,"system","grid")
+        self.osis_log = j.core.osis.getClientForCategory(osis,"logger","log")
 
     def getClient(self,nid):
         nid = int(nid)
@@ -58,16 +64,28 @@ class system_gridmanager(j.code.classGetBase()):
         self._nodeMap[node.id] = r
         return r
 
-    def getNodes(self, **kwargs):
+    def getNodes(self, gid=None, name=None, roles=None, ipaddr=None, macaddr=None, id=None, **kwargs):
         """
         list found nodes
         result list(list)
         """
-        result=[]
-        for osisid in self.osis_node.list():
-            node = self._getNode(osisid)
-            result.append(node)
-        return result
+        params = {'gid': gid,
+                  'name': name,
+                  'id': id,
+                  }
+        results = self._doSearch(params, self.osis_node)
+        def myfilter(node):
+            self._nodeMap[node['id']] = node
+            if roles and not set(roles).issubset(set(node['roles'])):
+                return False
+            if ipaddr and ipaddr not in node['ipaddr']:
+                return False
+            if macaddr and macaddr not in node['netaddr']:
+                return False
+            return True
+
+        return filter(myfilter, results)
+
 
     def getProcessStats(self, nodeId, domain="", name="", **kwargs):
         """
@@ -84,7 +102,7 @@ class system_gridmanager(j.code.classGetBase()):
         client=self.getClient(nodeId)
         return client.monitorProcess(domain=domain,name=name)
 
-    def getStat(self,statKey,width=500,height=250, **kwargs):
+    def getStatImage(self,statKey,width=500,height=250, **kwargs):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
@@ -111,11 +129,10 @@ class system_gridmanager(j.code.classGetBase()):
         param:nodeId id of node (if not specified goes to all nodes and aggregates)
         param:name optional name for process name (part of process name)
         param:domain optional name for process domain (part of process domain)
-        result json 
-        
+        result json
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getProcessesActive")
+        client = self.getClient(nodeId)
+        return client.getProcessesActive(domain, name)
 
     def getJob(self, id, includeloginfo, includechildren, **kwargs):
         """
@@ -124,23 +141,9 @@ class system_gridmanager(j.code.classGetBase()):
         param:id obliged id of job
         param:includeloginfo if true fetch all logs of job & return as well
         param:includechildren if true look for jobs which are children & return that info as well
-        
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getJob")
-
-    def getStatImage(self, statKey, width, height, **kwargs):
-        """
-        get png image as binary format
-        comes from right processmanager
-        param:statKey e.g. n1.disk.mbytes.read.sda1.last
-        param:width 
-        param:height 
-        result binary 
-        
-        """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getStatImage")
+        job = self.osis_job.get(id)
+        return {'result': job}
 
     def getLogs(self, id, level, category, text, from_, to, jid, nid, gid, pid, tags, **kwargs):
         """
@@ -156,10 +159,20 @@ class system_gridmanager(j.code.classGetBase()):
         param:gid find logs for specified grid
         param:pid find logs for specified process (on grid level)
         param:tags comma separted list of tags/labels
-        
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getLogs")
+        params = {'id': id,
+                  'level': {'name': 'level', 'value': level, 'eq': 'lte'},
+                  'category': category,
+                  'text': text,
+                  'from_': {'name': 'epoch', 'value': from_, 'eq': 'gte'},
+                  'to': {'name': 'epoch', 'value': to, 'eq': 'lte'},
+                  'jid': jid,
+                  'nid': nid,
+                  'gid': gid,
+                  'pid': pid,
+                  'tags': tags,
+                  }
+        return self._doSearch(params, self.osis_log)
 
     def getJobs(self, id, from_, to, nid, gid, parent, roles, state, jsorganization, jsname, **kwargs):
         """
@@ -172,12 +185,49 @@ class system_gridmanager(j.code.classGetBase()):
         param:parent find jobs which are children of specified parent
         param:roles match on comma separated list of roles (subsets also ok e.g. kvm.  would match all roles starting with kvm.)
         param:state OK;ERROR;...
-        param:jsorganization 
-        param:jsname 
-        
+        param:jsorganization
+        param:jsname
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getJobs")
+        params = {'ffrom': {'name': 'timeStart', 'value': from_, 'eq': 'gte'},
+                  'to': {'name': 'timeStart', 'value': to, 'eq': 'lte'},
+                  'nid': nid,
+                  'gid': gid,
+                  'id': id,
+                  'parent': parent,
+                  'state': state,
+                  'jsorganization': jsorganization,
+                  'jsname': jsname}
+
+        return self._doSearch(params, self.osis_job)
+
+    def _doSearch(self, params, osiscl):
+        query = {'query': {'bool': {'must': list()}}}
+        myranges = {}
+        for k, v in params.iteritems():
+            if isinstance(v, dict):
+                if not v['value']:
+                    continue
+                timestamp = j.base.time.getEpochAgo(v['value'])
+                if v['name'] not in myranges:
+                    myranges = {v['name']: dict()}
+                myranges[v['name']] = {v['eq']: timestamp}
+            elif v:
+                term = {'term': {k: v}}
+                query['query']['bool']['must'].append(term)
+        for key, value in myranges.iteritems():
+            query['query']['bool']['must'].append({'range': {key: value}})
+        if not query['query']['bool']['must']:
+            query = dict()
+        rawresults = osiscl.search(query)
+
+        results = list()
+        if 'result' in rawresults:
+            rawresults = rawresults['result']
+        elif 'hits' in rawresults:
+            rawresults = rawresults['hits']['hits']
+        for item in rawresults:
+            results.append(item['_source'])
+        return results
 
     def getErrorconditions(self, id, level, descr, descrpub, from_, to, nid, gid, category, tags, type, jid, jidparent, jsorganization, jsname, **kwargs):
         """
@@ -192,15 +242,29 @@ class system_gridmanager(j.code.classGetBase()):
         param:gid find ecos for specified grid
         param:category match on multiple categories; are comma separated
         param:tags comma separted list of tags/labels
-        param:type 
+        param:type
         param:jid find ecos for specified job
         param:jidparent find ecos which are children of specified parent job
         param:jsorganization find ecos coming from scripts from this org
         param:jsname find ecos coming from scripts with this name
-        
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getErrorconditions")
+        params = {'ffrom': {'name': 'epoch', 'value': from_, 'eq': 'gte'},
+                  'to': {'name':'epoch','value': to, 'eq': 'lte'},
+                  'nid': nid,
+                  'level': level,
+                  'descr': descr,
+                  'descrpub': descrpub,
+                  'category': category,
+                  'tags': tags,
+                  'type': type,
+                  'gid': gid,
+                  'jid': jid,
+                  'jidparent': jidparent,
+                  'id': id,
+                  'jsorganization': jsorganization,
+                  'jsname': jsname}
+        return self._doSearch(params, self.osis_eco)
+
 
     def getProcesses(self, id, name, nid, gid, aid, from_, to, **kwargs):
         """
@@ -212,62 +276,61 @@ class system_gridmanager(j.code.classGetBase()):
         param:aid find logs for specified application type
         param:from_ -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago)
         param:to -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified
-        result list(list) 
-        
+        result list(list)
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getProcesses")
+
+        params = {'ffrom': {'name': 'epochstart', 'value': from_, 'eq': 'gte'},
+                  'to': {'name': 'epochstart', 'value': to, 'eq': 'lte'},
+                  'nid': nid,
+                  'gid': gid,
+                  'id': id,
+                  'aid': aid}
+
+        return self._doSearch(params, self.osis_process)
 
     def getApplications(self, id, type, descr, **kwargs):
         """
         list known application types (applicationtype in osis)
         param:id only find 1 process entry
-        param:type 
+        param:type
         param:descr match on text in descr
-        result list(list) 
-        
+        result list(list)
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getApplications")
+        params = {'type': type,
+                  'id': id,
+                  'descr': descr}
+
+        return self._doSearch(params, self.osis_application)
 
     def getGrids(self, **kwargs):
         """
         list grids
-        result list(list) 
-        
+        result list(list)
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getGrids")
+        return self._doSearch({}, self.osis_grid)
 
     def getJumpscript(self, jsorganization, jsname, **kwargs):
         """
         calls internally the agentcontroller to fetch detail for 1 jumpscript
-        param:jsorganization 
-        param:jsname 
-        
+        param:jsorganization
+        param:jsname
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getJumpscript")
- 
+        return j.clients.agentcontroller.getJumpscript(jsorganization, jsname)
+
     def getJumpscripts(self, jsorganization, **kwargs):
         """
         calls internally the agentcontroller
         return: lists the jumpscripts with main fields (organization, name, category, descr)
         param:jsorganization find jumpscripts
-        
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getJumpscripts")
-    
+        return j.clients.agentcontroller.listJumpScripts(jsorganization)
+
     def getAgentControllerActiveJobs(self, **kwargs):
         """
         calls internally the agentcontroller
         list jobs now running on agentcontroller
-        
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getAgentControllerActiveJobs")
-    
+        return j.clients.agentcontroller.getActiveJobs()
 
     def getAgentControllerSessions(self, roles, nid, active, **kwargs):
         """
@@ -275,7 +338,14 @@ class system_gridmanager(j.code.classGetBase()):
         param:roles match on comma separated list of roles (subsets also ok e.g. kvm.  would match all roles starting with kvm.)
         param:nid find for specified node (on which agents are running which have sessions with the agentcontroller)
         param:active is session active or not
-        
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getAgentControllerSessions")
+        sessions = j.clients.agentcontroller.listSessions()
+        def myfilter(session):
+            if roles and not set(roles).issubset(set(session['roles'])):
+                return False
+            if active and not session['activejob']:
+                return False
+            # TODO nid?
+            return True
+
+        return filter(myfilter, sessions)
