@@ -74,6 +74,11 @@ class connector():
 		# text
 		'txt': 'text/plain',
 		'conf': 'text/plain',
+		'cfg': 'text/plain',
+		'wiki': 'text/plain',
+		'asc': 'text/plain',
+		'hrd': 'text/plain',
+		'info': 'text/plain',
 		'ini': 'text/plain',
 		'php': 'text/x-php',
 		'html': 'text/html',

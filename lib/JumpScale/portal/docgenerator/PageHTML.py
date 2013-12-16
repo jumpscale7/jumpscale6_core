@@ -713,13 +713,13 @@ function copyText$id() {
             # customData : {rootpath:'$path'} ,
             commands = """
 	    commands : [
-	    'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
+	    'quicklook', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
 	    'cut', 'paste','extract', 'archive', 'help',
 	    'resize', 'sort', 'edit'
 	    ],"""
             dircmd = "'reload', 'back', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
-            filecmd = "'getfile', '|','open', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
+            filecmd = "'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
 	                'rm', '|', 'edit', 'rename', 'resize', '|', 'archive', 'extract',"
 
         C = """
@@ -736,10 +736,19 @@ function copyText$id() {
 	        {commands}
 	        ui :[{tree}'path', 'stat'],
 
-	        $EDITOR
+            getFileCallback : function(files, fm) {
+                 return false;
+            },
+
 	        handlers :
             {
 	            // extract archive files on upload
+                dblclick : function(event, elfinderInstance) {
+                    event.preventDefault();
+                    elfinderInstance.exec('getfile')
+                        .done(function() { elfinderInstance.exec('quicklook'); })
+                        .fail(function() { elfinderInstance.exec('open'); });
+                },
 	            upload : function(event, instance)
 	            {
 	                var uploadedFiles = event.data.added;
@@ -752,8 +761,7 @@ function copyText$id() {
                         instance.exec('extract', file.hash);
                         }
                     }
-	            },
-                open   : function(event) { console.log(event.data); }
+	            }
 	        },
 	        contextmenu :
             {
@@ -799,7 +807,6 @@ function copyText$id() {
         height = str(height)
         C = C.replace("$height", str(height))
         C = C.replace("$width", str(width))
-        C = C.replace("$EDITOR", "")
         C = C.replace("{commands}", commands)
         self._explorerInstance += 1
         C = C.replace("{nr}", str(self._explorerInstance))
