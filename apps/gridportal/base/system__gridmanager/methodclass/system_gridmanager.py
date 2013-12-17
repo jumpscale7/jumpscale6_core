@@ -34,7 +34,7 @@ class system_gridmanager(j.code.classGetBase()):
         self.osis_disk = j.core.osis.getClientForCategory(osis,"system","disk")
         self.osis_vdisk = j.core.osis.getClientForCategory(osis,"system","vdisk")
         self.osis_alert = j.core.osis.getClientForCategory(osis,"system","alert")
-        self.osis_log = j.core.osis.getClientForCategory(osis,"logger","log")
+        self.osis_log = j.core.osis.getClientForCategory(osis,"system","log")
 
     def getClient(self,nid):
         nid = int(nid)

@@ -26,8 +26,8 @@ class ECO(OsisBaseObject):
             self.category=category #dot notation e.g. machine.start.failed
             self.tags=tags #e.g. machine:2323
 
-            self.errormessage=msg
-            self.errormessagePub=msgpub
+            self.errormessage=errormessage
+            self.errormessagePub=errormessagePub
 
             self.code=""
             self.funcname=""
