@@ -237,10 +237,9 @@ class MacroExecutorWiki(MacroExecutorBase):
         a doc is a document in preprocessor phase
         """
         macro, tags, cmdstr = self.parseMacroStr(macrostr)
-        doc2 = None
         if self.taskletsgroup.hasGroup(macro):
             try:
-                result, doc2 = self.taskletsgroup.executeV2(groupname=macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,
+                result, doc = self.taskletsgroup.executeV2(groupname=macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,
                                                             paramsExtra=paramsExtra, cmdstr=cmdstr, requestContext=ctx, content=content)
             except Exception:
                 e = traceback.format_exc()
@@ -248,17 +247,21 @@ class MacroExecutorWiki(MacroExecutorBase):
                     result = "***ERROR***: Could not execute macro %s on %s, did not return (out,doc)." % (macro, doc.name)
                 else:
                     result = "***ERROR***: Could not execute macro %s on %s, error in macro. Error was:\n%s " % (macro, doc.name, e)
-            if result == doc2:
+            if result == doc:
                 # means we did manipulate the doc.content
-                content = result.replace(macrostr, "")
-                return content, doc
+                doc.content = doc.content.replace(macrostr, "")
+                return doc.content, doc
+
             if result != None:
                 if not j.basetype.string.check(result):
                     result = "***ERROR***: Could not execute macro %s on %s, did not return content as string (params.result=astring)" % (macro, doc.name)
                 content = content.replace(macrostr, result)
         else:
-            content = content.replace(macrostr, "***ERROR***: Could not execute macro %s on %s, did not find the macro, was a wiki macro." % (macro, doc.name))
-        return content, doc2
+             result="***ERROR***: Could not execute macro %s on %s, did not find the macro, was a wiki macro." % (macro, doc.name)
+
+        content = content.replace(macrostr,result)
+
+        return content,doc
 
     def findMacros(self, text):
         """

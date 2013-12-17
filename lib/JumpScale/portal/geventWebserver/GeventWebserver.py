@@ -555,7 +555,7 @@ class GeventWebserver:
         ctx.params.update(extraParams)
 
         # doc.applyParams(ctx.params)
-        content, doc = doc.executeMacrosDynamicWiki(paramsExtra=extraParams, ctx=ctx)
+        content,doc = doc.executeMacrosDynamicWiki(paramsExtra=extraParams, ctx=ctx)
 
         page = self.confluence2htmlconvertor.convert(content, doc=doc, requestContext=ctx, page=self.getpage(), paramsExtra=ctx.params)
 
