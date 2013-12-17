@@ -22,6 +22,11 @@ class Node(OsisBaseObject):
             self.guid = None
             self.machineguid = ""
             self.ipaddr=[]
+            self.active = True
+            self.peer_stats=0 #node which has stats for this node
+            self.peer_log=0 #node which has transactionlog or other logs for this node
+            self.peer_backup=0 #node which has backups for this node
+
 
     def getUniqueKey(self):
         """

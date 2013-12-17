@@ -18,7 +18,7 @@ class ApplicationType(OsisBaseObject):
             self.name = name
             self.description = description
             self.type = type
-
+            self.active = True
 
     def getUniqueKey(self):
         """

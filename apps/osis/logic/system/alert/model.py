@@ -28,5 +28,4 @@ class Alert(OsisBaseObject):
             self.lasttime=0 #last time there was an error condition linked to this alert
             self.closetime=0  #alert is closed, no longer active
             self.nrerrorconditions=1 #nr of times this error condition happened
-            self.transactionsinfo=transactionsinfo
-            self.errorconditions=[]        
+            self.errorconditions=[]  #ids of errorconditions     

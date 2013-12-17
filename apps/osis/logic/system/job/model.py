@@ -31,6 +31,9 @@ class Job(OsisBaseObject):
             self.timeStop=0
             self.lock=lock
             self.lockduration=lockduration
+            self.description=""
+            self.source=""
+            self.category=""
 
     def getUniqueKey(self):
         """

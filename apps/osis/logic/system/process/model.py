@@ -24,6 +24,7 @@ class Process(OsisBaseObject):
             # self.sguid = None
             self.epochstart = j.base.time.getTimeEpoch()
             self.epochstop = 0
+            self.active = True
 
     def getUniqueKey(self):
         """
