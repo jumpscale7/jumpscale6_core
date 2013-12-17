@@ -15,9 +15,7 @@ class OSISPopulationTest(unittest.TestCase):
         pass
 
     def test_log(self):
-
         pass
-
 
     def test_stat(self):
         return
@@ -173,6 +171,8 @@ class OSISPopulationTest(unittest.TestCase):
                 self.backuptime=j.base.time.getTimeEpoch()-j.base.idgenerator.generateRandomInt(100,2000)
                 self.backuploaction="/mnt/abackuplocation/%s"%i
             client.set(obj)
+
+
 
 if __name__ == '__main__':
     unittest.main()

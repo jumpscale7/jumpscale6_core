@@ -15,7 +15,6 @@ class Process(OsisBaseObject):
             self.init("process","1.0")
             self.id = 0
             self.gid = gid
-            self.aid = aid  # application id is unique per grid
             self.nid = nid
             self.jpdomain= ""
             self.jpname= ""
@@ -34,8 +33,8 @@ class Process(OsisBaseObject):
         return unique key for object, is used to define unique id
         """
 
-        C="%s_%s_%s_%s_%s_%s_%s"%(self.systempid,self.gid,self.aid,self.nid,\
-            self.jpdomain,self.jpname,self.instance)
+        C="%s_%s_%s_%s_%s_%s_%s"%(self.systempid,self.gid,self.nid,\
+            self.jpdomain,self.jpname,self.instance,self.name)
         return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):

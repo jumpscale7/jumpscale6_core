@@ -74,16 +74,10 @@ class GridFactory():
 
         clientprocess=j.core.osis.getClientForCategory(self.gridOsisClient,"system","process")
 
-        clientapplication=j.core.osis.getClientForCategory(self.gridOsisClient,"system","applicationtype")
-
-        obj=clientapplication.new(name=j.application.appname,gid=j.application.whoAmI.gid,type="js",description=description)
-        key,new,changed=clientapplication.set(obj)
-        obj=clientapplication.get(key)
-        aid=obj.id        
-
-        obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,nid=j.application.whoAmI.nid,\
+        obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,\
+            nid=j.application.whoAmI.nid,\
             systempid=j.application.systempid,\
-            aid=aid,instance=instance)
+            instance=instance)
         key,new2,changed2=clientprocess.set(obj2)
         obj=clientprocess.get(key)
         pid=obj.id
