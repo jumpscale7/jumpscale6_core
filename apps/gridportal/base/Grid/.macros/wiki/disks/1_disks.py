@@ -11,22 +11,23 @@ def main(j, args, params, tags, tasklet):
     #this makes sure bootstrap datatables functionality is used
     out.append("{{datatables_use}}\n")
 
-    fields = ["id", "nid", "active", "ssd", "model", "path", "size", "free", "fs", "mounted", "name", "description", "type", "mountpoint"]
+    # fields = ["id", "nid", "active", "ssd", "model", "path", "size", "free",
+    #           "fs", "mounted", "name", "description", "type", "mountpoint"]
+    fields = ["id", "nid", "name", "active", "ssd", "size", "free", "mounted"]
 
-    header = [""]
-    for field in fields:
-        header.append(field)
-    header.append("")
-    out.append('||'.join(header))
-
-    # from IPython import embed
-    # embed()
+    out.append('||id||node||name||active||ssd||size||free||mounted||')
 
     for disk in actor.getDisks():
         line = [""]
 
         for field in fields:
-            line.append(str(disk[field]))
+            if field == 'id':
+                # add link
+                line.append('[%s|/grid/disk?id=%s]' % (str(disk[field]), str(disk[field])))
+            elif field == 'nid':
+                line.append('[%s|/grid/node?id=%s]' % (str(disk[field]), str(disk[field])))
+            else:
+                line.append(str(disk[field]))
 
         line.append("")
 
