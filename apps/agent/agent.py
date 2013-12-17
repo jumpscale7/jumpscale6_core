@@ -52,6 +52,7 @@ class LogHandler():
                     self.flushLogs()
         print "log thread started, will flush each %s sec"%interval
         self._t = MyFlush()
+        self._t.setDaemon(True)
         self._t.start()  
 
     def stop(self):
