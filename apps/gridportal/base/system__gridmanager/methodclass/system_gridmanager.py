@@ -71,7 +71,7 @@ class system_gridmanager(j.code.classGetBase()):
         self._nodeMap[node.id] = r
         return r
 
-    def getNodes(self, gid=None, name=None, roles=None, ipaddr=None, macaddr=None, id=None, active=None, peer_stats=None, peer_log=None, peer_backup=None, **kwargs):
+    def getNodes(self, guid=None, gid=None, name=None, roles=None, ipaddr=None, macaddr=None, id=None, active=None, peer_stats=None, peer_log=None, peer_backup=None, **kwargs):
         """
         list found nodes
         result list(list)
