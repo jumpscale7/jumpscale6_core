@@ -8,6 +8,7 @@ def main(j, args, params, tags, tasklet):
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
 
     out = []
+
     #this makes sure bootstrap datatables functionality is used
     out.append("{{datatables_use}}\n")
 
@@ -21,11 +22,12 @@ def main(j, args, params, tags, tasklet):
         line = [""]
 
         for field in fields:
+            # add links
             if field == 'id':
-                # add link
                 line.append('[%s|/grid/disk?id=%s]' % (str(disk[field]), str(disk[field])))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(disk[field]), str(disk[field])))
+
             else:
                 line.append(str(disk[field]))
 
