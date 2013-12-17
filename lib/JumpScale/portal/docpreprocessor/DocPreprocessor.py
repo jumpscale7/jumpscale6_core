@@ -206,13 +206,15 @@ class Doc(object):
         """
         if findfresh:
             self.findParams()
+        
         if len(self.params) > 0:
             for param in self.params:
                 if param in params:
+                    
                     if content == None:
-                        content = self.content.replace("$$%s" % param, params[param])
+                        content = self.content.replace("$$%s" % param, str(params[param]))                            
                     else:
-                        content = content.replace("$$%s" % param, params[param])
+                        content = content.replace("$$%s" % param, str(params[param]))
         return content
 
     def executeMacrosPreprocess(self):
