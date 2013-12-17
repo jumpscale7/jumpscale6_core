@@ -60,9 +60,9 @@
         var:ipaddr str,,comma separated list of ip addr to match against @tags: optional
         var:macaddr str,,comma separated list of mac addr to match against @tags: optional
         var:active bool,,True,is the node still active @tags: optional
-        var:peer_stats int,,id of node which has stats for this node
-        var:peer_log int,,id of node which has logs (e.g. transactionlogs) for this node
-        var:peer_backup int,,id of node which has backups for this node
+        var:peer_stats int,,id of node which has stats for this node @tags: optional
+        var:peer_log int,,id of node which has logs (e.g. transactionlogs) for this node @tags: optional
+        var:peer_backup int,,id of node which has backups for this node @tags: optional
         result:list(list)
 
     method:getMachines
