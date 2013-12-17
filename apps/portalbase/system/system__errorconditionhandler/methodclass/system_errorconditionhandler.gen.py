@@ -25,8 +25,7 @@ class system_errorconditionhandler(j.code.classGetBase()):
         param:description describe this errorcondition category
         param:resolution_user describe this errorcondition solution that the user can do himself
         param:resolution_ops describe this errorcondition solution that the operator can do himself to try and recover from the situation
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method describeCategory")

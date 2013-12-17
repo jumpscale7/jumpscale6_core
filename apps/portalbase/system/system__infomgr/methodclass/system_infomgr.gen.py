@@ -19,8 +19,7 @@ class system_infomgr(j.code.classGetBase()):
         """
         can be multi line
         param:info dotnotation of info e.g. 'water.white.level.sb 10'  (as used in graphite)
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method addInfo")
@@ -32,8 +31,7 @@ class system_infomgr(j.code.classGetBase()):
         param:id id in dot noation e.g. 'water.white.level.sb' (can be multiple use comma as separation)
         param:start epoch; 0 means all default=0
         param:stop epoch; 0 means all default=0
-        result list(list) 
-        
+        result list(list)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo1h")
@@ -45,8 +43,7 @@ class system_infomgr(j.code.classGetBase()):
         param:id id in dot noation e.g. 'water.white.level.sb'
         param:start epoch
         param:stop epoch
-        result dict() 
-        
+        result dict()
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo1hFromTo")
@@ -58,8 +55,7 @@ class system_infomgr(j.code.classGetBase()):
         param:id id in dot noation e.g. 'water.white.level.sb' (can be multiple use comma as separation)
         param:start epoch; 0 means all default=0
         param:stop epoch; 0 means all default=0
-        result list(list) 
-        
+        result list(list)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo5Min")
@@ -71,8 +67,7 @@ class system_infomgr(j.code.classGetBase()):
         param:id id in dot noation e.g. 'water.white.level.sb'
         param:start epoch
         param:stop epoch
-        result dict() 
-        
+        result dict()
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo5MinFromTo")
@@ -84,8 +79,7 @@ class system_infomgr(j.code.classGetBase()):
         param:start epoch
         param:stop epoch
         param:maxvalues nr of values you want to return default=360
-        result list(list) 
-        
+        result list(list)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfoWithHeaders")
@@ -94,8 +88,7 @@ class system_infomgr(j.code.classGetBase()):
     def reset(self, **kwargs):
         """
         reset all stats
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method reset")

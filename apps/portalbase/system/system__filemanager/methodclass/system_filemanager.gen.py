@@ -20,8 +20,7 @@ class system_filemanager(j.code.classGetBase()):
         param:path path of dir in unified namespace
         param:recursive if true will delete all files & dirs underneath default=True
         param:user user who modified the file
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method dirdelete")
@@ -31,8 +30,7 @@ class system_filemanager(j.code.classGetBase()):
         """
         param:path path of file in unified namespace
         param:user user who modified the file
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method filedelete")
@@ -42,8 +40,7 @@ class system_filemanager(j.code.classGetBase()):
         """
         param:path path of new file in unified namespace
         param:user user who modified the file
-        result str 
-        
+        result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method filemod")
@@ -53,8 +50,7 @@ class system_filemanager(j.code.classGetBase()):
         """
         param:path path of new file in unified namespace
         param:user user who modified the file
-        result str 
-        
+        result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method filenew")
@@ -63,8 +59,7 @@ class system_filemanager(j.code.classGetBase()):
     def getdirobject(self, id, **kwargs):
         """
         param:id unique id for dir object (is dirguid which is md5 path)
-        result str 
-        
+        result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getdirobject")
@@ -73,8 +68,7 @@ class system_filemanager(j.code.classGetBase()):
     def listdir(self, path, **kwargs):
         """
         param:path path of dir in unified namespace
-        result list(str) 
-        
+        result list(str)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method listdir")

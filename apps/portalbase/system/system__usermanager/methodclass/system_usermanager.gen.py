@@ -20,8 +20,7 @@ class system_usermanager(j.code.classGetBase()):
         this needs to be used before rest api can be used
         param:name name
         param:secret md5 or passwd
-        result str 
-        
+        result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method authenticate")
@@ -31,8 +30,7 @@ class system_usermanager(j.code.classGetBase()):
         """
         return list of groups in which user is member of
         param:user name of user
-        result list(str) 
-        
+        result list(str)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getusergroups")
@@ -43,8 +41,7 @@ class system_usermanager(j.code.classGetBase()):
         add user to group
         param:group name of group
         param:user name of user
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method groupadduser")
@@ -55,8 +52,7 @@ class system_usermanager(j.code.classGetBase()):
         create a group
         param:name name of group
         param:groups comma separated list of groups this group belongs to
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method groupcreate")
@@ -67,8 +63,7 @@ class system_usermanager(j.code.classGetBase()):
         remove user from group
         param:group name of group
         param:user name of user
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method groupdeluser")
@@ -86,8 +81,7 @@ class system_usermanager(j.code.classGetBase()):
         param:reference reference as used in other application using this API (optional) default=''
         param:remarks free to be used field by client default=''
         param:config free to be used field to store config information e.g. in json or xml format
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method usercreate")
@@ -96,8 +90,7 @@ class system_usermanager(j.code.classGetBase()):
     def userexists(self, name, **kwargs):
         """
         param:name name
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method userexists")
@@ -106,8 +99,7 @@ class system_usermanager(j.code.classGetBase()):
     def userexistsFromId(self, userid, **kwargs):
         """
         param:userid id
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method userexistsFromId")
@@ -121,8 +113,7 @@ class system_usermanager(j.code.classGetBase()):
         param:reference reference as used in other application using this API (optional) default=''
         param:remarks free to be used field by client default=''
         param:config free to be used field to store config information e.g. in json or xml format
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method userregister")

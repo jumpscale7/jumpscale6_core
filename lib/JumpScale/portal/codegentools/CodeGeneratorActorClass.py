@@ -94,10 +94,14 @@ class CodeGeneratorActorClass(CodeGeneratorBase):
             descr += "\n"
 
         if method.result != None:
-            descr += "result %s %s\n" % (method.result.type, self.descrTo1Line(method.result.description))
+            descr += "result %s" % method.result.type
+            linedescr = self.descrTo1Line(method.result.description)
+            if linedescr:
+                descr += " %s" % linedescr
+            descr += "\n"
 
         if descr != "":
-            s += j.code.indent("\"\"\"\n%s\n\"\"\"\n" % descr, 1)
+            s += j.code.indent("\"\"\"\n%s\n\"\"\"\n" % descr.strip('\n'), 1)
 
         params = ['self']
         paramsd = list()

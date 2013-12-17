@@ -20,8 +20,7 @@ class system_contentmanager(j.code.classGetBase()):
         """
         Reload all spaces from bitbucket post
         param:spacename 
-        result list 
-        
+        result list
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method bitbucketreload")
@@ -29,8 +28,7 @@ class system_contentmanager(j.code.classGetBase()):
 
     def getActors(self, **kwargs):
         """
-        result list(str) 
-        
+        result list(str)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getActors")
@@ -38,8 +36,7 @@ class system_contentmanager(j.code.classGetBase()):
 
     def getActorsWithPaths(self, **kwargs):
         """
-        result list([name,path]) 
-        
+        result list([name,path])
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getActorsWithPaths")
@@ -47,8 +44,7 @@ class system_contentmanager(j.code.classGetBase()):
 
     def getBuckets(self, **kwargs):
         """
-        result list(str) 
-        
+        result list(str)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getBuckets")
@@ -56,8 +52,7 @@ class system_contentmanager(j.code.classGetBase()):
 
     def getBucketsWithPaths(self, **kwargs):
         """
-        result list([name,path]) 
-        
+        result list([name,path])
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getBucketsWithPaths")
@@ -66,8 +61,7 @@ class system_contentmanager(j.code.classGetBase()):
     def getContentDirsWithPaths(self, **kwargs):
         """
         return root dirs of content (actors,buckets,spaces)
-        result list([name,path]) 
-        
+        result list([name,path])
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getContentDirsWithPaths")
@@ -75,8 +69,7 @@ class system_contentmanager(j.code.classGetBase()):
 
     def getSpaces(self, **kwargs):
         """
-        result list(str) 
-        
+        result list(str)
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getSpaces")
@@ -84,8 +77,7 @@ class system_contentmanager(j.code.classGetBase()):
 
     def getSpacesWithPaths(self, **kwargs):
         """
-        result list([name,path]) 
-        
+        result list([name,path])
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getSpacesWithPaths")
@@ -98,8 +90,7 @@ class system_contentmanager(j.code.classGetBase()):
         param:actorname 
         param:modelname 
         param:key 
-        result list 
-        
+        result list
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method modelobjectlist")
@@ -111,8 +102,7 @@ class system_contentmanager(j.code.classGetBase()):
         param:appname 
         param:actorname 
         param:key 
-        result html 
-        
+        result html
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method modelobjectupdate")
@@ -121,8 +111,7 @@ class system_contentmanager(j.code.classGetBase()):
     def notifyActorDelete(self, id, **kwargs):
         """
         param:id id of space which changed
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorDelete")
@@ -131,8 +120,7 @@ class system_contentmanager(j.code.classGetBase()):
     def notifyActorModification(self, id, **kwargs):
         """
         param:id id of actor which changed
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorModification")
@@ -142,8 +130,7 @@ class system_contentmanager(j.code.classGetBase()):
         """
         param:path path of content which got changed
         param:name name
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorNew")
@@ -154,7 +141,6 @@ class system_contentmanager(j.code.classGetBase()):
         param:actorname 
         param:actorpath  default=
         param:path 
-        
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorNewDir")
@@ -163,8 +149,7 @@ class system_contentmanager(j.code.classGetBase()):
     def notifyBucketDelete(self, id, **kwargs):
         """
         param:id id of bucket which changed
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyBucketDelete")
@@ -173,8 +158,7 @@ class system_contentmanager(j.code.classGetBase()):
     def notifyBucketModification(self, id, **kwargs):
         """
         param:id id of bucket which changed
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyBucketModification")
@@ -184,8 +168,7 @@ class system_contentmanager(j.code.classGetBase()):
         """
         param:path path of content which got changed
         param:name name
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyBucketNew")
@@ -194,8 +177,7 @@ class system_contentmanager(j.code.classGetBase()):
     def notifyFiledir(self, path, **kwargs):
         """
         param:path path of content which got changed
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyFiledir")
@@ -204,8 +186,7 @@ class system_contentmanager(j.code.classGetBase()):
     def notifySpaceDelete(self, id, **kwargs):
         """
         param:id id of space which changed
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifySpaceDelete")
@@ -214,8 +195,7 @@ class system_contentmanager(j.code.classGetBase()):
     def notifySpaceModification(self, id, **kwargs):
         """
         param:id id of space which changed
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifySpaceModification")
@@ -225,8 +205,7 @@ class system_contentmanager(j.code.classGetBase()):
         """
         param:path path of content which got changed
         param:name name
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifySpaceNew")
@@ -237,7 +216,6 @@ class system_contentmanager(j.code.classGetBase()):
         param:spacename 
         param:spacepath  default=
         param:path 
-        
         """
         args={}
         args["spacename"]=spacename
@@ -251,8 +229,7 @@ class system_contentmanager(j.code.classGetBase()):
         compress specs for specific actor and targz in appropriate download location
         param:app name of app
         param:actor name of actor
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method prepareActorSpecs")
@@ -262,8 +239,7 @@ class system_contentmanager(j.code.classGetBase()):
         """
         param:cachekey key to the doc
         param:text content of file to edit
-        result bool 
-        
+        result bool
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method wikisave")

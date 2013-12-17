@@ -12,9 +12,9 @@ class CodeGeneratorBase:
         self.subitems = []
 
     def descrTo1Line(self, descr):
+        descr = descr.strip()
         if descr == "":
             return descr
-        descr = descr.strip()
         descr = descr.replace("\n", "\\n")
         # descr=descr.replace("'n","")
         return descr

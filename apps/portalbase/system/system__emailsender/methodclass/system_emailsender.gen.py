@@ -22,8 +22,7 @@ class system_emailsender(j.code.classGetBase()):
         param:receiver_email Receiver email.
         param:subject Email subject
         param:body Email body
-        result str 
-        
+        result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method send")

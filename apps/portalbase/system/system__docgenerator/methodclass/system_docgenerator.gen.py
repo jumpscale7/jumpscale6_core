@@ -19,8 +19,7 @@ class system_docgenerator(j.code.classGetBase()):
         """
         Gets the json doc of the given actor
         param:actorname name of the actor to get documentation for
-        result dict 
-        
+        result dict
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getDocForActor")
@@ -28,8 +27,7 @@ class system_docgenerator(j.code.classGetBase()):
 
     def prepareCatalog(self, **kwargs):
         """
-        result dict 
-        
+        result dict
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method prepareCatalog")

@@ -19,8 +19,7 @@ class system_master(j.code.classGetBase()):
         """
         just a simple echo service
         param:input result will be same as this input
-        result str 
-        
+        result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method echo")
@@ -29,8 +28,7 @@ class system_master(j.code.classGetBase()):
     def getAppsActors(self, model=1, **kwargs):
         """
         param:model if you want to also get model actors; otherwise 0 default=1
-        result dict 
-        
+        result dict
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getAppsActors")
@@ -39,8 +37,7 @@ class system_master(j.code.classGetBase()):
     def ping(self, **kwargs):
         """
         just a simple ping to the service (returns pong)
-        result str 
-        
+        result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method ping")
@@ -54,8 +51,7 @@ class system_master(j.code.classGetBase()):
         param:secret secret
         param:appname appname
         param:actorname actorname
-        result dict 
-        
+        result dict
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method registerRedisInstance")
