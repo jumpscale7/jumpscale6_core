@@ -10,8 +10,11 @@ def main(j, args, params, tags, tasklet):
     idd=int(args.tags.getDict()["id"])
 
     obj=actor.getNodes(id=idd)
-    
-    doc.content=doc.applyParams(obj[0],content=doc.content)
+
+    from IPython import embed
+    embed()
+
+    doc.content=doc.applyParams(obj[0], content=doc.content)
 
     params.result = (doc, doc)
 

@@ -501,7 +501,9 @@ class system_gridmanager(j.code.classGetBase()):
         results = self.osis_machine.simpleSearch(params)
         return filter(myfilter, results)
 
-    def getDisks(self, id, guid, gid, nid, fs, sizeFrom, sizeTo, freeFrom, freeTo, mounted, ssd, path, model, description, mountpoint, type, active, **kwargs):
+    def getDisks(self, id=None, guid=None, gid=None, nid=None, fs=None, sizeFrom=None, sizeTo=None, freeFrom=None, \
+                 freeTo=None, mounted=None, ssd=None, path=None, model=None, description=None, mountpoint=None, \
+                 type=None, active=None, **kwargs):
         """
         list found disks (are really partitions) (comes from osis)
         param:id find based on id
