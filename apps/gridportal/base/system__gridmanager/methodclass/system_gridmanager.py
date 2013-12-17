@@ -349,3 +349,112 @@ class system_gridmanager(j.code.classGetBase()):
             return True
 
         return filter(myfilter, sessions)
+
+    def getAlerts(self, id, level, descr, descrpub, nid, gid, category, tags, state, from_inittime, to_inittime, from_lasttime, to_lasttime, from_closetime, to_closetime, nrerrorconditions, errorcondition, **kwargs):
+        """
+        interface to get alert (is optionally the result of an eco)
+        param:id only find 1 alert entry
+        param:level level between 1 & 3; all levels underneath are found e.g. level 3 means all levels, 1:critical, 2:warning, 3:info
+        param:descr match on text in descr
+        param:descrpub match on text in descrpub
+        param:nid find alerts for specified node
+        param:gid find alerts for specified grid
+        param:category match on multiple categories; are comma separated
+        param:tags comma separted list of tags/labels
+        param:state NEW ALERT CLOSED
+        param:from_inittime -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find alerts from date specified when they happened first (-4d means 4 days ago)
+        param:to_inittime -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find alerts to date specified when they happened first
+        param:from_lasttime -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find alerts from date specified when they happened last  (-4d means 4 days ago)
+        param:to_lasttime -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find alerts to date specified when they happened last
+        param:from_closetime -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find alerts from date specified when they were closed  (-4d means 4 days ago)
+        param:to_closetime -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find alerts to date specified when they were closed
+        param:nrerrorconditions nr of times errorcondition happened
+        param:errorcondition errorcondition(s) which caused this alert
+        
+        """
+        #put your code here to implement this method
+        raise NotImplementedError ("not implemented method getAlerts")
+
+    def getVDisks(self, id, machineid, guid, gid, nid, fs, sizeFrom, sizeTo, freeFrom, freeTo, sizeondiskFrom, sizeondiskTo, mounted, path, description, mountpoint, role, type, order, devicename, backup, backuplocation, backuptime, backupexpiration, active, **kwargs):
+        """
+        list found vdisks (virtual disks like qcow2 or sections on fs as used by a container or virtual machine) (comes from osis)
+        param:id find based on id
+        param:machineid to which machine is the vdisk attached
+        param:guid find based on guid
+        param:gid find vdisks for specified grid
+        param:nid find vdisks for specified node
+        param:fs ext4;xfs;...
+        param:sizeFrom in MB
+        param:sizeTo in MB
+        param:freeFrom in MB
+        param:freeTo in MB
+        param:sizeondiskFrom in MB
+        param:sizeondiskTo in MB
+        param:mounted is disk mounted
+        param:path match on part of path e.g. /dev/sda
+        param:description match on part of description
+        param:mountpoint match on part of mountpoint
+        param:role type e.g. BOOT DATA CACHE
+        param:type type e.g. QCOW2 FS
+        param:order when more vdisks linked to a vmachine order of linkage
+        param:devicename if known device name in vmachine
+        param:backup is this a backup image
+        param:backuplocation where is backup stored (tag based notation)
+        param:backuptime epoch when was backup taken
+        param:backupexpiration when does backup needs to expire
+        param:active True,is the disk still active
+        result list(list) 
+        
+        """
+        #put your code here to implement this method
+        raise NotImplementedError ("not implemented method getVDisks")
+
+    def getMachines(self, id, guid, otherid, gid, nid, name, description, state, roles, ipaddr, macaddr, active, cpucore, mem, type, **kwargs):
+        """
+        list found machines (comes from osis)
+        param:id find based on id
+        param:guid find based on guid
+        param:otherid find based on 2nd id
+        param:gid find nodes for specified grid
+        param:nid find nodes for specified node
+        param:name match on text in name
+        param:description match on text in name
+        param:state STARTED,STOPPED,RUNNING,FROZEN,CONFIGURED,DELETED
+        param:roles match on comma separated list of roles (subsets also ok e.g. kvm.  would match all roles starting with kvm.)
+        param:ipaddr comma separated list of ip addr to match against
+        param:macaddr comma separated list of mac addr to match against
+        param:active True,is the machine still active
+        param:cpucore find based on nr cpucore
+        param:mem find based on mem in MB
+        param:type KVM or LXC
+        result list(list) 
+        
+        """
+        #put your code here to implement this method
+        raise NotImplementedError ("not implemented method getMachines")
+
+    def getDisks(self, id, guid, gid, nid, fs, sizeFrom, sizeTo, freeFrom, freeTo, mounted, ssd, path, model, description, mountpoint, type, active, **kwargs):
+        """
+        list found disks (are really partitions) (comes from osis)
+        param:id find based on id
+        param:guid find based on guid
+        param:gid find disks for specified grid
+        param:nid find disks for specified node
+        param:fs ext4;xfs;...
+        param:sizeFrom in MB
+        param:sizeTo in MB
+        param:freeFrom in MB
+        param:freeTo in MB
+        param:mounted is disk mounted
+        param:ssd is disk an ssd
+        param:path match on part of path e.g. /dev/sda
+        param:model match on part of model
+        param:description match on part of description
+        param:mountpoint match on part of mountpoint
+        param:type type e.g. BOOT DATA CACHE
+        param:active True,is the disk still active
+        result list(list) 
+        
+        """
+        #put your code here to implement this method
+        raise NotImplementedError ("not implemented method getDisks")
