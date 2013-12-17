@@ -71,3 +71,31 @@ class OSISClientForCat():
     def search(self, query, start=0, size=None):
         return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
                                   start=start, size=size)
+
+    def simpleSearch(self, params, start=0, size=None):
+        query = {'query': {'bool': {'must': list()}}}
+        myranges = {}
+        for k, v in params.iteritems():
+            if isinstance(v, dict):
+                if not v['value']:
+                    continue
+                if v['name'] not in myranges:
+                    myranges = {v['name']: dict()}
+                myranges[v['name']] = {v['eq']: v['value']}
+            elif v:
+                term = {'term': {k: v}}
+                query['query']['bool']['must'].append(term)
+        for key, value in myranges.iteritems():
+            query['query']['bool']['must'].append({'range': {key: value}})
+        if not query['query']['bool']['must']:
+            query = dict()
+        rawresults = self.search(query, start, size)
+
+        results = list()
+        if 'result' in rawresults:
+            rawresults = rawresults['result']
+        elif 'hits' in rawresults:
+            rawresults = rawresults['hits']['hits']
+        for item in rawresults:
+            results.append(item['_source'])
+        return results

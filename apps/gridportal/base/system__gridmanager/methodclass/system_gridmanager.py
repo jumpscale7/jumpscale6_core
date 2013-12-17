@@ -4,13 +4,16 @@ import JumpScale.grid.osis
 import JumpScale.grid.agentcontroller
 import requests
 
+def mbToKB(value):
+    if not value:
+        return value
+    return value * 1024
+
 class system_gridmanager(j.code.classGetBase()):
     """
     gateway to grid
-    
     """
     def __init__(self):
-        
         self._te={}
         self.actorname="gridmanager"
         self.appname="system"
@@ -27,6 +30,10 @@ class system_gridmanager(j.code.classGetBase()):
         self.osis_process = j.core.osis.getClientForCategory(osis,"system","process")
         self.osis_application = j.core.osis.getClientForCategory(osis,"system","applicationtype")
         self.osis_grid = j.core.osis.getClientForCategory(osis,"system","grid")
+        self.osis_machine = j.core.osis.getClientForCategory(osis,"system","machine")
+        self.osis_disk = j.core.osis.getClientForCategory(osis,"system","disk")
+        self.osis_vdisk = j.core.osis.getClientForCategory(osis,"system","vdisk")
+        self.osis_alert = j.core.osis.getClientForCategory(osis,"system","alert")
         self.osis_log = j.core.osis.getClientForCategory(osis,"logger","log")
 
     def getClient(self,nid):
@@ -73,7 +80,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'name': name,
                   'id': id,
                   }
-        results = self._doSearch(params, self.osis_node)
+        results = self.osis_node.simpleSearch(params)
         def myfilter(node):
             self._nodeMap[node['id']] = node
             if roles and not set(roles).issubset(set(node['roles'])):
@@ -160,6 +167,8 @@ class system_gridmanager(j.code.classGetBase()):
         param:pid find logs for specified process (on grid level)
         param:tags comma separted list of tags/labels
         """
+        from_ = self._getEpoch(from_)
+        to = self._getEpoch(to)
         params = {'id': id,
                   'level': {'name': 'level', 'value': level, 'eq': 'lte'},
                   'category': category,
@@ -172,7 +181,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'pid': pid,
                   'tags': tags,
                   }
-        return self._doSearch(params, self.osis_log)
+        return self.osis_log.simpleSearch(params)
 
     def getJobs(self, id, from_, to, nid, gid, parent, roles, state, jsorganization, jsname, **kwargs):
         """
@@ -188,6 +197,8 @@ class system_gridmanager(j.code.classGetBase()):
         param:jsorganization
         param:jsname
         """
+        from_ = self._getEpoch(from_)
+        to = self._getEpoch(to)
         params = {'ffrom': {'name': 'timeStart', 'value': from_, 'eq': 'gte'},
                   'to': {'name': 'timeStart', 'value': to, 'eq': 'lte'},
                   'nid': nid,
@@ -198,36 +209,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'jsorganization': jsorganization,
                   'jsname': jsname}
 
-        return self._doSearch(params, self.osis_job)
-
-    def _doSearch(self, params, osiscl):
-        query = {'query': {'bool': {'must': list()}}}
-        myranges = {}
-        for k, v in params.iteritems():
-            if isinstance(v, dict):
-                if not v['value']:
-                    continue
-                timestamp = j.base.time.getEpochAgo(v['value'])
-                if v['name'] not in myranges:
-                    myranges = {v['name']: dict()}
-                myranges[v['name']] = {v['eq']: timestamp}
-            elif v:
-                term = {'term': {k: v}}
-                query['query']['bool']['must'].append(term)
-        for key, value in myranges.iteritems():
-            query['query']['bool']['must'].append({'range': {key: value}})
-        if not query['query']['bool']['must']:
-            query = dict()
-        rawresults = osiscl.search(query)
-
-        results = list()
-        if 'result' in rawresults:
-            rawresults = rawresults['result']
-        elif 'hits' in rawresults:
-            rawresults = rawresults['hits']['hits']
-        for item in rawresults:
-            results.append(item['_source'])
-        return results
+        return self.osis_job.simpleSearch(params)
 
     def getErrorconditions(self, id, level, descr, descrpub, from_, to, nid, gid, category, tags, type, jid, jidparent, jsorganization, jsname, **kwargs):
         """
@@ -248,6 +230,8 @@ class system_gridmanager(j.code.classGetBase()):
         param:jsorganization find ecos coming from scripts from this org
         param:jsname find ecos coming from scripts with this name
         """
+        from_ = self._getEpoch(from_)
+        to = self._getEpoch(to)
         params = {'ffrom': {'name': 'epoch', 'value': from_, 'eq': 'gte'},
                   'to': {'name':'epoch','value': to, 'eq': 'lte'},
                   'nid': nid,
@@ -263,7 +247,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'id': id,
                   'jsorganization': jsorganization,
                   'jsname': jsname}
-        return self._doSearch(params, self.osis_eco)
+        return self.osis_eco.simpleSearch(params)
 
 
     def getProcesses(self, id, name, nid, gid, aid, from_, to, **kwargs):
@@ -278,7 +262,8 @@ class system_gridmanager(j.code.classGetBase()):
         param:to -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified
         result list(list)
         """
-
+        from_ = self._getEpoch(from_)
+        to = self._getEpoch(to)
         params = {'ffrom': {'name': 'epochstart', 'value': from_, 'eq': 'gte'},
                   'to': {'name': 'epochstart', 'value': to, 'eq': 'lte'},
                   'nid': nid,
@@ -286,7 +271,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'id': id,
                   'aid': aid}
 
-        return self._doSearch(params, self.osis_process)
+        return self.osis_process.simpleSearch(params)
 
     def getApplications(self, id, type, descr, **kwargs):
         """
@@ -300,14 +285,14 @@ class system_gridmanager(j.code.classGetBase()):
                   'id': id,
                   'descr': descr}
 
-        return self._doSearch(params, self.osis_application)
+        return self.osis_application.simpleSearch(params)
 
     def getGrids(self, **kwargs):
         """
         list grids
         result list(list)
         """
-        return self._doSearch({}, self.osis_grid)
+        return self.osis_grid.simpleSearch({})
 
     def getJumpscript(self, jsorganization, jsname, **kwargs):
         """
@@ -350,6 +335,15 @@ class system_gridmanager(j.code.classGetBase()):
 
         return filter(myfilter, sessions)
 
+    def _getEpoch(self, time):
+        if not time:
+            return time
+        if isinstance(time, int):
+            return time
+        if time.startswith('-'):
+            return j.base.time.getEpochAgo(time)
+        return j.base.time.getEpochFuture(time)
+
     def getAlerts(self, id, level, descr, descrpub, nid, gid, category, tags, state, from_inittime, to_inittime, from_lasttime, to_lasttime, from_closetime, to_closetime, nrerrorconditions, errorcondition, **kwargs):
         """
         interface to get alert (is optionally the result of an eco)
@@ -370,10 +364,31 @@ class system_gridmanager(j.code.classGetBase()):
         param:to_closetime -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find alerts to date specified when they were closed
         param:nrerrorconditions nr of times errorcondition happened
         param:errorcondition errorcondition(s) which caused this alert
-        
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getAlerts")
+        from_inittime = self._getEpoch(from_inittime)
+        to_inittime = self._getEpoch(to_inittime)
+        from_lasttime = self._getEpoch(from_lasttime)
+        to_lasttime = self._getEpoch(to_lasttime)
+        from_closetime = self._getEpoch(from_closetime)
+        to_closetime = self._getEpoch(to_closetime)
+        params = {'id': id,
+                  'level': {'name': 'level', 'eq': 'lte', 'value': level},
+                  'from_inittime': {'name': 'inittime', 'eq': 'lte', 'value': from_inittime},
+                  'to_inittime': {'name': 'inittime', 'eq': 'gte', 'value': to_inittime},
+                  'from_lasttime': {'name': 'lasttime', 'eq': 'lte', 'value': from_lasttime},
+                  'to_lasttime': {'name': 'lasttime', 'eq': 'gte', 'value': to_lasttime},
+                  'from_closetime': {'name': 'closetime', 'eq': 'lte', 'value': from_closetime},
+                  'to_closetime': {'name': 'closetime', 'eq': 'gte', 'value': to_closetime},
+                  'descrpub': descrpub,
+                  'nid': nid,
+                  'gid': gid,
+                  'category': category,
+                  'tags': tags,
+                  'state': state,
+                  'nrerrorconditions': nrerrorconditions,
+                  'errorcondition': errorcondition,
+                 }
+        return self.osis_alert.simpleSearch(params)
 
     def getVDisks(self, id, machineid, guid, gid, nid, fs, sizeFrom, sizeTo, freeFrom, freeTo, sizeondiskFrom, sizeondiskTo, mounted, path, description, mountpoint, role, type, order, devicename, backup, backuplocation, backuptime, backupexpiration, active, **kwargs):
         """
@@ -403,11 +418,35 @@ class system_gridmanager(j.code.classGetBase()):
         param:backuptime epoch when was backup taken
         param:backupexpiration when does backup needs to expire
         param:active True,is the disk still active
-        result list(list) 
-        
+        result list(list)
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getVDisks")
+        params = {'id': id,
+                  'machineid': machineid,
+                  'guid': guid,
+                  'gid': gid,
+                  'nid': nid,
+                  'fs': fs,
+                  'sizeFrom': {'name': 'size', 'eq': 'lte', 'value': mbToKB(sizeFrom)},
+                  'sizeTo': {'name': 'size', 'eq': 'gte', 'value': mbToKB(sizeTo)},
+                  'freeFrom': {'name': 'free', 'eq': 'lte', 'value': mbToKB(freeFrom)},
+                  'freeTo': {'name': 'free', 'eq': 'gte', 'value': mbToKB(freeTo)},
+                  'sizeondiskFrom': {'name': 'sizeondisk', 'eq': 'lte', 'value': mbToKB(sizeondiskFrom)},
+                  'sizeondiskTo': {'name': 'sizeondisk', 'eq': 'gte', 'value': mbToKB(sizeondiskTo)},
+                  'mounted': mounted,
+                  'path': path,
+                  'description': description,
+                  'mountpoint': mountpoint,
+                  'role': role,
+                  'type': type,
+                  'order': order,
+                  'devicename': devicename,
+                  'backup': backup,
+                  'backuplocation': backuplocation,
+                  'backupexpiration': backupexpiration,
+                  'backuptime': backuptime,
+                  'active': active,
+                 }
+        return self.osis_vdisk.simpleSearch(params)
 
     def getMachines(self, id, guid, otherid, gid, nid, name, description, state, roles, ipaddr, macaddr, active, cpucore, mem, type, **kwargs):
         """
@@ -427,11 +466,32 @@ class system_gridmanager(j.code.classGetBase()):
         param:cpucore find based on nr cpucore
         param:mem find based on mem in MB
         param:type KVM or LXC
-        result list(list) 
-        
+        result list(list)
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getMachines")
+        params = {'id': id,
+                  'guid': guid,
+                  'otherid': otherid,
+                  'gid': gid,
+                  'nid': nid,
+                  'name': name,
+                  'description': description,
+                  'state': state,
+                  'active': active,
+                  'cpucore': cpucore,
+                  'mem': mem,
+                  'type': type,}
+
+        def myfilter(machine):
+            if roles and not set(roles).issubset(set(machine['roles'])):
+                return False
+            if ipaddr and ipaddr not in machine['ipaddr']:
+                return False
+            if macaddr and macaddr not in machine['netaddr']:
+                return False
+            return True
+
+        results = self.osis_machine.simpleSearch(params)
+        return filter(myfilter, results)
 
     def getDisks(self, id, guid, gid, nid, fs, sizeFrom, sizeTo, freeFrom, freeTo, mounted, ssd, path, model, description, mountpoint, type, active, **kwargs):
         """
@@ -453,8 +513,26 @@ class system_gridmanager(j.code.classGetBase()):
         param:mountpoint match on part of mountpoint
         param:type type e.g. BOOT DATA CACHE
         param:active True,is the disk still active
-        result list(list) 
-        
+        result list(list)
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getDisks")
+        params = {'id': id,
+                  'guid': guid,
+                  'gid': gid,
+                  'nid': nid,
+                  'fs': fs,
+                  'sizeFrom': {'name': 'size', 'eq': 'lte', 'value': mbToKB(sizeFrom)},
+                  'sizeTo': {'name': 'size', 'eq': 'gte', 'value': mbToKB(sizeTo)},
+                  'freeFrom': {'name': 'free', 'eq': 'lte', 'value': mbToKB(freeFrom)},
+                  'freeTo': {'name': 'free', 'eq': 'gte', 'value': mbToKB(freeTo)},
+                  'mounted': mounted,
+                  'ssd': ssd,
+                  'path': path,
+                  'model': model,
+                  'description': description,
+                  'mountpoint': mountpoint,
+                  'type': type,
+                  'active': active,
+                 }
+        return self.osis_disk.simpleSearch(params)
+
+
