@@ -268,7 +268,7 @@ class system_gridmanager(j.code.classGetBase()):
         return self.osis_eco.simpleSearch(params)
 
 
-    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, **kwargs):
+    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, active, **kwargs):
         """
         list processes (comes from osis), are the grid unique processes (not integrated with processmanager yet)
         param:id only find 1 process entry
@@ -286,6 +286,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'to': {'name': 'epochstart', 'value': to, 'eq': 'lte'},
                   'nid': nid,
                   'gid': gid,
+                  'active': active,
                   'id': id,
                   'guid': guid,
                   'aid': aid}
