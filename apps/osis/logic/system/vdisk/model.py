@@ -17,6 +17,7 @@ class VDisk(OsisBaseObject):
             self.guid = None
             self.gid = 0
             self.nid = 0
+            self.disk_id = 0 #diskid
             self.path = ""
             self.size = 0 #KB
             self.free = 0 #KB
@@ -33,12 +34,23 @@ class VDisk(OsisBaseObject):
             self.expiration=0
             self.backuplocation="" #where is backup stored (tag based notation)
             self.devicename=""
+            self.lastcheck=0 #epoch of last time the info was checked from reality
 
         
-
     def getUniqueKey(self):
         """
         return unique key for object, is used to define unique id
         """
+        C="%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.backup,self.type,self.backuplocation)
+        return j.tools.hash.md5_string(C)
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes also id)
+        """
+        self.gid = int(self.gid)
+        self.id = int(self.id)
+        self.guid = "%s_%s" % (self.gid, self.id)
+        self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 

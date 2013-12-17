@@ -28,11 +28,23 @@ class Disk(OsisBaseObject):
             self.model=""
             self.description=""
             self.type=""  #BOOT,DATA,...
+            self.lastcheck=0 #epoch of last time the info was checked from reality
 
 
     def getUniqueKey(self):
         """
         return unique key for object, is used to define unique id
         """
+        C="%s_%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.ssd,self.type)
+        return j.tools.hash.md5_string(C)
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes also id)
+        """
+        self.gid = int(self.gid)
+        self.id = int(self.id)
+        self.guid = "%s_%s" % (self.gid, self.id)
+        self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 

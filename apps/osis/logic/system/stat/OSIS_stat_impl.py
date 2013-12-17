@@ -11,11 +11,13 @@ class mainclass(OSISStore):
 
     def __init__(self):
         OSISStore.__init__(self)
-        self.elasticsearch=j.core.grid.getstatTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
+        self.indexTTL=3600*24*30 #30 days
+
 
     def set(self,key,value):
         obj=self.getObject(value)
-        self.elasticsearch.index(obj)
+        obj.getSetGuid()
+        self.index(obj)
         return [obj.key,False,False]
 
     def find(self,query, start=0, size =100):

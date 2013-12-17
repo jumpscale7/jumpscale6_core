@@ -11,7 +11,7 @@ class mainclass(OSISStore):
 
     def __init__(self):
         OSISStore.__init__(self)
-        self.elasticsearch=j.core.grid.getLogTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
+        # self.elasticsearch=j.core.grid.getLogTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
 
     def set(self,key,value):
         docs = []

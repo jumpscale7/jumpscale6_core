@@ -52,3 +52,18 @@ class ECO(OsisBaseObject):
 
             self.type=int(type) #j.enumerators.ErrorConditionType                       
 
+    def getUniqueKey(self):
+        """
+        return unique key for object, is used to define unique id
+        """
+        return self.guid
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes also id)
+        """
+        self.gid = int(self.gid)
+        self.id = int(self.id)
+        self.guid = "%s_%s" % (self.gid, self.id)
+        return self.guid
+

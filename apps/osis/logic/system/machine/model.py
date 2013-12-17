@@ -29,4 +29,22 @@ class Machine(OsisBaseObject):
             self.description=""
             self.otherid=""
             self.type = "" #KVM,LXC
+            self.lastcheck=0 #epoch of last time the info was checked from reality
 
+    def getUniqueKey(self):
+        """
+        return unique key for object, is used to define unique id
+        """
+        C= "%s_%s_%s"%(self.gid,self.id,self.name)
+        return j.tools.hash.md5_string(C)
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes also id)
+        """
+        self.gid = int(self.gid)
+        self.id = int(self.id)
+        # self.sguid=struct.pack("<HHL",self.gid,self.bid,self.id)
+        self.guid = "%s_%s" % (self.gid, self.id)
+        self.lastcheck=j.base.time.getTimeEpoch() 
+        return self.guid

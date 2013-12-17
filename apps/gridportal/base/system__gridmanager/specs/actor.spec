@@ -119,6 +119,7 @@
         var:guid str,,find based on guid @tags: optional
         var:gid int,,find vdisks for specified grid @tags: optional
         var:nid int,,find vdisks for specified node @tags: optional
+        var:disk_id int,find disk which hosts this disk
         var:fs str,,ext4;xfs;... @tags: optional
         var:sizeFrom int,,in MB @tags: optional
         var:sizeTo int,,in MB @tags: optional
@@ -237,16 +238,6 @@
         var:from_ str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago) @tags: optional
         var:to str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified @tags: optional
         var:active bool,,True,is the process still active @tags: optional
-        result:list(list)
-
-    method:getApplications
-        """     
-        list known application types (applicationtype in osis)
-        """
-        var:id str,,only find 1 application entry @tags: optional
-        var:type str,, @tags: optional
-        var:descr str,,match on text in descr @tags: optional
-        var:active bool,,True,is the apptype still active @tags: optional
         result:list(list)
 
     method:getGrids

@@ -17,6 +17,8 @@ class Process(OsisBaseObject):
             self.gid = gid
             self.aid = aid  # application id is unique per grid
             self.nid = nid
+            self.jpdomain= ""
+            self.jpname= ""
             self.name = name
             self.instance = instance
             self.systempid = systempid  # system process id (PID) at this point
@@ -25,12 +27,16 @@ class Process(OsisBaseObject):
             self.epochstart = j.base.time.getTimeEpoch()
             self.epochstop = 0
             self.active = True
+            self.lastcheck=0 #epoch of last time the info was checked from reality
 
     def getUniqueKey(self):
         """
         return unique key for object, is used to define unique id
         """
-        return self.getContentKey()
+
+        C="%s_%s_%s_%s_%s_%s_%s"%(self.systempid,self.gid,self.aid,self.nid,\
+            self.jpdomain,self.jpname,self.instance)
+        return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):
         """
@@ -40,5 +46,6 @@ class Process(OsisBaseObject):
         self.id = int(self.id)
         # self.sguid=struct.pack("<HHL",self.gid,self.bid,self.id)
         self.guid = "%s_%s" % (self.gid, self.id)
+        self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 

@@ -26,6 +26,8 @@ class Node(OsisBaseObject):
             self.peer_stats=0 #node which has stats for this node
             self.peer_log=0 #node which has transactionlog or other logs for this node
             self.peer_backup=0 #node which has backups for this node
+            self.description=""
+            self.lastcheck=0 #epoch of last time the info was checked from reality
 
 
     def getUniqueKey(self):
@@ -43,6 +45,7 @@ class Node(OsisBaseObject):
 
         # self.sguid=struct.pack("<HH",self.gid,self.id)
         self.guid = "%s_%s" % (self.gid, self.id)
+        self.lastcheck=j.base.time.getTimeEpoch() 
 
         return self.guid
 

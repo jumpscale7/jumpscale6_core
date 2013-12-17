@@ -8,11 +8,12 @@ class Job(OsisBaseObject):
     identifies a job in the grid
     """
 
-    def __init__(self, ddict={}, jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None,lock="",lockduration=3600):
+    def __init__(self, ddict={}, gid="",jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None,lock="",lockduration=3600):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.id= j.base.idgenerator.generateGUID().replace('-', '')
+            self.id=0
+            self.gid =gid
             self.jsname = jsname
             self.jsorganization=jsorganization
             self.roles=roles
@@ -39,14 +40,16 @@ class Job(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        return self.id
+        return j.base.idgenerator.generateGUID()
 
     def getSetGuid(self):
         """
         use osis to define & set unique guid (sometimes also id)
         """
-        self.guid = self.id
-        return self.id
+        self.gid = int(self.gid)
+        self.id = int(self.id)
+        self.guid = "%s_%s" % (self.gid, self.id)
+        return self.guid
 
     def getDict(self):
         """

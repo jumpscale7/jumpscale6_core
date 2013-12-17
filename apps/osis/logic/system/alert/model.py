@@ -29,3 +29,19 @@ class Alert(OsisBaseObject):
             self.closetime=0  #alert is closed, no longer active
             self.nrerrorconditions=1 #nr of times this error condition happened
             self.errorconditions=[]  #ids of errorconditions     
+
+    def getUniqueKey(self):
+        """
+        return unique key for object, is used to define unique id
+        """
+        return self.guid
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes also id)
+        """
+        self.gid = int(self.gid)
+        self.id = int(self.id)
+        self.guid = "%s_%s" % (self.gid, self.id)
+        return self.guid
+
