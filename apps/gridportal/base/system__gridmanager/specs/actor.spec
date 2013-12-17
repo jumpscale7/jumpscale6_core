@@ -119,7 +119,7 @@
         var:guid str,,find based on guid @tags: optional
         var:gid int,,find vdisks for specified grid @tags: optional
         var:nid int,,find vdisks for specified node @tags: optional
-        var:disk_id int,find disk which hosts this disk
+        var:disk_id int,,find disk which hosts this disk @tags: optional
         var:fs str,,ext4;xfs;... @tags: optional
         var:sizeFrom int,,in MB @tags: optional
         var:sizeTo int,,in MB @tags: optional

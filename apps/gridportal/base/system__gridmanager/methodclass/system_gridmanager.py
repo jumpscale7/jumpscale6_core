@@ -71,13 +71,18 @@ class system_gridmanager(j.code.classGetBase()):
         self._nodeMap[node.id] = r
         return r
 
-    def getNodes(self, gid=None, name=None, roles=None, ipaddr=None, macaddr=None, id=None, **kwargs):
+    def getNodes(self, gid=None, name=None, roles=None, ipaddr=None, macaddr=None, id=None, active=None, peer_stats=None, peer_log=None, peer_backup=None, **kwargs):
         """
         list found nodes
         result list(list)
         """
         params = {'gid': gid,
                   'name': name,
+                  'guid': guid,
+                  'active': active,
+                  'peer_stats': peer_stats,
+                  'peer_log': peer_log,
+                  'peer_backup': peer_backup,
                   'id': id,
                   }
         results = self.osis_node.simpleSearch(params)
@@ -120,7 +125,7 @@ class system_gridmanager(j.code.classGetBase()):
         else:
             raise RuntimeError("Could not parse statKey, only node stats supported for now (means starting with n)")
 
-        client=self.getClient(nodeId)
+        self.getClient(nodeId) # load ip in ipmap
         ip=self.clientsIp[nodeId] 
 
         url="http://%s:8081/render/?width=%s&height=%s&target=%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=first&tz=CET"%(ip,width,height,statKey)
@@ -141,7 +146,7 @@ class system_gridmanager(j.code.classGetBase()):
         client = self.getClient(nodeId)
         return client.getProcessesActive(domain, name)
 
-    def getJob(self, id, includeloginfo, includechildren, **kwargs):
+    def getJob(self, id, includeloginfo, includechildren, guid=None, **kwargs):
         """
         gets relevant info of job (also logs)
         can be used toreal time return job info
@@ -149,6 +154,12 @@ class system_gridmanager(j.code.classGetBase()):
         param:includeloginfo if true fetch all logs of job & return as well
         param:includechildren if true look for jobs which are children & return that info as well
         """
+        # TODO include loginfo
+        job = None
+        if guid and not id:
+            jobs = self.osis_job.simpleSearch({'guid':guid})
+            if jobs:
+                id = jobs[0]['id']
         job = self.osis_job.get(id)
         return {'result': job}
 
@@ -183,7 +194,7 @@ class system_gridmanager(j.code.classGetBase()):
                   }
         return self.osis_log.simpleSearch(params)
 
-    def getJobs(self, id, from_, to, nid, gid, parent, roles, state, jsorganization, jsname, **kwargs):
+    def getJobs(self, id, guid, from_, to, nid, gid, parent, roles, state, jsorganization, jsname, **kwargs):
         """
         interface to get job information
         param:id only find 1 job entry
@@ -204,6 +215,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'nid': nid,
                   'gid': gid,
                   'id': id,
+                  'guid': guid,
                   'parent': parent,
                   'state': state,
                   'jsorganization': jsorganization,
@@ -250,7 +262,7 @@ class system_gridmanager(j.code.classGetBase()):
         return self.osis_eco.simpleSearch(params)
 
 
-    def getProcesses(self, id, name, nid, gid, aid, from_, to, **kwargs):
+    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, **kwargs):
         """
         list processes (comes from osis), are the grid unique processes (not integrated with processmanager yet)
         param:id only find 1 process entry
@@ -269,6 +281,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'nid': nid,
                   'gid': gid,
                   'id': id,
+                  'guid': guid,
                   'aid': aid}
 
         return self.osis_process.simpleSearch(params)
@@ -390,7 +403,7 @@ class system_gridmanager(j.code.classGetBase()):
                  }
         return self.osis_alert.simpleSearch(params)
 
-    def getVDisks(self, id, machineid, guid, gid, nid, fs, sizeFrom, sizeTo, freeFrom, freeTo, sizeondiskFrom, sizeondiskTo, mounted, path, description, mountpoint, role, type, order, devicename, backup, backuplocation, backuptime, backupexpiration, active, **kwargs):
+    def getVDisks(self, id, machineid, guid, gid, nid, disk_id, fs, sizeFrom, sizeTo, freeFrom, freeTo, sizeondiskFrom, sizeondiskTo, mounted, path, description, mountpoint, role, type, order, devicename, backup, backuplocation, backuptime, backupexpiration, active, **kwargs):
         """
         list found vdisks (virtual disks like qcow2 or sections on fs as used by a container or virtual machine) (comes from osis)
         param:id find based on id
@@ -398,6 +411,7 @@ class system_gridmanager(j.code.classGetBase()):
         param:guid find based on guid
         param:gid find vdisks for specified grid
         param:nid find vdisks for specified node
+        param:disk_id find disk which hosts this disk
         param:fs ext4;xfs;...
         param:sizeFrom in MB
         param:sizeTo in MB
@@ -425,6 +439,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'guid': guid,
                   'gid': gid,
                   'nid': nid,
+                  'disk_id': disk_id,
                   'fs': fs,
                   'sizeFrom': {'name': 'size', 'eq': 'lte', 'value': mbToKB(sizeFrom)},
                   'sizeTo': {'name': 'size', 'eq': 'gte', 'value': mbToKB(sizeTo)},
