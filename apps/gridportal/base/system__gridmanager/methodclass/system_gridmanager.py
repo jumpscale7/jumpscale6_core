@@ -194,7 +194,7 @@ class system_gridmanager(j.code.classGetBase()):
                   }
         return self.osis_log.simpleSearch(params)
 
-    def getJobs(self, id, guid, from_, to, nid, gid, parent, roles, state, jsorganization, jsname, **kwargs):
+    def getJobs(self, id, guid, from_, to, nid, gid, parent, roles, state, jsorganization, jsname, description, category, source, **kwargs):
         """
         interface to get job information
         param:id only find 1 job entry
@@ -207,6 +207,9 @@ class system_gridmanager(j.code.classGetBase()):
         param:state OK;ERROR;...
         param:jsorganization
         param:jsname
+        param:description any description when asked for the job
+        param:category category in dot notation
+        param:source who asked for the job is free text
         """
         from_ = self._getEpoch(from_)
         to = self._getEpoch(to)
@@ -216,6 +219,9 @@ class system_gridmanager(j.code.classGetBase()):
                   'gid': gid,
                   'id': id,
                   'guid': guid,
+                  'description': description,
+                  'category': category,
+                  'source': source,
                   'parent': parent,
                   'state': state,
                   'jsorganization': jsorganization,
