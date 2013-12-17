@@ -40,6 +40,7 @@ class PageHTML(Page):
         self.padding = True
         self.pagemirror4jscss = None
         self.processparameters = {}
+        self.bodyattributes = []
 
         if htmllibPath != None:
             self.liblocation = htmllibPath
@@ -659,6 +660,10 @@ function copyText$id() {
         self.addCSS("%s/bootstrap/css/bootstrap.css" % self.liblocation)
         self.addCSS("%s/bootstrap/css/bootstrap-responsive.css" % self.liblocation)
 
+    def addBodyAttribute(self, attribute):
+        if attribute not in self.bodyattributes:
+            self.bodyattributes.append(attribute)
+
     def addHostBasedContent(self):
         if self._hostbasedmacro:
             return
@@ -892,4 +897,5 @@ function copyText$id() {
 
         return '<!DOCTYPE html>\n<html>\n \
         <head>\n%s\n</head>\n \
-        <body>\n%s</body>\n</html>' % (jsHead, self.body)
+            <body %s>\n%s</body>\n</html>' % (jsHead, ' '.join(self.bodyattributes), self.body)
+ 
