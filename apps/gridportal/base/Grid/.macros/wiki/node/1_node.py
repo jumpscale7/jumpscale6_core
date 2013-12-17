@@ -11,11 +11,9 @@ def main(j, args, params, tags, tasklet):
 
     obj=actor.getNodes(id=idd)
     
-    # doc.content=doc.applyParams(obj[0],content=params.content)
+    doc.content=doc.applyParams(obj[0],content=doc.content)
 
-    out=str(obj[0])
-
-    params.result = (out, doc)
+    params.result = (doc, doc)
 
     return params
 
