@@ -293,20 +293,6 @@ class system_gridmanager(j.code.classGetBase()):
 
         return self.osis_process.simpleSearch(params)
 
-    def getApplications(self, id, type, descr, **kwargs):
-        """
-        list known application types (applicationtype in osis)
-        param:id only find 1 process entry
-        param:type
-        param:descr match on text in descr
-        result list(list)
-        """
-        params = {'type': type,
-                  'id': id,
-                  'descr': descr}
-
-        return self.osis_application.simpleSearch(params)
-
     def getGrids(self, **kwargs):
         """
         list grids

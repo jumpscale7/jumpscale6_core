@@ -21,7 +21,8 @@ class mainclass(OSISStore):
 
         # print "batch:%s"%len(docs)            
         #self.elasticsearch.bulk_index(index="clusterlog_%s_%s"%(logobject["bid"],logobject["gid"]), doc_type="json", docs=docs, id_field="id")                        
-        self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=docs, id_field="id")                        
+        if docs:
+            self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=docs, id_field="id")                        
         return ["",True,True]
 
     def find(self,query, start=0, size =100):
