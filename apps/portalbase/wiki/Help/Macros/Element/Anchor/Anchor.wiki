@@ -1,0 +1,14 @@
+{{anchor: anchor_macro}}
+h2. Anchor Macro
+
+This macro is used to add an HTML anchor, which can be linked using 
+
+h2. Example
+
+{{code:
+\{\{anchor:anchor_macro\}\}
+}}
+
+h3. Output
+
+[Click this link to go to the anchor (on top of page)|#anchor_macro]
