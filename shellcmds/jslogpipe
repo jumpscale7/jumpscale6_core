@@ -10,7 +10,7 @@ parser.add_argument('-c', '--category', default='stdout', help='Category used fo
 options = parser.parse_args()
 from JumpScale import j
 j.application.start(options.name)
-j.logger.addLogTargetElasticSearch()
+j.logger.setLogTargetLogForwarder(bulk=True)
 while True:
     line = sys.stdin.readline()
     if line:

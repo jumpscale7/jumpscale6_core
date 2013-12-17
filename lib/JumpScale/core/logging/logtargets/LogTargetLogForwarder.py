@@ -1,5 +1,6 @@
 # import socket
 from JumpScale import j
+import threading
 import time
 import Queue
 
@@ -18,9 +19,30 @@ class DropQueue(Queue.Queue):
                 pass
         return Queue.Queue.put(self, item, block, timeout)
 
+class LogScheduler(threading.Thread):
+    def __init__(self, handler, *args, **kwargs):
+        super(LogScheduler, self).__init__(*args, **kwargs)
+        self._handler = handler
+        self.running = False
+        self.setDaemon(True)
+
+    def run(self, *args, **kwargs):
+        self.running = True
+        while self.running:
+            time.sleep(5)
+            records = list()
+            for _ in xrange(self._handler._logqueue.qsize()):
+                records.append(self._handler._logqueue.get())
+            if records:
+                self._handler.logBatch(records)
+
+    def __del__(self, *args, **kwargs):
+        self.running = False
+
 class LogTargetLogForwarder():
     """Forwards incoming logRecords to localclientdaemon"""
-    def __init__(self, serverip=None):
+    def __init__(self, serverip=None, bulk=False):
+        self.bulk = True
         self._lastcheck = 0
         self._logqueue = DropQueue(QUEUESIZE)
         self._ecoqueue = DropQueue(QUEUESIZE)
@@ -44,6 +66,9 @@ class LogTargetLogForwarder():
         self.serverip = serverip
         self.loggerClient=None
         self.checkTarget()
+        self._bulkthread = None
+        if self.bulk:
+            self._bulkthread = LogScheduler(self).start()
 
     def checkTarget(self):
         """
@@ -62,8 +87,10 @@ class LogTargetLogForwarder():
         if self.loggerClient==None:
             self.loggerClient=j.core.grid.getZLoggerClient(ipaddr=self.serverip)
             j.logger.logTargetLogForwarder=self
-        self._processQueue(self._logqueue, self.log)
+        if not self.bulk:
+            self._processQueue(self._logqueue, self.log)
         self._processQueue(self._ecoqueue, self.logECO)
+        self._processQueue(self._batchqueue, self.logBatch)
         return self.connected
 
     def _processQueue(self, queue, method):
@@ -96,7 +123,7 @@ class LogTargetLogForwarder():
         forward the already encoded message to the target destination
         """
         if self.enabled:
-            if not self.checkTarget():
+            if not self.checkTarget() or self.bulk:
                 self._logqueue.put(log)
                 return
 

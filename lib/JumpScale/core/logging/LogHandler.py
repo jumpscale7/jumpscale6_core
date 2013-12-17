@@ -191,14 +191,10 @@ class LogHandler(object):
     def addLogTargetStdOut(self):
         self.logTargetAdd(LogTargetStdOut())
 
-    def addLogTargetElasticSearch(self):
-        from .logtargets.LogTargetElasticSearch import LogTargetElasticSearch
-        self.logTargetAdd(LogTargetElasticSearch('localhost'))
-
     def addLogTargetLocalFS(self):
         self.logTargetAdd(LogTargetFS())
 
-    def setLogTargetLogForwarder(self, serverip=None):
+    def setLogTargetLogForwarder(self, serverip=None, bulk=False):
         """
         there will be only logging to stdout (if q.loghandler.consoleloglevel set properly)
         & to the LogForwarder
@@ -207,7 +203,7 @@ class LogHandler(object):
         self.logs=[]
         self.inlog=False
         self.order=0
-        self.logTargetLogForwarder = LogTargetLogForwarder(serverip)
+        self.logTargetLogForwarder = LogTargetLogForwarder(serverip, bulk)
 
     def disable(self):
         self.enabled = False
