@@ -18,10 +18,9 @@ class OSISPopulationTest(unittest.TestCase):
         pass
 
     def test_stat(self):
-        return
-        client=j.core.osis.getClientForCategory(self.client,"system","stat")
-        
 
+        client=j.core.osis.getClientForCategory(self.client,"system","stat")
+    
         for i in range(10):
             keys=["cpu.percent",\
                 "process.nrconnections",\
@@ -35,7 +34,6 @@ class OSISPopulationTest(unittest.TestCase):
                 client.set(obj)
 
     def test_node(self):
-        return
         print 'node'
         client=j.core.osis.getClientForCategory(self.client,"system","node")        
 
@@ -58,7 +56,6 @@ class OSISPopulationTest(unittest.TestCase):
             client.set(obj)
         
     def test_machine(self):
-        return
         print 'machine'
         client=j.core.osis.getClientForCategory(self.client,"system","machine")        
 
@@ -84,7 +81,6 @@ class OSISPopulationTest(unittest.TestCase):
             client.set(obj)
 
     def test_process(self):
-        return
         print 'process'
         client=j.core.osis.getClientForCategory(self.client,"system","process")        
 
@@ -141,9 +137,8 @@ class OSISPopulationTest(unittest.TestCase):
             client.set(obj)
 
     def test_vdisk(self):
-        return
         print 'vdisk'
-        client=j.core.osis.getClientForCategory(self.client,"system","disk")        
+        client=j.core.osis.getClientForCategory(self.client,"system","vdisk")        
 
         for i in range(20,70):
             obj=client.new()            
