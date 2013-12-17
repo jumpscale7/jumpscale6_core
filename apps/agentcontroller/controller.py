@@ -45,12 +45,14 @@ class Job():
 
         self.event=None
         self.controller=controller
+        gid = j.application.whoAmI.gid
 
         self.db=self.controller.jobclient.new(sessionid=sessionid, jsorganization=jsorganization, roles=roles, \
             args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
-            jsname=jsname)
+            jsname=jsname,gid=gid)
 
         self.id= self.db.id
+        self.gid = self.db.gid
         self.jsname = self.db.jsname
         self.jsorganization=self.db.jsorganization
         self.roles=self.db.roles

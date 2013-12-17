@@ -62,7 +62,7 @@ class ZLogger(ZDaemon):
         #make sure system namespace exists
         # OSISclient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
-        OSISclientLogger=j.core.osis.getClientForCategory(OSISclient,"logger","log")
+        OSISclientLogger=j.core.osis.getClientForCategory(OSISclient,"system","log")
         OSISclientEco=j.core.osis.getClientForCategory(OSISclient,"system","eco")
 
         path = "loghandling"

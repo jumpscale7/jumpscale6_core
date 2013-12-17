@@ -10,7 +10,8 @@ class mainclass(parentclass):
 
     def set(self,key,value):
         obj=self.getObject(value)
-        obj.guid = obj.id
+        obj.id = self.db.increment(1)#increment
+        obj.getSetGuid()
         self.db.set(self.dbprefix,key=obj.guid,value=ujson.dumps(obj.__dict__))
         self.index(obj)
         return [obj.guid,True,True]

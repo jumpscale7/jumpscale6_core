@@ -34,7 +34,7 @@ class system_gridmanager(j.code.classGetBase()):
         self.osis_disk = j.core.osis.getClientForCategory(osis,"system","disk")
         self.osis_vdisk = j.core.osis.getClientForCategory(osis,"system","vdisk")
         self.osis_alert = j.core.osis.getClientForCategory(osis,"system","alert")
-        self.osis_log = j.core.osis.getClientForCategory(osis,"logger","log")
+        self.osis_log = j.core.osis.getClientForCategory(osis,"system","log")
 
     def getClient(self,nid):
         nid = int(nid)
@@ -268,7 +268,7 @@ class system_gridmanager(j.code.classGetBase()):
         return self.osis_eco.simpleSearch(params)
 
 
-    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, **kwargs):
+    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, active, **kwargs):
         """
         list processes (comes from osis), are the grid unique processes (not integrated with processmanager yet)
         param:id only find 1 process entry
@@ -286,6 +286,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'to': {'name': 'epochstart', 'value': to, 'eq': 'lte'},
                   'nid': nid,
                   'gid': gid,
+                  'active': active,
                   'id': id,
                   'guid': guid,
                   'aid': aid}
