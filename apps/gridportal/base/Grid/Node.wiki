@@ -1,11 +1,15 @@
 @usedefaults
 
+{{node: id:$$id}}
+
+$$description
+
 h3. Node Jobs
 
-{{ac_jobList: nid:$$nid}}
+#{{joblist: nid:$$id}}
 
-{{grid_node}}
 
 h4. Logs
 
-{{systemlogs}}
+#{{logs: nid:$$id}}
+

@@ -78,6 +78,7 @@ class OSISPopulationTest(unittest.TestCase):
             obj.description = "this is a description for machine %s"%i
             obj.otherid="m%s"%(i+5)
             obj.active=j.base.idgenerator.generateRandomInt(10,14)==11
+            obj.type="KVM"
             client.set(obj)
 
     def test_process(self):
