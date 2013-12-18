@@ -63,6 +63,8 @@
         var:peer_stats int,,id of node which has stats for this node @tags: optional
         var:peer_log int,,id of node which has logs (e.g. transactionlogs) for this node @tags: optional
         var:peer_backup int,,id of node which has backups for this node @tags: optional
+        var:lastcheckFrom str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find nodes with lastcheckFrom  (-4d means 4 days ago) @tags: optional
+        var:lastcheckTo str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find nodes with lastcheckTo  (-4d means 4 days ago) @tags: optional
         result:list(list)
 
     method:getMachines
@@ -84,7 +86,9 @@
         var:active bool,,True,is the machine still active @tags: optional
         var:cpucore int,,find based on nr cpucore @tags: optional
         var:mem int,,find based on mem in MB @tags: optional
-        var:type str,,KVM or LXC
+        var:type str,,KVM or LXC @tags: optional
+        var:lastcheckFrom str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find machines with lastcheckFrom  (-4d means 4 days ago) @tags: optional
+        var:lastcheckTo str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find machines with lastcheckTo  (-4d means 4 days ago) @tags: optional
 
     method:getDisks
         """     
@@ -108,6 +112,8 @@
         var:mountpoint str,,match on part of mountpoint @tags: optional
         var:type str,,type e.g. BOOT DATA CACHE @tags: optional
         var:active bool,,True,is the disk still active @tags: optional        
+        var:lastcheckFrom str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find disks with lastcheckFrom  (-4d means 4 days ago) @tags: optional
+        var:lastcheckTo str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find disk with lastcheckTo  (-4d means 4 days ago) @tags: optional
 
     method:getVDisks
         """     
@@ -140,6 +146,8 @@
         var:backuptime int,,epoch when was backup taken @tags: optional
         var:backupexpiration int,,when does backup needs to expire @tags: optional
         var:active bool,,True,is the disk still active @tags: optional  
+        var:lastcheckFrom str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find vdisks with lastcheckFrom  (-4d means 4 days ago) @tags: optional
+        var:lastcheckTo str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find vdisks with lastcheckTo  (-4d means 4 days ago) @tags: optional
 
     method:getLogs
         """     
@@ -238,6 +246,8 @@
         var:from_ str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago) @tags: optional
         var:to str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified @tags: optional
         var:active bool,,True,is the process still active @tags: optional
+        var:lastcheckFrom str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckFrom  (-4d means 4 days ago) @tags: optional
+        var:lastcheckTo str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckTo  (-4d means 4 days ago) @tags: optional
         result:list(list)
 
     method:getGrids
