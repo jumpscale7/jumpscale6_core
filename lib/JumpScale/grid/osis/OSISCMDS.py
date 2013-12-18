@@ -44,11 +44,8 @@ class OSISCMDS(object):
 
     def _getOsisInstanceForCat(self, namespace, category):
         fullname = "%s_%s" % (namespace, category)
-        if self.osisInstances.has_key(fullname):
+        if fullname in self.osisInstances:
             return self.osisInstances[fullname]
-        from IPython import embed
-        print "DEBUG NOW did not find category"
-        embed()
         
         j.errorconditionhandler.raiseBug(
             message="cannot find osis local instance for namespace:%s & category:%s" % (namespace, category), die=False, \

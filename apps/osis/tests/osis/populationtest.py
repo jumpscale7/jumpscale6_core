@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import unittest
 import re
 import time
@@ -21,7 +22,7 @@ class OSISPopulationTest(unittest.TestCase):
 
         client=j.core.osis.getClientForCategory(self.client,"system","stat")
     
-        for i in range(10):
+        for i in xrange(10):
             keys=["cpu.percent",\
                 "process.nrconnections",\
                 "memory.rss",\
@@ -35,31 +36,30 @@ class OSISPopulationTest(unittest.TestCase):
 
     def test_node(self):
         print 'node'
-        client=j.core.osis.getClientForCategory(self.client,"system","node")        
+        client = j.core.osis.getClientForCategory(self.client, "system", "node")
 
-        for i in range(80,90):
-            obj=client.new()
-            obj.gid=1
-            obj.nid=i
-            mac1='46:3a:26:39:67:%s'%i
-            mac2='00:22:4d:9a:ee:%s'%i
-            netaddr={mac1: ['lxcbr0', '10.0.3.%s'%i], mac2: ['eth1', '192.168.200.%s'%i]}
-            obj.netaddr=netaddr
-            obj.peer_log=j.base.idgenerator.generateRandomInt(80,90)
-            obj.peer_stats=j.base.idgenerator.generateRandomInt(80,90)
-            obj.peer_backup=j.base.idgenerator.generateRandomInt(80,90)
-            obj.machineguid="00224d9aee%s"%i
-            obj.ipaddr=['10.0.3.%s'%i, '192.168.200.%s'%i]
-            obj.name="name%s"%i
-            obj.description = "this is a description for node %s"%i
-            obj.active=j.base.idgenerator.generateRandomInt(10,14)==11
+        for i in xrange(0, 20):
+            obj = client.new()
+            obj.gid = 1
+            mac1 = '46:3a:26:39:67:%s' % i
+            mac2 = '00:22:4d:9a:ee:%s' % i
+            netaddr = {mac1: ['lxcbr0', '10.0.3.%s' % i], mac2: ['eth1', '192.168.200.%s' % i]}
+            obj.netaddr = netaddr
+            obj.peer_log = j.base.idgenerator.generateRandomInt(1, 10)
+            obj.peer_stats = j.base.idgenerator.generateRandomInt(1, 10)
+            obj.peer_backup = j.base.idgenerator.generateRandomInt(1, 10)
+            obj.machineguid = "00224d9aee%s" % i
+            obj.ipaddr = ['10.0.3.%s' % i, '192.168.200.%s' % i]
+            obj.name = "name%s" % i
+            obj.description = "this is a description for node %s" % i
+            obj.active = j.base.idgenerator.generateRandomInt(10, 14) == 11
             client.set(obj)
         
     def test_machine(self):
         print 'machine'
         client=j.core.osis.getClientForCategory(self.client,"system","machine")        
 
-        for i in range(30,50):
+        for i in xrange(30,50):
 
             obj=client.new()            
             obj.gid=1
@@ -85,7 +85,7 @@ class OSISPopulationTest(unittest.TestCase):
         print 'process'
         client=j.core.osis.getClientForCategory(self.client,"system","process")        
 
-        for i in range(30,1000):
+        for i in xrange(30,1000):
 
             obj=client.new()            
             obj.gid=1
@@ -109,7 +109,7 @@ class OSISPopulationTest(unittest.TestCase):
         print 'disk'
         client = j.core.osis.getClientForCategory(self.client, "system", "disk")
 
-        for i in range(20, 70):
+        for i in xrange(20, 70):
             obj = client.new()
 
             obj.gid = 1
@@ -153,7 +153,7 @@ class OSISPopulationTest(unittest.TestCase):
         print 'vdisk'
         client=j.core.osis.getClientForCategory(self.client,"system","vdisk")        
 
-        for i in range(20,70):
+        for i in xrange(20,70):
             obj=client.new()            
             obj.gid=1
             obj.nid=obj.nid=j.base.idgenerator.generateRandomInt(1,10)

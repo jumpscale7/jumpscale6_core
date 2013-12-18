@@ -5,18 +5,44 @@ def main(j, args, params, tags, tasklet):
     doc = params.doc
     tags = params.tags
 
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
+    actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
-    idd=int(args.tags.getDict()["id"])
+    idd = int(args.tags.getDict()["id"])
 
-    obj=actor.getNodes(id=idd)
+    obj = actor.getNodes(id=idd)[0]
 
-    from IPython import embed
-    embed()
+    out = ['||Property||Value||']
 
-    doc.content=doc.applyParams(obj[0], content=doc.content)
+    out.append("|id|%s|" % (obj['id']))
 
-    params.result = (doc, doc)
+    n = 1
+    for i in obj['netaddr']:
+        out.append("|net %s mac address|%s|" % (n, i))
+        out.append("|net %s port|%s|" % (n, obj['netaddr'][i][0]))
+        out.append("|net %s IP address|%s|" % (n, obj['netaddr'][i][1]))
+        n += 1
+
+    # IP addresses: duplicate information, remove field?
+    n = 1
+    for i in obj['ipaddr']:
+        out.append("|IP address %s|%s|" % (n, i))
+        n +=1
+
+    # Display only if peers are actually defined
+    if obj['peer_log'] > 0:
+        out.append("|%s|[%s|/grid/node?id=%s]|" % ('peer log', obj['peer_log'], obj['peer_log']))
+    if obj['peer_stats'] > 0:
+        out.append("|%s|[%s|/grid/node?id=%s]|" % ('peer stats', obj['peer_stats'], obj['peer_stats']))
+    if obj['peer_backup'] > 0:
+        out.append("|%s|[%s|/grid/node?id=%s]|" % ('peer backup', obj['peer_backup'], obj['peer_backup']))
+
+    out.append("|%s|%s|" % ('machine guid', obj['machineguid']))
+    out.append("|%s|%s|" % ('active', obj['active']))
+    out.append("|%s|%s|" % ('name', obj['name']))
+    out.append("|%s|%s|" % ('description', obj['description']))
+
+    params.result = ('\n'.join(out), doc)
+
 
     return params
 
