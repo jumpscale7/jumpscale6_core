@@ -5,13 +5,18 @@ def main(j, args, params, tags, tasklet):
     domain = args.requestContext.params.get('domain')
     name = args.requestContext.params.get('name')
     version = args.requestContext.params.get('version')
+    nid = args.requestContext.params.get('nodeId')
 
-    if version:
-        package = j.packages.find(domain, name, version)[0]
-    else:
-        package = j.packages.findNewest(domain, name)
+    j.core.portal.runningPortal.actorsloader.getActor('system', 'packagemanager')
+
+    if not nid:
+        _, nid, _ = j.application.whoAmI
+    result = j.apps.system.packagemanager.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)['result']
+
+    import json
+    result = json.loads(result)['result']
     
-    page.addExplorer(package.getPathMetadata(),readonly=False, tree=True)
+    page.addExplorer(result['getPathMetadata'],readonly=False, tree=True)
 
     params.result = page
     return params

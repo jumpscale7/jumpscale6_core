@@ -71,15 +71,31 @@ class system_gridmanager(j.code.classGetBase()):
         self._nodeMap[node.id] = r
         return r
 
-    def getNodes(self, guid=None, gid=None, name=None, roles=None, ipaddr=None, macaddr=None, id=None, active=None, peer_stats=None, peer_log=None, peer_backup=None, **kwargs):
+    def getNodes(self, guid=None, gid=None, name=None, roles=None, ipaddr=None, macaddr=None, id=None, active=None, peer_stats=None, peer_log=None, peer_backup=None, lastcheckFrom=None, lastcheckTo=None, **kwargs):
         """
-        list found nodes
-        result list(list)
+        param:id int,,find specific id
+        param:guid str,,find based on guid
+        param:gid int,,find nodes for specified grid
+        param:name str,,match on text in name
+        param:roles str,,match on comma separated list of roles (subsets also ok e.g. kvm.  would match all roles starting with kvm.)
+        param:ipaddr str,,comma separated list of ip addr to match against
+        param:macaddr str,,comma separated list of mac addr to match against
+        param:active bool,,True,is the node still active
+        param:peer_stats int,,id of node which has stats for this node
+        param:peer_log int,,id of node which has logs (e.g. transactionlogs) for this node
+        param:peer_backup int,,id of node which has backups for this node
+        param:lastcheckFrom str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find nodes with lastcheckFrom  (-4d means 4 days ago)
+        param:lastcheckTo str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find nodes with lastcheckTo  (-4d means 4 days ago)
+        result:list(list)
         """
+        lastcheckFrom = self._getEpoch(lastcheckFrom)
+        lastcheckTo = self._getEpoch(lastcheckTo)
         params = {'gid': gid,
                   'name': name,
                   'guid': guid,
                   'active': active,
+                  'lastcheckFrom': {'name': 'lastcheck', 'value': lastcheckFrom, 'eq': 'gte'},
+                  'lastcheckTo': {'name': 'lastcheck', 'value': lastcheckTo, 'eq': 'lte'},
                   'peer_stats': peer_stats,
                   'peer_log': peer_log,
                   'peer_backup': peer_backup,
@@ -268,7 +284,7 @@ class system_gridmanager(j.code.classGetBase()):
         return self.osis_eco.simpleSearch(params)
 
 
-    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, active, **kwargs):
+    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, active, lastcheckFrom, lastcheckTo, **kwargs):
         """
         list processes (comes from osis), are the grid unique processes (not integrated with processmanager yet)
         param:id only find 1 process entry
@@ -278,12 +294,18 @@ class system_gridmanager(j.code.classGetBase()):
         param:aid find logs for specified application type
         param:from_ -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago)
         param:to -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified
+        param:lastcheckFrom str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckFrom  (-4d means 4 days ago)
+        param:lastcheckTo str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckTo  (-4d means 4 days ago)
         result list(list)
         """
         from_ = self._getEpoch(from_)
         to = self._getEpoch(to)
+        lastcheckFrom = self._getEpoch(lastcheckFrom)
+        lastcheckTo = self._getEpoch(lastcheckTo)
         params = {'ffrom': {'name': 'epochstart', 'value': from_, 'eq': 'gte'},
                   'to': {'name': 'epochstart', 'value': to, 'eq': 'lte'},
+                  'lastcheckFrom': {'name': 'lastcheck', 'value': lastcheckFrom, 'eq': 'gte'},
+                  'lastcheckTo': {'name': 'lastcheck', 'value': lastcheckTo, 'eq': 'lte'},
                   'nid': nid,
                   'gid': gid,
                   'active': active,
@@ -396,7 +418,7 @@ class system_gridmanager(j.code.classGetBase()):
                  }
         return self.osis_alert.simpleSearch(params)
 
-    def getVDisks(self, id, machineid, guid, gid, nid, disk_id, fs, sizeFrom, sizeTo, freeFrom, freeTo, sizeondiskFrom, sizeondiskTo, mounted, path, description, mountpoint, role, type, order, devicename, backup, backuplocation, backuptime, backupexpiration, active, **kwargs):
+    def getVDisks(self, id, machineid, guid, gid, nid, disk_id, fs, sizeFrom, sizeTo, freeFrom, freeTo, sizeondiskFrom, sizeondiskTo, mounted, path, description, mountpoint, role, type, order, devicename, backup, backuplocation, backuptime, backupexpiration, active, lastcheckFrom, lastcheckTo, **kwargs):
         """
         list found vdisks (virtual disks like qcow2 or sections on fs as used by a container or virtual machine) (comes from osis)
         param:id find based on id
@@ -425,8 +447,12 @@ class system_gridmanager(j.code.classGetBase()):
         param:backuptime epoch when was backup taken
         param:backupexpiration when does backup needs to expire
         param:active True,is the disk still active
+        param:lastcheckFrom str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find vdisks with lastcheckFrom  (-4d means 4 days ago)
+        param:lastcheckTo str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find vdisks with lastcheckTo  (-4d means 4 days ago)
         result list(list)
         """
+        lastcheckFrom = self._getEpoch(lastcheckFrom)
+        lastcheckTo = self._getEpoch(lastcheckTo)
         params = {'id': id,
                   'machineid': machineid,
                   'guid': guid,
@@ -440,6 +466,8 @@ class system_gridmanager(j.code.classGetBase()):
                   'freeTo': {'name': 'free', 'eq': 'gte', 'value': mbToKB(freeTo)},
                   'sizeondiskFrom': {'name': 'sizeondisk', 'eq': 'lte', 'value': mbToKB(sizeondiskFrom)},
                   'sizeondiskTo': {'name': 'sizeondisk', 'eq': 'gte', 'value': mbToKB(sizeondiskTo)},
+                  'lastcheckFrom': {'name': 'lastcheck', 'value': lastcheckFrom, 'eq': 'gte'},
+                  'lastcheckTo': {'name': 'lastcheck', 'value': lastcheckTo, 'eq': 'lte'},
                   'mounted': mounted,
                   'path': path,
                   'description': description,
@@ -456,7 +484,7 @@ class system_gridmanager(j.code.classGetBase()):
                  }
         return self.osis_vdisk.simpleSearch(params)
 
-    def getMachines(self, id, guid, otherid, gid, nid, name, description, state, roles, ipaddr, macaddr, active, cpucore, mem, type, **kwargs):
+    def getMachines(self, id, guid, otherid, gid, nid, name, description, state, roles, ipaddr, macaddr, active, cpucore, mem, type, lastcheckFrom, lastcheckTo, **kwargs):
         """
         list found machines (comes from osis)
         param:id find based on id
@@ -474,13 +502,19 @@ class system_gridmanager(j.code.classGetBase()):
         param:cpucore find based on nr cpucore
         param:mem find based on mem in MB
         param:type KVM or LXC
+        param:lastcheckFrom str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find machines with lastcheckFrom  (-4d means 4 days ago)
+        param:lastcheckTo str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find machines with lastcheckTo  (-4d means 4 days ago)
         result list(list)
         """
+        lastcheckFrom = self._getEpoch(lastcheckFrom)
+        lastcheckTo = self._getEpoch(lastcheckTo)
         params = {'id': id,
                   'guid': guid,
                   'otherid': otherid,
                   'gid': gid,
                   'nid': nid,
+                  'lastcheckFrom': {'name': 'lastcheck', 'value': lastcheckFrom, 'eq': 'gte'},
+                  'lastcheckTo': {'name': 'lastcheck', 'value': lastcheckTo, 'eq': 'lte'},
                   'name': name,
                   'description': description,
                   'state': state,
@@ -503,7 +537,7 @@ class system_gridmanager(j.code.classGetBase()):
 
     def getDisks(self, id=None, guid=None, gid=None, nid=None, fs=None, sizeFrom=None, sizeTo=None, freeFrom=None, \
                  freeTo=None, mounted=None, ssd=None, path=None, model=None, description=None, mountpoint=None, \
-                 type=None, active=None, **kwargs):
+                 type=None, active=None, lastcheckFrom=None, lastcheckTo=None, **kwargs):
         """
         list found disks (are really partitions) (comes from osis)
         param:id find based on id
@@ -523,8 +557,12 @@ class system_gridmanager(j.code.classGetBase()):
         param:mountpoint match on part of mountpoint
         param:type type e.g. BOOT DATA CACHE
         param:active True,is the disk still active
+        param:lastcheckFrom str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find disks with lastcheckFrom  (-4d means 4 days ago)
+        param:lastcheckTo str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find disks with lastcheckTo  (-4d means 4 days ago)
         result list(list)
         """
+        lastcheckFrom = self._getEpoch(lastcheckFrom)
+        lastcheckTo = self._getEpoch(lastcheckTo)
         params = {'id': id,
                   'guid': guid,
                   'gid': gid,
@@ -534,6 +572,8 @@ class system_gridmanager(j.code.classGetBase()):
                   'sizeTo': {'name': 'size', 'eq': 'gte', 'value': mbToKB(sizeTo)},
                   'freeFrom': {'name': 'free', 'eq': 'lte', 'value': mbToKB(freeFrom)},
                   'freeTo': {'name': 'free', 'eq': 'gte', 'value': mbToKB(freeTo)},
+                  'lastcheckFrom': {'name': 'lastcheck', 'value': lastcheckFrom, 'eq': 'gte'},
+                  'lastcheckTo': {'name': 'lastcheck', 'value': lastcheckTo, 'eq': 'lte'},
                   'mounted': mounted,
                   'ssd': ssd,
                   'path': path,
