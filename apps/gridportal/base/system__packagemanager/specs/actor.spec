@@ -19,24 +19,29 @@
         var:nodeId int,,id of node
         var:domain str,,domain name for jpackage
         var:name str,,name for jpackage
+        var:version str,, version of jpackage
         result:json
 
-    method:start
-        """
-        use agentcontroller to start a jpackage
-        give good category for job so its easy to fetch info later
-        return jobid
+    method:getPackageDescription
+        """     
+        ask the right processmanager on right node to get the information (will query jpackages underneath)
+        returns a package description
         """
         var:nodeId int,,id of node
         var:domain str,,domain name for jpackage
         var:name str,,name for jpackage
+        var:version str,, version of jpackage
+        result:json
 
-    method:stop
+    method:action
         """
-        use agentcontroller to stop a jpackage
+        use agentcontroller to execute action on a jpackage
         give good category for job so its easy to fetch info later
         return jobid
         """
         var:nodeId int,,id of node
         var:domain str,,domain name for jpackage
         var:name str,,name for jpackage
+        var:version str,, version of jpackage
+        var:action str,, action to be executed on jpackage
+        result:str

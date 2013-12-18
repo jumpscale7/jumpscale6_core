@@ -4,20 +4,16 @@ def main(j, args, params, tags, tasklet):
     domain = args.requestContext.params.get('domain')
     name = args.requestContext.params.get('name')
     version = args.requestContext.params.get('version')
+    nid = args.requestContext.params.get('nodeId')
 
-    if version:
-        package = j.packages.find(domain, name, version)[0]
-    else:
-        package = j.packages.findNewest(domain, name)
+    j.core.portal.runningPortal.actorsloader.getActor('system', 'packagemanager')
 
-    message = "%s on %s successful" % (action, name)
+    if not nid:
+        _, nid, _ = j.application.whoAmI
+    result = j.apps.system.packagemanager.action(nodeId=nid, domain=domain, pname=name, version=version, action=action)['result']
 
-    if action == 'update':
-        package.install()
-    elif hasattr(package, action):
-        getattr(package, action)()
-    else:
-        message = "%s on %s failed" % (action, name)
+    import json
+    message = json.loads(result)['result']
 
     page.addHTML(message)
 

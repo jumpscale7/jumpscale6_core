@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import unittest
 import re
 import time
@@ -37,22 +38,22 @@ class OSISPopulationTest(unittest.TestCase):
         print 'node'
         client=j.core.osis.getClientForCategory(self.client,"system","node")        
 
-        for i in range(80,90):
+        for i in range(80, 90):
             obj=client.new()
             obj.gid=1
             obj.nid=i
-            mac1='46:3a:26:39:67:%s'%i
-            mac2='00:22:4d:9a:ee:%s'%i
-            netaddr={mac1: ['lxcbr0', '10.0.3.%s'%i], mac2: ['eth1', '192.168.200.%s'%i]}
-            obj.netaddr=netaddr
-            obj.peer_log=j.base.idgenerator.generateRandomInt(80,90)
-            obj.peer_stats=j.base.idgenerator.generateRandomInt(80,90)
-            obj.peer_backup=j.base.idgenerator.generateRandomInt(80,90)
-            obj.machineguid="00224d9aee%s"%i
-            obj.ipaddr=['10.0.3.%s'%i, '192.168.200.%s'%i]
-            obj.name="name%s"%i
-            obj.description = "this is a description for node %s"%i
-            obj.active=j.base.idgenerator.generateRandomInt(10,14)==11
+            mac1='46:3a:26:39:67:%s' % i
+            mac2='00:22:4d:9a:ee:%s' % i
+            netaddr = {mac1: ['lxcbr0', '10.0.3.%s' % i], mac2: ['eth1', '192.168.200.%s' % i]}
+            obj.netaddr = netaddr
+            obj.peer_log = j.base.idgenerator.generateRandomInt(80, 90)
+            obj.peer_stats = j.base.idgenerator.generateRandomInt(80, 90)
+            obj.peer_backup = j.base.idgenerator.generateRandomInt(80, 90)
+            obj.machineguid = "00224d9aee%s" % i
+            obj.ipaddr = ['10.0.3.%s' % i, '192.168.200.%s' % i]
+            obj.name = "name%s" % i
+            obj.description = "this is a description for node %s" % i
+            obj.active = j.base.idgenerator.generateRandomInt(10, 14) == 11
             client.set(obj)
         
     def test_machine(self):
@@ -107,33 +108,45 @@ class OSISPopulationTest(unittest.TestCase):
 
     def test_disk(self):
         print 'disk'
-        client=j.core.osis.getClientForCategory(self.client,"system","disk")        
+        client = j.core.osis.getClientForCategory(self.client, "system", "disk")
 
-        for i in range(20,70):
-            obj=client.new()            
-            obj.gid=1
-            obj.nid=obj.nid=j.base.idgenerator.generateRandomInt(1,10)
-            obj.active=j.base.idgenerator.generateRandomInt(10,14)==11
-            if j.base.idgenerator.generateRandomInt(1,5)==2:
-                obj.ssd=True
+        for i in range(20, 70):
+            obj = client.new()
+
+            obj.gid = 1
+
+            obj.nid = j.base.idgenerator.generateRandomInt(1, 10)
+
+            obj.active = j.base.idgenerator.generateRandomInt(10, 14) == 11
+
+            if j.base.idgenerator.generateRandomInt(1, 5) == 2:
+                obj.ssd = True
             else:
-                obj.ssd=False
-            self.model="amodel %s"%i
+                obj.ssd = False
 
-            r=j.base.idgenerator.generateRandomInt(0,2)
-            paths=["/dev/sda","/dev/sdb","/dev/sdc"]
-            obj.path=paths[r]+str(j.base.idgenerator.generateRandomInt(0,3))
-            obj.size=j.base.idgenerator.generateRandomInt(100000,2000000)
-            obj.free=int(float(obj.size)*((float(j.base.idgenerator.generateRandomInt(1,9))/10)))
+            self.model = "some disk model %s" % i
 
-            fss=["ext4","btrfs","ext3","ntfs"]
-            obj.fs=fss[j.base.idgenerator.generateRandomInt(0,3)]
-            obj.mounted=not j.base.idgenerator.generateRandomInt(1,5)==2
-            obj.name="disk%s"%i
-            obj.description = "this is a description for disk %s"%i            
-            ttype=["BOOT","DATA","SWAP","TEMP"]
-            obj.type=ttype[j.base.idgenerator.generateRandomInt(0,3)]
-            obj.mountpoint="/mnt/data/%s"%i
+            paths = ["/dev/sda", "/dev/sdb", "/dev/sdc"]
+            r = j.base.idgenerator.generateRandomInt(0, 2)
+            obj.path = paths[r] + str(j.base.idgenerator.generateRandomInt(0, 3))
+
+            obj.size = j.base.idgenerator.generateRandomInt(100000, 2000000)
+
+            obj.free = int(float(obj.size)*((float(j.base.idgenerator.generateRandomInt(1, 9))/10)))
+
+            fss = ["ext4", "btrfs", "ext3", "ntfs"]
+            obj.fs = fss[j.base.idgenerator.generateRandomInt(0, 3)]
+
+            obj.mounted = j.base.idgenerator.generateRandomInt(1, 5) != 2
+
+            obj.name = "disk%s" % i
+
+            obj.description = "this is a description for disk %s" % i
+
+            ttype = ["BOOT", "DATA", "SWAP", "TEMP"]
+            obj.type = ttype[j.base.idgenerator.generateRandomInt(0, 3)]
+
+            obj.mountpoint = "/mnt/data/%s" % i
 
             client.set(obj)
 

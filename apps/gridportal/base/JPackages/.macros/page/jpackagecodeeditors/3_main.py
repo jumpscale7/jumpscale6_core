@@ -5,15 +5,20 @@ def main(j, args, params, tags, tasklet):
     domain = args.requestContext.params.get('domain')
     name = args.requestContext.params.get('name')
     version = args.requestContext.params.get('version')
+    nid = args.requestContext.params.get('nodeId')
 
-    if version:
-        package = j.packages.find(domain, name, version)[0]
-    else:
-        package = j.packages.findNewest(domain, name)
+    j.core.portal.runningPortal.actorsloader.getActor('system', 'packagemanager')
+
+    if not nid:
+        _, nid, _ = j.application.whoAmI
+    result = j.apps.system.packagemanager.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)['result']
+
+    import json
+    result = json.loads(result)['result']
     
-    page.addHeading("Code editors for %s:%s"%(package.domain,package.name), 2)
+    page.addHeading("Code editors for %s:%s"%(result['domain'], result['name']), 2)
 
-    for path in package.getCodeLocationsFromRecipe():
+    for path in result['getCodeLocationsFromRecipe']:
         page.addHeading("%s"%path, 3)
         page.addExplorer(path,readonly=False, tree=True,height=300)
 

@@ -1,0 +1,6 @@
+@usedefault
+
+h2. Disks details
+
+{{disk: id:$$id}}
+

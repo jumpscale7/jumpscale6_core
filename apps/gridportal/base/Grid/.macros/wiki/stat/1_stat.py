@@ -8,9 +8,8 @@ def main(j, args, params, tags, tasklet):
     
     p=args.tags.getDict()
 
-    out="!/restmachine/system/gridmanager/getStat?statKey=+%s&_png=1&width=%s&height=%s&.png!"%(p["key"],p["width"],p["height"])
-
-
+    out='!/restmachine/system/gridmanager/getStatImage?statKey=%s&_png=1&width=%s&height=%s&.png!'%(p["key"],p["width"],p["height"])
+    
     params.result = (out, doc)
 
     return params

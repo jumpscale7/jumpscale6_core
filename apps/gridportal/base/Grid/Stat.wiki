@@ -2,4 +2,5 @@
 
 H3. Stat example
 
-{{stat: key:n1.disk.mbytes.read.sda1.avg width:500 height:200}}
+{{stat: key:n1.processes.cloudscalers.cloudbroker.contentswitches.avg width:400 height:200}}
+
