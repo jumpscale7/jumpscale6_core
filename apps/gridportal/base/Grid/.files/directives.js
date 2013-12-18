@@ -50,7 +50,9 @@ angular.module('jumpscale')
 
                             var now = new Date().getTime();
                             scope.statisticsData.push([now,result.data[selectedStatistic]]);
-
+                            while (scope.statisticsData.length > 90){
+                                scope.statisticsData.shift();
+                            }
                             updateChart(scope.statisticsData); // update DOM
                         }); 
 
