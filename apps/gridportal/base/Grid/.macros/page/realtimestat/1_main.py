@@ -2,9 +2,10 @@ def main(j, args, params, tags, tasklet):
 
     page = args.page
   
-    qsparams = args.requestContext.params
-    nodeId = qsparams.pop('nid', None)
-    statistic = qsparams.pop('statistic', None)
+    
+    p=args.tags.getDict()
+    nodeId = p['nid']
+    statistic = p['statistic']
 
     page.addBodyAttribute('ng-app="jumpscale"')
 
