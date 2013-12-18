@@ -108,6 +108,7 @@ def install_grid():
     print cuapi.run("jpackage_install -n agent -r --debug")
     print cuapi.run("jsprocess start")
 
+
 def install_desktop():
 
     names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway","sublimetext"]
