@@ -72,7 +72,9 @@ class Job():
         self.lockduration=self.db.lockduration
 
     def save(self):
-        self.controller.jobclient.set(self.db)
+        guid, new, changed = self.controller.jobclient.set(self.db)
+        if new or changed:
+            self.db = self.controller.jobclient.get(guid)
 
     def __repr__(self):
         return str(self.db.__dict__)
@@ -378,6 +380,8 @@ class ControllerCMDS():
             if wait:
                 return self.waitJumpscript(job.id,session)
 
+            if isinstance(job.db, dict):
+                return job.db
             return job.db.__dict__
         else:
             print "nothingtodo"
@@ -386,6 +390,8 @@ class ControllerCMDS():
             job.state="NOWORK"
             job.timeStop=job.timeStart
             job.save()            
+            if isinstance(job.db, dict):
+                return job.db
             return job.db.__dict__
 
     def waitJumpscript(self,jobid,session):
@@ -404,12 +410,16 @@ class ControllerCMDS():
             job.event=Event()
             job.event.wait()            
             timeout.cancel()
-            return job.db.getDict()
+            if isinstance(job.db, dict):
+                return job.db
+            return job.db.__dict__
         except:
             timeout.cancel()
             job.resultcode=1
             print "timeout on execution"
-            return job.db.getDict()
+            if isinstance(job.db, dict):
+                return job.db
+            return job.db.__dict__
 
     def getWork(self, session=None):
         """
@@ -543,6 +553,8 @@ class ControllerCMDS():
     def getJobInfo(self, jobid, session=None):
         job = self.jobs.get(jobid)
         if job:
+            if isinstance(job.db, dict):
+                return job.db
             return job.db.__dict__
 
     def getActiveJobs(self, session=None):
