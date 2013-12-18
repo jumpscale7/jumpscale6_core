@@ -20,13 +20,9 @@ def action(domain, pname, version):
         if domain and pname:
             package = j.packages.findNewest(domain, pname)
             if not package:
-                returnpath = "/jpackages/jpackages"
-                returncontent = "<script>window.open('%s', '_self', '');</script>" % returnpath
-                return returncontent
+                return False
         else:
-            returnpath = "/jpackages/jpackages"
-            returncontent = "<script>window.open('%s', '_self', '');</script>" % returnpath
-            return returncontent
+            return False
 
     packagedata = {}
     info = ('domain', 'version', 'buildNr', 'description', 'name', 'dependencies', 'supportedPlatforms')

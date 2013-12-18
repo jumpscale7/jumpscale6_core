@@ -26,6 +26,4 @@ def action(domain, pname, version):
             infofiles.append({'platform': platform, 'ttype': ttype})
         return infofiles
     else:
-        returnpath = "/jpackages/jpackages"
-        returncontent = "<script>window.open('%s', '_self', '');</script>" % returnpath
-        return returncontent
+        return False

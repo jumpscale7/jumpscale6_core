@@ -15,6 +15,11 @@ def main(j, args, params, tags, tasklet):
 
     import json
     result = json.loads(result)['result']
+
+    if result == False:
+        page.addHTML("<script>window.open('/jpackages/jpackages', '_self', '');</script>" )
+        params.result = page
+        return params
     
     page.addExplorer(result['getPathMetadata'],readonly=False, tree=True)
 

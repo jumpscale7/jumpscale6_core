@@ -15,8 +15,8 @@ def main(j, args, params, tags, tasklet):
 
     import json
     result = json.loads(result['result'])['result']
-    if isinstance(result, basestring):
-        page.addHTML(result)
+    if result == False:
+        page.addHTML("<script>window.open('/jpackages/jpackages', '_self', '');</script>" )
         params.result = page
         return params
     
