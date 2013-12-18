@@ -7,10 +7,6 @@ h2. Explorers
 |[JPackage Browser|/jpackages/JPackageBrowser?domain=$$domain&name=$$name&version=$$version]|
 |[JPackage Files|/jpackages/JPackageFiles?domain=$$domain&name=$$name&version=$$version]|
 
-h2. Links
-
-|[JPackage Blobs|/jpackages/JPackageBlobs?domain=$$domain&name=$$name&version=$$version]|
-
 h2. Actions
 
 |[start|/jpackages/JPackageAction?action=start&domain=$$domain&name=$$name&version=$$version]|

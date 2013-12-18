@@ -14,7 +14,6 @@ def main(j, args, params, tags, tasklet):
     out = ['||Property||Value||']
 
     out.append("|id|%s|" % (obj['id']))
-    out.append("|node (remove this field?)|%s|" % (obj['nid']))
 
     n = 1
     for i in obj['netaddr']:
@@ -29,9 +28,14 @@ def main(j, args, params, tags, tasklet):
         out.append("|IP address %s|%s|" % (n, i))
         n +=1
 
-    out.append("|%s|[%s|/node?id=%s]|" % ('peer log', obj['peer_log'], obj['peer_log']))
-    out.append("|%s|[%s|/node?id=%s]|" % ('peer stats', obj['peer_stats'], obj['peer_stats']))
-    out.append("|%s|[%s|/node?id=%s]|" % ('peer backup', obj['peer_backup'], obj['peer_backup']))
+    # Display only if peers are actually defined
+    if obj['peer_log'] > 0:
+        out.append("|%s|[%s|/grid/node?id=%s]|" % ('peer log', obj['peer_log'], obj['peer_log']))
+    if obj['peer_stats'] > 0:
+        out.append("|%s|[%s|/grid/node?id=%s]|" % ('peer stats', obj['peer_stats'], obj['peer_stats']))
+    if obj['peer_backup'] > 0:
+        out.append("|%s|[%s|/grid/node?id=%s]|" % ('peer backup', obj['peer_backup'], obj['peer_backup']))
+
     out.append("|%s|%s|" % ('machine guid', obj['machineguid']))
     out.append("|%s|%s|" % ('active', obj['active']))
     out.append("|%s|%s|" % ('name', obj['name']))

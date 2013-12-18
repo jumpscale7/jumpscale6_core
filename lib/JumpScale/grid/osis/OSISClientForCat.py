@@ -49,7 +49,11 @@ class OSISClientForCat():
 
     def get(self, key):
         value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
-        value=json.loads(value)
+        if isinstance(value, basestring):
+            try:
+                value=json.loads(value)
+            except:
+                pass # might be normal string/data aswell
         if isinstance(value, dict) and value.has_key("_type"):
             value["_type"]
             klass=self._getModelClass()
