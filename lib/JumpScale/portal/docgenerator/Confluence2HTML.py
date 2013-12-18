@@ -259,7 +259,7 @@ class Confluence2HTML():
                 continue
 
             # IMAGE
-            regex = r"\![\w\-:_/= *.,|]*\!"
+            regex = r"\![\w\-:_/= *.,|?&]*\!"
             if (state == "start" or state == "table")and j.codetools.regex.match(regex, line):
                 matches = j.codetools.regex.findAll(regex, line)
                 for match in matches:
@@ -274,7 +274,10 @@ class Confluence2HTML():
                         styles = [attr.split('=') for attr in styles.split(',')]
                     else:
                         styles = []
-                    imagePath = "/images/%s/%s" % (doc.getSpaceName(), image)
+                    if image.startswith('/') or image.startswith('http://'):
+                        imagePath = image
+                    else:
+                        imagePath = "/images/%s/%s" % (doc.getSpaceName(), image)
                     if image not in doc.images:
                         # th=j.core.tags.getObject(tags)
                         # result=th.getValues(width=800,height=600,border=True)
