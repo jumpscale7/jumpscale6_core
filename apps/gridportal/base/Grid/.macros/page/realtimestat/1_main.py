@@ -31,8 +31,9 @@ def main(j, args, params, tags, tasklet):
         print nodeId
 
     url = '/restmachine/system/gridmanager/getNodeSystemStats?nodeId=%s' % nodeId
-
-    page.addHTML('<div id="statisticsChart" data-chart ng-model="statisticsData" ng-url="%s" ng-stat="%s" style="width: 100%%;"></div>' % (url,statistic))
+    import random
+    randomid = random.randint(1, 999999999999)
+    page.addHTML('<div id="statisticsChart%s" data-chart ng-model="statisticsData" ng-url="%s" ng-stat="%s" style="width: 100%%;"></div>' % (randomid, url,statistic))
 
     params.result = page
     return params
