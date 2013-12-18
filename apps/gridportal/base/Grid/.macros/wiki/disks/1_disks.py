@@ -16,7 +16,7 @@ def main(j, args, params, tags, tasklet):
     #           "fs", "mounted", "name", "description", "type", "mountpoint"]
     fields = ["id", "nid", "name", "active", "ssd", "size", "free", "mounted"]
 
-    out.append('||id||node||name||active||ssd||size||free||mounted||')
+    out.append('||id||node||name||active||ssd||usage||mounted||')
 
     for disk in actor.getDisks():
         line = [""]
@@ -27,7 +27,12 @@ def main(j, args, params, tags, tasklet):
                 line.append('[%s|/grid/disk?id=%s]' % (str(disk[field]), str(disk[field])))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(disk[field]), str(disk[field])))
-
+            elif field == 'size':
+                disksize = disk[field]
+            elif field == 'free':
+                diskfree = disk[field]
+                diskusage = 100 - int(100.0 * diskfree / disksize)
+                line.append('%s%%' % diskusage)
             else:
                 line.append(str(disk[field]))
 

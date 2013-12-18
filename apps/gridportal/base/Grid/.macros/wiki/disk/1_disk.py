@@ -17,13 +17,14 @@ def main(j, args, params, tags, tasklet):
     #           "fs", "mounted", "name", "description", "type", "mountpoint"]
 
     out.append("|%s|%s|" % ('id', obj['id']))
-    out.append("|%s|%s|" % ('node', obj['nid']))
+    out.append("|[%s|/grid/node?id=%s]|%s|" % ('node', obj['nid'], obj['nid']))
     out.append("|%s|%s|" % ('active', obj['active']))
     out.append("|%s|%s|" % ('ssd', obj['ssd']))
     out.append("|%s|%s|" % ('model', obj['model']))
     out.append("|%s|%s|" % ('path', obj['path']))
     out.append("|%s|%s|" % ('size', obj['size']))
     out.append("|%s|%s|" % ('free', obj['free']))
+    out.append("|%s|%s%%|" % ('usage', 100 - int(100.0 * obj['free'] / obj['size'])))
     out.append("|%s|%s|" % ('filesystem', obj['fs']))
     out.append("|%s|%s|" % ('mounted', obj['mounted']))
     out.append("|%s|%s|" % ('name', obj['name']))
