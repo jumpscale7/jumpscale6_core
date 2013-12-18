@@ -73,8 +73,6 @@ class Job():
 
     def save(self):
         guid, new, changed = self.controller.jobclient.set(self.db)
-        if new or changed:
-            self.db = self.controller.jobclient.get(guid)
 
     def __repr__(self):
         return str(self.db.__dict__)
