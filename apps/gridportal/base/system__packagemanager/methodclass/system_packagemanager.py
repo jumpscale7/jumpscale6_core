@@ -9,6 +9,7 @@ class system_packagemanager(j.code.classGetBase()):
         self.appname = "system"
         j.clients.agentcontroller.client.loadJumpscripts()
         j.core.portal.runningPortal.actorsloader.getActor('system', 'gridmanager')
+        self.gid, _, _ = j.application.whoAmI
 
     def getInstalledJPackages(self, **args):
         nodeId = args.get('nodeId')
@@ -18,8 +19,7 @@ class system_packagemanager(j.code.classGetBase()):
 
     def getJPackage(self, **args):
         nodeId = args.get('nodeId')
-        gid, _, _ = j.application.whoAmI
-        roles = "node.%i.%i" % (gid, nodeId)
+        roles = "node.%s.%s" % (self.gid, nodeId)
         domain = args.get('domain', None)
         name = args.get('pname', None)
         version = args.get('version', None)
@@ -27,8 +27,7 @@ class system_packagemanager(j.code.classGetBase()):
 
     def getPackageDescription(self, **args):
         nodeId = args.get('nodeId')
-        gid, _, _ = j.application.whoAmI
-        roles = "node.%i.%i" % (gid, nodeId)
+        roles = "node.%s.%s" % (self.gid, nodeId)
         domain = args.get('domain', None)
         name = args.get('pname', None)
         version = args.get('version', None)
@@ -36,10 +35,29 @@ class system_packagemanager(j.code.classGetBase()):
 
     def action(self, **args):
         nodeId = args.get('nodeId')
-        gid, _, _ = j.application.whoAmI
-        roles = "node.%i.%i" % (gid, nodeId)
+        roles = "node.%s.%s" % (self.gid, nodeId)
         domain = args.get('domain', None)
         name = args.get('pname', None)
         action = args.get('action', None)
         version = args.get('version', None)
         return j.clients.agentcontroller.execute('jumpscale', 'jpackage_action', roles, domain=domain, pname=name, version=version, action=action)
+
+    def getBlobs(self, **args):
+        nodeId = args.get('nodeId')
+        domain = args.get('domain', None)
+        name = args.get('pname', None)
+        version = args.get('version', None)
+        roles = "node.%s.%s" % (self.gid, nodeId)
+        return j.clients.agentcontroller.execute('jumpscale', 'jpackage_blobs', roles, domain=domain, pname=name, version=version)
+
+    def getBlobContents(self, **args):
+        nodeId = args.get('nodeId')
+        domain = args.get('domain', None)
+        name = args.get('pname', None)
+        version = args.get('version', None)
+        platform = args.get('platform')
+        ttype = args.get('ttype')
+        roles = "node.%s.%s" % (self.gid, nodeId)
+        blobcontent =  j.clients.agentcontroller.execute('jumpscale', 'jpackage_blobdata', roles, domain=domain, pname=name, version=version, platform=platform, ttype=ttype)['result']
+        import json
+        return json.loads(blobcontent)['result']
