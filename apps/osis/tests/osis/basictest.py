@@ -2,6 +2,7 @@ import unittest
 import re
 import time
 from JumpScale import j
+import json
 import random
 
 
@@ -22,29 +23,28 @@ class OSISSearchTests(unittest.TestCase):
 
     def setUp(self):
         print 'setup'
-        self.client = j.core.osis.getClient()
+        self.nodeclient =j.core.osis.getClientForCategory(client, 'system', 'node')
+
         self.prefix = time.time()
         # We make some basic entries to search on
         numbers = range(10)
         self.created = []
         for i in numbers:
-            macaddr = randomMAC()
-            netaddr = {macaddr: ['127.0.0.1', '127.0.0.2']}
-            machineguid = j.tools.hash.md5_string(str(netaddr.keys()))
-            obj = j.core.grid.zobjects.getZNodeObject(name="%s_%s" %
-                                                     (self.prefix, i), netaddr=netaddr, machineguid=
-                                                      machineguid)
-            key, new, changed = client.set("system", "znode", obj)
+            obj = self.nodeclient.new()
+            obj.name = "%s_%s" % (self.prefix, i)
+            obj.netaddr = {randomMAC(): ['127.0.0.1', '127.0.0.2']}
+            obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
+            key, new, changed = self.nodeclient.set(obj)
             self.created.append(key)
 
     def tearDown(self):
         # cleanup of al created entries
         print 'delete'
         for i in self.created:
-            client.delete("system", "znode", i)
+            client.delete("system", "node", i)
 
     def test_set_search_all(self):
-        result = self.client.search("system", "znode", {})
+        result = client.search("system", "node", {})
         print result
 
 
@@ -58,56 +58,51 @@ class OSISTests(unittest.TestCase):
         return ':'.join(map(lambda x: "%02x" % x, mac))
 
     def setUp(self):
-        self.client = j.core.osis.getClient()
+        self.nodeclient =j.core.osis.getClientForCategory(client, 'system', 'node')
         self.prefix = time.time()
 
     def test_set(self):
         # We first set some elements and verify the reponse
-        macaddr = self.randomMAC()
-        netaddr = {macaddr: ['127.0.0.1', '127.0.0.2']}
-        machineguid = j.tools.hash.md5_string(str(netaddr.keys()))
-        obj = j.core.grid.zobjects.getZNodeObject(name="%s_1" % self.prefix,
-                                                  netaddr=netaddr, machineguid=machineguid)
-        key, new, changed = client.set("system", "znode", obj)
-        testresult = new and not changed and self.verify_id(key)
+        obj = self.nodeclient.new()
+        obj.name = "%s_1" % self.prefix
+        obj.netaddr = {randomMAC(): ['127.0.0.1', '127.0.0.2']}
+        obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
+        key, new, changed = self.nodeclient.set(obj)
+        testresult = self.verify_id(key) and new and changed
         self.assertEqual(testresult, True)
 
     def test_set_and_get(self):
         # Set a object and get it back, check the content.
-        macaddr = self.randomMAC()
-        netaddr = {macaddr: ['127.0.0.1', '127.0.0.2']}
-        machineguid = j.tools.hash.md5_string(str(netaddr.keys()))
-        obj = j.core.grid.zobjects.getZNodeObject(name="%s_1" % self.prefix,
-                                                  netaddr=netaddr, machineguid=machineguid)
-        key, new, changed = client.set("system", "znode", obj)
-        obj = client.get("system", "znode", key)
+        obj = self.nodeclient.new()
+        obj.name = "%s_1" % self.prefix
+        obj.netaddr = {randomMAC(): ['127.0.0.1', '127.0.0.2']}
+        obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
+        key, new, changed = self.nodeclient.set(obj)
+        obj = json.loads(client.get("system", "node", key))
         self.assertEqual(obj['name'], "%s_1" % self.prefix)
 
     def test_set_and_self(self):
         numbers = range(10)
-        items = client.list("system", "znode")
+        items = client.list("system", "node")
         startnr = len(items)
         for i in numbers:
-            macaddr = self.randomMAC()
-            netaddr = {macaddr: ['127.0.0.1', '127.0.0.2']}
-            machineguid = j.tools.hash.md5_string(str(netaddr.keys()))
-            obj = j.core.grid.zobjects.getZNodeObject(name="%s_%s" %
-                                                     (self.prefix, i), netaddr=netaddr, machineguid=
-                                                      machineguid)
-            key, new, changed = client.set("system", "znode", obj)
-        items = client.list("system", "znode")
+            obj = self.nodeclient.new()
+            obj.name = "%s_%s" % (self.prefix, i)
+            obj.netaddr = {randomMAC(): ['127.0.0.1', '127.0.0.2']}
+            obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
+            key, new, changed = self.nodeclient.set(obj)
+        items = client.list("system", "node")
         self.assertEqual(len(items), startnr + 10)
 
     def test_set_and_delete(self):
-        macaddr = self.randomMAC()
-        netaddr = {macaddr: ['127.0.0.1', '127.0.0.2']}
-        machineguid = j.tools.hash.md5_string(str(netaddr.keys()))
-        obj = j.core.grid.zobjects.getZNodeObject(name="%s_1" % self.prefix,
-                                                  netaddr=netaddr, machineguid=machineguid)
-        key, new, changed = client.set("system", "znode", obj)
-        obj = client.get("system", "znode", key)
-        client.delete("system", "znode", key)
-        items = client.list("system", "znode")
+        obj = self.nodeclient.new()
+        obj.name = "%s_1" % self.prefix
+        obj.netaddr = {randomMAC(): ['127.0.0.1', '127.0.0.2']}
+        obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
+        key, new, changed = self.nodeclient.set(obj)
+        obj = client.get("system", "node", key)
+        client.delete("system", "node", key)
+        items = client.list("system", "node")
         if key in items:
             deleted = False
         else:
