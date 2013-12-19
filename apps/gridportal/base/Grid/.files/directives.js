@@ -10,12 +10,13 @@ angular.module('jumpscale')
 
 
             var updateChart = function(data){
-                    element.empty();
-                    if (!data) {return;};
-                    $.jqplot(attrs.id,[ data ],{
-                        axesDefaults: {
-                        tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
-                        tickOptions: {
+                if (scope.plot){scope.plot.destroy();}
+                element.empty();
+                if (!data) {return;};
+                scope.plot = $.jqplot(attrs.id,[ data ],{
+                    axesDefaults: {
+                    tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+                            tickOptions: {
                             fontSize: '10pt'
                             }
                         },
