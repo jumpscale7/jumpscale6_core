@@ -111,9 +111,9 @@ def install_grid():
 
 def install_desktop():
 
-    names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway","sublimetext"]
+    names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway"]#,"sublimetext"]
     for name in names:
-        print cuapi.run("jpackage_install -n %s"%name)
+        print cuapi.run("jpackage_install -n %s -r"%name)
 
 
 if "platform" in result:
