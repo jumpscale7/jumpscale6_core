@@ -81,8 +81,11 @@ class ErrorConditionObject():
         def _toAscii(s):
             try:
                 return unicodedata.normalize('NFKD', unicode(s)).encode('ascii','ignore') 
-            except:
-                return s        
+            except Exception,e:
+                print "BUG"
+                import ipdb
+                ipdb.set_trace()
+                                                
         self.errormessage=_toAscii(self.errormessage)
         self.errormessagePub=_toAscii(self.errormessagePub)
         self.backtrace=_toAscii(self.backtrace)
