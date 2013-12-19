@@ -7,29 +7,24 @@ class Space(LoaderBaseObject):
     def __init__(self):
         LoaderBaseObject.__init__(self, "space")
         self.docprocessor = None
+        self._loading = False
 
     def loadDocProcessor(self):
+        if self._loading:
+            return
+        self._loading = True
         if j.system.fs.exists(j.system.fs.joinPaths(self.model.path, ".macros")):
-            # macroPathsPreprocessor = ["system/system__contentmanager/macros/preprocess", j.system.fs.joinPaths(self.model.path, ".macros", "preprocess")]
-            # macroPathsWiki = ["system/system__contentmanager/macros/wiki", j.system.fs.joinPaths(self.model.path, ".macros", "wiki")]
-            # macroPathsPage = ["system/system__contentmanager/macros/page", j.system.fs.joinPaths(self.model.path, ".macros", "page")]
-
             #load the macro's only relevant to the space, the generic ones are loaded on docpreprocessorlevel
             macroPathsPreprocessor = [j.system.fs.joinPaths(self.model.path, ".macros", "preprocess")]
             macroPathsWiki = [j.system.fs.joinPaths(self.model.path, ".macros", "wiki")]
             macroPathsPage = [j.system.fs.joinPaths(self.model.path, ".macros", "page")]
 
-            MacroExecutorPreprocess, MacroExecutorPage, MacroExecutorWiki = j.web.geventws.getMacroExecutors()
-            spaceMacroexecutorPreprocessor = MacroExecutorPreprocess(macroPathsPreprocessor)
-            spaceMacroexecutorPage = MacroExecutorPage(macroPathsPage)
-            spaceMacroexecutorWiki = MacroExecutorWiki(macroPathsWiki)
-            self.docprocessor = j.tools.docpreprocessor.get(contentDirs=[self.model.path], spacename=self.model.id,
-                                                            spaceMacroexecutorPreprocessor=spaceMacroexecutorPreprocessor,
-                                                            spaceMacroexecutorPage=spaceMacroexecutorPage,
-                                                            spaceMacroexecutorWiki=spaceMacroexecutorWiki)            
-
-        else:
-            self.docprocessor = j.tools.docpreprocessor.get(contentDirs=[self.model.path], spacename=self.model.id)
+            name = self.model.id.lower()
+            webserver = j.core.portal.runningPortal.webserver
+            webserver.macroexecutorPage.addMacros(macroPathsPage, name)
+            webserver.macroexecutorPreprocessor.addMacros(macroPathsPreprocessor, name)
+            webserver.macroexecutorWiki.addMacros(macroPathsWiki, name)
+        self.docprocessor = j.tools.docpreprocessor.get(contentDirs=[self.model.path], spacename=self.model.id)
 
     def createDefaults(self, path):
         self._createDefaults(path, ["default.wiki", "nav.wiki", "notfound.wiki", "template.wiki", "users.cfg"])

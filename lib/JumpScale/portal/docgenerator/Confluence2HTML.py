@@ -306,9 +306,6 @@ class Confluence2HTML():
 
             # 1 line macros
             if (state == "start" or state == "table") and line.find("{{") != -1 and line.find("}}") != -1:
-                if doc.preprocessor.spaceMacroexecutorPage != None:
-                    doc.preprocessor.macroexecutorPage.taskletsgroup2 = doc.preprocessor.spaceMacroexecutorPage.taskletsgroup
-
                 macros = doc.preprocessor.macroexecutorPage.getMacroCandidates(line)
                 for macro in macros:
                     # print "## 1linemacro:%s"%macro
@@ -326,7 +323,6 @@ class Confluence2HTML():
                 # print "processed 1 macro line:%s"%line
                 if line.strip() == "":
                     continue
-                doc.preprocessor.macroexecutorPage.taskletsgroup2 = None
 
             # print "after1linemacrostate:%s %s"%(line,state)
 
@@ -343,15 +339,7 @@ class Confluence2HTML():
                 # macro=macro.strip().lstrip("{{")
                 # macro=macro.rstrip("}}")
                 if doc != None:
-                    # ms=doc.preprocessor.macroexecutorPage.findMacros(macro)
-                    # if len(ms)==1:
-                    # print "EXECUTE MACRO %s"%macro
-                    if doc.preprocessor.spaceMacroexecutorPage != None:
-                        doc.preprocessor.macroexecutorPage.taskletsgroup2 = doc.preprocessor.spaceMacroexecutorPage.taskletsgroup
-                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc, requestContext=requestContext, paramsExtra=paramsExtra)
-                        doc.preprocessor.macroexecutorPage.taskletsgroup2 = None
-                    else:
-                        doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc, requestContext=requestContext, paramsExtra=paramsExtra)
+                    doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc, requestContext=requestContext, paramsExtra=paramsExtra)
                     macro = ""
                     # params=""
                     continue
