@@ -1,4 +1,5 @@
 from JumpScale import j
+import ujson
 
 class AgentControllerFactory(object):
 
@@ -26,11 +27,20 @@ class AgentControllerFactory(object):
         return self._client
 
 
-    def execute(self,organization,name,role,timeout=60,wait=True,lock="",**kwargs):
+    def execute(self,organization,name,role,timeout=60,wait=True,lock="",dieOnFailure=True,**kwargs):
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
-        return self.client.executeJumpscript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,lock=lock)
+        job= self.client.executeJumpscript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,lock=lock)
+        if job["state"]=="ERROR":
+            eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(job["result"]))
+            print eco
+            if dieOnFailure:
+                raise RuntimeError("Could not execute %s %s for role, ecoguid was:%s"%(organization,name,role,eco.guid))
+                #j.errorconditionhandler.processErrorConditionObject(eco)
+
+
+        
 
     def listJumpScripts(self, organization=None, cat=None):
         """
