@@ -2,7 +2,17 @@ from JumpScale import j
 import traceback
 
 
-class MacroExecutorBase():
+class MacroExecutorBase(object):
+    def __init__(self, macrodirs=[]):
+        self.taskletsgroup = dict()
+        self.addMacros(macrodirs, None)
+
+    def addMacros(self, macrodirs, spacename):
+        spacename = spacename.lower() if spacename else None
+        taskletsgroup = j.core.taskletengine.getGroup()
+        for macrodir in macrodirs:
+            taskletsgroup.addTasklets(macrodir)
+        self.taskletsgroup[spacename] = taskletsgroup
 
     def getMacroCandidates(self, txt):
         result = []
@@ -13,6 +23,23 @@ class MacroExecutorBase():
                 if item not in result:
                     result.append("{{%s}}" % item)
         return result
+
+    def _getTaskletGroup(self, doc, macrospace, macro):
+        # if macrospace specified check there first
+        spacename = doc.getSpaceName().lower()
+        if macrospace is not None:
+            macrospace = macrospace or None
+            if macrospace:
+                j.core.portal.runningPortal.webserver.spacesloader.spaces[macrospace].loadDocProcessor()
+            if macrospace in self.taskletsgroup and self.taskletsgroup[macrospace].hasGroup(macro):
+                return self.taskletsgroup[macrospace]
+        # else check in document space
+        if spacename in self.taskletsgroup and self.taskletsgroup[spacename].hasGroup(macro):
+            return self.taskletsgroup[spacename]
+        # last fall back to default macros
+        if self.taskletsgroup[macrospace].hasGroup(macro):
+            return self.taskletsgroup[macrospace]
+        return None
 
     def parseMacroStr(self, macrostr):
         """
@@ -43,61 +70,60 @@ class MacroExecutorBase():
         if cmdbody != "":
             cmdstr = cmdbody
 
-        return macro, tags, cmdstr
+        macroparts = macro.split('.', 1)
+        if len(macroparts) == 2:
+            space, macro  = macroparts
+        else:
+            space = None
 
-    def findMacros(self, text):
+        return space, macro, tags, cmdstr
+
+    def findMacros(self, doc):
         """
         @returns list of list with macrostrwithtags,withouttags
         """
-        if text.strip() == "":
+        text = doc.content.strip()
+        if text == "":
             return []
         return self.getMacroCandidates(text)
 
 
 class MacroExecutorPreprocess(MacroExecutorBase):
 
-    def __init__(self, macrodirs=[]):
-        self.taskletsgroup = j.core.taskletengine.getGroup()
-        self.priority = {}
+    def __init__(self, *args, **kwargs):
+        self.priority = dict()
+        super(MacroExecutorPreprocess, self).__init__(*args, **kwargs)
+
+    def addMacros(self, macrodirs, spacename):
+        taskletgroup = j.core.taskletengine.getGroup()
+        self.taskletsgroup[spacename] = taskletgroup
+        priority = dict()
+        self.priority[spacename] = priority
         for macrodir in macrodirs:
-            self.taskletsgroup.addTasklets(macrodir)
-
-            macrosprocessed = {}
-
-            self.priority[8] = []
-
+            taskletgroup.addTasklets(macrodir)
             cfg = j.system.fs.joinPaths(macrodir, "prio.cfg")
             if j.system.fs.exists(cfg):
                 lines = j.system.fs.fileGetContents(cfg).split("\n")
                 for line in lines:
                     prio, macroname = line.split(":")
-                    macroname = macroname.lower().strip()
-                    prio = int(prio)
-                    if prio not in self.priority:
-                        self.priority[prio] = []
-                    self.priority[prio].append(macroname)
-                    macrosprocessed[macroname] = True
+                    priority[macroname] = int(prio)
 
-            for name in self.taskletsgroup.taskletEngines.keys():
-                if name not in macrosprocessed:
-                    self.priority[8].append(name)
-
-    def _executeMacroOnDoc(self, macrostr, doc, paramsExtra=None):
+    def _executeMacroOnDoc(self, macrospace, macro, tags, cmdstr, macrostr, doc, paramsExtra=None):
         """
         find macro's in a doc & execute the macro
         a doc is a document in preprocessor phase
         """
-        macro, tags, cmdstr = self.parseMacroStr(macrostr)
         if not paramsExtra:
             paramsExtra = {}
-        if self.taskletsgroup.hasGroup(macro):
-            result2 = self.taskletsgroup.executeV2(macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr, paramsExtra=paramsExtra, cmdstr=cmdstr)
+        taskletgroup = self._getTaskletGroup(doc, macrospace, macro)
+        if taskletgroup:
+            result2 = taskletgroup.executeV2(macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr, paramsExtra=paramsExtra, cmdstr=cmdstr)
             try:
                 result, doc =result2
             except:
-                taskletPath= self.taskletsgroup.taskletEngines[macro].path
+                taskletPath= taskletgroup.taskletEngines[macro].path
                 raise RuntimeError("Cannot execute macro: %s on doc:%s, tasklet:%s, did not return (result,doc)."%(macrostr,taskletPath,doc))
-                
+
             if result != None:
                 if not j.basetype.string.check(result):
                     result = "***ERROR***: Could not execute macro %s on %s, did not return content as string (params.result=astring)" % (macro, doc.name)
@@ -105,15 +131,17 @@ class MacroExecutorPreprocess(MacroExecutorBase):
         return doc
 
     def execMacrosOnDoc(self, doc, paramsExtra={}):
+        spacename = doc.getSpaceName().lower()
+        def macrosorter(entry):
+            space = entry[0] or spacename
+            return self.priority.get(space, dict()).get(entry[1], 9999)
 
-        macrostrs = self.findMacros(doc.content)
+        macrostrs = self.findMacros(doc)
         if len(macrostrs) > 0:
-            macros = {}
+            macros = list()
             for macrostr in macrostrs:
-                macro, tags, cmdstr = self.parseMacroStr(macrostr)
+                macrospace, macro, tags, cmdstr = self.parseMacroStr(macrostr)
                 macro = macro.lower().strip()
-                if macro not in macros:
-                    macros[macro] = []
                 # check which macro's are params
                 if macro in paramsExtra:
                     doc.content = doc.content.replace(macrostr, paramsExtra[macro])
@@ -130,26 +158,14 @@ class MacroExecutorPreprocess(MacroExecutorBase):
                 if macro == "docpath":
                     doc.content = doc.content.replace(macrostr, doc.path)
                     continue
+                macros.append((macrospace, macro, tags, cmdstr, macrostr, doc))
 
-                macros[macro].append([macrostr, tags])
-
-            for prio in range(0, 10):
-                if prio in self.priority:
-                    for macro in self.priority[prio]:
-                        if macro in macros:
-                            # found macrow which is in doc sorted following priority
-                            for macrostr, tags in macros[macro]:
-                                doc = self._executeMacroOnDoc(macrostr, doc)
+            for macroentry in sorted(macros, key=macrosorter):
+                doc = self._executeMacroOnDoc(*macroentry)
         return doc
 
 
 class MacroExecutorPage(MacroExecutorBase):
-
-    def __init__(self, macrodirs=[]):
-        self.taskletsgroup = j.core.taskletengine.getGroup()
-        for macrodir in macrodirs:
-            self.taskletsgroup.addTasklets(macrodir)
-        self.taskletsgroup2 = None
 
     def executeMacroAdd2Page(self, macrostr, page, doc=None, requestContext=None, paramsExtra=""):
         """
@@ -162,18 +178,15 @@ class MacroExecutorPage(MacroExecutorBase):
         if not str(type(page)) == "<type 'instance'>" or "body" not in page.__dict__:
             raise RuntimeError("Page was no page object. Was for macro:%s on doc:%s" % (macrostr, doc.name))
 
-        macro, tags, cmdstr = self.parseMacroStr(macrostr)
+        macrospace, macro, tags, cmdstr = self.parseMacroStr(macrostr)
 
         # print "execute macro %s on page %s" % (macrostr,page.name)
         # for ease of use add the requestContext params to the main params
+        taskletgroup = self._getTaskletGroup(doc, macrospace, macro)
 
-        if self.taskletsgroup2 != None and self.taskletsgroup2.hasGroup(macro):
-            # print macrostr
-            page = self.taskletsgroup2.executeV2(macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,
+        if taskletgroup:
+            page = taskletgroup.executeV2(macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,
                                                  paramsExtra=paramsExtra, cmdstr=cmdstr, page=page, requestContext=requestContext)
-        elif self.taskletsgroup.hasGroup(macro):
-            page = self.taskletsgroup.executeV2(macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,
-                                                paramsExtra=paramsExtra, cmdstr=cmdstr, page=page, requestContext=requestContext)
         else:
             page.addMessage("***error***: could not find macro %s" % macro)
 
@@ -205,30 +218,23 @@ class MacroExecutorPage(MacroExecutorBase):
 
 class MacroExecutorWiki(MacroExecutorBase):
 
-    def __init__(self, macrodirs):
-        if len(macrodirs) == 0:
-            raise RuntimeError("need to specify a macrodir, cannot be empty")
-        
-        self.taskletsgroup = j.core.taskletengine.getGroup()
-        for macrodir in macrodirs:
-            self.taskletsgroup.addTasklets(macrodir)
-
     def execMacrosOnContent(self, content, doc, paramsExtra={}, recursivedepth=0, ctx=None):
         recursivedepth += 1
         if ctx != None:
             content = doc.applyParams(ctx.params, findfresh=True, content=content)
         if paramsExtra != {}:
             content = doc.applyParams(paramsExtra, findfresh=True, content=content)
-        macrostrs = self.findMacros(content)
+        macrostrs = self.findMacros(doc)
         for macrostr in macrostrs:
             # print "EXEC MACRO ONCONTENT:"
             # print macrostr
             # print recursivedepth
             if recursivedepth > 20:
                 content += 'ERROR: recursive error in executing macro %s' % macrostr
-                return
+                return content, doc
             content, doc = self.executeMacroOnContent(content, macrostr, doc, paramsExtra, ctx=ctx)
-            content, doc = self.execMacrosOnContent(content, doc, paramsExtra, recursivedepth, ctx=ctx)  # work recursive see if other macro's
+            #content, doc = self.execMacrosOnContent(content, doc, paramsExtra, recursivedepth, ctx=ctx)  # work recursive see if other macro's
+        print 'ddddd'
         return content, doc
 
     def executeMacroOnContent(self, content, macrostr, doc, paramsExtra=None, ctx=None):
@@ -236,10 +242,11 @@ class MacroExecutorWiki(MacroExecutorBase):
         find macro's in a doc & execute the macro
         a doc is a document in preprocessor phase
         """
-        macro, tags, cmdstr = self.parseMacroStr(macrostr)
-        if self.taskletsgroup.hasGroup(macro):
+        macrospace, macro, tags, cmdstr = self.parseMacroStr(macrostr)
+        taskletgroup = self._getTaskletGroup(doc, macrospace, macro)
+        if taskletgroup:
             try:
-                result, doc = self.taskletsgroup.executeV2(groupname=macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,
+                result, doc = taskletgroup.executeV2(groupname=macro, doc=doc, tags=tags, macro=macro, macrostr=macrostr,
                                                             paramsExtra=paramsExtra, cmdstr=cmdstr, requestContext=ctx, content=content)
             except Exception:
                 e = traceback.format_exc()
@@ -263,29 +270,26 @@ class MacroExecutorWiki(MacroExecutorBase):
 
         return content,doc
 
-    def findMacros(self, text):
+    def findMacros(self, doc):
         """
         """
-        if text.strip() == "":
+        text = doc.content.strip()
+        if text == "":
             return []
-        # result=j.codetools.regex.findAll("\{\{[\w :;,\.\*\!\?\^\=\'\-/]*\}\}",text) #finds {{...}}
-        # result=j.codetools.regex.findAll("(?s)\{\{.*\}\}",text) #finds {{...}}
-        #result2=[[item,item.replace("{{","").replace("}}","").strip()] for item in result]
-        result3 = []
-        # print self.getMacroCandidates(text)
-        # print "*************"
+        result = []
         for item in self.getMacroCandidates(text):  # make unique
-            macro, tags, cmd = self.parseMacroStr(item)
+            macrospace, macro, tags, cmd = self.parseMacroStr(item)
             # print "macro2:%s" % macro
-            if self.taskletsgroup.hasGroup(macro):
-                result3.append(item)
+            if self._getTaskletGroup(doc, macrospace, macro):
+                result.append(item)
 
-        return result3
+        return result
+
 
     def existsMacros(self, doc):
-        macrostrs = self.findMacros(doc.content)
+        macrostrs = self.findMacros(doc)
         for macrostr in macrostrs:
-            macro, tags, cmd = self.parseMacroStr(macrostr)
-            if self.taskletsgroup.hasGroup(macro):
-                return True
+            macrospace, macro, tags, cmd = self.parseMacroStr(macrostr)
+            if not self._getTaskletGroup(doc, macrospace, macro):
+                return False
         return False

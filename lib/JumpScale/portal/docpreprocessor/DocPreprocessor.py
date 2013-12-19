@@ -221,9 +221,6 @@ class Doc(object):
         if self.source == "":
             self.loadFromDisk()
         
-        if self.preprocessor.spaceMacroexecutorPreprocessor != None:
-            self.preprocessor.spaceMacroexecutorPreprocessor.execMacrosOnDoc(self)
-
         self.preprocessor.macroexecutorPreprocessor.execMacrosOnDoc(self)
 
         self.hasMacros = self.preprocessor.macroexecutorWiki.existsMacros(self)  # find the macro tags on the doc
@@ -241,13 +238,7 @@ class Doc(object):
             paramsExtra["space"] = self.getSpaceName()
 
 
-        if self.preprocessor.spaceMacroexecutorWiki != None:
-            content, doc = self.preprocessor.spaceMacroexecutorWiki.execMacrosOnContent(content=self.content, doc=self, paramsExtra=paramsExtra, ctx=ctx)
-            
-            return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=content, doc=doc, paramsExtra=paramsExtra, ctx=ctx)
-
-        else:
-            return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=self.content, doc=self, paramsExtra=paramsExtra, ctx=ctx)
+        return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=self.content, doc=self, paramsExtra=paramsExtra, ctx=ctx)
 
     def generate2disk(self, outpath):
         if self.generate and self.visible:
@@ -358,9 +349,7 @@ class Doc(object):
 
 class DocPreprocessor():
 
-    def __init__(self, contentDirs=[], varsPath="", spacename="",
-                 spaceMacroexecutorPreprocessor=None, spaceMacroexecutorPage=None,
-                 spaceMacroexecutorWiki=None):
+    def __init__(self, contentDirs=[], varsPath="", spacename=""):
         """
         @param contentDirs are the dirs where we will load wiki files from & parse
         @param varsPath is the file with fars (just multiple lines with something like customer = ABC Data)
@@ -372,10 +361,6 @@ class DocPreprocessor():
         self.macroexecutorPreprocessor = j.core.portal.runningPortal.webserver.macroexecutorPreprocessor
         self.macroexecutorPage = j.core.portal.runningPortal.webserver.macroexecutorPage
         self.macroexecutorWiki = j.core.portal.runningPortal.webserver.macroexecutorWiki
-
-        self.spaceMacroexecutorPreprocessor = spaceMacroexecutorPreprocessor
-        self.spaceMacroexecutorPage = spaceMacroexecutorPage
-        self.spaceMacroexecutorWiki = spaceMacroexecutorWiki
 
         if spacename == "":
             raise RuntimeError("spacename cannot be empty")

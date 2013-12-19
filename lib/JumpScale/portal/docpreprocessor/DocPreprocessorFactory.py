@@ -4,22 +4,11 @@ from DocPreprocessor import *
 
 class DocPreprocessorFactory():
 
-    def get(self, contentDirs=[], varsPath="", spacename="",
-            spaceMacroexecutorPreprocessor=None, spaceMacroexecutorPage=None,
-            spaceMacroexecutorWiki=None):
+    def get(self, contentDirs=[], varsPath="", spacename=""):
         """
         @param contentDirs are the dirs where we will load wiki files from & parse
         """
-        # print "MACROPATHS"
-        # print macroPathsPreprocessor
-        # print macroPathsWiki
-        # print macroPaths
-        # print "MACROPATHSEND"
-
-        return DocPreprocessor(contentDirs, varsPath, spacename,
-                               spaceMacroexecutorPreprocessor=spaceMacroexecutorPreprocessor,
-                               spaceMacroexecutorPage=spaceMacroexecutorPage,
-                               spaceMacroexecutorWiki=spaceMacroexecutorWiki)
+        return DocPreprocessor(contentDirs, varsPath, spacename)
 
     def _getMacroExecutor(self, paths):
         return MacroExecutor(paths)
