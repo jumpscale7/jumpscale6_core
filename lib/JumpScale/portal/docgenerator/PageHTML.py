@@ -54,7 +54,10 @@ class PageHTML(Page):
 
         self._hasCharts = False
         self._hasCodeblock = False
+        self._hasJQuery = False
         self._hasBootstrap = False
+        self._hasBootstrapCSS = False
+        self._hasBootstrapJS = False
         self._hasSidebar = False
         self.functionsAdded = {}
         self._explorerInstance = 0
@@ -651,14 +654,22 @@ function copyText$id() {
     def addBootstrap(self, jquery=True):
         if self._hasBootstrap:
             return
-        self._hasBootstrap = True
-        if jquery:
+
+        if jquery and not self._hasJQuery:
             self.addJS("%s/jquery-latest.js" % self.liblocation)
-        self.addJS("%s/bootstrap/js/bootstrap.js" % self.liblocation)
-        self.addJS("%s/jquery.cookie.js" % self.liblocation)
-        #self.addCSS("%s/bootstrap/css/bootstrap.min.css"% self.liblocation)
-        self.addCSS("%s/bootstrap/css/bootstrap.css" % self.liblocation)
-        self.addCSS("%s/bootstrap/css/bootstrap-responsive.css" % self.liblocation)
+            self._hasJQuery = True
+
+        if not self._hasBootstrapJS:
+            self.addJS("%s/bootstrap/js/bootstrap.js" % self.liblocation)
+            self.addJS("%s/jquery.cookie.js" % self.liblocation)
+            self._hasBootstrapJS = True
+
+        if not self._hasBootstrapCSS:
+            self.addCSS("%s/bootstrap/css/bootstrap.css" % self.liblocation)
+            self.addCSS("%s/bootstrap/css/bootstrap-responsive.css" % self.liblocation)
+            self._hasBootstrapCSS = True
+
+        self._hasBootstrap = True
 
     def addBodyAttribute(self, attribute):
         if attribute not in self.bodyattributes:

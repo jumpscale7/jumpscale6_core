@@ -222,6 +222,7 @@ class Confluence2HTML():
 
             content = out
 
+        ulAttributes = ''
         for line in content.split("\n"):
 
             self._lastLine = line
@@ -378,8 +379,8 @@ class Confluence2HTML():
                 stars, line = unorderedItem.foundSubitems
                 level = len(stars)
                 line = self.processDefs(line, doc, page)
-                ulAttributes = '' #@todo weird, was below page.addBUllet??? what is point?
                 page.addBullet(line, level, attributes=ulAttributes)
+                ulAttributes = '' # ulAttributes is set in the previous iteration of the for-loop. It should be reset _after_ the list is added 
                 continue
 
             numberedItem = j.codetools.regex.getRegexMatch("^\*(#+) (.+?)$", line)
@@ -391,6 +392,12 @@ class Confluence2HTML():
                 ulAttributes = ''
                 continue
 
+            # Read styles for lists
+            # The syntax will be like this
+            #
+            #   *- id=main-menu | class=nav nav-list
+            #   * item 1
+            #   * item 2
             ulAttributes = j.codetools.regex.getRegexMatch("^(\*+)- (.+?)$", line)
             if ulAttributes:
                 ulAttributes = div_base.tag_params_to_html_attrs(ulAttributes.foundSubitems[1])
