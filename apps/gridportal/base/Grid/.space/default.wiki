@@ -1,17 +1,29 @@
 
-{{title:Grids}}
+{{title:GRID}}
+
+{{projectname:GRID}}
 
 {{find}}
 
 {{menu:
-Help:/Help
+System:/System
 }}
 
 {{menuadmin_grid}}
 
+
 @block
 @row
+
+@col 2
+{{navigation}}
+@divend
+
+@col 10
 
 {content}
 
 @divend
+@divend
+
+

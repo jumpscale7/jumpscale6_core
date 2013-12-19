@@ -23,7 +23,9 @@ class system_packagemanager(j.code.classGetBase()):
         domain = args.get('domain', None)
         name = args.get('pname', None)
         version = args.get('version', None)
-        return j.clients.agentcontroller.execute('jumpscale', 'jpackage_info', roles, domain=domain, pname=name, version=version)
+        jp= j.clients.agentcontroller.execute('jumpscale', 'jpackage_info', roles, domain=domain, pname=name, version=version)
+        return jp
+
 
     def getPackageDescription(self, **args):
         nodeId = args.get('nodeId')

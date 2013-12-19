@@ -13,6 +13,15 @@ def main(j, args, params, tags, tasklet):
         _, nid, _ = j.application.whoAmI
     result = j.apps.system.packagemanager.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)['result']
 
+    if result==None:
+        from IPython import embed
+        print "DEBUG NOW ooo"
+        embed()
+        
+        page.addHeading("could not find package:%s %s (%s) on node %s"%(domain,name,version,nid), level=4)
+        params.result = page
+        return params        
+
     import json
     result = json.loads(result)['result']
 

@@ -29,6 +29,7 @@ class LogHandler():
         if not logitem.category:
             logitem.category = LOGCATEGORY
         self.queue.put(logitem.__dict__)
+        print logitem
 
     def logECO(self, eco):
         eco.jid = self.jid
@@ -128,10 +129,10 @@ class Agent():
                 if self.actions.has_key(jscriptid):
                     action,jscript=self.actions[jscriptid]
                 else:
-                    print "CACHEMISS"
+                    # print "CACHEMISS"
                     jscript=self.client.getJumpscriptFromKey(jscriptid)
                     try:
-                        self.log('Job started')
+                        self.log("Load script:%s %s"%(jscript["organization"],jscript["name"]))
                         exec(jscript["source"])
                         self.actions[jscriptid]=(action,jscript)
                         #result is method action
@@ -143,10 +144,11 @@ class Agent():
                         eco.errormessage = msg
                         eco.jid = jid
                         eco.category = LOGCATEGORY
-                        self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
+                        self.notifyWorkCompleted(result={},eco=eco.__dict__)
+                        continue
                     
                 eco=None
-
+                self.log("Job started: %s %s"%(jscript["organization"],jscript["name"]))
                 try:
                     result=action(**args)
                 except Exception,e:
@@ -156,11 +158,33 @@ class Agent():
                     eco.errormessage = msg
                     eco.jid = jid
                     eco.category = LOGCATEGORY
-                    self.client.notifyWorkCompleted(result=None,eco=eco.__dict__)
+                    self.notifyWorkCompleted({},eco.__dict__)
                     continue
+
+                if not j.basetype.dictionary.check(result):
+                    msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\nScript started was: %s_%s.\n"%(jscript["organization"],jscript["name"])
+                    try:
+                        msg+="result was:%s\n"%result
+                    except:
+                        pass
+                    eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
+                    self.notifyWorkCompleted({},eco.__dict__)
+                    continue
+                    
                 
-                print "notify work completed"
-                self.client.notifyWorkCompleted(result=result,eco=None)
+                self.log("result:%s"%result)
+                self.notifyWorkCompleted(result,{})
+
+
+    def notifyWorkCompleted(self,result,eco):
+        try:
+            self.client.notifyWorkCompleted(result=None,eco=eco)
+        except Exception,e:
+            print "******************* SERIOUS BUG **************"
+            print "COULD NOT EXECUTE JOB, COULD NOT PROCESS RESULT OF WORK."
+            print "ERROR WAS:%s"%e
+            print "******************* SERIOUS BUG **************"
+
 
     def log(self, message, category=LOGCATEGORY,level=5):
         #queue saving logs        

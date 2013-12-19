@@ -1,23 +1,4 @@
 @usedefault
-{{jpackageshow}}
 
-h2. Explorers
-
-|[JPackage Code Editors|/jpackages/JPackageCodeEditors?domain=$$domain&name=$$name&version=$$version]|
-|[JPackage Browser|/jpackages/JPackageBrowser?domain=$$domain&name=$$name&version=$$version]|
-|[JPackage Files|/jpackages/JPackageFiles?domain=$$domain&name=$$name&version=$$version]|
-
-h2. Actions
-
-|[start|/jpackages/JPackageAction?action=start&domain=$$domain&name=$$name&version=$$version]|
-|[stop|/jpackages/JPackageAction?action=stop&domain=$$domain&name=$$name&version=$$version]|
-|[restart|/jpackages/JPackageAction?action=restart&domain=$$domain&name=$$name&version=$$version]|
-|[update|/jpackages/JPackageAction?action=update&domain=$$domain&name=$$name&version=$$version]|
-|[package|/jpackages/JPackageAction?action=package&domain=$$domain&name=$$name&version=$$version]|
-|[upload|/jpackages/JPackageAction?action=upload&domain=$$domain&name=$$name&version=$$version]|
-
-h2. Description
-
-{{jpackagedescr}}
-
+{{jpackageshow: domain:$$domain name:$$name version:$$version show:explorers,actions,description}}
 

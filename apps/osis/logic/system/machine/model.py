@@ -35,7 +35,7 @@ class Machine(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        C= "%s_%s_%s"%(self.gid,self.id,self.name)
+        C= "%s_%s_%s"%(self.gid,self.nid,self.name)
         return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):

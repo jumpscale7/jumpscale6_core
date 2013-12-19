@@ -47,7 +47,8 @@ class Job():
         self.controller=controller
         gid = j.application.whoAmI.gid
 
-        self.db=self.controller.jobclient.new(sessionid=sessionid, jsorganization=jsorganization, roles=roles, \
+        self.db=self.controller.jobclient.new(sessionid=sessionid, \
+            jsorganization=jsorganization, roles=roles, \
             args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
             jsname=jsname,gid=gid)
 
@@ -169,7 +170,8 @@ class ControllerCMDS():
             if job.sessionid==sessionid:
                 print "found job which cannot be completed" #@todo need to escalate
                 self.activeJobSessions.pop(job.sessionid)
-            self.jobs.pop(job.id)
+            if self.jobs.has_key(job.id):
+                self.jobs.pop(job.id)
             del job
 
         if self.session2agent.has_key(session.id):
@@ -393,15 +395,15 @@ class ControllerCMDS():
             job.event=Event()
             job.event.wait()            
             timeout.cancel()
-            if isinstance(job.db, dict):
-                return job.db
+            # if isinstance(job.db, dict):
+            #     return job.db
             return job.db.__dict__
         except:
             timeout.cancel()
             job.resultcode=1
             print "timeout on execution"
-            if isinstance(job.db, dict):
-                return job.db
+            # if isinstance(job.db, dict):
+            #     return job.db
             return job.db.__dict__
 
     def getWork(self, session=None):
@@ -441,6 +443,10 @@ class ControllerCMDS():
             print "timeout (if too fast timeouts then error in getWork while loop)"
 
     def notifyWorkCompleted(self,result=None,eco=None,session=None):
+
+        if not j.basetype.dictionary.check(result) or not j.basetype.dictionary.check(eco):
+            raise RuntimeError("agentcontroller: notifywork completed needs to have dicts as input for result & eco.")
+
         # print "notifyworkcompleted"
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
 
@@ -460,11 +466,13 @@ class ControllerCMDS():
             except:
                 print ecobj
             print "#########################"
+            job.db.result = eco
         else:
             eco = ''
             job.db.resultcode=0
             job.db.state="OK"
-        job.db.result = json.dumps(eco)
+            job.db.result = result
+        
         job.save()
         
         #now need to return it to the client who asked for the work 
@@ -474,10 +482,14 @@ class ControllerCMDS():
                 #all children executed
                 job.parent.db.resultcode=0
                 job.parent.db.state = "OK"
-                job.parent.db.result = 0
+                job.parent.db.result = None
                 job.parent.event.set()
         
         if job.event<>None:
+            from IPython import embed
+            print "DEBUG NOW uuu"
+            embed()
+            
             job.event.set()
 
         print "completed job"
