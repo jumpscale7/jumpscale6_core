@@ -316,10 +316,6 @@ class Doc(object):
             # are now sure is image
             line2 = match2.split(".", 1)[1].strip()
 
-            if match2.find("=") != -1:
-                print "ignore image %s because of wrong format" % match2
-                continue
-
             if line2.find(" ") != -1:
                 # there could be tags & labels
                 imagepath, tags = match2.split(" ", 1)
