@@ -40,7 +40,7 @@ class system_packagemanager(j.code.classGetBase()):
         name = args.get('pname', None)
         action = args.get('action', None)
         version = args.get('version', None)
-        return j.clients.agentcontroller.execute('jumpscale', 'jpackage_action', roles, domain=domain, pname=name, version=version, action=action)
+        return j.clients.agentcontroller.execute('jumpscale', 'jpackage_action', roles, domain=domain, pname=name, version=version, wait=False, action=action)
 
     def getBlobs(self, **args):
         nodeId = args.get('nodeId')
