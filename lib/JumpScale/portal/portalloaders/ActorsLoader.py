@@ -102,6 +102,26 @@ class ActorLoader(LoaderBaseObject):
         #     self.activate()
         # sloader.scan(ppath)
 
+class GroupAppsClass(object):
+    def __init__(self, actorsloader):
+        self.actorsloader = actorsloader
+
+    def __getattr__(self, appname):
+        app = AppClass(self.actorsloader, appname)
+        setattr(self, appname, app)
+        return app
+
+class AppClass(object):
+    def __init__(self, actorsloader, appname):
+        self._appname = appname
+        self._actorsloader = actorsloader
+
+    def __getattr__(self, actorname):
+        if actorname in ('__members__', '__methods__', 'trait_names', '_getAttributeNames'):
+            return object.__getattr__(self, actorname)
+        actor = self._actorsloader.getActor(self._appname, actorname)
+        setattr(self, actorname, actor)
+        return actor
 
 class ActorsLoader(LoaderBase):
 
@@ -114,8 +134,7 @@ class ActorsLoader(LoaderBase):
         self.osiscl = None
 
     def reset(self):
-        j.apps = Class()
-        j.apps.__dict__["actorsloader"] = self
+        j.apps = GroupAppsClass(self)
         j.core.specparser.app_actornames = {}
         j.core.specparser.actornames = []
         j.core.specparser.appnames = []
@@ -355,7 +374,7 @@ def match(j, args, params, actor, tags, tasklet):
 
         # LOAD actorobject to qbase tree
         if appname not in j.apps.__dict__:
-            j.apps.__dict__[appname] = Class()
+            j.apps.__dict__[appname] = AppClass(self, appname)
 
         if actorname not in j.apps.__dict__[appname].__dict__:
             j.apps.__dict__[appname].__dict__[actorname] = actorobject
