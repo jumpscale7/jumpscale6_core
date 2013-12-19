@@ -30,4 +30,12 @@
 		just a simple echo service
 		"""        
 		var:input str,,result will be same as this input
-		result:str		
+		result:str
+
+    method:waitForJob
+        """
+        waits for a job to execute
+        """
+        var:jobid int,,
+        var:timeout int,,	@tags: optional
+        result:dict

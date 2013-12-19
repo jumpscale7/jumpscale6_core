@@ -14,6 +14,7 @@ import time
 from MacroExecutor import MacroExecutorPage, MacroExecutorWiki, MacroExecutorPreprocess
 import mimeparse
 import mimetypes
+import JumpScale.grid.agentcontroller
 
 BLOCK_SIZE = 4096
 
@@ -201,6 +202,8 @@ class GeventWebserver:
         self.wwwroot = wwwroot
         self.filesroot = filesroot
         self.confluence2htmlconvertor = j.tools.docgenerator.getConfluence2htmlConvertor()
+        self.activejobs = list()
+        self.jobids2greenlets = dict()
 
         self.schedule1min = {}
         self.schedule15min = {}
@@ -500,6 +503,9 @@ class GeventWebserver:
         if match == "restmachine":
             return self.processor_rest(environ, start_response, path, human=False, ctx=ctx)
 
+        if match == "jobs":
+            return self.processor_jobs(environ, start_response, path, ctx=ctx)
+
         elif match == "elfinder":
             return self.process_elfinder(path, ctx)
 
@@ -598,6 +604,35 @@ class GeventWebserver:
         ctx.start_response(status, headers)
         result = j.db.serializers.getSerializerType('j').dumps(response)
         return [result]
+
+    def processor_jobs(self, environ, start_response, path, ctx):
+        status = '200 OK'
+        headers = [('Content-Type', 'application/json')]
+
+        start_response(status, headers)
+        activejobs = j.clients.agentcontroller.getActiveJobs()
+        if not (self.activejobs or activejobs):
+            return j.db.serializers.getSerializerType('j').dumps('no data available')
+        else:
+            data = list()
+            for job in activejobs:
+                if job['id'] not in self.activejobs:
+                    self.activejobs.append(job['id'])
+
+            for jobid in self.activejobs:
+                job = j.clients.agentcontroller.getJobInfo(jobid)
+                result = job['result']
+                if result:
+                    data.append(result)
+                    self.activejobs.remove(jobid)
+
+            return j.db.serializers.getSerializerType('j').dumps(data)
+
+    def spawnJob(self, jobid):
+        self.jobids2greenlets[jobid] = gevent.spawn(self.executeJob, jobid)
+
+    def executeJob(self, jobid):
+        return j.clients.agentcontroller.client.waitJumpscript(jobid)['result']
 
     def path2spacePagename(self, path):
 
