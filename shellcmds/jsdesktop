@@ -7,10 +7,10 @@ import sys,time
 j.application.start("jsprocess_start")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['ps','new','list','killall','delete','configure','rdp'], help='Command to perform')
-parser.add_argument("-n", '--nr', help='desktop nr')
+parser.add_argument("action", choices=['ps','new','list','killall','delete','configure','rdp','userconfig'], help='Command to perform')
+parser.add_argument("-n", '--name', help='desktop nr or name')
 parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
-parser.add_argument('--passwd', help='password for desktop')
+parser.add_argument("-p",'--passwd', help='password for desktop')
 
 ip=""
 
@@ -211,5 +211,15 @@ if opts.action =='killall':
 if opts.action =='del':
     cmd="lxc-destroy -n desktop%s -f"%opts.nr
     resultcode,out=j.system.process.execute(cmd)
+
+if opts.action =='userconfig':
+    if opts.name==None:
+        raise RuntimeError("please specify name")
+    if opts.passwd==None:
+        raise RuntimeError("please specify passwd")        
+    import JumpScale.grid.agentcontroller
+    client=j.clients.agentcontroller
+    client.execute("jumpscale", "desktopcreate", "master", timeout=60, wait=True, lock='desktopcreate', username=opts.name,passwd=opts.passwd)
+
 
 j.application.stop()

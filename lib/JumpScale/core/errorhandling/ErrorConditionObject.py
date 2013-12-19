@@ -79,8 +79,10 @@ class ErrorConditionObject():
 
     def toAscii(self):
         def _toAscii(s):
-            return unicodedata.normalize('NFKD', unicode(s)).encode('ascii','ignore') 
-
+            try:
+                return unicodedata.normalize('NFKD', unicode(s)).encode('ascii','ignore') 
+            except:
+                return s        
         self.errormessage=_toAscii(self.errormessage)
         self.errormessagePub=_toAscii(self.errormessagePub)
         self.backtrace=_toAscii(self.backtrace)

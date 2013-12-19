@@ -162,6 +162,8 @@ class RecipeItem(object):
             if self.tags.labelExists("config"):
                 print "CONFIG:%s"%self
                 self.exportToSystem(force=force)
+            elif self.tags.labelExists("nodirs") and j.system.fs.isDir(source):
+                print "NODIR:%s"%self
             else:
                 print "link:%s to %s"%(source,destination)
                 if j.system.fs.isLink(destination):

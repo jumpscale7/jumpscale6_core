@@ -304,8 +304,7 @@ class JPackageClient():
         @param domain:  string - The domain of the jpackages
         @param name:    string - The name of the jpackages
         @param version: string - The version of the jpackages
-        """
-
+        """        
         return j.system.fs.joinPaths(self.packageDirFiles, domain,name,version)
 
     def getMetaTarPath(self, domainName):

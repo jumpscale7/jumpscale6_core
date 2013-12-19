@@ -136,7 +136,7 @@ class JPackageObject():
             # print "remove:%s"%path
 
         j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
-        j.system.fs.remove("%s/actions/code.link.py"%self.getPathMetadata())
+        # j.system.fs.remove("%s/actions/code.link.py"%self.getPathMetadata())
         j.system.fs.remove("%s/actions/upload.py"%self.getPathMetadata())
         
 
