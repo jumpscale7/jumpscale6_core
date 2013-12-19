@@ -36,7 +36,7 @@ class AgentControllerFactory(object):
             eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(job["result"]))
             print eco
             if dieOnFailure:
-                raise RuntimeError("Could not execute %s %s for role, ecoguid was:%s"%(organization,name,role,eco.guid))
+                raise RuntimeError("Could not execute %s %s %s for role, ecoguid was:%s"%(organization,name,role,eco.guid))
                 #j.errorconditionhandler.processErrorConditionObject(eco)
 
 

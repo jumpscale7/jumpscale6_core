@@ -21,7 +21,7 @@ client=j.clients.agentcontroller
 print "start test"
 for i in range(10):
     print i
-    job=client.executeJumpscript("opencode","wait","node",args={"msg":"test:%s"%i},timeout=5,wait=True,lock="")
+    job=client.execute("opencode","wait","node",msg="test:%s"%i,timeout=5,wait=True,lock="")
     # job=client.waitJumpscript(job["id"])
     print job
 

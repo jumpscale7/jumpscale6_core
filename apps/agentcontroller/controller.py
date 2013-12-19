@@ -51,28 +51,13 @@ class Job():
             args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
             jsname=jsname,gid=gid)
 
-        self.id= self.db.id
-        self.gid = self.db.gid
-        self.jsname = self.db.jsname
-        self.jsorganization=self.db.jsorganization
-        self.roles=self.db.roles
-        self.args=self.db.args
-        self.timeout=self.db.timeout
-        self.result=self.db.result
-        self.sessionid=self.db.sessionid
-        self.jscriptid=self.db.jscriptid
-        self.children=self.db.children
-        self.childrenActive=self.db.childrenActive
-        self.parent=self.db.parent
-        self.resultcode=self.db.resultcode
-        self.state=self.db.state
-        self.timeStart=self.db.timeStart
-        self.timeStop=self.db.timeStop
-        self.lock=self.db.lock
-        self.lockduration=self.db.lockduration
+        for key, value in self.db.getDict().iteritems():
+            setattr(self, key, value)
 
     def save(self):
         guid, new, changed = self.controller.jobclient.set(self.db)
+        if new or changed:
+            self.db.load(self.controller.jobclient.get(guid))
 
     def __repr__(self):
         return str(self.db.__dict__)
