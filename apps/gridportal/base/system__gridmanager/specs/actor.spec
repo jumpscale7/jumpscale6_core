@@ -242,10 +242,13 @@
         var:name str,,match on text in name @tags: optional
         var:nid int,,find logs for specified node @tags: optional
         var:gid int,,find logs for specified grid @tags: optional        
-        var:aid int,,find logs for specified application type @tags: optional
         var:from_ str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago) @tags: optional
         var:to str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified @tags: optional
         var:active bool,,True,is the process still active @tags: optional
+        var:jpdomain str,, JPackage domain of process @tags: optional
+        var:jpname str,, JPackage name of process @tags: optional
+        var:instance str,, instance of process @tags: optional
+        var:systempid int,, pid on the system of process @tags: optional
         var:lastcheckFrom str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckFrom  (-4d means 4 days ago) @tags: optional
         var:lastcheckTo str,,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckTo  (-4d means 4 days ago) @tags: optional
         result:list(list)

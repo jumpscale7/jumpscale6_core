@@ -284,7 +284,7 @@ class system_gridmanager(j.code.classGetBase()):
         return self.osis_eco.simpleSearch(params)
 
 
-    def getProcesses(self, id, guid, name, nid, gid, aid, from_, to, active, lastcheckFrom, lastcheckTo, **kwargs):
+    def getProcesses(self, id, guid, name, nid, gid, from_, to, active, jpdomain, jpname, instance, systempid, lastcheckFrom, lastcheckTo, **kwargs):
         """
         list processes (comes from osis), are the grid unique processes (not integrated with processmanager yet)
         param:id only find 1 process entry
@@ -294,6 +294,10 @@ class system_gridmanager(j.code.classGetBase()):
         param:aid find logs for specified application type
         param:from_ -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes from date specified  (-4d means 4 days ago)
         param:to -4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes to date specified
+        param:jpdomain str.. JPackage domain of process
+        param:jpname str.. JPackage name of process
+        param:instance str.. instance of process
+        param:systempid int.. pid on the system of process
         param:lastcheckFrom str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckFrom  (-4d means 4 days ago)
         param:lastcheckTo str,-1h,-4d;-4w;-4m;-1h;-1s  d=day w=week m=month s=sec  find processes with lastcheckTo  (-4d means 4 days ago)
         result list(list)
@@ -310,8 +314,12 @@ class system_gridmanager(j.code.classGetBase()):
                   'gid': gid,
                   'active': active,
                   'id': id,
+                  'systempid': systempid,
+                  'jpdomain': jpdomain,
+                  'jpname': jpname,
+                  'instance': instance,
                   'guid': guid,
-                  'aid': aid}
+                  }
 
         return self.osis_process.simpleSearch(params)
 
