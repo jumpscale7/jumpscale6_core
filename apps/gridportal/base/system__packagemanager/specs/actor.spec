@@ -18,7 +18,7 @@
         """
         var:nodeId int,,id of node
         var:domain str,,domain name for jpackage
-        var:name str,,name for jpackage
+        var:pname str,,name for jpackage
         var:version str,, version of jpackage
         result:json
 
@@ -29,7 +29,7 @@
         """
         var:nodeId int,,id of node
         var:domain str,,domain name for jpackage
-        var:name str,,name for jpackage
+        var:pname str,,name for jpackage
         var:version str,, version of jpackage
         result:json
 
@@ -41,7 +41,7 @@
         """
         var:nodeId int,,id of node
         var:domain str,,domain name for jpackage
-        var:name str,,name for jpackage
+        var:pname str,,name for jpackage
         var:version str,, version of jpackage
         var:action str,, action to be executed on jpackage
         result:str

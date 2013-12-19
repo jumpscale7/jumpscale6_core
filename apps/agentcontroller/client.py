@@ -4,7 +4,7 @@ import httplib
 import thread
 import time
 
-import JumpScale.grid.geventws
+import JumpScale.grid.agentcontroller
 
 import sys
 
@@ -12,10 +12,9 @@ j.application.start("agentcontrollertest")
 
 j.logger.consoleloglevel = 5
 
-login = j.application.config.get('system.superadmin.login')
-passwd = j.application.config.get('system.superadmin.passwd')
-client = j.servers.geventws.getClient("127.0.0.1", 4444, org="myorg", user=login, passwd=passwd, \
-    roles=["system.1", "hypervisor.1"],category="agent")
+
+
+client=j.clients.agentcontroller
 
 # print client.listSessions()
 

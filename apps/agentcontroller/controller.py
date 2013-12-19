@@ -73,8 +73,6 @@ class Job():
 
     def save(self):
         guid, new, changed = self.controller.jobclient.set(self.db)
-        if new or changed:
-            self.db = self.controller.jobclient.get(guid)
 
     def __repr__(self):
         return str(self.db.__dict__)
@@ -472,13 +470,16 @@ class ControllerCMDS():
             job.db.state="ERROR"
             ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
             print "#####ERROR ON AGENT######"
-            j.errorconditionhandler.processErrorConditionObject(ecobj)
+            try:
+                j.errorconditionhandler.processErrorConditionObject(ecobj)
+            except:
+                print ecobj
             print "#########################"
         else:
             eco = ''
             job.db.resultcode=0
             job.db.state="OK"
-        job.db.result = json.dumps({'result': result, 'eco': eco})
+        job.db.result = json.dumps(eco)
         job.save()
         
         #now need to return it to the client who asked for the work 
