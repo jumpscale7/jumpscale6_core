@@ -351,7 +351,7 @@ class ControllerCMDS():
                     self.agent2freeSessions[agentid][sessionid].set()
 
             if len(jobs)>1:
-                jobgroup= Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, \
+                jobgroup= Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
                 jobgroup.children=jobs
                 for jobchild in jobs:
@@ -371,10 +371,11 @@ class ControllerCMDS():
             return job.db.__dict__
         else:
             print "nothingtodo"
-            job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, \
+            job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
             job.db.state="NOWORK"
-            job.db.timeStop=job.timeStart
+            job.db.timeStop=job.db.timeStart
+
             job.save()            
             return job.db.__dict__
 
@@ -439,15 +440,15 @@ class ControllerCMDS():
 
     def notifyWorkCompleted(self,result=None,eco=None,session=None):
 
-        if not j.basetype.dictionary.check(result) or not j.basetype.dictionary.check(eco):
-            msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\n"
-            try:
-                msg+="result was:\n%s\n"%result
-                msg+="eco was:\n%s\n"%eco
-                print msg
-            except:
-                pass
-            raise RuntimeError(msg)
+        #if not j.basetype.dictionary.check(result) or not j.basetype.dictionary.check(eco):
+        #    msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\n"
+        #    try:
+        #        msg+="result was:\n%s\n"%result
+        #        msg+="eco was:\n%s\n"%eco
+        #        print msg
+        #    except:
+        #        pass
+        #    raise RuntimeError(msg)
 
         # print "notifyworkcompleted"
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()

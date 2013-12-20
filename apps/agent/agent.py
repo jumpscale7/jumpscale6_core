@@ -187,15 +187,15 @@ class Agent():
                     self.notifyWorkCompleted({},eco.__dict__)
                     continue
 
-                if not j.basetype.dictionary.check(result):
-                    msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\nScript started was: %s_%s.\n"%(jscript["organization"],jscript["name"])
-                    try:
-                        msg+="result was:%s\n"%result
-                    except:
-                        print "***ERROR***: could not print result"
-                    eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
-                    self.notifyWorkCompleted({},eco.__dict__)
-                    continue
+                #if not j.basetype.dictionary.check(result):
+                #    msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\nScript started was: %s_%s.\n"%(jscript["organization"],jscript["name"])
+                #   try:
+                #        msg+="result was:%s\n"%result
+                #    except:
+                #        print "***ERROR***: could not print result"
+                #    eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
+                #    self.notifyWorkCompleted({},eco.__dict__)
+                #    continue
                     
                 
                 self.log("result:%s"%result)
