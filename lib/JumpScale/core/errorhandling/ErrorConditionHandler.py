@@ -13,6 +13,7 @@ class ErrorConditionHandler():
         self.lastAction=""
         self.haltOnError=haltOnError     
         self.setExceptHook()
+        self.lastEco=None
         
     def toolStripNonAsciFromText(text):
         return string.join([char for char in str(text) if ((ord(char)>31 and ord(char)<127) or ord(char)==10)],"")        
@@ -75,7 +76,10 @@ class ErrorConditionHandler():
 
         self.processErrorConditionObject(eco)
         if die:
-            self.halt()
+            self.lastEco=eco
+            if message=="":
+                message=eco.errormessage
+            raise RuntimeError(message)
 
     def raiseOperationalWarning(self, message="", category="",msgpub="",tags="",eco=None):
         if not eco:
