@@ -140,6 +140,7 @@ class PortalClientFactory():
         else:
             cl = PortalClient(ip, port, secret)
             self._appserverclients[key] = cl
+            cl._loadSpaces()
             return cl
 
     # def getActor(self,appName,actorName,instance=0,authKey=""):

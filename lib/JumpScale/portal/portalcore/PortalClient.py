@@ -24,13 +24,21 @@ class GroupAppsClass(object):
         return app
 
 class AppClass(object):
-    def __init__(self, client, appname):
+    def __init__(self, client, appname, actors=None):
         self._appname = appname
         self._client = client
+        if actors:
+            for actor in actors:
+                setattr(self, actor, None)
 
-    def __getattr__(self, actorname):
-        if actorname in ('__members__', '__methods__', 'trait_names', '_getAttributeNames'):
-            return object.__getattr__(self, actorname)
+
+    def __getattribute__(self, actorname):
+        if actorname in ('__class__', '__members__', '__methods__', '__dict__', 'trait_names', '_getAttributeNames'):
+            return object.__getattribute__(self, actorname)
+        attr = self.__dict__.get(actorname)
+        if attr:
+            return attr
+
         actor = self._client.getActor(self._appname, actorname)
         setattr(self, actorname, actor)
         return actor
@@ -54,8 +62,19 @@ class PortalClient():
         j.core.portal.runningPortal = apsp
         apsp.actors = {}
 
-        if "apps" not in j.__dict__:
-            j.__dict__["apps"] = GroupAppsClass(self)
+        if not hasattr(j, 'apps'):
+            j.apps = GroupAppsClass(self)
+        self.actors = j.apps
+
+    def _loadSpaces(self):
+        spaces = dict()
+        for actor in j.apps.system.contentmanager.getActors():
+            space, actor = actor.split('__')
+            spaceactors = spaces.setdefault(space, list())
+            spaceactors.append(actor)
+        for space, actors in spaces.iteritems():
+            setattr(j.apps, space, AppClass(self, space, actors))
+
 
     def getActor(self, appname, actorname, instance=0, redis=False, refresh=False):
         if appname.lower() == "system" and actorname == "manage":
@@ -100,5 +119,12 @@ class PortalClient():
                 actorobject.models.__dict__[modelName] = j.core.osismodel.getNoDB(appname, actorname, modelName, classs)
 
         j.core.portal.runningPortal.actors[key] = actorobject
+
+        apphook = getattr(j.apps, appname, None)
+        if not apphook:
+            apphook = AppClass(self, appname)
+            setattr(j.apps, appname, apphook)
+        if not hasattr(apphook, actorname):
+            setattr(apphook, actorobject)
 
         return actorobject
