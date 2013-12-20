@@ -31,15 +31,22 @@ class AgentControllerFactory(object):
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
-        job= self.client.executeJumpscript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,lock=lock)
+        job= self.client.executeJumpscript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,lock=lock,transporttimeout=timeout)
         if job["state"]=="ERROR":
             eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(job["result"]))
             print eco
             if dieOnFailure:
-                raise RuntimeError("Could not execute %s %s %s for role, ecoguid was:%s"%(organization,name,role,eco.guid))
+                raise RuntimeError("Could not execute %s %s for role:%s, jobid was:%s"%(organization,name,role,job["id"]))
                 #j.errorconditionhandler.processErrorConditionObject(eco)
 
-
+        if wait:
+            if job["result"]==None:
+                return None
+            else:
+                return ujson.loads(job["result"])
+        else:
+            return job
+            
         
 
     def listJumpScripts(self, organization=None, cat=None):

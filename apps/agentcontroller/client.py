@@ -18,6 +18,12 @@ client=j.clients.agentcontroller
 
 # print client.listSessions()
 
+jp= client.execute('jumpscale', 'jpackage_info', role="master", domain="jumpscale", pname="osis", version="1.0",timeout=10)
+
+print jp
+
+j.application.stop()
+
 print "start test"
 for i in range(10):
     print i

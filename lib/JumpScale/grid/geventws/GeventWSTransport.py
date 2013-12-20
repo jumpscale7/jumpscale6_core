@@ -9,7 +9,6 @@ import requests
 class GeventWSTransport(Transport):
     def __init__(self, addr="localhost", port=9999):
 
-        self.timeout = 60
         self.url = "http://%s:%s/rpc/" % (addr, port)
         self._id = None
         self._addr = addr
@@ -27,7 +26,7 @@ class GeventWSTransport(Transport):
         """
         pass
 
-    def sendMsg(self, category, cmd, data, sendformat="", returnformat="",retry=True):
+    def sendMsg(self, category, cmd, data, sendformat="", returnformat="",retry=True,timeout=60):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -47,10 +46,10 @@ class GeventWSTransport(Transport):
             r=None
             while r==None:
                 now=j.base.time.getTimeEpoch()
-                if now>start+self.timeout:
+                if now>start+timeout:
                     break
                 try:
-                    r = requests.post(self.url, data=data2, headers=headers,timeout=60)
+                    r = requests.post(self.url, data=data2, headers=headers,timeout=timeout)
                 except Exception,e:
                     if str(e).find("Connection refused")<>-1:
                         print "retry connection to %s"%self.url
@@ -59,7 +58,7 @@ class GeventWSTransport(Transport):
                         raise RuntimeError("error to send msg to %s,error was %s"%(self.url,e))
 
         else:
-            r = requests.post(self.url, data=data2, headers=headers,timeout=60)
+            r = requests.post(self.url, data=data2, headers=headers,timeout=timeout)
 
         # print data
 

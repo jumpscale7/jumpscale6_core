@@ -17,4 +17,5 @@ class mainclass(parentclass):
         obj.getSetGuid()
         self.db.set(self.dbprefix,key=obj.guid,value=ujson.dumps(obj.__dict__))
         self.index(obj)
+                        
         return [obj.guid,new,True]

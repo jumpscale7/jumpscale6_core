@@ -20,7 +20,7 @@ class ZDaemonTransport(Transport):
         self._id = sessionid
         self._init()
 
-    def sendMsg(self, category, cmd, data, sendformat="", returnformat=""):
+    def sendMsg(self, category, cmd, data, sendformat="", returnformat="",timeout=None):
         """
         overwrite this class in implementation to send & retrieve info from the server (implement the transport layer)
 
@@ -31,6 +31,8 @@ class ZDaemonTransport(Transport):
             1= not authenticated
             2= method not found
             2+ any other error
+
+        @param timeout is not used
         """
         self._cmdchannel.send_multipart([category, cmd, sendformat, returnformat, data])
         result=self._cmdchannel.recv_multipart()

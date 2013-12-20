@@ -131,7 +131,8 @@ class DaemonClient(object):
         self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__, ssl=ssl, returnformat="")
         print "registered session"
 
-    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, category=None,die=False):
+    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, \
+        category=None,die=True,transporttimeout=5):
         """
         cmd is command on server (is asci text)
         data is any to be serialized data
@@ -139,11 +140,17 @@ class DaemonClient(object):
         formatstring is right order of formats e.g. mc means messagepack & then compress
         formats see: j.db.serializers.get(?
 
-        return is always multipart message [$resultcode(0=no error,1=autherror),$formatstr,$remainingdata]
-
-        errors are always return using msgpack and are a dict
+        return is always multipart message [$resultcode(0=no error,1=autherror),$formatstr,$data]
 
         """
+
+        ##LOGGING FOR DEBUG
+        # try:
+        #     dest=self.transport.url
+        # except:
+        #     dest="unknown"
+        # print "###data send to %s\n%s\n#######"%(dest,data)
+        
         if sendformat == None:
             sendformat = self.defaultSerialization
         if returnformat == None:
@@ -155,7 +162,7 @@ class DaemonClient(object):
             data = ser.dumps(data)
 
         # self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
-        parts = self.transport.sendMsg(category, cmd, data, sendformat, returnformat)
+        parts = self.transport.sendMsg(category, cmd, data, sendformat, returnformat,timeout=transporttimeout)
         returncode = parts[0]
         # print "return:%s"%returncode
         if returncode == returnCodes.AUTHERROR:
@@ -163,7 +170,7 @@ class DaemonClient(object):
                 print "session lost"
                 self.initSession()
                 retry += 1
-                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat, returnformat, retry, maxretry, category)
+                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat, returnformat, retry, maxretry, category,transporttimeout=transporttimeout)
             else:
                 msg = "Authentication error on server.\n"
                 raise AuthenticationError(msg)
@@ -179,10 +186,11 @@ class DaemonClient(object):
             msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
-            # print "*** error in client to zdaemon ***"
-            # print eco            
-            j.errorconditionhandler.raiseOperationalCritical(eco=eco)
+            print "*** error in client to zdaemon ***"
+            print eco            
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=die)
             # raise RuntimeError(str(eco))
+            result=eco
 
         returnformat = parts[1]
         if returnformat <> "":
@@ -224,7 +232,7 @@ class Klass(object):
 
     def method(%s):
         '''%s'''
-        return self._client.sendcmd(cmd="%s", category=self._category, %s,sendformat="${sendformat}",returnformat="${returnformat}")
+        return self._client.sendcmd(cmd="%s", category=self._category, %s,sendformat="${sendformat}",returnformat="${returnformat}",transporttimeout=transporttimeout)
 """
             strmethod=strmethod.replace("${sendformat}",sendformat)
             strmethod=strmethod.replace("${returnformat}",returnformat)
@@ -237,6 +245,7 @@ class Klass(object):
                     cnt += 1
                     params_spec[-cnt] += "=%r" % default
             params = ', '.join(params_spec)
+            params += ",transporttimeout=5"
             strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
             strmethod=strmethod.replace(", ,",",")
             try:
@@ -247,14 +256,14 @@ class Klass(object):
             setattr(client, key, klass.method)
         return client
 
-    def sendcmd(self, cmd, sendformat=None, returnformat=None, category=None, **args):
+    def sendcmd(self, cmd, sendformat=None, returnformat=None, category=None,transporttimeout=5, **args):
         """
         formatstring is right order of formats e.g. mc means messagepack & then compress
         formats see: j.db.serializers.get(?
 
         return is the deserialized data object
         """
-        return self.sendMsgOverCMDChannel(cmd, args, sendformat, returnformat, category=category)
+        return self.sendMsgOverCMDChannel(cmd, args, sendformat, returnformat, category=category,transporttimeout=transporttimeout)
 
     def perftest(self):
         start = time.time()

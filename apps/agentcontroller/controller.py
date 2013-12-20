@@ -4,7 +4,8 @@ import JumpScale.grid.geventws
 import gevent
 from gevent.event import Event
 import JumpScale.grid.osis
-import json
+# import json
+import ujson as json
 
 j.application.start("agentcontroller")
 
@@ -52,8 +53,10 @@ class Job():
             args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
             jsname=jsname,gid=gid)
 
-        for key, value in self.db.getDict().iteritems():
-            setattr(self, key, value)
+        self.parent=None
+
+        # for key, value in self.db.getDict().iteritems():
+        #     setattr(self, key, value)
 
     def save(self):
         guid, new, changed = self.controller.jobclient.set(self.db)
@@ -167,11 +170,11 @@ class ControllerCMDS():
             toremove.set()
             
         for job in self.activeJobSessions.itervalues():
-            if job.sessionid==sessionid:
+            if job.db.sessionid==sessionid:
                 print "found job which cannot be completed" #@todo need to escalate
-                self.activeJobSessions.pop(job.sessionid)
-            if self.jobs.has_key(job.id):
-                self.jobs.pop(job.id)
+                self.activeJobSessions.pop(job.db.sessionid)
+            if self.jobs.has_key(job.db.id):
+                self.jobs.pop(job.db.id)
             del job
 
         if self.session2agent.has_key(session.id):
@@ -334,11 +337,11 @@ class ControllerCMDS():
         if self.roles2agents.has_key(role):            
             
             for agentid in self.roles2agents[role]:
-                job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, \
+                job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
                 job.save()
                 self.workqueue[agentid].append(job)
-                self.jobs[job.id]=job
+                self.jobs[job.db.id]=job
                 jobs.append(job)
 
                 if len(self.agent2freeSessions[agentid].keys())>0:
@@ -357,26 +360,22 @@ class ControllerCMDS():
                 self.jobs[jobgroup.id]=jobgroup
                 for child in jobs:
                     child=self.jobs[child.id]
-                    child.parent=jobgroup
+                    child.db.parent=jobgroup
                     child.db.parent=jobgroup.id
                 job=jobgroup
                 job.save()
 
             if wait:
-                return self.waitJumpscript(job.id,session)
+                return self.waitJumpscript(job.db.id,session)
 
-            if isinstance(job.db, dict):
-                return job.db
             return job.db.__dict__
         else:
             print "nothingtodo"
             job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=args, timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
-            job.state="NOWORK"
-            job.timeStop=job.timeStart
+            job.db.state="NOWORK"
+            job.db.timeStop=job.timeStart
             job.save()            
-            if isinstance(job.db, dict):
-                return job.db
             return job.db.__dict__
 
     def waitJumpscript(self,jobid,session):
@@ -389,21 +388,17 @@ class ControllerCMDS():
         """
         print "wait job execution:%s"%jobid
         job=self.jobs[jobid]
-        timeout = gevent.Timeout(job.timeout)
+        timeout = gevent.Timeout(job.db.timeout)
         timeout.start()
         try:
             job.event=Event()
             job.event.wait()            
             timeout.cancel()
-            # if isinstance(job.db, dict):
-            #     return job.db
             return job.db.__dict__
         except:
             timeout.cancel()
             job.resultcode=1
             print "timeout on execution"
-            # if isinstance(job.db, dict):
-            #     return job.db
             return job.db.__dict__
 
     def getWork(self, session=None):
@@ -420,15 +415,15 @@ class ControllerCMDS():
                     #check locking
 
                     job=self.workqueue[session.agentid][-1]
-                    if job.lock and not self.locks.checkLock(session.agentid,job.lock):
+                    if job.db.lock and not self.locks.checkLock(session.agentid,job.db.lock):
                         #not set yet can execute
                         job=self.workqueue[session.agentid].pop()
-                        self.locks.addLock(session.agentid,job.lock,job.lockduration)
+                        self.locks.addLock(session.agentid,job.db.lock,job.db.lockduration)
                     else:
                         job=self.workqueue[session.agentid].pop()
                     self.activeJobSessions[session.id]=job
                     timeout.cancel()
-                    return (job.jscriptid,job.args,job.id)
+                    return (job.db.jscriptid,job.db.args,job.db.id)
                 #else no work wait for x time (to support long polling) to see if there is activity for this session
                 event=self._markSessionFree(session)
                 print "wait for event for agent:id %s"%session.agentid
@@ -445,7 +440,14 @@ class ControllerCMDS():
     def notifyWorkCompleted(self,result=None,eco=None,session=None):
 
         if not j.basetype.dictionary.check(result) or not j.basetype.dictionary.check(eco):
-            raise RuntimeError("agentcontroller: notifywork completed needs to have dicts as input for result & eco.")
+            msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\n"
+            try:
+                msg+="result was:\n%s\n"%result
+                msg+="eco was:\n%s\n"%eco
+                print msg
+            except:
+                pass
+            raise RuntimeError(msg)
 
         # print "notifyworkcompleted"
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
@@ -466,12 +468,12 @@ class ControllerCMDS():
             except:
                 print ecobj
             print "#########################"
-            job.db.result = eco
+            job.db.result = json.dumps(eco)
         else:
             eco = ''
             job.db.resultcode=0
             job.db.state="OK"
-            job.db.result = result
+            job.db.result = json.dumps(result)
         
         job.save()
         
@@ -482,19 +484,15 @@ class ControllerCMDS():
                 #all children executed
                 job.parent.db.resultcode=0
                 job.parent.db.state = "OK"
-                job.parent.db.result = None
+                job.parent.db.result = json.dumps(None)
                 job.parent.event.set()
         
         if job.event<>None:
-            from IPython import embed
-            print "DEBUG NOW uuu"
-            embed()
-            
             job.event.set()
 
         print "completed job"
-        # print "result was.\n"
-        # print job.
+        print "result was.\n"
+        print job.db
         return
         
     def getScheduledWork(self,agentid,session=None):
@@ -551,8 +549,6 @@ class ControllerCMDS():
     def getJobInfo(self, jobid, session=None):
         job = self.jobs.get(jobid)
         if job:
-            if isinstance(job.db, dict):
-                return job.db
             return job.db.__dict__
 
     def getActiveJobs(self, session=None):
@@ -572,18 +568,18 @@ class ControllerCMDS():
         for jobid in self.jobs.keys():
             job = self.jobs[jobid]
             jobresult['id'] = jobid
-            jobresult['jsname'] = job.jsname
-            jobresult['jsorganization'] = job.jsorganization
-            jobresult['roles'] = job.roles
-            jobresult['args'] = job.args
-            jobresult['timeout'] = job.timeout
-            jobresult['result'] = job.result
-            jobresult['sessionid'] = job.sessionid
-            jobresult['jscriptid'] = job.jscriptid
-            jobresult['children'] = job.children
-            jobresult['childrenActive'] = job.childrenActive
-            jobresult['parent'] = job.parent
-            jobresult['resultcode'] = job.resultcode
+            jobresult['jsname'] = job.db.jsname
+            jobresult['jsorganization'] = job.db.jsorganization
+            jobresult['roles'] = job.db.roles
+            # jobresult['args'] = job.db.args
+            jobresult['timeout'] = job.db.timeout
+            jobresult['result'] = job.db.result
+            jobresult['sessionid'] = job.db.sessionid
+            jobresult['jscriptid'] = job.db.jscriptid
+            jobresult['children'] = job.db.children
+            jobresult['childrenActive'] = job.db.childrenActive
+            jobresult['parent'] = job.db.parent
+            jobresult['resultcode'] = job.db.resultcode
             if self.activeJobSessions.has_key(session.id):
                 jobresult["isactive"] == jobid in self.activeJobSessions[session.id]
             else:

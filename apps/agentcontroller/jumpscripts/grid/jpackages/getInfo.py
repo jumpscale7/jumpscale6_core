@@ -31,4 +31,7 @@ def action(domain, pname, version):
     packagedata['isInstalled'] = package.isInstalled()
     packagedata['getCodeLocationsFromRecipe'] = package.getCodeLocationsFromRecipe()
     packagedata['getPathMetadata'] = package.getPathMetadata()
+
+    raise RuntimeError("test")
+
     return packagedata

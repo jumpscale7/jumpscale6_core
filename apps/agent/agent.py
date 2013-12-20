@@ -13,6 +13,8 @@ j.application.start("agent")
 j.logger.consoleloglevel = 2
 j.logger.maxlevel=7
 
+import ujson as json
+
 LOGCATEGORY = 'agent_exec'
 
 class LogHandler():
@@ -65,12 +67,16 @@ class LogHandler():
     def close(self):
         self.stop()
 
+import sys
 
 class Agent():
 
     def __init__(self):
 
         self.loghandler=LogHandler(self)
+
+        
+
         j.logger.logTargets=[]
         j.logger.logTargetLogForwarder=False
 
@@ -85,30 +91,49 @@ class Agent():
 
         j.logger.logTargetAdd(self.loghandler)
         self.loghandler.start()        
-        # setup eco
+        # setup logger
         if not j.logger.logTargetLogForwarder:
             j.logger.logTargetLogForwarder = self.loghandler
 
         print "agent: %s"%self.agentid
 
+        sys.excepthook=self.exceptHook
+
         self.actions={}
         self.serverurl=self.client._client.transport.url
         self.register()
-        self.log("test", category='agent')
-        
+
+    def exceptHook(self,type, value, traceback):
+        print "******************* SERIOUS BUG **************"
+        print "COULD NOT EXECUTE JOB"
+        eco=j.errorconditionhandler.processPythonExceptionObject(value)
+        eco.getBacktraceDetailed(traceback)
+        try:
+            j.errorconditionhandler.processErrorConditionObject(eco)
+        except:
+            print "COULD NOT PROCESS ERRORCONDITION OBJECT"
+            try:
+                print eco
+            except:
+                print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
+        print "******************* SERIOUS BUG **************"   
+        self.register()
+        self.start()     
 
     def register(self):
-
+        print "REGISTERED"
         ok=False
         while ok==False:
             try:
                 self.client.register(similarProcessPIDs=self.similarProcessPIDs)
                 ok=True
             except Exception,e:
-                print "retry registration to %s"%self.serverurl
+                print e
+                print "retry registration"
                 time.sleep(2)
 
     def start(self):
+        print "STARTED"
         while True:
 
             ok=False
@@ -123,6 +148,7 @@ class Agent():
                 
             if havework<>None and ok:
                 jscriptid,args,jid=havework
+                args=json.loads(args)
                 self.loghandler.jid=jid
                 
                 #eval action code, if not ok send error back, cache the evalled action
@@ -166,7 +192,7 @@ class Agent():
                     try:
                         msg+="result was:%s\n"%result
                     except:
-                        pass
+                        print "***ERROR***: could not print result"
                     eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
                     self.notifyWorkCompleted({},eco.__dict__)
                     continue
@@ -178,17 +204,24 @@ class Agent():
 
     def notifyWorkCompleted(self,result,eco):
         try:
-            self.client.notifyWorkCompleted(result=None,eco=eco)
+            result=self.client.notifyWorkCompleted(result=result,eco=eco,transporttimeout=5)
         except Exception,e:
+            eco=j.errorconditionhandler.lastEco
+            j.errorconditionhandler.lastEco=None
+
             print "******************* SERIOUS BUG **************"
             print "COULD NOT EXECUTE JOB, COULD NOT PROCESS RESULT OF WORK."
-            print "ERROR WAS:%s"%e
+            try:
+                print "ERROR WAS:%s"%eco
+            except:
+                print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
             print "******************* SERIOUS BUG **************"
 
 
     def log(self, message, category=LOGCATEGORY,level=5):
         #queue saving logs        
         j.logger.log(message,category=category,level=level)
+        print message
 
 
 
