@@ -50,7 +50,9 @@ class Job():
         self.db=self.controller.jobclient.new(sessionid=sessionid, jsorganization=jsorganization, roles=roles, \
             args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
             jsname=jsname,gid=gid)
+        self._syncProps()
 
+    def _syncProps(self):
         for key, value in self.db.getDict().iteritems():
             setattr(self, key, value)
 
@@ -58,6 +60,7 @@ class Job():
         guid, new, changed = self.controller.jobclient.set(self.db)
         if new or changed:
             self.db.load(self.controller.jobclient.get(guid))
+            self._syncProps()
 
     def __repr__(self):
         return str(self.db.__dict__)
