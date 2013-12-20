@@ -42,6 +42,8 @@ class GeventWSTransport(Transport):
         headers = {'content-type': 'application/raw'}
         data2 = j.servers.base._serializeBinSend(category, cmd, data, sendformat, returnformat, self._id)
         start=j.base.time.getTimeEpoch()
+        if self.timeout:
+            timeout = self.timeout
         if retry:
             r=None
             while r==None:
