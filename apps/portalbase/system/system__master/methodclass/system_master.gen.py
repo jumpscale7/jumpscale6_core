@@ -56,3 +56,14 @@ class system_master(j.code.classGetBase()):
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method registerRedisInstance")
     
+
+    def waitForJob(self, jobid, timeout, **kwargs):
+        """
+        waits for a job to execute
+        param:jobid 
+        param:timeout 
+        result dict
+        """
+        #put your code here to implement this method
+        raise NotImplementedError ("not implemented method waitForJob")
+    

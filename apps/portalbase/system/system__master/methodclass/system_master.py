@@ -1,4 +1,5 @@
 from JumpScale import j
+import JumpScale.portal
 
 class system_master(j.code.classGetBase()):
 
@@ -60,3 +61,14 @@ class system_master(j.code.classGetBase()):
         """
         # put your code here to implement this method
         raise NotImplementedError("not implemented method registerRedisInstance")
+
+    def waitForJob(self, jobid, timeout=10, **args):
+        jobid = int(jobid)
+        if jobid not in j.core.portal.runningPortal.webserver.jobids2greenlets:
+            j.core.portal.runningPortal.webserver.spawnJob(jobid)
+        result = j.core.portal.runningPortal.webserver.jobids2greenlets[jobid].get(timeout=timeout)
+        if result:
+            j.core.portal.runningPortal.webserver.jobids2greenlets.pop(jobid)
+            return j.db.serializers.getSerializerType('j').loads(result)
+        else:
+            return None
