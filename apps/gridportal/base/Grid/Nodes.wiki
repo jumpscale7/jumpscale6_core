@@ -1,0 +1,10 @@
+@usedefault
+
+h2. Nodes
+
+{{nodes: gid:$$gid name:$$name roles:$$roles ipaddr:$$ipaddr macaddr:$$macaddr active:$$active peer_stats:$$peer_stats peer_log:$$peer_log peer_backup:$$peer_backup lastcheckFrom:$$lastcheckFrom lastcheckTo:$$lastcheckTo}}
+
+make sure that all same logic is applied as in rest webservice
+call the actor that way
+
+

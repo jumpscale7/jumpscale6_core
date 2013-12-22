@@ -6,10 +6,10 @@ $$description
 
 h3. Node Jobs
 
-#{{joblist: nid:$$id}}
+{{joblist: nid:$$id}}
 
 
 h4. Logs
 
-#{{logs: nid:$$id}}
+{{logs: nid:$$id}}
 
