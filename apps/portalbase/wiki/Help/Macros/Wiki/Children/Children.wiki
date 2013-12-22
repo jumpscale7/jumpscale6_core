@@ -17,9 +17,9 @@ h3. Depth
 h3. Example
 
 {{code:
-\{\{children: page:docs bullets\}\}
+\{\{children: page:help bullets\}\}
 }}
 
 h4. Output
 
-{{children: page:docs bullets}}
+{{children: page:help bullets}}

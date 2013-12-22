@@ -21,43 +21,43 @@ h3. Examples
 h4. Default layout
 
 {{code:
-\{\{childrentree: page:docs \}\}
+\{\{childrentree: page:help \}\}
 }}
 
-{{childrentree: page:docs }}
+{{childrentree: page:help }}
 
 
 h4. bullets
 
 {{code:
-\{\{childrentree: page:docs bullets no-tree\}\}
+\{\{childrentree: page:help bullets no-tree\}\}
 }}
 
-{{childrentree: page:docs bullets no-tree}}
+{{childrentree: page:help bullets no-tree}}
 
 h4. no-tree
 
 {{code:
-\{\{childrentree: page:docs no-tree\}\}
+\{\{childrentree: page:help no-tree\}\}
 }}
 
-{{childrentree: page:docs no-tree}}
+{{childrentree: page:help no-tree}}
 
 h4. items
 
 {{code:
-\{\{childrentree: page:docs items:[Macros(Children,JGauge(JGauge3,'St. Thomas'),MenuAdmin),UserManagement]\}\}
+\{\{childrentree: page:help items:[Macros(Children,JGauge(JGauge3,'St. Thomas'),MenuAdmin),UserManagement]\}\}
 }}
 
-{{childrentree: page:docs items:[Macros(Children,JGauge(JGauge3,'St. Thomas'),MenuAdmin),UserManagement]}}
+{{childrentree: page:help items:[Macros(Children,JGauge(JGauge3,'St. Thomas'),MenuAdmin),UserManagement]}}
 
 h4. depth
 
 {{code:
-\{\{childrentree: page:docs depth:1\}\}
+\{\{childrentree: page:help depth:1\}\}
 }}
 
-{{childrentree: page:docs depth:1}}
+{{childrentree: page:help depth:1}}
 
 h4. page
 

@@ -154,8 +154,8 @@ def main(j, args, params, tags, tasklet):
         if doc.preprocessor.docExists(pagecontent):
             doc = doc.preprocessor.docGet(pagecontent)
         else:
-            page.addMessage('MACRO CHILDREN ERROR: Could not find page with name %s to start from.' % page)
-            return
+            page.addMessage('MACRO CHILDREN ERROR: Could not find page with name %s to start from.' % pagecontent)
+            return params
 
     dir_name = j.system.fs.getDirName(doc.path)
     if items:
