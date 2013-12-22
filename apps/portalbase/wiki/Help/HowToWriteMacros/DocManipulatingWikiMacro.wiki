@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
     idd=int(args.tags.getDict()["id"])
 
     #retrieve nods from actor method
-    obj=actor.getNodes(id=idd)[0] #returns 1 node in array (is how the getNodes method worls)
+    obj=actor.getNodes(id=idd)[0] #returns 1 node in array (is how the getNodes method works)
     #obj is a dict
 
     #apply the properties of the object as parameters to the active wiki document
