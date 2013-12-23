@@ -1,5 +1,5 @@
 @usedefault
 
 h2. Overview of the grid
+#{{nodes}}
 
-{{nodes}}

@@ -246,7 +246,7 @@ class system_gridmanager(j.code.classGetBase()):
 
         return self.osis_job.simpleSearch(params)
 
-    def getErrorconditions(self, id, level, descr, descrpub, from_, to, nid, gid, category, tags, type, jid, jidparent, jsorganization, jsname, **kwargs):
+    def getErrorconditions(self, id=None, level=None, descr=None, descrpub=None, from_=None, to=None, nid=None, gid=None, category=None, tags=None, type=None, jid=None, jidparent=None, jsorganization=None, jsname=None, **kwargs):
         """
         interface to get errorcondition information (eco)
         param:id only find 1 eco entry
@@ -285,7 +285,7 @@ class system_gridmanager(j.code.classGetBase()):
         return self.osis_eco.simpleSearch(params)
 
 
-    def getProcesses(self, id, guid, name, nid, gid, from_, to, active, jpdomain, jpname, instance, systempid, lastcheckFrom, lastcheckTo, **kwargs):
+    def getProcesses(self, id=None, guid=None, name=None, nid=None, gid=None, from_=None, to=None, active=None, jpdomain=None, jpname=None, instance=None, systempid=None, lastcheckFrom=None, lastcheckTo=None, **kwargs):
         """
         list processes (comes from osis), are the grid unique processes (not integrated with processmanager yet)
         param:id only find 1 process entry
@@ -337,9 +337,9 @@ class system_gridmanager(j.code.classGetBase()):
         param:jsorganization
         param:jsname
         """
-        return j.clients.agentcontroller.getJumpscript(jsorganization, jsname)
+        return j.clients.agentcontroller.getJumpScript(jsorganization, jsname)
 
-    def getJumpscripts(self, jsorganization, **kwargs):
+    def getJumpscripts(self, jsorganization=None, **kwargs):
         """
         calls internally the agentcontroller
         return: lists the jumpscripts with main fields (organization, name, category, descr)
@@ -381,7 +381,7 @@ class system_gridmanager(j.code.classGetBase()):
             return j.base.time.getEpochAgo(time)
         return j.base.time.getEpochFuture(time)
 
-    def getAlerts(self, id, level, descr, descrpub, nid, gid, category, tags, state, from_inittime, to_inittime, from_lasttime, to_lasttime, from_closetime, to_closetime, nrerrorconditions, errorcondition, **kwargs):
+    def getAlerts(self, id=None, level=None, descr=None, descrpub=None, nid=None, gid=None, category=None, tags=None, state=None, from_inittime=None, to_inittime=None, from_lasttime=None, to_lasttime=None, from_closetime=None, to_closetime=None, nrerrorconditions=None, errorcondition=None, **kwargs):
         """
         interface to get alert (is optionally the result of an eco)
         param:id only find 1 alert entry
@@ -427,7 +427,7 @@ class system_gridmanager(j.code.classGetBase()):
                  }
         return self.osis_alert.simpleSearch(params)
 
-    def getVDisks(self, id, machineid, guid, gid, nid, disk_id, fs, sizeFrom, sizeTo, freeFrom, freeTo, sizeondiskFrom, sizeondiskTo, mounted, path, description, mountpoint, role, type, order, devicename, backup, backuplocation, backuptime, backupexpiration, active, lastcheckFrom, lastcheckTo, **kwargs):
+    def getVDisks(self, id=None, machineid=None, guid=None, gid=None, nid=None, disk_id=None, fs=None, sizeFrom=None, sizeTo=None, freeFrom=None, freeTo=None, sizeondiskFrom=None, sizeondiskTo=None, mounted=None, path=None, description=None, mountpoint=None, role=None, type=None, order=None, devicename=None, backup=None, backuplocation=None, backuptime=None, backupexpiration=None, active=None, lastcheckFrom=None, lastcheckTo=None, **kwargs):
         """
         list found vdisks (virtual disks like qcow2 or sections on fs as used by a container or virtual machine) (comes from osis)
         param:id find based on id
@@ -493,7 +493,7 @@ class system_gridmanager(j.code.classGetBase()):
                  }
         return self.osis_vdisk.simpleSearch(params)
 
-    def getMachines(self, id, guid, otherid, gid, nid, name, description, state, roles, ipaddr, macaddr, active, cpucore, mem, type, lastcheckFrom, lastcheckTo, **kwargs):
+    def getMachines(self, id=None, guid=None, otherid=None, gid=None, nid=None, name=None, description=None, state=None, roles=None, ipaddr=None, macaddr=None, active=None, cpucore=None, mem=None, type=None, lastcheckFrom=None, lastcheckTo=None, **kwargs):
         """
         list found machines (comes from osis)
         param:id find based on id

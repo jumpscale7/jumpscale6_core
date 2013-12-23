@@ -12,14 +12,11 @@ def main(j, args, params, tags, tasklet):
     #this makes sure bootstrap datatables functionality is used
     out.append("{{datatables_use}}\n")
 
+    fields = ['id', 'nid', 'name', 'description', 'active', 'sizeondisk', 'free', 'path']
 
-    #fields = ['otherid', 'description', 'roles', 'mem', 'netaddr', 'ipaddr', 'nid', 'lastcheck', 'state', 'gid', 'active', 'cpucore', 'type', 'id', 'name', 'id', 'size', 'devicename', 'disk_id', 'gid', 'role', 'machineid', 'type', 'fs', 'description', 'backuplocation', 'free', 'sizeondisk', 'nid', 'active', 'path', 'name', 'backuptime', 'lastcheck', 'expiration', 'machine_id', 'backup', 'order']
+    out.append('||id||node||name||description||active||free||path||')
 
-    fields = ["id", "nid", "name", "active", "ssd", "size", "free", "mounted"]
-
-    out.append('||id||node||name||active||ssd||usage||mounted||')
-
-    for disk in actor.getDisks():
+    for disk in actor.getVDisks():
         line = [""]
 
         for field in fields:
@@ -28,10 +25,11 @@ def main(j, args, params, tags, tasklet):
                 line.append('[%s|/grid/disk?id=%s]' % (str(disk[field]), str(disk[field])))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(disk[field]), str(disk[field])))
-            elif field == 'size':
-                disksize = disk[field]
+            elif field == 'sizeondisk':
+                continue
             elif field == 'free':
                 diskfree = disk[field]
+                disksize = disk['sizeondisk']
                 diskusage = 100 - int(100.0 * diskfree / disksize)
                 line.append('%s%%' % diskusage)
             else:

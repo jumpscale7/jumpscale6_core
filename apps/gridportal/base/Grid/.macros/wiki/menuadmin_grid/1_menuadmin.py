@@ -28,6 +28,15 @@ grid:/grid
 logs_errors:/gridlogs
 jpackages:/jpackages
 --------------
+Machines:/grid/Machines
+Disks:/grid/Disks
+VDisks:/grid/vdisks
+Nodes:/grid/Nodes
+Processes:/grid/Processes
+ECOs:/grid/ECOs
+Alerts:/grid/alerts
+JumpScripts:/grid/JumpScripts
+Stats:/grid/stat
 """
     # C+=spacestxt
     C+='}}'
