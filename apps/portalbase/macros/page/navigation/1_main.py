@@ -5,8 +5,8 @@ def main(j, args, params, tags, tasklet):
     page.addBootstrap()
     navStr = args.cmdstr
 
-    page.addMessage("<div class='well sidebar-nav'>")
     page._hasSidebar = True
+    menuStr = "<div class='well sidebar-nav'>"
 
     if args.doc.navigation != "":
         if navStr.strip() == "":
@@ -42,7 +42,7 @@ def main(j, args, params, tags, tasklet):
                 doc = args.doc.preprocessor.docGet(name)
                 line, doc2 = doc.executeMacrosDynamicWiki()
                 html = clean(doc.getHtmlBody())
-                page.addMessage(html)
+                menuStr += html
             if line.find("{{") == 0:
                 try:
                     line, doc2 = args.doc.preprocessor.macroexecutorWiki.execMacrosOnContent(content=line, doc=args.doc)
@@ -68,8 +68,13 @@ def main(j, args, params, tags, tasklet):
                 line2 = "<li><a href=\"%s\"><i class=\"%s\"></i>%s</a></li>" % (target.strip(), icon.strip(), name.strip())
                 items += "%s\n" % line2
 
-    page.addMessage(items)
-    page.addMessage("</div>")
+
+    menuStr += items
+    menuStr += "</div>"
+
+    # Add the sidebar only when there are items to show
+    if items:
+        page.addMessage(menuStr)
 
     params.result = page
 
