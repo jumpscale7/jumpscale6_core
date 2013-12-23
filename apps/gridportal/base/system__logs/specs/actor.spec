@@ -14,6 +14,7 @@
         var:jsorganization str,, @tags: optional
         var:jsname str,, @tags: optional
         var:nip str,, @tags: optional
+        var:roles str,, @tags: optional
         result:dict
 
 
@@ -29,4 +30,11 @@
         Gets ECOs for node
         """
         var:nid int,, @tags: optional
+        result:dict
+
+    method: listLogs
+        """
+        Gets logs (for node)
+        """
+        var: nid int,, @tags: optional
         result:dict

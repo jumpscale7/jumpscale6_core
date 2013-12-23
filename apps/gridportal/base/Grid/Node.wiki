@@ -2,14 +2,12 @@
 
 {{node: id:$$id}}
 
-$$description
 
+<br>
 h3. Node Jobs
+{{nodejobs: nid:$$id}}
 
-{{joblist: nid:$$id}}
 
-
-h4. Logs
-
+<br>
+h3. Logs
 {{logs: nid:$$id}}
-

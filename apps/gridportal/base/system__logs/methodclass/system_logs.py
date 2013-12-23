@@ -19,7 +19,7 @@ class system_logs(j.code.classGetBase()):
         client = j.core.osis.getClientForCategory(osiscl, 'system', 'job')
 
         params = {'ffrom': '', 'to': '', 'nid': '', 'gid': '',
-                  'parent': '', 'state': '', 'jsorganization': '', 'jsname': ''}
+                  'parent': '', 'state': '', 'jsorganization': '', 'jsname': '', 'roles': ''}
         for p in params:
             params[p] = args.get(p)
 
@@ -40,7 +40,13 @@ class system_logs(j.code.classGetBase()):
                 else:
                     drange = {'range': {'timeStart': {'lte': ending}}}
                     query['query']['bool']['must'].append(drange)
+            if params['roles']:
+                roles = params.pop('roles')
+                query_string = {"query_string":{"default_field":"roles","query": roles}}
+                query['query']['bool']['must'].append(query_string)
             for k, v in params.iteritems():
+                if k == 'state':
+                    v = v.lower()
                 if v:
                     term = {'term': {k: v}}
                     query['query']['bool']['must'].append(term)
@@ -53,9 +59,11 @@ class system_logs(j.code.classGetBase()):
             itemdata = list()
             for field in fields:
                 itemdata.append(item['_source'].get(field))
-            itemdata.append('<a href=%s>%s</a>' % ('/gridlogs/job?jobid=%s' % item['_id'], item['_source'].get('args', {}).get('msg', '')))
-            result = j.db.serializers.ujson.loads(item['_source'].get('result', ''))
-            itemdata.append(result.get('result', ''))
+            itemargs = j.db.serializers.ujson.loads(item['_source'].get('args', {}))
+            itemdata.append('<a href=%s>%s</a>' % ('/gridlogs/job?jobid=%s' % item['_id'], itemargs.get('msg', '')))
+            result = item['_source'].get('result', '{}')
+            result = j.db.serializers.ujson.loads(result if result else '{}')
+            itemdata.append(result)
             aaData.append(itemdata)
         return {'aaData': aaData}
 
@@ -65,8 +73,8 @@ class system_logs(j.code.classGetBase()):
         import JumpScale.grid.osis
         osiscl = j.core.osis.getClient()
         client = j.core.osis.getClientForCategory(osiscl, 'system', 'node')
-
-        nodes = client.search("null")
+        
+        nodes = client.search('null')
 
         aaData = list()
         fields = ('name', 'roles', 'ipaddr', 'machineguid')
@@ -78,9 +86,6 @@ class system_logs(j.code.classGetBase()):
             ipaddr = item['_source'].get('ipaddr')[0] if item['_source'].get('ipaddr') else ''
             itemdata.append('<a href="/grid/node?nip=%s">link</a>' % ipaddr)
             aaData.append(itemdata)
-
-        if not aaData:
-            aaData = [None, None, None, None, None]
         return {'aaData': aaData}
 
 
@@ -105,4 +110,26 @@ class system_logs(j.code.classGetBase()):
 
         if not aaData:
             aaData = [None, None, None, None, None]
+        return {'aaData': aaData}
+
+
+    def listLogs(self, **args):
+        import JumpScale.baselib.elasticsearch
+        esc = j.clients.elasticsearch.get()
+
+        query = 'null'
+        if args.get('nid'):
+            nid = args.get('nid')
+            query = {"query":{"bool":{"must":[{"term":{"nid":nid}}]}}}
+
+        logs = esc.search(query, index='system_log')
+
+        aaData = list()
+        fields = ('appname', 'category', 'epoch', 'message', 'level', 'pid')
+
+        for item in logs['hits']['hits']:
+            itemdata = list()
+            for field in fields:
+                itemdata.append(item['_source'].get(field))
+            aaData.append(itemdata)
         return {'aaData': aaData}

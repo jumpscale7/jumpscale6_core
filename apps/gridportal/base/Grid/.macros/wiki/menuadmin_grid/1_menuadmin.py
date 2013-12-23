@@ -28,7 +28,6 @@ grid:/grid
 logs_errors:/gridlogs
 jpackages:/jpackages
 --------------
-nodes:/grid/GridNodes
 """
     # C+=spacestxt
     C+='}}'

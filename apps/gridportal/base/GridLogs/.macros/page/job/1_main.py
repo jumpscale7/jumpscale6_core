@@ -19,7 +19,11 @@ def main(j, args, params, tags, tasklet):
     page.addHeading("Details", 5)
     rows = list()
     for k,v in sorted(job.iteritems()):
-        v = v or ""
+        try:
+            v = j.db.serializers.ujson.loads(v) or ""
+        except:
+            v = v
+        
         if k in ('guid', 'id'):
             continue
         elif k in ('timeStop', 'timeStart'):
@@ -29,11 +33,6 @@ def main(j, args, params, tags, tasklet):
             rows.append(["<th>%s</th>" %k,"", ""])
             for ka, va in v.iteritems():
                 rows.append(["<th></th>", ka,va])
-        elif k == 'result':
-            rows.append(["<th>%s</th>" %k,"", ""])
-            vdict = j.db.serializers.ujson.loads(v)
-            for ka, va in vdict.iteritems():
-                rows.append(["<th></th>", ka,va])
         elif k in ('children', 'childrenActive'):
             rows.append(["<th>%s</th>" %k,"", ""])
             for kc in v:
@@ -42,7 +41,7 @@ def main(j, args, params, tags, tasklet):
             rows.append(["<th>%s</th>" %k,"", v])
 
 
-    page.addList(rows )
+    page.addList(rows)
 
     params.result = page
     return params

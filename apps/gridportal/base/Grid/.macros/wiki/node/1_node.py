@@ -9,7 +9,12 @@ def main(j, args, params, tags, tasklet):
     
     idd = int(args.tags.getDict()["id"])
 
-    obj = actor.getNodes(id=idd)[0]
+    node = actor.getNodes(id=idd)
+    if not node:
+        params.result = ('Node with id %s not found' % idd, doc)
+        return params
+
+    obj = node[0]
 
     out = ['||Property||Value||']
 
@@ -39,6 +44,7 @@ def main(j, args, params, tags, tasklet):
     out.append("|%s|%s|" % ('machine guid', obj['machineguid']))
     out.append("|%s|%s|" % ('active', obj['active']))
     out.append("|%s|%s|" % ('name', obj['name']))
+    out.append("|%s|%s|" % ('roles', ', '.join(obj['roles'])))
     out.append("|%s|%s|" % ('description', obj['description']))
 
     params.result = ('\n'.join(out), doc)
