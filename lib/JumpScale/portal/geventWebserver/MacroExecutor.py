@@ -224,7 +224,7 @@ class MacroExecutorWiki(MacroExecutorBase):
             content = doc.applyParams(ctx.params, findfresh=True, content=content)
         if paramsExtra != {}:
             content = doc.applyParams(paramsExtra, findfresh=True, content=content)
-        macrostrs = self.findMacros(doc)
+        macrostrs = self.findMacros(doc, content)
         for macrostr in macrostrs:
             # print "EXEC MACRO ONCONTENT:"
             # print macrostr
@@ -270,10 +270,11 @@ class MacroExecutorWiki(MacroExecutorBase):
 
         return content,doc
 
-    def findMacros(self, doc):
+    def findMacros(self, doc, content=None):
         """
         """
-        text = doc.content.strip()
+        content = content or doc.content
+        text = content.strip()
         if text == "":
             return []
         result = []
