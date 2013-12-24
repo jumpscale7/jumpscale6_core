@@ -40,7 +40,7 @@ def main(j, args, params, tags, tasklet):
 
     content = j.system.fs.fileGetContents(path)
 
-    page.addCodeBlock(content, path=path, exitpage=False, edit=args["edit"], spacename=args["space"], pagename=args['page'])
+    page.addCodeBlock(content, path=path, exitpage=False, edit=args["edit"], spacename=args["space"], pagename=page_name)
 
     params.result = page
     return params
