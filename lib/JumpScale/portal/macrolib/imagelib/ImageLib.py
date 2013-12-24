@@ -1,7 +1,6 @@
 from JumpScale import j
 
 from PIL import Image
-print "IMAGELIB LOAD"
 
 
 class ImageLib:
