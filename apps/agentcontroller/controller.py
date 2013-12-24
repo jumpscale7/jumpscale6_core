@@ -356,7 +356,7 @@ class ControllerCMDS():
                 jobgroup.children=jobs
                 for jobchild in jobs:
                     jobgroup.db.children.append(jobchild.db)
-                    jobgroup.db.childrenActive[jobchild.id] = jobchild.db
+                    jobgroup.db.childrenActive[jobchild.db.id] = jobchild.db
                 self.jobs[jobgroup.id]=jobgroup
                 for child in jobs:
                     child=self.jobs[child.id]
