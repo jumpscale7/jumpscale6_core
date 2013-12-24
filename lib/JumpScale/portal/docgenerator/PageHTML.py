@@ -716,8 +716,11 @@ function copyText$id() {
         self.addJS("%s/elfinder/js/proxy/elFinderSupportVer1.js" % self.liblocation)
         #codemirror resources
         self.addCSS('%s/codemirror/lib/codemirror.css' % self.liblocation)
+        self.addCSS('%s/codemirror/addon/hint/show-hint.css' % self.liblocation)
         self.addCSS('%s/codemirror/theme/elegant.css' % self.liblocation)
         self.addJS('%s/codemirror/lib/codemirror.js' % self.liblocation)
+        self.addJS('%s/codemirror/addon/hint/show-hint.js' % self.liblocation)
+        self.addJS('%s/codemirror/addon/hint/python-hint.js' % self.liblocation)
         self.addJS('%s/codemirror/mode/python/python.js' % self.liblocation)
 
         if readonly:
@@ -745,7 +748,10 @@ function copyText$id() {
 
         C = """
 <script type="text/javascript" charset="utf-8">
-     $().ready(function() {
+     $(document).ready(function() {
+        CodeMirror.commands.autocomplete = function(cm) {
+            CodeMirror.showHint(cm, CodeMirror.hint.python);
+        };
         var options=
         {
             defaultView : 'list',
@@ -763,6 +769,9 @@ function copyText$id() {
                             lineNumbers: true,
                             theme: "elegant",
                             mode: "python",
+                            indentUnit: 4,
+                            extraKeys: {"Ctrl-Space": "autocomplete"},
+
                             onCursorActivity: function() {
                                 editor1.setLineClass(hlLine, null, null);
                                 hlLine = editor1.setLineClass(editor1.getCursor().line, null, "activeline");
