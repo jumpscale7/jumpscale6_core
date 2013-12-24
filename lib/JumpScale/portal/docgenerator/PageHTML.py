@@ -714,6 +714,14 @@ function copyText$id() {
         self.addCSS("%s/elfinder/css/theme.css" % self.liblocation)
         self.addJS("%s/elfinder/js/elfinder.min.js" % self.liblocation)
         self.addJS("%s/elfinder/js/proxy/elFinderSupportVer1.js" % self.liblocation)
+        #codemirror resources
+        self.addCSS('%s/codemirror/lib/codemirror.css' % self.liblocation)
+        self.addCSS('%s/codemirror/addon/hint/show-hint.css' % self.liblocation)
+        self.addCSS('%s/codemirror/theme/elegant.css' % self.liblocation)
+        self.addJS('%s/codemirror/lib/codemirror.js' % self.liblocation)
+        self.addJS('%s/codemirror/addon/hint/show-hint.js' % self.liblocation)
+        self.addJS('%s/codemirror/addon/hint/python-hint.js' % self.liblocation)
+        self.addJS('%s/codemirror/mode/python/python.js' % self.liblocation)
 
         if readonly:
             commands = """
@@ -740,8 +748,10 @@ function copyText$id() {
 
         C = """
 <script type="text/javascript" charset="utf-8">
-     $().ready(function() {
-
+     $(document).ready(function() {
+        CodeMirror.commands.autocomplete = function(cm) {
+            CodeMirror.showHint(cm, CodeMirror.hint.python);
+        };
         var options=
         {
             defaultView : 'list',
@@ -750,6 +760,33 @@ function copyText$id() {
             width : $width,
             transport : new elFinderSupportVer1(),
 	        {commands}
+            commandsOptions: {
+                edit : {
+                editors : [{
+                    mimes : ['text/plain', 'text/html', 'text/javascript', 'text/x-python', 'text/x-php', 'text/css', 'text/rtf', 'text/x-ruby', 'text/x-shellscript', 'application/msword'],
+                    load : function(textarea) {
+                        this.myCodeMirror = CodeMirror.fromTextArea(textarea, {
+                            lineNumbers: true,
+                            theme: "elegant",
+                            mode: "python",
+                            indentUnit: 4,
+                            extraKeys: {"Ctrl-Space": "autocomplete"},
+
+                            onCursorActivity: function() {
+                                editor1.setLineClass(hlLine, null, null);
+                                hlLine = editor1.setLineClass(editor1.getCursor().line, null, "activeline");
+                        }});
+                    },
+                    close : function(textarea, instance) {
+                        this.myCodeMirror = null;
+                    },
+                    save : function(textarea, editor) {
+                      textarea.value = this.myCodeMirror.getValue();
+                      this.myCodeMirror = null;
+                    }
+                    } ]
+                }
+            },
 	        ui :[{tree}'path', 'stat'],
 
             getFileCallback : function(files, fm) {
