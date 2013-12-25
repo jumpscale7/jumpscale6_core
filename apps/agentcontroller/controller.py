@@ -357,11 +357,11 @@ class ControllerCMDS():
                 for jobchild in jobs:
                     jobgroup.db.children.append(jobchild.db)
                     jobgroup.db.childrenActive[jobchild.db.id] = jobchild.db
-                self.jobs[jobgroup.id]=jobgroup
+                self.jobs[jobgroup.db.id]=jobgroup
                 for child in jobs:
-                    child=self.jobs[child.id]
+                    child=self.jobs[child.db.id]
                     child.db.parent=jobgroup
-                    child.db.parent=jobgroup.id
+                    child.db.parent=jobgroup.db.id
                 job=jobgroup
                 job.save()
 
