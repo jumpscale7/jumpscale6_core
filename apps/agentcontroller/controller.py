@@ -44,7 +44,7 @@ class Jumpscript():
 class Job():
     def __init__(self, controller,sessionid,jsname, jsorganization, roles,args,timeout,jscriptid,lock):
 
-        self.event=None
+        self.event = Event()
         self.controller=controller
         gid = j.application.whoAmI.gid
 
@@ -53,10 +53,11 @@ class Job():
             args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
             jsname=jsname,gid=gid)
 
-        self.parent=None
+    def wait(self):
+        self.event.wait()
 
-        # for key, value in self.db.getDict().iteritems():
-        #     setattr(self, key, value)
+    def done(self):
+        self.event.set()
 
     def save(self):
         guid, new, changed = self.controller.jobclient.set(self.db)
@@ -111,7 +112,7 @@ class ControllerCMDS():
     def __init__(self, daemon):
 
         j.application.initGrid()
-        
+
         self.daemon = daemon
         self.jumpscripts = {}
         self.jumpscriptsFromKeys = {}
@@ -127,12 +128,12 @@ class ControllerCMDS():
         self.sessions={} #key=sessionid
         self.sessionsUpdateTime={} #key=sessionid, val is last epoch of contact
         self.activeJobSessions={}  # key=sessionid , is job running per session or does not exist if no job running on that session
-        
+
         self.agent2freeSessions={} #key is agent, val is dict of sessions free to be used
 
         self.adminpasswd = j.application.config.get('system.superadmin.passwd')
         self.adminuser = j.application.config.get('system.superadmin.login')
-        
+
         self.osisclient = j.core.osis.getClient()
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
 
@@ -334,8 +335,7 @@ class ControllerCMDS():
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         jobs=[]
-        if self.roles2agents.has_key(role):            
-            
+        if role in self.roles2agents:
             for agentid in self.roles2agents[role]:
                 job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
@@ -353,16 +353,16 @@ class ControllerCMDS():
             if len(jobs)>1:
                 jobgroup= Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
-                jobgroup.children=jobs
+                jobgroup.save()
                 for jobchild in jobs:
-                    jobgroup.db.children.append(jobchild.db)
-                    jobgroup.db.childrenActive[jobchild.db.id] = jobchild.db
+                    jobgroup.db.children.append(jobchild.db.id)
+                    jobgroup.db.childrenActive.append(jobchild.db.id)
                 self.jobs[jobgroup.db.id]=jobgroup
                 for child in jobs:
                     child=self.jobs[child.db.id]
-                    child.db.parent=jobgroup
                     child.db.parent=jobgroup.db.id
                 job=jobgroup
+                self.jobs[job.db.id]=job
                 job.save()
 
             if wait:
@@ -387,13 +387,13 @@ class ControllerCMDS():
         returncode 2 = error (then result is eco)
 
         """
-        print "wait job execution:%s"%jobid
-        job=self.jobs[jobid]
+        job=self.jobs.get(jobid)
+        if not job:
+            raise RuntimeError("Not job found with id %s" % jobid)
         timeout = gevent.Timeout(job.db.timeout)
         timeout.start()
         try:
-            job.event=Event()
-            job.event.wait()            
+            job.wait()
             timeout.cancel()
             return job.db.__dict__
         except:
@@ -439,18 +439,6 @@ class ControllerCMDS():
             print "timeout (if too fast timeouts then error in getWork while loop)"
 
     def notifyWorkCompleted(self,result=None,eco=None,session=None):
-
-        #if not j.basetype.dictionary.check(result) or not j.basetype.dictionary.check(eco):
-        #    msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\n"
-        #    try:
-        #        msg+="result was:\n%s\n"%result
-        #        msg+="eco was:\n%s\n"%eco
-        #        print msg
-        #    except:
-        #        pass
-        #    raise RuntimeError(msg)
-
-        # print "notifyworkcompleted"
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
 
         if (not self.activeJobSessions.has_key(session.id)) or self.activeJobSessions[session.id]==None:
@@ -475,21 +463,25 @@ class ControllerCMDS():
             job.db.resultcode=0
             job.db.state="OK"
             job.db.result = json.dumps(result)
-        
         job.save()
-        
+    
         #now need to return it to the client who asked for the work 
-        if job.parent<>None:
-            job.parent.childrenActive.pop(job.id)
-            if len(job.parent.childrenActive)==0:
+        if job.db.parent and job.db.parent in self.jobs:
+            parentjob = self.jobs[job.db.parent]
+            parentjob.db.childrenActive.remove(job.db.id)
+            if job.db.state == 'ERROR':
+                parentjob.db.state = 'ERROR'
+                parentjob.db.result = job.db.result
+            if not parentjob.db.childrenActive:
                 #all children executed
-                job.parent.db.resultcode=0
-                job.parent.db.state = "OK"
-                job.parent.db.result = json.dumps(None)
-                job.parent.event.set()
-        
-        if job.event<>None:
-            job.event.set()
+                parentjob.db.resultcode=0
+                if parentjob.db.state != 'ERROR':
+                    parentjob.db.state = "OK"
+                if not parentjob.db.result:
+                    parentjob.db.result = json.dumps(None)
+                parentjob.save()
+                parentjob.done()
+        job.done()
 
         print "completed job"
         print "result was.\n"
