@@ -728,11 +728,11 @@ function copyText$id() {
 	    commands : [
 	    'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'archive',
-	    'resize', 'sort'
+	    'resize', 'sort', 'ping'
 	    ],"""
 
-            dircmd = "'reload', 'back'"
-            filecmd = "'open', '|', 'download', '|', 'archive',"
+            dircmd = "'reload', 'back', 'ping'"
+            filecmd = "'open', '|', 'download', 'ping', '|', 'archive',"
         else:
             # customData : {rootpath:'$path'} ,
             commands = """
@@ -740,15 +740,42 @@ function copyText$id() {
 	    'quicklook', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
 	    'cut', 'paste','extract', 'archive', 'help',
-	    'resize', 'sort', 'edit'
+	    'resize', 'sort', 'edit', 'ping'
 	    ],"""
-            dircmd = "'reload', 'back', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
+            dircmd = "'reload', 'back', 'ping', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
             filecmd = "'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
-	                'rm', '|', 'edit', 'rename', 'resize', '|', 'archive', 'extract',"
+	                'rm', '|', 'edit', 'ping', 'rename', 'resize', '|', 'archive', 'extract',"
 
         C = """
 <script type="text/javascript" charset="utf-8">
      $(document).ready(function() {
+        elFinder.prototype.i18.en.messages['cmdping'] = 'Ping';
+        elFinder.prototype._options.commands.push('ping');
+        elFinder.prototype.commands.ping = function() {
+            // Add command shortcuts
+            // this.shortcuts = [{
+            //     pattern     : 'ctrl+t'
+            // }];
+            
+            // return 0 to enable command, -1 to disable
+            this.getstate = function(sel) {
+                return 0;
+            }
+            
+            // execute the command business itself
+            this.exec = function(hashes) {
+                $.each(this.files(hashes), function(i, file) {
+                    // here you have refs to files
+                });
+                $.ajax({
+                  url: "/restmachine/system/master/ping"
+                })
+                  .done(function( data ) {
+                    alert(data);
+                });
+                return;
+            }
+        }
         CodeMirror.commands.autocomplete = function(cm) {
             CodeMirror.showHint(cm, CodeMirror.hint.python);
         };
