@@ -210,7 +210,6 @@ class Doc(object):
         if len(self.params) > 0:
             for param in self.params:
                 if param in params:
-                    
                     if content == None:
                         content = self.content.replace("$$%s" % param, str(params[param]))                            
                     else:
@@ -232,7 +231,7 @@ class Doc(object):
                 paramsExtra[key] = self.docparams[key]
 
         if "page" not in paramsExtra:
-            paramsExtra["page"] = self.name
+            paramsExtra["page"] = self.original_name
 
         if "space" not in paramsExtra:
             paramsExtra["space"] = self.getSpaceName()
@@ -644,7 +643,8 @@ class DocPreprocessor():
 
                     # print "lastdefaultpath:%s" % lastDefaultPath
                     doc = self.docNew()
-                    doc.name = j.system.fs.getBaseName(pathItem).lower().replace(".wiki", "")
+                    doc.original_name = j.system.fs.getBaseName(pathItem).replace(".wiki", "")
+                    doc.name = doc.original_name.lower()
                     print "doc:%s path:%s" % (doc.name, pathItem)
                     if checkDefault(pathItem, doc.name):
                         # print "default %s" %lastDefaultPath

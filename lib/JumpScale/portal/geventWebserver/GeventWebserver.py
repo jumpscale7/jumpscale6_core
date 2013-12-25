@@ -567,7 +567,7 @@ class GeventWebserver:
 
         if not 'postprocess' in page.processparameters or page.processparameters['postprocess']:
             page.body = page.body.replace("$$space", space)
-            page.body = page.body.replace("$$page", doc.name)
+            page.body = page.body.replace("$$page", doc.original_name)
             page.body = page.body.replace("$$path", doc.path)
 
         page.body = page.body.replace("$$$menuright", "")
