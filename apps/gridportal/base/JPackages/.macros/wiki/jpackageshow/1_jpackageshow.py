@@ -11,14 +11,11 @@ def main(j, args, params, tags, tasklet):
         _, nid, _ = j.application.whoAmI
     
     jp=actor.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)
-
+    out = ''
     if jp==None:
         out= "h3. Could not find package:%s %s (%s) installed on node:%s"%(domain,name,version,nid)
         params.result = (out, args.doc)
         return params
-
-    import json
-    result = json.loads(result)
 
     # if result == False:
     #     page.addHTML("<script>window.open('/jpackages/jpackages', '_self', '');</script>" )
@@ -32,26 +29,26 @@ def main(j, args, params, tags, tasklet):
     for i in info:
         out+='* %s: %s\n' % (i.capitalize(), jp[i])
 
-    out+="Supported platforms: %s" % ', '.join([x for x in result['supportedPlatforms']])
+    out+="Supported platforms: %s" % ', '.join([x for x in jp['supportedPlatforms']])
 
     out+="h2. Dependencies\n"
-    dependencies = sorted(result['dependencies'], key=lambda x: x.name)
+    dependencies = sorted(jp['dependencies'], key=lambda x: x.name)
     for dep in dependencies:
-        href = '/jpackages/JPackageShow?domain=%s&name=%s&version=%s' % (dep.domain, dep.name, dep.version)
+        href = '/jpackages/JPackageShow?nodeId=%s&domain=%s&name=%s&version=%s' % (nid, dep.domain, dep.name, dep.version)
         out+="* [%s|%s]\n" % (href, dep.name)
 
     
 
 
-    C="""
+    out+="""
 h2. Explorers
 
-|[JPackage Code Editors|/jpackages/JPackageCodeEditors?domain=$$domain&name=$$name&version=$$version]|
-|[JPackage Browser|/jpackages/JPackageBrowser?domain=$$domain&name=$$name&version=$$version]|
-|[JPackage Files|/jpackages/JPackageFiles?domain=$$domain&name=$$name&version=$$version]|
+|[JPackage Code Editors|/jpackages/JPackageCodeEditors?nodeId=$$nid&domain=$$domain&name=$$name&version=$$version]|
+|[JPackage Browser|/jpackages/JPackageBrowser?nodeId=$$nid&domain=$$domain&name=$$name&version=$$version]|
+|[JPackage Files|/jpackages/JPackageFiles?nodeId=$$nid&domain=$$domain&name=$$name&version=$$version]|
 """
 
-    C="""
+    out+="""
 h2. Actions
 
 |[start|/jpackages/JPackageAction?action=start&domain=$$domain&name=$$name&version=$$version]|
@@ -62,17 +59,11 @@ h2. Actions
 |[upload|/jpackages/JPackageAction?action=upload&domain=$$domain&name=$$name&version=$$version]|
 """
 
-    C="""
+    out+="""
 h2. Description
 
 {{jpackagedescr}}
 """
-
-
-
-
-    import json
-    out = json.loads(description)['result']
 
     params.result = (out, args.doc)
 

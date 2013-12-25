@@ -32,6 +32,4 @@ def action(domain, pname, version):
     packagedata['getCodeLocationsFromRecipe'] = package.getCodeLocationsFromRecipe()
     packagedata['getPathMetadata'] = package.getPathMetadata()
 
-    raise RuntimeError("test")
-
     return packagedata

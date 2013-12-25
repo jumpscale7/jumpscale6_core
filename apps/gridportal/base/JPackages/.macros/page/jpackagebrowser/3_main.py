@@ -11,19 +11,12 @@ def main(j, args, params, tags, tasklet):
 
     if not nid:
         _, nid, _ = j.application.whoAmI
-    result = j.apps.system.packagemanager.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)['result']
+    result = j.apps.system.packagemanager.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)
 
     if result==None:
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
-        
         page.addHeading("could not find package:%s %s (%s) on node %s"%(domain,name,version,nid), level=4)
         params.result = page
-        return params        
-
-    import json
-    result = json.loads(result)['result']
+        return params
 
     if result == False:
         page.addHTML("<script>window.open('/jpackages/jpackages', '_self', '');</script>" )
