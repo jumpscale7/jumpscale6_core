@@ -82,15 +82,14 @@ class Agent():
 
         self.similarProcessPIDs=[process.pid for process in j.system.process.getSimularProcesses()]
         
-        id=j.application.getWhoAmiStr()
+        self.agentid = j.application.getWhoAmiStr()
 
         ipaddr=j.application.config.get("grid.master.ip")
         adminpasswd = j.application.config.get('system.superadmin.passwd')
         adminuser = j.application.config.get('system.superadmin.login')
         self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, \
-            category="agent",id=id,timeout=36000)
+            category="agent",id=self.agentid,timeout=36000)
 
-        self.agentid="%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid)
 
         j.logger.logTargetAdd(self.loghandler)
         self.loghandler.start()        
