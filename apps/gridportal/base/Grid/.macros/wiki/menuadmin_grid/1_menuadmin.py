@@ -34,6 +34,7 @@ VDisks:/grid/vdisks
 Nodes:/grid/Nodes
 Processes:/grid/Processes
 ECOs:/grid/ECOs
+Logs:/grid/Logs
 Alerts:/grid/alerts
 JumpScripts:/grid/JumpScripts
 Stats:/grid/stat

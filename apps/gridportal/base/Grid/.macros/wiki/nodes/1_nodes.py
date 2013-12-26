@@ -8,7 +8,7 @@ def main(j, args, params, tags, tasklet):
     actor=j.apps.actorsloader.getActor("system","gridmanager")
 
     #this makes sure bootstrap datatables functionality is used
-    out="{{datatables_use}}\n\n"
+    out="{{datatables_use: disable_filters: True}}}}\n\n"
 
     out+="||id||name||ip||roles||\n"
 

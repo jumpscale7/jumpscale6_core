@@ -10,7 +10,13 @@ def main(j, args, params, tags, tasklet):
 
     id = int(args.tags.getDict()["id"])
 
-    obj = actor.getProcesses(id=id)[0]
+    obj = actor.getProcesses(id=id)
+    if not obj:
+        out = 'No process with id %s found' % id
+        params.result = (out, doc)
+        return params
+
+    obj = obj[0]
 
     out = ['||Property||Value||']
 

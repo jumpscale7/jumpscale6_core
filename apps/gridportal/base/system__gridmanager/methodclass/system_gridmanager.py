@@ -180,7 +180,7 @@ class system_gridmanager(j.code.classGetBase()):
         job = self.osis_job.get(id)
         return {'result': job}
 
-    def getLogs(self, id, level, category, text, from_, to, jid, nid, gid, pid, tags, **kwargs):
+    def getLogs(self, id=None, level=None, category=None, text=None, from_=None, to=None, jid=None, nid=None, gid=None, pid=None, tags=None, **kwargs):
         """
         interface to get log information
         param:id only find 1 log entry
@@ -211,7 +211,7 @@ class system_gridmanager(j.code.classGetBase()):
                   }
         return self.osis_log.simpleSearch(params)
 
-    def getJobs(self, id, guid, from_, to, nid, gid, parent, roles, state, jsorganization, jsname, description, category, source, **kwargs):
+    def getJobs(self, id=None, guid=None, from_=None, to=None, nid=None, gid=None, parent=None, roles=None, state=None, jsorganization=None, jsname=None, description=None, category=None, source=None, **kwargs):
         """
         interface to get job information
         param:id only find 1 job entry
@@ -243,7 +243,6 @@ class system_gridmanager(j.code.classGetBase()):
                   'state': state,
                   'jsorganization': jsorganization,
                   'jsname': jsname}
-
         return self.osis_job.simpleSearch(params)
 
     def getErrorconditions(self, id=None, level=None, descr=None, descrpub=None, from_=None, to=None, nid=None, gid=None, category=None, tags=None, type=None, jid=None, jidparent=None, jsorganization=None, jsname=None, **kwargs):

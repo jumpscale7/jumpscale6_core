@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use}}\n")
+    out.append("{{datatables_use: disable_filters: True}}}}\n")
 
 
     #fields = ['otherid', 'description', 'roles', 'mem', 'netaddr', 'ipaddr', 'nid', 'lastcheck', 'state', 'gid', 'active', 'cpucore', 'type', 'id', 'name', 'id', 'size', 'devicename', 'disk_id', 'gid', 'role', 'machineid', 'type', 'fs', 'description', 'backuplocation', 'free', 'sizeondisk', 'nid', 'active', 'path', 'name', 'backuptime', 'lastcheck', 'expiration', 'machine_id', 'backup', 'order']
