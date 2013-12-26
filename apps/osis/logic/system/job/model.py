@@ -23,7 +23,7 @@ class Job(OsisBaseObject):
             self.sessionid=sessionid
             self.jscriptid=jscriptid
             self.children=[]
-            self.childrenActive={}
+            self.childrenActive=[]
             self.parent=None
             self.resultcode=None
             self.lock=lock

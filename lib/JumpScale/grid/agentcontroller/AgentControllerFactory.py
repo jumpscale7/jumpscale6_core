@@ -27,7 +27,7 @@ class AgentControllerFactory(object):
         return self._client
 
     def execute(self,organization,name,role,timeout=60,wait=True,lock="",dieOnFailure=True,**kwargs):
-        return self.executeKwargs(organization, name, role, timeout, wait, lock. dieOnFailure, kwargs)
+        return self.executeKwargs(organization, name, role, timeout, wait, lock, dieOnFailure, kwargs)
 
     def executeKwargs(self,organization,name,role,timeout=60,wait=True,lock="",dieOnFailure=True,kwargs=None):
         """

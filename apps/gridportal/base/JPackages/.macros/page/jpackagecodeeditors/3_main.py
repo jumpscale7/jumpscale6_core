@@ -11,10 +11,7 @@ def main(j, args, params, tags, tasklet):
 
     if not nid:
         _, nid, _ = j.application.whoAmI
-    result = j.apps.system.packagemanager.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)['result']
-
-    import json
-    result = json.loads(result)['result']
+    result = j.apps.system.packagemanager.getJPackage(nodeId=nid, domain=domain, pname=name, version=version)
     
     if result == False:
         page.addHTML("<script>window.open('/jpackages/jpackages', '_self', '');</script>" )
