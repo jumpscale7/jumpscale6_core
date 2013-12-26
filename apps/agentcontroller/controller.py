@@ -4,7 +4,8 @@ import JumpScale.grid.geventws
 import gevent
 from gevent.event import Event
 import JumpScale.grid.osis
-# import json
+import imp
+import inspect
 import ujson as json
 
 j.application.start("agentcontroller")
@@ -237,10 +238,11 @@ class ControllerCMDS():
     def _markSessionFree(self,session):
         self.agent2freeSessions[session.agentid][session.id]=Event()
         return self.agent2freeSessions[session.agentid][session.id]
+
     def _unmarkSessionFree(self,session):
         if not self.agent2freeSessions.has_key(session.agentid):
             raise RuntimeError("bug in _unmarkSessionFree in agentcontroller, sessionfree needs to have agentid")
-            
+
         if self.agent2freeSessions[session.agentid].has_key(session.id):
             self.agent2freeSessions[session.agentid].pop(session.id)
 
@@ -253,34 +255,8 @@ class ControllerCMDS():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
-            C = j.system.fs.fileGetContents(path2)
-            C2 = ""
-            name = ""
-            category = "unknown"
-            organization = "unknown"
-            author = "unknown"
-            license = "unknown"
-            version = "1.0"
-            roles = ["*"]
-            source = ""
-
-            state = "start"
-
-            for line in C.split("\n"):
-                line = line.replace("\t", "    ")
-                line = line.rstrip()
-                if line.strip() == "":
-                    continue
-                if line.find("###########") != -1:
-                    break
-                C2 += "%s\n" % line
-                if state == "start" and line.find("def action") == 0:
-                    state = "action"
-                if state == "action":
-                    source += "%s\n" % line
-
             try:
-                exec(C2)
+                script = imp.load_source('jumpscript.%s' % j.tools.hash.md5_string(path2), path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
@@ -288,7 +264,16 @@ class ControllerCMDS():
                 j.errorconditionhandler.raiseInputError(msgpub="",message=msg,category="agentcontroller.load",tags="",die=False)
                 continue
 
-            t = Jumpscript(name, category, organization, author, license, version, roles, action, source, path2, descr)
+            name = getattr(script, 'name', "")
+            category = getattr(script, 'category', "unknown")
+            organization = getattr(script, 'organization', "unknown")
+            author = getattr(script, 'author', "unknown")
+            license = getattr(script, 'license', "unknown")
+            version = getattr(script, 'version', "1.0")
+            roles = getattr(script, 'roles', ["*"])
+            source = inspect.getsource(script.action)
+
+            t = Jumpscript(name, category, organization, author, license, version, roles, script.action, source, path2, script.descr)
             print "found jumpscript:%s " %("%s_%s" % (organization, name))
             self.jumpscripts["%s_%s" % (organization, name)] = t
             self.jumpscriptsFromKeys[t.id] = t
@@ -487,7 +472,7 @@ class ControllerCMDS():
         print "result was.\n"
         print job.db
         return
-        
+
     def getScheduledWork(self,agentid,session=None):
         """
         list all work scheduled for 1 agent
@@ -519,9 +504,8 @@ class ControllerCMDS():
 
     def listSessions(self,session=None):
         result=[]
-        for sessionid in self.sessions.keys():
+        for sessionid, session in self.sessions.itervalues():
             sessionresult={}
-            session=self.sessions[sessionid]
             sessionresult["id"]=sessionid
             sessionresult["roles"]=session.roles
             sessionresult["netinfo"]=session.netinfo
@@ -531,10 +515,8 @@ class ControllerCMDS():
             sessionresult["user"]=session.user
             sessionresult["start"]=session.start
             sessionresult["lastpoll"]=self.sessionsUpdateTime[session.id]
-            if self.activeJobSessions.has_key(session.id):
-                sessionresult["activejob"]=self.activeJobSessions[session.id].id
-            else:
-                sessionresult["activejob"]=None
+            activejob = self.activeJobSessions.get(session.id)
+            sessionresult["activejob"] = activejob.id if activejob else None
             result.append(sessionresult)
         return result
 
