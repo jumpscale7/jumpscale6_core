@@ -119,14 +119,14 @@ class Confluence2HTML():
         # This is a list of formatting tags & I'm going to replace the in HTML, e.g. _word_ will be replaced with
         # <em>word</em>
         #styled_text = r'([\w\-:_/= *.\.\/\>\<\\{},|`!]+)'
-        styled_text = r'([^{0}\n]+?)'
+        styled_text = r'[^{0}\n]+?'
 
         def limiter(char):
             # Limiters can contain RE special chars, so I escape them here
             limiter_re = ''.join('\\' + c for c in char)
 
             # This is the RE which is used to replace wiki text formatting with equivalent HTML tag
-            return re.compile(r'(\W){0}{1}{0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
+            return re.compile(r'(\W){0}([^ {0}]{1}[^ {0}]){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
 
         def limiter_replacement(sub):
             return r'\1<{0}>\2</{0}>\3'.format(sub)
@@ -260,7 +260,7 @@ class Confluence2HTML():
                 continue
 
             # IMAGE
-            regex = r"\![\w\-:_/= *.,|?&]*\!"
+            regex = r"\![\w\-:_/=*.,|?&][\w\-:_/= *.,|?&]*[\w\-:_/=*.,|?&]\!"
             if (state == "start" or state == "table")and j.codetools.regex.match(regex, line):
                 matches = j.codetools.regex.findAll(regex, line)
                 for match in matches:
