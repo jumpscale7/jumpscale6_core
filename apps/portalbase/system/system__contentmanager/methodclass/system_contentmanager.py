@@ -394,7 +394,7 @@ class system_contentmanager(j.code.classGetBase()):
         contents = j.apps.system.contentmanager.dbmem.cacheGet(cachekey)
         j.system.fs.writeFile(contents['path'], text)
         j.core.portal.runningPortal.webserver.loadSpace(contents['space'])
-        returnpath = "/system/edit?space=%s&page=%s" % (contents['space'], contents['page'])
+        returnpath = "/%s/%s" % (contents['space'], contents['page'])
         returncontent = "<script>window.open('%s', '_self', '');</script>" % returnpath
 
         return returncontent
