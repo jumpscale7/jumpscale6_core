@@ -12,5 +12,5 @@ category = "startupmanager.check"
 period = 60 #always in sec
 
 def action():
-    j.tools.startupmanager.startProcess()
+    j.tools.startupmanager.startProcess(None,None)
 

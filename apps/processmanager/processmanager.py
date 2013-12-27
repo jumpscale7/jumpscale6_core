@@ -8,6 +8,10 @@ from gevent.event import Event
 import JumpScale.baselib.graphite
 import psutil
 
+j.system.platform.psutil=psutil
+
+import JumpScale.lib.diskmanager
+
 import JumpScale.baselib.stataggregator
 
 j.application.start("jsprocess_manager")
@@ -31,7 +35,7 @@ class Jumpscript():
         self.period=period
 
     def __repr__(self):
-        return str(self.__dict__)
+        return "%s %s"%(self.name,self.descr)
 
     __str__ = __repr__
 
@@ -48,6 +52,17 @@ class MgrCmds():
         self.jumpscripts={}
         self.adminpasswd = j.application.config.get('system.superadmin.passwd')
         self.adminuser = j.application.config.get('system.superadmin.login')
+        self.nics={} #@todo P1 load them from ES at start (otherwise delete will not work), make sure they are proper osis objects
+        self.processes={} #@todo P1 load them from ES
+
+        masterip=j.application.config.get("grid.master.ip")
+        client = j.core.osis.getClient(masterip)
+        self.osis_node=j.core.osis.getClientForCategory(client,"system","node")
+        self.osis_disk=j.core.osis.getClientForCategory(client,"system","disk")
+        self.osis_nic=j.core.osis.getClientForCategory(client,"system","nic")
+        self.osis_vdisk=j.core.osis.getClientForCategory(client,"system","vdisk")
+        self.osis_machine=j.core.osis.getClientForCategory(client,"system","machine")
+        self.osis_process=j.core.osis.getClientForCategory(client,"system","process")
 
 
     def _adminAuth(self,user,passwd):
@@ -189,82 +204,16 @@ class MgrCmds():
 
 
     def monitorSystem(self,remember=False,session=None):
+        from IPython import embed
+        print "DEBUG NOW monitorSystem"
+        embed()
+        
         
         results={}
-        nr=0
-        for val in psutil.cpu_percent(0,True):
-            nr+=1
-            results["cpu.percent.%s"%nr]=round(val,0)
-
-        nr=0
-        for cput in psutil.cpu_times(True):
-            nr+=1
-            for key in cput.__dict__.keys():
-                val=cput.__dict__[key]
-                results["cpu.time.%s.%s"%(key,nr)]=val
-
-        #disk counters
-        counters=psutil.disk_io_counters(True)
-        nr=0
-        for counterkey in counters.keys():
-            counter=counters[counterkey]
-            nr+=1
-            read_count, write_count, read_bytes, write_bytes, read_time, write_time=counter
-            results["disk.time.read.%s"%(counterkey)]=read_time
-            results["disk.time.write.%s"%(counterkey)]=write_time
-            results["disk.count.read.%s"%(counterkey)]=read_count
-            results["disk.count.write.%s"%(counterkey)]=write_count
-            results["disk.mbytes.read.%s"%(counterkey)]=round(read_bytes/1024/1024,2)
-            results["disk.mbytes.write.%s"%(counterkey)]=round(write_bytes/1024/1024,2)
-
-        #network counters
-        counters=psutil.network_io_counters(True)
-        nr=0
-        for counterkey in counters.keys():
-            counter=counters[counterkey]
-            nr+=1
-            bytes_sent, bytes_recv, packets_sent, packets_recv, errin, errout, dropin, dropout=counter
-            results["network.kbytes.recv.%s"%(counterkey)]=round(bytes_recv/1024,0)
-            results["network.kbytes.send.%s"%(counterkey)]=round(bytes_sent/1024,0)
-            results["network.packets.recv.%s"%(counterkey)]=packets_recv
-            results["network.packets.send.%s"%(counterkey)]=packets_sent
-            results["network.error.in.%s"%(counterkey)]=errin
-            results["network.error.out.%s"%(counterkey)]=errout
-            results["network.drop.in.%s"%(counterkey)]=dropin
-            results["network.drop.out.%s"%(counterkey)]=dropout
-
-        #disk freespace
-        for part in psutil.disk_partitions():
-            total,used,free,percent=psutil.disk_usage(part.mountpoint)
-            results["disk.space.free.%s"%(part.device)]=round(free/1024/1024,2)
-            results["disk.space.used.%s"%(part.device)]=round(used/1024/1024,2)
-            results["disk.space.percent.%s"%(part.device)]=percent
-
-        total,used,free,percent=psutil.phymem_usage()
-        results["memory.free"]=round(free/1024/1024,2)
-        results["memory.used"]=round(used/1024/1024,2)
-        results["memory.percent"]=percent
-
-        total,used,free,percent,sin,sout=psutil.virtmem_usage()
-        results["swap.free"]=round(free/1024/1024,2)
-        results["swap.used"]=round(used/1024/1024,2)
-        results["swap.percent"]=percent
-
-        result2={}
-        for key in results.keys():
-            result2[key]=j.system.stataggregator.set(key,results[key],remember=remember)
 
         return result2
 
 
-        # out=""
-        # keys=result.keys()
-        # keys.sort()
-        # for key in keys:
-        #     out+="%s.%s %s\n"%(jspid,key,result[key])
-
-
-        # j.system.statmanager.addInfo(monitorinfo)
 
     def restartProcess(self, domain,name,**args):
         if session<>None:
@@ -387,7 +336,7 @@ class MgrCmds():
 def loop_$period():
     while True:
         for action in j.processmanager.jumpscriptsByPeriod[$period]:
-            print "start action:%s"%action
+            #print "start action:%s"%action
             try:
                 action.action()
             except Exception,e:
@@ -405,7 +354,7 @@ def loop_$period():
 """
 
             C=C.replace("$period",str(period))
-            print C
+            # print C
             exec(C)
             CC="loop_$period"
             CC=CC.replace("$period",str(period))
