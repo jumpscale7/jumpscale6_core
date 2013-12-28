@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use}}\n")
+    out.append("{{datatables_use: disable_filters: True}}}}\n")
 
     #['category', 'jid', 'code', 'level', 'backtrace', 'appname', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'type', 'funcfilename', 'tags']
 

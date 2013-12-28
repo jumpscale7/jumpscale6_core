@@ -1,3 +1,5 @@
 @usedefaults
 
 {{process: id:$$id}}
+
+{{logs: pid:$$id}}

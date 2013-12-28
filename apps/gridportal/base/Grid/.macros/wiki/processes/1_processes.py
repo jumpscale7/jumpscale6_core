@@ -11,13 +11,13 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use}}\n")
+    out.append("{{datatables_use: disable_filters: True}}\n")
 
     #fields = ['systempid', 'name', 'instance', 'id', 'nid', 'epochstart', 'lastcheck', 'jpdomain', 'gid', 'active', 'jpname', 'epochstop']
 
-    fields = ["id", "nid", "name", "jpname", "jpdomain", "epochstart", "epochstop", "active"]
+    fields = ["id", "nid", "name", "jpname", "jpdomain", "epochstart", "active"]
 
-    out.append('||id||node||name||process name||process domain||start||stop||active||')
+    out.append('||id||node||name||process name||process domain||start||active||')
 
     for process in actor.getProcesses():
         line = [""]
@@ -28,8 +28,8 @@ def main(j, args, params, tags, tasklet):
                 line.append('[%s|/grid/process?id=%s]' % (str(process[field]), str(process[field])))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(process[field]), str(process[field])))
-            elif field in ('epochstop', 'epochstart'):
-                time = datetime.datetime.fromtimestamp(process[field]).strftime('%Y-%m-%d %H:%M:%S')
+            elif field in ('epochstart'):
+                time = datetime.datetime.fromtimestamp(process[field]).strftime('%m-%d %H:%M:%S')
                 line.append(str(time))
             else:
                 line.append(str(process[field]))

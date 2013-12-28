@@ -23,3 +23,12 @@ System:/System
 @divend
 
 
+{{cssstyle
+td {
+    max-width:500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;}
+}}
+
+
