@@ -1,4 +1,4 @@
 @usedefaults
 
 h2. Alerts
-{{alerts}}
+{{alerts: nid:$$nid }}

@@ -18,6 +18,7 @@ class VDisk(OsisBaseObject):
             self.gid = 0
             self.nid = 0
             self.disk_id = 0 #diskid
+            self.machine_id=0 #machine which is running on top of disk
             self.path = ""
             self.size = 0 #KB
             self.free = 0 #KB

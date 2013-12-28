@@ -1,4 +1,4 @@
 @usedefaults
 
 h2. Machines
-{{machines}}
+{{machines: nid:$$nid}}
