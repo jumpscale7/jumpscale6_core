@@ -17,6 +17,7 @@ def main(j, args, params, tags, tasklet):
 
     C = """
 {{menudropdown: name:Portal
+New:/system/create
 Edit:/system/edit?space=$$space&page=$$page
 --------------
 Logout:/system/login?user_logoff_=1
