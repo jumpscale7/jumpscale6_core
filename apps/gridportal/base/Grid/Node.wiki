@@ -12,3 +12,6 @@ h3. Node Jobs
 h3. Logs
 {{logs: nid:$$id}}
 
+<br>
+h3. Disks
+{{disks: nid:$$id}}

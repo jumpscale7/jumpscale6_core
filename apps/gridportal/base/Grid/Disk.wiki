@@ -1,6 +1,8 @@
 @usedefault
 
 h2. Disks details
-
 {{disk: id:$$id}}
 
+<br>
+h3. Virtual Disks
+{{vdisks: disk_id:$$id}}

@@ -1,3 +1,7 @@
 @usedefaults
 
 {{machine: id:$$id}}
+
+<br>
+h3. Virtual Disks
+{{vdisks: machineid:$$id}}

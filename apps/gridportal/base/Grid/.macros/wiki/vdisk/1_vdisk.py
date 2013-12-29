@@ -14,7 +14,7 @@ def main(j, args, params, tags, tasklet):
 
     out = ['||Property||Value||']
 
-    fields = ['id', 'size', 'devicename', 'disk_id', 'gid', 'role', 'machineid', 'type', 'fs', 'description', 'backuplocation', 'free', 'sizeondisk', 'nid', 'active', 'path', 'name', 'backuptime', 'lastcheck', 'expiration', 'machine_id', 'backup', 'order']
+    fields = ['id', 'name', 'otherid', 'type', 'description', 'roles', 'mem', 'netaddr', 'ipaddr', 'nid', 'lastcheck', 'state', 'gid', 'active', 'cpucore']
 
     for field in fields:
         if field == 'nid':

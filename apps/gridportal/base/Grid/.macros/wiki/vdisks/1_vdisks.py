@@ -7,6 +7,9 @@ def main(j, args, params, tags, tasklet):
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
 
+    machineid = args.tags.getDict().get("machineid", None)
+    disk_id = args.tags.getDict().get("disk_id", None)
+
     out = []
 
     #this makes sure bootstrap datatables functionality is used
@@ -15,25 +18,25 @@ def main(j, args, params, tags, tasklet):
     fields = ['id', 'nid', 'name', 'description', 'active', 'sizeondisk', 'free', 'path']
 
     out.append('||id||node||name||description||active||free||path||')
-
-    for disk in actor.getVDisks():
+    vdisks = actor.getVDisks(machineid=machineid, disk_id=disk_id)
+    for vdisk in vdisks:
         line = [""]
 
         for field in fields:
             # add links
             if field == 'id':
-                line.append('[%s|/grid/disk?id=%s]' % (str(disk[field]), str(disk[field])))
+                line.append('[%s|/grid/vdisk?id=%s]' % (str(vdisk[field]), str(vdisk[field])))
             elif field == 'nid':
-                line.append('[%s|/grid/node?id=%s]' % (str(disk[field]), str(disk[field])))
+                line.append('[%s|/grid/node?id=%s]' % (str(vdisk[field]), str(vdisk[field])))
             elif field == 'sizeondisk':
                 continue
             elif field == 'free':
-                diskfree = disk[field]
-                disksize = disk['sizeondisk']
+                diskfree = vdisk[field]
+                disksize = vdisk['sizeondisk']
                 diskusage = 100 - int(100.0 * diskfree / disksize)
                 line.append('%s%%' % diskusage)
             else:
-                line.append(str(disk[field]))
+                line.append(str(vdisk[field]))
 
         line.append("")
 
