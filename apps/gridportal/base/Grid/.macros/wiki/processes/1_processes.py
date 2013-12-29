@@ -11,7 +11,7 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use: disable_filters: True}}\n")
+    out.append("{{datatables_use: disable_filters:True}}\n")
 
     #fields = ['systempid', 'name', 'instance', 'id', 'nid', 'epochstart', 'lastcheck', 'jpdomain', 'gid', 'active', 'jpname', 'epochstop']
 

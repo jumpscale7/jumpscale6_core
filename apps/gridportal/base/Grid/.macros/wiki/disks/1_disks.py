@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use: disable_filters: True}}}}\n")
+    out.append("{{datatables_use: disable_filters:True}}}}\n")
 
     nid = args.tags.getDict().get("nid", None)
 
