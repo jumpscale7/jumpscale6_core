@@ -108,7 +108,7 @@ class JumpscriptsCmds():
             raise RuntimeError(message)
         return self.jumpscriptsFromKeys[jumpscriptkey]
 
-    def listMonitoringJumpScripts(self, organization=None, cat=None, session=None):
+    def listJumpScripts(self, organization=None, cat=None, session=None):
         """
         @return [[org,name,category,descr],...]
         """
