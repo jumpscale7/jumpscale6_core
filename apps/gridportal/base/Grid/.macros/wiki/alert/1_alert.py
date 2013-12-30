@@ -14,7 +14,7 @@ def main(j, args, params, tags, tasklet):
 
     out = ['||Property||Value||']
 
-    fields = ['category', 'description', 'level', 'inittime', 'tags', 'closetime', 'id', 'state', 'gid', 'nrerrorconditions', 'lasttime', 'descriptionpub', 'errorconditions']
+    fields = ['id', 'category', 'state', 'description', 'descriptionpub', 'level', 'inittime', 'tags', 'closetime', 'gid', 'lasttime', 'nrerrorconditions', 'errorconditions']
 
     for field in fields:
         if field in ('errorconditions'):

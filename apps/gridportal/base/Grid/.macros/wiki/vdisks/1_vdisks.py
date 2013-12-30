@@ -19,6 +19,11 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||id||node||name||description||active||free||path||')
     vdisks = actor.getVDisks(machineid=machineid, disk_id=disk_id)
+
+    if not vdisks:
+        params.result = ('No disks found', doc)
+        return params
+
     for vdisk in vdisks:
         line = [""]
 

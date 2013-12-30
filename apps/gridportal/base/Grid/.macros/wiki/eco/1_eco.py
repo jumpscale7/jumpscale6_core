@@ -14,7 +14,7 @@ def main(j, args, params, tags, tasklet):
 
     out = ['||Property||Value||']
 
-    fields = ['category', 'jid', 'code', 'level', 'backtrace', 'appname', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'type', 'funcfilename', 'tags']
+    fields = ['appname', 'category', 'jid', 'code', 'level', 'backtrace', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'type', 'funcfilename', 'tags']
     for field in fields:
         if field == 'nid':
             out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))

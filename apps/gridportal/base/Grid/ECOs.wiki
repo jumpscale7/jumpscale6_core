@@ -3,4 +3,4 @@
 h2. Error Condition Objects
 
 ##TODO find out why ID is not returned
-{{ecos}}
+{{ecos category:$$category jid:$$jid code:$$code level:$$level backtrace:$$backtrace appname:$$appname pid:$$pid nid:$$nid funcname:$$funcname epoch:$$epoch errormessagePub:$$errormessagePub funclinenr:$$funclinenr gid:$$gid masterjid:$$masterjid errormessage:$$errormessage type:$$type funcfilename:$$funcfilename tags:$$tags}}
