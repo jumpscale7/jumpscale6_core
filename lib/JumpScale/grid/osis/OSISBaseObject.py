@@ -56,7 +56,13 @@ class OSISBaseObject():
         return self.__dict__
 
     def __str__(self):
-        return str(self.__dict__)
+        out=""
+        for key,val in self.__dict__.iteritems():
+            if key[0]<>"_":
+                out+="%-35s :  %s\n"%(key,val)
+        items=out.split("\n")
+        items.sort()
+        return "\n".join(items)
 
     __repr__ = __str__
 

@@ -19,6 +19,7 @@ class Process(OsisBaseObject):
             self.jpdomain= ""
             self.jpname= ""
             self.name = name
+            self.ports = []
             self.instance = instance
             self.systempid = systempid  # system process id (PID) at this point
             self.guid = None
@@ -27,6 +28,15 @@ class Process(OsisBaseObject):
             self.epochstop = 0
             self.active = True
             self.lastcheck=0 #epoch of last time the info was checked from reality
+            self.cmd=""
+            self.workingdir=''
+
+            r=["nr_file_descriptors","nr_ctx_switches_voluntary","nr_ctx_switches_involuntary","nr_threads",\
+                "cpu_time_user","cpu_time_system","cpu_percent","mem_vms","mem_rss",\
+                "io_read_count","io_write_count","io_read_bytes","io_write_bytes","nr_connections_in","nr_connections_out"]
+            for item in r:
+                self.__dict__[item]=0.0
+                self.__dict__["%s_total"%item]=0.0
 
     def getUniqueKey(self):
         """
@@ -42,9 +52,9 @@ class Process(OsisBaseObject):
         use osis to define & set unique guid (sometimes also id)
         """
         self.gid = int(self.gid)
+        self.nid = int(self.nid)
         self.id = int(self.id)
-        # self.sguid=struct.pack("<HHL",self.gid,self.bid,self.id)
-        self.guid = "%s_%s" % (self.gid, self.id)
+        self.guid = "%s_%s_%s" % (self.gid,self.nid,self.id)
         self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 

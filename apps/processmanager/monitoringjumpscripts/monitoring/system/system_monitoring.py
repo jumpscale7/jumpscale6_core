@@ -10,25 +10,18 @@ license = "bsd"
 version = "1.0"
 category = "monitoring.processes"
 period = 10 #always in sec
+enable=False
 
 def action():
 	psutil=j.system.platform.psutil
     results={}
     nr=0
-    for val in psutil.cpu_percent(0,True):
-        nr+=1
-        results["cpu.percent.%s"%nr]=round(val,0)
-
-    nr=0
-    for cput in psutil.cpu_times(True):
-        nr+=1
-        for key in cput.__dict__.keys():
-            val=cput.__dict__[key]
-            results["cpu.time.%s.%s"%(key,nr)]=val
-
-    import psutil
-    results={}
-
+    val=psutil.cpu_percent(0)
+    results["cpu.percent"]=round(val,0)
+    cput= psutil.cpu_times()
+    for key in cput.__dict__.keys():
+        val=cput.__dict__[key]
+        results["cpu.time.%s"%(key)]=val
 
     counter=psutil.network_io_counters(False)
     bytes_sent, bytes_recv, packets_sent, packets_recv, errin, errout, dropin, dropout=counter

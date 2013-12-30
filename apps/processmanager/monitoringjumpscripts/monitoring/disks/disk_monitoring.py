@@ -11,6 +11,7 @@ version = "1.0"
 category = "monitoring.disk"
 period = 20 #always in sec
 order = 1
+enable=False
 
 def action():
 	psutil=j.system.platform.psutil
