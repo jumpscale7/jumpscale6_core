@@ -242,7 +242,8 @@ class HRD():
         return value
 
     def _unserialize(self,value):
-        value=value.replace("\\n","\n")    
+        if j.basetype.string.check(value):
+            value=value.replace("\\n","\n")    
         return value
 
     def set(self,key,value,persistent=True):

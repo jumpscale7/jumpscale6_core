@@ -3,44 +3,10 @@ import os
 import JumpScale.baselib.screen
 import time
 import threading
-# import Queue
-
-# class MonitorStat:
-#     def __init__(self,pd):
-#         self._pd=pd
-#         self.cpu=0
-#         self.running=False
-#         self.mem=0
-#         self.db={} #key=type, val={$time:$val}
-
-
-#     def set(self,type,val,epoch=0):
-#         if epoch==0:
-#             epoch=j.base.time.getTimeEpoch()
-#         if not self.db.has_key(type):
-#             self.db[type]={}
-#         self.db[type][epoch]=float(val)
-#         tot=0.0
-#         for ttime in self.db[type].keys():
-#             if ttime<epoch-300:
-#                 self.db[type].pop(ttime)
-#             else:
-#                 tot+=self.db[type][ttime]
-
-
-
-#     def __str__(self):
-#         out=""
-#         for key in self.__dict__:
-#             if key[0]<>"_":
-#                 out="%s:%s"%(key,self.__dict__[key])
-
-#     __repr__ = __str__
-
 
 class ProcessDef:
     def __init__(self, hrd,path):
-        self.autostart=hrd.get("process.autostart")
+        self.autostart=hrd.getInt("process.autostart")==1
         self.path=path
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
@@ -70,6 +36,7 @@ class ProcessDef:
             self._nameLong+=" "
         self.lastCheck=0
         self.lastMeasurements={}
+        self.active=None
 
 
     def getJSPid(self):
@@ -80,6 +47,11 @@ class ProcessDef:
 
     def start(self, timeout=100):
         # self.logToStartupLog("***START***")
+
+        if self.autostart==False:
+            self.log("no need to start, disabled.")
+            return
+
         if self.isRunning():
             self.log("no need to start, already started.")
             return
@@ -87,9 +59,6 @@ class ProcessDef:
             jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
         except Exception,e:
             raise RuntimeError("COULD NOT FIND JPACKAGE:%s:%s"%(self.domain,self.name))
-
-        if not self.autostart:
-            return
             
         self.log("process dependency CHECK")
         jp.processDepCheck(timeout=timeout)
@@ -122,7 +91,6 @@ class ProcessDef:
         if not self.isRunning():
             raise RuntimeError("Could not start process:%s an error occured:\n%s"%(self,self.getStartupLog()))
         
-        self.getStatInfo()
         self.log("*** STARTED ***")
         return pid
 
@@ -146,6 +114,7 @@ class ProcessDef:
             return None
         self.processobject=j.system.process.getProcessObject(pid)
         return self.processobject
+
 
     def getPid(self,timeout=0,ifNoPidFail=True,timeouttmux=0):
         #first check screen is already there with window, max waiting 1 sec
@@ -207,6 +176,8 @@ class ProcessDef:
     def isRunning(self):
         pid=self.getPid(ifNoPidFail=False)
 
+        self.active=False
+
         if pid==0:
             return False
         test=j.system.process.isPidAlive(pid)
@@ -219,45 +190,8 @@ class ProcessDef:
                 if not j.system.net.checkListenPort(port):
                     return False
 
+        self.active=True
         return True
-
-    def getStatInfo(self):
-        """
-        @format dict or txt
-        """
-        
-        result={}
-        if self.pid<>0 and j.system.process.isPidAlive(self.pid):
-            p=self.getProcessObject()
-
-            out=""
-            result["cpu.percent"]=p.get_cpu_percent(interval=0)            
-            
-            result["process.nrconnections"]=len(p.get_connections())
-
-            rss,vms=p.get_memory_info()
-            result["memory.rss"]=round(rss/1024/1024,1)
-            result["memory.vms"]=round(rss/1024/1024,1)
-
-            a,b=p.get_num_ctx_switches()
-            result["contentswitches"]=a+b
-
-            openfiles=len(p.get_open_files())
-            result["openfiles"]=openfiles
-
-            user,system=p.get_cpu_times()
-            result["cpu.time.user"]=user
-            result["cpu.time.system"]=system
-
-            read_count,write_count,read_bytes,write_bytes=p.get_io_counters()
-
-            result["io.read.count"]=(read_count)
-            result["io.write.count"]=(write_count)
-            result["io.read.kbytes"]=((read_bytes)/1024)
-            result["io.write.kbytes"]=((write_bytes)/1024)
-    
-
-        return result
 
     def stop(self, timeout=20):
                      
@@ -299,7 +233,9 @@ class ProcessDef:
         if windowdown==False:
             raise RuntimeError("Window was not down yet within 2 sec for %s"%self)
 
+
     def disable(self):
+        self.stop()
         hrd=j.core.hrd.getHRD(self.path)
         hrd.set("process.autostart",0)
         self.autostart=False
@@ -349,6 +285,7 @@ class StartupManager:
         if self.__init==False:
             self.load()
             self.__init=True
+
 
     def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False,\
         workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None):
@@ -519,6 +456,7 @@ class StartupManager:
             result=result and self.getStatus(pd.domain,pd.name)
         return result
 
+
     def getStatus(self, domain, name):
         """
         get status of process, True if status ok
@@ -536,13 +474,6 @@ class StartupManager:
             file_ = os.path.splitext(file_)[0]
             result.append(file_)
         return result
-
-    def _getJPackage(self, domain, name):
-        jps = j.packages.find(domain, name, installed=True)
-        if not jps:
-            raise RuntimeError('Could not find installed jpackage with domain %s and name %s' % (domain, name))
-        return jps[0]
-
 
     def startProcess(self, domain, name, timeout=20):
         for pd in self.getProcessDefs(domain, name):
