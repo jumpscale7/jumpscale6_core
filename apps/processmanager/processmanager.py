@@ -49,7 +49,9 @@ class MgrCmds():
                 if key not in ["core"] and cmds.__dict__.has_key("_name"):
                     exec("self.%s=cmds"%cmds._name)
         
-        self.jumpscripts.loadMonitoringJumpscripts()
+        self.childrenPidsFound={} #children already found, to not double count
+
+        self.jumpscripts.loadJumpscripts()
 
         self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")        
         self.osis_nic=j.core.osis.getClientForCategory(self.daemon.osis,"system","nic")

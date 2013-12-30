@@ -18,6 +18,7 @@ class Jumpscript():
         self.period=period
         self.order=1
         self.enable=True
+        self._name="jumpscripts"
 
     def __repr__(self):
         return "%s %s"%(self.name,self.descr)
@@ -25,7 +26,7 @@ class Jumpscript():
     __str__ = __repr__
 
 
-class MonitoringJumpscriptsCmds():
+class JumpscriptsCmds():
 
     def __init__(self,daemon):
         self.daemon=daemon
@@ -38,7 +39,7 @@ class MonitoringJumpscriptsCmds():
         # self.lastMonitorResult=None
         self.lastMonitorTime=None
 
-    def loadMonitoringJumpscripts(self, path="monitoringjumpscripts", session=None):
+    def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):

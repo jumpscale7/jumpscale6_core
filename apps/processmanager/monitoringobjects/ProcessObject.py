@@ -71,7 +71,9 @@ class ProcessObject():
 
         for child in self.p.get_children():
             child=j.processmanager.cache.processobject.get(child.pid,child,lastcheck)
-            self.children.append(child)
+            if not j.processmanager.childrenPidsFound.has_key(child.pid):                
+                self.children.append(child)
+                j.processmanager.childrenPidsFound[int(child.pid)]=True
             
     def getGuid(Self):
         return self.pid
@@ -80,7 +82,6 @@ class ProcessObject():
         """
         @format dict or txt
         """
-        
         result={}
         if totals:
             self.getTotalsChildren()
