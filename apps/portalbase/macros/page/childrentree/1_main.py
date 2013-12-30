@@ -1,5 +1,6 @@
 from cStringIO import StringIO
 import os
+from JumpScale import j
 
 
 # `items` parameter needs to define the tree hierarchically. To do this I use a syntax similar to Python function call.
@@ -49,15 +50,26 @@ def parse_children_tree(expr):
     return simplify([Scope._str_to_scope(s) for s in eval(expr, Scope())])
 
 
-# TODO: move these 2 functions to be part of fs.py
-
-
 def dir_children(dir_name):
-    """Return a list of the _full path_ of the children of a directory"""
-    if os.path.isdir(dir_name):
-        return [os.path.join(dir_name, f) for f in os.listdir(dir_name)]
-    else:
+    """Return a _sorted_ list of the _full path_ of the children of a directory"""
+    # If a directory contains a .order file, then it's used for base of sorting. If it doesn't, then files are ordered alphabetically
+    #
+    # The format of .order file is like the following
+    #
+    #   1:Doc 1
+    #   2:Doc 3
+    #   3:Doc 2
+    # 
+    # I parse the file & sort it based on the page index, then keep the sorted files in _doc_order_cache
+    if not os.path.isdir(dir_name):
         return []
+
+    order_file = os.path.join(dir_name, '.order')
+    if not os.path.exists(order_file):
+        return sorted(os.path.join(dir_name, f) for f in os.listdir(dir_name))
+    else:
+        docs = sorted([line.split(':') for line in j.system.fs.fileGetContents(order_file).splitlines()], key=lambda line: int(line[0]))
+        return [os.path.join(dir_name, f + '.wiki') for f in zip(*docs)[1]]
 
 
 def is_wiki_page(child):
@@ -71,6 +83,7 @@ def is_wiki_page(child):
     return os.path.isdir(child) or child.endswith('.wiki')
 
 
+
 def get_dir_tree(dir_name, max_depth=1, items=None):
     if max_depth == 0:
         return []
@@ -82,13 +95,11 @@ def get_dir_tree(dir_name, max_depth=1, items=None):
         items_key = lambda x: items_order.get(os.path.basename(x[0]).lower(), Infinity)
         items_filter = lambda x: os.path.splitext(os.path.basename(x).lower())[0] in items_order
     else:
-        items_key = lambda x: x[0].lower()
         items_filter = lambda x: True
 
-    return sorted([(child, get_dir_tree(child, max_depth=max_depth - 1))
+    return [(child, get_dir_tree(child, max_depth=max_depth - 1))
                   for child in dir_children(dir_name)
-                  if is_wiki_page(child) and items_filter(child)],
-                  key=items_key)
+                  if is_wiki_page(child) and items_filter(child)]
 
 
 def format_dir_tree(dir_tree, space_name, bullets=False, tree=False, depth=1):
