@@ -10,6 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "info.gather.nic"
 period = 300 #always in sec
+enable=False
 
 def action():
     osis=j.processmanager.osis_nic
@@ -28,11 +29,12 @@ def action():
             nic.ipaddr=ipaddr
             nic.mac=mac
             nic.name=name
+            nic.gid=j.application.whoAmI.gid
+            nic.nid=j.application.whoAmI.nid
 
             guid,new,changed=osis.set(nic)
             nic=osis.get(guid)
             result[name]=nic
-
 
     for item in j.processmanager.nics.keys():
         if item not in result.keys():

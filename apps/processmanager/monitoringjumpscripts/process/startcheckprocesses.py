@@ -10,6 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "startupmanager.check"
 period = 60 #always in sec
+enable=False
 
 def action():
     j.tools.startupmanager.startProcess(None,None)
