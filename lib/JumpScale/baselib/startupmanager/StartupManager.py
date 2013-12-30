@@ -30,7 +30,6 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
-        self.pid=0
         self._nameLong=self.name
         while len(self._nameLong)<20:
             self._nameLong+=" "
@@ -59,6 +58,9 @@ class ProcessDef:
             jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
         except Exception,e:
             raise RuntimeError("COULD NOT FIND JPACKAGE:%s:%s"%(self.domain,self.name))
+
+        if not self.autostart:
+            return
             
         self.log("process dependency CHECK")
         jp.processDepCheck(timeout=timeout)
@@ -73,7 +75,9 @@ class ProcessDef:
         self.log("pid get")
 
         pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=5)
-
+        hrd = j.core.hrd.getHRD(self.path)
+        hrd.set('pid', pid)
+        hrd.set('process_active', True)
         self.log("pid: %s"%pid)
 
         if pid==0:
@@ -109,12 +113,11 @@ class ProcessDef:
             print "No logs found for %s" % self
 
     def getProcessObject(self):
-        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=0)
+        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=5)
         if pid==0:
             return None
         self.processobject=j.system.process.getProcessObject(pid)
         return self.processobject
-
 
     def getPid(self,timeout=0,ifNoPidFail=True,timeouttmux=0):
         #first check screen is already there with window, max waiting 1 sec
@@ -123,7 +126,7 @@ class ProcessDef:
         pid=None
         while pid==None and now<start+timeouttmux:
             pid = j.system.platform.screen.getPid(self.domain, self.name)
-            if pid<>None:
+            if pid:
                 break
             time.sleep(0.2)
             now=time.time()
@@ -168,29 +171,28 @@ class ProcessDef:
             if pid==None:
                 pid=0
             return pid
-
         if pid>0:
             return pid
         raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
     def isRunning(self):
+        hrd = j.core.hrd.getHRD(self.path)
         pid=self.getPid(ifNoPidFail=False)
-
-        self.active=False
-
         if pid==0:
+            hrd.set('process_active', False)
             return False
         test=j.system.process.isPidAlive(pid)
         if test==False:
+            hrd.set('process_active', False)
             return False
 
         for port in self.ports:
             if port<>None and port.strip()<>"":
                 port = int(port)
                 if not j.system.net.checkListenPort(port):
+                    hrd.set('process_active', False)
                     return False
-
-        self.active=True
+        hrd.set('process_active', True)
         return True
 
     def stop(self, timeout=20):
@@ -209,6 +211,10 @@ class ProcessDef:
                     break
                 time.sleep(0.05)
                 now=j.base.time.getTimeEpoch()
+
+        hrd = j.core.hrd.getHRD(self.path)
+        hrd.set('pid', 0)
+        hrd.set('process_active', False)
 
         for port in self.ports:        
             if not port or not port.isdigit():
@@ -232,7 +238,6 @@ class ProcessDef:
 
         if windowdown==False:
             raise RuntimeError("Window was not down yet within 2 sec for %s"%self)
-
 
     def disable(self):
         self.stop()
@@ -286,9 +291,8 @@ class StartupManager:
             self.load()
             self.__init=True
 
-
     def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False,\
-        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None):
+        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None, pid=0, active=False):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -315,6 +319,8 @@ class StartupManager:
         if autostart:
             autostart=1
         hrd+="process.autostart=%s\n"%autostart
+        hrd+="process.pid=%s\n"%pid
+        hrd+="process.active=%s\n"%active
         pstring=""
         for port in ports:
             pstring+="%s,"%port
@@ -455,7 +461,6 @@ class StartupManager:
         for pd in self.getProcessDefs4JPackage(jpackage):
             result=result and self.getStatus(pd.domain,pd.name)
         return result
-
 
     def getStatus(self, domain, name):
         """
