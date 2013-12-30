@@ -16,8 +16,7 @@ def action():
     
     osis=j.processmanager.cache.processobject.osis
     psutil=j.system.platform.psutil
-    result={} 
-    resultwitchchildren={}
+    result={}
 
     j.processmanager.childrenPidsFound={}
 
@@ -42,21 +41,16 @@ def action():
             guid,new,changed=osis.set(processOsisObject)
             process.guid=guid
             result[pid]=process
-            from IPython import embed
-            print "DEBUG NOW oo"
-            embed()
                                     
 
     for process in j.processmanager.startupmanager.manager.getProcessDefs():
-        pid=process.pid
+        pid=process.getPid()
         print pid
-        if pid<>0:
+        if pid:
             processOsisObject=osis.new()
-            if process.active==None:
-                process.isRunning()
-            processOsisObject.active=process.active
+            processOsisObject.active=process.isRunning()
             processOsisObject.name=process.name
-            processOsisObject.systempid=process.pid
+            processOsisObject.systempid=pid
             processOsisObject.epochstart=0
             processOsisObject.jpname=process.jpackage_name
             processOsisObject.jpdomain=process.jpackage_domain
@@ -64,9 +58,6 @@ def action():
             processOsisObject.cmd=process.cmd
             processOsisObject.workingdir=process.workingdir
             send2osis(pid,processOsisObject)
-        from IPython import embed
-        print "DEBUG NOW oooooooooooooo"
-        embed()
             
     else:
         # plist=psutil.get_process_list()
@@ -75,13 +66,13 @@ def action():
         for process in initprocess.get_children():
             if process.name in ["getty"]:
                 continue
-
-            if process.pid==0:
+            pid = process.pid
+            if pid == 0:
                 continue
 
-            print "systemprocess:%s %s"%(process.name,process.pid)
+            print "systemprocess:%s %s"%(process.name, pid)
 
-            if int(process.pid) not in result.keys():
+            if int(pid) not in result.keys():
                 processOsisObject=osis.new()
                 processOsisObject.active=False
                 processOsisObject.jpname=""
@@ -90,22 +81,20 @@ def action():
                 processOsisObject.cmd=" ".join(process.cmdline)
                 processOsisObject.workingdir=""
 
-                pid=int(process.pid)
-
                 send2osis(pid,processOsisObject)
 
 
 
     for pid in j.processmanager.cache.processobject.monitorobjects.keys():
         #result is all found processobject in this run
-        if pid<>0 and not result.has_key(pid):
+        if pid and not result.has_key(pid):
             #no longer active
             print "NO LONGER ACTIVE"
             process=j.processmanager.cache.processobject.get(pid) #is cached so low overhead
-            from IPython import embed
-            print "DEBUG NOW NO LONGER ACTIVE"
-            embed()
             
+            if not j.processmanager.cache.processobject.monitorobjects.get(pid).guid:
+                j.processmanager.cache.processobject.monitorobjects.pop(pid)
+                continue
             processOsisObject=osis.get(process.guid)
 
             processOsisObject.active=False
@@ -114,9 +103,8 @@ def action():
                 processOsisObject.__dict__[name]=0.0
 
             osis.set(processOsisObject)    
-                
-            j.processmanager.cache.processobject.monitorobjects.pop(pid)
 
+            j.processmanager.cache.processobject.monitorobjects.pop(pid)
     j.processmanager.cache.processobject.monitorobjects=result
 
 

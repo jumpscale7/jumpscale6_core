@@ -70,10 +70,14 @@ class ProcessObject():
         self.guid=None #guid from osis
 
         for child in self.p.get_children():
-            child=j.processmanager.cache.processobject.get(child.pid,child,lastcheck)
-            if not j.processmanager.childrenPidsFound.has_key(child.pid):                
+            if hasattr(child, 'pid'):
+                childpid = child.pid
+            else:
+                childpid = child.getPid()
+            child=j.processmanager.cache.processobject.get(childpid,child,lastcheck)
+            if not j.processmanager.childrenPidsFound.has_key(childpid):                
                 self.children.append(child)
-                j.processmanager.childrenPidsFound[int(child.pid)]=True
+                j.processmanager.childrenPidsFound[int(childpid)]=True
             
     def getGuid(Self):
         return self.pid
