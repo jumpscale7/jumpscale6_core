@@ -6,13 +6,17 @@ json=j.db.serializers.getSerializerType("j")
 class OSISClientForCat():
 
     def __init__(self, client, namespace, cat):
-        if cat in client.listNamespaceCategories(namespace):
-            self.client = client
+        self.client = client
         self.namespace = namespace
         self.cat = cat
         self.objectclass=None
 
+    def _checkCat(self):
+        if self.cat not in self.client.listNamespaceCategories(self.namespace):
+            self.client.createNamespaceCategory(self.namespace, self.cat)
+
     def _getModelClass(self):
+        self._checkCat()
         if self.objectclass==None:
             klass=self.client.getOsisObjectClass(self.namespace,self.cat)
             name=""
@@ -34,6 +38,7 @@ class OSISClientForCat():
         return self.objectclass
 
     def new(self,**args):
+        self._checkCat()
         return self._getModelClass()(**args)
 
     def set(self, obj, key=None):
@@ -41,6 +46,7 @@ class OSISClientForCat():
         if key none then key will be given by server
         @return (guid,new,changed)
         """
+        self._checkCat()
         if hasattr(obj,"dump"):
             obj=obj.dump()
             guid,new,changed = self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
@@ -49,8 +55,8 @@ class OSISClientForCat():
             return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
 
     def get(self, key):
-        if self.client:
-            value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
+        self._checkCat()
+        value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
         if isinstance(value, basestring):
             try:
                 value=json.loads(value)
@@ -66,20 +72,20 @@ class OSISClientForCat():
             return value
 
     def delete(self, key):
-        if self.client:
-            return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
+        self._checkCat()
+        return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
 
     def destroy(self):
-        if self.client:
-            return self.client.destroy(namespace=self.namespace, categoryname=self.cat)
+        self._checkCat()
+        return self.client.destroy(namespace=self.namespace, categoryname=self.cat)
 
     def list(self, prefix=""):
-        if self.client:
-            return self.client.list(namespace=self.namespace, categoryname=self.cat, prefix=prefix)
+        self._checkCat()
+        return self.client.list(namespace=self.namespace, categoryname=self.cat, prefix=prefix)
 
     def search(self, query, start=0, size=None):
-        if self.client:
-            return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
+        self._checkCat()
+        return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
                                   start=start, size=size)
 
     def simpleSearch(self, params, start=0, size=None):
