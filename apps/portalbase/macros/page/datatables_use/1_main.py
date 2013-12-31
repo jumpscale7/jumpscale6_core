@@ -7,25 +7,26 @@ def main(j, args, params, tags, tasklet):
     modifier = j.html.getPageModifierGridDataTables(args.page)
     modifier.prepare4DataTables()
     if not disable_filters:
-	    page.addJS(jsContent='''
-	    	$(function() {
-		    	$('.dataTable').each(function() {
-		    		var table = $(this);
-		    		var numOfColumns = table.find('th').length;
-		    		var tfoot = $('<tfoot />');
-		    		for (var i = 0; i < numOfColumns; i++) {
-		    			var td = $('<td />');
-		    			td.append(
-		    				$('<input />', {type: 'text', 'class': 'datatables_filter'}).keyup(function() {
-		    					table.dataTable().fnFilter(this.value, tfoot.find('input').index(this));
-		    				})
-		    			);
-		    			tfoot.append(td);
-		    		}
-		    		table.append(tfoot);
-		    	});
-		    });'''
-	    , header=False)
+        page.addJS(jsContent='''
+          $(function() {
+              $('.dataTable').each(function() {
+                  var table = $(this);
+                  var numOfColumns = table.find('th').length;
+                  var tfoot = $('<tfoot />');
+                  for (var i = 0; i < numOfColumns; i++) {
+                      var td = $('<td />');
+                      td.append(
+                          $('<input />', {type: 'text', 'class': 'datatables_filter'}).keyup(function() {
+                              table.dataTable().fnFilter(this.value, tfoot.find('input').index(this));
+                          })
+                      );
+                      tfoot.append(td);
+                  }
+                  if (table.find('tfoot').length == 0)
+                    table.append(tfoot);
+              });
+            });'''
+        , header=False)
 
     return params
 
