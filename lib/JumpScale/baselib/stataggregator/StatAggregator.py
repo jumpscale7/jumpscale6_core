@@ -101,13 +101,12 @@ class StatAggregator():
 
     def send2carbon(self):
         out=""
-        me="n%s"%j.application.whoAmI.nid
         for key in self.stats.keys():
             stat=self.stats[key]
-            out+="%s.%s.last %s\n" %(me,key,stat.result)
+            out+="%s.last %s\n" %(key,stat.result)
             avg,m=stat.getAvgMax()
-            out+="%s.%s.avg %s\n" %(me,key,avg)
-            out+="%s.%s.max %s\n" %(me,key,m)
+            out+="%s.avg %s\n" %(key,avg)
+            out+="%s.max %s\n" %(key,m)
         j.clients.graphite.send(out)
         print out
 

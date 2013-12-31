@@ -352,6 +352,8 @@ class HRD():
 
     def getInt(self,key):
         res=self.get(key)
+        if res.strip()=="":
+            res=0
         return int(res)
 
     def getFloat(self,key):
