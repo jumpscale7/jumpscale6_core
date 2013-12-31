@@ -13,7 +13,7 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use: disable_filters:True}}}}\n")
+    out.append("{{datatables_use}}}}\n")
 
     fields = ['id', 'nid', 'name', 'description', 'active', 'sizeondisk', 'free', 'path']
 

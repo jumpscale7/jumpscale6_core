@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use: disable_filters:True}}}}\n")
+    out.append("{{datatables_use}}}}\n")
 
     #[u'lock', u'timeStop', u'lockduration', u'result', u'id', u'category', u'jsname', u'children', u'source', u'state', u'gid', u'childrenActive', u'jscriptid', u'description', u'parent', u'args', u'sessionid', u'jsorganization', u'roles', u'timeStart', u'timeout', u'resultcode']
 
