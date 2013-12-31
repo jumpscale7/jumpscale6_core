@@ -6,9 +6,10 @@ json=j.db.serializers.getSerializerType("j")
 class OSISClientForCat():
 
     def __init__(self, client, namespace, cat):
+        if cat in client.listNamespaceCategories(namespace):
+            self.client = client
         self.namespace = namespace
         self.cat = cat
-        self.client = client
         self.objectclass=None
 
     def _getModelClass(self):
@@ -48,7 +49,8 @@ class OSISClientForCat():
             return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
 
     def get(self, key):
-        value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
+        if self.client:
+            value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
         if isinstance(value, basestring):
             try:
                 value=json.loads(value)
@@ -64,16 +66,20 @@ class OSISClientForCat():
             return value
 
     def delete(self, key):
-        return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
+        if self.client:
+            return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
 
     def destroy(self):
-        return self.client.destroy(namespace=self.namespace, categoryname=self.cat)
+        if self.client:
+            return self.client.destroy(namespace=self.namespace, categoryname=self.cat)
 
     def list(self, prefix=""):
-        return self.client.list(namespace=self.namespace, categoryname=self.cat, prefix=prefix)
+        if self.client:
+            return self.client.list(namespace=self.namespace, categoryname=self.cat, prefix=prefix)
 
     def search(self, query, start=0, size=None):
-        return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
+        if self.client:
+            return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
                                   start=start, size=size)
 
     def simpleSearch(self, params, start=0, size=None):
