@@ -53,6 +53,7 @@ class PortalClient():
         """
         connect to Portal6
         """
+        
         self.wsclient = j.web.geventws.getClient(ip, port, secret)
         self.ip = ip
         self.port = port

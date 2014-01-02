@@ -124,7 +124,7 @@ class PortalClientFactory():
                 # j.core.portal.gridmap.data=gridmap
             # self._appserverclients={}
             # self._actorClients={}
-    def getPortalClient(self, ip="localhost", port=9999, secret=None):
+    def getPortalClient(self, ip="localhost", port=9900, secret=None):
         """
         return client to manipulate & access a running application server (out of process)
         caching is done so can call this as many times as required
