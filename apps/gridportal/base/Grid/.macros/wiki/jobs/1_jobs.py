@@ -19,8 +19,8 @@ def main(j, args, params, tags, tasklet):
     out.append('||id||category||result||jsname||jsorganization||state||description||')
 
 
-    jsname = args.tags.getDict().get('jsname', None)
-    jsorganization = args.tags.getDict().get('jsorganization', None)
+    jsname = args.tags.getDict().get('jsname', None) if not args.tags.getDict().get('jsname', None).startswith('$$') else None
+    jsorganization = args.tags.getDict().get('jsorganization', None) if not args.tags.getDict().get('jsorganization', None).startswith('$$') else None
 
     jobs = actor.getJobs(jsname=jsname, jsorganization=jsorganization)
     if not jobs:

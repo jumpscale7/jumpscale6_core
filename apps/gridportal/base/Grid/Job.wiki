@@ -1,3 +1,3 @@
 @usedefaults
 
-{{job: id:$$id}}
+{{job: id:$$id logs children details scriptsource}}

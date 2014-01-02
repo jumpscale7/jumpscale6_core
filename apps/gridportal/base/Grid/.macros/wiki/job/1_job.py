@@ -9,7 +9,7 @@ def main(j, args, params, tags, tasklet):
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
 
-    id = args.tags.getDict().get('id', None)
+    id = args.tags.getDict().get('id', None) if not args.tags.getDict().get('id', None).startswith('$$') else None
 
     details =args.tags.labelExists("details")
     logs = args.tags.labelExists("logs")
@@ -33,7 +33,7 @@ def main(j, args, params, tags, tasklet):
         obj["nid"]=0
 
     out +="* gid:%s nid:%s  roles:%s \n"%(obj["gid"],obj["nid"],obj["roles"])
-    out +="* jumpscript [%s:%s|/grid/jumpscript?organization=%s&name=%s]\n"%(obj["jsorganization"],obj["jsname"],obj["jsorganization"],obj["jsname"])
+    out +="* jumpscript [%s:%s|/grid/jumpscript?jsorganization=%s&jsname=%s]\n"%(obj["jsorganization"],obj["jsname"],obj["jsorganization"],obj["jsname"])
     if  obj["description"]<>"":
         out +="* description : %s\n"%obj["description"]
     out += "* start:%s  (timeout:%s)\n"% (datetime.datetime.fromtimestamp(obj["timeStart"]).strftime('%Y-%m-%d %H:%M:%S'),obj["timeout"])
@@ -49,7 +49,7 @@ def main(j, args, params, tags, tasklet):
         eco=json.loads(obj["result"])
         ecoguid=eco["guid"]
 
-        out +="h2. Error Condition Info\n"
+        out +="h3. Error Condition Info\n"
         out +="{{eco: guid:%s}}\n"%ecoguid
 
 
@@ -57,52 +57,53 @@ def main(j, args, params, tags, tasklet):
         out +="* Job completed at "
         out += "%s\n"% datetime.datetime.fromtimestamp(obj["timeStop"]).strftime('%Y-%m-%d %H:%M:%S')
 
-    if obj["args"]<>{}:
+    if obj["args"]:
         out+="||name||value||\n"
-        args=json.loads(obj["args"])
+        objargs=json.loads(obj["args"])
         
-        for key,value in args.iteritems():
+        for key,value in objargs.iteritems():
             out+="|%s|%s|\n"%(str(key),str(value))
 
     if logs:
+        if obj["result"]:
+            out +="h2. Result\n"
+            out+="{{code:\n"
+            #pretty print the json structure
+            out+=json.dumps(json.loads(obj["result"]), indent=2)
+            out+="\n}}\n"
 
-        out +="h2. Result\n"
-        out+="{{code:\n"
-        #pretty print the json structure
-        out+=json.dumps(json.loads(obj["result"]),indent=2)
-        out+="\ncode}}\n"
-
-        out+= "h2. logs\n"
-        out+= "{{logs: jid:%s astext}}\n"
+        out+= "h3. Logs\n"
+        out+= "{{Grid.logs: jid:%s astext}}}}\n" % id
 
     if script:
-        out+= "h2. jumpscript\n"
-        out+= "{{jumpscript: domain:%s name:%s codeonly}}\n"%(obj["jsorganization"],obj["jsname"])
+        out+= "h3. jumpscript\n"
+        out+= "{{jumpscript: jsorganization:%s jsname:%s codeonly}}\n"%(obj["jsorganization"],obj["jsname"])
 
     if children and len(obj["children"])>0:
-        out +="h2. Children\n"
+        out +="h3. Children\n"
         from IPython import embed
         print "DEBUG NOW children macro job, implement"
         embed()
         
 
     if details:
-        out +="h2. Additional Info\n"
+        out +="h3. Additional Info\n"
 
-        out = ['||Property||Value||']
+        out2 = ['||Property||Value||']
 
         fields = [  'lockduration', 'category', 'source','childrenActive' , 'parent', 'sessionid', 'resultcode']
 
         for field in fields:
             if field in ('children'):
-                out.append("|%s|%s|" % (field.capitalize(), ', '.join(obj[field])))
+                out2.append("|%s|%s|" % (field.capitalize(), ', '.join(obj[field])))
             elif field == 'timeStart':
                 timeStart = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-                out.append("|%s|%s|" % (field.capitalize(), timeStart))
+                out2.append("|%s|%s|" % (field.capitalize(), timeStart))
             else:
-                out.append("|%s|%s|" % (field.capitalize(), obj[field]))
+                out2.append("|%s|%s|" % (field.capitalize(), obj[field]))
+        out += '\n'.join(out2)
 
-    params.result = ('\n'.join(out), doc)
+    params.result = (out, doc)
 
     return params
 

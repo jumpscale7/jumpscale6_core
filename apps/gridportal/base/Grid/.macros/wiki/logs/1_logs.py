@@ -15,10 +15,11 @@ def main(j, args, params, tags, tasklet):
 
     out+="||App Name||Category||Start Time||Message||Level||Process ID||Node ID||Job ID||\n"
 
-    nid = args.tags.getDict().get("nid", None)
-    pid = args.tags.getDict().get("pid", None)
+    nid = args.tags.getDict().get("nid", None) if not args.tags.getDict().get("nid").startswith('$$') else None
+    pid = args.tags.getDict().get("pid", None) if not args.tags.getDict().get("pid").startswith('$$') else None
+    jid = args.tags.getDict().get("jid", None) if not args.tags.getDict().get("jid").startswith('$$') else None
 
-    logs = actor.getLogs(nid=nid, pid=pid)
+    logs = actor.getLogs(nid=nid, pid=pid, jid=jid)
     if not logs:
         params.result = ('No logs found', doc)
         return params
