@@ -49,7 +49,8 @@
     method:notifySpaceModification
 		"""		
 		"""
-		var:id str,,id of space which changed
+		var:id str,,id of space which changed# @tags: optional
+        #var:name str,,name of space which changed @tags: optional
         result:bool    
 
     method:notifySpaceNew

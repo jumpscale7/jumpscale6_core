@@ -1075,6 +1075,10 @@ class GeventWebserver:
 
     def processor_restext(self, env, start_response, path, human=True, ctx=False):
         
+        """
+        rest processer gen 2 (not used by the original get code)
+        """
+
         if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:
@@ -1206,6 +1210,8 @@ class GeventWebserver:
 
     def restRouter(self, env, start_response, path, paths, ctx, ext=False, routekey=None, human=False):
         """
+        does validaton & authorization
+        returns right route key
         """
         if not routekey:
             routekey = "%s_%s_%s" % (paths[0], paths[1], paths[2])
@@ -1229,7 +1235,7 @@ class GeventWebserver:
             ctx.actor = paths[1]            
             ctx.method = paths[2]
             auth = routes[routekey][5]
-            resultcode, msg = self.validate(ext, auth, ctx)
+            resultcode, msg = self.validate(ext, auth, ctx) #validation & authorization (but user needs to be known)
             if resultcode == False:                
                 if human:
                     params = {}
@@ -1269,6 +1275,10 @@ class GeventWebserver:
             return (False, self.raiseError(ctx=ctx, msg=msg, errorObject=eco))
 
     def processor_rest(self, env, start_response, path, human=True, ctx=False):
+        """
+        orignal rest processor (get statements)
+        e.g. http://localhost/restmachine/system/contentmanager/notifySpaceModification?name=www_openvstorage&authkey=1234
+        """
         if ctx == False:
             raise RuntimeError("ctx cannot be empty")
         try:

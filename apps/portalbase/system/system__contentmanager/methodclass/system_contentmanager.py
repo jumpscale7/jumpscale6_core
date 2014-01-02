@@ -1,5 +1,5 @@
 from JumpScale import j
-
+import ujson
 
 class system_contentmanager(j.code.classGetBase()):
 
@@ -302,10 +302,24 @@ class system_contentmanager(j.code.classGetBase()):
         result bool 
         
         """
-
+        id=id.lower()
         loaders = j.core.portal.runningPortal.webserver.spacesloader
         loader = loaders.getLoaderFromId(id)
         loader.reset()
+
+        ctx=args["ctx"]
+
+        if ctx.params.has_key("payload"):
+
+            payload=ujson.loads(ctx.params["payload"])
+
+            owner=payload["repository"]["owner"]
+            name=payload["repository"]["name"]
+
+            cmd="cd /opt/code/%s/%s;hg pull;hg update -C"%(owner,name)
+            print "execute %s"%cmd
+            j.system.process.execute(cmd)
+
 
     def notifySpaceNew(self, path, name, **args):
         """
