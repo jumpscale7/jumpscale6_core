@@ -6,16 +6,16 @@ This jumpscript logs something (test)
 
 name = "log"
 category = "test"
-organization = "opencode"
+organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 roles = ["*"]
 
 
-def action(msg):
-    o.logger.log("test log msg", level=5, category="acategory")
-    return msg
+def action(logmsg):
+    j.logger.setLogTargetLogForwarder()
+    j.logger.log(logmsg, level=5, category="test_category")
 
 
 

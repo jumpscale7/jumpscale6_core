@@ -6,7 +6,7 @@ This jumpscript echos back (test)
 
 name = "echo"
 category = "test"
-organization = "opencode"
+organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
