@@ -4,7 +4,7 @@ def main(j, args, params, tags, tasklet):
   
     
     p=args.tags.getDict()
-    nodeId = p['nid']
+    nid = p['nid']
     statistic = p['statistic']
 
     page.addBodyAttribute('ng-app="jumpscale"')
@@ -27,10 +27,10 @@ def main(j, args, params, tags, tasklet):
     page.addJS(".files/app.js")
     page.addJS(".files/directives.js")
 
-    if nodeId:
-        print nodeId
+    if nid:
+        print nid
 
-    url = '/restmachine/system/gridmanager/getNodeSystemStats?nodeId=%s' % nodeId
+    url = '/restmachine/system/gridmanager/getNodeSystemStats?nid=%s' % nid
     import random
     randomid = random.randint(1, 999999999999)
     page.addHTML('<div id="statisticsChart%s" data-chart ng-model="statisticsData" ng-url="%s" ng-stat="%s" style="width: 100%%;"></div>' % (randomid, url,statistic))

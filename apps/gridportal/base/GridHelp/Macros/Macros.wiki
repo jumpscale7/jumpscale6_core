@@ -1,0 +1,4 @@
+h2. macros specific to grid
+
+{{children}}
+

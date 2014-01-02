@@ -5,13 +5,13 @@ def main(j, args, params, tags, tasklet):
     domain = args.requestContext.params.get('domain')
     name = args.requestContext.params.get('name')
     version = args.requestContext.params.get('version')
-    nid = args.requestContext.params.get('nodeId')
+    nid = args.requestContext.params.get('nid')
 
     j.core.portal.runningPortal.actorsloader.getActor('system', 'packagemanager')
 
     if not nid:
         _, nid, _ = j.application.whoAmI
-    result = j.apps.system.packagemanager.getBlobs(nodeId=nid, domain=domain, pname=name, version=version)['result']
+    result = j.apps.system.packagemanager.getBlobs(nid=nid, domain=domain, pname=name, version=version)['result']
 
     import json
     blobs = json.loads(result)['result']
@@ -29,7 +29,7 @@ def main(j, args, params, tags, tasklet):
 
         page.addHeading("Platform:%s" % platform.capitalize(), 5)
 
-        url = '/restmachine/system/packagemanager/getBlobContents?nodeId=%s&domain=%s&pname=%s&version=%s&platform=%s&ttype=%s' % (nid, domain, name, version, platform, ttype)
+        url = '/restmachine/system/packagemanager/getBlobContents?nid=%s&domain=%s&pname=%s&version=%s&platform=%s&ttype=%s' % (nid, domain, name, version, platform, ttype)
 
         fieldnames = ('File', 'MD5 Checksum')
         page = modifier.addTableFromURL(url, fieldnames)

@@ -1,0 +1,17 @@
+@usedefaults
+
+h2. macro jumpscript
+
+show info about a jumpscript
+
+h3. arguments
+
+||name||description||optional||
+|domain|domain of jumpscript|NO|
+|name|name of jumpscript|NO|
+
+h3. labels
+
+||name||description||
+|codeonly|then jumpscript code is shown and nothing|
+

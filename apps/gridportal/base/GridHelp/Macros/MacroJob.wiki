@@ -1,0 +1,18 @@
+@usedefaults
+
+h2. macro job
+
+h3. arguments
+
+||name||description||
+|id|id of job||
+
+obliged param
+
+h3. labels
+
+||name||description||
+|details|when details of jobs should be shown|
+|logs|when logs should be shown of the job|
+|children|show the children?|
+|script|show the jumpscript code?|

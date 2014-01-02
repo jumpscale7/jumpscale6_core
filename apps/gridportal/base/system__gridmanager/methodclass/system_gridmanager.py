@@ -36,7 +36,7 @@ class system_gridmanager(j.code.classGetBase()):
         self.osis_alert = j.core.osis.getClientForCategory(osis,"system","alert")
         self.osis_log = j.core.osis.getClientForCategory(osis,"system","log")
 
-    def getClient(self,nid):
+    def getClient(self,nid,category):
         nid = int(nid)
         if nid not in self.clients:
             if nid not in self._nodeMap:
@@ -45,20 +45,22 @@ class system_gridmanager(j.code.classGetBase()):
                 raise RuntimeError('Could not get client for node %s!' % nid)
             for ip in self._nodeMap[nid]['ipaddr']:
                 if j.system.net.tcpPortConnectionTest(ip, 4445):
-                    self.clients[nid] = j.servers.geventws.getClient(ip, 4445, org="myorg", user="admin", passwd="1234",category="processmanager")
+                    user=j.application.config.get('system.superadmin.login')
+                    passwd=j.application.config.get('system.superadmin.passwd')
+                    self.clients[nid] = j.servers.geventws.getClient(ip, 4445, org="myorg", user=user, passwd=passwd,category=category)
                     self.clientsIp[nid] = ip
                     return self.clients[nid]
             raise RuntimeError('Could not get client for node %s!' % nid)
 
         return self.clients[nid]
 
-    def getNodeSystemStats(self, nodeId, **kwargs):
+    def getNodeSystemStats(self, nid, **kwargs):
         """
         ask the right processmanager on right node to get the information about node system
-        param:nodeId id of node
+        param:nid id of node
         result json
         """
-        client=self.getClient(nodeId)
+        client=self.getClient(nid)
         return client.monitorSystem()
 
     def _getNode(self, nid):
@@ -116,10 +118,10 @@ class system_gridmanager(j.code.classGetBase()):
         return filter(myfilter, results)
 
 
-    def getProcessStats(self, nodeId, domain="", name="", **kwargs):
+    def getProcessStats(self, nid, domain="", name="", **kwargs):
         """
         ask the right processmanager on right node to get the information
-        param:nodeId id of node
+        param:nid id of node
         param:domain optional domain name for process
         param:name optional name for process
         result json
@@ -128,7 +130,7 @@ class system_gridmanager(j.code.classGetBase()):
             domain=""
         if name=="*":
             name=""
-        client=self.getClient(nodeId)
+        client=self.getClient(nid)
         return client.monitorProcess(domain=domain,name=name)
 
     def getStatImage(self,statKey,width=500,height=250, **kwargs):
@@ -138,12 +140,12 @@ class system_gridmanager(j.code.classGetBase()):
         statKey=statKey.strip()
         if statKey[0]=="n":
             #node info
-            nodeId=int(statKey.split(".")[0].replace("n",""))
+            nid=int(statKey.split(".")[0].replace("n",""))
         else:
             raise RuntimeError("Could not parse statKey, only node stats supported for now (means starting with n)")
 
-        self.getClient(nodeId) # load ip in ipmap
-        ip=self.clientsIp[nodeId] 
+        self.getClient(nid) # load ip in ipmap
+        ip=self.clientsIp[nid] 
 
         url="http://%s:8081/render/?width=%s&height=%s&target=%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=first&tz=CET"%(ip,width,height,statKey)
 
@@ -151,16 +153,16 @@ class system_gridmanager(j.code.classGetBase()):
 
         return r.content
 
-    def getProcessesActive(self, nodeId, name, domain, **kwargs):
+    def getProcessesActive(self, nid, name, domain, **kwargs):
         """
         ask the right processmanager on right node to get the info (this comes not from osis)
         output all relevant info (no stat info for that we have getProcessStats)
-        param:nodeId id of node (if not specified goes to all nodes and aggregates)
+        param:nid id of node (if not specified goes to all nodes and aggregates)
         param:name optional name for process name (part of process name)
         param:domain optional name for process domain (part of process domain)
         result json
         """
-        client = self.getClient(nodeId)
+        client = self.getClient(nid)
         return client.getProcessesActive(domain, name)
 
     def getJob(self, id, includeloginfo, includechildren, guid=None, **kwargs):

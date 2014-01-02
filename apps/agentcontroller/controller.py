@@ -324,6 +324,7 @@ class ControllerCMDS():
             for agentid in self.roles2agents[role]:
                 job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
+                job.db.nid=int(session.agentid.split("_")[1])
                 job.save()
                 self.workqueue[agentid].append(job)
                 self.jobs[job.db.id]=job

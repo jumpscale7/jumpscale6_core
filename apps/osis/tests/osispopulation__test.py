@@ -6,16 +6,25 @@ from JumpScale import j
 
 import JumpScale.grid.osis
 
-class OSISPopulationTest(unittest.TestCase):
+descr = """
+populate osis for grid with fake data
+"""
+
+organization = "jumpscale"
+author = "despiegk"
+license = "bsd"
+version = "1.0"
+category = "osis.basic.testdata.populate,grid.testdata.populate"
+enable=True
+priority=2
+
+
+class TEST():
 
     def setUp(self):
-        print 'setup'
         self.client = j.core.osis.getClient()
 
     def tearDown(self):
-        pass
-
-    def test_log(self):
         pass
 
     def test_stat(self):
@@ -180,7 +189,3 @@ class OSISPopulationTest(unittest.TestCase):
                 self.backuploaction="/mnt/abackuplocation/%s"%i
             client.set(obj)
 
-
-
-if __name__ == '__main__':
-    unittest.main()

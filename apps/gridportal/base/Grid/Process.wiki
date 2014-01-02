@@ -1,5 +1,9 @@
 @usedefaults
 
+h2. Processes
+
 {{process: id:$$id}}
 
-{{logs: pid:$$id}}
+
+h2. logs from last 1h
+{{logs: pid:$$id from:-1h}}

@@ -24,12 +24,24 @@ def action(domain, pname, version):
         else:
             return False
 
-    packagedata = {}
-    info = ('domain', 'version', 'buildNr', 'description', 'name', 'dependencies', 'supportedPlatforms')
-    for i in info:
-        packagedata[i] = getattr(package, i)
-    packagedata['isInstalled'] = package.isInstalled()
-    packagedata['getCodeLocationsFromRecipe'] = package.getCodeLocationsFromRecipe()
-    packagedata['getPathMetadata'] = package.getPathMetadata()
+        result = dict()
+        fields = ('buildNr', 'debug', 'dependencies','domain',
+                  'name', 'startupTime', 'supportedPlatforms',
+                  'taskletsChecksum', 'tcpPorts', 'version','tags','version')
 
-    return packagedata
+        if package:
+            for field in fields:
+                result[field] = getattr(package, field)
+
+            result['isInstalled'] = package.isInstalled()
+            result['codeLocations'] = package.getCodeLocationsFromRecipe()
+            result['metadataPath'] = package.getPathMetadata()
+            result['filesPath'] = package.getPathFiles()
+            recipe=package.getCodeMgmtRecipe()            
+            lines=[line for line in j.system.fs.fileGetContents(recipe.configpath).split("\n") if (line.strip()<>"" and line.strip()[0]<>"#")]
+            result['coderecipe']="\n".join(lines)
+            result['description'] = j.system.fs.fileGetContents("%s/description.wiki"%package.getPathMetadata())
+            result["buildNrInstalled"]=package.getHighestInstalledBuildNr()
+
+
+    return result

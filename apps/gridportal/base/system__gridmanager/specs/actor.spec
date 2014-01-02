@@ -6,7 +6,7 @@
         """     
         ask the right processmanager on right node to get the information
         """
-        var:nodeId int,,id of node 
+        var:nid int,,id of node 
         var:domain str,,optional domain name for process @tags: optional
         var:name str,,optional name for process @tags: optional
         result:json
@@ -16,7 +16,7 @@
         ask the right processmanager on right node to get the info (this comes not from osis)
         output all relevant info (no stat info for that we have getProcessStats)
         """
-        var:nodeId int,,id of node (if not specified goes to all nodes and aggregates) @tags: optional
+        var:nid int,,id of node (if not specified goes to all nodes and aggregates) @tags: optional
         var:name str,,optional name for process name (part of process name) @tags: optional
         var:domain str,,optional name for process domain (part of process domain) @tags: optional
         result:json
@@ -35,7 +35,7 @@
         """     
         ask the right processmanager on right node to get the information about node system
         """
-        var:nodeId int,,id of node
+        var:nid int,,id of node
         result:json
 
     method:getStatImage

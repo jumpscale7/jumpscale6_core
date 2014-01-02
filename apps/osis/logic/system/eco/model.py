@@ -15,11 +15,6 @@ class ECO(OsisBaseObject):
         else:
             self.init("eco","1.0")
 
-            if guid=="":
-                self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes
-            else:
-                self.guid=guid
-
             self.errormessage=errormessage
             self.errormessagePub=errormessagePub
             self.level=int(level) #1:critical, 2:warning, 3:info
@@ -36,6 +31,8 @@ class ECO(OsisBaseObject):
             self.backtrace=""
 
             self.appname=j.application.appname #name as used by application
+
+            self.id=0
 
             self.gid = gid
             self.nid = nid

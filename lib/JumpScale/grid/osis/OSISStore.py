@@ -198,6 +198,7 @@ class OSISStore(object):
         delete objects as well as index (all)
         """
         self.destroyindex()
+        
         self.db.destroy(category=self.dbprefix)
         self.db.destroy(category=self.dbprefix_incr)
         self.db.incrementReset(self.dbprefix_incr)

@@ -113,7 +113,7 @@ class OSISCMDS(object):
                                                                 namespacename), dirNameOnly=True)
         return ddirs
 
-    def deleteNamespaceCategory(self, namespacename, name,session=None):
+    def deleteNamespaceCategory(self, namespacename, name,removecode=False,session=None):
         """
         """
         if session<>None:
@@ -121,9 +121,12 @@ class OSISCMDS(object):
         namespacepath = j.system.fs.joinPaths(self.path, namespacename)
         if not j.system.fs.exists(path=namespacepath):
             raise RuntimeError("Could not find namespace with name:%s"%namespacename)
-
-        j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
-        self.db.destroy(name)        
+        if removecode:
+            j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
+        key="%s_%s"%(namespacename,name)
+        self.elasticsearch.delete_index(key)
+        self.db.destroy(key)
+        self.db.destroy(key+"_incr")
 
     def createNamespaceCategory(self, namespacename, name,session=None):
         """

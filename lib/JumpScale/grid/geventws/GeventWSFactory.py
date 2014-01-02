@@ -2,6 +2,9 @@ from JumpScale import j
 
 
 class GeventWSFactory():
+    def __init__(self):
+        self.cache={}
+        self.cachecat={}
 
     def getServer(self, port, sslorg=None, ssluser=None, sslkeyvaluestor=None):
         """
@@ -28,13 +31,25 @@ class GeventWSFactory():
         return GeventWSServer('', port, ssluser=ssluser, sslorg=sslorg, sslkeyvaluestor=sslkeyvaluestor)
 
     def getClient(self, addr, port, category="core", org="myorg", user="root", passwd="passwd", ssl=False, roles=[],id=None,timeout=60):
-        from .GeventWSTransport import GeventWSTransport
-        from JumpScale.grid.serverbase.DaemonClient import DaemonClient
-        trans = GeventWSTransport(addr, port)
-        trans.timeout=timeout
 
-        cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans,id=id)
-        return cl.getCmdClient(category)
+        key="%s_%s"%(addr,port)
+        keycat="%s_%s_%s"%(addr,port,category)
+
+        if self.cachecat.has_key(keycat):
+            return self.cachecat[keycat]
+
+        if self.cache.has_key(key):
+            cl=self.cache[key]
+        else:
+            from .GeventWSTransport import GeventWSTransport
+            from JumpScale.grid.serverbase.DaemonClient import DaemonClient
+            trans = GeventWSTransport(addr, port)
+            trans.timeout=timeout
+            cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans,id=id)
+            self.cache[key]=cl
+
+        self.cachecat[keycat]=cl.getCmdClient(category)
+        return self.cachecat[keycat]
 
     def initSSL4Server(self, organization, serveruser, sslkeyvaluestor=None):
         """
