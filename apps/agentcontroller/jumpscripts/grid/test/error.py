@@ -1,8 +1,7 @@
 from JumpScale import j
-import time
 
 descr = """
-This jumpscript waits 30 sec (test)
+This jumpscript throws error
 """
 
 name = "wait"
@@ -14,9 +13,8 @@ version = "1.0"
 roles = ["*"]
 
 
-def action(msg,timeout):
-    time.sleep(timeout)
-    o.logger.log(msg, level=5, category="test.wait")
+def action(msg):
+    raise RuntimeError("test")
     return msg
 
 

@@ -1,11 +1,10 @@
 from JumpScale import j
-import time
 
 descr = """
-This jumpscript waits 30 sec (test)
+This jumpscript logs something (test)
 """
 
-name = "wait"
+name = "log"
 category = "test"
 organization = "opencode"
 author = "kristof@incubaid.com"
@@ -14,9 +13,8 @@ version = "1.0"
 roles = ["*"]
 
 
-def action(msg,timeout):
-    time.sleep(timeout)
-    o.logger.log(msg, level=5, category="test.wait")
+def action(msg):
+    o.logger.log("test log msg", level=5, category="acategory")
     return msg
 
 
