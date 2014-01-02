@@ -4,18 +4,17 @@ descr = """
 This jumpscript throws error
 """
 
-name = "wait"
+name = "error"
 category = "test"
-organization = "opencode"
+organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 roles = ["*"]
 
 
-def action(msg):
-    raise RuntimeError("test")
-    return msg
+def action():
+    return 5/0
 
 
 
