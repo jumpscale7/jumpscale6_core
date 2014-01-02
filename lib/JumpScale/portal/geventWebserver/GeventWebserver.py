@@ -275,6 +275,7 @@ class GeventWebserver:
                         # found match
                         right = spaceobject.model.acl[groupuser]
                         break
+
         if right == "*":
             right = "rwa"
         # print "right:%s" % right
@@ -337,6 +338,10 @@ class GeventWebserver:
             if spaceObject.docprocessor == None:
                 spaceObject.loadDocProcessor()  # dynamic load of space
 
+            from IPython import embed
+            print "DEBUG NOW ooo"
+            embed()
+            
             spacedocgen = spaceObject.docprocessor
 
             if name != "" and name in spacedocgen.name2doc:
