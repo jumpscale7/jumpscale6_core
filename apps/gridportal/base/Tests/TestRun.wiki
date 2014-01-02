@@ -1,0 +1,10 @@
+@usedefaults
+
+h2. TestRun Failed
+
+{{testrun: id:$$id  status:failed }}
+
+h2. TestRun Ok
+
+{{testrun: id:$$id  status:ok }}
+

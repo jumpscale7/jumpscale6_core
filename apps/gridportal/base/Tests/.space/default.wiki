@@ -1,0 +1,34 @@
+
+{{title:TESTRUNS}}
+
+{{projectname:TESTRUNS}}
+
+{{find}}
+
+{{menu:
+System:/System
+}}
+
+{{menuadmin_tests}}
+
+
+@block
+@row
+
+@col 10
+
+{content}
+
+@divend
+@divend
+
+
+{{cssstyle
+td {
+    max-width:500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;}
+}}
+
+
