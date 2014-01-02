@@ -9,25 +9,33 @@ class StartupManagerCmds():
         self.manager= j.tools.startupmanager        
         self._name="startupmanager"
 
-    def getDomains(self,**args):
+    def _getJPackage(self, domain, name):
+        jps = j.packages.find(domain, name, installed=True)
+        if not jps:
+            raise RuntimeError('Could not find installed jpackage with domain %s and name %s' % (domain, name))
+        return jps[0]
+
+
+    def getDomains(self,session=None,**args):
         return self.manager.getDomains()
 
-    def startAll(self,**args):
+    def startAll(self,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         return self.manager.startAll()
 
-    def removeProcess(self,domain, name,**args):
+    def removeProcess(self,domain, name,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         return self.manager.removeProcess(domain, name)
 
-    def getStatus4JPackage(self,jpackage,**args):
+    def getStatus4JPackage(self,domain, name,session=None,**args):
         if session<>None:
-            self._adminAuth(session.user,session.passwd)        
+            self._adminAuth(session.user,session.passwd) 
+        jpackage=self._getJPackage(domain,name)       
         return self.manager.getStatus4JPackage(jpackage)
 
-    def getStatus(self, domain, name,**args):
+    def getStatus(self, domain, name,session=None,**args):
         """
         get status of process, True if status ok
         """
@@ -35,7 +43,7 @@ class StartupManagerCmds():
             self._adminAuth(session.user,session.passwd)        
         return self.manager.getStatus( domain, name)
 
-    def listProcesses(self,**args):
+    def listProcesses(self,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         return [item.split("__") for item in self.manager.listProcesses()]
@@ -62,32 +70,32 @@ class StartupManagerCmds():
         return result
 
 
-    def startProcess(self, domain="", name="", timeout=20,**args):
+    def startProcess(self, domain="", name="", timeout=20,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         return self.manager.startProcess( domain, name, timeout)
 
-    def stopProcess(self, domain,name, timeout=20,**args):
+    def stopProcess(self, domain,name, timeout=20,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         return self.manager.stopProcess(domain,name, timeout)
 
-    def disableProcess(self, domain,name, timeout=20,**args):
+    def disableProcess(self, domain,name, timeout=20,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         return self.manager.disableProcess( domain,name, timeout)
 
-    def enableProcess(self, domain,name, timeout=20,**args):
+    def enableProcess(self, domain,name, timeout=20,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         return self.manager.enableProcess( domain,name, timeout)
 
-    def restartProcess(self, domain,name,**args):
+    def restartProcess(self, domain,name,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         return self.manager.restartProcess( domain,name)
 
-    def reloadProcess(self, domain, name,**args):
+    def reloadProcess(self, domain, name,session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         return self.manager.reloadProcess( domain,name)

@@ -10,6 +10,7 @@ parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['delete','deleteall'], help='Command to perform')
 parser.add_argument("-m", '--model',help='name of model')
 parser.add_argument("-n", '--namespace', help='namespace of osis')
+parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
 
 opts = parser.parse_args()
 
@@ -19,10 +20,10 @@ if opts.action =='deleteall':
     import JumpScale.grid.osis
     es = j.clients.elasticsearch.get()
 
-
-    if j.console.askString("Are you sure to delete full osis & elasticsearch indexes, type YES")<>"YES":
-        print "did not see yes, will not continue"
-        j.application.stop()
+    if opts.force==None:
+        if j.console.askString("Are you sure to delete full osis & elasticsearch indexes, type YES")<>"YES":
+            print "did not see yes, will not continue"
+            j.application.stop()
 
     es.delete_all_indexes()
 
@@ -37,7 +38,9 @@ if opts.action =='deleteall':
         namespaces.pop(namespaces.index("system"))
     if "logger" in namespaces:
         namespaces.pop(namespaces.index("logger"))
-    namespaces=j.console.askChoiceMultiple(namespaces)
+
+    if opts.force==None:
+        namespaces=j.console.askChoiceMultiple(namespaces)
     for namespace in namespaces:
         path="/opt/jumpscale/apps/osis/logic/%s"%namespace
         j.system.fs.removeDirTree(path)

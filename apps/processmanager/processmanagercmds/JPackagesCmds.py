@@ -7,6 +7,7 @@ class JPackagesCmds():
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
         self._name="jpackages"
+        self.manager=j.tools.startupmanager
 
     def _getJPackage(self, domain, name):
         jps = j.packages.find(domain, name, installed=True)
@@ -15,7 +16,7 @@ class JPackagesCmds():
         return jps[0]
 
 
-    def listJPackages(self, domain=None, **args):
+    def listJPackages(self, domain=None, session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         if not domain:
@@ -33,31 +34,65 @@ class JPackagesCmds():
                 result.append(pdict)
         return result
 
-    def getJPackage(self, domain, name, **args):
+    def getJPackage(self, domain, name, session=None, **args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         package = j.packages.findNewest(domain, name, returnNoneIfNotFound=True)
         result = dict()
         fields = ('buildNr', 'debug', 'dependencies','domain',
                   'name', 'startupTime', 'supportedPlatforms',
-                  'taskletsChecksum', 'tcpPorts', 'version')
+                  'tcpPorts', 'version','tags','version')
+
         if package:
             for field in fields:
                 result[field] = getattr(package, field)
+
+            result['isInstalled'] = package.isInstalled()
+            result['codeLocations'] = package.getCodeLocationsFromRecipe()
+            result['metadataPath'] = package.getPathMetadata()
+            result['filesPath'] = package.getPathFiles()
+            recipe=package.getCodeMgmtRecipe()            
+            lines=[line for line in j.system.fs.fileGetContents(recipe.configpath).split("\n") if (line.strip()<>"" and line.strip()[0]<>"#")]
+            result['coderecipe']="\n".join(lines)
+            result['description'] = j.system.fs.fileGetContents("%s/description.wiki"%package.getPathMetadata())
+            result["buildNrInstalled"]=package.getHighestInstalledBuildNr()
+
         return result
 
-    def startJPackage(self,jpackage,timeout=20,**args):
+
+    def getJPackageFilesInfo(self,domain, name, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
-        return self.manager.startJPackage(jpackage,timeout)
+                    
+        package = j.packages.findNewest(domain, name, returnNoneIfNotFound=True)
 
-    def stopJPackage(self,jpackage,timeout=20,**args):  
+        aaData = list()
+        
+        for platform,ttype in package.getBlobPlatformTypes():
+
+            blobinfo = package.getBlobInfo(platform, ttype)
+            for entry in blobinfo[1]:
+                aaData.append([platform,ttype,entry[1],entry[0]])
+        
+        return aaData
+
+
+    def startJPackage(self,domain, name,timeout=20, session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
+        jpackage=self._getJPackage(domain,name)
+                
+        return self.manager.startJPackage(jpackage,timeout)
+
+    def stopJPackage(self,domain, name,timeout=20, session=None,**args):  
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
+        jpackage=self._getJPackage(domain,name)
         return self.manager.stopJPackage(jpackage,timeout)
 
-    def existsJPackage(self,jpackage,**args):
+    def existsJPackage(self,domain, name, session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
+        jpackage=self._getJPackage(domain,name)
         return self.manager.existsJPackage(jpackage)
 

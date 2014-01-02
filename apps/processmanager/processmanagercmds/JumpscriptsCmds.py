@@ -1,5 +1,6 @@
 from JumpScale import j
 import gevent
+import copy
 
 class Jumpscript():
 
@@ -46,6 +47,7 @@ class JumpscriptsCmds():
             C = j.system.fs.fileGetContents(path2)
             C2 = ""
             name = j.system.fs.getBaseName(path2)
+            name=name.strip(".py")
             organization = "unknown"
             author = "unknown"
             license = "unknown"
@@ -89,19 +91,23 @@ class JumpscriptsCmds():
             if not self.jumpscriptsByPeriod.has_key(period):
                 self.jumpscriptsByPeriod[period]=[]
             self.jumpscriptsByPeriod[period].append(t)
-        self.killGreenLets()       
+        self._killGreenLets()       
         self._configureScheduling()
         
-    def getMonitoringJumpscript(self, organization, name, session=None):
+    def getJumpscript(self, organization, name, session=None):
+
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         key = "%s_%s" % (organization, name)
-        if key in self.jumpscripts:
-            return self.jumpscripts[key]
+        if key in self.jumpscripts.keys():              
+            r=copy.copy(self.jumpscripts[key].__dict__)
+            r.pop("action")
+            return r            
         else:
-            j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s:%s" % (organization, name), category="action.notfound", die=False)
+            j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s:%s" % (organization, name), \
+                category="action.notfound", die=True)
 
-    def getMonitoringJumpscriptFromKey(self, jumpscriptkey, session=None):
+    def getJumpscriptFromKey(self, jumpscriptkey, session=None):
         if not self.jumpscriptsFromKeys.has_key(jumpscriptkey):
             message="Could not find jumpscript with key:%s"%jumpscriptkey
             # j.errorconditionhandler.raiseBug(message="Could not find jumpscript with key:%s"%jumpscriptkey,category="jumpscript.controller.scriptnotfound")
@@ -125,7 +131,7 @@ class JumpscriptsCmds():
 
 
     ####SCHEDULING###
-    def killGreenLets(self,session=None):
+    def _killGreenLets(self,session=None):
         """
         make sure all running greenlets stop
         """

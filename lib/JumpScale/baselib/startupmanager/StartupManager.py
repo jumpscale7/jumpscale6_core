@@ -68,7 +68,7 @@ class ProcessDef:
         self.log("start process")
         j.system.fs.remove(self.logfile)
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
-        j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
+        # j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
         time.sleep(2)#need to wait because maybe error did not happen yet (is not the nicest method, but dont know how we can do else?) kds
 

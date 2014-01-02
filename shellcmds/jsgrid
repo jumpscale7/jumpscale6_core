@@ -7,12 +7,13 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit','reconfigure'], help='Command to perform')
+parser.add_argument("action", choices=['reinit','reconfigure','testall'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
 
-
+#parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
+#parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
 
 
 opts = parser.parse_args()
@@ -33,8 +34,13 @@ if opts.action =='reconfigure':
 
 ############PS
 if opts.action =='reinit':
+    
+    if opts.force<>None:
+        j.system.process.executeWithoutPipe("osis deleteall")
+    else:
+        j.system.process.executeWithoutPipe("osis deleteall --force=1")
 
-    j.system.process.executeWithoutPipe("osis deleteall")
+    
 
     packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
     for package in packages:
@@ -47,13 +53,6 @@ if opts.action =='reinit':
 #         jp.restart()
 
     j.tools.startupmanager.startAll()
-
-
-
-    from IPython import embed
-    print "DEBUG NOW jsgridmain"
-    embed()
-    
 
 
 j.application.stop()
