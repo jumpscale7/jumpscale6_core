@@ -9,8 +9,8 @@ class Space(LoaderBaseObject):
         self.docprocessor = None
         self._loading = False
 
-    def loadDocProcessor(self):
-        if self._loading:
+    def loadDocProcessor(self,force=False):
+        if self._loading and force==False:
             return
         self._loading = True
         if j.system.fs.exists(j.system.fs.joinPaths(self.model.path, ".macros")):

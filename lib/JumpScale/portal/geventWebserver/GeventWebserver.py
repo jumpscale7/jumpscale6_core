@@ -336,11 +336,7 @@ class GeventWebserver:
             spaceObject = self.spacesloader.getLoaderFromId(space)
 
             if spaceObject.docprocessor == None:
-                spaceObject.loadDocProcessor()  # dynamic load of space
-
-            from IPython import embed
-            print "DEBUG NOW ooo"
-            embed()
+                spaceObject.loadDocProcessor(force=True)  # dynamic load of space
             
             spacedocgen = spaceObject.docprocessor
 
