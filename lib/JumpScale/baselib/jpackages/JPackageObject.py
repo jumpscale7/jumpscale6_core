@@ -388,7 +388,7 @@ class JPackageObject():
 ##################################################################################################
 
 
-    def loadDependencies(self):
+    def loadDependencies(self, errorIfNotFound=True):
         
         if self.dependencies==[]:
 
@@ -415,7 +415,10 @@ class JPackageObject():
                 maxversion=self.hrd.get(key % 'maxversion')
 
                 deppack=j.packages.findNewest(domain,name,\
-                    minversion=minversion,maxversion=maxversion) #,platform=j.system.platformtype.myplatformdeppack.loadDependencies()
+                    minversion=minversion,maxversion=maxversion,returnNoneIfNotFound=not(errorIfNotFound)) #,platform=j.system.platformtype.myplatformdeppack.loadDependencies()
+
+                if errorIfNotFound == False and deppack == None:
+                    continue
 
                 deppackKey="%s__%s"%(deppack.domain,deppack.name)
                 self.dependenciesNames[deppackKey]=deppack
@@ -461,22 +464,22 @@ class JPackageObject():
     def getKey(self):
         return "%s|%s|%s"%(self.domain,self.name,self.version)
 
-    def getDependingInstalledPackages(self, recursive=False):
+    def getDependingInstalledPackages(self, recursive=False, errorIfNotFound=True):
         """
         Return the packages that are dependent on this packages and installed on this machine
         This is a heavy operation and might take some time
         """
         ##self.assertAccessable()
-        if self.getDependingPackages(recursive=recursive) == None:
+        if errorIfNotFound and self.getDependingPackages(recursive=recursive, errorIfNotFound=errorIfNotFound) == None:
             raise RuntimeError("No depending packages present")
-        [p for p in self.getDependingPackages(recursive=recursive) if p.isInstalled()]
+        [p for p in self.getDependingPackages(recursive=recursive, errorIfNotFound=errorIfNotFound) if p.isInstalled()]
 
-    def getDependingPackages(self, recursive=False):
+    def getDependingPackages(self, recursive=False, errorIfNotFound=True):
         """
         Return the packages that are dependent on this package
         This is a heavy operation and might take some time
         """
-        return [p for p in j.packages.getJPackageObjects() if self in p.getDependencies()]
+        return [p for p in j.packages.getJPackageObjects() if self in p.getDependencies(errorIfNotFound)]
 
     def _getState(self):
         ##self.assertAccessable()
@@ -614,11 +617,11 @@ class JPackageObject():
                 broken.append(dep)
         return broken
 
-    def getDependencies(self):
+    def getDependencies(self, errorIfNotFound=True):
         """
         Return the dependencies for the JPackage
         """
-        self.loadDependencies()
+        self.loadDependencies(errorIfNotFound)
         return self.dependencies
 
     def _getPackageInteractive(self,platform):
@@ -1081,9 +1084,9 @@ class JPackageObject():
         
         self.loadActions()
         if unInstallDependingFirst:
-            for p in self.getDependingInstalledPackages():
+            for p in self.getDependingInstalledPackages(errorIfNotFound=False):
                 p.uninstall(True)
-        if self.getDependingInstalledPackages(True):
+        if self.getDependingInstalledPackages(recursive=True,errorIfNotFound=False):
             raise RuntimeError('Other package on the system dependend on this one, uninstall them first!')
 
         tag = "install"
