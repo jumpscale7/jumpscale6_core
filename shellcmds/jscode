@@ -67,8 +67,8 @@ def getRepos():
 repos=getRepos()
 
 if opts.action == "status":
-    print "\n\nSTATUS: account reponame branch added:modified:deleted needapush localrev remoterev"
-    print "==================================================================================="
+    print "\n\nSTATUS: account reponame branch added:modified:deleted insyncwithremote? localrev remoterev"
+    print "==============================================================================================="
 
 
 for bitbucket,account,reponame,client,path in repos:
