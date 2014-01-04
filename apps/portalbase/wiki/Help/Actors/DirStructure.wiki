@@ -1,7 +1,0 @@
-@usedefault
-
-h2. actor dirstructure
-
-/.actor/
-/specs/
-/osis/$modelname/$crudmethodname/   #tasklets which implement the crud methods

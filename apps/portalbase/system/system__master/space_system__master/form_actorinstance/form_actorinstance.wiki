@@ -1,5 +1,0 @@
-
-h2. actorinstance
-
-{{form_master_actorinstance}}
-

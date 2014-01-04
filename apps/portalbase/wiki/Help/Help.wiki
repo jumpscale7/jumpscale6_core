@@ -1,7 +1,4 @@
-h1. JumpScale Documentation
+h2. Help for portal
 
-Welcome on documentation space of jumpscale portal system.
-The documentation is very much work in progess.
-All help more than welcome.
-
+please visit [http://portals.incubaid.com/doc_portal]
 
