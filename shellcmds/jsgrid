@@ -12,8 +12,8 @@ parser.add_argument("action", choices=['reinit','reconfigure','testall'], help='
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
 
-#parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
-#parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
+parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
 
 
 opts = parser.parse_args()

@@ -52,7 +52,7 @@ if opts.action =='add':
         gid=j.console.askInteger("gid",defaultValue=j.application.whoAmI.gid)
         domain=j.console.askString("domain e.g. incubaid.com")
         
-        if j.console.askYesNo("do you want to define new groups.")=="y":
+        if j.console.askYesNo("do you want to define new groups."):
             groups=j.console.askString("comma separated list of groups").split(",")
         else:
             groups=[item["id"] for item in groupclient.simpleSearch({"gid":gid})]
