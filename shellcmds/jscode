@@ -78,7 +78,12 @@ for bitbucket,account,reponame,client,path in repos:
         mods=client.getModifiedFiles()
 
         lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
-        client.branchname
+        if opts.branch<>None:
+            if client.branchname<>opts.branch:
+                cmd="cd %s;hg branch %s"%(path,opts.branch)
+                j.system.process.execute(cmd)
+                print "moved branch:%s"%opts.branch
+
         changesets=bitbucket.getChangeSets(reponame=reponame,limit=1)
         if changesets.has_key("error"):
             print "could not process repo: %s %s error:%s"%(account,reponame,changesets["error"]["message"])
@@ -115,7 +120,7 @@ for bitbucket,account,reponame,client,path in repos:
             print "no need to update, repo is in sync"
             continue
 
-    if opts.action in ['commit']:
+    if opts.action in ['commit']:        
         if nrmods==0:
             print "no need to commit, no mods"
             continue
@@ -125,9 +130,6 @@ for bitbucket,account,reponame,client,path in repos:
         if opts.message==None and nrmods>0:
             opts.message=j.console.askString("commit message")
 
-        if opts.branch<>None:
-            cmd="cd %s;hg branch %s"%(path,opts.branch)
-            print "branch:%s"%opts.branch
 
     if opts.update or opts.action =='update':
         print "PULL ",
@@ -137,6 +139,8 @@ for bitbucket,account,reponame,client,path in repos:
             addRemoveUntrackedFiles=True, trymerge=True, pull=False,force=opts.force)        
     
     if opts.action =='commit' or opts.action =='push':
+        
+
         print "COMMIT ",
         client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
 
