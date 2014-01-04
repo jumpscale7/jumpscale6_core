@@ -64,12 +64,14 @@ def getRepos():
     return result
 
 
-    if opts.action == "status":
-        print "\n\nSTATUS: account reponame branch added:modified:deleted needapush localrev remoterev"
-        print "==================================================================================="
+repos=getRepos()
+
+if opts.action == "status":
+    print "\n\nSTATUS: account reponame branch added:modified:deleted needapush localrev remoterev"
+    print "==================================================================================="
 
 
-for bitbucket,account,reponame,client,path in getRepos():
+for bitbucket,account,reponame,client,path in repos:
 
     if opts.action in ['status','commit','push','update']:
 
@@ -78,7 +80,17 @@ for bitbucket,account,reponame,client,path in getRepos():
         lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
         client.branchname
         changesets=bitbucket.getChangeSets(reponame=reponame,limit=1)
-        remotelastrevision=changesets["changesets"][0]["revision"]
+        if changesets.has_key("error"):
+            print "could not process repo: %s %s error:%s"%(account,reponame,changesets["error"]["message"])
+            # print changesets            
+            continue
+        try:
+            remotelastrevision=changesets["changesets"][0]["revision"]
+        except Exception,e:
+            from IPython import embed
+            print "DEBUG NOW jscode check error from changeset pull"
+            embed()
+            
         rid=changesets["changesets"][0]["raw_node"] #remoteid
 
         if lid==rid:
@@ -88,7 +100,7 @@ for bitbucket,account,reponame,client,path in getRepos():
 
         nrmods= len(mods["added"])+len(mods["nottracked"])+len(mods["modified"])+len(mods["missing"])+len(mods["removed"])
 
-        print "%-12s %-15s %-10s a%-3s:m%-3s:d%-3s reposync:%-1s  lrev:%-5s rrev:%-5s" %(account,reponame,client.branchname,\
+        print "%-15s %-25s %-10s a%-3s:m%-3s:d%-3s reposync:%-1s  lrev:%-5s rrev:%-5s" %(account,reponame,client.branchname,\
             len(mods["added"])+len(mods["nottracked"]),len(mods["modified"]),len(mods["missing"])+len(mods["removed"]),\
             reposync,\
             lrev,remotelastrevision)

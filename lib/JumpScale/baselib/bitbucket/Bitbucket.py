@@ -140,7 +140,7 @@ class BitbucketConnection(object):
         return object
 
     def getChangeSets(self,reponame,limit=50):
-        url="repositories/jumpscale/%s/changesets/?limit=%s"%(reponame,limit)
+        url="repositories/%s/%s/changesets/?limit=%s"%(self.accountName,reponame,limit)
         return self.restCallBitbucket(url)
 
     def getRepoInfo(self,repoName):
