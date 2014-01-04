@@ -175,7 +175,7 @@ class ProcessDef:
             return pid
         raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
-    def isRunning(self):
+    def isRunning(self,quicktest=False):
         hrd = j.core.hrd.getHRD(self.path)
         pid=self.getPid(ifNoPidFail=False)
         if pid==0:
@@ -185,6 +185,9 @@ class ProcessDef:
         if test==False:
             hrd.set('process_active', False)
             return False
+
+        if quicktest:
+            return True
 
         for port in self.ports:
             if port<>None and port.strip()<>"":

@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jsgroup")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['add','delete','list'], help='Command to perform')
+parser.add_argument("-d",'--data', help='add group as groupname:domain')
+parser.add_argument("-p",'--passwd', help='superadmin passwd for grid')
+parser.add_argument("-a",'--addr', help='ip addr of master, if not specified will be the one as specified in local config')
+
+#parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
+#parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+
+import JumpScale.grid.osis
+
+opts = parser.parse_args()
+
+if opts.passwd==None:
+    if j.application.config.exists("gridmaster.superadminpasswd"):
+        opts.passwd=j.application.config.get("gridmaster.superadminpasswd")
+    else:
+        opts.passwd=j.console.askString("please provide superadmin passwd for the grid.")
+
+if opts.addr==None:    
+    addr=j.application.config.get("grid.master.ip")
+else:
+    addr=opts.addr
+print opts.passwd
+osis=j.core.osis.getClient(addr,5544,"root",opts.passwd)
+userclient=j.core.osis.getClientForCategory(osis,"system","user")
+groupclient=j.core.osis.getClientForCategory(osis,"system","group")
+
+############ADD
+if opts.action =='add':
+    if opts.data<>None:
+        splitted=opts.data.split(":")
+        if len(splitted)<>2:
+            raise RuntimeError("error, format for param data needs to be: groupname:domain")
+        name,domain=splitted
+    else:
+        name=j.console.askString("name")
+        domain=j.console.askString("domain e.g. incubaid.com")
+
+    if groupclient.exists(name):
+        raise RuntimeError("group already exists")
+
+    group=groupclient.new()
+    group.id=name
+    group.domain=domain
+
+    guid,a,b=groupclient.set(group)
+
+    group=groupclient.get(guid)
+
+    print group
+
+
+#@todo implement delete & list
+
+
+j.application.stop()

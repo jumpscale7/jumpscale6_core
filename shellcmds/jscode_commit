@@ -3,12 +3,25 @@ from JumpScale import j
 j.application.start("jspush")
 import JumpScale.baselib.mercurial
 
-for subdir in ["jumpscale","incubaid"]:
-    if j.system.fs.exists("/opt/code/%s"%subdir):
-        bitbucket=j.clients.bitbucket.getBitbucketConnection(subdir)
-        for item in j.system.fs.listDirsInDir("/opt/code/%s"%subdir):
-            cl=bitbucket.getMercurialClient(j.system.fs.getBaseName(item))
-            # cl=j.clients.mercurial.getClient(item)
-            cl.commit()
+def getRepos():
+    result=[]
+    accounts=j.system.fs.listDirsInDir("/opt/code", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+    accounts=j.console.askChoiceMultiple(accounts,"select bitbucketaccounts")
+    for account in accounts:
+        accountdir="/opt/code/%s"%account
+        if j.system.fs.exists():
+            bitbucket=j.clients.bitbucket.getBitbucketConnection(accountdir)
+            for reponame in j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+                repodir="%s/%s"%(accountdir,reponame)
+                cl=bitbucket.getMercurialClient(repodir)
+                # cl=j.clients.mercurial.getClient(item)
+                result.append((account,reponame,cl))
+
+
+for account,reponame,client in getRepos()
+    from IPython import embed
+    print "DEBUG NOW commit"
+    embed()
+    #cl.commit()
 
 j.application.stop()

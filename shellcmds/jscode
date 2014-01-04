@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jstest")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['commit','push'], help='Command to perform')
+
+parser.add_argument('-m','--message',help='commit message')
+parser.add_argument('-b','--branch',help='branch')
+
+parser.add_argument('-a','--accounts',help='comma separated list of accounts')
+parser.add_argument('-r','--repos',help='comma separated list of repos, will look for the accounts')
+
+# parser.add_argument('-m','--message',required=False, action='store_true',help='commit message')
+
+opts = parser.parse_args()
+
+if opts.accounts==None and opts.repos==None:
+    if j.system.fs.exists("%s/%s"%(j.system.fs.getcwd(),".hg")):
+        #we are in repo
+        opts.repos=j.system.fs.getBaseName(j.system.fs.getcwd())
+        opts.accounts=j.system.fs.getBaseName(j.system.fs.getParent(j.system.fs.getcwd()))
+
+def getRepos():
+    result=[]
+    if opts.accounts<>None:
+        accounts=[item.strip() for item in opts.accounts.split(",")]
+    elif opts.repos<>None:
+        accounts=j.system.fs.listDirsInDir("/opt/code", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+    else:
+        accounts=j.system.fs.listDirsInDir("/opt/code", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+        accounts=j.console.askChoiceMultiple(accounts,"select bitbucketaccounts")
+
+    for account in accounts:
+        accountdir="/opt/code/%s"%account
+        if j.system.fs.exists(accountdir):
+            bitbucket=j.clients.bitbucket.getBitbucketConnection(account)
+            if opts.repos==None:
+                reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+                reponames=j.console.askChoiceMultiple(reponames,"select repos")
+            else:
+                reponames=[item.strip() for item in opts.repos.split(",")]
+
+            for reponame in reponames:
+                repodir="%s/%s"%(accountdir,reponame)
+                if not j.system.fs.exists(path=repodir):
+                    raise RuntimeError("Could not find mercurial repo on %s"%repodir)
+                cl=bitbucket.getMercurialClient(reponame)
+                # cl=j.clients.mercurial.getClient(item)
+                result.append((account,reponame,cl,repodir))
+    return result
+
+
+for account,reponame,client,path in getRepos():
+    if opts.message==None:
+        opts.message=j.console.askString("commit message")
+
+    if opts.action =='commit' or opts.action =='push':
+        if opts.branch<>None:
+            cmd="cd %s;hg branch %s"%opts.branch
+            print "branch:%s"%opts.branch
+    if opts.action =='commit':
+        client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
+
+
+j.application.stop()

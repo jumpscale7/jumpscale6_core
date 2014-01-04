@@ -508,9 +508,7 @@ class Console:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         if not choicearray:
             return []
-        if len(choicearray) == 1:
-            self.echo("Found exactly one choice: %s"%(choicearray[0]))
-            return choicearray
+
         descr = descr or "\nMake a selection please: "
         if sort:
             choicearray.sort()

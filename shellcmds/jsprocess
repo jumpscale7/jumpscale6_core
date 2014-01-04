@@ -2,7 +2,7 @@
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
-j.application.start("jsprocess_start")
+j.application.start("jsprocess")
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['logs', 'attach', 'list', 'status', 'start', 'stop', 'restart', 'disable', 'enable'], help='Command to perform')
@@ -37,10 +37,14 @@ if opts.action == 'restart':
 # commands applying on list of processes
 for pd in pds:
     if opts.action in ('list', 'status'):
+        
         status = ''
-        active = 'enabled' if pd.autostart == '1' else 'disabled'
+        active = 'enabled' if pd.autostart else 'disabled'
         if opts.action == 'status':
             status = 'RUNNING' if pd.isRunning() else 'HALTED'
+        else:
+            status = 'RUNNING' if pd.isRunning(quicktest=True) else 'HALTED'
+
         print FORMAT % (pd.domain, pd.name, pd.priority, status, active)
     else:
         getattr(pd, opts.action)()
