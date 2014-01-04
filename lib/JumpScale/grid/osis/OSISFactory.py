@@ -5,7 +5,7 @@ from OSISBaseObject import OSISBaseObject
 import random
 import imp
 import sys
-
+import ujson
 
 class OSISFactory:
 
@@ -15,6 +15,29 @@ class OSISFactory:
     def __init__(self):
         self.osisConnections = {}
         self.osisConnectionsCat={}
+        self.nodeguids={}
+        if j.application.config.exists("gridmaster.superadminpasswd"):
+            self.superadminpasswd=j.application.config.get("gridmaster.superadminpasswd")
+        else:
+            self.superadminpasswd=none
+        self.key=j.application.config.get("osis.key")
+        
+
+    def encrypt(self,obj):
+        if not j.basetype.string.check(obj):
+            if j.basetype.dictionary.check(obj):
+                val=obj
+            else:
+                val=obj.__dict__
+            val=ujson.dumps(val)
+        val=j.db.serializers.blowfish.dumps(val,self.key)
+        return val
+
+    def decrypt(self,text):
+        if not j.basetype.string.check(text):
+            raise RuntimeError("needs to be string")
+        text=j.db.serializers.blowfish.loads(text,self.key)
+        return text
 
     def getLocal(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None):
         """
@@ -31,14 +54,24 @@ class OSISFactory:
         zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
         zd.setCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
         zd.daemon.cmdsInterfaces["osis"][-1].init()
+        self.cmds=zd.daemon.cmdsInterfaces["osis"][-1]
         zd.start()
 
-    def getClient(self, ipaddr="localhost", port=5544,user="root",passwd="rooter",ssl=False):
+    def getClient(self, ipaddr="localhost", port=5544,user=None,passwd=None,ssl=False):
         key = "%s_%s" % (ipaddr, port)
         if self.osisConnections.has_key(key):
             return self.osisConnections[key]
         # self.osisConnections[key] = OSISClient(ipaddr, port)
         j.logger.log("get client to osis")
+        if user==None:
+            user="node"
+            passwd=j.application.config.get("grid.node.machineguid")
+        if user=="root" and passwd==None:
+            if j.application.config.exists("gridmaster.superadminpasswd"):
+                passwd=j.application.config.get("gridmaster.superadminpasswd")
+            else:
+                raise RuntimeError("Superadmin passwd has not been defined on this node, please put in hrd (gridmaster.superadminpasswd) or use argument 'passwd'.")
+            
         self.osisConnections[key] = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=port, category="osis",\
             user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j")
         return self.osisConnections[key]

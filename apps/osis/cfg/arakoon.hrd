@@ -1,4 +1,0 @@
-
-#comma separated list of arakoon cluster
-arakoon.cluster=localhost:3445,192.168.1.1:3445,192.168.1.2:3445
-
