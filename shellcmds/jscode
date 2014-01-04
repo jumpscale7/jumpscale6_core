@@ -105,6 +105,9 @@ for bitbucket,account,reponame,client,path in repos:
 
         nrmods= len(mods["added"])+len(mods["nottracked"])+len(mods["modified"])+len(mods["missing"])+len(mods["removed"])
 
+        if nrmods>0:
+            reposync="N"            
+
         print "%-15s %-25s %-10s a%-3s:m%-3s:d%-3s reposync:%-1s  lrev:%-5s rrev:%-5s" %(account,reponame,client.branchname,\
             len(mods["added"])+len(mods["nottracked"]),len(mods["modified"]),len(mods["missing"])+len(mods["removed"]),\
             reposync,\
