@@ -474,7 +474,10 @@ syntax: regexp
         self._log("push %s to %s" % (self.basedir, self.remoteUrl))
         url = self.getUrl()
         if branch<>None:
-            self.client.push(dest=url,branch=branch,newbranch=newbranch)
+            if newbranch:
+                self.client.push(dest=url,newbranch=newbranch)
+            else:
+                self.client.push(dest=url,branch=branch)
         else:
             self.client.push(dest=url,newbranch=newbranch)
         
