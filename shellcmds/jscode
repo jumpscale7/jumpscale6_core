@@ -64,10 +64,53 @@ def getRepos():
     return result
 
 
+    if opts.action == "status":
+        print "\n\nSTATUS: account reponame branch added:modified:deleted needapush localrev remoterev"
+        print "==================================================================================="
+
+
 for bitbucket,account,reponame,client,path in getRepos():
 
+    if opts.action in ['status','commit','push','update']:
+
+        mods=client.getModifiedFiles()
+
+        lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
+        client.branchname
+        changesets=bitbucket.getChangeSets(reponame=reponame,limit=1)
+        remotelastrevision=changesets["changesets"][0]["revision"]
+        rid=changesets["changesets"][0]["raw_node"] #remoteid
+
+        if lid==rid:
+            reposync="Y"
+        else:
+            reposync="N"
+
+        nrmods= len(mods["added"])+len(mods["nottracked"])+len(mods["modified"])+len(mods["missing"])+len(mods["removed"])
+
+        print "%-12s %-15s %-10s a%-3s:m%-3s:d%-3s reposync:%-1s  lrev:%-5s rrev:%-5s" %(account,reponame,client.branchname,\
+            len(mods["added"])+len(mods["nottracked"]),len(mods["modified"]),len(mods["missing"])+len(mods["removed"]),\
+            reposync,\
+            lrev,remotelastrevision)
+
+    if opts.action in ['push']:
+        if nrmods==0 and reposync=="Y":
+            print "no need to push, repo is in sync"
+            continue
+
+    if opts.action in ['update']:
+        if nrmods==0 and reposync=="Y":
+            print "no need to update, repo is in sync"
+            continue
+
+    if opts.action in ['commit']:
+        if nrmods==0:
+            print "no need to commit, no mods"
+            continue
+
     if opts.action in ['commit','push','update']:
-        if opts.message==None:
+
+        if opts.message==None and nrmods>0:
             opts.message=j.console.askString("commit message")
 
         if opts.branch<>None:
@@ -95,31 +138,6 @@ for bitbucket,account,reponame,client,path in getRepos():
     if opts.action in ['commit','push','update']:
         print
 
-    if opts.action == "status":
-        print "\n\nSTATUS: account reponame branch added:modified:deleted needapush localrev remoterev"
-        print "==================================================================================="
-        filesmodified=client.hasModifiedFiles()
-
-        mods=client.getModifiedFiles()
-
-        lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
-        client.branchname
-        changesets=bitbucket.getChangeSets(reponame=reponame,limit=1)
-        remotelastrevision=changesets["changesets"][0]["revision"]
-        rid=changesets["changesets"][0]["raw_node"] #remoteid
-
-        if lid==rid:
-            isPushNeeded="N"
-        else:
-            isPushNeeded="Y"
-
-        if len(mods["added"])+len(mods["nottracked"])+len(mods["modified"])+len(mods["missing"])+len(mods["removed"])>0:
-            isPushNeeded="Y"            
-
-        print "%-12s %-15s %-10s a%-3s:m%-3s:d%-3s pushneed:%-1s  lrev:%-5s rrev:%-5s" %(account,reponame,client.branchname,\
-            len(mods["added"])+len(mods["nottracked"]),len(mods["modified"]),len(mods["missing"])+len(mods["removed"]),\
-            isPushNeeded,\
-            lrev,remotelastrevision)
 
 
 
