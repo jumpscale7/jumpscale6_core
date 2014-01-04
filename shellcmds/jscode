@@ -17,6 +17,8 @@ parser.add_argument('-r','--repos',help='comma separated list of repos, will loo
 
 parser.add_argument('-u','--update',required=False, action='store_true',help='update merge before doing push or commit')
 
+parser.add_argument('-f','--force',required=False, action='store_true',help='auto answer yes on every question')
+
 
 # parser.add_argument('-m','--message',required=False, action='store_true',help='commit message')
 
@@ -76,7 +78,7 @@ for account,reponame,client,path in getRepos():
         client.pull()
         print "UPDATE ",
         client.updatemerge(commitMessage=opts.message, ignorechanges=False,
-            addRemoveUntrackedFiles=True, trymerge=True, pull=False)        
+            addRemoveUntrackedFiles=True, trymerge=True, pull=False,force=opts.force)        
     
     if opts.action =='commit' or opts.action =='push':
         print "COMMIT ",

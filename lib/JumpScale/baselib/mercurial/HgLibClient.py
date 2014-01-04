@@ -240,7 +240,7 @@ syntax: regexp
             return False            
             
     def updatemerge(self, commitMessage="", ignorechanges=False,
-            addRemoveUntrackedFiles=False, trymerge=True, pull=True, user=None):
+            addRemoveUntrackedFiles=False, trymerge=True, pull=True, user=None,force=False):
         if ignorechanges:
             raise NotImplemented("Need to verify this code path, not implemented for now")
         self._log("updatemerge %s" % (self.basedir))
@@ -272,7 +272,7 @@ syntax: regexp
 
                 if result["missing"]:
                     j.console.echo("\n".join(["Missing: %s" % item for item in result["missing"]]))
-                    if not j.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?"):
+                    if force==False and not j.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?"):
                         self._raise("Cannot update repo because files are deleted on filesystem which should not have.")
                     else:
                         self.addremove(message="add remove missing files for %s" % commitMessage) #@todo P1 check if this is ok?
@@ -282,7 +282,10 @@ syntax: regexp
                 if len(result["nottracked"])>0 or len(result["ignored"])>0:
                     j.console.echo("\n".join(["Nottracked/Ignored: %s" % item for item in result["nottracked"] + result["ignored"]]))
                     j.console.echo("\n\Above files are not added yet to repo but on filesystem")
-                    action = j.gui.dialog.askChoice("What do you want to do with these files" , ["RemoveTheseFiles", "AddRemove", "Abort"])
+                    if force==False:
+                        action = j.gui.dialog.askChoice("What do you want to do with these files" , ["RemoveTheseFiles", "AddRemove", "Abort"])
+                    else:
+                        action = "AddRemove"
                     if action == "RemoveTheseFiles":
                         for path in result["nottracked"] + result["ignored"]:
                             if j.system.fs.exists(j.system.fs.joinPaths(self.basedir,path)):
@@ -312,7 +315,7 @@ syntax: regexp
                 j.console.echo("\n".join(["Added:    %s" % item for item in result["added"]]))
                 j.console.echo("\n".join(["Removed:  %s" % item for item in result["removed"]]))
                 j.console.echo("\n".join(["Modified: %s" % item for item in result["modified"]]))                    
-                if j.gui.dialog.askYesNo("\nDo you want to commit the files?"):
+                if force or j.gui.dialog.askYesNo("\nDo you want to commit the files?"):
                     commitMessage=self.commit(commitMessage, user=user)
                 elif j.gui.dialog.askYesNo("\nDo you want to ignore the changed files? The changes will be lost"):
                     self.update(force=True) #@todo P1 not implemented
