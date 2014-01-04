@@ -61,7 +61,7 @@ for account,reponame,client,path in getRepos():
 
     if opts.action =='commit' or opts.action =='push':
         if opts.branch<>None:
-            cmd="cd %s;hg branch %s"%opts.branch
+            cmd="cd %s;hg branch %s"%(path,opts.branch)
             print "branch:%s"%opts.branch
     
     if opts.action =='commit':
