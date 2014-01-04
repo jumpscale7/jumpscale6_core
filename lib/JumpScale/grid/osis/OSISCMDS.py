@@ -1,5 +1,6 @@
 from JumpScale import j
 import JumpScale.baselib.elasticsearch
+import ujson
 
 class OSISCMDS(object):
 
@@ -9,6 +10,25 @@ class OSISCMDS(object):
         self.db = None  # default db
         self.elasticsearch = None  # default elastic search connection
         self.path="/opt/jumpscale/apps/osis/logic"
+
+    def authenticate(self, namespace, categoryname, name,passwd, session=None):
+        """
+        authenticates a user and returns the groups in which the user is
+        """
+        if namespace<>"system" and categoryname<>"user":
+            raise RuntimeError("Cannot process, only supported for system/user namespace")
+        oi = self._getOsisInstanceForCat("system", "user")
+
+        key="%s_%s"%(j.application.whoAmI.gid,name)
+        if not oi.exists(key):
+            return {"authenticated":False,"exists":False,"groups":[]}
+
+        user=ujson.loads(oi.get(key))
+
+        if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:
+            return {"authenticated":True,"exists":True,"groups":user["groups"]}
+
+        return {"authenticated":False,"exists":True,"groups":[]}
 
     def get(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
@@ -42,7 +62,8 @@ class OSISCMDS(object):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"search",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))        
+                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
+              
         result = oi.find(query, start, size)
         return result
 

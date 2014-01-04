@@ -186,11 +186,14 @@ class DaemonClient(object):
             msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
-            print "*** error in client to zdaemon ***"
-            print eco            
-            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=die)
+            # print "*** error in client to zdaemon ***"
+            if eco.errormessage.find("Authentication error")<>-1:
+                eco.errormessage="Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user)
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
             # raise RuntimeError(str(eco))
-            result=eco
+            #result=eco
+            if die:
+                j.application.stop()
 
         returnformat = parts[1]
         if returnformat <> "":

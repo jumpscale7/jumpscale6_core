@@ -12,7 +12,8 @@ class OSISClientForCat():
         self.objectclass=None
 
     def _checkCat(self):
-        if self.cat not in self.client.listNamespaceCategories(self.namespace):
+        return  #@todo note sure I can do this?
+        if self.cat not in self.client.listNamespaceCategories(self.namespace):            
             self.client.createNamespaceCategory(self.namespace, self.cat)
 
     def _getModelClass(self):
@@ -36,6 +37,14 @@ class OSISClientForCat():
             self.objectclass=resultclass
 
         return self.objectclass
+
+
+    def authenticate(self, name,passwd,**args):
+        """
+        authenticates a user and returns the groups in which the user is
+        """
+        self._checkCat()
+        return  self.client.authenticate(namespace=self.namespace, categoryname=self.cat,name=name,passwd=passwd,**args)     
 
     def new(self,**args):
         self._checkCat()
