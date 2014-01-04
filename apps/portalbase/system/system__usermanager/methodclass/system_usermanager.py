@@ -23,6 +23,7 @@ class system_usermanager(j.code.classGetBase()):
         result str 
         
         """
+        raise NotImplementedError("not implemented method authenticate")
         user = self._userGet(name, usecache=False)
 
         if user == None:
@@ -41,6 +42,7 @@ class system_usermanager(j.code.classGetBase()):
         result list(str) 
         
         """
+        raise NotImplementedError("not implemented method getusergroups")
         usermanager = j.apps.system.usermanager
         user = self._userGet(user)
 

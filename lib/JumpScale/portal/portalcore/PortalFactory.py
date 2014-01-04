@@ -10,75 +10,6 @@ class Group():
     pass
 
 
-# class GridMap():
-
-#     def __init__(self):
-#         self.data = {}  # key is "%s_%s_%s" % (appName, actorName,instance), value=[[ipaddr],port,secret]
-
-#     def _getKey(self, appName, actorName, instance):
-#         key = "%s_%s_%s" % (appName.lower().strip(), actorName.lower().strip(), instance)
-#         return key
-
-#     def set(self, appName, actorName, instance, ipaddr=None, port=None, secret=None):
-#         """
-#         @param ipaddr=list of ip addr []
-#         """
-#         key = self._getKey(appName, actorName, instance)
-#         self.data[key] = [ipaddr, port, secret]
-#         if not j.core.portal.runningPortal.ismaster:
-#             raise RuntimeError("Can only be used local to master appserver")
-
-#     def get(self, appName, actorName, instance):
-#         key = self._getKey(appName, actorName, instance)
-#         if self.exists(appName, actorName, instance):
-#             return self.data[key]
-#         else:
-#             raise RuntimeError("Cannot find app:%s, actor:%s, instance:%s in gridmap" % (appName, actorName, instance))
-
-#     def exists(self, appName, actorName, instance):
-#         key = self._getKey(appName, actorName, instance)
-#         return key in self.data
-
-
-# class GridMapLocal():
-
-#     def __init__(self):
-#         raise RuntimeError("gridmap not impl")
-#         self.data = {}  # key is "%s_%s_%s" % (appName, actorName,instance), value=[[ipaddr],port,secret]
-#         self.datalist = []
-
-#     def _getKey(self, appName, actorName, instance):
-#         key = "%s_%s_%s" % (appName.lower().strip(), actorName.lower().strip(), instance)
-#         return key
-
-#     def set(self, appName, actorName, instance):
-#         """
-#         @param ipaddr=list of ip addr []
-#         """
-#         key = self._getKey(appName, actorName, instance)
-#         if j.core.portal.runningPortal == None:
-#             raise RuntimeError("can only set to gridmap when appserver is known & operational")
-#         ipaddr = j.core.portal.runningPortal.ipaddr
-#         if ipaddr == "localhost":
-#             ipaddr = "127.0.0.1"
-#         port = j.core.portal.runningPortal.port
-#         secret = j.core.portal.runningPortal.secret
-#         if key not in self.data:
-#             self.data[key] = [ipaddr, port, secret]
-#             self.datalist.append([appName, actorName, instance, ipaddr, port, secret])
-
-#     def get(self, appName, actorName, instance):
-#         key = self._getKey(appName, actorName, instance)
-#         if self.exists(appName, actorName, instance):
-#             return self.data[key]
-#         else:
-#             raise RuntimeError("Cannot find app:%s, actor:%s, instance:%s in gridmap" % (appName, actorName, instance))
-
-#     def exists(self, appName, actorName, instance):
-#         key = self._getKey(appName, actorName, instance)
-#         return key in self.data
-
-
 class PortalClientFactory():
 
     def __init__(self):
@@ -110,20 +41,7 @@ class PortalClientFactory():
         #     except Exception,e:
         #         print "*ERROR*: Could not load actor %s %s" % (appname,actorname)
 
-    # def updateGridmap(self):
-        #"""
-        # this only works when we are not in appserver
-        # will make sure all actor clients are recreated #now brute force, can do more intelligent @todo
-        #"""
-        # if j.core.portal.runningPortal==None:
-            # if self.inprocess:
-                # j.core.portal.gridmap.data=GridMap()
-            # else:
-                # result=self.masterClient.wsclient.callWebService("system","manage","getgridmap")
-                # gridmap=result[1]["result"]
-                # j.core.portal.gridmap.data=gridmap
-            # self._appserverclients={}
-            # self._actorClients={}
+
     def getPortalClient(self, ip="localhost", port=9900, secret=None):
         """
         return client to manipulate & access a running application server (out of process)
@@ -134,13 +52,13 @@ class PortalClientFactory():
 
         if ip == "localhost":
             ip = "127.0.0.1"
-        key = "%s_%s" % (ip, port)
+        key = "%s_%s_%s" % (ip, port,secret)
         if key in self._appserverclients:
             return self._appserverclients[key]
         else:
             cl = PortalClient(ip, port, secret)
             self._appserverclients[key] = cl
-            cl._loadSpaces()
+            # cl._loadSpaces()
             return cl
 
     # def getActor(self,appName,actorName,instance=0,authKey=""):
@@ -180,12 +98,12 @@ class PortalClientFactory():
     #         self.actors[key] = actor
     #     return actor
 
-    def usePortalExceptionHandler(self):
-        self._init()
-        j.core.portal.exceptionHandler = PortalExceptionHandler(
-            haltOnError=True)
-        return j.core.portal.exceptionHandler
+    # def usePortalExceptionHandler(self):
+    #     self._init()
+    #     j.core.portal.exceptionHandler = PortalExceptionHandler(
+    #         haltOnError=True)
+    #     return j.core.portal.exceptionHandler
 
-    def getConfigTemplatesPath(self):
-        dirname = j.system.fs.getDirName(__file__)
-        return j.system.fs.joinPaths(dirname, 'configtemplates')
+    # def getConfigTemplatesPath(self):
+    #     dirname = j.system.fs.getDirName(__file__)
+    #     return j.system.fs.joinPaths(dirname, 'configtemplates')

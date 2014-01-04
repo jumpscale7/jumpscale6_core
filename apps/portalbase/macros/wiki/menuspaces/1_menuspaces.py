@@ -14,7 +14,7 @@ System:/system
 """
     C="" #@todo fix
 
-    if j.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(params.requestContext):
+    if j.core.webserver.isAdminFromCTX(params.requestContext):
         params.result = C
 
     params.result = (params.result, doc)

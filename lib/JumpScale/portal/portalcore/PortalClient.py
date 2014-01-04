@@ -49,15 +49,16 @@ class PortalClient():
     client to appserver 6 running out of process
     """
 
-    def __init__(self, ip, port, secret):
+    def __init__(self, ip, port, login,passwd):
         """
         connect to Portal6
         """
         
-        self.wsclient = j.web.geventws.getClient(ip, port, secret)
+        self.wsclient = j.web.geventws.getClient(ip, port, login=login,passwd=passwd)
         self.ip = ip
         self.port = port
-        self.secret = secret
+        self.login = login
+        self.passwd=passwd
 
         apsp = PortalProcess()
         j.core.portal.runningPortal = apsp
@@ -67,14 +68,14 @@ class PortalClient():
             j.apps = GroupAppsClass(self)
         self.actors = j.apps
 
-    def _loadSpaces(self):
-        spaces = dict()
-        for actor in j.apps.system.contentmanager.getActors():
-            space, actor = actor.split('__')
-            spaceactors = spaces.setdefault(space, list())
-            spaceactors.append(actor)
-        for space, actors in spaces.iteritems():
-            setattr(j.apps, space, AppClass(self, space, actors))
+    # def _loadSpaces(self):
+    #     spaces = dict()
+    #     for actor in j.apps.system.contentmanager.getActors():
+    #         space, actor = actor.split('__')
+    #         spaceactors = spaces.setdefault(space, list())
+    #         spaceactors.append(actor)
+    #     for space, actors in spaces.iteritems():
+    #         setattr(j.apps, space, AppClass(self, space, actors))
 
 
     def getActor(self, appname, actorname, instance=0, redis=False, refresh=False):

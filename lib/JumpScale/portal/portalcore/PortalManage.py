@@ -22,9 +22,9 @@ class PortalManage():
         self._initPortal()
         j.core.portal.runningPortal.start(reset=reset)
 
-    def _initPortal(self, processNr=1):
+    def _initPortal(self):
 
-        ini = j.tools.inifile.open(os.path.abspath("cfg/appserver.cfg"))
+        ini = j.tools.inifile.open(os.path.abspath("cfg/portal.cfg"))
         appdir = ini.getValue("main", "appdir")
 
         cfgdir = j.system.fs.joinPaths(j.system.fs.getcwd(), "cfg")
@@ -36,23 +36,23 @@ class PortalManage():
         #self.masterSecret=self.gridInifile.getValue("master", "secret")
         #self.masterPort=self.gridInifile.getValue("master", "port")
 
-        try:
-            ips = j.system.net.getIpAddresses()
-        except:
-            print "WARNING, COULD NOT FIND LOCAL IP ADDRESSES, use value from appserver config file"  # @todo implement on windows
-            ips = list()
+        # try:
+        #     ips = j.system.net.getIpAddresses()
+        # except:
+        #     print "WARNING, COULD NOT FIND LOCAL IP ADDRESSES, use value from appserver config file"  # @todo implement on windows
+        #     ips = list()
 
-        ips = [item for item in ips if item != "127.0.0.1"]
-        if len(ips) == 1:
-            ini.setParam('main', "ipaddr", ips[0])
-            ip = ips[0]
-        elif len(ips) == 0:
-            ip = ini.getValue("main", "ipaddr")
-        else:
-            pass
-            # ip = ",".join(ips)
-            # ini.setParam('main', "ipaddr", ip)
+        # ips = [item for item in ips if item != "127.0.0.1"]
+        # if len(ips) == 1:
+        #     ini.setParam('main', "ipaddr", ips[0])
+        #     ip = ips[0]
+        # elif len(ips) == 0:
+        #     ip = ini.getValue("main", "ipaddr")
+        # else:
+        #     pass
+        #     # ip = ",".join(ips)
+        #     # ini.setParam('main', "ipaddr", ip)
 
-        PortalProcess(processNr=processNr, cfgdir=cfgdir, startdir=curdir)
+        PortalProcess( cfgdir=cfgdir, startdir=curdir)
 
 

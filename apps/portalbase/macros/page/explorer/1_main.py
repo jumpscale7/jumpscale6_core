@@ -41,9 +41,6 @@ def main(j, args, params, tags, tasklet):
     else:
         readonly = False
 
-    if j.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(args.requestContext):
-        readonly = False
-
     if args.tags.tagExists("tree") or args.tags.labelExists("tree"):
         tree = True
     else:

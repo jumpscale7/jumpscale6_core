@@ -13,7 +13,7 @@ def main(j, args, params, tags, tasklet):
     querystr = querystr.replace("&authkey=", "")
     querystr = querystr.replace("authkey=,", "")
     querystr = querystr.replace("authkey=", "")
-    querystr += "authkey=%s" % j.apps.system.usermanager.extensions.usermanager.getUserFromCTX(args.requestContext).secret
+    querystr += "authkey=???" #@todo fill in use authenticator
 
     if "machine" in args:
         url = "http://" + addr +\

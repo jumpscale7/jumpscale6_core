@@ -7,7 +7,7 @@ class system_docgenerator(j.code.classGetBase()):
         self._te = {}
         self.actorname = "docgenerator"
         self.appname = "system"
-        self.host = j.core.portal.runningPortal.dns
+
 
     def getDocForActor(self, actorname, **args):
         apppart, actorpart = actorname.split('__')

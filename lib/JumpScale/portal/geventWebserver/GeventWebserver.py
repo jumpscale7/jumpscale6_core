@@ -2,16 +2,18 @@ import re
 import urlparse
 import pprint
 import os
-
+import redis
 
 from beaker.middleware import SessionMiddleware
+from MacroExecutor import MacroExecutorPage, MacroExecutorWiki, MacroExecutorPreprocess
+from GeventWebserverAuthenticatorOSIS import GeventWebserverAuthenticatorOSIS
+
 
 from JumpScale import j
 from gevent.pywsgi import WSGIServer
 import gevent
 import time
 
-from MacroExecutor import MacroExecutorPage, MacroExecutorWiki, MacroExecutorPreprocess
 import mimeparse
 import mimetypes
 import JumpScale.grid.agentcontroller
@@ -24,112 +26,6 @@ CONTENT_TYPE_YAML = 'application/yaml'
 CONTENT_TYPE_PLAIN = 'text/plain'
 CONTENT_TYPE_HTML = 'text/html'
 CONTENT_TYPE_PNG = 'image/png'
-
-
-class GeventWebserverFactory:
-
-    def get(self, port, secret, wwwroot="", filesroot="", cfgdir=""):
-        return GeventWebserver(port, secret, wwwroot=wwwroot, filesroot=filesroot, cfgdir=cfgdir)
-
-    def getClient(self, ip, port, secret):
-        return GeventWSClient(ip, port, secret)
-
-    def getMacroExecutors(self):
-        return (MacroExecutorPreprocess, MacroExecutorPage, MacroExecutorWiki)
-
-
-class GeventWSClient():
-
-    def __init__(self, ip, port, secret=None):
-        self.ip = ip
-        self.port = port
-        self.secret = secret
-        import JumpScale.baselib.http_client
-        self.httpconnection = j.clients.http.getConnection()
-
-    def html2text(self, data):
-        # get only the body content
-        bodyPat = re.compile(r'< body[^<>]*?>(.*?)< / body >', re.I)
-        result = re.findall(bodyPat, data)
-        if len(result) > 0:
-            data = result[0]
-
-        # now remove the java script
-        p = re.compile(r'< script[^<>]*?>.*?< / script >')
-        data = p.sub('', data)
-
-        # remove the css styles
-        p = re.compile(r'< style[^<>]*?>.*?< / style >')
-        data = p.sub('', data)
-
-        # remove html comments
-        p = re.compile(r'')
-        data = p.sub('', data)
-
-        # remove all the tags
-        p = re.compile(r'<[^<]*?>')
-        data = p.sub('', data)
-
-        data = data.replace("&nbsp;", " ")
-        data = data.replace("\n\n", "\n")
-
-        return data
-
-    def ping(self, nrping=1):
-        url = "http://%s:%s/ping/" % (self.ip, self.port)
-        for nr in range(nrping):
-            result = self.httpconnection.get(url)
-            result = result.read()
-            if result != "ping":
-                raise RuntimeError("ping error to %s %s" % (self.ip, self.port))
-
-    def callWebService(self, appname, actorname, method, **params):
-        """
-        ip,port & secret are params of webservice to call
-        @params the extra params is what will be passed to the webservice as arguments
-            e.g. name="kds",color="red"
-        @return 0, result #if ok
-        @return 1, result #if error
-        @return 3, result #if asyncresult
-        """
-
-        url = "http://%s:%s/restmachine/%s/%s/%s?authkey=%s" % (self.ip, self.port, appname, actorname, method, self.secret)
-        j.logger.log("Calling URL %s" % url, 8)
-        if "params" in params:
-            for key in params["params"]:
-                params[key] = params["params"][key]
-            params.pop("params")
-        #params["caller"] = j.core.grid.config.whoami
-
-        data = j.db.serializers.getSerializerType('j').dumps(params)
-
-        headers = {'content-type': 'application/json'}
-
-        result = self.httpconnection.post(url, headers=headers, data=data)
-
-        contentType = result.headers['Content-Type']
-        content = result.read()
-
-        # j.logger.log("Received result %s" % content, 8)
-
-        if contentType == CONTENT_TYPE_JSON:
-            decodedResult = j.db.serializers.getSerializerType('j').loads(content)
-        else:
-            raise ValueError("Cannot handle content type %s" % contentType)
-
-        if isinstance(decodedResult, basestring):
-            if decodedResult.find("ERROR: PLEASE SPECIFY PARAM") != -1:
-                raise RuntimeError(self.html2text(decodedResult))
-            elif decodedResult.startswith("ASYNC::"):
-                r = int(decodedResult.split("::", 1)[1])
-                return 3, r
-            elif decodedResult.startswith("ERRORJSON::"):
-                r = decodedResult.split("\n", 1)[1]  # remove first line
-                return 1, j.db.serializers.getSerializerType('j').loads(r)
-            elif decodedResult.startswith("ERROR::"):
-                raise RuntimeError("ERROR SHOULD HAVE BEEN IN JSON FORMAT.\n%s" % self.html2text(decodedResult))
-
-        return 0, decodedResult
 
 
 class RequestContext(object):
@@ -169,38 +65,38 @@ class RequestContext(object):
 
 class GeventWebserver:
 
-    def __init__(self, port, secret, wwwroot="", filesroot="", cfgdir=""):
+    def __init__(self, port, wwwroot="", filesroot="", cfgdir="",secret=None,admingroups=[]):
         self.port = int(port)
-        self.secret = secret
         self.app_actor_dict = {}
         self.epoch = 0
         self.contentdirs = {}
         self.cfgdir = cfgdir
         self.libpath = j.html.getHtmllibDir()
         self.logdir = j.system.fs.joinPaths(j.dirs.varDir, "qwiki", "logs")
+        self.admingroups=admingroups
         j.system.fs.createDir(self.logdir)
         # j.errorconditionhandler.setExceptHook()
-        self.userKeyToName = {}
-        self.bitbucketUsers={}
 
         session_opts = {
             'session.cookie_expires': False,
             'session.type': 'file',
             'session.data_dir': '%s' % j.system.fs.joinPaths(j.dirs.varDir, "beakercache")
         }
-        cfg = j.system.fs.joinPaths(self.cfgdir, 'appserver.cfg')
-        ini = j.tools.inifile.open(cfg)
-        listenip = '0.0.0.0'
-        if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
-            listenip = ini.getValue('main', 'listenip')
+        # cfg = j.system.fs.joinPaths(self.cfgdir, 'portal.cfg')
+        # ini = j.tools.inifile.open(cfg)
+        # listenip = '0.0.0.0'
+        # if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
+        #     listenip = ini.getValue('main', 'listenip')
         self.router = SessionMiddleware(self.router, session_opts)
-        self.webserver = WSGIServer((listenip, self.port), self.router)
+        self.webserver = WSGIServer(('0.0.0.0', self.port), self.router)
 
-        wwwroot = wwwroot.replace("\\", "/")
-        while len(wwwroot) > 0 and wwwroot[-1] == "/":
-            wwwroot = wwwroot[:-1]
+        self.secret=secret
 
-        self.wwwroot = wwwroot
+        # wwwroot = wwwroot.replace("\\", "/")
+        # while len(wwwroot) > 0 and wwwroot[-1] == "/":
+        #     wwwroot = wwwroot[:-1]
+
+        # self.wwwroot = wwwroot
         self.filesroot = filesroot
         self.confluence2htmlconvertor = j.tools.docgenerator.getConfluence2htmlConvertor()
         self.activejobs = list()
@@ -211,6 +107,16 @@ class GeventWebserver:
         self.schedule60min = {}
 
         self._init()
+
+        j.core.webserver=self
+
+        self.rediscache=redis.StrictRedis(host='localhost', port=7767, db=0)
+        self.redisprod=redis.StrictRedis(host='localhost', port=7768, db=0)
+
+        if j.application.config.get("portal.auth.source.type").lower()=="osis":
+            self.auth=GeventWebserverAuthenticatorOSIS()
+        else:
+            self.auth=GeventWebserverAuthenticatorFake()
 
     def _init(self):
 
@@ -228,14 +134,17 @@ class GeventWebserver:
         self.macroexecutorPage = MacroExecutorPage(macroPathsPage)
         self.macroexecutorWiki = MacroExecutorWiki(macroPathsWiki)
 
-        self.initGeoIP()
+        self.filesroot =  j.system.fs.joinPaths(j.dirs.varDir,"portal","files")
+        j.system.fs.createDir(self.filesroot)
 
-    def initGeoIP(self):
-        try:
-            import GeoIP
-            self.geoIP = GeoIP.open("/opt/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
-        except:
-            self.geoIP = None
+    #     self.initGeoIP()
+
+    # def initGeoIP(self):
+    #     try:
+    #         import GeoIP
+    #         self.geoIP = GeoIP.open("/opt/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
+    #     except:
+    #         self.geoIP = None
 
     def getpage(self):
         page = j.tools.docgenerator.pageNewHTML("index.html", htmllibPath="/lib")
@@ -259,9 +168,11 @@ class GeventWebserver:
         if username == "":
             right = ""
         else:
-            groupsusers = j.apps.system.usermanager.getusergroups(username)
-            if username not in groupsusers:
-                groupsusers.append(username)  #user has always a group which is himself
+            
+            if username=="guest":
+                groupsusers=["guest","guests"]
+            else:
+                groupsusers=self.auth.getGroups(username)
 
             right = ""
             if "admin" in groupsusers:
@@ -274,15 +185,14 @@ class GeventWebserver:
                         right = spaceobject.model.acl[groupuser]
                         break
 
-            if right == "":
-                #check bitbucket
-                for key,acl in spaceobject.model.acl.iteritems():
-                    if key.find("bitbucket")==0:
-                        from IPython import embed
-                        print "DEBUG NOW ooooooo"
-                        embed()
+            # if right == "":
+            #     #check bitbucket
+            #     for key,acl in spaceobject.model.acl.iteritems():
+            #         if key.find("bitbucket")==0:
+            #             from IPython import embed
+            #             print "DEBUG NOW ooooooo"
+            #             embed()
                         
-
         if right == "*":
             right = "rwa"
         # print "right:%s" % right
@@ -399,13 +309,28 @@ class GeventWebserver:
             pathSpace = j.system.fs.joinPaths(self.logdir, "space_%s.log" % space)
             j.system.fs.writeFile(pathSpace, msg, True)
 
+    def getUserFromCTX(self,ctx):
+        return str(ctx.env["beaker.session"]["user"])
+
+    def getGroupsFromCTX(self,ctx):
+        groups=self.auth.getGroups(ctx.env["beaker.session"]["user"])
+        return [str(item.lower()) for item in groups]
+
+    def isAdminFromCTX(self,ctx):
+        groups=self.getGroupsFromCTX(ctx)
+        for gr in groups:
+            if gr in self.admingroups:
+                return True
+        return False        
+
     def startSession(self, ctx, path):
         session = ctx.env['beaker.session']
         if "authkey" in ctx.params:
             # user is authenticated by a special key
             key = ctx.params["authkey"]
-            if key in self.userKeyToName:
-                username = self.userKeyToName[key]
+
+            if self.auth.existsKey(key):
+                username = self.auth.getUserFromKey(key)
                 session['user'] = username
                 session.save()
             elif key == self.secret:
@@ -429,7 +354,7 @@ class GeventWebserver:
             # user has filled in his login details, this is response on posted info
             name = ctx.params['user_login_']
             secret = ctx.params['passwd']
-            if j.apps.system.usermanager.authenticate(name, secret):
+            if self.auth.authenticate(name, secret):
                 session['user'] = name
                 if "querystr" in session:
                     ctx.env['QUERY_STRING'] = session['querystr']
@@ -593,6 +518,7 @@ class GeventWebserver:
         options = {'root': rootpath}
         con = elFinder.connector(options)
         params = ctx.params.copy()
+
         if 'rawdata' in params:
             from JumpScale.portal.html import multipart
             from cStringIO import StringIO

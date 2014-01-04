@@ -19,7 +19,7 @@ class PortalProcess():
     """
     """
 
-    def __init__(self, processNr=1, mainLoop=None, inprocess=False, cfgdir="", startdir=""):
+    def __init__(self, mainLoop=None, inprocess=False, cfgdir="", startdir=""):
 
         self.started = False
         # self.logs=[]
@@ -54,7 +54,7 @@ class PortalProcess():
                 j.system.fs.copyDirTree(pathcfgold, newpath)
             self.cfgdir = newpath
 
-        ini = j.tools.inifile.open(self.cfgdir + "/appserver.cfg")
+        ini = j.tools.inifile.open(self.cfgdir + "/portal.cfg")
 
         if ini.checkParam("main", "appdir"):
             self.appdir = self._replaceVar(ini.getValue("main", "appdir"))
@@ -82,34 +82,21 @@ class PortalProcess():
         elif dbtype == "arakoon":
             self.dbtype = j.enumerators.KeyValueStoreType.ARAKOON
         else:
-            raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon")
+            raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon, used here'%s'"%dbtype)
 
         # self.systemdb=j.db.keyvaluestore.getFileSystemStore("appserversystem",baseDir=self._replaceVar(ini.getValue("systemdb","dbdpath")))
 
-        self.processNr = processNr
 
-        skey = "process_%s" % self.processNr
-        if not ini.checkSection(skey):
-            raise RuntimeError("Could not find process_%s section in config file for appserver" % processNr)
+        self.wsport = int(ini.getValue("main", "webserverport"))
 
-        self.ipaddr = ini.getValue("main", "ipaddr")
+        secret = ini.getValue("main", "secret")
+        admingroups = ini.getValue("main", "admingroups").split(",")
 
-        if ini.checkParam('main', 'dns'):
-            self.dns = ini.getValue('main', 'dns')
-        else:
-            self.dns = self.ipaddr.split(',')[0]
+        # self.filesroot = self._replaceVar(ini.getValue("main", "filesroot"))
 
-        self.secret = ini.getValue(skey, "secret").strip()
-
-        self.wsport = int(ini.getValue(skey, "webserverport"))
-
-        self.filesroot = self._replaceVar(ini.getValue("main", "filesroot"))
-
-        self.filesroot = self._replaceVar(ini.getValue("main", "filesroot"))
 
         if self.wsport > 0 and inprocess == False:
-            self.webserver = j.web.geventws.get(self.wsport, self.secret, wwwroot=ini.getValue("main", "wwwroot"),
-                                                filesroot=self.filesroot, cfgdir=cfgdir)
+            self.webserver = j.web.geventws.get(self.wsport, cfgdir=cfgdir,secret=secret,admingroups=admingroups)
         else:
             self.webserver = None
 
@@ -119,11 +106,11 @@ class PortalProcess():
 
         self.tcpserver = None
         self.tcpservercmds = {}
-        tcpserverport = int(ini.getValue(skey, "tcpserverport", default=0))
+        tcpserverport = int(ini.getValue("main", "tcpserverport", default=0))
         if tcpserverport > 0 and inprocess == False:
             self.tcpserver = StreamServer(('0.0.0.0', tcpserverport), self.socketaccept)
 
-        manholeport = int(ini.getValue(skey, "manholeport", default=0))
+        manholeport = int(ini.getValue("main", "manholeport", default=0))
         self.manholeserver = None
         if manholeport > 0 and inprocess == False:
             self.manholeserver = StreamServer(('0.0.0.0', manholeport), self.socketaccept_manhole)
@@ -164,21 +151,7 @@ class PortalProcess():
         self.mainLoop = mainLoop
         j.core.portal.runningPortal = self
 
-        self.ismaster = int(ini.getValue(skey, "ismaster")) == 1
-
         self.cfg = ini
-
-        self.redisServersLocal = {}
-        if ini.checkSection('redis') and int(ini.getValue("redis", "local")) == 1:
-            rediscfg = ini.getValue("redis", "actors")
-            self.rediscfg = rediscfg.split(",")
-            self.rediscfg = [item.strip() for item in self.rediscfg]
-
-            # check redis installed
-            if not j.system.platformtype.isWindows():
-                j.system.platform.ubuntu.checkInstall(["python-redis", "redis-server"], "redis-server")  #@todo P1 put in jpackage
-        else:
-            self.rediscfg = None
 
         # toload=[]
         self.bootstrap()
@@ -214,9 +187,9 @@ class PortalProcess():
         self.actorsloader._generateLoadActor("system", "usermanager", actorpath="system/system__usermanager/")
         self.actorsloader.scan("system")
         self.actorsloader.getActor("system", "usermanager")
-        self.actorsloader.getActor("system", "errorconditionhandler")
+        # self.actorsloader.getActor("system", "errorconditionhandler")
 
-        self.actorsloader._getSystemLoaderForUsersGroups()
+        # self.actorsloader._getSystemLoaderForUsersGroups()
 
     def loadFromConfig(self, reset=False):
         if reset:
@@ -228,192 +201,79 @@ class PortalProcess():
         self.webserver.loadFromConfig4loader(loader, reset)
 
     def _replaceVar(self, txt):
-        txt = txt.replace("$qbase", j.dirs.baseDir).replace("\\", "/")
+        # txt = txt.replace("$base", j.dirs.baseDir).replace("\\", "/")
         txt = txt.replace("$appdir", j.system.fs.getcwd()).replace("\\", "/")
         txt = txt.replace("$vardir", j.dirs.varDir).replace("\\", "/")
         txt = txt.replace("$htmllibdir", j.html.getHtmllibDir()).replace("\\", "/")
         txt = txt.replace("\\", "/")
         return txt
 
-    def startNginxServer(self):
+    # def startNginxServer(self):
 
-        ini = j.tools.inifile.open("cfg/appserver.cfg")
-        local = int(ini.getValue("nginx", "local")) == 1
+    #     ini = j.tools.inifile.open("cfg/appserver.cfg")
+    #     local = int(ini.getValue("nginx", "local")) == 1
 
-        configtemplate = j.system.fs.fileGetContents(j.system.fs.joinPaths(j.core.portal.getConfigTemplatesPath(), "nginx", "appserver_template.conf"))
-        configtemplate = self._replaceVar(configtemplate)
+    #     configtemplate = j.system.fs.fileGetContents(j.system.fs.joinPaths(j.core.portal.getConfigTemplatesPath(), "nginx", "appserver_template.conf"))
+    #     configtemplate = self._replaceVar(configtemplate)
 
-        if local:
-            varnginx = j.system.fs.joinPaths(j.dirs.varDir, 'nginx')
-            j.system.fs.createDir(varnginx)
-            if j.system.platformtype.isWindows():
+    #     if local:
+    #         varnginx = j.system.fs.joinPaths(j.dirs.varDir, 'nginx')
+    #         j.system.fs.createDir(varnginx)
+    #         if j.system.platformtype.isWindows():
 
-                apppath = self._replaceVar(ini.getValue("nginx", "apppath")).replace("\\", "/")
+    #             apppath = self._replaceVar(ini.getValue("nginx", "apppath")).replace("\\", "/")
 
-                cfgpath = j.system.fs.joinPaths(apppath, "conf", "sites-enabled", "appserver.conf")
-                j.system.fs.writeFile(cfgpath, configtemplate)
+    #             cfgpath = j.system.fs.joinPaths(apppath, "conf", "sites-enabled", "appserver.conf")
+    #             j.system.fs.writeFile(cfgpath, configtemplate)
 
-                apppath2 = j.system.fs.joinPaths(apppath, "start.bat")
-                cmd = "%s %s" % (apppath2, apppath)
-                cmd = cmd.replace("\\", "/").replace("//", "/")
+    #             apppath2 = j.system.fs.joinPaths(apppath, "start.bat")
+    #             cmd = "%s %s" % (apppath2, apppath)
+    #             cmd = cmd.replace("\\", "/").replace("//", "/")
 
-                extpath = inspect.getfile(self.__init__)
-                extpath = j.system.fs.getDirName(extpath)
-                maincfg = j.system.fs.joinPaths(extpath, "configtemplates", "nginx", "nginx.conf")
-                configtemplate2 = j.system.fs.fileGetContents(maincfg)
-                configtemplate2 = self._replaceVar(configtemplate2)
-                j.system.fs.writeFile("%s/conf/nginx.conf" % apppath, configtemplate2)
+    #             extpath = inspect.getfile(self.__init__)
+    #             extpath = j.system.fs.getDirName(extpath)
+    #             maincfg = j.system.fs.joinPaths(extpath, "configtemplates", "nginx", "nginx.conf")
+    #             configtemplate2 = j.system.fs.fileGetContents(maincfg)
+    #             configtemplate2 = self._replaceVar(configtemplate2)
+    #             j.system.fs.writeFile("%s/conf/nginx.conf" % apppath, configtemplate2)
 
-                pid = j.system.windows.getPidOfProcess("nginx.exe")
-                if pid != None:
-                    j.system.process.kill(pid)
+    #             pid = j.system.windows.getPidOfProcess("nginx.exe")
+    #             if pid != None:
+    #                 j.system.process.kill(pid)
 
-                pid = j.system.windows.getPidOfProcess("php-cgi.exe")
-                if pid != None:
-                    j.system.process.kill(pid)
+    #             pid = j.system.windows.getPidOfProcess("php-cgi.exe")
+    #             if pid != None:
+    #                 j.system.process.kill(pid)
 
-                j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.varDir, "nginx"))
+    #             j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.varDir, "nginx"))
 
-                print "start nginx, cmd was %s" % (cmd)
-                j.system.process.executeAsync(cmd, outputToStdout=False)
+    #             print "start nginx, cmd was %s" % (cmd)
+    #             j.system.process.executeAsync(cmd, outputToStdout=False)
 
-            else:
-                j.system.platform.ubuntu.check()
+    #         else:
+    #             j.system.platform.ubuntu.check()
 
-                j.system.fs.remove("/etc/nginx/sites-enabled/default")
+    #             j.system.fs.remove("/etc/nginx/sites-enabled/default")
 
-                cfgpath = j.system.fs.joinPaths("/etc/nginx/sites-enabled", "appserver.conf")
-                j.system.fs.writeFile(cfgpath, configtemplate)
+    #             cfgpath = j.system.fs.joinPaths("/etc/nginx/sites-enabled", "appserver.conf")
+    #             j.system.fs.writeFile(cfgpath, configtemplate)
 
-                if not j.system.fs.exists("/etc/nginx/nginx.conf.backup"):
-                    j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.varDir, "nginx"))
-                    maincfg = j.system.fs.joinPaths(j.core.portal.getConfigTemplatesPath(), "nginx", "nginx.conf")
-                    configtemplate2 = j.system.fs.fileGetContents(maincfg)
-                    configtemplate2 = self._replaceVar(configtemplate2)
-                    j.system.fs.copyFile("/etc/nginx/nginx.conf", "/etc/nginx/nginx.conf.backup")
-                    j.system.fs.writeFile("/etc/nginx/nginx.conf", configtemplate2)
-                    j.system.process.execute("/etc/init.d/nginx restart")
+    #             if not j.system.fs.exists("/etc/nginx/nginx.conf.backup"):
+    #                 j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.varDir, "nginx"))
+    #                 maincfg = j.system.fs.joinPaths(j.core.portal.getConfigTemplatesPath(), "nginx", "nginx.conf")
+    #                 configtemplate2 = j.system.fs.fileGetContents(maincfg)
+    #                 configtemplate2 = self._replaceVar(configtemplate2)
+    #                 j.system.fs.copyFile("/etc/nginx/nginx.conf", "/etc/nginx/nginx.conf.backup")
+    #                 j.system.fs.writeFile("/etc/nginx/nginx.conf", configtemplate2)
+    #                 j.system.process.execute("/etc/init.d/nginx restart")
 
-                j.system.process.execute("/etc/init.d/nginx reload")
+    #             j.system.process.execute("/etc/init.d/nginx reload")
 
 
-        else:
-            pass
-            #raise RuntimeError("only supported in nginx mode")
+    #     else:
+    #         pass
+    #         #raise RuntimeError("only supported in nginx mode")
 
-    def startConnectRedisServer(self, appname, actorname, instance=0):
-        ini = self.cfg
-        allinone = ini.getIntValue("redis", "allinone") == 1
-
-        if not int(ini.getValue("redis", "local")) == 1:
-            return
-
-        launch = False
-        if actorname.find("_model_") != -1:
-            actorname = actorname.split("_model_")[0]
-        else:
-            actorname = actorname
-
-        port = None
-        key = "%s__%s" % (appname, actorname)
-        print key
-        if "*" in self.rediscfg:
-            launch = True
-        elif appname in self.rediscfg:
-            launch = True
-        elif key in self.rediscfg:
-            launch = True
-
-        ip = self.ipaddr
-        secret = self.secret
-        rediscfg = False
-        if allinone == False:
-            rediscfg = self.master.gridMapGetRedisClusterFromAppActorName(appname, actorname)
-            if rediscfg != False:
-                ip, port = rediscfg.hosts[0].split(":")
-                secret = rediscfg.secret
-                launch = False
-                if j.clients.redis.ping(ip, port, secret) == False:
-                    print "The redis instance %s %s was not started, try to start now" % (ip, port)
-                    launch = True
-
-        if allinone and len(self.redisServersLocal.keys()) > 0:
-            # means there is already 1 local redisserver
-            p = self.redisServersLocal.keys()[0]
-            return ip, self.redisServersLocal[p], 0, secret
-
-        sysdb = self.systemdb
-
-        lastport = port
-
-        if launch:
-            redisportrangeFrom = int(ini.getValue("redis", "portrangeFrom"))
-            redisportrangeTo = int(ini.getValue("redis", "portrangeTo"))
-
-            if j.system.platformtype.isWindows():
-                redisapppath = self._replaceVar(ini.getValue("redis", "apppath")).replace("\\", "/")
-                redisdbdpath = self._replaceVar(ini.getValue("redis", "dbdpath")).replace("\\", "/")
-            else:
-                redisapppath = ""
-                redisdbdpath = j.system.fs.joinPaths(j.dirs.varDir, "redis")
-
-            j.system.fs.createDir(redisdbdpath)
-
-            if not sysdb.exists("rediscfg", key):
-                lastport = redisportrangeFrom + sysdb.increment("rediscfg_lastport")
-                if lastport > redisportrangeTo:
-                    raise RuntimeError("not enough ports for redis, cannot start more, max amount of actors reached")
-                sysdb.set("rediscfg", key, lastport)
-            else:
-                lastport = sysdb.get("rediscfg", key)
-
-            templpath = j.system.fs.joinPaths(j.core.portal.getConfigTemplatesPath(), "redis", "redis_template.conf")
-            configtemplate = j.system.fs.fileGetContents(templpath)
-            configtemplate = configtemplate.replace("$port", str(lastport))
-            configtemplate = configtemplate.replace("$key", key)
-            configtemplate = configtemplate.replace("$dir", redisdbdpath)
-
-            cfgpath = j.system.fs.joinPaths(redisdbdpath, "redis_%s_%s.conf" % (appname, actorname))
-            j.system.fs.writeFile(cfgpath, configtemplate)
-
-            if j.system.platformtype.isWindows():
-                apppath2 = j.system.fs.joinPaths(redisapppath, "start.bat")
-                cmd = "%s %s %s" % (apppath2, redisapppath, cfgpath)
-                print "start redis for actor %s %s, cmd was %s" % (appname, actorname, cmd)
-                j.system.process.executeAsync(cmd, outputToStdout=False)
-            else:
-                j.system.process.executeAsync("redis-server", [cfgpath], False, False, False, False, False)
-
-            self.redisServersLocal[key] = lastport
-
-        if "*" in self.rediscfg:
-            self.redisServersLocal["*"] = lastport
-        elif appname in self.rediscfg:
-            self.redisServersLocal[appname] = lastport
-        port = lastport
-
-        # need to register in gridmap
-
-        if rediscfg == False:
-            rediscfg = self.gridmap.new_rediscluster()
-            rediscfg.hosts.append("%s:%s" % (ip, port))
-            rediscfg.secret = self.secret
-        else:
-            rediscfg.secret = self.secret
-            rediscfg.hosts = []
-            rediscfg.hosts.append("%s:%s" % (ip, port))
-
-        self.gridmap.actor2redis[key] = rediscfg.id
-
-        ai = self.gridmap.new_actorinstance("%s_%s_%s" % (appname, actorname, instance))
-        ai.actorname = actorname
-        ai.appname = appname
-        ai.instance = instance
-        ai.ismodel = False
-        ai.redisclusterid = rediscfg.id
-        self.master.gridMapSave()
-
-        return ip, port, 0, secret
 
     def activateActor(self, appname, actor):
         if not "%s_%s" % (appname, actor) in self.actors.keys():
@@ -526,26 +386,6 @@ class PortalProcess():
             self.ecserver.start()
         if self.signalserver_enable == True:
             self.signalserver.start()
-
-        if not self.ismaster:
-
-            from JumpScale.core.Shell import ipshell
-            print "DEBUG NOW start is not master"
-            ipshell()
-            self.masterClient = j.core.portal.getPortalClient("127.0.0.1", 9000, "1234")
-            # self.masterSystemActor=client.getActor("system","manager",instance=0)
-            # contact master & populate gridmap there
-            # self.masterClient
-            # j.core.portal.gridmaplocal.data
-
-        else:
-            # is master
-            ipaddr = self.ipaddr
-            if ipaddr == "localhost":
-                ipaddr = "127.0.0.1"
-            #@todo implement registration
-            # for app,actorname,instance,ipaddr,port,secret in j.core.portal.gridmaplocal.datalist:
-                # j.core.portal.gridmap.set(app,actorname,instance,ipaddr,port,secret)
 
         # self.redirectErrors()
 

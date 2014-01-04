@@ -1,4 +1,4 @@
 from JumpScale import j
-from .GeventWebserver import GeventWebserverFactory
+from .GeventWebserverFactory import GeventWebserverFactory
 j.base.loader.makeAvailable(j, 'web')
 j.web.geventws = GeventWebserverFactory()
