@@ -13,97 +13,6 @@ try:
 except:
     pass
 
-#from PortalCoreWebservices import *
-
-#from ActorLoaderPortal import ActorLoaderPortal
-
-#from MessageRouter import MessageRouter
-
-
-# class Scheduler():
-
-#     def __init__(self):
-#         self.tasks = {}
-
-#     def check(self, epoch):
-#         for key in self.tasks.keys():
-#             task = self.tasks[key]
-#             task.check(epoch)
-
-#     def _queueTask(self, executionEpoch, waitTime, method, **params):
-#         key = "%s_%s" % (method.func_code.co_name, str(params).replace("\n", ""))
-#         self.tasksScheduled[key].append(self.epoch + waitTime)
-#         self.taskQueue.append([executionEpoch, waitTime, method, params])
-
-#     def scheduleFromNow(self, secFromNow, minimalPeriod, method, **args):
-#         self.schedule(j.core.portal.runningPortal.epoch + secFromNow, minimalPeriod, 0, method, **args)
-
-#     def scheduleNow(self, minimalPeriod, method, **args):
-#         task = self.schedule(0, minimalPeriod, 0, method, **args)
-#         task.check(j.core.portal.runningPortal.epoch)
-
-#     def schedule(self, executionEpoch, minimalPeriod, recurringPeriod, method, **args):
-#         print self.tasks
-#         key = "%s_%s" % (method.func_code.co_name, str(args).replace("\n", ""))
-#         if key not in self.tasks:
-#             self.tasks[key] = Task(method, args, executionEpoch, minimalPeriod, recurringPeriod)
-#             return self.tasks[key]
-#         else:
-#             task = self.tasks[key]
-#             task.minimalPeriod = minimalPeriod
-#             task.recurringPeriod = recurringPeriod
-#             task.schedule(executionEpoch)
-#             return task
-
-
-# class Task():
-
-#     def __init__(self, method, args, executionEpoch, minimalPeriod, recurringPeriod):
-#         self.scheduled = []
-#         self.method = method
-#         self.args = args
-#         self.lastRun = 0
-#         self.key = self.getKey()
-#         self.recurringPeriod = recurringPeriod
-#         self.minimalPeriod = minimalPeriod
-#         self.schedule(executionEpoch)
-
-#     def schedule(self, executionEpoch):
-#         self.scheduled.append(executionEpoch)
-
-#     def check(self, epoch):
-#         # check recurring
-#         if self.recurringPeriod != 0 and self.lastRun + self.recurringPeriod < epoch:
-#             self.execute(epoch)
-#             # check with scheduled tasks we can remove
-#             for x in range(0, len(self.scheduled)):
-#                 epochschedule = self.scheduled[x]
-#                 if epochschedule < self.lastRun + self.recurringPeriod:
-#                     self.scheduled.pop(x)
-#                     x = x - 1
-#                 else:
-#                     return
-#             return
-
-#         for x in range(0, len(self.scheduled)):
-#             epochschedule = self.scheduled[x]
-#             if epoch > epochschedule:
-#                 if self.lastRun + self.minimalPeriod < epoch:
-#                     self.execute(epoch)
-#                     self.scheduled = [item for item in self.scheduled if not (item < self.lastRun + self.minimalPeriod)]
-#                     return
-#             else:
-#                 break
-
-#     def execute(self, epoch):
-#         self.method(**self.args)
-#         self.scheduled.pop(0)
-#         self.lastRun = epoch
-
-#     def getKey(self):
-#         self.key = "%s_%s" % (self.method.func_code.co_name, str(self.args).replace("\n", ""))
-#         return self.key
-
 
 class PortalProcess():
 
@@ -274,23 +183,23 @@ class PortalProcess():
         # toload=[]
         self.bootstrap()
 
-        if self.ismaster:
-            self.actorsloader.getActor("system", "master")
-            self.master = j.apps.system.master.extensions.master
-            # self.master._init()
-            # self.master.gridmapPrevious=None
-            # self.master.gridMapSave()
-            # self.master.gridMapRegisterPortal(self.ismaster,self.ipaddr,self.wsport,self.secret)
+        # if self.ismaster:
+        #     self.actorsloader.getActor("system", "master")
+        #     self.master = j.apps.system.master.extensions.master
+        #     # self.master._init()
+        #     # self.master.gridmapPrevious=None
+        #     # self.master.gridMapSave()
+        #     # self.master.gridMapRegisterPortal(self.ismaster,self.ipaddr,self.wsport,self.secret)
 
-            # look for nginx & start
-            self.startNginxServer()
-            # self.scheduler = Scheduler()
+        #     # look for nginx & start
+        #     #self.startNginxServer()
+        #     # self.scheduler = Scheduler()
 
-        else:
-            self.master = None
-            #from JumpScale.core.Shell import ipshellDebug,ipshell
-            # print "DEBUG NOW not implemented yet in appserver6process, need to connect to other master & master client"
-            # ipshell()
+        # else:
+        #     self.master = None
+        #     #from JumpScale.core.Shell import ipshellDebug,ipshell
+        #     # print "DEBUG NOW not implemented yet in appserver6process, need to connect to other master & master client"
+        #     # ipshell()
 
         self.loadFromConfig()
 
@@ -301,7 +210,7 @@ class PortalProcess():
     def bootstrap(self):
         self.actorsloader.reset()
         self.actorsloader._generateLoadActor("system", "contentmanager", actorpath="system/system__contentmanager/")
-        self.actorsloader._generateLoadActor("system", "master", actorpath="system/system__master/")
+        # self.actorsloader._generateLoadActor("system", "master", actorpath="system/system__master/")
         self.actorsloader._generateLoadActor("system", "usermanager", actorpath="system/system__usermanager/")
         self.actorsloader.scan("system")
         self.actorsloader.getActor("system", "usermanager")
