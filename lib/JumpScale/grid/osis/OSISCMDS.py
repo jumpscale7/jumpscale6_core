@@ -21,14 +21,15 @@ class OSISCMDS(object):
 
         key="%s_%s"%(j.application.whoAmI.gid,name)
         if not oi.exists(key):
-            return {"authenticated":False,"exists":False,"groups":[]}
+            return {"authenticated":False,"exists":False}
 
         user=ujson.loads(oi.get(key))
 
         if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:
-            return {"authenticated":True,"exists":True,"groups":user["groups"]}
+            return {"authenticated":True,"exists":True,"groups":user["groups"],\
+                "passwdhash":user["passwd"],"authkey":user["authkey"]}
 
-        return {"authenticated":False,"exists":True,"groups":[]}
+        return {"authenticated":False,"exists":True}
 
     def get(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)

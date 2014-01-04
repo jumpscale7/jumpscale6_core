@@ -25,6 +25,7 @@ class User(OsisBaseObject):
             self.lastcheck=0 #epoch of last time the info updated
             self.guid=j.base.idgenerator.generateGUID()
             self.groups=[]
+            self.authkey=""
 
     def getSetGuid(self):
         """

@@ -44,7 +44,7 @@ agentcontroller:/gridlogs/agentcontroller
 #Pages:/system/Pages?space=$$space
 #ReloadAll:javascript:(function loadAll() {$.ajax({'url': '/system/ReloadApplication'});(function checkSpaceIsUp(trials) {if (trials <= 0) return;setTimeout(function() {$.ajax({'url': '/system/'}).done(function(){location.reload();console.log('Reloaded');}).error(function(){checkSpaceIsUp(trials - 1)});}, 1000);})(10);})();void(0);
 
-    if j.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(params.requestContext):
+    if j.core.webserver.isAdminFromCTX(params.requestContext):
         params.result = C
 
     params.result = (params.result, doc)
