@@ -5,7 +5,7 @@ import JumpScale.baselib.mercurial
 
 for subdir in ["jumpscale","incubaid","openvstorage"]:
     if j.system.fs.exists("/opt/code/%s"%subdir):
-        bitbucket=j.clients.bitbucket.getBitbucketConnection(subdir)
+        bitbucket=j.clients.bitbucket.getBitbucketAccountClient(subdir)
         for item in j.system.fs.listDirsInDir("/opt/code/%s"%subdir):
             cl=bitbucket.getMercurialClient(j.system.fs.getBaseName(item))
             # cl=j.clients.mercurial.getClient(item)

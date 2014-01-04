@@ -94,7 +94,7 @@ class BitbucketInterface():
             return  self.__dict__[accountname]
         
     def _populate1account(self,account):
-        bbc=o.clients.bitbucket.getBitbucketConnection(account)
+        bbc=o.clients.bitbucket.getBitbucketAccountClient(account)
         self.__dict__[account]=Account()
         self.__dict__[account].name=account
         names=bbc.getRepoNamesLocal()

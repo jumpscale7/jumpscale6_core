@@ -10,7 +10,7 @@ def getRepos():
     for account in accounts:
         accountdir="/opt/code/%s"%account
         if j.system.fs.exists():
-            bitbucket=j.clients.bitbucket.getBitbucketConnection(accountdir)
+            bitbucket=j.clients.bitbucket.getBitbucketAccountClient(accountdir)
             for reponame in j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
                 repodir="%s/%s"%(accountdir,reponame)
                 cl=bitbucket.getMercurialClient(repodir)

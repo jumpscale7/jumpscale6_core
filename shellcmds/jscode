@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jstest")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['commit','push','update'], help='Command to perform')
+parser.add_argument("action", choices=['commit','push','update','status'], help='Command to perform')
 
 parser.add_argument('-m','--message',help='commit message')
 parser.add_argument('-b','--branch',help='branch')
@@ -30,8 +30,8 @@ if opts.accounts==None and opts.repos==None:
         opts.repos=j.system.fs.getBaseName(j.system.fs.getcwd())
         opts.accounts=j.system.fs.getBaseName(j.system.fs.getParent(j.system.fs.getcwd()))
 
-# if opts.branch==None:
-#     opts.branch="default"
+if opts.branch<>None and opts.action in ['status']: 
+    raise RuntimeError("Cannot specify branch when asking status")
 
 def getRepos():
     result=[]
@@ -46,10 +46,11 @@ def getRepos():
     for account in accounts:
         accountdir="/opt/code/%s"%account
         if j.system.fs.exists(accountdir):
-            bitbucket=j.clients.bitbucket.getBitbucketConnection(account)
+            bitbucket=j.clients.bitbucket.getBitbucketAccountClient(account)
             if opts.repos==None:
                 reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
-                reponames=j.console.askChoiceMultiple(reponames,"select repos")
+                if  not opts.action in ['status']:
+                    reponames=j.console.askChoiceMultiple(reponames,"select repos")
             else:
                 reponames=[item.strip() for item in opts.repos.split(",")]
 
@@ -59,11 +60,11 @@ def getRepos():
                     raise RuntimeError("Could not find mercurial repo on %s"%repodir)
                 cl=bitbucket.getMercurialClient(reponame)
                 # cl=j.clients.mercurial.getClient(item)
-                result.append((account,reponame,cl,repodir))
+                result.append((bitbucket,account,reponame,cl,repodir))
     return result
 
 
-for account,reponame,client,path in getRepos():
+for bitbucket,account,reponame,client,path in getRepos():
 
     if opts.action in ['commit','push','update']:
         if opts.message==None:
@@ -90,9 +91,36 @@ for account,reponame,client,path in getRepos():
                 client.push(branch=[opts.branch],newbranch=True)
             else:
                 client.push(branch=None,newbranch=False)
-        
-    print
-        
+
+    if opts.action in ['commit','push','update']:
+        print
+
+    if opts.action == "status":
+        print "\n\nSTATUS: account reponame branch added:modified:deleted needapush localrev remoterev"
+        print "==================================================================================="
+        filesmodified=client.hasModifiedFiles()
+
+        mods=client.getModifiedFiles()
+
+        lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
+        client.branchname
+        changesets=bitbucket.getChangeSets(reponame=reponame,limit=1)
+        remotelastrevision=changesets["changesets"][0]["revision"]
+        rid=changesets["changesets"][0]["raw_node"] #remoteid
+
+        if lid==rid:
+            isPushNeeded="N"
+        else:
+            isPushNeeded="Y"
+
+        if len(mods["added"])+len(mods["nottracked"])+len(mods["modified"])+len(mods["missing"])+len(mods["removed"])>0:
+            isPushNeeded="Y"            
+
+        print "%-12s %-15s %-10s a%-3s:m%-3s:d%-3s pushneed:%-1s  lrev:%-5s rrev:%-5s" %(account,reponame,client.branchname,\
+            len(mods["added"])+len(mods["nottracked"]),len(mods["modified"]),len(mods["missing"])+len(mods["removed"]),\
+            isPushNeeded,\
+            lrev,remotelastrevision)
+
 
 
 j.application.stop()
