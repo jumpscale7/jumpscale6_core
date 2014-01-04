@@ -63,7 +63,9 @@ for account,reponame,client,path in getRepos():
         if opts.branch<>None:
             cmd="cd %s;hg branch %s"%opts.branch
             print "branch:%s"%opts.branch
+    
     if opts.action =='commit':
+        print "COMMIT"
         client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
 
 
