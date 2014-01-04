@@ -74,7 +74,9 @@ class ErrorConditionHandler():
             eco.type=j.enumerators.ErrorConditionType.OPERATIONS
             eco.level=1
 
-        self.processErrorConditionObject(eco)
+        self.processErrorConditionObject(eco,tostdout=False)
+        print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"%eco.errormessage
+        print 
         if die:
             self.lastEco=eco
             if message=="":
@@ -265,7 +267,7 @@ class ErrorConditionHandler():
         return False
 
         
-    def processErrorConditionObject(self,errorConditionObject):
+    def processErrorConditionObject(self,errorConditionObject,tostdout=True):
         """
         a errorObject gets processed which means stored locally or forwarded to a logserver or both
         @return [ecsource,ecid,ecguid]
@@ -289,12 +291,10 @@ class ErrorConditionHandler():
             return
 
         if j.logger.logTargetLogForwarder and j.logger.logTargetLogForwarder.enabled:
-            print errorConditionObject
             j.logger.logTargetLogForwarder.logECO(errorConditionObject)
-        else:
+
+        if tostdout:
             print errorConditionObject
-        # else:
-        #     j.logger.log(str(errorConditionObject), j.enumerators.LogLevel.OPERATORMSG)
 
         return errorConditionObject
         

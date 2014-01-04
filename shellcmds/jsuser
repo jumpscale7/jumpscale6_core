@@ -7,34 +7,37 @@ import sys,time
 j.application.start("jsuser")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['add','delete','list'], help='Command to perform')
-parser.add_argument("-p",'--passwd', help='superadmin passwd for grid')
+parser.add_argument("action", choices=['add','delete','list','auth'], help='Command to perform')
+
 parser.add_argument("-d",'--data', help='add user as username:passwd:group1,group2:email1,email2:domain')
-parser.add_argument("-a",'--addr', help='ip addr of master, if not specified will be the one as specified in local config')
+
+parser.add_argument("-ul",'--userlogin', help='username to do check,edit')
+parser.add_argument("-up",'--userpasswd', help='passwd for user to check,edit')
+parser.add_argument("-ud",'--domain', help='domain for user to list')
 
 #parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
 #parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
 
+opts=cmdutils.processLogin(parser)
+
 import JumpScale.grid.osis
 
-opts = parser.parse_args()
-
-if opts.passwd==None:
-    if j.application.config.exists("gridmaster.superadminpasswd"):
-        opts.passwd=j.application.config.get("gridmaster.superadminpasswd")
-    else:
-        opts.passwd=j.console.askString("please provide superadmin passwd for the grid.")
-
-if opts.addr==None:    
-    addr=j.application.config.get("grid.master.ip")
-else:
-    addr=opts.addr
-print opts.passwd
-osis=j.core.osis.getClient(addr,5544,"root",opts.passwd)
+osis=j.core.osis.getClient(opts.addr,5544,"root",opts.passwd)
 userclient=j.core.osis.getClientForCategory(osis,"system","user")
 groupclient=j.core.osis.getClientForCategory(osis,"system","group")
 
 ############ADD
+if opts.action =='auth':
+    if opts.userlogin==None:
+        opts.userlogin=j.console.askString("user to check")
+    if opts.userpasswd==None:
+        opts.userpasswd=j.console.askString("passwd for user to check")
+
+    result=userclient.authenticate(name=opts.userlogin,passwd=opts.userpasswd)
+    for key,val in result.iteritems():
+        print "%-20s %s"%(key,val)
+
+
 if opts.action =='add':
     if opts.data<>None:
         splitted=opts.data.split(":")
@@ -73,6 +76,18 @@ if opts.action =='add':
 
     print user
 
+if opts.action =='list':
+    out=""
+    print "\n%-20s %-25s %s"%("name","domain","groups")
+    print "="*80,
+    for item in userclient.simpleSearch({"domain":opts.domain}):
+        out+="%-20s %-25s %s\n"%(item["id"],item["domain"],",".join(item["groups"]))
+    out=out.split("\n")
+    out.sort()
+    out="\n".join(out)
+    print out
+    print
+            
 
 #@todo implement delete & list
 
