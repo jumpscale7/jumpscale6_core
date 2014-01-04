@@ -467,10 +467,13 @@ syntax: regexp
         if message:
             self.commit(message)        
         
-    def push(self,branch=["default"],newbranch=False):
+    def push(self,branch=None,newbranch=False):
         self._log("push %s to %s" % (self.basedir, self.remoteUrl))
         url = self.getUrl()
-        self.client.push(dest=url,branch=branch,newbranch=newbranch)
+        if branch<>None:
+            self.client.push(dest=url,branch=branch,newbranch=newbranch)
+        else:
+            self.client.push(dest=url,newbranch=newbranch)
         
     def commitpush(self, commitMessage="", ignorechanges=False,
             addRemoveUntrackedFiles=False, trymerge=True, pull=True, user=None):

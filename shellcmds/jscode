@@ -28,8 +28,8 @@ if opts.accounts==None and opts.repos==None:
         opts.repos=j.system.fs.getBaseName(j.system.fs.getcwd())
         opts.accounts=j.system.fs.getBaseName(j.system.fs.getParent(j.system.fs.getcwd()))
 
-if opts.branch==None:
-    opts.branch="default"
+# if opts.branch==None:
+#     opts.branch="default"
 
 def getRepos():
     result=[]
@@ -62,30 +62,34 @@ def getRepos():
 
 
 for account,reponame,client,path in getRepos():
-    if opts.message==None:
-        opts.message=j.console.askString("commit message")
-
-
 
     if opts.action in ['commit','push','update']:
+        if opts.message==None:
+            opts.message=j.console.askString("commit message")
+
         if opts.branch<>None:
             cmd="cd %s;hg branch %s"%(path,opts.branch)
             print "branch:%s"%opts.branch
 
     if opts.update or opts.action =='update':
-        print "UPDATE"
-        from IPython import embed
-        embed()
-        
+        print "PULL ",
+        client.pull()
+        print "UPDATE ",
+        client.updatemerge(commitMessage=opts.message, ignorechanges=False,
+            addRemoveUntrackedFiles=True, trymerge=True, pull=False)        
     
     if opts.action =='commit' or opts.action =='push':
-        print "COMMIT"
+        print "COMMIT ",
         client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
 
         if opts.action =='push':
-            print "PUSH"
-            client.push(branch=[opts.branch],newbranch=opts.branch<>"default")
+            print "PUSH ",
+            if opts.branch<>None:
+                client.push(branch=[opts.branch],newbranch=True)
+            else:
+                client.push(branch=None,newbranch=False)
         
+    print
         
 
 
