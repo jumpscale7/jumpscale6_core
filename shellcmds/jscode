@@ -15,6 +15,8 @@ parser.add_argument('-b','--branch',help='branch')
 parser.add_argument('-a','--accounts',help='comma separated list of accounts')
 parser.add_argument('-r','--repos',help='comma separated list of repos, will look for the accounts')
 
+
+
 # parser.add_argument('-m','--message',required=False, action='store_true',help='commit message')
 
 opts = parser.parse_args()
@@ -64,12 +66,17 @@ for account,reponame,client,path in getRepos():
             cmd="cd %s;hg branch %s"%(path,opts.branch)
             print "branch:%s"%opts.branch
     
-    if opts.action =='commit':
+    if opts.action =='commit' or opts.action =='push':
         print "COMMIT"
         client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
-        import ipdb
-        print "DEBUG NOW ooo"
-        ipdb.set_trace()
+
+        if opts.action =='push':
+            print "PUSH"
+            client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
+        from IPython import embed
+        print "DEBUG NOW id"
+        embed()
+        
         
 
 
