@@ -503,7 +503,7 @@ class Console:
         
         return valuearray[result-1]
 
-    def askChoiceMultiple(self, choicearray, descr=None, sort=None):
+    def askChoiceMultiple(self, choicearray, descr=None, sort=True):
         if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         if not choicearray:
