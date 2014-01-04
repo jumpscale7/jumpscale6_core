@@ -28,6 +28,9 @@ if opts.accounts==None and opts.repos==None:
         opts.repos=j.system.fs.getBaseName(j.system.fs.getcwd())
         opts.accounts=j.system.fs.getBaseName(j.system.fs.getParent(j.system.fs.getcwd()))
 
+if opts.branch==None:
+    opts.branch="default"
+
 def getRepos():
     result=[]
     if opts.accounts<>None:
@@ -81,7 +84,7 @@ for account,reponame,client,path in getRepos():
 
         if opts.action =='push':
             print "PUSH"
-            client.push(force=opts.branch<>None)
+            client.push(branch=[opts.branch],newbranch=opts.branch<>"default")
         
         
 
