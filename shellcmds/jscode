@@ -67,6 +67,10 @@ for account,reponame,client,path in getRepos():
     if opts.action =='commit':
         print "COMMIT"
         client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
+        import ipdb
+        print "DEBUG NOW ooo"
+        ipdb.set_trace()
+        
 
 
 j.application.stop()
