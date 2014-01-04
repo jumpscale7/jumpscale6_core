@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jstest")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['commit','push'], help='Command to perform')
+parser.add_argument("action", choices=['commit','push','update'], help='Command to perform')
 
 parser.add_argument('-m','--message',help='commit message')
 parser.add_argument('-b','--branch',help='branch')
@@ -15,6 +15,7 @@ parser.add_argument('-b','--branch',help='branch')
 parser.add_argument('-a','--accounts',help='comma separated list of accounts')
 parser.add_argument('-r','--repos',help='comma separated list of repos, will look for the accounts')
 
+parser.add_argument('-u','--update',required=False, action='store_true',help='update merge before doing push or commit')
 
 
 # parser.add_argument('-m','--message',required=False, action='store_true',help='commit message')
@@ -61,10 +62,18 @@ for account,reponame,client,path in getRepos():
     if opts.message==None:
         opts.message=j.console.askString("commit message")
 
-    if opts.action =='commit' or opts.action =='push':
+
+
+    if opts.action in ['commit','push','update']:
         if opts.branch<>None:
             cmd="cd %s;hg branch %s"%(path,opts.branch)
             print "branch:%s"%opts.branch
+
+    if opts.update or opts.action =='update':
+        print "UPDATE"
+        from IPython import embed
+        embed()
+        
     
     if opts.action =='commit' or opts.action =='push':
         print "COMMIT"
@@ -72,10 +81,7 @@ for account,reponame,client,path in getRepos():
 
         if opts.action =='push':
             print "PUSH"
-            client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
-        from IPython import embed
-        print "DEBUG NOW id"
-        embed()
+            client.push(force=opts.branch<>None)
         
         
 

@@ -467,9 +467,13 @@ syntax: regexp
         if message:
             self.commit(message)        
         
-    def push(self):
+    def push(self,force=False):
         self._log("push %s to %s" % (self.basedir, self.remoteUrl))
         url = self.getUrl()
+        from IPython import embed
+        print "DEBUG NOW ooo"
+        embed()
+        
         self.client.push(dest=url)
         
     def commitpush(self, commitMessage="", ignorechanges=False,
