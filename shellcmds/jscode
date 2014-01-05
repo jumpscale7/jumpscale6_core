@@ -79,10 +79,15 @@ for bitbucket,account,reponame,client,path in repos:
 
         lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
         if opts.branch<>None:
+            print "set branch:%s"%opts.branch
+            cmd="cd %s;hg branch %s"%(path,opts.branch)
+            j.system.process.execute(cmd,dieOnNonZeroExitCode=False, outputToStdout=False, useShell=True, ignoreErrorOutput=False)
             if client.branchname<>opts.branch:
-                cmd="cd %s;hg update %s"%(path,opts.branch)
-                j.system.process.execute(cmd)
-                print "moved branch:%s"%opts.branch
+                if opts.action in ["update"] or opts.update==True:
+                    cmd="cd %s;hg update %s"%(path,opts.branch)
+                    j.system.process.execute(cmd)
+                    print "updated to branch:%s"%opts.branch
+
 
         changesets=bitbucket.getChangeSets(reponame=reponame,limit=1)
         if changesets.has_key("error"):
