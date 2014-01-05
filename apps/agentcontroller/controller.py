@@ -320,6 +320,7 @@ class ControllerCMDS():
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         jobs=[]
+        role = role.lower()
         if role in self.roles2agents:
             for agentid in self.roles2agents[role]:
                 job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \

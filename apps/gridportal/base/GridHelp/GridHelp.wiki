@@ -1,3 +1,0 @@
-h2. Documentation for grid portal.
-
-{{children}}
