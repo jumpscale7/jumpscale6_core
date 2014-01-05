@@ -8,6 +8,8 @@ def main(j, args, params, tags, tasklet):
 
     menu = args.cmdstr
 
+    noguest = args.tags.labelExists('no-guest')
+
     if args.tags.labelExists("nopadding"):
         page.padding = False
 
@@ -17,7 +19,7 @@ def main(j, args, params, tags, tasklet):
         classtags = "navbar navbar-inverse navbar-fixed-top"
 
     T = """
-<div class="{classtags}">
+<div class="{classtags}"  {hide-menu}>
     <div class="navbar-inner">
         <div class="container">
             <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -86,6 +88,11 @@ def main(j, args, params, tags, tasklet):
                 line2 = "<li><a href=\"%s\">%s</a></li>" % (target, name)
             items += "%s\n" % line2
     T = T.replace("{items}", items)
+
+    if args.requestContext.env['beaker.session']['user'] == "guest" and noguest:
+        T=T.replace("{hide-menu}","style=\"display:none;\"")
+    else:
+        T=T.replace("{hide-menu}","")
 
     page.addHTMLBody(T)
     params.result = page
