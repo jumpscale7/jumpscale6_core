@@ -140,12 +140,16 @@ class JPackageClient():
         """
 
         if j.application.shellconfig.interactive:
-            domain  = j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
+            if not domain:
+                domain  = j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
             j.packages.getDomainObject(domain)._ensureDomainCanBeUpdated() #@question what does this do?
 
-            name    = j.console.askString("Please provide a name")
-            version = j.console.askString("Please provide a version","1.0")
-            descr   = j.console.askString("Please provide a description","")
+            if not name:
+                name    = j.console.askString("Please provide a name")
+            if not version:
+                version = j.console.askString("Please provide a version","1.0")
+            if not description:
+                description = j.console.askString("Please provide a description","")
 
             while not supportedPlatforms:
                 supportedPlatforms = j.console.askChoiceMultiple(sorted(j.system.platformtype.getPlatforms()), 'Please enumerate the supported platforms')
