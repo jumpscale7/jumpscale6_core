@@ -7,7 +7,8 @@ j.application.start('jpackage')
 parser = cmdutils.ArgumentParser()
 
 commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
-            'publish', 'repackage', 'restart', 'start', 'stop', 'update', 'updateall', 'upload', 'mirror']
+            'publish', 'repackage', 'restart', 'start', 'stop', 'update', 'updateall', 'upload', 'mirror',
+            'switchbranch']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
@@ -46,6 +47,10 @@ group.add_argument('--merge', dest="merge", default=False, action="store_true", 
 #upload
 group = parser.add_argument_group(title="Upload")
 group.add_argument('--onlycode', required=False, action='store_true', help='to only upload jpackage files which are for coderecipes')
+
+#switchbranch
+group = parser.add_argument_group(title="Switch Branch")
+group.add_argument('--branch', help='Branch of the coderecipe')
 
 args = parser.parse_args()
 
@@ -171,7 +176,13 @@ elif args.action == 'mirror':
         package.download(allplatforms=True)
 
 elif args.action == 'updateall':
+    j.packages.updateMetaData(force=True)
     j.packages.updateAll()
 
+elif args.action == 'switchbranch':
+    packages = cmdutils.getJPackage(args,installed=False)
+    for package in packages:
+        recipe = package.getCodeMgmtRecipe()
+        recipe.hrd.set('jp.code.branch', args.branch)
 
 j.application.stop()
