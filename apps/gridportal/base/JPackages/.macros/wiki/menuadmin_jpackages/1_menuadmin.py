@@ -8,7 +8,7 @@ def main(j, args, params, tags, tasklet):
     params.result = ""
 
 
-    # spaces = sorted(j.core.portal.runningPortal.webserver.getSpaces())
+    # spaces = sorted(j.core.portal.active.getSpaces())
     # spacestxt=""
     # for item in spaces:
     #     if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1 and item.find("test")==-1 and  item.find("gridlogs")==-1:
@@ -41,7 +41,7 @@ jpackagesoveriew:/jpackages
 #Pages:/system/Pages?space=$$space
 #ReloadAll:javascript:(function loadAll() {$.ajax({'url': '/system/ReloadApplication'});(function checkSpaceIsUp(trials) {if (trials <= 0) return;setTimeout(function() {$.ajax({'url': '/system/'}).done(function(){location.reload();console.log('Reloaded');}).error(function(){checkSpaceIsUp(trials - 1)});}, 1000);})(10);})();void(0);
 
-    if j.core.webserver.isAdminFromCTX(params.requestContext):
+    if j.core.portal.runningPortal.isAdminFromCTX(params.requestContext):
         params.result = C
 
     params.result = (params.result, doc)
