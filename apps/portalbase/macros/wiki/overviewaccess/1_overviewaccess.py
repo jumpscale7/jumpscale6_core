@@ -15,7 +15,7 @@ def main(j, args, params, tags, tasklet):
         out += 'h2. Access Overview of Space "%s"\n\n' % spaces[0]
         singlespace = True
     else:
-        spaces = j.core.portal.runningPortal.webserver.spacesloader.spaces.keys()
+        spaces = j.core.portal.active.spacesloader.spaces.keys()
         out += "h2. Acess Overview of Spaces\n\n"
 
     if spaces:
@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
         out += "||Name||Right||Emails||Groups||Secret url||\n"
     for spacename in sorted(spaces):
         try:
-            space = j.core.portal.runningPortal.webserver.spacesloader.getSpaceFromId(spacename)
+            space = j.core.portal.active.spacesloader.getSpaceFromId(spacename)
         except:
             params.result = "ERROR: Could not find space %s" % spacename
             return params

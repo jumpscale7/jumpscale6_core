@@ -76,7 +76,7 @@ class Doc(object):
 
     def getPageKey(self):
         key = j.base.byteprocessor.hashMd5("%s_%s" % (self.pagename, self.getSpaceName()))
-        j.core.portal.runningPortal.webserver.pageKey2doc[key] = self
+        j.core.portal.active.pageKey2doc[key] = self
         return key
 
     def checkVisible(self, visibility):
@@ -177,7 +177,7 @@ class Doc(object):
             self.loadFromDisk()
             self.preprocess()
         content, doc = self.executeMacrosDynamicWiki(paramsExtra, ctx)
-        ws = j.core.portal.runningPortal.webserver
+        ws = j.core.portal.active
         content, page = ws.confluence2htmlconvertor.convert(content, doc=self, page=ws.getpage())
         return page.body
 
@@ -353,9 +353,9 @@ class DocPreprocessor():
 
         """
         self.varsPath = varsPath
-        self.macroexecutorPreprocessor = j.core.portal.runningPortal.webserver.macroexecutorPreprocessor
-        self.macroexecutorPage = j.core.portal.runningPortal.webserver.macroexecutorPage
-        self.macroexecutorWiki = j.core.portal.runningPortal.webserver.macroexecutorWiki
+        self.macroexecutorPreprocessor = j.core.portal.active.macroexecutorPreprocessor
+        self.macroexecutorPage = j.core.portal.active.macroexecutorPage
+        self.macroexecutorWiki = j.core.portal.active.macroexecutorWiki
 
         if spacename == "":
             raise RuntimeError("spacename cannot be empty")

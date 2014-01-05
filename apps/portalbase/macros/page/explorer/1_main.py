@@ -20,10 +20,10 @@ def main(j, args, params, tags, tasklet):
     if args.tags.tagExists("bucket"):
         bucket = args.tags.tagGet("bucket").lower()
 
-        if bucket not in j.core.portal.runningPortal.webserver.bucketsloader.buckets:
+        if bucket not in j.core.portal.active.bucketsloader.buckets:
             page.addMessage("Could not find bucket %s" % bucket)
             return params
-        bucket = j.core.portal.runningPortal.webserver.bucketsloader.buckets[bucket]
+        bucket = j.core.portal.active.bucketsloader.buckets[bucket]
         path = bucket.model.path.replace("\\", "/")
 
     if args.tags.tagExists("height"):

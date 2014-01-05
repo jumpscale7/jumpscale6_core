@@ -8,7 +8,7 @@ def main(j, args, params, tags, tasklet):
 
     bullets = params.tags.labelExists("bullets")
     table = params.tags.labelExists("table")
-    spaces = sorted(j.core.portal.runningPortal.webserver.getSpaces())
+    spaces = sorted(j.core.portal.active.getSpaces())
 
     if table:
         for item in spaces:

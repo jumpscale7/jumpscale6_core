@@ -1,7 +1,7 @@
 import urlparse
 import os
 
-class GeventWebserverClient():
+class PortalClientWS():
 
     def __init__(self, ip, port, secret=None):
         self.ip = ip

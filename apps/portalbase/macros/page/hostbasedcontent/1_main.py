@@ -12,7 +12,7 @@ def main(j, args, params, tags, tasklet):
         tocheck.push({"hostname":"%s", "divid":"%s"});""" % (hostname, divid)
 
     page.addJS(jsContent=scriptcontent)
-    space = j.core.portal.runningPortal.webserver.spacesloader.spaces[args.doc.getSpaceName()]
+    space = j.core.portal.active.spacesloader.spaces[args.doc.getSpaceName()]
     if space.docprocessor.docExists(contentpage):
         doc = space.docprocessor.docGet(contentpage)
         htmlcontent = doc.getHtmlBody()

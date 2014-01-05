@@ -14,7 +14,7 @@ class system_docgenerator(j.code.classGetBase()):
         j.core.portal.runningPortal.actorsloader.getActor(apppart, actorpart)
         actorjson = {'swaggerVersion': '1.1', 'basePath': '/',
                      'resourcePath': '/%s' % actorname, 'apis': []}
-        routes = j.core.portal.runningPortal.webserver.routes
+        routes = j.core.portal.active.routes
         for path, route in routes.iteritems():
             (app, actor, method) = path.split('_')
             if actor == actorname.split('__')[1]:
@@ -36,7 +36,7 @@ class system_docgenerator(j.code.classGetBase()):
         if 'actors' in args and args['actors']:
             actors = args['actors'].split(',')
         else:
-            actors = j.core.portal.runningPortal.webserver.getActors()
+            actors = j.core.portal.active.getActors()
 
         for actor in sorted(actors):
             catalog['apis'].append({'path': '%s' % actor})

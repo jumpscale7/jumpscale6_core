@@ -5,9 +5,9 @@ def main(j, arg, params,  tags, tasklet):
     space = params.paramsExtra['space']
     out = ""
 
-    spaces = j.core.portal.runningPortal.webserver.getSpaces()
+    spaces = j.core.portal.active.getSpaces()
     if space in spaces:
-        sp = j.core.portal.runningPortal.webserver.getSpace(space)
+        sp = j.core.portal.active.getSpace(space)
     else:
         params.result = out, doc
         return params

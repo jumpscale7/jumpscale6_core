@@ -20,7 +20,7 @@ class Space(LoaderBaseObject):
             macroPathsPage = [j.system.fs.joinPaths(self.model.path, ".macros", "page")]
 
             name = self.model.id.lower()
-            webserver = j.core.portal.runningPortal.webserver
+            webserver = j.core.portal.active
             webserver.macroexecutorPage.addMacros(macroPathsPage, name)
             webserver.macroexecutorPreprocessor.addMacros(macroPathsPreprocessor, name)
             webserver.macroexecutorWiki.addMacros(macroPathsWiki, name)

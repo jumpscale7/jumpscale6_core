@@ -7,11 +7,11 @@ def main(j, args, params, tags, tasklet):
     params.result = ""
 
 
-    spaces = sorted(j.core.portal.runningPortal.webserver.getSpaces())
+    spaces = sorted(j.core.portal.active.getSpaces())
     spacestxt=""
     for item in spaces:
         if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1:
-            name = j.core.portal.runningPortal.webserver.getSpace(item).model.id
+            name = j.core.portal.active.getSpace(item).model.id
             spacestxt += "%s:/%s\n" % (name, item.lower().strip("/"))
 
 
@@ -35,7 +35,7 @@ ReloadAll:javascript:(function loadAll() {$.ajax({'url': '/system/ReloadApplicat
 #Spaces:/system/Spaces
 #Pages:/system/Pages?space=$$space
 
-    if j.core.webserver.isAdminFromCTX(params.requestContext):
+    if j.core.portal.runningPortal.isAdminFromCTX(params.requestContext):
         params.result = C
 
     params.result = (params.result, doc)

@@ -158,6 +158,13 @@ class LoaderBase():
     #     lba.processUsers(j.core.portal.runningPortal.cfgdir)
 
     def scan(self, path, reset=False):
+        """
+        path can be 1 path of list of paths
+        """
+        if j.basetype.list.check(path):
+            for p in path:
+                self.scan(p,reset)
+            return 
 
         items = [j.system.fs.pathNormalize(item.replace(".%s" % self.type, "") + "/") for
                  item in j.system.fs.listDirsInDir(path, True, False, True)

@@ -6,7 +6,7 @@ def main(j, args, params, actor, tags, tasklet):
     params.path = params.path.replace("\\", "/")
 
     if params.spacepath == None:
-        space = j.core.portal.runningPortal.webserver.spacesloader.getSpaceFromId(params.spacename.lower())
+        space = j.core.portal.active.spacesloader.getSpaceFromId(params.spacename.lower())
         params.spacepath = space.model.path
 
     params.spacepath = params.spacepath.replace("\\", "/")

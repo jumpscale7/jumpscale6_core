@@ -47,16 +47,11 @@ class ActorLoader(LoaderBaseObject):
         LoaderBaseObject.__init__(self, "actor")
 
     def createDefaults(self, path):
-        self._createDefaults(path, ["users.cfg"])
         base = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), ".%s" % self.type, "dirstructure")
         j.system.fs.copyDirTree(base, path, overwriteFiles=False)
 
     def raiseError(self, msg, path=None):
-        # if path==None:
-        #    path=self.model.path
-        # j.system.fs.writeFile(j.system.fs.joinPaths(path,"ERROR.TXT"),msg)
-        #@todo kristof use proper event mgmt
-        return False
+        raise RuntimeError("%s\npath was:%s"%(msg,path))
 
     def loadFromDisk(self, path, reset=False):
         # the name is $appname__actorname all in lowercase
@@ -74,7 +69,7 @@ class ActorLoader(LoaderBaseObject):
         print "remove actor %s from memory" % self.model.id
         j.core.specparser.removeSpecsForActor(self.model.application, self.model.actor)
         j.core.codegenerator.removeFromMem(self.model.application, self.model.actor)
-        j.core.portal.runningPortal.webserver.unloadActorFromRoutes(self.model.application, self.model.actor)
+        j.core.portal.active.unloadActorFromRoutes(self.model.application, self.model.actor)
         key = "%s_%s" % (self.model.application.lower(), self.model.actor.lower())
         if key in j.core.portal.runningPortal.actors:
             j.core.portal.runningPortal.actors.pop(key)
@@ -89,8 +84,8 @@ class ActorLoader(LoaderBaseObject):
         result = j.apps.actorsloader._generateLoadActor(self.model.application, self.model.actor, self.model.path)
         return result
 
-    def loadSpace(self):
-        self.activate()
+    # def loadSpace(self):
+    #     self.activate()
     
 class GroupAppsClass(object):
     def __init__(self, actorsloader):
@@ -327,11 +322,11 @@ def match(j, args, params, actor, tags, tasklet):
 
                 auth = not tags.labelExists("noauth")
                 methodcall = getattr(actorobject, methodspec.name)
-                j.core.portal.runningPortal.webserver.addRoute(methodcall, appname, actorname, methodspec.name,
+                j.core.portal.active.addRoute(methodcall, appname, actorname, methodspec.name,
                                                                paramvalidation=paramvalidation, paramdescription=paramdescription, paramoptional=paramoptional,
                                                                description=methodspec.description, auth=auth, returnformat=returnformat)
                 actorobjects = modelNames
-                j.core.portal.runningPortal.webserver.addExtRoute(methodcall, appname, actorname, methodspec.name,
+                j.core.portal.active.addExtRoute(methodcall, appname, actorname, methodspec.name,
                                                                   actorobjects,
                                                                   paramvalidation=paramvalidation, paramdescription=paramdescription, paramoptional=paramoptional, description=methodspec.description, auth=auth, returnformat=returnformat)
 

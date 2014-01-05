@@ -30,7 +30,7 @@ class MacroExecutorBase(object):
         if macrospace is not None:
             macrospace = macrospace or None
             if macrospace:
-                j.core.portal.runningPortal.webserver.spacesloader.spaces[macrospace].loadDocProcessor()
+                j.core.portal.active.spacesloader.spaces[macrospace].loadDocProcessor()
             if macrospace in self.taskletsgroup and self.taskletsgroup[macrospace].hasGroup(macro):
                 return self.taskletsgroup[macrospace]
         # else check in document space
@@ -202,7 +202,7 @@ class MacroExecutorPage(MacroExecutorBase):
         macrostr is already formatted like {{....}} and only that is returned, 
         use executeMacrosInWikiContent instead to process macros in a full text
         """
-        page0 = j.core.portal.runningPortal.webserver.getpage()
+        page0 = j.core.portal.active.getpage()
         if pagemirror4jscss != None:
             page0.pagemirror4jscss = pagemirror4jscss
         page0 = self.executeMacroAdd2Page(macrostr, page0, doc, requestContext, paramsExtra)

@@ -14,7 +14,7 @@ System:/system
 """
     C="" #@todo fix
 
-    if j.core.webserver.isAdminFromCTX(params.requestContext):
+    if j.core.portal.runningPortal.isAdminFromCTX(params.requestContext):
         params.result = C
 
     params.result = (params.result, doc)

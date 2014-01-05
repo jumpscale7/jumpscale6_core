@@ -14,6 +14,9 @@ except:
     pass
 
 
+raise RuntimeError("is not working now")
+#THERE ARE SOME GOOD IDEAS IN HERE IN HOW TO BUILD A SOCKET SERVER WITH MANOLE, ...
+
 class PortalProcess():
 
     """
@@ -26,14 +29,6 @@ class PortalProcess():
         # self.errors=[]
         self.epoch = time.time()
         self.lock = {}
-
-        j.core.portal.runningPortal = self
-
-        self.actorsloader = j.core.portalloader.getActorsLoader()
-
-        self.taskletengines = {}
-
-        self.actors = {}  # key is the applicationName_actorname (lowercase)
 
         # j.errorconditionhandler.setExceptHook() #@does not do much?
 
@@ -96,7 +91,7 @@ class PortalProcess():
 
 
         if self.wsport > 0 and inprocess == False:
-            self.webserver = j.web.geventws.get(self.wsport, cfgdir=cfgdir,secret=secret,admingroups=admingroups)
+            self.webserver = j.core.portal.get(self.wsport, cfgdir=cfgdir,secret=secret,admingroups=admingroups)
         else:
             self.webserver = None
 

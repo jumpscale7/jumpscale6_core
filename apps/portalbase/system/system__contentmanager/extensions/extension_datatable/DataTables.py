@@ -106,7 +106,7 @@ class DataTables():
 
         field = self.processLink(field)
         if field.find("{{") != -1:
-            field = j.core.portal.runningPortal.webserver.macroexecutorPage.processMacrosInWikiContent(field)
+            field = j.core.portal.active.macroexecutorPage.processMacrosInWikiContent(field)
 
         return field
 

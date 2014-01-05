@@ -1,5 +1,5 @@
 #from ActorsLoaderRemote import ActorsLoaderRemote
-from PortalProcess import PortalProcess
+from PortalServer import PortalServer
 from PortalClient import PortalClient
 #from ActorLoaderLocal import *
 
@@ -10,20 +10,24 @@ class Group():
     pass
 
 
-class PortalClientFactory():
+class PortalFactory():
 
     def __init__(self):
-        self._inited = False
-        self.runningPortal = None
+        # self._inited = False
+        self.active = None
         self.inprocess = False
-        self._appserverclients = {}
+        self._portalClients = {}
+
+    def getServer(self):
+        return PortalServer()
 
     def loadActorsInProcess(self):
         """
         make sure all actors are loaded on j.apps...
         """
+        raise RuntimeError("not implemented, need to fix")
         self.inprocess = True
-        self._inited = False
+        # self._inited = False
         j.apps = Group()
         j.db.keyvaluestore
         ini = j.tools.inifile.open("cfg/appserver.cfg")
@@ -41,8 +45,7 @@ class PortalClientFactory():
         #     except Exception,e:
         #         print "*ERROR*: Could not load actor %s %s" % (appname,actorname)
 
-
-    def getPortalClient(self, ip="localhost", port=9900, secret=None):
+    def getClient(self, ip="localhost", port=9900, secret=None):
         """
         return client to manipulate & access a running application server (out of process)
         caching is done so can call this as many times as required
@@ -53,11 +56,11 @@ class PortalClientFactory():
         if ip == "localhost":
             ip = "127.0.0.1"
         key = "%s_%s_%s" % (ip, port,secret)
-        if key in self._appserverclients:
-            return self._appserverclients[key]
+        if key in self._portalClients:
+            return self._portalClients[key]
         else:
             cl = PortalClient(ip, port, secret)
-            self._appserverclients[key] = cl
+            self._portalClients[key] = cl
             # cl._loadSpaces()
             return cl
 

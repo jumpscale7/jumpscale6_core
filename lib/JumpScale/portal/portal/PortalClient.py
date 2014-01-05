@@ -2,6 +2,7 @@
 #from ActorLoaderRemote import ActorLoaderRemote
 #from Portal6Process import Portal6Process
 
+from PortalClientWS import PortalClientWS
 
 from JumpScale import j
 
@@ -49,12 +50,12 @@ class PortalClient():
     client to appserver 6 running out of process
     """
 
-    def __init__(self, ip, port, login,passwd):
+    def __init__(self, ip, port, secret):
         """
         connect to Portal6
         """
         
-        self.wsclient = j.web.geventws.getClient(ip, port, login=login,passwd=passwd)
+        self.wsclient = PortalClientWS(ip, port, secret=secret)
         self.ip = ip
         self.port = port
         self.login = login
