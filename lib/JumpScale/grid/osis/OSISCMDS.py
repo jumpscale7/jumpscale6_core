@@ -190,19 +190,20 @@ class OSISCMDS(object):
 
         else:
             templatespath = "_templates"
-            templatespath_namespace = j.system.fs.joinPaths(templatespath, "namespace")
-            templatespath_category = j.system.fs.joinPaths(templatespath, "category")
-            namespacepath = j.system.fs.joinPaths(path, namespacename)
-            j.system.fs.copyDirTree(templatespath_namespace, namespacepath, overwriteFiles=False)
-            if namespacename[0] <> "_" and j.system.fs.exists(path=j.system.fs.joinPaths(namespacepath, ".parentInTemplate")):  
-                # check if parent is coming from template
-                j.system.fs.remove(j.system.fs.joinPaths(namespacepath, "OSIS_parent.py"))
-                j.system.fs.remove(j.system.fs.joinPaths(namespacepath, "OSIS_parent.pyc"))
+            if j.system.fs.exists(path=templatespath):
+                templatespath_namespace = j.system.fs.joinPaths(templatespath, "namespace")
+                templatespath_category = j.system.fs.joinPaths(templatespath, "category")
+                namespacepath = j.system.fs.joinPaths(path, namespacename)
+                j.system.fs.copyDirTree(templatespath_namespace, namespacepath, overwriteFiles=False)
+                if namespacename[0] <> "_" and j.system.fs.exists(path=j.system.fs.joinPaths(namespacepath, ".parentInTemplate")):  
+                    # check if parent is coming from template
+                    j.system.fs.remove(j.system.fs.joinPaths(namespacepath, "OSIS_parent.py"))
+                    j.system.fs.remove(j.system.fs.joinPaths(namespacepath, "OSIS_parent.pyc"))
 
-            for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
-                catpath = j.system.fs.joinPaths(namespacepath, catname)
-                j.system.fs.copyDirTree(templatespath_category, catpath, overwriteFiles=False)
-                # j.system.fs.copyDirTree(templatespath_osistasklets,catpath,overwriteFiles=overwriteTasklets)
+                for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
+                    catpath = j.system.fs.joinPaths(namespacepath, catname)
+                    j.system.fs.copyDirTree(templatespath_category, catpath, overwriteFiles=False)
+                    # j.system.fs.copyDirTree(templatespath_osistasklets,catpath,overwriteFiles=overwriteTasklets)
 
     def init(self, path="",overwriteImplementation=False, namespacename=None, template=None,session=None):
         if session<>None:
