@@ -1565,7 +1565,7 @@ class GeventWebserver:
 
     def loadSpace(self, name):
         space = self.getSpace(name)
-        space.loadDocProcessor()
+        space.loadDocProcessor(force=True)
         return space
 
     def getBucket(self, name):
