@@ -50,7 +50,7 @@ Stats:/grid/stat
 #Pages:/system/Pages?space=$$space
 #ReloadAll:javascript:(function loadAll() {$.ajax({'url': '/system/ReloadApplication'});(function checkSpaceIsUp(trials) {if (trials <= 0) return;setTimeout(function() {$.ajax({'url': '/system/'}).done(function(){location.reload();console.log('Reloaded');}).error(function(){checkSpaceIsUp(trials - 1)});}, 1000);})(10);})();void(0);
 
-    if j.core.portal.runningPortal.isAdminFromCTX(params.requestContext):
+    if j.core.portal.active.isAdminFromCTX(params.requestContext):
 
         params.result = C
 

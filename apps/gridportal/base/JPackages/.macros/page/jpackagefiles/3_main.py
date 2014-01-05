@@ -7,7 +7,7 @@ def main(j, args, params, tags, tasklet):
     version = args.requestContext.params.get('version')
     nid = args.requestContext.params.get('nid')
 
-    j.core.portal.runningPortal.actorsloader.getActor('system', 'packagemanager')
+    j.core.portal.active.actorsloader.getActor('system', 'packagemanager')
 
     if not nid:
         _, nid, _ = j.application.whoAmI

@@ -8,7 +8,7 @@ class system_packagemanager(j.code.classGetBase()):
         self.actorname = "packagemanager"
         self.appname = "system"
         j.clients.agentcontroller.client.loadJumpscripts()
-        j.core.portal.runningPortal.actorsloader.getActor('system', 'gridmanager')
+        j.core.portal.active.actorsloader.getActor('system', 'gridmanager')
         self.gid, _, _ = j.application.whoAmI
 
 
