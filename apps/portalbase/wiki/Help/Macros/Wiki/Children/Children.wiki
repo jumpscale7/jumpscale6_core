@@ -1,0 +1,25 @@
+h2. Children Macro
+
+h3. Bullets
+
+* When showing the children show the bullets
+
+h3. Page
+
+* Define from which page to start
+* If not defined then from doc where macro has been used
+
+h3. Depth
+
+* How many levels deep do we want to go (starting from startpoint)
+  0 means all levels
+
+h3. Example
+
+{{code:
+\{\{children: page:help bullets\}\}
+}}
+
+h4. Output
+
+{{children: page:help bullets}}

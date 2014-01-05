@@ -12,18 +12,20 @@ class UserManager():
 
     def _init(self):
         if self.inited == False:
+            self.userModelDB = j.apps.system.usermanager.models.user
+            self.groupModelDB = j.apps.system.usermanager.models.group
             self._rememberUserKeys()
             self.inited = True
 
     def reset(self):
         self._init()
-        j.apps.system.usermanager.models.user.destroy()
-        j.apps.system.usermanager.models.group.destroy()
+        self.userModelDB.destroy()
+        self.groupModelDB.destroy()
 
     def userGet(self, name, createNew=False, usecache=True):
         self._init()
 
-        model = j.apps.system.usermanager.models.user
+        model = self.userModelDB
 
         def new(model, name):
             obj = model.new()
@@ -48,7 +50,7 @@ class UserManager():
     def groupGet(self, name, createNew=False):
         self._init()
 
-        model = j.apps.system.usermanager.models.group
+        model = self.groupModelDB
 
         def new(model, name):
             obj = model.new()
@@ -75,7 +77,7 @@ class UserManager():
         creates user no matter what
         """
         self._init()
-        model = j.apps.system.usermanager.models.user
+        model = self.userModelDB
         user = self.userGet(name, createNew=True)
 
         groups = [str(group) for group in groups]
@@ -105,7 +107,7 @@ class UserManager():
         return self.userGet(user)
 
     def _rememberUserKeys(self):
-        model = j.apps.system.usermanager.models.user
+        model = self.userModelDB
         ids = model.list()
         for id in ids:
             try:

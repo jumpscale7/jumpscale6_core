@@ -1,0 +1,9 @@
+h1. Pages
+
+View a list of pages
+
+{{code:
+\{\{pages}}
+}}
+
+{{pages}}

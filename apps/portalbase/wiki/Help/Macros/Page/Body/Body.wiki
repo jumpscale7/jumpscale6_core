@@ -1,0 +1,9 @@
+h1. Body
+
+Adds content to the body of the page
+
+{{code:
+{{body: Hello}}
+}}
+
+{{body: Hello}}

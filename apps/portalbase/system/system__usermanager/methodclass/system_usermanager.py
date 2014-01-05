@@ -12,8 +12,6 @@ class system_usermanager(j.code.classGetBase()):
         self._te = {}
         self.actorname = "usermanager"
         self.appname = "system"
-        self.cache = {} #cache for users
-        self.cacheg = {} #cache for 
 
     def authenticate(self, name, secret, **args):
         """
@@ -23,7 +21,8 @@ class system_usermanager(j.code.classGetBase()):
         result str 
         
         """
-        user = self._userGet(name, usecache=False)
+        usermanager = j.apps.system.usermanager
+        user = usermanager.extensions.usermanager.userGet(name, usecache=False)
 
         if user == None:
             return False
@@ -42,7 +41,7 @@ class system_usermanager(j.code.classGetBase()):
         
         """
         usermanager = j.apps.system.usermanager
-        user = self._userGet(user)
+        user = usermanager.extensions.usermanager.userGet(user)
 
         if user == None:
             # did not find user
@@ -117,7 +116,7 @@ class system_usermanager(j.code.classGetBase()):
         
         """
         usermanager = j.apps.system.usermanager
-        user = self._userGet(name)
+        user = usermanager.extensions.usermanager.userGet(name)
         if user == None:
             return False
         else:

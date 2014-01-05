@@ -1,0 +1,23 @@
+@usedefaults
+
+h2. basic constructs
+
+h3. usedefault
+
+{{code:
+@usedefault
+}}
+
+* only needs to be used when page does not have same name as parent directory, it forces the wiki system to use the default.wiki page from the .space config directory
+
+h3. basic wiki syntac
+
+* we based the syntax on confluence wiki
+
+h4. headings
+
+{{code:
+h1. heading 1
+h2. heading 2
+h3. heading 3
+}}

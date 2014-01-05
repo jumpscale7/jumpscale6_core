@@ -1,0 +1,14 @@
+h1. Include
+
+Used to include other pages their content inside a page
+
+h2. Wiki
+
+{{code:
+\{\{include:included_page\}\}
+}}
+
+h2. Output
+
+{{include:included_page}}
+

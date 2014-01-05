@@ -1,0 +1,13 @@
+h1. Find
+
+Shows a search box in the navigation menu.
+
+h2. Example
+
+You will find a search box in the navigation menu.
+
+{{code:
+{{find}}
+}}
+
+{{find}}

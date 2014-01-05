@@ -1,0 +1,68 @@
+h2. Childrentree
+
+This macro shows a tree of all the children of the current document
+
+* `page`: Define from which page to start. Optional. Default value is the current page.
+
+* `bullets`: Show the children with bullets. Optional. Default value is `False`.
+
+* `depth`: The depth of the children tree to go. Optional. The default is 0, causing it to view the complete children tree.
+
+* `no-tree`: By default, the children list is viewed as tree with collapsed items. If `no-tree` is specified, it will be just plain nested `ul` elements, with no collapsing.
+
+* `items`: A tree of the children to view. This can be used to show only some of the children in specific order. If this not specified, all children are viewed, sorted alphabetically. Take care that items must not be separated by spaces
+
+h3. UI customization
+
+The macro depends on `pagetree.js` for tree behavior, and `pagetree.css` for default layout. These files exist in `pylabs-core-6.0\extensions\core\html\htmllib\pagetree`.
+
+h3. Examples
+
+h4. Default layout
+
+{{code:
+\{\{childrentree: page:help \}\}
+}}
+
+{{childrentree: page:help }}
+
+
+h4. bullets
+
+{{code:
+\{\{childrentree: page:help bullets no-tree\}\}
+}}
+
+{{childrentree: page:help bullets no-tree}}
+
+h4. no-tree
+
+{{code:
+\{\{childrentree: page:help no-tree\}\}
+}}
+
+{{childrentree: page:help no-tree}}
+
+h4. items
+
+{{code:
+\{\{childrentree: page:help items:[Macros(Children,JGauge(JGauge3,'St. Thomas'),MenuAdmin),UserManagement]\}\}
+}}
+
+{{childrentree: page:help items:[Macros(Children,JGauge(JGauge3,'St. Thomas'),MenuAdmin),UserManagement]}}
+
+h4. depth
+
+{{code:
+\{\{childrentree: page:help depth:1\}\}
+}}
+
+{{childrentree: page:help depth:1}}
+
+h4. page
+
+{{code:
+\{\{childrentree: page:Macros \}\}
+}}
+
+{{childrentree: page:Macros }}

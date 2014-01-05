@@ -1,0 +1,14 @@
+@usedefault
+
+h2. types which can be used in model spec
+
+str
+int
+float
+bool
+$TypeOfObject
+$TypeOfEnumeration
+list
+dict
+
+#list & dict can have other list & dict & the other types above

@@ -1,15 +1,16 @@
 
 {{title:QWiki}}
 
-{{projectname:TestSpace}}
+{{projectname:Documentation}}
 
 {{find}}
 
 {{menu:
 System:/System
-RestInterface:/rest
-Explorer:/System/Explorer
 }}
+
+{{menuadmin}}
+
 
 @block
 @row

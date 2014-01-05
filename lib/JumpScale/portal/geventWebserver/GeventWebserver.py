@@ -181,7 +181,6 @@ class GeventWebserver:
         j.system.fs.createDir(self.logdir)
         # j.errorconditionhandler.setExceptHook()
         self.userKeyToName = {}
-        self.bitbucketUsers={}
 
         session_opts = {
             'session.cookie_expires': False,
@@ -260,8 +259,11 @@ class GeventWebserver:
             right = ""
         else:
             groupsusers = j.apps.system.usermanager.getusergroups(username)
-            if username not in groupsusers:
-                groupsusers.append(username)  #user has always a group which is himself
+            if groupsusers != None:
+                # groupsusers+=[username]  #@todo why did we do that???, maybe something will break now
+                pass
+            else:
+                print "ERROR:  user %s has no groups" % username
 
             right = ""
             if "admin" in groupsusers:
@@ -273,15 +275,6 @@ class GeventWebserver:
                         # found match
                         right = spaceobject.model.acl[groupuser]
                         break
-
-            if right == "":
-                #check bitbucket
-                for key,acl in spaceobject.model.acl.iteritems():
-                    if key.find("bitbucket")==0:
-                        from IPython import embed
-                        print "DEBUG NOW ooooooo"
-                        embed()
-                        
 
         if right == "*":
             right = "rwa"
