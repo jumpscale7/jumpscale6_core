@@ -275,6 +275,7 @@ class GeventWebserver:
                         # found match
                         right = spaceobject.model.acl[groupuser]
                         break
+
         if right == "*":
             right = "rwa"
         # print "right:%s" % right
@@ -335,8 +336,8 @@ class GeventWebserver:
             spaceObject = self.spacesloader.getLoaderFromId(space)
 
             if spaceObject.docprocessor == None:
-                spaceObject.loadDocProcessor()  # dynamic load of space
-
+                spaceObject.loadDocProcessor(force=True)  # dynamic load of space
+            
             spacedocgen = spaceObject.docprocessor
 
             if name != "" and name in spacedocgen.name2doc:
