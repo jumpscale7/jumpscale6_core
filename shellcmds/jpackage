@@ -8,7 +8,7 @@ parser = cmdutils.ArgumentParser()
 
 commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
             'publish', 'repackage', 'restart', 'start', 'stop', 'update', 'updateall', 'upload', 'mirror',
-            'switchbranch']
+            'switchbranch', 'list']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
@@ -184,5 +184,15 @@ elif args.action == 'switchbranch':
     for package in packages:
         recipe = package.getCodeMgmtRecipe()
         recipe.hrd.set('jp.code.branch', args.branch)
+
+elif args.action == 'list':
+    packages = cmdutils.getJPackage(args,installed=True)
+    form = '%(domain)-15s %(name)-20s %(version)8s %(buildnr)8s %(debug)5s'
+    print form % {'domain': 'DOMAIN', 'name': 'NAME', 'version': 'VERSION', 'debug': 'DEBUG', 'buildnr':'BUILDNR'}
+    print '=' * 60
+    print ''
+    for package in packages:
+        debug = 'yes' if package.debug else 'no'
+        print form % {'name': package.name, 'domain': package.domain, 'version': package.version, 'debug': debug, 'buildnr': package.buildNr}
 
 j.application.stop()
