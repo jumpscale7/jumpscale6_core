@@ -9,7 +9,7 @@ def main(j, args, params, tags, tasklet):
         if not j.system.fs.exists(path):
             page.addMessage("ERROR:could not find file %s" % path)
 
-        apppath = j.core.portal.runningPortal.cfgdir.rpartition('/')[0]
+        apppath = j.core.portal.active.cfgdir.rpartition('/')[0]
         codepath = os.getcwd()
         if path.startswith('/') and not (path.startswith(apppath) or path.startswith(codepath)):
             path = ''

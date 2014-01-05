@@ -21,7 +21,7 @@ class system_contentmanager(j.code.classGetBase()):
         result list(str) 
         
         """
-        return j.core.portal.runningPortal.actorsloader.actors.keys()
+        return j.core.portal.active.actorsloader.actors.keys()
 
     def getActorsWithPaths(self, **args):
         """
@@ -29,8 +29,8 @@ class system_contentmanager(j.code.classGetBase()):
         
         """
         actors = []
-        for actor in j.core.portal.runningPortal.actorsloader.id2object.keys():
-            actor = j.core.portal.runningPortal.actorsloader.id2object[actor]
+        for actor in j.core.portal.active.actorsloader.id2object.keys():
+            actor = j.core.portal.active.actorsloader.id2object[actor]
             actors.append([actor.model.id, actor.model.path])
         return actors
 
@@ -90,7 +90,7 @@ class system_contentmanager(j.code.classGetBase()):
         param:modelname 
         param:key         
         """
-        actor = j.core.portal.runningPortal.actorsloader.getActor(appname, actorname)
+        actor = j.core.portal.active.actorsloader.getActor(appname, actorname)
         cache = actor.dbmem.cacheGet(key)
 
         dtext = j.apps.system.contentmanager.extensions.datatables
@@ -147,12 +147,12 @@ class system_contentmanager(j.code.classGetBase()):
     def reloadAll(self, id):
         def reloadApp():
             print "RELOAD APP FOR ACTORS Delete"
-            j.core.portal.runningPortal.reset()
+            j.core.portal.active.reset()
 
-        j.core.portal.runningPortal.actorsloader.id2object.pop(id)
+        j.core.portal.active.actorsloader.id2object.pop(id)
 
-        j.core.portal.runningPortal.scheduler.scheduleFromNow(2, 9, reloadApp)
-        j.core.portal.runningPortal.scheduler.scheduleFromNow(10, 9, reloadApp)
+        j.core.portal.active.scheduler.scheduleFromNow(2, 9, reloadApp)
+        j.core.portal.active.scheduler.scheduleFromNow(10, 9, reloadApp)
 
     def notifyActorModification(self, id, **args):
         """
@@ -160,7 +160,7 @@ class system_contentmanager(j.code.classGetBase()):
         result bool 
         
         """
-        loaders = j.core.portal.runningPortal.actorsloader
+        loaders = j.core.portal.active.actorsloader
         loader = loaders.getLoaderFromId(id)
         loader.reset()
 
@@ -179,7 +179,7 @@ class system_contentmanager(j.code.classGetBase()):
         appname, actorname = name.split("__")
         path = path
 
-        if key not in j.core.portal.runningPortal.actorsloader.actors:
+        if key not in j.core.portal.active.actorsloader.actors:
             # actor does not exist yet, create required dirs in basedir
             if path == "":
                 path = j.system.fs.joinPaths(j.core.portal.active.basepath, "actors", key)
@@ -190,7 +190,7 @@ class system_contentmanager(j.code.classGetBase()):
                 j.system.fs.createDir(j.system.fs.joinPaths(path, ".actor"))
 
             print "scan path:%s" % path
-            j.core.portal.runningPortal.actorsloader.scan(path)
+            j.core.portal.active.actorsloader.scan(path)
             result = True
         else:
             result = False
@@ -222,8 +222,8 @@ class system_contentmanager(j.code.classGetBase()):
             j.core.portal.active.loadSpaces(reset=True)
 
         # loader.pop(id)
-        # j.core.portal.runningPortal.scheduler.scheduleFromNow(1,9,reloadApp,id=id)
-        j.core.portal.runningPortal.scheduler.scheduleFromNow(10, 9, reloadApp, id=id)
+        # j.core.portal.active.scheduler.scheduleFromNow(1,9,reloadApp,id=id)
+        j.core.portal.active.scheduler.scheduleFromNow(10, 9, reloadApp, id=id)
         return result
 
     def notifyBucketModification(self, id, **args):
@@ -294,7 +294,7 @@ class system_contentmanager(j.code.classGetBase()):
         # loader=j.core.portal.active.spacesloader.id2object
         # loader.pop(id)
 
-        j.core.portal.runningPortal.scheduler.scheduleFromNow(10, 9, reloadApp)
+        j.core.portal.active.scheduler.scheduleFromNow(10, 9, reloadApp)
 
     def notifySpaceModification(self, id, **args):
         """
@@ -381,9 +381,9 @@ class system_contentmanager(j.code.classGetBase()):
         actorname = actor
         appname = app
 
-        filesroot = j.core.portal.runningPortal.filesroot
+        filesroot = j.core.portal.active.filesroot
 
-        actorloader = j.core.portal.runningPortal.actorsloader.id2object["%s__%s" % (appname, actorname)]
+        actorloader = j.core.portal.active.actorsloader.id2object["%s__%s" % (appname, actorname)]
 
         path = j.system.fs.joinPaths(actorloader.model.path, "specs")
 

@@ -18,3 +18,5 @@ class PortalLoaderFactory():
     def getTemplatesPath(self):
         dirname = j.system.fs.getDirName(__file__)
         return j.system.fs.joinPaths(dirname, 'templates')
+
+    

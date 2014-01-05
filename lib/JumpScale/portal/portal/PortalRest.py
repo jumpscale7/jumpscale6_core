@@ -5,16 +5,13 @@ from JumpScale import j
 import mimeparse
 import mimetypes
 
-
-from PortalServerRest1 import PortalServerRest1
-
-class PortalServerRest2(PortalServerRest1):
+class PortalRest():
 
     def __init__(self, webserver):
         self.ws=webserver
 
 
-    def validate(self, restext, auth, ctx):
+    def validate(self, auth, ctx):
         if ctx.params == "":
             msg = 'No parameters given to actormethod.'
             return False, msg
@@ -23,12 +20,10 @@ class PortalServerRest2(PortalServerRest1):
             ctx.start_response('401 %s' % msg, [])
             return False, msg
 
-        if restext:
-            paramCriteria = self.routesext[ctx.path][1]
-            paramOptional = self.routesext[ctx.path][3]
-        else:
-            paramCriteria = self.routes[ctx.path][1]
-            paramOptional = self.routes[ctx.path][3]
+        paramCriteria = self.ws.routes[ctx.path][1]
+        paramOptional = self.ws.routes[ctx.path][3]
+        
+
         for key in paramCriteria.keys():
             criteria = paramCriteria[key]
             if key not in ctx.params:
@@ -85,12 +80,13 @@ class PortalServerRest2(PortalServerRest1):
         if not routekey:
             routekey = "%s_%s_%s" % (paths[0], paths[1], paths[2])
         # j.logger.log("Execute %s %s" % (env["REMOTE_ADDR"], routekey))
-        if ext:
-            routes = self.routesext
-        else:
-            routes = self.routes
+        routes = self.ws.routes
         if routekey not in routes:
-            j.core.portal.runningPortal.activateActor(paths[0], paths[1])
+            self.activateActor(paths[0], paths[1])
+        
+        if routekey not in routes:
+            routekey="GET_%s"%routekey
+
         if routekey in routes:
             if human:
                 ctx.fformat = "human"
@@ -104,7 +100,7 @@ class PortalServerRest2(PortalServerRest1):
             ctx.actor = paths[1]            
             ctx.method = paths[2]
             auth = routes[routekey][5]
-            resultcode, msg = self.validate(ext, auth, ctx) #validation & authorization (but user needs to be known)
+            resultcode, msg = self.validate(auth, ctx) #validation & authorization (but user needs to be known)
             if resultcode == False:                
                 if human:
                     params = {}
@@ -112,11 +108,11 @@ class PortalServerRest2(PortalServerRest1):
                     params["appname"] = ctx.application
                     params["actorname"] = ctx.actor
                     params["method"] = ctx.method
-                    page = self.returnDoc(ctx, start_response, "system",
+                    page = self.ws.returnDoc(ctx, start_response, "system",
                                           "restvalidationerror", extraParams=params)
                     return (False, ctx, [str(page)])
                 else:                    
-                    return (False, ctx, self.raiseError(ctx, msg))
+                    return (False, ctx, self.ws.raiseError(ctx, msg))
             else:
                 return (True, ctx, routekey)
         else:
@@ -125,15 +121,12 @@ class PortalServerRest2(PortalServerRest1):
             actor = paths[1]
             if human:
                 page = self.getServicesInfo(appname, actor)
-                return (False, ctx, self.raiseError(ctx=ctx, msg=msg,msginfo=str(page)))
+                return (False, ctx, self.ws.raiseError(ctx=ctx, msg=msg,msginfo=str(page)))
             else:
-                return (False, ctx, self.raiseError(ctx=ctx, msg=msg,msginfo=""))
+                return (False, ctx, self.ws.raiseError(ctx=ctx, msg=msg,msginfo=""))
 
     def execute_rest_call(self, ctx, routekey, ext=False):
-        if ext:
-            routes = self.routesext
-        else:
-            routes = self.routes
+        routes = self.ws.routes
         try:
             method = routes[routekey][0]
             result = method(ctx=ctx, **ctx.params)
@@ -141,7 +134,7 @@ class PortalServerRest2(PortalServerRest1):
         except Exception as errorObject:
             eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
             msg = "Execute method %s failed." % (routekey)
-            return (False, self.raiseError(ctx=ctx, msg=msg, errorObject=eco))
+            return (False, self.ws.raiseError(ctx=ctx, msg=msg, errorObject=eco))
 
     def processor_rest(self, env, start_response, path, human=True, ctx=False):
         """
@@ -164,11 +157,11 @@ class PortalServerRest2(PortalServerRest1):
             if not success:
                 params["error"] = msg
                 if human:
-                    page = self.returnDoc(ctx, start_response, "system", "rest",
+                    page = self.ws.returnDoc(ctx, start_response, "system", "rest",
                                           extraParams=params)
                     return [str(page)]
                 else:
-                    return self.raiseError(ctx, msg)
+                    return self.ws.raiseError(ctx, msg)
             paths = params['paths']
 
             success, ctx, routekey = self.restRouter(env, start_response, path,
@@ -186,9 +179,9 @@ class PortalServerRest2(PortalServerRest1):
                 ctx.format = "json"
                 params = {}
                 params["result"] = result
-                return [str(self.returnDoc(ctx, start_response, "system", "restresult", extraParams=params))]
+                return [str(self.ws.returnDoc(ctx, start_response, "system", "restresult", extraParams=params))]
             else:
-                contentType, result = self.reformatOutput(ctx, result)
+                contentType, result = self.ws.reformatOutput(ctx, result)
                 return [respond(contentType, result)]
         except Exception as errorObject:
             eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
@@ -197,7 +190,7 @@ class PortalServerRest2(PortalServerRest1):
                 j.errorconditionhandler.processErrorConditionObject(eco)
                 print eco
             else:
-                return self.raiseError(ctx, errorObject=eco)
+                return self.ws.raiseError(ctx, errorObject=eco)
 
     def processor_restext(self, env, start_response, path, human=True, ctx=False):
         
@@ -220,11 +213,11 @@ class PortalServerRest2(PortalServerRest1):
             if not success:
                 params["error"] = message
                 if human:
-                    page = self.returnDoc(ctx, start_response, "system", "rest",
+                    page = self.ws.returnDoc(ctx, start_response, "system", "rest",
                                           extraParams=params)
                     return [str(page)]
                 else:
-                    return self.raiseError(ctx, message)
+                    return self.ws.raiseError(ctx, message)
             paths = params['paths']
             appname = paths[0]
             actor = paths[1]
@@ -268,7 +261,7 @@ class PortalServerRest2(PortalServerRest1):
 
                 elif requestmethod == 'OPTIONS':
                     result = 'Allow: HEAD,GET,PUT,DELETE,OPTIONS'
-                    contentType, result = self.reformatOutput(ctx, result)
+                    contentType, result = self.ws.reformatOutput(ctx, result)
                     return respond(contentType, result)
 
                 else:
@@ -288,9 +281,9 @@ class PortalServerRest2(PortalServerRest1):
                 ctx.format = "json"
                 params = {}
                 params["result"] = result
-                return [str(self.returnDoc(ctx, start_response, "system", "restresult", extraParams=params))]
+                return [str(self.ws.returnDoc(ctx, start_response, "system", "restresult", extraParams=params))]
             else:
-                contentType, result = self.reformatOutput(ctx, result)
+                contentType, result = self.ws.reformatOutput(ctx, result)
                 return respond(contentType, result)
         except Exception as errorObject:
             eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
@@ -299,46 +292,24 @@ class PortalServerRest2(PortalServerRest1):
                 j.errorconditionhandler.processErrorConditionObject(eco)
                 print eco
             else:
-                return self.raiseError(ctx, errorObject=eco)
- 
+                return self.ws.raiseError(ctx, errorObject=eco)
  
     def activateActor(self, appname, actor):
-        if not "%s_%s" % (appname, actor) in self.actors.keys():
+        if not "%s_%s" % (appname, actor) in self.ws.actors.keys():
             # need to activate
-            result = self.actorsloader.getActor(appname, actor)
+            result = self.ws.actorsloader.getActor(appname, actor)
             if result == None:
                 # there was no actor
                 return False
-    def _getActorMethodCall(self, appname, actor, method):
-        """
-        used for during error show links to methods in browser
-        """
-        url = "/rest/%s/%s/%s?" % (appname, actor, method)
 
-        auth = self.routes["%s_%s_%s" % (appname, actor, method)][5]
-        if auth:
-            params = ["authkey"]
-        else:
-            params = []
-        params.extend(self.routes["%s_%s_%s" % (appname, actor, method)][1].keys())
 
-        for param in params:
-            url += "%s=&" % param
-        url += "format=text"
-        if url[-1] == "&":
-            url = url[:-1]
-        if url[-1] == "?":
-            url = url[:-1]
-        # url="<a href=\"%s\">%s</a> " % (url,url)
-        return url
-
-    def _getActorInfoUrl(self, appname, actor):
-        """
-        used for during error show links to actor in browser
-        """
-        if actor == "":
-            url = "/rest/%s/" % (appname)
-        else:
-            url = "/rest/%s/%s/" % (appname, actor)
-        # url="<a href=\"%s\">go here for more info about actor %s in %s</a> " % (url,actor,appname)
-        return url                
+    # def _getActorInfoUrl(self, appname, actor):
+    #     """
+    #     used for during error show links to actor in browser
+    #     """
+    #     if actor == "":
+    #         url = "/rest/%s/" % (appname)
+    #     else:
+    #         url = "/rest/%s/%s/" % (appname, actor)
+    #     # url="<a href=\"%s\">go here for more info about actor %s in %s</a> " % (url,actor,appname)
+    #     return url                

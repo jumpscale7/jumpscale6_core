@@ -35,7 +35,7 @@ ReloadAll:javascript:(function loadAll() {$.ajax({'url': '/system/ReloadApplicat
 #Spaces:/system/Spaces
 #Pages:/system/Pages?space=$$space
 
-    if j.core.portal.runningPortal.isAdminFromCTX(params.requestContext):
+    if j.core.portal.active.isAdminFromCTX(params.requestContext):
         params.result = C
 
     params.result = (params.result, doc)

@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
 
     if args["app"] != "" and args["actor"] != "":
         # look for path for bucket
-        aloader = j.core.portal.runningPortal.actorsloader.getActorLoaderFromId("%s__%s" % (args["app"].lower(), args["actor"].lower()))
+        aloader = j.core.portal.active.actorsloader.getActorLoaderFromId("%s__%s" % (args["app"].lower(), args["actor"].lower()))
         path = j.system.fs.joinPaths(aloader.model.path, args["path"])
     elif args["space"] != "":
         # look for path for bucket

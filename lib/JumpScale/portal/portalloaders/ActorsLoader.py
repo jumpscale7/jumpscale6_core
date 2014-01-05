@@ -36,10 +36,102 @@ class ActorExtensionsGroup(PMExtensionsGroup):
             extension = self.pm_extensions[extensionName]
             extension.activate()
 
-
 class Class():
     pass
+    
+class GroupAppsClass(object):
+    def __init__(self, actorsloader):
+        self.actorsloader = actorsloader
 
+    def __getattr__(self, appname):
+        app = AppClass(self.actorsloader, appname)
+        setattr(self, appname, app)
+        return app
+
+class AppClass(object):
+    def __init__(self, actorsloader, appname):
+        self._appname = appname
+        self._actorsloader = actorsloader
+
+    def __getattr__(self, actorname):
+        if actorname in ('__members__', '__methods__', 'trait_names', '_getAttributeNames'):
+            return object.__getattr__(self, actorname)
+        actor = self._actorsloader.getActor(self._appname, actorname)
+        setattr(self, actorname, actor)
+        return actor
+
+
+class ActorsLoader(LoaderBase):
+    """
+    loader for all actors
+    """
+
+    def __init__(self):
+        """
+        """
+        LoaderBase.__init__(self, "actor", ActorLoader)
+        self.actorIdToActorLoader = self.id2object
+        self.getActorLoaderFromId = self.getLoaderFromId
+        self.osiscl = None
+
+    def reset(self):
+        j.apps = GroupAppsClass(self)
+        j.core.specparser.app_actornames = {}
+        j.core.specparser.actornames = []
+        j.core.specparser.appnames = []
+        j.core.specparser.modelnames = {}
+        j.core.specparser.roles = {}
+        j.core.specparser.specs = {}
+        j.core.codegenerator.classes = {}
+        # j.core.portal.active._init()
+
+    def getApps(self):
+        result = {}
+        for item in self.id2object.keys():
+            if item.find("__") != -1:
+                app = item.split("__")[0]
+                result[app] = 1
+        return result.keys()
+
+    def getAppActors(self):
+        result = []
+        for item in self.id2object.keys():
+            if item.find("__") != -1:
+                app, actor = item.split("__", 2)
+                result.append([app, actor])
+        return result
+
+    def getActor(self, appname, actorname):
+
+        key = "%s__%s" % (appname.lower(), actorname.lower())
+
+        if key in j.core.portal.active.actors:
+            return j.core.portal.active.actors[key]
+
+        print "get actor cache miss for %s %s" % (appname, actorname)
+
+        if key in self.actorIdToActorLoader:
+            loader = self.actorIdToActorLoader[key]
+            aobj = loader.activate()
+            j.core.portal.active.actors[key] = aobj
+            return j.core.portal.active.actors[key]
+        else:
+            raise RuntimeError("Cannot find actor from app %s with name %s" % (appname, actorname))
+
+    def existsActorLoader(self, appname, actorname):
+        key = "%s__%s" % (appname.lower(), actorname.lower())
+        return key in self.id2object
+
+    def existsActor(self, appname, actorname):
+        key = "%s__%s" % (appname.lower(), actorname.lower())
+        return key in j.core.portal.active.actors
+
+    def loadOsisTasklets(self, actorobject, actorpath, modelname):
+        path = j.system.fs.joinPaths(actorpath, "osis", modelname)
+        if j.system.fs.exists(path):
+            for method in ["set", "get", "delete", "list", "find", "datatables"]:
+                path2 = j.system.fs.joinPaths(path, "method_%s" % method)
+                actorobject._te["model_%s_%s" % (modelname, method)] = j.core.taskletengine.get(path2)
 
 class ActorLoader(LoaderBaseObject):
 
@@ -63,112 +155,20 @@ class ActorLoader(LoaderBaseObject):
         self._loadFromDisk(path, reset=False)
         self.model.application = app
         self.model.actor = actor
-        self.save()
-
+        
     def _removeFromMem(self):
         print "remove actor %s from memory" % self.model.id
         j.core.specparser.removeSpecsForActor(self.model.application, self.model.actor)
         j.core.codegenerator.removeFromMem(self.model.application, self.model.actor)
         j.core.portal.active.unloadActorFromRoutes(self.model.application, self.model.actor)
         key = "%s_%s" % (self.model.application.lower(), self.model.actor.lower())
-        if key in j.core.portal.runningPortal.actors:
-            j.core.portal.runningPortal.actors.pop(key)
+        if key in j.core.portal.active.actors:
+            j.core.portal.active.actors.pop(key)
 
     def reset(self):
         self._removeFromMem()
         self.loadFromDisk(self.model.path, reset=True)
-        j.core.portal.runningPortal.actorsloader.getActor(self.model.application, self.model.actor)
-
-    def activate(self):
-        print "activate actor: %s %s" % (self.model.application, self.model.actor)
-        result = j.apps.actorsloader._generateLoadActor(self.model.application, self.model.actor, self.model.path)
-        return result
-
-    # def loadSpace(self):
-    #     self.activate()
-    
-class GroupAppsClass(object):
-    def __init__(self, actorsloader):
-        self.actorsloader = actorsloader
-
-    def __getattr__(self, appname):
-        app = AppClass(self.actorsloader, appname)
-        setattr(self, appname, app)
-        return app
-
-class AppClass(object):
-    def __init__(self, actorsloader, appname):
-        self._appname = appname
-        self._actorsloader = actorsloader
-
-    def __getattr__(self, actorname):
-        if actorname in ('__members__', '__methods__', 'trait_names', '_getAttributeNames'):
-            return object.__getattr__(self, actorname)
-        actor = self._actorsloader.getActor(self._appname, actorname)
-        setattr(self, actorname, actor)
-        return actor
-
-class ActorsLoader(LoaderBase):
-
-    def __init__(self):
-        """
-        """
-        LoaderBase.__init__(self, "actor", ActorLoader)
-        self.actorIdToActorLoader = self.id2object
-        self.getActorLoaderFromId = self.getLoaderFromId
-        self.osiscl = None
-
-    def reset(self):
-        j.apps = GroupAppsClass(self)
-        j.core.specparser.app_actornames = {}
-        j.core.specparser.actornames = []
-        j.core.specparser.appnames = []
-        j.core.specparser.modelnames = {}
-        j.core.specparser.roles = {}
-        j.core.specparser.specs = {}
-        j.core.codegenerator.classes = {}
-        # j.core.portal.runningPortal._init()
-
-    def getApps(self):
-        result = {}
-        for item in self.id2object.keys():
-            if item.find("__") != -1:
-                app = item.split("__")[0]
-                result[app] = 1
-        return result.keys()
-
-    def getAppActors(self):
-        result = []
-        for item in self.id2object.keys():
-            if item.find("__") != -1:
-                app, actor = item.split("__", 2)
-                result.append([app, actor])
-        return result
-
-    def getActor(self, appname, actorname):
-
-        key = "%s__%s" % (appname.lower(), actorname.lower())
-
-        if key in j.core.portal.runningPortal.actors:
-            return j.core.portal.runningPortal.actors[key]
-
-        print "get actor cache miss for %s %s" % (appname, actorname)
-
-        if key in self.actorIdToActorLoader:
-            loader = self.actorIdToActorLoader[key]
-            aobj = loader.activate()
-            j.core.portal.runningPortal.actors[key] = aobj
-            return j.core.portal.runningPortal.actors[key]
-        else:
-            raise RuntimeError("Cannot find actor from app %s with name %s" % (appname, actorname))
-
-    def existsActorLoader(self, appname, actorname):
-        key = "%s__%s" % (appname.lower(), actorname.lower())
-        return key in self.id2object
-
-    def existsActor(self, appname, actorname):
-        key = "%s__%s" % (appname.lower(), actorname.lower())
-        return key in j.core.portal.runningPortal.actors
+        j.core.portal.active.actorsloader.getActor(self.model.application, self.model.actor)
 
     def _descrTo1Line(self, descr):
         if descr == "":
@@ -178,14 +178,13 @@ class ActorsLoader(LoaderBase):
         # descr=descr.replace("'n","")
         return descr
 
-    def loadOsisTasklets(self, actorobject, actorpath, modelname):
-        path = j.system.fs.joinPaths(actorpath, "osis", modelname)
-        if j.system.fs.exists(path):
-            for method in ["set", "get", "delete", "list", "find", "datatables"]:
-                path2 = j.system.fs.joinPaths(path, "method_%s" % method)
-                actorobject._te["model_%s_%s" % (modelname, method)] = j.core.taskletengine.get(path2)
 
-    def _generateLoadActor(self, appname, actorname, actorpath):
+    def activate(self):
+        print "activate actor: %s %s" % (self.model.application, self.model.actor)
+
+        appname=self.model.application
+        actorname=self.model.actor
+        actorpath=self.model.path
         # parse the specs
         j.core.specparser.parseSpecs("%s/specs" % actorpath, appname=appname, actorname=actorname)
 
@@ -293,7 +292,7 @@ def match(j, args, params, actor, tags, tasklet):
                     j.system.fs.writeFile(methodtasklet, taskletContent)
                 actorobject._te[methodspec.name] = j.core.taskletengine.get(taskletpath)
 
-            if "runningPortal" in j.core.portal.__dict__:
+            if j.core.portal.active<>None:
 
                 paramvalidation = {}
                 for var in methodspec.vars:
@@ -325,10 +324,13 @@ def match(j, args, params, actor, tags, tasklet):
                 j.core.portal.active.addRoute(methodcall, appname, actorname, methodspec.name,
                                                                paramvalidation=paramvalidation, paramdescription=paramdescription, paramoptional=paramoptional,
                                                                description=methodspec.description, auth=auth, returnformat=returnformat)
-                actorobjects = modelNames
-                j.core.portal.active.addExtRoute(methodcall, appname, actorname, methodspec.name,
-                                                                  actorobjects,
-                                                                  paramvalidation=paramvalidation, paramdescription=paramdescription, paramoptional=paramoptional, description=methodspec.description, auth=auth, returnformat=returnformat)
+                # actorobjects = modelNames
+                # j.core.portal.active.addExtRoute(methodcall, appname, actorname, methodspec.name,
+                #                                                   actorobjects,
+                #                                                   paramvalidation=paramvalidation, 
+                #                                                   paramdescription=paramdescription, 
+                #                                                   paramoptional=paramoptional, 
+                #                                                   description=methodspec.description, auth=auth, returnformat=returnformat)
 
         # load taskletengines if they do exist
         tepath = j.system.fs.joinPaths(actorpath, "taskletengines")
@@ -348,7 +350,7 @@ def match(j, args, params, actor, tags, tasklet):
 
         if "runningAppserver" in j.core.portal.__dict__:
             key = "%s_%s" % (spec.appname.lower(), spec.actorname.lower())
-            j.core.portal.runningPortal.actors[key] = actorobject
+            j.core.portal.active.actors[key] = actorobject
 
         # load extensions
         actorobject.__dict__['extensions'] = ActorExtensionsGroup(j.system.fs.joinPaths(actorpath, "extensions"))

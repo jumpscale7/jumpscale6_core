@@ -10,7 +10,7 @@ class DataTables():
 
     def getActorModel(self, appname, actorname, modelname):
         try:
-            actor = j.core.portal.runningPortal.actorsloader.getActor(appname, actorname)
+            actor = j.core.portal.active.actorsloader.getActor(appname, actorname)
             model = actor.models.__dict__[modelname]
         except Exception as e:
             # self.page.addMessage()

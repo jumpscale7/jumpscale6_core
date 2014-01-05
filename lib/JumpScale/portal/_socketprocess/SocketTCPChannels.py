@@ -87,7 +87,7 @@ class WorkerSession(TCPSession):
             print "loopstart"
             dtype, length, epoch, gid, nid, pid, data = self.read()
             print "loopend"
-            j.core.portal.runningPortal.messagerouter.queue(gid, nid, pid, data)
+            j.core.portal.active.messagerouter.queue(gid, nid, pid, data)
 
         # except Exception,e:
             # print "read error in appserver6 workergreenlet %s\n" % self.sessionnr
@@ -153,7 +153,7 @@ class ManholeSession(TCPSession):
     def __init__(self, addr, port, socket):
         TCPSession.__init__(self, addr, port, socket)
         self.type = "manhole"
-        self.cmds = j.core.portal.runningPortal.tcpservercmds
+        self.cmds = j.core.portal.active.tcpservercmds
         self.socket.settimeout(None)
 
     def run(self):
@@ -234,15 +234,15 @@ commands:
         return result
 
     def getsession(self, id):
-        if id not in j.core.portal.runningPortal.sessions:
+        if id not in j.core.portal.active.sessions:
             self.send("Could not find session with id %s" % id)
             return False
-        return j.core.portal.runningPortal.sessions[id]
+        return j.core.portal.active.sessions[id]
 
     def killallsessions(self):
         result = ""
-        for key in j.core.portal.runningPortal.sessions.keys():
-            session = j.core.portal.runningPortal.sessions[key]
+        for key in j.core.portal.active.sessions.keys():
+            session = j.core.portal.active.sessions[key]
             if session.type != "manhole":
                 session.active = False
                 session.kill()
@@ -252,8 +252,8 @@ commands:
 
     def listsessions(self):
         result = ""
-        for key in j.core.portal.runningPortal.sessions.keys():
-            session = j.core.portal.runningPortal.sessions[key]
+        for key in j.core.portal.active.sessions.keys():
+            session = j.core.portal.active.sessions[key]
             result += "%s" % session
         return result
 

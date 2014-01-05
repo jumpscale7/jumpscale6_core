@@ -44,7 +44,7 @@ def main(j, args, params, tags, tasklet):
         for name in msorted:
             right = ",".join(memberace[name])
             user = j.apps.system.usermanager.extensions.usermanager.userGet(name)
-            secreturl = "http://%s/%s?authkey=%s" % (j.core.portal.runningPortal.ipaddr, spacename, user.secret)
+            secreturl = "http://%s/%s?authkey=%s" % (j.core.portal.active.ipaddr, spacename, user.secret)
             if not singlespace:
                 out += "|%s" % spacename
             out += "|%s|%s|%s|%s|[secretlink|%s]|\n" % (name, right, ",".join(user.emails), ",".join(user.groups), secreturl)

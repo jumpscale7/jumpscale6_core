@@ -8,6 +8,7 @@ from beaker.middleware import SessionMiddleware
 from MacroExecutor import MacroExecutorPage, MacroExecutorWiki, MacroExecutorPreprocess
 from PortalAuthenticatorOSIS import PortalAuthenticatorOSIS
 from RequestContext import RequestContext
+from PortalRest import PortalRest
 
 from JumpScale import j
 from gevent.pywsgi import WSGIServer
@@ -38,7 +39,22 @@ class PortalServer:
         self.started = False
         self.epoch = time.time()
 
-        self.loadConfig()
+        self.cfgdir="cfg"
+
+        j.core.portal.active=self
+
+        self.pageKey2doc = {}
+        self.routes = {}
+
+        self.loadConfig()        
+
+        macroPathsPreprocessor = ["macros/preprocess"]
+        macroPathsWiki = ["macros/wiki"]
+        macroPathsPage = ["macros/page"]
+
+        self.macroexecutorPreprocessor = MacroExecutorPreprocess(macroPathsPreprocessor)
+        self.macroexecutorPage = MacroExecutorPage(macroPathsPage)
+        self.macroexecutorWiki = MacroExecutorWiki(macroPathsWiki)
 
         self.bootstrap()
 
@@ -52,8 +68,8 @@ class PortalServer:
         # listenip = '0.0.0.0'
         # if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
         #     listenip = ini.getValue('main', 'listenip')
-        self.router = SessionMiddleware(self.router, session_opts)
-        self._webserver = WSGIServer(('0.0.0.0', self.port), self.router)
+        self._router = SessionMiddleware(self.router, session_opts)
+        self._webserver = WSGIServer(('0.0.0.0', self.port), self._router)
 
         # wwwroot = wwwroot.replace("\\", "/")
         # while len(wwwroot) > 0 and wwwroot[-1] == "/":
@@ -68,19 +84,6 @@ class PortalServer:
         self.schedule15min = {}
         self.schedule60min = {}
 
-        self.pageKey2doc = {}
-        self.routes = {}
-
-        macroPathsPreprocessor = ["macros/preprocess"]
-        macroPathsWiki = ["macros/wiki"]
-        macroPathsPage = ["macros/page"]
-
-        self.macroexecutorPreprocessor = MacroExecutorPreprocess(macroPathsPreprocessor)
-        self.macroexecutorPage = MacroExecutorPage(macroPathsPage)
-        self.macroexecutorWiki = MacroExecutorWiki(macroPathsWiki)
-
-        j.core.portal.active=self
-
         self.rediscache=redis.StrictRedis(host='localhost', port=7767, db=0)
         self.redisprod=redis.StrictRedis(host='localhost', port=7768, db=0)
 
@@ -91,9 +94,11 @@ class PortalServer:
 
         self.loadSpaces()
 
+        self.rest=PortalRest(self)        
+
     def loadConfig(self):
 
-        def replaceVar(self, txt):
+        def replaceVar(txt):
             # txt = txt.replace("$base", j.dirs.baseDir).replace("\\", "/")
             txt = txt.replace("$appdir", j.system.fs.getcwd()).replace("\\", "/")
             txt = txt.replace("$vardir", j.dirs.varDir).replace("\\", "/")
@@ -111,6 +116,9 @@ class PortalServer:
         else:
             self.appdir = j.system.fs.getcwd()
 
+        self.contentdirs = self.getContentDirs() #contentdirs need to be loaded before we go to other dir of base server
+        j.system.fs.changeDir(self.appdir)            
+
         dbtype = ini.getValue("main", "dbtype").lower().strip()
         if dbtype == "fs":
             self.dbtype = j.enumerators.KeyValueStoreType.FILE_SYSTEM
@@ -125,8 +133,11 @@ class PortalServer:
 
         # self.systemdb=j.db.keyvaluestore.getFileSystemStore("appserversystem",baseDir=replaceVar(ini.getValue("systemdb","dbdpath")))
 
+        self.port = int(ini.getValue("main", "webserverport"))
 
-        self.wsport = int(ini.getValue("main", "webserverport"))
+        self.logdir= j.system.fs.joinPaths(j.dirs.logDir,"portal",str(self.port))
+        j.system.fs.createDir(self.logdir)
+
 
         self.secret = ini.getValue("main", "secret")
         self.admingroups = ini.getValue("main", "admingroups").split(",")
@@ -138,8 +149,9 @@ class PortalServer:
         self.getContentDirs()
 
     def reset(self):
-        self.bootstrap()
-        self.contentdirs = self.getContentDirs()
+        self.routes={}
+        self.loadConfig()
+        self.bootstrap()        
         j.core.codegenerator.resetMemNonSystem()
         j.core.specparser.resetMemNonSystem()
         # self.actorsloader.scan(path=self.contentdirs,reset=True) #do we need to load them all
@@ -151,12 +163,13 @@ class PortalServer:
         self.actors = {}  # key is the applicationName_actorname (lowercase)
         self.actorsloader = j.core.portalloader.getActorsLoader()
         self.app_actor_dict = {}
-        # self.taskletengines = {}        
+        self.taskletengines = {}        
         self.actorsloader.reset()
-        self.actorsloader._generateLoadActor("system", "contentmanager", actorpath="system/system__contentmanager/")
+        # self.actorsloader._generateLoadActor("system", "contentmanager", actorpath="%s/apps/portalbase/system/system__contentmanager/"%j.dirs.baseDir)
         # self.actorsloader._generateLoadActor("system", "master", actorpath="system/system__master/")
-        self.actorsloader._generateLoadActor("system", "usermanager", actorpath="system/system__usermanager/")
-        self.actorsloader.scan("system")
+        # self.actorsloader._generateLoadActor("system", "usermanager", actorpath="system/system__usermanager/")
+        self.actorsloader.scan(self.contentdirs)
+        self.actorsloader.getActor("system", "contentmanager")
         self.actorsloader.getActor("system", "usermanager")
 
     def loadSpaces(self):
@@ -179,30 +192,34 @@ class PortalServer:
 
         cfgpath = j.system.fs.joinPaths(self.cfgdir, "contentdirs.cfg")
 
+        def append(path):
+            path=j.system.fs.pathNormalize(path)
+            if path not in self.contentdirs:
+                self.contentdirs.append(path)
+
         if j.system.fs.exists(cfgpath):
             wikicfg = j.system.fs.fileGetContents(cfgpath)
 
-        paths = wikicfg.split("\n")
+            paths = wikicfg.split("\n")
+
+            for path in paths:
+                path = path.strip()
+                if path=="" or path[0]=="#":
+                    continue
+                path=path.replace("\\","/")
+                if path[0] != "/" and path.find(":") == -1:
+                    path = j.system.fs.joinPaths(j.system.fs.getParent(self.cfgdir), path)
+                append(path)
 
         #add own base path
         self.basepath = j.system.fs.joinPaths(j.system.fs.getParent(self.cfgdir), "base")
         j.system.fs.createDir(self.basepath)
-        if self.basepath not in paths:
-            paths.append(self.basepath)
+        append(self.basepath)
 
         #add base path of parent portal
         appdir = self.appdir
-        paths.append(j.system.fs.joinPaths(appdir, "wiki"))
-        paths.append(j.system.fs.joinPaths(appdir, "system"))
-
-        for path in paths:
-            path = path.strip()
-            if path=="" or path[0]=="#":
-                continue
-            path=path.replace("\\","/")
-            if path[0] != "/" and path.find(":") == -1:
-                path = j.system.fs.joinPaths(j.system.fs.getParent(self.cfgdir), path)
-            self.contentdirs.append(path)
+        append(j.system.fs.joinPaths(appdir, "wiki"))
+        append(j.system.fs.joinPaths(appdir, "system"))
 
     def unloadActorFromRoutes(self, appname, actorname):
         for key in self.routes.keys():
@@ -838,26 +855,23 @@ class PortalServer:
             path = "/".join(pathparts[1:])
 
         if match == "restmachine":
-            return self.processor_rest(environ, start_response, path, human=False, ctx=ctx)
-
-        if match == "jobs":
-            return self.processor_jobs(environ, start_response, path, ctx=ctx)
+            return self.rest.processor_rest(environ, start_response, path, human=False, ctx=ctx)
 
         elif match == "elfinder":
             return self.process_elfinder(path, ctx)
 
         elif match == "restextmachine":
-            return self.processor_restext(environ, start_response, path, human=False, ctx=ctx)
+            return self.rest.processor_restext(environ, start_response, path, human=False, ctx=ctx)
 
         elif match == "rest":
             space, pagename = self.path2spacePagename(path.strip("/"))
             self.log(ctx, user, path, space, pagename)
-            return self.processor_rest(environ, start_response, path, ctx=ctx)
+            return self.rest.processor_rest(environ, start_response, path, ctx=ctx)
 
         elif match == "restext":
             space, pagename = self.path2spacePagename(path.strip("/"))
             self.log(ctx, user, path, space, pagename)
-            return self.processor_restext(environ, start_response, path,
+            return self.rest.processor_restext(environ, start_response, path,
                                           ctx=ctx)
         elif match == "ping":
             status = '200 OK'
@@ -888,7 +902,8 @@ class PortalServer:
             self.log(ctx, user, path, space, pagename)
             return [str(self.returnDoc(ctx, start_response, space, pagename, {}))]
     
-    def addRoute(self, function, appname, actor, method, paramvalidation={}, paramdescription={}, paramoptional={}, description="", auth=True, returnformat=None):
+    def addRoute(self, function, appname, actor, method, paramvalidation={}, paramdescription={}, \
+        paramoptional={}, description="", auth=True, returnformat=None):
         """
         @param function is the function which will be called as follows: function(webserver,path,params):
             function can also be a string, then only the string will be returned
@@ -920,7 +935,7 @@ class PortalServer:
 
         methoddict = {'get': 'GET', 'set': 'PUT', 'new': 'POST', 'delete': 'DELETE',
                       'find': 'GET', 'list': 'GET', 'datatables': 'GET', 'create': 'POST'}
-        self.routesext["%s_%s_%s_%s" % ('GET', appname, actor, method)] = [function, paramvalidation, paramdescription, paramoptional, \
+        self.routes["%s_%s_%s_%s" % ('GET', appname, actor, method)] = [function, paramvalidation, paramdescription, paramoptional, \
                                                                         description, auth, returnformat]
 
 ##################### SCHEDULING
@@ -1065,3 +1080,18 @@ class PortalServer:
             fcntl.fcntl(fd, fcntl.F_SETFD, flags | fcntl.FD_CLOEXEC)
         os.chdir(apppath)
         os.execv(sys.executable, args)
+
+    def __str__(self):
+        out=""
+        for key,val in self.__dict__.iteritems():
+            if key[0]<>"_" and key not in ["routes"]:
+                out+="%-35s :  %s\n"%(key,val)
+        routes=",".join(self.routes.keys())
+        out+="%-35s :  %s\n"%("routes",routes)
+        items=out.split("\n")
+        items.sort()
+        out="portalserver:"+"\n".join(items)
+        return out
+
+    __repr__ = __str__
+

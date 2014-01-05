@@ -353,6 +353,7 @@ class DocPreprocessor():
 
         """
         self.varsPath = varsPath
+
         self.macroexecutorPreprocessor = j.core.portal.active.macroexecutorPreprocessor
         self.macroexecutorPage = j.core.portal.active.macroexecutorPage
         self.macroexecutorWiki = j.core.portal.active.macroexecutorWiki
