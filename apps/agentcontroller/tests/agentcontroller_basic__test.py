@@ -18,7 +18,6 @@ class TEST():
     def setUp(self):
         import JumpScale.grid.agentcontroller
         self.client=j.clients.agentcontroller
-                      
 
     def test_basic_execution(self):
         #@todo this is just a basic test to see if agent controller works
@@ -44,6 +43,6 @@ class TEST():
         osis_jobs = j.core.osis.getClientForCategory(osisclient, "system", "job")
         assert len(osis_jobs.search(query)['result']) > 0
 
-        kwargs = {'msg': 'test msg', 'timeout': 5}
-        result2 = self.client.executeKwargs('jumpscale', 'wait', 'node.1.1', kwargs=kwargs)
+        # kwargs = {'msg': 'test msg', 'timeout': 5}
+        # result2 = self.client.executeKwargs('jumpscale', 'wait', 'node.1.1', kwargs=kwargs)
 
