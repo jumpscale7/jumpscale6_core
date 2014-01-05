@@ -1,7 +1,7 @@
 from JumpScale import j
 import copy
 json=j.db.serializers.getSerializerType("j")
-import imp
+
 
 class OSISStore(object):
 
@@ -9,20 +9,21 @@ class OSISStore(object):
     Default object implementation (is for one specific namespace_category)
     """
 
-    def init(self, path, namespace,categoryname):
+    def init(self, path, hrd):
 
         self.path = path
+        self.hrd = hrd
         self.tasklets = {}
 
-        # for tasklettype in j.system.fs.listDirsInDir(self.path, dirNameOnly=True):
-        #     self.tasklets[tasklettype] = j.core.taskletengine.get(j.system.fs.joinPaths(self.path, tasklettype))
+        for tasklettype in j.system.fs.listDirsInDir(self.path, dirNameOnly=True):
+            self.tasklets[tasklettype] = j.core.taskletengine.get(j.system.fs.joinPaths(self.path, tasklettype))
 
         self.db = None
 
         self.db = self._getDB()
 
-        self.namespace = namespace
-        self.categoryname = categoryname
+        self.namespace = self.hrd.get("namespace.name")
+        self.categoryname = self.hrd.get("category.name")
 
         if self.namespace=="" or self.categoryname=="":
             raise RuntimeError("namespace & category cannot be empty")
@@ -30,40 +31,33 @@ class OSISStore(object):
         self.dbprefix = "%s_%s" % (self.namespace, self.categoryname)
         self.dbprefix_incr = "%s_incr" % (self.dbprefix)
 
+        indexEnabled = self.hrd.getInt("category.index") == 1
+        elasticsearchEnabled = self.hrd.getInt("category.elasticsearch") == 1
+
         self.buildlist = False
 
-        self.elasticsearch = self._getElasticSearch()
-        status = self.elasticsearch.status()
-        indexname = self.getIndexName()
-        if indexname not in status['indices'].keys():
-            import pyelasticsearch
-            try:
-                self.elasticsearch.create_index(self.getIndexName())
-            except pyelasticsearch.IndexAlreadyExistsError:
-                pass 
+        if elasticsearchEnabled:
+        # put on None if no elastic search
+            self.elasticsearch = self._getElasticSearch()
+            status = self.elasticsearch.status()
+            indexname = self.getIndexName()
+            if indexname not in status['indices'].keys():
+                import pyelasticsearch
+                try:
+                    self.elasticsearch.create_index(self.getIndexName())
+                except pyelasticsearch.IndexAlreadyExistsError:
+                    pass # we pass this cause elasticsearch can have some delays
+        else:
+            self.elasticsearch = None
+            if indexEnabled:
+                self.buildlist = True
 
-        # if self.tasklets.has_key("init"):
-        #     self.tasklets["init"].executeV2(osis=self)
+        if self.tasklets.has_key("init"):
+            self.tasklets["init"].executeV2(osis=self)
+
+        self.indexTTL = self.hrd.get("category.indexttl")
 
         self.objectclass=None
-
-        authpath=j.system.fs.joinPaths(self.path,"OSIS_auth.py")
-        auth=None
-        authparent=None
-        if j.system.fs.exists(authpath):
-            testmod = imp.load_source("auth_%s"%self.dbprefix, authpath)
-            auth=testmod.AUTH()
-            auth.load(self)
-
-        authpath=j.system.fs.joinPaths(j.system.fs.getParent(self.path),"OSIS_auth.py")
-        if j.system.fs.exists(authpath):
-            testmod = imp.load_source("auth_%s"%self.dbprefix, authpath)
-            authparent=testmod.AUTH()
-            authparent.load(self)
-
-        self.auth=auth
-        if self.auth==None and authparent<>None:
-            self.auth=authparent
 
     def _getModelClass(self):
         if self.objectclass==None:
@@ -104,13 +98,6 @@ class OSISStore(object):
         """
         return self.db.get(self.dbprefix, key)
 
-    def exists(self, key):
-        """
-        get dict value
-        """
-        return self.db.exists(self.dbprefix, key)
-
-
     def getObject(self, ddict={}):
         klass=self._getModelClass()
         if klass=="":
@@ -121,7 +108,20 @@ class OSISStore(object):
     def set(self, key, value):
         obj = self.getObject(value)
 
+        if self.tasklets.has_key("set_pre"):
+            from IPython import embed
+            print "DEBUG NOW setpre tasklets"
+            embed()
+            
+            self.tasklets["set_pre"].executeV2()
+
         self.db.set(self.dbprefix, key=obj.guid, value=value)
+
+        if self.tasklets.has_key("set_post"):
+            from IPython import embed
+            print "DEBUG NOW set_post tasklets"
+            embed()
+            self.tasklets["set_post"].executeV2()
 
         if obj<>value:
             #means there is a model found
@@ -135,34 +135,28 @@ class OSISStore(object):
         """
         return self.dbprefix
 
-    def index(self, obj,ttl=0):
+    def index(self, obj):
         """
-        @param ttl = time to live in seconds of the index
         """
         obj = copy.copy(obj)
-        if self.elasticsearch == None:
-            raise RuntimeError("Cannot find index")
+        if self.elasticsearch <> None:
+            index = self.getIndexName()
 
-        index = self.getIndexName()
-
-        if j.basetype.dictionary.check(obj):
-            data=obj
-        else:
-            data=obj.__dict__
-        guid=data["guid"]
-        data.pop("guid")  # remove guid from object before serializing to json
-        for key5 in data.keys():
-            if key5[0] == "_":
-                data.pop(key5)
-        try:
-            data.pop("sguid")
-        except:
-            pass
-        
-        if ttl <> 0:
-            self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=ttl, replication="async")
-        else:
-            self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
+            guid = obj.guid
+            obj.__dict__.pop("guid")  # remove guid from object before serializing to json
+            for key5 in obj.__dict__.keys():
+                if key5[0] == "_":
+                    obj.__dict__.pop(key5)
+            try:
+                obj.__dict__.pop("sguid")
+            except:
+                pass
+            data = obj.__dict__
+            
+            if self.indexTTL <> "":
+                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=self.indexTTL, replication="async")
+            else:
+                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
 
     def exists(self, key):
         return self.db.exists(self.dbprefix, key)

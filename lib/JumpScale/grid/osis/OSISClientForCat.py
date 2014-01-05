@@ -71,10 +71,6 @@ class OSISClientForCat():
         else:
             return value
 
-    def exists(self, key):
-        self._checkCat()
-        return self.client.exists(namespace=self.namespace, categoryname=self.cat, key=key)
-
     def delete(self, key):
         self._checkCat()
         return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
@@ -93,9 +89,6 @@ class OSISClientForCat():
                                   start=start, size=size)
 
     def simpleSearch(self, params, start=0, size=None):
-        """
-        @todo document P1
-        """
         query = {'query': {'bool': {'must': list()}}}
         myranges = {}
         for k, v in params.iteritems():

@@ -8,49 +8,28 @@ class OSISCMDS(object):
         self.osisInstances = {}  # key is namespace_categoryname
         self.db = None  # default db
         self.elasticsearch = None  # default elastic search connection
+        self._loadCoreHRD()
         self.path="/opt/jumpscale/apps/osis/logic"
 
     def get(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
-            if oi.auth.authenticate(oi,"get",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
         return oi.get(key)
-
-    def exists(self, namespace, categoryname, key, session=None):
-        oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
-            if oi.auth.authenticate(oi,"get",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on exists %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.exists(key)
 
     def set(self, namespace, categoryname, key=None, value=None, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
-            if oi.auth.authenticate(oi,"set",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
         return oi.set(key=key, value=value)
 
     def delete(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
-            if oi.auth.authenticate(oi,"delete",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))        
         return oi.delete(key=key)
 
     def search(self, namespace, categoryname, query, start=0, size=None, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
-            if oi.auth.authenticate(oi,"search",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))        
         result = oi.find(query, start, size)
         return result
 
     def list(self, namespace, categoryname, prefix=None, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
-            if oi.auth.authenticate(oi,"list",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))        
         if prefix==None:
             return oi.list()
         return oi.list(prefix)
@@ -59,6 +38,9 @@ class OSISCMDS(object):
         return msg
 
     #################################################3
+
+    def _loadCoreHRD(self,session=None):
+        self.corehrd = j.core.hrd.getHRD("cfg")
 
     def _getOsisInstanceForCat(self, namespace, category):
         fullname = "%s_%s" % (namespace, category)
@@ -69,17 +51,13 @@ class OSISCMDS(object):
             message="cannot find osis local instance for namespace:%s & category:%s" % (namespace, category), die=False, \
             category="osis.valueerror")
 
-    def _authenticateAdmin(self,session=None,user=None,passwd=None):
-        if session<>None:
-            user=session.user
-            passwd=session.passwd
-        if user=="root":
-            if passwd==j.core.osis.superadminpasswd:
-                return True
-            if j.tools.hash.md5_string(passwd)==j.core.osis.superadminpasswd:
-                return True                          
+    def _authenticateAdmin(self,session):
+        if session.user=="root" and session.passwd=="rooter":
+            #@todo needs to come from a local hrd
+            return True
         else:
             raise RuntimeError("Could not authenticate administrator.")
+
 
     def createNamespace(self, name=None, incrementName=False, template=None,session=None):
         """
@@ -102,11 +80,14 @@ class OSISCMDS(object):
         if template <> None:
             j.system.fs.copyDirTree(j.system.fs.joinPaths(self.path, "_%s" % template), \
                 j.system.fs.joinPaths(self.path, name), overwriteFiles=False)
+            j.system.fs.remove(j.system.fs.joinPaths(self.path, name, "namespace.hrd"))
+            j.system.fs.remove(j.system.fs.joinPaths(self.path, name, "namespaceid.hrd"))
 
         path = j.system.fs.joinPaths(self.path, name)
 
-        self._initDefaultContent( namespacename=name)
-        self.init(path=self.path, namespacename=name, template=template)
+        self._initDefaultContent(overwriteHRD=False, namespacename=name)
+        hrd = j.core.hrd.getHRD(path)
+        self.init(path=self.path, overwriteHRD=False, namespacename=name, template=template)
         return True
 
     def getOsisObjectClass(self,namespace,categoryname,session=None):
@@ -158,20 +139,20 @@ class OSISCMDS(object):
 
         j.system.fs.createDir(j.system.fs.joinPaths(namespacepath, name))
 
-        self.init(path=self.path, overwriteImplementation=False, namespacename=namespacename)
+        self.init(path=self.path, overwriteHRD=False, overwriteImplementation=False, namespacename=namespacename)
 
-    def _initDefaultContent(self,  namespacename=None):
+    def _initDefaultContent(self, overwriteHRD=False, namespacename=None):
         path = self.path
         if namespacename == None:
             for namespacename in j.system.fs.listDirsInDir(path, dirNameOnly=True):
-                self._initDefaultContent(namespacename=namespacename)
+                self._initDefaultContent(overwriteHRD, namespacename=namespacename)
 
         else:
             templatespath = "_templates"
             templatespath_namespace = j.system.fs.joinPaths(templatespath, "namespace")
             templatespath_category = j.system.fs.joinPaths(templatespath, "category")
             namespacepath = j.system.fs.joinPaths(path, namespacename)
-            j.system.fs.copyDirTree(templatespath_namespace, namespacepath, overwriteFiles=False)
+            j.system.fs.copyDirTree(templatespath_namespace, namespacepath, overwriteFiles=overwriteHRD)
             if namespacename[0] <> "_" and j.system.fs.exists(path=j.system.fs.joinPaths(namespacepath, ".parentInTemplate")):  
                 # check if parent is coming from template
                 j.system.fs.remove(j.system.fs.joinPaths(namespacepath, "OSIS_parent.py"))
@@ -179,10 +160,10 @@ class OSISCMDS(object):
 
             for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
                 catpath = j.system.fs.joinPaths(namespacepath, catname)
-                j.system.fs.copyDirTree(templatespath_category, catpath, overwriteFiles=False)
+                j.system.fs.copyDirTree(templatespath_category, catpath, overwriteFiles=overwriteHRD)
                 # j.system.fs.copyDirTree(templatespath_osistasklets,catpath,overwriteFiles=overwriteTasklets)
 
-    def init(self, path="",overwriteImplementation=False, namespacename=None, template=None,session=None):
+    def init(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None, template=None,session=None):
         if session<>None:
             self._authenticateAdmin(session)
 
@@ -195,31 +176,48 @@ class OSISCMDS(object):
 
         if namespacename == None:
             for namespacename in j.system.fs.listDirsInDir(path, dirNameOnly=True):
-                self.init(path, overwriteImplementation=overwriteImplementation, namespacename=namespacename)
+                self.init(path, overwriteHRD, overwriteImplementation, namespacename=namespacename)
         else:
             # te=j.core.taskletengine.get(j.system.fs.joinPaths("systemtasklets","init"))
             # te.executeV2(osis=self) #will add db & elasticsearch w
             if namespacename[0] == "_":
                 return
 
-            self._initDefaultContent(namespacename=namespacename)
+            self._initDefaultContent(overwriteHRD, namespacename=namespacename)
+            hrd = self.corehrd
+            
+            hrd.add2tree(path)
+            hrd2 = hrd.getHrd("")
+
             # enable db's
-            if j.application.config.get("osis.db.type") == "filesystem":
+            if hrd2.osis_db_type == "filesystem":
                 self.db = j.db.keyvaluestore.getFileSystemStore("osis")
             else:
                 raise RuntimeError("Only filesystem db implemented in osis")
 
             # wait for elastic search & get
-            eip=j.application.config.get("osis.elasticsearch.ip")
-            eport=j.application.config.get("osis.elasticsearch.port")
-            self.elasticsearch = j.clients.elasticsearch.get(ip=eip, port=int(eport))
+            self.elasticsearch = j.clients.elasticsearch.get(ip=hrd2.osis_elasticsearch_ip, port=int(hrd2.osis_elasticsearch_port))
             j.core.osis.db = self.db
             j.core.osis.elasticsearch = self.elasticsearch
 
             namespacepath = j.system.fs.joinPaths(path, namespacename)
+            hrdNameSpace = hrd.getHrd("%s" % (namespacename))
+
+            if not hrdNameSpace.get("namespace.name")==namespacename:
+                hrdNameSpace.set("namespace.name", namespacename)
+
+            if template <> None:
+                hrdNameSpace.set("namespace.type", template)
 
             for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
+                hrdCat = hrd.getHrd("%s/%s" % (namespacename, catname))
                 catpath = j.system.fs.joinPaths(namespacepath, catname)
+
+                if hrdCat.get("namespace.name") <>namespacename:
+                    hrdCat.set("namespace.name", namespacename)
+
+                if hrdCat.get("category.name") <>catname:
+                    hrdCat.set("category.name", catname)
 
                 # check if there is already an implfile
                 implfile = "OSIS_%s_impl.py" % catname
@@ -229,11 +227,9 @@ class OSISCMDS(object):
                     j.system.fs.copyFile(fileFrom, implpath)
 
                 classs = j.core.osis._loadModuleClass(implpath)
-                
-                          
                 if namespacename[0] <> "_":
                     osis = classs()
-                    osis.init(catpath,namespace=namespacename, categoryname=catname)
+                    osis.init(catpath, hrdCat)
                     key = "%s_%s" % (namespacename, catname)
                     self.osisInstances[key] = osis
 
