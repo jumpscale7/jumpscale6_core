@@ -21,7 +21,6 @@ class mainclass(parentclass):
 
         if changed:
             print "OBJECT CHANGED WRITE"
-
             val=j.core.osis.encrypt(obj)
             self.db.set(self.dbprefix,key=obj.guid,value=val)
             self.index(obj.getDictForIndex())

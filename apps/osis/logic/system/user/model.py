@@ -23,7 +23,7 @@ class User(OsisBaseObject):
             self.description=""
             self.emails=[]
             self.lastcheck=0 #epoch of last time the info updated
-            self.guid=j.base.idgenerator.generateGUID()
+            self.guid=""
             self.groups=[]
             self.authkey=""
 
