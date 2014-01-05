@@ -38,15 +38,9 @@ def processLogin(parser):
     return opts
 
 
-def getJPackage(parser=None,installed=None,domain=None):
+def getJPackage(args, installed=None,domain=None):
     if installed:
         domain=""
-    parser = parser or ArgumentParser()
-    parser.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
-    parser.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
-    parser.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
-
-    args = parser.parse_args()
 
     if args.domain<>None:
         domain=args.domain
@@ -76,7 +70,7 @@ def getJPackage(parser=None,installed=None,domain=None):
         else:
             packages = j.console.askChoiceMultiple(packages, "Multiple packages found. Select:")
 
-    return packages, args
+    return packages
 
 def getProcess(parser=None):
     parser = parser or ArgumentParser()
