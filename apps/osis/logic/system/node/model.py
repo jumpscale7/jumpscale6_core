@@ -15,7 +15,7 @@ class Node(OsisBaseObject):
         else:
             self.init("node","1.0")
             self.id = 0
-            self.gid = j.application.whoAmI.gid
+            self.gid = 0
             self.name = ""
             self.roles = []
             self.netaddr = None
@@ -54,7 +54,7 @@ class Node(OsisBaseObject):
         get ipaddr info & gid & nid from local config
         """
 
-        self.machineguid = j.base.idgenerator.generateGUID()#j.application.getUniqueMachineId().replace(":", "")
+        self.machineguid = j.application.getUniqueMachineId().replace(":", "")
         self.roles= j.application.config.get("grid.node.roles").split(",")
 
         self.ipaddr=[item for item in j.system.net.getIpAddresses() if item <>"127.0.0.1"]        

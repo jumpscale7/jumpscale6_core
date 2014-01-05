@@ -2,7 +2,6 @@ from JumpScale import j
 
 j.application.start("osisclient")
 j.application.initGrid()
-import JumpScale.grid.osis
 
 client = j.core.osis.getClient()
 # getNameIDsInfo
