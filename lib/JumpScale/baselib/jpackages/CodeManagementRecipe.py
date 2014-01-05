@@ -343,8 +343,8 @@ class CodeManagementRecipe:
         ttype=self.hrd.get("jp.code.type")
         if ttype == "bitbucket":
             branch = branch or 'default'
-            print "getrepo connection: %s %s %s"%(account, repo, branch)
-            self._repoconnection = j.clients.bitbucket.getRepoConnection(account, repo, branch)
+            print "getrepo connection: %s %s %s"%(account, repo, branch)            
+            self._repoconnection = j.clients.bitbucket.getMecurialRepoClient(account, repo, branch)
             return self._repoconnection
         # elif ttype == "github":
         #     pass
