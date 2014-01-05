@@ -1,6 +1,6 @@
 from JumpScale import j
 import time
-class PortalServerAuthenticatorOSIS():
+class PortalAuthenticatorOSIS():
 
     def __init__(self):
 
