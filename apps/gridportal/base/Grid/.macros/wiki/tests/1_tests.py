@@ -29,7 +29,7 @@ def main(j, args, params, tags, tasklet):
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(test[field]), str(test[field])))
             elif field in ('testrun'):
-                line.append(str(test[field]).replace('_', '-'))
+                line.append(str(test[field]).replace('_', '-', 2).replace('_', ' ', 1).replace('_',':'))
             else:
                 line.append(str(test[field]))
 

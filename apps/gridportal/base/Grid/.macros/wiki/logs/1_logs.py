@@ -8,16 +8,16 @@ def main(j, args, params, tags, tasklet):
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
     #this makes sure bootstrap datatables functionality is used
-    out="{{datatables_use}}}}\n\n"
+    out="{{datatables_use}}\n\n"
 
     fields = ['appname', 'category', 'epoch', 'message', 'level', 'pid', 'nid', 'jid']
     #[u'category', u'jid', u'level', u'parentjid', u'appname', u'pid', u'nid', u'order', u'masterjid', u'epoch', u'gid', u'private', u'aid', u'message', u'id', u'tags']
 
     out+="||App Name||Category||Start Time||Message||Level||Process ID||Node ID||Job ID||\n"
 
-    nid = args.tags.getDict().get("nid", None) if not args.tags.getDict().get("nid").startswith('$$') else None
-    pid = args.tags.getDict().get("pid", None) if not args.tags.getDict().get("pid").startswith('$$') else None
-    jid = args.tags.getDict().get("jid", None) if not args.tags.getDict().get("jid").startswith('$$') else None
+    nid = args.tags.getDict().get("nid", None) if args.tags.getDict().get("nid") and not args.tags.getDict().get("nid").startswith('$$') else None
+    pid = args.tags.getDict().get("pid", None) if args.tags.getDict().get("pid") and not args.tags.getDict().get("pid").startswith('$$') else None
+    jid = args.tags.getDict().get("jid", None) if args.tags.getDict().get("jid") and not args.tags.getDict().get("jid").startswith('$$') else None
 
     logs = actor.getLogs(nid=nid, pid=pid, jid=jid)
     if not logs:

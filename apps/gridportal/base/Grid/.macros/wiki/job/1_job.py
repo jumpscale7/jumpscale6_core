@@ -9,7 +9,7 @@ def main(j, args, params, tags, tasklet):
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
 
-    id = args.tags.getDict().get('id', None) if not args.tags.getDict().get('id', None).startswith('$$') else None
+    id = args.tags.getDict().get('id', None) if args.tags.getDict().get("id") and not args.tags.getDict().get('id', None).startswith('$$') else None
 
     details =args.tags.labelExists("details")
     logs = args.tags.labelExists("logs")
@@ -73,10 +73,10 @@ def main(j, args, params, tags, tasklet):
             out+="\n}}\n"
 
         out+= "h3. Logs\n"
-        out+= "{{Grid.logs: jid:%s astext}}}}\n" % id
+        out+= "{{logs: jid:%s astext}}\n" % id
 
     if script:
-        out+= "h3. jumpscript\n"
+        out+= "h3. JumpScript\n"
         out+= "{{jumpscript: jsorganization:%s jsname:%s codeonly}}\n"%(obj["jsorganization"],obj["jsname"])
 
     if children and len(obj["children"])>0:
@@ -91,7 +91,7 @@ def main(j, args, params, tags, tasklet):
 
         out2 = ['||Property||Value||']
 
-        fields = [  'lockduration', 'category', 'source','childrenActive' , 'parent', 'sessionid', 'resultcode']
+        fields = ['lockduration', 'category', 'source','childrenActive' , 'parent', 'sessionid', 'resultcode']
 
         for field in fields:
             if field in ('children'):
