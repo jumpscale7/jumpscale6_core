@@ -988,7 +988,9 @@ class JPackageObject():
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
                 # print "type:%s,%s"%(ttype,ttype.find("cr_"))
                 if doCodeRecipe==False and ttype.find("cr_")==0:
+                    print "DO NOT COPY, because debug "
                     continue #skip the coderecipe folders
+
                 else:
                     pathttype=j.system.fs.joinPaths(pathplatform,ttype)
                     j.system.fs.removeIrrelevantFiles(pathttype)
@@ -1036,7 +1038,6 @@ class JPackageObject():
         when dependencies the reinstall will not be asked for there
 
         """        
-
         # If I am already installed assume my dependencies are also installed
         if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
             self.log('already installed')
@@ -1045,8 +1046,14 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
+                from IPython import embed
+                print "DEBUG NOW ooo"
+                embed()
+                
                 dep.install(False, download, reinstall=reinstalldeps)
         self.loadActions() #reload actions to make sure new hrdactive are applied
+
+        self.stop()
 
         if download:
             self.download(dependencies=False)
@@ -1347,6 +1354,9 @@ class JPackageObject():
         """
         Download the jpackages & expand
         """        
+
+        if self.debug:
+            nocode=True
 
         if dependencies==None and j.application.shellconfig.interactive:
             dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
