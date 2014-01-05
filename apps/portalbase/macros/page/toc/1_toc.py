@@ -12,7 +12,7 @@ def main(j, args, params, *other_args):
     page.addJS(jsContent='''
                         $(document).ready(function(){{ 
                           $("#{0}").tableOfContents(
-                            null,
+                            $("#{0}").parent(),
                             {{
                               startLevel:           {1},
                               depth:                {2}
