@@ -233,8 +233,7 @@ class MacroExecutorWiki(MacroExecutorBase):
                 content += 'ERROR: recursive error in executing macro %s' % macrostr
                 return content, doc
             content, doc = self.executeMacroOnContent(content, macrostr, doc, paramsExtra, ctx=ctx)
-            #content, doc = self.execMacrosOnContent(content, doc, paramsExtra, recursivedepth, ctx=ctx)  # work recursive see if other macro's
-        print 'ddddd'
+            content, doc = self.execMacrosOnContent(content, doc, paramsExtra, recursivedepth, ctx=ctx)  # work recursive see if other macro's
         return content, doc
 
     def executeMacroOnContent(self, content, macrostr, doc, paramsExtra=None, ctx=None):
