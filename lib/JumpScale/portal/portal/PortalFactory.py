@@ -21,6 +21,10 @@ class PortalFactory():
     def getServer(self):
         return PortalServer()
 
+    def getPortalConfig(self, appname):
+        cfg = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', appname, 'cfg', 'portal')
+        return j.config.getConfig(cfg)
+
     def loadActorsInProcess(self):
         """
         make sure all actors are loaded on j.apps...

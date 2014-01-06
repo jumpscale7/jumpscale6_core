@@ -46,7 +46,7 @@ class LoaderBase():
 
     def scan(self, path, reset=False):
         """
-        path can be 1 path of list of paths
+        path can be 1 path or list of paths
         """
         if j.basetype.list.check(path):
             for p in path:

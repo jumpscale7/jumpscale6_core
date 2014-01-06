@@ -34,7 +34,7 @@ class PortalServer:
 ##################### INIT
     def __init__(self):
 
-        # self.contentdirs = {}
+        self.contentdirs = list()
         self.libpath = j.html.getHtmllibDir()
         self.started = False
         self.epoch = time.time()
@@ -116,7 +116,7 @@ class PortalServer:
         else:
             self.appdir = j.system.fs.getcwd()
 
-        self.contentdirs = self.getContentDirs() #contentdirs need to be loaded before we go to other dir of base server
+        self.getContentDirs() #contentdirs need to be loaded before we go to other dir of base server
         j.system.fs.changeDir(self.appdir)            
 
         dbtype = ini.getValue("main", "dbtype").lower().strip()
@@ -188,8 +188,6 @@ class PortalServer:
         """
         walk over known content dirs & execute loader on it
         """
-        self.contentdirs=[]
-
         cfgpath = j.system.fs.joinPaths(self.cfgdir, "contentdirs.cfg")
 
         def append(path):
