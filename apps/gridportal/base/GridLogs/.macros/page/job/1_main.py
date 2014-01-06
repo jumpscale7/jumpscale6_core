@@ -5,7 +5,7 @@ import JumpScale.baselib.serializers
 def main(j, args, params, tags, tasklet):
     import json
     import JumpScale.grid.osis
-    osiscl = j.core.osis.getClient()
+    osiscl = j.core.osis.getClient(user='root')
     client = j.core.osis.getClientForCategory(osiscl, 'system', 'job')
     page = args.page
     p = args.requestContext.params

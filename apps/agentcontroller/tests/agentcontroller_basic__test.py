@@ -35,7 +35,7 @@ class TEST():
         self.client.executeKwargs('jumpscale', 'log', 'node.1.1', kwargs=kwargs)
         query = {"query":{"bool":{"must":[{"term":{"category":"test_category"}}]}}}
         import JumpScale.grid.osis
-        osisclient = j.core.osis.getClient()
+        osisclient = j.core.osis.getClient(user='root')
         osis_logs = j.core.osis.getClientForCategory(osisclient, "system", "log")
         assert len(osis_logs.search(query)['hits']['hits']) > 0
 

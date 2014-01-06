@@ -4,7 +4,7 @@ j.application.start("osisclient")
 j.application.initGrid()
 import JumpScale.grid.osis
 
-client = j.core.osis.getClient()
+client = j.core.osis.getClient(user='root')
 # getNameIDsInfo
 
 # eco=q.errorconditionhandler.getErrorConditionObject(msg="this is error",msgpub="pubmessage",category="a.cat")

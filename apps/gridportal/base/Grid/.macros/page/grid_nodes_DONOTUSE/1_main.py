@@ -5,7 +5,7 @@ def main(j, args, params, tags, tasklet):
     page.addHeading('Grid Information', 3)
 
     import JumpScale.grid.osis
-    osiscl = j.core.osis.getClient()
+    osiscl = j.core.osis.getClient(user='root')
     client = j.core.osis.getClientForCategory(osiscl, 'system', 'grid')
 
     grid = client.search('null')

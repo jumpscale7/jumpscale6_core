@@ -35,7 +35,7 @@ class MgrCmds():
         self.daemon._adminAuth=self._adminAuth
         
         masterip=j.application.config.get("grid.master.ip")
-        self.daemon.osis = j.core.osis.getClient(masterip)
+        self.daemon.osis = j.core.osis.getClient(masterip, user='root')
 
     def _init(self):
         

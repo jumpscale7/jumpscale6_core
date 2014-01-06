@@ -82,7 +82,7 @@ class ZBroker(ZDaemon):
         ip = j.core.grid.config.get("osis.ip")
         nsid = j.core.grid.config.getInt("grid.broker.id")
 
-        osisclient = j.core.osis.getClient(ip, port)
+        osisclient = j.core.osis.getClient(ip, port, user='root')
         if nsid == 0:
             nsname, nsid = osisclient.createNamespace(name="broker_", template="coreobjects", incrementName=True)
             j.core.grid.config.set("grid.broker.id", nsid)
