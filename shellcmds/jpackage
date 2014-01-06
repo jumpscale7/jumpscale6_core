@@ -183,6 +183,9 @@ elif args.action == 'switchbranch':
     packages = cmdutils.getJPackage(args,installed=False)
     for package in packages:
         recipe = package.getCodeMgmtRecipe()
+        if args.branch==None:
+            args.branch=j.console.askString("new branchname")
+        print "switch branch for %s to %s"%(package,args.branch)
         recipe.hrd.set('jp.code.branch', args.branch)
 
 elif args.action == 'list':
