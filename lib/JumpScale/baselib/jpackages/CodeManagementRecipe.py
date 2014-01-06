@@ -180,7 +180,8 @@ class RecipeItem(object):
                 j.dirs.addProtectedDir(destination)
 
     def addToProtectedDirs(self):
-        j.dirs.addProtectedDir(self.systemdest)
+        if not self.tags.labelExists("config"):
+            j.dirs.addProtectedDir(self.systemdest)
 
     def unlinkSystem(self,force=False):
         '''
@@ -283,6 +284,7 @@ class CodeManagementRecipe:
             
     def addToProtectedDirs(self):
         for item in self.items:
+
             item.addToProtectedDirs()
 
     def link(self,force=False):

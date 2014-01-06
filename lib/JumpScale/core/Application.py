@@ -64,13 +64,12 @@ class Application:
             #     import JumpScale.grid
             #     j.core.grid.init()
 
-
     def initGrid(self):
         if not self.gridInitialized:
             import JumpScale.grid
             j.core.grid.init()
             self.gridInitialized=True
-
+            
     def getWhoAmiStr(self):
         return "_".join([str(item) for item in self.whoAmI])
 

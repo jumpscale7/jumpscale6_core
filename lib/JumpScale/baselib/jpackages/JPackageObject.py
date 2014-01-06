@@ -80,11 +80,12 @@ class JPackageObject():
         #create defaults for new jpackages
         hrddir=j.system.fs.joinPaths(self.getPathMetadata(),"hrd")
 
-        if True or not j.system.fs.exists(hrddir): #@todo first True statement needs to go
+        extpath=inspect.getfile(self.__init__)
+        extpath=j.system.fs.getDirName(extpath)
+        src=j.system.fs.joinPaths(extpath,"templates")
 
-            extpath=inspect.getfile(self.__init__)
-            extpath=j.system.fs.getDirName(extpath)
-            src=j.system.fs.joinPaths(extpath,"templates")
+
+        if not j.system.fs.exists(hrddir):
 
             if self.hrd==None:
                 content="jp.domain=%s\n"%self.domain
@@ -94,35 +95,36 @@ class JPackageObject():
 
             j.system.fs.copyDirTree(src,self.getPathMetadata(), overwriteFiles=False) #do never put this on true
 
-            #for easy development, overwrite specific implementations
-            # j.system.fs.copyDirTree(src+"/actions/",self.getPathMetadata()+"/actions/", overwriteFiles=True)
-            #j.system.fs.copyFile(src+"/actions/process.depcheck.py",self.getPathMetadata()+"/actions/process.depcheck.py")
+        j.system.fs.copyDirTree(src+"/actions/",self.getPathMetadata()+"/actions/", overwriteFiles=False)
 
-            self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
+        #for easy development, overwrite specific implementations
+        #j.system.fs.copyFile(src+"/actions/process.depcheck.py",self.getPathMetadata()+"/actions/process.depcheck.py")
 
-            if self.hrd.get("jp.domain",checkExists=True)<>self.domain:
-                self.hrd.set("jp.domain",self.domain)
-            if self.hrd.get("jp.name",checkExists=True)<>self.name:
-                self.hrd.set("jp.name",self.name)
-            if self.hrd.get("jp.version",checkExists=True)<>self.version:                
-                self.hrd.set("jp.version",self.version)
+        self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
-            descr=self.hrd.get("jp.description",checkExists=True)
-            if descr<>False and descr<>"":
-                self.description=descr
-            if descr<>self.description:                
-                self.hrd.set("jp.description",self.description)                      
+        if self.hrd.get("jp.domain",checkExists=True)<>self.domain:
+            self.hrd.set("jp.domain",self.domain)
+        if self.hrd.get("jp.name",checkExists=True)<>self.name:
+            self.hrd.set("jp.name",self.name)
+        if self.hrd.get("jp.version",checkExists=True)<>self.version:                
+            self.hrd.set("jp.version",self.version)
 
-            self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
+        descr=self.hrd.get("jp.description",checkExists=True)
+        if descr<>False and descr<>"":
+            self.description=descr
+        if descr<>self.description:                
+            self.hrd.set("jp.description",self.description)                      
 
-            if self.supportedPlatforms==[]:
-                raise RuntimeError("supported platforms cannot be empty")
+        self.supportedPlatforms=self.hrd.getList("jp.supportedplatforms")
 
-            j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
-            j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"files"))
+        if self.supportedPlatforms==[]:
+            raise RuntimeError("supported platforms cannot be empty")
 
-            for platform in self.supportedPlatforms:
-                j.system.fs.createDir(self.getPathFilesPlatform(platform))
+        j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"uploadhistory"))
+        j.system.fs.createDir(j.system.fs.joinPaths(self.getPathMetadata(),"files"))
+
+        for platform in self.supportedPlatforms:
+            j.system.fs.createDir(self.getPathFilesPlatform(platform))
 
     def clean(self):
         for item in [".quarantine",".tmb"]:
@@ -243,7 +245,7 @@ class JPackageObject():
             self.init()
         return CodeManagementRecipe(hrdpath,recipepath)
 
-    def _loadActiveHrd(self):
+    def installActiveHrd(self):
         """
         match hrd templates with active ones, add entries where needed
         """
@@ -266,15 +268,12 @@ class JPackageObject():
                     j.application.loadConfig() #will load that underneath
 
     def loadActions(self, force=False,hrd=True):
-        # print "loadactions:%s"%self
+        print "loadactions:%s"%self
 
         force=True #@todo need more checks, now for first release do always
 
         if self.actions <> None and not force:
             return
-
-        if hrd==True:
-            self._loadActiveHrd()
 
         self.check()
 
@@ -1065,6 +1064,9 @@ class JPackageObject():
                 raise RuntimeError ("jpackages is in inconsistent state, ...")                
 
             self.prepare(dependencies=False)
+
+            self.installActiveHrd()
+
             self.copyfiles(dependencies=False)
 
             self.actions.install_post()
@@ -1123,6 +1125,7 @@ class JPackageObject():
         """
         self.log('configure')
         self.loadActions()
+        self.installActiveHrd()
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
