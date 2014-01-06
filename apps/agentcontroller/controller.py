@@ -135,7 +135,7 @@ class ControllerCMDS():
         self.adminpasswd = j.application.config.get('system.superadmin.passwd')
         self.adminuser = j.application.config.get('system.superadmin.login')
 
-        self.osisclient = j.core.osis.getClient()
+        self.osisclient = j.core.osis.getClient(user="root")
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
 
         j.logger.setLogTargetLogForwarder()

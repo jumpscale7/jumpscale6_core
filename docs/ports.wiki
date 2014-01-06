@@ -19,6 +19,8 @@ nginx 80
 
 graphite:8081
 
+shellinabox:5577
+
 
 
 
