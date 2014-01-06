@@ -110,7 +110,7 @@ elif args.action == 'install' or args.action == 'update':
         if args.nodownload:
             download=False
         package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
-    j.tools.startupmanager.startAll()
+    # j.tools.startupmanager.startAll()
     
 
 elif args.action == 'link':
