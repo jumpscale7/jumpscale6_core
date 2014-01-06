@@ -39,6 +39,12 @@ if opts.action == 'restart':
     j.application.stop(0)
 
 # commands applying on list of processes
+if opts.action == 'stop':
+    pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
+    for pd in pds_rev:
+        pd.stop()
+    j.application.stop(0)
+
 for pd in pds:
     if opts.action in ('list', 'status'):
         
