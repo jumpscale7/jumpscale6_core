@@ -59,7 +59,7 @@ class GridFactory():
         if not j.system.net.waitConnectionTest(self.masterip,5544,10):
             raise RuntimeError("Could not connect to master osis")
 
-        self.gridOsisClient=j.core.osis.getClient(self.masterip)
+        self.gridOsisClient=j.core.osis.getClient(self.masterip, user='root')
 
         if self.nid == 0:
             jp=j.packages.findNewest("jumpscale","grid_node")

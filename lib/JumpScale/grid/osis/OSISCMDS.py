@@ -107,7 +107,7 @@ class OSISCMDS(object):
             if passwd==j.core.osis.superadminpasswd:
                 return True
             if j.tools.hash.md5_string(passwd)==j.core.osis.superadminpasswd:
-                return True                          
+                return True
         else:
             raise RuntimeError("Could not authenticate for admin usage, user login was %s"%user)
 
