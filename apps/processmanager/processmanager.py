@@ -47,13 +47,13 @@ class MgrCmds():
             for cmds in cmdss:
                 print cmds            
                 if key not in ["core"] and cmds.__dict__.has_key("_name"):
-                    exec("self.%s=cmds"%cmds._name)
+                    setattr(self, cmds._name, cmds)
         
         self.childrenPidsFound={} #children already found, to not double count
 
         self.jumpscripts.loadJumpscripts()
 
-        self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")        
+        self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")
         self.osis_nic=j.core.osis.getClientForCategory(self.daemon.osis,"system","nic")
         self.osis_vdisk=j.core.osis.getClientForCategory(self.daemon.osis,"system","vdisk")
         self.osis_machine=j.core.osis.getClientForCategory(self.daemon.osis,"system","machine")
@@ -64,10 +64,11 @@ class MgrCmds():
         for item in j.system.fs.listFilesInDir("monitoringobjects",filter="*.py"):
             name=j.system.fs.getBaseName(item).replace(".py","")
             if name[0]<>"_":
-                exec ("from monitoringobjects.%s import *"%(name))
-                classs=eval("%s"%name)
+                monmodule = __import__('monitoringobjects.%s' % name)
+                monmodule = getattr(monmodule, name)
+                classs=getattr(monmodule, name)
                 print "load factory:%s"%name
-                factory=eval("%sFactory(self,classs)"%name)
+                factory = getattr(monmodule, '%sFactory' % name)(self, classs)
                 j.processmanager.cache.__dict__[name.lower()]=factory        
 
     def getMonitorObject(self,name,id,monobject=None,lastcheck=0,session=None):
