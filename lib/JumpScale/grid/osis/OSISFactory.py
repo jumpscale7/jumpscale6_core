@@ -87,10 +87,11 @@ class OSISFactory:
                 return self.osisConnections[key]
             # self.osisConnections[key] = OSISClient(ipaddr, port)
             j.logger.log("get client to osis")
+
             if user==None:
                 user="node"
                 passwd=j.application.config.get("grid.node.machineguid")
-            if user=="root" and passwd==None:
+            elif user=="root" and passwd==None:
                 if j.application.config.exists("gridmaster.superadminpasswd"):
                     passwd=j.application.config.get("gridmaster.superadminpasswd")
                 else:

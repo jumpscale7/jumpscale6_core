@@ -95,8 +95,7 @@ class OSISCMDS(object):
         if session<>None:
             user=session.user
             passwd=session.passwd
-        return True #@todo FIX P1
-
+        
         if user=="root":
             if j.core.osis.superadminpasswd=="":
                 j.application.loadConfig()
@@ -110,7 +109,7 @@ class OSISCMDS(object):
             if j.tools.hash.md5_string(passwd)==j.core.osis.superadminpasswd:
                 return True                          
         else:
-            raise RuntimeError("Could not authenticate for admin usage.")
+            raise RuntimeError("Could not authenticate for admin usage, user login was %s"%user)
 
     def createNamespace(self, name=None, incrementName=False, template=None,session=None):
         """
