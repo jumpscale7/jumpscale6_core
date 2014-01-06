@@ -19,6 +19,15 @@ class Bitbucket:
         self.connections={}
         j.logger.consolelogCategories.append("bitbucket")
 
+        C=j.system.fs.fileGetContents("/root/.hgrc")
+        if C.find("[hostfingerprints]")==-1:
+            C+="\n[hostfingerprints]\nbitbucket.org =24:9c:45:8b:9c:aa:ba:55:4e:01:6d:58:ff:e4:28:7d:2a:14:ae:3b\n"
+            j.system.fs.writeFile("/root/.hgrc",C)
+
+        
+#         [hostfingerprints]
+# bitbucket.org = 
+
     def log(self,msg,category="",level=5):
         category="bitbucket.%s"%category
         category=category.rstrip(".")

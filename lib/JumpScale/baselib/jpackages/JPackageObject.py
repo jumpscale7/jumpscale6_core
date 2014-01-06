@@ -1046,9 +1046,6 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                from IPython import embed
-                print "DEBUG NOW ooo"
-                embed()
                 
                 dep.install(False, download, reinstall=reinstalldeps)
         self.loadActions() #reload actions to make sure new hrdactive are applied
