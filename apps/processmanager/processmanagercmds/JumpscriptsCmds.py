@@ -3,7 +3,6 @@ import gevent
 import copy
 import inspect
 import imp
-import functools
 
 class Jumpscript():
 
@@ -147,6 +146,5 @@ class JumpscriptsCmds():
     def _configureScheduling(self):        
         for period in self.jumpscriptsByPeriod.keys():
             period=int(period)
-            loopmethod = functools.partial(self.loop, period)
-            self.daemon.schedule("loop%s"%period, loopmethod)
+            self.daemon.schedule("loop%s"%period, self.loop, period=period)
 
