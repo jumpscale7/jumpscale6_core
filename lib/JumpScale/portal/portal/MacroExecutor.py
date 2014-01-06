@@ -11,7 +11,8 @@ class MacroExecutorBase(object):
         spacename = spacename.lower() if spacename else None
         taskletsgroup = j.core.taskletengine.getGroup()
         for macrodir in macrodirs:
-            taskletsgroup.addTasklets(macrodir)
+            if j.system.fs.exists(macrodir):
+                taskletsgroup.addTasklets(macrodir)
         self.taskletsgroup[spacename] = taskletsgroup
 
     def getMacroCandidates(self, txt):
