@@ -255,7 +255,7 @@ class ActorLoader(LoaderBaseObject):
                     namespacename = actorname
                     if not self.osiscl:
                         import JumpScale.grid.osis
-                        self.osiscl = j.core.osis.getClient()
+                        self.osiscl = j.core.osis.getClient(user='root')
                     if actorname not in self.osiscl.listNamespaces():
                         template = tags.tagGet('osis_template', 'modelobjects')
                         self.osiscl.createNamespace(actorname, template=template)
