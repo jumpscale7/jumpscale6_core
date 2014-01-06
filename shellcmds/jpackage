@@ -7,7 +7,7 @@ j.application.start('jpackage')
 parser = cmdutils.ArgumentParser()
 
 commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
-            'publish', 'repackage', 'restart', 'start', 'stop', 'update', 'updateall', 'upload', 'mirror',
+            'publish', 'repackage', 'restart', 'start', 'stop', 'mdupdate', 'updateall', 'upload', 'mirror',
             'switchbranch', 'list']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
@@ -16,10 +16,11 @@ group = parser.add_argument_group(title="Package Selection")
 group.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
 group.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
 group.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
-group.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
+group.add_argument('--deps', required=False, action='store_true', help='do on dependencies e.g. install, update, ...')
+group.add_argument('-f','--force',required=False, action='store_true',help='auto answer yes on every question')
 
 #install
-group = parser.add_argument_group(title="Install")
+group = parser.add_argument_group(title="Install/Update")
 group.add_argument('-r', '--reinstall', required=False, action='store_true', help='Reinstall found package')
 group.add_argument('-s', '--single', required=False, action='store_true', help='Do not install dependencies')
 group.add_argument('--debug', required=False, action='store_true', help='Sets debug_mode for package')
@@ -54,7 +55,11 @@ group.add_argument('--branch', help='Branch of the coderecipe')
 
 args = parser.parse_args()
 
+if (args.deps) and args.action in ["create","debug","mdupdate","mirror","list"]:
+    raise RuntimeError("deps or nodeps option is not used for %s."%args.action)
+
 if args.action == 'create':
+
     j.packages.create()
 
 elif args.action == 'debug':
@@ -64,38 +69,40 @@ elif args.action == 'debug':
         j.application.stop()
 
     if not args.debug:
+        #to disable debug
         choicearray=[]
         for item in j.packages.getDebugPackages():
             # choicearray.append([str(item),item])
             choicearray.append(item)
 
-        for item in j.console.askChoiceMultiple(choicearray):
+        for item in j.console.askChoiceMultiple(choicearray,"select packages to disable debug"):
             item.removeDebugMode()
     else:
+        print "SELECT which packages to enable debug for. First select domain, then select jpackages."
         packages = cmdutils.getJPackage(args,installed=False)
         for package in packages:
-            package.setDebugMode(dependencies=args.all)
+            package.setDebugMode(dependencies=args.deps)
 
 elif args.action == 'download':
     packages = cmdutils.getJPackage(args)
     for package in packages:
-        package.download(dependencies=args.all,nocode=args.nocode,expand=not(args.noexpand))
+        package.download(dependencies=args.deps,nocode=args.nocode,expand=not(args.noexpand))
 
 elif args.action == 'export':
     packages = cmdutils.getJPackage(args, installed=True)
     for package in packages:
-        package.codeExport(dependencies=args.all)
+        package.codeExport(dependencies=args.deps)
 
 elif args.action == 'configure':
     packages = cmdutils.getJPackage(args,installed=True)
     for package in packages:
-        package.configure(dependencies=args.all)
+        package.configure(dependencies=args.deps)
 
-elif args.action == 'install':
+elif args.action == 'install' or args.action == 'update':
     packages = cmdutils.getJPackage(args)
     for package in packages:
-        dependencies = not args.reinstall or not package.isInstalled()
-        if args.single:
+        dependencies = True
+        if args.single or args.deps:#args.deps because the cmdutils.getJPackage(...) will already have found the dependencies
             dependencies=False
         if args.debug:
             package.setDebugMode()
@@ -103,17 +110,18 @@ elif args.action == 'install':
         if args.nodownload:
             download=False
         package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
+    
 
 elif args.action == 'link':
     packages = cmdutils.getJPackage(args,installed=True)
     for package in packages:
-        package.codeLink(dependencies=args.all)
+        package.codeLink(dependencies=args.deps)
 
 elif args.action == 'monitor':
     packages = cmdutils.getJPackage(args,installed=True)
     result=[]
     for package in packages:
-        if package.monitor(dependencies=args.all)==True:
+        if package.monitor(dependencies=args.deps)==True:
             result.append("OK    :%s"%package)
         else:
             result.append("ERROR :%s"%package)
@@ -124,11 +132,15 @@ elif args.action == 'monitor':
 elif args.action == 'package':
     packages = cmdutils.getJPackage(args)
     for package in packages:
-        package.package(dependencies=args.all)
+        package.package(dependencies=args.deps)
 
 elif args.action == 'publish':
     packages = cmdutils.getJPackage(args,installed=False)
-    domains = {p.domain for p in packages}
+
+    domains=[]
+    for p in packages:
+        if p.domain not in domains:
+            domains.append(p.domain)
     for domain in domains:
         j.packages.publish(args.message,domain)
 
@@ -150,34 +162,30 @@ elif args.action == 'repackage':
 elif args.action == 'restart':
     packages= cmdutils.getJPackage(args,installed=True)
     for package in packages:
-        package.restart(dependencies=args.all)
+        package.restart(dependencies=args.deps)
 
 elif args.action == 'start':
     packages= cmdutils.getJPackage(args,installed=True)
     for package in packages:
-        package.start(dependencies=args.all)
+        package.start(dependencies=args.deps)
 
 elif args.action == 'stop':
     packages= cmdutils.getJPackage(args,installed=True)
     for package in packages:
-        package.stop(dependencies=args.all)
+        package.stop(dependencies=args.deps)
 
-elif args.action == 'update':
-    j.packages.updateMetaData(force=True)
+elif args.action == 'mdupdate':
+    j.packages.updateMetaData(force=args.force)
 
 elif args.action == 'upload':
     packages = cmdutils.getJPackage(args,installed=False)
     for package in packages:
-        package.upload(dependencies=args.all,onlycode=args.onlycode)
+        package.upload(dependencies=args.deps,onlycode=args.onlycode)
 
 elif args.action == 'mirror':
     packages=j.packages.find(domain="*",name="*")
     for package in packages:
         package.download(allplatforms=True)
-
-elif args.action == 'updateall':
-    j.packages.updateMetaData(force=True)
-    j.packages.updateAll()
 
 elif args.action == 'switchbranch':
     packages = cmdutils.getJPackage(args,installed=False)

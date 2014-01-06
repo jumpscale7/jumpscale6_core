@@ -54,8 +54,7 @@ def getJPackage(args, installed=None,domain=None):
     if args.name<>"":
         packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=False)
     else:
-        packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
-
+        packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)        
 
     if len(packages) == 0:
         if installed:
@@ -69,6 +68,11 @@ def getJPackage(args, installed=None,domain=None):
             j.application.stop(1)
         else:
             packages = j.console.askChoiceMultiple(packages, "Multiple packages found. Select:")
+            if args.deps:
+                for p in packages:
+                    for dep in p.getDependencies():
+                        if dep not in packages:
+                            packages.append(dep)
 
     return packages
 

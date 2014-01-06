@@ -179,6 +179,9 @@ class RecipeItem(object):
                 j.system.fs.symlink(source, destination)
                 j.dirs.addProtectedDir(destination)
 
+    def addToProtectedDirs(self):
+        j.dirs.addProtectedDir(self.systemdest)
+
     def unlinkSystem(self,force=False):
         '''
         unlink the system, remove the links and copy the content instead
@@ -278,6 +281,10 @@ class CodeManagementRecipe:
         for item in self.items:
             item.exportToSystem()
             
+    def addToProtectedDirs(self):
+        for item in self.items:
+            item.addToProtectedDirs()
+
     def link(self,force=False):
         repoconnection = self._getRepoConnection()
         for item in self.items:

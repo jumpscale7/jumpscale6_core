@@ -397,7 +397,7 @@ class Domain():
                            "go to directory %s and update the metadata yourself using mercurial" % self.metadatadir)
                   
             #self.bitbucketclient.checkoutMerge    
-            mercurialclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+            mercurialclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)            
             mercurialclient.pullupdate(force=force)
        
             #link code to right metadata location

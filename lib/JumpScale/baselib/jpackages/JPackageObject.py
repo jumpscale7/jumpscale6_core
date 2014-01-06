@@ -312,6 +312,9 @@ class JPackageObject():
                 dep.setDebugMode(dependencies=False)
 
         self.state.setDebugMode()
+        recipe=self.getCodeMgmtRecipe()
+        recipe.addToProtectedDirs()
+        
         self.load()
         self.log("set debug mode",category="init")
 
