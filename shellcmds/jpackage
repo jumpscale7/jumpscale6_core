@@ -1,0 +1,198 @@
+#!/usr/bin/env python
+from JumpScale.baselib import cmdutils
+import JumpScale.baselib.jpackages
+from JumpScale import j
+j.application.start('jpackage')
+
+parser = cmdutils.ArgumentParser()
+
+commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
+            'publish', 'repackage', 'restart', 'start', 'stop', 'update', 'updateall', 'upload', 'mirror',
+            'switchbranch', 'list']
+
+parser.add_argument("action", choices=commands, help='Command to perform')
+
+group = parser.add_argument_group(title="Package Selection")
+group.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
+group.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
+group.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
+group.add_argument('-a', '--all', required=False, action='store_true', help='do also for dependencies (all jpackages)')
+
+#install
+group = parser.add_argument_group(title="Install")
+group.add_argument('-r', '--reinstall', required=False, action='store_true', help='Reinstall found package')
+group.add_argument('-s', '--single', required=False, action='store_true', help='Do not install dependencies')
+group.add_argument('--debug', required=False, action='store_true', help='Sets debug_mode for package')
+group.add_argument('--nodownload', required=False, action='store_true', help='skips download')
+
+#debug
+group = parser.add_argument_group(title="Debug")
+engroup = group.add_mutually_exclusive_group()
+engroup.add_argument('--enable', dest='debug', default=True, action='store_true')
+engroup.add_argument('--disable', dest='debug', default=True, action='store_false')
+group.add_argument('--list', action='store_true')
+
+#download
+group = parser.add_argument_group(title="Download")
+group.add_argument('--nocode', required=False, action='store_true', help='do not download the files which were build using the coderecipe')
+group.add_argument('--noexpand', required=False, action='store_true', help='do not expand locally')
+
+#publish
+group = parser.add_argument_group(title="Repackage / Publish")
+group.add_argument('-m', '--message', required=False, help='Commit message to publish package')
+group.add_argument('-l', '--local', dest="local", default=False, action="store_true", required=False, help='Only repackage locally')
+group.add_argument('-p', '--publish', dest="publish", default=False, action="store_true", required=False, help='Publish metadata')
+group.add_argument('--merge', dest="merge", default=False, action="store_true", required=False, help='Merge existing content of jpackage files with recipe if ommited clean existing content.')
+
+#upload
+group = parser.add_argument_group(title="Upload")
+group.add_argument('--onlycode', required=False, action='store_true', help='to only upload jpackage files which are for coderecipes')
+
+#switchbranch
+group = parser.add_argument_group(title="Switch Branch")
+group.add_argument('--branch', help='Branch of the coderecipe')
+
+args = parser.parse_args()
+
+if args.action == 'create':
+    j.packages.create()
+
+elif args.action == 'debug':
+    if args.list:
+        for item in j.packages.getDebugPackages():
+            print item
+        j.application.stop()
+
+    if not args.debug:
+        choicearray=[]
+        for item in j.packages.getDebugPackages():
+            # choicearray.append([str(item),item])
+            choicearray.append(item)
+
+        for item in j.console.askChoiceMultiple(choicearray):
+            item.removeDebugMode()
+    else:
+        packages = cmdutils.getJPackage(args,installed=False)
+        for package in packages:
+            package.setDebugMode(dependencies=args.all)
+
+elif args.action == 'download':
+    packages = cmdutils.getJPackage(args)
+    for package in packages:
+        package.download(dependencies=args.all,nocode=args.nocode,expand=not(args.noexpand))
+
+elif args.action == 'export':
+    packages = cmdutils.getJPackage(args, installed=True)
+    for package in packages:
+        package.codeExport(dependencies=args.all)
+
+elif args.action == 'configure':
+    packages = cmdutils.getJPackage(args,installed=True)
+    for package in packages:
+        package.configure(dependencies=args.all)
+
+elif args.action == 'install':
+    packages = cmdutils.getJPackage(args)
+    for package in packages:
+        dependencies = not args.reinstall or not package.isInstalled()
+        if args.single:
+            dependencies=False
+        if args.debug:
+            package.setDebugMode()
+        download=True
+        if args.nodownload:
+            download=False
+        package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
+
+elif args.action == 'link':
+    packages = cmdutils.getJPackage(args,installed=True)
+    for package in packages:
+        package.codeLink(dependencies=args.all)
+
+elif args.action == 'monitor':
+    packages = cmdutils.getJPackage(args,installed=True)
+    result=[]
+    for package in packages:
+        if package.monitor(dependencies=args.all)==True:
+            result.append("OK    :%s"%package)
+        else:
+            result.append("ERROR :%s"%package)
+
+    print "\n\nMONITORING RESULTS:"
+    print "\n".join(result)
+
+elif args.action == 'package':
+    packages = cmdutils.getJPackage(args)
+    for package in packages:
+        package.package(dependencies=args.all)
+
+elif args.action == 'publish':
+    packages = cmdutils.getJPackage(args,installed=False)
+    domains = {p.domain for p in packages}
+    for domain in domains:
+        j.packages.publish(args.message,domain)
+
+elif args.action == 'repackage':
+    domains = { jp.domain for jp in packages }
+    for domain in domains:
+        j.packages.updateMetaData(domain)
+
+    for package in packages:
+        if not args.merge:
+            j.system.fs.removeDirTree(package.getPathFiles())
+        package.package(update=True)
+        if not args.message:
+            args.message = 'Building JPackage "%s"' % package.name
+        package.upload(remote=not args.local)
+        if args.publish:
+            j.packages.publish(args.message, package.domain)
+
+elif args.action == 'restart':
+    packages= cmdutils.getJPackage(args,installed=True)
+    for package in packages:
+        package.restart(dependencies=args.all)
+
+elif args.action == 'start':
+    packages= cmdutils.getJPackage(args,installed=True)
+    for package in packages:
+        package.start(dependencies=args.all)
+
+elif args.action == 'stop':
+    packages= cmdutils.getJPackage(args,installed=True)
+    for package in packages:
+        package.stop(dependencies=args.all)
+
+elif args.action == 'update':
+    j.packages.updateMetaData(force=True)
+
+elif args.action == 'upload':
+    packages = cmdutils.getJPackage(args,installed=False)
+    for package in packages:
+        package.upload(dependencies=args.all,onlycode=args.onlycode)
+
+elif args.action == 'mirror':
+    packages=j.packages.find(domain="*",name="*")
+    for package in packages:
+        package.download(allplatforms=True)
+
+elif args.action == 'updateall':
+    j.packages.updateMetaData(force=True)
+    j.packages.updateAll()
+
+elif args.action == 'switchbranch':
+    packages = cmdutils.getJPackage(args,installed=False)
+    for package in packages:
+        recipe = package.getCodeMgmtRecipe()
+        recipe.hrd.set('jp.code.branch', args.branch)
+
+elif args.action == 'list':
+    packages = cmdutils.getJPackage(args,installed=True)
+    form = '%(domain)-15s %(name)-20s %(version)8s %(buildnr)8s %(debug)5s'
+    print form % {'domain': 'DOMAIN', 'name': 'NAME', 'version': 'VERSION', 'debug': 'DEBUG', 'buildnr':'BUILDNR'}
+    print '=' * 60
+    print ''
+    for package in packages:
+        debug = 'yes' if package.debug else 'no'
+        print form % {'name': package.name, 'domain': package.domain, 'version': package.version, 'debug': debug, 'buildnr': package.buildNr}
+
+j.application.stop()
