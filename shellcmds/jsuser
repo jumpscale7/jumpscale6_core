@@ -22,7 +22,7 @@ opts=cmdutils.processLogin(parser)
 
 import JumpScale.grid.osis
 
-osis=j.core.osis.getClient(opts.addr,5544,"root",opts.passwd)
+osis=j.core.osis.getClient(opts.addr,5544,opts.login,opts.passwd)
 userclient=j.core.osis.getClientForCategory(osis,"system","user")
 groupclient=j.core.osis.getClientForCategory(osis,"system","group")
 
@@ -47,10 +47,10 @@ if opts.action =='add':
         groups=groups.split(",")
         emails=emails.split(",")
     else:
-        name=j.console.askString("name")
-        passwd=j.console.askString("passwd")
+        name = opts.userlogin or j.console.askString("name")
+        passwd = opts.userpasswd or j.console.askPassword("passwd")
         gid=j.console.askInteger("gid",defaultValue=j.application.whoAmI.gid)
-        domain=j.console.askString("domain e.g. incubaid.com")
+        domain=opts.domain or j.console.askString("domain e.g. incubaid.com")
         
         if j.console.askYesNo("do you want to define new groups."):
             groups=j.console.askString("comma separated list of groups").split(",")

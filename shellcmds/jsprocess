@@ -21,7 +21,7 @@ pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name)
 
 # single process commands
 if opts.action in ('attach', 'logs'):
-    if len(pds) != 1 or not pds[0].isRunning():
+    if len(pds) != 1:
         print 'Could not find exactly one running process %s %s' % (opts.domain, opts.name)
         j.application.stop(1)
     elif opts.action == 'attach':
