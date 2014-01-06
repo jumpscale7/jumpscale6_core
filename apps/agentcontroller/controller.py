@@ -506,7 +506,7 @@ class ControllerCMDS():
 
     def listSessions(self,session=None):
         result=[]
-        for sessionid, session in self.sessions.itervalues():
+        for sessionid, session in self.sessions.iteritems():
             sessionresult={}
             sessionresult["id"]=sessionid
             sessionresult["roles"]=session.roles
