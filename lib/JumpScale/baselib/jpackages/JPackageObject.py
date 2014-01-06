@@ -1048,7 +1048,6 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                
                 dep.install(False, download, reinstall=reinstalldeps)
         self.loadActions() #reload actions to make sure new hrdactive are applied
 
@@ -1061,7 +1060,7 @@ class JPackageObject():
             #print 'really installing ' + str(self)
             self.log('installing')
             if self.state.checkNoCurrentAction == False:
-                raise RuntimeError ("jpackages is in inconsistent state, ...")                
+                raise RuntimeError("jpackages is in inconsistent state, ...")
 
             self.prepare(dependencies=False)
 
@@ -1073,10 +1072,11 @@ class JPackageObject():
 
             if self.buildNr==-1:
                 self.buildNr=0
-            self.state.setLastInstalledBuildNr(self.buildNr)
 
         if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
             self.configure(dependencies=False)
+
+        self.state.setLastInstalledBuildNr(self.buildNr)
 
         if self.debug:
             self.log('install for debug (link)')
