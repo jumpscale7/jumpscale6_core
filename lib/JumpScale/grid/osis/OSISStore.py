@@ -159,10 +159,22 @@ class OSISStore(object):
         except:
             pass
         
-        if ttl <> 0:
-            self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=ttl, replication="async")
-        else:
-            self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
+        try:
+            if ttl <> 0:
+                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=ttl, replication="async")
+            else:
+                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
+        except Exception,e:
+            if str(e).find("Index failed")<>-1:
+                try:
+                    msg="cannot index object:\n%s"%obj
+                except Exception,ee:
+                    msg="cannot index object, cannot even print object"                
+                print e
+                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index', msgpub='', die=True, tags='', eco=None)
+            else:
+                j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))
+            
 
     def exists(self, key):
         return self.db.exists(self.dbprefix, key)
