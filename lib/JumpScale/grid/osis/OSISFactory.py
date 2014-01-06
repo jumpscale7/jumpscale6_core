@@ -91,7 +91,7 @@ class OSISFactory:
             if user==None:
                 user="node"
                 passwd=j.application.config.get("grid.node.machineguid")
-            elif user=="root" and passwd==None:
+            elif user=="root" and not passwd:
                 if j.application.config.exists("gridmaster.superadminpasswd"):
                     passwd=j.application.config.get("gridmaster.superadminpasswd")
                 else:

@@ -13,6 +13,8 @@ category = "agentcontroller.basic"
 enable=True
 priority=2
 
+ROLE = 'node.%s.%s' % (j.application.whoAmI.gid, j.application.whoAmI.nid)
+
 class TEST():
 
     def setUp(self):
@@ -28,22 +30,22 @@ class TEST():
         #was there an eco in KVS (osis DB)
         #is it indeed waiting, so agent should be blocked
         kwargs = {'msg': 'test msg'}
-        result1 = self.client.executeKwargs('jumpscale', 'echo', 'node.1.1', kwargs=kwargs)
+        result1 = self.client.executeKwargs('jumpscale', 'echo', ROLE, kwargs=kwargs)
         assert result1 == kwargs['msg']
 
         kwargs = {'logmsg': 'test log msg'}
-        self.client.executeKwargs('jumpscale', 'log', 'node.1.1', kwargs=kwargs)
+        self.client.executeKwargs('jumpscale', 'log', ROLE, kwargs=kwargs)
         query = {"query":{"bool":{"must":[{"term":{"category":"test_category"}}]}}}
         import JumpScale.grid.osis
         osisclient = j.core.osis.getClient(user='root')
         osis_logs = j.core.osis.getClientForCategory(osisclient, "system", "log")
         assert len(osis_logs.search(query)['hits']['hits']) > 0
 
-        self.client.execute('jumpscale', 'error', 'node.1.1', dieOnFailure=False)
+        self.client.execute('jumpscale', 'error', ROLE, dieOnFailure=False)
         query = {"query":{"bool":{"must":[{"term":{"state":"error"}}, {"term":{"jsname":"error"}}]}}}
         osis_jobs = j.core.osis.getClientForCategory(osisclient, "system", "job")
         assert len(osis_jobs.search(query)['result']) > 0
 
         kwargs = {'msg': 'test msg', 'timeout': 5}
-        result2 = self.client.executeKwargs('jumpscale', 'wait', 'node.1.1', kwargs=kwargs)
+        result2 = self.client.executeKwargs('jumpscale', 'wait', ROLE, kwargs=kwargs)
 
