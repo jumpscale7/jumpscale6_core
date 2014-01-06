@@ -1,6 +1,9 @@
 from JumpScale import j
 import gevent
 import copy
+import inspect
+import imp
+import functools
 
 class Jumpscript():
 
@@ -44,38 +47,8 @@ class JumpscriptsCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
-            C = j.system.fs.fileGetContents(path2)
-            C2 = ""
-            name = j.system.fs.getBaseName(path2)
-            name=name.strip(".py")
-            organization = "unknown"
-            author = "unknown"
-            license = "unknown"
-            version = "1.0"
-            roles = ["*"]
-            source = ""
-
-            state = "start"
-
-            enable=True
-            order=1
-
-            for line in C.split("\n"):
-                line = line.replace("\t", "    ")
-                line = line.rstrip()
-                if line.strip() == "":
-                    continue
-                if line.find("###########") != -1:
-                    break
-                C2 += "%s\n" % line
-                if state == "start" and line.find("def action") == 0:
-                    state = "action"
-                if state == "action":
-                    source += "%s\n" % line
-
             try:
-                #loads all params
-                exec(C2)
+                script = imp.load_source('jumpscript.%s' % j.tools.hash.md5_string(path2), path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
@@ -83,9 +56,21 @@ class JumpscriptsCmds():
                 j.errorconditionhandler.raiseInputError(msgpub="",message=msg,category="agentcontroller.load",tags="",die=False)
                 continue
 
-            t = Jumpscript(name,  organization, author, license, version, action, source, path2, descr=descr,category=category,period=period)
-            t.order=order
-            t.enable=enable
+            name = getattr(script, 'name', "")
+            category = getattr(script, 'category', "unknown")
+            organization = getattr(script, 'organization', "unknown")
+            author = getattr(script, 'author', "unknown")
+            license = getattr(script, 'license', "unknown")
+            version = getattr(script, 'version', "1.0")
+            roles = getattr(script, 'roles', ["*"])
+            enable = getattr(script, 'enabled', True)
+            order = getattr(script, 'order', 1)
+            period = getattr(script, 'period')
+            source = inspect.getsource(script.action)
+
+            t = Jumpscript(name, organization, author, license, version, script.action, source, path2, script.descr, category, period)
+            t.enable = enable
+            t.order = order
             print "found jumpscript:%s " %("%s_%s" % (organization, name))
             self.jumpscripts["%s_%s" % (organization, name)] = t
             if not self.jumpscriptsByPeriod.has_key(period):
@@ -138,42 +123,31 @@ class JumpscriptsCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
-            greenlet.kill()     
+            greenlet.kill()
+
+    def loop(self, period):
+        while True:
+            for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[period]:
+                if not action.enable:
+                    continue
+                #print "start action:%s"%action
+                try:
+                    action.action()
+                except Exception,e:
+                    eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                    eco.errormessage+='\\n'
+                    for key in action.__dict__.keys():
+                        if key not in ["license"]:
+                            eco.errormessage+="%s:%s\\n"%(key,action.__dict__[key]) 
+                    eco.tags="category:%s"%action.category
+                    j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+                    continue
+                print "ok"
+            gevent.sleep(period) 
 
     def _configureScheduling(self):        
         for period in self.jumpscriptsByPeriod.keys():
             period=int(period)
-
-            C="""
-def loop_$period():
-    while True:
-        for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[$period]:
-            if not action.enable:
-                continue
-            #print "start action:%s"%action
-            try:
-                action.action()
-            except Exception,e:
-                eco=j.errorconditionhandler.parsePythonErrorObject(e)
-                eco.errormessage+='\\n'
-                for key in action.__dict__.keys():
-                    if key not in ["license"]:
-                        eco.errormessage+="%s:%s\\n"%(key,action.__dict__[key]) 
-                eco.tags="category:%s"%action.category
-                print eco
-                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                continue
-            print "ok"
-        gevent.sleep($period) 
-"""
-
-            C=C.replace("$period",str(period))
-            # print C
-            exec(C)
-            CC="loop_$period"
-            CC=CC.replace("$period",str(period))
-            
-            loopmethod=eval(CC)
-            
-            self.daemon.schedule("loop%s"%period,loopmethod)
+            loopmethod = functools.partial(self.loop, period)
+            self.daemon.schedule("loop%s"%period, loopmethod)
 
