@@ -41,7 +41,7 @@ class OSISFactory:
         if j.application.config.exists("gridmaster.superadminpasswd"):
             self.superadminpasswd=j.application.config.get("gridmaster.superadminpasswd")
         else:
-            self.superadminpasswd=none
+            self.superadminpasswd=None
         self.key=j.application.config.get("osis.key")
         
 
