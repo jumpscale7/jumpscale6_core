@@ -10,12 +10,11 @@ license = "bsd"
 version = "1.0"
 category = "info.gather.process"
 period = 300 #always in sec
-enable=False
+enable=True
 
 def action():
     
     osis=j.processmanager.cache.processobject.osis
-    psutil=j.system.platform.psutil
     result={}
 
     j.processmanager.childrenPidsFound={}
@@ -37,11 +36,10 @@ def action():
                     processOsisObject.__dict__[name]=process.__dict__[name]
                 else:
                     processOsisObject.__dict__[name]=0.0
-            
+
             guid,new,changed=osis.set(processOsisObject)
             process.guid=guid
             result[pid]=process
-                                    
 
     for process in j.processmanager.startupmanager.manager.getProcessDefs():
         pid=process.getPid()
@@ -58,7 +56,7 @@ def action():
             processOsisObject.cmd=process.cmd
             processOsisObject.workingdir=process.workingdir
             send2osis(pid,processOsisObject)
-            
+
     else:
         # plist=psutil.get_process_list()
         initprocess=j.system.process.getProcessObject(1)  #find init process
@@ -91,7 +89,7 @@ def action():
             #no longer active
             print "NO LONGER ACTIVE"
             process=j.processmanager.cache.processobject.get(pid) #is cached so low overhead
-            
+
             if not j.processmanager.cache.processobject.monitorobjects.get(pid).guid:
                 j.processmanager.cache.processobject.monitorobjects.pop(pid)
                 continue

@@ -14,7 +14,7 @@ order = 1
 enable=False
 
 def action():
-	psutil=j.system.platform.psutil
+    psutil=j.system.platform.psutil
     results={}
 
     disks=j.system.platform.diskmanager.partitionsFind(mounted=True)

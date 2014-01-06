@@ -13,7 +13,7 @@ period = 10 #always in sec
 enable=False
 
 def action():
-	psutil=j.system.platform.psutil
+    psutil=j.system.platform.psutil
     results={}
     nr=0
     val=psutil.cpu_percent(0)

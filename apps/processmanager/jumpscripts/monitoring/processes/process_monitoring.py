@@ -10,14 +10,13 @@ license = "bsd"
 version = "1.0"
 category = "monitoring.processes"
 period = 10 #always in sec
-enable=False
+enable=True
 
 def action():
-	
     for pid,obj in j.processmanager.cache.processobject.monitorobjects.iteritems():
-        result=obj.getStatInfo(totals=True)
-        for key in results.keys():
-            j.system.stataggregator.set("n%s.p%s.%s"%(j.application.whoAmI.nid,obj.id,key),results[key],remember=True)
+        results=obj.getStatInfo(totals=True)
+        for key, value in results.iteritems():
+            j.system.stataggregator.set("n%s.p%s.%s"%(j.application.whoAmI.nid,pid,key),value,remember=True)
 
 
 #check behaviour in http://localhost:8081/

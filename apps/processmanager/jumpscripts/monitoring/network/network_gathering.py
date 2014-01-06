@@ -12,6 +12,8 @@ category = "info.gather.nic"
 period = 300 #always in sec
 enable=False
 
+j.processmanager.nics = dict()
+
 def action():
     osis=j.processmanager.osis_nic
     netinfo=j.system.net.getNetworkInfo()
