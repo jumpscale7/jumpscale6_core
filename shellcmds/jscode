@@ -46,6 +46,7 @@ def getRepos():
     for account in accounts:
         accountdir="/opt/code/%s"%account
         if j.system.fs.exists(accountdir):
+            j.system.net.checkUrlReachable('https://bitbucket.org/%s' % account)
             bitbucket=j.clients.bitbucket.getBitbucketAccountClient(account)
             if opts.repos==None:
                 reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)

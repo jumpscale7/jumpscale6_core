@@ -53,6 +53,22 @@ class SystemNet:
             now=j.base.time.getTimeEpoch()
         return False
 
+    def checkUrlReachable(self, url):
+        """
+        raise operational critical if unreachable
+        return True if reachable
+        """
+        import urllib
+        try:
+            code = urllib.urlopen(url).getcode()
+        except Exception:
+            j.errorconditionhandler.raiseOperationalCritical("Url %s is unreachable" % url)
+        
+        if code != 200:
+            j.logger.setLogTargetLogForwarder()
+            j.errorconditionhandler.raiseOperationalCritical("Url %s is unreachable" % url)
+        return True
+
 
     def checkListenPort(self, port):
         """
