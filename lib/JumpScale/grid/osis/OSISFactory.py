@@ -16,7 +16,6 @@ class FileLikeStreamObject(object):
             #print "###%s"%line
             self.out+="%s\n"%line
 
-
 class OSISFactory:
 
     """
@@ -102,7 +101,8 @@ class OSISFactory:
         except Exception,e:
             out=self._stopRedirect(pprint=True)            
             raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,out,e))
-        self._stopRedirect()
+        finally:
+            self._stopRedirect()
         return self.osisConnections[key]
 
     def getClientForCategory(self, client,namespace, category):
