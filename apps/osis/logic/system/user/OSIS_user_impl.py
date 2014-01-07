@@ -16,8 +16,9 @@ class mainclass(parentclass):
         changed=True
         if self.exists(obj.guid):
             objexist=self.getObject(ujson.loads(self.get(obj.guid)))
-            if obj.getUniqueKey()==objexist.getUniqueKey():
+            if obj.getContentKey()==objexist.getContentKey():
                 changed=False
+                
 
         if changed:
             print "OBJECT CHANGED WRITE"
