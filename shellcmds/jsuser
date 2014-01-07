@@ -7,13 +7,21 @@ import sys,time
 j.application.start("jsuser")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['add','delete','list','auth'], help='Command to perform')
+parser.add_argument("action", choices=['add','set','delete','list','auth','addgroup','delgroup'], help='Command to perform')
 
 parser.add_argument("-d",'--data', help='add user as username:passwd:group1,group2:email1,email2:domain')
 
-parser.add_argument("-ul",'--userlogin', help='username to do check,edit')
-parser.add_argument("-up",'--userpasswd', help='passwd for user to check,edit')
-parser.add_argument("-ud",'--domain', help='domain for user to list')
+group = parser.add_argument_group(title="Authentication")
+group.add_argument("-ul",'--userlogin', help='username to do check,edit')
+group.add_argument("-up",'--userpasswd', help='passwd for user to check,edit')
+
+group = parser.add_argument_group(title="List")
+group.add_argument("-ud",'--domain', help='domain for user to list')
+
+group = parser.add_argument_group(title="GroupManipulation")
+group.add_argument("-gu",'--groupuser', help='user')
+group.add_argument("-gg",'--groupgroup', help='group to add or remove')
+
 
 #parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
 #parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
@@ -38,7 +46,7 @@ if opts.action =='auth':
         print "%-20s %s"%(key,val)
 
 
-if opts.action =='add':
+if opts.action =='add' or opts.action =='set':
     if opts.data<>None:
         splitted=opts.data.split(":")
         if len(splitted)<>5:
@@ -60,8 +68,9 @@ if opts.action =='add':
 
         emails=j.console.askString("comma separated list of emails")
 
-    if userclient.exists(name):
-        raise RuntimeError("user already exists")
+
+    if opts.action =='add' and userclient.exists("%s_%s"%(j.application.whoAmI.gid,name)):
+        j.errorconditionhandler.raiseOperationalCritical(message='user already exists', category="jsuser.add.exists")
 
     user=userclient.new()
     user.id=name
@@ -75,6 +84,31 @@ if opts.action =='add':
     user=userclient.get(guid)
 
     print user
+
+if opts.action =='addgroup' or opts.action =='delgroup':
+    key="%s_%s"%(j.application.whoAmI.gid,opts.groupuser)
+    if not userclient.exists(key):
+        j.errorconditionhandler.raiseOperationalCritical(message='cannot find user:%s'%opts.user, category="jsuser.add.exists")
+    user=userclient.get(key)   
+
+    if opts.action =='delgroup':
+        print "del group:%s from %s"%(opts.groupgroup,opts.groupuser)
+
+        if opts.groupgroup in user.groups:
+            user.groups.pop(user.groups.index(opts.groupgroup))
+
+    if opts.action =='addgroup':
+        print "add group:%s from %s"%(opts.groupgroup,opts.groupuser)
+        if not opts.groupgroup in user.groups:
+            user.groups.append(opts.groupgroup)            
+           
+
+    guid,a,b=userclient.set(user)
+
+    user=userclient.get(guid)
+
+    print user    
+
 
 if opts.action =='list':
     out=""

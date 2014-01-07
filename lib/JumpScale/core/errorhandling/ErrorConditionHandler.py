@@ -75,6 +75,7 @@ class ErrorConditionHandler():
             eco.level=1
 
         self.processErrorConditionObject(eco,tostdout=False)
+        eco.errormessage=eco.errormessage.strip("\"")
         msg = eco.errormessage if j.application.config.get('system.debug', checkExists=True, defaultval='0') == '0' else str(eco)
 
         print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg
@@ -237,7 +238,7 @@ class ErrorConditionHandler():
         @tb : can be a python data object or a Event
         """
         
-        print "jumpscale EXCEPTIONHOOK"
+        #print "jumpscale EXCEPTIONHOOK"
         
         if self.inException:
             print "ERROR IN EXCEPTION HANDLING ROUTINES, which causes recursive errorhandling behaviour."
