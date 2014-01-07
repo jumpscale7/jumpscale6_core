@@ -150,10 +150,10 @@ class system_gridmanager(j.code.classGetBase()):
         ip=self.clientsIp[nid] 
 
         targets = ''
-        for target in statKey.split('|'):
+        for target in statKey.split(','):
             targets += '&target=%s' % target
 
-        url="http://%s:8081/render/?width=%s&height=%s%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=first&tz=CET"%(ip,width,height,targets)
+        url="http://%s:8081/render/?width=%s&height=%s%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=none&tz=CET"%(ip,width,height,targets)
         r = requests.get(url)
 
         return r.content
