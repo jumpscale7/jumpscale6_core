@@ -2,6 +2,7 @@
 
 {{node: id:$$id}}
 
+[NodeStats?id:$$id]
 
 <br>
 h3. Node Jobs

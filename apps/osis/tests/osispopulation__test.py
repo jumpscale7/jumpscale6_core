@@ -94,7 +94,7 @@ class TEST():
         print 'process'
         client=j.core.osis.getClientForCategory(self.client,"system","process")        
 
-        for i in xrange(30,1000):
+        for i in xrange(30,100):
 
             obj=client.new()            
             obj.gid=1

@@ -1,0 +1,5 @@
+@usedefaults
+
+h2. Node Stats
+
+{{stat: nid:$$nid key:n1.compute.... width:800 height:500}}
