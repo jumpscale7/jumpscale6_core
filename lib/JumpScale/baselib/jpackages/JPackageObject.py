@@ -324,6 +324,9 @@ class JPackageObject():
             for dep in deps:
                 dep.removeDebugMode(dependencies=False)
 
+        recipe=self.getCodeMgmtRecipe()
+        recipe.removeFromProtectedDirs()
+
         self.state.setDebugMode(mode=0)
         self.log("remove debug mode",category="init")
 
