@@ -10,7 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "monitoring.send2carbon"
 period = 120 #always in sec
-enable=False
+enable=True
 
 def action():
     j.system.stataggregator.send2carbon()

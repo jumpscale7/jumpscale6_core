@@ -10,7 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "monitoring.processes"
 period = 10 #always in sec
-enable=False
+enable=True
 
 def action():
     psutil=j.system.platform.psutil

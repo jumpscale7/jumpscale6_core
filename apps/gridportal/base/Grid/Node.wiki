@@ -2,12 +2,11 @@
 
 {{node: id:$$id}}
 
-[NodeStats?id:$$id]
+[NodeStats|NodeStats?id=$$id]
 
 <br>
 h3. Node Jobs
 {{nodejobs: nid:$$id}}
-
 
 <br>
 h3. Logs

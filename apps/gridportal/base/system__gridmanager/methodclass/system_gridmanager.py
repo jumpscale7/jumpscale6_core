@@ -137,6 +137,8 @@ class system_gridmanager(j.code.classGetBase()):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
+        ctx = kwargs['ctx']
+        ctx.start_response('200', (('content-type', 'image/png'),))
         statKey=statKey.strip()
         if statKey[0]=="n":
             #node info
@@ -144,11 +146,10 @@ class system_gridmanager(j.code.classGetBase()):
         else:
             raise RuntimeError("Could not parse statKey, only node stats supported for now (means starting with n)")
 
-        self.getClient(nid) # load ip in ipmap
+        self.getClient(nid, 'core') # load ip in ipmap
         ip=self.clientsIp[nid] 
 
         url="http://%s:8081/render/?width=%s&height=%s&target=%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=first&tz=CET"%(ip,width,height,statKey)
-
         r = requests.get(url)
 
         return r.content

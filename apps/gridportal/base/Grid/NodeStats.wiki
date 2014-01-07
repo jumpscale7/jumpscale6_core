@@ -2,4 +2,9 @@
 
 h2. Node Stats
 
-{{stat: nid:$$nid key:n1.compute.... width:800 height:500}}
+
+h3. CPU Statistics
+{{stat: nid:$$id key:n$$id.cpu.percent.max width:800 height:500}}
+
+h3. Memory Statistics
+{{stat: nid:$$id key:n$$id.memory.used.max width:800 height:500}}
