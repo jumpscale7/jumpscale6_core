@@ -183,6 +183,10 @@ class RecipeItem(object):
         if not self.tags.labelExists("config"):
             j.dirs.addProtectedDir(self.systemdest)
 
+    def removeFromProtectedDirs(self):
+        if not self.tags.labelExists("config"):
+            j.dirs.removeProtectedDir(self.systemdest)
+
     def unlinkSystem(self,force=False):
         '''
         unlink the system, remove the links and copy the content instead
@@ -284,8 +288,11 @@ class CodeManagementRecipe:
             
     def addToProtectedDirs(self):
         for item in self.items:
-
             item.addToProtectedDirs()
+
+    def removeFromProtectedDirs(self):
+        for item in self.items:
+            item.removeFromProtectedDirs()
 
     def link(self,force=False):
         repoconnection = self._getRepoConnection()

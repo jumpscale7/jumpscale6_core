@@ -585,6 +585,7 @@ class JPackageClient():
         if domain<>"":
             j.logger.log("Update metadata information for jpackages domain %s" % domain, 1)
             d=self.getDomainObject(domain)
+            j.system.net.checkUrlReachable('https://bitbucket.org/%s' % domain)
             d.updateMetadata(force=force)
         else:
             domainnames=self.getDomainNames()            
@@ -602,6 +603,7 @@ class JPackageClient():
 
         if domain<>"":
             j.logger.log("Merge metadata information for jpackages domain %s" % domain, 1)
+            j.system.net.checkUrlReachable('https://bitbucket.org/%s' % domain)
             d=self.getDomainObject(domain)
             d.mergeMetadata(commitMessage=commitMessage)
         else:
@@ -712,6 +714,7 @@ class JPackageClient():
                 self.publish( commitMessage=commitMessage,domain=domain)
         else:
             domainobject=j.packages.getDomainObject(domain)
+            j.system.net.checkUrlReachable('https://bitbucket.org/%s' % domain)
             domainobject.publish(commitMessage=commitMessage)
 
     def publishAll(self, commitMessage=None):
@@ -734,6 +737,7 @@ class JPackageClient():
         """
         if domain=="":
             domain=j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
+        j.system.net.checkUrlReachable('https://bitbucket.org/%s' % domain)
         self.getDomainObject(domain)._ensureDomainCanBeUpdated()
         self.getDomainObject(domain).publish(commitMessage=commitMessage)
 
