@@ -79,7 +79,7 @@ elif args.action == 'debug':
             item.removeDebugMode()
     else:
         print "SELECT which packages to enable debug for. First select domain, then select jpackages."
-        packages = cmdutils.getJPackage(args,installed=False)
+        packages = cmdutils.getJPackage(args,installed=False,debug=False)
         for package in packages:
             package.setDebugMode(dependencies=args.deps)
 

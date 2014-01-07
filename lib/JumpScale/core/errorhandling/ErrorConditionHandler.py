@@ -237,8 +237,8 @@ class ErrorConditionHandler():
         @ttype : is the description of the error
         @tb : can be a python data object or a Event
         """
-        
-        #print "jumpscale EXCEPTIONHOOK"
+
+        # print "jumpscale EXCEPTIONHOOK"
         
         if self.inException:
             print "ERROR IN EXCEPTION HANDLING ROUTINES, which causes recursive errorhandling behaviour."
