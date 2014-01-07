@@ -1312,6 +1312,11 @@ class JPackageObject():
 
     def _caculateBlobInfo(self):
         result = False
+        # clean old .info files (might be invalid anymore)
+        filesdir = j.system.fs.joinPaths(self.getPathMetadata(),"files")
+        for crfile in j.system.fs.listFilesInDir(filesdir, filter='*.info'):
+            j.system.fs.remove(crfile)
+
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
