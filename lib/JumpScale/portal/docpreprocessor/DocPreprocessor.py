@@ -161,6 +161,7 @@ class Doc(object):
         """
         if self.source == "":
             self.loadFromDisk()
+       
         # print "preprocess %s" % self.name
         self._convertToInternalFormat()
         self.findParams()
@@ -236,7 +237,6 @@ class Doc(object):
         if "space" not in paramsExtra:
             paramsExtra["space"] = self.getSpaceName()
 
-
         return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=self.content, doc=self, paramsExtra=paramsExtra, ctx=ctx)
 
     def generate2disk(self, outpath):
@@ -267,10 +267,10 @@ class Doc(object):
                 continue
             linenr += 1
             if line.strip() == "":
-                if lastLineWasEmpty:
-                    continue
+                # if lastLineWasEmpty:
+                #     continue
                 out += "\n"
-                lastLineWasEmpty = True
+                # lastLineWasEmpty = True
                 continue
             if lastLineWasHeading and lastLineWasEmpty == False:
                 out += "\n"
@@ -498,7 +498,7 @@ class DocPreprocessor():
         return result
 
     def scan(self, path):
-        print "SCAN space:%s" % path
+        print "DOCPREPROCESSOR SCAN space:%s" % path
         self.space_path = path
 
         spaceconfigdir = j.system.fs.getDirName(path + "/" + ".space" + "/")

@@ -1,0 +1,32 @@
+
+
+{{title:JSPortal}}
+
+{{projectname:System}}
+
+{{find}}
+
+{{menu:
+Help:/Help
+}}
+
+{{menuadmin}}
+{{menuspaces}}
+
+
+
+
+@block
+@row
+
+@col 0
+@divend
+
+@col 12
+
+{{edit: app:$$app actor:$$actor space:$$space bucket:$$bucket path:$$path page:$$page}}
+
+
+@divend
+@divend
+

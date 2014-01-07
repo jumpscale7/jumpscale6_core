@@ -136,7 +136,7 @@ def main(j, args, params, tags, tasklet):
         if js_content not in page.head:
             page.addJS(jsContent=js_content)
 
-    MAX_DEPTH = 99999
+    MAX_DEPTH = 3
 
     if args.tags.tagExists('depth'):
         depth = int(args.tags.tagGet('depth'))
@@ -169,10 +169,7 @@ def main(j, args, params, tags, tasklet):
             return params
 
     dir_name = j.system.fs.getDirName(doc.path)
-    if items:
-        dir_tree = items
-    else:
-        dir_tree = get_dir_tree(dir_name, depth)
+    dir_tree = items+get_dir_tree(dir_name, depth)
     page.addMessage(format_dir_tree(dir_tree, doc.getSpaceName(), bullets, tree))
 
     return params

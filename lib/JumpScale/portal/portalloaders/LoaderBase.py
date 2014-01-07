@@ -57,11 +57,12 @@ class LoaderBase():
                  item in j.system.fs.listDirsInDir(path, True, False, True)
                  if j.system.fs.getDirName(item + "/", True) == ".%s" % self.type]
 
+        #find objects like spaces,actors,...
         for path in items:
             object = self._objectClass()
             result = object.loadFromDisk(path, reset)
             if result != False:
-                print "load object %s" % path
+                print "load %s %s" % (self.type,path)
                 self.id2object[object.model.id.lower()] = object
 
 class Model():
@@ -83,11 +84,10 @@ class LoaderBaseObject():
         self.type = type
         # self._osis=None
 
-    def _createDefaults(self, path, items):
-        src = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), ".%s" % self.type)
-        dest = j.system.fs.joinPaths(path, ".%s" % self.type)
-        j.system.fs.copyDirTree(src, dest, keepsymlinks=False, eraseDestination=False, skipProtectedDirs=False, overwriteFiles=False)
-        
+    def _createDefaults(self, path):
+        src = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), "%s" % self.type)
+        dest = j.system.fs.joinPaths(path)
+        j.system.fs.copyDirTree(src, dest, keepsymlinks=False, eraseDestination=False, skipProtectedDirs=False, overwriteFiles=False)        
 
     def _loadFromDisk(self, path, reset=False):
         # path=path.replace("\\","/")

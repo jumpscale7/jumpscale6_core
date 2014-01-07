@@ -10,9 +10,8 @@ def main(j, args, params, tags, tasklet):
     spaces = sorted(j.core.portal.active.getSpaces())
     spacestxt=""
     for item in spaces:
-        if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1:
-            name = j.core.portal.active.getSpace(item).model.id
-            spacestxt += "%s:/%s\n" % (name, item.lower().strip("/"))
+        if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1 and item not in ["help","system"]:
+            spacestxt += "%s:/%s\n" % (item, item.lower().strip("/"))
 
 
     C = """

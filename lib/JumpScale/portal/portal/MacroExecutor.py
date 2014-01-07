@@ -47,6 +47,7 @@ class MacroExecutorBase(object):
         @param macrostr full string like {{test something more}}
         @return macroname,jumpscaletags
         """
+        # print "############\n%s\n################"%macrostr
         cmdstr = macrostr.replace("{{", "").replace("}}", "").strip()
         if cmdstr.find("\n") != -1:
             # multiline
@@ -76,6 +77,8 @@ class MacroExecutorBase(object):
             space, macro  = macroparts
         else:
             space = None
+
+        # print "############\n%s\n################"%macro
 
         return space, macro, tags, cmdstr
 
@@ -235,7 +238,6 @@ class MacroExecutorWiki(MacroExecutorBase):
                 return content, doc
             content, doc = self.executeMacroOnContent(content, macrostr, doc, paramsExtra, ctx=ctx)
             #content, doc = self.execMacrosOnContent(content, doc, paramsExtra, recursivedepth, ctx=ctx)  # work recursive see if other macro's
-        print 'ddddd'
         return content, doc
 
     def executeMacroOnContent(self, content, macrostr, doc, paramsExtra=None, ctx=None):

@@ -251,7 +251,7 @@ class Confluence2HTML():
                 page.addNewLine()
                 continue
 
-            if line == "":
+            if state != "macro" and line == "":
                 page._checkBlock('', '', '')
                 continue
 

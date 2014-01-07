@@ -7,7 +7,11 @@ def main(j, args, params, tags, tasklet):
     content = content.replace("\{", "{")
     content = content.replace("\}", "}")
 
-    page.addCodeBlock(content, edit=False)
+    #template="python"
+    #linecolor="#eee"
+
+    page.addCodeBlock(content, edit=False, exitpage=True, spacename='', pagename='',linenr=False,\
+        linecolor="#eee",linecolortopbottom="1px solid black")
 
     params.result = page
     return params

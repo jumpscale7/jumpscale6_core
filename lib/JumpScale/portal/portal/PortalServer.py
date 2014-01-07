@@ -177,6 +177,7 @@ class PortalServer:
         self.bucketsloader = j.core.portalloader.getBucketsLoader()
         self.spacesloader = j.core.portalloader.getSpacesLoader()
         self.bucketsloader.scan(self.contentdirs)
+
         self.spacesloader.scan(self.contentdirs)
 
         if "system" not in self.spacesloader.spaces:
@@ -283,7 +284,13 @@ class PortalServer:
         for gr in groups:
             if gr in self.admingroups:
                 return True
-        return False        
+        return False     
+
+    def isLoggedInFromCTX(self,ctx):
+        user=self.getUserFromCTX(ctx)
+        if user<>"" and user<>"guest":
+            return True
+        return False
 
 ##################### process pages, get docs
     def getpage(self):
@@ -296,7 +303,7 @@ class PortalServer:
         return [page.getContent()]
 
     def getDoc(self, space, name, ctx, params={}):
-        # print "getdoc:%s" % space
+        print "GETDOC:%s" % space
         space = space.lower()
         name = name.lower()
 
@@ -344,7 +351,7 @@ class PortalServer:
 
             if spaceObject.docprocessor == None:
                 spaceObject.loadDocProcessor(force=True)  # dynamic load of space
-            
+
             spacedocgen = spaceObject.docprocessor
 
             if name != "" and name in spacedocgen.name2doc:
@@ -738,7 +745,10 @@ class PortalServer:
         if "user_login_" in ctx.params:
             # user has filled in his login details, this is response on posted info
             name = ctx.params['user_login_']
-            secret = ctx.params['passwd']
+            if not ctx.params.has_key('passwd'):
+                secret=""
+            else:
+                secret = ctx.params['passwd']
             if self.auth.authenticate(name, secret):
                 session['user'] = name
                 if "querystr" in session:
@@ -1026,6 +1036,7 @@ class PortalServer:
         return self.actorsloader.id2object.keys()
 
     def getSpace(self, name):
+
         name = name.lower()
         if name not in self.spacesloader.spaces:
             raise RuntimeError("Could not find space %s" % name)
