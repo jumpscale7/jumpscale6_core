@@ -27,9 +27,11 @@ class OSISFactory:
 
     def _stopRedirect(self,pprint=False):
         sys.stdout=self._sysstdout
-        out=self._out.out
-        if pprint:
-            print out
+        out = None
+        if self._out:
+            out=self._out.out
+            if pprint:
+                print out
         self._out=None 
         return out
 
@@ -83,7 +85,6 @@ class OSISFactory:
         try:
             key = "%s_%s_%s_%s" % (ipaddr, port,user,passwd)
             if self.osisConnections.has_key(key):
-                out=self._stopRedirect(pprint=True)  
                 return self.osisConnections[key]
             # self.osisConnections[key] = OSISClient(ipaddr, port)
             j.logger.log("get client to osis")
