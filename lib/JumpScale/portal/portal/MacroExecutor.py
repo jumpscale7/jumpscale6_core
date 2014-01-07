@@ -104,6 +104,8 @@ class MacroExecutorPreprocess(MacroExecutorBase):
         priority = dict()
         self.priority[spacename] = priority
         for macrodir in macrodirs:
+            if not j.system.fs.exists(path=macrodir):
+                continue
             taskletgroup.addTasklets(macrodir)
             cfg = j.system.fs.joinPaths(macrodir, "prio.cfg")
             if j.system.fs.exists(cfg):
