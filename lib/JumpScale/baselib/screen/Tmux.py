@@ -144,7 +144,7 @@ class Tmux:
 
     def logWindow(self, session, name, filename):
         pane = self._getPane(session, name)
-        cmd = "tmux pipe-pane -t '%s' 'tee -a \"%s\" | jslogpipe -n \"%s\"'" % (pane, filename, '%s_%s' % (session, name))
+        cmd = "tmux pipe-pane -t '%s' 'cat >> \"%s\"'" % (pane, filename)
         j.system.process.execute(cmd)
 
     def windowExists(self, session, name):

@@ -30,6 +30,8 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
+        if not j.system.fs.exists(self.logfile):
+            j.system.fs.createEmptyFile(self.logfile)
         self._nameLong=self.name
         while len(self._nameLong)<20:
             self._nameLong+=" "
@@ -66,9 +68,8 @@ class ProcessDef:
         jp.processDepCheck(timeout=timeout)
         self.log("process dependency OK")
         self.log("start process")
-        j.system.fs.remove(self.logfile)
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
-        # j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
+        j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
         time.sleep(2)#need to wait because maybe error did not happen yet (is not the nicest method, but dont know how we can do else?) kds
 
