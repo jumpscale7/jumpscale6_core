@@ -18,11 +18,15 @@ class Bitbucket:
         self.config=BitbucketConfigManagement()
         self.connections={}
         j.logger.consolelogCategories.append("bitbucket")
-
-        C=j.system.fs.fileGetContents("/root/.hgrc")
+        
+        hgpath = '/root/.hgrc'
+        if j.system.fs.exists(hgpath):
+            C=j.system.fs.fileGetContents(hgpath)
+        else:
+            C=''
         if C.find("[hostfingerprints]")==-1:
             C+="\n[hostfingerprints]\nbitbucket.org =24:9c:45:8b:9c:aa:ba:55:4e:01:6d:58:ff:e4:28:7d:2a:14:ae:3b\n"
-            j.system.fs.writeFile("/root/.hgrc",C)
+            j.system.fs.writeFile(hgpath,C)
 
         
 #         [hostfingerprints]
