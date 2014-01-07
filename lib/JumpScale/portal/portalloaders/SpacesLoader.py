@@ -12,7 +12,7 @@ class Space(LoaderBaseObject):
     def loadDocProcessor(self,force=False):
         if self._loading and force==False:
             return
-        # self._loading = True
+        self._loading = True
         self.createDefaultDir()        
         if j.system.fs.exists(j.system.fs.joinPaths(self.model.path, ".macros")):
             #load the macro's only relevant to the space, the generic ones are loaded on docpreprocessorlevel
