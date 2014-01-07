@@ -66,7 +66,12 @@ class HgLibClient:
         else:
             self.client = hglib.open(self.basedir, configs=self._configs)
             self.remoteUrl = self.getUrl()
-            self.branchname = self.getbranchname()                
+            currentbranchname = self.getbranchname()
+            if branchname and branchname != currentbranchname:
+                self.switchbranch(branchname)
+            else:
+                self.branchname = currentbranchname
+
             
         self.reponame, self.repokey = self._getRepoNameAndKey()
 
@@ -374,10 +379,9 @@ syntax: regexp
         return 0
                     
     def switchbranch(self,branchname):
-        raise NotImplementedError("no support for switchbrand, do this manually")
-        #self._log("switchbranch %s" % (self.basedir))
-        #if branchname<>self.getbranchname():
-            #self.updatemerge(commitMessage="switch branch",ignorechanges=False,addRemoveUntrackedFiles=False,trymerge=True, release=branchname)
+        self._log("switchbranch %s" % (self.basedir))
+        if branchname != self.getbranchname():
+            self.update(rev=branchname)
         
     def pullupdate(self, force=False):
         self._log("pullupdate %s" % (self.basedir),category="pullupdate")
