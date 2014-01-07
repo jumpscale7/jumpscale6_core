@@ -4,7 +4,7 @@ def main(j, args, params, tags, tasklet):
   
     
     p=args.tags.getDict()
-    nid = p['nid']
+    nid = p['nid'] if p.get('nid') and not p['nid'].startswith('$$') else None
     statistic = p['statistic']
 
     page.addBodyAttribute('ng-app="jumpscale"')

@@ -5,12 +5,12 @@ def main(j, args, params, tags, tasklet):
     version = args.requestContext.params.get('version')
     nid = args.requestContext.params.get('nid')
 
-    actor=j.core.portal.active.actorsloader.getActor('system', 'packagemanager')
+    actor = j.apps.actorsloader.getActor('system', 'packagemanager')
 
     if not nid:
         _, nid, _ = j.application.whoAmI
     
-    jp=actor.getJPackage(nid=nid, domain=domain, pname=name, version=version)
+    jp = actor.getJPackages(nid=nid, domain=domain, pname=name, version=version)
     out = ''
     if jp==None:
         out= "h3. Could not find package:%s %s (%s) installed on node:%s"%(domain,name,version,nid)

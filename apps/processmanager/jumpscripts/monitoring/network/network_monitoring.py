@@ -10,10 +10,10 @@ license = "bsd"
 version = "1.0"
 category = "monitoring.nic"
 period = 30 #always in sec
-enable=False
+enable=True
 
 def action():
-	psutil=j.system.platform.psutil
+    psutil=j.system.platform.psutil
 
     netinfo=j.system.net.getNetworkInfo()
 
