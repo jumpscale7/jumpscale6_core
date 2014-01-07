@@ -13,6 +13,8 @@ category = "agentcontroller.advanced"
 enable=True
 priority=8
 
+ROLE = 'node.%s.%s' % (j.application.whoAmI.gid, j.application.whoAmI.nid)
+
 class TEST():
 
     def setUp(self):
@@ -23,12 +25,12 @@ class TEST():
     def test_queuetest1agent(self):
         #@todo launch 5 wait js (1 sec each), see they are all execute one after the other, check the logs that they were executed
         #test there is only 1 agent (use startupmanager through the processmanager)
-        jp= client.execute('jumpscale', 'jpackage_info', domain="jumpscale", timeout=10)
+        self.client.execute('jumpscale', 'jpackage_info', ROLE, domain="jumpscale", pname='core', version='1.0', timeout=10)
 
     def test_queuetest5agents(self):
         #@todo launch 50 wait js (1 sec each), see they are all execute one after the other, check the logs that they were executed
         #start 5 agents, see that they sort of equally executed the tasks
-        jp= client.execute('jumpscale', 'jpackage_info', domain="jumpscale", timeout=10)
+        self.client.execute('jumpscale', 'jpackage_info', ROLE, domain="jumpscale", pname='core', version='1.0', timeout=10)
 
     def test_killbehaviour(self):
         #1 agent running
