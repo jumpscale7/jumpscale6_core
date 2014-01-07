@@ -412,7 +412,7 @@ class JPackageClient():
 
         res = self._find(domain=domain, name=name, version=version)
         if not res:
-            j.console.echo('No packages found, did you forget to run jpackage_update?')
+            j.console.echo('No packages found, did you forget to run "jpackage mdupdate"?')
 
         if installed==True:
             res=[item for item in res if item.isInstalled()]

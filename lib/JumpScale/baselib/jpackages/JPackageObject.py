@@ -1062,9 +1062,8 @@ class JPackageObject():
             if self.state.checkNoCurrentAction == False:
                 raise RuntimeError("jpackages is in inconsistent state, ...")
 
-            self.prepare(dependencies=False)
-
             self.installActiveHrd()
+            self.prepare(dependencies=False)
 
             self.copyfiles(dependencies=False)
 
