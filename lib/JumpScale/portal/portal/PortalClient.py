@@ -58,8 +58,6 @@ class PortalClient():
         self.wsclient = PortalClientWS(ip, port, secret=secret)
         self.ip = ip
         self.port = port
-        self.login = login
-        self.passwd=passwd
 
         apsp = PortalProcess()
         j.core.portal.active = apsp

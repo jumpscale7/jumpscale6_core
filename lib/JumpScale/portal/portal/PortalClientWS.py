@@ -1,5 +1,7 @@
-import urlparse
-import os
+from JumpScale import j
+import re
+
+CONTENT_TYPE_JSON = 'application/json'
 
 class PortalClientWS():
 
