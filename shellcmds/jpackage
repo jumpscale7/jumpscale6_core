@@ -146,6 +146,7 @@ elif args.action == 'publish':
         j.packages.publish(args.message,domain)
 
 elif args.action == 'repackage':
+    packages = cmdutils.getJPackage(args)
     domains = { jp.domain for jp in packages }
     for domain in domains:
         j.packages.updateMetaData(domain)
