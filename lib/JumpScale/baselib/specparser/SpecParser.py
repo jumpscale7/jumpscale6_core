@@ -622,7 +622,7 @@ class SpecParserFactory():
 
         if spec.type<>spec.type.lower().strip():
             emsg="type %s of spec %s should be lowercase & no spaces" % (spec.type,key)
-            raise RuntimeError(emsg+" {category:specs.input}")
+            raise RuntimeError(emsg+" {category:specs.input}") #@todo P2 the errorcondition handler does not deal with this format to escalate categories
         if spec.name<>spec.name.lower().strip():
             emsg="name %s of spec %s should be lowercase & no spaces" % (spec.name,key)
             raise RuntimeError(emsg+" {category:specs.input}")
@@ -631,8 +631,8 @@ class SpecParserFactory():
             self.appnames.append(spec.appname)
 
         if spec.actorname=="":
-            emsg="actorname cannot be empty for spec:%s %s starting line %s" % (spec.name,spec.specpath,spec.linenr)
-            raise RuntimeError(emsg+" {category:specs.input}")
+            emsg="actorname cannot be empty for spec:%s" % (spec.name)
+            raise RuntimeError(emsg+"\n{category:specs.input}")
         if "%s_%s"%(spec.appname,spec.actorname) not in self.actornames:
             self.actornames.append("%s_%s"%(spec.appname,spec.actorname))
         self.specs[key]=spec
