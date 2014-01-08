@@ -41,20 +41,32 @@ def action():
             process.guid=guid
             result[pid]=process
 
+    def fillInProcessObject(pid, process, processOsisObject):
+        if not processOsisObject.name:
+            processOsisObject.name=process.name
+        processOsisObject.systempid=pid
+        processOsisObject.epochstart = process.create_time
+        if not processOsisObject.workingdir:
+            processOsisObject.workingdir = process.getcwd()
+        if not processOsisObject.cmd:
+            processOsisObject.cmd = process.exe
+
     for process in j.processmanager.startupmanager.manager.getProcessDefs():
         pid=process.getPid()
         print pid
         if pid:
             processOsisObject=osis.new()
             processOsisObject.active=process.isRunning()
-            processOsisObject.name=process.name
-            processOsisObject.systempid=pid
-            processOsisObject.epochstart=0
-            processOsisObject.jpname=process.jpackage_name
+            processOsisObject.ports = process.ports
+            processOsisObject.jpname = process.jpackage_name
             processOsisObject.jpdomain=process.jpackage_domain
-            processOsisObject.ports=process.ports
-            processOsisObject.cmd=process.cmd
-            processOsisObject.workingdir=process.workingdir
+            processOsisObject.workingdir = process.workingdir
+            processOsisObject.cmd = process.cmd
+            processOsisObject.name = process.name
+            processOsisObject.epochstart=0
+            if processOsisObject.active:
+                proc = process.getProcessObject()
+                fillInProcessObject(pid, proc, processOsisObject)
             send2osis(pid,processOsisObject)
 
     # plist=psutil.get_process_list()
@@ -71,13 +83,8 @@ def action():
 
         if int(pid) not in result.keys():
             processOsisObject=osis.new()
-            processOsisObject.active=True
-            processOsisObject.jpname=""
-            processOsisObject.jpdomain=""
-            # process=j.processmanager.cache.processobject.get(process.pid)
-            processOsisObject.cmd=" ".join(process.cmdline)
-            processOsisObject.workingdir=""
-
+            fillInProcessObject(pid, process, processOsisObject)
+            processOsisObject.active=process.is_running()
             send2osis(pid,processOsisObject)
 
 
