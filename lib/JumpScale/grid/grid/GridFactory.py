@@ -80,7 +80,7 @@ class GridFactory():
             instance=instance)
         key,new2,changed2=clientprocess.set(obj2)
         obj=clientprocess.get(key)
-        pid=obj.id
+        pid=obj.systempid
 
         self.pid = pid
         self.processObject=obj
