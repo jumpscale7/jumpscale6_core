@@ -52,7 +52,7 @@ class ZDaemonTransport(Transport):
 
         self._cmdchannel = self._context.socket(zmq.REQ)
 
-        self._cmdchannel.setsockopt(zmq.IDENTITY, self._id)
+        self._cmdchannel.setsockopt(zmq.IDENTITY, str(self._id))
 
         # if self.port == 4444 and j.system.platformtype.isLinux():
         #     self.cmdchannel.connect("ipc:///tmp/cmdchannel_clientdaemon")
