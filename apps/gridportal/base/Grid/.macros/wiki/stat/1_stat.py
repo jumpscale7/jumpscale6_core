@@ -31,11 +31,10 @@ def main(j, args, params, tags, tasklet):
         if netstats:
             out += '\nh3. Network Statistics\n'
             out += '|| || ||\n'
-            out += '|<b><center>KBytes</center></b>|<b><center>Packets</center></b>|\n'
-            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.kbytes.recv.avg,n%(nid)s.network.kbytes.send.avg&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.packets.recv.avg,n%(nid)s.network.packets.send.avg&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+            
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.kbytes.recv.avg,n%(nid)s.network.kbytes.send.avg&title=KBytes&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.packets.recv.avg,n%(nid)s.network.packets.send.avg&title=Packets&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
 
-            out += '|<b><center>Drop</center></b>|<b><center>Error</center></b>|\n'
-            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.drop.in.avg,n%(nid)s.network.drop.out.avg&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.error.in.avg,n%(nid)s.network.error.out.avg&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.drop.in.avg,n%(nid)s.network.drop.out.avg&title=Drop&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.error.in.avg,n%(nid)s.network.error.out.avg&title=Error&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
     elif stattype == 'process':
         cpustats = args.tags.labelExists("cpustats")
         iostats = args.tags.labelExists("iostats")

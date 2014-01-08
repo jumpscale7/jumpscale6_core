@@ -1,5 +1,12 @@
 @usedefaults
 
+{{cssstyle
+    table{
+        width: 125% !important;
+        max-width: 125%;
+    }
+}}
+
 h2. Node Stats
 
 {{stat: stattype:node nid:$$id width:800 height:500 netstats cpustats memstats}}

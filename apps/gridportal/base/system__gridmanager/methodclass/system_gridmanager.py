@@ -133,7 +133,7 @@ class system_gridmanager(j.code.classGetBase()):
         client=self.getClient(nid)
         return client.monitorProcess(domain=domain,name=name)
 
-    def getStatImage(self,statKey,width=500,height=250, **kwargs):
+    def getStatImage(self,statKey, title=None, width=500,height=250, **kwargs):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
@@ -152,8 +152,12 @@ class system_gridmanager(j.code.classGetBase()):
         targets = ''
         for target in statKey.split(','):
             targets += '&target=%s' % target
+        
+        graphtitle = ''
+        if title:
+            graphtitle = '&title=%s' % title
 
-        url="http://%s:8081/render/?width=%s&height=%s%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=none&tz=CET"%(ip,width,height,targets)
+        url="http://%s:8081/render/?width=%s&height=%s%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=none%s&tz=CET"%(ip,width,height,targets,graphtitle)
         r = requests.get(url)
 
         return r.content
