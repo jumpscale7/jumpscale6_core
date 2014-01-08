@@ -73,10 +73,10 @@ def main(j, args, params, tags, tasklet):
             out+="\n}}\n"
 
         out+= "h3. Logs\n"
-        out+= "{{Grid.logs: jid:%s astext}}}}\n" % id
+        out+= "{{Grid.logs: jid:%s astext}}\n" % id
 
     if script:
-        out+= "h3. jumpscript\n"
+        out+= "h3. Jumpscript\n"
         out+= "{{jumpscript: jsorganization:%s jsname:%s codeonly}}\n"%(obj["jsorganization"],obj["jsname"])
 
     if children and len(obj["children"])>0:

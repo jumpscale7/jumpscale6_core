@@ -7,3 +7,5 @@ h2. Processes
 
 h2. logs from last 1h
 {{logs: pid:$$id from:-1h}}
+
+[ProcessStats|ProcessStats?pid=$$id&nid=$$nid]
