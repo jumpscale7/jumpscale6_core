@@ -27,7 +27,10 @@ class Stat():
             nr+=1
             if self.results[key]>m:
                 m=self.results[key]
-        return (round(tot/nr,2),m)
+        if nr != 0:
+            return (round(tot/nr,2),m)
+        else:
+            return 0
 
     def clean(self,now):
         for key in self.results.keys():
