@@ -9,12 +9,17 @@ def main(j, args, params, tags, tasklet):
     nodeactor = j.apps.actorsloader.getActor("system", "gridmanager")
 
     #this makes sure bootstrap datatables functionality is used
-    out="{{datatables_use}}}}\n\n"
+    out="{{datatables_use}}\n\n"
 
     out+="||JSName||JSOrganization||Roles||State||\n"
 
     nid = args.tags.getDict()["nid"] or None
-    roles = ' or '.join(nodeactor.getNodes(id=nid)[0]['roles']) or None
+    nodes = nodeactor.getNodes(id=nid)
+    if not nodes:
+        params.result = ('No jobs found for this node', doc)
+        return params
+    
+    roles = ' or '.join(nodes[0].get('roles')) or None
 
     jobs = actor.listJobs(roles=roles)['aaData']
     if not jobs:

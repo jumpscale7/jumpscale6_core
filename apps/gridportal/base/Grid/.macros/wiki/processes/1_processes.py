@@ -8,6 +8,8 @@ def main(j, args, params, tags, tasklet):
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
+    nid = args.tags.getDict()['nid'] if args.tags.getDict().get('nid') and not args.tags.getDict()['nid'].startswith('$$') else None
+
     out = []
 
     #this makes sure bootstrap datatables functionality is used
@@ -17,7 +19,7 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||pid||node||name||process name||process domain||start||active||')
 
-    for process in actor.getProcesses():
+    for process in actor.getProcesses(nid=nid):
         line = [""]
 
         for field in fields:
