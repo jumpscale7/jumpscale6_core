@@ -13,19 +13,17 @@ def main(j, args, params, tags, tasklet):
     #this makes sure bootstrap datatables functionality is used
     out.append("{{datatables_use}}\n")
 
-    #fields = ['systempid', 'name', 'instance', 'id', 'nid', 'epochstart', 'lastcheck', 'jpdomain', 'gid', 'active', 'jpname', 'epochstop']
+    fields = ["systempid", "nid", "name", "jpname", "jpdomain", "epochstart", "active"]
 
-    fields = ["id", "nid", "name", "jpname", "jpdomain", "epochstart", "active"]
-
-    out.append('||id||node||name||process name||process domain||start||active||')
+    out.append('||pid||node||name||process name||process domain||start||active||')
 
     for process in actor.getProcesses():
         line = [""]
 
         for field in fields:
             # add links
-            if field == 'id':
-                line.append('[%s|/grid/process?id=%s&nid=%s]' % (str(process[field]), str(process[field]), str(process['nid'])))
+            if field == 'systempid':
+                line.append('[%s|/grid/process?pid=%s&nid=%s&gid=%s]' % (process[field], process[field], process['nid'], process['gid']))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(process[field]), str(process[field])))
             elif field in ('epochstart'):

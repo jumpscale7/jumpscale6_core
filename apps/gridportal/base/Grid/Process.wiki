@@ -2,10 +2,10 @@
 
 h2. Processes
 
-{{process: id:$$id}}
+{{process: nid:$$nid gid:$$gid pid:$$pid}}
 
 
 h2. logs from last 1h
-{{logs: pid:$$id from:-1h}}
+{{logs: pid:$$pid from:-1h}}
 
-[ProcessStats|ProcessStats?pid=$$id&nid=$$nid]
+[ProcessStats|ProcessStats?pid=$$pid&nid=$$nid&gid=$$gid]

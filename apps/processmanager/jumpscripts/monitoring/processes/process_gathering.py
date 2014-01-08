@@ -57,30 +57,28 @@ def action():
             processOsisObject.workingdir=process.workingdir
             send2osis(pid,processOsisObject)
 
-    else:
-        # plist=psutil.get_process_list()
-        initprocess=j.system.process.getProcessObject(1)  #find init process
+    # plist=psutil.get_process_list()
+    initprocess=j.system.process.getProcessObject(1)  #find init process
 
-        for process in initprocess.get_children():
-            if process.name in ["getty"]:
-                continue
-            pid = process.pid
-            if pid == 0:
-                continue
+    for process in initprocess.get_children():
+        if process.name in ["getty"]:
+            continue
+        pid = process.pid
+        if pid == 0:
+            continue
 
-            print "systemprocess:%s %s"%(process.name, pid)
+        print "systemprocess:%s %s"%(process.name, pid)
 
-            if int(pid) not in result.keys():
-                processOsisObject=osis.new()
-                processOsisObject.active=False
-                processOsisObject.jpname=""
-                processOsisObject.jpdomain=""
-                # process=j.processmanager.cache.processobject.get(process.pid)
-                processOsisObject.cmd=" ".join(process.cmdline)
-                processOsisObject.workingdir=""
+        if int(pid) not in result.keys():
+            processOsisObject=osis.new()
+            processOsisObject.active=True
+            processOsisObject.jpname=""
+            processOsisObject.jpdomain=""
+            # process=j.processmanager.cache.processobject.get(process.pid)
+            processOsisObject.cmd=" ".join(process.cmdline)
+            processOsisObject.workingdir=""
 
-                send2osis(pid,processOsisObject)
-
+            send2osis(pid,processOsisObject)
 
 
     for pid in j.processmanager.cache.processobject.monitorobjects.keys():

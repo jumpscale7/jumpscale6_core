@@ -8,12 +8,12 @@ class Process(OsisBaseObject):
     unique process
     """
 
-    def __init__(self, ddict={}, gid=0,aid=0,nid=0,name="",instance="",systempid=0, id=0):
+    def __init__(self, ddict={}, gid=0,aid=0,nid=0,name="",instance="",systempid=0, id=''):
         if ddict <> {}:
             self.load(ddict)
+            self.getSetGuid()
         else:
             self.init("process","1.0")
-            self.id = 0
             self.gid = gid
             self.nid = nid
             self.jpdomain= ""
@@ -37,6 +37,7 @@ class Process(OsisBaseObject):
             for item in r:
                 self.__dict__[item]=0.0
                 self.__dict__["%s_total"%item]=0.0
+            self.getSetGuid()
 
     def getUniqueKey(self):
         """
@@ -53,8 +54,8 @@ class Process(OsisBaseObject):
         """
         self.gid = int(self.gid)
         self.nid = int(self.nid)
-        self.id = int(self.id)
-        self.guid = "%s_%s_%s" % (self.gid,self.nid,self.id)
+        self.guid = "%s_%s_%s" % (self.gid,self.nid,self.systempid)
+        self.id = self.guid
         self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 

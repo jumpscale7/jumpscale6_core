@@ -7,8 +7,9 @@ def main(j, args, params, tags, tasklet):
     # tags = params.tags
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
+    tags = args.tags.getDict()
+    id = "%(gid)s_%(nid)s_%(pid)s" % (tags)
 
-    id = int(args.tags.getDict()["id"])
 
     obj = actor.getProcesses(id=id)
     if not obj:
@@ -20,7 +21,7 @@ def main(j, args, params, tags, tasklet):
 
     out = ['||Property||Value||']
 
-    fields = ['systempid', 'name', 'instance', 'id', 'nid', 'epochstart', 'lastcheck', 'jpdomain', 'gid', 'active', 'jpname', 'epochstop']
+    fields = ['systempid', 'name', 'instance', 'nid', 'epochstart', 'lastcheck', 'jpdomain', 'gid', 'active', 'jpname', 'epochstop']
 
     for field in fields:
         if field == 'nid':

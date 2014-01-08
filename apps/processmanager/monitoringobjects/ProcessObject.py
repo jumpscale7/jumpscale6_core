@@ -79,8 +79,6 @@ class ProcessObject():
                 self.children.append(child)
                 j.processmanager.childrenPidsFound[int(childpid)]=True
             
-    def getGuid(Self):
-        return self.pid
 
     def getStatInfo(self,totals=False):
         """
