@@ -24,7 +24,9 @@ def main(j, args, params, tags, tasklet):
 
         if cpustats:
             out += '\nh3. CPU Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.cpu.time.system.avg,n%(nid)s.cpu.time.user.avg,n%(nid)s.cpu.time.iowait.avg,n%(nid)s.cpu.time.idle.avg&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
+            out += '|| || ||\n'
+            
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.cpu.percent.avg&title=Average CPU Percent&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.cpu.time.system.avg,n%(nid)s.cpu.time.user.avg,n%(nid)s.cpu.time.iowait.avg,n%(nid)s.cpu.time.idle.avg&title=CPU Time&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
         if memstats:
             out += '\nh3. Memory Statistics\n'
             out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.memory.free.avg,n%(nid)s.memory.percent.avg,n%(nid)s.memory.used.avg&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
