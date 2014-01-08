@@ -1,12 +1,12 @@
 from JumpScale import j
+import gevent
+from gevent import Greenlet
 
 import time
 
 import JumpScale.grid.geventws
 
 import Queue
-
-import threading
 
 j.application.start("agent")
 
@@ -17,9 +17,10 @@ import ujson as json
 
 LOGCATEGORY = 'agent_exec'
 
-class LogHandler():
+class LogHandler(Greenlet):
 
     def __init__(self,agent):
+        Greenlet.__init__(self)
         self.enabled = True
         self.agent=agent
         self.queue = Queue.Queue()
@@ -46,17 +47,11 @@ class LogHandler():
         if logs:
             self.agent.client.log(logs)
 
-    def start(self, interval=5):
+    def _run(self, interval=5):
         self._running = True
-        class MyFlush(threading.Thread):
-            def run(s):
-                while self._running:
-                    time.sleep(interval)
-                    self.flushLogs()
-        print "log thread started, will flush each %s sec"%interval
-        self._t = MyFlush()
-        self._t.setDaemon(True)
-        self._t.start()  
+        while self._running:
+            gevent.sleep(interval)
+            self.flushLogs()
 
     def stop(self):
         self._running = False
@@ -69,10 +64,10 @@ class LogHandler():
 
 import sys
 
-class Agent():
+class Agent(Greenlet):
 
     def __init__(self):
-
+        Greenlet.__init__(self)
         self.loghandler=LogHandler(self)
 
         
@@ -120,7 +115,7 @@ class Agent():
                 print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
         print "******************* SERIOUS BUG **************"   
         self.register()
-        self.start()     
+        self.loop()
 
     def register(self):
         print "REGISTERED"
@@ -132,9 +127,12 @@ class Agent():
             except Exception,e:
                 print e
                 print "retry registration"
-                time.sleep(2)
+                gevent.sleep(2)
 
-    def start(self):
+    def _run(self):
+        self.loop()
+
+    def loop(self):
         print "STARTED"
         while True:
 
@@ -229,3 +227,5 @@ class Agent():
 
 agent=Agent()
 agent.start()
+agent.join()
+
