@@ -14,33 +14,15 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             sys.exit(status)
 
-
-def processLogin(parser):
-
-    parser.add_argument("-l",'--login', help='login for grid, if not specified defaults to root')
-    parser.add_argument("-p",'--passwd', help='passwd for grid')
-    parser.add_argument("-a",'--addr', help='ip addr of master, if not specified will be the one as specified in local config')
-
-    opts = parser.parse_args()
-
-    if opts.login==None:
-        opts.login="root"
-
-    if opts.passwd==None and opts.login=="root":
-        if j.application.config.exists("gridmaster.superadminpasswd"):
-            opts.passwd=j.application.config.get("gridmaster.superadminpasswd")
-        else:
-            opts.passwd=j.console.askString("please provide superadmin passwd for the grid.")
-
-    if opts.addr==None:    
-        opts.addr=j.application.config.get("grid.master.ip")
-
-    return opts
-
-
-def getJPackage(args, installed=None,domain=None,debug=None):
+def getJPackage(parser=None,installed=None,domain=None):
     if installed:
         domain=""
+    parser = parser or ArgumentParser()
+    parser.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
+    parser.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
+    parser.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
+
+    args = parser.parse_args()
 
     if args.domain<>None:
         domain=args.domain
@@ -56,9 +38,6 @@ def getJPackage(args, installed=None,domain=None,debug=None):
     else:
         packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
 
-    if debug==False:
-        debugpackages=j.packages.getDebugPackages()
-        packages=[item for item in packages if item not in debugpackages]        
 
     if len(packages) == 0:
         if installed:
@@ -72,13 +51,8 @@ def getJPackage(args, installed=None,domain=None,debug=None):
             j.application.stop(1)
         else:
             packages = j.console.askChoiceMultiple(packages, "Multiple packages found. Select:")
-            if args.deps:
-                for p in packages:
-                    for dep in p.getDependencies():
-                        if dep not in packages:
-                            packages.append(dep)
 
-    return packages
+    return packages, args
 
 def getProcess(parser=None):
     parser = parser or ArgumentParser()
