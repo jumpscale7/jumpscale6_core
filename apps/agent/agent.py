@@ -25,7 +25,6 @@ class LogHandler(Greenlet):
         self.agent=agent
         self.queue = Queue.Queue()
         self.jid=""
-        self._running = False
 
     def log(self,logitem):
         logitem.jid=self.jid
@@ -48,19 +47,12 @@ class LogHandler(Greenlet):
             self.agent.client.log(logs)
 
     def _run(self, interval=5):
-        self._running = True
-        while self._running:
+        while True:
             gevent.sleep(interval)
             self.flushLogs()
 
-    def stop(self):
-        self._running = False
-
-    def __exit__(self):
-        self._running = False
-
     def close(self):
-        self.stop()
+        self.flushLogs()
 
 import sys
 
@@ -70,13 +62,11 @@ class Agent(Greenlet):
         Greenlet.__init__(self)
         self.loghandler=LogHandler(self)
 
-        
-
         j.logger.logTargets=[]
         j.logger.logTargetLogForwarder=False
 
         self.similarProcessPIDs=[process.pid for process in j.system.process.getSimularProcesses()]
-        
+
         self.agentid = j.application.getWhoAmiStr()
 
         ipaddr=j.application.config.get("grid.master.ip")
@@ -115,7 +105,7 @@ class Agent(Greenlet):
                 print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
         print "******************* SERIOUS BUG **************"   
         self.register()
-        self.loop()
+        self._run()
 
     def register(self):
         print "REGISTERED"
@@ -130,9 +120,6 @@ class Agent(Greenlet):
                 gevent.sleep(2)
 
     def _run(self):
-        self.loop()
-
-    def loop(self):
         print "STARTED"
         while True:
 
