@@ -253,6 +253,7 @@ class Domain():
         """
         j.logger.log("Publish metadata for domain %s" % self.domainname,2)
         if not self.metadataFromTgz:
+            j.system.net.checkUrlReachable('https://bitbucket.org/%s/%s' % (self.bitbucketaccount, self.bitbucketreponame))
             hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
             hg.commit(message=commitMessage,force=force)
             hg.push()
@@ -396,7 +397,8 @@ class Domain():
                            "Could not update the metadata for the domain",\
                            "go to directory %s and update the metadata yourself using mercurial" % self.metadatadir)
                   
-            #self.bitbucketclient.checkoutMerge    
+            #self.bitbucketclient.checkoutMerge
+            j.system.net.checkUrlReachable('https://bitbucket.org/%s/%s' % (self.bitbucketaccount, self.bitbucketreponame))    
             mercurialclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)            
             mercurialclient.pullupdate(force=force)
        
@@ -440,6 +442,7 @@ class Domain():
             j.action.start("update & merge jpackages metadata for domain %s" % self.domainname,\
                            "Could not update/merge the metadata for the domain",\
                            "go to directory %s and update/merge/commit the metadata yourself using mercurial" % self.metadatadir)
+            j.system.net.checkUrlReachable('https://bitbucket.org/%s/%s' % (self.bitbucketaccount, self.bitbucketreponame))
             hgclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)            
             hgclient.pull()
             hgclient.updatemerge(commitMessage=commitMessage,ignorechanges=False,addRemoveUntrackedFiles=True,trymerge=True)	    
