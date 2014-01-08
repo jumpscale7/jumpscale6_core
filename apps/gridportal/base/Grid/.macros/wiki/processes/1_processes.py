@@ -25,7 +25,7 @@ def main(j, args, params, tags, tasklet):
         for field in fields:
             # add links
             if field == 'id':
-                line.append('[%s|/grid/process?id=%s]' % (str(process[field]), str(process[field])))
+                line.append('[%s|/grid/process?id=%s&nid=%s]' % (str(process[field]), str(process[field]), str(process['nid'])))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(process[field]), str(process[field])))
             elif field in ('epochstart'):
