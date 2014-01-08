@@ -13,8 +13,29 @@ def main(j, args, params, tags, tasklet):
     width = p['width'] if p.get('width') and not p['width'].startswith('$$') else 800
     height = p['height'] if p.get('height') and not p['height'].startswith('$$') else 400
 
+    _data = {'nid': nid, 'pid':pid, 'height':height, 'width':width}
+
     if stattype == 'node':
-        out='!/restmachine/system/gridmanager/getStatImage?statKey=%s&_png=1&width=%s&height=%s&.png!'%(p["key"],p["width"],p["height"])
+        cpustats = args.tags.labelExists("cpustats")
+        netstats = args.tags.labelExists("netstats")
+        memstats = args.tags.labelExists("memstats")
+
+        out = ''
+
+        if cpustats:
+            out += '\nh3. CPU Statistics\n'
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.cpu.time.system.avg,n%(nid)s.cpu.time.user.avg,n%(nid)s.cpu.time.iowait.avg,n%(nid)s.cpu.time.idle.avg&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
+        if memstats:
+            out += '\nh3. Memory Statistics\n'
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.memory.free.avg,n%(nid)s.memory.percent.avg,n%(nid)s.memory.used.avg&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
+        if netstats:
+            out += '\nh3. Network Statistics\n'
+            out += '|| || ||\n'
+            out += '|<b><center>KBytes</center></b>|<b><center>Packets</center></b>|\n'
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.kbytes.recv.avg,n%(nid)s.network.kbytes.send.avg&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.packets.recv.avg,n%(nid)s.network.packets.send.avg&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+
+            out += '|<b><center>Drop</center></b>|<b><center>Error</center></b>|\n'
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.drop.in.avg,n%(nid)s.network.drop.out.avg&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.error.in.avg,n%(nid)s.network.error.out.avg&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
     elif stattype == 'process':
         cpustats = args.tags.labelExists("cpustats")
         iostats = args.tags.labelExists("iostats")
@@ -25,16 +46,16 @@ def main(j, args, params, tags, tasklet):
 
         if cpustats:
             out += '\nh5. CPU Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%s.p%s.cpu_percent_total.avg,n%s.p%s.cpu_time_system_total.avg&_png=1&width=%s&height=%s&.png!<br><br>' % (nid, pid, nid, pid, width, height)
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.cpu_percent_total.avg,n%(nid)s.p%(pid)s.cpu_time_system_total.avg&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
         if iostats:
             out += '\nh5. IO Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%s.p%s.io_read_count.avg,n%s.p%s.io_write_bytes_total.avg,n%s.p%s.nr_file_descriptors_total.avg&_png=1&width=%s&height=%s&.png!<br><br>' % (nid, pid, nid, pid, nid, pid, width, height)
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.io_read_count.avg,n%(nid)s.p%(pid)s.io_write_bytes_total.avg,n%(nid)s.p%(pid)s.nr_file_descriptors_total.avg&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
         if memstats:
             out += '\nh5. Memory Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%s.p%s.mem_rss_total.max,n%s.p%s.mem_vms_total.last&_png=1&width=%s&height=%s&.png!<br><br>' % (nid, pid, nid, pid, width, height)
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.mem_rss_total.max,n%(nid)s.p%(pid)s.mem_vms_total.last&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
         if threadingstats:
             out += '\nh5. Threading Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%s.p%s.nr_threads_total.max,n%s.p%s.nr_threads_total.last&_png=1&width=%s&height=%s&.png!<br><br>' % (nid, pid, nid, pid, width, height)
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.nr_threads_total.max,n%(nid)s.p%(pid)s.nr_threads_total.last&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
 
     else:
         out = '!/restmachine/system/gridmanager/getStatImage?statKey=%s&_png=1&width=%s&height=%s&.png!'%(p["key"],p["width"],p["height"])

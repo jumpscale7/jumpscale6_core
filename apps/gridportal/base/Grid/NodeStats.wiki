@@ -2,13 +2,5 @@
 
 h2. Node Stats
 
-
-h3. CPU Statistics
-{{stat: nid:$$id key:n$$id.cpu.percent.max width:800 height:500}}
-
-h3. Memory Statistics
-{{stat: nid:$$id key:n$$id.memory.used.max width:800 height:500}}
-
-h3. Network Statistics
-{{stat: nid:$$id key:n$$id.network.kbytes.send.avg,n$$id.network.kbytes.recv.avg width:800 height:500}}
+{{stat: stattype:node nid:$$id width:800 height:500 netstats cpustats memstats}}
 
