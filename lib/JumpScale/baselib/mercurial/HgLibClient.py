@@ -23,9 +23,9 @@ class HgLibClient:
         """
         self.remoteUrl = remoteUrl.strip()
         self.basedir = hgbasedir
-        if not branchname:
-            branchname = 'default'
         self.branchname = branchname
+        if not self.branchname:
+            self.branchname = 'default'
 
         if remoteUrl<>"":
             self._log("mercurial remoteurl:%s"%(remoteUrl),category="config")
@@ -37,11 +37,6 @@ class HgLibClient:
         if not self.isInitialized() and not self.remoteUrl:
             raise RuntimeError(".hg not found and remote url is not supplied")
 
-        ##use branchname from hg itself
-        # branchmarker=j.system.fs.joinPaths(self.basedir,".branch")
-        # if j.system.fs.exists(branchmarker):
-        #     #found branch marker
-        #     self.branchname=j.system.fs.fileGetContents(j.system.fs.joinPaths(self.basedir,".branch"))/replace("\n","").strip()
 
         if j.system.fs.exists(self.basedir) and not self.isInitialized():
             if len(j.system.fs.listFilesInDir(self.basedir,recursive=True))==0:
@@ -69,8 +64,8 @@ class HgLibClient:
             currentbranchname = self.getbranchname()
             if branchname and branchname != currentbranchname:
                 self.switchbranch(branchname)
-            else:
-                self.branchname = currentbranchname
+                currentbranchname = branchname
+            self.branchname = currentbranchname
 
             
         self.reponame, self.repokey = self._getRepoNameAndKey()
