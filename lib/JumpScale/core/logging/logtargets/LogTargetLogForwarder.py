@@ -1,6 +1,7 @@
 # import socket
 from JumpScale import j
-import threading
+from gevent import Greenlet
+import gevent
 import time
 import Queue
 
@@ -19,25 +20,19 @@ class DropQueue(Queue.Queue):
                 pass
         return Queue.Queue.put(self, item, block, timeout)
 
-class LogScheduler(threading.Thread):
+class LogScheduler(Greenlet):
     def __init__(self, handler, *args, **kwargs):
         super(LogScheduler, self).__init__(*args, **kwargs)
         self._handler = handler
-        self.running = False
-        self.setDaemon(True)
 
-    def run(self, *args, **kwargs):
-        self.running = True
-        while self.running:
-            time.sleep(5)
+    def _run(self, *args, **kwargs):
+        while True:
+            gevent.sleep(5)
             records = list()
             for _ in xrange(self._handler._logqueue.qsize()):
                 records.append(self._handler._logqueue.get())
             if records:
                 self._handler.logBatch(records)
-
-    def __del__(self, *args, **kwargs):
-        self.running = False
 
 class LogTargetLogForwarder():
     """Forwards incoming logRecords to localclientdaemon"""
@@ -66,9 +61,8 @@ class LogTargetLogForwarder():
         self.serverip = serverip
         self.loggerClient=None
         self.checkTarget()
-        self._bulkthread = None
         if self.bulk:
-            self._bulkthread = LogScheduler(self).start()
+            LogScheduler(self).start()
 
     def checkTarget(self):
         """
