@@ -49,10 +49,10 @@ def main(j, args, params, tags, tasklet):
                 },
                 success: function(data) {
                     $('.contact_form').find('button').button('reset');
-                    if (data.substr(0, 7).toLowerCase() === 'success') {
+                    if (data.result.substr(0, 7).toLowerCase() === 'success') {
                         $('.contact_form').find('.alert').removeClass('alert-error').addClass('alert-success').text('Sent successfully.').show();
                     } else {
-                        $('.contact_form').find('.alert').removeClass('alert-success').addClass('alert-error').text(data).show();
+                        $('.contact_form').find('.alert').removeClass('alert-success').addClass('alert-error').text(data.result).show();
                     }
                 },
                 error: function() {
