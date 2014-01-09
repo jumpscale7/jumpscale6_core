@@ -1,0 +1,10 @@
+@usedefaults
+{{cssstyle
+    table{
+        width: 125% !important;
+        max-width: 125%;
+    }
+}}
+{{nic: id:$$id}}
+
+{{stat: stattype:nic iid:$$id nid:$$nid}}

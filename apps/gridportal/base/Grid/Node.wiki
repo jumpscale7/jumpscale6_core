@@ -19,3 +19,6 @@ h3. Logs
 <br>
 h3. Disks
 {{disks: nid:$$id}}
+
+h3. Interfaces
+{{nics: nid:$$id}}

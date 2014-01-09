@@ -12,8 +12,9 @@ def main(j, args, params, tags, tasklet):
     nid = p['nid'] if p.get('nid') and not p['nid'].startswith('$$') else None
     width = p['width'] if p.get('width') and not p['width'].startswith('$$') else 800
     height = p['height'] if p.get('height') and not p['height'].startswith('$$') else 400
+    iid = p['iid'] if p.get('iid') and not p['iid'].startswith('$$') else None
 
-    _data = {'nid': nid, 'pid':pid, 'height':height, 'width':width}
+    _data = {'nid': nid, 'pid':pid, 'height':height, 'width':width, 'iid': iid}
 
     if stattype == 'node':
         cpustats = args.tags.labelExists("cpustats")
@@ -37,6 +38,7 @@ def main(j, args, params, tags, tasklet):
             out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.kbytes.recv.avg,n%(nid)s.network.kbytes.send.avg&title=KBytes&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.packets.recv.avg,n%(nid)s.network.packets.send.avg&title=Packets&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
 
             out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.drop.in.avg,n%(nid)s.network.drop.out.avg&title=Drop&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.error.in.avg,n%(nid)s.network.error.out.avg&title=Error&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+    
     elif stattype == 'process':
         cpustats = args.tags.labelExists("cpustats")
         iostats = args.tags.labelExists("iostats")
@@ -57,6 +59,15 @@ def main(j, args, params, tags, tasklet):
         if threadingstats:
             out += '\nh5. Threading Statistics\n'
             out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.nr_threads_total.max,n%(nid)s.p%(pid)s.nr_threads_total.last&_png=1&width=%(width)s&height=%(height)s&.png!<br><br>' % _data
+
+    elif stattype == 'nic':        
+        out = ''
+        out += '\nh3. Network Interface Statistics\n'
+        out += '|| || ||\n'
+        
+        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.kbytes.recv.avg,i%(iid)s.network.kbytes.send.avg&title=KBytes&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.packets.recv.avg,i%(iid)s.network.packets.send.avg&title=Packets&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+
+        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.drop.in.avg,i%(iid)s.network.drop.out.avg&title=Drop&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.error.in.avg,i%(iid)s.network.error.out.avg&title=Error&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
 
     else:
         out = '!/restmachine/system/gridmanager/getStatImage?statKey=%s&_png=1&width=%s&height=%s&.png!'%(p["key"],p["width"],p["height"])

@@ -35,6 +35,7 @@ class system_gridmanager(j.code.classGetBase()):
         self.osis_vdisk = j.core.osis.getClientForCategory(osis,"system","vdisk")
         self.osis_alert = j.core.osis.getClientForCategory(osis,"system","alert")
         self.osis_log = j.core.osis.getClientForCategory(osis,"system","log")
+        self.osis_nic = j.core.osis.getClientForCategory(osis,"system","nic")
 
     def getClient(self,nid,category):
         nid = int(nid)
@@ -133,7 +134,7 @@ class system_gridmanager(j.code.classGetBase()):
         client=self.getClient(nid)
         return client.monitorProcess(domain=domain,name=name)
 
-    def getStatImage(self,statKey, title=None, width=500,height=250, **kwargs):
+    def getStatImage(self,statKey, title=None, aliases={}, width=500,height=250, **kwargs):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
@@ -143,14 +144,20 @@ class system_gridmanager(j.code.classGetBase()):
         if statKey[0]=="n":
             #node info
             nid=int(statKey.split(".")[0].replace("n",""))
+        elif statKey[0] == 'i':
+            statKeyInfo = statKey.split(".")
+            nid = int(statKeyInfo.pop(1).replace("n",""))
+            statKey = '.'.join(statKeyInfo)
         else:
             raise RuntimeError("Could not parse statKey, only node stats supported for now (means starting with n)")
-
         self.getClient(nid, 'core') # load ip in ipmap
-        ip=self.clientsIp[nid] 
+        ip=self.clientsIp[nid]
 
         targets = ''
         for target in statKey.split(','):
+
+            if target in aliases:
+                target = "alias(%s, '%s')" % (target, aliases[target])
             targets += '&target=%s' % target
         
         graphtitle = ''
@@ -603,5 +610,32 @@ class system_gridmanager(j.code.classGetBase()):
                   'active': active,
                  }
         return self.osis_disk.simpleSearch(params)
+
+
+    def getNics(self, id=None, guid=None, gid=None, nid=None, active=None, ipaddr=None, lastcheck=None, mac=None, name=None, **kwargs):
+        """
+        list found disks (are really partitions) (comes from osis)
+        param:id find based on id
+        param:guid find based on guid
+        param:gid find disks for specified grid
+        param:nid find disks for specified node
+        param:active
+        param:ipaddr
+        param:lastcheck
+        param:mac
+        param:name
+        result list(list)
+        """
+        params = {'id': id,
+                  'guid': guid,
+                  'gid': gid,
+                  'nid': nid,
+                  'lastcheck': lastcheck,
+                  'mac': mac,
+                  'name': name,
+                  'ipaddr': ipaddr,
+                  'active': active
+                 }
+        return self.osis_nic.simpleSearch(params)
 
 
