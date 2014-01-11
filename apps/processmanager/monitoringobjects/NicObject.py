@@ -11,6 +11,7 @@ class NicObjectFactory(MonObjectBaseFactory):
 class NicObject():
 
     def __init__(self,pid,nic_object=None,lastcheck=0):
+        self._expire=5 #means after 5 sec the cache will create new one
         if nic_object<>None:
             self.nic_object=nic_object
             

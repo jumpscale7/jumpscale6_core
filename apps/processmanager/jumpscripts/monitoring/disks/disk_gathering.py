@@ -1,4 +1,4 @@
-from JumpScale import j
+
 
 descr = """
 gather statistics about disks
@@ -12,10 +12,12 @@ category = "info.gather.disk"
 period = 300 #always in sec
 enable = True
 
+from JumpScale import j
 j.processmanager.disks = dict()
 
-def action():
-    osis = j.processmanager.disks
+def action(j):
+    
+    osis = j.processmanager.osis_disk
     disks = j.system.platform.diskmanager.partitionsFind(mounted=True)
     result = {}
     for disk in disks:
@@ -23,9 +25,13 @@ def action():
             #NEW
             disk.gid = j.application.whoAmI.gid
             disk.nid = j.application.whoAmI.nid
-            guid,new,changed = osis.set(disk)
+            guid,new,changed = osis.set(disk.__dict__)
             disk = osis.get(guid)
             result[disk.id] = disk
+        else:
+            disk=result[disk.id]
+
+
 
     for item in j.processmanager.disks.keys():
         if item not in result.keys():

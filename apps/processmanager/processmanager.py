@@ -40,7 +40,6 @@ class MgrCmds():
     def _init(self):
         
         self.loadMonitorObjectTypes()
-
     
         for key,cmdss in self.daemon.cmdsInterfaces.iteritems():
 
@@ -53,10 +52,11 @@ class MgrCmds():
 
         self.jumpscripts.loadJumpscripts()
 
-        self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")
-        self.osis_nic=j.core.osis.getClientForCategory(self.daemon.osis,"system","nic")
-        self.osis_vdisk=j.core.osis.getClientForCategory(self.daemon.osis,"system","vdisk")
-        self.osis_machine=j.core.osis.getClientForCategory(self.daemon.osis,"system","machine")
+        # self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")
+        # self.osis_nic=j.core.osis.getClientForCategory(self.daemon.osis,"system","nic")
+        # self.osis_vdisk=j.core.osis.getClientForCategory(self.daemon.osis,"system","vdisk")
+        # self.osis_disk=j.core.osis.getClientForCategory(self.daemon.osis,"system","disk")
+        # self.osis_machine=j.core.osis.getClientForCategory(self.daemon.osis,"system","machine")
         
 
     def loadMonitorObjectTypes(self):

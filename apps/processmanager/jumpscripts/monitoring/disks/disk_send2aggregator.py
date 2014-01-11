@@ -1,4 +1,3 @@
-from JumpScale import j
 
 descr = """
 gather statistics about disks
@@ -13,7 +12,8 @@ period = 20 #always in sec
 order = 1
 enable=True
 
-def action():
+def action(j):
+
     psutil=j.system.platform.psutil
     results={}
 
@@ -37,6 +37,7 @@ def action():
             results["d%s.space.free"%(disk.id)]=disk.free
             results["d%s.space.used"%(disk.id)]=disk.size-disk.free
             results["d%s.space.percent"%(disk.id)]=round((float(disk.size-disk.free)/float(disk.size)),2)
+
 
     result2={}
     for key in results.keys():

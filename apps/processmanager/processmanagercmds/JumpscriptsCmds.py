@@ -130,7 +130,7 @@ class JumpscriptsCmds():
                     continue
                 #print "start action:%s"%action
                 try:
-                    action.action()
+                    action.action(j)
                 except Exception,e:
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.errormessage+='\\n'

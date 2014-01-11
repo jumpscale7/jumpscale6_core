@@ -23,12 +23,15 @@ class ProcessObjectFactory(MonObjectBaseFactory):
 class ProcessObject():
 
     def __init__(self,pid,psobject=None,lastcheck=0):
+        self._expire=10 #means after 5 sec the cache will create new one
         if psobject<>None:
             self.p=psobject
         else:
             self.p=j.system.process.getProcessObject(pid)
         self.children=[]
         self.name=self.p.name
+        self.jpname=""
+        self.jpdomain=""
         self.mem_rss,self.mem_vms=self.p.get_memory_info()
         connections= self.p.get_connections()
         self.nr_connections=0
