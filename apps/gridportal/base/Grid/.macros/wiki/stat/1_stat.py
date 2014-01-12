@@ -65,9 +65,9 @@ def main(j, args, params, tags, tasklet):
         out += '\nh3. Network Interface Statistics\n'
         out += '|| || ||\n'
         
-        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.kbytes.recv.avg,i%(iid)s.network.kbytes.send.avg&title=KBytes&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.packets.recv.avg,i%(iid)s.network.packets.send.avg&title=Packets&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.kbytes.recv.avg,n%(nid)s.i%(iid)s.network.kbytes.send.avg&title=KBytes&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.packets.recv.avg,n%(nid)s.i%(iid)s.network.packets.send.avg&title=Packets&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
 
-        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.drop.in.avg,i%(iid)s.network.drop.out.avg&title=Drop&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=i%(iid)s.n%(nid)s.network.error.in.avg,i%(iid)s.network.error.out.avg&title=Error&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.drop.in.avg,n%(nid)s.i%(iid)s.network.drop.out.avg&title=Drop&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.error.in.avg,i%(iid)s.network.error.out.avg&title=Error&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
 
     else:
         out = '!/restmachine/system/gridmanager/getStatImage?statKey=%s&_png=1&width=%s&height=%s&.png!'%(p["key"],p["width"],p["height"])

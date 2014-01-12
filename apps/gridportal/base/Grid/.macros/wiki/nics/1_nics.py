@@ -29,6 +29,8 @@ def main(j, args, params, tags, tasklet):
                 data = '[%s|/grid/nic?id=%s&nid=%s]' % (nic['name'], nic['id'], nic['nid'])
             elif field == 'nid':
                 data = '[%s|/grid/node?id=%s]' % (nic['nid'], nic['nid'])
+            elif isinstance(nic[field], list):
+                data = ', '.join(nic[field])
             else:
                 data = str(nic[field]).replace('[', '&#91;') #Some messages had square brackets
             out += "|%s" % data

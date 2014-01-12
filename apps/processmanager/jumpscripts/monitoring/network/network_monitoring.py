@@ -14,6 +14,7 @@ enable=True
 
 def action():
     psutil=j.system.platform.psutil
+    nodeid = j.application.whoAmI.nid
 
     netinfo=j.system.net.getNetworkInfo()
 
@@ -39,7 +40,7 @@ def action():
             results["network.drop.out"]=dropout
 
             for key in results.keys():
-                j.system.stataggregator.set("i%s.%s"%(nic.id,key),results[key],remember=True)
+                j.system.stataggregator.set("n%s.i%s.%s"%(nodeid, nic.id,key),results[key],remember=True)
 
 
 
