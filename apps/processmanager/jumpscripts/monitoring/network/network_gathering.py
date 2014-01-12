@@ -39,12 +39,8 @@ def action():
             result[name]=nic
 
     for item in j.processmanager.nics.keys():
-        if item not in result.keys():
-            #DELETED
-            osis.delete(j.processmanager.nics[name].guid)
-            #@todo test P2            
+        if item not in result:
+            osis.delete(j.processmanager.nics[item].guid)
 
     j.processmanager.nics=result
-    
-
 

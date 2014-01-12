@@ -16,17 +16,17 @@ def main(j, args, params, tags, tasklet):
 
     #fields = ['otherid', 'description', 'roles', 'mem', 'netaddr', 'ipaddr', 'nid', 'lastcheck', 'state', 'gid', 'active', 'cpucore', 'type', 'id', 'name', 'id', 'size', 'devicename', 'disk_id', 'gid', 'role', 'machineid', 'type', 'fs', 'description', 'backuplocation', 'free', 'sizeondisk', 'nid', 'active', 'path', 'name', 'backuptime', 'lastcheck', 'expiration', 'machine_id', 'backup', 'order']
 
-    fields = ["id", "nid", "name", "active", "ssd", "size", "free", "mounted"]
+    fields = ["path", "nid", "mountpoint", "ssd", "size", "free", "mounted"]
 
-    out.append('||id||node||name||active||ssd||usage||mounted||')
+    out.append('||path||node||mountpoint||ssd||usage||mounted||')
 
     for disk in actor.getDisks(nid=nid):
         line = [""]
 
         for field in fields:
             # add links
-            if field == 'id':
-                line.append('[%s|/grid/disk?id=%s]' % (str(disk[field]), str(disk[field])))
+            if field == 'path':
+                line.append('[%s|/grid/disk?id=%s]' % (str(disk[field]), str(disk['id'])))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(disk[field]), str(disk[field])))
             elif field == 'size':

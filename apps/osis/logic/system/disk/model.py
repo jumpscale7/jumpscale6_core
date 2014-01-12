@@ -14,6 +14,7 @@ class Disk(OsisBaseObject):
         else:
             self.init("disk","1.0")
             self.id = 0
+            self.partnr = 0
             self.gid = 0
             self.nid = 0
             self.path = ""
@@ -29,13 +30,13 @@ class Disk(OsisBaseObject):
             self.description=""
             self.type=[]  #BOOT,DATA,...
             self.lastcheck=0 #epoch of last time the info was checked from reality
-
+        self.getSetGuid()
 
     def getUniqueKey(self):
         """
         return unique key for object, is used to define unique id
         """
-        C="%s_%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.ssd,self.type)
+        C="%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.ssd)
         return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):
@@ -43,8 +44,11 @@ class Disk(OsisBaseObject):
         use osis to define & set unique guid (sometimes also id)
         """
         self.gid = int(self.gid)
-        self.id = int(self.id)
-        self.guid = "%s_%s" % (self.gid, self.id)
-        self.lastcheck=j.base.time.getTimeEpoch() 
+        if self.path.startswith('/dev/') and self.path.count('/') == 2:
+            self.guid = "%s_%s_%s" % (self.gid, self.nid, self.path[5:])
+        else:
+            self.guid = "%s_%s_%s" % (self.gid, self.nid, j.tools.hash.md5_string(self.path))
+        self.id = self.guid
+        self.lastcheck=j.base.time.getTimeEpoch()
         return self.guid
 
