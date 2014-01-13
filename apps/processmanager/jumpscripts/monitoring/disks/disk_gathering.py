@@ -21,7 +21,7 @@ def action(j):
     disks = j.system.platform.diskmanager.partitionsFind(mounted=True)
     result = {}
     for disk in disks:
-        if not j.processmanager.disks.has_key(disk.id):
+        if disk.id not in j.processmanager.disks:
             #NEW
             disk.gid = j.application.whoAmI.gid
             disk.nid = j.application.whoAmI.nid

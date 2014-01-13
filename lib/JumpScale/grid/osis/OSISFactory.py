@@ -20,13 +20,17 @@ class OSISFactory:
 
     """
     """
+
+
     def _redirect(self):
         self._out=FileLikeStreamObject()
-        self._sysstdout=sys.stdout
+        if not self._sysstdout:
+            self._sysstdout=sys.stdout
         sys.stdout=self._out
 
     def _stopRedirect(self,pprint=False):
-        sys.stdout=self._sysstdout
+        if self._sysstdout:
+            sys.stdout=self._sysstdout
         out = None
         if self._out:
             out=self._out.out
@@ -36,6 +40,7 @@ class OSISFactory:
         return out
 
     def __init__(self):
+        self._sysstdout = None
         self.osisConnections = {}
         self.osisConnectionsCat={}
         self.nodeguids={}

@@ -138,7 +138,10 @@ class system_gridmanager(j.code.classGetBase()):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
+        import urllib
+        query = list()
         ctx = kwargs['ctx']
+        ctx.params['_png'] = 1
         ctx.start_response('200', (('content-type', 'image/png'),))
         statKey=statKey.strip()
         if statKey[0]=="n":
@@ -153,20 +156,31 @@ class system_gridmanager(j.code.classGetBase()):
         self.getClient(nid, 'core') # load ip in ipmap
         ip=self.clientsIp[nid]
 
-        targets = ''
         for target in statKey.split(','):
 
             if target in aliases:
                 target = "alias(%s, '%s')" % (target, aliases[target])
-            targets += '&target=%s' % target
-        
-        graphtitle = ''
+            query.append(('target', target))
         if title:
-            graphtitle = '&title=%s' % title
+            query.append(('title', title))
 
-        url="http://%s:8081/render/?width=%s&height=%s%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=none%s&tz=CET"%(ip,width,height,targets,graphtitle)
+        query.append(('height', height))
+        query.append(('width', width))
+        query.append(('lineWidth', '2'))
+        query.append(('graphOnly', 'false'))
+        query.append(('hidexAxes', 'false'))
+        query.append(('hidexGrid', 'false'))
+        query.append(('areaMode', 'none'))
+        query.append(('tz', 'CET'))
+
+        params = kwargs.copy()
+        params.pop('ctx')
+        for key, value in params.iteritems():
+            query.append((key, value))
+
+        querystr = urllib.urlencode(query)
+        url="http://%s:8081/render?%s"%(ip, querystr)
         r = requests.get(url)
-
         return r.content
 
     def getProcessesActive(self, nid, name, domain, **kwargs):

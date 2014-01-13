@@ -57,6 +57,7 @@ class MgrCmds():
         # self.osis_vdisk=j.core.osis.getClientForCategory(self.daemon.osis,"system","vdisk")
         # self.osis_disk=j.core.osis.getClientForCategory(self.daemon.osis,"system","disk")
         # self.osis_machine=j.core.osis.getClientForCategory(self.daemon.osis,"system","machine")
+
         
 
     def loadMonitorObjectTypes(self):
