@@ -43,11 +43,14 @@ class PythonPackage(object):
             p.install()
         self._checked=True
 
-    def install(self, name, version=None):
+    def install(self, name, version=None, latest=True):
         self.check()
         if version:
             j.system.process.execute("pip install '%s%s'" % (name, version))
-        j.system.process.execute("pip install '%s' --upgrade" % name)
+        elif latest:
+            j.system.process.execute("pip install '%s' --upgrade" % name)
+        else:
+            j.system.process.execute("pip install '%s'" % name)
 
     def remove(self,names,clearcache=True):
         """
