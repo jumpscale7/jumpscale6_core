@@ -191,7 +191,9 @@ class ProcessDef:
             return True
 
         for port in self.ports:
-            if port<>None and port.strip()<>"":
+            if port:
+                if isinstance(port, basestring) and not port.strip():
+                    continue
                 port = int(port)
                 if not j.system.net.checkListenPort(port):
                     hrd.set('process_active', False)
