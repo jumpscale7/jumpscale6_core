@@ -253,6 +253,7 @@ syntax: regexp
             # j.console.log("There was nothing to merge")
             pass
         else:
+            print "MERGE DONE: WILL COMMIT NOW."
             self.commitInteractive(commitMessage,user,force)
         updateresult=self.update(die=False)
         if updateresult==False:
