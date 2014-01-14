@@ -156,8 +156,13 @@ class BitbucketConnection(object):
         url="repositories/%s/%s/changesets/?limit=%s"%(self.accountName,reponame,limit)
         return self.restCallBitbucket(url)
 
-    def getRepoInfo(self,repoName):
-        raise RuntimeError("not implemented")
+    def getRepoInfo(self, accountName, repoName):
+        url = "repositories/%s/%s" % (accountName, repoName)
+        result = requests.get(url)
+        if result.ok:
+            return result.json()
+        else:
+            return result.status_code
 
     def getRepoPathLocal(self,repoName="",die=True):      
         if repoName=="":
