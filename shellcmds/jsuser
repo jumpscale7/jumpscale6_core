@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jsuser")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['add','set','delete','list','auth','addgroup','delgroup'], help='Command to perform')
+parser.add_argument("action", choices=['add','set','delete','list','auth','addgroup','delgroup','passwd'], help='Command to perform')
 
 parser.add_argument("-d",'--data', help='add user as username:passwd:group1,group2:email1,email2:domain')
 
@@ -44,6 +44,15 @@ if opts.action =='auth':
     result=userclient.authenticate(name=opts.userlogin,passwd=opts.userpasswd)
     for key,val in result.iteritems():
         print "%-20s %s"%(key,val)
+
+if opts.action =='passwd':
+    if opts.userlogin==None:
+        opts.userlogin=j.console.askString("user to set passwd for")
+    if opts.userpasswd==None:
+        opts.userpasswd=j.console.askPassword("passwd")
+    user=userclient.get("%s_%s"%(j.application.whoAmI.gid,opts.userlogin))
+    user.passwd=opts.userpasswd
+    userclient.set(user)
 
 
 if opts.action =='add' or opts.action =='set':
