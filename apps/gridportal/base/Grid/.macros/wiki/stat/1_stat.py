@@ -50,16 +50,16 @@ def main(j, args, params, tags, tasklet):
 
         if cpustats:
             out += '\nh5. CPU Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.cpu_percent_total.avg,n%(nid)s.p%(pid)s.cpu_time_system_total.avg&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.cpu_percent_total.avg,n%(nid)s.process.%(pid)s.cpu_time_system_total.avg&width=%(width)s&height=%(height)s!<br><br>' % _data
         if iostats:
             out += '\nh5. IO Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.io_read_count.avg,n%(nid)s.p%(pid)s.io_write_bytes_total.avg,n%(nid)s.p%(pid)s.nr_file_descriptors_total.avg&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.io_read_count.avg,n%(nid)s.process.%(pid)s.io_write_bytes_total.avg,n%(nid)s.process.%(pid)s.nr_file_descriptors_total.avg&width=%(width)s&height=%(height)s!<br><br>' % _data
         if memstats:
             out += '\nh5. Memory Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.mem_rss_total.max,n%(nid)s.p%(pid)s.mem_vms_total.last&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.mem_rss_total.max,n%(nid)s.process.%(pid)s.mem_vms_total.last&width=%(width)s&height=%(height)s!<br><br>' % _data
         if threadingstats:
             out += '\nh5. Threading Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.p%(pid)s.nr_threads_total.max,n%(nid)s.p%(pid)s.nr_threads_total.last&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.nr_threads_total.max,n%(nid)s.process.%(pid)s.nr_threads_total.last&width=%(width)s&height=%(height)s!<br><br>' % _data
 
     elif stattype == 'nic':        
         out = ''
