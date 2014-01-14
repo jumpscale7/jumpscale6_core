@@ -26,19 +26,17 @@ class ProcessObjectFactory(MonObjectBaseFactory):
 class ProcessObject(MonObjectBase):
 
     def __init__(self,cache):
-        
         self._expire=10 #means after 5 sec the cache will create new one
         MonObjectBase.__init__(self,cache)
         self.p=None #is process object
         self.children=[]
-        self.db.pname=self.p.name
 
         self.netConnectionsIn=[]
         self.netConnectionsOut=[]
 
         self.db.gid=j.application.whoAmI.gid
         self.db.nid=j.application.whoAmI.nid
-                
+
         self.lastcheck=time.time()
 
     def getStatInfo(self,totals=False):
@@ -50,7 +48,7 @@ class ProcessObject(MonObjectBase):
             self.getTotalsChildren()
 
         for name in j.processmanager.cache.processobject.getProcessStatProps(totals):
-            result[name]=self.__dict__[name]
+            result[name]=self.db.__dict__[name]
 
         return result
 
@@ -62,6 +60,7 @@ class ProcessObject(MonObjectBase):
         for item in j.processmanager.cache.processobject.getProcessStatProps():
             newname="%s_total"%item
             self.db.__dict__[newname]=self.db.__dict__[item]
+            continue #TODO fix this that children get accumulated
             for child in self.children:
                 self.db.__dict__[newname]+=float(child.db.__dict__[item])            
 

@@ -17,7 +17,7 @@ def action():
     result={}
     
     def loadFromSystemProcessInfo(cacheobj,pid):
-        cacheobj.p=j.system.process.getProcessObject(pid)
+        cacheobj.p = j.system.process.getProcessObject(pid)
 
         cacheobj.db.pname=cacheobj.p.name
         cacheobj.db.systempid=pid
@@ -34,7 +34,7 @@ def action():
                 if c.status=="LISTEN":
                     #is server
                     port=c.local_address[1]
-                    if port not in cacheobj.ports:
+                    if port not in cacheobj.db.ports:
                         cacheobj.db.ports.append(port)
                     if c.remote_address<>() and c.remote_address not in cacheobj.netConnectionsIn:
                         cacheobj.netConnectionsIn.append(c.remote_address)
@@ -61,19 +61,18 @@ def action():
                 childpid = child.pid
             else:
                 childpid = child.getPid()
-            child=j.processmanager.cache.processobject.get(childpid,child,lastcheck)
-            if not j.processmanager.childrenPidsFound.has_key(childpid):                
-                cacheobj.children.append(child)
+            #TODO children should be of type osisdb
+            if childpid not in j.processmanager.childrenPidsFound:
+                if childpid not in cacheobj.children:
+                    cacheobj.children.append(child)
                 j.processmanager.childrenPidsFound[int(childpid)]=True
-
-
 
     #walk over startupmanager processes (make sure we don't double count)
     for sprocess in j.processmanager.startupmanager.manager.getProcessDefs():
-        pid=process.getPid()
+        pid = sprocess.getPid()
         print pid
         if pid:
-            process_key="%s_%s"%(sprocess.domain,sprocess.name)
+            process_key = pid
 
             exists=j.processmanager.cache.processobject.exists(process_key)
 
@@ -90,7 +89,7 @@ def action():
 
             loadFromSystemProcessInfo(cacheobj,pid)
 
-            process.getTotalsChildren()
+            cacheobj.getTotalsChildren()
 
             result[process_key]=cacheobj
 
@@ -109,14 +108,9 @@ def action():
 
         print "systemprocess:%s %s"%(process.name, pid)
 
-        process_key=process.name
+        process_key=pid
         exists=j.processmanager.cache.processobject.exists(process_key)
-
-        if result.has_key(process_key):
-            #process with same name does already exist, lets first create temp getProcessObject
-            cacheobj=j.processmanager.cache.processobject.get(id=pid)
-        else:
-            cacheobj=j.processmanager.cache.processobject.get(id=process_key)
+        cacheobj=j.processmanager.cache.processobject.get(id=pid)
 
         processOsisObject=cacheobj.db
 
@@ -127,7 +121,7 @@ def action():
         processOsisObject.workingdir = process.getcwd()
         processOsisObject.cmd = process.exe
  
-        process.getTotalsChildren()
+        cacheobj.getTotalsChildren()
 
         if result.has_key(process_key):
             #was double process, need to aggregate
@@ -155,14 +149,14 @@ def action():
             print "NO LONGER ACTIVE"
             process=j.processmanager.cache.processobject.get(process_key) #is cached so low overhead
 
-            processOsisObject=osis.get(process.guid)
+            processOsisObject=process.cache.get(process.getGuid())
 
             processOsisObject.active=False
 
             for name in j.processmanager.cache.processobject.getProcessStatProps(True):
                 processOsisObject.__dict__[name]=0.0
 
-            osis.set(processOsisObject)    
+            process.cache.set(processOsisObject)    
 
             j.processmanager.cache.processobject.monitorobjects.pop(process_key)
             

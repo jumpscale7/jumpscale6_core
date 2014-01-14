@@ -15,7 +15,7 @@ enable = False
 from JumpScale import j
 j.processmanager.disks = dict()
 
-def action(j):
+def action():
     
     osis = j.processmanager.osis_disk
     disks = j.system.platform.diskmanager.partitionsFind(mounted=True)

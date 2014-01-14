@@ -49,9 +49,9 @@ class MonObjectBase():
         self._expire=60 #means after X sec the cache will create new one
         self.cache=cache
         self.db=self.cache.osis.new()
-            
-    def getGuid(Self):
-        return self.db.getGuid
+
+    def getGuid(self):
+        return self.db.getSetGuid()
 
     def __repr__(self):
         return str(self.db)

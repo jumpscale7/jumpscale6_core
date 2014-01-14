@@ -130,13 +130,13 @@ class JumpscriptsCmds():
                     continue
                 #print "start action:%s"%action
                 try:
-                    action.action(j)
+                    action.action()
                 except Exception,e:
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.errormessage+='\\n'
                     for key in action.__dict__.keys():
-                        if key not in ["license"]:
-                            eco.errormessage+="%s:%s\\n"%(key,action.__dict__[key]) 
+                        if key not in ["license", 'source', 'action']:
+                            eco.errormessage+="%s:%s\n"%(key,action.__dict__[key]) 
                     eco.tags="category:%s"%action.category
                     j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
                     continue
