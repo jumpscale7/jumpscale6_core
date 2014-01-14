@@ -56,9 +56,9 @@ def getJPackage(args, installed=None,domain=None,debug=None):
     else:
         packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
 
-        if debug:
-            debugpackages=j.packages.getDebugPackages()
-            packages=[item for item in packages if item not in debugpackages]        
+    if debug:
+        debugpackages=j.packages.getDebugPackages()
+        packages=[item for item in packages if item not in debugpackages]        
 
     if len(packages) == 0:
         if installed:

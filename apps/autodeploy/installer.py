@@ -11,6 +11,8 @@ parser.add_option('-r', '--remote', help='Ip address of node',default="")
 parser.add_option('-s', '--seedpasswd', help='Originalpasswd (used to login first time)',default="")
 parser.add_option('-p', '--passwd', help='New Passwd To Set Or Use',default="rooter")
 parser.add_option('-g', '--gridnr', help='Id of grid, make sure is unique.',default="")
+parser.add_option('-c', '--cfgname', help='Name of cfg directory.',default="")
+parser.add_option('-t','--type', help='Type of action (platform,core,desktop,grid), is comma separated.',default="")
 
 (options, args) = parser.parse_args()
 
@@ -31,6 +33,8 @@ remote = options.remote
 seedpasswd = options.seedpasswd
 passwd = options.passwd
 
+if options.cfgname=="":
+    options.cfgname=j.console.askChoice(j.system.fs.listDirsInDir("cfgs",False,True),"Please select configuration templates for the remote machine.")
 
 import JumpScale.baselib.remote
 
@@ -43,7 +47,11 @@ passwd
 """
 print help
 
-result=j.console.askChoiceMultiple(["platform","core","grid","desktop"])
+
+if options.type=="":
+    result=j.console.askChoiceMultiple(["platform","core","grid","desktop"])
+else:
+    result=options.type.split(",")
 
 cuapi = j.remote.cuisine.api
 j.remote.cuisine.fabric.env["password"]=passwd
