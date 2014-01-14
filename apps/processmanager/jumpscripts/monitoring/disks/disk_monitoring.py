@@ -11,7 +11,9 @@ version = "1.0"
 category = "monitoring.disk"
 period = 20 #always in sec
 order = 1
-enable=False
+enable=True
+
+j.processmanager.disks = dict()
 
 def action():
     psutil=j.system.platform.psutil
@@ -19,7 +21,7 @@ def action():
     nid = j.application.whoAmI.nid
     gid = j.application.whoAmI.gid
 
-    disks=j.system.platform.diskmanager.partitionsFind(mounted=True)
+    disks = j.system.platform.diskmanager.partitionsFind(mounted=True)
 
     #disk counters
 
@@ -43,9 +45,7 @@ def action():
             results["n%s.disk.%s.space.used"%(nid, path)]=disk.size-disk.free
             results["n%s.disk.%s.space.percent"%(nid, path)]=round((float(disk.size-disk.free)/float(disk.size)),2)
 
-    result2={}
     for key in results.keys():
-        result2[key]=j.system.stataggregator.set(key,results[key],remember=True)
+        j.system.stataggregator.set(key,results[key],remember=True)
 
-
-
+    j.processmanager.disks = disks
