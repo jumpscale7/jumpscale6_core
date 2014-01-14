@@ -1,11 +1,14 @@
 from JumpScale import j
 
+
 from _MonObjectBaseFactory import *
 
 class ProcessObjectFactory(MonObjectBaseFactory):
     def __init__(self,host,classs):
         MonObjectBaseFactory.__init__(self,host,classs)
         self.osis=j.core.osis.getClientForCategory(self.host.daemon.osis,"system","process")
+        self.osisobjects={} #@todo P1 load them from ES at start (otherwise delete will not work), make sure they are proper osis objects
+        j.processmanager.childrenPidsFound={}
 
     def getProcessStatProps(self,totals=False):
         r=["nr_file_descriptors","nr_ctx_switches_voluntary","nr_ctx_switches_involuntary","nr_threads",\
@@ -20,68 +23,23 @@ class ProcessObjectFactory(MonObjectBaseFactory):
         return r
 
 
-class ProcessObject():
+class ProcessObject(MonObjectBase):
 
-    def __init__(self,pid,psobject=None,lastcheck=0):
+    def __init__(self,cache):
+        
         self._expire=10 #means after 5 sec the cache will create new one
-        if psobject<>None:
-            self.p=psobject
-        else:
-            self.p=j.system.process.getProcessObject(pid)
+        MonObjectBase.__init__(self,cache)
+        self.p=None #is process object
         self.children=[]
-        self.name=self.p.name
-        self.jpname=""
-        self.jpdomain=""
-        self.mem_rss,self.mem_vms=self.p.get_memory_info()
-        connections= self.p.get_connections()
-        self.nr_connections=0
-        self.ports=[]
+        self.db.pname=self.p.name
+
         self.netConnectionsIn=[]
         self.netConnectionsOut=[]
-        if len(connections)>0:
-            self.nr_connections=len(connections)
-            for c in connections:
-                if c.status=="LISTEN":
-                    #is server
-                    port=c.local_address[1]
-                    if port not in self.ports:
-                        self.ports.append(port)
-                    if c.remote_address<>() and c.remote_address not in self.netConnectionsIn:
-                        self.netConnectionsIn.append(c.remote_address)
-                if c.status=="ESTABLISHED":
-                    if c.remote_address not in self.netConnectionsOut:
-                        self.netConnectionsOut.append(c.remote_address)
 
-        self.nr_connections_in=len(self.netConnectionsIn)
-        self.nr_connections_out=len(self.netConnectionsOut)
-
-        self.io_read_count, self.io_write_count, self.io_read_bytes, self.io_write_bytes=self.p.get_io_counters()
-        self.cmd=self.p.getcwd()
-        self.parent=self.p.parent.pid
-        self.nr_file_descriptors=self.p.get_num_fds()
-        self.nr_ctx_switches_voluntary,self.nr_ctx_switches_involuntary=self.p.get_num_ctx_switches()
-        self.nr_threads=self.p.get_num_threads()
-        # self.nr_openfiles=self.p.get_open_files()
-        self.cpu_time_user,self.cpu_time_system=self.p.get_cpu_times()
-        self.cpu_percent=self.p.get_cpu_percent(0)
-        self.user=self.p.username
-        self._totals=None
-        if lastcheck<>0:
-            self.lastcheck=lastcheck
-        else:
-            self.lastcheck=time.time()
-        self.guid=None #guid from osis
-
-        for child in self.p.get_children():
-            if hasattr(child, 'pid'):
-                childpid = child.pid
-            else:
-                childpid = child.getPid()
-            child=j.processmanager.cache.processobject.get(childpid,child,lastcheck)
-            if not j.processmanager.childrenPidsFound.has_key(childpid):                
-                self.children.append(child)
-                j.processmanager.childrenPidsFound[int(childpid)]=True
-            
+        self.db.gid=j.application.whoAmI.gid
+        self.db.nid=j.application.whoAmI.nid
+                
+        self.lastcheck=time.time()
 
     def getStatInfo(self,totals=False):
         """
@@ -101,21 +59,20 @@ class ProcessObject():
         """
         calculate total for children
         """
-        if self._totals==None:
-
-            for item in j.processmanager.cache.processobject.getProcessStatProps():
-                newname="%s_total"%item
-                self.__dict__[newname]=self.__dict__[item]
-                for child in self.children:
-                    self.__dict__[newname]+=float(child.__dict__[item])            
-                        
-        self._totals=True
+        for item in j.processmanager.cache.processobject.getProcessStatProps():
+            newname="%s_total"%item
+            self.db.__dict__[newname]=self.db.__dict__[item]
+            for child in self.children:
+                self.db.__dict__[newname]+=float(child.db.__dict__[item])            
 
     def __repr__(self):
         out=""
         for key,val in self.__dict__.iteritems():
-            if key not in ["p","children"]:
+            if key not in ["p","children","db"]:
                 out+="%s:%s\n"%(key,val)
+        for key,val in self.db.__dict__.iteritems():
+            out+="%s:%s\n"%(key,val)
+
         items=out.split("\n")
         items.sort()
         return "\n".join(items)

@@ -10,7 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "info.gather.disk"
 period = 300 #always in sec
-enable = True
+enable = False
 
 from JumpScale import j
 j.processmanager.disks = dict()

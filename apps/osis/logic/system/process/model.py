@@ -18,7 +18,8 @@ class Process(OsisBaseObject):
             self.nid = nid
             self.jpdomain= ""
             self.jpname= ""
-            self.name = name
+            self.pname = name  #process name
+            self.sname= "" #name as specifief in starup manager
             self.ports = []
             self.instance = instance
             self.systempid = systempid  # system process id (PID) at this point
@@ -30,6 +31,8 @@ class Process(OsisBaseObject):
             self.lastcheck=0 #epoch of last time the info was checked from reality
             self.cmd=""
             self.workingdir=''
+            self.parent=""
+            self.user=""
 
             r=["nr_file_descriptors","nr_ctx_switches_voluntary","nr_ctx_switches_involuntary","nr_threads",\
                 "cpu_time_user","cpu_time_system","cpu_percent","mem_vms","mem_rss",\

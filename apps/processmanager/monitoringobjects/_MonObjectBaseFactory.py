@@ -8,7 +8,7 @@ class MonObjectBaseFactory():
         self.classs=classs
         self.monitorobjects={} #key is id of monitor object
 
-    def get(self,id,monobject=None,lastcheck=0):
+    def get(self,id=None,lastcheck=None):
         """
         """
         if self.monitorobjects.has_key(id):
@@ -17,7 +17,12 @@ class MonObjectBaseFactory():
                 self.monitorobjects.pop(id)
             else:
                 return self.monitorobjects[id]
-        self.monitorobjects[id]=  self.classs(self,id,monobject,lastcheck=lastcheck)     
+        self.monitorobjects[id]=  self.classs(self)     
+        if id<>None:
+            self.monitorobjects[id].db.id=id
+        if lastcheck<>None:
+            self.monitorobjects[id].lastcheck=lastcheck
+
         return self.monitorobjects[id]
 
     def exists(self,id):
@@ -40,16 +45,13 @@ class MonObjectBaseFactory():
 
 class MonObjectBase():
 
-    def __init__(self,cache,id,lastcheck=0):
+    def __init__(self,cache):
         self._expire=60 #means after X sec the cache will create new one
-        sel.cache=cache
-        self.db=cache.osis.new()
-        if disk_object<>None:
-            self.disk_object=disk_object
+        self.cache=cache
+        self.db=self.cache.osis.new()
             
     def getGuid(Self):
-        return self.db.guid
-
+        return self.db.getGuid
 
     def __repr__(self):
         return str(self.db)

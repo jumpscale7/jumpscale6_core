@@ -10,7 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "monitoring.nic"
 period = 30 #always in sec
-enable=True
+enable=False
 
 def action():
     psutil=j.system.platform.psutil

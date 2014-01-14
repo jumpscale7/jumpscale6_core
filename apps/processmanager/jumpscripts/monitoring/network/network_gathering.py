@@ -10,7 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "info.gather.nic"
 period = 300 #always in sec
-enable=True
+enable=False
 
 j.processmanager.nics = dict()
 
