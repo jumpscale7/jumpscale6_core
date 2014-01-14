@@ -122,6 +122,18 @@ class Params():
 
         return self
 
+    def getTag(self, name, default=None):
+        tags = getattr(self, 'tags', None)
+        if not tags:
+            return default
+        tags = tags.getDict()
+        tag = tags.get(name)
+        if tag and tag.startswith('$$'):
+            return default
+        if not tag:
+            return default
+        return tag
+
     def pop(self,key):
         if self.has_key(key):
             self.__dict__.pop(key)
