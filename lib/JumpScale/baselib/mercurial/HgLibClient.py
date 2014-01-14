@@ -239,28 +239,30 @@ syntax: regexp
         else:
             return False            
             
-    def updatemerge(self, commitMessage="", addRemoveUntrackedFiles=True, trymerge=True, pull=False, user=None,force=False):
+    def updatemerge(self, commitMessage="", addRemoveUntrackedFiles=True, pull=False, user=None,force=False):
         self._log("updatemerge %s" % (self.basedir))
         self.checkbranch()
         if pull:
             self.pull()
-        result=self.update(die=False)
-        if not result:
-            if addRemoveUntrackedFiles:
-                self.addRemoveInteractive(commitMessage,user,force)
+        updateresult=self.update(die=False)
+        if addRemoveUntrackedFiles:
+            self.addRemoveInteractive(commitMessage,user,force)
+        self.commitInteractive(commitMessage,user,force)
+        result = self.merge(commit=False)
+        if result == 1 or result == 2:
+            # j.console.log("There was nothing to merge")
+            pass
+        else:
             self.commitInteractive(commitMessage,user,force)
-            if trymerge:
-                from IPython import embed
-                print "DEBUG NOW merge from udpatemerge"
-                embed()
-                
-                j.console.echo("cannot update will try a merge")
-                result = self.merge(commitMessage=commitMessage, user=user)
-                if result == 1 or result == 2:
-                    j.console.log("There was nothing to merge")
-                else:
-                    self.commit("Automatic Merge")                
-                result = self.update()            
+        updateresult=self.update(die=False)
+        if updateresult==False:
+            raise RuntimeError("BUG:update should not fail at this point, because all addedremoved, merged & committed.")
+        if self.hasModifiedFiles():
+            from IPython import embed
+            print "DEBUG NOW ooo"
+            embed()
+            
+            raise RuntimeError("BUG: there should be no uncommitted files at this point")
             
     def addRemoveInteractive(self,commitMessage="", user=None,force=False):
 
@@ -369,27 +371,35 @@ syntax: regexp
         if self.hasModifiedFiles():
             self._raise("Cannot merge %s because there are untracked files." % self.basedir)
 
-        try:
-            self.client.merge()
-            returncode = 0
-            out = ''
-        except hglib.client.error.CommandError, e:
-            self._log("merge %s" % e)
-            out = e.err
-            returncode = e.ret
-
-        if out.find("nothing to merge")<>-1 or out.find("has one head")<>-1 :
-            self._log("Nothing to merge",5)
+        heads=[item for item in  self.client.heads() if item.branch==self.branchname]
+        if len(heads)==1:
+            #no need to merge
             return 1
-        if out.find("conflicts during merge")<>-1:
-            self._raise("conflicts in merge")
-        
-        if returncode > 0:
-            self._raise("cannot merge, cmd was hg merge in dir %s" % self.basedir)            
+        elif len(heads)==0:
+            raise RuntimeError("BUG: there should always be at least 1 head with the expected branchname:%s"%self.branchname)
+        else:
+            #need merge
+            try:
+                self.client.merge()
+                returncode = 0
+                out = ''
+            except hglib.client.error.CommandError, e:
+                self._log("merge %s" % e)
+                out = e.err
+                returncode = e.ret
 
-        if commit:
-            self.commit(commitMessage, force=True, user=user)
-        return 0
+            if out.find("nothing to merge")<>-1 or out.find("has one head")<>-1 :
+                self._log("Nothing to merge",5)
+                return 1
+            if out.find("conflicts during merge")<>-1:
+                self._raise("conflicts in merge")
+            
+            if returncode > 0:
+                self._raise("cannot merge, cmd was hg merge in dir %s" % self.basedir)            
+
+            if commit:
+                self.commit(commitMessage, force=True, user=user)
+            return 0
                     
     def switchbranch(self,branchname):
         self._log("switchbranch %s" % (self.basedir))

@@ -147,7 +147,7 @@ for bitbucket,account,reponame,client,path in repos:
         print "PULL ",
         client.pull()
         print "UPDATE ",
-        client.updatemerge(commitMessage=opts.message, addRemoveUntrackedFiles=True, trymerge=True, pull=False,force=opts.force)        
+        client.updatemerge(commitMessage=opts.message, addRemoveUntrackedFiles=True, pull=False,force=opts.force)        
     
     if opts.action =='commit' or opts.action =='push':        
         print "COMMIT ",
