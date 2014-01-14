@@ -143,16 +143,13 @@ for bitbucket,account,reponame,client,path in repos:
             opts.message=j.console.askString("commit message")
 
 
-    if opts.update or opts.action =='update':
+    if opts.update or opts.action =='update' or opts.action =='push':
         print "PULL ",
         client.pull()
         print "UPDATE ",
-        client.updatemerge(commitMessage=opts.message, ignorechanges=False,
-            addRemoveUntrackedFiles=True, trymerge=True, pull=False,force=opts.force)        
+        client.updatemerge(commitMessage=opts.message, addRemoveUntrackedFiles=True, trymerge=True, pull=False,force=opts.force)        
     
-    if opts.action =='commit' or opts.action =='push':
-        
-
+    if opts.action =='commit' or opts.action =='push':        
         print "COMMIT ",
         client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
 

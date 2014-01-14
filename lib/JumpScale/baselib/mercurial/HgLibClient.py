@@ -239,21 +239,21 @@ syntax: regexp
         else:
             return False            
             
-    def updatemerge(self, commitMessage="", ignorechanges=False,
-            addRemoveUntrackedFiles=False, trymerge=True, pull=True, user=None,force=False):
-        if ignorechanges:
-            raise NotImplemented("Need to verify this code path, not implemented for now")
+    def updatemerge(self, commitMessage="", addRemoveUntrackedFiles=True, trymerge=True, pull=False, user=None,force=False):
         self._log("updatemerge %s" % (self.basedir))
-        if ignorechanges and trymerge:
-            self._raise("Cannot ignore changes and try to do a merge at the same time")
-        if ignorechanges and addRemoveUntrackedFiles:
-            self._raise("Cannot ignore changes and try to add remove untracked files at same time")
         self.checkbranch()
         if pull:
             self.pull()
         result=self.update(die=False)
         if not result:
+            if addRemoveUntrackedFiles:
+                self.addRemoveInteractive(commitMessage,user,force)
+            self.commitInteractive(commitMessage,user,force)
             if trymerge:
+                from IPython import embed
+                print "DEBUG NOW merge from udpatemerge"
+                embed()
+                
                 j.console.echo("cannot update will try a merge")
                 result = self.merge(commitMessage=commitMessage, user=user)
                 if result == 1 or result == 2:
@@ -262,51 +262,65 @@ syntax: regexp
                     self.commit("Automatic Merge")                
                 result = self.update()            
             
+    def addRemoveInteractive(self,commitMessage="", user=None,force=False):
+
         result= self.getModifiedFiles()
 
-        # means files are in repo but no longer on filesystem
-        if any([result["ignored"], result["nottracked"], result["missing"]]):
-            #there are files not added yet
-            if j.application.shellconfig.interactive:
-                j.console.echo("\n\nFound files not added yet to repo or deleted from filesystem")
+        def remove(items):
+            for item in items:
+                path=j.system.fs.joinPaths(self.basedir,item)
+                if j.system.fs.exists(path):
+                    if j.system.fs.isDir(path):
+                        j.system.fs.removeDir(path)
+                    else:
+                        j.system.fs.remove(path)
 
-                if result["missing"]:
-                    j.console.echo("\n".join(["Missing: %s" % item for item in result["missing"]]))
-                    if force==False and not j.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?"):
-                        self._raise("Cannot update repo because files are deleted on filesystem which should not have.")
+        remove(result["ignored"])
+
+        addremove=False
+
+        #means files not added to repo
+        if len(result["nottracked"])>0:
+            if force==False and j.application.shellconfig.interactive:
+                j.console.echo("\n\nFound files not added yet to repo.")
+                j.console.echo("\n".join(["To Add: %s" % item for item in result["nottracked"]]))
+                add=j.gui.dialog.askYesNo("Above files are not added yet to repo but on filesystem, is it ok to add these files (No will remove)?")
+                if add==False:
+                    j.console.echo("remove the nontracked files.\n\n")
+                    j.console.echo("\n".join(["Will Remove: %s" % item for item in result["nottracked"]]))
+                    sure=j.gui.dialog.askYesNo("are you sure you want to remove above mentioned files.")
+                    if sure:
+                        remove(result["nottracked"])
                     else:
-                        self.addremove(message="add remove missing files for %s" % commitMessage) #@todo P1 check if this is ok?
-                        #for path in result["missing"]:
-                            #self.remove(path)
-                            
-                if len(result["nottracked"])>0 or len(result["ignored"])>0:
-                    j.console.echo("\n".join(["Nottracked/Ignored: %s" % item for item in result["nottracked"] + result["ignored"]]))
-                    j.console.echo("\n\Above files are not added yet to repo but on filesystem")
-                    if force==False:
-                        action = j.gui.dialog.askChoice("What do you want to do with these files" , ["RemoveTheseFiles", "AddRemove", "Abort"])
-                    else:
-                        action = "AddRemove"
-                    if action == "RemoveTheseFiles":
-                        for path in result["nottracked"] + result["ignored"]:
-                            if j.system.fs.exists(j.system.fs.joinPaths(self.basedir,path)):
-                                if j.system.fs.isDir(j.system.fs.joinPaths(self.basedir,path)):
-                                    j.system.fs.removeDir(j.system.fs.joinPaths(self.basedir,path))
-                                else:
-                                    j.system.fs.remove(j.system.fs.joinPaths(self.basedir,path))
-                    elif action == "AddRemove":
-                        message = "commit missing jpackage files, addremove"
-                        if commitMessage:
-                            message = commitMessage
-                        self.addremove(message=message)
-                    elif action == "Abort":
-                        self._raise("Cannot update repo because there are files which are not added or removed yet to local repo." )                    
-                
+                        j.console.echo("Please manually add your files and restart operation.")
+                        j.application.stop()                        
+                else:
+                    addremove=True
+            elif force:
+                addremove=True
             else:
-                if result["missing"] and not ignorechanges:
-                    self._raise("Cannot update repo because files are deleted on filesystem which should not be.")
-                if result["nottracked"] and not addRemoveUntrackedFiles:
-                    self._raise("Cannot update repo because there are files which are not added or removed yet to local repo.")
-                self.addremove(message="add remove untracked files for %s" % commitMessage)
+                raise RuntimeError("Cannot addremove, did not force operation.")
+
+        #means files are in repo but no longer on filesystem
+        if len(result["missing"])>0:
+            if force==False and j.application.shellconfig.interactive:
+                j.console.echo("\n\nFound files in repo which are no longer on filesystem, so probably deleted.")
+                j.console.echo("\n".join(["To remove from repo: %s" % item for item in result["missing"]]))
+                remove=j.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?")
+                if remove==False:
+                    j.console.echo("Please manually get your missing files back and restart operation.")
+                    j.application.stop()
+            elif force:
+                addremove=True                
+            else:
+                raise RuntimeError("Cannot addremove, did not force operation.")
+
+        if addremove:
+            self.addremove() #does not commit yet
+
+        self.commitInteractive(commitMessage,user=user,force=force)
+
+    def commitInteractive(self,commitMessage="",user=None,force=False):
             
         result=self.getModifiedFiles()   
         if any([result["added"], result["removed"], result["modified"]]):
@@ -318,11 +332,15 @@ syntax: regexp
                 if force or j.gui.dialog.askYesNo("\nDo you want to commit the files?"):
                     commitMessage=self.commit(commitMessage, user=user)
                 elif j.gui.dialog.askYesNo("\nDo you want to ignore the changed files? The changes will be lost"):
-                    self.update(force=True) #@todo P1 not implemented
+                    self.update(force=True)
                 else:
                     self._raise("Cannot update repo because uncommitted files in %s" % self.basedir)        
             else:
-                self.commit(commitMessage, user=user)
+                if force:
+                    self.commit(commitMessage, user=user)
+                else:
+                    self._raise("Cannot update repo because uncommitted files in %s" % self.basedir)
+
 
     def update(self, die=True, force=False, rev=None):
         self._log("update %s " % (self.basedir))
@@ -442,7 +460,7 @@ syntax: regexp
         if not user:
             self._assertCommitterInfo()
 
-        self.checkbranch()   
+        self.checkbranch()
 
         if not self.status():
             self._log("Nothing to commit, e.g. after a merge which had nothing to do.",5)
