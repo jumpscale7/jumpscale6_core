@@ -11,10 +11,7 @@ def main(j, args, params, tags, tasklet):
 
     #this makes sure bootstrap datatables functionality is used
     out.append("{{datatables_use}}}}\n")
-
-    nid = args.tags.getDict().get("nid", None)
-
-    #fields = ['otherid', 'description', 'roles', 'mem', 'netaddr', 'ipaddr', 'nid', 'lastcheck', 'state', 'gid', 'active', 'cpucore', 'type', 'id', 'name', 'id', 'size', 'devicename', 'disk_id', 'gid', 'role', 'machineid', 'type', 'fs', 'description', 'backuplocation', 'free', 'sizeondisk', 'nid', 'active', 'path', 'name', 'backuptime', 'lastcheck', 'expiration', 'machine_id', 'backup', 'order']
+    nid = args.getTag('nid')
 
     fields = ["path", "nid", "mountpoint", "ssd", "size", "free", "mounted"]
 

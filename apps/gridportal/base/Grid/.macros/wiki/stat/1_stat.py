@@ -1,25 +1,19 @@
 
 def main(j, args, params, tags, tasklet):
-    import urllib
     params.merge(args)
 
     doc = params.doc
 
-    p=args.tags.getDict()
-
-    stattype = p['stattype'] if p.get('stattype') and not p['stattype'].startswith('$$') else None
-    pid = p['pid'] if p.get('pid') and not p['pid'].startswith('$$') else None
-    nid = p['nid'] if p.get('nid') and not p['nid'].startswith('$$') else None
-    width = p['width'] if p.get('width') and not p['width'].startswith('$$') else 800
-    height = p['height'] if p.get('height') and not p['height'].startswith('$$') else 400
-    iid = p['iid'] if p.get('iid') and not p['iid'].startswith('$$') else None
-    did = p['did'] if p.get('did') and not p['did'].startswith('$$') else None
+    stattype = args.getTag('stattype')
+    pid = args.getTag('pid')
+    nid = args.getTag('nid')
+    width = args.getTag('width', 800)
+    height = args.getTag('height', 400)
+    iid = args.getTag('iid')
+    did = args.getTag('did')
     if did:
         did = did.split('_')[-1]
 
-    query = list()
-    query.append(('height', height))
-    query.append(('width', width))
 
     _data = {'nid': nid, 'pid':pid, 'height':height, 'width':width, 'iid': iid, 'did': did}
 
