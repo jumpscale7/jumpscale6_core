@@ -416,7 +416,6 @@ syntax: regexp
         self._log("clone %s" % (self.basedir),category="clone")
         self.client = hglib.clone(self.remoteUrl, self.basedir, branch=self.branchname, configs=self._configs)
         self.pull()
-        self.client.open()
         self.verify()
 
     def getbranchname(self):

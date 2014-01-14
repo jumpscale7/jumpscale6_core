@@ -115,7 +115,7 @@ class hgclient(object):
             self.server.stdin.flush()
 
         if not self.server:
-            raise ValueError("server not connected")
+            self.open()
 
         self.server.stdin.write('runcommand\n')
         writeblock('\0'.join(args))
