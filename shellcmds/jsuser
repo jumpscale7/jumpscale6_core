@@ -54,6 +54,11 @@ if opts.action =='passwd':
     user.passwd=opts.userpasswd
     userclient.set(user)
 
+if opts.action =='delete':
+    if opts.userlogin==None:
+        opts.userlogin=j.console.askString("user to delete")
+    user=userclient.get("%s_%s"%(j.application.whoAmI.gid,opts.userlogin))
+    userclient.delete(user.guid)
 
 if opts.action =='add' or opts.action =='set':
     if opts.data<>None:
@@ -132,6 +137,5 @@ if opts.action =='list':
     print
             
 
-#@todo implement delete & list
 
 j.application.stop()
