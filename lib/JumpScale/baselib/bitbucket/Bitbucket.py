@@ -222,8 +222,7 @@ class BitbucketConnection(object):
             #return self.mercurialclients[repoName]
         #@todo P2 cache the connections but also use branchnames
         
-        
-
+    
         if repoName=="":
             repoName=self.findRepoFromBitbucket(repoName)       
         if repoName=="":
