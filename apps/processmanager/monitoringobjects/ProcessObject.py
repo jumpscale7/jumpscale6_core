@@ -60,7 +60,6 @@ class ProcessObject(MonObjectBase):
         for item in j.processmanager.cache.processobject.getProcessStatProps():
             newname="%s_total"%item
             self.db.__dict__[newname]=self.db.__dict__[item]
-            continue #TODO fix this that children get accumulated
             for child in self.children:
                 self.db.__dict__[newname]+=float(child.db.__dict__[item])            
 

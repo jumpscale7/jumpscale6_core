@@ -61,10 +61,12 @@ def action():
                 childpid = child.pid
             else:
                 childpid = child.getPid()
-            #TODO children should be of type osisdb
+
+            childcache = j.processmanager.cache.processobject.get(id=childpid)
+            loadFromSystemProcessInfo(childcache, childpid)
             if childpid not in j.processmanager.childrenPidsFound:
                 if childpid not in cacheobj.children:
-                    cacheobj.children.append(child)
+                    cacheobj.children.append(childcache)
                 j.processmanager.childrenPidsFound[int(childpid)]=True
 
     #walk over startupmanager processes (make sure we don't double count)
