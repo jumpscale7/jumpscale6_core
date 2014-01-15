@@ -163,8 +163,8 @@ class Domain():
         if self.metadataFromTgz:
             raise RuntimeError('Meta data is comming from tar, cannot make connection to mercurial server ')
 
-        self._bitbucketclient = j.clients.bitbucket.getBitbucketAccountClient(self.bitbucketaccount)
-        self._mercurialclient = self.bitbucketclient.getMercurialClient(self.bitbucketreponame,branch="default")
+        self._bitbucketclient = j.clients.bitbucket.getBitbucketRepoClient(self.bitbucketaccount, self.bitbucketreponame)
+        self._mercurialclient = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
 
     def hasModifiedMetadata(self):
         """
@@ -253,7 +253,6 @@ class Domain():
         """
         j.logger.log("Publish metadata for domain %s" % self.domainname,2)
         if not self.metadataFromTgz:
-            j.system.net.checkUrlReachable('https://bitbucket.org/%s/%s' % (self.bitbucketaccount, self.bitbucketreponame))
             hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
             hg.commit(message=commitMessage,force=force)
             hg.push()
@@ -397,8 +396,7 @@ class Domain():
                            "Could not update the metadata for the domain",\
                            "go to directory %s and update the metadata yourself using mercurial" % self.metadatadir)
                   
-            #self.bitbucketclient.checkoutMerge
-            j.system.net.checkUrlReachable('https://bitbucket.org/%s/%s' % (self.bitbucketaccount, self.bitbucketreponame))    
+            #self.bitbucketclient.checkoutMerge    
             mercurialclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)            
             mercurialclient.pullupdate(force=force)
        
@@ -442,7 +440,6 @@ class Domain():
             j.action.start("update & merge jpackages metadata for domain %s" % self.domainname,\
                            "Could not update/merge the metadata for the domain",\
                            "go to directory %s and update/merge/commit the metadata yourself using mercurial" % self.metadatadir)
-            j.system.net.checkUrlReachable('https://bitbucket.org/%s/%s' % (self.bitbucketaccount, self.bitbucketreponame))
             hgclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)            
             hgclient.pull()
             hgclient.updatemerge(commitMessage=commitMessage,ignorechanges=False,addRemoveUntrackedFiles=True,trymerge=True)	    
