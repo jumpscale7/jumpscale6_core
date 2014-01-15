@@ -37,8 +37,6 @@ class ProcessObject(MonObjectBase):
         self.db.gid=j.application.whoAmI.gid
         self.db.nid=j.application.whoAmI.nid
 
-        self.lastcheck=time.time()
-
     def getStatInfo(self,totals=False):
         """
         @format dict or txt

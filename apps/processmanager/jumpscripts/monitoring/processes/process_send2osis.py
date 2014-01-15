@@ -13,9 +13,5 @@ period = 60 #always in sec
 enable=True
 
 def action():
-    for process_key,obj in j.processmanager.cache.processobject.monitorobjects.iteritems():
-        j.processmanager.cache.set(obj)
-
-
-#check behaviour in http://localhost:8081/
-
+    for process in j.processmanager.cache.processobject.monitorobjects.copy().itervalues():
+        process.cache.osis.set(process.db)

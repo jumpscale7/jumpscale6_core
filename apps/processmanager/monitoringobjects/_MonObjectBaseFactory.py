@@ -43,9 +43,10 @@ class MonObjectBaseFactory():
             monobject.lastcheck=time.time()
         self.monitorobjects[monobject.getGuid()]=monobject
 
-class MonObjectBase():
+class MonObjectBase(object):
 
     def __init__(self,cache):
+        self.lastcheck=time.time()
         self._expire=60 #means after X sec the cache will create new one
         self.cache=cache
         self.db=self.cache.osis.new()
