@@ -259,10 +259,6 @@ syntax: regexp
         if updateresult==False:
             raise RuntimeError("BUG:update should not fail at this point, because all addedremoved, merged & committed.")
         if self.hasModifiedFiles():
-            from IPython import embed
-            print "DEBUG NOW ooo"
-            embed()
-            
             raise RuntimeError("BUG: there should be no uncommitted files at this point")
             
     def addRemoveInteractive(self,commitMessage="", user=None,force=False):
@@ -318,8 +314,12 @@ syntax: regexp
             else:
                 raise RuntimeError("Cannot addremove, did not force operation.")
 
-        if addremove:
-            self.addremove() #does not commit yet
+        # if addremove:
+        #     from IPython import embed
+        #     print "DEBUG NOW ooo"
+        #     embed()
+            
+        self.addremove() #does not commit yet
 
         self.commitInteractive(commitMessage,user=user,force=force)
 
@@ -368,7 +368,7 @@ syntax: regexp
     def merge(self, commitMessage="", commit=True, user=None):
         self._log("merge '%s'" % (self.basedir))
         self.checkbranch()
-        self._removeRedundantFiles()
+        # self._removeRedundantFiles()
         if self.hasModifiedFiles():
             self._raise("Cannot merge %s because there are untracked files." % self.basedir)
 
