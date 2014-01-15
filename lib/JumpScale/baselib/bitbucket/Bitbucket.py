@@ -7,6 +7,7 @@ import urllib
 
 import requests
 from requests.auth import HTTPBasicAuth
+import os
 
 
 class Bitbucket:
@@ -18,8 +19,8 @@ class Bitbucket:
         self.config=BitbucketConfigManagement()
         self.connections={}
         j.logger.consolelogCategories.append("bitbucket")
-        
-        hgpath = '/root/.hgrc'
+
+        hgpath = '{0}/.hgrc'.format(os.getenv('HOME'))
         if j.system.fs.exists(hgpath):
             C=j.system.fs.fileGetContents(hgpath)
         else:
@@ -99,7 +100,7 @@ class Bitbucket:
                     passwd = j.gui.dialog.askPassword("  \nPassword for bitbucket account %s" % accountName, confirm=False)
                 else:
                     passwd = ""
-                self.config.configure(accountName,{'passwd': passwd})       
+                self.config.configure(accountName,{'passwd': passwd})
             if j.application.shellconfig.interactive and (login=="" or passwd==""):
                 self.accountsReview(accountName)
             loginInfo = '%s:%s@' % (login, passwd)
@@ -109,7 +110,7 @@ class Bitbucket:
         else:
             url=" ssh://hg@bitbucket.org/%s/" % (accountName)
         return url, login, passwd
-        
+
     def getMecurialRepoClient(self, accountName, reponame,branch="default"):
         bitbucket_connection = self.getBitbucketRepoClient(accountName, reponame)
         return bitbucket_connection.getMercurialClient(reponame,branch=branch)
@@ -124,13 +125,13 @@ class BitbucketConnection(object):
         self.passwd=passwd
         self.accountPathLocal = j.system.fs.joinPaths("/opt/code",accountName)
         j.system.fs.createDir(self.accountPathLocal)
-        self.mercurialclients={}                
-                
+        self.mercurialclients={}
+
     def restCallBitbucket(self,url):
         url="https://bitbucket.org/api/1.0/%s"%url
         r=requests.get(url, auth=HTTPBasicAuth(self.login, self.passwd))
         return r.json()
-                       
+
     def addGroup(self, groupName):
         """
         Add Bitbucket new group
@@ -139,7 +140,7 @@ class BitbucketConnection(object):
         @return The newly created Bitbucket L{Group}
         """
         raise RuntimeError("not implemented")
-        
+
     def addRepo(self, repoName,usersOwner=[]):
         """
         Add Bitbucket repo
@@ -170,7 +171,7 @@ class BitbucketConnection(object):
         result = requests.get(url)
         return result.ok
 
-    def getRepoPathLocal(self,repoName="",die=True):      
+    def getRepoPathLocal(self,repoName="",die=True):
         if repoName=="":
             repoName=j.gui.dialog.askChoice("Select repo",self.getRepoNamesLocal())
             if repoName==None:
@@ -185,7 +186,7 @@ class BitbucketConnection(object):
     def getRepoNamesLocal(self,checkIgnore=True,checkactive=True):
         if j.system.fs.exists(self.accountPathLocal):
             items=j.system.fs.listDirsInDir(self.accountPathLocal,False,True)
-            return items        
+            return items
         else:
             return []
 
@@ -195,23 +196,23 @@ class BitbucketConnection(object):
     def findRepoFromBitbucket(self,partofName="",reload=False):
         """
         will use bbitbucket api to retrieven all repo information
-        @param reload means reload from bitbucket   
+        @param reload means reload from bitbucket
         """
         names=self.getRepoNamesFromBitbucket(partofName,reload)
         j.gui.dialog.message("Select bitbucket repository")
-        reposFound2=j.gui.dialog.askChoice("",names)        
+        reposFound2=j.gui.dialog.askChoice("",names)
         return reposFound2
 
     def getRepoNamesFromBitbucket(self,partOfRepoName="",reload=False):
         """
         will use bbitbucket api to retrieven all repo information
-        @param reload means reload from bitbucket   
+        @param reload means reload from bitbucket
         """
         if self.bitbucket_client.accountsRemoteRepoNames.has_key(self.accountName) and reload==False:
             repoNames= self.bitbucket_client.accountsRemoteRepoNames[self.accountName]
         else:
             repos=self._getBitbucketRepoInfo()
-            repoNames=[str(repo["slug"]) for repo in repos["repositories"]] 
+            repoNames=[str(repo["slug"]) for repo in repos["repositories"]]
             self.bitbucket_client.accountsRemoteRepoNames[self.accountName]=repoNames
         if partOfRepoName<>"":
             partOfRepoName=partOfRepoName.replace("*","").replace("?","").lower()
@@ -219,7 +220,7 @@ class BitbucketConnection(object):
             for name in repoNames:
                 name2=name.lower()
                 if name2.find(partOfRepoName)<>-1:
-                    repoNames2.append(name)            
+                    repoNames2.append(name)
                 #print name2 + " " + partOfRepoName + " " + str(name2.find(partOfRepoName))
             repoNames=repoNames2
 
@@ -233,7 +234,7 @@ class BitbucketConnection(object):
             #return self.mercurialclients[repoName]
         #@todo P2 cache the connections but also use branchnames
         if repoName=="":
-            repoName=self.findRepoFromBitbucket(repoName)       
+            repoName=self.findRepoFromBitbucket(repoName)
         if repoName=="":
             raise RuntimeError("reponame cannot be empty")
 
@@ -242,7 +243,7 @@ class BitbucketConnection(object):
             url=url+"/"
 
         url += "%s/"%repoName
-            
+
         hgrcpath=j.system.fs.joinPaths(self.getRepoPathLocal(repoName),".hg","hgrc")
         if j.system.fs.exists(hgrcpath):
             editor=j.codetools.getTextFileEditor(hgrcpath)
@@ -277,7 +278,7 @@ class BitbucketConnection(object):
 
         return groups[0] if len(groups) == 1 else j.errorconditionhandler.raiseError('Found more than group with name [%s].' %groupName)
 
-    
+
     def checkGroup(self, groupName):
         """
         Check whether group exists or not
