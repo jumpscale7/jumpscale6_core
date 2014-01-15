@@ -411,7 +411,24 @@ class HRD():
             result=str(result)
         
         elif ttype=="int":
-            result=str(j.console.askInteger(question=descr, defaultValue=default))
+            if tags.tagExists("minValue"):
+                minValue = int(tags.tagGet("minValue"))
+            else:
+                minValue = None
+
+            if tags.tagExists("maxValue"):
+                maxValue = int(tags.tagGet("maxValue"))
+            else:
+                maxValue = None
+
+            if tags.tagExists("retry"):
+                retry = int(tags.tagGet("retry"))
+            else:
+                retry = None
+
+            if not default:
+                default=None
+            result=j.console.askInteger(question=descr,  defaultValue=default, minValue=minValue, maxValue=maxValue, retry=retry)
 
         elif ttype=="bool":
             if descr<>"":
