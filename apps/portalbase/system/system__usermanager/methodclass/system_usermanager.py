@@ -109,6 +109,17 @@ class system_usermanager(j.code.classGetBase()):
         result = j.apps.system.usermanager.extensions.usermanager.usercreate(name=name, passwd=passwd, groups=groups, emails=emails, userid=userid)
         return result
 
+    def userget(self, name, **args):
+        """
+        """
+        usermanager = j.apps.system.usermanager
+        user = usermanager.extensions.usermanager.userGet(name, usecache=False)
+        if user == None:
+            return {}
+        else:
+            return {'username': user.id, "emails": user.emails}
+
+
     def userexists(self, name, **args):
         """
         param:name name

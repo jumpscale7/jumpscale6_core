@@ -43,6 +43,13 @@
         var:name str,,name 
         result:bool
 
+    method:userget
+        """
+        get userinformation of a user
+        """
+        var:name str,,name
+        result:list
+
     method:userexistsFromId
 		"""
 		"""
