@@ -498,7 +498,9 @@ class JPackageClient():
                     packagepath=j.system.fs.joinPaths(domainpath,packagename)
                     versions=j.system.fs.listDirsInDir(packagepath,dirNameOnly=True)
                     for version in versions:
-                        res.append([domainName,packagename,version])
+                        hrdfile = j.system.fs.joinPaths(packagepath, version, 'hrd', 'main.hrd')
+                        if j.system.fs.exists(hrdfile):
+                            res.append([domainName,packagename,version])
         return res
 
     def getJPackageObjects(self, platform=None, domain=None):

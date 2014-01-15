@@ -1566,8 +1566,11 @@ class SystemProcess:
         myprocess=self.getMyProcessObject()
         result=[]
         for item in psutil.get_process_list():
-            if item.cmdline==myprocess.cmdline:
-                result.append(item)
+            try:
+                if item.cmdline==myprocess.cmdline:
+                    result.append(item)
+            except psutil.NoSuchProcess:
+                pass
         return result
 
 

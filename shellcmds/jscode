@@ -46,8 +46,6 @@ def getRepos():
     for account in accounts:
         accountdir="/opt/code/%s"%account
         if j.system.fs.exists(accountdir):
-            j.system.net.checkUrlReachable('https://bitbucket.org/%s' % account)
-            bitbucket=j.clients.bitbucket.getBitbucketAccountClient(account)
             if opts.repos==None:
                 reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
                 if  not opts.action in ['status']:
@@ -59,6 +57,7 @@ def getRepos():
                 repodir="%s/%s"%(accountdir,reponame)
                 if not j.system.fs.exists(path=repodir):
                     raise RuntimeError("Could not find mercurial repo on %s"%repodir)
+                bitbucket = j.clients.bitbucket.getBitbucketRepoClient(account, reponame)
                 cl=bitbucket.getMercurialClient(reponame)
                 # cl=j.clients.mercurial.getClient(item)
                 result.append((bitbucket,account,reponame,cl,repodir))
