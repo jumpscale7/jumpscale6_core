@@ -48,7 +48,7 @@ class Process(OsisBaseObject):
         """
 
         C="%s_%s_%s_%s_%s_%s_%s"%(self.systempid,self.gid,self.nid,\
-            self.jpdomain,self.jpname,self.instance,self.name)
+            self.jpdomain,self.jpname,self.instance,self.pname)
         return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):
