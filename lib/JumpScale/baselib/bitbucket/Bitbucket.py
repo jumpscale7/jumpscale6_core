@@ -20,7 +20,7 @@ class Bitbucket:
         self.connections={}
         j.logger.consolelogCategories.append("bitbucket")
 
-        hgpath = '{0}/.hgrc'.format(os.getenv('HOME'))
+        hgpath = '{0}/.hgrc'.format(os.path.expanduser('~'))
         if j.system.fs.exists(hgpath):
             C=j.system.fs.fileGetContents(hgpath)
         else:
