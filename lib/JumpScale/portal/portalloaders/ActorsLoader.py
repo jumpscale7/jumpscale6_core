@@ -137,6 +137,7 @@ class ActorLoader(LoaderBaseObject):
 
     def __init__(self):
         LoaderBaseObject.__init__(self, "actor")
+        self.osiscl = None
 
     def createDefaults(self, path):
         base = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), ".%s" % self.type, "dirstructure")
