@@ -461,10 +461,8 @@ class HRD():
             line=line.strip()
             if line=="" or line[0]=="#":
                 continue
-            if line.find("=")<>-1:
-                items=line.split("=")
-                if len(items)>2:
-                    raise RuntimeError("in template only 1 '=' sign' per line")
+            if line.find("=") != -1:
+                items=line.split("=", 1)
                 key=items[0].strip()
                 defvalue=items[1].strip()
                 if not self.exists(key):
@@ -482,7 +480,7 @@ class HRD():
             line=line.strip()
             if line=="" or line[0]=="#":
                 continue
-            if line.find("=")<>-1:
+            if line.find("=") != -1:
                 #found line
                 if line.find("#")<>-1:
                     line=line.split("#")[0]
