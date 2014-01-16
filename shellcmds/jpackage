@@ -168,6 +168,7 @@ elif args.action == 'repackage':
         package.upload(remote=not args.local)
         if args.publish:
             j.packages.publish(args.message, package.domain)
+        print 'New %s %s' % (package, package.buildNr)
 
 elif args.action == 'restart':
     packages= cmdutils.getJPackage(args,installed=True)
