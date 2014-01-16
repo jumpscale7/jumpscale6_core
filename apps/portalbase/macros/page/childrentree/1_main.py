@@ -169,7 +169,7 @@ def main(j, args, params, tags, tasklet):
             return params
 
     dir_name = j.system.fs.getDirName(doc.path)
-    dir_tree = items+get_dir_tree(dir_name, depth)
+    dir_tree = items if items else get_dir_tree(dir_name, depth)
     page.addMessage(format_dir_tree(dir_tree, doc.getSpaceName(), bullets, tree))
 
     return params
