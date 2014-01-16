@@ -45,7 +45,8 @@ if opts.action =='reinit':
     packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
     for package in packages:
         jp=j.packages.findNewest(name=package)
-        jp.configure()
+        if jp.isInstalled():
+            jp.configure()
 
 # packages=["osis","logger"]
 #     for package in packages:
