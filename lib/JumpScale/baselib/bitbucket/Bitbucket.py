@@ -88,14 +88,14 @@ class Bitbucket:
         login = config["login"]
         passwd = config["passwd"]
 
-        if login.find("@login")<>-1 or login.strip()=="":
+        if login.find("@login")<>-1:
             if j.application.shellconfig.interactive:
                 login=j.gui.dialog.askString("  \nLogin for bitbucket account %s" % accountName)
             else:
                 login = ""
             self.config.configure(accountName,{'login': login})
         
-        if passwd.find("@passwd")<>-1 or passwd.strip()=="":
+        if passwd.find("@passwd")<>-1:
             if j.application.shellconfig.interactive:
                 passwd = j.gui.dialog.askPassword("  \nPassword for bitbucket account %s" % accountName, confirm=False)
             else:
@@ -113,8 +113,8 @@ class Bitbucket:
             url = " https://%sbitbucket.org/%s/" % (loginInfo, accountName)
         else:
             url=" ssh://hg@bitbucket.org/%s/" % (accountName)
-        if login==None or login.strip()=="":
-            raise RuntimeError("Login cannot be empty, url:%s"%url)
+        # if login==None or login.strip()=="":
+        #     raise RuntimeError("Login cannot be empty, url:%s"%url)
 
         return url, login, passwd
 
