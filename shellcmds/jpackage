@@ -57,8 +57,6 @@ group.add_argument('--branch', help='Branch of the coderecipe')
 
 args = parser.parse_args()
 
-original_stdout = sys.stdout
-
 if args.quiet:
     class NullDevice():
         def write(self, s):
@@ -224,5 +222,4 @@ elif args.action == 'list':
             debug = 'yes' if package.debug else 'no'
             print form % {'name': package.name, 'domain': package.domain, 'version': package.version, 'debug': debug, 'buildnr': package.buildNr}
 
-sys.stdout = original_stdout
 j.application.stop()
