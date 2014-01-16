@@ -398,8 +398,18 @@ class HRD():
         else:
             default=""
 
+        if tags.tagExists("retry"):
+            retry = int(tags.tagGet("retry"))
+        else:
+            retry = None
+
+        if tags.tagExists("regex"):
+            regex = tags.tagGet("regex")
+        else:
+            regex = None
+
         if ttype=="str":
-            result=j.console.askString(question=descr, defaultparam=default, regex=None)
+            result=j.console.askString(question=descr, defaultparam=default, regex=regex, retry=retry)
 
         elif ttype=="float":
             result=j.console.askString(question=descr, defaultparam=default, regex=None)
@@ -420,11 +430,6 @@ class HRD():
                 maxValue = int(tags.tagGet("maxValue"))
             else:
                 maxValue = None
-
-            if tags.tagExists("retry"):
-                retry = int(tags.tagGet("retry"))
-            else:
-                retry = None
 
             if not default:
                 default=None
