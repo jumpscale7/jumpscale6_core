@@ -21,7 +21,7 @@ class system_gridmanager(j.code.classGetBase()):
         self._nodeMap = dict()
         self.clientsIp = dict()
 
-        self.passwd = j.application.config.get("system.superadmin.passwd")
+        self.passwd = j.application.config.get("gridmaster.superadminpasswd")
 
         osis = j.core.osis.getClient(j.application.config.get("grid.master.ip"), passwd=self.passwd, user='root')
         self.osis_node = j.core.osis.getClientForCategory(osis,"system","node")
@@ -46,8 +46,8 @@ class system_gridmanager(j.code.classGetBase()):
                 raise RuntimeError('Could not get client for node %s!' % nid)
             for ip in self._nodeMap[nid]['ipaddr']:
                 if j.system.net.tcpPortConnectionTest(ip, 4445):
-                    user=j.application.config.get('system.superadmin.login')
-                    passwd=j.application.config.get('system.superadmin.passwd')
+                    user="root"#j.application.config.get('system.superadmin.login')
+                    passwd=self.passwd
                     self.clients[nid] = j.servers.geventws.getClient(ip, 4445, org="myorg", user=user, passwd=passwd,category=category)
                     self.clientsIp[nid] = ip
                     return self.clients[nid]

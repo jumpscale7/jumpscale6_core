@@ -19,7 +19,7 @@ class Process(OsisBaseObject):
             self.jpdomain= ""
             self.jpname= ""
             self.pname = name  #process name
-            self.sname= "" #name as specifief in starup manager
+            self.sname= "" #name as specifief in startup manager
             self.ports = []
             self.instance = instance
             self.systempid = systempid  # system process id (PID) at this point

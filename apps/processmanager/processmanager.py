@@ -29,8 +29,8 @@ class MgrCmds():
         self.daemon = daemon
         j.processmanager=self
 
-        self.adminpasswd = j.application.config.get('system.superadmin.passwd')
-        self.adminuser = j.application.config.get('system.superadmin.login')
+        self.adminpasswd = j.application.config.get('gridmaster.superadminpasswd')
+        self.adminuser = 'root'#j.application.config.get('system.superadmin.login')
 
         self.daemon._adminAuth=self._adminAuth
         
