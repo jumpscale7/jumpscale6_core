@@ -7,6 +7,7 @@ def main(j, args, params, tags, tasklet):
     stattype = args.getTag('stattype')
     pid = args.getTag('pid')
     nid = args.getTag('nid')
+    key = args.getTag('key')
     width = args.getTag('width', 800)
     height = args.getTag('height', 400)
     iid = args.getTag('iid')
@@ -77,7 +78,7 @@ def main(j, args, params, tags, tasklet):
 
 
     else:
-        out = '!/restmachine/system/gridmanager/getStatImage?statKey=%s&width=%s&height=%s!'%(p["key"],p["width"],p["height"])
+        out = '!/restmachine/system/gridmanager/getStatImage?statKey=%s&width=%s&height=%s!'%(key,width,height)
     
     params.result = (out, doc)
 
