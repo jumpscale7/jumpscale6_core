@@ -36,6 +36,19 @@ bq. Text inside blockquote text
 
 Paragraphs are separated by new lines. Consecutive new lines are considered as one. To force a new line, write double-backslashes. `\\`
 
+
+h2. Escaping characters
+
+Characters can be escaped by preceding it with a back-slash `\`.
+{{code:
+c:\\\windows\\\system32
+\\* not going to be a list item
+}}
+
+c:\\windows\\system32
+\* not going to be a list item
+
+
 h2. Heading
 
 You define a heading as follows: `h1. `, followed by your heading text. The heading range is from 1 to 6 included.

@@ -166,6 +166,11 @@ class Confluence2HTML():
 
         content = ''.join(blocks)
 
+        # Escape characters by putting \ in front of it, e.g. \*
+        def escape_char(char):
+            return '&#{0};'.format(ord(char.group(1)))
+        content = re.sub(r'\\([^\n\r\\])', escape_char, content)
+
         if page == None:
             page = j.tools.docgenerator.pageNewHTML("temp")
 
@@ -228,12 +233,13 @@ class Confluence2HTML():
             self._lastLine = line
             line = line.strip()
 
-            # New lines
-            # This should be the last thing
+            # \\ on their own line will emit <br>
             if line == r'\\':
                 page.addNewLine()
                 line = ''
                 continue
+
+
 
             # print "#: %s %s" % (state,line)
 
@@ -471,6 +477,7 @@ class Confluence2HTML():
                 if line[0] != "@":
                     line = self.processDefs(line, doc, page)
                     page.addMessage(line, isElement=False)
+            
 
         if page.body != "":
             # work on the special includes with [[]]
