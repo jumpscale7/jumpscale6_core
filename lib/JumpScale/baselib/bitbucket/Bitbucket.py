@@ -20,7 +20,7 @@ class Bitbucket:
         self.connections={}
         j.logger.consolelogCategories.append("bitbucket")
 
-        hgpath = '{0}/.hgrc'.format(os.getenv('HOME'))
+        hgpath = '{0}/.hgrc'.format(os.path.expanduser('~'))
         if j.system.fs.exists(hgpath):
             C=j.system.fs.fileGetContents(hgpath)
         else:
@@ -73,10 +73,10 @@ class Bitbucket:
 
     def getBitbucketRepoClient(self, accountName, repoName, branch='default'):
         url, accountLogin, accountPasswd = self._getRepoInfo(accountName, repoName, branch)
-        if self.connections.has_key(accountName):
-            return self.connections[accountName]
-        self.connections[accountName] = BitbucketConnection(accountName,url,login=accountLogin,passwd=accountPasswd)
-        return self.connections[accountName]
+        if self.connections.has_key(repoName):
+            return self.connections[repoName]
+        self.connections[repoName] = BitbucketConnection(accountName,url,login=accountLogin,passwd=accountPasswd)
+        return self.connections[repoName]
 
     def _getRepoInfo(self, accountName, repoName, branch="default"):
         loginInfo = ''

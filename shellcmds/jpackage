@@ -2,6 +2,7 @@
 from JumpScale.baselib import cmdutils
 import JumpScale.baselib.jpackages
 from JumpScale import j
+import sys
 j.application.start('jpackage')
 
 parser = cmdutils.ArgumentParser()
@@ -13,6 +14,7 @@ commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'li
 parser.add_argument("action", choices=commands, help='Command to perform')
 
 group = parser.add_argument_group(title="Package Selection")
+group.add_argument('-q','--quiet', required=False, action='store_true', help='Put in quiet mode')
 group.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
 group.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
 group.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
@@ -54,6 +56,12 @@ group = parser.add_argument_group(title="Switch Branch")
 group.add_argument('--branch', help='Branch of the coderecipe')
 
 args = parser.parse_args()
+
+if args.quiet:
+    class NullDevice():
+        def write(self, s):
+            pass
+    sys.stdout = NullDevice();
 
 if (args.deps) and args.action in ["create","debug","mdupdate","mirror","list"]:
     raise RuntimeError("deps or nodeps option is not used for %s."%args.action)
