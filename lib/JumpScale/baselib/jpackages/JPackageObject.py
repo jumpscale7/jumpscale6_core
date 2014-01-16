@@ -602,9 +602,9 @@ class JPackageObject():
         path=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", self.domain)
         if not j.system.fs.isLink(path):
             raise RuntimeError("%s needs to be link"%path)
-        jpackagesdir=j.system.fs.getParent(j.system.fs.readlink(path))
-        ql=[item for item in j.system.fs.listDirsInDir(jpackagesdir,False,True) if item<>".hg"]
-        return ql
+        jpackageconfig = j.config.getConfig('sources', 'jpackages')
+        ql = jpackageconfig[self.domain].get('qualitylevel', [])
+        return [ql] if not isinstance(ql, list) else ql
 
     def getBrokenDependencies(self, platform=None):
         """
