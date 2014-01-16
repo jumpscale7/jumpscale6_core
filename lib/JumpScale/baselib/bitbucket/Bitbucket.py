@@ -83,32 +83,39 @@ class Bitbucket:
         login = None
         passwd = None
         repoInfo = self.getRepoInfo(accountName, repoName)
-        if repoInfo == 404:
-            j.errorconditionhandler.raiseOperationalCritical("Repo %s/%s is invalid" % (accountName, repoName))
-        elif repoInfo == 403:
-            config = self._accountGetConfig(accountName)
-            login = config["login"]
-            if login.find("@login")<>-1:
-                if j.application.shellconfig.interactive:
-                    login=j.gui.dialog.askString("  \nLogin for bitbucket account %s" % accountName)
-                else:
-                    login = ""
-                self.config.configure(accountName,{'login': login})
-            passwd = config["passwd"]
-            if passwd.find("@passwd")<>-1:
-                if j.application.shellconfig.interactive:
-                    passwd = j.gui.dialog.askPassword("  \nPassword for bitbucket account %s" % accountName, confirm=False)
-                else:
-                    passwd = ""
-                self.config.configure(accountName,{'passwd': passwd})
-            if j.application.shellconfig.interactive and (login=="" or passwd==""):
-                self.accountsReview(accountName)
-            loginInfo = '%s:%s@' % (login, passwd)
 
+        config = self._accountGetConfig(accountName)
+        login = config["login"]
+        passwd = config["passwd"]
+
+        if login.find("@login")<>-1 or login.strip()=="":
+            if j.application.shellconfig.interactive:
+                login=j.gui.dialog.askString("  \nLogin for bitbucket account %s" % accountName)
+            else:
+                login = ""
+            self.config.configure(accountName,{'login': login})
+        
+        if passwd.find("@passwd")<>-1 or passwd.strip()=="":
+            if j.application.shellconfig.interactive:
+                passwd = j.gui.dialog.askPassword("  \nPassword for bitbucket account %s" % accountName, confirm=False)
+            else:
+                passwd = ""
+            self.config.configure(accountName,{'passwd': passwd})
+        if j.application.shellconfig.interactive and (login=="" or passwd==""):
+            self.accountsReview(accountName)
+        loginInfo = '%s:%s@' % (login, passwd)
+
+        if repoInfo == 404: #not found
+            j.errorconditionhandler.raiseOperationalCritical("Repo %s/%s is invalid" % (accountName, repoName))
+        # elif repoInfo == 403: #forbidden
+            
         if login not in ('hg', 'ssh'):
             url = " https://%sbitbucket.org/%s/" % (loginInfo, accountName)
         else:
             url=" ssh://hg@bitbucket.org/%s/" % (accountName)
+        if login==None or login.strip()=="":
+            raise RuntimeError("Login cannot be empty, url:%s"%url)
+
         return url, login, passwd
 
     def getMecurialRepoClient(self, accountName, reponame,branch="default"):
@@ -130,7 +137,13 @@ class BitbucketConnection(object):
     def restCallBitbucket(self,url):
         url="https://bitbucket.org/api/1.0/%s"%url
         r=requests.get(url, auth=HTTPBasicAuth(self.login, self.passwd))
-        return r.json()
+        try:
+            data=r.json()
+        except Exception,e:
+            msg="Could not connect to:%s, reason:%s, login was:'%s'"%(url,r.reason,self.login)
+            raise RuntimeError(msg)
+        return data
+            
 
     def addGroup(self, groupName):
         """

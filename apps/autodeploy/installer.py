@@ -13,6 +13,7 @@ parser.add_option('-p', '--passwd', help='New Passwd To Set Or Use',default="roo
 parser.add_option('-g', '--gridnr', help='Id of grid, make sure is unique.',default="")
 parser.add_option('-c', '--cfgname', help='Name of cfg directory.',default="")
 parser.add_option('-t','--type', help='Type of action (platform,core,desktop,grid), is comma separated.',default="")
+parser.add_option('--nopasswd', help='work with ssh key',default=False)
 
 (options, args) = parser.parse_args()
 
@@ -54,12 +55,17 @@ else:
     result=options.type.split(",")
 
 cuapi = j.remote.cuisine.api
-j.remote.cuisine.fabric.env["password"]=passwd
+if options.nopasswd==False:
+    j.remote.cuisine.fabric.env["password"]=passwd
 cuapi.connect(remote)
 
-#this will make sure new password is set
-cl=j.tools.expect.new("sh")
-cl.login(remote=remote,passwd=passwd,seedpasswd=seedpasswd)
+def setpasswd():
+    #this will make sure new password is set
+    cl=j.tools.expect.new("sh")
+    cl.login(remote=remote,passwd=passwd,seedpasswd=seedpasswd)
+
+if options.nopasswd==False:
+    setpasswd()
 
 def prepare_platform():
     print cuapi.apt_get("update")
@@ -72,18 +78,18 @@ def install_jscore():
         print cuapi.run("pip uninstall JumpScale-core -y")
     except:
         pass
-    print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
+    print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/unstable.zip")
     print cuapi.dir_ensure("/opt/jumpscale/cfg/jsconfig/", True)    
     print cuapi.dir_ensure("/opt/jumpscale/cfg/jpackages/", True)
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/blobstor.cfg","cfg/jsconfig/blobstor.cfg")
     print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/bitbucket.cfg", "/opt/jumpscale/cfg/jsconfig/bitbucket.cfg")
     print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","cfg/jpackages/sources.cfg")
-    print cuapi.run("jpackage_update")
+    print cuapi.run("jpackage mdupdate")
     try:
         print cuapi.run("jscode_update")
     except:
         pass    
-    print cuapi.run("jpackage_install -n core -r --debug")
+    print cuapi.run("jpackage install -n core -r --debug")
 
 def install_grid():
     print cuapi.dir_ensure("/opt/jumpscale/cfg/hrd/", True)
@@ -93,6 +99,10 @@ def install_grid():
     
     hrd.set("grid.id",options.gridnr)
     hrd.set("system.superadmin.passwd",passwd)
+    hrd.set("gridmaster.superadminpasswd",passwd)
+
+    
+
     hrd.set("gridmaster.grid.id",options.gridnr)
     hrd.set("elasticsearch.cluster.name","cl_%s"%options.gridnr)
 
