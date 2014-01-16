@@ -101,14 +101,13 @@ class Bitbucket:
             else:
                 passwd = ""
             self.config.configure(accountName,{'passwd': passwd})
-        if j.application.shellconfig.interactive and (login=="" or passwd==""):
-            self.accountsReview(accountName)
+
         loginInfo = '%s:%s@' % (login, passwd)
 
         if repoInfo == 404: #not found
             j.errorconditionhandler.raiseOperationalCritical("Repo %s/%s is invalid" % (accountName, repoName))
         # elif repoInfo == 403: #forbidden
-            
+        
         if login not in ('hg', 'ssh'):
             url = " https://%sbitbucket.org/%s/" % (loginInfo, accountName)
         else:
