@@ -104,7 +104,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         return j.system.fs.joinPaths(self.dbpath, category)
 
     def _getStorePath(self, category, key,createIfNeeded=True):
-        key = str(key)
+        key = j.tools.text.toStr(key)
         origkey = key
         if len(key)<4:
             key = key + (4 - len(key)) * '_'
