@@ -40,6 +40,11 @@ if opts.action =='reinit':
     else:
         j.system.process.executeWithoutPipe("osis deleteall --force=1")
 
+    for item in ["/opt/graphite/storage/whisper/","/opt/jumpscale/var/log/","/opt/jumpscale/var/tmp/"]:
+
+        j.system.fs.removeDirTree(item)
+        j.system.fs.createDir(item)
+
     
 
     packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
