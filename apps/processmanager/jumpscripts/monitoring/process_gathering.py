@@ -29,7 +29,12 @@ def action():
 
 
     def aggregate(cacheobj,process_key,key,value,avg=True,ttype="N",percent=False):
-        aggrkey="n%s.process.%s.%s"%(j.application.whoAmI.nid,process_key,key)
+        if cacheobj.db.jpdomain<>"":
+            cat="js"
+        else:
+            cat="os"
+
+        aggrkey="n%s.process.%s.%s.%s"%(j.application.whoAmI.nid,cat,process_key,key)
 
         j.system.stataggregator.set(aggrkey,value,ttype=ttype,remember=True,memonly=not(j.basetype.string.check(process_key)),percent=percent)
         if avg:
