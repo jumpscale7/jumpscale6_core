@@ -23,6 +23,14 @@ class Nic(OsisBaseObject):
             self.active = False
             self.lastcheck=0 #epoch of last time the info was checked from reality
 
+            for item in ["kbytes_sent","kbytes_recv","packets_sent","packets_recv","errin","errout","dropin","dropout"]:
+                self.__dict__[item]=0
+
+    def getContentKey(self):
+        C="%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.id,self.name,self.mac,self.ipaddr,self.active)
+        return j.tools.hash.md5_string(C)
+
+
     def getUniqueKey(self):
         """
         return unique key for object, is used to define unique id

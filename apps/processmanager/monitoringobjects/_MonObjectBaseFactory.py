@@ -1,4 +1,6 @@
 import time
+from JumpScale import j
+
 class MonObjectBaseFactory():
     def __init__(self,host,classs):
         """
@@ -18,8 +20,7 @@ class MonObjectBaseFactory():
             else:
                 return self.monitorobjects[id]
         self.monitorobjects[id]=  self.classs(self)     
-        if id<>None:
-            self.monitorobjects[id].db.id=id
+
         if lastcheck<>None:
             self.monitorobjects[id].lastcheck=lastcheck
 
@@ -34,14 +35,15 @@ class MonObjectBaseFactory():
             return False
 
 
-    def set(self,monobject,lastcheck=0):
+    def set(self,id,monobject,lastcheck=0):
         """
         """
         if lastcheck<>0:
             monobject.lastcheck=lastcheck
         else:
             monobject.lastcheck=time.time()
-        self.monitorobjects[monobject.getGuid()]=monobject
+        self.monitorobjects[id]=monobject
+
 
 class MonObjectBase(object):
 
@@ -50,6 +52,12 @@ class MonObjectBase(object):
         self._expire=60 #means after X sec the cache will create new one
         self.cache=cache
         self.db=self.cache.osis.new()
+        self.db.gid=j.application.whoAmI.gid
+        self.db.nid=j.application.whoAmI.nid
+        self.ckeyOld=""
+
+    def send2osis(self):
+        self.cache.osis.set(self.db)
 
     def getGuid(self):
         return self.db.getSetGuid()

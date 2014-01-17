@@ -3,10 +3,12 @@ import gevent
 import copy
 import inspect
 import imp
+import time
+import sys
 
 class Jumpscript():
 
-    def __init__(self, name,organization, author, license, version, action, source, path, descr,category,period):
+    def __init__(self, name,organization, author, license, version, action, source, path, descr,category,period,startatboot):
         self.name = name
         self.descr = descr
         self.category = category
@@ -21,6 +23,8 @@ class Jumpscript():
         self.period=period
         self.order=1
         self.enable=True
+        self.startatboot=startatboot
+        self.lastrun=0
         self._name="jumpscripts"
 
     def __repr__(self):
@@ -53,9 +57,13 @@ class JumpscriptsCmds():
                 msg+="Error was:%s\n" % e
                 # print msg
                 j.errorconditionhandler.raiseInputError(msgpub="",message=msg,category="agentcontroller.load",tags="",die=False)
+                j.application.stop()
                 continue
 
             name = getattr(script, 'name', "")
+            if name=="":
+                name=j.system.fs.getBaseName(path2)
+                name=name.replace(".py","").lower()
             category = getattr(script, 'category', "unknown")
             organization = getattr(script, 'organization', "unknown")
             author = getattr(script, 'author', "unknown")
@@ -64,9 +72,11 @@ class JumpscriptsCmds():
             enable = getattr(script, 'enable', True)
             order = getattr(script, 'order', 1)
             period = getattr(script, 'period')
+            startatboot = getattr(script, 'startatboot',True)
+
             source = inspect.getsource(script.action)
 
-            t = Jumpscript(name, organization, author, license, version, script.action, source, path2, script.descr, category, period)
+            t = Jumpscript(name, organization, author, license, version, script.action, source, path2, script.descr, category, period,startatboot)
             t.enable = enable
             t.order = order
             print "found jumpscript:%s " %("%s_%s" % (organization, name))
@@ -123,24 +133,38 @@ class JumpscriptsCmds():
         for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
             greenlet.kill()
 
+    def run(self,period=None):
+        if period==None:
+            for period in j.processmanager.jumpscripts.jumpscriptsByPeriod.keys():
+                self.run(period)
+
+        for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[period]:
+            if not action.enable:
+                continue
+            #print "start action:%s"%action
+            try:
+                if action.lastrun==0 and action.startatboot==False:
+                    print "did not start at boot:%s"%action.name
+                else:
+                    action.action()
+                action.lastrun=time.time()
+            except Exception,e:
+                eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                eco.errormessage+='\\n'
+                for key in action.__dict__.keys():
+                    if key not in ["license", 'source', 'action']:
+                        eco.errormessage+="%s:%s\n"%(key,action.__dict__[key]) 
+                eco.tags="category:%s"%action.category
+                print eco
+                sys.exit()
+                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+                continue
+            print "ok"
+
+
     def loop(self, period):
         while True:
-            for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[period]:
-                if not action.enable:
-                    continue
-                #print "start action:%s"%action
-                try:
-                    action.action()
-                except Exception,e:
-                    eco=j.errorconditionhandler.parsePythonErrorObject(e)
-                    eco.errormessage+='\\n'
-                    for key in action.__dict__.keys():
-                        if key not in ["license", 'source', 'action']:
-                            eco.errormessage+="%s:%s\n"%(key,action.__dict__[key]) 
-                    eco.tags="category:%s"%action.category
-                    j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                    continue
-                print "ok"
+            self.run(period)
             gevent.sleep(period) 
 
     def _configureScheduling(self):        

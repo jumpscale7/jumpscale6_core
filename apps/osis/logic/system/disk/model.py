@@ -39,16 +39,20 @@ class Disk(OsisBaseObject):
         C="%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.ssd)
         return j.tools.hash.md5_string(C)
 
+    def getContentKey(self):
+        C="%s_%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.ssd,self.model,self.size,self.mountpoint,self.mounted,self.partnr)
+        return j.tools.hash.md5_string(C)
+
     def getSetGuid(self):
         """
         use osis to define & set unique guid (sometimes also id)
         """
         self.gid = int(self.gid)
-        if self.path.startswith('/dev/') and self.path.count('/') == 2:
-            self.guid = "%s_%s_%s" % (self.gid, self.nid, self.path[5:])
-        else:
-            self.guid = "%s_%s_%s" % (self.gid, self.nid, j.tools.hash.md5_string(self.path))
-        self.id = self.guid
+        self.guid = "%s_%s_%s" % (self.gid, self.nid, self.id)
+        # if self.path.startswith('/dev/') and self.path.count('/') == 2:
+        #     self.guid = "%s_%s_%s" % (self.gid, self.nid, self.path[5:])
+        # else:
+        #     self.guid = "%s_%s_%s" % (self.gid, self.nid, j.tools.hash.md5_string(self.path))
         self.lastcheck=j.base.time.getTimeEpoch()
         return self.guid
 

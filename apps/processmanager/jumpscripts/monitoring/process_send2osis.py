@@ -8,10 +8,11 @@ organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-category = "monitoring.send2osis"
-period = 60 #always in sec
+category = "process.send2osis"
+period = 300 #always in sec
 enable=True
 
 def action():
-    for process in j.processmanager.cache.processobject.monitorobjects.copy().itervalues():
-        process.cache.osis.set(process.db)
+    for process in j.processmanager.cache.processobject.monitorobjects.itervalues():
+        process.send2osis()
+        

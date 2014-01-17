@@ -7,19 +7,13 @@ class ProcessObjectFactory(MonObjectBaseFactory):
     def __init__(self,host,classs):
         MonObjectBaseFactory.__init__(self,host,classs)
         self.osis=j.core.osis.getClientForCategory(self.host.daemon.osis,"system","process")
-        self.osisobjects={} #@todo P1 load them from ES at start (otherwise delete will not work), make sure they are proper osis objects
+        #@todo P1 load them from ES at start (otherwise delete will not work), make sure they are proper osis objects
         j.processmanager.childrenPidsFound={}
 
-    def getProcessStatProps(self,totals=False):
+    def getProcessStatProps(self):
         r=["nr_file_descriptors","nr_ctx_switches_voluntary","nr_ctx_switches_involuntary","nr_threads",\
                 "cpu_time_user","cpu_time_system","cpu_percent","mem_vms","mem_rss",\
                 "io_read_count","io_write_count","io_read_bytes","io_write_bytes","nr_connections_out","nr_connections_in"]
-        if totals:
-            r2=[]
-            for item in r:
-                r2.append(item)
-                r2.append("%s_total"%item)
-            return r2
         return r
 
 
@@ -29,13 +23,10 @@ class ProcessObject(MonObjectBase):
         self._expire=10 #means after 5 sec the cache will create new one
         MonObjectBase.__init__(self,cache)
         self.p=None #is process object
-        self.children=[]
+        self.children=[]        
 
         self.netConnectionsIn=[]
         self.netConnectionsOut=[]
-
-        self.db.gid=j.application.whoAmI.gid
-        self.db.nid=j.application.whoAmI.nid
 
     def getStatInfo(self,totals=False):
         """
@@ -56,12 +47,14 @@ class ProcessObject(MonObjectBase):
         calculate total for children
         """
         for item in j.processmanager.cache.processobject.getProcessStatProps():
-            newname="%s_total"%item
-            self.db.__dict__[newname]=self.db.__dict__[item]
             for child in self.children:
-                self.db.__dict__[newname]+=float(child.db.__dict__[item])            
+                self.db.__dict__[item]+=float(child.db.__dict__[item])            
 
     def __repr__(self):
+        sp=",".join([str(item) for item in self.db.systempids])            
+        return "%-25s:%-25s:%s" %(self.db.pname,self.db.sname,sp)
+
+    def repr(self):
         out=""
         for key,val in self.__dict__.iteritems():
             if key not in ["p","children","db"]:

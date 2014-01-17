@@ -47,7 +47,16 @@ def action():
 
     result2={}
     for key in results.keys():
-        result2[key]=j.system.stataggregator.set("n%s.%s"%(j.application.whoAmI.nid,key),results[key],remember=True)
+        if key.find("percent")<>-1 or key.find("time")<>-1:
+            percent=True
+        else:
+            percent=False
+        if key.find("network.")<>-1 or key.find("time")<>-1:
+            ttype="D"
+        else:
+            ttype="N"
+
+        result2[key]=j.system.stataggregator.set("n%s.system.%s"%(j.application.whoAmI.nid,key),results[key],remember=True,memonly=False,percent=percent,ttype=ttype)
 
     return results
 

@@ -22,7 +22,10 @@ class Process(OsisBaseObject):
             self.sname= "" #name as specifief in startup manager
             self.ports = []
             self.instance = instance
-            self.systempid = systempid  # system process id (PID) at this point
+            if systempid<>0:
+                self.systempids = [systempid]  # system process id (PID) at this point
+            else:
+                self.systempids=[]
             self.guid = None
             # self.sguid = None
             self.epochstart = j.base.time.getTimeEpoch()
@@ -33,23 +36,24 @@ class Process(OsisBaseObject):
             self.workingdir=''
             self.parent=""
             self.user=""
+            self.type=""
+
 
             r=["nr_file_descriptors","nr_ctx_switches_voluntary","nr_ctx_switches_involuntary","nr_threads",\
                 "cpu_time_user","cpu_time_system","cpu_percent","mem_vms","mem_rss",\
                 "io_read_count","io_write_count","io_read_bytes","io_write_bytes","nr_connections_in","nr_connections_out"]
             for item in r:
                 self.__dict__[item]=0.0
-                self.__dict__["%s_total"%item]=0.0
             self.getSetGuid()
 
     def getUniqueKey(self):
         """
         return unique key for object, is used to define unique id
         """
-
-        C="%s_%s_%s_%s_%s_%s_%s"%(self.systempid,self.gid,self.nid,\
-            self.jpdomain,self.jpname,self.instance,self.pname)
-        return j.tools.hash.md5_string(C)
+        # C="%s_%s_%s_%s_%s_%s_%s"%(",".join(self.systempids),self.gid,self.nid,\
+        #     self.jpdomain,self.jpname,self.instance,self.pname)
+        # return j.tools.hash.md5_string(C)
+        return self.getSetGuid()
 
     def getSetGuid(self):
         """
@@ -57,8 +61,22 @@ class Process(OsisBaseObject):
         """
         self.gid = int(self.gid)
         self.nid = int(self.nid)
-        self.guid = "%s_%s_%s" % (self.gid,self.nid,self.systempid)
-        self.id = self.guid
+        if self.sname<>"":
+            key="%s_%s"%(self.jpdomain,self.sname)
+        else:
+            key=self.pname
+        self.guid = "%s_%s_%s" % (self.gid,self.nid,key)
         self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 
+    def getContentKey(self):
+        """
+        is like returning the hash, is used to see if object changed
+        """
+        out=""
+        for item in ["gid","nid","jpdomain","jpname","pname","sname","ports","systempids","epochstart","epochstop","active","cmd","workingdir","user"]:
+            out+=str(self.__dict__[item])
+        return j.tools.hash.md5_string(out)
+
+
+        
