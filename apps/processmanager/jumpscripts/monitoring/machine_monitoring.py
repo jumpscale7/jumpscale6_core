@@ -32,6 +32,7 @@ def action():
     domains = con.listAllDomains()
     for domain in domains:
         machine = j.processmanager.cache.machineobject.get(id=domain.ID())
+        machine.ckeyOld = machine.db.getContentKey()
         machine.db.name = domain.name()
         machine.db.nid = j.application.whoAmI.nid
         machine.db.gid = j.application.whoAmI.gid
@@ -48,3 +49,7 @@ def action():
         machine.db.lastcheck = machine.lastcheck
         machine.db.state = stateMap.get(domain.state()[0], 'STOPPED')
         machine.db.cpucore = int(xml.find('vcpu').text)
+
+        if machine.ckeyOld != machine.db.getContentKey():
+            #obj changed
+            machine.send2osis()
