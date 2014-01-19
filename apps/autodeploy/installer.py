@@ -88,35 +88,30 @@ def install_jscore():
             print cuapi.dir_ensure("/opt/jumpscale/cfg/%s"%cfgdirpath, True)
             done.append(cfgdirpath)            
         cuapi.file_upload("/opt/jumpscale/cfg/%s/%s"%(cfgdirpath,j.system.fs.getBaseName(item)),item)#,True,True)
-            
+
+    cmd="jsconfig hrdset -n system.superadmin.passwd -v %s"%passwd
+    print cuapi.run(cmd)            
 
     print cuapi.run("jpackage mdupdate")
     try:
-        print cuapi.run("jscode_update")
+        print cuapi.run("jscode update -f -a* -r*")
     except:
         pass    
     print cuapi.run("jpackage install -n core -r --debug")
 
 def install_grid():
-    print cuapi.dir_ensure("/opt/jumpscale/cfg/hrd/", True)
+
+    cmd="jsconfig hrdset -n grid.id -v %s"%options.gridnr
+    print cuapi.run(cmd)
+
+    cmd="jsconfig hrdset -n gridmaster.superadminpasswd -v %s"%j.tools.hash.md5_string(passwd)
+    print cuapi.run(cmd)
     
-    hrd=j.core.hrd.getHRD("cfg/hrd")
+    cmd="jsconfig hrdset -n gridmaster.grid.id -v %s"%options.gridnr
+    print cuapi.run(cmd)
 
-    
-    hrd.set("grid.id",options.gridnr)
-    hrd.set("system.superadmin.passwd",passwd)
-    hrd.set("gridmaster.superadminpasswd",passwd)
-
-    
-
-    hrd.set("gridmaster.grid.id",options.gridnr)
-    hrd.set("elasticsearch.cluster.name","cl_%s"%options.gridnr)
-
-    names= [j.system.fs.getBaseName(item)[:-4] for item in j.system.fs.listFilesInDir("cfg/hrd") if item.find(".hrd")<>-1]
-    
-    for hrdname in names:
-        print cuapi.file_upload("/opt/jumpscale/cfg/hrd/", "cfg/hrd/%s.hrd"%hrdname)
-
+    cmd="jsconfig hrdset -n elasticsearch.cluster.name -v cl_%s"%options.gridnr
+    print cuapi.run(cmd)
 
     print cuapi.run("jpackage install -n elasticsearch -r")
     print cuapi.run("jpackage install -n osis -r --debug")

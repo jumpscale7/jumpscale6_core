@@ -12,7 +12,7 @@ parser.add_argument("action", choices=['commit','push','update','status'], help=
 parser.add_argument('-m','--message',help='commit message')
 parser.add_argument('-b','--branch',help='branch')
 
-parser.add_argument('-a','--accounts',help='comma separated list of accounts')
+parser.add_argument('-a','--accounts',help='comma separated list of accounts, * is all')
 parser.add_argument('-r','--repos',help='comma separated list of repos, will look for the accounts')
 
 parser.add_argument('-u','--update',required=False, action='store_true',help='update merge before doing push or commit')
@@ -30,15 +30,17 @@ if opts.accounts==None and opts.repos==None:
         opts.repos=j.system.fs.getBaseName(j.system.fs.getcwd())
         opts.accounts=j.system.fs.getBaseName(j.system.fs.getParent(j.system.fs.getcwd()))
 
+
 if opts.branch<>None and opts.action in ['status']: 
     raise RuntimeError("Cannot specify branch when asking status")
 
 def getRepos():
     result=[]
-    if opts.accounts<>None:
-        accounts=[item.strip() for item in opts.accounts.split(",")]
-    elif opts.repos<>None:
+
+    if opts.accounts=="*":
         accounts=j.system.fs.listDirsInDir("/opt/code", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+    elif opts.accounts<>None:
+        accounts=[item.strip() for item in opts.accounts.split(",")]
     else:
         accounts=j.system.fs.listDirsInDir("/opt/code", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
         accounts=j.console.askChoiceMultiple(accounts,"select bitbucketaccounts")
@@ -50,6 +52,8 @@ def getRepos():
                 reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
                 if  not opts.action in ['status']:
                     reponames=j.console.askChoiceMultiple(reponames,"select repos")
+            elif opts.repos=="*":
+                reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
             else:
                 reponames=[item.strip() for item in opts.repos.split(",")]
 
