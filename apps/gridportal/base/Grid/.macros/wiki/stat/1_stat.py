@@ -5,7 +5,7 @@ def main(j, args, params, tags, tasklet):
     doc = params.doc
 
     stattype = args.getTag('stattype')
-    pid = args.getTag('pid')
+    id = args.getTag('id')
     nid = args.getTag('nid')
     key = args.getTag('key')
     width = args.getTag('width', 800)
@@ -16,7 +16,7 @@ def main(j, args, params, tags, tasklet):
         did = did.split('_')[-1]
 
 
-    _data = {'nid': nid, 'pid':pid, 'height':height, 'width':width, 'iid': iid, 'did': did}
+    _data = {'nid': nid, 'height':height, 'width':width, 'iid': iid, 'did': did}
 
     if stattype == 'node':
         cpustats = args.tags.labelExists("cpustats")
@@ -48,21 +48,36 @@ def main(j, args, params, tags, tasklet):
         threadingstats = args.tags.labelExists("threadingstats")
         
         out = ''
+        actor=j.apps.system.gridmanager
+        obj = actor.getProcesses(id=id)
+        if not obj:
+            out = 'No process with id %s found' % id
+            params.result = (out, doc)
+            return params
+
+        obj = obj[0]
+        prockey = "n%s.process.%%s.%%s" % obj['nid']
+        if obj['type'] == 'jsprocess':
+            prockey = prockey % ('js', "%s_%s" % (obj['jpdomain'], obj['sname']))
+        else:
+            prockey = prockey % ('os', "%s" % (obj['sname']))
+
+        _data['prockey'] = prockey
 
         if cpustats:
             out += '\nh5. CPU Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.cpu_percent_total.avg,n%(nid)s.process.%(pid)s.cpu_time_system_total.avg&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=%(prockey)s.cpu_percent&width=%(width)s&height=%(height)s!<br><br>' % _data
         if iostats:
             out += '\nh5. IO Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.io_read_count.avg,n%(nid)s.process.%(pid)s.io_write_bytes_total.avg,n%(nid)s.process.%(pid)s.nr_file_descriptors_total.avg&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=%(prockey)s.io_read_count,%(prockey)s.io_write_mbytes,%(prockey)s.nr_file_descriptors&width=%(width)s&height=%(height)s!<br><br>' % _data
         if memstats:
             out += '\nh5. Memory Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.mem_rss_total.max,n%(nid)s.process.%(pid)s.mem_vms_total.last&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=%(prockey)s.mem_rss,%(prockey)s.mem_vms&width=%(width)s&height=%(height)s!<br><br>' % _data
         if threadingstats:
             out += '\nh5. Threading Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.process.%(pid)s.nr_threads_total.max,n%(nid)s.process.%(pid)s.nr_threads_total.last&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=%(prockey)s.nr_threads,%(prockey)s.nr_threads&width=%(width)s&height=%(height)s!<br><br>' % _data
 
-    elif stattype == 'nic':        
+    elif stattype == 'nic':
         out = ''
         out += '\nh3. Network Interface Statistics\n'
         out += '|| || ||\n'

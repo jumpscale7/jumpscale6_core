@@ -4,7 +4,6 @@ def main(j, args, params, tags, tasklet):
 
     params.merge(args)
     doc = params.doc
-    tags = params.tags
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
@@ -15,22 +14,26 @@ def main(j, args, params, tags, tasklet):
     #this makes sure bootstrap datatables functionality is used
     out.append("{{datatables_use}}\n")
 
-    fields = ["systempid", "nid", "name", "jpname", "jpdomain", "epochstart", "active"]
+    fields = ["systempids", "nid", "name", "jpname", "jpdomain", "epochstart", "active"]
 
-    out.append('||pid||node||name||process name||process domain||start||active||')
+    out.append('||pids||node||name||process name||process domain||start||active||')
 
     for process in actor.getProcesses(nid=nid):
         line = [""]
 
         for field in fields:
             # add links
-            if field == 'systempid':
-                line.append('[%s|/grid/process?pid=%s&nid=%s&gid=%s]' % (process[field], process[field], process['nid'], process['gid']))
+            if field == 'systempids':
+                pids = ', '.join([ str(x) for x in process[field]])
+                line.append('[%s|/grid/process?id=%s]' % (pids, process['id']))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(process[field]), str(process[field])))
             elif field in ('epochstart'):
                 time = datetime.datetime.fromtimestamp(process[field]).strftime('%m-%d %H:%M:%S')
                 line.append(str(time))
+            elif field == 'name':
+                name = process['sname'] or process['pname']
+                line.append(name)
             else:
                 line.append(str(process[field]))
 
