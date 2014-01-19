@@ -29,17 +29,17 @@ def main(j, args, params, tags, tasklet):
             out += '\nh3. CPU Statistics\n'
             out += '|| || ||\n'
             
-            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.cpu.percent.avg&title=Average CPU Percent&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.cpu.time.system.avg,n%(nid)s.cpu.time.user.avg,n%(nid)s.cpu.time.iowait.avg,n%(nid)s.cpu.time.idle.avg&title=CPU Time&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.system.cpu.percent&title=CPU Percent&_png=1&width=%(width)s&height=%(height)s&.png!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.system.cpu.time.system,n%(nid)s.system.cpu.time.user,n%(nid)s.system.cpu.time.iowait,n%(nid)s.system.cpu.time.idle&title=CPU Time&_png=1&width=%(width)s&height=%(height)s&.png!|\n' % _data
         if memstats:
             out += '\nh3. Memory Statistics\n'
-            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.memory.free.avg,n%(nid)s.memory.percent.avg,n%(nid)s.memory.used.avg&width=%(width)s&height=%(height)s!<br><br>' % _data
+            out += '!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.system.memory.free,n%(nid)s.system.memory.percent,n%(nid)s.system.memory.used&width=%(width)s&height=%(height)s!<br><br>' % _data
         if netstats:
             out += '\nh3. Network Statistics\n'
             out += '|| || ||\n'
             
-            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.kbytes.recv.avg,n%(nid)s.network.kbytes.send.avg&title=KBytes&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.packets.recv.avg,n%(nid)s.network.packets.send.avg&title=Packets&width=%(width)s&height=%(height)s!|\n' % _data
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.system.network.kbytes.recv,n%(nid)s.system.network.kbytes.send&title=KBytes&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.system.network.packets.recv,n%(nid)s.system.network.packets.send&title=Packets&width=%(width)s&height=%(height)s!|\n' % _data
 
-            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.drop.in.avg,n%(nid)s.network.drop.out.avg&title=Drop&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.network.error.in.avg,n%(nid)s.network.error.out.avg&title=Error&width=%(width)s&height=%(height)s!|\n' % _data
+            out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.system.network.drop.in,n%(nid)s.system.network.drop.out&title=Drop&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.system.network.error.in,n%(nid)s.system.network.error.out&title=Error&width=%(width)s&height=%(height)s!|\n' % _data
     
     elif stattype == 'process':
         cpustats = args.tags.labelExists("cpustats")
