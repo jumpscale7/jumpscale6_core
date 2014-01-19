@@ -101,8 +101,8 @@ class Bitbucket:
             else:
                 passwd = ""
             self.config.configure(accountName,{'passwd': passwd})
-
-        loginInfo = '%s:%s@' % (login, passwd)
+        if login:
+            loginInfo = '%s:%s@' % (login, passwd)
 
         if repoInfo == 404: #not found
             j.errorconditionhandler.raiseOperationalCritical("Repo %s/%s is invalid" % (accountName, repoName))

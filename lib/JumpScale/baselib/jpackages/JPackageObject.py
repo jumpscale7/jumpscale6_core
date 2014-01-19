@@ -1271,7 +1271,7 @@ class JPackageObject():
 
         newbuildNr = False
 
-        newblobinfo = self._caculateBlobInfo()
+        newblobinfo = self._calculateBlobInfo()
 
 
         actionsdir=j.system.fs.joinPaths(self.getPathMetadata(), "actions")
@@ -1313,7 +1313,7 @@ class JPackageObject():
             self.save()
             self.load()
 
-    def _caculateBlobInfo(self):
+    def _calculateBlobInfo(self):
         result = False
         # clean old .info files (might be invalid anymore)
         filesdir = j.system.fs.joinPaths(self.getPathMetadata(),"files")
@@ -1491,7 +1491,7 @@ class JPackageObject():
         """
 
         self.loadActions(force=True)
-        self._caculateBlobInfo()
+        self._calculateBlobInfo()
 
         for platform,ttype in self.getBlobPlatformTypes():
 
