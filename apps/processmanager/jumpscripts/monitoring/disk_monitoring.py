@@ -43,6 +43,7 @@ def action():
         cacheobj=j.processmanager.cache.diskobject.get(id=disk_key)
 
         cacheobj.ckeyOld=cacheobj.db.getContentKey()
+        disk.nid = j.application.whoAmI.nid
 
         if counters.has_key(path):
             counter=counters[path]

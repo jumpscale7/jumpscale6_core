@@ -7,16 +7,14 @@ def main(j, args, params, tags, tasklet):
     stattype = args.getTag('stattype')
     id = args.getTag('id')
     nid = args.getTag('nid')
+    actor=j.apps.system.gridmanager
     key = args.getTag('key')
     width = args.getTag('width', 800)
     height = args.getTag('height', 400)
     nic = args.getTag('nic')
-    did = args.getTag('did')
-    if did:
-        did = did.split('_')[-1]
 
 
-    _data = {'nid': nid, 'height':height, 'width':width, 'nic': nic, 'did': did}
+    _data = {'nid': nid, 'height':height, 'width':width, 'nic': nic}
 
     if stattype == 'node':
         cpustats = args.tags.labelExists("cpustats")
@@ -48,7 +46,6 @@ def main(j, args, params, tags, tasklet):
         threadingstats = args.tags.labelExists("threadingstats")
         
         out = ''
-        actor=j.apps.system.gridmanager
         obj = actor.getProcesses(id=id)
         if not obj:
             out = 'No process with id %s found' % id
@@ -85,11 +82,19 @@ def main(j, args, params, tags, tasklet):
 
         out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.nic.%(nic)s.dropin,n%(nid)s.nic.%(nic)s.dropout&title=Drop&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.nic.%(nic)s.errin,n%(nid)s.nic.%(nic)s.errout&title=Error&width=%(width)s&height=%(height)s!|\n' % _data
     elif stattype == 'disk':
+        obj = actor.getDisks(id=id)
+        if not obj:
+            out = 'No disk with id %s found' % id
+            params.result = (out, doc)
+            return params
+        obj = obj[0]
+        name = obj['path'].replace('/dev/', '')
+        diskkey = 'n%s.disk.%s' % (obj['nid'], name)
+        _data['diskkey'] = diskkey
         out = ''
         out += '\nh3. Disk Statistics\n'
         out += '|| || ||\n'
-        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.disk.%(did)s.space.free.last,n%(nid)s.d%(did)s.space.used.last&title=Used Space&width=%(width)s&height=%(height)s&graphType=pie!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.disk.%(did)s.mbytes.read.avg,n%(nid)s.d%(did)s.mbytes.write.avg&title=IO&width=%(width)s&height=%(height)s!|\n' % _data
-
+        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=%(diskkey)s.space_free_mb,%(diskkey)s.space_used_mb&title=Used Space&width=%(width)s&height=%(height)s&graphType=pie!|!/restmachine/system/gridmanager/getStatImage?statKey=%(diskkey)s.kbytes_read,%(diskkey)s.kbytes_write&title=IO&width=%(width)s&height=%(height)s!|\n' % _data
 
     else:
         out = '!/restmachine/system/gridmanager/getStatImage?statKey=%s&width=%s&height=%s!'%(key,width,height)
