@@ -31,6 +31,7 @@ class ProcessDef:
         self.jpackage_version=hrd.get("process.jpackage.version")
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
         if not j.system.fs.exists(self.logfile):
+            j.system.fs.createDir(StartupManager.LOGDIR)
             j.system.fs.createEmptyFile(self.logfile)
         self._nameLong=self.name
         while len(self._nameLong)<20:
