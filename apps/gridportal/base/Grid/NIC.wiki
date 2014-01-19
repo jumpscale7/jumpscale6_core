@@ -7,4 +7,4 @@
 }}
 {{nic: id:$$id}}
 
-{{stat: stattype:nic iid:$$id nid:$$nid}}
+{{stat: stattype:nic nic:$$nic nid:$$nid}}

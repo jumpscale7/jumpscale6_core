@@ -67,7 +67,7 @@ def action():
         for key,value in disk.__dict__.iteritems():
             cacheobj.db.__dict__[key]=value
 
-    if cacheobj.ckeyOld<>cacheobj.db.getContentKey():
-        #obj changed
-        cacheobj.send2osis()
+        if cacheobj.ckeyOld<>cacheobj.db.getContentKey():
+            #obj changed
+            cacheobj.send2osis()
 

@@ -10,13 +10,13 @@ def main(j, args, params, tags, tasklet):
     key = args.getTag('key')
     width = args.getTag('width', 800)
     height = args.getTag('height', 400)
-    iid = args.getTag('iid')
+    nic = args.getTag('nic')
     did = args.getTag('did')
     if did:
         did = did.split('_')[-1]
 
 
-    _data = {'nid': nid, 'height':height, 'width':width, 'iid': iid, 'did': did}
+    _data = {'nid': nid, 'height':height, 'width':width, 'nic': nic, 'did': did}
 
     if stattype == 'node':
         cpustats = args.tags.labelExists("cpustats")
@@ -81,10 +81,9 @@ def main(j, args, params, tags, tasklet):
         out = ''
         out += '\nh3. Network Interface Statistics\n'
         out += '|| || ||\n'
-        
-        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.kbytes.recv.avg,n%(nid)s.i%(iid)s.network.kbytes.send.avg&title=KBytes&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.packets.recv.avg,n%(nid)s.i%(iid)s.network.packets.send.avg&title=Packets&width=%(width)s&height=%(height)s!|\n' % _data
+        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.nic.%(nic)s.kbytes_recv,n%(nid)s.nic.%(nic)s.kbytes_sent&title=KBytes&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.nic.%(nic)s.packets_recv,n%(nid)s.nic.%(nic)s.packets_sent&title=Packets&width=%(width)s&height=%(height)s!|\n' % _data
 
-        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.drop.in.avg,n%(nid)s.i%(iid)s.network.drop.out.avg&title=Drop&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.i%(iid)s.network.error.in.avg,i%(iid)s.network.error.out.avg&title=Error&width=%(width)s&height=%(height)s!|\n' % _data
+        out += '|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.nic.%(nic)s.dropin,n%(nid)s.nic.%(nic)s.dropout&title=Drop&width=%(width)s&height=%(height)s!|!/restmachine/system/gridmanager/getStatImage?statKey=n%(nid)s.nic.%(nic)s.errin,n%(nid)s.nic.%(nic)s.errout&title=Error&width=%(width)s&height=%(height)s!|\n' % _data
     elif stattype == 'disk':
         out = ''
         out += '\nh3. Disk Statistics\n'
