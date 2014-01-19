@@ -79,11 +79,17 @@ def install_jscore():
     except:
         pass
     print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/unstable.zip")
-    print cuapi.dir_ensure("/opt/jumpscale/cfg/jsconfig/", True)    
-    print cuapi.dir_ensure("/opt/jumpscale/cfg/jpackages/", True)
-    print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/blobstor.cfg","cfg/jsconfig/blobstor.cfg")
-    print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/bitbucket.cfg", "/opt/jumpscale/cfg/jsconfig/bitbucket.cfg")
-    print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","cfg/jpackages/sources.cfg")
+
+    items=j.system.fs.listFilesInDir("cfgs/%s"%options.cfgname,True)
+    done=[]
+    for item in items:
+        cfgdirpath=j.system.fs.getDirName(j.system.fs.pathRemoveDirPart(item,"cfgs/%s"%options.cfgname)).rstrip("/")
+        if cfgdirpath not in done:
+            print cuapi.dir_ensure("/opt/jumpscale/cfg/%s"%cfgdirpath, True)
+            done.append(cfgdirpath)            
+        cuapi.file_upload("/opt/jumpscale/cfg/%s/%s"%(cfgdirpath,j.system.fs.getBaseName(item)),item)#,True,True)
+            
+
     print cuapi.run("jpackage mdupdate")
     try:
         print cuapi.run("jscode_update")
@@ -112,18 +118,18 @@ def install_grid():
         print cuapi.file_upload("/opt/jumpscale/cfg/hrd/", "cfg/hrd/%s.hrd"%hrdname)
 
 
-    print cuapi.run("jpackage_install -n elasticsearch -r")
-    print cuapi.run("jpackage_install -n osis -r --debug")
+    print cuapi.run("jpackage install -n elasticsearch -r")
+    print cuapi.run("jpackage install -n osis -r --debug")
     print cuapi.run("jsprocess start")
-    print cuapi.run("jpackage_install -n grid -r --debug")
-    print cuapi.run("jpackage_install -n grid_master -r --debug")
-    print cuapi.run("jpackage_install -n grid_node -r --debug")
-    print cuapi.run("jpackage_install -n logger -r --debug")
+    print cuapi.run("jpackage install -n grid -r --debug")
+    print cuapi.run("jpackage install -n grid_master -r --debug")
+    print cuapi.run("jpackage install -n grid_node -r --debug")
+    print cuapi.run("jpackage install -n logger -r --debug")
     print cuapi.run("jsprocess start")
-    print cuapi.run("jpackage_install -n grid_portal -r --debug")
-    print cuapi.run("jpackage_install -n portal -r --debug")
-    print cuapi.run("jpackage_install -n agentcontroller -r --debug")
-    print cuapi.run("jpackage_install -n agent -r --debug")
+    print cuapi.run("jpackage install -n grid_portal -r --debug")
+    print cuapi.run("jpackage install -n portal -r --debug")
+    print cuapi.run("jpackage install -n agentcontroller -r --debug")
+    print cuapi.run("jpackage install -n agent -r --debug")
     print cuapi.run("jsprocess start")
 
 
@@ -132,7 +138,7 @@ def install_desktop():
     names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway"]#,"sublimetext"]
     names=["xfce4desktop","xrdp"]
     for name in names:
-        print cuapi.run("jpackage_install -n %s -r"%name)
+        print cuapi.run("jpackage install -n %s -r"%name)
     cmd='update-rc.d xrdp defaults'
     print cuapi.run(cmd)
 

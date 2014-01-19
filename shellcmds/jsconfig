@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jstest")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['hrdset','hrdget'], help='Command to perform')
+
+group = parser.add_argument_group(title="hrd set&get")
+group.add_argument('-n','--name', required=False, help='name of var in hrd to set')
+group.add_argument('-v','--value',required=False, help='value')
+
+
+# parser.add_argument('-m','--message',required=False, action='store_true',help='commit message')
+
+opts = parser.parse_args()
+
+
+if opts.action == "hrdset":
+    hrd=j.core.hrd.getHRD("/opt/jumpscale/cfg/hrd")    
+    hrd.set(opts.name,opts.value)
+
+if opts.action == "hrdget":
+    hrd=j.core.hrd.getHRD("/opt/jumpscale/cfg/hrd")    
+    print hrd.get(opts.name)
+
+j.application.stop()
