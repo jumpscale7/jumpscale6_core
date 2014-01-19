@@ -173,7 +173,10 @@ class OSISCMDS(object):
         if removecode:
             j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
         key="%s_%s"%(namespacename,name)
-        self.elasticsearch.delete_index(key)
+        try:
+            self.elasticsearch.delete_index(key)
+        except:
+            pass
         self.db.destroy(key)
         self.db.destroy(key+"_incr")
 

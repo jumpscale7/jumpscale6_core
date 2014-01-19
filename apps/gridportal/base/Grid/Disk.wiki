@@ -3,7 +3,7 @@
 h2. Disks details
 {{disk: id:$$id}}
 
-{{stat: stattype:disk did:$$id nid:$$nid}}
+{{stat: stattype:disk id:$$id nid:$$nid}}
 
 <br>
 h3. Virtual Disks
