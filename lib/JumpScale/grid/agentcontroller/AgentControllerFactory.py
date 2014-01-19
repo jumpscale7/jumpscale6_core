@@ -16,7 +16,7 @@ class AgentControllerFactory(object):
             self.ipaddr=j.application.config.get("grid.master.ip")
         else:
             self.ipaddr=agentControllerIP
-        passwd=j.application.config.get("system.superadmin.passwd")
+        passwd=j.application.config.get("gridmaster.superadminpasswd")
         login=j.application.config.get("system.superadmin.login")
         self._client= j.servers.geventws.getClient(self.ipaddr, 4444, user=login, passwd=passwd,category="agent")
 
