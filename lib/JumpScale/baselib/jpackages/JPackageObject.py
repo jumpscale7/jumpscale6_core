@@ -1320,7 +1320,11 @@ class JPackageObject():
         for crfile in j.system.fs.listFilesInDir(filesdir, filter='*.info'):
             j.system.fs.remove(crfile)
 
-        for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
+        pathfiles = self.getPathFiles()
+        if not j.system.fs.exists(pathfiles):
+            return result
+
+        for platform in j.system.fs.listDirsInDir(pathfiles,dirNameOnly=True):
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
                 pathttype=j.system.fs.joinPaths(pathplatform,ttype)

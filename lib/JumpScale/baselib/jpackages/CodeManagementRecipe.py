@@ -311,35 +311,34 @@ class CodeManagementRecipe:
     #         item.importFromSystem(jpackages)                
 
     def package(self, jpackage,*args,**kwargs):
-        # clean up files
-        # filesPath = jpackages.getPathFiles()
-        # j.system.fs.removeDirTree(filesPath)
-        ##DO TNO REMOVE, TOO DANGEROUS HAPPENS NOW PER ITEM
-        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.codeToFiles(jpackage)
 
         
     def push(self):
         repoconnection = self._getRepoConnection()
-        for item in self.items:
-            item.push()       
+        if repoconnection:
+            repoconnection.push()
             
     def update(self,force=False):        
         repoconnection = self._getRepoConnection()
-        return self.pullupdate(force=force)
+        if repoconnection:
+            return repoconnection.pullupdate(force=force)
     
     def pullupdate(self,force=False):
         repoconnection = self._getRepoConnection()
-        repoconnection.pullupdate()
+        if repoconnection:
+            repoconnection.pullupdate()
 
     def pullmerge(self):
         repoconnection = self._getRepoConnection()
-        repoconnection.pullmerge()        
+        if repoconnection:
+            repoconnection.pullmerge()        
             
     def commit(self):
         repoconnection = self._getRepoConnection()
-        repoconnection.commit()                
+        if repoconnection:
+            repoconnection.commit()                
 
 
     def _getSource(self, source):
@@ -354,7 +353,7 @@ class CodeManagementRecipe:
         if repo=="":
             print "repo not filled in, so coderecipe probably not used for %s"%self
             return 
-            # raise RuntimeError("Cannot load repo when repo is not filled in in code.hrd of jpackage.")
+
         branch=self.hrd.get("jp.code.branch")
         ttype=self.hrd.get("jp.code.type")
         if ttype == "bitbucket":
