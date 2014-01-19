@@ -113,6 +113,9 @@ def install_grid():
     cmd="jsconfig hrdset -n elasticsearch.cluster.name -v cl_%s"%options.gridnr
     print cuapi.run(cmd)
 
+    cmd="jsconfig hrdset -n agent.nrinstances -v %s"%2
+    print cuapi.run(cmd)
+
     print cuapi.run("jpackage install -n elasticsearch -r")
     print cuapi.run("jpackage install -n osis -r --debug")
     print cuapi.run("jsprocess start")
@@ -126,6 +129,8 @@ def install_grid():
     print cuapi.run("jpackage install -n agentcontroller -r --debug")
     print cuapi.run("jpackage install -n agent -r --debug")
     print cuapi.run("jsprocess start")
+
+    print cuapi.run("jpackage install -n shorewall")
 
 
 def install_desktop():

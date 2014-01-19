@@ -1,7 +1,7 @@
 grid.useavahi=1
 grid.master.ip=127.0.0.1
 grid.master.port=5651
-grid.id=2
-grid.node.roles=node,computenode.kvm
+grid.id=1
+grid.node.roles=node,computenode.kvm,master
 grid.node.machineguid=08002711ce23
 grid.node.id=1
