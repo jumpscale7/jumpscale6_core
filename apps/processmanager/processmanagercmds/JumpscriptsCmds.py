@@ -51,7 +51,7 @@ class JumpscriptsCmds():
             self._adminAuth(session.user,session.passwd)
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
             try:
-                script = imp.load_source('jumpscript.%s' % j.tools.hash.md5_string(path2), path2)
+                script = imp.load_source('JumpScale.jumpscript_%s' % j.tools.hash.md5_string(path2), path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
