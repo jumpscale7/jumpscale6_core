@@ -11,6 +11,7 @@ class PortalAuthenticatorOSIS():
 
         osis=j.core.osis.getClient(addr,5544,"root",passwd)
         self.osis=j.core.osis.getClientForCategory(osis,"system","user")
+        self.osisgroups=j.core.osis.getClientForCategory(osis,"system","group")
         self.users={}
         self.usersLastCheck={}
         self.key2user={}
@@ -23,14 +24,17 @@ class PortalAuthenticatorOSIS():
             return "guest"
         return self.key2user[key]
 
-    def _getUkey(self, username):
+    def _getkey(self, username):
         return "%s_%s" % (j.application.whoAmI.gid, username)
 
     def getUserInfo(self, user):
-        return self.osis.get(self._getUkey(user))
+        return self.osis.get(self._getkey(user))
+
+    def getGroupInfo(self, groupname):
+        return self.osisgroups.get(self._getkey(groupname))
 
     def userExists(self, user):
-        return self.osis.exists(self._getUkey(user))
+        return self.osis.exists(self._getkey(user))
 
     def createUser(self, username, password, email, groups, domain):
         user = self.osis.new()
@@ -42,6 +46,12 @@ class PortalAuthenticatorOSIS():
         user.domain=domain
         user.passwd=j.tools.hash.md5_string(password)
         self.osis.set(user)
+
+    def listUsers(self):
+        return self.osis.simpleSearch({})
+
+    def listGroups(self):
+        return self.osisgroups.simpleSearch({})
 
     def getGroups(self,user):
         if not self.users.has_key(user):
