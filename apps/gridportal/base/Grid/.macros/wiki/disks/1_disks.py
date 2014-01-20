@@ -17,7 +17,13 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||path||node||mountpoint||ssd||usage||mounted||')
 
-    for disk in actor.getDisks(nid=nid):
+    disks = actor.getDisks(nid=nid)
+
+    if not disks:
+        params.result = ('No disks found', doc)
+        return params
+
+    for disk in disks:
         line = [""]
 
         for field in fields:

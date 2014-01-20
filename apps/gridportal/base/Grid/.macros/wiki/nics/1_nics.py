@@ -10,15 +10,15 @@ def main(j, args, params, tags, tasklet):
     #this makes sure bootstrap datatables functionality is used
     out="{{datatables_use}}\n\n"
 
-    fields = ['name', 'nid', 'ipaddr', 'mac', 'lastcheck']
+    fields = ['name', 'ipaddr', 'mac', 'lastcheck']
 
-    out+="||Name||Node ID||IP Address||MAC Address||Last Checked||\n"
+    out+="||Name||IP Address||MAC Address||Last Checked||\n"
 
     nid = args.tags.getDict().get("nid") if not args.tags.getDict().get("nid", "").startswith('$$') else None
 
     nics = actor.getNics(nid=nid)
     if not nics:
-        params.result = ('No Network Interfaces found', doc)
+        params.result = ('No NICs found', doc)
         return params
 
     for nic in nics:
@@ -28,8 +28,6 @@ def main(j, args, params, tags, tasklet):
                 data = datetime.datetime.fromtimestamp(nic[field]).strftime('%m-%d %H:%M:%S') or ''
             elif field == 'name':
                 data = '[%(name)s|/grid/nic?id=%(id)s&nic=%(name)s&nid=%(nid)s]' % _data
-            elif field == 'nid':
-                data = '[%(nid)s|/grid/node?id=%(nid)s]' % _data
             elif isinstance(nic[field], list):
                 data = ', '.join(nic[field])
             else:

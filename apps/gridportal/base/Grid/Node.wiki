@@ -2,14 +2,15 @@
 
 {{node: id:$$id}}
 
-[NodeStats|NodeStats?id=$$id]
+h3. NICs
+{{nics: nid:$$id}}
 
 <br>
-h3. Node Jobs
+h3. Jobs
 {{jobs: nid:$$id}}
 
 <br>
-h3. Node Processes
+h3. Processes
 {{processes nid:$$id}}
 
 <br>
@@ -19,6 +20,3 @@ h3. Logs
 <br>
 h3. Disks
 {{disks: nid:$$id}}
-
-h3. Interfaces
-{{nics: nid:$$id}}
