@@ -2,7 +2,7 @@ from JumpScale import j
 import JumpScale.grid.geventws
 import JumpScale.grid.osis
 import JumpScale.grid.agentcontroller
-import requests
+import grequests as requests
 
 def mbToKB(value):
     if not value:
@@ -181,7 +181,8 @@ class system_gridmanager(j.code.classGetBase()):
         querystr = urllib.urlencode(query)
         url="http://%s:8081/render?%s"%(ip, querystr)
         r = requests.get(url)
-        return r.content
+        result = r.send()
+        return result.content
 
     def getProcessesActive(self, nid, name, domain, **kwargs):
         """
