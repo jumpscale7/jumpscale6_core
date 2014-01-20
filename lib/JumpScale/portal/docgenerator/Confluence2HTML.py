@@ -143,6 +143,8 @@ class Confluence2HTML():
             (limiter('^'),  limiter_replacement('sup')),
             (limiter('~'),  limiter_replacement('sub')),
             (limiter('`'),  limiter_replacement('code')),
+            ('<',           '&lt;'),
+            ('>',           '&gt;'),
 
             # {color: red}text goes here{color}
             (re.compile(r'\{{color\:(.*?)\}}({0})\{{color\}}'.format(styled_text),
