@@ -25,11 +25,11 @@ def main(j, args, params, tags, tasklet):
         out += '\nh3. CPU Statistics\n'
         out += '|| || ||\n'
         
-        out += '|{{stat key:n%(nid)s.system.cpu.percent&title=CPU%%20Percent width:%(width)s height:%(height)s}}|{{stat key:n%(nid)s.system.cpu.time.system,n%(nid)s.system.cpu.time.user,n%(nid)s.system.cpu.time.iowait,n%(nid)s.system.cpu.time.idle&title=CPU%%20Time width:%(width)s height:%(height)s}}|\n' % _data
+        out += '|{{stat key:n%(nid)s.system.cpu.percent&title=CPU%%20Percent&areaMode=stacked&yMax=100 width:%(width)s height:%(height)s}}|{{stat key:n%(nid)s.system.cpu.time.system,n%(nid)s.system.cpu.time.user,n%(nid)s.system.cpu.time.iowait,n%(nid)s.system.cpu.time.idle&title=CPU%%20Time&graphType=pie width:%(width)s height:%(height)s}}|\n' % _data
 
     if memstats:
         out += '\nh3. Memory Statistics\n'
-        out += '{{stat key:n%(nid)s.system.memory.free,n%(nid)s.system.memory.percent,n%(nid)s.system.memory.used width:%(width)s height:%(height)s}}<br><br>' % _data
+        out += '{{stat key:n%(nid)s.system.memory.percent&areaMode=stacked&yMax=100 width:%(width)s height:%(height)s}}<br><br>' % _data
 
     if netstats:
         out += '\nh3. Network Statistics\n'

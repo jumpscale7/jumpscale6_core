@@ -5,9 +5,13 @@ def main(j, args, params, tags, tasklet):
     doc = params.doc
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
-    tags = args.tags.getDict()
 
-    id = tags["id"]
+    id = args.getTag("id")
+    if not id:
+        out = 'Missing disk id param "id"'
+        params.result = (out, doc)
+        return params
+
 
     obj = actor.getDisks(id=id)[0]
 

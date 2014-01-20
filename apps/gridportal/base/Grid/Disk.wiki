@@ -4,7 +4,3 @@ h2. Disks details
 {{disk: id:$$id}}
 
 {{diskstat: id:$$id nid:$$nid}}
-
-<br>
-h3. Virtual Disks
-{{vdisks: disk_id:$$id}}

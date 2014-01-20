@@ -18,7 +18,6 @@ def main(j, args, params, tags, tasklet):
     cpustats = args.tags.labelExists("cpustats")
     iostats = args.tags.labelExists("iostats")
     memstats = args.tags.labelExists("memstats")
-    threadingstats = args.tags.labelExists("threadingstats")
     
     out = ''
     obj = actor.getProcesses(id=id)
@@ -28,26 +27,24 @@ def main(j, args, params, tags, tasklet):
         return params
 
     obj = obj[0]
+
     prockey = "n%s.process.%%s.%%s" % obj['nid']
     if obj['type'] == 'jsprocess':
         prockey = prockey % ('js', "%s_%s" % (obj['jpdomain'], obj['sname']))
     else:
-        prockey = prockey % ('os', "%s" % (obj['sname']))
+        prockey = prockey % ('os', "%s" % (obj['pname']))
 
     _data['prockey'] = prockey
 
     if cpustats:
         out += '\nh5. CPU Statistics\n'
-        out += '{{stat key:%(prockey)s.cpu_percent width:%(width)s height:%(height)s}}<br><br>' % _data
+        out += '{{stat key:%(prockey)s.cpu_percent&areaMode=stacked&yMax=100 width:%(width)s height:%(height)s}}<br><br>' % _data
     if iostats:
         out += '\nh5. IO Statistics\n'
-        out += '{{stat key:%(prockey)s.io_read_count,%(prockey)s.io_write_mbytes,%(prockey)s.nr_file_descriptors width:%(width)s height:%(height)s}}<br><br>' % _data
+        out += '{{stat key:%(prockey)s.io_read_mbytes,%(prockey)s.io_write_mbytes width:%(width)s height:%(height)s}}<br><br>' % _data
     if memstats:
         out += '\nh5. Memory Statistics\n'
         out += '{{stat key:%(prockey)s.mem_rss,%(prockey)s.mem_vms width:%(width)s height:%(height)s}}<br><br>' % _data
-    if threadingstats:
-        out += '\nh5. Threading Statistics\n'
-        out += '{{stat key:%(prockey)s.nr_threads,%(prockey)s.nr_threads width:%(width)s height:%(height)s}}<br><br>' % _data
 
     params.result = (out, doc)
 

@@ -10,15 +10,20 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use}}}}\n")
+    out.append("{{datatables_use}}\n")
 
     #['category', 'jid', 'code', 'level', 'backtrace', 'appname', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'type', 'funcfilename', 'tags']
 
-    fields = ["nid", "appname", "category", "errormessagePub", "jid"]
+    fields = ["nid", "appname", "category", "errormessage", "jid"]
 
-    out.append('||nid||app name||category||error message||job ID||')
+    out.append('||NID||App Name||Category||Error Message||Job ID||')
+    ecos = actor.getErrorconditions()
+    if not ecos:
+        out = 'No ECOs available'
+        params.result = (out, doc)
+        return params
 
-    for eco in actor.getErrorconditions():
+    for eco in ecos:
         line = [""]
 
         for field in fields:
@@ -27,12 +32,13 @@ def main(j, args, params, tags, tasklet):
                 line.append('[%s|/grid/node?id=%s]' % (str(eco[field]), str(eco[field])))
             elif field == 'jid':
                 line.append('[%s|/grid/job?id=%s]' % (str(eco[field]), str(eco[field])))
+            elif field == 'errormessage':
+                errormessage = eco[field].replace('\n', '<br>').replace(']', '\]').replace('[', '\[')
+                line.append('[%s|/grid/eco?id=%s]' % (errormessage, eco['guid']))
             else:
                 line.append(str(eco[field]))
 
         line.append("")
-
-        #out.append("|[%s|/grid/node?id=%s]|%s|%s|%s|" % (node["id"], node["id"], node["name"], ipaddr, roles))
         out.append("|".join(line))
     params.result = ('\n'.join(out), doc)
 

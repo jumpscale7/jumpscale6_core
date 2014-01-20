@@ -101,7 +101,7 @@ class OSISClientForCat():
         return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
                                   start=start, size=size)
 
-    def simpleSearch(self, params, start=0, size=None):
+    def simpleSearch(self, params, start=0, size=None, withguid=False):
         query = {'query': {'bool': {'must': list()}}}
         myranges = {}
         for k, v in params.iteritems():
@@ -126,5 +126,7 @@ class OSISClientForCat():
         elif 'hits' in rawresults:
             rawresults = rawresults['hits']['hits']
         for item in rawresults:
+            if withguid:
+                item['_source']['guid'] = item['_id']
             results.append(item['_source'])
         return results

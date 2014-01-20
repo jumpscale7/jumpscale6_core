@@ -28,8 +28,8 @@ def main(j, args, params, tags, tasklet):
     _data['diskkey'] = diskkey
     out = ''
     out += '\nh3. Disk Statistics\n'
-    out += '|| || ||\n'
-    out += '|{{stat key:%(diskkey)s.space_free_mb,%(diskkey)s.space_used_mb&title=Used%%20Space&graphType=pie width:%(width)s height:%(height)s}}|{{stat key:%(diskkey)s.kbytes_read,%(diskkey)s.kbytes_write&title=IO width:%(width)s height:%(height)s}}|\n' % _data
+    out += '{{stat key:%(diskkey)s.space_free_mb,%(diskkey)s.space_used_mb&title=Used%%20Space&graphType=pie width:%(width)s height:%(height)s}}<br>'
+    out += '{{stat key:%(diskkey)s.kbytes_read,%(diskkey)s.kbytes_write&title=IO width:%(width)s height:%(height)s}}' % _data
 
     params.result = (out, doc)
 

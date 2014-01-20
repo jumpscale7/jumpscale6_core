@@ -18,7 +18,13 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||id||category||errorconditions||description||state||level||')
 
-    for alert in actor.getAlerts():
+    alerts = actor.getAlerts()
+    if not alerts:
+        out = 'No alerts available'
+        params.result = (out, doc)
+        return params
+
+    for alert in alerts:
         line = [""]
 
         for field in fields:

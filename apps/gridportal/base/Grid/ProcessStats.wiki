@@ -1,5 +1,5 @@
 @usedefaults
 
 h2. Process Stats
-{{processstat: id:$$id width:800 height:500 memstats cpustats iostats threadingstats}}
+{{processstat: id:$$id width:800 height:500 memstats cpustats iostats}}
 

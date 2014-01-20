@@ -8,7 +8,10 @@ def main(j, args, params, tags, tasklet):
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
     id = args.getTag('id')
-
+    if not id:
+        out = 'Missing process id param "id"'
+        params.result = (out, doc)
+        return params
 
     obj = actor.getProcesses(id=id)
     if not obj:

@@ -8,7 +8,12 @@ def main(j, args, params, tags, tasklet):
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
 
-    id = int(args.tags.getDict()["id"])
+    id = args.getTag("id")
+
+    if not id:
+        out = 'Missing machine id param "id"'
+        params.result = (out, doc)
+        return params
 
     obj = actor.getMachines(id=id)[0]
 

@@ -8,7 +8,11 @@ def main(j, args, params, tags, tasklet):
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
 
-    id = args.tags.getDict()["id"]
+    id = args.getTag("id")
+    if not id:
+        out = 'Missing log id param "id"'
+        params.result = (out, doc)
+        return params
 
     obj = actor.getLogs(id=id)[0]
 

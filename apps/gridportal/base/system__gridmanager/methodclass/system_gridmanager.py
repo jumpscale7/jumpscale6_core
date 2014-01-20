@@ -313,8 +313,9 @@ class system_gridmanager(j.code.classGetBase()):
                   'jidparent': jidparent,
                   'id': id,
                   'jsorganization': jsorganization,
-                  'jsname': jsname}
-        return self.osis_eco.simpleSearch(params)
+                  'jsname': jsname,
+                  'guid':guid}
+        return self.osis_eco.simpleSearch(params, withguid=True)
 
 
     def getProcesses(self, id=None, guid=None, name=None, nid=None, gid=None, from_=None, to=None, active=None, jpdomain=None, jpname=None, instance=None, systempid=None, lastcheckFrom=None, lastcheckTo=None, **kwargs):
