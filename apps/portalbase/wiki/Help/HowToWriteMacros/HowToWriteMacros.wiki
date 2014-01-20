@@ -1,0 +1,4 @@
+
+h2. tips how to write macros
+
+{{children}}

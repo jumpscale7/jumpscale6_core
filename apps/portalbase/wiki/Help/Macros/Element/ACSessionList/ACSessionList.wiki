@@ -1,0 +1,13 @@
+h2. SessionList Macro
+
+This macro is used to see agent session information
+
+h2. Example
+
+{{code:
+\{\{ac_sessionList\}\}
+}}
+
+Output
+
+{{ac_sessionList}}

@@ -1,0 +1,13 @@
+h2. JobList Macro
+
+This macro is used to see agent job information
+
+h2. Example
+
+{{code:
+\{\{ac_jobList\}\}
+}}
+
+Output
+
+{{ac_jobList}}

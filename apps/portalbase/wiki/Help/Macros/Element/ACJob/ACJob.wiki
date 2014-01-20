@@ -1,0 +1,13 @@
+h2. AgentController Job Macro
+
+This macro is used to see an agent job information
+
+h2. Example
+
+{{code:
+\{\{ac_job\}\}
+}}
+
+Output
+
+{{ac_job}}

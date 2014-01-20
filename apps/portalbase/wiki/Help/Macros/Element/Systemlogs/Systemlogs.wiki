@@ -1,0 +1,13 @@
+h2. Systemlogs Macro
+
+This macro is used to show system logs (fetched from elasticseach)
+
+h2. Example
+
+{{code:
+\{\{systemlogs\}\}
+}}
+
+Output
+
+{{systemlogs}}

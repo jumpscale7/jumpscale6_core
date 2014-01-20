@@ -1,0 +1,18 @@
+@usedefault
+
+h4. dbtype
+
+possible db types are: fs,mem,arakoon,redis  (redis for now not implemented)
+@dbtype:mem 
+
+the first type used will also be linked to actor.db & will be used to store the models linked to the actor
+
+h4. dbserializer
+possible list of serializers, is comma separated  if multiple
+@dbserializer:ujson,blosc  #will first serialize using ujson then blosc
+
+serializers can be found on q.db.serializers e.g.:
+{{code:
+q.db.serializers.blosc   q.db.serializers.msgpack q.db.serializers.snappy  q.db.serializers.ujson
+q.db.serializers.int     q.db.serializers.pickle  q.db.serializers.time
+}}

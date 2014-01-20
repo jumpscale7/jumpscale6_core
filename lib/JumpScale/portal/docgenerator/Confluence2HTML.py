@@ -126,7 +126,7 @@ class Confluence2HTML():
             limiter_re = ''.join('\\' + c for c in char)
 
             # This is the RE which is used to replace wiki text formatting with equivalent HTML tag
-            return re.compile(r'(\W){0}([^ {0}]{1}[^ {0}]){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
+            return re.compile(r'(\W){0}([^ #{0}]{1}[^ {0}]){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
 
         def limiter_replacement(sub):
             return r'\1<{0}>\2</{0}>\3'.format(sub)
@@ -145,7 +145,7 @@ class Confluence2HTML():
             (limiter('`'),  limiter_replacement('code')),
 
             # {color: red}text goes here{color}
-            (re.compile(r'\{{color\:(.*?)\}}{0}\{{color\}}'.format(styled_text),
+            (re.compile(r'\{{color\:(.*?)\}}({0})\{{color\}}'.format(styled_text),
                         flags=re.DOTALL | re.MULTILINE | re.IGNORECASE),
              r'<span style="color:\1">\2</span>'),
 
@@ -165,6 +165,11 @@ class Confluence2HTML():
                 blocks[i] = re.sub(tag_re, sub_re, blocks[i])
 
         content = ''.join(blocks)
+
+        # Escape characters by putting \ in front of it, e.g. \*
+        def escape_char(char):
+            return '&#{0};'.format(ord(char.group(1)))
+        content = re.sub(r'\\([^\n\r\\])', escape_char, content)
 
         if page == None:
             page = j.tools.docgenerator.pageNewHTML("temp")
@@ -228,12 +233,13 @@ class Confluence2HTML():
             self._lastLine = line
             line = line.strip()
 
-            # New lines
-            # This should be the last thing
+            # \\ on their own line will emit <br>
             if line == r'\\':
                 page.addNewLine()
                 line = ''
                 continue
+
+
 
             # print "#: %s %s" % (state,line)
 
@@ -471,6 +477,7 @@ class Confluence2HTML():
                 if line[0] != "@":
                     line = self.processDefs(line, doc, page)
                     page.addMessage(line, isElement=False)
+            
 
         if page.body != "":
             # work on the special includes with [[]]

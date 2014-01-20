@@ -1,0 +1,25 @@
+h2. Document Converter
+
+Uses Microsoft Office API to convert Powerpoint presentations, Word documents and Excel worksheets to other formats.
+
+h3. To use:
+* example url: http://127.0.0.1/rest/office/converter/convertinputpath=https://www.eff.org/files/EFF_Social_Network_Law_Enforcement_Guides.xls&outtype=pdf&format=text
+* parameters
+** +inputpath+: path on filesystem or url. Must end with proper file extension. (In this case, xls)
+** +outtype+: output type. Filetype extension desired. Defaults to pdf.
+** +username+: optional. For file access.
+** +password+: optional. For file access.
+** +outputdirectory+: optional. Default is under *_docconverter/base/office/.files/_*
+
+Currently supported:
+* *Powerpoint Presentation*
+** +Supported extensions+: _.ppt_, _.pptx_
+** +Supported outtypes+: _pdf, ppt_
+
+* *Word Documents*
+** +Supported extensions+: _.doc_, _.docx_
+** +Supported outtypes+: _html, rtf, xml, xps, pdf_
+
+* *Excel Worksheets*
+** +Supported extensions+: _.xls, _.xlsx_
+** +Supported outtypes+: _csv, html, xlsb, xlsx, xlsm, xls, txt, prn, pdf_

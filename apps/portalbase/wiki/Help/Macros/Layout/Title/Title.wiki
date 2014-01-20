@@ -1,0 +1,14 @@
+h1. Title
+
+Set the html title
+
+h2. Wiki
+
+{{code:
+{{title: MyTitle}}
+}}
+
+h2. Output
+
+{{title:MyTitle}}
+

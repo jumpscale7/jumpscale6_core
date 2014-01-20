@@ -1,0 +1,9 @@
+h1. Capitalize
+
+Use this macro to capitalize text.
+
+{{code:
+{{capitalize: this page is &#36;&#36;page}}
+}}
+
+{{capitalize: this page is $$page}}

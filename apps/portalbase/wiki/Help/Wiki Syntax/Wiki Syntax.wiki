@@ -1,0 +1,200 @@
+h1. Wiki Syntax
+
+To write documentation with JumpScale, you have to use a specific wiki format, which is a plain-text syntax using text annotation to change the markup.
+In this section you find the general text formatting in the JumpScale wiki format.
+
+h2. General Text Formatting
+
+Any text surrounded with one of the 
+
+|| Marker || Function || Example || Result ||
+| `*`       | Bold | &#42;strong text&#42;    | *strong text*  |
+| `_`       | Italic     | &#95;italic text&#95;    | _italic text_  |
+| `+`       | Underline    | &#43;inserted text&#43;  | +inserted text+  |
+| `-`       | Strike-through | &#45;strike text&#45;    | -strike text-  |
+| `??`      | Cite, quote   | &#63;&#63;cite text&#63;&#63;      | ??cite text??  |
+| `^`       | Superscript    | &#94;superscript&#94;    | ^superscript^  |
+| `~`       | Subscript    | &#126;subscript&#126;      | ~subscript~  |
+| `&#96;`   | No format   | &#96;code&#96;           |  `code` |
+
+
+h2. Other Text Formatting
+
+* Use text color:
+{{code:
+{color:green}Colored text{color}
+}}
+\\
+{color:green}Colored text{color}
+
+* Use block quotes: 
+{{code:
+bq. Text inside blockquote text
+}}
+\\
+bq. Text inside blockquote text
+
+Paragraphs are separated by new lines. Consecutive new lines are considered as one. To force a new line, write double-backslashes. `\\`
+
+
+h2. Escaping characters
+
+Characters can be escaped by preceding it with a back-slash `\`.
+{{code:
+c:\\\windows\\\system32
+\\* not going to be a list item
+}}
+
+c:\\windows\\system32
+\* not going to be a list item
+
+
+h2. Heading
+
+You define a heading as follows: `h1. `, followed by your heading text. The heading range is from 1 to 6 included.
+
+For example:
+
+{{code:
+h4. Sample heading 4
+}}
+
+becomes
+
+h4. Sample heading 4
+
+h2. Lists
+
+You can create two types of lists:
+
+* Ordered lists: you create an ordered list by using the the combination star and hash (`&#42;#`) as first characters on each line. Do not use empty lines between subsequent items because the numbering will restart.
+* Unordered lists: you create an unordered list by using the asterisk (`&#42;`) as first character on each line. 
+
+You can nest levels, by adding two or more asterisks (`&#42;&#42;`) or hashes (`&#42;##`). You can also combine unordered and ordered lists. 
+
+h3. Example Unordered List
+
+
+{{code:
+* item 1
+* item 2
+** item 2.1
+** item 2.2
+* item 3
+}}
+
+* item 1
+* item 2
+** item 2.1
+** item 2.2
+* item 3
+
+
+h3. Example Ordered List
+
+{{code:
+*# item 1
+*# item 2
+*## item 2.1
+*## item 2.2
+*# item 3
+}}
+
+*# item 1
+*# item 2
+*## item 2.1
+*## item 2.2
+*# item 3
+
+h3. Ordered List with Inline CSS
+
+{{code:
+*- style=border: 1px solid green | id=ul_id
+*# item 1
+*# item 2
+**- style=border: 1px solid red
+*## item 2.1
+*## item 2.2
+*# item 3
+}}
+
+*- style=border: 1px solid green | id=ul_id
+*# item 1
+*# item 2
+**- style=border: 1px solid red
+*## item 2.1
+*## item 2.2
+*# item 3
+
+
+h2. Images
+
+To create an image, write its path enclosed with exclamation marks `!`
+
+{{code:
+!/$$space/.files/img/gorilla.jpg!
+}}
+
+!/$$space/.files/img/gorilla.jpg!
+
+h3. With styles
+
+{{code:
+!/$$space/.files/img/gorilla.jpg | border= 5px solid blue!
+}}
+
+!/$$space/.files/img/gorilla.jpg | border= 5px solid blue!
+
+h2. Links
+Links are surrounded by square brackets
+
+{{code:
+You can add any HTML attribute to your list by adding `*-` before the list, followed by the HTML attributes. Attributes for nested list should be added by increasing the number of asterisks.
+[/docs/Macros]
+}}
+
+[/docs/Macros]
+To add description to the link, add it like this
+
+{{code:
+[Macros page description | /docs/Macros]
+}}
+[Macros page description | /docs/Macros]
+
+You can put a link to a page in a space this way
+
+{{code:
+[Macros page description | docs;macros]
+}}
+[Macros page description | docs;macros]
+
+You can add ID & class to it
+
+{{code:
+[Macros page description | /docs/Macros | id=link_id | class = link_class]
+}}
+
+[Macros page description | /docs/Macros | id=link_id | class = link_class]
+
+You can add images in the description of links
+
+{{code:
+[Macros page description !/$$space/.files/img/gorilla.jpg! | /docs/Macros | id=link_id | class = link_class]
+}}
+
+[Macros page description !/$$space/.files/img/gorilla.jpg! | /docs/Macros | id=link_id | class = link_class]
+
+
+h2. Tables
+
+Header cells are enclosed with double bars `|&#124;`, while table body cells are surrounded with single bars `|`.
+
+{{code:
+|| Header 1 || Header 2 ||
+| Cell 1.1 | Cell 1.2 |
+| Cell 2.1 | Cell 2.2 |
+}}
+
+|| Header 1 || Header 2 ||
+| Cell 1.1 | Cell 1.2 |
+| Cell 2.1 | Cell 2.2 |

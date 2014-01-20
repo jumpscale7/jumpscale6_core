@@ -1,0 +1,21 @@
+h1. Menu
+
+Macro to make menus can only be used once
+
+h2. Wiki
+
+{{code:
+\{\{menu:
+MyLocation:/MyHyperLink
+Location:/MyHyperLink
+\}\}
+}}
+
+h2. Output
+
+This will overwrite system menu at the top 
+{{menu:
+MyLocation:/MyHyperLink
+Location:/MyHyperLink
+}}
+

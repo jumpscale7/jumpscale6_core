@@ -1,0 +1,17 @@
+h2. Footer Macro
+
+This macro is used to add footer element to your page
+
+h2. Example
+
+{{code:
+\{\{footer:
+This is a sample footer
+\}\}
+}}
+
+Output
+
+{{footer:
+This is a sample footer
+}}

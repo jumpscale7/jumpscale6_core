@@ -1,0 +1,3 @@
+h2. Pylabs Extensions Documentation
+
+{{children: no-tree page:PylabsExtensions}}
