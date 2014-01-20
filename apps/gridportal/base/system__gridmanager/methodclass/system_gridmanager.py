@@ -181,7 +181,27 @@ class system_gridmanager(j.code.classGetBase()):
         querystr = urllib.urlencode(query)
         url="http://%s:8081/render?%s"%(ip, querystr)
         r = requests.get(url)
-        result = r.send()
+        try:
+            result = r.send()
+        except Exception:        
+            import PIL.Image as Image
+            import PIL.ImageDraw as ImageDraw
+            import StringIO
+
+            size = (int(width), int(height))
+            im = Image.new('RGB', size, 'white') 
+            draw = ImageDraw.Draw(im)   
+            red = (255,0,0)    
+            text_pos = (size[0]/2,size[1]/2) 
+            text = "STATS UNAVAILABLE" 
+            draw.text(text_pos, text, fill=red)
+            
+            del draw 
+            output = StringIO.StringIO()
+            im.save(output, 'PNG')
+            response = output.getvalue()
+            output.close()
+            return response # and we're done!
         return result.content
 
     def getProcessesActive(self, nid, name, domain, **kwargs):
