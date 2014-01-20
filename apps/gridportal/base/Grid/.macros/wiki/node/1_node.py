@@ -6,7 +6,11 @@ def main(j, args, params, tags, tasklet):
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
-    idd = int(args.tags.getDict()["id"])
+    idd = args.getTag("id")
+    if not idd:
+        out = 'Missing node id param "id"'
+        params.result = (out, doc)
+        return params
 
     node = actor.getNodes(id=idd)
     if not node:

@@ -9,5 +9,5 @@
 
 h2. Node Stats
 
-{{stat: stattype:node nid:$$id width:800 height:500 netstats cpustats memstats}}
+{{nodestat: nid:$$id width:800 height:500 netstats cpustats memstats}}
 

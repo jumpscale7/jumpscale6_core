@@ -6,7 +6,7 @@
 
 <br>
 h3. Node Jobs
-{{nodejobs: nid:$$id}}
+{{jobs: nid:$$id}}
 
 <br>
 h3. Node Processes

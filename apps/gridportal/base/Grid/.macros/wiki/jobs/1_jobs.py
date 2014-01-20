@@ -3,10 +3,15 @@ def main(j, args, params, tags, tasklet):
 
     params.merge(args)
     doc = params.doc
-    tags = params.tags
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
+    nid = args.getTag("nid")
+    if not nid and args.tags.tagExists('nid'):
+        out = 'Missing node id param "id"'
+        params.result = (out, doc)
+        return params
+
     out = []
 
     #this makes sure bootstrap datatables functionality is used
@@ -19,10 +24,10 @@ def main(j, args, params, tags, tasklet):
     out.append('||id||category||result||jsname||jsorganization||state||description||')
 
 
-    jsname = args.tags.getDict().get('jsname', None) if args.tags.getDict().get("jsname") and not args.tags.getDict().get('jsname', None).startswith('$$') else None
-    jsorganization = args.tags.getDict().get('jsorganization', None) if args.tags.getDict().get("jsorganization") and not args.tags.getDict().get('jsorganization', None).startswith('$$') else None
+    jsname = args.getTag('jsname')
+    jsorganization = args.getTag('jsorganization')
 
-    jobs = actor.getJobs(jsname=jsname, jsorganization=jsorganization)
+    jobs = actor.getJobs(nid=nid, jsname=jsname, jsorganization=jsorganization)
     if not jobs:
         params.result = ('No jobs found', doc)
         return params
