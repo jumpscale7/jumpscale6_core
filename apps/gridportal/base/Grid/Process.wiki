@@ -3,4 +3,4 @@
 
 
 h3. logs from last 1h
-{{logs: pid:$$pid from:-1h}}
+{{logs: pid:$$id from:-1h}}
