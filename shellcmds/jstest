@@ -13,7 +13,7 @@ parser = cmdutils.ArgumentParser()
 # parser.add_argument('--passwd', help='password for desktop')
 
 # parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
-parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+parser.add_argument('--debug',required=False, action='store_true', default=False, help='will stop on errors and show all relevant info')
 parser.add_argument('--reinit',required=False, action='store_true',help='reinit env')
 parser.add_argument('-p','--path',required=False, help='path to use e.g. for running tests')
 
@@ -45,7 +45,7 @@ else:
     j.tools.testengine.paths=[opts.path]
 
 j.tools.testengine.initTests()
-j.tools.testengine.runTests(debug=opts.debug<>None)
+j.tools.testengine.runTests(debug=opts.debug)
 
 
 j.application.stop()

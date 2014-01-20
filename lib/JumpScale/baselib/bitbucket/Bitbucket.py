@@ -9,6 +9,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import os
 
+INFOCACHE = dict()
 
 class Bitbucket:
     """
@@ -31,11 +32,15 @@ class Bitbucket:
 
     def getRepoInfo(self, accountName, repoName):
         url = "https://bitbucket.org/api/1.0/repositories/%s/%s" % (accountName, repoName)
+        result = INFOCACHE.get(url)
+        if result:
+            return result
         result = requests.get(url)
         if result.ok:
-            return result.json()
+            INFOCACHE[url] = result.json()
         else:
-            return result.status_code
+            INFOCACHE[url] = result.status_code
+        return INFOCACHE[url]
 
     def log(self,msg,category="",level=5):
         category="bitbucket.%s"%category
