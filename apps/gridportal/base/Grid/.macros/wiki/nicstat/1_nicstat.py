@@ -19,7 +19,7 @@ def main(j, args, params, tags, tasklet):
     if not missing:            
         _data = {'nid': nid, 'height':height, 'width':width, 'nic': nic}
         
-        out += '\nh3. Network Interface Statistics\n'
+        out += '\nh3. Statistics\n'
         out += '|| || ||\n'
         out += '|{{stat key:n%(nid)s.nic.%(nic)s.kbytes_recv,n%(nid)s.nic.%(nic)s.kbytes_sent&title=KBytes width:%(width)s height:%(height)s}}|{{stat key:n%(nid)s.nic.%(nic)s.packets_recv,n%(nid)s.nic.%(nic)s.packets_sent&title=Packets width:%(width)s height:%(height)s}}|\n' % _data
 
