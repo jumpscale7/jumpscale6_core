@@ -135,6 +135,8 @@ class Confluence2HTML():
             return r'<a href="{0}">{1}</a>'.format(match.group(1), match.group(1).replace('mailto:', '', 1))
 
         substitutions = [
+            ('<',           '&lt;'),
+            ('>',           '&gt;'),
             (limiter('*'),  limiter_replacement('strong')),
             (limiter('_'),  limiter_replacement('em')),
             (limiter('+'),  limiter_replacement('ins')),
@@ -143,8 +145,7 @@ class Confluence2HTML():
             (limiter('^'),  limiter_replacement('sup')),
             (limiter('~'),  limiter_replacement('sub')),
             (limiter('`'),  limiter_replacement('code')),
-            ('<',           '&lt;'),
-            ('>',           '&gt;'),
+            
 
             # {color: red}text goes here{color}
             (re.compile(r'\{{color\:(.*?)\}}({0})\{{color\}}'.format(styled_text),
@@ -240,7 +241,6 @@ class Confluence2HTML():
                 page.addNewLine()
                 line = ''
                 continue
-
 
 
             # print "#: %s %s" % (state,line)
