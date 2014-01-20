@@ -1,5 +1,0 @@
-
-h2. contactinfo
-
-{{form_taskmanager_contactinfo}}
-
