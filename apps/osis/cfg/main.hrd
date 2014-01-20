@@ -1,0 +1,8 @@
+osis.elasticsearch.ip=localhost
+osis.elasticsearch.port=9200
+
+osis.db.type=filesystem
+
+#osis.db.type=arakoon
+
+

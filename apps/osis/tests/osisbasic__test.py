@@ -29,7 +29,7 @@ class TEST():
         return ':'.join(map(lambda x: "%02x" % x, mac))
 
     def setUp(self):
-        self.client = j.core.osis.getClient(user="root")
+        self.client = j.core.osis.getClient()
         self.nodeclient =j.core.osis.getClientForCategory(self.client, 'system', 'fake4test')
         self.prefix = time.time()
         

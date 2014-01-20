@@ -55,17 +55,6 @@ class OSISBaseObject():
         """
         return self.__dict__
 
-    def getDictForIndex(self):
-        """
-        get dict of object without passwd and props starting with _
-        """
-        d={}
-        for key,val in self.__dict__.iteritems():
-            if key[0]<>"_" and key not in ["passwd","password","secret"]:
-                d[key]=val
-        return d
-        
-
     def __str__(self):
         out=""
         for key,val in self.__dict__.iteritems():

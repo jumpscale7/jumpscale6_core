@@ -91,7 +91,7 @@ def main(j, args, params, tags, tasklet):
 
         out2 = ['||Property||Value||']
 
-        fields = [  'lockduration', 'category', 'source','childrenActive' , 'parent', 'sessionid', 'resultcode']
+        fields = ['lockduration', 'category', 'source','childrenActive' , 'parent', 'sessionid', 'resultcode']
 
         for field in fields:
             if field in ('children'):

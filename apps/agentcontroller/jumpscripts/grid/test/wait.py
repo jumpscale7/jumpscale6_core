@@ -14,9 +14,9 @@ version = "1.0"
 roles = ["*"]
 
 
-def action(msg,timeout):
-    time.sleep(timeout)
+def action(msg, waittime):
     j.logger.log(msg, level=5, category="test.wait")
+    time.sleep(waittime)
     return msg
 
 

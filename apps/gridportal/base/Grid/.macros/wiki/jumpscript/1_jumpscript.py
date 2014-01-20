@@ -21,7 +21,7 @@ def main(j, args, params, tags, tasklet):
             continue
         out.append("|%s|%s|" % (k.capitalize(), v.replace('\n', '') if v else v))
 
-    out.append('\n{{code:%s}}' % obj['source'])
+    out.append('\n{{code:\n%s\n}}' % obj['source'])
     params.result = ('\n'.join(out), doc)
 
     return params
