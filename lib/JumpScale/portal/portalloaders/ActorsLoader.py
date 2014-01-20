@@ -44,19 +44,18 @@ class GroupAppsClass(object):
         self.actorsloader = actorsloader
 
     def __getattr__(self, appname):
-        app = AppClass(self.actorsloader, appname)
+        app = AppClass(appname)
         setattr(self, appname, app)
         return app
 
 class AppClass(object):
-    def __init__(self, actorsloader, appname):
+    def __init__(self, appname):
         self._appname = appname
-        self._actorsloader = actorsloader
 
     def __getattr__(self, actorname):
         if actorname in ('__members__', '__methods__', 'trait_names', '_getAttributeNames'):
             return object.__getattr__(self, actorname)
-        actor = self._actorsloader.getActor(self._appname, actorname)
+        actor = j.apps.actorsloader.getActor(self._appname, actorname)
         setattr(self, actorname, actor)
         return actor
 
@@ -344,7 +343,7 @@ def match(j, args, params, actor, tags, tasklet):
 
         # LOAD actorobject to qbase tree
         if appname not in j.apps.__dict__:
-            j.apps.__dict__[appname] = AppClass(self, appname)
+            j.apps.__dict__[appname] = AppClass(appname)
 
         if actorname not in j.apps.__dict__[appname].__dict__:
             j.apps.__dict__[appname].__dict__[actorname] = actorobject
