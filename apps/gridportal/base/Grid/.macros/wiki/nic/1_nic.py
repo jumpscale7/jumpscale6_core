@@ -20,11 +20,11 @@ def main(j, args, params, tags, tasklet):
 
     out.append('h3. Details')
 
-    out.append("|MAC Address|%s|" % obj['mac'])
-    out.append("|IP Address|%s|" % ', '.join(obj['ipaddr']))
+    out.append("|*MAC Address*|%s|" % obj['mac'])
+    out.append("|*IP Address*|%s|" % ', '.join(obj['ipaddr']))
     lastchecked = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
-    out.append("|Last check|%s|" % lastchecked)
-    out.append("|Node|[%s|/grid/node?id=%s]|" % (obj['nid'], obj['nid']))
+    out.append("|*Last check*|%s|" % lastchecked)
+    out.append("|*Node*|[%s|/grid/node?id=%s]|" % (obj['nid'], obj['nid']))
 
     params.result = ('\n'.join(out), doc)
 
