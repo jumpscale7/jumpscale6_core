@@ -46,6 +46,6 @@ class TEST():
         osis_jobs = j.core.osis.getClientForCategory(osisclient, "system", "job")
         assert len(osis_jobs.search(query)['result']) > 0
 
-        kwargs = {'msg': 'test msg', 'timeout': 5}
+        kwargs = {'msg': 'test msg', 'waittime': 5}
         result2 = self.client.executeKwargs('jumpscale', 'wait', ROLE, kwargs=kwargs)
 
