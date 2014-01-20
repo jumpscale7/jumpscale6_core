@@ -1,4 +1,5 @@
 import datetime
+import JumpScale.grid.osis
 
 def main(j, args, params, tags, tasklet):
 
@@ -6,7 +7,8 @@ def main(j, args, params, tags, tasklet):
     doc = params.doc
     # tags = params.tags
 
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
+    oscl = j.core.osis.getClient(user='root')
+    ecocl = j.core.osis.getClientForCategory(oscl, 'system', 'eco')
 
     id = args.getTag('id')
     if not id:
@@ -14,17 +16,26 @@ def main(j, args, params, tags, tasklet):
         params.result = (out, doc)
         return params
 
-    obj = actor.getErrorconditions(guid=id)
-
+    obj = ecocl.get(id)
     out = ['||Property||Value||']
 
-    fields = ['appname', 'category', 'jid', 'code', 'level', 'backtrace', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'type', 'funcfilename', 'tags']
+    fields = ['appname', 'category', 'jid', 'code', 'level', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'backtrace', 'type', 'funcfilename', 'tags']
+
     for field in fields:
         if field == 'nid':
             out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
+        elif field == 'pid':
+            out.append("|Process|[%s|/grid/process?id=%s]|" % (obj[field], obj[field]))
+        elif field == 'jid':
+            out.append("|Job|[%s|/grid/job?id=%s]|" % (obj[field], obj[field]))
+        elif field == 'gid':
+            out.append("|Grid|[%s|/grid/grid?id=%s]|" % (obj[field], obj[field]))
         elif field == 'epoch':
             epoch = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
             out.append("|%s|%s|" % (field.capitalize(), epoch))
+        elif field in ['errormessage', 'backtrace']:
+            message = obj[field].replace('\n', '<br>').replace(']', '\]').replace('[', '\[')
+            out.append("|%s|%s|" % (field.capitalize(), message))
         else:
             out.append("|%s|%s|" % (field.capitalize(), obj[field]))
 

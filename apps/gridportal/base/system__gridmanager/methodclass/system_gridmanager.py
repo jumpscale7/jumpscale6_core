@@ -313,8 +313,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'jidparent': jidparent,
                   'id': id,
                   'jsorganization': jsorganization,
-                  'jsname': jsname,
-                  'guid':guid}
+                  'jsname': jsname}
         return self.osis_eco.simpleSearch(params, withguid=True)
 
 
