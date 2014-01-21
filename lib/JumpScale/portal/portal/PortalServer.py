@@ -542,8 +542,11 @@ class PortalServer:
         status = '%s' % status
         headers = [ (k, v) for k,v in header.iteritems() ]
         ctx.start_response(status, headers)
-        result = j.db.serializers.getSerializerType('j').dumps(response)
-        return [result]
+        if 'download' not in params:
+            response = j.db.serializers.getSerializerType('j').dumps(response)
+        else:
+            response = response['content']
+        return [response]
 
     def path2spacePagename(self, path):
 

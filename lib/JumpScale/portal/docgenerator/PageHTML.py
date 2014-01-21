@@ -764,7 +764,7 @@ function copyText$id() {
 	    'quicklook', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
 	    'cut', 'paste','extract', 'archive', 'help',
-	    'resize', 'sort', 'edit', 'ping'
+	    'resize', 'sort', 'edit', 'ping', 'download'
 	    ],"""
             dircmd = "'reload', 'back', 'ping', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
             filecmd = "'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
@@ -885,7 +885,7 @@ function copyText$id() {
             {
                 toolbar : [
 		['back', 'forward'],
-        ['reload'],
+        ['reload', 'download'],
         ['home', 'up']
 	],
             	tree :
