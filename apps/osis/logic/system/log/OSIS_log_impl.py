@@ -16,7 +16,7 @@ class mainclass(OSISStore):
     def set(self,key,value):
         docs = []
         for logobject in ujson.loads(value):
-            logobject["id"] = j.base.idgenerator.generateGUID()
+            logobject["id"] = j.base.idgenerator.generateGUID().replace('-', '')
             docs.append(logobject)
 
         # print "batch:%s"%len(docs)            
