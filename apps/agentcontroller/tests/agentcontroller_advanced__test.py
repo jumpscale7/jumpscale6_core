@@ -29,18 +29,14 @@ class TEST():
         import JumpScale.grid.osis
         osis_logs = j.core.osis.getClientForCategory(self.osisclient, "system", "log")
         for i in range(1, 6):
-            kwargs = {'msg': 'msg %s' % i, 'waittime':1}
+            kwargs = {'msg': 'msg%s' % i, 'waittime':1}
             self.client.executeKwargs('jumpscale', 'wait', ROLE, kwargs=kwargs)
         results = list()
         for i in range(1, 6):
-            query = {"query":{"bool":{"must":[{"term":{"category":"test.wait"}}, {"term":{"message":'msg %s' % i}}]}}}
-            result = osis_logs.search(query)['hits']['hits']
+            query = {"category":"test_wait", "message":'msg%s' % i}
+            result = osis_logs.simpleSearch(query)
             assert len(result) > 0
             results.append(result)
-
-        for i, result in iter(results):
-            assert result['timestart'] == min(results, key=lambda x: x['timeStart'])
-            results.pop(i)
 
     def test_queuetest5agents(self):
         #start 5 agents, see that they sort of equally executed the tasks

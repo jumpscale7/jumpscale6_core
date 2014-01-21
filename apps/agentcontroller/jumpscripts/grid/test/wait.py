@@ -18,6 +18,3 @@ def action(msg, waittime):
     j.logger.log(msg, level=5, category="test.wait")
     time.sleep(waittime)
     return msg
-
-
-

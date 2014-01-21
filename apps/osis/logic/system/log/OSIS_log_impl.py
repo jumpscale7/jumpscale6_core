@@ -16,7 +16,7 @@ class mainclass(OSISStore):
     def set(self,key,value):
         docs = []
         for logobject in ujson.loads(value):
-            logobject["id"] = "%s_%s_%s"%(logobject["gid"], logobject["pid"], logobject["order"])            
+            logobject["id"] = j.base.idgenerator.generateGUID()
             docs.append(logobject)
 
         # print "batch:%s"%len(docs)            
@@ -25,8 +25,13 @@ class mainclass(OSISStore):
             self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=docs, id_field="id")                        
         return ["",True,True]
 
-    def find(self,query, start=0, size =100):
-        return self.elasticsearch.search(index='system_log', query=query)
+    def find(self, query, start=0, size=100):
+        kwargs = dict()
+        if start:
+            kwargs['es_from'] = start
+        if size:
+            kwargs['size'] = size
+        return self.elasticsearch.search(index='system_log', query=query, **kwargs)
 
     def destroyindex(self):
         import ipdb
