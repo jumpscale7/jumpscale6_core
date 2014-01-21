@@ -3,7 +3,7 @@ from JumpScale import j
 j.application.start("reload")
 
 from raven import Client
-client = Client('http://18275531e40849ae8f259a4edd8f1c22:d43b0396addb4b789cd6c325a9ceb36e@95.85.60.252:9000/2')
+client = Client('http://18275531e40849ae8f259a4edd8f1c22:d43b0396addb4b789cd6c325a9ceb36e@localhost:9000/2')
 
 
 try:

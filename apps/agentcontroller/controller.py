@@ -132,7 +132,7 @@ class ControllerCMDS():
 
         self.agent2freeSessions={} #key is agent, val is dict of sessions free to be used
 
-        self.adminpasswd = j.application.config.get('gridmaster.superadminpasswd')
+        self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = j.application.config.get('gridmaster.superadminuser')
 
         self.osisclient = j.core.osis.getClient(user="root")

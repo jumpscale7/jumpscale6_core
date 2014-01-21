@@ -22,7 +22,7 @@ class TEST():
 
     def setUp(self):
         self.client= j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user=j.application.config.get('system.superadmin.login'), \
-    passwd=j.application.config.get('gridmaster.superadminpasswd'),category="startupmanager")
+    passwd=j.application.config.get('grid.master.superadminpasswd'),category="startupmanager")
 
     def test_getdomains(self):
         self.domains=self.client.getDomains()

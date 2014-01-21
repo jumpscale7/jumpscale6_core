@@ -10,7 +10,7 @@ class system_testmanager(j.code.classGetBase()):
         self._te={}
         self.actorname="testmanager"
         self.appname="system"
-        passwd = j.application.config.get("gridmaster.superadminpasswd")
+        passwd = j.application.config.get("grid.master.superadminpasswd")
         osis = j.core.osis.getClient(j.application.config.get("grid.master.ip"), passwd=passwd, user='root')
         self.osis_test = j.core.osis.getClientForCategory(osis,"system","test")
         #system_testmanager_osis.__init__(self)

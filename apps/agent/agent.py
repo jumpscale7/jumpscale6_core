@@ -70,7 +70,7 @@ class Agent(Greenlet):
         self.agentid = j.application.getWhoAmiStr()
 
         ipaddr=j.application.config.get("grid.master.ip")
-        adminpasswd = j.application.config.get('gridmaster.superadminpasswd')
+        adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         adminuser = 'root'#j.application.config.get('system.superadmin.login')
         self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, \
             category="agent",id=self.agentid,timeout=36000)

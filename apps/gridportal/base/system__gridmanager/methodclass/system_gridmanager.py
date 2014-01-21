@@ -21,7 +21,7 @@ class system_gridmanager(j.code.classGetBase()):
         self._nodeMap = dict()
         self.clientsIp = dict()
 
-        self.passwd = j.application.config.get("gridmaster.superadminpasswd")
+        self.passwd = j.application.config.get("grid.master.superadminpasswd")
 
         osis = j.core.osis.getClient(j.application.config.get("grid.master.ip"), passwd=self.passwd, user='root')
         self.osis_node = j.core.osis.getClientForCategory(osis,"system","node")

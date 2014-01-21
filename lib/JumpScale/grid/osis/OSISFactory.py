@@ -44,8 +44,8 @@ class OSISFactory:
         self.osisConnections = {}
         self.osisConnectionsCat={}
         self.nodeguids={}
-        if j.application.config.exists("gridmaster.superadminpasswd"):
-            self.superadminpasswd=j.application.config.get("gridmaster.superadminpasswd")
+        if j.application.config.exists("grid.master.superadminpasswd"):
+            self.superadminpasswd=j.application.config.get("grid.master.superadminpasswd")
         else:
             self.superadminpasswd=None
         self.key=j.application.config.get("osis.key")
@@ -98,10 +98,10 @@ class OSISFactory:
                 user="node"
                 passwd=j.application.config.get("grid.node.machineguid")
             elif user=="root" and not passwd:
-                if j.application.config.exists("gridmaster.superadminpasswd"):
-                    passwd=j.application.config.get("gridmaster.superadminpasswd")
+                if j.application.config.exists("grid.master.superadminpasswd"):
+                    passwd=j.application.config.get("grid.master.superadminpasswd")
                 else:
-                    raise RuntimeError("Superadmin passwd has not been defined on this node, please put in hrd (gridmaster.superadminpasswd) or use argument 'passwd'.")
+                    raise RuntimeError("Superadmin passwd has not been defined on this node, please put in hrd (grid.master.superadminpasswd) or use argument 'passwd'.")
             self.osisConnections[key] = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=port, category="osis",\
                 user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j")
         except Exception,e:
