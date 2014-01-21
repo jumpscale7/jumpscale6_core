@@ -21,30 +21,29 @@ def main(j, args, params, tags, tasklet):
 
     obj = obj[0]
 
-    out = ['||Property||Value||']
+    out = ["h2. Process '%s'" % obj['pname'] or 'None']
 
-    fields = ['systempids', 'name', 'instance', 'nid', 'epochstart', 'lastcheck', 'jpdomain', 'gid', 'active', 'jpname', 'epochstop']
+    out.append("h3. Details")
 
-    for field in fields:
-        if field == 'nid':
-            out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
-        elif field in ('lastcheck', 'epochstart', 'epochstop'):
-            lastchecked = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|%s|%s|" % (field.capitalize(), lastchecked))
-        elif field == 'systempids':
-            pids = ', '.join([ str(x) for x in obj[field]])
-            out.append('|Systempids|%s|' % (pids))
-        elif field == 'name':
-            name = obj['sname'] or obj['pname']
-            out.append('|Name|%s|' % name)
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
-
+    pids = ', '.join([str(x) for x in obj['systempids']])
+    out.append('|*System PIDs*|%s|' % pids)
+    ports = ', '.join([str(x) for x in obj['ports']])
+    out.append('|*Ports*|%s|' % ports)
+    out.append("|*User*|%s|" % obj['user'])
+    out.append("|*Active*|%s|" % obj['active'])
+    lastchecked = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
+    out.append("|*Last check*|%s|" %  lastchecked)
+    epochstart = datetime.datetime.fromtimestamp(obj['epochstart']).strftime('%Y-%m-%d %H:%M:%S')
+    out.append("|*Started*|%s|" %  epochstart)
+    epochstop = datetime.datetime.fromtimestamp(obj['epochstop']).strftime('%Y-%m-%d %H:%M:%S')
+    out.append("|*Stopped*|%s|" %  epochstop)
+    out.append("|*JPackage*|%s|" % obj['jpname'] or 'None')
+    out.append("|*Node*|[%s|/grid/node?id=%s]|" % (obj['nid'], obj['nid']))
+    out.append("|*Statistics*|[Go to statistics page|ProcessStats?id=%s]|" % id)
 
     params.result = ('\n'.join(out), doc)
 
     return params
-
 
 def match(j, args, params, tags, tasklet):
     return True

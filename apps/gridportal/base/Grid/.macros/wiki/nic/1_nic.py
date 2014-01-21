@@ -16,20 +16,15 @@ def main(j, args, params, tags, tasklet):
 
     obj = actor.getNics(id=id)[0]
 
-    out = ['||Property||Value||']
+    out = ['h2. NIC %s' % obj['name']]
 
-    fields = ['name', 'nid', 'ipaddr', 'mac', 'lastcheck', 'gid']
-    for field in fields:
-        if field == 'nid':
-            out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
-        elif field in ('ipaddr'):
-            out.append("|%s|%s|" % (field.capitalize(), ', '.join(obj[field])))
-        elif field == 'lastcheck':
-            lastchecked = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|%s|%s|" % (field.capitalize(), lastchecked))
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
+    out.append('h3. Details')
 
+    out.append("|*MAC Address*|%s|" % obj['mac'])
+    out.append("|*IP Address*|%s|" % ', '.join(obj['ipaddr']))
+    lastchecked = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
+    out.append("|*Last check*|%s|" % lastchecked)
+    out.append("|*Node*|[%s|/grid/node?id=%s]|" % (obj['nid'], obj['nid']))
 
     params.result = ('\n'.join(out), doc)
 

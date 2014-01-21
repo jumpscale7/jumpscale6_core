@@ -1,11 +1,6 @@
 @usedefaults
-
-h2. Process
-
 {{process: id:$$id}}
 
-[ProcessStats|ProcessStats?id=$$id]
 
-
-h2. logs from last 1h
-{{logs: pid:$$pid from:-1h}}
+h3. logs from last 1h
+{{logs: pid:$$id from:-1h}}
