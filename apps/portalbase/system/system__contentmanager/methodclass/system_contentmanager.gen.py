@@ -83,12 +83,11 @@ class system_contentmanager(j.code.classGetBase()):
         raise NotImplementedError ("not implemented method getSpacesWithPaths")
     
 
-    def modelobjectlist(self, appname, actorname, modelname, key, **kwargs):
+    def modelobjectlist(self, namespace, category, key, **kwargs):
         """
         @todo describe what the goal is of this method
-        param:appname 
-        param:actorname 
-        param:modelname 
+        param:namespace 
+        param:category 
         param:key 
         result list
         """

@@ -82,7 +82,7 @@ class system_contentmanager(j.code.classGetBase()):
             spaces.append([space.model.id, space.model.path])
         return spaces
 
-    def modelobjectlist(self, appname, actorname, modelname, key, **args):
+    def modelobjectlist(self, namespace, category, key, **args):
         """
         @todo describe what the goal is of this method
         param:appname 
@@ -90,13 +90,8 @@ class system_contentmanager(j.code.classGetBase()):
         param:modelname 
         param:key         
         """
-        actor = j.core.portal.active.actorsloader.getActor(appname, actorname)
-        cache = actor.dbmem.cacheGet(key)
-
         dtext = j.apps.system.contentmanager.extensions.datatables
-        data = dtext.getDataFromActorModel(appname, actorname, modelname, cache["fields"],
-                                           cache["fieldids"], cache["fieldnames"])
-
+        data = dtext.getData(namespace, category, key, **args)
         return data
 
     def modelobjectupdate(self, appname, actorname, key, **args):

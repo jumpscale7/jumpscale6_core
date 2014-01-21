@@ -7,15 +7,16 @@ class DataTables():
         self.inited = False
         self.cache = {}
         self.cacheg = {}
+        self._osiscl = j.core.osis.getClient(user='root')
+        self._catclient = dict()
 
-    def getActorModel(self, appname, actorname, modelname):
-        try:
-            actor = j.core.portal.active.actorsloader.getActor(appname, actorname)
-            model = actor.models.__dict__[modelname]
-        except Exception as e:
-            # self.page.addMessage()
-            raise RuntimeError("Error: could not find app with appname:%s, actorname:%s, model:%s" % (appname, actorname, modelname))
-        return actor, model
+    def getClient(self, namespace, category):
+        key = '%s_%s' % (namespace, category)
+        if key in self._catclient:
+            return self._catclient[key]
+        client = j.core.osis.getClientForCategory(self._osiscl, namespace, category)
+        self._catclient[key] = client
+        return client
 
     def getTableDefFromActorModel(self, appname, actorname, modelname, excludes=[]):
         """
@@ -58,20 +59,20 @@ class DataTables():
 
         return actor, model, fields, fieldids, fieldnames
 
-    def storInCache(self, appname, actorname, modelname, fields, fieldids, fieldnames):
-        actor, model = self.getActorModel(appname, actorname, modelname)
+    def storInCache(self, fieldids, fieldnames, fieldvalues, filters=None):
+        cache = j.db.keyvaluestore.getMemoryStore('datatables')
         cacheinfo = {}
-        cacheinfo["modelname"] = modelname
-        cacheinfo["fields"] = fields
-        cacheinfo["fieldids"] = fieldids
         cacheinfo["fieldnames"] = fieldnames
-
+        cacheinfo["fieldids"] = fieldids
+        cacheinfo["fieldvalues"] = fieldvalues
+        cacheinfo["filters"] = filters
         key = j.base.idgenerator.generateGUID()
-        actor.dbmem.cacheSet(key, cacheinfo)
-
-        print "key:%s" % key
-
+        cache.cacheSet(key, cacheinfo)
         return key
+
+    def getFromCache(self, key):
+        cache = j.db.keyvaluestore.getMemoryStore('datatables')
+        return cache.cacheGet(key)
 
     def processLink(self, line):
         if line.find("[") != -1:
@@ -110,23 +111,48 @@ class DataTables():
 
         return field
 
-    def getDataFromActorModel(self, appname, actorname, modelname, fields, fieldids, fieldnames):
-        actor, model = self.getActorModel(appname, actorname, modelname)
-        inn = model.list(True)
-        l = len(inn)
-        if l > 1000:
-            raise RuntimeError("for now max length of editable grid=1000, h appname:%s, actorname:%s, model:%s" %
-                              (appname, actorname, modelname))
+    def getData(self, namespace, category, key, **kwargs):
+        datainfo = self.getFromCache(key)
+        fieldids = datainfo['fieldids']
+        fieldvalues = datainfo['fieldvalues'] or fieldids
+        filters = datainfo["filters"] or dict()
+        filters = filters.copy()
 
+        client = self.getClient(namespace, category)
+
+        #pagin
+        start = kwargs['iDisplayStart']
+        size = kwargs['iDisplayLength']
+
+
+        #sort
+        sort = dict()
+        if kwargs['iSortCol_0']:
+            for i in xrange(int(kwargs['iSortingCols'])):
+                colidx = kwargs['iSortCol_%s' % i]
+                key = 'bSortable_%s' % colidx
+                if kwargs[key] == 'true':
+                    colname = fieldids[int(colidx)]
+                    sort[colname] = 'asc' if kwargs['sSortDir_%s' % i] == 'asc' else 'desc'
+
+        #filters
+        for x in xrange(len(fieldids)):
+            svalue = kwargs.get('sSearch_%s' % x)
+            if kwargs['bSearchable_%s' % x] == 'true' and svalue:
+                filters[fieldids[x]] = svalue
+
+        total, inn = client.simpleSearch(filters, size=size, start=start, withtotal=True, sort=sort)
         result = {}
-        result["sEcho"] = 1
-        result["iTotalRecords"] = l
-        result["iTotalDisplayRecords"] = l
+        result["sEcho"] = int(kwargs.get('sEcho', 1))
+        result["iTotalRecords"] = total
+        result["iTotalDisplayRecords"] = total
         result["aaData"] = []
         for row in inn:
             r = []
-            for field in fields:
-                if j.basetype.integer.check(field):
+            for field in fieldvalues:
+                if field in row:
+                    r.append(row[field])
+                elif j.basetype.integer.check(field):
                     r.append(row[field])
                 elif j.basetype.string.check(field):
                     r.append(self.executeMacro(row, field))

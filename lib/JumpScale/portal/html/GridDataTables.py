@@ -14,9 +14,18 @@ class GridDataTables:
         self.page.addJS("%s/datatables/jquery.dataTables.min.js" % self.liblocation)
         self.page.addBootstrap()
 
-    def addTableFromActorModel(self, appname, actorname, modelname, fields, fieldids, fieldnames):
-        key = j.apps.system.contentmanager.extensions.datatables.storInCache(appname, actorname, modelname, fields, fieldids, fieldnames)
-        url = "/restmachine/system/contentmanager/modelobjectlist?appname=%s&actorname=%s&modelname=%s&key=%s" % (appname, actorname, modelname, key)
+    def addTableForModel(self, namespace, category, fieldids, fieldnames=None, fieldvalues=None, filters=None):
+        """
+        @param namespace: namespace of the model
+        @param cateogry: cateogry of the model
+        @param fieldids: list of str pointing to the fields of the dataset
+        @param fieldnames: list of str showed in the table header if ommited fieldids will be used
+        @param fieldvalues: list of items resprenting the value of the data can be a callback
+        """
+        key = j.apps.system.contentmanager.extensions.datatables.storInCache(fieldids, fieldnames, fieldvalues, filters)
+        url = "/restmachine/system/contentmanager/modelobjectlist?namespace=%s&category=%s&key=%s" % (namespace, category, key)
+        if not fieldnames:
+            fieldnames = fieldids
         self.addTableFromURL(url, fieldnames)
         return self.page
 
@@ -34,8 +43,10 @@ class GridDataTables:
 $(document).ready(function() {
     $('#$tableid').dataTable( {
         "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
-        "bProcessing": false,
-        "bServerSide": false,
+        "bProcessing": true,
+        "bServerSide": true,
+        "bDestroy": true,
+        "sPaginationType": "bootstrap",
         "sAjaxSource": "$url"
     } );
     $.extend( $.fn.dataTableExt.oStdClasses, {
@@ -51,7 +62,7 @@ $(document).ready(function() {
 
         C = """
 <div id="dynamic">
-<table class="table table-striped table-bordered" id=$tableid border="0" cellpadding="0" cellspacing="0" width="100%">
+<table class="table table-striped table-bordered" id="$tableid" border="0" cellpadding="0" cellspacing="0" width="100%">
     <thead>
         <tr>
 $fields
@@ -74,12 +85,34 @@ $fields
         self.page.addMessage(C, isElement=True, newline=True)
         return self.page
 
+    def addSearchOptions(self, tableid=".dataTable"):
+        self.page.addJS(jsContent='''
+          $(function() {
+              $('%s').each(function() {
+                  var table = $(this);
+                  var numOfColumns = table.find('th').length;
+                  var tfoot = $('<tfoot />');
+                  for (var i = 0; i < numOfColumns; i++) {
+                      var td = $('<td />');
+                      td.append(
+                          $('<input />', {type: 'text', 'class': 'datatables_filter'}).keyup(function() {
+                              table.dataTable().fnFilter(this.value, tfoot.find('input').index(this));
+                          })
+                      );
+                      tfoot.append(td);
+                  }
+                  if (table.find('tfoot').length == 0)
+                    table.append(tfoot);
+              });
+            });''' % tableid
+        , header=False)
+
     def prepare4DataTables(self):
         self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
         self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
         C = """
          $(document).ready(function() {
-         $('.dataTable').dataTable( {
+         $('.JSdataTable').dataTable( {
                 "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
                 "sPaginationType": "bootstrap",
                 "bDestroy": true,
