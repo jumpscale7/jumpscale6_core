@@ -27,8 +27,8 @@ def processLogin(parser):
         opts.login="root"
 
     if opts.passwd==None and opts.login=="root":
-        if j.application.config.exists("gridmaster.superadminpasswd"):
-            opts.passwd=j.application.config.get("gridmaster.superadminpasswd")
+        if j.application.config.exists("grid.master.superadminpasswd"):
+            opts.passwd=j.application.config.get("grid.master.superadminpasswd")
         else:
             opts.passwd=j.console.askString("please provide superadmin passwd for the grid.")
 

@@ -104,7 +104,7 @@ def install_grid():
     cmd="jsconfig hrdset -n grid.id -v %s"%options.gridnr
     print cuapi.run(cmd)
 
-    cmd="jsconfig hrdset -n gridmaster.superadminpasswd -v %s"%j.tools.hash.md5_string(passwd)
+    cmd="jsconfig hrdset -n grid.master.superadminpasswd -v %s"%j.tools.hash.md5_string(passwd)
     print cuapi.run(cmd)
     
     cmd="jsconfig hrdset -n gridmaster.grid.id -v %s"%options.gridnr
