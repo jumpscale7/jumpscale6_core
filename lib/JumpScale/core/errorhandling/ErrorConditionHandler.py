@@ -1,6 +1,7 @@
 import sys
 import traceback
 import string
+import inspect
 
 from JumpScale import j
 
@@ -14,6 +15,7 @@ class ErrorConditionHandler():
         self.haltOnError=haltOnError     
         self.setExceptHook()
         self.lastEco=None
+        self.sentryOwnClientInit=False
         
     def toolStripNonAsciFromText(text):
         return string.join([char for char in str(text) if ((ord(char)>31 and ord(char)<127) or ord(char)==10)],"")        
@@ -42,7 +44,7 @@ class ErrorConditionHandler():
         else:
             eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=1) 
             eco.getBacktrace()
-                                  
+
         eco.tags=tags
         eco.type=j.enumerators.ErrorConditionType.BUG
         self.processErrorConditionObject(eco)
@@ -57,7 +59,6 @@ class ErrorConditionHandler():
                 return self.escalateBugToDeveloper(eco)   
         if die:                         
             self.halt()
-
         
     def raiseOperationalCritical(self, message="", category="",msgpub="",die=True,tags="",eco=None):
         """
@@ -75,8 +76,12 @@ class ErrorConditionHandler():
             eco.level=1
 
         self.processErrorConditionObject(eco,tostdout=False)
+
         eco.errormessage=eco.errormessage.strip("\"")
-        msg = eco.errormessage if j.application.config.get('system.debug', checkExists=True, defaultval='0') == '0' else str(eco)
+
+        msg = eco.errormessage 
+        if j.application.config.get('system.debug', checkExists=True, defaultval='0') == '1':
+            msg=str(eco)
 
         print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg
         print 
@@ -114,7 +119,6 @@ class ErrorConditionHandler():
         if die:
             self.halt()
         
-
     def raisePerformanceError(self, message, category="",msgpub="",tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
                                          level=2,type=j.enumerators.ErrorConditionType.PERFORMANCE)
@@ -130,7 +134,7 @@ class ErrorConditionHandler():
         errorconditionObject= ErrorConditionObject(ddict=ddict,msg=msg,msgpub=msgpub,level=level,category=category,type=type)                
         return errorconditionObject        
   
-    def processPythonExceptionObject(self,pythonExceptionObject,ttype=None, tb=None,level=1,message=""):
+    def processPythonExceptionObject(self,pythonExceptionObject,ttype=None, tb=None,level=1,message="",sentry=True):
         """ 
         how to use
         
@@ -150,10 +154,8 @@ class ErrorConditionHandler():
         """        
         obj=self.parsePythonErrorObject(pythonExceptionObject,ttype, tb,level,message)
 
-        return self.processErrorConditionObject(obj)
+        return self.processErrorConditionObject(obj,sentry=sentry)
         
-        
-
     def parsePythonErrorObject(self,pythonExceptionObject,ttype=None, tb=None,level=1,message=""):
         
         """ 
@@ -174,8 +176,7 @@ class ErrorConditionHandler():
         @return a ErrorConditionObject object as used by jumpscale (should be the only type of object we send around)
         """
         if tb==None:
-            ttype, exc_value, tb=sys.exc_info()            
-
+            ttype, exc_value, tb=sys.exc_info()
         try:
             message2=pythonExceptionObject.message
             if message2.strip()=="":
@@ -209,8 +210,6 @@ class ErrorConditionHandler():
         except:
             print "ERROR in trying to get backtrace"
         
-        errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level)
-
         try:
             errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level)
             errorobject.category=cat
@@ -219,6 +218,8 @@ class ErrorConditionHandler():
             print "CRITICAL ERROR in trying to get errorobject, is BUG, please check (ErrorConditionHandler.py on line 202)"
             print "error:%s"%e
             sys.exit()
+
+        errorobject.tb=tb
             
         try:
             errorobject.funcfilename=tb.tb_frame.f_code.co_filename
@@ -246,10 +247,30 @@ class ErrorConditionHandler():
             return 
             
         self.inException=True
-           
+
+               
         errorobject=self.parsePythonErrorObject(pythonExceptionObject,ttype=ttype,tb=tb)
-        
-        
+        errorobject.tb=tb
+
+        # if j.application.config.exists("sentry.server"):
+        #         frames=self.getFrames(tb)
+        #         frame=frames[-1][0]
+        #             modulename=inspect.getmodulename(frame.f_code.co_filename)
+        #         except:
+        #             modulename="appname:%s"%(j.application.appname)
+            
+        #     self.sendMessageToSentry(modulename,errorConditionObject.errormessage,ttype="error",tags=None,extra=extra,level="error",tb=tb)
+        #     # client=self.getSentryClient()
+        #     # client.captureException(
+        #     # exc_info=(ttype, pythonExceptionObject, tb),
+        #     # extra={
+        #     #     'gid': j.application.whoAmI.gid,
+        #     #     'nid': j.application.whoAmI.nid,
+        #     #     'appname':j.application.appname,
+        #     #     #'tb':errorobject.backtrace,
+        #     #     })
+
+
         if self.lastAction<>"":
             j.logger.log("Last action done before error was %s" % self.lastAction)
         
@@ -257,7 +278,7 @@ class ErrorConditionHandler():
                 
         self.inException=False             
         
-        self.processErrorConditionObject(errorobject)
+        self.processErrorConditionObject(errorobject,sentry=True)
 
         if j.application.shellconfig.interactive:
             return self.escalateBugToDeveloper(errorobject,tb)
@@ -269,8 +290,43 @@ class ErrorConditionHandler():
                 return True
         return False
 
+    def getFrames(self,tb=None):
+
+        def _getitem_from_frame(f_locals, key, default=None):
+            """
+            f_locals is not guaranteed to have .get(), but it will always
+            support __getitem__. Even if it doesnt, we return ``default``.
+            """
+            try:
+                return f_locals[key]
+            except Exception:
+                return default
+
+        if tb==None:
+            ttype,msg,tb=sys.exc_info()
+        else:
+            frames=[]
+            while tb: #copied from sentry raven lib (BSD license)
+                # support for __traceback_hide__ which is used by a few libraries
+                # to hide internal frames.
+                f_locals = getattr(tb.tb_frame, 'f_locals', {})
+                if not _getitem_from_frame(f_locals, '__traceback_hide__'):
+                    frames.append((tb.tb_frame, getattr(tb, 'tb_lineno', None)))
+                tb = tb.tb_next
         
-    def processErrorConditionObject(self,errorConditionObject,tostdout=True):
+        result=[]
+        ignore=["ipython","errorconditionhandler"]
+        for frame,linenr in frames:
+            name=frame.f_code.co_filename
+            toignore=False
+            for check in ignore:
+                if name.find(check)<>-1:
+                    toignore=True
+            if not toignore:
+                result.append((frame,linenr))
+        return result
+
+    def processErrorConditionObject(self,errorConditionObject,tostdout=True,sentry=True,modulename=None):
         """
         a errorObject gets processed which means stored locally or forwarded to a logserver or both
         @return [ecsource,ecid,ecguid]
@@ -299,8 +355,126 @@ class ErrorConditionHandler():
         if tostdout:
             print errorConditionObject
 
+        if sentry and j.application.config.exists("sentry.server"):
+            extra={}
+            tb=errorConditionObject.tb
+            
+            extra["tb"]=errorConditionObject.backtrace
+            extra["category"]=errorConditionObject.category
+            
+            self.sendMessageToSentry(modulename=modulename,message=errorConditionObject.errormessage,ttype="error",tags=None,extra=extra,level="error",tb=tb)
+            # client=self.getSentryClient()            
+            # print client.capture('raven.events.Message', message=errorConditionObject.errormessage,extra={
+            #     'gid': j.application.whoAmI.gid,
+            #     'nid': j.application.whoAmI.nid,
+            #     'appname':j.application.appname,
+            #     'tb':errorConditionObject.backtrace,
+            #     'category':errorConditionObject.category,
+            #     'appname':errorConditionObject.appname
+            #     })
+            
+
         return errorConditionObject
-        
+
+    def getSentryClient(self):
+        if j.application.config.exists("sentry.server"):
+            server=j.application.config.get("sentry.server")
+            pub=j.application.config.get("sentry.public.key")
+            secret=j.application.config.get("sentry.secret.key")
+            port=int(j.application.config.get("sentry.port"))
+            default=j.application.config.get("sentry.project.default")
+            from raven import Client
+            url='http://%s:%s@%s:%s/%s'%(pub,secret,server,port,default)
+            client = Client(url)
+            client.name="g%s.n%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)            
+            return client
+        raise RuntimeError("sentry client should not be asked when not enabled")
+
+    def sendMessageToSentry(self,modulename,message,ttype="bug",tags=None,extra={},level="error",tb=None):
+        """
+        @param level        
+            fatal
+            error
+            warning
+            info
+            debug
+
+        """
+
+        if j.application.config.exists("sentry.server"):
+            import requests
+            import ujson
+            import uuid
+            import datetime
+            server=j.application.config.get("sentry.server")
+            pub=j.application.config.get("sentry.public.key")
+            secret=j.application.config.get("sentry.secret.key")
+            port=int(j.application.config.get("sentry.port"))
+            default=j.application.config.get("sentry.project.default")
+            url='http://%s:%s/'%(server,port)
+            exc={}
+            exc["type"]=ttype
+            exc["value"]=message
+
+            if modulename==None:
+                try:
+                    frames=self.getFrames(tb)
+                    frame=frames[-1][0]
+                    
+                    modulename=inspect.getmodulename(frame.f_code.co_filename)
+                    modulename=str(inspect.getmodule(frame)).replace("<module ","").replace("'","").replace(".pyc","").replace(">","")
+                    try:
+                        modulename=modulename.split("from")[0].strip()
+                    except:
+                        pass
+                except:
+                    modulename="appname:%s"%(j.application.appname)                
+                
+            exc["module"]=modulename
+            exc=[exc]
+            if tags==None:
+                tags={}
+            else:
+                tags=j.core.tags.getObject(tags)
+                tags=tags.getDict()
+                
+            data={}
+            data["event_id"]=uuid.uuid4().hex
+            data["culprit"]=modulename
+            data["timestamp"]=str(datetime.datetime.utcnow())
+            data["message"]="%s" %(message)
+            data["tags"]=tags
+            data["exception"]=exc
+            data["level"]=level
+            data["logger"]=j.application.appname
+            data["platform"]="python"
+            data["server_name"]="g%s.n%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)  
+            data["extra"]=extra
+
+            if tb<>None:
+                from stacks import iter_traceback_frames,get_stack_info
+                frames=iter_traceback_frames(tb)
+                data.update({
+                    'sentry.interfaces.Stacktrace': {
+                        'frames': get_stack_info(frames)
+                    },
+                })
+
+
+            url2="%s/api/%s/store/"%(url,default)
+
+            auth="Sentry sentry_version=5, sentry_timestamp=%s,"%j.base.time.getTimeEpoch()
+            auth+="sentry_key=%s, sentry_client=raven-python/1.0,"%pub
+            auth+="sentry_secret=%s"%secret
+
+            headers = {'X-Sentry-Auth': auth}
+
+            try:
+                r = requests.post(url2,data=ujson.dumps(data), headers=headers, timeout=1)
+            except Exception,e:                
+                print "COULD NOT SEND \n%s \nTO SENTRY.\nReason:%s"%(data,e)
+            
+
     
     def _dealWithRunningAction(self):
         """Function that deals with the error/resolution messages generated by j.action.start() and j.action.stop()

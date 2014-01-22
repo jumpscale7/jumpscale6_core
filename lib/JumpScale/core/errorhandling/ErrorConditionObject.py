@@ -75,7 +75,8 @@ class ErrorConditionObject():
 
             self.epoch= j.base.time.getTimeEpoch()
             self.tags=""
-            self.type=int(type) #j.enumerators.ErrorConditionType            
+            self.type=int(type) #j.enumerators.ErrorConditionType  
+            self.tb=None          
 
     def toAscii(self):
         def _toAscii(s):
