@@ -30,7 +30,9 @@ def main(j, args, params, tags, tasklet):
     out.append("|%s|%s|" % ('*Roles*', ', '.join(obj['roles']) or 'None'))
     out.append("|%s|%s|" % ('*Description*', obj['description'] or 'None'))
     out.append("|%s|%s|" % ('*Statistics*', '[Go to statistics page|NodeStats?id=%s]' % idd))
-    out.append("|%s|%s|" % ('*Real Time Statistics*', '[Go to real time stats page|realtimestats?nid=%s&statistic=cpupercent]' % idd))
+    out.append("|%s|%s|" % ('*CPU Real Time Statistics*', '[Go to real time stats for CPU page|realtimestats?nid=%s&statistic=cpupercent]' % idd))
+    out.append("|%s|%s|" % ('*Memory Real Time Statistics*', '[Go to real time stats for memory page|realtimestats?nid=%s&statistic=mempercent]' % idd))
+    out.append("|%s|%s|" % ('*Network Real Time Statistics*', '[Go to real time stats for network page|realtimestats?nid=%s&statistic=netstat]' % idd))
 
     # Display only if peers are actually defined
     if obj['peer_log'] > 0:

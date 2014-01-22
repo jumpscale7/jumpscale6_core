@@ -33,7 +33,7 @@ def main(j, args, params, tags, tasklet):
     page.addJS(".files/lib/jqplot-1.0.8/plugins/jqplot.canvasAxisLabelRenderer.min.js")
     page.addJS(".files/lib/jqplot-1.0.8/plugins/jqplot.dateAxisRenderer.js")
 
-
+    page.addJS(".files/lib/jqplot-1.0.8/plugins/jqplot.enhancedLegendRenderer.min.js")
 
     page.addJS(".files/lib/angular-1.2.5/angular.js")
     page.addJS(".files/app.js")

@@ -60,7 +60,7 @@ class system_gridmanager(j.code.classGetBase()):
         ctx.start_response('200', (('content-type', 'json'),))
         resultdata = list()
         for k in key:
-            url = "http://%s:8081/render?target=%s&format=json&from=-1minute" % (ip, k)
+            url = "http://%s:8081/render?target=%s&format=json&from=-1hour" % (ip, k)
             r = requests.get(url)
             content = None
             try:
@@ -83,12 +83,16 @@ class system_gridmanager(j.code.classGetBase()):
         """
         ctx = kwargs['ctx']
         nid = int(nid)
-        self.getClient(nid, 'core') # load ip in ipmap  
+        self.getClient(nid, 'core') 
         ip = self.clientsIp[nid]
+
         cpupercent =  self._getStatsOfKey(nid, ['n%s.system.cpu.percent' % nid], ip, ctx)
         mempercent =  self._getStatsOfKey(nid, ['n%s.system.memory.percent' % nid], ip, ctx)
         netstat =  self._getStatsOfKey(nid, ['n%s.system.network.kbytes.recv' % nid, 'n%s.system.network.kbytes.send' % nid], ip, ctx)
-        result = {'cpupercent': cpupercent, 'mempercent': mempercent, 'netstat': netstat}
+
+        result = {'cpupercent': [cpupercent, {'series': [{'label': 'CPU PERCENTAGE'}]}], 
+                  'mempercent': [mempercent, {'series': [{'label': 'MEMORY PERCENTAGE'}]}], 
+                  'netstat': [netstat, {'series': [{'label': 'KBytes Recieved'}, {'label': 'KBytes Sent'}]}]}
         return result
 
     def _getNode(self, nid):

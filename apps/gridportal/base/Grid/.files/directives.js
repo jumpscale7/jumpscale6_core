@@ -9,57 +9,66 @@ angular.module('jumpscale')
             scope.statisticsData = [];
 
 
-            var updateChart = function(data){
+            var updateChart = function(data, series){
                 if (scope.plot){scope.plot.destroy();}
                 element.empty();
                 if (!data) {return;};
-                scope.plot = $.jqplot(attrs.id,[ data ],{
+                scope.plot = $.jqplot(attrs.id, data, {
+                    legend:{
+                        show:true, 
+                        placement: 'outside', 
+                        renderer: $.jqplot.EnhancedLegendRenderer,
+                        location:'n'
+                    },
                     axesDefaults: {
                         tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
                         tickOptions: {
                             fontSize: '10pt'
                         }
                     },
-                axes:{
-                    xaxis:
-                        {
-                            renderer:$.jqplot.DateAxisRenderer,
-                            tickOptions: {
-                                formatString: '%T',
-                                angle: -30
+                    axes:{
+                        xaxis:
+                            {
+                                renderer:$.jqplot.DateAxisRenderer,
+                                tickOptions: {
+                                    formatString: '%T',
+                                    angle: -30
+                                }
+                            },
+                        yaxis:
+                            {
+                            tickOptions:{
+                                formatString:'%.2f'
                             }
-                        },
-                    yaxis:
-                        {
-                        tickOptions:{
-                            formatString:'%.2f'
                         }
-                    }
-                },
-                rendererOptions: {
-                    smooth: true
-                },
-                cursor: {
-                            show: true,
-                            zoom:true
-                        }
-                }
-            );
+                    },
+                    cursor: {
+                        show: true,
+                        zoom:true
+                    },
+                    series: series
+                });
             }
   
             function scheduleUpdate() {
                 $http.get(attrs.ngUrl).
                     then(
-                        function(result){ 
-
+                        function(result){
+                            if ('series' in result.data[selectedStatistic][1]){
+                                var series = result.data[selectedStatistic][1].series;
+                                result.data[selectedStatistic][1].series = null;
+                            }
                             var now = new Date().getTime();
-                            for (var i = 0; i < result.data[selectedStatistic].length; i++) {
-                                scope.statisticsData.push([now, result.data[selectedStatistic][i]]);
+                            for (var i = 0; i < result.data[selectedStatistic][0].length; i++) {
+                                if(typeof scope.statisticsData[i] === 'undefined'){
+                                    scope.statisticsData[i] = []
+                                };
+                                scope.statisticsData[i].push([now, result.data[selectedStatistic][0][i]]);
                             }
-                            while (scope.statisticsData.length > 90){
-                                scope.statisticsData.shift();
+                            while (scope.statisticsData[0].length > 90){
+                                scope.statisticsData[0].shift();
                             }
-                            updateChart(scope.statisticsData); // update DOM
+                            updateChart(scope.statisticsData, series); // update DOM
                         });
 
                 // save the timeoutId for canceling
