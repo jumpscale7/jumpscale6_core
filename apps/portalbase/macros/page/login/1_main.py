@@ -44,7 +44,7 @@ body {padding-top: 60px; padding-bottom: 40px;}</style>
 
     body = """
 <div class="container">
-      <form id="loginform" class="form-signin" method="post" action="/$$path">
+      <form id="loginform" class="form-signin" method="post" action="/$$path$$querystr">
         <h2 class="form-signin-heading">Please sign in</h2>
         <input type="text" class="input-block-level"  name="user_login_" placeholder="Username">
         <input type="password" class="input-block-level" name="passwd" placeholder="Password">
@@ -59,10 +59,7 @@ body {padding-top: 60px; padding-bottom: 40px;}</style>
         if jumpto.find("wiki") == 0:
             jumpto = jumpto[5:].strip("/")
 
-    if args.tags.tagExists("querystr"):
-        querystr = args.tags.tagGet("querystr")
-    else:
-        querystr = ""
+    querystr = args.requestContext.env['QUERY_STRING']
 
     session = args.requestContext.env['beaker.session']
     session["querystr"] = querystr
@@ -76,6 +73,8 @@ body {padding-top: 60px; padding-bottom: 40px;}</style>
     page.addHTMLHeader(head)
     page.body += body
     page.body = page.body.replace("$$path", jumpto)
+    if querystr:
+        querystr = "?%s" % querystr
     page.body = page.body.replace("$$querystr", querystr)
 
     params.result = page
