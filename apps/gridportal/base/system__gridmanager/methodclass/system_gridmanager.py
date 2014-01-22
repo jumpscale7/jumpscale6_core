@@ -2,6 +2,7 @@ from JumpScale import j
 import JumpScale.grid.geventws
 import JumpScale.grid.osis
 import JumpScale.grid.agentcontroller
+import JumpScale.baselib.serializers
 import grequests as requests
 
 def mbToKB(value):
@@ -61,8 +62,20 @@ class system_gridmanager(j.code.classGetBase()):
         param:nid id of node
         result json
         """
-        client=self.getClient(nid)
-        return client.monitorSystem()
+        ctx = kwargs['ctx']
+        ctx.start_response('200', (('content-type', 'json'),))
+        nid = int(nid)
+        self.getClient(nid, 'core') # load ip in ipmap  
+        ip = self.clientsIp[nid]
+        url = "http://%s:8081/render?%s" % (ip, 'width=586&height=308&target=n1.system.cpu.percent&format=json&from=-1minute')
+        r = requests.get(url)
+        try:
+            result = r.send()
+            content = j.db.serializers.ujson.loads(result.content)
+            content = content[0]['datapoints'][-1][0]
+        except Exception:        
+            content = None
+        return {'cpupercent': content}
 
     def _getNode(self, nid):
         node=self.osis_node.get(nid)
@@ -118,7 +131,6 @@ class system_gridmanager(j.code.classGetBase()):
 
         return filter(myfilter, results)
 
-
     def getProcessStats(self, nid, domain="", name="", **kwargs):
         """
         ask the right processmanager on right node to get the information
@@ -134,7 +146,28 @@ class system_gridmanager(j.code.classGetBase()):
         client=self.getClient(nid)
         return client.monitorProcess(domain=domain,name=name)
 
-    def getStatImage(self,statKey, title=None, aliases={}, width=500,height=250, **kwargs):
+    def _showUnavailable(self, width, height, message="STATS UNAVAILABLE"):
+        import PIL.Image as Image
+        import PIL.ImageDraw as ImageDraw
+        import StringIO
+
+        size = (int(width), int(height))
+        im = Image.new('RGB', size, 'white') 
+        draw = ImageDraw.Draw(im)   
+        red = (255,0,0)
+        text_pos = (size[0]/2,size[1]/2)
+        text = message
+        draw.text(text_pos, text, fill=red)
+        
+        del draw 
+        output = StringIO.StringIO()
+        im.save(output, 'PNG')
+        del im
+        response = output.getvalue()
+        output.close()
+        return response
+
+    def getStatImage(self, statKey, title=None, aliases={}, width=500, height=250, **kwargs):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
@@ -153,9 +186,12 @@ class system_gridmanager(j.code.classGetBase()):
             statKey = '.'.join(statKeyInfo)
         else:
             raise RuntimeError("Could not parse statKey, only node stats supported for now (means starting with n)")
-        self.getClient(nid, 'core') # load ip in ipmap
-        ip=self.clientsIp[nid]
+        try: 
+            self.getClient(nid, 'core') # load ip in ipmap
+        except:
+            return self._showUnavailable(width, height, message='PROCESSMANAGER UNAVAILABLE')
 
+        ip=self.clientsIp[nid]
         for target in statKey.split(','):
 
             if target in aliases:
@@ -184,24 +220,7 @@ class system_gridmanager(j.code.classGetBase()):
         try:
             result = r.send()
         except Exception:        
-            import PIL.Image as Image
-            import PIL.ImageDraw as ImageDraw
-            import StringIO
-
-            size = (int(width), int(height))
-            im = Image.new('RGB', size, 'white') 
-            draw = ImageDraw.Draw(im)   
-            red = (255,0,0)    
-            text_pos = (size[0]/2,size[1]/2) 
-            text = "STATS UNAVAILABLE" 
-            draw.text(text_pos, text, fill=red)
-            
-            del draw 
-            output = StringIO.StringIO()
-            im.save(output, 'PNG')
-            response = output.getvalue()
-            output.close()
-            return response # and we're done!
+            return self._showUnavailable(width, height, "GRAPHITE UNAVAILABLE")
         return result.content
 
     def getProcessesActive(self, nid, name, domain, **kwargs):

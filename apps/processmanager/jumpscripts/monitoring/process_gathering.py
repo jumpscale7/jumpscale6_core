@@ -191,7 +191,7 @@ def action():
         processOsisObject.active=True #process.is_running()
 
         processOsisObject.pname=pname
-        processOsisObject.sname=""
+        processOsisObject.sname=pname
 
         processOsisObject.getSetGuid()
 
@@ -201,7 +201,7 @@ def action():
         loadFromSystemProcessInfo(process_key,cacheobj,pid)
 
         processOsisObject.pname=pname #need to reset because loadfromsystem does not clean
-        processOsisObject.sname=""
+        processOsisObject.sname=pname
  
         processOsisObject.type="childreninit" #init children
 

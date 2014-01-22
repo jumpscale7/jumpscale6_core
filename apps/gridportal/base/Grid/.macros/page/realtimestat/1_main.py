@@ -2,10 +2,22 @@ def main(j, args, params, tags, tasklet):
 
     page = args.page
   
+    nid = args.getTag('nid')
+    statistic = args.getTag('statistic')
     
-    p=args.tags.getDict()
-    nid = p['nid'] if p.get('nid') and not p['nid'].startswith('$$') else None
-    statistic = p['statistic']
+    out = ''
+    missing = False
+    for k,v in {'nid':nid, 'statistic':statistic}.iteritems():
+        if not v:
+            out += 'Missing param "%s".<br>' % k
+            missing = True
+
+    if missing:
+        page.addMessage(out)
+        params.result = page
+        return params
+
+
 
     page.addBodyAttribute('ng-app="jumpscale"')
 
@@ -33,7 +45,7 @@ def main(j, args, params, tags, tasklet):
     url = '/restmachine/system/gridmanager/getNodeSystemStats?nid=%s' % nid
     import random
     randomid = random.randint(1, 999999999999)
-    page.addHTML('<div id="statisticsChart%s" data-chart ng-model="statisticsData" ng-url="%s" ng-stat="%s" style="width: 100%%;"></div>' % (randomid, url,statistic))
+    page.addHTML('<div id="statisticsChart%s" data-chart ng-model="statisticsData" ng-url="%s" ng-stat="%s" style="width: 100%%;"></div>' % (randomid, url, statistic))
 
     params.result = page
     return params

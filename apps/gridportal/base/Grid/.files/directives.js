@@ -15,33 +15,36 @@ angular.module('jumpscale')
                 if (!data) {return;};
                 scope.plot = $.jqplot(attrs.id,[ data ],{
                     axesDefaults: {
-                    tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
-                            tickOptions: {
+                        tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+                        tickOptions: {
                             fontSize: '10pt'
-                            }
-                        },
-                        axes:{
-                            xaxis:
-                                {
-                                    renderer:$.jqplot.DateAxisRenderer,
-                                    tickOptions: {
-                                    formatString: '%T',
-                                    angle: -30
-                                }
-                            },
-                            yaxis:
-                                {
-                                tickOptions:{
-                                formatString:'%.2f'
-                                }
-                            }
-                        },
-                        cursor: {
-                                    show: true,
-                                    zoom:true
-                                }
                         }
-                    );
+                    },
+                axes:{
+                    xaxis:
+                        {
+                            renderer:$.jqplot.DateAxisRenderer,
+                            tickOptions: {
+                                formatString: '%T',
+                                angle: -30
+                            }
+                        },
+                    yaxis:
+                        {
+                        tickOptions:{
+                            formatString:'%.2f'
+                        }
+                    }
+                },
+                rendererOptions: {
+                    smooth: true
+                },
+                cursor: {
+                            show: true,
+                            zoom:true
+                        }
+                }
+            );
             }
   
             function scheduleUpdate() {
@@ -60,7 +63,7 @@ angular.module('jumpscale')
                 // save the timeoutId for canceling
                 timeoutId = $timeout(function() {
                     scheduleUpdate(); // schedule the next update
-                    }, 1000);
+                    }, 5000);
             }
  
             element.on('$destroy', function() {

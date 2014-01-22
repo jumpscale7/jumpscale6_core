@@ -38,6 +38,7 @@ Logs:/grid/Logs
 Alerts:/grid/alerts
 JumpScripts:/grid/JumpScripts
 Stats:/grid/stat
+Real Time Stats:/grid/realtimestats
 """
     # C+=spacestxt
     C+='}}'
