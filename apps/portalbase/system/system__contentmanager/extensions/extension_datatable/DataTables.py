@@ -137,12 +137,13 @@ class DataTables():
                     sort[colname] = 'asc' if kwargs['sSortDir_%s' % i] == 'asc' else 'desc'
 
         #filters
+        partials = dict()
         for x in xrange(len(fieldids)):
             svalue = kwargs.get('sSearch_%s' % x)
             if kwargs['bSearchable_%s' % x] == 'true' and svalue:
-                filters[fieldids[x]] = svalue
+                partials[fieldids[x]] = svalue
 
-        total, inn = client.simpleSearch(filters, size=size, start=start, withtotal=True, sort=sort)
+        total, inn = client.simpleSearch(filters, size=size, start=start, withtotal=True, sort=sort, partials=partials)
         result = {}
         result["sEcho"] = int(kwargs.get('sEcho', 1))
         result["iTotalRecords"] = total
