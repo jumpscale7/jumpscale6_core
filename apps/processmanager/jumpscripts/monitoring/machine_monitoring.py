@@ -12,6 +12,7 @@ category = "monitoring.machine"
 period = 20 #always in sec
 order = 1
 enable=True
+async=False
 
 from xml.etree import ElementTree
 

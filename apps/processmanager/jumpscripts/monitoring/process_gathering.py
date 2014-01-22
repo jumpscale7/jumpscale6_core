@@ -12,6 +12,7 @@ version = "1.0"
 category = "info.gather.process"
 period = 120 #always in sec
 enable=True
+async=False
 
 def action():
     import time

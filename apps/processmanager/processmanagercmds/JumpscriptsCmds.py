@@ -6,6 +6,9 @@ import imp
 import time
 import sys
 
+from redis import Redis
+from rq import Queue
+
 class Jumpscript():
 
     def __init__(self, name,organization, author, license, version, action, source, path, descr,category,period,startatboot):
@@ -25,7 +28,13 @@ class Jumpscript():
         self.enable=True
         self.startatboot=startatboot
         self.lastrun=0
+        self.queue="default"
+        self.async=False        
         self._name="jumpscripts"
+
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts"))
+        j.system.fs.writeFile(filename=j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts","__init__.py"),contents="")
+        
 
     def __repr__(self):
         return "%s %s"%(self.name,self.descr)
@@ -46,12 +55,20 @@ class JumpscriptsCmds():
         # self.lastMonitorResult=None
         self.lastMonitorTime=None
 
+        self.redis = Redis("127.0.0.1", 7768, password=None)
+
+        self.q_i = Queue(name="io",connection=self.redis)
+        self.q_h = Queue(name="hypervisor",connection=self.redis)
+        self.q_d = Queue(name="default",connection=self.redis)
+
+
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
             try:
-                script = imp.load_source('JumpScale.jumpscript_%s' % j.tools.hash.md5_string(path2), path2)
+                fname="%s_%s"%(j.system.fs.getParentDirName(j.system.fs.getDirName(path2)),j.system.fs.getBaseName(path2).replace(".py",""))                
+                script = imp.load_source('jumpscript_pm_%s' % fname, path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
@@ -73,17 +90,31 @@ class JumpscriptsCmds():
             order = getattr(script, 'order', 1)
             period = getattr(script, 'period')
             startatboot = getattr(script, 'startatboot',True)
+            async = getattr(script, 'async',False)
+            queue = getattr(script, 'queue',"default")
 
             source = inspect.getsource(script.action)
 
             t = Jumpscript(name, organization, author, license, version, script.action, source, path2, script.descr, category, period,startatboot)
             t.enable = enable
             t.order = order
+            t.queue=queue
+            t.async=async
+
             print "found jumpscript:%s " %("%s_%s" % (organization, name))
             self.jumpscripts["%s_%s" % (organization, name)] = t
             if not self.jumpscriptsByPeriod.has_key(period):
                 self.jumpscriptsByPeriod[period]=[]
             self.jumpscriptsByPeriod[period].append(t)
+
+            #remember for worker
+            tpath=j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts","%s.py"%t.name)
+            content="""
+from JumpScale import j
+"""
+            content+=t.source
+            j.system.fs.writeFile(filename=tpath,contents=content)
+
         self._killGreenLets()       
         self._configureScheduling()
         
@@ -142,24 +173,25 @@ class JumpscriptsCmds():
             if not action.enable:
                 continue
             #print "start action:%s"%action
-            try:
-                if action.lastrun==0 and action.startatboot==False:
-                    print "did not start at boot:%s"%action.name
-                else:
-                    action.action()
-                action.lastrun=time.time()
-            except Exception,e:
-                eco=j.errorconditionhandler.parsePythonErrorObject(e)
-                eco.errormessage+='\\n'
-                for key in action.__dict__.keys():
-                    if key not in ["license", 'source', 'action']:
-                        eco.errormessage+="%s:%s\n"%(key,action.__dict__[key]) 
-                eco.tags="category:%s"%action.category
-                print eco
-                sys.exit()
-                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                continue
-            print "ok"
+            if action.lastrun==0 and action.startatboot==False:
+                print "did not start at boot:%s"%action.name
+            else:
+                if action.async==False:
+                    try:
+                        action.action()
+                    except Exception,e:
+                        eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                        eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(action.organization,action.name, \
+                                j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
+                        eco.tags="jscategory:%s"%action.category
+                        eco.tags+=" jsorganization:%s"%action.organization
+                        eco.tags+=" jsname:%s"%action.name                        
+                        j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+                else:                    
+                    result = self.q_d.enqueue('%s.action'%action.name)
+                
+            action.lastrun=time.time()
+            print "ok:%s"%action.name
 
 
     def loop(self, period):

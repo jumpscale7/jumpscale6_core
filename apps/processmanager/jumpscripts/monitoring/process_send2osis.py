@@ -11,6 +11,7 @@ version = "1.0"
 category = "process.send2osis"
 period = 300 #always in sec
 enable=True
+async=False
 
 def action():
     for process in j.processmanager.cache.processobject.monitorobjects.itervalues():

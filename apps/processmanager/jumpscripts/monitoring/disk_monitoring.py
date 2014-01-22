@@ -9,9 +9,10 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "disk.monitoring"
-period = 20 #always in sec
+period = 60 #always in sec
 order = 1
 enable=True
+async=False
 
 j.processmanager.disks = dict()
 

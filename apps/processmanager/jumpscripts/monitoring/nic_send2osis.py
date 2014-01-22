@@ -11,6 +11,7 @@ version = "1.0"
 category = "nic.send2osis"
 period = 600 #always in sec
 enable = True
+async=False
 
 from JumpScale import j
 

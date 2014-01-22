@@ -1,7 +1,5 @@
 from JumpScale import j
 from JumpScale.grid.osis.OSISStore import OSISStore
-import JumpScale.grid.grid
-import uuid
 
 ujson = j.db.serializers.getSerializerType('j')
 
@@ -21,33 +19,33 @@ class mainclass(OSISStore):
         return ["",True,True]
 
     def find(self,query, start=0, size =100):
-        j.errorconditionhandler.raiseBug(message="osis 'find' for stat not implemented",category="osis.notimplemented")
+        raise RuntimeError("osis 'find' for stat not implemented")
 
     def destroyindex(self):
-        j.errorconditionhandler.raiseBug(message="osis 'destroyindex' for stat not implemented",category="osis.notimplemented")
+        raise RuntimeError("osis 'destroyindex' for stat not implemented")
 
     def getIndexName(self):
         return "system_stats"
 
     def get(self,key):
-        j.errorconditionhandler.raiseBug(message="osis 'get' for stat not implemented",category="osis.notimplemented")
+        raise RuntimeError("osis 'get' for stat not implemented")
 
     def exists(self,key):
-        j.errorconditionhandler.raiseBug(message="osis exists for stat not implemented",category="osis.notimplemented")
+        raise RuntimeError("osis exists for stat not implemented")
         #work with elastic search only
 
 
     #NOT IMPLEMENTED METHODS WHICH WILL NEVER HAVE TO BE IMPLEMENTED
 
     def setObjIds(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method setObjIds is not relevant for statger namespace",category="osis.notimplemented")
+        raise RuntimeError("osis method setObjIds is not relevant for stats namespace")
 
     def rebuildindex(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method rebuildindex is not relevant for statger namespace",category="osis.notimplemented")
+        raise RuntimeError("osis method rebuildindex is not relevant for stats namespace")
 
     def list(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method list is not relevant for statger namespace",category="osis.notimplemented")
+        raise RuntimeError("osis method list is not relevant for stats namespace")
 
     def removeFromIndex(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method removeFromIndex is not relevant for statger namespace",category="osis.notimplemented")
+        raise RuntimeError("osis method removeFromIndex is not relevant for stats namespace")
 

@@ -262,6 +262,7 @@ class OSISCMDS(object):
                 if overwriteImplementation or not j.system.fs.exists(path=implpath):
                     j.system.fs.copyFile(fileFrom, implpath)
 
+                print implpath
                 classs = j.core.osis._loadModuleClass(implpath)
                 
                           

@@ -4,6 +4,19 @@ from redis import *
 from rq import Queue, Connection, Worker
 
 from JumpScale.baselib import cmdutils
+from JumpScale import j
+sys.path.insert(0,j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts"))
+
+import psutil
+
+j.system.platform.psutil=psutil
+
+import JumpScale.baselib.graphite
+
+import JumpScale.lib.diskmanager
+
+import JumpScale.baselib.stataggregator
+
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("-wn", '--workername', help='Worker name')
@@ -15,7 +28,7 @@ parser.add_argument("-p", '--port', help='Port of redis')
 opts = parser.parse_args()
 
 # Preload libraries
-from JumpScale import j
+
 
 # Provide queue names to listen to as arguments to this script,
 # similar to rqworker
@@ -30,22 +43,11 @@ redis = Redis(opts.addr, int(opts.port), password=opts.auth)
 qs = Queue(opts.queuename,connection=redis)
 w = Worker(qs,name=opts.workername,connection=redis)
 
-from raven import Client
-from rq.contrib.sentry import register_sentry
-client = Client('http://18275531e40849ae8f259a4edd8f1c22:d43b0396addb4b789cd6c325a9ceb36e@localhost:9000/2')
-# register_sentry(client, w)
-client.name="kds"
-
 def my_handler(job, *exc_info):#exc_type, exc_value, traceback):
-    client.captureException(
-        exc_info=exc_info,
-        extra={
-            'job_id': job.id,
-            'func': job.func_name,
-            'args': job.args,
-            'kwargs': job.kwargs,
-            'description': job.description,
-            })    
+    exc_type, exc_value, traceback=exc_info 
+    j.errorconditionhandler.sendMessageToSentry(modulename=None,message="Could not execute work on worker. Crash.",\
+        ttype="worker.execution.error",tags="",extra={},level="error",tb=traceback)
+
 
 w.push_exc_handler(my_handler)
 

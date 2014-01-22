@@ -1,5 +1,6 @@
 from JumpScale import j
 
+
 descr = """
 gather statistics about system
 """
@@ -11,6 +12,7 @@ version = "1.0"
 category = "monitoring.processes"
 period = 10 #always in sec
 enable=True
+async=False
 
 def action():
     psutil=j.system.platform.psutil

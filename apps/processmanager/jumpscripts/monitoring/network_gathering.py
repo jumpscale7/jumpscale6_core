@@ -12,6 +12,7 @@ version = "1.0"
 category = "info.gather.nic"
 period = 30 #always in sec
 enable=True
+async=False
 
 j.processmanager.nics = dict()
 

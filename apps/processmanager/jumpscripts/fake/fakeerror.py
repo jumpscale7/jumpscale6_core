@@ -1,19 +1,20 @@
 from JumpScale import j
 
 descr = """
-tell stat aggregator to cleanup history
+fake
 """
 
 organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-category = "monitoring.aggregate"
-period = 600 #always in sec
+category = "fake.fake"
+period = 1 #always in sec
 enable=False
 async=False
 
 def action():
-    j.system.stataggregator.clean()
+    raise RuntimeError("oef")
+    return "HALLO"
 
 

@@ -138,15 +138,12 @@ class OSISFactory:
 
     def _loadModuleClass(self, path):
         '''Load the Python module from disk using a random name'''
-        # Random name -> name in sys.modules
-        def generate_module_name():
-            '''Generate a random unused module name'''
-            return '_osis_module_%d' % random.randint(0, sys.maxint)
-        modname = generate_module_name()
-        while modname in sys.modules:
-            modname = generate_module_name()
+        modname = "osis_%s"%path.replace("/","_").replace("logic_","")[:-3]
+        
+        # while modname in sys.modules:
+        #     modname = generate_module_name()
 
-        print path
+        # print path
 
         module = imp.load_source(modname, path)
         # find main classname of module

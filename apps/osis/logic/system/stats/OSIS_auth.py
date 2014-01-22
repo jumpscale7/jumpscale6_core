@@ -4,10 +4,7 @@ import ujson
 class AUTH():
 
     def load(self,osis):
-        for key in osis.list():
-            item=osis.get(key)
-            obj=ujson.loads(item)
-            j.core.osis.nodeguids[str(obj["machineguid"])]=obj["id"]
+        pass
 
     def authenticate(self,osis,method,user,passwd):
         if j.core.osis.cmds._authenticateAdmin(user=user,passwd=passwd):
