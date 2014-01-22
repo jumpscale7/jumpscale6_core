@@ -60,6 +60,7 @@ class Node(OsisBaseObject):
         self.ipaddr=[item for item in j.system.net.getIpAddresses() if item <>"127.0.0.1"]        
         
         self.netaddr=j.system.net.getNetworkInfo()
+        self.name = j.system.net.getHostname()
 
         self.gid=j.application.config.getInt("grid.id")
         if self.gid==0:
