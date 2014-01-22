@@ -55,6 +55,12 @@ class PortalAuthenticatorOSIS():
 
     def getGroups(self,user):
         if not self.users.has_key(user):
+            try:
+                userinfo = self.getUserInfo(user).__dict__
+                self.users[user] = userinfo
+                return userinfo['groups']
+            except:
+                pass
             return ["guest","guests"]
         return  self.users[user]["groups"]
 
