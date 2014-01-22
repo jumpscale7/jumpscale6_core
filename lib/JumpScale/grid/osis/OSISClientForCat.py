@@ -137,4 +137,6 @@ class OSISClientForCat():
             total = -1
             if 'total' in response:
                 total = response['total']
+            elif 'hits' in response and 'total' in response['hits']:
+                total = response['hits']['total']
             return total, results
