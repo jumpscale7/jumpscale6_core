@@ -827,6 +827,7 @@ function copyText$id() {
                                 editor1.setLineClass(hlLine, null, null);
                                 hlLine = editor1.setLineClass(editor1.getCursor().line, null, "activeline");
                         }});
+                        this.myCodeMirror.setSize(790, 600);
                     },
                     close : function(textarea, instance) {
                         this.myCodeMirror = null;
