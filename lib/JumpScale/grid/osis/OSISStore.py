@@ -199,7 +199,6 @@ class OSISStore(object):
             result = self.elasticsearch.search(query=query, index=index, es_from=start,
                                            size=size)
         except:
-            raise
             result = {'hits': {'hits': list(), 'total': 0}}
         if not isinstance(result, dict):
             result = result()
