@@ -93,6 +93,10 @@ class JPackagesCmds():
     def existsJPackage(self,domain, name, session=None,**args):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
-        jpackage=self._getJPackage(domain,name)
-        return self.manager.existsJPackage(jpackage)
+        res= j.packages.find(domain, name)
+        if len(res)>0:
+            return True
+        else:
+            return False
+        
 

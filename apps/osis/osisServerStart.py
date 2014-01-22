@@ -5,9 +5,9 @@ j.application.start("osisserver")
 
 
 
-from gevent import monkey
-monkey.patch_socket()
-monkey.patch_thread()
+# from gevent import monkey
+# monkey.patch_socket()
+# monkey.patch_thread()
 
 j.core.osis.startDaemon(overwriteImplementation=False)
 

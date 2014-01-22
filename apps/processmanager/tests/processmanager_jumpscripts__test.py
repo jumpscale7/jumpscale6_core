@@ -28,7 +28,7 @@ class TEST():
         self.client.loadJumpscripts()
 
     def test_getJumpscript(self):
-        result=self.client.getJumpscript(organization="jumpscale",name="startcheckprocesses")        
+        result=self.client.getJumpscript(organization="jumpscale",name="disk_monitoring")        
 
         #how can we check that there needs to be an error @todo
         # error=False

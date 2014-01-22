@@ -1,6 +1,6 @@
 @usedefault
 
-h2. Overview of the grid
+h2. Overview of the grid (different nodes)
 
 {{nodes}}
 

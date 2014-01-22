@@ -55,7 +55,11 @@ class StartupManagerCmds():
         for pd in self.manager.getProcessDefs(domain, name):
             item = dict()
             item['status'] = pd.isRunning()
-            item['pid'] = pd.pid
+            if item['status']:
+                item['pid'] = pd.pid
+            else:
+                item['pid'] = 0
+                
             item['name'] = pd.name
             item['domain'] = pd.domain
             item['autostart'] = pd.autostart == '1'
