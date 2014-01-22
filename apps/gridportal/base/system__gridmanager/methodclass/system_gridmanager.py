@@ -56,6 +56,25 @@ class system_gridmanager(j.code.classGetBase()):
 
         return self.clients[nid]
 
+    def _getStatsOfKey(self, nid, key, ip, ctx, **kwargs):
+        ctx.start_response('200', (('content-type', 'json'),))
+        resultdata = list()
+        for k in key:
+            url = "http://%s:8081/render?target=%s&format=json&from=-1minute" % (ip, k)
+            r = requests.get(url)
+            content = None
+            try:
+                result = r.send()
+                data = j.db.serializers.ujson.loads(result.content)
+                for i in data:
+                    if i['target'] == k:
+                        content = i['datapoints'][-1][0]
+            except Exception:        
+                content = None
+            resultdata.append(content)
+        return resultdata
+
+
     def getNodeSystemStats(self, nid, **kwargs):
         """
         ask the right processmanager on right node to get the information about node system
@@ -63,19 +82,14 @@ class system_gridmanager(j.code.classGetBase()):
         result json
         """
         ctx = kwargs['ctx']
-        ctx.start_response('200', (('content-type', 'json'),))
         nid = int(nid)
         self.getClient(nid, 'core') # load ip in ipmap  
         ip = self.clientsIp[nid]
-        url = "http://%s:8081/render?%s" % (ip, 'width=586&height=308&target=n1.system.cpu.percent&format=json&from=-1minute')
-        r = requests.get(url)
-        try:
-            result = r.send()
-            content = j.db.serializers.ujson.loads(result.content)
-            content = content[0]['datapoints'][-1][0]
-        except Exception:        
-            content = None
-        return {'cpupercent': content}
+        cpupercent =  self._getStatsOfKey(nid, ['n%s.system.cpu.percent' % nid], ip, ctx)
+        mempercent =  self._getStatsOfKey(nid, ['n%s.system.memory.percent' % nid], ip, ctx)
+        netstat =  self._getStatsOfKey(nid, ['n%s.system.network.kbytes.recv' % nid, 'n%s.system.network.kbytes.send' % nid], ip, ctx)
+        result = {'cpupercent': cpupercent, 'mempercent': mempercent, 'netstat': netstat}
+        return result
 
     def _getNode(self, nid):
         node=self.osis_node.get(nid)
