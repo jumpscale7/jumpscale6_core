@@ -26,8 +26,7 @@ class GridDataTables:
         url = "/restmachine/system/contentmanager/modelobjectlist?namespace=%s&category=%s&key=%s" % (namespace, category, key)
         if not fieldnames:
             fieldnames = fieldids
-        self.addTableFromURL(url, fieldnames)
-        return self.page
+        return self.addTableFromURL(url, fieldnames)
 
     def addTableFromURL(self, url, fieldnames):
         import random
@@ -83,7 +82,7 @@ $fields
         C = C.replace("$tableid", tableid)
 
         self.page.addMessage(C, isElement=True, newline=True)
-        return self.page
+        return tableid
 
     def addSearchOptions(self, tableid=".dataTable"):
         self.page.addJS(jsContent='''
