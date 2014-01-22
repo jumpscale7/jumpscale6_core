@@ -31,7 +31,10 @@ class mainclass(OSISStore):
             kwargs['es_from'] = start
         if size:
             kwargs['size'] = size
-        return self.elasticsearch.search(index='system_log', query=query, **kwargs)
+        try:
+            return self.elasticsearch.search(index='system_log', query=query, **kwargs)
+        except:
+            return {'hits': {'hits': list(), 'total': 0}}
 
     def destroyindex(self):
         import ipdb

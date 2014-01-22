@@ -193,11 +193,14 @@ class OSISStore(object):
             query = json.loads(query)
         
         index = self.getIndexName()
-        if size:
+        size = size or 100000
+
+        try:
             result = self.elasticsearch.search(query=query, index=index, es_from=start,
                                            size=size)
-        else:
-            result = self.elasticsearch.search(query=query, index=index, es_from=0, size=100000)
+        except:
+            raise
+            result = {'hits': {'hits': list(), 'total': 0}}
         if not isinstance(result, dict):
             result = result()
         return {'result': result['hits']['hits'],
