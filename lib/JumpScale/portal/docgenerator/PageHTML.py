@@ -850,7 +850,7 @@ function copyText$id() {
                 dblclick : function(event, elfinderInstance) {
                     event.preventDefault();
                     elfinderInstance.exec('getfile')
-                        .done(function() { elfinderInstance.exec('quicklook'); })
+                        .done(function() { elfinderInstance.exec('download'); })
                         .fail(function() { elfinderInstance.exec('open'); });
                 },
 	            upload : function(event, instance)
