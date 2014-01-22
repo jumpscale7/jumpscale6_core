@@ -15,7 +15,8 @@ def main(j, args, params, tags, tasklet):
     jidstr = '[%(jid)s|/grid/job?id=%(jid)s]'
     fieldids = ['appname', 'category', 'epoch', 'message', 'level', 'pid', 'nid', 'jid']
     fieldvalues = [appstr, 'category', makeTime, 'message', 'level', pidstr, nidstr, jidstr]
-    modifier.addTableForModel('system', 'log', fieldids, fieldnames, fieldvalues)
+    tableid = modifier.addTableForModel('system', 'log', fieldids, fieldnames, fieldvalues)
+    modifier.addSearchOptions('#%s' % tableid)
 
     params.result = page
 

@@ -26,7 +26,8 @@ def main(j, args, params, tags, tasklet):
     fieldnames = ['Id', 'Category', 'Result', 'JSName', 'JSOrganization', 'State', 'Description']
     fieldvalues = [makeLink, 'category', 'result', 'jsname', 'jsorganization', 'state', 'description']
     fieldids = ['id', 'category', 'result', 'jsname', 'jsorganization', 'state', 'description']
-    modifier.addTableForModel('system', 'job', fieldids, fieldnames, fieldvalues, filters)
+    tableid = modifier.addTableForModel('system', 'job', fieldids, fieldnames, fieldvalues, filters)
+    modifier.addSearchOptions('#%s' % tableid)
 
     params.result = page
     return params

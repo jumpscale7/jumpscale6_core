@@ -9,7 +9,8 @@ def main(j, args, params, tags, tasklet):
 
     fieldvalues = [makeLink, 'name', 'ipaddr', 'roles']
     fieldids = ['id', 'name', 'ipaddr', 'roles']
-    modifier.addTableForModel('system', 'node', fieldids, fieldnames, fieldvalues)
+    tableid = modifier.addTableForModel('system', 'node', fieldids, fieldnames, fieldvalues)
+    modifier.addSearchOptions('#%s' % tableid)
 
     params.result = page
 
