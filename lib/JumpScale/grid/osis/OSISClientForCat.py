@@ -122,6 +122,7 @@ class OSISClientForCat():
             query = dict()
         if sort:
             query['sort'] = [ {x:v} for x,v in sort.iteritems() ]
+
         response = self.search(query, start, size)
 
         results = list()
