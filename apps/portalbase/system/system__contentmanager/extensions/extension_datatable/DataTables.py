@@ -105,6 +105,7 @@ class DataTables():
         except:
             raise RuntimeError("Cannot process macro string for row, row was %s, field was %s" % (row, field))
 
+        field = field % row
         field = self.processLink(field)
         if field.find("{{") != -1:
             field = j.core.portal.active.macroexecutorPage.processMacrosInWikiContent(field)
@@ -149,7 +150,7 @@ class DataTables():
         result["aaData"] = []
         for row in inn:
             r = []
-            for field in fieldvalues:
+            for field, fieldid in zip(fieldvalues, fieldids):
                 if field in row:
                     r.append(row[field])
                 elif j.basetype.integer.check(field):
@@ -158,7 +159,7 @@ class DataTables():
                     r.append(self.executeMacro(row, field))
                 else:
                     # is function
-                    field = field(row, field)
+                    field = field(row, fieldid)
                     field = self.processLink(field)
                     r.append(field)
 
