@@ -61,10 +61,6 @@ if opts.action =='reinit':
     jp=j.packages.findNewest(name="grid_portal")
     jp.restart()
 
-    j.system.process.executeWithoutPipe("jsuser add -d admin:admin:admin::")
-
-    print "has set user admin with passwd admin, please change using command 'jsuser' if required."
-
 # packages=["osis","logger"]
 #     for package in packages:
 #         jp=j.packages.findNewest(name=package)        
@@ -72,5 +68,8 @@ if opts.action =='reinit':
 
     j.tools.startupmanager.startAll()
 
+    j.system.process.executeWithoutPipe("jsuser add -d admin:admin:admin::")
+
+    print "has set user admin with passwd admin, please change using command 'jsuser' if required."
 
 j.application.stop()
