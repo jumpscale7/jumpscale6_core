@@ -183,6 +183,8 @@ class PageHTML(Page):
         @param headers [header1, header2, ...]
         @param linkcolumns has pos (starting 0) of columns which should be formatted as links  (in that column format needs to be $description__$link
         """
+        if rows==[[]]:
+            return 
         if "datatables" in self.functionsAdded:
             classparams += 'cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered display JSdataTable dataTable'
         if len(rows) == 0:
@@ -222,8 +224,14 @@ class PageHTML(Page):
         c += "<tbody>\n"
         for row in rows3:
             c += "<tr>\n"
-            if row[0] in columnAliases:
-                row[0] = columnAliases[row[0]]
+            try:
+                if row[0] in columnAliases:
+                    row[0] = columnAliases[row[0]]
+            except:
+                from IPython import embed
+                print "DEBUG NOW yyyyyyyt"
+                embed()
+                
             colnr = 0
             for col in row:
                 if col == "":
