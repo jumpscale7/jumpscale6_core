@@ -367,8 +367,8 @@ class GeventWebserver:
                 else:
                     ctx.params["path"] = "space:%s pagename:%s" % (space, name)
                     doc, params = self.getDoc(space, "pagenotfound", ctx, params)
-
         ctx.params["rights"] = right
+        doc.loadFromDisk()
 
         return doc, params
 

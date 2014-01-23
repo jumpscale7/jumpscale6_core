@@ -41,6 +41,7 @@ class Doc(object):
         self.docContentChanged = False
         self.content = ""
         self.path = ""
+        self._mtime = 0
         self.shortpath = ""
         self.md5 = ""
         self.title = ""
@@ -93,12 +94,17 @@ class Doc(object):
         self.visible = False
 
     def loadFromDisk(self, preprocess=True):
-        self.source = j.system.fs.fileGetTextContents(self.path)
+        stat = os.stat(self.path)
+        if stat.st_mtime > self._mtime:
+            self._mtime = stat.st_mtime
+            self.source = j.system.fs.fileGetTextContents(self.path)
 
         self.source = self.source.replace("\r\n", "\n")
         self.source = self.source.replace("\n\r", "\n")
         self.source = self.source.replace("\r", "\n")
+        self.loadFromSource(preprocess)
 
+    def loadFromSource(self, preprocess=True):
         self.content = self.source
         if "@usedefault" in self.content:
             self.usedefault = True
