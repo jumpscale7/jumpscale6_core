@@ -7,6 +7,8 @@
 
 {{menu:
 System:/System
+Dashboard:/grid/dashboard
+
 }}
 
 {{menuadmin_grid}}
