@@ -50,10 +50,5 @@ class TEST():
     def test_existsJPackage(self):
         if self.client.existsJPackage(domain="jumpscale",name="osis")<>True:
             raise RuntimeError("needed to exist")
-        try:
-            if self.client.existsJPackage(domain="jumpscale",name="osisssss")<>False:
-                raise RuntimeError("needed to not exist")
-        except Exception,e:
-            if str(e).find("Could not find installed jpackage")<>-1:
-                return
-        raise RuntimeError("jpackage should not have been found")            
+        if self.client.existsJPackage(domain="jumpscale",name="osisssss"):
+            raise RuntimeError("needed to not exist")
