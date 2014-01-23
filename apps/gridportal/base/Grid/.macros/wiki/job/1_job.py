@@ -50,7 +50,7 @@ def main(j, args, params, tags, tasklet):
         ecoguid=eco["guid"]
 
         out +="h3. Error Condition Info\n"
-        out +="{{eco: guid:%s}}\n"%ecoguid
+        out +="{{eco: id:%s}}\n"%ecoguid
 
 
     else:
