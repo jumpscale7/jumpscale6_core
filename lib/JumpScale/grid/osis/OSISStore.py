@@ -150,7 +150,7 @@ class OSISStore(object):
         else:
             data=obj.__dict__
         guid=data["guid"]
-        data.pop("guid")  # remove guid from object before serializing to json
+        # data.pop("guid")  # remove guid from object before serializing to json
         for key5 in data.keys():
             if key5[0] == "_":
                 data.pop(key5)

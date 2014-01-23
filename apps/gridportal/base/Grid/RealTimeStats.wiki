@@ -1,3 +1,0 @@
-h1. Real Time Statistics
-
-{{realtimestat nid:$$nid statistic:$$statistic}}

@@ -26,7 +26,7 @@ class Process(OsisBaseObject):
                 self.systempids = [systempid]  # system process id (PID) at this point
             else:
                 self.systempids=[]
-            self.guid = None
+            self.guid = ""
             # self.sguid = None
             self.epochstart = j.base.time.getTimeEpoch()
             self.epochstop = 0

@@ -1,6 +1,28 @@
 @usedefaults
 
-{{node: id:$$id}}
+{{node_getdata id:$$id}}
+
+h2. Node $$id $$name
+
+#{{nodestat: nid:$$nid cpustats}}
+
+|*gid:nid*|$$gid:$$id|
+|*Name*|$$name|
+|*Active*|$$active|
+|*Roles*|$$roles|
+|*Description*|$$description|
+|*ipaddr*|$$ipaddr|
+
+h3. Network
+
+$$netaddr
+
+h3. Statistics
+
+* [*Statistics*|NodeStats?id=$$id]
+* [*CPU Real Time Statistics*|realtimestats?nid=$$id&statistic=cpupercent]
+* [*Memory Real Time Statistics*|realtimestats?nid=$$id&statistic=mempercent]
+* [*Network Real Time Statistics*|realtimestats?nid=$$id&statistic=netstat]
 
 h3. NICs
 {{nics: nid:$$id}}

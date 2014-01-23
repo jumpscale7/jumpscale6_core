@@ -111,7 +111,8 @@ class TEST():
             domains=["jumpscale","incubaid","adomain"]
             obj.jpdomain=domains[r]
             obj.jpname="jpname%s"%i
-            obj.name="process%s"%i
+            obj.pname="process%s"%i
+            obj.sname="process%s"%i
             client.set(obj)
 
     def test_disk(self):
