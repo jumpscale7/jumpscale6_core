@@ -41,9 +41,7 @@ def method(self{args}):
     try:
         result=self._actions['{name}'](j,self._jpackage{args})
     except Exception,e:
-        client=j.errorconditionhandler.getSentryClient()
-        client.captureException()
-        j.errorconditionhandler.processPythonExceptionObject(e,sentry=False)
+        j.errorconditionhandler.processPythonExceptionObject(e)
         j.application.stop()
     return result"""
 
@@ -57,9 +55,7 @@ def method(self{args}):
     try:
         result=self._actions['{name}'](j,self._jpackage{args2})
     except Exception,e:
-        client=j.errorconditionhandler.getSentryClient()
-        client.captureException()
-        j.errorconditionhandler.processPythonExceptionObject(e,sentry=False)
+        j.errorconditionhandler.processPythonExceptionObject(e)
         j.application.stop()
     self._done[key]=True
     return result"""

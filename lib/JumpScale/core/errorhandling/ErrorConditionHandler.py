@@ -385,19 +385,19 @@ class ErrorConditionHandler():
 
         return errorConditionObject
 
-    def getSentryClient(self):
-        if j.application.config.exists("sentry.server"):
-            server=j.application.config.get("sentry.server")
-            pub=j.application.config.get("sentry.public.key")
-            secret=j.application.config.get("sentry.secret.key")
-            port=int(j.application.config.get("sentry.port"))
-            default=j.application.config.get("sentry.project.default")
-            from raven import Client
-            url='http://%s:%s@%s:%s/%s'%(pub,secret,server,port,default)
-            client = Client(url)
-            client.name="g%s.n%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)            
-            return client
-        raise RuntimeError("sentry client should not be asked when not enabled")
+    # def getSentryClient(self):
+    #     if j.application.config.exists("sentry.server"):
+    #         server=j.application.config.get("sentry.server")
+    #         pub=j.application.config.get("sentry.public.key")
+    #         secret=j.application.config.get("sentry.secret.key")
+    #         port=int(j.application.config.get("sentry.port"))
+    #         default=j.application.config.get("sentry.project.default")
+    #         from raven import Client
+    #         url='http://%s:%s@%s:%s/%s'%(pub,secret,server,port,default)
+    #         client = Client(url)
+    #         client.name="g%s.n%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)            
+    #         return client
+    #     raise RuntimeError("sentry client should not be asked when not enabled")
 
     def sendMessageToSentry(self,modulename,message,ttype="bug",tags=None,extra={},level="error",tb=None,frames=[]):
         """
