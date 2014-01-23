@@ -56,39 +56,20 @@ class system_gridmanager(j.code.classGetBase()):
 
         return self.clients[nid]
 
-    def _getStatsOfKey(self, nid, key, ip, ctx, **kwargs):
-        ctx.start_response('200', (('content-type', 'json'),))
-        resultdata = list()
-        for k in key:
-            url = "http://%s:8081/render?target=%s&format=json&from=-1hour" % (ip, k)
-            r = requests.get(url)
-            content = None
-            try:
-                result = r.send()
-                data = j.db.serializers.ujson.loads(result.content)
-                for i in data:
-                    if i['target'] == k:
-                        content = i['datapoints'][-1][0]
-            except Exception:        
-                content = None
-            resultdata.append(content)
-        return resultdata
-
-
     def getNodeSystemStats(self, nid, **kwargs):
         """
         ask the right processmanager on right node to get the information about node system
         param:nid id of node
         result json
         """
-        ctx = kwargs['ctx']
         nid = int(nid)
-        self.getClient(nid, 'core') 
-        ip = self.clientsIp[nid]
+        client = self.getClient(nid, 'stats') 
 
-        cpupercent =  self._getStatsOfKey(nid, ['n%s.system.cpu.percent' % nid], ip, ctx)
-        mempercent =  self._getStatsOfKey(nid, ['n%s.system.memory.percent' % nid], ip, ctx)
-        netstat =  self._getStatsOfKey(nid, ['n%s.system.network.kbytes.recv' % nid, 'n%s.system.network.kbytes.send' % nid], ip, ctx)
+        stats = client.listStatKeys('n%s.system.' % nid)
+
+        cpupercent = [ stats['n%s.system.cpu.percent' % nid][-1] ]
+        mempercent = [ stats['n%s.system.memory.percent' % nid][-1] ]
+        netstat = [ stats['n%s.system.network.kbytes.recv' % nid][-1], stats['n%s.system.network.kbytes.send' % nid][-1] ]
 
         result = {'cpupercent': [cpupercent, {'series': [{'label': 'CPU PERCENTAGE'}]}], 
                   'mempercent': [mempercent, {'series': [{'label': 'MEMORY PERCENTAGE'}]}], 
@@ -192,7 +173,6 @@ class system_gridmanager(j.code.classGetBase()):
         import urllib
         query = list()
         ctx = kwargs['ctx']
-        ctx.params['_png'] = 1
         ctx.start_response('200', (('content-type', 'image/png'),))
         statKey=statKey.strip()
         if statKey[0]=="n":
