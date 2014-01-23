@@ -691,6 +691,9 @@ class PortalServer:
             "yaml": {"content_type": CONTENT_TYPE_YAML, "serializer": self._resultyamlSerializer}
         }
 
+        if ctx._response_started:
+            return None, result
+
         fformat = ctx.fformat
         if '_jsonp' in ctx.params:
             return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], j.db.serializers.getSerializerType('j').dumps(result))
