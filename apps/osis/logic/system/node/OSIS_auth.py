@@ -10,6 +10,7 @@ class AUTH():
             j.core.osis.nodeguids[str(obj["machineguid"])]=obj["id"]
 
     def authenticate(self,osis,method,user,passwd):
+        raise RuntimeError("kkk")
         if j.core.osis.cmds._authenticateAdmin(user=user,passwd=passwd):
             return True
         if user=="node" and method in ["set","get"]:

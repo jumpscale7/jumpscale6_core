@@ -179,11 +179,13 @@ class DaemonClient(object):
             msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             raise MethodNotFoundException(msg)
         if str(returncode) != returnCodes.OK:
-            
+            frames= j.errorconditionhandler.getFrames()            
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
             ddict = s.loads(parts[2])
             eco = j.errorconditionhandler.getErrorConditionObject(ddict)
             eco.category="rpc.exec"
+            eco.frames=frames
+
             msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)

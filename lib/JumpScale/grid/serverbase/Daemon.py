@@ -2,6 +2,7 @@ from JumpScale import j
 import JumpScale.baselib.serializers
 from JumpScale.grid.serverbase import returnCodes
 import inspect
+import copy
 import time
 
 class Session():
@@ -167,9 +168,11 @@ class Daemon(object):
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco
-            eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
-            eco.errormessage = "ERROR IN RPC CALL:\n"+ eco.errormessage
+            # eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
+            eco.errormessage = "ERROR IN RPC CALL %s: %s\nData:%s\n"%(cmdkey,eco.errormessage ,data)
             j.errorconditionhandler.processErrorConditionObject(eco)
+            eco.__dict__.pop("tb")
+            eco.tb=None
             result = self.errorconditionserializer.dumps(eco.__dict__)
             return returnCodes.ERROR, "", result
 
