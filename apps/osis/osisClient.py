@@ -2,7 +2,7 @@ from JumpScale import j
 
 j.application.start("osisclient")
 j.application.initGrid()
-
+import JumpScale.grid.osis
 client = j.core.osis.getClient(user='root')
 # getNameIDsInfo
 
@@ -24,13 +24,11 @@ def testSet(client):
 
     return obj
 
-client.createNamespace(name="testcoreobjects",template="coreobjects",incrementName=False)
-
 print client.listNamespaces()
 
-clientnode=j.core.osis.getClientForCategory(client,"testcoreobjects","node")
+clientnode=j.core.osis.getClientForCategory(client,"system","node")
 
-obj=testSet(clientnode)
+# obj=testSet(clientnode)
 
 
 

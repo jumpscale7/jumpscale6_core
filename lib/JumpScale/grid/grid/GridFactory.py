@@ -77,7 +77,7 @@ class GridFactory():
         ps=j.system.process.getProcessObject(j.application.systempid)
         workingdir=ps.getcwd()
 
-        if j.system.net.tcpPortConnectionTest("127.0.0.1",4445):
+        if False:#j.system.net.tcpPortConnectionTest("127.0.0.1",4445):  #@todo to fix later
             #means there is a process manager, we can ask the pid
             clientpm=j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user="root", \
                 passwd="",category="process")

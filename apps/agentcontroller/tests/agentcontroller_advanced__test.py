@@ -70,9 +70,9 @@ class TEST():
         #5 agents running
         #run echo test 5000 times, measure timing, put some boundaries around, there needs to be a minimal performance
         start = time.time()
-        for i in range(1, 5000):
+        for i in range(1, 500):
             kwargs = {'msg': 'msg %s' % i}
             self.client.executeKwargs('jumpscale', 'echo', ROLE, kwargs=kwargs)
         end = time.time()
-        print 'It took %s seconds to execute 5000 echo jobs' % (end - start)
+        print 'It took %s seconds to execute 500 echo jobs' % (end - start)
 
