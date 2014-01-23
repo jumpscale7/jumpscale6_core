@@ -231,7 +231,8 @@ class Confluence2HTML():
         for line in content.split("\n"):
 
             self._lastLine = line
-            line = line.strip()
+            if state not in ['macro']:
+                line = line.strip()
 
             # \\ on their own line will emit <br>
             if line == r'\\':
