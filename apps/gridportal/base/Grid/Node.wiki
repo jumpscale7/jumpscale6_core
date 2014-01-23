@@ -20,9 +20,7 @@ $$netaddr
 h3. Statistics
 
 * [*Statistics*|NodeStats?id=$$id]
-* [*CPU Real Time Statistics*|realtimestats?nid=$$id&statistic=cpupercent]
-* [*Memory Real Time Statistics*|realtimestats?nid=$$id&statistic=mempercent]
-* [*Network Real Time Statistics*|realtimestats?nid=$$id&statistic=netstat]
+* [*Real Time Statistics*|RealTimeStatsNode?nid=$$id]
 
 h3. NICs
 {{nics: nid:$$id}}

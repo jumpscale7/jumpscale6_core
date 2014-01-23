@@ -1,3 +1,4 @@
+@usedefaults
 h1. Real Time Statistics
 
 h3. CPU
