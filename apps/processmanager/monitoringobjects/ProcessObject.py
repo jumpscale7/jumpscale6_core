@@ -9,6 +9,8 @@ class ProcessObjectFactory(MonObjectBaseFactory):
         self.osis=j.core.osis.getClientForCategory(self.host.daemon.osis,"system","process")
         #@todo P1 load them from ES at start (otherwise delete will not work), make sure they are proper osis objects
         j.processmanager.childrenPidsFound={}
+        self.pid2name={}
+
 
     def getProcessStatProps(self):
         r=["nr_file_descriptors","nr_ctx_switches_voluntary","nr_ctx_switches_involuntary","nr_threads",\
@@ -16,6 +18,11 @@ class ProcessObjectFactory(MonObjectBaseFactory):
                 "io_read_count","io_write_count","io_read_bytes","io_write_bytes","nr_connections_out","nr_connections_in"]
         return r
 
+    def getFromSystemPid(self,pid):
+        for key,obj in self.monitorobjects.iteritems():
+            if pid in obj.db.systempids:
+                return obj
+        return None
 
 class ProcessObject(MonObjectBase):
 
@@ -27,6 +34,7 @@ class ProcessObject(MonObjectBase):
 
         self.netConnectionsIn=[]
         self.netConnectionsOut=[]
+
 
     def getStatInfo(self,totals=False):
         """

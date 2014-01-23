@@ -8,7 +8,8 @@ import JumpScale.grid.agentcontroller
 
 import sys
 
-j.application.start("agentcontrollertest")
+j.application.start("jumpscale:agentcontrollertest")
+j.application.initGrid()
 
 j.logger.consoleloglevel = 5
 

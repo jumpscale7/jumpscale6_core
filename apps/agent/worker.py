@@ -17,6 +17,8 @@ import JumpScale.lib.diskmanager
 
 import JumpScale.baselib.stataggregator
 
+j.application.start("jumpscale:worker")
+j.application.initGrid()
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("-wn", '--workername', help='Worker name')
