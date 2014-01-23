@@ -383,6 +383,7 @@ class PortalServer:
                     doc, params = self.getDoc(space, "pagenotfound", ctx, params)
 
         ctx.params["rights"] = right
+        doc.loadFromDisk()
 
         return doc, params
 
