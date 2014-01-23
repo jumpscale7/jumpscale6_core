@@ -14,6 +14,7 @@ class Process(OsisBaseObject):
             self.getSetGuid()
         else:
             self.init("process","1.0")
+            self.id=0
             self.gid = gid
             self.nid = nid
             self.jpdomain= ""
@@ -37,6 +38,7 @@ class Process(OsisBaseObject):
             self.parent=""
             self.user=""
             self.type=""
+            self.statkey="" #key as used in graphite
 
 
             r=["nr_file_descriptors","nr_ctx_switches_voluntary","nr_ctx_switches_involuntary","nr_threads",\
@@ -65,7 +67,7 @@ class Process(OsisBaseObject):
             key="%s_%s"%(self.jpdomain,self.sname)
         else:
             key=self.pname
-        self.guid = "%s_%s_%s" % (self.gid,self.nid,key)
+        self.guid = "%s_%s" % (self.gid,self.id)
         self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 

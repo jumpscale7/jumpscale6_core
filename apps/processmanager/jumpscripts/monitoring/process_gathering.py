@@ -119,6 +119,9 @@ def action():
     #walk over startupmanager processes (make sure we don't double count)
     for sprocess in j.processmanager.startupmanager.manager.getProcessDefs():
         pid = sprocess.getPid(ifNoPidFail=False)
+
+        if j.processmanager.cache.processobject.pid2name.has_key(pid):
+            sprocess.domain,sprocess.name=j.processmanager.cache.processobject.pid2name[pid]
         
         process_key="%s_%s"%(sprocess.domain,sprocess.name)
         print "process: '%s' pid:'%s'"%(process_key,pid)
@@ -142,6 +145,7 @@ def action():
         processOsisObject.pname = ""
         processOsisObject.getSetGuid()
         processOsisObject.type="jsprocess"
+        processOsisObject.statkey=process_key
 
 
         if pid:            
@@ -174,7 +178,14 @@ def action():
 
         print "systemprocess:%s %s"%(pname, pid)
 
-        process_key=pname
+        if j.processmanager.cache.processobject.pid2name.has_key(pid):
+            domain0,name0=j.processmanager.cache.processobject.pid2name[pid]
+            if domain0==None:
+                process_key="%s"%(name0)
+            else:
+                process_key="%s_%s"%(domain0,name0)
+        else:
+            process_key=pname
 
         if result.has_key(process_key):
             #process with same name does already exist, lets first create temp getProcessObject, which will be done by pid
@@ -224,7 +235,7 @@ def action():
             #@todo NEED TO SEE FOR OTHER RELEVANT ITEMS TOO TO AGGREGATE
             cacheobj.db.id=process_key
 
-
+        cacheobj.db.statkey=process_key
         result[process_key]=cacheobj    
 
         # exists=j.processmanager.cache.processobject.exists(process_key)

@@ -8,7 +8,8 @@ import JumpScale.grid.geventws
 
 import Queue
 
-j.application.start("agent")
+j.application.start("jumpscale:agent")
+j.application.initGrid()
 
 j.logger.consoleloglevel = 2
 j.logger.maxlevel=7
@@ -26,7 +27,7 @@ class LogHandler(Greenlet):
         self.enabled = True
         self.agent=agent
         self.queue = Queue.Queue()
-        self.jid=""
+        self.jid=j.application.jid
 
     def log(self,logitem):
         logitem.jid=self.jid
@@ -139,7 +140,7 @@ class Agent(Greenlet):
             if havework<>None and ok:
                 jscriptid,args,jid=havework
                 args=json.loads(args)
-                self.loghandler.jid=jid
+                j.application.jid=jid
                 
                 #eval action code, if not ok send error back, cache the evalled action
                 if self.actions.has_key(jscriptid):

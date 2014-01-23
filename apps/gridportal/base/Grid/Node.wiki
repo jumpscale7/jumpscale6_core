@@ -4,7 +4,7 @@
 
 h2. Node $$id $$name
 
-#{{nodestat: nid:$$nid cpustats}}
+{{nodestat: nid:$$id cpustats}}
 
 |*gid:nid*|$$gid:$$id|
 |*Name*|$$name|

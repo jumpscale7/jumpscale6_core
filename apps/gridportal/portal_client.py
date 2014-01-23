@@ -1,7 +1,8 @@
 import time
 from JumpScale import j
 
-j.application.start("appserver6_client")
+j.application.start("jumpscale:portalclientest")
+j.application.initGrid()
 
 import JumpScale.portal
 

@@ -11,7 +11,7 @@ version = "1.0"
 category = "fake.fake"
 period = 1 #always in sec
 enable=False
-async=False
+async=True
 
 def action():
     raise RuntimeError("oef")

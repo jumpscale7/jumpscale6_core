@@ -8,7 +8,8 @@ import imp
 import inspect
 import ujson as json
 
-j.application.start("agentcontroller")
+j.application.start("jumpscale:agentcontroller")
+j.application.initGrid()
 
 j.logger.consoleloglevel = 2
 

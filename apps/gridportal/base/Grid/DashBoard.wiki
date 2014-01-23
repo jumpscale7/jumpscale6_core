@@ -1,0 +1,57 @@
+
+#http://$$addr:8081/dashboard
+
+
+{{title:GRIDDashboard}}
+
+{{projectname:GRID}}
+
+{{find}}
+
+{{menu:
+System:/System
+Dashboard:/grid/dashboard
+}}
+
+{{menuadmin_grid}}
+
+
+@block
+@row
+
+@col 3
+h5. Total Used Capacity Of Environment
+{{jgauge: id:1 width:200 height:114 val:20 style:black start:0 end:10 end:100 labelsuffix:%}}
+@divend 
+@col 3
+h5. Nr Of Events Per Day
+{{jgauge: id:4 width:200 height:114 val:103 start:0 end:300}}
+@divend 
+@col 3
+h5. Nr Of Vmachines Running From Total Deployed
+{{jgauge: id:5 width:200 height:114 val:17 start:0 end:45 }}
+@divend 
+
+@divend
+
+@col 3
+test
+@divend 
+@col 3
+test2
+@divend 
+@col 3
+test3   
+@divend 
+
+
+
+{{cssstyle
+td {
+    max-width:500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;}
+}}
+
+
