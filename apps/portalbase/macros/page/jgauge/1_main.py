@@ -12,46 +12,46 @@ def main(j, args, params, tags, tasklet):
     page.addCSS("/lib/jgauge/jgauge.css")
     # page.addCSS("/lib/jgauge/page.css")
 
-    args.expandParams()
+    params=args.expandParams()
 
-    d = params.getDict()
+    paramsd = params.getDict()
 
-    if "id" in args:
-        gaugeid = int(args.id)
+    if "id" in paramsd:
+        gaugeid = int(params.id)
     else:
         gaugeid = j.apps.system.contentmanager.dbmem.increment("jgaugeid")
 
-    if "style" in params:
+    if "style" in paramsd:
         style = params.style.lower().strip()
     else:
-        style = "default"
+        style = "black"  #default does also work
 
-    if "height" in params:
+    if "height" in paramsd:
         height = params.height
     else:
         height = 114
 
-    if "width" in params:
+    if "width" in paramsd:
         width = params.width
     else:
         width = 200
 
-    if "start" in params:
+    if "start" in paramsd:
         start = params.start
     else:
         start = 0
 
-    if "end" in params:
+    if "end" in paramsd:
         end = params.end
     else:
         end = 12
 
-    if "labelsuffix" in params:
+    if "labelsuffix" in paramsd:
         labelsuffix = str(params.labelsuffix)
     else:
         labelsuffix = ""
 
-    if "randomspeed" in params:
+    if "randomspeed" in paramsd:
         randomspeed = str(params.randomspeed)
     else:
         randomspeed = 100
@@ -98,8 +98,8 @@ $gid.range.color = 'rgba(0, 0, 0, 0)';
             "ticks.color ", "ticks.thickness", "ticks.radius", "ticks.labelPrecision", "ticks.labelRadius", "range.radius",
             "range.thickness ", " range.start ", "range.end ", "range.color"]
     for cmd in cmds:
-        if cmd in args:
-            C = "myGauge%s.%s=%s\n" % (gaugeid, cmd, d["%s" % cmd])
+        if cmd in paramsd.keys():
+            C = "myGauge%s.%s=%s\n" % (gaugeid, cmd, paramsd["%s" % cmd])
 
     C = C.replace("$id", str(gaugeid))
     C = C.replace("$height", str(height))
@@ -108,7 +108,9 @@ $gid.range.color = 'rgba(0, 0, 0, 0)';
     C = C.replace("$end", str(end))
     C = C.replace("$gid", "myGauge%s" % gaugeid)
     C = C.replace("$suffix", labelsuffix)
-    C = C.replace("$val", args.val)
+    C = C.replace("$val", params.val)
+
+    
 
     page.addJS(jsContent=C)
 
@@ -116,7 +118,7 @@ $gid.range.color = 'rgba(0, 0, 0, 0)';
     # page.addNewLine()
     # page.addPageBreak()
 
-    if "random" in args:
+    if "random" in paramsd:
         C = """
 function randVal$id()
 {
@@ -133,15 +135,15 @@ function randVal$id()
                 }
         }
 }"""
-        range = args.random
+        range = params.random
         C = C.replace("$id", str(gaugeid))
         C = C.replace("$range", str(range))
         page.addJS(jsContent=C)
 
     C = "myGauge%s.init();\n" % gaugeid
-    C += "myGauge%s.setValue(%s)\n" % (gaugeid, args.val)
+    C += "myGauge%s.setValue(%s)\n" % (gaugeid, params.val)
 
-    if "random" in args:
+    if "random" in paramsd:
         C += "setInterval('randVal%s()', %s);\n" % (gaugeid, randomspeed)
     page.addDocumentReadyJSfunction(C)
     params.result = page

@@ -119,21 +119,22 @@ class PortalServer:
         self.getContentDirs() #contentdirs need to be loaded before we go to other dir of base server
         j.system.fs.changeDir(self.appdir)            
 
-        dbtype = ini.getValue("main", "dbtype").lower().strip()
-        if dbtype == "fs":
-            self.dbtype = j.enumerators.KeyValueStoreType.FILE_SYSTEM
-        elif dbtype == "mem":
-            self.dbtype = j.enumerators.KeyValueStoreType.MEMORY
-        elif dbtype == "redis":
-            self.dbtype = j.enumerators.KeyValueStoreType.REDIS
-        elif dbtype == "arakoon":
-            self.dbtype = j.enumerators.KeyValueStoreType.ARAKOON
-        else:
-            raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon, used here'%s'"%dbtype)
+        # dbtype = ini.getValue("main", "dbtype").lower().strip()
+        # if dbtype == "fs":
+        #     self.dbtype = j.enumerators.KeyValueStoreType.FILE_SYSTEM
+        # elif dbtype == "mem":
+        #     self.dbtype = j.enumerators.KeyValueStoreType.MEMORY
+        # elif dbtype == "redis":
+        #     self.dbtype = j.enumerators.KeyValueStoreType.REDIS
+        # elif dbtype == "arakoon":
+        #     self.dbtype = j.enumerators.KeyValueStoreType.ARAKOON
+        # else:
+        #     raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon, used here'%s'"%dbtype)
 
         # self.systemdb=j.db.keyvaluestore.getFileSystemStore("appserversystem",baseDir=replaceVar(ini.getValue("systemdb","dbdpath")))
 
         self.port = int(ini.getValue("main", "webserverport"))
+        self.addr = ini.getValue("main", "pubipaddr")
 
         self.logdir= j.system.fs.joinPaths(j.dirs.logDir,"portal",str(self.port))
         j.system.fs.createDir(self.logdir)
@@ -643,6 +644,8 @@ class PortalServer:
                     except AttributeError:
                         data[key] = value
                 return data
+            eco.tb=""
+            eco.frames=[]
             msg = j.db.serializers.getSerializerType('j').dumps(todict(eco))
 
         ctx.start_response(httpcode, [('Content-Type', 'text/html')])
