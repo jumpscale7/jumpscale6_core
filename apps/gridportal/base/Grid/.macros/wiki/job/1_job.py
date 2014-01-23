@@ -22,7 +22,7 @@ def main(j, args, params, tags, tasklet):
 
     obj = actor.getJobs(id=id)
     if not obj:
-        params.result = ('Job %s not found'%id)
+        params.result = ("Job '%s' was not found" % id, doc)
         return params
 
     obj = obj[0]
