@@ -15,7 +15,9 @@ j.logger.maxlevel=7
 
 import ujson as json
 
-LOGCATEGORY = 'agent_exec'
+LOGS = {'current':'agent',
+        'agent': 'agent',
+        'job': 'agent_job' }
 
 class LogHandler(Greenlet):
 
@@ -29,7 +31,7 @@ class LogHandler(Greenlet):
     def log(self,logitem):
         logitem.jid=self.jid
         if not logitem.category:
-            logitem.category = LOGCATEGORY
+            logitem.category = LOGS['current']
         self.queue.put(logitem.__dict__)
         print logitem
 
@@ -156,21 +158,24 @@ class Agent(Greenlet):
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
                         eco.errormessage = msg
                         eco.jid = jid
-                        eco.category = LOGCATEGORY
+                        eco.category = LOGS['agent']
                         self.notifyWorkCompleted(result={},eco=eco.__dict__)
                         continue
                     
                 eco=None
                 self.log("Job started: %s %s"%(jscript["organization"],jscript["name"]))
                 try:
+                    LOGS['current'] = LOGS['job']
                     result=action(**args)
+                    LOGS['current'] = LOGS['agent']
                 except Exception,e:
+                    LOGS['current'] = LOGS['agent']
                     msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                         jscript["source"],e)
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.errormessage = msg
                     eco.jid = jid
-                    eco.category = LOGCATEGORY
+                    eco.category = LOGS['agent']
                     self.notifyWorkCompleted({},eco.__dict__)
                     continue
 
@@ -205,7 +210,7 @@ class Agent(Greenlet):
             print "******************* SERIOUS BUG **************"
 
 
-    def log(self, message, category=LOGCATEGORY,level=5):
+    def log(self, message, category=LOGS['agent'],level=5):
         #queue saving logs        
         j.logger.log(message,category=category,level=level)
         print message

@@ -4,9 +4,12 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
     nid = args.getTag('nid')
+    jid = args.getTag('jid')
     filters = dict()
     if nid:
         filters['nid'] = nid
+    if jid:
+        filters['jid'] = jid
 
     fieldnames = ['App Name', 'Category', 'Start Time', 'Message', 'Level', 'Process ID', 'Node ID', 'Job ID']
 
