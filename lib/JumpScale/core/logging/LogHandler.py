@@ -111,7 +111,10 @@ class LogItem(object):
 
         self.appname = j.application.appname
         self.tags = str(tags).strip().replace("\r\n", "/n").replace("\n", "/n").replace("|", "/|")
-        self.jid = str(jid)
+        if jid=="" and j.application.jid<>0:
+            self.jid=j.application.jid
+        else:
+            self.jid = str(jid)
         self.parentjid = str(parentjid)
         self.masterjid = str(masterjid)
         self.epoch = int(epoch) or j.base.time.getTimeEpoch()
@@ -147,7 +150,7 @@ class LogHandler(object):
         This empties the log targets
         '''
         self.utils = LogUtils()
-        self.reset()
+        self.reset()        
 
     def getLogObjectFromDict(self, ddict):
         return LogItemFromDict(ddict)

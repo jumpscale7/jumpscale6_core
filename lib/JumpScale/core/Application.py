@@ -30,6 +30,8 @@ class Application:
 
         self.gridInitialized=False
 
+        self.jid=0
+
     def initWhoAmI(self):
         """
         when in grid:

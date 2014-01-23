@@ -1,6 +1,6 @@
 from JumpScale import j
 
-j.application.appname = "autostarter"
+j.application.appname = "jumpscale:autodeploy_installer"
 j.application.start()
 
 
