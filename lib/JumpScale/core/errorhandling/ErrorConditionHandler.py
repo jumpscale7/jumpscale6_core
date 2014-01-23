@@ -304,6 +304,9 @@ class ErrorConditionHandler():
 
         if tb==None:
             ttype,msg,tb=sys.exc_info()
+
+        if tb==None:
+            frames=[(item[0],item[2]) for item in inspect.stack()]
         else:
             frames=[]
             while tb: #copied from sentry raven lib (BSD license)
@@ -313,7 +316,7 @@ class ErrorConditionHandler():
                 if not _getitem_from_frame(f_locals, '__traceback_hide__'):
                     frames.append((tb.tb_frame, getattr(tb, 'tb_lineno', None)))
                 tb = tb.tb_next
-        
+            
         result=[]
         ignore=["ipython","errorconditionhandler"]
         for frame,linenr in frames:
@@ -325,6 +328,7 @@ class ErrorConditionHandler():
             if not toignore:
                 result.append((frame,linenr))
         return result
+
 
     def processErrorConditionObject(self,errorConditionObject,tostdout=True,sentry=True,modulename=None):
         """
@@ -358,11 +362,16 @@ class ErrorConditionHandler():
         if sentry and j.application.config.exists("sentry.server"):
             extra={}
             tb=errorConditionObject.tb
-            
-            extra["tb"]=errorConditionObject.backtrace
+
+            if errorConditionObject.__dict__.has_key("frames"):
+                frames=errorConditionObject.frames
+            else:
+                frames=[]
+            if errorConditionObject.backtrace<>"":
+                extra["tb"]=errorConditionObject.backtrace
             extra["category"]=errorConditionObject.category
             
-            self.sendMessageToSentry(modulename=modulename,message=errorConditionObject.errormessage,ttype="error",tags=None,extra=extra,level="error",tb=tb)
+            self.sendMessageToSentry(modulename=modulename,message=errorConditionObject.errormessage,ttype="error",tags=None,extra=extra,level="error",tb=tb,frames=frames)
             # client=self.getSentryClient()            
             # print client.capture('raven.events.Message', message=errorConditionObject.errormessage,extra={
             #     'gid': j.application.whoAmI.gid,
@@ -390,7 +399,7 @@ class ErrorConditionHandler():
             return client
         raise RuntimeError("sentry client should not be asked when not enabled")
 
-    def sendMessageToSentry(self,modulename,message,ttype="bug",tags=None,extra={},level="error",tb=None):
+    def sendMessageToSentry(self,modulename,message,ttype="bug",tags=None,extra={},level="error",tb=None,frames=[]):
         """
         @param level        
             fatal
@@ -416,19 +425,42 @@ class ErrorConditionHandler():
             exc["type"]=ttype
             exc["value"]=message
 
+            def ignore(modulename):
+                if modulename.strip()=="":
+                    return True
+                toignore=["errorhandling"]
+                for check in toignore:
+                    if modulename.find(check)<>-1:
+                        return True
+                return False
+                
+
             if modulename==None:
+                modulename="appname:%s"%(j.application.appname)
                 try:
-                    frames=self.getFrames(tb)
-                    frame=frames[-1][0]
-                    
-                    modulename=inspect.getmodulename(frame.f_code.co_filename)
-                    modulename=str(inspect.getmodule(frame)).replace("<module ","").replace("'","").replace(".pyc","").replace(">","")
-                    try:
-                        modulename=modulename.split("from")[0].strip()
-                    except:
-                        pass
-                except:
-                    modulename="appname:%s"%(j.application.appname)                
+                    if frames==[]:
+                        frames=self.getFrames(tb)
+                    frame=frames.pop()[0]
+                    modulename=""
+                    while ignore(modulename):                    
+                        modulename=inspect.getmodule(frame)
+                        if modulename==None or str(modulename).strip()=="":
+                            modulename=inspect.getmodulename(frame.f_code.co_filename)
+                        modulename=str(modulename)
+                        modulename=modulename.replace("<module ","").replace("'","").replace(".pyc","").replace(">","")
+                        try:
+                            modulename=modulename.split("from")[0].strip()
+                        except:
+                            pass
+                        if len(frames)>0:
+                            frame=frames.pop()[0]
+                        else:
+                            modulename="appname:%s"%(j.application.appname)
+                    if modulename.find("appname")==-1:
+                        modulename="appname:%s / %s"%(j.application.appname,modulename)
+                except Exception,e:
+                    modulename="appname:%s"%(j.application.appname)  
+
                 
             exc["module"]=modulename
             exc=[exc]
@@ -459,7 +491,6 @@ class ErrorConditionHandler():
                         'frames': get_stack_info(frames)
                     },
                 })
-
 
             url2="%s/api/%s/store/"%(url,default)
 
