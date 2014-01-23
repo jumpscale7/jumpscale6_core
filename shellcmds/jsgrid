@@ -34,6 +34,9 @@ if opts.action =='reconfigure':
 
 ############PS
 if opts.action =='reinit':
+
+    jp=j.packages.findNewest(name="osis")
+    jp.start()
     
     if opts.force<>None:
         j.system.process.executeWithoutPipe("osis deleteall")
@@ -45,12 +48,14 @@ if opts.action =='reinit':
         j.system.fs.removeDirTree(item)
         j.system.fs.createDir(item)
 
-    
 
     packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
     for package in packages:
         jp=j.packages.findNewest(name=package)
-        if jp.isInstalled():
+        if not jp.isInstalled():
+            jp.install()
+        elif jp.isInstalled():
+            print "RECONFIGURE:%s"%jp
             jp.configure()
 
 # packages=["osis","logger"]
