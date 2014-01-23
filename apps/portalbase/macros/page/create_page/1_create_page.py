@@ -23,8 +23,32 @@ def main(j, args, params, tags, tasklet):
 
         # Redirect to edit the new page
         page.addMessage("<script>window.open('/system/edit?space={0}&page={1}', '_self', '');</script>".format(page_space, page_name))
+    elif page_name==None and page_space<>None:
 
+        page.addMessage('''
+            <form class="form-horizontal" method="get" action="/system/create">
+                <fieldset>
+                <div class="control-group">
+                <input type="hidden" name="space" value="$$space">
+                </div>                
+                <div class="control-group">
+                  <label class="control-label" for="name">Name</label>
+                  <div class="controls">
+                    <input id="page" name="page" type="text" placeholder="" class="input-xlarge" required="">
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <div class="controls">
+                    <button class="btn btn-primary">Create</button>
+                  </div>
+                </div>
+
+                </fieldset>
+            </form>
+            '''.replace("$$space",page_space))
     else:
+        
         spaces = sorted(s for s in j.core.portal.active.getSpaces())
         spaces = ''.join('<option value="{0}">{0}</option>'.format(space) for space in spaces)
         page.addMessage('''
@@ -42,7 +66,7 @@ def main(j, args, params, tags, tasklet):
                 <div class="control-group">
                   <label class="control-label" for="name">Name</label>
                   <div class="controls">
-                    <input id="page" name="page" type="text" placeholder="Create Machine Bucket" class="input-xlarge" required="">
+                    <input id="page" name="page" type="text" placeholder="" class="input-xlarge" required="">
                   </div>
                 </div>
 

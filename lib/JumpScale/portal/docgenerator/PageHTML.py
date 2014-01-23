@@ -264,7 +264,7 @@ class PageHTML(Page):
         self.addList(arr)
         self.addNewLine()
 
-    def getLink(self, description, link, link_id=None, link_class=None):
+    def getLink(self, description, link, link_id=None, link_class=None,htmlelements=""):
         if link_id:
             link_id = ' id="%s"' % link_id.strip()
         else:
@@ -275,7 +275,7 @@ class PageHTML(Page):
         else:
             link_class = ''
 
-        anchor = "<a href='%s' %s %s>%s</a>" % (link.strip(), link_id.strip(), link_class, description)
+        anchor = "<a href='%s' %s %s %s>%s</a>" % (link.strip(), link_id.strip(), link_class,htmlelements, description)
         return anchor
 
     def addLink(self, description, link):

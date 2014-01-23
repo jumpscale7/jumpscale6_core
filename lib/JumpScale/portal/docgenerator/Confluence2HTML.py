@@ -51,6 +51,7 @@ class Confluence2HTML():
         r = r"\[[^\[\]]+\]"
         if j.codetools.regex.match(r, line):  # find links
             # print "match %s"% line
+            htmlelements=""
             for match in j.codetools.regex.yieldRegexMatches(r, line):
                 # print "link: %s" % match.founditem
                 link_id = link_class = None
@@ -60,9 +61,14 @@ class Confluence2HTML():
                     descr = parts[0]
                     link = parts[1]
                     if len(parts) >= 3:
-                        link_id = parts[2].split('=')[1]
+                        if parts[2].strip()<>"":
+                            link_id = (parts[2].split('=')[1]).strip()
                     if len(parts) >= 4:
-                        link_class = parts[3].split('=')[1]
+                        if parts[2].strip()<>"":
+                            link_class = (parts[3].split('=')[1]).strip()
+                    if len(parts) >= 5:
+                        htmlelements = parts[4]
+
                 elif match2.find(":") != -1:
                     descr, link = match2.split(":", 1)[1], match2
                 else:
@@ -75,7 +81,7 @@ class Confluence2HTML():
                     link = "/%s/%s" % (space.lower().strip().strip("/"), pagename.strip().strip("/"))
                 # print "match:%s"%match.founditem
                 # print "getlink:%s" %page.getLink(descr,link)
-                line = line.replace(match.founditem, page.getLink(descr, link, link_id, link_class))
+                line = line.replace(match.founditem, page.getLink(descr, link, link_id, link_class,htmlelements))
         return line
 
     # This is copied from PageHTML.py
