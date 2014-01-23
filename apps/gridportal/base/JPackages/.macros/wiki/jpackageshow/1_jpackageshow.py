@@ -26,9 +26,15 @@ def main(j, args, params, tags, tasklet):
     
     out+="h2. %s\n"%jp['name']
     out+="* Installed: %s\n" % (jp['isInstalled'])
-    info = ('domain', 'version', 'buildNr', 'description')
+    info = ('domain', 'version', 'buildNr')
     for i in info:
         out+='* %s: %s\n' % (i.capitalize(), jp[i])
+
+    out += 'h2. Description\n'
+    descr = jp['description'].replace('$(jp.name)', jp['name'])
+    descr = descr.replace('$(jp.version)', jp['version'])
+    descr = descr.replace('$(jp.description)', '')
+    out +=  descr + "\n"
 
     out+="Supported platforms: %s\n" % ', '.join([x for x in jp['supportedPlatforms']])
 
@@ -56,11 +62,6 @@ h2. Actions
 |[update|/jpackages/JPackageAction?action=update&domain=%(domain)s&name=%(name)s&version=%(version)s]|
 |[package|/jpackages/JPackageAction?action=package&domain=%(domain)s&name=%(name)s&version=%(version)s]|
 |[upload|/jpackages/JPackageAction?action=upload&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-""" % jp
-    out+="""
-h2. Description
-
-%(description)s
 """ % jp
 
     params.result = (out, args.doc)
