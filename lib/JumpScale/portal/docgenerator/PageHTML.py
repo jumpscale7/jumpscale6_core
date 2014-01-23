@@ -306,7 +306,7 @@ class PageHTML(Page):
         self.addList([row])
 
     def addCodeBlock(self, code, template="python", path="", edit=True, exitpage=True, spacename='', pagename='',linenr=False,\
-        linecolor="#eee",linecolortopbottom="1px solid black",wrap=True,wrapwidth=100):
+        linecolor="#eee",linecolortopbottom="1px solid black",wrap=True,wrapwidth=100, querystr=None):
         """
         @todo define types of templates supported
         @template e.g. python
@@ -364,7 +364,7 @@ class PageHTML(Page):
             """
             F = F.replace("$id", str(self._codeblockid))
             guid = j.base.idgenerator.generateGUID()
-            content = {'space': spacename, 'path': path, 'page': pagename}
+            content = {'space': spacename, 'path': path, 'page': pagename, 'querystr': querystr}
             j.apps.system.contentmanager.dbmem.cacheSet(guid, content, 60)
             F = F.replace("$guid", guid)
             self.addMessage(F)

@@ -405,6 +405,7 @@ class PortalServer:
             page.body = page.body.replace("$$space", space)
             page.body = page.body.replace("$$page", doc.original_name)
             page.body = page.body.replace("$$path", doc.path)
+            page.body = page.body.replace("$$querystr", ctx.env['QUERY_STRING'])
 
         page.body = page.body.replace("$$$menuright", "")
 

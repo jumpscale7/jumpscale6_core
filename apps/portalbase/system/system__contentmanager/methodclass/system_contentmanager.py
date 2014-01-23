@@ -402,7 +402,8 @@ class system_contentmanager(j.code.classGetBase()):
         """
         contents = j.apps.system.contentmanager.dbmem.cacheGet(cachekey)
         j.system.fs.writeFile(contents['path'], text)
-        j.core.portal.active.loadSpaces()
         returnpath = "/%s/%s" % (contents['space'], contents['page'])
+        if contents['querystr']:
+            returnpath += "?%s" % contents['querystr']
         returncontent = "<script>window.open('%s', '_self', '');</script>" % returnpath
         return returncontent

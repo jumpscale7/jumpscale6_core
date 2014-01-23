@@ -1,5 +1,14 @@
 
 def main(j, args, params, tags, tasklet):
+    import urlparse
+    import urllib
+
+    querystr = args.requestContext.env['QUERY_STRING']
+    querytuples = urlparse.parse_qsl(querystr)
+    for item in querytuples[:]:
+        if item[0] in ['space', 'page']:
+            querytuples.remove(item)
+    querystr = urllib.urlencode(querytuples)
 
     page = args.page
 
@@ -40,7 +49,7 @@ def main(j, args, params, tags, tasklet):
 
     content = j.system.fs.fileGetContents(path)
 
-    page.addCodeBlock(content, path=path, exitpage=False, edit=args["edit"], spacename=args["space"], pagename=page_name)
+    page.addCodeBlock(content, path=path, exitpage=False, edit=args["edit"], spacename=args["space"], pagename=page_name, querystr=querystr)
 
     params.result = page
     return params
