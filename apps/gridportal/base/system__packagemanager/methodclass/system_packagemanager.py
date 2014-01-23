@@ -9,7 +9,7 @@ class system_packagemanager(j.code.classGetBase()):
         self.appname = "system"
         j.clients.agentcontroller.client.loadJumpscripts()
         j.core.portal.active.actorsloader.getActor('system', 'gridmanager')
-        self.gid, _, _ = j.application.whoAmI
+        self.gid = j.application.whoAmI.gid
 
 
     def getJPackages(self, **args):
@@ -20,7 +20,6 @@ class system_packagemanager(j.code.classGetBase()):
 
     def getJPackageInfo(self, **args):
         nid = args.get('nid')
-        roles = "node.%s.%s" % (self.gid, nid)
         domain = args.get('domain', None)
         name = args.get('pname', None)
         # version = args.get('version', None)
@@ -40,7 +39,6 @@ class system_packagemanager(j.code.classGetBase()):
         result json
         """
         nid = args.get('nid')
-        roles = "node.%s.%s" % (self.gid, nid)
         domain = args.get('domain', None)
         name = args.get('pname', None)
         # version = args.get('version', None)
