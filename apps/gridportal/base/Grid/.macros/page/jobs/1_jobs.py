@@ -8,15 +8,13 @@ def main(j, args, params, tags, tasklet):
         params.result = page
         return params
 
-    jsname = args.getTag('jsname')
-    jsorganization = args.getTag('jsorganization')
-
     filters = dict()
-    filters['nid'] = nid
-    if jsname:
-        filters['jsname'] = jsname
-    if jsorganization:
-        filters['jsorganization'] = jsorganization
+    for tag, val in args.tags.getDict().iteritems():
+        val = args.getTag(tag)
+        if tag == 'from' and val:
+            filters[tag] = j.base.time.getEpochAgo(val)
+        elif val:
+            filters[tag] = val
 
     modifier = j.html.getPageModifierGridDataTables(page)
 

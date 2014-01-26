@@ -3,9 +3,16 @@ import datetime
 def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
+    
+    filters = dict()
+    for tag, val in args.tags.getDict().iteritems():
+        val = args.getTag(tag)
+        if tag == 'from' and val:
+            filters[tag] = j.base.time.getEpochAgo(val)
+        elif val:
+            filters[tag] = val
 
     fieldnames = ['Node ID', 'App Name', 'Category', 'Error Message', 'Job ID', "Time"]
-    filters = dict()
 
     def errormessage(row, field):
         return row[field].replace('\n', '<br>')

@@ -3,13 +3,14 @@ import datetime
 def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
-    nid = args.getTag('nid')
-    jid = args.getTag('jid')
+
     filters = dict()
-    if nid:
-        filters['nid'] = nid
-    if jid:
-        filters['jid'] = jid
+    for tag, val in args.tags.getDict().iteritems():
+        val = args.getTag(tag)
+        if tag == 'from' and val:
+            filters[tag] = j.base.time.getEpochAgo(val)
+        elif val:
+            filters[tag] = val
 
     fieldnames = ['App Name', 'Category', 'Start Time', 'Message', 'Level', 'Process ID', 'Node ID', 'Job ID']
 

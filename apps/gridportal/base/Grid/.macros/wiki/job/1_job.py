@@ -9,14 +9,14 @@ def main(j, args, params, tags, tasklet):
 
     actor=j.apps.actorsloader.getActor("system","gridmanager")
 
-    id = args.tags.getDict().get('id', None) if not args.tags.getDict().get('id', None).startswith('$$') else None
+    id = args.getTag('id')
 
     details =args.tags.labelExists("details")
     logs = args.tags.labelExists("logs")
     children = args.tags.labelExists("children")
     script = args.tags.labelExists("scriptsource")
 
-    if id==None:
+    if not id:
         params.result = ('Job id needs to be specified, param name:id')
         return params
 
