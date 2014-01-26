@@ -52,27 +52,34 @@ class GeventWSTransport(Transport):
                     break
                 try:
                     r = requests.post(self.url, data=data2, headers=headers,timeout=timeout)
+                    responses=requests.map([r])
+                    rcv=responses[0]
+                    # rcv = r.send()
                 except Exception,e:
                     if str(e).find("Connection refused")<>-1:
                         print "retry connection to %s"%self.url
-                        time.sleep(1)
+                        time.sleep(0.1)
                     else:
+                        from IPython import embed
+                        print "DEBUG NOW error in GeventWSTransport"
+                        embed()
+                        
                         raise RuntimeError("error to send msg to %s,error was %s"%(self.url,e))
 
         else:
+            print "NO RETRY ON REQUEST WS TRANSPORT"
             r = requests.post(self.url, data=data2, headers=headers,timeout=timeout)
 
-        # print data
-        rcv = r.send()
+        # rcv = r.send()
 
         if rcv==None:
             eco=j.errorconditionhandler.getErrorConditionObject(msg='timeout on request to %s'%self.url, msgpub='', \
-                category='tornado.transport')
+                category='gevent.transport')
             return "4","m",j.db.serializers.msgpack.dumps(eco.__dict__)
                     
         if rcv.ok==False:
             eco=j.errorconditionhandler.getErrorConditionObject(msg='error 500 from webserver on %s'%self.url, msgpub='', \
-                category='tornado.transport')
+                category='gevent.transport')
             return "6","m",j.db.serializers.msgpack.dumps(eco.__dict__)
 
         return j.servers.base._unserializeBinReturn(rcv.content)

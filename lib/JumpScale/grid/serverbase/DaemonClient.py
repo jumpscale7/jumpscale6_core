@@ -63,12 +63,12 @@ class DaemonClient(object):
         # if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:
         #     raise RuntimeError("gid or nid cannot be 0, see grid.hrd file in main config of jumpscale hrd dir")
 
-        roles2=[]
-        for role in roles:
-            role+=".%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
-            roles2.append(role)
+        #WILL NOT LONGER ADD GID & NID
+        # roles2=[]
+        # for role in roles:
+        #     role+=".%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+        #     roles2.append(role)
 
-        roles=roles2
         self.roles = roles
         self.keystor = None
         self.key = None

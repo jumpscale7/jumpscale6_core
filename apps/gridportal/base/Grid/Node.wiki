@@ -6,6 +6,8 @@ h2. Node $$id $$name
 
 {{nodestat: nid:$$id cpustats}}
 
+h3. info
+
 |*gid:nid*|$$gid:$$id|
 |*Name*|$$name|
 |*Active*|$$active|

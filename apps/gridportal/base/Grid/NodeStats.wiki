@@ -7,7 +7,16 @@
     }
 }}
 
-h2. Node Stats
+h3. CPU Statistics
+{{stat key:n$$id.system.cpu.percent title=CPUPercent areaMode=stacked Max=100}}
+{{stat key:n$$id.system.cpu.time.system,n$$id.system.cpu.time.user,n$$id.system.cpu.time.iowait,n$$id.system.cpu.time.idle title=CPU%%20Time graphType=pie}}
 
-{{nodestat: nid:$$id width:800 height:500 netstats cpustats memstats}}
+h3. Memory Statistics
+{{stat key:n$$id.system.memory.percent areaMode=stacked}}
 
+h3. Network Statistics
+
+{{stat key:n$$id.system.network.kbytes.recv,n$$id.system.network.kbytes.send title=KBytes}}
+{{stat key:n$$id.system.network.packets.recv,n$$id.system.network.packets.send title=Packets}}
+{{stat key:n$$id.system.network.drop.in,n$$id.system.network.drop.out title=Drop}}
+{{stat key:n$$id.system.network.error.in,n$$id.system.network.error.out title=Error}}

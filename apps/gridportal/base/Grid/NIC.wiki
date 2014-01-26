@@ -7,4 +7,12 @@
 }}
 {{nic: id:$$id}}
 
-{{nicstat: nic:$$nic nid:$$nid}}
+h3. Statistics
+
+{{stat key:n$$nid.nic.$$nic.kbytes_recv,n$$nid.nic.$$nic.kbytes_sent title=KBytes}}
+{{stat key:n$$nid.nic.$$nic.packets_recv,n$$nid.nic.$$nic.packets_sent title=Packets}}
+
+{{stat key:n$$nid.nic.$$nic.dropin,n$$nid.nic.$$nic.dropout title=Drop}}
+{{stat key:n$$nid.nic.$$nic.errin,n$$nid.nic.$$nic.errout title=Error}}
+
+

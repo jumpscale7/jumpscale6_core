@@ -28,6 +28,7 @@ class Node(OsisBaseObject):
             self.peer_backup=0 #node which has backups for this node
             self.description=""
             self.lastcheck=0 #epoch of last time the info was checked from reality
+            self.roles=[]
 
 
     def getUniqueKey(self):
