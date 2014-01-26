@@ -267,7 +267,7 @@ class PageHTML(Page):
         else:
             link_class = ''
 
-        anchor = "<a href='%s' %s %s>%s</a>" % (link.strip(), link_id.strip(), link_class, description)
+        anchor = '<a href="%s" %s %s>%s</a>' % (link.strip(), link_id.strip(), link_class, description)
         return anchor
 
     def addLink(self, description, link):
