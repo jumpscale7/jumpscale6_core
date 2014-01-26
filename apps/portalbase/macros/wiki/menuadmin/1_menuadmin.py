@@ -9,7 +9,7 @@ def main(j, args, params, tags, tasklet):
 
     spaces = sorted(j.core.portal.runningPortal.webserver.getSpaces())
     spacestxt=""
-    for item in spaces:
+    for item in sorted(spaces):
         if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1:
             name = j.core.portal.runningPortal.webserver.getSpace(item).model.id
             spacestxt += "%s:/%s\n" % (name, item.lower().strip("/"))
@@ -19,6 +19,8 @@ def main(j, args, params, tags, tasklet):
 {{menudropdown: name:Portal
 New:/system/create
 Edit:/system/edit?space=$$space&page=$$page
+--------------
+Files:/system/files?space=$$space
 --------------
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
