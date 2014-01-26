@@ -1,3 +1,4 @@
+from JumpScale import j
 """
 Provides the Params object and the ParamsFactory that is used in the Q-Tree
 """
@@ -128,7 +129,7 @@ class Params():
             return default
         tags = tags.getDict()
         tag = tags.get(name)
-        if tag and tag.startswith('$$'):
+        if tag and j.tools.text.toStr(tag).startswith('$$'):
             return default
         if not tag:
             return default
