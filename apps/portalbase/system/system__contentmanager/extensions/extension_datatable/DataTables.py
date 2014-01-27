@@ -141,9 +141,19 @@ class DataTables():
         for x in xrange(len(fieldids)):
             svalue = kwargs.get('sSearch_%s' % x)
             if kwargs['bSearchable_%s' % x] == 'true' and svalue:
-                partials[fieldids[x]] = svalue
+                partials[fieldids[x]] = '*%s*' % svalue.lower()
 
-        total, inn = client.simpleSearch(filters, size=size, start=start, withtotal=True, sort=sort, partials=partials, withguid=True)
+        #top search field
+        nativequery = None
+        if 'sSearch' in kwargs and kwargs['sSearch']:
+            dummyobj = client.new()
+            nativequery = {'query': {'bool': {'should': list()}}}
+            for idname in fieldids:
+                if isinstance(getattr(dummyobj, idname, None), basestring):
+                    nativequery['query']['bool']['should'].append({'wildcard': {idname: '*%s*' % kwargs['sSearch'].lower()}})
+            nativequery
+
+        total, inn = client.simpleSearch(filters, size=size, start=start, withtotal=True, sort=sort, partials=partials, withguid=True, nativequery=nativequery)
         result = {}
         result["sEcho"] = int(kwargs.get('sEcho', 1))
         result["iTotalRecords"] = total
