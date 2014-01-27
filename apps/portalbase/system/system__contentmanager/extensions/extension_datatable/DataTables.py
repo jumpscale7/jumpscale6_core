@@ -143,12 +143,6 @@ class DataTables():
             if kwargs['bSearchable_%s' % x] == 'true' and svalue:
                 partials[fieldids[x]] = svalue
 
-        if filters.get('from'):
-            filters['from_'] = {'name': 'epoch', 'value': filters['from'], 'eq': 'gte'}
-            filters.pop('from')
-        if filters.get('to'):
-            filters['to'] = {'name': 'epoch', 'value': filters['to'], 'eq': 'lte'}
-
         total, inn = client.simpleSearch(filters, size=size, start=start, withtotal=True, sort=sort, partials=partials, withguid=True)
         result = {}
         result["sEcho"] = int(kwargs.get('sEcho', 1))
