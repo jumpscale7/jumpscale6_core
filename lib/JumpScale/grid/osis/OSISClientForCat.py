@@ -101,8 +101,11 @@ class OSISClientForCat():
         return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
                                   start=start, size=size)
 
-    def simpleSearch(self, params, start=0, size=None, withguid=False, withtotal=False, sort=None, partials=None):
-        query = {'query': {'bool': {'must': list()}}}
+    def simpleSearch(self, params, start=0, size=None, withguid=False, withtotal=False, sort=None, partials=None, nativequery=None):
+        if nativequery:
+            query = nativequery.copy()
+        else:
+            query = {'query': {'bool': {'must': list()}}}
         myranges = {}
         for k, v in params.iteritems():
             if isinstance(v, dict):
@@ -117,8 +120,15 @@ class OSISClientForCat():
         for key, value in myranges.iteritems():
             query['query']['bool']['must'].append({'range': {key: value}})
         if partials:
-            query['query']['bool']['must'].append({'prefix': partials})
-        if not query['query']['bool']['must']:
+            query['query']['bool']['must'].append({'wildcard': partials})
+        boolq = query['query']['bool']
+        def isEmpty(inputquery):
+            for key, value in inputquery.iteritems():
+                if value:
+                    return False
+            return True
+
+        if isEmpty(boolq):
             query = dict()
         if sort:
             query['sort'] = [ {x:v} for x,v in sort.iteritems() ]

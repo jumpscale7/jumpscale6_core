@@ -29,6 +29,7 @@ class Test(OsisBaseObject):
             self.result={}
             self.output={}
             self.eco={}
+            self.license = ""
             self.source={}
 
             self.id=0
