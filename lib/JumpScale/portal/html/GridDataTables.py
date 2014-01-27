@@ -1,4 +1,5 @@
 from JumpScale import j
+import datetime
 
 class GridDataTables:
 
@@ -13,6 +14,11 @@ class GridDataTables:
 
         self.page.addJS("%s/datatables/jquery.dataTables.min.js" % self.liblocation)
         self.page.addBootstrap()
+
+    def makeTime(self, row, field):
+        if row[field] == 0:
+            return ''
+        return datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or ''
 
     def addTableForModel(self, namespace, category, fieldids, fieldnames=None, fieldvalues=None, filters=None):
         """
