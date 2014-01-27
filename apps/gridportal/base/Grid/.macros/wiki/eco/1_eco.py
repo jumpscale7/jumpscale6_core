@@ -16,7 +16,12 @@ def main(j, args, params, tags, tasklet):
         params.result = (out, doc)
         return params
 
-    obj = ecocl.get(id)
+    try:
+        obj = ecocl.get(id)
+    except:
+        out = 'Could not find eco with id %s'  % id
+        params.result = (out, doc)
+        return params
     out = ['||Property||Value||']
 
     fields = ['appname', 'category', 'jid', 'code', 'level', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'backtrace', 'type', 'funcfilename', 'tags']
