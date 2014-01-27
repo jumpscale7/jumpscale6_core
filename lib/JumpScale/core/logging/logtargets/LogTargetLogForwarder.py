@@ -102,14 +102,17 @@ class LogTargetLogForwarder():
     __repr__ = __str__
 
     def logECO(self, eco):
+        eco = eco.__dict__.copy()
+        eco.pop('tb', None)
+        eco = j.errorconditionhandler.getErrorConditionObject(eco)
         if self.enabled:
             if not self.checkTarget():
                 self._ecoqueue.put(eco)
                 return
             try:
                 self.loggerClient.logECO(eco)
-            except:
-                print 'Failed to log in %s' % self
+            except Exception, e:
+                print 'Failed to log in %s error: %s' % (self, e)
                 self.connected = False
 
     def log(self, log):

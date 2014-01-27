@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from JumpScale import j
 from JumpScale.baselib import cmdutils
+import JumpScale.grid
 
 import sys,time
 
@@ -43,6 +44,8 @@ if opts.path==None:
     j.tools.testengine.paths=["/opt/jumpscale/apps"]
 else:
     j.tools.testengine.paths=[opts.path]
+
+j.core.grid.init()
 
 j.tools.testengine.initTests()
 j.tools.testengine.runTests(debug=opts.debug)

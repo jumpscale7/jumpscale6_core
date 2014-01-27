@@ -1,6 +1,7 @@
 import sys
 from JumpScale import j
 import imp
+import time
 import JumpScale.grid.osis
 import inspect
 
@@ -28,8 +29,9 @@ class Test():
         print "\n##TEST:%s %s"%(self.db.organization,self.db.name)
         self.testclass.setUp()
         print "setup"
-        
+        self.db.starttime = time.time() 
         print self.db.path
+        self.db.state = 'OK'
         for test in inspect.getmembers(self.testclass):
             if str(test[0]).find("test_")==0:
                 #found test
@@ -43,8 +45,11 @@ class Test():
                     sys.stderr = out
                 
                 try:
-                    self.db.result=test[1]()
+                    self.db.result[name]=test[1]()
+                    self.db.teststates[name] = 'OK'
                 except Exception,e:
+                    self.db.state = 'ERROR'
+                    self.db.teststates[name] = 'ERROR'
                     sys.stdout =j.tools.testengine.sysstdout
                     sys.stderr =j.tools.testengine.sysstderr  
                     print "ERROR IN TEST:"
@@ -52,7 +57,8 @@ class Test():
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.tags="testrunner testrun:%s org:%s testgroup:%s testname:%s testpath:%s" % (self.db.testrun,\
                             self.db.organization, self.db.name,name,self.db.path)
-                    j.errorconditionhandler.processErrorConditionObject(eco)                    
+                    j.errorconditionhandler.processErrorConditionObject(eco)
+                    self.db.result[name] = eco.guid
                     if debug:
                         sys.exit()
                 sys.stdout =j.tools.testengine.sysstdout
@@ -63,6 +69,7 @@ class Test():
             self.testclass.tearDown()
         except Exception,e:
             pass
+        self.db.endtime = time.time()
 
     def __str__(self):
         out=""
@@ -119,7 +126,8 @@ class TestEngine():
                 test.db.priority=testmod.priority
                 test.db.gid=j.application.whoAmI.gid
                 test.db.nid=j.application.whoAmI.nid
-                test.db.state="INIT"
+                test.db.state = 'INIT'
+                test.db.teststates = dict()
                 test.db.testrun=testrunname
                 test.db.name=name
                 test.db.path=item
@@ -134,7 +142,8 @@ class TestEngine():
                     test.db.source[methodname]=methodsource
 
                 test.testclass=testclass
-                self.osis.set(test.db)
+                guid, _, _ = self.osis.set(test.db)
+                test.db.load(self.osis.get(guid))
                 self.tests.append(test)
 
         print "all tests loaded in osis"
