@@ -23,10 +23,9 @@ Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
 System:/system
 --------------
-agentcontroller:/agentcontroller
-grid:/grid
-logs_errors:/gridlogs
-jpackages:/jpackages
+Grid:/grid
+Logs_errors:/gridlogs
+JPackages:/jpackages
 --------------
 Machines:/grid/Machines
 Disks:/grid/Disks

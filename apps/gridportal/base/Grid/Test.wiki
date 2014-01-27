@@ -1,3 +1,0 @@
-@usedefaults
-
-{{grid.test: id:$$id details scriptsource}}
