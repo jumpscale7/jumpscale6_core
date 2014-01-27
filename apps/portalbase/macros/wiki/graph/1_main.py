@@ -30,7 +30,7 @@ def main(j, args, params, tags, tasklet):
 
             return params
 
-    out = "!/root/dot/%s.png!" % md5
+    out = "!/files/dot/%s.png!" % md5
 
     params.result = (out, doc)
 
