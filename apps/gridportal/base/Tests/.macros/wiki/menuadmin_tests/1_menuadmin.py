@@ -17,7 +17,7 @@ def main(j, args, params, tags, tasklet):
 
     C = """
 {{menudropdown: name:Portal
-Edit:/system/edit?space=$$space&page=$$page
+Edit:/system/edit?space=$$space&page=$$page&$$querystr
 --------------
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space

@@ -8,7 +8,7 @@ class Test(OsisBaseObject):
     identifies a job in the grid
     """
 
-    def __init__(self, ddict={}, gid="",jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None,lock="",\
+    def __init__(self, ddict={}, gid=0, jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None,lock="",\
             lockduration=3600,nid=0):
         if ddict <> {}:
             self.load(ddict)
@@ -23,6 +23,8 @@ class Test(OsisBaseObject):
             self.author=""
             self.version=0
             self.categories=[]
+            self.starttime = 0
+            self.endtime = 0
             self.enable=True
             self.result={}
             self.output={}
