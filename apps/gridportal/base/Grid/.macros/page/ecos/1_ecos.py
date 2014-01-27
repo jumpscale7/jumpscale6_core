@@ -3,15 +3,16 @@ import datetime
 def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
-    
+
     filters = dict()
-    for tag, val in args.tags.getDict().iteritems():
+    for tag, val in args.tags.tags.iteritems():
         val = args.getTag(tag)
         if tag == 'from' and val:
-            filters[tag] = j.base.time.getEpochAgo(val)
+            filters['from_'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'gte'}
+        elif tag == 'to' and val:
+            filters['to'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
         elif val:
             filters[tag] = val
-
     fieldnames = ['Node ID', 'App Name', 'Category', 'Error Message', 'Job ID', "Time"]
 
     def errormessage(row, field):

@@ -9,10 +9,12 @@ def main(j, args, params, tags, tasklet):
         return params
 
     filters = dict()
-    for tag, val in args.tags.getDict().iteritems():
+    for tag, val in args.tags.tags.iteritems():
         val = args.getTag(tag)
         if tag == 'from' and val:
-            filters[tag] = j.base.time.getEpochAgo(val)
+            filters['from_'] = {'name': 'timeStart', 'value': j.base.time.getEpochAgo(val), 'eq': 'gte'}
+        elif tag == 'to' and val:
+            filters['to'] = {'name': 'timeStop', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
         elif val:
             filters[tag] = val
 

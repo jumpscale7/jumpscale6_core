@@ -40,8 +40,7 @@ class LogHandler(Greenlet):
         eco.jid = self.jid
         if not isinstance(eco.type, int):
             eco.type = eco.type.level
-        eco.tb = None
-        self.agent.client.escalateError(eco.__dict__)
+        self.agent.client.escalateError(eco)
 
     def flushLogs(self):
         logs = []
@@ -199,12 +198,13 @@ class Agent(Greenlet):
 
 
     def notifyWorkCompleted(self,result,eco):
-        print self.client.listSessions()
         try:
+            eco = eco.copy()
+            eco.pop('tb')
             result=self.client.notifyWorkCompleted(result=result,eco=eco)
         except Exception,e:
-            eco=j.errorconditionhandler.lastEco
-            j.errorconditionhandler.lastEco=None
+            eco = j.errorconditionhandler.lastEco
+            j.errorconditionhandler.lastEco = None
             # self.loghandler.logECO(eco)
 
             print "******************* SERIOUS BUG **************"

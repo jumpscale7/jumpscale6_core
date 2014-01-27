@@ -59,7 +59,7 @@ class ECO(OsisBaseObject):
         """
         use osis to define & set unique guid (sometimes also id)
         """
-        if not guid:
+        if not self.guid:
             self.gid = int(self.gid)
             self.id = int(self.id)
             self.guid = "%s_%s" % (self.gid, self.id)
