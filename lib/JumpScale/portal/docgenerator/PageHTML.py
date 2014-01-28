@@ -376,6 +376,7 @@ var editor$id = CodeMirror.fromTextArea(document.getElementById("code$id"),
     {
     lineNumbers: $linenr,
     theme: "elegant",
+    readOnly: $readonly,
     lineWrapping: $wrap,
     mode: "{template}",
     onCursorActivity: function() {
@@ -396,7 +397,8 @@ function copyText$id() {
         JS = JS.replace("$id", str(self._codeblockid))
         JS = JS.replace("$linenr", linenr)
         JS = JS.replace("$wrap", str(wrap).lower())
-        
+        JS = JS.replace("$readonly", str(not edit).lower())
+
         self.addJS(jsContent=JS.replace("{template}", template), header=False)
         self._hasCodeblock = True
 
