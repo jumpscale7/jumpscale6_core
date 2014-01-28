@@ -314,13 +314,14 @@ class PageHTML(Page):
         """
         # if codeblock no postprocessing(e.g replacing $$space, ...) should be
         # done
+        theme = 'monokai'
 
         if edit:
             self.processparameters['postprocess'] = False
         self.addJS("%s/codemirror/lib/codemirror.js" % self.liblocation)
         self.addCSS("%s/codemirror/lib/codemirror.css" % self.liblocation)
         self.addJS("%s/codemirror/mode/javascript/javascript.js" % self.liblocation)
-        self.addCSS("%s/codemirror/theme/elegant.css" % self.liblocation)
+        self.addCSS("%s/codemirror/theme/%s.css" % (self.liblocation, theme))
         #self.addCSS("%s/codemirror/doc/docs.css"% self.liblocation)
         self.addJS("%s/codemirror/mode/%s/%s.js" % (self.liblocation, template, template))
         CSS = """
@@ -377,6 +378,7 @@ var editor$id = CodeMirror.fromTextArea(document.getElementById("code$id"),
     lineNumbers: $linenr,
     theme: "elegant",
     readOnly: $readonly,
+    theme: "$theme",
     lineWrapping: $wrap,
     mode: "{template}",
     onCursorActivity: function() {
@@ -398,6 +400,7 @@ function copyText$id() {
         JS = JS.replace("$linenr", linenr)
         JS = JS.replace("$wrap", str(wrap).lower())
         JS = JS.replace("$readonly", str(not edit).lower())
+        JS = JS.replace("$theme", theme)
 
         self.addJS(jsContent=JS.replace("{template}", template), header=False)
         self._hasCodeblock = True
