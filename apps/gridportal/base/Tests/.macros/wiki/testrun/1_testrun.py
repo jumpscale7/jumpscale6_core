@@ -25,7 +25,15 @@ def main(j, args, params, tags, tasklet):
 
     obj = tests[0]
 
-    out= "h2. TestRun %(state)s\n"%  obj
+    out = """{{jscript
+
+$( function () {
+    $(".testruncontainer").hide();
+    $('h3').click(function() { $(this).next(".testruncontainer").toggle("fast") });
+});
+}}
+"""
+    out += "h2. TestRun %(state)s\n"%  obj
 
     out +="* gid:%s nid:%s\n"%(obj["gid"],obj["nid"])
     out +="* Categories: %s\n"%(', '.join(obj["categories"]))
@@ -47,7 +55,8 @@ def main(j, args, params, tags, tasklet):
     if obj['output']:
         for testname, output in obj['output'].iteritems():
             teststate = obj['teststates'].get(testname, 'UNKNOWN')
-            out += "h3. Test: %s %s\n" % (testname, teststate)
+            out += "h3. [Test: %s %s|#]\n" % (testname, teststate)
+            out += "{{div: class=testruncontainer}}\n"
             out += "h4. Source\n"
             out += "{{code\n%s\n}}\n" % obj['source'].get(testname, '')
             if teststate == 'OK':
@@ -59,6 +68,7 @@ def main(j, args, params, tags, tasklet):
 
             out += "h4. Output\n"
             out += "{{code\n%s\n}}\n" % output
+            out += "{{div}}\n"
 
     params.result = (out, doc)
 
