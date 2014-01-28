@@ -315,9 +315,6 @@ class PageHTML(Page):
         # if codeblock no postprocessing(e.g replacing $$space, ...) should be
         # done
 
-        if wrap and edit==False:
-            code=j.console.formatMessage(code,width=wrapwidth,removeemptylines=False)            
-
         if edit:
             self.processparameters['postprocess'] = False
         self.addJS("%s/codemirror/lib/codemirror.js" % self.liblocation)
@@ -379,6 +376,7 @@ var editor$id = CodeMirror.fromTextArea(document.getElementById("code$id"),
     {
     lineNumbers: $linenr,
     theme: "elegant",
+    lineWrapping: $wrap,
     mode: "{template}",
     onCursorActivity: function() {
         editor$id.setLineClass(hlLine, null, null);
@@ -397,6 +395,7 @@ function copyText$id() {
 
         JS = JS.replace("$id", str(self._codeblockid))
         JS = JS.replace("$linenr", linenr)
+        JS = JS.replace("$wrap", str(wrap).lower())
         
         self.addJS(jsContent=JS.replace("{template}", template), header=False)
         self._hasCodeblock = True
