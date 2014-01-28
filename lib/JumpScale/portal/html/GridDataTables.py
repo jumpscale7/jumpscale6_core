@@ -48,7 +48,6 @@ class GridDataTables:
 $(document).ready(function() {
     $('#$tableid').dataTable( {
         "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
-        "bProcessing": true,
         "bServerSide": true,
         "bDestroy": true,
         "sPaginationType": "bootstrap",
