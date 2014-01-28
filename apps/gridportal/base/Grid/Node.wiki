@@ -6,14 +6,14 @@ h2. Node $$id $$name
 
 {{nodestat: nid:$$id cpustats}}
 
-h3. info
+h3. Info
 
-|*gid:nid*|$$gid:$$id|
+|*GID:NID*|$$gid:$$id|
 |*Name*|$$name|
 |*Active*|$$active|
 |*Roles*|$$roles|
 |*Description*|$$description|
-|*ipaddr*|$$ipaddr|
+|*IP Address*|$$ipaddr|
 
 h3. Statistics
 
