@@ -14,7 +14,7 @@ class Process(OsisBaseObject):
             self.getSetGuid()
         else:
             self.init("process","1.0")
-            self.id=0
+            self.id = 0
             self.gid = gid
             self.nid = nid
             self.jpdomain= ""
@@ -52,8 +52,7 @@ class Process(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        # C="%s_%s_%s_%s_%s_%s_%s"%(",".join(self.systempids),self.gid,self.nid,\
-        #     self.jpdomain,self.jpname,self.instance,self.pname)
+        # C="%s_%s_%s_%s_%s_%s"% (self.gid,self.nid, self.jpdomain,self.jpname,self.instance,self.pname)
         # return j.tools.hash.md5_string(C)
         return self.getSetGuid()
 
@@ -62,12 +61,12 @@ class Process(OsisBaseObject):
         use osis to define & set unique guid (sometimes also id)
         """
         self.gid = int(self.gid)
-        self.nid = int(self.nid)
+        self.id = int(self.id)
         if self.sname<>"":
             key="%s_%s"%(self.jpdomain,self.sname)
         else:
             key=self.pname
-        self.guid = "%s_%s" % (self.gid,self.id)
+        self.guid = "%s_%s_%s" % (self.gid, self.id, key)
         self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 
