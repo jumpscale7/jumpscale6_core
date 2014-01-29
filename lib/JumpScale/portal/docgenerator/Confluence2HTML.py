@@ -119,7 +119,7 @@ class Confluence2HTML():
         # This is a list of formatting tags & I'm going to replace the in HTML, e.g. _word_ will be replaced with
         # <em>word</em>
         #styled_text = r'([\w\-:_/= *.\.\/\>\<\\{},|`!]+)'
-        styled_text = r'[^{0}\n]+?'
+        styled_text = r'[^{0}\n]*?'
 
         def limiter(char):
             # Limiters can contain RE special chars, so I escape them here
