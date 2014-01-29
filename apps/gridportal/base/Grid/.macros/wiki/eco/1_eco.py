@@ -2,53 +2,28 @@ import datetime
 import JumpScale.grid.osis
 
 def main(j, args, params, tags, tasklet):
-
-    params.merge(args)
-    doc = params.doc
-    # tags = params.tags
+    id = args.getTag('id')
+    if not id:
+        out = 'Missing ECO id param "id"'
+        params.result = (out, args.doc)
+        return params
 
     oscl = j.core.osis.getClient(user='root')
     ecocl = j.core.osis.getClientForCategory(oscl, 'system', 'eco')
-
-    id = args.getTag('id')
-    if not id:
-        out = 'Missing eco id param "id"'
-        params.result = (out, doc)
-        return params
-
     try:
         obj = ecocl.get(id)
     except:
-        out = 'Could not find eco with id %s'  % id
-        params.result = (out, doc)
+        out = 'Could not find Error Condition Object with id %s'  % id
+        params.result = (out, args.doc)
         return params
-    out = ['||Property||Value||']
 
-    fields = ['appname', 'category', 'jid', 'code', 'level', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'backtrace', 'type', 'funcfilename', 'tags']
+    def objFetchManipulate(id):
+        obj['epoch'] = datetime.datetime.fromtimestamp(obj['epoch']).strftime('%Y-%m-%d %H:%M:%S')
+        for attr in ['errormessage', 'errormessagePub']:
+            obj[attr] = obj[attr].replace('\n', '<br>')
+        obj['id'] = id
+        return obj
 
-    for field in fields:
-        if field == 'nid':
-            out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'pid':
-            out.append("|Process|[%s|/grid/process?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'jid':
-            out.append("|Job|[%s|/grid/job?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'gid':
-            out.append("|Grid|[%s|/grid/grid?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'epoch':
-            epoch = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|%s|%s|" % (field.capitalize(), epoch))
-        elif field in ['errormessage', 'backtrace']:
-            message = obj[field].replace('\n', '<br>').replace(']', '\]').replace('[', '\[')
-            out.append("|%s|%s|" % (field.capitalize(), message))
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
+    push2doc = j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-
-    params.result = ('\n'.join(out), doc)
-
-    return params
-
-
-def match(j, args, params, tags, tasklet):
-    return True
+    return push2doc(args,params,objFetchManipulate)

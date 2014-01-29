@@ -1,6 +1,19 @@
 @usedefault
-
-h2. Disks details
 {{disk: id:$$id}}
+
+h2. Disk $$id
+|*Node*|[$$nid|node?id=$$nid|]|
+|*Active*|$$active|
+|*SSD*|$$ssd|
+|*Model*|$$model|
+|*Path*|$$path|
+|*Size*|$$size|
+|*Free*|$$free|
+|*Usage*|$$usage|
+|*File System*|$$fs|
+|*Mounted*|$$mounted|
+|*Description*|$$description|
+|*Type*|$$type|
+|*Mount Point*|$$mountpoint|
 
 {{diskstat: id:$$id nid:$$nid}}

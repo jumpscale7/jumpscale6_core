@@ -1,47 +1,34 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
-
-    params.merge(args)
-    doc = params.doc
-    # tags = params.tags
-
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
-
-    id = args.getTag("id")
-
+    id = args.getTag('id')
     if not id:
         out = 'Missing machine id param "id"'
-        params.result = (out, doc)
+        params.result = (out, args.doc)
         return params
 
-    obj = actor.getMachines(id=id)[0]
+    machines = j.apps.system.gridmanager.getMachines(id=id)
+    if not machines:
+        params.result = ('Machine with id %s not found' % id, args.doc)
+        return params
 
-    out = ['||Property||Value||']
+    def objFetchManipulate(id):
+        obj = machines[0]
+        for attr in ['roles', 'ipaddr']:
+            obj[attr] = ', '.join([str(x) for x in obj[attr]]) 
 
-    fields = ['id', 'otherid', 'name', 'description', 'roles', 'mem', 'netaddr', 'ipaddr', 'nid', 'lastcheck', 'state', 'gid', 'active', 'cpucore', 'type']
-    for field in fields:
-        if field == 'nid':
-            out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
-        elif field in ('roles', 'ipaddr'):
-            out.append("|%s|%s|" % (field.capitalize(), ', '.join(obj[field])))
-        elif field == 'netaddr':
-            netaddr = obj[field]
-            netinfo = ''
-            for k, v in netaddr.iteritems():
-                netinfo += 'mac address: %s, interface: %s, ip: %s<br>' % (k, v[0], v[1])
-            out.append("|%s|%s|" % (field.capitalize(), netinfo))
-        elif field == 'lastcheck':
-            lastchecked = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|%s|%s|" % (field.capitalize(), lastchecked))
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
+        netaddr = obj['netaddr']
+        netinfo = ''
+        for k, v in netaddr.iteritems():
+            netinfo += 'mac address: %s, interface: %s, ip: %s<br>' % (k, v[0], v[1])
+        obj['netaddr'] = netinfo
 
+        obj['lastcheck'] = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
+        return obj
 
-    params.result = ('\n'.join(out), doc)
+    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-    return params
-
+    return push2doc(args,params,objFetchManipulate)
 
 def match(j, args, params, tags, tasklet):
     return True

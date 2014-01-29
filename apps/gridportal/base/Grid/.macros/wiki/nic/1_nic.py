@@ -1,35 +1,26 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
-
-    params.merge(args)
-    doc = params.doc
-    # tags = params.tags
-
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
-
-    id = args.getTag("id")
+    id = args.getTag('id')
     if not id:
-        out = 'Missing nic id param "id"'
-        params.result = (out, doc)
+        out = 'Missing NIC id param "id"'
+        params.result = (out, args.doc)
         return params
 
-    obj = actor.getNics(id=id)[0]
+    nics = j.apps.system.gridmanager.getNics(id=id)
+    if not nics:
+        params.result = ('NIC with id %s not found' % id, args.doc)
+        return params
 
-    out = ['h2. NIC %s' % obj['name']]
+    def objFetchManipulate(id):
+        obj = nics[0]
+        obj['lastcheck'] = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
+        obj['ipaddr'] = ', '.join([str(x) for x in obj['ipaddr']])
+        return obj
 
-    out.append('h3. Details')
+    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-    out.append("|*MAC Address*|%s|" % obj['mac'])
-    out.append("|*IP Address*|%s|" % ', '.join(obj['ipaddr']))
-    lastchecked = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
-    out.append("|*Last check*|%s|" % lastchecked)
-    out.append("|*Node*|[%s|/grid/node?id=%s]|" % (obj['nid'], obj['nid']))
-
-    params.result = ('\n'.join(out), doc)
-
-    return params
-
+    return push2doc(args,params,objFetchManipulate)
 
 def match(j, args, params, tags, tasklet):
     return True

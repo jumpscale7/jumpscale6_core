@@ -1,41 +1,26 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
-
-    params.merge(args)
-    doc = params.doc
-    # tags = params.tags
-
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
-
-    id = args.getTag("id")
+    id = args.getTag('id')
     if not id:
         out = 'Missing log id param "id"'
-        params.result = (out, doc)
+        params.result = (out, args.doc)
         return params
 
-    obj = actor.getLogs(id=id)[0]
+    logs = j.apps.system.gridmanager.getLogs(id=id)
+    if not logs:
+        params.result = ('Log with id %s not found' % id, args.doc)
+        return params
 
-    out = ['||Property||Value||']
+    def objFetchManipulate(id):
+        obj = logs[0]
+        for attr in ['epoch']:
+            obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
+        return obj
 
-    fields = ['id', 'appname', 'category', 'message', 'jid', 'level', 'parentjid', 'pid', 'nid', 'order', 'masterjid', 'epoch', 'gid', 'private', 'aid', 'tags']
-    for field in fields:
-        if field == 'nid':
-            out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'pid':
-            out.append("|Process|[%s|/grid/process?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'jid':
-            out.append("|Job|[%s|/grid/job?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'epoch':
-            epoch = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|Time|%s|" % epoch)
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
+    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-
-    params.result = ('\n'.join(out), doc)
-
-    return params
+    return push2doc(args,params,objFetchManipulate)
 
 
 def match(j, args, params, tags, tasklet):

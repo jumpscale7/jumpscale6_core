@@ -13,20 +13,20 @@ def main(j, args, params, tags, tasklet):
             filters['to'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
         elif val:
             filters[tag] = val
-    fieldnames = ['Node ID', 'App Name', 'Category', 'Error Message', 'Job ID', "Time"]
+    fieldnames = ["Time", 'Node ID', 'App Name', 'Category', 'Error Message', 'Job ID']
 
     def errormessage(row, field):
         return row[field].replace('\n', '<br>')
 
     def makeTime(row, field):
         time = datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or ''
-        return '[%s|grid/eco?id=%s]' % (time, row['guid'])
+        return '[%s|eco?id=%s]' % (time, row['guid'])
 
-    nidstr = '[%(nid)s|/grid/node?id=%(nid)s]'
-    jidstr = '[%(jid)s|/grid/job?id=%(jid)s]'
+    nidstr = '[%(nid)s|node?id=%(nid)s]'
+    jidstr = '[%(jid)s|job?id=%(jid)s]'
 
-    fieldids = ["nid", "appname", "category", "errormessage", "jid", "epoch"]
-    fieldvalues = [nidstr, 'appname', 'category', errormessage, jidstr, makeTime]
+    fieldids = ["epoch", "nid", "appname", "category", "errormessage", "jid"]
+    fieldvalues = [makeTime, nidstr, 'appname', 'category', errormessage, jidstr]
     tableid = modifier.addTableForModel('system', 'eco', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
 
