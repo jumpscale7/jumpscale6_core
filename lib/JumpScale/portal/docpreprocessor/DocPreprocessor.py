@@ -217,9 +217,9 @@ class Doc(object):
             for param in self.params:
                 if param in params:
                     if content == None:
-                        content = self.content.replace("$$%s" % param, str(params[param]))                            
+                        content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), self.content)
                     else:
-                        content = content.replace("$$%s" % param, str(params[param]))
+                        content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), content)
         return content
 
     def executeMacrosPreprocess(self):

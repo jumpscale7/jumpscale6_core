@@ -13,7 +13,7 @@ class MacroHelper():
         
         idd = args.getTag("id")
         if not idd:
-            params.result = ('Missing node id param "id"',doc)
+            params.result = ('Missing id param "id"',doc)
             return params
 
         obj=objFetchManipulate(idd)
@@ -34,8 +34,10 @@ class MacroHelper():
             params.result=("{{code:\n%s\n}}"%out,doc)
             return params
 
+        objparams = { str(k).lower(): v for k,v in obj.iteritems() }
+
         #apply the properties of the object as parameters to the active wiki document
-        doc.content=doc.applyParams(obj,content=doc.content)
+        doc.content=doc.applyParams(objparams, content=doc.content)
 
         #IMPORTANT return 2x doc (not (out,doc)) but return (doc,doc) this tells the appserver that the doc was manipulated
         params.result = (doc, doc)
