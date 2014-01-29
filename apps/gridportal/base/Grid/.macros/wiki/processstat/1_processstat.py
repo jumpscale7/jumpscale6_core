@@ -1,55 +1,26 @@
 def main(j, args, params, tags, tasklet):
     params.merge(args)
 
-    doc = params.doc
-
     id = args.getTag('id')
-    actor=j.apps.system.gridmanager
-    width = args.getTag('width', 800)
-    height = args.getTag('height', 400)
-
     if not id:
-        out = 'Missing process id param "id"'
-        params.result = (out, doc)
         return params
 
-    _data = {'height':height, 'width':width}
-    
-    cpustats = args.tags.labelExists("cpustats")
-    iostats = args.tags.labelExists("iostats")
-    memstats = args.tags.labelExists("memstats")
-    
-    out = ''
-    obj = actor.getProcesses(id=id)
-    if not obj:
-        out = 'No process with id %s found' % id
-        params.result = (out, doc)
+    process = j.apps.system.gridmanager.getProcesses(id=id)
+    if not process:
         return params
 
-    obj = obj[0]
+    def objFetchManipulate(id):
+        obj = process[0]
+        prockey = "n%s.process.%%s.%%s" % obj['nid']
+        if obj['type'] == 'jsprocess':
+            obj['prockey'] = prockey % ('js', "%s_%s" % (obj['jpdomain'], obj['sname']))
+        else:
+            obj['prockey'] = prockey % ('os', "%s" % (obj['pname']))
+        return obj
 
-    prockey = "n%s.process.%%s.%%s" % obj['nid']
-    if obj['type'] == 'jsprocess':
-        prockey = prockey % ('js', "%s_%s" % (obj['jpdomain'], obj['sname']))
-    else:
-        prockey = prockey % ('os', "%s" % (obj['pname']))
+    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-    _data['prockey'] = prockey
-
-    if cpustats:
-        out += '\nh5. CPU Statistics\n'
-        out += '{{stat key:%(prockey)s.cpu_percent&areaMode=stacked&yMax=100 width:%(width)s height:%(height)s}}<br><br>' % _data
-    if iostats:
-        out += '\nh5. IO Statistics\n'
-        out += '{{stat key:%(prockey)s.io_read_mbytes,%(prockey)s.io_write_mbytes width:%(width)s height:%(height)s}}<br><br>' % _data
-    if memstats:
-        out += '\nh5. Memory Statistics\n'
-        out += '{{stat key:%(prockey)s.mem_rss,%(prockey)s.mem_vms width:%(width)s height:%(height)s}}<br><br>' % _data
-
-    params.result = (out, doc)
-
-    return params
-
+    return push2doc(args,params,objFetchManipulate)
 
 def match(j, args, params, tags, tasklet):
     return True
