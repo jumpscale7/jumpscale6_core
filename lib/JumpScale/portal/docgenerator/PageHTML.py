@@ -297,7 +297,8 @@ class PageHTML(Page):
                 raise RuntimeError("Could not find action %s" % action)
         self.addList([row])
 
-    def addCodeBlock(self, code, template="python", path="", edit=True, exitpage=True, spacename='', pagename=''):
+    def addCodeBlock(self, code, template="python", path="", edit=True, exitpage=True, spacename='', pagename='',linenr=False,\
+        linecolor="#eee",linecolortopbottom="1px solid black",wrap=True,wrapwidth=100, querystr=None):
         """
         @todo define types of templates supported
         @template e.g. python
@@ -305,23 +306,38 @@ class PageHTML(Page):
         """
         # if codeblock no postprocessing(e.g replacing $$space, ...) should be
         # done
+        theme = 'monokai'
+
         if edit:
             self.processparameters['postprocess'] = False
         self.addJS("%s/codemirror/lib/codemirror.js" % self.liblocation)
         self.addCSS("%s/codemirror/lib/codemirror.css" % self.liblocation)
         self.addJS("%s/codemirror/mode/javascript/javascript.js" % self.liblocation)
-        self.addCSS("%s/codemirror/theme/elegant.css" % self.liblocation)
+        self.addCSS("%s/codemirror/theme/%s.css" % (self.liblocation, theme))
         #self.addCSS("%s/codemirror/doc/docs.css"% self.liblocation)
         self.addJS("%s/codemirror/mode/%s/%s.js" % (self.liblocation, template, template))
         CSS = """
 <style type="text/css">
-      .CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black}
-      .CodeMirror-scroll { height: 100% }
+    .CodeMirror {
+        height: auto;
+        border: $linecolor;
+        border-top: $linecolortopbottom;
+        border-bottom: $linecolortopbottom                
+    }
+    .CodeMirror-scroll {
+        overflow-y: hidden;
+        overflow-x: auto;
+    }
+        
 </style>
-"""
+"""     
+        CSS = CSS.replace("$linecolortopbottom", linecolortopbottom)
+        CSS = CSS.replace("$linecolor", linecolor)
+
         self.head += CSS
         self._codeblockid += 1
-        TA = "<textarea id=\"code%s\" name=\"code%s\" rows=\"5\">" % (self._codeblockid, self._codeblockid)
+        #rows=\"20\"
+        TA = "<textarea id=\"code%s\" name=\"code%s\" >" % (self._codeblockid, self._codeblockid)
         TA += code
         TA += "</textarea>"
         if path != "" and edit:
@@ -338,17 +354,24 @@ class PageHTML(Page):
             """
             F = F.replace("$id", str(self._codeblockid))
             guid = j.base.idgenerator.generateGUID()
-            content = {'space': spacename, 'path': path, 'page': pagename}
+            content = {'space': spacename, 'path': path, 'page': pagename, 'querystr': querystr}
             j.apps.system.contentmanager.dbmem.cacheSet(guid, content, 60)
             F = F.replace("$guid", guid)
             self.addMessage(F)
 
         # if not self._hasCodeblock:
+        if linenr:
+            linenr="true"
+        else:
+            linenr="false"
         JS = """
 var editor$id = CodeMirror.fromTextArea(document.getElementById("code$id"),
     {
-    lineNumbers: true,
+    lineNumbers: $linenr,
     theme: "elegant",
+    readOnly: $readonly,
+    theme: "$theme",
+    lineWrapping: $wrap,
     mode: "{template}",
     onCursorActivity: function() {
         editor$id.setLineClass(hlLine, null, null);
@@ -366,6 +389,11 @@ function copyText$id() {
 """
 
         JS = JS.replace("$id", str(self._codeblockid))
+        JS = JS.replace("$linenr", linenr)
+        JS = JS.replace("$wrap", str(wrap).lower())
+        JS = JS.replace("$readonly", str(not edit).lower())
+        JS = JS.replace("$theme", theme)
+
         self.addJS(jsContent=JS.replace("{template}", template), header=False)
         self._hasCodeblock = True
 

@@ -29,4 +29,4 @@ If you write this in your page
 
 This will be the result
 
-{{gallery: picturedir: | title:demo | thumb_size:300x200}}
+{{gallery: picturedir: | title:demo | thumb_size:110x110}}
