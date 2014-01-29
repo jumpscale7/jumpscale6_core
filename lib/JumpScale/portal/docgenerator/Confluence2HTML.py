@@ -134,6 +134,9 @@ class Confluence2HTML():
         def substitute_email(match):
             return r'<a href="{0}">{1}</a>'.format(match.group(1), match.group(1).replace('mailto:', '', 1))
 
+        def escape_char(char):
+            return '&#{0};'.format(ord(char.group(1)))
+
         substitutions = [
             ('<',           '&lt;'),
             ('>',           '&gt;'),
@@ -156,7 +159,10 @@ class Confluence2HTML():
             #(r'\[(.*?)\]', substitute_email),
 
             # blockquote
-            (r'bq\.\s+(.*?)\n', r'<blockquote>\1</blockquote>\n')
+            (r'bq\.\s+(.*?)\n', r'<blockquote>\1</blockquote>\n'),
+
+            # Escape characters by putting \ in front of it, e.g. \*
+            (r'\\([^\n\r\\])',  escape_char)
         ]
         # First, divide the text into macros & non-macros
         blocks = re.split(r'({{.*?}})', content, flags=re.DOTALL)
@@ -168,12 +174,7 @@ class Confluence2HTML():
                 blocks[i] = re.sub(tag_re, sub_re, blocks[i])
 
         content = ''.join(blocks)
-
-        # Escape characters by putting \ in front of it, e.g. \*
-        def escape_char(char):
-            return '&#{0};'.format(ord(char.group(1)))
-        content = re.sub(r'\\([^\n\r\\])', escape_char, content)
-
+        
         if page == None:
             page = j.tools.docgenerator.pageNewHTML("temp")
 
