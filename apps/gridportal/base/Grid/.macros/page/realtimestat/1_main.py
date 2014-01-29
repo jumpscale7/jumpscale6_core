@@ -7,7 +7,7 @@ def main(j, args, params, tags, tasklet):
     
     out = ''
     missing = False
-    for k,v in {'nid':nid, 'statistic':statistic}.iteritems():
+    for k, v in (('nid', nid), ('statistic', statistic)):
         if not v:
             out += 'Missing param "%s".<br>' % k
             missing = True
