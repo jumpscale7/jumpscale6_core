@@ -95,6 +95,12 @@ class Locks():
             return False
         return True
 
+    def removeLock(self, agentid, type):
+        if agentid in self.locks.keys():
+            if type in self.locks[agentid].keys():
+                self.locks[agentid].pop(type)
+        return True
+
     def removeOldLocks(self):
         now=j.base.time.getTimeEpoch()
         for agentid in self.locks.keys():
@@ -401,17 +407,20 @@ class ControllerCMDS():
             while True:
                 if len(self.workqueue[session.agentid])>0:
                     #check locking
-
-                    job=self.workqueue[session.agentid][-1]
-                    if job.db.lock and not self.locks.checkLock(session.agentid,job.db.lock):
-                        #not set yet can execute
-                        job=self.workqueue[session.agentid].pop()
-                        self.locks.addLock(session.agentid,job.db.lock,job.db.lockduration)
-                    else:
-                        job=self.workqueue[session.agentid].pop()
-                    self.activeJobSessions[session.id]=job
-                    timeout.cancel()
-                    return (job.db.jscriptid,job.db.args,job.db.id)
+                    for job in self.workqueue[session.agentid]:
+                        if job.db.lock:
+                            if not self.locks.checkLock(session.agentid,job.db.lock):
+                                #not set yet can execute
+                                self.workqueue[session.agentid].remove(job)
+                                self.locks.addLock(session.agentid,job.db.lock,job.db.lockduration)
+                            else:
+                                continue
+                                #job is locked continue to next job
+                        else:
+                            self.workqueue[session.agentid].remove(job)
+                        self.activeJobSessions[session.id]=job
+                        timeout.cancel()
+                        return (job.db.jscriptid,job.db.args,job.db.id)
                 #else no work wait for x time (to support long polling) to see if there is activity for this session
                 event=self._markSessionFree(session)
                 print "wait for event for agent:id %s"%session.agentid
@@ -433,6 +442,9 @@ class ControllerCMDS():
         
         job = self.activeJobSessions.pop(session.id)
         job.db.timeStop=self.sessionsUpdateTime[session.id]
+        if job.db.lock:
+            #job has a lock, clean lock
+            self.locks.removeLock(session.agentid, job.db.lock)
 
         if eco:
             job.db.resultcode=2
