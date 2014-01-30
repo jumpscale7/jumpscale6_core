@@ -15,7 +15,7 @@ Later we will add bucket support.
 
 h2. Examples
 
-* `gallery: picturedir: testimages3 | title: test`: This will search for images in `_space_/.files.img/testimage`
+* `gallery: picturedir: testimages3 | title: testimage`: This will search for images in `_space_/.files/img/testimage`
 * `gallery`: This will list all the images in the local directory (supported formats: jpg, jpeg, bmp, gif, png)
 * `gallery: title:demo`: This will list all the images in the local dir and use 'demo' as title
 
@@ -24,9 +24,55 @@ h2. Demo
 If you write this in your page
 
 {{code:
-{{gallery: picturedir: | title:demo | thumb_size:300x200}}
+{{gallery: picturedir:gallery_images thumb_size:300x200}}
 }}
 
 This will be the result
 
-{{gallery: picturedir: | title:demo | thumb_size:110x110}}
+{{gallery: picturedir:gallery_images thumb_size:110x110}}
+
+{{cssstyle:
+.modal-gallery, .modal-footer { background: rgba(0, 0, 0, 0) }
+.modal, .modal-header, .modal-footer { border: 0; box-shadow: none; }
+.modal-header { color: none; }
+.modal-gallery.fade .modal-image, .modal-gallery.fade .modal-image * {
+  -webkit-transition: opacity .25s ease-in-out;
+  -moz-transition: opacity .25s ease-in-out;
+  -ms-transition: opacity .25s ease-in-out;
+  -o-transition: opacity .25s ease-in-out;
+  transition: opacity .25s ease-in-out;
+}
+.modal-gallery .modal-image, .modal-gallery .modal-image * {
+    
+}
+
+/* Show left/right arrows all time */
+.modal-gallery .modal-image:before,
+.modal-gallery .modal-image:after {
+  content: '\2039';
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  font-size: 60px;
+  font-weight: 100;
+  line-height: 30px;
+  color: #ffffff;
+  text-align: center;
+  background: #222222;
+  border: 3px solid #ffffff;
+  -webkit-border-radius: 23px;
+  -moz-border-radius: 23px;
+  border-radius: 23px;
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+  z-index: 1;
+}
+.modal-gallery .modal-image:after {
+  content: '\203A';
+  left: auto;
+  right: 15px;
+}
+}}
