@@ -7,17 +7,14 @@ The gallery macro has three optional keywords:
 
 * `picturedir`: sub directory in `_spacename_/.files/img`, e.g. `testimages3` will point to `Docs/.files/img/testimages3`. If you don't specify the picturedir, the local directory of the wiki page will be selected.
 
-* `title`: Title printed on the gallery viewer  
-
 * `thumb_size`: The size of the thumbnail images which are viewed in the main gallery, in the format `<em>width</em>x<em>height</em>` e.g. `300x200`. If this option is not passed to the macro, it will be read from the file `.params.cfg`. If the file `.params.cfg` is not available, then the size will be `150x100`.
 
 Later we will add bucket support.
 
 h2. Examples
 
-* `gallery: picturedir: testimages3 | title: testimage`: This will search for images in `_space_/.files/img/testimage`
+* `gallery: picturedir:testimages3`: This will search for images in `_space_/.files/img/testimage`
 * `gallery`: This will list all the images in the local directory (supported formats: jpg, jpeg, bmp, gif, png)
-* `gallery: title:demo`: This will list all the images in the local dir and use 'demo' as title
 
 h2. Demo
 
@@ -30,49 +27,3 @@ If you write this in your page
 This will be the result
 
 {{gallery: picturedir:gallery_images thumb_size:110x110}}
-
-{{cssstyle:
-.modal-gallery, .modal-footer { background: rgba(0, 0, 0, 0) }
-.modal, .modal-header, .modal-footer { border: 0; box-shadow: none; }
-.modal-header { color: none; }
-.modal-gallery.fade .modal-image, .modal-gallery.fade .modal-image * {
-  -webkit-transition: opacity .25s ease-in-out;
-  -moz-transition: opacity .25s ease-in-out;
-  -ms-transition: opacity .25s ease-in-out;
-  -o-transition: opacity .25s ease-in-out;
-  transition: opacity .25s ease-in-out;
-}
-.modal-gallery .modal-image, .modal-gallery .modal-image * {
-    
-}
-
-/* Show left/right arrows all time */
-.modal-gallery .modal-image:before,
-.modal-gallery .modal-image:after {
-  content: '\2039';
-  position: absolute;
-  top: 50%;
-  left: 15px;
-  width: 40px;
-  height: 40px;
-  margin-top: -20px;
-  font-size: 60px;
-  font-weight: 100;
-  line-height: 30px;
-  color: #ffffff;
-  text-align: center;
-  background: #222222;
-  border: 3px solid #ffffff;
-  -webkit-border-radius: 23px;
-  -moz-border-radius: 23px;
-  border-radius: 23px;
-  opacity: 0.5;
-  filter: alpha(opacity=50);
-  z-index: 1;
-}
-.modal-gallery .modal-image:after {
-  content: '\203A';
-  left: auto;
-  right: 15px;
-}
-}}
