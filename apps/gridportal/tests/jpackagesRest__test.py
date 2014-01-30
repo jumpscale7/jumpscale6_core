@@ -1,4 +1,5 @@
 from JumpScale import j
+import unittest
 
 import JumpScale.portal
 
@@ -14,7 +15,7 @@ category = "appserver.jpackages.rest,portal"
 enable=True
 priority=5
 
-class TEST():
+class TEST(unittest.TestCase):
 
     def setUp(self):
         self.client= j.core.portal.getClient("127.0.0.1", 81, "1234")  #@need to read from config file for the secret

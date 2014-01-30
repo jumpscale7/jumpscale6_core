@@ -7,37 +7,10 @@ import imp
 import sys
 import ujson
 
-class FileLikeStreamObject(object):
-    def __init__(self):
-        self.out=""
-
-    def write(self, buf,**args):
-        for line in buf.rstrip().splitlines():
-            #print "###%s"%line
-            self.out+="%s\n"%line
-
 class OSISFactory:
 
     """
     """
-
-
-    def _redirect(self):
-        self._out=FileLikeStreamObject()
-        if not self._sysstdout:
-            self._sysstdout=sys.stdout
-        sys.stdout=self._out
-
-    def _stopRedirect(self,pprint=False):
-        if self._sysstdout:
-            sys.stdout=self._sysstdout
-        out = None
-        if self._out:
-            out=self._out.out
-            if pprint:
-                print out
-        self._out=None 
-        return out
 
     def __init__(self):
         self._sysstdout = None
@@ -86,29 +59,27 @@ class OSISFactory:
         zd.start()
 
     def getClient(self, ipaddr="localhost", port=5544,user=None,passwd=None,ssl=False,gevent=False):
-        self._redirect()
-        try:
-            key = "%s_%s_%s_%s" % (ipaddr, port,user,passwd)
-            if self.osisConnections.has_key(key):
-                return self.osisConnections[key]
-            # self.osisConnections[key] = OSISClient(ipaddr, port)
-            j.logger.log("get client to osis")
+        with j.logger.nostdout() as stdout:
+            try:
+                key = "%s_%s_%s_%s" % (ipaddr, port,user,passwd)
+                if self.osisConnections.has_key(key):
+                    return self.osisConnections[key]
+                # self.osisConnections[key] = OSISClient(ipaddr, port)
+                j.logger.log("get client to osis")
 
-            if user==None:
-                user="node"
-                passwd=j.application.config.get("grid.node.machineguid")
-            elif user=="root" and not passwd:
-                if j.application.config.exists("grid.master.superadminpasswd"):
-                    passwd=j.application.config.get("grid.master.superadminpasswd")
-                else:
-                    raise RuntimeError("Superadmin passwd has not been defined on this node, please put in hrd (grid.master.superadminpasswd) or use argument 'passwd'.")
-            self.osisConnections[key] = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=port, category="osis",\
-                user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)
-        except Exception,e:
-            out=self._stopRedirect(pprint=True)            
-            raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,out,e))
-        finally:
-            self._stopRedirect()
+                if user==None:
+                    user="node"
+                    passwd=j.application.config.get("grid.node.machineguid")
+                elif user=="root" and not passwd:
+                    if j.application.config.exists("grid.master.superadminpasswd"):
+                        passwd=j.application.config.get("grid.master.superadminpasswd")
+                    else:
+                        raise RuntimeError("Superadmin passwd has not been defined on this node, please put in hrd (grid.master.superadminpasswd) or use argument 'passwd'.")
+                self.osisConnections[key] = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=port, category="osis",\
+                    user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)
+            except Exception,e:
+                print stdout.getvalue()
+                raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,out,e))
         return self.osisConnections[key]
 
     def getClientForCategory(self, client,namespace, category):

@@ -2,6 +2,7 @@
 import unittest
 import re
 import time
+import sys
 from JumpScale import j
 
 import JumpScale.grid.osis
@@ -19,7 +20,7 @@ enable=True
 priority=2
 
 
-class TEST():
+class TEST(unittest.TestCase):
 
     def setUp(self):
         self.client = j.core.osis.getClient(user='root')
