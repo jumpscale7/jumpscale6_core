@@ -524,7 +524,7 @@ class PortalServer:
         from JumpScale.portal.html import elFinder
         db = j.db.keyvaluestore.getMemoryStore('elfinder')
         rootpath = db.cacheGet(path)
-        options = {'root': rootpath}
+        options = {'root': rootpath, 'dotFiles': True}
         con = elFinder.connector(options)
         params = ctx.params.copy()
 
