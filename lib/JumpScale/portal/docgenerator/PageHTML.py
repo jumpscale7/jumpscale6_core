@@ -224,14 +224,8 @@ class PageHTML(Page):
         c += "<tbody>\n"
         for row in rows3:
             c += "<tr>\n"
-            try:
-                if row[0] in columnAliases:
-                    row[0] = columnAliases[row[0]]
-            except:
-                from IPython import embed
-                print "DEBUG NOW yyyyyyyt"
-                embed()
-                
+            if row[0] in columnAliases:
+                row[0] = columnAliases[row[0]]
             colnr = 0
             for col in row:
                 if col == "":

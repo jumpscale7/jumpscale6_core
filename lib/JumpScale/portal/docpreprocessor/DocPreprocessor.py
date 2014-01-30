@@ -171,7 +171,6 @@ class Doc(object):
         self._convertToInternalFormat()
         self.findParams()
         self.executeMacrosPreprocess()
-        self.findImages()
         self.clean()
         self.dirty = False
 
@@ -292,40 +291,6 @@ class Doc(object):
                 line = "h%s.%s" % (hnr, line2)
             out += line + "\n"
         self.content = out
-
-    def findImages(self):
-        def checkIsImage(line):
-            line = line.lower()
-            for test in [".png", ".jpg", ".jpeg", ".gif"]:
-                if line.find(test) > 0:
-                    return True
-            return False
-
-        # if not self.imagesFound:
-        regex = r"\![\w\-:_= *.,|]*\!"
-        matches = j.codetools.regex.getRegexMatches(regex, self.content)
-        for match in matches.matches:
-            match2 = match.founditem.replace("!", "")
-            if not checkIsImage(match2):
-                continue
-            # are now sure is image
-            line2 = match2.split(".", 1)[1].strip()
-
-            if line2.find(" ") != -1:
-                # there could be tags & labels
-                imagepath, tags = match2.split(" ", 1)
-            else:
-                imagepath = match2
-                tags = ""
-
-            imagepath = imagepath.lower().strip()
-            # imagepath=self.preprocessor.images[imagepath]
-
-            self.images[imagepath] = (imagepath, tags, match.founditem)  # first element is path which we do not know here, 2nd is tagsstr, 3e the match
-
-            # repl="!/images/%s/%s!"%(self.getSpaceName(),match2)
-            repl = "!%s!" % imagepath
-            self.content = self.content.replace(match.founditem, repl)
 
     def __str__(self):
         ss = ""

@@ -125,7 +125,7 @@ class Confluence2HTML():
         # This is a list of formatting tags & I'm going to replace the in HTML, e.g. _word_ will be replaced with
         # <em>word</em>
         #styled_text = r'([\w\-:_/= *.\.\/\>\<\\{},|`!]+)'
-        styled_text = r'[^{0}\n]+?'
+        styled_text = r'[^{0}\n]*?'
 
         def limiter(char):
             # Limiters can contain RE special chars, so I escape them here
@@ -140,7 +140,12 @@ class Confluence2HTML():
         def substitute_email(match):
             return r'<a href="{0}">{1}</a>'.format(match.group(1), match.group(1).replace('mailto:', '', 1))
 
+        def escape_char(char):
+            return '&#{0};'.format(ord(char.group(1)))
+
         substitutions = [
+            ('<',           '&lt;'),
+            ('>',           '&gt;'),
             (limiter('*'),  limiter_replacement('strong')),
             (limiter('_'),  limiter_replacement('em')),
             (limiter('+'),  limiter_replacement('ins')),
@@ -149,6 +154,7 @@ class Confluence2HTML():
             (limiter('^'),  limiter_replacement('sup')),
             (limiter('~'),  limiter_replacement('sub')),
             (limiter('`'),  limiter_replacement('code')),
+            
 
             # {color: red}text goes here{color}
             (re.compile(r'\{{color\:(.*?)\}}({0})\{{color\}}'.format(styled_text),
@@ -159,7 +165,10 @@ class Confluence2HTML():
             #(r'\[(.*?)\]', substitute_email),
 
             # blockquote
-            (r'bq\.\s+(.*?)\n', r'<blockquote>\1</blockquote>\n')
+            (r'bq\.\s+(.*?)\n', r'<blockquote>\1</blockquote>\n'),
+
+            # Escape characters by putting \ in front of it, e.g. \*
+            (r'\\([^\n\r\\])',  escape_char)
         ]
         # First, divide the text into macros & non-macros
         blocks = re.split(r'({{.*?}})', content, flags=re.DOTALL)
@@ -171,12 +180,7 @@ class Confluence2HTML():
                 blocks[i] = re.sub(tag_re, sub_re, blocks[i])
 
         content = ''.join(blocks)
-
-        # Escape characters by putting \ in front of it, e.g. \*
-        def escape_char(char):
-            return '&#{0};'.format(ord(char.group(1)))
-        content = re.sub(r'\\([^\n\r\\])', escape_char, content)
-
+        
         if page == None:
             page = j.tools.docgenerator.pageNewHTML("temp")
 
@@ -245,7 +249,6 @@ class Confluence2HTML():
                 page.addNewLine()
                 line = ''
                 continue
-
 
 
             # print "#: %s %s" % (state,line)

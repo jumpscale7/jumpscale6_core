@@ -9,9 +9,6 @@ def main(j, args, params, tags, tasklet):
     content = content.replace("\{", "{")
     content = content.replace("\}", "}")
 
-    #template="python"
-    #linecolor="#eee"
-
     page.addCodeBlock(content, edit=False, exitpage=True, spacename='', pagename='',linenr=False,\
         linecolor="#eee",linecolortopbottom="1px solid black", template=template, wrap=wrap)
 

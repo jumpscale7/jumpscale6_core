@@ -4,6 +4,12 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     params.result = page
 
+    path = ''
+    space = args.paramsExtra.get('space')
+    if space:
+        space = j.core.portal.runningPortal.webserver.getSpace(space)
+        path = os.path.join(j.core.portal.runningPortal.cfgdir.rpartition('/')[0], 'wiki', space.model.id)
+
     if args.tags.tagExists("ppath"):
         path = args.tags.tagGet("ppath").replace("+", ":").replace("___", ":").replace("\\", "/")
         if not j.system.fs.exists(path):
@@ -13,9 +19,6 @@ def main(j, args, params, tags, tasklet):
         codepath = os.getcwd()
         if path.startswith('/') and not (path.startswith(apppath) or path.startswith(codepath)):
             path = ''
-
-    else:
-        path = ""
 
     if args.tags.tagExists("bucket"):
         bucket = args.tags.tagGet("bucket").lower()
