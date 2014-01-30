@@ -1549,9 +1549,7 @@ class SystemProcess:
 
 
     def getMyProcessObject(self):
-        import psutil
-        myprocess=[p for p in psutil.get_process_list() if p.pid==j.application.whoAmI.pid][0]
-        return myprocess
+        return self.getProcessObject(os.getpid())
 
     def getProcessObject(self,pid):
         import psutil
