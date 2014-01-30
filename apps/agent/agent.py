@@ -200,7 +200,7 @@ class Agent(Greenlet):
     def notifyWorkCompleted(self,result,eco):
         try:
             eco = eco.copy()
-            eco.pop('tb')
+            eco.pop('tb', None)
             result=self.client.notifyWorkCompleted(result=result,eco=eco)
         except Exception,e:
             eco = j.errorconditionhandler.lastEco
@@ -210,7 +210,7 @@ class Agent(Greenlet):
             print "******************* SERIOUS BUG **************"
             print "COULD NOT EXECUTE JOB, COULD NOT PROCESS RESULT OF WORK."
             try:
-                print "ERROR WAS:%s"%eco
+                print "ERROR WAS:%s"%eco, e
             except:
                 print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
             print "******************* SERIOUS BUG **************"

@@ -193,8 +193,9 @@ class ControllerCMDS():
     def _clean(self,similarProcessPIDs,session):
         print similarProcessPIDs        
         pid=int(session.id.split("_")[2])
-        
-        similarProcessPIDs.pop(similarProcessPIDs.index(pid))
+       
+        if pid in similarProcessPIDs:
+            similarProcessPIDs.remove(pid)
         if self.agent2sessions.has_key(session.agentid):
             for sessionkey in self.agent2sessions[session.agentid]:
                 session=self.sessions[sessionkey]
@@ -215,6 +216,8 @@ class ControllerCMDS():
         roles=session.roles
 
         for role in roles:
+            gid, nid = session.agentid.split('_')
+            role = "%s.%s.%s" % (role, gid, nid)
             self._setRole2Agent(role,session.agentid)
             compl=""
             while role.find(".")<>-1:

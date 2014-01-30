@@ -1,5 +1,6 @@
 from JumpScale import j
 import time
+import unittest
 
 
 descr = """
@@ -16,7 +17,7 @@ priority=8
 
 ROLE = 'node.%s.%s' % (j.application.whoAmI.gid, j.application.whoAmI.nid)
 
-class TEST():
+class TEST(unittest.TestCase):
 
     def setUp(self):
         import JumpScale.grid.agentcontroller
@@ -35,7 +36,7 @@ class TEST():
         for i in range(1, 6):
             query = {"category":"test_wait", "message":'msg%s' % i}
             result = osis_logs.simpleSearch(query)
-            assert len(result) > 0
+            self.assertGreater(len(result), 0)
             results.append(result)
 
     def test_queuetest5agents(self):
@@ -63,8 +64,8 @@ class TEST():
         osis_jobs = j.core.osis.getClientForCategory(self.osisclient, "system", "job")
         print osis_jobs.get(secondjob['guid'])['state']
         print osis_jobs.get(firstjob['guid'])['state']
-        assert osis_jobs.get(secondjob['guid'])['state'] == 'OK'
-        assert osis_jobs.get(firstjob['guid'])['state'] != 'OK'
+        self.assertEqual(osis_jobs.get(secondjob['guid'])['state'], 'OK')
+        self.assertNotEqual(osis_jobs.get(firstjob['guid'])['state'], 'OK')
 
     def test_performance(self):
         #5 agents running
