@@ -168,6 +168,25 @@ class LogHandler(object):
                 self.enabled = previousvalue
         return wrapper
 
+    def nostdout(self):
+        class NoStdout(object):
+            def __init__(self):
+                self._original_stderr = sys.stderr
+                self._original_stdout = sys.stdout
+                self._buffer = StringIO()
+
+            def __enter__(self):
+                sys.stdout = self._buffer
+                sys.stderr = self._buffer
+                return self._buffer
+
+            def __exit__(self, *args, **kwargs):
+                sys.stdout = self._original_stdout
+                sys.stderr = self._original_stderr
+                self._buffer.close()
+
+        return NoStdout()
+
     def reset(self):
         self.maxlevel = 6
         self.consoleloglevel = 2
