@@ -74,6 +74,8 @@ class DaemonCMDS(object):
                 # Remove the 'session' parameter
                 if 'session' in args.args:
                     session_index = args.args.index('session')
+                    if session_index<>len(args.args)-1:
+                        raise RuntimeError("session arg needs to be last argument of method. Cat:%s Method:%s \nArgs:%s"%(cat,name,args))
                     del args.args[session_index]
                     if args.defaults:
                         session_default_index = session_index - len(args.args) - 1

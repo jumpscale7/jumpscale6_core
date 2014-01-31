@@ -3,6 +3,14 @@ from JumpScale import j
 j.application.start("osisclient")
 j.application.initGrid()
 import JumpScale.grid.osis
+
+cl=j.core.osis.getOsisModelClass("test_complextype","project")
+
+from IPython import embed
+print "DEBUG NOW uiuiui"
+embed()
+
+
 client = j.core.osis.getClient(user='root')
 # getNameIDsInfo
 
@@ -26,7 +34,10 @@ def testSet(client):
 
 print client.listNamespaces()
 
-clientnode=j.core.osis.getClientForCategory(client,"system","node")
+# clientnode=j.core.osis.getClientForCategory(client,"system","node")
+
+clientvfs=j.core.osis.getClientForCategory(client,"osismodel","vfs")
+vfs=clientvfs.new()
 
 # obj=testSet(clientnode)
 

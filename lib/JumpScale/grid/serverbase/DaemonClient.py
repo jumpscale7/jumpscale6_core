@@ -9,7 +9,9 @@ from random import randrange
 class Session():
 
     def __init__(self, id, organization, user, passwd, encrkey, netinfo, roles):
-        self.id = id
+        self.id = id #is unique session id
+        self.gid=j.application.whoAmI.gid
+        self.nid=j.application.whoAmI.nid
         self.encrkey = encrkey
         self.user = user
         self.passwd = passwd
@@ -17,7 +19,6 @@ class Session():
         self.netinfo = netinfo
         self.start = int(time.time())
         self.roles = roles
-        self.agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
 
     def __repr__(self):
         return str(self.__dict__)
@@ -240,6 +241,7 @@ class Klass(object):
             strmethod=strmethod.replace("${returnformat}",returnformat)
             Klass = None
             args = ["%s=%s" % (x, x) for x in spec['args'][0][1:]]
+            
             params_spec = spec['args'][0]
             if spec['args'][3]:
                 params_spec = list(spec['args'][0])

@@ -243,200 +243,200 @@ class OSISInstance(OSISInstanceNoDB):
         convert osis object to an inifile, only properties of root are used
         """
 
-    def ini2objects(self, cfgpath, overwriteInDB=True, deepcheck=True, ignoreWhenNotExist=False, manipulator=None,
-                    manipulatorargs={}, limitVars=[], writeIni=True):
-        """
-        read inifile
-        each section is a new object
-        see if obj exists (starting from id & guid)
-        when overwriteInDB=True
-          if obj found overwrite values in db from cfg file
-        else:
-          overwrite the ini file
-        when deepcheck then check against inconsistencies
-        @param ignoreWhenNotExist if true will continue even if ini file does not exists
+    # def ini2objects(self, cfgpath, overwriteInDB=True, deepcheck=True, ignoreWhenNotExist=False, manipulator=None,
+    #                 manipulatorargs={}, limitVars=[], writeIni=True):
+    #     """
+    #     read inifile
+    #     each section is a new object
+    #     see if obj exists (starting from id & guid)
+    #     when overwriteInDB=True
+    #       if obj found overwrite values in db from cfg file
+    #     else:
+    #       overwrite the ini file
+    #     when deepcheck then check against inconsistencies
+    #     @param ignoreWhenNotExist if true will continue even if ini file does not exists
 
-        manipulator method allows you to manipulate ini file & obj, if changes will be saved on disk or in db
-        ini2,objFromDb,objFromIni,skip=manipulator(ini,section,existsInDb,objFromDB,objFromIni)
-          existsInDb is True when it did exist in db
-            when method puts skip on True then ini2object will return False
+    #     manipulator method allows you to manipulate ini file & obj, if changes will be saved on disk or in db
+    #     ini2,objFromDb,objFromIni,skip=manipulator(ini,section,existsInDb,objFromDB,objFromIni)
+    #       existsInDb is True when it did exist in db
+    #         when method puts skip on True then ini2object will return False
 
-        """
-        result = []
-        if j.system.fs.exists(cfgpath):
-            ini = j.tools.inifile.open(cfgpath)
-            for name in ini.getSections():
-                if ini.checkParam(name, "create"):
-                    create = ini.getIntValue(name, "create") == 1
-                else:
-                    create = True
-                # create true means we will overwrite the db
-                obj = self.ini2object(cfgpath, section=name, overwriteInDB=create, manipulator=manipulator, manipulatorargs=manipulatorargs,
-                                      limitVars=limitVars, writeIni=writeIni)
-                if obj <> None:
-                    result.append(obj)
-            return result
-        else:
-            if ignoreWhenNotExist:
-                return []
-            raise RuntimeError("Cannot find ini %s to convert to objects" % cfgpath)
+    #     """
+    #     result = []
+    #     if j.system.fs.exists(cfgpath):
+    #         ini = j.tools.inifile.open(cfgpath)
+    #         for name in ini.getSections():
+    #             if ini.checkParam(name, "create"):
+    #                 create = ini.getIntValue(name, "create") == 1
+    #             else:
+    #                 create = True
+    #             # create true means we will overwrite the db
+    #             obj = self.ini2object(cfgpath, section=name, overwriteInDB=create, manipulator=manipulator, manipulatorargs=manipulatorargs,
+    #                                   limitVars=limitVars, writeIni=writeIni)
+    #             if obj <> None:
+    #                 result.append(obj)
+    #         return result
+    #     else:
+    #         if ignoreWhenNotExist:
+    #             return []
+    #         raise RuntimeError("Cannot find ini %s to convert to objects" % cfgpath)
 
-    def ini2object(self, cfgpath, section="main", overwriteInDB=True, manipulator=None, manipulatorargs={}, limitVars=[], writeIni=True):
-        """
-        read inifile
-        see if obj exists (starting from id & guid)
-        when overwriteInDB=True
-          if obj found overwrite values in db from cfg file
-        else:
-          overwrite the ini file
-        when deepcheck then check against inconsistencies
-        if useId: then will use id when specified in inifile, if false will remove
+    # def ini2object(self, cfgpath, section="main", overwriteInDB=True, manipulator=None, manipulatorargs={}, limitVars=[], writeIni=True):
+    #     """
+    #     read inifile
+    #     see if obj exists (starting from id & guid)
+    #     when overwriteInDB=True
+    #       if obj found overwrite values in db from cfg file
+    #     else:
+    #       overwrite the ini file
+    #     when deepcheck then check against inconsistencies
+    #     if useId: then will use id when specified in inifile, if false will remove
 
 
 
-        """
-        print "ini2object for cfgpath:%s and section:%s" % (cfgpath, section)
+    #     """
+    #     print "ini2object for cfgpath:%s and section:%s" % (cfgpath, section)
 
-        if j.system.fs.exists(cfgpath):
-            ini = j.tools.inifile.open(cfgpath)
-        else:
-            ini = j.tools.inifile.new(cfgpath)
-        if section <> "main":
-            id = section
-        else:
-            if ini.checkParam(section, "id"):
-                id = str(ini.getValue(section, "id"))
-            else:
-                id = None
+    #     if j.system.fs.exists(cfgpath):
+    #         ini = j.tools.inifile.open(cfgpath)
+    #     else:
+    #         ini = j.tools.inifile.new(cfgpath)
+    #     if section <> "main":
+    #         id = section
+    #     else:
+    #         if ini.checkParam(section, "id"):
+    #             id = str(ini.getValue(section, "id"))
+    #         else:
+    #             id = None
 
-        guid = None
-        if ini.checkParam(section, "guid"):
-            guid = str(ini.getValue(section, "guid"))
-            if guid.strip() == "":
-                guid = None
+    #     guid = None
+    #     if ini.checkParam(section, "guid"):
+    #         guid = str(ini.getValue(section, "guid"))
+    #         if guid.strip() == "":
+    #             guid = None
 
-        ini.setParam(section, "id", id)
-        if section == "main" and not ini.checkParam(section, "id") and id <> None:
-            ini.write()
+    #     ini.setParam(section, "id", id)
+    #     if section == "main" and not ini.checkParam(section, "id") and id <> None:
+    #         ini.write()
 
-        if ini.checkParam(section, "reset"):
-            # if there is a reset value the overwriteindb will be adjusted following the reset value
-            overwriteInDB = str(ini.getValue(section, "reset")) == "1"
+    #     if ini.checkParam(section, "reset"):
+    #         # if there is a reset value the overwriteindb will be adjusted following the reset value
+    #         overwriteInDB = str(ini.getValue(section, "reset")) == "1"
 
-        existsInDb = self.exists(guid=guid, id=id)
-        if not existsInDb:
-            overwriteInDB = True
+    #     existsInDb = self.exists(guid=guid, id=id)
+    #     if not existsInDb:
+    #         overwriteInDB = True
 
-        obj = self.get(guid, id, createIfNeeded=True, ignoreError=True)
+    #     obj = self.get(guid, id, createIfNeeded=True, ignoreError=True)
 
-        if obj.guid <> guid and guid <> None:
-            # found object but guid is not correct
-            if overwriteInDB:
-                obj.guid = guid
-                self.set(obj)
-            else:
-                guid = obj.guid
-                # will no longer remember guid on config files
-                # ini.setParam(section,"guid",guid)
-                # ini.write()
+    #     if obj.guid <> guid and guid <> None:
+    #         # found object but guid is not correct
+    #         if overwriteInDB:
+    #             obj.guid = guid
+    #             self.set(obj)
+    #         else:
+    #             guid = obj.guid
+    #             # will no longer remember guid on config files
+    #             # ini.setParam(section,"guid",guid)
+    #             # ini.write()
 
-        elif guid == None:
-            guid = obj.guid
+    #     elif guid == None:
+    #         guid = obj.guid
 
-        if obj == None and self.exists(guid):
-            # found object
-            obj = self.get(guid)
-            self.link(obj)
+    #     if obj == None and self.exists(guid):
+    #         # found object
+    #         obj = self.get(guid)
+    #         self.link(obj)
 
-        objnew = self.new()  # is only in mem, does not get stored in DB
+    #     objnew = self.new()  # is only in mem, does not get stored in DB
 
-        def check2process(name):
-            if name in ["create", "reset"]:
-                return False
-            if limitVars <> [] and name not in limitVars:
-                return False
-            return True
+    #     def check2process(name):
+    #         if name in ["create", "reset"]:
+    #             return False
+    #         if limitVars <> [] and name not in limitVars:
+    #             return False
+    #         return True
 
-        params = []
-        spec = self.spec
-        for prop in spec.properties:
-            # print "check2process:%s %s"%(prop.name,check2process(prop.name))
-            value = None
-            if check2process(prop.name):
-                # print "section:%s propname:%s" %(section,prop.name)
-                default = prop.default
-                ttype = prop.type
-                name = prop.name
-                params.append(name)
-                if name <> "id" or section == "main":
-                    if not ini.checkParam(section, name):
-                        ini.setParam(section, name, "")
-                        if writeIni:
-                            ini.write()
-                    if ttype == "int":
-                        value = ini.getValue(section, name)
-                        if value == "" or value.lower() == "none":
-                            value = 0
-                            ini.setParam(section, name, 0)
-                            if writeIni:
-                                ini.write()
-                        else:
-                            value = int(value)
-                        if value == 0 and str(default) <> "":
-                            value = int(default)
-                    elif ttype == "str":
-                        value = str(ini.getValue(section, name))
-                        if not value and str(default):
-                            value = str(default)
-                    elif ttype == "bool":
-                        value = str(ini.getValue(section, name))
-                        if value == "1":
-                            value = True
-                        else:
-                            value = False
-                    elif ttype == "list(str)":
-                        value = [item.strip() for item in str(ini.getValue(section, name)).split(",")]
-                    elif ttype == "list(int)":
-                        value = [int(item) for item in str(ini.getValue(section, name)).split(",")]
-                else:
-                    if name == "id":
-                        key = "_P_%s" % prop.name
-                        objnew.__dict__[key] = id
+    #     params = []
+    #     spec = self.spec
+    #     for prop in spec.properties:
+    #         # print "check2process:%s %s"%(prop.name,check2process(prop.name))
+    #         value = None
+    #         if check2process(prop.name):
+    #             # print "section:%s propname:%s" %(section,prop.name)
+    #             default = prop.default
+    #             ttype = prop.type
+    #             name = prop.name
+    #             params.append(name)
+    #             if name <> "id" or section == "main":
+    #                 if not ini.checkParam(section, name):
+    #                     ini.setParam(section, name, "")
+    #                     if writeIni:
+    #                         ini.write()
+    #                 if ttype == "int":
+    #                     value = ini.getValue(section, name)
+    #                     if value == "" or value.lower() == "none":
+    #                         value = 0
+    #                         ini.setParam(section, name, 0)
+    #                         if writeIni:
+    #                             ini.write()
+    #                     else:
+    #                         value = int(value)
+    #                     if value == 0 and str(default) <> "":
+    #                         value = int(default)
+    #                 elif ttype == "str":
+    #                     value = str(ini.getValue(section, name))
+    #                     if not value and str(default):
+    #                         value = str(default)
+    #                 elif ttype == "bool":
+    #                     value = str(ini.getValue(section, name))
+    #                     if value == "1":
+    #                         value = True
+    #                     else:
+    #                         value = False
+    #                 elif ttype == "list(str)":
+    #                     value = [item.strip() for item in str(ini.getValue(section, name)).split(",")]
+    #                 elif ttype == "list(int)":
+    #                     value = [int(item) for item in str(ini.getValue(section, name)).split(",")]
+    #             else:
+    #                 if name == "id":
+    #                     key = "_P_%s" % prop.name
+    #                     objnew.__dict__[key] = id
 
-                key = "_P_%s" % prop.name
-                # print "objnew: %s %s" %(prop.name,value)
-                if prop.name == "guid" and value == "":
-                    continue
-                if value <> None:
-                    objnew.__dict__[key] = value
+    #             key = "_P_%s" % prop.name
+    #             # print "objnew: %s %s" %(prop.name,value)
+    #             if prop.name == "guid" and value == "":
+    #                 continue
+    #             if value <> None:
+    #                 objnew.__dict__[key] = value
 
-        if manipulator <> None:
-            ini2, obj, objnew, skip = manipulator(ini, section, existsInDb, obj, objnew, manipulatorargs)
-            if ini2 <> ini and ini2 <> None:
-                ini.write()
+    #     if manipulator <> None:
+    #         ini2, obj, objnew, skip = manipulator(ini, section, existsInDb, obj, objnew, manipulatorargs)
+    #         if ini2 <> ini and ini2 <> None:
+    #             ini.write()
 
-            if skip:
-                return None
+    #         if skip:
+    #             return None
 
-        if obj == None:
-            obj = objnew
-            obj.guid = j.base.idgenerator.generateGUID()
-            self.link(obj)
-            self.set(obj)
-            ini.setParam(section, "guid", obj.guid)
-            if writeIni:
-                ini.write()
-        else:
-            # will compare if objects are alike
-            if not self.checkEqualNoId(obj, objnew):
-                # oeps objects are not alike
-                if overwriteInDB:
-                    self.set(objnew)
-                    obj = objnew
-                else:
-                    self.set(obj)
+    #     if obj == None:
+    #         obj = objnew
+    #         obj.guid = j.base.idgenerator.generateGUID()
+    #         self.link(obj)
+    #         self.set(obj)
+    #         ini.setParam(section, "guid", obj.guid)
+    #         if writeIni:
+    #             ini.write()
+    #     else:
+    #         # will compare if objects are alike
+    #         if not self.checkEqualNoId(obj, objnew):
+    #             # oeps objects are not alike
+    #             if overwriteInDB:
+    #                 self.set(objnew)
+    #                 obj = objnew
+    #             else:
+    #                 self.set(obj)
 
-        return obj
+    #     return obj
 
     def checkEqualNoId(self, obj1, obj2):
         """

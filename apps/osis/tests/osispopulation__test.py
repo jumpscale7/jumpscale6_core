@@ -16,7 +16,7 @@ author = "despiegk"
 license = "bsd"
 version = "1.0"
 category = "osis.basic.testdata.populate,grid.testdata.populate"
-enable=True
+enable=False
 priority=2
 
 

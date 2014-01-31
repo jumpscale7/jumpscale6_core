@@ -2,7 +2,8 @@ from JumpScale import j
 import JumpScale.baselib.hash
 import copy
 
-class OSISBaseObject():
+
+class OSISBaseObjectComplexType():
 
     def init(self,ttype,version):
         self.guid=""
@@ -47,20 +48,31 @@ class OSISBaseObject():
         """        
         self.__dict__.update(ddict)
 
+
     def dump(self):
         """
         dump the object to a dict of primitive types (dict, list, int, bool, str, long) and a combination of those
         std behaviour is the __dict__ of the obj
         """
-        return self.__dict__
-        
+        dd={}
+        for key,val in self.__dict__.iteritems():
+            if key[0:3]=="_P_":
+                key2=key[3:]
+                dd[key2]=val
+            else:
+                dd[key]=val             
+        return dd        
+
     def getDictForIndex(self):
         """
         get dict of object without passwd and props starting with _
         """
         d={}
         for key,val in self.__dict__.iteritems():
+            if key.find("_P_")==0:
+                key2=key.replace("_P_","")
+                d[key2]=self.__dict__[key]
             if key[0]<>"_" and key not in ["passwd","password","secret"]:
                 d[key]=val
         return d
-        
+

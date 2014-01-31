@@ -139,12 +139,22 @@ class OSISCMDS(object):
         self.init(path=self.path, namespacename=name, template=template)
         return True
 
-    def getOsisObjectClass(self,namespace,categoryname,session=None):
+    def getOsisObjectClassCodeOrSpec(self,namespace,categoryname,session=None):
+        """
+        @return (1,spec file for osis complex time)
+        @return (2,content of model.py)
+        @return (3,"")  #could not find
+        """
+
         path=j.system.fs.joinPaths(self.path, namespace,categoryname,"model.py")
-        if j.system.fs.exists(path):
-            return j.system.fs.fileGetContents(path)
+        osismodelpath=j.system.fs.joinPaths(self.path, namespace,categoryname,"%s_%s_osismodelbase.py"%(namespace,categoryname))
+        if j.system.fs.exists(osismodelpath):
+            osismodelpathSpec=j.system.fs.joinPaths(self.path, namespace,"model.spec")
+            return 1,j.system.fs.fileGetContents(osismodelpathSpec)
+        elif j.system.fs.exists(path):
+            return 2,j.system.fs.fileGetContents(path)
         else:
-            return ""
+            return 3,""
 
     def listNamespaces(self, prefix="",session=None):
         ddirs = j.system.fs.listDirsInDir(self.path, dirNameOnly=True)
@@ -198,10 +208,14 @@ class OSISCMDS(object):
         if namespacename == None:
             for namespacename in j.system.fs.listDirsInDir(path, dirNameOnly=True):
                 self._initDefaultContent(namespacename=namespacename)
-
         else:
             templatespath = "_templates"
             if j.system.fs.exists(path=templatespath):
+                from IPython import embed
+                print "DEBUG NOW uy"
+                embed()
+                
+                # if j.system.fs.exists(path):
                 templatespath_namespace = j.system.fs.joinPaths(templatespath, "namespace")
                 templatespath_category = j.system.fs.joinPaths(templatespath, "category")
                 namespacepath = j.system.fs.joinPaths(path, namespacename)
@@ -255,22 +269,28 @@ class OSISCMDS(object):
             for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
                 catpath = j.system.fs.joinPaths(namespacepath, catname)
 
+                j.core.osis.getOsisModelClass(namespacename,catname)
+
                 # check if there is already an implfile
                 implfile = "OSIS_%s_impl.py" % catname
                 implpath = j.system.fs.joinPaths(catpath, implfile)
                 fileFrom = j.system.fs.joinPaths(namespacepath, "OSIS_category_template.py")
                 if overwriteImplementation or not j.system.fs.exists(path=implpath):
                     j.system.fs.copyFile(fileFrom, implpath)
-
-                print implpath
-                classs = j.core.osis._loadModuleClass(implpath)
                 
-                          
+                ed=j.codetools.getTextFileEditor(implpath)
+                ed.replaceNonRegex("$namespace",namespacename)
+                ed.save()
+
+                classs = j.core.osis._loadModuleClass(implpath)
+                                          
                 if namespacename[0] <> "_":
                     osis = classs()
                     osis.init(catpath,namespace=namespacename, categoryname=catname)
                     key = "%s_%s" % (namespacename, catname)
                     self.osisInstances[key] = osis
+
+
 
             j.core.osis.db = None
             j.core.osis.elasticsearch = None

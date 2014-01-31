@@ -3,7 +3,6 @@ import time
 import JumpScale.grid.serverbase
 from JumpScale.grid.serverbase.DaemonClient import Transport
 
-
 import grequests as requests
 
 class GeventWSTransport(Transport):

@@ -19,22 +19,31 @@ class OSISClientForCat():
     def _getModelClass(self):
         self._checkCat()
         if self.objectclass==None:
-            klass=self.client.getOsisObjectClass(self.namespace,self.cat)
-            name=""
-            for line in klass.split("\n"):
-                if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
-                    name=line.split("(")[0].lstrip("class ")
-            if name=="":
-                raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
-            try:
-                exec(klass)
-            except Exception,e:
-                from IPython import embed
-                print "DEBUG NOW error in _getModelClass, OSISClientForCat"
-                embed()
+            retcode,content=self.client.getOsisObjectClassCodeOrSpec(self.namespace,self.cat)
+            if retcode==1:
+                pathdir=j.system.fs.joinPaths(j.dirs.varDir,"code","osis",self.namespace)
+                path=j.system.fs.joinPaths(pathdir,"model.spec")
+                j.system.fs.createDir(pathdir)
+                j.system.fs.writeFile(filename=path,contents=content)                
+                resultclass=j.core.osis.getOsisModelClass(self.namespace,self.cat,specpath=path)
+                self.objectclass=resultclass
+            elif retcode==2:
+                klass=content
+                name=""
+                for line in klass.split("\n"):
+                    if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
+                        name=line.split("(")[0].lstrip("class ")
+                if name=="":
+                    raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
+                try:
+                    exec(klass)
+                except Exception,e:
+                    raise RuntimeError("Could not import osis: %s_%s error:%s"%(self.namespace,self.cat,e))
                 
-            resultclass=eval(name)
-            self.objectclass=resultclass
+                resultclass=eval(name)
+                self.objectclass=resultclass
+            else:
+                raise RuntimeError("Could not find spec or class code for %s_%s on osis"%(self.namespace,self.cat))
 
         return self.objectclass
 
@@ -55,9 +64,8 @@ class OSISClientForCat():
         if key none then key will be given by server
         @return (guid,new,changed)
         """
-        self._checkCat()
+        self._checkCat()        
         if hasattr(obj,"dump"):
-            obj=obj.dump()
             guid,new,changed = self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
             return (guid,new,changed)
         else:

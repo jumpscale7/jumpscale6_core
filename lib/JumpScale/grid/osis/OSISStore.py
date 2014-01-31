@@ -10,6 +10,9 @@ class OSISStore(object):
     """
 
     def init(self, path, namespace,categoryname):
+        """
+        gets executed when catgory in osis gets loaded by osiscmds.py (.init method)
+        """
 
         self.path = path
         self.tasklets = {}
@@ -50,6 +53,7 @@ class OSISStore(object):
         authpath=j.system.fs.joinPaths(self.path,"OSIS_auth.py")
         auth=None
         authparent=None
+
         if j.system.fs.exists(authpath):
             testmod = imp.load_source("auth_%s"%self.dbprefix, authpath)
             auth=testmod.AUTH()
@@ -66,25 +70,39 @@ class OSISStore(object):
             self.auth=authparent
 
     def _getModelClass(self):
+        """
+        is called when someone needs an object
+        """
         if self.objectclass==None:
 
-            path=j.system.fs.joinPaths(self.path, "model.py")
-            if j.system.fs.exists(path):
-                klass= j.system.fs.fileGetContents(path)
+            #need to check if there is a specfile or we go from model.py
+            specpath=j.system.fs.joinPaths(self.path, "model.spec")    
+            print "SPECPATH:%s" %specpath
+            if j.system.fs.exists(path=specpath):
+                j.core.specparser.parseSpecs(self.path, appname=self.categoryname, actorname="osismodel")
+                spec = j.core.specparser.getActorSpec(appname, actorname, raiseError=False)            
+                from IPython import embed
+                print "DEBUG NOW uuuuu"
+                embed()
+                
             else:
-                self.objectclass= ""
-                # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
+                path=j.system.fs.joinPaths(self.path, "model.py")
+                if j.system.fs.exists(path):
+                    klass= j.system.fs.fileGetContents(path)
+                else:
+                    self.objectclass= ""
+                    # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
 
-            name=""
+                name=""
 
-            for line in klass.split("\n"):
-                if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
-                    name=line.split("(")[0].lstrip("class ")
-            if name=="":
-                raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
-            exec(klass)
-            resultclass=eval(name)
-            self.objectclass=resultclass
+                for line in klass.split("\n"):
+                    if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
+                        name=line.split("(")[0].lstrip("class ")
+                if name=="":
+                    raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
+                exec(klass)
+                resultclass=eval(name)
+                self.objectclass=resultclass
 
         return self.objectclass
 
