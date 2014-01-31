@@ -139,7 +139,7 @@ class ActorLoader(LoaderBaseObject):
         self.osiscl = None
 
     def createDefaults(self, path):
-        base = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), ".%s" % self.type, "dirstructure")
+        base = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), "%s" % self.type)
         j.system.fs.copyDirTree(base, path, overwriteFiles=False)
 
     def raiseError(self, msg, path=None):
@@ -148,6 +148,7 @@ class ActorLoader(LoaderBaseObject):
     def loadFromDisk(self, path, reset=False):
         # the name is $appname__actorname all in lowercase
         name = j.system.fs.getDirName(path, True)
+        # print "load actor dir:%s"%path
         if name.find("__") != -1:
             app, actor = name.split("__", 1)
         else:

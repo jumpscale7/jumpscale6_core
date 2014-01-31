@@ -125,6 +125,16 @@ class CodeGenerator:
         classs = self.generate(spec, type=type, typecheck=typecheck, dieInGenCode=dieInGenCode, codepath=codepath)
         return classs
 
+    def getCodePymodel(self, appname, actor, modelname, typecheck=True, dieInGenCode=True, codepath=""):
+        """
+        """        
+        spectype = "model"
+        type = "pymodel"
+        spec = j.core.specparser.getModelSpec(appname, actor, modelname)
+        cg = CodeGeneratorModel(spec, typecheck=True, dieInGenCode=dieInGenCode)
+        code=cg.generate()        
+        return code
+
     # def getClassWhoosh(self,appname,actor,modelname,typecheck=True,dieInGenCode=True):
     #     """
     #     """
@@ -165,8 +175,8 @@ class CodeGenerator:
         # path is location in a var dir where code will be generated, is always overwritten
         # if not self.generated.has_key(name):
         if spec.type == "model" and type == "pymodel":
-            writeForm = self._target == 'server'
-            cg = CodeGeneratorModel(spec, typecheck, dieInGenCode, codepath=codepath, writeForm=writeForm)
+            # writeForm = self._target == 'server' #we dont generate forms any more
+            cg = CodeGeneratorModel(spec, typecheck, dieInGenCode)
         # elif spec.type=="model" and type=="whoosh":
         #     cg=CodeGeneratorWhoosh(spec,typecheck,dieInGenCode)
         elif spec.type == "enumeration":
