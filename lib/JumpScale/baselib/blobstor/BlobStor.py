@@ -233,7 +233,7 @@ class BlobStor:
 
         hashFromCompressed = j.tools.hash.md5(tmpfile)
         descr = ""
-        descr += "agentid=%s\n" % j.application.agentid
+        descr += "whoami=%s\n" %  j.application.getWhoAmiStr()
         descr += "appname=%s\n" % j.application.appname
         descr += "tags=%s\n" % tags
         descr += "expiration=%s\n" % expiration
