@@ -340,11 +340,6 @@ class CodeManagementRecipe:
         if repoconnection:
             repoconnection.commit()                
 
-
-    def _getSource(self, source):
-        con = self._getRepoConnection()
-        return j.system.fs.joinPaths(con.basedir, source)
-
     def _getRepoConnection(self):
         if self._repoconnection:
             return self._repoconnection

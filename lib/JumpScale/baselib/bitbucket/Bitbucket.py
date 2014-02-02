@@ -267,12 +267,13 @@ class BitbucketConnection(object):
             editor=j.codetools.getTextFileEditor(hgrcpath)
             editor.replace1Line("default=%s" % url,["default *=.*"])
         j.clients.bitbucket.log("init mercurial client ##%s## on path:%s"%(repoName,self.getRepoPathLocal(repoName)),category="getclient")
-        cl = j.clients.mercurial.getClient("%s/%s/%s/" % (j.dirs.codeDir,self.accountName,repoName), url, branchname=branch)
+        cl = j.clients.mercurial.getClient(self.getCodeFolder(repoName), url, branchname=branch)
         # j.clients.bitbucket.log("mercurial client inited for repo:%s"%repoName,category="getclient")
         self.mercurialclients[repoName]=cl
         return cl
 
-
+    def getCodeFolder(self, repoName):
+        return "%s/%s/%s/" % (j.dirs.codeDir,self.accountName,repoName)
 
     def getGroups(self):
         """
