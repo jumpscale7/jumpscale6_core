@@ -49,8 +49,7 @@ else:
 if not opts.noOsis:
     j.core.grid.init()
 
-j.tools.testengine.initTests()
-j.tools.testengine.noOsis=opts.noOsis
+j.tools.testengine.initTests(opts.noOsis)
 j.tools.testengine.runTests(debug=opts.debug)
 
 

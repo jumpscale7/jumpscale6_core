@@ -10,6 +10,14 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+class Tee(object):
+    def __init__(self, fileobj1, fileobj2):
+        self.fileobj1 = fileobj1
+        self.fileobj2 = fileobj2
+
+    def write(self, data):
+        self.fileobj1.write(data)
+        self.fileobj2.write(data)
 
 
 PRINTSTR = "\r%s %s"
@@ -28,8 +36,12 @@ class TestResult(unittest.result.TestResult):
         self.printStatus(test)
         buffer = StringIO()
         self.tests[test] = buffer
-        sys.stdout = buffer
-        sys.stderr = buffer
+        if self._debug:
+            sys.stdout = Tee(self._original_stdout, buffer)
+            sys.stderr = Tee(self._original_stderr, buffer)
+        else:
+            sys.stdout = buffer
+            sys.stderr = buffer
 
     def printStatus(self, test, state=None):
         if state:
@@ -126,15 +138,23 @@ class Test():
     __repr__ = __str__
 
 
+class FakeTestObj(object):
+    def __init__(self):
+        self.source = dict()
+        self.output = dict()
+        self.teststates = dict()
+
 class TestEngine():
     def __init__(self):
         self.paths=[]
         self.tests=[]
         self.outputpath="/opt/jumpscale/apps/gridportal/base/Tests/TestRuns/"
 
-    def initTests(self,osisip="127.0.0.1",login="",passwd=""): #@todo implement remote osis
-        client = j.core.osis.getClient(user="root")
-        self.osis=j.core.osis.getClientForCategory(client, 'system', 'test')
+    def initTests(self,noOsis, osisip="127.0.0.1",login="",passwd=""): #@todo implement remote osis
+        self.noOsis = noOsis
+        if not noOsis:
+            client = j.core.osis.getClient(user="root")
+            self.osis=j.core.osis.getClientForCategory(client, 'system', 'test')
 
     def _patchTest(self, testmod):
         if hasattr(testmod, 'TEST') and not isinstance(testmod.TEST, unittest.TestCase):
@@ -166,7 +186,8 @@ class TestEngine():
                 #now sorted
                 # print test
                 results.append(test.execute(testrunname=testrunname,debug=debug))
-                self.osis.set(test.db)
+                if not self.noOsis:
+                    guid, change, new = self.osis.set(test.db)
         total = sum(x['total'] for x in results)
         error = sum(x['error'] for x in results)
         failed = sum(x['failed'] for x in results)
@@ -179,7 +200,10 @@ class TestEngine():
 
 
     def testFile(self, testrunname, filepath):
-        testdb=self.osis.new()
+        if self.noOsis:
+            testdb = FakeTestObj() 
+        else:
+            testdb=self.osis.new()
         name=j.system.fs.getBaseName(filepath).replace("__test.py","").lower()
         testmod = imp.load_source(name, filepath)
         self._patchTest(testmod)
@@ -214,8 +238,9 @@ class TestEngine():
             methodsource="\n".join([item.strip() for item in method.split("\n")[1:] if item.strip()<>""])
             test.db.source[methodname]=methodsource
 
-        guid, _, _ = self.osis.set(test.db)
-        test.db.load(self.osis.get(guid))
+        if not self.noOsis:
+            guid, _, _ = self.osis.set(test.db)
+            test.db = self.osis.get(guid)
         self.tests.append(test)
 
 
