@@ -227,7 +227,7 @@ class ActorLoader(LoaderBaseObject):
                 if spec.hasTasklets:
                     self.loadOsisTasklets(actorobject, actorpath, modelname=modelspec.name)
 
-                classs = j.core.codegenerator.getClassPymodel(appname, actorname, modelName, codepath=actorpath)
+                classs = j.core.codegenerator.getClassJSModel(appname, actorname, modelName, codepath=actorpath)
                 if modelspec.tags == None:
                     modelspec.tags = ""
                 index = j.core.tags.getObject(modelspec.tags).labelExists("index")

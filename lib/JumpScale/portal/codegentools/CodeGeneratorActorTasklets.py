@@ -43,8 +43,8 @@ def main(j, params, service, tags, tasklet):
             return params
 
     params.result={}
-    params.result["pymodelobject"]=obj.obj2dict()
-    params.result["pymodeltype"]="{appname}__{actorname}__{modelname}"
+    params.result["JSModelobject"]=obj.obj2dict()
+    params.result["JSModeltype"]="{appname}__{actorname}__{modelname}"
     return params
 
 def match(j, params, service, tags, tasklet):
@@ -62,7 +62,7 @@ def main(j, params, service, tags, tasklet):
 
     ddict=j.tools.json.decode(params.data)
     obj=modeldb.new()
-    obj2=j.core.osis.dict2pymodelobject(obj,ddict)
+    obj2=j.core.osis.dict2JSModelobject(obj,ddict)
     modeldb.set(obj2)
     params.result=[obj2.id,obj2.guid]
     return params
@@ -81,7 +81,7 @@ def main(j, params, service, tags, tasklet):
 
     ddict=j.tools.json.decode(params.data)
     obj=modeldb.new()
-    obj2=j.core.osis.dict2pymodelobject(obj,ddict)
+    obj2=j.core.osis.dict2JSModelobject(obj,ddict)
     modeldb.set(obj2)
     params.result=[obj2.id,obj2.guid]
     return params
@@ -160,8 +160,8 @@ def main(j, params, service, tags, tasklet):
     obj=modeldb.new()
     modeldb.set(obj)
     params.result={}
-    params.result["pymodelobject"]=obj.obj2dict()
-    params.result["pymodeltype"]="{appname}__{actorname}__{modelname}"
+    params.result["JSModelobject"]=obj.obj2dict()
+    params.result["JSModeltype"]="{appname}__{actorname}__{modelname}"
     return params
 
 def match(j, params, service, tags, tasklet):

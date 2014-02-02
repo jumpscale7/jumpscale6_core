@@ -7,7 +7,7 @@ class CodeGeneratorModel(CodeGeneratorBase):
 
     def __init__(self, spec, typecheck=True, dieInGenCode=True):
         CodeGeneratorBase.__init__(self, spec, typecheck, dieInGenCode)
-        self.type = "pymodel"
+        self.type = "JSModel"
 
     def getPropertyCode(self, name, type, indent=1):
         value = ""
@@ -44,7 +44,7 @@ if not isinstance(value, %(type)s) and value is not None:
                 type = "enumerator:%s or int" % type
                 value = "int(value)"
             elif specfound.type == "model":
-                pre = "classs=j.core.codegenerator.getClassPymodel(\"%s\",\"%s\",\"%s\")\n" % (specfound.appname, specfound.actorname, specfound.name)
+                pre = "classs=j.core.codegenerator.getClassJSModel(\"%s\",\"%s\",\"%s\")\n" % (specfound.appname, specfound.actorname, specfound.name)
                 s = "isinstance(value, classs)"
                 init = pre
                 init += "self._P_%s=classs()" % name
@@ -90,7 +90,7 @@ if not isinstance(value, %(type)s) and value is not None:
         s = ""
 
         if spec not in ["int", "bool", "float", "str", "list", "dict"]:
-            classstr = "j.core.codegenerator.getClassPymodel(\"%s\",\"%s\",\"%s\")()" % (spec.appname, spec.actorname, spec.name)
+            classstr = "j.core.codegenerator.getClassJSModel(\"%s\",\"%s\",\"%s\")()" % (spec.appname, spec.actorname, spec.name)
         else:
             if spec == "int":
                 classstr = "0"
@@ -138,9 +138,9 @@ return self._P_{name}[-1]\n
 
     def generate(self):
         if self.spec.rootobject:
-            self.addClass(baseclass="j.code.classGetPyRootModelBase()")
+            self.addClass(baseclass="j.code.classGetJSRootModelBase()")
         else:
-            self.addClass(baseclass="j.code.classGetPyModelBase()")
+            self.addClass(baseclass="j.code.classGetJSModelBase()")
 
         for prop in self.spec.properties:
             self.addProperty(propertyname=prop.name, type=prop.type, default=prop.default, description=prop.description)

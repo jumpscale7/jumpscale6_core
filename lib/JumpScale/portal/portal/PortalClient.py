@@ -116,7 +116,7 @@ class PortalClient():
             actorobject.models = ModelsClass()
 
             for modelName in modelNames:
-                classs = j.core.codegenerator.getClassPymodel(appname, actorname, modelName)
+                classs = j.core.codegenerator.getClassJSModel(appname, actorname, modelName)
                 actorobject.models.__dict__[modelName] = j.core.osismodel.getNoDB(appname, actorname, modelName, classs)
 
         j.core.portal.active.actors[key] = actorobject

@@ -111,11 +111,11 @@ class CodeGenerator:
         classs = self.generate(spec, type=type, typecheck=typecheck, dieInGenCode=dieInGenCode)
         return classs
 
-    def getClassPymodel(self, appname, actor, modelname, typecheck=True, dieInGenCode=True, codepath=""):
+    def getClassJSModel(self, appname, actor, modelname, typecheck=True, dieInGenCode=True, codepath=""):
         """
         """
         spectype = "model"
-        type = "pymodel"
+        type = "JSModel"
         key = "%s_%s_%s_%s_%s" % (type, appname, spectype, actor, modelname)
         key = key.replace(".", "_")
         if key in self.classes:
@@ -125,11 +125,11 @@ class CodeGenerator:
         classs = self.generate(spec, type=type, typecheck=typecheck, dieInGenCode=dieInGenCode, codepath=codepath)
         return classs
 
-    def getCodePymodel(self, appname, actor, modelname, typecheck=True, dieInGenCode=True, codepath=""):
+    def getCodeJSModel(self, appname, actor, modelname, typecheck=True, dieInGenCode=True, codepath=""):
         """
         """        
         spectype = "model"
-        type = "pymodel"
+        type = "JSModel"
         spec = j.core.specparser.getModelSpec(appname, actor, modelname)
         cg = CodeGeneratorModel(spec, typecheck=True, dieInGenCode=dieInGenCode)
         code=cg.generate()        
@@ -166,7 +166,7 @@ class CodeGenerator:
                  codepath=None, classpath=None, returnClass=True, args={}, makeCopy=False):
         """
         param: spec is spec we want to generate from
-        param: type pymodel,actormethodgreenlet,enumeration,actorlocal
+        param: type JSModel,actormethodgreenlet,enumeration,actorlocal
         param: typecheck (means in generated code the types will be checked)
         param: dieInGenCode  if true means in generated code we will die when something uneforeseen happens
         return: dict of classes if more than 1 otherwise just the class
@@ -174,7 +174,7 @@ class CodeGenerator:
         name, path = self._getCodeLocation(type, spec.appname, spec.type, spec.actorname, spec.name)
         # path is location in a var dir where code will be generated, is always overwritten
         # if not self.generated.has_key(name):
-        if spec.type == "model" and type == "pymodel":
+        if spec.type == "model" and type == "JSModel":
             # writeForm = self._target == 'server' #we dont generate forms any more
             cg = CodeGeneratorModel(spec, typecheck, dieInGenCode)
         # elif spec.type=="model" and type=="whoosh":
