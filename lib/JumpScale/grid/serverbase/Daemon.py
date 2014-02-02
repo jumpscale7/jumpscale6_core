@@ -207,6 +207,7 @@ class Daemon(object):
                 data = ser.loads(data)
         except Exception,e:
             eco=j.errorconditionhandler.parsePythonErrorObject(e)
+            eco.tb=""
             return returnCodes.SERIALIZATIONERRORIN, "", self.errorconditionserializer.dumps(eco.__dict__)
 
 

@@ -211,9 +211,6 @@ class OSISCMDS(object):
         else:
             templatespath = "_templates"
             if j.system.fs.exists(path=templatespath):
-                from IPython import embed
-                print "DEBUG NOW uy"
-                embed()
                 
                 # if j.system.fs.exists(path):
                 templatespath_namespace = j.system.fs.joinPaths(templatespath, "namespace")
@@ -230,20 +227,32 @@ class OSISCMDS(object):
                     j.system.fs.copyDirTree(templatespath_category, catpath, overwriteFiles=False)
                     # j.system.fs.copyDirTree(templatespath_osistasklets,catpath,overwriteFiles=overwriteTasklets)
 
-    def init(self, path="",overwriteImplementation=False, namespacename=None, template=None,session=None):
+    def init(self, path="",overwriteImplementation=False, namespacename=None, template=None,initES=True,session=None):
+        
         if session<>None:
             self._authenticateAdmin(session)
 
-        if path == "":
-            path = "logic"
-
-        self.path = path
-
-        j.logger.consoleloglevel = 7
+        if initES:
+            eip=j.application.config.get("osis.elasticsearch.ip")
+            eport=j.application.config.get("osis.elasticsearch.port")
+            self.elasticsearch = j.clients.elasticsearch.get(ip=eip, port=int(eport))
+            if path <> "":
+                self.path = path
+            else:
+                path=self.path
+            j.logger.consoleloglevel = 7
+            # enable db's
+            if j.application.config.get("osis.db.type") == "filesystem":
+                self.db = j.db.keyvaluestore.getFileSystemStore("osis")
+            else:
+                raise RuntimeError("Only filesystem db implemented in osis")
+            # wait for elastic search & get
+            j.core.osis.db = self.db
+            j.core.osis.elasticsearch = self.elasticsearch
 
         if namespacename == None:
             for namespacename in j.system.fs.listDirsInDir(path, dirNameOnly=True):
-                self.init(path, overwriteImplementation=overwriteImplementation, namespacename=namespacename)
+                self.init(path, overwriteImplementation=overwriteImplementation, namespacename=namespacename,initES=False)
         else:
             # te=j.core.taskletengine.get(j.system.fs.joinPaths("systemtasklets","init"))
             # te.executeV2(osis=self) #will add db & elasticsearch w
@@ -251,20 +260,12 @@ class OSISCMDS(object):
                 return
 
             self._initDefaultContent(namespacename=namespacename)
-            # enable db's
-            if j.application.config.get("osis.db.type") == "filesystem":
-                self.db = j.db.keyvaluestore.getFileSystemStore("osis")
-            else:
-                raise RuntimeError("Only filesystem db implemented in osis")
-
-            # wait for elastic search & get
-            eip=j.application.config.get("osis.elasticsearch.ip")
-            eport=j.application.config.get("osis.elasticsearch.port")
-            self.elasticsearch = j.clients.elasticsearch.get(ip=eip, port=int(eport))
-            j.core.osis.db = self.db
-            j.core.osis.elasticsearch = self.elasticsearch
 
             namespacepath = j.system.fs.joinPaths(path, namespacename)
+            specpath=j.system.fs.joinPaths(path, namespacename, "model.spec")
+
+            j.core.osis.generateOsisModelDefaults(namespacename,specpath)
+
 
             for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
                 catpath = j.system.fs.joinPaths(namespacepath, catname)
@@ -292,7 +293,7 @@ class OSISCMDS(object):
 
 
 
-            j.core.osis.db = None
-            j.core.osis.elasticsearch = None
+            # j.core.osis.db = None
+            # j.core.osis.elasticsearch = None
 
             

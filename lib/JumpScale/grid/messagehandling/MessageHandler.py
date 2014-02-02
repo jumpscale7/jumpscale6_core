@@ -62,8 +62,8 @@ class MessageHandler:
     def getRPCMessage(self, appname, actorname, instance, methodname, data, timeout=0,
                       sync=True, serializertype=11):
         """
-        pymodelid= appname,actorname,modelname    (use the commas)
-        data = dict with data (can be used to create pymodel from) or a var dict
+        JSModelid= appname,actorname,modelname    (use the commas)
+        data = dict with data (can be used to create JSModel from) or a var dict
         timeout = in seconds how long the call can take, 0 is not specified
         @param serializertype:
           12 = compressed & json

@@ -12,7 +12,6 @@ class Disk(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("disk","1.0")
             self.id = 0
             self.partnr = 0
             self.gid = 0

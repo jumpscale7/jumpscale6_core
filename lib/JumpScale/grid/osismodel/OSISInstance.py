@@ -27,7 +27,7 @@ class OSISInstanceNoDB(object):
     def _getObj(self, obj):
         if isinstance(obj, dict):
             attributes = obj.copy()
-            return j.code.dict2pymodelobject(self.modelclass(), attributes)
+            return j.code.dict2JSModelobject(self.modelclass(), attributes)
         else:
             return obj
 
@@ -65,7 +65,7 @@ class OSISRemoteOSISInstance(OSISInstanceNoDB):
     def get(self, guid=None, id=None):
         # TODO invoke guid to id osis call
         obj = self.remoteOSISClient.get(self.actorname, self.modelname, id)
-        return j.code.dict2pymodelobject(self.modelclass(), obj)
+        return j.code.dict2JSModelobject(self.modelclass(), obj)
 
     def delete(self, guid=None, id=None):
         # TODO invoke guid to id osis call
@@ -160,7 +160,7 @@ class OSISInstance(OSISInstanceNoDB):
 
         id = self._getId(guid, id)
         value = self._db.get(key, str(id))
-        return j.code.dict2pymodelobject(self.modelclass(), value)
+        return j.code.dict2JSModelobject(self.modelclass(), value)
 
     def getguid2id(self, id=None, guid=None, ignoreError=False):
         """

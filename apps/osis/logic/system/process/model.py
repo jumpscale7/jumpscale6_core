@@ -13,7 +13,6 @@ class Process(OsisBaseObject):
             self.load(ddict)
             self.getSetGuid()
         else:
-            self.init("process","1.0")
             self.id = 0
             self.gid = gid
             self.nid = nid

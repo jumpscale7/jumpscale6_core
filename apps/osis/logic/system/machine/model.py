@@ -13,7 +13,6 @@ class Machine(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("machine","1.0")
             self.id = 0
             self.gid = 0
             self.nid = 0

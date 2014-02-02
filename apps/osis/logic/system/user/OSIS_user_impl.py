@@ -6,8 +6,6 @@ import ujson
 class mainclass(parentclass):
     """
     """
-    def __init__(self):
-        pass
         
     def set(self,key,value):
         obj=self.getObject(value)        

@@ -1,6 +1,6 @@
 from JumpScale import j
 
-OsisBaseObject=j.core.osis.getOsisBaseObjectClassNoRepr()
+OsisBaseObject=j.core.osis.getOSISBaseObjectComplexType()
 
 from $modelbase_osismodelbase import $modelbase_osismodelbase
 
@@ -12,6 +12,7 @@ class $modelbase(OsisBaseObject,$modelbase_osismodelbase):
     """
 
     def __init__(self, ddict={}):
+        # OsisBaseObject.__init__(self)
         $modelbase_osismodelbase.__init__(self)
         if ddict <> {}:
             self.load(ddict)
@@ -43,5 +44,11 @@ class $modelbase(OsisBaseObject,$modelbase_osismodelbase):
     #     self.lastcheck=j.base.time.getTimeEpoch() 
 
     #     return self.guid
+
+    # def getDictForIndex(self):
+    #     """
+    #     return dict which needs to be indexed
+    #     """
+    #     pass
 
 

@@ -1,18 +1,22 @@
 from JumpScale import j
 import copy
-json=j.db.serializers.getSerializerType("j")
 import imp
+# import ujson as json
 
 class OSISStore(object):
-
     """
     Default object implementation (is for one specific namespace_category)
     """
+
+    def __init__(self):
+        pass
+        
 
     def init(self, path, namespace,categoryname):
         """
         gets executed when catgory in osis gets loaded by osiscmds.py (.init method)
         """
+        self.json=j.db.serializers.getSerializerType("j")
 
         self.path = path
         self.tasklets = {}
@@ -69,42 +73,41 @@ class OSISStore(object):
         if self.auth==None and authparent<>None:
             self.auth=authparent
 
-    def _getModelClass(self):
-        """
-        is called when someone needs an object
-        """
-        if self.objectclass==None:
+    # def _getModelClass(self):
+    #     """
+    #     is called when someone needs an object
+    #     """
+    #     if self.objectclass==None:
 
-            #need to check if there is a specfile or we go from model.py
-            specpath=j.system.fs.joinPaths(self.path, "model.spec")    
-            print "SPECPATH:%s" %specpath
-            if j.system.fs.exists(path=specpath):
-                j.core.specparser.parseSpecs(self.path, appname=self.categoryname, actorname="osismodel")
-                spec = j.core.specparser.getActorSpec(appname, actorname, raiseError=False)            
-                from IPython import embed
-                print "DEBUG NOW uuuuu"
-                embed()
+    #         #need to check if there is a specfile or we go from model.py
+    #         specpath=j.system.fs.joinPaths(self.path, "model.spec")    
+    #         print "SPECPATH:%s" %specpath
+    #         if j.system.fs.exists(path=specpath):
+    #             j.core.specparser.parseSpecs(self.path, appname=self.categoryname, actorname="osismodel")
+    #             spec = j.core.specparser.getActorSpec(appname, actorname, raiseError=False)            
+    #             from IPython import embed
+    #             print "DEBUG NOW uuuuu"
+    #             embed()
                 
-            else:
-                path=j.system.fs.joinPaths(self.path, "model.py")
-                if j.system.fs.exists(path):
-                    klass= j.system.fs.fileGetContents(path)
-                else:
-                    self.objectclass= ""
-                    # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
+    #         path=j.system.fs.joinPaths(self.path, "model.py")
+    #         if j.system.fs.exists(path):
+    #             klass= j.system.fs.fileGetContents(path)
+    #         else:
+    #             self.objectclass= ""
+    #             # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
 
-                name=""
+    #         name=""
 
-                for line in klass.split("\n"):
-                    if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
-                        name=line.split("(")[0].lstrip("class ")
-                if name=="":
-                    raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
-                exec(klass)
-                resultclass=eval(name)
-                self.objectclass=resultclass
+    #         for line in klass.split("\n"):
+    #             if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
+    #                 name=line.split("(")[0].lstrip("class ")
+    #         if name=="":
+    #             raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there.\nClass file on %s"%)
+    #         exec(klass)
+    #         resultclass=eval(name)
+    #         self.objectclass=resultclass
 
-        return self.objectclass
+    #     return self.objectclass
 
     def _getDB(self):
         if j.core.osis.db == None:
@@ -128,24 +131,94 @@ class OSISStore(object):
         """
         return self.db.exists(self.dbprefix, key)
 
-
     def getObject(self, ddict={}):
-        klass=self._getModelClass()
+        klass=j.core.osis.getOsisModelClass(self.namespace,self.categoryname)
         if klass=="":
             return ddict            
         obj = klass(ddict=ddict)
         return obj
 
+    def setObjIds(self,obj):
+        """
+        for osis object get unique id & set it in object
+        return (new,changed,obj) #new & changed=boolean
+        """        
+        ckey=obj.getContentKey()
+        # print "ckey:%s"%ckey
+        ukey=obj.getUniqueKey()
+        # print "ukey:%s"%ukey
+        if ukey==None or str(ukey)=="":
+            # print "UKEY NONE SO NEW"
+            changed=True
+            new=True
+            ukey=None
+        else:
+            changed=False
+            new=False
+        
+        if ukey<>None and self.db.exists(self.dbprefix_incr, ukey):
+            # print "ukey exists"
+            new=False            
+            id,guid,ckey2=self.json.loads(self.db.get(self.dbprefix_incr, ukey))
+            guid=str(guid)
+            ckey=str(ckey)
+            ckey2=str(ckey2)
+            # print "guid,ckey in db: %s:%s"%(guid,ckey2)
+            if obj.id<>id:
+                obj.id=id
+            obj.getSetGuid()
+            if obj.guid<>guid:
+                # print "GUID changed"
+                changed=True
+            ckey=obj.getContentKey()
+            if ckey2<>ckey:
+                # print "content changed"
+                changed=True
+            if changed:
+                json=self.json.dumps([obj.id,obj.guid,ckey])
+                self.db.set(self.dbprefix_incr, ukey, json)       
+            # print "ret:%s %s" %(new,changed)         
+            return (new,changed,obj)
+        else:
+            # print "ukey not in db"
+            new=True
+            changed=True    
+            id=self.db.increment(self.dbprefix_incr)
+            # print "newid:%s"%id
+            obj.id=id
+            obj.getSetGuid()
+            ukey=obj.getUniqueKey()
+            ckey=obj.getContentKey()
+            obj._ckey=ckey
+            # print "ukey,ckey for new object: %s:%s"%(ukey,ckey)
+            if ukey<>None:
+                json=self.json.dumps([obj.id,obj.guid,ckey])
+                self.db.set(self.dbprefix_incr, ukey, json)
+            return (new,changed,obj)
+
     def set(self, key, value):
-        obj = self.getObject(value)
-
-        self.db.set(self.dbprefix, key=obj.guid, value=value)
-
-        if obj<>value:
-            #means there is a model found
-            self.index(obj)
-
-        return [None, None, None]
+        """
+        value can be a dict or a raw value (seen as string)
+        if raw value then will not try to index
+        """
+        if j.basetype.dictionary.check(value):
+            #is probably an osis object
+            if value.has_key("_meta") and  value.has_key("_ckey"):
+                #is an osis object
+                obj=self.getObject(value)
+                # obj.getSetGuid()
+                new,changed,obj=self.setObjIds(obj)
+                key=obj.guid
+                self.index(obj)
+                value=self.json.dumps(obj.obj2dict())
+            else:
+                value=self.json.dumps(value)
+                new=None
+                changed=None
+        
+        #not an osis obj, need to stor as raw value, there will be no indexing
+        self.db.set(self.dbprefix, key=key, value=value)
+        return (key,new,changed)
 
     def getIndexName(self):
         """
@@ -157,17 +230,22 @@ class OSISStore(object):
         """
         @param ttl = time to live in seconds of the index
         """
-        obj = copy.copy(obj)
         if self.elasticsearch == None:
             raise RuntimeError("Cannot find index")
 
         index = self.getIndexName()
 
         if j.basetype.dictionary.check(obj):
+            data=copy.copy(obj)
             data=obj
         else:
-            data=obj.__dict__
+            if hasattr(obj,"getDictForIndex"):
+                data=obj.getDictForIndex()
+            else:
+                data=copy.copy(obj.__dict__)
+
         guid=data["guid"]
+
         # data.pop("guid")  # remove guid from object before serializing to json
         for key5 in data.keys():
             if key5[0] == "_":
@@ -208,7 +286,7 @@ class OSISStore(object):
 
     def find(self, query, start=0, size=None):
         if not isinstance(query, dict):
-            query = json.loads(query)
+            query = self.json.loads(query)
         
         index = self.getIndexName()
         size = size or 100000
@@ -246,7 +324,6 @@ class OSISStore(object):
         return all object id's stored in DB
         """
         db = self.db
-
         if withcontent == False:
             return db.list(self.dbprefix, prefix)
 

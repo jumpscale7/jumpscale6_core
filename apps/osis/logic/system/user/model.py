@@ -13,7 +13,6 @@ class User(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("user","1.0")
             self.id = ""
             self.domain=""
             self.gid = j.application.whoAmI.gid

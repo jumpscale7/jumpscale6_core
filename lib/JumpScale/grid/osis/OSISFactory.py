@@ -111,7 +111,7 @@ class OSISFactory:
                     user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)
             except Exception,e:
                 print stdout.getvalue()
-                raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,out,e))
+                raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,stdout.getvalue(),e))
         return self.osisConnections[key]
 
     def getClientForCategory(self, client,namespace, category):
@@ -130,7 +130,7 @@ class OSISFactory:
     def getOsisBaseObjectClass(self):
         return OSISBaseObject
 
-    def getOsisBaseObjectClassNoRepr(self):
+    def getOSISBaseObjectComplexType(self):
         return OSISBaseObjectComplexType
 
     def getOsisImplementationParentClass(self, namespacename):
@@ -177,13 +177,13 @@ class OSISFactory:
                 # if spec.hasTasklets:
                 #     self.loadOsisTasklets(actorobject, actorpath, modelName=modelspec.name)
 
-                code = j.core.codegenerator.getCodePymodel("osismodel", namespace, modelName)
+                code = j.core.codegenerator.getCodeJSModel("osismodel", namespace, modelName)
                 if modelspec.tags == None:
                     modelspec.tags = ""
                 index = j.core.tags.getObject(modelspec.tags).labelExists("index")
                 tags = j.core.tags.getObject(modelspec.tags)
 
-                classnameGenerated="pymodel_%s_%s_%s"%("osismodel", namespace, modelName)
+                classnameGenerated="JSModel_%s_%s_%s"%("osismodel", namespace, modelName)
                 classnameNew="%s_%s"%(namespace,modelName)
                 classnameNew2="%s_%s_osismodelbase"%(namespace,modelName)
                 code=code.replace(classnameGenerated,classnameNew2)
@@ -202,27 +202,35 @@ class OSISFactory:
 
         return classpath
 
+    def generateOsisModelDefaults(self,namespace,specpath=""):
+        import JumpScale.portal.codegentools
+
+        if specpath=="":
+            specpath=j.system.fs.joinPaths("logic", namespace, "model.spec")
+
+        basepathspec=j.system.fs.getDirName(specpath)
+
+
+        if j.system.fs.exists(path=specpath):
+            print "SPECPATH:%s" %specpath
+            self._generateOsisModelClassFromSpec(namespace,specpath=basepathspec,classpath=basepathspec)
+
 
     def getOsisModelClass(self,namespace,category,specpath=""):
         """
         returns class generated from spec file or from model.py file
         """
-        # print "getOsisModelClass: %s %s"%(namespace,category)
-        import JumpScale.portal.codegentools
+        print "getOsisModelClass: %s %s"%(namespace,category)
         key="%s_%s"%(namespace,category)
+
         if not self.osisModels.has_key(key):
-            #need to check if there is a specfile or we go from model.py  
+            # #need to check if there is a specfile or we go from model.py  
             if specpath=="":
                 specpath=j.system.fs.joinPaths("logic", namespace, "model.spec")            
 
             basepathspec=j.system.fs.getDirName(specpath)            
             basepath=j.system.fs.joinPaths(basepathspec,category)            
             modelpath=j.system.fs.joinPaths(basepath,"model.py")
-
-            if j.system.fs.exists(path=specpath) and not self.namespacesInited.has_key(basepathspec):
-                print "SPECPATH:%s" %specpath
-                self._generateOsisModelClassFromSpec(namespace,specpath=basepathspec,classpath=basepathspec)
-                self.namespacesInited[basepathspec]=True           
 
             if j.system.fs.exists(path=modelpath):                
                 klass= j.system.fs.fileGetContents(modelpath)

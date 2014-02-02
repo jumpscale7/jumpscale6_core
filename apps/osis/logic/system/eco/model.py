@@ -13,8 +13,6 @@ class ECO(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("eco","1.0")
-
             self.errormessage=errormessage
             self.errormessagePub=errormessagePub
             self.level=int(level) #1:critical, 2:warning, 3:info

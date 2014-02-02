@@ -5,7 +5,7 @@ OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 class Test(OsisBaseObject):
 
     """
-    identifies a job in the grid
+    identifies a test in the grid
     """
 
     def __init__(self, ddict={}, gid=0, jsname='', jsorganization='', roles=[], args=[], timeout=60, sessionid=None, jscriptid=None,lock="",\
@@ -31,16 +31,14 @@ class Test(OsisBaseObject):
             self.eco={}
             self.license = ""
             self.source={}
-
-            self.id=0
             self.gid =gid
             self.nid =nid
 
-    # def getUniqueKey(self):
-    #     """
-    #     return unique key for object, is used to define unique id
-    #     """
-    #     return j.base.idgenerator.generateGUID()
+    def getUniqueKey(self):
+        """
+        return unique key for object, is used to define unique id
+        """
+        return None #if you return none, means is always unique
 
     def getSetGuid(self):
         """

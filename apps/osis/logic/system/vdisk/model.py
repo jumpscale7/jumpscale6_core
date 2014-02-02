@@ -12,7 +12,6 @@ class VDisk(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("vdisk","1.0")
             self.id = 0
             self.guid = None
             self.gid = 0

@@ -5,6 +5,4 @@ parentclass=j.core.osis.getOsisImplementationParentClass("system")  #is the name
 class mainclass(parentclass):
     """
     """
-    def __init__(self):
-        pass
 

@@ -7,7 +7,7 @@ class system_packagemanager(j.code.classGetBase()):
         self._te = {}
         self.actorname = "packagemanager"
         self.appname = "system"
-        j.clients.agentcontroller.client.loadJumpscripts()
+        # j.clients.agentcontroller.client.loadJumpscripts()
         j.core.portal.active.actorsloader.getActor('system', 'gridmanager')
         self.gid = j.application.whoAmI.gid
 

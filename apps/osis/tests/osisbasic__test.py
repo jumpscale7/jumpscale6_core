@@ -14,65 +14,90 @@ author = "incubaid"
 license = "bsd"
 version = "1.0"
 category = "osis.basic.testset"
-enable=False
+enable=True
 priority=1
+send2osis=False
 
 import JumpScale.grid.osis
 
 
 class TEST():
+
     def randomMAC(self):
-        mac = [0x00, 0x16, 0x3e,
-               random.randint(0x00, 0x7f),
-               random.randint(0x00, 0xff),
-               random.randint(0x00, 0xff)]
-        return ':'.join(map(lambda x: "%02x" % x, mac))
+        return j.base.idgenerator.generateGUID().replace("-","")
 
     def setUp(self):
         self.client = j.core.osis.getClient(user='root')
-        self.nodeclient =j.core.osis.getClientForCategory(self.client, 'system', 'fake4test')
+        self.osisclient =j.core.osis.getClientForCategory(self.client, 'system', 'fake4test')
         self.prefix = time.time()
         
 
-    def test_set(self):
+    def test_setGetBasicVerify(self):
         # We first set some elements and verify the reponse
-        obj = self.nodeclient.new()
-        obj.name = "%s_1" % self.prefix
-        obj.netaddr = {self.randomMAC(): ['127.0.0.1', '127.0.0.2']}
-        obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
-        key, new, changed = self.nodeclient.set(obj)
-        testresult = self.verify_id(key) and new and changed
+        obj = self.osisclient.new()
+        obj.name = "test"
+        obj.netaddr = {"AABBCCDDEEFFGG": ['127.0.0.1', '127.0.0.2']}
+
+        ckeyOriginal=obj.getContentKey()
+
+        assert ckeyOriginal=='f7d877013a2d6c853092e55bad32435b'
+        assert obj.getUniqueKey()=='098f6bcd4621d373cade4e832627b4f6'
+
+        key,new,changed=self.osisclient.set(obj)
+        key2,new,changed=self.osisclient.set(obj)
+
+        print "2x save should have same key"
+        assert key==key2
+
+        print "check 2nd save new & changed are not new or changed"
+        assert new==False
+        assert changed==False
+
+        print "test content key does not get modified when set"
+        assert ckeyOriginal==obj.getContentKey()
+
+        print "retrieve obj from db"
+        obj2=self.osisclient.get(key)
+        print "test content key needs to remain same after fetching object"
+
+        assert ckeyOriginal==obj2.getContentKey()
+
+        obj.description="a descr"
+        print "obj needs to be different"
+        assert ckeyOriginal<>obj.getContentKey()
+        key3,new,changed=self.osisclient.set(obj)
+        print "check 3nd save new & changed are False,True for modified obj"
+        assert new==False
+        assert changed==True
+        print "key should be same"
+        assert key==key3
+
+        obj3=self.osisclient.get(key3)
+        print "guid should be same even after content change"
+        assert obj3.guid==key
+        
+        print "verify id structure"
+        testresult = self.verify_id(key)
         assert testresult==True
 
-    def test_set_and_get(self):
-        # Set a object and get it back, check the content.
-        obj = self.nodeclient.new()
-        obj.name = "%s_1" % self.prefix
-        obj.netaddr = {self.randomMAC(): ['127.0.0.1', '127.0.0.2']}
-        obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
-        key, new, changed = self.nodeclient.set(obj)
-        obj = json.loads(self.client.get("system", "fake4test", key))
-        assert obj['name']== "%s_1" % self.prefix
 
     def test_set_and_self(self):
         numbers = range(10)
         items = self.client.list("system", "fake4test")
         startnr = len(items)
         for i in numbers:
-            obj = self.nodeclient.new()
+            obj = self.osisclient.new()
             obj.name = "%s_%s" % (self.prefix, i)
             obj.netaddr = {self.randomMAC(): ['127.0.0.1', '127.0.0.2']}
-            obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
-            key, new, changed = self.nodeclient.set(obj)
+            key, new, changed = self.osisclient.set(obj)
         items = self.client.list("system", "fake4test")
         assert len(items)== startnr + 10
 
     def test_set_and_delete(self):
-        obj = self.nodeclient.new()
+        obj = self.osisclient.new()
         obj.name = "%s_1" % self.prefix
         obj.netaddr = {self.randomMAC(): ['127.0.0.1', '127.0.0.2']}
-        obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
-        key, new, changed = self.nodeclient.set(obj)
+        key, new, changed = self.osisclient.set(obj)
         obj = self.client.get("system", "fake4test", key)
         self.client.delete("system", "fake4test", key)
         items = self.client.list("system", "fake4test")

@@ -11,20 +11,16 @@ class OSISClientForCat():
         self.cat = cat
         self.objectclass=None
 
-    def _checkCat(self):
-        return  #@todo note sure I can do this?
-        if self.cat not in self.client.listNamespaceCategories(self.namespace):            
-            self.client.createNamespaceCategory(self.namespace, self.cat)
-
     def _getModelClass(self):
-        self._checkCat()
         if self.objectclass==None:
             retcode,content=self.client.getOsisObjectClassCodeOrSpec(self.namespace,self.cat)
             if retcode==1:
                 pathdir=j.system.fs.joinPaths(j.dirs.varDir,"code","osis",self.namespace)
                 path=j.system.fs.joinPaths(pathdir,"model.spec")
+                j.system.fs.removeDirTree(pathdir)
                 j.system.fs.createDir(pathdir)
-                j.system.fs.writeFile(filename=path,contents=content)                
+                j.system.fs.writeFile(filename=path,contents=content)
+                j.core.osis.generateOsisModelDefaults(self.namespace,path)
                 resultclass=j.core.osis.getOsisModelClass(self.namespace,self.cat,specpath=path)
                 self.objectclass=resultclass
             elif retcode==2:
@@ -52,35 +48,35 @@ class OSISClientForCat():
         """
         authenticates a user and returns the groups in which the user is
         """
-        self._checkCat()
+        
         return  self.client.authenticate(namespace=self.namespace, categoryname=self.cat,name=name,passwd=passwd,**args)     
 
     def new(self,**args):
-        self._checkCat()
-        return self._getModelClass()(**args)
+        
+        obj=self._getModelClass()(**args)
+        obj.init(self.namespace,self.cat,1)
+        return obj
 
     def set(self, obj, key=None):
         """
         if key none then key will be given by server
         @return (guid,new,changed)
         """
-        self._checkCat()        
         if hasattr(obj,"dump"):
-            guid,new,changed = self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
-            return (guid,new,changed)
-        else:
-            return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
+            obj=obj.dump()
+        # if j.basetype.dictionary.check(obj):
+        #     obj=json.dumps(obj)        
+        return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
 
     def get(self, key):
-        self._checkCat()
+        
         value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
         if isinstance(value, basestring):
             try:
                 value=json.loads(value)
             except:
                 pass # might be normal string/data aswell
-        if isinstance(value, dict) and value.has_key("_type"):
-            value["_type"]
+        if isinstance(value, dict) and value.has_key("_meta"):
             klass=self._getModelClass()
             obj=klass()
             obj.load(value)
@@ -89,23 +85,23 @@ class OSISClientForCat():
             return value
 
     def exists(self, key):
-            self._checkCat()
+            
             return self.client.exists(namespace=self.namespace, categoryname=self.cat, key=key)
 
     def delete(self, key):
-        self._checkCat()
+        
         return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
 
     def destroy(self):
-        self._checkCat()
+        
         return self.client.destroy(namespace=self.namespace, categoryname=self.cat)
 
     def list(self, prefix=""):
-        self._checkCat()
+        
         return self.client.list(namespace=self.namespace, categoryname=self.cat, prefix=prefix)
 
     def search(self, query, start=0, size=None):
-        self._checkCat()
+        
         return self.client.search(namespace=self.namespace, categoryname=self.cat, query=query,
                                   start=start, size=size)
 

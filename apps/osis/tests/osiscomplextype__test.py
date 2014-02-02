@@ -15,7 +15,7 @@ license = "bsd"
 version = "1.0"
 category = "osis.complextype.testset"
 enable=True
-priority=2
+priority=3
 
 import JumpScale.grid.osis
 
@@ -24,81 +24,76 @@ class TEST():
 
     def setUp(self):
         self.client = j.core.osis.getClient(user='root')
-        self.projclient =j.core.osis.getClientForCategory(self.client, 'test_complextype', 'project')
-        
-
+        self.osisclient =j.core.osis.getClientForCategory(self.client, 'test_complextype', 'project')
+   
     def test_set(self):
         # We first set some elements and verify the reponse
-        obj = self.projclient.new()
-        obj.descr="test descr"
+        obj = self.osisclient.new()
         obj.descr="test descr"
         for i in range (5):
             task=obj.new_task()
             task.name="a task %s"%i
             task.priority=i
         
-        key, new, changed = self.projclient.set(obj)
-
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
+        assert obj.getContentKey()=='4e2e3a33a5887669070a2dcc6fc4888a'
         
+        ckeyOriginal=obj.getContentKey()
 
-        testresult = self.verify_id(key) and new and changed
-        assert testresult==True
+        key,new,changed=self.osisclient.set(obj)
+        key2,new,changed=self.osisclient.set(obj)
 
-    # def test_set_and_get(self):
-    #     # Set a object and get it back, check the content.
-    #     obj = self.nodeclient.new()
-    #     obj.name = "%s_1" % self.prefix
-    #     obj.netaddr = {self.randomMAC(): ['127.0.0.1', '127.0.0.2']}
-    #     obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
-    #     key, new, changed = self.nodeclient.set(obj)
-    #     obj = json.loads(self.client.get("system", "fake4test", key))
-    #     assert obj['name']== "%s_1" % self.prefix
+        print "2x save should have same key"
+        assert key==key2
 
-    # def test_set_and_self(self):
-    #     numbers = range(10)
-    #     items = self.client.list("system", "fake4test")
-    #     startnr = len(items)
-    #     for i in numbers:
-    #         obj = self.nodeclient.new()
-    #         obj.name = "%s_%s" % (self.prefix, i)
-    #         obj.netaddr = {self.randomMAC(): ['127.0.0.1', '127.0.0.2']}
-    #         obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
-    #         key, new, changed = self.nodeclient.set(obj)
-    #     items = self.client.list("system", "fake4test")
-    #     assert len(items)== startnr + 10
+        print "check 2nd save new & changed are not new or changed"
+        assert new==False
+        assert changed==False
 
-    # def test_set_and_delete(self):
-    #     obj = self.nodeclient.new()
-    #     obj.name = "%s_1" % self.prefix
-    #     obj.netaddr = {self.randomMAC(): ['127.0.0.1', '127.0.0.2']}
-    #     obj.machineguid = j.tools.hash.md5_string(str(obj.netaddr.keys()))
-    #     key, new, changed = self.nodeclient.set(obj)
-    #     obj = self.client.get("system", "fake4test", key)
-    #     self.client.delete("system", "fake4test", key)
-    #     items = self.client.list("system", "fake4test")
-    #     if key in items:
-    #         deleted = False
-    #     else:
-    #         deleted = True
-    #     assert deleted==True
+        print "test content key does not get modified when set"
+        assert ckeyOriginal==obj.getContentKey()
 
-    # def test_find(self):
-    #     pass
+        print "retrieve obj from db"
+        obj2=self.osisclient.get(key)
+        print "test content key needs to remain same after fetching object"
 
-    def verify_id(self, id):
-        """
-        This function verifies a id, e.g checks if its in the correct format
-        Id should be clusterid_objectid
-        Clusterid and objectid are both integers
-        """
-        regex = '^\d+[_]\d+$'
-        if re.search(regex, id):
-            return True
-        else:
-            return False
+        assert ckeyOriginal==obj2.getContentKey()
+
+        obj.description="a descr"
+        print "obj needs to be different"
+        assert ckeyOriginal<>obj.getContentKey()
+        key3,new,changed=self.osisclient.set(obj)
+        print "check 3nd save new & changed are False,True for modified obj"
+        assert new==False
+        assert changed==True
+        print "key should be same"
+        assert key==key3
+
+        obj3=self.osisclient.get(key3)
+        print "guid should be same even after content change"
+        assert obj3.guid==key
+
+    def test_find(self):
+        # We first set some elements and verify the reponse
+        for x in range(2):  #this should not make new elements
+            for t in range(5):
+                obj = self.osisclient.new()
+                obj.name="name%s"%t
+                obj.descr="test descr"
+                for i in range (5):
+                    task=obj.new_task()
+                    task.name="a task %s %s"%(t,i)
+                    task.priority=i
+                key,new,changed=self.osisclient.set(obj)
+
+        q='{"query":{"bool":{"must":[{"text":{"json.name":"name1"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
+        items=self.osisclient.search(q)
+
+        assert items["total"]==1 #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
+
+        items=self.osisclient.simpleSearch(params={"name":"name3"})
+
+        assert len(items)==1 #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
+
 
     def tearDown(self):
         pass

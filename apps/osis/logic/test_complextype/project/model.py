@@ -1,6 +1,6 @@
 from JumpScale import j
 
-OsisBaseObject=j.core.osis.getOsisBaseObjectClassNoRepr()
+OsisBaseObject=j.core.osis.getOSISBaseObjectComplexType()
 
 from test_complextype_project_osismodelbase import test_complextype_project_osismodelbase
 
@@ -12,9 +12,27 @@ class test_complextype_project(OsisBaseObject,test_complextype_project_osismodel
     """
 
     def __init__(self, ddict={}):
+        # OsisBaseObject.__init__(self)
         test_complextype_project_osismodelbase.__init__(self)
         if ddict <> {}:
             self.load(ddict)
+
+    def getUniqueKey(self):
+        """
+        return unique key for object, is used to define unique id
+        """
+        return self.getSetGuid()
+
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes combination of other keys, std the guid and does nothing)
+        """
+        # print self.name
+        key= j.tools.hash.md5_string(self.name).replace(":","")
+        # print "guid:%s"%key
+        self.guid=key
+        return key
 
 
     # def getContentKey(self):
@@ -43,5 +61,11 @@ class test_complextype_project(OsisBaseObject,test_complextype_project_osismodel
     #     self.lastcheck=j.base.time.getTimeEpoch() 
 
     #     return self.guid
+
+    # def getDictForIndex(self):
+    #     """
+    #     return dict which needs to be indexed
+    #     """
+    #     pass
 
 

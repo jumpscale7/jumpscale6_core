@@ -13,7 +13,6 @@ class Group(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("group","1.0")
             self.id = ""
             self.domain=""
             self.gid = j.application.whoAmI.gid
