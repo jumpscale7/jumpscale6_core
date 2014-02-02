@@ -38,7 +38,7 @@ class Test(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        return None #if you return none, means is always unique
+        return self.getSetGuid()
 
     def getSetGuid(self):
         """
