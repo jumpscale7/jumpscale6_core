@@ -7,12 +7,12 @@ class jumpscale_netmgr(j.code.classGetBase()):
     """
     def __init__(self):
         
-        self._te={}
-        self.actorname="netmgr"
-        self.appname="jumpscale"
+        self._te = {}
+        self.actorname = "netmgr"
+        self.appname = "jumpscale"
         #jumpscale_netmgr_osis.__init__(self)
         self.client = j.core.osis.getClient(user='root')
-        self.osisclient =j.core.osis.getClientForCategory(self.client, 'vfw', 'virtualfirewall')
+        self.osisclient = j.core.osis.getClientForCategory(self.client, 'vfw', 'virtualfirewall')
 
     def fw_check(self, fwid, gid, **kwargs):
         """
@@ -102,8 +102,12 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:gid grid id
         param:domain if not specified then all domains
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_list")
+        result = list()
+        vfws = self.osisclient.list()
+        for vfw in vfws:
+            if vfw.gid == gid and vfw.domain == domain:
+                result.append(vfw)
+        return result
     
 
     def fw_start(self, fwid, gid, **kwargs):
@@ -111,8 +115,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_start")
+        return True
     
 
     def fw_stop(self, fwid, gid, **kwargs):
@@ -120,8 +123,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_stop")
+        return True
     
 
     def ws_forward_create(self, wsid, gid, sourceurl, desturls, **kwargs):
@@ -131,8 +133,12 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:sourceurl url which will match (e.g. http://www.incubaid.com:80/test/)
         param:desturls url which will be forwarded to (e.g. http://192.168.10.1/test/) can be more than 1 then loadbalancing; if only 1 then like a portforward but matching on url
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method ws_forward_create")
+        wsfobj = self.osisclient.get(wsid)
+        rule = wsfobj.new_wsForwardRule()
+        rule.url = sourceurl
+        rule.toUrls = desturls
+        self.osisclient.set(wsfobj)
+        return True
     
 
     def ws_forward_delete(self, wsid, gid, sourceurl, desturls, **kwargs):
@@ -142,8 +148,16 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:sourceurl url which will match (e.g. http://www.incubaid.com:80/test/)
         param:desturls url which will be forwarded to
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method ws_forward_delete")
+        vfws = self.osisclient.get(wsid)
+        wsfr = vfws.wsForwardRules
+        for rule in wsfr:
+            if rule['url'] == sourceurl:
+                for dest in desturls:
+                    if dest in rule['toUrls']:
+                        rule['toUrls'].remove(dest)
+                if len(rule['toUrls']) == 0:
+                    wsfr.remove(rule)
+        return True
     
 
     def ws_forward_list(self, wsid, gid, **kwargs):
@@ -155,6 +169,10 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:wsid firewall id (is also the loadbalancing webserver)
         param:gid grid id
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method ws_forward_list")
+        result = list()
+        vfws = self.osisclient.get(wsid)
+        wsfr = vfws.wsForwardRules
+        for rule in wsfr:
+            result.append([rule['url'], rule['toUrls']])
+        return result
     

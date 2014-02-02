@@ -11,7 +11,7 @@
     prop:masquerade bool,True,if True then masquerading done from internal network to external
     prop:wsForwardRules list(wsForwardRule),,set of rules for reverse proxy
 
-[model:tcpForwardRule] #@inde
+[model:tcpForwardRule] #@index
     """
     """
     prop:fromPort str,,tcp port incoming
