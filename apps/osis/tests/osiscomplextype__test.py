@@ -1,9 +1,5 @@
 import unittest
-import re
-import time
 from JumpScale import j
-import json
-import random
 
 descr = """
 basic functioning of osis (test set) for complex types
@@ -20,7 +16,7 @@ priority=3
 import JumpScale.grid.osis
 
 
-class TEST():
+class TEST(unittest.TestCase):
 
     def setUp(self):
         self.client = j.core.osis.getClient(user='root')
@@ -35,7 +31,7 @@ class TEST():
             task.name="a task %s"%i
             task.priority=i
         
-        assert obj.getContentKey()=='4e2e3a33a5887669070a2dcc6fc4888a'
+        self.assertEqual(obj.getContentKey(), '4e2e3a33a5887669070a2dcc6fc4888a')
         
         ckeyOriginal=obj.getContentKey()
 
@@ -43,34 +39,34 @@ class TEST():
         key2,new,changed=self.osisclient.set(obj)
 
         print "2x save should have same key"
-        assert key==key2
+        self.assertEqual(key, key2)
 
         print "check 2nd save new & changed are not new or changed"
-        assert new==False
-        assert changed==False
+        self.assertFalse(new)
+        self.assertFalse(changed)
 
         print "test content key does not get modified when set"
-        assert ckeyOriginal==obj.getContentKey()
+        self.assertEqual(ckeyOriginal, obj.getContentKey())
 
         print "retrieve obj from db"
         obj2=self.osisclient.get(key)
         print "test content key needs to remain same after fetching object"
 
-        assert ckeyOriginal==obj2.getContentKey()
+        self.assertEqual(ckeyOriginal, obj2.getContentKey())
 
         obj.description="a descr"
         print "obj needs to be different"
-        assert ckeyOriginal<>obj.getContentKey()
+        self.assertNotEqual(ckeyOriginal, obj.getContentKey())
         key3,new,changed=self.osisclient.set(obj)
         print "check 3nd save new & changed are False,True for modified obj"
-        assert new==False
-        assert changed==True
+        self.assertFalse(new)
+        self.assertTrue(changed)
         print "key should be same"
-        assert key==key3
+        self.assertEqual(key, key3)
 
         obj3=self.osisclient.get(key3)
         print "guid should be same even after content change"
-        assert obj3.guid==key
+        self.assertEqual(obj3.guid, key)
 
     def test_find(self):
         # We first set some elements and verify the reponse
@@ -88,12 +84,8 @@ class TEST():
         q='{"query":{"bool":{"must":[{"text":{"json.name":"name1"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
         items=self.osisclient.search(q)
 
-        assert items["total"]==1 #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
+        self.assertEqual(items["total"], 1) #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
 
         items=self.osisclient.simpleSearch(params={"name":"name3"})
 
-        assert len(items)==1 #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
-
-
-    def tearDown(self):
-        pass
+        self.assertEqual(len(items), 1) #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
