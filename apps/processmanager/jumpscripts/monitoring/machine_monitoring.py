@@ -15,10 +15,12 @@ enable=True
 async=False
 
 from xml.etree import ElementTree
+import JumpScale.lib.qemu_img
 
 try:
     import libvirt
     con = libvirt.open('qemu:///system')
+    #con = libvirt.open('qemu+ssh://10.101.190.24/system')
     stateMap = {libvirt.VIR_DOMAIN_RUNNING: 'RUNNING',
                 libvirt.VIR_DOMAIN_NOSTATE: 'NOSTATE',
                 libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
@@ -54,3 +56,26 @@ def action():
         if machine.ckeyOld != machine.db.getContentKey():
             #obj changed
             machine.send2osis()
+
+        for disk in xml.findall('devices/disk'):
+            if disk.attrib['device'] != 'disk':
+                continue
+            path = disk.find('source').attrib['dev']
+            vdisk = j.processmanager.vdiskobject.get(id=path)
+            vdisk.ckeyOld = vdisk.db.getContentKey()
+            vdisk.db.path = path
+            vdisk.db.type = disk.find('driver').attrib['type']
+            vdisk.db.devicename = disk.find('target').attrib['dev']
+            vdisk.db.machine_id = machine.db.id
+            vdisk.db.active = j.system.fs.exists(path)
+            if vdisk.db.active:
+                diskinfo = j.system.platform.qemu_img.info(path)
+                vdisk.db.size = diskinfo['virtual size']
+                vdisk.db.sizeondisk = diskinfo['disk size']
+
+
+
+            if vdisk.ckeyOld != vdisk.db.getContentKey():
+                #obj changed
+                vdisk.send2osis()
+
