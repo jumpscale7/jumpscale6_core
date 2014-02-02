@@ -22,8 +22,8 @@ class KeyValueStoreFactory(object):
         @param namespace: namespace of the store, defaults to None
         @type namespace: String
 
-        @param defaultPymodelSerializer: default Pymodel serializer
-        @type defaultPymodelSerializer: Object
+        @param defaultJSModelSerializer: default JSModel serializer
+        @type defaultJSModelSerializer: Object
 
         @return: key value store
         @rtype: ArakoonKeyValueStore
@@ -47,8 +47,8 @@ class KeyValueStoreFactory(object):
         @param baseDir: base directory of the store, defaults to j.dirs.db
         @type namespace: String
 
-        @param defaultPymodelSerializer: default Pymodel serializer
-        @type defaultPymodelSerializer: Object
+        @param defaultJSModelSerializer: default JSModel serializer
+        @type defaultJSModelSerializer: Object
 
         @return: key value store
         @rtype: FileSystemKeyValueStore

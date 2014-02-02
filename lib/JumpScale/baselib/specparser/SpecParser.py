@@ -1,5 +1,5 @@
 from JumpScale import j
-from SpecModelActorsGenerator import SpecModelActorsGenerator
+# from SpecModelActorsGenerator import SpecModelActorsGenerator
 
 class Specbase(j.code.classGetBase()):
     def __init__(self,linenr):

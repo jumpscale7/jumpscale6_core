@@ -31,19 +31,19 @@ if opts.action =='deleteall':
 
     j.system.fs.removeDirTree(path)
 
-    print "Remove code & metadata on osisserver for namespaces?"
-    cl=j.core.osis.getClient(user='root')
-    namespaces=cl.listNamespaces()
-    if "system" in namespaces:
-        namespaces.pop(namespaces.index("system"))
-    if "logger" in namespaces:
-        namespaces.pop(namespaces.index("logger"))
+    # print "Remove code & metadata on osisserver for namespaces?"
+    # cl=j.core.osis.getClient(user='root')
+    # namespaces=cl.listNamespaces()
+    # if "system" in namespaces:
+    #     namespaces.pop(namespaces.index("system"))
+    # if "logger" in namespaces:
+    #     namespaces.pop(namespaces.index("logger"))
 
-    if opts.force==None:
-        namespaces=j.console.askChoiceMultiple(namespaces)
-    for namespace in namespaces:
-        path="/opt/jumpscale/apps/osis/logic/%s"%namespace
-        j.system.fs.removeDirTree(path)
+    # if opts.force==None:
+    #     namespaces=j.console.askChoiceMultiple(namespaces)
+    # for namespace in namespaces:
+    #     path="/opt/jumpscale/apps/osis/logic/%s"%namespace
+    #     j.system.fs.removeDirTree(path)
 
     j.tools.startupmanager.restartProcess("jumpscale","osis")
     

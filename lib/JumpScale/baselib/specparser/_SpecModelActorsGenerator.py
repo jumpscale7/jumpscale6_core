@@ -20,7 +20,7 @@ class SpecModelActorsGenerator():
         s="""
 [actor]
 	\"\"\"
-	is actor to manipulate pymodel {name}
+	is actor to manipulate JSModel {name}
 	\"\"\"
 	method:model_{name}_delete
 		\"\"\"
@@ -48,11 +48,11 @@ class SpecModelActorsGenerator():
         A new object will be created and a new id & guid generated
         \"\"\"
         @tasklettemplate:modelnew
-        result:object    #the pymodel object
+        result:object    #the JSModel object
 
 	method:model_{name}_set
 		\"\"\"
-		Saves model {name} instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+		Saves model {name} instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
 		\"\"\"
         @tasklettemplate:modelupdate
         var:data str,"",data is object to save

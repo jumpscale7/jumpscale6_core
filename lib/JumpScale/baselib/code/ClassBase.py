@@ -21,20 +21,20 @@ class ClassBase(object):
         return j.code.object2dict(self)
     
     def dict2obj(self,data):
-        j.code.dict2object(self,data)    
+        j.code.dict2object(self,data)
 
         
     def __str__(self):
-        return j.code.object2json(j.code.object2dict(self),True)
+        return j.code.object2json(self,True)
                 
     __repr__=__str__
 
-class PyModelBase(ClassBase):
+class JSModelBase(ClassBase):
     def dict2obj(self,data):
-        j.code.dict2pymodelobject(self,data)    
+        j.code.dict2JSModelobject(self,data)    
 
 
-class PyRootModelBase(PyModelBase):
+class JSRootModelBase(JSModelBase):
     def getMetaInfo(self):
         """
         @return [appname,actorname,modelname,version] if relevant (e.g. for rootobject)

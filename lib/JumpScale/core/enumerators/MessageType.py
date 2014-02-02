@@ -12,7 +12,7 @@ class MessageType(BaseEnumeration):
        - cpu overloaded (detected by monitoring tasklet) 
     - testresult e.g. avgcpu over last 1h 
     - job message e.g. tells information about object
-    - pymodel update message 
+    - JSModel update message 
     - rpc message 
     more info see: 
     - http://www.jumpscale.org/display/PM/JumpScale+Messages
@@ -33,7 +33,7 @@ MessageType.registerItem('log', 1)
 MessageType.registerItem('errorcondition', 2)
 MessageType.registerItem('testresult', 3)
 MessageType.registerItem('job', 4)
-MessageType.registerItem('pymodel', 5)
+MessageType.registerItem('JSModel', 5)
 MessageType.registerItem('rpc', 6)
 #MessageType.registerItem('tlog', 7)
 

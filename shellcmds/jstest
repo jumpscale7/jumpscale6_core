@@ -17,6 +17,7 @@ parser = cmdutils.ArgumentParser()
 parser.add_argument('--debug',required=False, action='store_true', default=False, help='will stop on errors and show all relevant info')
 parser.add_argument('--reinit',required=False, action='store_true',help='reinit env')
 parser.add_argument('-p','--path',required=False, help='path to use e.g. for running tests')
+parser.add_argument('--noOsis',required=False, action='store_true',default=False,help='use this option to not send test results to osis')
 
 
 opts = parser.parse_args()
@@ -45,10 +46,13 @@ if opts.path==None:
 else:
     j.tools.testengine.paths=[opts.path]
 
-j.core.grid.init()
+if not opts.noOsis:
+    j.core.grid.init()
 
 j.tools.testengine.initTests()
+j.tools.testengine.noOsis=opts.noOsis
 j.tools.testengine.runTests(debug=opts.debug)
+
 
 
 j.application.stop()

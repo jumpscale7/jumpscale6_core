@@ -4,7 +4,7 @@ import hashlib
 import yaml
 import json
 
-from pymodel.serializers import YamlSerializer
+from JSModel.serializers import YamlSerializer
 
 class ActorObject(object):
     """
@@ -97,7 +97,7 @@ class ActorObject(object):
         actorObject = actorObjectManager.get()
 
         serializedModel = data[actorObjectTypeLen + 2:-16]
-        actorObject.model = actorObject.model.deserialize(j.db.pymodelserializers.thriftbase64, serializedModel)
+        actorObject.model = actorObject.model.deserialize(j.db.JSModelserializers.thriftbase64, serializedModel)
         return actorObject
 
 
@@ -110,7 +110,7 @@ class ActorObject(object):
         """
 
         actorObjectType = self.__class__.__name__
-        serializedModel = self.model.serialize(j.db.pymodelserializers.thriftbase64)
+        serializedModel = self.model.serialize(j.db.JSModelserializers.thriftbase64)
 
         data = struct.pack('B', self._DATA_TYPE_ID)
         data += struct.pack('B', len(actorObjectType))

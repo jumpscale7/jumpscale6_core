@@ -127,12 +127,12 @@ class _EnumerationContainer:
 
 enumerations = _EnumerationContainer()
 
-class PymodelEnumerationContainer:
+class JSModelEnumerationContainer:
     """
-    Dummy object to store the pymodel enumerators on it 
+    Dummy object to store the JSModel enumerators on it 
     """
     pass
-pymodelEnumerators =dict()
+JSModelEnumerators =dict()
 
 
 def generateRegisterItem():
