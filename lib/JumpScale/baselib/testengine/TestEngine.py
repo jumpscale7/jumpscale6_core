@@ -75,20 +75,24 @@ class Test():
 
     def execute(self,testrunname,debug=False):
         print "\n##TEST:%s %s"%(self.db.organization,self.db.name)
+        res = {'total': 0, 'error': 0, 'success': 0, 'failed': 0 }
         self.db.starttime = time.time() 
         self.db.state = 'OK'
         result = TestResult(debug)
         suite = unittest.defaultTestLoader.loadTestsFromModule(self.testmodule)
         suite.run(result)
         for test, buffer in result.tests.iteritems():
+            res['total'] += 1
             name = test._testMethodName[5:]
             self.db.output[name]=buffer.getvalue()
             if test in result.errors or test in result.failure:
                 if test in result.errors:
+                    res['error'] += 1
                     error = result.errors[test]
                     self.db.teststates[name] = 'ERROR'
                     self.db.state = 'ERROR'
                 else:
+                    res['failed'] += 1
                     error = result.failure[test]
                     self.db.teststates[name] = 'FAILURE'
                     if self.db.state != 'ERROR':
@@ -103,10 +107,12 @@ class Test():
                 print self.db.output[name]
                 print eco
             else:
+                res['success'] += 1
                 self.db.teststates[name] = 'OK'
             pass
         self.db.endtime = time.time()
         print ''
+        return res
 
     def __str__(self):
         out=""
@@ -154,12 +160,23 @@ class TestEngine():
             priority[test.db.priority].append(test)
         prio=priority.keys()
         prio.sort()
+        results = list()
         for key in prio:
             for test in priority[key]:
                 #now sorted
                 # print test
-                test.execute(testrunname=testrunname,debug=debug)
+                results.append(test.execute(testrunname=testrunname,debug=debug))
                 self.osis.set(test.db)
+        total = sum(x['total'] for x in results)
+        error = sum(x['error'] for x in results)
+        failed = sum(x['failed'] for x in results)
+        print "Ran %s tests" % total,
+        if error:
+            print '%s Error' % error,
+        if failed:
+            print '%s Failed' % failed,
+        print ''
+
 
     def testFile(self, testrunname, filepath):
         testdb=self.osis.new()
