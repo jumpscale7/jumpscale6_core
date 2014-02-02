@@ -63,13 +63,8 @@ class PortalServer:
             'session.type': 'file',
             'session.data_dir': '%s' % j.system.fs.joinPaths(j.dirs.varDir, "beakercache")
         }
-        # cfg = j.system.fs.joinPaths(self.cfgdir, 'portal.cfg')
-        # ini = j.tools.inifile.open(cfg)
-        # listenip = '0.0.0.0'
-        # if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
-        #     listenip = ini.getValue('main', 'listenip')
         self._router = SessionMiddleware(self.router, session_opts)
-        self._webserver = WSGIServer(('0.0.0.0', self.port), self._router)
+        self._webserver = WSGIServer((self.listenip, self.port), self._router)
 
         # wwwroot = wwwroot.replace("\\", "/")
         # while len(wwwroot) > 0 and wwwroot[-1] == "/":
@@ -132,6 +127,10 @@ class PortalServer:
         #     raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon, used here'%s'"%dbtype)
 
         # self.systemdb=j.db.keyvaluestore.getFileSystemStore("appserversystem",baseDir=replaceVar(ini.getValue("systemdb","dbdpath")))
+
+        self.listenip = '0.0.0.0'
+        if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
+            self.listenip = ini.getValue('main', 'listenip')
 
         self.port = int(ini.getValue("main", "webserverport"))
         self.addr = ini.getValue("main", "pubipaddr")
