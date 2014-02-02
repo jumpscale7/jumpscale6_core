@@ -73,8 +73,13 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:destip adr where we forward to e.g. a ssh server in DMZ
         param:destport port where we forward to e.g. a ssh server in DMZ
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_forward_delete")
+        fwobj = self.osisclient.get(fwid)
+        for rule in fwobj.tcpForwardRules:
+            if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport:
+                fwobj.tcpForwardRules.remove(rule)
+                return True
+
+        return False
     
 
     def fw_forward_list(self, fwid, gid, **kwargs):
@@ -85,9 +90,12 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_forward_list")
-    
+        fwobj = self.osisclient.get(fwid)
+        result = list()
+        for rule in fwobj.tcpForwardRules:
+            result.append([rule.fromPort, rule.toAddr, rule.toPort])
+
+        return result
 
     def fw_list(self, gid, domain, **kwargs):
         """
