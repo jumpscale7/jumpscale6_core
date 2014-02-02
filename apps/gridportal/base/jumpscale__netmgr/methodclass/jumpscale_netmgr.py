@@ -20,8 +20,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_check")
+        return True
     
 
     def fw_create(self, domain, name, gid, nid, masquerade, **kwargs):
@@ -32,24 +31,22 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:nid node id
         param:masquerade do you want to allow masquerading?
         """
-        #put your code here to implement this method
-        obj=self.osisclient.new()
-        obj.domain=domain
-        #@todo complete + all other methods
-        from IPython import embed
-        print "DEBUG NOW fw_create"
-        embed()
-        
-        raise NotImplementedError ("not implemented method fw_create")
-    
+        fwobj = self.osisclient.new()
+        fwobj.domain = domain
+        fwobj.name = name
+        fwobj.gid = gid
+        fwobj.nid = nid
+        fwobj.masquerade = masquerade
+        self.osisclient.set(fwobj)
+        return fwobj.guid
 
     def fw_delete(self, fwid, gid, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_delete")
+        self.osisclient.delete(fwid)
+        return True
     
 
     def fw_forward_create(self, fwid, gid, fwport, destip, destport, **kwargs):
@@ -60,9 +57,13 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:destip adr where we forward to e.g. a ssh server in DMZ
         param:destport port where we forward to e.g. a ssh server in DMZ
         """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method fw_forward_create")
-    
+        fwobj = self.osisclient.get(fwid)
+        rule = fwobj.new_tcpForwardRule()
+        rule.fromPort = fwport
+        rule.toAddr = destip
+        rule.toPort = destport
+        self.osisclient.set(fwobj)
+        return True
 
     def fw_forward_delete(self, fwid, gid, fwport, destip, destport, **kwargs):
         """
