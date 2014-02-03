@@ -16,7 +16,7 @@
         """     
         """
         var:gid int,,grid id
-        var:domain str,,if not specified then all domains
+        var:domain str,,if not specified then all domains @tags: optional
 
 
     method:fw_delete @noauth

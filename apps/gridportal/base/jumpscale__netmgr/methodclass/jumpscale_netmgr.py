@@ -97,7 +97,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
 
         return result
 
-    def fw_list(self, gid, domain, **kwargs):
+    def fw_list(self, gid, domain=None, **kwargs):
         """
         param:gid grid id
         param:domain if not specified then all domains
@@ -105,8 +105,11 @@ class jumpscale_netmgr(j.code.classGetBase()):
         result = list()
         vfws = self.osisclient.list()
         for vfwid in vfws:
-            vfw = self.osisclient.get(vfwid)        
-            result.append(vfw)
+            vfw = self.osisclient.get(vfwid)
+            if not domain and str(vfw.gid) == str(gid):
+                result.append(vfw)
+            if domain and vfw.domain == domain and str(vfw.gid) == str(gid):
+                result.append(vfw)
         return result
     
 
@@ -151,11 +154,14 @@ class jumpscale_netmgr(j.code.classGetBase()):
         vfws = self.osisclient.get(wsid)
         wsfr = vfws.wsForwardRules
         for rule in wsfr:
-            if rule['url'] == sourceurl:
+            if rule.url == sourceurl:
+                desturls = desturls.split(',')
+                urls = rule.toUrls.split(',')
                 for dest in desturls:
-                    if dest in rule['toUrls']:
-                        rule['toUrls'].remove(dest)
-                if len(rule['toUrls']) == 0:
+                    if dest in rule.toUrls:
+                        urls.remove(dest)
+                rule.toUrls = ','.join(urls)
+                if len(urls) == 0:
                     wsfr.remove(rule)
         return True
     
@@ -173,6 +179,6 @@ class jumpscale_netmgr(j.code.classGetBase()):
         vfws = self.osisclient.get(wsid)
         wsfr = vfws.wsForwardRules
         for rule in wsfr:
-            result.append([rule['url'], rule['toUrls']])
+            result.append([rule.url, rule.toUrls])
         return result
     
