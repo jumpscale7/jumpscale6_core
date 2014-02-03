@@ -2,7 +2,7 @@
     """
     net manager
     """    
-    method:fw_create
+    method:fw_create @noauth
         """     
         """
         var:domain str,,needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
@@ -12,20 +12,20 @@
         var:masquerade int,,do you want to allow masquerading?
         #result:int #unique id of firewall
 
-    method:fw_list
+    method:fw_list @noauth
         """     
         """
         var:gid int,,grid id
         var:domain str,,if not specified then all domains
 
 
-    method:fw_delete
+    method:fw_delete @noauth
         """     
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
 
-    method:fw_check
+    method:fw_check @noauth
         """     
         will do some checks on firewall to see is running, is reachable over ssh, is connected to right interfaces
         """
@@ -33,19 +33,19 @@
         var:gid int,,grid id
 
 
-    method:fw_stop
+    method:fw_stop @noauth
         """     
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
 
-    method:fw_start
+    method:fw_start @noauth
         """     
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
         
-    method:fw_forward_list
+    method:fw_forward_list @noauth
         """     
         list all portformarding rules,
         is list of list [[$fwport,$destip,$destport]]
@@ -54,7 +54,7 @@
         var:fwid int,,firewall id
         var:gid int,,grid id
 
-    method:fw_forward_create
+    method:fw_forward_create @noauth
         """     
         """
         var:fwid int,,firewall id
@@ -63,7 +63,7 @@
         var:destip str,,adr where we forward to e.g. a ssh server in DMZ
         var:destport int,,port where we forward to e.g. a ssh server in DMZ
 
-    method:fw_forward_delete
+    method:fw_forward_delete @noauth
         """     
         """
         var:fwid int,,firewall id
@@ -72,8 +72,8 @@
         var:destip str,,adr where we forward to e.g. a ssh server in DMZ
         var:destport int,,port where we forward to e.g. a ssh server in DMZ
 
-    method:ws_forward_list
-        """     
+    method:ws_forward_list @noauth
+        """
         list all loadbalancing rules (HTTP ONLY),
         ws stands for webserver
         is list of list [[$sourceurl,$desturl],..]
@@ -82,7 +82,7 @@
         var:wsid int,,firewall id (is also the loadbalancing webserver)
         var:gid int,,grid id
 
-    method:ws_forward_create
+    method:ws_forward_create @noauth
         """     
         """
         var:wsid int,,firewall id
@@ -90,7 +90,7 @@
         var:sourceurl str,,url which will match (e.g. http://www.incubaid.com:80/test/)
         var:desturls str,,url which will be forwarded to (e.g. http://192.168.10.1/test/) can be more than 1 then loadbalancing; if only 1 then like a portforward but matching on url
 
-    method:ws_forward_delete
+    method:ws_forward_delete @noauth
         """     
         """
         var:wsid int,,firewall id
