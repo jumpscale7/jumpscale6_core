@@ -37,7 +37,6 @@ def toolStripNonAsciFromText(text):
     """
     return SAFE_CHARS_REGEX.sub("", text)
 
-
 class LogUtils(object):
     """
     Some log related utilities.
@@ -89,7 +88,6 @@ class LogUtils(object):
             def decorator(func):
                 return func
         return decorator
-
 
 class LogItem(object):
     def __init__(self, message="", category="", tags="", level=5, jid="", parentjid="", masterjid="", private=False, epoch=0):
@@ -216,7 +214,7 @@ class LogHandler(object):
     def addLogTargetLocalFS(self):
         self.logTargetAdd(LogTargetFS())
 
-    def setLogTargetLogForwarder(self, serverip=None, bulk=False):
+    def setLogTargetLogForwarder(self, serverip="127.0.0.1",port=7767):
         """
         there will be only logging to stdout (if q.loghandler.consoleloglevel set properly)
         & to the LogForwarder
@@ -225,7 +223,7 @@ class LogHandler(object):
         self.logs=[]
         self.inlog=False
         self.order=0
-        self.logTargetLogForwarder = LogTargetLogForwarder(serverip, bulk)
+        self.logTargetLogForwarder = LogTargetLogForwarder(serverip=serverip, port=port)
 
     def disable(self):
         self.enabled = False
@@ -276,7 +274,6 @@ class LogHandler(object):
             return
             
         log = LogItem(message=message, level=level, category=category, tags=tags, jid=jid, parentjid=parentjid,masterjid=masterjid, private=private)
-
 
         if level < (self.consoleloglevel + 1):
 
