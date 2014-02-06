@@ -60,10 +60,11 @@ class LogTargetLogForwarder():
             eco.pop('tb', None)
             eco = j.errorconditionhandler.getErrorConditionObject(eco)
             if self.checkTarget():
-                self.redisqueue.put(ujson.dumps(eco.__dict__))
-            except Exception, e:
-                print 'Failed to log in %s error: %s' % (self, e)
-                self.connected = False
+                try:
+                    self.redisqueue.put(ujson.dumps(eco.__dict__))
+                except Exception, e:
+                    print 'Failed to log in %s error: %s' % (self, e)
+                    self.connected = False
 
     def log(self, log):
         """
