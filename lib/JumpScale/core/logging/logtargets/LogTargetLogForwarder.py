@@ -1,9 +1,6 @@
 # import socket
 from JumpScale import j
-from gevent import Greenlet
-import gevent
 import time
-import Queue
 import ujson
 
 TIMEOUT = 5
