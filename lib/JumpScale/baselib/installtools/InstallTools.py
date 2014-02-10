@@ -21,7 +21,7 @@ class InstallTools():
     def __init__(self):
         if platform.system().lower()=="windows":
             self.TYPE="WIN"
-            self.BASE="%s/"%os.environ["QBASE"].replace("\\","/")
+            self.BASE="%s/"%os.environ["JBASE"].replace("\\","/")
             while self.BASE[-1]=="/":
                 self.BASE=self.BASE[:-1]
             self.BASE+="/"
