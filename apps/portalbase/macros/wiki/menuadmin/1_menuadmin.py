@@ -11,7 +11,7 @@ def main(j, args, params, tags, tasklet):
     spacestxt=""
     for item in sorted(spaces):
         if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1:
-            name = j.core.portal.runningPortal.webserver.getSpace(item).model.id
+            name = j.core.portal.runningPortal.webserver.getSpace(item, ignore_doc_processor=True).model.id
             spacestxt += "%s:/%s\n" % (name, item.lower().strip("/"))
 
 
