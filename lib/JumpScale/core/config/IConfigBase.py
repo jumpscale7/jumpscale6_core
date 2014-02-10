@@ -383,6 +383,11 @@ def generateGroupConfigManagementMethods(**kwargs):
         # return list of names of ConfigManagementItem instances
         return self._sortConfigList(j.config.getConfig(self._CONFIGTYPE))
 
+    def saveAll(self):
+        for itemname in self.list():
+            item = self._ITEMCLASS(self._CONFIGTYPE, itemname, load=True, validate=False)
+            item.save()
+
     def getConfig(self, itemname=None):
         """
         Get config dictionary for a [%(description)s]
@@ -474,7 +479,7 @@ def generateGroupConfigManagementMethods(**kwargs):
                 item.commit()
 
 
-    return {"add": add, "list": list, "getConfig": getConfig, "review": review, "show": show, "remove": remove, "configure": configure, "_sortConfigList":_sortConfigList}
+    return {"add": add, "list": list, "getConfig": getConfig, "review": review, "show": show, "remove": remove, "configure": configure, "_sortConfigList":_sortConfigList, "saveAll": saveAll}
 
 
 
@@ -618,7 +623,6 @@ def generateSingleConfigManagementMethods(**kwargs):
         return j.config.getConfig(self._CONFIGTYPE)[SINGLE_ITEM_SECTION_NAME]
 
     getConfig.__doc__ = getConfig.__doc__ % kwargs
-
     return {"review": review, "show": show, "configure": configure, "setDefaultValues": setDefaultValues, "getConfig": getConfig}
 
 

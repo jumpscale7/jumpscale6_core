@@ -18,6 +18,7 @@ class Bitbucket:
 
     def __init__(self):
         self.config=BitbucketConfigManagement()
+        self.config.saveAll()
         self.connections={}
         j.logger.consolelogCategories.append("bitbucket")
 
