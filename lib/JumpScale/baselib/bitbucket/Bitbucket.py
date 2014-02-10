@@ -22,13 +22,10 @@ class Bitbucket:
         j.logger.consolelogCategories.append("bitbucket")
 
         hgpath = '{0}/.hgrc'.format(os.path.expanduser('~'))
-        if j.system.fs.exists(hgpath):
-            C=j.system.fs.fileGetContents(hgpath)
-        else:
-            C=''
-        if C.find("[hostfingerprints]")==-1:
-            C+="\n[hostfingerprints]\nbitbucket.org =24:9c:45:8b:9c:aa:ba:55:4e:01:6d:58:ff:e4:28:7d:2a:14:ae:3b\n"
-            j.system.fs.writeFile(hgpath,C)
+        hgini = j.tools.inifile.open(hgpath)
+        hgini.addSection('hostfingerprints')
+        if not hgini.checkParam('hostfingerprints', 'bitbucket.org'):
+            hgini.addParams('hostfingerprints', '24:9c:45:8b:9c:aa:ba:55:4e:01:6d:58:ff:e4:28:7d:2a:14:ae:3b')
 
     def getRepoInfo(self, accountName, repoName):
         url = "https://bitbucket.org/api/1.0/repositories/%s/%s" % (accountName, repoName)
@@ -114,7 +111,7 @@ class Bitbucket:
         # elif repoInfo == 403: #forbidden
         
         if login not in ('hg', 'ssh'):
-            url = " https://%sbitbucket.org/%s/" % (loginInfo, accountName)
+            url = " https://bitbucket.org/%s/" % (accountName)
         else:
             url=" ssh://hg@bitbucket.org/%s/" % (accountName)
         # if login==None or login.strip()=="":
