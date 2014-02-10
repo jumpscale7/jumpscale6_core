@@ -125,10 +125,6 @@ class PlatformTypes():
         #         _platform = PlatformType.UNKNOWN
 
         elif sys.platform.startswith("win"):
-            from IPython import embed
-            print "DEBUG NOW todo: find a way to distinguish win32 from win64 in jpackages platform class"
-            embed()
-                   
             _platform = "win64"
 
         elif sys.platform.startswith("cygwin"):

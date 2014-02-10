@@ -30,7 +30,7 @@ from JumpScale.core.enumerators.WinRegHiveType import WinRegHiveType
 from JumpScale.core.enumerators.WinRegValueType import WinRegValueType
 
 from JumpScale import j
-from JumpScale.core.inifile.IniFile import IniFile
+# from JumpScale.core.inifile.IniFile import IniFile
 import shutil
 
 
