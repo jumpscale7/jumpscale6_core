@@ -144,7 +144,7 @@ class ControllerCMDS():
                 name=j.system.fs.getBaseName(path2)
                 name=name.replace(".py","").lower()
 
-            source = inspect.getsource(script.action)            
+            source = inspect.getsource(script)
             t=self.jumpscriptclient.new(name=name,action=script.action)
             t.name=name
             t.author=getattr(script, 'author', "unknown")

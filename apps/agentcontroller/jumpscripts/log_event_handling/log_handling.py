@@ -50,7 +50,7 @@ def action():
     while log<>None:
         log=ujson.decode(log)
         log = j.logger.getLogObjectFromDict(log)
-        log= loghandlingTE.executeV2(logobj=log)      
+        log= loghandlingTE.executeV2(logobj=log)
         if log<>None:
             out.append(log.__dict__)
         if len(out)>500:
@@ -64,9 +64,9 @@ def action():
     while eco<>None:
         eco=ujson.decode(eco)
         eco["epoch"] = int(time.time())
-        eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)        
+        eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
         eco= eventhandlingTE.executeV2(eco=eco)
         if hasattr(eco,"tb"):
-            eco.__dict__.pop("tb")        
+            eco.__dict__.pop("tb")
         OSISclientEco.set(eco.__dict__)
         eco=redisqueueEco.get_nowait()
