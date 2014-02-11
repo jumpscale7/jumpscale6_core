@@ -12,10 +12,8 @@ j.application.start("jumpscale:agentcontroller")
 j.application.initGrid()
 
 j.logger.consoleloglevel = 2
-
+import JumpScale.baselib.redis
 import inspect
-
-import geventredis
 
 # class Job():
 #     def __init__(self, controller,sessionid,jsname, jsorganization, roles,args,timeout,jscriptid,lock):
@@ -77,8 +75,8 @@ class ControllerCMDS():
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
-
-        self.redis = geventredis.connect('127.0.0.1', 7768)
+        
+        self.redis = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
 
         j.logger.setLogTargetLogForwarder()
 
@@ -156,34 +154,49 @@ class ControllerCMDS():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
+
+            if j.system.fs.getDirName(path2,True)[0]=="_": #skip dirs starting with _
+                continue
+
             try:
-                script = imp.load_source('JumpScale.jumpscript_%s' % j.tools.hash.md5_string(path2), path2)
+                fname="%s_%s"%(j.system.fs.getParentDirName(j.system.fs.getDirName(path2)),j.system.fs.getBaseName(path2).replace(".py",""))                
+                script = imp.load_source('jumpscript_pm_%s' % fname, path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
                 # print msg
                 j.errorconditionhandler.raiseInputError(msgpub="",message=msg,category="agentcontroller.load",tags="",die=False)
+                j.application.stop()
                 continue
 
             name = getattr(script, 'name', "")
-            category = getattr(script, 'category', "unknown")
-            organization = getattr(script, 'organization', "unknown")
-            author = getattr(script, 'author', "unknown")
-            license = getattr(script, 'license', "unknown")
-            version = getattr(script, 'version', "1.0")
-            roles = getattr(script, 'roles', ["*"])
+            if name=="":
+                name=j.system.fs.getBaseName(path2)
+                name=name.replace(".py","").lower()
+
             source = inspect.getsource(script.action)            
-            t=self.jumpscriptclient.new(name=name,category=category,organization=organization,action=script.action)
-            t.author=author
-            t.license=license
-            t.version=version
-            t.roles=roles
+            t=self.jumpscriptclient.new(name=name,action=script.action)
+            t.name=name
+            t.author=getattr(script, 'author', "unknown")
+            t.organization=getattr(script, 'organization', "unknown")
+            t.category=getattr(script, 'category', "unknown")
+            t.license=getattr(script, 'license', "unknown")
+            t.version=getattr(script, 'version', "1.0")
+            t.roles=getattr(script, 'roles', ["*"])
             t.source=source
             t.path=path2
             t.descr=script.descr
+            t.queue=getattr(script, 'queue',"default")
+            t.async = getattr(script, 'async',False)
+            t.period=getattr(script, 'period',0)
+            t.order=getattr(script, 'order', 1)
+            t.enable=getattr(script, 'enable', True)
+            t.gid=getattr(script, 'gid', j.application.whoAmI.gid)
+
+
             self.jumpscriptclient.set(t)
-            print "found jumpscript:%s " %("%s_%s" % (organization, name))
-            self.jumpscripts["%s_%s" % (organization, name)] = True
+            print "found jumpscript:%s " %("%s_%s" % (t.organization, t.name))
+            # self.jumpscripts["%s_%s_%s" % (t.gid,t.organization, t.name)] = True
 
             self.redis.set("jumpscripts_%s_%s_%s"%(t.gid,t.organization,t.name),json.dumps(t.__dict__))
 

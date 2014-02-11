@@ -12,7 +12,7 @@ login="root"
 client= j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
 
 blob=""
-for i in range(1024*1024*4):
+for i in range(1024):#*1024*4):
     blob+="A"
 #4MB
 
@@ -23,7 +23,13 @@ client.set(hash,blob,repoId="repo1")
 client.set(hash,blob,repoId="repo2")
 blob2=client.get(hash)
 
+md=client.getMD(hash)
+print md
+
 blob2=client.delete(hash)
+
+md=client.getMD(hash)
+print md
 
 assert blob2==blob
 

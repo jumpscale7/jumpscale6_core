@@ -141,6 +141,8 @@ cmds.daemon.parentdaemon=daemon
 
 cmds._init()
 
+cmds.jumpscripts.loadJumpscripts()
+
 daemon.start()
 
 j.application.stop()

@@ -35,38 +35,41 @@ class JumpscriptsCmds():
 
         agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
 
+        ipaddr=j.application.config.get("grid.master.ip")        
+
         self.agentcontroller_client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=self.adminuser , passwd=self.adminpasswd, \
             category="agent",id=agentid,timeout=36000)       
+
 
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
-            #ASK agentcontroller about known jumpscripts 
-            from IPython import embed
-            print "DEBUG NOW ASK agentcontroller about known jumpscripts "
-            embed()
-            
-            t=None #@todo
+        #ASK agentcontroller about known jumpscripts 
+        from IPython import embed
+        print "DEBUG NOW ASK agentcontroller about known jumpscripts "
+        embed()
+        
+        t=None #@todo
 
-            print "found jumpscript:%s " %("%s_%s" % (organization, name))
-            self.jumpscripts["%s_%s" % (organization, name)] = t
-            if not self.jumpscriptsByPeriod.has_key(period):
-                self.jumpscriptsByPeriod[period]=[]
-            self.jumpscriptsByPeriod[period].append(t)
+        print "found jumpscript:%s " %("%s_%s" % (organization, name))
+        self.jumpscripts["%s_%s" % (organization, name)] = t
+        if not self.jumpscriptsByPeriod.has_key(period):
+            self.jumpscriptsByPeriod[period]=[]
+        self.jumpscriptsByPeriod[period].append(t)
 
-            #@todo remember in redis (NOT NEEDED NOW)
-            #self.redis.set("jumpscripts_%s_%s"%(t.organization,t.name),ujson.dumps(t.__dict__))            
+        #@todo remember in redis (NOT NEEDED NOW)
+        #self.redis.set("jumpscripts_%s_%s"%(t.organization,t.name),ujson.dumps(t.__dict__))            
 
-            #remember for worker
-            tpath=j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts",t.organization,"%s.py"%t.name)
+        #remember for worker
+        tpath=j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts",t.organization,"%s.py"%t.name)
 
-            content="""
+        content="""
 from JumpScale import j
 """
-            content+=t.source
-            j.system.fs.writeFile(filename=tpath,contents=content)
+        content+=t.source
+        j.system.fs.writeFile(filename=tpath,contents=content)
 
         self._killGreenLets()       
         self._configureScheduling()

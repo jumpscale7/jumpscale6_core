@@ -54,7 +54,18 @@ class BlobserverCMDS():
             fp.close()
         return data2
 
+    def getMD(self,key,session=None):
+        backuppath=j.system.fs.joinPaths(self.STORpath,key[0:2],key[2:4],key)
+        with open(backuppath) as fp:
+            data2 = fp.read()
+            fp.close()
+        return data2        
+
     def delete(self,key,repoId="",session=None):
+        from IPython import embed
+        print "DEBUG NOW ppp"
+        embed()
+        
         if key<>"" and not self.exists(key):
             return 
         backuppath=j.system.fs.joinPaths(self.STORpath,key[0:2],key[2:4],key)
