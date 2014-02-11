@@ -13,9 +13,9 @@ from gitlab import Gitlab
 
 class GitlabInstance(Gitlab):
 
-    def __init__(self, addr,login,passwd):
+    def __init__(self, addr, login, passwd, token):
         self.addr=addr
-        Gitlab.__init__(self,addr)
+        Gitlab.__init__(self, addr, token=token)
         # self.accountPathLocal = j.system.fs.joinPaths("/opt/code",accountName)
         # j.system.fs.createDir(self.accountPathLocal)
         # self._gitlab = gitlab.Gitlab(self.addr)

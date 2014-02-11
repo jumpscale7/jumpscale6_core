@@ -9,6 +9,7 @@ import requests
 import json
 import markdown
 from . import exceptions
+from JumpScale import j
 
 
 class Gitlab(object):
@@ -96,19 +97,13 @@ class Gitlab(object):
             raise RuntimeError("Could not get users for cache")
 
     def _getGroupsInit(self):
-        self.users2id={}
+        self.groups2id={}
         items=self.getgroups()
         result=[]
         if j.basetype.list.check(items):
             for item in items:
-                from IPython import embed
-                print "DEBUG NOW iooiigroups"
-                embed()
-                
-                if item["state"]=="active":
-                    result.append([item["username"],item["id"]])
-                    key=item["username"]
-                self.groups2id[key]=item["id"]
+                result.append([item["name"],item["id"]])
+                self.groups2id[item["name"]]=item["id"]
             return result
         else:
             raise RuntimeError("Could not get users for cache")            

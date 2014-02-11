@@ -25,7 +25,7 @@ class GitlabFactory:
 
     def get(self,account):
         config=self._accountGetConfig(account)
-        return GitlabInstance(config["addr"],config["login"],config["passwd"])
+        return GitlabInstance(config["addr"], config["login"], config["passwd"], config["token"])
 
     def log(self,msg,category="",level=5):
         category="gitlab.%s"%category
