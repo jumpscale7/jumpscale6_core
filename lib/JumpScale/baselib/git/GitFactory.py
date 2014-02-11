@@ -1,12 +1,12 @@
-from HgLibClient import HgLibClient
+from GitClient import GitClient
 from JumpScale import j
 
 
-class HgLibFactory:
+class GitFactory:
     def __init__(self):
-        j.logger.consolelogCategories.append("bitbucket")
+        j.logger.consolelogCategories.append("git")
 
-    def getClient(self, hgbasedir, remoteUrl="", branchname=None, cleandir=False):
+    def getClient(self, basedir, remoteUrl="", branchname=None, cleandir=False):
         """
         return a mercurial tool which you can help to manipulate a hg repository
         @param base dir where local hgrepository will be stored
@@ -15,9 +15,9 @@ class HgLibFactory:
         """
         if not isinstance(cleandir, bool):
             raise ValueError("cleandir needs to be boolean")
-        return HgLibClient(hgbasedir, remoteUrl, branchname=branchname, cleandir=cleandir)
+        return GitClient(basedir, remoteUrl, branchname=branchname, cleandir=cleandir)
 
     def log(self,msg,category="",level=5):
-        category="mercurial.%s"%category
+        category="git.%s"%category
         category=category.rstrip(".")
         j.logger.log(msg,category=category,level=level)

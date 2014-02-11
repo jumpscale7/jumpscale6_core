@@ -2,6 +2,7 @@
 """
 pyapi-gitlab, a gitlab python wrapper for the gitlab API
 by Itxaka Serrano Garcia <itxakaserrano@gmail.com>
+now changes also by jumpscale team
 """
 
 import requests

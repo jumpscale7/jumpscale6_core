@@ -61,11 +61,11 @@ class GitlabFactory:
 
         return self.config.getConfig(accountName)
 
-    def getGitClient(self, accountName, repoName, branch='default'):
+    def getGitlabClient(self, accountName, repoName, branch='default'):
         url, accountLogin, accountPasswd = self._getRepoInfo(accountName, repoName, branch)
         if self.connections.has_key(repoName):
             return self.connections[repoName]
-        self.connections[repoName] = GitlabConnection(accountName,url,login=accountLogin,passwd=accountPasswd)
+        self.connections[repoName] = GitlabInstance(accountName,url,login=accountLogin,passwd=accountPasswd)
         return self.connections[repoName]
 
     def getRepoInfo(self, accountName, repoName):

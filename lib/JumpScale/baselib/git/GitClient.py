@@ -7,6 +7,9 @@ import JumpScale.baselib.codetools
 import os
 # import hashlib
         
+##IMPORTANT
+#use http://packages.python.org/GitPython/0.3.2/tutorial.html#initialize-a-repo-object as lib
+
 class GitClient:    
 
     # _configs = ['ui.merge=internal:merge']  @todo is this ok to remove? (kds)
