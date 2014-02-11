@@ -38,6 +38,8 @@ class Jumpscript(OsisBaseObject):
             self.enabled=True
             self.async=True
             self.period=0
+            self.order=0
+            self.queue=""
 
     def setArgs(self,action):
         import inspect

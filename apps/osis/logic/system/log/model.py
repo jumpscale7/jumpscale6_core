@@ -2,10 +2,8 @@ from JumpScale import j
 
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 
-class Stat(OsisBaseObject):
+class Log(OsisBaseObject):
 
     """
     """
-
-    def __init__(self, ddict={}):
-        pass
+    pass

@@ -14,15 +14,15 @@ class mainclass(OSISStore):
         # self.elasticsearch=j.core.grid.getLogTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
 
     def set(self,key,value):
-        docs = []
-        for logobject in ujson.loads(value):
-            logobject["id"] = j.base.idgenerator.generateGUID().replace('-', '')
-            docs.append(logobject)
+        ##no manipulation so no longer needed
+        # docs = []
+        # for logobject in value:            
+        #     docs.append(logobject)
 
-        # print "batch:%s"%len(docs)            
-        #self.elasticsearch.bulk_index(index="clusterlog_%s_%s"%(logobject["bid"],logobject["gid"]), doc_type="json", docs=docs, id_field="id")                        
-        if docs:
-            self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=docs, id_field="id")                        
+        # print "batch log:%s"%len(value)            
+        #self.elasticsearch.bulk_index(index="clusterlog_%s_%s"%(logobject["bid"],logobject["gid"]), doc_type="json", docs=docs, id_field="id")                                                    
+        if len(value)>0:
+            self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=value, id_field="guid")                        
         return ["",True,True]
 
     def find(self, query, start=0, size=100):

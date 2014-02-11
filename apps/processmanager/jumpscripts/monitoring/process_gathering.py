@@ -233,7 +233,6 @@ def action():
             cacheobj=cacheobjPrev
 
             #@todo NEED TO SEE FOR OTHER RELEVANT ITEMS TOO TO AGGREGATE
-            cacheobj.db.id=process_key
 
         cacheobj.db.statkey=process_key
         result[process_key]=cacheobj    

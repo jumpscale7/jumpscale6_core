@@ -11,11 +11,14 @@ version = "1.0"
 category = "monitoring.machine"
 period = 20 #always in sec
 order = 1
-enable=True
-async=False
+enable=False
+async=True
 
 from xml.etree import ElementTree
-import JumpScale.lib.qemu_img
+try:
+    import JumpScale.lib.qemu_img
+except:
+    enable=False
 
 try:
     import libvirt

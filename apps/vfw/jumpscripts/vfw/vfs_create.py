@@ -12,7 +12,7 @@ organization = "jumpscale"
 author = "zains@incubaid.com"
 license = "bsd"
 version = "1.0"
-roles = ["*"]
+roles = ["vfw.host"]
 
 
 def action(name, base):

@@ -9,7 +9,7 @@ author = "khamisr@incubaid.com"
 version = "1.0"
 
 gid, nid, _ = j.application.whoAmI
-roles = ["node.%s.%s" % (gid, nid)]
+roles = ["grid.node"]
 
 
 def action(domain, pname, version):

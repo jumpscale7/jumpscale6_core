@@ -215,6 +215,13 @@ class OSISStore(object):
                 value=self.json.dumps(value)
                 new=None
                 changed=None
+        else:
+            new=True
+            changed=True
+            from IPython import embed
+            print "DEBUG NOW osisstoreset should be dict"
+            embed()
+            
         
         #not an osis obj, need to stor as raw value, there will be no indexing
         self.db.set(self.dbprefix, key=key, value=value)

@@ -8,3 +8,6 @@ from .ZDaemonFactory import ZDaemonFactory
 
 j.base.loader.makeAvailable(j, 'core')
 j.core.zdaemon = ZDaemonFactory()
+
+j.base.loader.makeAvailable(j, 'servers')
+j.servers.zdaemon = ZDaemonFactory()

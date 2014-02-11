@@ -19,7 +19,7 @@ class Process(OsisBaseObject):
             self.jpdomain= ""
             self.jpname= ""
             self.pname = name  #process name
-            self.sname= "" #name as specifief in startup manager
+            self.sname= "" #name as specified in startup manager
             self.ports = []
             self.instance = instance
             if systempid<>0:
@@ -51,9 +51,8 @@ class Process(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        # C="%s_%s_%s_%s_%s_%s"% (self.gid,self.nid, self.jpdomain,self.jpname,self.instance,self.pname)
-        # return j.tools.hash.md5_string(C)
-        return self.getSetGuid()
+        C="%s_%s_%s_%s_%s_%s_%s_%s"% (self.gid,self.nid, self.jpdomain,self.jpname,self.workingdir,self.cmd,self.pname,self.sname)
+        return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):
         """
@@ -61,6 +60,7 @@ class Process(OsisBaseObject):
         """
         self.gid = int(self.gid)
         self.id = int(self.id)
+        
         if self.sname<>"":
             key="%s_%s"%(self.jpdomain,self.sname)
         else:

@@ -34,7 +34,7 @@ class DaemonCMDS(object):
     def getpubkeyserver(self, session):
         return self.daemon.keystor.getPubKey(self.daemon.sslorg, self.daemon.ssluser, returnAsString=True)
 
-    def registersession(self, sessiondata, session, ssl):
+    def registersession(self, sessiondata, ssl,session):
         """
         @param sessiondata is encrypted data (SSL)
         """
@@ -63,7 +63,7 @@ class DaemonCMDS(object):
         eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
         self.daemon.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
 
-    def introspect(self, session, cat):
+    def introspect(self, cat,session=None):
         methods = {}
         interfaces = self.daemon.cmdsInterfaces[cat]
         for interface in interfaces:
@@ -171,6 +171,8 @@ class Daemon(object):
             eco.level = 2
             # print eco
             # eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
+            if len(str(data))>1024:
+                data="too much data to show."
             eco.errormessage = "ERROR IN RPC CALL %s: %s\nData:%s\n"%(cmdkey,eco.errormessage ,data)
             j.errorconditionhandler.processErrorConditionObject(eco)
             eco.__dict__.pop("tb")

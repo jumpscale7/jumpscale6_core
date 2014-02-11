@@ -98,11 +98,11 @@ class GridFactory():
                 instance=instance)
             obj2.workingdir=workingdir
 
+
             grid_guid,new2,changed2=clientprocess.set(obj2)
             grid_pid=int(grid_guid.split("_")[1])
 
-        self.pid = j.application.systempid
-            # self.processObject=obj
+        self.pid = grid_pid
 
         WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
         j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=grid_pid)
