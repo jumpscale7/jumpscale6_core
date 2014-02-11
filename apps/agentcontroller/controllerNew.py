@@ -13,36 +13,6 @@ j.application.initGrid()
 
 j.logger.consoleloglevel = 2
 import JumpScale.baselib.redis
-import inspect
-
-# class Job():
-#     def __init__(self, controller,sessionid,jsname, jsorganization, roles,args,timeout,jscriptid,lock):
-
-#         self.event = Event()
-#         self.controller=controller
-#         gid = j.application.whoAmI.gid
-
-#         self.db=self.controller.jobclient.new(sessionid=sessionid, \
-#             jsorganization=jsorganization, roles=roles, \
-#             args=args, timeout=timeout, jscriptid=jscriptid,lock=lock,\
-#             jsname=jsname,gid=gid)
-
-#     def wait(self):
-#         self.event.wait()
-
-#     def done(self):
-#         self.event.set()
-
-#     def save(self):
-#         guid, new, changed = self.controller.jobclient.set(self.db)
-#         if new or changed:
-#             self.db.load(self.controller.jobclient.get(guid))
-
-#     def __repr__(self):
-#         return str(self.db.__dict__)
-
-#     __str__ = __repr__
-
 
 class ControllerCMDS():
 
@@ -71,7 +41,7 @@ class ControllerCMDS():
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
 
-        self.osisclient = j.core.osis.getClient(user="root",gevent=True)
+        self.osisclient = j.core.osis.getClient(user=self.adminuser,gevent=True)
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
@@ -198,21 +168,22 @@ class ControllerCMDS():
             print "found jumpscript:%s " %("%s_%s" % (t.organization, t.name))
             # self.jumpscripts["%s_%s_%s" % (t.gid,t.organization, t.name)] = True
 
-            self.redis.set("jumpscripts_%s_%s_%s"%(t.gid,t.organization,t.name),json.dumps(t.__dict__))
+            redis = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768, False)
+            redis.set("jumpscripts_%s_%s_%s"%(t.gid,t.organization,t.name),json.dumps(t.__dict__))
+            key = "%s_%s_%s" % (j.application.whoAmI.gid,t.organization, t.name)
+            self.jumpscripts[key] = t
 
         
     def getJumpScript(self, organization, name,gid=None, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-            gid,nid=session.agentid.split("_")
+            gid = session.gid
+            nid = session.nid
         else:
             if gid==None:
                 gid=j.application.whoAmI.gid
 
         key = "%s_%s_%s" % (gid,organization, name)
-        from IPython import embed
-        print "DEBUG NOW oooo111"
-        embed()
         
         if key in self.jumpscripts:
             return self.jumpscripts[key]
@@ -222,7 +193,8 @@ class ControllerCMDS():
     def existsJumpScript(self, organization, name,gid=None, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-            gid,nid=session.agentid.split("_")
+            gid = session.gid
+            nid = session.nid
         else:
             if gid==None:
                 gid=j.application.whoAmI.gid
@@ -254,13 +226,9 @@ class ControllerCMDS():
             if cat and entry.category != cat:
                 return False
             return True
-        from IPython import embed
-        print "DEBUG NOW listJumpScripts"
-        embed()
-        
         return [[t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
-    def executeJumpscript(self, organization, name, role, args={},all=False, timeout=600,session=None,wait=True,lock=""):
+    def executeJumpscript(self, organization, name, role, args={},all=False, timeout=600,wait=True,lock="", session=None):
         """
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents

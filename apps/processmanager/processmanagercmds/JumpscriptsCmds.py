@@ -9,6 +9,36 @@ import ujson
 from redis import Redis
 from rq import Queue
 
+
+class JumpScript(object):
+    def __init__(self, ddict):
+        self.period = 0
+        self.lastrun = 0
+        self.startatboot = False
+        self.__dict__.update(ddict)
+        self.write()
+        self.load()
+
+    def write(self):
+        jscriptdir = j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts", self.organization)
+        j.system.fs.createDir(jscriptdir)
+        self.path=j.system.fs.joinPaths(jscriptdir, "%s.py" % self.name)
+
+        content="""
+from JumpScale import j
+
+"""
+        content += self.source
+        j.system.fs.writeFile(filename=self.path, contents=content)
+
+    def load(self):
+        md5sum = j.tools.hash.md5_string(self.path)
+        self.module = imp.load_source('JumpScale.jumpscript_%s' % md5sum, self.path)
+
+    def run(self, *args, **kwargs):
+        self.module.action(*args, **kwargs)
+
+
 class JumpscriptsCmds():
 
     def __init__(self,daemon):
@@ -47,29 +77,22 @@ class JumpscriptsCmds():
             self._adminAuth(session.user,session.passwd)
 
         #ASK agentcontroller about known jumpscripts 
-        from IPython import embed
-        print "DEBUG NOW ASK agentcontroller about known jumpscripts "
-        embed()
-        
-        t=None #@todo
+        jumpscripts = self.agentcontroller_client.listJumpScripts()
+        for organization, name, category, descr in jumpscripts:
+            jumpscript = JumpScript(self.agentcontroller_client.getJumpScript(organization, name))
 
-        print "found jumpscript:%s " %("%s_%s" % (organization, name))
-        self.jumpscripts["%s_%s" % (organization, name)] = t
-        if not self.jumpscriptsByPeriod.has_key(period):
-            self.jumpscriptsByPeriod[period]=[]
-        self.jumpscriptsByPeriod[period].append(t)
+            print "found jumpscript:%s " %("%s_%s" % (organization, name))
+            self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
+            period = jumpscript.period
+            if period:
+                if period and period not in self.jumpscriptsByPeriod:
+                    self.jumpscriptsByPeriod[period]=[]
+                self.jumpscriptsByPeriod[period].append(jumpscript)
 
-        #@todo remember in redis (NOT NEEDED NOW)
-        #self.redis.set("jumpscripts_%s_%s"%(t.organization,t.name),ujson.dumps(t.__dict__))            
+            #@todo remember in redis (NOT NEEDED NOW)
+            #self.redis.set("jumpscripts_%s_%s"%(t.organization,t.name),ujson.dumps(t.__dict__))            
 
-        #remember for worker
-        tpath=j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts",t.organization,"%s.py"%t.name)
-
-        content="""
-from JumpScale import j
-"""
-        content+=t.source
-        j.system.fs.writeFile(filename=tpath,contents=content)
+            #remember for worker
 
         self._killGreenLets()       
         self._configureScheduling()
@@ -129,24 +152,24 @@ from JumpScale import j
             if not action.enable:
                 continue
             #print "start action:%s"%action
-            if action.lastrun==0 and action.startatboot==False:
+            if action.lastrun == 0 and action.startatboot == False:
                 print "did not start at boot:%s"%action.name
             else:
-                if action.async==False:
+                if not action.async:
                     try:
-                        action.action()
+                        action.run()
                     except Exception,e:
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
                         eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(action.organization,action.name, \
                                 j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
                         eco.tags="jscategory:%s"%action.category
                         eco.tags+=" jsorganization:%s"%action.organization
-                        eco.tags+=" jsname:%s"%action.name                        
+                        eco.tags+=" jsname:%s"%action.name
                         j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
                 else:                    
                     result = self.q_d.enqueue('%s.action'%action.name)
                 
-            action.lastrun=time.time()
+            action.lastrun = time.time()
             print "ok:%s"%action.name
 
 
