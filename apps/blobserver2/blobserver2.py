@@ -42,9 +42,9 @@ class BlobserverCMDS():
             fp.close()
         return data2
 
-    def delete(self,key,epoId=0,session=None):
+    def delete(self,key,repoId=0,session=None):
         from IPython import embed
-        print "DEBUG NOW test"
+        print "DEBUG NOW delete"
         embed()
         
         backuppath=j.system.fs.joinPaths(self.STORpath,key[0:2],key[2:4],key)
