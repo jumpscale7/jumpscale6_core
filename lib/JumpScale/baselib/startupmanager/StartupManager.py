@@ -4,6 +4,10 @@ import JumpScale.baselib.screen
 import time
 import threading
 
+
+class ProcessNotFoundException(Exception):
+    pass
+
 class ProcessDef:
     def __init__(self, hrd,path):
         self.autostart=hrd.getInt("process.autostart")==1
@@ -387,6 +391,8 @@ class StartupManager:
 
         processes = filter(processFilter, self.processdefs.values())
         processes.sort(key=lambda pd: pd.priority)
+        if not processes and (domain or name ):
+            raise ProcessNotFoundException("Could not find process with domain:%s and name:%s" % (domain, name))
         return processes
 
     def getDomains(self):
