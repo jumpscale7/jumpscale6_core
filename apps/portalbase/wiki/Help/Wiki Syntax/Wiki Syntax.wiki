@@ -8,14 +8,14 @@ h2. General Text Formatting
 Any text surrounded with one of the 
 
 || Marker || Function || Example || Result ||
-| `*`       | Bold | &#42;strong text&#42;    | *strong text*  |
-| `_`       | Italic     | &#95;italic text&#95;    | _italic text_  |
-| `+`       | Underline    | &#43;inserted text&#43;  | +inserted text+  |
-| `-`       | Strike-through | &#45;strike text&#45;    | -strike text-  |
-| `??`      | Cite, quote   | &#63;&#63;cite text&#63;&#63;      | ??cite text??  |
-| `^`       | Superscript    | &#94;superscript&#94;    | ^superscript^  |
-| `~`       | Subscript    | &#126;subscript&#126;      | ~subscript~  |
-| `&#96;`   | No format   | &#96;code&#96;           |  `code` |
+| `*`       | Bold | *strong text*    | *strong text*  |
+| `_`       | Italic     | _italic text_    | _italic text_  |
+| `+`       | Underline    | +inserted text+  | +inserted text+  |
+| `-`       | Strike-through | -strike text-    | -strike text-  |
+| `??`      | Cite, quote   | ??cite text??      | ??cite text??  |
+| `^`       | Superscript    | ^superscript^    | ^superscript^  |
+| `~`       | Subscript    | ~subscript~      | ~subscript~  |
+| ```   | No format   | `code`           |  `code` |
 
 
 h2. Other Text Formatting
@@ -34,7 +34,7 @@ bq. Text inside blockquote text
 \\
 bq. Text inside blockquote text
 
-Paragraphs are separated by new lines. Consecutive new lines are considered as one. To force a new line, write double-backslashes. `\\`
+Paragraphs are separated by new lines. Consecutive new lines are considered as one. To force a new line, write double-backslashes. `&#92;&#92;`
 
 
 h2. Escaping characters
@@ -67,10 +67,10 @@ h2. Lists
 
 You can create two types of lists:
 
-* Ordered lists: you create an ordered list by using the the combination star and hash (`&#42;#`) as first characters on each line. Do not use empty lines between subsequent items because the numbering will restart.
-* Unordered lists: you create an unordered list by using the asterisk (`&#42;`) as first character on each line. 
+* Ordered lists: you create an ordered list by using the the combination star and hash (`*#`) as first characters on each line. Do not use empty lines between subsequent items because the numbering will restart.
+* Unordered lists: you create an unordered list by using the asterisk (`*`) as first character on each line. 
 
-You can nest levels, by adding two or more asterisks (`&#42;&#42;`) or hashes (`&#42;##`). You can also combine unordered and ordered lists. 
+You can nest levels, by adding two or more asterisks (`**`) or hashes (`*##`). You can also combine unordered and ordered lists. 
 
 h3. Example Unordered List
 
@@ -132,18 +132,18 @@ h2. Images
 To create an image, write its path enclosed with exclamation marks `!`
 
 {{code:
-!/$$space/.files/img/gorilla.jpg!
+!/$$space/.files/img/gallery_images/gorilla.jpg!
 }}
 
-!/$$space/.files/img/gorilla.jpg!
+!/$$space/.files/img/gallery_images/gorilla.jpg!
 
 h3. With styles
 
 {{code:
-!/$$space/.files/img/gorilla.jpg | border= 5px solid blue!
+!/$$space/.files/img/gallery_images/gorilla.jpg | border= 5px solid blue!
 }}
 
-!/$$space/.files/img/gorilla.jpg | border= 5px solid blue!
+!/$$space/.files/img/gallery_images/gorilla.jpg | border= 5px solid blue!
 
 h2. Links
 Links are surrounded by square brackets
@@ -187,7 +187,7 @@ You can add images in the description of links
 
 h2. Tables
 
-Header cells are enclosed with double bars `|&#124;`, while table body cells are surrounded with single bars `|`.
+Header cells are enclosed with double bars `&#124;&#124;`, while table body cells are surrounded with single bars `&#124;`.
 
 {{code:
 || Header 1 || Header 2 ||
