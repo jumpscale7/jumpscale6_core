@@ -19,8 +19,11 @@ for i in range(1024*1024*4):
 hash=j.tools.hash.md5_string(blob)
 
 print "start"
-client.set(hash,blob) 
-blob2=client.get(hash) 
+client.set(hash,blob,repoId="repo1") 
+client.set(hash,blob,repoId="repo2")
+blob2=client.get(hash)
+
+blob2=client.delete(hash)
 
 assert blob2==blob
 
