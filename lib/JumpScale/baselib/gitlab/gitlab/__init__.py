@@ -462,8 +462,6 @@ class Gitlab(object):
                 "merge_requests_enabled": merge_requests_enabled,
                 "wiki_enabled": wiki_enabled,
                 "snippets_enabled": snippets_enabled}
-        if sudo != "":
-            data['sudo'] = sudo
 
         # if gitlab is the new 6th version, there is a public option for the
         # project creation
@@ -474,6 +472,7 @@ class Gitlab(object):
         request = requests.post(self.projects_url, headers=self.headers,
                                 data=data, verify=self.verify_ssl)
         if request.status_code == 201:
+            self._getProjectsInit()
             return json.loads(request.content.decode("utf-8"))
         elif request.status_code == 403:
             if "Your own projects limit is 0" in request.content:
@@ -494,6 +493,7 @@ class Gitlab(object):
         request = requests.delete(self.projects_url + "/" + str(project_id),
                                   headers=self.headers)
         if request.status_code == 200:
+            self._getProjectsInit()
             return True
 
 
@@ -518,9 +518,9 @@ class Gitlab(object):
         request = requests.post(self.projects_url + "/user/" + str(id_),
                                 headers=self.headers, data=data, verify=self.verify_ssl)
         if request.status_code == 201:
+            self._getProjectsInit()
             return True
         else:
-            
             return False
 
     def listprojectmembers(self, id_):

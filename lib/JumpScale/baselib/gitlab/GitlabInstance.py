@@ -10,6 +10,7 @@ import gitlab
 import os
 
 from gitlab import Gitlab
+import JumpScale.baselib.git
 
 class GitlabInstance(Gitlab):
 
@@ -25,29 +26,25 @@ class GitlabInstance(Gitlab):
         #         setattr(self,item,getattr(self._gitlab,item))
         self.gitclients={}
 
-    def getGitClient(self,repoName="",branch=None):
+    def getGitClient(self,accountName, repoName="",branch=None):
         """
         """
         #if self.gitclients.has_key(repoName):
             #return self.gitclients[repoName]
         #@todo P2 cache the connections but also use branchnames
-
+        self.accountName = accountName
         if repoName=="":
             repoName=self.findRepoFromGitlab(repoName)
         if repoName=="":
             raise RuntimeError("reponame cannot be empty")
 
-        url = self.url
+        url = 'http://%s' % self.addr
         if url[-1]<>"/":
             url=url+"/"
 
-        url += "%s/"%repoName
+        url += "%s/%s.git" % (accountName, repoName)
 
-        hgrcpath=j.system.fs.joinPaths(self.getRepoPathLocal(repoName),".hg","hgrc")
-        if j.system.fs.exists(hgrcpath):
-            editor=j.codetools.getTextFileEditor(hgrcpath)
-            editor.replace1Line("default=%s" % url,["default *=.*"])
-        j.clients.gitlab.log("init git client ##%s## on path:%s"%(repoName,self.getRepoPathLocal(repoName)),category="getclient")
+        j.clients.gitlab.log("init git client ##%s## on path:%s"%(repoName,self.getCodeFolder(repoName)),category="getclient")
         cl = j.clients.git.getClient(self.getCodeFolder(repoName), url, branchname=branch)
         # j.clients.gitlab.log("git client inited for repo:%s"%repoName,category="getclient")
         self.gitclients[repoName]=cl

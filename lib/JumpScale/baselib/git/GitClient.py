@@ -5,6 +5,7 @@ import sys
 # import hglib
 import JumpScale.baselib.codetools
 import os
+from git import *
 # import hashlib
         
 ##IMPORTANT
@@ -23,8 +24,6 @@ class GitClient:
         @param cleandir: If True, files in that directory will be deleted before doing clone (if it wasn't an git) if set to False,
                          an exception will be raised if directory has files, if None, the user will be asked interactively.
         """
-        
-        from git import *
         
         self.remoteUrl = remoteUrl.strip()
         self.basedir = gitbasedir
@@ -192,7 +191,8 @@ syntax: regexp
     
     def pull(self):
         self._log("pull %s to %s" % (self.remoteUrl,self.basedir))
-        self.client.pull(source=self.remoteUrl)
+        g = self.client.git
+        g.checkout()
     
     def isTrackingFile(self, file):
         self._log("isTrackingFile of %s" % (self.basedir))
@@ -428,9 +428,7 @@ syntax: regexp
 
     def _clone(self):
         self._log("clone %s" % (self.basedir),category="clone")
-        self.client = hglib.clone(self.remoteUrl, self.basedir, branch=self.branchname, configs=self._configs)
-        self.pull()
-        self.verify()
+        self.client = Repo.clone_from(self.remoteUrl, self.basedir)
 
     def getbranchname(self):
         return self.client.branch()
