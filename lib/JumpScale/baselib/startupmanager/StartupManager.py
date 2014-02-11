@@ -415,16 +415,16 @@ class StartupManager:
                 result.append(pd)
         return result
 
-    def _start(self,j,pd):
-        # print "thread start:%s"%pd
-        try:
-            pd.start()
-        except Exception,e:
-            print "********** ERROR **********"
-            print pd
-            print e
-            print "********** ERROR **********"
-        # print "thread started:%s"%pd
+    # def _start(self,j,pd):
+    #     # print "thread start:%s"%pd
+    #     try:
+    #         pd.start()
+    #     except Exception,e:
+    #         print "********** ERROR **********"
+    #         print pd
+    #         print e
+    #         print "********** ERROR **********"
+    #     # print "thread started:%s"%pd
 
     def startAll(self):
         l=self.getProcessDefs()
@@ -433,7 +433,17 @@ class StartupManager:
         
         for pd in self.getProcessDefs():
             # pd.start()
-            pd.start()
+            errors=[]
+            
+            try:
+                pd.start()
+            except Exception,e:                
+                errors.append("could not start: %s."%pd)
+                j.errorconditionhandler.processPythonExceptionObject(e)
+
+        if len(errors)>0:
+            print "COULD NOT START:"
+            print "\n".join(errors)
 
 
     # def startAll(self):

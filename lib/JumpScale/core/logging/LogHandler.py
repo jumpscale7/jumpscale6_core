@@ -100,12 +100,12 @@ class LogItem(object):
         if j.application.whoAmI:
             
             self.gid = j.application.whoAmI.gid
-            self.nid = j.application.whoAmI.nid
+            self.nid = j.application.whoAmI.nid            
             self.pid = j.application.whoAmI.pid
-            if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
-                self.aid = j.core.grid.aid
-            else:
-                self.aid = 0
+            # if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
+            #     self.aid = j.core.grid.aid
+            # else:
+            #     self.aid = 0
 
         self.appname = j.application.appname
         self.tags = str(tags).strip().replace("\r\n", "/n").replace("\n", "/n").replace("|", "/|")
@@ -124,6 +124,18 @@ class LogItem(object):
             self.private = 1
         else:
             self.private = 0
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes also id)
+        """
+        self.gid = int(self.gid)
+        if self.pid<>0:
+            self.guid = "%s_%s_%s"%(self.gid,self.pid,self.order)
+        else:
+            self.guid = "%s_%s_%s_%s"%(self.gid,self.nid,self.epoch,self.order)
+
+        return self.guid
 
     def toJson(self):
         return j.db.serializers.ujson.dumps(self.__dict__)

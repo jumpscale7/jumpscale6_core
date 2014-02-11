@@ -2,6 +2,7 @@
 from JumpScale import j
 import time
 import ujson
+import JumpScale.baselib.redis
 
 TIMEOUT = 5
 
@@ -34,7 +35,7 @@ class LogTargetLogForwarder():
             return self.connected
 
         #redis & processmanager need to be active
-        self.connected = j.system.net.tcpPortConnectionTest(self.serverip,7769) and j.system.net.tcpPortConnectionTest(self.serverip,4445)
+        self.connected = j.system.net.tcpPortConnectionTest(self.serverip,7767) and j.system.net.tcpPortConnectionTest(self.serverip,4445)
 
         self._lastcheck = time.time()
         if not self.connected:
@@ -42,6 +43,7 @@ class LogTargetLogForwarder():
             return self.connected
 
         self.redisqueue=j.clients.redis.getRedisQueue(self.serverip,self.port,"logs")
+        self.redisqueueEco=j.clients.redis.getRedisQueue(self.serverip,self.port,"eco")
 
         return self.connected
 
@@ -58,7 +60,7 @@ class LogTargetLogForwarder():
             eco = j.errorconditionhandler.getErrorConditionObject(eco)
             if self.checkTarget():
                 try:
-                    self.redisqueue.put(ujson.dumps(eco.__dict__))
+                    self.redisqueueEco.put(ujson.dumps(eco.__dict__))
                 except Exception, e:
                     print 'Failed to log in %s error: %s' % (self, e)
                     self.connected = False

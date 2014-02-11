@@ -16,6 +16,11 @@ if opts.action in ('list', 'status'):
     print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART')
     print '-'* 71
     print
+if opts.domain==None and  opts.name==None and  opts.action=="start":
+    j.tools.startupmanager.startAll()
+    j.application.stop(0)
+
+
 
 pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name)
 

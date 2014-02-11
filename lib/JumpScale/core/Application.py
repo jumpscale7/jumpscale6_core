@@ -52,7 +52,7 @@ class Application:
 
             self.systempid=os.getpid()
 
-            self.whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=self.systempid)
+            self.whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=0)
 
             self.whoAmIBytestr = struct.pack("<hhh", self.whoAmI.pid, self.whoAmI.nid, self.whoAmI.gid)
 
