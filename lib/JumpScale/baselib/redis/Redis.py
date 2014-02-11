@@ -2,7 +2,7 @@ from JumpScale import j
 
 import geventredis
 import redis
-from geventredis.RedisQueue import RedisQueue
+from .geventredis.RedisQueue import RedisQueue
 
 
 class RedisFactory:
@@ -15,9 +15,11 @@ class RedisFactory:
         # self.gredisq={}
         # self.redisq={}
 
-    def getGeventRedisClient(self,ipaddr,port):
+    def getGeventRedisClient(self,ipaddr,port, fromcache=True):
+        if not fromcache:
+            return geventredis.connect(ipaddr, port)
         key="%s_%s"%(ipaddr,port)
-        if not self.gredis.has_key(key):
+        if key not in self.gredis:
             self.gredis[key]=geventredis.connect(ipaddr, port)
         return self.gredis[key]
 
