@@ -5,7 +5,5 @@ import uuid
 ujson = j.db.serializers.getSerializerType('j')
 
 class mainclass(OSISStore):
-    """
-    """
-    pass    
+    pass
 

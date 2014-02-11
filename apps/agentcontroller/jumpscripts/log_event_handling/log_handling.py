@@ -67,6 +67,6 @@ def action():
         eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
         eco= eventhandlingTE.executeV2(eco=eco)
         if hasattr(eco,"tb"):
-            eco.__dict__.pop("tb")
+            delattr(eco, 'tb')
         OSISclientEco.set(eco.__dict__)
         eco=redisqueueEco.get_nowait()

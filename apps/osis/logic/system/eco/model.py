@@ -51,7 +51,7 @@ class ECO(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        return self.guid
+        return self.getSetGuid()
 
     def getSetGuid(self):
         """
