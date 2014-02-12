@@ -68,24 +68,16 @@ class Agent(Greenlet):
         j.logger.logTargets=[]
         j.logger.logTargetLogForwarder=False
 
-        self.similarProcessPIDs=[process.pid for process in j.system.process.getSimularProcesses()]
-
-        self.agentid = j.application.getWhoAmiStr()
-
         ipaddr=j.application.config.get("grid.master.ip")
         adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         adminuser = 'root'#j.application.config.get('system.superadmin.login')
-        self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, \
-            category="agent",id=self.agentid,timeout=36000)
-
+        self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, category="agent",timeout=36000)
 
         j.logger.logTargetAdd(self.loghandler)
         self.loghandler.start()        
         # setup logger
         if not j.logger.logTargetLogForwarder:
             j.logger.logTargetLogForwarder = self.loghandler
-
-        print "agent: %s"%self.agentid
 
         sys.excepthook=self.exceptHook
 
@@ -111,16 +103,17 @@ class Agent(Greenlet):
         self._run()
 
     def register(self):
-        print "REGISTERED"
+        print "REGISTER:",
         ok=False
         while ok==False:
             try:
-                self.client.register(similarProcessPIDs=self.similarProcessPIDs)
+                self.client.register()
                 ok=True
             except Exception,e:
                 print e
                 print "retry registration"
                 gevent.sleep(2)
+        print "OK"
 
     def _run(self):
         print "STARTED"
