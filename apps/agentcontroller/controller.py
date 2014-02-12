@@ -48,9 +48,14 @@ class ControllerCMDS():
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
         
-        self.redis = j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT)
+        #self.redis = j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT)
+        self.redis_lock = gevent.coros.RLock()
 
         j.logger.setLogTargetLogForwarder()
+
+    @property
+    def redis(self):
+        return j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT, False)
 
     def _adminAuth(self,user,passwd):
         if user != self.adminuser or passwd != self.adminpasswd:
@@ -67,7 +72,8 @@ class ControllerCMDS():
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
         job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
-        jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
+        with self.redis_lock:
+            jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         job.id=jobid
         self._setJob(job, True)
         q = self._getCmdQueue(session)
@@ -75,20 +81,15 @@ class ControllerCMDS():
         return job
 
     def _setJob(self, job, osis=False):
-        self.redis.hmset("jobs:%s"%job.gid,{job.id:json.dumps(job.__dict__)})
+        with self.redis_lock:
+            self.redis.hmset("jobs:%s"%job.gid,{job.id:json.dumps(job.__dict__)})
         if osis:
             self.jobclient.set(job)
 
     def _getJob(self, gid, jobid):
-        jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
+        with self.redis_lock:
+            jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
         return self.jobclient.new(ddict=jobdict)
-
-
-    def getCmd(self,session):
-        """
-        returns work for 1 agent, which is identified by nid (there is never more than 1 agent per node)
-        """
-        return self._getCmdQueue(session).get()
 
     def _getCmdQueue(self, session):
         agentid="%s_%s"%(session.gid,session.nid)
@@ -97,6 +98,10 @@ class ControllerCMDS():
             #self.agentqueues[agentid] = j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
             return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
         return self.agentqueues[agentid]
+
+    def _getJobWait(self, jobid):
+        queuename = "jobq_%s" % jobid
+        return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
         
 
     def _setRole2Agent(self,role,agent):
@@ -186,8 +191,6 @@ class ControllerCMDS():
             print "found jumpscript:%s " %("%s_%s" % (t.organization, t.name))
             # self.jumpscripts["%s_%s_%s" % (t.gid,t.organization, t.name)] = True
 
-            redis = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768, False)
-            redis.set("jumpscripts_%s_%s_%s"%(t.gid,t.organization,t.name),json.dumps(t.__dict__))
             key = "%s_%s_%s" % (j.application.whoAmI.gid,t.organization, t.name)
             self.jumpscripts[key] = t
        
@@ -275,21 +278,16 @@ class ControllerCMDS():
         returncode 2 = error (then result is eco)
 
         """
-        #@redo using redis
         job = self._getJob(session.gid, jobid)
-        if not job:
-            raise RuntimeError("Not job found with id %s" % jobid)
-        timeout = gevent.Timeout(job.timeout)
-        timeout.start()
-        try:
-            job.wait()
-            timeout.cancel()
-            return job.__dict__
-        except:
-            timeout.cancel()
-            job.resultcode=1
-            print "timeout on execution"
-            return job.__dict__
+        if job:
+            res = self._getJobWait(jobid).get(job.timeout)
+            if res:
+                job = self._getJob(session.gid, jobid)
+                return json.loads(job.result)
+            else:
+                job.resultcode=1
+                print "timeout on execution"
+                return job.__dict__
 
     def getWork(self, session=None):
         """
@@ -339,6 +337,7 @@ class ControllerCMDS():
             job.state="OK"
             job.result = json.dumps(result)
         self._setJob(job, osis=True)
+        self._getJobWait(jobid).put(job.state)
     
         #now need to return it to the client who asked for the work 
         if job.parent and job.parent in self.jobs:
@@ -358,8 +357,6 @@ class ControllerCMDS():
                 parentjob.done()
 
         print "completed job"
-        print "result was.\n"
-        print job
         return
 
     def getScheduledWork(self,agentid,session=None):
