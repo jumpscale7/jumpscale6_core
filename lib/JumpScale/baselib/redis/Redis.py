@@ -12,8 +12,8 @@ class RedisFactory:
     def __init__(self):
         self.gredis={}
         self.redis={}
-        # self.gredisq={}
-        # self.redisq={}
+        self.gredisq={}
+        self.redisq={}
 
     def getGeventRedisClient(self,ipaddr,port, fromcache=True):
         if not fromcache:
@@ -30,9 +30,15 @@ class RedisFactory:
         return self.redis[key]
 
     def getRedisQueue(self,ipaddr,port,name,namespace="queues"):
-        return RedisQueue(self.getRedisClient(ipaddr,port),name,namespace=namespace)
+        key="%s_%s_%s_%s"%(ipaddr,port,name,namespace)
+        if not self.redisq.has_key(key):
+            self.redisq[key]=RedisQueue(self.getRedisClient(ipaddr,port),name,namespace=namespace)
+        return self.redisq[key]
 
     def getGeventRedisQueue(self,ipaddr,port,name,namespace="queues"):
-        return RedisQueue(self.getGeventRedisClient(ipaddr,port),name,namespace=namespace)
+        key="%s_%s_%s_%s"%(ipaddr,port,name,namespace)
+        if not self.gredisq.has_key(key):
+            self.gredisq[key]=RedisQueue(self.getGeventRedisClient(ipaddr,port),name,namespace=namespace)
+        return self.gredisq[key]        
 
 
