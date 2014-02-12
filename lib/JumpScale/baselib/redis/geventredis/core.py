@@ -12,7 +12,7 @@ class RedisSocket(socket):
         socket.__init__(self, *args, **kwargs)
         self._rbuf = StringIO()
         self._semaphore = coros.Semaphore()
-        spawn( self._drain )
+        #spawn( self._drain )
 
     def _read(self, size):
         return self.recv(size)
