@@ -28,7 +28,6 @@ class ControllerCMDS():
         self.jumpscriptsFromKeys = {}
 
         self.roles2agents = {}  # key=role in all depths
-        self.agent2roles={}
         self.agentqueues = dict()
         self.sessionsUpdateTime={}
 
@@ -48,14 +47,9 @@ class ControllerCMDS():
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
         
-        #self.redis = j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT)
-        self.redis_lock = gevent.coros.RLock()
+        self.redis = j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT)
 
         j.logger.setLogTargetLogForwarder()
-
-    @property
-    def redis(self):
-        return j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT, False)
 
     def _adminAuth(self,user,passwd):
         if user != self.adminuser or passwd != self.adminpasswd:
@@ -72,8 +66,7 @@ class ControllerCMDS():
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
         job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
-        with self.redis_lock:
-            jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
+        jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         job.id=jobid
         self._setJob(job, True)
         q = self._getCmdQueue(session)
@@ -81,14 +74,12 @@ class ControllerCMDS():
         return job
 
     def _setJob(self, job, osis=False):
-        with self.redis_lock:
-            self.redis.hmset("jobs:%s"%job.gid,{job.id:json.dumps(job.__dict__)})
+        self.redis.hmset("jobs:%s"%job.gid,{job.id:json.dumps(job.__dict__)})
         if osis:
             self.jobclient.set(job)
 
     def _getJob(self, gid, jobid):
-        with self.redis_lock:
-            jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
+        jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
         return self.jobclient.new(ddict=jobdict)
 
     def _getCmdQueue(self, session):
@@ -109,11 +100,6 @@ class ControllerCMDS():
             self.roles2agents[role]=[]
         if agent not in self.roles2agents[role]:
             self.roles2agents[role].append(agent)   
-
-        if not self.agent2roles.has_key(agent):
-            self.agent2roles[agent]=[]
-        if role not in self.agent2roles[agent]:
-            self.agent2roles[agent].append(role)   
 
 
     def register(self,session):
@@ -240,7 +226,7 @@ class ControllerCMDS():
             return True
         return [[t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
-    def executeJumpscript(self, organization, name, role, args={},all=False, timeout=600,wait=True,lock="", session=None):
+    def executeJumpScript(self, organization, name, role, args={},all=False, timeout=600,wait=True,lock="", session=None):
         """
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
@@ -405,7 +391,7 @@ class ControllerCMDS():
         #    activejob = self.activeJobSessions.get(session.id)
         #    sessionresult["activejob"] = activejob.id if activejob else None
         #    result.append(sessionresult)
-        return self.agent2roles
+        return self.roles2agents
 
     def getJobInfo(self, jobid, session=None):
         job = self.jobs.get(jobid)

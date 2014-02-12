@@ -25,7 +25,7 @@ class AgentControllerClient():
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
-        job= self.client.executeJumpscript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,lock=lock,transporttimeout=timeout)
+        job= self.client.executeJumpScript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,lock=lock,transporttimeout=timeout)
         if job["state"]=="ERROR":
             eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(job["result"]))
             print eco
