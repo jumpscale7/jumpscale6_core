@@ -69,7 +69,7 @@ class ControllerCMDS():
         jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         job.id=jobid
         self._setJob(job, True)
-        q = self._getCmdQueue(session)
+        q = self._getCmdQueue(gid=gid, nid=nid)
         q.put(str(job.id))  
         return job
 
@@ -82,13 +82,16 @@ class ControllerCMDS():
         jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
         return self.jobclient.new(ddict=jobdict)
 
-    def _getCmdQueue(self, session):
-        agentid="%s_%s"%(session.gid,session.nid)
-        if agentid not in self.agentqueues:
-            queuename = "cmdq_%s_%s" % (session.gid, session.nid)
+    def _getCmdQueue(self, session=None, gid=None, nid=None):
+        if not gid and not nid:
+            gid = session.gid
+            nid = session.nid
+
+        queuename = "cmdq_%s_%s" % (gid, nid)
+        if queuename not in self.agentqueues:
             #self.agentqueues[agentid] = j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
             return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
-        return self.agentqueues[agentid]
+        return self.agentqueues[queuename]
 
     def _getJobWait(self, jobid):
         queuename = "jobq_%s" % jobid
@@ -305,6 +308,13 @@ class ControllerCMDS():
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         job = self._getJob(session.gid, jobid)
         job.timeStop=self.sessionsUpdateTime[session.id]
+        if job.queue:
+            lq = self._getCmdQueue(session, job.queue)
+            q = self._getCmdQueue(session)
+            lq.get()
+            newjobid = lq.get()
+            if newjobid:
+                q.put(newjobid)
 
         if eco:
             job.resultcode=2
