@@ -14,13 +14,13 @@ category = "agentcontroller.basic"
 enable=True
 priority=2
 
-ROLE = 'node.%s.%s' % (j.application.whoAmI.gid, j.application.whoAmI.nid)
+ROLE = 'node'
 
 class TEST(unittest.TestCase):
 
     def setUp(self):
         import JumpScale.grid.agentcontroller
-        self.client=j.clients.agentcontroller
+        self.client=j.clients.agentcontroller.get()
 
     def test_basic_execution(self):
         #@todo this is just a basic test to see if agent controller works
@@ -30,11 +30,11 @@ class TEST(unittest.TestCase):
         #was there an eco in KVS (osis DB)
         #is it indeed waiting, so agent should be blocked
         kwargs = {'msg': 'test msg'}
-        result1 = self.client.executeKwargs('jumpscale', 'echo', ROLE, kwargs=kwargs)
+        result1 = self.client.executeJumpScript('jumpscale', 'echo', ROLE, args=kwargs, wait=True)
         self.assertEqual(result1, kwargs['msg'])
 
         kwargs = {'logmsg': 'test log msg'}
-        self.client.executeKwargs('jumpscale', 'log', ROLE, kwargs=kwargs)
+        self.client.executeJumpScript('jumpscale', 'log', ROLE, args=kwargs, wait=True)
         query = {"query":{"bool":{"must":[{"term":{"category":"test_category"}}]}}}
         import JumpScale.grid.osis
         osisclient = j.core.osis.getClient(user='root')

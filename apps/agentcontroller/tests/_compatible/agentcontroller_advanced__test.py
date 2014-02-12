@@ -15,13 +15,13 @@ category = "agentcontroller.advanced"
 enable=True
 priority=8
 
-ROLE = 'node.%s.%s' % (j.application.whoAmI.gid, j.application.whoAmI.nid)
+ROLE = 'node'
 
 class TEST(unittest.TestCase):
 
     def setUp(self):
         import JumpScale.grid.agentcontroller
-        self.client = j.clients.agentcontroller
+        self.client = j.clients.agentcontroller.get()
         self.osisclient = j.core.osis.getClient(user='root')
 
     def test_queuetest1agent(self):
@@ -31,7 +31,7 @@ class TEST(unittest.TestCase):
         osis_logs = j.core.osis.getClientForCategory(self.osisclient, "system", "log")
         for i in range(1, 6):
             kwargs = {'msg': 'msg%s' % i, 'waittime':1}
-            self.client.executeKwargs('jumpscale', 'wait', ROLE, kwargs=kwargs)
+            self.client.executeJumpScript('jumpscale', 'wait', ROLE, args=kwargs)
         results = list()
         for i in range(1, 6):
             query = {"category":"test_wait", "message":'msg%s' % i}
@@ -54,9 +54,9 @@ class TEST(unittest.TestCase):
         # TODO this test does not work 
         return
         kwargs = {'msg': 'test kill behavior', 'waittime':2}
-        firstjob = self.client.executeKwargs('jumpscale', 'wait', ROLE, wait=False, kwargs=kwargs)
+        firstjob = self.client.executeJumpScript('jumpscale', 'wait', ROLE, wait=False, args=kwargs)
         kwargs = {'msg': 'test kill behavior', 'waittime':5}
-        secondjob = self.client.executeKwargs('jumpscale', 'wait', ROLE, wait=False, kwargs=kwargs)
+        secondjob = self.client.executeJumpScript('jumpscale', 'wait', ROLE, wait=False, args=kwargs)
         j.tools.startupmanager.stopProcess('jumpscale', 'agent_0')
         j.tools.startupmanager.startProcess('jumpscale', 'agent_0')
 
@@ -73,7 +73,7 @@ class TEST(unittest.TestCase):
         start = time.time()
         for i in range(1, 500):
             kwargs = {'msg': 'msg %s' % i}
-            self.client.executeKwargs('jumpscale', 'echo', ROLE, kwargs=kwargs)
+            self.client.executeJumpScript('jumpscale', 'echo', ROLE, args=kwargs, wait=True)
         end = time.time()
         print 'It took %s seconds to execute 500 echo jobs' % (end - start)
 

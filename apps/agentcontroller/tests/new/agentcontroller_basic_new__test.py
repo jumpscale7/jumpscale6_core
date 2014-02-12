@@ -11,7 +11,7 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "agentcontroller.basic.new"
-enable=True
+enable=False
 priority=2
 
 # class TEST(unittest.TestCase):
@@ -34,7 +34,7 @@ class TEST():
         #is it indeed waiting, so agent should be blocked
 
         args = {'msg': 'test msg'}
-        self.client.scheduleCmd(nid, cmdcategory, cmdname, args=args, queue=True, log='', timeout={}, transporttimeout=5
+        self.client.scheduleCmd(nid, cmdcategory, cmdname, args=args, queue=True, log='', timeout={}, transporttimeout=5)
         
         result1 = self.client.executeKwargs('jumpscale', 'echo', ROLE, kwargs=kwargs)
         self.assertEqual(result1, kwargs['msg'])
