@@ -26,7 +26,7 @@ class GitlabInstance(Gitlab):
         #         setattr(self,item,getattr(self._gitlab,item))
         self.gitclients={}
 
-    def getGitClient(self,accountName, repoName="",branch=None):
+    def getGitClient(self, accountName, repoName="",branch=None):
         """
         """
         #if self.gitclients.has_key(repoName):
@@ -51,5 +51,5 @@ class GitlabInstance(Gitlab):
         return cl
 
     def getCodeFolder(self, repoName):
-        return "%s/%s/%s/" % (j.dirs.codeDir,"git_%s"%self.accountName,repoName)
+        return j.system.fs.joinPaths(j.dirs.codeDir, "git_%s" % self.accountName, repoName)
 
