@@ -2,6 +2,8 @@ h1. PlantUML
 
 This macro allows you to quickly draw different diagrams (mainly UML), using the [PlantUML|http://plantuml.sourceforge.net/] syntax.
 
+Some diagrams require that [GraphViz|http://www.graphviz.org/] is installed on the server.
+
 h2. Examples
 
 h3. Simple example
@@ -9,13 +11,15 @@ h3. Simple example
 {{code:
 
 \{\{plantuml:
-Here->There : train
+Internet --|> Space 
+Space --|> Page 
 \}\}
 
 }}
 \\
 {{plantuml:
-Here->There : train
+Internet --|> Space 
+Space --|> Page 
 }}
 
 h3. A complex example
