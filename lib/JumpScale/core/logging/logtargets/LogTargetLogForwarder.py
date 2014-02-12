@@ -9,7 +9,7 @@ TIMEOUT = 5
 class LogTargetLogForwarder():
     """Forwards incoming logRecords to redis"""
 
-    def __init__(self, serverip="127.0.0.1",port=7767):
+    def __init__(self, serverip="127.0.0.1",port=7768):
 
         self.serverip=serverip
         self.port=port
@@ -35,7 +35,7 @@ class LogTargetLogForwarder():
             return self.connected
 
         #redis & processmanager need to be active
-        self.connected = j.system.net.tcpPortConnectionTest(self.serverip,7767) and j.system.net.tcpPortConnectionTest(self.serverip,4445)
+        self.connected = j.system.net.tcpPortConnectionTest(self.serverip,7768)
 
         self._lastcheck = time.time()
         if not self.connected:
@@ -54,22 +54,25 @@ class LogTargetLogForwarder():
     __repr__ = __str__
 
     def logECO(self, eco):
+        # print "!!!!!!!!!!!!"
         if self.enabled:
             eco = eco.__dict__.copy()
             eco.pop('tb', None)
+            eco.pop('frames', None)
+            eco["type"]=str(eco["type"])
             eco = j.errorconditionhandler.getErrorConditionObject(eco)
             if self.checkTarget():
                 try:
                     self.redisqueueEco.put(ujson.dumps(eco.__dict__))
                 except Exception, e:
-                    print 'Failed to log in %s error: %s' % (self, e)
+                    print 'Failed to log error in %s error: %s' % (self, e)
                     self.connected = False
 
     def log(self, log):
         """
         forward the already encoded message to the target destination
         """
-        if self.enabled:
+        if self.enabled:            
             if self.checkTarget():
                 try:
                     self.redisqueue.put(ujson.dumps(log.__dict__))

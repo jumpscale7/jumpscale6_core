@@ -341,8 +341,6 @@ class ErrorConditionHandler():
                     toignore=True
             if not toignore:
                 result.append((frame,linenr))
-            else:
-                print "IGNORE"
 
         return result
 

@@ -226,7 +226,7 @@ class LogHandler(object):
     def addLogTargetLocalFS(self):
         self.logTargetAdd(LogTargetFS())
 
-    def setLogTargetLogForwarder(self, serverip="127.0.0.1",port=7767):
+    def setLogTargetLogForwarder(self, serverip="127.0.0.1",port=7768):
         """
         there will be only logging to stdout (if q.loghandler.consoleloglevel set properly)
         & to the LogForwarder
