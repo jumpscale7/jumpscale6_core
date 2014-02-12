@@ -22,13 +22,16 @@ class TEST():
     def setUp(self):
         #make sure logging happens
         self.serverip="127.0.0.1"
+        print "check process manager active"
+        if not j.system.net.tcpPortConnectionTest(self.serverip,4445) == True:
+            j.errorconditionhandler.raiseOperationalCritical("could not connect to processmanager, is it running?", category="processmanager.test.setup")
         print "check redis active"
-        assert j.system.net.tcpPortConnectionTest(self.serverip,7767) == True
-        assert j.system.net.tcpPortConnectionTest(self.serverip,7768) == True
-        print "check port process manager"
-        j.system.net.tcpPortConnectionTest(self.serverip,4445)
+        if not j.system.net.tcpPortConnectionTest(self.serverip,7767) or not j.system.net.tcpPortConnectionTest(self.serverip,7768):
+            j.errorconditionhandler.raiseOperationalCritical("could not connect to redis, is it running? (port 7767 and 7768)", category="processmanager.test.setup")
         print "check port elasticsearch"
-        assert j.system.net.tcpPortConnectionTest(self.serverip,9200) == True
+        if not  j.system.net.tcpPortConnectionTest(self.serverip,9200):
+            j.errorconditionhandler.raiseOperationalCritical("could not connect to elasticsearch, is it running? (port 9200)", category="processmanager.test.setup")
+            
         self.client= j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user=j.application.config.get('system.superadmin.login'), \
             passwd=j.application.config.get('grid.master.superadminpasswd'),category="jpackages")
         self.logqueue=j.clients.redis.getRedisQueue("127.0.0.1",7767,"logs")

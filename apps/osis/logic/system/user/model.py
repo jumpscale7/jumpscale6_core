@@ -25,6 +25,7 @@ class User(OsisBaseObject):
             self.guid=""
             self.groups=[]
             self.authkey=""
+         
 
     def getSetGuid(self):
         """

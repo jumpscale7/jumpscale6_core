@@ -16,7 +16,7 @@ import JumpScale.lib.diskmanager
 
 import JumpScale.baselib.stataggregator
 
-j.application.start("jsprocess_manager")
+j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
 

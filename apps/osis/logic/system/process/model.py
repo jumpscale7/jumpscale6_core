@@ -61,11 +61,12 @@ class Process(OsisBaseObject):
         self.gid = int(self.gid)
         self.id = int(self.id)
         
-        if self.sname<>"":
-            key="%s_%s"%(self.jpdomain,self.sname)
-        else:
-            key=self.pname
-        self.guid = "%s_%s_%s" % (self.gid, self.id, key)
+        # if self.sname<>"":
+        #     key="%s_%s"%(self.jpdomain,self.sname)
+        # else:
+        #     key=self.pname
+
+        self.guid = "%s_%s" % (self.gid, self.id)
         self.lastcheck=j.base.time.getTimeEpoch() 
         return self.guid
 

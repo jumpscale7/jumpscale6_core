@@ -23,6 +23,9 @@ class Group(OsisBaseObject):
             self.guid=""
             self.users=[]
 
+
+
+
     def getSetGuid(self):
         """
         use osis to define & set unique guid (sometimes also id)
