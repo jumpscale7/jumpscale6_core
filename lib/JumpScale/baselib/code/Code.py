@@ -225,7 +225,7 @@ class Code():
                         continue
                     value[key]=todict(obj[key],{},ignoreKeys)
                 return value
-            elif isinstance(obj, list):
+            elif isinstance(obj, (tuple,list)):
                 value=[]
                 for item in obj:
                     value.append(todict(item,{},ignoreKeys))
