@@ -22,6 +22,11 @@ class GitClient(object):
     def getModifiedFiles(self):
         return [diff.a_blob.name for diff in self.repo.index.diff(None)]
 
+    def addFiles(self, files=[], message=''):
+        if files:
+            self.repo.index.add(files)
+            self.repo.index.commit(message)
+
     def pull(self):
         self.repo.git.pull()
 
@@ -35,4 +40,4 @@ class GitClient(object):
             self.repo.index.commit(message)
 
     def push(self):
-        self.repo.remotes.origin.push()
+        self.repo.git.push('--all')

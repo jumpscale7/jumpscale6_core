@@ -26,7 +26,7 @@ class GitlabInstance(Gitlab):
         #         setattr(self,item,getattr(self._gitlab,item))
         self.gitclients={}
 
-    def getGitClient(self, accountName, repoName="",branch=None):
+    def getGitClient(self, accountName, repoName="", branch=None, clean=False):
         """
         """
         #if self.gitclients.has_key(repoName):
@@ -45,7 +45,7 @@ class GitlabInstance(Gitlab):
         url += "%s/%s.git" % (accountName, repoName)
 
         j.clients.gitlab.log("init git client ##%s## on path:%s"%(repoName,self.getCodeFolder(repoName)),category="getclient")
-        cl = j.clients.git.getClient(self.getCodeFolder(repoName), url, branchname=branch)
+        cl = j.clients.git.getClient(self.getCodeFolder(repoName), url, branchname=branch, cleandir=clean)
         # j.clients.gitlab.log("git client inited for repo:%s"%repoName,category="getclient")
         self.gitclients[repoName]=cl
         return cl

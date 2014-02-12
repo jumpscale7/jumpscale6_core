@@ -499,7 +499,7 @@ class Gitlab(object):
 
     def createprojectuser(self, id_, name, description="", default_branch="",
                           issues_enabled=0, wall_enabled=0,
-                          merge_requests_enabled=0, wiki_enabled=0,
+                          merge_requests_enabled=0, wiki_enabled=0, public=0,
                           snippets_enabled=0, sudo=""):
         """
         Create a project for the given user identified by id
@@ -513,6 +513,10 @@ class Gitlab(object):
                 "merge_requests_enabled": merge_requests_enabled,
                 "wiki_enabled": wiki_enabled,
                 "snippets_enabled": snippets_enabled}
+        if type(public) != int:
+            raise TypeError
+        if public != 0:
+            data['public'] = public
         if sudo != "":
             data['sudo'] = sudo
         request = requests.post(self.projects_url + "/user/" + str(id_),
