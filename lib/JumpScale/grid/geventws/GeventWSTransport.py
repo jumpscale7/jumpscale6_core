@@ -18,6 +18,8 @@ class GeventWSTransport(Transport):
         everwrite this method in implementation to init your connection to server (the transport layer)
         """
         self._id = sessionid
+        if j.system.net.tcpPortConnectionTest(self._addr,self._port)==False:
+            j.errorconditionhandler.raiseOperationalCritical("could not connect to server %s on port %s, is it running?"%(self._addr,self._port), category="transport.ws.gevent.init")        
 
     def close(self):
         """
@@ -54,7 +56,7 @@ class GeventWSTransport(Transport):
                     responses=requests.map([r])
                     rcv=responses[0]
                     # rcv = r.send()
-                except Exception,e:
+                except Exception,e:                    
                     if str(e).find("Connection refused")<>-1:
                         print "retry connection to %s"%self.url
                         time.sleep(0.1)
@@ -72,6 +74,7 @@ class GeventWSTransport(Transport):
         # rcv = r.send()
 
         if rcv==None:
+            
             eco=j.errorconditionhandler.getErrorConditionObject(msg='timeout on request to %s'%self.url, msgpub='', \
                 category='gevent.transport')
             return "4","m",j.db.serializers.msgpack.dumps(eco.__dict__)

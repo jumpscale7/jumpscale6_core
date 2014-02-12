@@ -20,6 +20,8 @@ j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
 
+j.core.grid.init()
+
 class Empty():
     pass
 
