@@ -183,9 +183,10 @@ class OSISStore(object):
             # print "ukey not in db"
             new=True
             changed=True    
-            id=self.db.increment(self.dbprefix_incr)
-            # print "newid:%s"%id
-            obj.id=id
+            if not obj.id:
+                id=self.db.increment(self.dbprefix_incr)
+                # print "newid:%s"%id
+                obj.id=id
             obj.getSetGuid()
             ukey=obj.getUniqueKey()
             ckey=obj.getContentKey()
