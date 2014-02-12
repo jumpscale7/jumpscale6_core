@@ -8,7 +8,7 @@ import imp
 import inspect
 import ujson as json
 
-j.application.start("jumpscale:agentcontroller")
+j.application.start("jumpscale:agentcontrollerV2")
 j.application.initGrid()
 
 j.logger.consoleloglevel = 2
@@ -29,6 +29,9 @@ class ControllerCMDS():
         # self.jobs= {} #key is jobid
 
         self.roles2agents = {}  # key=role in all depths
+        self.agent2roles={}
+
+        self.sessionsUpdateTime={}
 
         # self.session2agent={} #key= sessionid, val = agentid
         # self.agent2sessions={} #key=agent, val=list of sessions
@@ -50,7 +53,6 @@ class ControllerCMDS():
 
         j.logger.setLogTargetLogForwarder()
 
-
     def _adminAuth(self,user,passwd):
         if user != self.adminuser or passwd != self.adminpasswd:
             raise RuntimeError("permission denied")
@@ -58,11 +60,46 @@ class ControllerCMDS():
     def authenticate(self, session):
         return False  # to make sure we dont use it
 
+    def scheduleCmd(self,gid,nid,cmdcategory,cmdname,args={},queue="",log=True,timeout=0,roles=[],session=None): 
+        """ 
+        new preferred method for scheduling work
+        @name is name of cmdserver method or name of jumpscript 
+        """
+        if session<>None: 
+            self._adminAuth(session.user,session.passwd) 
+        job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
+        #ask redis for uniqueid 
+        jobid=self.gredis.hincrby("jobs:last",str(session.gid),1) 
+        job.id=jobid
+        self.gredis.hmset("jobs:%s"%session.gid,{job.id:json.dumps(job.__dict__)})
+        from IPython import embed
+        print "DEBUG NOW oooooo"
+        embed()
+        
+        q=....getQueue("cmdq_%s_%s"%(gid,nid))  #@toro use redis extension (getGeventRedisQueue)
+        q.put(str(job.id))  
+
+    def getCmd(self,session):
+        """
+        returns work for 1 agent, which is identified by nid (there is never more than 1 agent per node)
+        """
+        #make sure is all working async (use gevent redis client)
+        from IPython import embed
+        print "DEBUG NOW get cmd"
+        embed()
+
+
+
     def _setRole2Agent(self,role,agent):
         if not self.roles2agents.has_key(role):
             self.roles2agents[role]=[]
         if agent not in self.roles2agents[role]:
             self.roles2agents[role].append(agent)   
+
+        if not self.agent2roles.has_key(agent):
+            self.agent2roles[agent]=[]
+        if role not in self.roles2agents[agent]:
+            self.agent2roles[agent].append(role)   
 
 
     def register(self,session):
@@ -74,45 +111,26 @@ class ControllerCMDS():
         # self.sessions[session.id]=session
         # self.session2agent[session.id]=session.agentid
         roles=session.roles
-        gid,nid=session.agentid.split("_")
 
+        agentid="%s_%s"%(session.gid,session.nid)
 
-        from IPython import embed
-        print "DEBUG NOW register"
-        embed()
-        
         for role in roles:
-            self._setRole2Agent(role,session.agentid)
-            compl=""
-            while role.find(".")<>-1:
-                pre,role=role.split(".",1)
-                compl+=".%s"%pre
-                self._setRole2Agent(compl.lstrip("."),session.agentid)
-        self.workqueue[session.agentid]=[]
+            self._setRole2Agent(role,agentid)
+        
+        self.sessionsUpdateTime[agentid]=j.base.time.getTimeEpoch()
 
-        #mark agent 2 session
-        if not self.agent2sessions.has_key(session.agentid):
-            self.agent2sessions[session.agentid]=[]
-        if session.id not in self.agent2sessions[session.agentid]:
-            self.agent2sessions[session.agentid].append(session.id)
+        print "register done:%s"%agentid
 
-        self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
+    # def _markSessionFree(self,session):
+    #     self.agent2freeSessions[session.agentid][session.id]=Event()
+    #     return self.agent2freeSessions[session.agentid][session.id]
 
-        if not self.agent2freeSessions.has_key(session.agentid):
-            self.agent2freeSessions[session.agentid]={}
+    # def _unmarkSessionFree(self,session):
+    #     if not self.agent2freeSessions.has_key(session.agentid):
+    #         raise RuntimeError("bug in _unmarkSessionFree in agentcontroller, sessionfree needs to have agentid")
 
-        print "register done:%s"%session.id
-
-    def _markSessionFree(self,session):
-        self.agent2freeSessions[session.agentid][session.id]=Event()
-        return self.agent2freeSessions[session.agentid][session.id]
-
-    def _unmarkSessionFree(self,session):
-        if not self.agent2freeSessions.has_key(session.agentid):
-            raise RuntimeError("bug in _unmarkSessionFree in agentcontroller, sessionfree needs to have agentid")
-
-        if self.agent2freeSessions[session.agentid].has_key(session.id):
-            self.agent2freeSessions[session.agentid].pop(session.id)
+    #     if self.agent2freeSessions[session.agentid].has_key(session.id):
+    #         self.agent2freeSessions[session.agentid].pop(session.id)
 
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
@@ -172,8 +190,7 @@ class ControllerCMDS():
             redis.set("jumpscripts_%s_%s_%s"%(t.gid,t.organization,t.name),json.dumps(t.__dict__))
             key = "%s_%s_%s" % (j.application.whoAmI.gid,t.organization, t.name)
             self.jumpscripts[key] = t
-
-        
+       
     def getJumpScript(self, organization, name,gid=None, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
@@ -205,14 +222,6 @@ class ControllerCMDS():
         else:
             j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s:%s" % (organization, name), category="action.notfound", die=False)
 
-
-    # def getJumpscriptFromKey(self, jumpscriptkey, session=None):
-    #     if not self.jumpscriptsFromKeys.has_key(jumpscriptkey):
-    #         message="Could not find jumpscript with key:%s"%jumpscriptkey
-    #         # j.errorconditionhandler.raiseBug(message="Could not find jumpscript with key:%s"%jumpscriptkey,category="jumpscript.controller.scriptnotfound")
-    #         raise RuntimeError(message)
-    #     return self.jumpscriptsFromKeys[jumpscriptkey]
-
     def listJumpScripts(self, organization=None, cat=None, session=None):
         """
         @return [[org,name,category,descr],...]
@@ -235,47 +244,21 @@ class ControllerCMDS():
         """
         self._adminAuth(session.user,session.passwd)
 
-        #action = self.getJumpScript(organization, name)
+        action = self.getJumpScript(organization, name)
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
-        jobs=[]
         role = role.lower()
         if role in self.roles2agents:
             for agentid in self.roles2agents[role]:
-                job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
-                    jscriptid=action.id,lock=lock,jsname=name)
-                job.db.nid=int(session.agentid.split("_")[1])
-                job.save()
-                self.workqueue[agentid].append(job)
-                self.jobs[job.db.id]=job
-                jobs.append(job)
-
-                if len(self.agent2freeSessions[agentid].keys())>0:
-                    #means there are agents waiting for work
-                    sessionid=self.agent2freeSessions[agentid].keys()[0]
-                    print "found free session:%s"%sessionid
-                    self.agent2freeSessions[agentid][sessionid].set()
-
-            if len(jobs)>1:
-                jobgroup= Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
-                    jscriptid=action.id,lock=lock,jsname=name)
-                jobgroup.save()
-                for jobchild in jobs:
-                    jobgroup.db.children.append(jobchild.db.id)
-                    jobgroup.db.childrenActive.append(jobchild.db.id)
-                self.jobs[jobgroup.db.id]=jobgroup
-                for child in jobs:
-                    child=self.jobs[child.db.id]
-                    child.db.parent=jobgroup.db.id
-                job=jobgroup
-                self.jobs[job.db.id]=job
-                job.save()
+                gid,nid=agentid.split("_")                
+                job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=lock,log=True,timeout=timeout,roles=[role],session=session)
 
             if wait:
                 return self.waitJumpscript(job.db.id,session)
 
-            return job.db.__dict__
+            return job.__dict__
         else:
+            #@todo redo with job object from osis (see scheduleCmd)
             print "nothingtodo"
             job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
                     jscriptid=action.id,lock=lock,jsname=name)
@@ -293,6 +276,7 @@ class ControllerCMDS():
         returncode 2 = error (then result is eco)
 
         """
+        #@redo using redis
         job=self.jobs.get(jobid)
         if not job:
             raise RuntimeError("Not job found with id %s" % jobid)
@@ -312,6 +296,7 @@ class ControllerCMDS():
         """
         is for agent to ask for work
         """
+        #@redo use self.getCmd(....)
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         # gevent.spawn(greenletGetWork,session=session)
         timeout = gevent.Timeout(30)
