@@ -35,6 +35,9 @@ class Job(OsisBaseObject):
             self.timeStop=0
             self.log=log
 
+    def getUniqueKey(self):
+        return self.getSetGuid()
+
     def getSetGuid(self):
         """
         use osis to define & set unique guid (sometimes also id)
