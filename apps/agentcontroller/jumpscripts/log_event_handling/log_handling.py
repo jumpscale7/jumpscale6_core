@@ -22,9 +22,9 @@ import time
 
 def action():
 
-    redisqueue=j.clients.redis.getRedisQueue("127.0.0.1",7767,"logs")
+    redisqueue=j.clients.redis.getRedisQueue("127.0.0.1",7768,"logs")
     # redis=j.clients.redis.getRedisClient("127.0.0.1",7767)
-    redisqueueEco=j.clients.redis.getRedisQueue("127.0.0.1",7767,"eco")
+    redisqueueEco=j.clients.redis.getRedisQueue("127.0.0.1",7768,"eco")
 
     OSISclient = j.core.osis.getClient(user='root')
 
