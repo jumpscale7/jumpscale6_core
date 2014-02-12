@@ -72,11 +72,13 @@ class LogTargetLogForwarder():
         """
         forward the already encoded message to the target destination
         """
-        if self.enabled:            
+        if self.enabled:
             if self.checkTarget():
                 try:
-                    self.redisqueue.put(ujson.dumps(log.__dict__))
-                except Exception,e:                
+                    if not isinstance(log, dict):
+                        log = log.__dict__
+                    self.redisqueue.put(ujson.dumps(log))
+                except Exception,e:
                     print 'Failed to log in %s,error:%s' % (self,e)
                     self.connected = False
 
