@@ -128,10 +128,13 @@ class Agent(Greenlet):
                 except Exception,e:
                     self.register()
                     continue
+
+            if not havework:
+                print 'no work here'
                 
-            if havework<>None and ok:
-                jscriptid,args,jid=havework
-                args=json.loads(args)
+            if havework and ok:
+                organization, name, kwargs, jid = havework
+                jscriptid = "%s_%s" % (organization, name)
                 j.application.jid=jid
                 
                 #eval action code, if not ok send error back, cache the evalled action
@@ -139,7 +142,7 @@ class Agent(Greenlet):
                     action,jscript=self.actions[jscriptid]
                 else:
                     # print "CACHEMISS"
-                    jscript=self.client.getJumpscriptFromKey(jscriptid)
+                    jscript=self.client.getJumpScript(organization, name)
                     try:
                         self.log("Load script:%s %s"%(jscript["organization"],jscript["name"]))
                         exec(jscript["source"])
@@ -161,7 +164,7 @@ class Agent(Greenlet):
                 self.log("Job started: %s %s"%(jscript["organization"],jscript["name"]))
                 try:
                     LOGS['current'] = LOGS['job']
-                    result=action(**args)
+                    result=action(**kwargs)
                     LOGS['current'] = LOGS['agent']
                 except Exception,e:
                     LOGS['current'] = LOGS['agent']
@@ -172,7 +175,7 @@ class Agent(Greenlet):
                     eco.jid = jid
                     eco.category = LOGS['agent']
                     # self.loghandler.logECO(eco)
-                    self.notifyWorkCompleted({},eco.__dict__)
+                    self.notifyWorkCompleted(jid, {},eco.__dict__)
                     continue
 
                 #if not j.basetype.dictionary.check(result):
@@ -187,14 +190,14 @@ class Agent(Greenlet):
                     
                 
                 self.log("result:%s"%result)
-                self.notifyWorkCompleted(result,{})
+                self.notifyWorkCompleted(jid, result,{})
 
 
-    def notifyWorkCompleted(self,result,eco):
+    def notifyWorkCompleted(self,jid, result,eco):
         try:
             eco = eco.copy()
             eco.pop('tb', None)
-            result=self.client.notifyWorkCompleted(result=result,eco=eco)
+            result=self.client.notifyWorkCompleted(jid, result=result,eco=eco)
         except Exception,e:
             eco = j.errorconditionhandler.lastEco
             j.errorconditionhandler.lastEco = None

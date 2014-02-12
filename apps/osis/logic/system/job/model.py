@@ -8,21 +8,24 @@ class Job(OsisBaseObject):
     identifies a job in the grid
     """
 
-    def __init__(self, ddict={}, gid="",jsname='', jsorganization='', role="", args=[], timeout=60, sessionid=None, jscriptid=None,\
-            nid=0,cmd="",category="",log=True):
+    def __init__(self, ddict={}, gid="", roles=None, args=None, timeout=60, sessionid=None, jscriptid=None,\
+            nid=0,cmd="",category="",log=True, queue=None):
         if ddict <> {}:
             self.load(ddict)
         else:
             self.id=0
-            self.sessionid=sessionid
+            self.sessionid = sessionid
             self.gid =gid
             self.nid =nid
-            self.jsname = jsname
-            self.jsorganization=jsorganization
-            self.cmd=""
-            self.category=""
-            self.role=role
+            self.cmd = cmd
+            self.category = category
+            if not roles:
+                roles = list()
+            if not args:
+                args = dict()
+            self.roles=roles
             self.args=args
+            self.queue=queue
             self.timeout=timeout
             self.result=None
             self.parent=None
@@ -40,7 +43,3 @@ class Job(OsisBaseObject):
         self.id = int(self.id)
         self.guid = "%s_%s" % (self.gid, self.id)
         return self.guid
-
-            
-
-       

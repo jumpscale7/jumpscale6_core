@@ -14,6 +14,9 @@ j.application.initGrid()
 j.logger.consoleloglevel = 2
 import JumpScale.baselib.redis
 
+REDISSERVER = '127.0.0.1'
+REDISPORT = 7768
+
 class ControllerCMDS():
 
     def __init__(self, daemon):
@@ -24,12 +27,9 @@ class ControllerCMDS():
         self.jumpscripts = {}
         self.jumpscriptsFromKeys = {}
 
-        # self.workqueue = {}  # key=agentid
-
-        # self.jobs= {} #key is jobid
-
         self.roles2agents = {}  # key=role in all depths
         self.agent2roles={}
+        self.agentqueues = dict()
         self.sessionsUpdateTime={}
 
         # self.session2agent={} #key= sessionid, val = agentid
@@ -48,7 +48,7 @@ class ControllerCMDS():
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
         
-        self.redis = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+        self.redis = j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT)
 
         j.logger.setLogTargetLogForwarder()
 
@@ -67,27 +67,37 @@ class ControllerCMDS():
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
         job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
-        #ask redis for uniqueid 
-        jobid=self.gredis.hincrby("jobs:last",str(session.gid),1) 
+        jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         job.id=jobid
-        self.gredis.hmset("jobs:%s"%session.gid,{job.id:json.dumps(job.__dict__)})
-        from IPython import embed
-        print "DEBUG NOW oooooo"
-        embed()
-        
-        q=....getQueue("cmdq_%s_%s"%(gid,nid))  #@toro use redis extension (getGeventRedisQueue)
+        self._setJob(job, True)
+        q = self._getCmdQueue(session)
         q.put(str(job.id))  
+        return job
+
+    def _setJob(self, job, osis=False):
+        self.redis.hmset("jobs:%s"%job.gid,{job.id:json.dumps(job.__dict__)})
+        if osis:
+            self.jobclient.set(job)
+
+    def _getJob(self, gid, jobid):
+        jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
+        return self.jobclient.new(ddict=jobdict)
+
 
     def getCmd(self,session):
         """
         returns work for 1 agent, which is identified by nid (there is never more than 1 agent per node)
         """
-        #make sure is all working async (use gevent redis client)
-        from IPython import embed
-        print "DEBUG NOW get cmd"
-        embed()
+        return self._getCmdQueue(session).get()
 
-
+    def _getCmdQueue(self, session):
+        agentid="%s_%s"%(session.gid,session.nid)
+        if agentid not in self.agentqueues:
+            queuename = "cmdq_%s_%s" % (session.gid, session.nid)
+            #self.agentqueues[agentid] = j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
+            return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
+        return self.agentqueues[agentid]
+        
 
     def _setRole2Agent(self,role,agent):
         if not self.roles2agents.has_key(role):
@@ -97,27 +107,18 @@ class ControllerCMDS():
 
         if not self.agent2roles.has_key(agent):
             self.agent2roles[agent]=[]
-        if role not in self.roles2agents[agent]:
+        if role not in self.agent2roles[agent]:
             self.agent2roles[agent].append(role)   
 
 
     def register(self,session):
-
         print "new agent:"
-        print session
-
-        # self._clean(similarProcessPIDs,session)
-        # self.sessions[session.id]=session
-        # self.session2agent[session.id]=session.agentid
         roles=session.roles
-
         agentid="%s_%s"%(session.gid,session.nid)
-
         for role in roles:
-            self._setRole2Agent(role,agentid)
+            self._setRole2Agent(role, agentid)
         
         self.sessionsUpdateTime[agentid]=j.base.time.getTimeEpoch()
-
         print "register done:%s"%agentid
 
     # def _markSessionFree(self,session):
@@ -253,19 +254,18 @@ class ControllerCMDS():
                 job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=lock,log=True,timeout=timeout,roles=[role],session=session)
 
             if wait:
-                return self.waitJumpscript(job.db.id,session)
+                return self.waitJumpscript(job.id,session)
 
             return job.__dict__
         else:
             #@todo redo with job object from osis (see scheduleCmd)
+            job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=lock,args=args,log=True,timeout=timeout) 
             print "nothingtodo"
-            job = Job(self,sessionid=session.id, jsorganization=organization, roles=role, args=json.dumps(args), timeout=timeout, \
-                    jscriptid=action.id,lock=lock,jsname=name)
-            job.db.state="NOWORK"
-            job.db.timeStop=job.db.timeStart
+            job.state="NOWORK"
+            job.timeStop=job.timeStart
 
-            job.save()            
-            return job.db.__dict__
+            self.jobclient.set(job)
+            return job.__dict__
 
     def waitJumpscript(self,jobid,session):
         """
@@ -276,70 +276,55 @@ class ControllerCMDS():
 
         """
         #@redo using redis
-        job=self.jobs.get(jobid)
+        job = self._getJob(session.gid, jobid)
         if not job:
             raise RuntimeError("Not job found with id %s" % jobid)
-        timeout = gevent.Timeout(job.db.timeout)
+        timeout = gevent.Timeout(job.timeout)
         timeout.start()
         try:
             job.wait()
             timeout.cancel()
-            return job.db.__dict__
+            return job.__dict__
         except:
             timeout.cancel()
             job.resultcode=1
             print "timeout on execution"
-            return job.db.__dict__
+            return job.__dict__
 
     def getWork(self, session=None):
         """
         is for agent to ask for work
         """
-        #@redo use self.getCmd(....)
+        jobid = self._getCmdQueue(session).get(timeout=30)
+        if not jobid:
+            return
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-        # gevent.spawn(greenletGetWork,session=session)
-        timeout = gevent.Timeout(30)
-        timeout.start()
         try:
-            while True:
-                if len(self.workqueue[session.agentid])>0:
-                    #check locking
+            #check locking
+            # GET JOB object
+            job = self._getJob(session.gid, jobid)
+            agentid = "%s_%s" % (session.gid, session.nid)
 
-                    job=self.workqueue[session.agentid][-1]
-                    if job.db.lock and not self.locks.checkLock(session.agentid,job.db.lock):
-                        #not set yet can execute
-                        job=self.workqueue[session.agentid].pop()
-                        self.locks.addLock(session.agentid,job.db.lock,job.db.lockduration)
-                    else:
-                        job=self.workqueue[session.agentid].pop()
-                    self.activeJobSessions[session.id]=job
-                    timeout.cancel()
-                    return (job.db.jscriptid,job.db.args,job.db.id)
-                #else no work wait for x time (to support long polling) to see if there is activity for this session
-                event=self._markSessionFree(session)
-                print "wait for event for agent:id %s"%session.agentid
-                event.wait()
-                #if we get here there is someone asking something to do, unmark the session, go into while to return next job
-                self._unmarkSessionFree(session)
+            if job.queue and not self.locks.checkLock(agentid,job.queue):
+                #not set yet can execute
+                self.locks.addLock(session.agentid,job.queue,job.timeout)
+            #self.activeJobSessions[session.id]=job
+            return (job.category, job.cmd, job.args, job.id)
 
-        except:# Exception,e:
-            timeout.cancel()
+        except Exception,e:
+            raise
+            print 'something went wrong %s' % e
             #because of timeout max wait is 2 min
-            self._unmarkSessionFree(session)
             print "timeout (if too fast timeouts then error in getWork while loop)"
 
-    def notifyWorkCompleted(self,result=None,eco=None,session=None):
+    def notifyWorkCompleted(self, jobid, result=None,eco=None,session=None):
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-
-        if (not self.activeJobSessions.has_key(session.id)) or self.activeJobSessions[session.id]==None:
-            raise RuntimeError("Could not notify job completed for session:%s"%session.id)
-        
-        job = self.activeJobSessions.pop(session.id)
-        job.db.timeStop=self.sessionsUpdateTime[session.id]
+        job = self._getJob(session.gid, jobid)
+        job.timeStop=self.sessionsUpdateTime[session.id]
 
         if eco:
-            job.db.resultcode=2
-            job.db.state="ERROR"
+            job.resultcode=2
+            job.state="ERROR"
             ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
             print "#####ERROR ON AGENT######"
             try:
@@ -347,18 +332,18 @@ class ControllerCMDS():
             except:
                 print ecobj
             print "#########################"
-            job.db.result = json.dumps(eco)
+            job.result = json.dumps(eco)
         else:
             eco = ''
-            job.db.resultcode=0
-            job.db.state="OK"
-            job.db.result = json.dumps(result)
-        job.save()
+            job.resultcode=0
+            job.state="OK"
+            job.result = json.dumps(result)
+        self._setJob(job, osis=True)
     
         #now need to return it to the client who asked for the work 
-        if job.db.parent and job.db.parent in self.jobs:
+        if job.parent and job.parent in self.jobs:
             parentjob = self.jobs[job.db.parent]
-            parentjob.db.childrenActive.remove(job.db.id)
+            parentjob.db.childrenActive.remove(job.id)
             if job.db.state == 'ERROR':
                 parentjob.db.state = 'ERROR'
                 parentjob.db.result = job.db.result
@@ -371,11 +356,10 @@ class ControllerCMDS():
                     parentjob.db.result = json.dumps(None)
                 parentjob.save()
                 parentjob.done()
-        job.done()
 
         print "completed job"
         print "result was.\n"
-        print job.db
+        print job
         return
 
     def getScheduledWork(self,agentid,session=None):
@@ -404,26 +388,27 @@ class ControllerCMDS():
         return result
 
     def log(self, logs, session=None):
-        j.logger.logTargetLogForwarder.logBatch(logs)
+        for log in logs:
+            j.logger.logTargetLogForwarder.log(log)
             
 
     def listSessions(self,session=None):
-        result=[]
-        for sessionid, session in self.sessions.iteritems():
-            sessionresult={}
-            sessionresult["id"]=sessionid
-            sessionresult["roles"]=session.roles
-            sessionresult["netinfo"]=session.netinfo
-            sessionresult["organization"]=session.organization
-            sessionresult["agentid"]=session.agentid
-            sessionresult["id"]=session.id
-            sessionresult["user"]=session.user
-            sessionresult["start"]=session.start
-            sessionresult["lastpoll"]=self.sessionsUpdateTime[session.id]
-            activejob = self.activeJobSessions.get(session.id)
-            sessionresult["activejob"] = activejob.id if activejob else None
-            result.append(sessionresult)
-        return result
+        #result=[]
+        #for sessionid, session in self.sessions.iteritems():
+        #    sessionresult={}
+        #    sessionresult["id"]=sessionid
+        #    sessionresult["roles"]=session.roles
+        #    sessionresult["netinfo"]=session.netinfo
+        #    sessionresult["organization"]=session.organization
+        #    sessionresult["agentid"]=session.agentid
+        #    sessionresult["id"]=session.id
+        #    sessionresult["user"]=session.user
+        #    sessionresult["start"]=session.start
+        #    sessionresult["lastpoll"]=self.sessionsUpdateTime[session.id]
+        #    activejob = self.activeJobSessions.get(session.id)
+        #    sessionresult["activejob"] = activejob.id if activejob else None
+        #    result.append(sessionresult)
+        return self.agent2roles
 
     def getJobInfo(self, jobid, session=None):
         job = self.jobs.get(jobid)

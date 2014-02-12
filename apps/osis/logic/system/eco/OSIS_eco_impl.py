@@ -3,8 +3,6 @@ from JumpScale import j
 parentclass=j.core.osis.getOsisImplementationParentClass("system")  #is the name of the namespace
 
 class mainclass(parentclass):
-    """
-    """
     def set(self, key, value):
         obj = self.getObject(value)
         new,changed,obj=self.setObjIds(obj)
