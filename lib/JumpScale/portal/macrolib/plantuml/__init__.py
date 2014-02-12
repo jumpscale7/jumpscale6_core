@@ -1,4 +1,4 @@
-import os, sys, subprocess, hashlib
+import os, subprocess, hashlib
 from JumpScale import j
 
 class JarNotFoundException(Exception): pass
