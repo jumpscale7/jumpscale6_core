@@ -143,7 +143,7 @@ cmds.daemon.parentdaemon=daemon
 
 cmds._init()
 
-cmds.jumpscripts.loadJumpscripts()
+cmds.jumpscripts.startAgent()
 
 daemon.start()
 

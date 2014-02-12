@@ -36,7 +36,7 @@ from JumpScale import j
         self.module = imp.load_source('JumpScale.jumpscript_%s' % md5sum, self.path)
 
     def run(self, *args, **kwargs):
-        self.module.action(*args, **kwargs)
+        return self.module.action(*args, **kwargs)
 
 
 class JumpscriptsCmds():
@@ -72,6 +72,55 @@ class JumpscriptsCmds():
 
 
 
+    def startAgent(self):
+        self.loadJumpscripts()
+        self.agentcontroller_client.register()
+        gevent.Greenlet(self._runAgent).start()
+
+    def _runAgent(self):
+        while True:
+            print 'getting work'
+            work = self.agentcontroller_client.getWork()
+            if work:
+                category, name, kwargs, jid = work
+                jscriptkey = "%s_%s" % (category, name)
+                jscript = self.jumpscripts.get(jscriptkey)
+                try:
+                    result = jscript.run(**kwargs)
+                except Exception, e:
+                    msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript.organization,jscript.name,j.application.getWhoAmiStr(),\
+                        jscript.source,e)
+                    eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                    eco.errormessage = msg
+                    eco.jid = jid
+                    # self.loghandler.logECO(eco)
+                    self.notifyWorkCompleted(jid, {},eco.__dict__)
+                    continue
+                self.notifyWorkCompleted(jid, result)
+
+
+    def notifyWorkCompleted(self,jid, result,eco=None):
+        try:
+            if not eco:
+                eco = dict()
+            else:
+                eco = eco.copy()
+                eco.pop('tb', None)
+            result=self.agentcontroller_client.notifyWorkCompleted(jid, result=result,eco=eco)
+        except Exception,e:
+            eco = j.errorconditionhandler.lastEco
+            j.errorconditionhandler.lastEco = None
+            # self.loghandler.logECO(eco)
+
+            print "******************* SERIOUS BUG **************"
+            print "COULD NOT EXECUTE JOB, COULD NOT PROCESS RESULT OF WORK."
+            try:
+                print "ERROR WAS:%s"%eco, e
+            except:
+                print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
+            print "******************* SERIOUS BUG **************"
+
+
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
@@ -96,7 +145,7 @@ class JumpscriptsCmds():
 
         self._killGreenLets()       
         self._configureScheduling()
-        
+
     def getJumpscript(self, organization, name, session=None):
 
         if session<>None:
@@ -133,6 +182,14 @@ class JumpscriptsCmds():
         return [[t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
 
+    def executeJumpscript(self, organization, name, args={},all=False, timeout=600,wait=True,lock="", session=None):
+        key = "%s_%s" % (organization, name)
+        if wait:
+            return self.jumpscripts[key].run(**args)
+        else:
+            gevent.Greenlet(self.jumpscripts[key].run, **args).start()
+
+
     ####SCHEDULING###
     def _killGreenLets(self,session=None):
         """
@@ -143,10 +200,10 @@ class JumpscriptsCmds():
         for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
             greenlet.kill()
 
-    def run(self,period=None):
+    def _run(self,period=None):
         if period==None:
             for period in j.processmanager.jumpscripts.jumpscriptsByPeriod.keys():
-                self.run(period)
+                self._run(period)
 
         for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[period]:
             if not action.enable:
@@ -173,13 +230,13 @@ class JumpscriptsCmds():
             print "ok:%s"%action.name
 
 
-    def loop(self, period):
+    def _loop(self, period):
         while True:
-            self.run(period)
+            self._run(period)
             gevent.sleep(period) 
 
     def _configureScheduling(self):        
         for period in self.jumpscriptsByPeriod.keys():
             period=int(period)
-            self.daemon.schedule("loop%s"%period, self.loop, period=period)
+            self.daemon.schedule("loop%s"%period, self._loop, period=period)
 

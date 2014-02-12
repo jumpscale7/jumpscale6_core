@@ -183,7 +183,7 @@ class OSISStore(object):
             # print "ukey not in db"
             new=True
             changed=True    
-            if not obj.id:
+            if not hasattr(obj, 'id') or not obj.id:
                 id=self.db.increment(self.dbprefix_incr)
                 # print "newid:%s"%id
                 obj.id=id
