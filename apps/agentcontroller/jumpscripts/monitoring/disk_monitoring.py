@@ -16,7 +16,10 @@ async=False
 
 roles = ["grid.node.disk"]
 
-j.processmanager.disks = dict()
+if not hasattr(j, 'processmanager'):
+    enable = False
+else:
+    j.processmanager.disks = dict()
 
 def action():
 

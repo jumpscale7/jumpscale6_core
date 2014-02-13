@@ -15,7 +15,10 @@ enable=True
 async=False
 roles = ["grid.node.network"]
 
-j.processmanager.nics = dict()
+if not hasattr(j, 'processmanager'):
+    enable = False
+else:
+    j.processmanager.nics = dict()
 
 def action():
 
