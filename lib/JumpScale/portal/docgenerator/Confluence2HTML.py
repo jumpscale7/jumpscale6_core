@@ -348,7 +348,7 @@ class Confluence2HTML():
             if state == "macro":
                 macro += "%s\n" % line
 
-            if state == "macro" and line.find("}}") == 0:
+            if state == "macro" and line.find("}}") >= 0:
                 state = "start"
                 # print "macroend:%s"%line
                 # macrostr=macro
