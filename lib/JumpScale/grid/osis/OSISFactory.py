@@ -3,7 +3,8 @@ from OSISCMDS import OSISCMDS
 from OSISClientForCat import OSISClientForCat
 from OSISBaseObject import OSISBaseObject
 from OSISBaseObjectComplexType import OSISBaseObjectComplexType
-import random
+
+import inspect
 import imp
 import sys
 import ujson
@@ -156,7 +157,6 @@ class OSISFactory:
 
         if classpath=="":
             classpath=j.system.fs.joinPaths(j.dirs.varDir,"code","osismodel",namespace)
-        import inspect
 
         extpath=j.system.fs.getDirName(inspect.getfile(self.getClient))
         templpath=j.system.fs.joinPaths(extpath,"_templates","osiscomplextypes")
@@ -214,6 +214,10 @@ class OSISFactory:
         if j.system.fs.exists(path=specpath):
             print "SPECPATH:%s" %specpath
             self._generateOsisModelClassFromSpec(namespace,specpath=basepathspec,classpath=basepathspec)
+
+    def getModelTemplate(self):
+        extpath=j.system.fs.getDirName(inspect.getfile(self.getClient))
+        return j.system.fs.joinPaths(extpath,"_templates","model_template.py")
 
 
     def getOsisModelClass(self,namespace,category,specpath=""):

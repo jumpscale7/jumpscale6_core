@@ -270,6 +270,19 @@ class OSISCMDS(object):
             for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
                 catpath = j.system.fs.joinPaths(namespacepath, catname)
 
+
+                #generate model class
+                modelfile = j.system.fs.joinPaths(catpath, "model.py")
+                if overwriteImplementation or not j.system.fs.exists(path=modelfile):
+                    fileFrom = j.system.fs.joinPaths(namespacepath, "model_template.py")
+                    if not j.system.fs.exists(fileFrom):
+                        fileFrom = j.core.osis.getModelTemplate()
+                    j.system.fs.copyFile(fileFrom, modelfile)
+                    ed=j.codetools.getTextFileEditor(modelfile)
+                    ed.replaceNonRegex("$categoryname",catname.capitalize())
+                    ed.save()
+
+
                 j.core.osis.getOsisModelClass(namespacename,catname)
 
                 # check if there is already an implfile
@@ -278,10 +291,11 @@ class OSISCMDS(object):
                 fileFrom = j.system.fs.joinPaths(namespacepath, "OSIS_category_template.py")
                 if overwriteImplementation or not j.system.fs.exists(path=implpath):
                     j.system.fs.copyFile(fileFrom, implpath)
-                
+
                 ed=j.codetools.getTextFileEditor(implpath)
                 ed.replaceNonRegex("$namespace",namespacename)
                 ed.save()
+
 
                 classs = j.core.osis._loadModuleClass(implpath)
                                           
