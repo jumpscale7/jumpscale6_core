@@ -353,7 +353,10 @@ class ErrorConditionHandler():
         frs=self.getFrames(tb=tb)
         frs.reverse()
         for f,linenr in frs:            
-            code,linenr2=inspect.findsource(f)
+            try:
+                code,linenr2=inspect.findsource(f)
+            except IOError:
+                continue
             start=max(linenr-10,0)
             stop=min(linenr+4,len(code))
             code2="".join(code[start:stop])
