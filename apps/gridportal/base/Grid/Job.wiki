@@ -7,7 +7,7 @@ h2. Job $$id
 * *Grid ID*: $$gid
 * *Node ID*: $$nid
 * *Roles*: $$roles
-* *Jumpscript*: [$$jsorganization:$$jsname|jumpscript?jsorganization=$$jsorganization&jsname=$$jsname]
+* *Jumpscript*: [$$category:$$cmd|jumpscript?category=$$category&cmd=$$cmd]
 * *Description*: $$description
 * *Start*: $$timestart (*Timeout*: $$timeout)
 * *Lock*: $$lock (*Duration*: $$lockduration)

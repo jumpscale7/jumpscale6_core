@@ -23,8 +23,8 @@ def main(j, args, params, tags, tasklet):
                 obj[attr] = 'N/A'
 
         obj['nid'] = obj.get('nid', 0)
-        for attr in ['children', 'childrenActive']:
-            obj[attr] = ', '.join(obj[attr]) or ''
+        obj['roles'] = ', '.join(obj['roles'])
+        obj['args'] = json.dumps(obj['args'])
 
         if obj["state"] == "ERROR":
             obj['state'] = "FAILED"
