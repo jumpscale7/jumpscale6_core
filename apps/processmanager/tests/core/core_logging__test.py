@@ -34,9 +34,9 @@ class TEST():
             
         self.client= j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user=j.application.config.get('system.superadmin.login'), \
             passwd=j.application.config.get('grid.master.superadminpasswd'),category="jpackages")
-        self.logqueue=j.clients.redis.getRedisQueue("127.0.0.1",7767,"logs")
-        self.logqueueEco=j.clients.redis.getRedisQueue("127.0.0.1",7767,"eco")
-        self.redis=j.clients.redis.getRedisClient("127.0.0.1",7767)
+        self.logqueue=j.clients.redis.getRedisQueue("127.0.0.1",7768,"logs")
+        self.logqueueEco=j.clients.redis.getRedisQueue("127.0.0.1",7768,"eco")
+        self.redis=j.clients.redis.getRedisClient("127.0.0.1",7768)
         j.logger.setLogTargetLogForwarder()
 
 

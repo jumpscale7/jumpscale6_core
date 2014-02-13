@@ -68,6 +68,7 @@ class ControllerCMDS():
         job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
         jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         job.id=jobid
+        job.getSetGuid()
         self._setJob(job, True)
         q = self._getCmdQueue(gid=gid, nid=nid)
         q.put(str(job.id))  
@@ -78,7 +79,7 @@ class ControllerCMDS():
         if osis:
             self.jobclient.set(job)
 
-    def _getJob(self, gid, jobid):
+    def _getJobFromRedis(self, gid, jobid):
         jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
         return self.jobclient.new(ddict=jobdict)
 
@@ -93,7 +94,7 @@ class ControllerCMDS():
             return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
         return self.agentqueues[queuename]
 
-    def _getJobWait(self, jobid):
+    def _getJobQueue(self, jobid):
         queuename = "jobq_%s" % jobid
         return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
         
@@ -229,7 +230,7 @@ class ControllerCMDS():
             return True
         return [[t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
-    def executeJumpScript(self, organization, name, role, args={},all=False, timeout=600,wait=True,lock="", session=None):
+    def executeJumpScript(self, organization, name, nid=None, role=None, args={},all=False, timeout=600,wait=True,queue="", session=None):
         """
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
@@ -243,19 +244,17 @@ class ControllerCMDS():
         if role in self.roles2agents:
             for agentid in self.roles2agents[role]:
                 gid,nid=agentid.split("_")                
-                job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=lock,log=True,timeout=timeout,roles=[role],session=session)
+                job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session)
 
             if wait:
                 return self.waitJumpscript(job.id,session)
 
             return job.__dict__
         else:
-            #@todo redo with job object from osis (see scheduleCmd)
-            job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=lock,args=args,log=True,timeout=timeout) 
+            job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout) 
             print "nothingtodo"
             job.state="NOWORK"
             job.timeStop=job.timeStart
-
             self.jobclient.set(job)
             return job.__dict__
 
@@ -267,11 +266,11 @@ class ControllerCMDS():
         returncode 2 = error (then result is eco)
 
         """
-        job = self._getJob(session.gid, jobid)
+        job = self._getJobFromRedis(session.gid, jobid)
         if job:
-            res = self._getJobWait(jobid).get(job.timeout)
+            res = self._getJobQueue(jobid).get(job.timeout)
             if res:
-                job = self._getJob(session.gid, jobid)
+                job = self._getJobFromRedis(session.gid, jobid)
                 return json.loads(job.result)
             else:
                 job.resultcode=1
@@ -289,14 +288,10 @@ class ControllerCMDS():
         try:
             #check locking
             # GET JOB object
-            job = self._getJob(session.gid, jobid)
+            job = self._getJobFromRedis(session.gid, jobid)
             agentid = "%s_%s" % (session.gid, session.nid)
-
-            if job.queue and not self.locks.checkLock(agentid,job.queue):
-                #not set yet can execute
-                self.locks.addLock(session.agentid,job.queue,job.timeout)
             #self.activeJobSessions[session.id]=job
-            return (job.category, job.cmd, job.args, job.id)
+            return (job.__dict__)
 
         except Exception,e:
             raise
@@ -306,7 +301,7 @@ class ControllerCMDS():
 
     def notifyWorkCompleted(self, jobid, result=None,eco=None,session=None):
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-        job = self._getJob(session.gid, jobid)
+        job = self._getJobFromRedis(session.gid, jobid)
         job.timeStop=self.sessionsUpdateTime[session.id]
         if job.queue:
             lq = self._getCmdQueue(session, job.queue)
@@ -333,24 +328,27 @@ class ControllerCMDS():
             job.state="OK"
             job.result = json.dumps(result)
         self._setJob(job, osis=True)
-        self._getJobWait(jobid).put(job.state)
-    
-        #now need to return it to the client who asked for the work 
-        if job.parent and job.parent in self.jobs:
-            parentjob = self.jobs[job.db.parent]
-            parentjob.db.childrenActive.remove(job.id)
-            if job.db.state == 'ERROR':
-                parentjob.db.state = 'ERROR'
-                parentjob.db.result = job.db.result
-            if not parentjob.db.childrenActive:
-                #all children executed
-                parentjob.db.resultcode=0
-                if parentjob.db.state != 'ERROR':
-                    parentjob.db.state = "OK"
-                if not parentjob.db.result:
-                    parentjob.db.result = json.dumps(None)
-                parentjob.save()
-                parentjob.done()
+        self._getJobQueue(jobid).put(job.state)
+        self.redis.hdel("jobs:%s"%job.gid,job.id)
+
+
+        #NO PARENT SUPPORT YET
+        # #now need to return it to the client who asked for the work 
+        # if job.parent and job.parent in self.jobs:
+        #     parentjob = self.jobs[job.db.parent]
+        #     parentjob.db.childrenActive.remove(job.id)
+        #     if job.db.state == 'ERROR':
+        #         parentjob.db.state = 'ERROR'
+        #         parentjob.db.result = job.db.result
+        #     if not parentjob.db.childrenActive:
+        #         #all children executed
+        #         parentjob.db.resultcode=0
+        #         if parentjob.db.state != 'ERROR':
+        #             parentjob.db.state = "OK"
+        #         if not parentjob.db.result:
+        #             parentjob.db.result = json.dumps(None)
+        #         parentjob.save()
+        #         parentjob.done()
 
         print "completed job"
         return
@@ -384,7 +382,6 @@ class ControllerCMDS():
         for log in logs:
             j.logger.logTargetLogForwarder.log(log)
             
-
     def listSessions(self,session=None):
         #result=[]
         #for sessionid, session in self.sessions.iteritems():

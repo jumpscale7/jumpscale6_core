@@ -143,7 +143,10 @@ cmds.daemon.parentdaemon=daemon
 
 cmds._init()
 
-cmds.jumpscripts.startAgent()
+if hasattr(cmds, 'jumpscripts'):
+    cmds.jumpscripts.loadJumpscripts()
+if hasattr(cmds, 'agent'):
+    cmds.agent.init()
 
 daemon.start()
 

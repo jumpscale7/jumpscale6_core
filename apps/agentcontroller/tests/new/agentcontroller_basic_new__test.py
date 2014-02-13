@@ -22,10 +22,6 @@ class TEST():
         self.client=j.clients.agentcontroller.get("127.0.0.1")
 
     def test_basic_execution(self):
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
-        
         #@todo this is just a basic test to see if agent controller works
         #execute the 4 test jumpscripts, test the right behaviour
         #did we see log (log msg in ES)
@@ -34,8 +30,19 @@ class TEST():
         #is it indeed waiting, so agent should be blocked
 
         args = {'msg': 'test msg'}
-        self.client.scheduleCmd(nid, cmdcategory, cmdname, args=args, queue=True, log='', timeout={}, transporttimeout=5)
+        cmdcategory="jumpscale"
+        cmdname="echo"
+
+        self.client.scheduleCmd(j.application.whoAmI.gid,j.application.whoAmI.nid, cmdcategory, cmdname, args=args, queue="default", log=True, timeout=3600)
+
+
+        return 
         
+        from IPython import embed
+        print "DEBUG NOW cmd scheduled"
+        embed()
+
+                
         result1 = self.client.executeKwargs('jumpscale', 'echo', ROLE, kwargs=kwargs)
         self.assertEqual(result1, kwargs['msg'])
 

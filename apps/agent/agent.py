@@ -123,7 +123,7 @@ class Agent(Greenlet):
             while ok==False:
                 try:
                     # print "check if work"
-                    havework=self.client.getWork()
+                    job=self.client.getWork()
                     ok=True
                 except Exception,e:
                     self.register()
@@ -132,8 +132,11 @@ class Agent(Greenlet):
             if not havework:
                 print 'no work here'
                 
-            if havework and ok:
-                organization, name, kwargs, jid = havework
+            if job and ok:
+                organization=job["category"]
+                name=job["cmd"]
+                kwargs=job["args"]
+                jid = job["id"]
                 jscriptid = "%s_%s" % (organization, name)
                 j.application.jid=jid
                 

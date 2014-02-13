@@ -128,7 +128,8 @@ class JumpscriptsCmds():
         #ASK agentcontroller about known jumpscripts 
         jumpscripts = self.agentcontroller_client.listJumpScripts()
         for organization, name, category, descr in jumpscripts:
-            jumpscript = JumpScript(self.agentcontroller_client.getJumpScript(organization, name))
+            jumpscript_data=self.agentcontroller_client.getJumpScript(organization, name)
+            jumpscript = JumpScript(jumpscript_data)
 
             print "found jumpscript:%s " %("%s_%s" % (organization, name))
             self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
@@ -138,10 +139,7 @@ class JumpscriptsCmds():
                     self.jumpscriptsByPeriod[period]=[]
                 self.jumpscriptsByPeriod[period].append(jumpscript)
 
-            #@todo remember in redis (NOT NEEDED NOW)
-            #self.redis.set("jumpscripts_%s_%s"%(t.organization,t.name),ujson.dumps(t.__dict__))            
-
-            #remember for worker
+            self.redis.hset("jumpscripts:%s"%(jumpscript.organization),jumpscript.name, ujson.dumps(jumpscript_data))
 
         self._killGreenLets()       
         self._configureScheduling()
@@ -197,8 +195,13 @@ class JumpscriptsCmds():
         """
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
+        todelete=[]
         for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
-            greenlet.kill()
+            if key.find("loop")==0:
+                greenlet.kill()
+                todelete.append(key)
+        for key in todelete:
+            self.daemon.parentdaemon.greenlets.pop(key)
 
     def _run(self,period=None):
         if period==None:
@@ -217,14 +220,15 @@ class JumpscriptsCmds():
                         action.run()
                     except Exception,e:
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                        
                         eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(action.organization,action.name, \
                                 j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
                         eco.tags="jscategory:%s"%action.category
                         eco.tags+=" jsorganization:%s"%action.organization
                         eco.tags+=" jsname:%s"%action.name
                         j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                else:                    
-                    result = self.q_d.enqueue('%s.action'%action.name)
+                else:
+                    result = self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
                 
             action.lastrun = time.time()
             print "ok:%s"%action.name

@@ -19,14 +19,12 @@ class ECO(OsisBaseObject):
             self.category=category #dot notation e.g. machine.start.failed
             self.tags=tags #e.g. machine:2323
 
-            self.errormessage=errormessage
-            self.errormessagePub=errormessagePub
-
             self.code=""
             self.funcname=""
             self.funcfilename=""
             self.funclinenr=0
             self.backtrace=""
+            self.backtraceDetailed=""
 
             self.appname=j.application.appname #name as used by application
 
@@ -51,7 +49,8 @@ class ECO(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        return self.getSetGuid()
+        C= "%s_%s_%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.errormessage,self.level,self.category,self.funcname,self.funcfilename,self.appname,self.pid,self.jid)
+        return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):
         """

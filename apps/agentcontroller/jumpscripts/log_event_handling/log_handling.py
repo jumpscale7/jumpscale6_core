@@ -65,8 +65,11 @@ def action():
         eco=ujson.decode(eco)
         eco["epoch"] = int(time.time())
         eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
+        if not hasattr(eco,"id"):
+            eco.id=0
         eco= eventhandlingTE.executeV2(eco=eco)
         if hasattr(eco,"tb"):
             delattr(eco, 'tb')
+        
         OSISclientEco.set(eco.__dict__)
         eco=redisqueueEco.get_nowait()
