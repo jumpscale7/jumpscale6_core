@@ -21,7 +21,7 @@ send2osis=False
 import JumpScale.grid.osis
 
 
-class TEST():
+class TEST(unittest.TestCase):
 
     def randomMAC(self):
         return j.base.idgenerator.generateGUID().replace("-","")
