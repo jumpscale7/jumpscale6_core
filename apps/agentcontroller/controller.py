@@ -268,9 +268,11 @@ class ControllerCMDS():
         """
         job = self._getJobFromRedis(session.gid, jobid)
         if job:
-            res = self._getJobQueue(jobid).get(job.timeout)
+            args = [] if not job.timeout else [job.timeout]
+            res = self._getJobQueue(jobid).get(*args)
             if res:
                 job = self._getJobFromRedis(session.gid, jobid)
+                self.redis.hdel("jobs:%s"%job.gid,job.id)
                 return json.loads(job.result)
             else:
                 job.resultcode=1
@@ -329,7 +331,6 @@ class ControllerCMDS():
             job.result = json.dumps(result)
         self._setJob(job, osis=True)
         self._getJobQueue(jobid).put(job.state)
-        self.redis.hdel("jobs:%s"%job.gid,job.id)
 
 
         #NO PARENT SUPPORT YET
