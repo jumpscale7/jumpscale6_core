@@ -5,6 +5,12 @@ from OSISBaseObjectComplexType import OSISBaseObjectComplexType
 
 class OSISBaseObject(OSISBaseObjectComplexType):
 
+    def __init__(self, ddict=None, **kwargs):
+        if ddict:
+            kwargs = ddict
+        for key, value in kwargs:
+            setattr(self, key, value)
+
     def load(self, ddict):
         """
         update object from ddict being given

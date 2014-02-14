@@ -64,8 +64,6 @@ class OSISClientForCat():
         """
         if hasattr(obj,"dump"):
             obj=obj.dump()
-        # if j.basetype.dictionary.check(obj):
-        #     obj=json.dumps(obj)        
         return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
 
     def get(self, key):
@@ -76,11 +74,14 @@ class OSISClientForCat():
                 value=json.loads(value)
             except:
                 pass # might be normal string/data aswell
-        if isinstance(value, dict) and value.has_key("_meta"):
-            klass=self._getModelClass()
-            obj=klass()
-            obj.load(value)
-            return obj
+        if isinstance(value, dict):
+            try:
+                klass=self._getModelClass()
+                obj=klass()
+                obj.load(value)
+                return obj
+            except:
+                return valuee
         else:
             return value
 
