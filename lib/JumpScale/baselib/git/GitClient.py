@@ -52,3 +52,76 @@ class GitClient(object):
 
     def push(self):
         self.repo.git.push('--all')
+
+    def getUntrackedFiles(self):
+        return self.repo.untracked_files
+
+    def patchGitignore(self):
+        gitignore = '''# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# Sphinx documentation
+docs/_build/'''
+        ignorefilepath = j.system.fs.joinPaths(self.gitBaseDir, '.gitignore')
+        if not j.system.fs.exists(ignorefilepath):
+            j.system.fs.writeFile(ignorefilepath, gitignore)
+        else:
+            lines = gitignore.split('\n')
+            inn = j.system.fs.fileGetContents(ignorefilepath)
+            linesExisting = inn.split('\n')
+            linesout = []
+            for line in linesExisting:
+                if line.strip():
+                    linesout.append(line)
+            for line in lines:
+                if line not in linesExisting and line.strip():
+                    linesout.append(line)
+            out = '\n'.join(linesout)
+            if out.strip() != inn.strip():
+                j.system.fs.writeFile(ignorefilepath, out)
