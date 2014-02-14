@@ -147,8 +147,9 @@ class ErrorConditionObject():
         j.system.fs.writeFile(path,msg)
         return path    
     
-    def getBacktrace(self,btkis,filename0,linenr0,func0):
-        # btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS()
+    def getBacktrace(self,btkis=None,filename0=None,linenr0=None,func0=None):
+        if btkis==None:
+            btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS()
         out="File:'%s':function:'%s'\n"%(filename0,func0)
         out+="Linenr:%s\n*************************************************************\n\n"%linenr0
         btkis.reverse()

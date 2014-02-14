@@ -8,6 +8,7 @@ from optparse import OptionParser
 
 parser = OptionParser()
 parser.add_option('-r', '--remote', help='Ip address of node',default="")
+parser.add_option('-l', '--local', action='store_true', help='To execute locally.')
 parser.add_option('-s', '--seedpasswd', help='Originalpasswd (used to login first time)',default="")
 parser.add_option('-p', '--passwd', help='New Passwd To Set Or Use',default="rooter")
 parser.add_option('-g', '--gridnr', help='Id of grid, make sure is unique.',default="")
@@ -17,18 +18,22 @@ parser.add_option('--nopasswd', help='work with ssh key',default=False)
 
 (options, args) = parser.parse_args()
 
+if options.local:
+    options.remote="127.0.0.1"
+    options.seedpasswd=""
 
-if options.remote =="":
-    options.remote=j.console.askString("Ip address of remote")
+else:
+    if options.remote =="":
+        options.remote=j.console.askString("Ip address of remote")
 
-if options.seedpasswd =="":
-    options.seedpasswd=j.console.askString("Seedpasswd if any, press enter if none.",defaultparam="")
-
-if options.passwd =="":
-    options.passwd=j.console.askString("New Passwd To Set Or Use (default rooter)",defaultparam="rooter")
+    if options.seedpasswd =="":
+        options.seedpasswd=j.console.askString("Seedpasswd if any, press enter if none.",defaultparam="")
 
 if options.gridnr =="":
     options.gridnr=j.console.askString("Grid id, make sure is unique.")
+
+if options.passwd =="":
+    options.passwd=j.console.askString("New Passwd To Set Or Use (default rooter)",defaultparam="rooter")
 
 remote = options.remote
 seedpasswd = options.seedpasswd
@@ -50,7 +55,7 @@ print help
 
 
 if options.type=="":
-    result=j.console.askChoiceMultiple(["platform","core","grid","desktop"])
+    result=j.console.askChoiceMultiple(["platform","core","configure","grid","desktop"])
 else:
     result=options.type.split(",")
 
@@ -72,13 +77,15 @@ def prepare_platform():
     print cuapi.apt_get("upgrade")
     print cuapi.apt_get("install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython mc -y")
     
-
 def install_jscore():
     try:
         print cuapi.run("pip uninstall JumpScale-core -y")
     except:
         pass
     print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/unstable.zip")
+    install_configure()
+
+def install_configure():
 
     items=j.system.fs.listFilesInDir("cfgs/%s"%options.cfgname,True)
     done=[]
@@ -148,6 +155,9 @@ if "platform" in result:
 
 if "core" in result:
     install_jscore()
+
+if "configure" in result and not "core" in result:
+    install_configure()
 
 if "grid" in result:
     install_grid()

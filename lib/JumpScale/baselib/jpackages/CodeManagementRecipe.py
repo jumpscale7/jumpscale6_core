@@ -235,6 +235,7 @@ class CodeManagementRecipe:
         self.configpath=configpath
         self.hrd=j.core.hrd.getHRD(hrdpath)
         self.items = []
+        self._getRepoConnection()
         self._process()
 
     def _getSource(self,source):

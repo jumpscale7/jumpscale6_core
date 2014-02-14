@@ -260,6 +260,7 @@ class BitbucketConnection(object):
 
         url += "%s/"%repoName
 
+
         hgrcpath=j.system.fs.joinPaths(self.getRepoPathLocal(repoName),".hg","hgrc")
         if j.system.fs.exists(hgrcpath):
             editor=j.codetools.getTextFileEditor(hgrcpath)
