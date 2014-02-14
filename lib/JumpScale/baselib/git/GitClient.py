@@ -16,8 +16,14 @@ class GitClient(object):
         else:
             self.repo = git.Repo(self.gitBaseDir)
 
+        if branchName != 'master':
+            self.switchBranch(branchName)
+
     def clone(self):
         self.repo = git.Repo.clone_from(self.remoteUrl, self.gitBaseDir)
+
+    def switchBranch(self, branchName):
+        self.repo.git.checkout(branchName)
 
     def getModifiedFiles(self):
         return [diff.a_blob.name for diff in self.repo.index.diff(None)]
@@ -26,6 +32,11 @@ class GitClient(object):
         if files:
             self.repo.index.add(files)
             self.repo.index.commit(message)
+
+    def removeFiles(self, files=[], message=''):
+        if files:
+           self.repo.index.remove(files)
+           self.repo.index.commit(message)
 
     def pull(self):
         self.repo.git.pull()
