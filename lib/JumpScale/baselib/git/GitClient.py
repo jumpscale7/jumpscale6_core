@@ -33,6 +33,11 @@ class GitClient(object):
             self.repo.index.add(files)
             self.repo.index.commit(message)
 
+    def removeFiles(self, files=[], message=''):
+        if files:
+           self.repo.index.remove(files)
+           self.repo.index.commit(message)
+
     def pull(self):
         self.repo.git.pull()
 
