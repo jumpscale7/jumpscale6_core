@@ -52,6 +52,7 @@ class ErrorConditionObject():
         if ddict<>{}:
             self.__dict__=ddict
         else:
+            self.id=""
             self.backtrace=""
             self.backtraceDetailed=""
             btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS(tb=tb)
