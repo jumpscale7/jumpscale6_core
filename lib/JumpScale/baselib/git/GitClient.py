@@ -12,14 +12,14 @@ class GitClient(object):
         if cleanDir:
             j.system.fs.removeDirTree(gitBaseDir)
             j.system.fs.createDir(gitBaseDir)
-            self.clone()
+            self._clone()
         else:
             self.repo = git.Repo(self.gitBaseDir)
 
         if branchName != 'master':
             self.switchBranch(branchName)
 
-    def clone(self):
+    def _clone(self):
         self.repo = git.Repo.clone_from(self.remoteUrl, self.gitBaseDir)
 
     def switchBranch(self, branchName):
