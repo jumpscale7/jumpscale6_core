@@ -10,7 +10,7 @@ class mainclass(OSISStore):
     """
 
     def set(self, key, value):
-        id = value['id']
+        id = value.get('id')
         if id and self.db.exists(self.dbprefix, id):
             orig = self.get(id)
             orig.update(value)

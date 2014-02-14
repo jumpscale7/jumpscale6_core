@@ -129,9 +129,6 @@ class Agent(Greenlet):
                     self.register()
                     continue
 
-            if not havework:
-                print 'no work here'
-                
             if job and ok:
                 organization=job["category"]
                 name=job["cmd"]
@@ -139,7 +136,6 @@ class Agent(Greenlet):
                 jid = job["id"]
                 jscriptid = "%s_%s" % (organization, name)
                 j.application.jid=jid
-                
                 #eval action code, if not ok send error back, cache the evalled action
                 if self.actions.has_key(jscriptid):
                     action,jscript=self.actions[jscriptid]
