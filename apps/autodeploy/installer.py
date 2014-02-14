@@ -134,11 +134,15 @@ def install_grid():
     print cuapi.run("jpackage install -n grid_portal -r --debug")
     print cuapi.run("jpackage install -n portal -r --debug")
     print cuapi.run("jpackage install -n agentcontroller -r --debug")
-    print cuapi.run("jpackage install -n agent -r --debug")
+    print cuapi.run("jpackage install -n workers -r --debug")
     print cuapi.run("jsprocess start")
 
-    print cuapi.run("jpackage install -n shorewall")
+    print cuapi.run("jpackage install -n blobserver2 -r --debug")
+    print cuapi.run("jpackage install -n jumpscale_examples -r --debug")
+    print cuapi.run("jpackage install -n doc_jumpscale -r --debug")
 
+    print cuapi.run("jpackage install -n shorewall")
+    print cuapi.run("shorewall stop")
 
 def install_desktop():
 
