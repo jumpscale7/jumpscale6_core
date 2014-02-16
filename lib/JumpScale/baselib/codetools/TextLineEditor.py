@@ -114,15 +114,27 @@ class TextLineEditor():
         """
         mark block as not matching based on startline
         """
-        self.getBlock(blockname,blocknr) #just to check if block exists
-        self.lines=[line for line in self.lines if (line.name<>blockname and (blocknr==None or line.blocknr==blocknr))]
+        if blocknr==None:
+            if not self.existsBlock(blockname):
+                from IPython import embed
+                print "DEBUG NOW ooo"
+                embed()
+                
+                return
+        else:
+            self.getBlock(blockname,blocknr) #just to check if block exists
+        if blocknr==None:
+            self.lines=[line for line in self.lines if (line.block<>blockname)]
+        else:
+            self.lines=[line for line in self.lines if (line.block<>blockname and line.blocknr==blocknr)]
+
         
         
     def getBlock(self,blockname,blocknr):
         """
         get block based on startline
         """
-        block=[line for line in self.lines (line.name==blockname and line.blocknr==blocknr)]
+        block=[line for line in self.lines if (line.block==blockname and line.blocknr==blocknr)]
         if len(block)==0:
             raise RuntimeError("Cannot find block from text with blockname %s and blocknr %s" % (blockname,blocknr))
         return str.join(block)

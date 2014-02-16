@@ -1226,6 +1226,21 @@ class SystemFS:
                 break
         return s
 
+    def touch(self,paths,overwrite=True):
+        """
+        can be single path or multiple (then list)
+        """
+        if  j.basetype.list.check(paths):
+            for item in paths:
+                self.touch(item,overwrite=overwrite)
+        path=paths
+        self.createDir(j.system.fs.getDirName(path))
+        if overwrite:
+            self.remove(path)
+        if not self.exists(path=path):
+            self.writeFile(path,"")
+        
+
     def writeFile(self,filename, contents, append=False):
         """
         Open a file and write file contents, close file afterwards
