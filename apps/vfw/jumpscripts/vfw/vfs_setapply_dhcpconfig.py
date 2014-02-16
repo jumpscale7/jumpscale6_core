@@ -1,4 +1,6 @@
 from JumpScale import j
+import JumpScale.lib.dhcp
+import JumpScale.lib.lxc
 
 descr = """
 configure DHCP
@@ -14,15 +16,11 @@ roles = ["*"]
 
 
 def action(name, fromIP, toIP, interface):
-    import JumpScale.lib.dhcp
-    import JumpScale.lib.lxc
-
-    host = j.system.platform.lxc.getip(name)
+    host = j.system.platform.lxc.getIp(name)
     password = j.application.config.get('system.superadmin.passwd')
 
     cl = j.system.platform.dhcp.get(host, password)
     cl.configure(fromIP, toIP, interface)
-    return "done"
 
 
 
