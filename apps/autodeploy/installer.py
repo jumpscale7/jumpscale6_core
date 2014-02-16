@@ -131,6 +131,11 @@ def install_grid():
     print cuapi.run("jpackage install -n grid_node -r --debug")
     print cuapi.run("jsprocess start -c")
 
+    #@todo should run but now die
+    # print cuapi.run("jsprocess disable -n logger")
+
+    print cuapi.run("jsuser add -d admin:admin:admin::incubaid")
+
     print cuapi.run("jpackage install -n grid_portal -r --debug")
     print cuapi.run("jpackage install -n portal -r --debug")
     print cuapi.run("jpackage install -n agentcontroller -r --debug")
