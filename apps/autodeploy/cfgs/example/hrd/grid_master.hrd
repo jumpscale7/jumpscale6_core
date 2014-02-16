@@ -1,6 +1,4 @@
-gridmaster.useavahi=1
+
+gridmaster.useavahi=0
 gridmaster.grid.id=1
-gridmaster.mainbroker.port.clients=5651
-gridmaster.mainbroker.port.workers=5650
-gridmaster.mainbroker.id=1
-grid.master.superadminpasswd=
+
