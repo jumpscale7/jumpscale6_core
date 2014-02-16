@@ -123,14 +123,17 @@ def install_grid():
     cmd="jsconfig hrdset -n agent.nrinstances -v %s"%2
     print cuapi.run(cmd)
 
+    print cuapi.run("jpackage install -n sentry -r")
+    print cuapi.run("jsprocess start -n sentry")
+
     print cuapi.run("jpackage install -n elasticsearch -r")
     print cuapi.run("jpackage install -n osis -r --debug")
     print cuapi.run("jsprocess start -c")
     print cuapi.run("jpackage install -n grid -r --debug")
     print cuapi.run("jpackage install -n grid_master -r --debug")
     print cuapi.run("jpackage install -n grid_node -r --debug")
-    print cuapi.run("jpackage install -n logger -r --debug")
     print cuapi.run("jsprocess start -c")
+
     print cuapi.run("jpackage install -n grid_portal -r --debug")
     print cuapi.run("jpackage install -n portal -r --debug")
     print cuapi.run("jpackage install -n agentcontroller -r --debug")
@@ -146,8 +149,8 @@ def install_grid():
 
 def install_desktop():
 
-    names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway"]#,"sublimetext"]
-    names=["xfce4desktop","xrdp"]
+    names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway","sublimetext"]
+    # names=["xfce4desktop","xrdp"]
     for name in names:
         print cuapi.run("jpackage install -n %s -r"%name)
     cmd='update-rc.d xrdp defaults'
