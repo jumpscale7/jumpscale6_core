@@ -74,16 +74,31 @@ jpackage install -n graphite
 jpackage install -n agentcontroller
 jpackage install -n agent
 
-echo 'secret=1234' >> /opt/jumpscale/apps/gridportal/cfg/portal.cfg
+echo '[main]
+appdir = /opt/jumpscale/apps/portalbase
+
+filesroot = $vardir/portal/files
+
+actors = *
+webserverport = 81
+
+#leave 0 if disabled (this is like secret which gives access to all)
+secret=1234
+
+#groups which get access to admin features of portal
+admingroups=admin,gridadmin,superadmin
+
+pubipaddr=127.0.0.1
+' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
 
 jsprocess start
 
 pip install nose
 
-nosetests --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/jumpscale_grid/apps/osis/tests/* /opt/code/jumpscale/jumpscale_grid/apps/gridportal/tests/* /opt/code/jumpscale/jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/jumpscale_grid/apps/processmanager/tests/*
+nosetests --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/jumpscale_grid/apps/osis/tests/*  /opt/code/jumpscale/jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/jumpscale_grid/apps/processmanager/tests/*
 
 "
-
+#/opt/code/jumpscale/jumpscale_grid/apps/gridportal/tests/*
 exitcode=$?
 
 sudo cp "/var/lib/lxc/${BUILD_TAG}/delta0/opt/tests.xml" $WORKSPACE/tests.xml
