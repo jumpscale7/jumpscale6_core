@@ -8,6 +8,7 @@ parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['logs', 'attach', 'list', 'status', 'start', 'stop', 'restart', 'disable', 'enable'], help='Command to perform')
 parser.add_argument("-n", '--name', help='Process name')
 parser.add_argument("-d", '--domain', help='Process domain')
+parser.add_argument("-c", '--carefull', action='store_true', default=False, help='Check each startup status, die if one could not start.')
 
 FORMAT = "%-20s %-20s %-10s %-8s %-10s"
 
@@ -16,7 +17,7 @@ if opts.action in ('list', 'status'):
     print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART')
     print '-'* 71
     print
-if opts.domain==None and  opts.name==None and  opts.action=="start":
+if opts.domain==None and  opts.name==None and  opts.action=="start" and not opts.carefull:
     j.tools.startupmanager.startAll()
     j.application.stop(0)
 
