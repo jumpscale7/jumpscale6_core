@@ -74,7 +74,7 @@ jpackage install -n graphite
 jpackage install -n agentcontroller
 jpackage install -n agent
 
-echo 'secret=1234' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
+echo 'secret=1234' >> /opt/jumpscale/apps/gridportal/cfg/portal.cfg
 
 jsprocess start
 
