@@ -3,6 +3,7 @@ from JumpScale import j
 
 j.application.start("jsdevelop")
 
+j.system.process.executeWithoutPipe("chmod 7770 /opt/jumpscale/apps/autodeploy/install_grid_local.sh")
 j.system.process.executeWithoutPipe("sh /opt/jumpscale/apps/autodeploy/install_grid_local.sh")
 
 j.application.stop()
