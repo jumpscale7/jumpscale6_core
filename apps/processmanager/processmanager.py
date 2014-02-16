@@ -46,9 +46,12 @@ class MgrCmds():
         for key,cmdss in self.daemon.cmdsInterfaces.iteritems():
 
             for cmds in cmdss:
-                print cmds            
-                if key not in ["core"] and cmds.__dict__.has_key("_name"):
-                    setattr(self, cmds._name, cmds)
+                print cmds
+                if key != 'core':
+                    if hasattr(cmds, '_name'):
+                        setattr(self, cmds._name, cmds)
+                    if hasattr(cmds, '_init'):
+                        cmds._init()
         
         self.childrenPidsFound={} #children already found, to not double count
 
@@ -140,13 +143,7 @@ for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
 
 cmds.daemon.schedule=daemon.schedule
 cmds.daemon.parentdaemon=daemon
-
 cmds._init()
-
-if hasattr(cmds, 'jumpscripts'):
-    cmds.jumpscripts.loadJumpscripts()
-if hasattr(cmds, 'agent'):
-    cmds.agent.init()
 
 daemon.start()
 

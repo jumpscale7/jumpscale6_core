@@ -29,6 +29,9 @@ class AgentCmds():
 
         self.client = j.clients.agentcontroller.get()
 
+    def _init(self):
+        self.init()
+
     def init(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
