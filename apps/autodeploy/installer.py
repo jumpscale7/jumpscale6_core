@@ -120,15 +120,9 @@ def install_grid():
     cmd="jsconfig hrdset -n elasticsearch.cluster.name -v cl_%s"%options.gridnr
     print cuapi.run(cmd)
 
-<<<<<<< local
-=======
-    cmd="jsconfig hrdset -n agent.nrinstances -v %s"%2
-    print cuapi.run(cmd)
-
     print cuapi.run("jpackage install -n sentry -r")
     print cuapi.run("jsprocess start -n sentry")
 
->>>>>>> other
     print cuapi.run("jpackage install -n elasticsearch -r")
     print cuapi.run("jpackage install -n osis -r --debug")
     print cuapi.run("jsprocess start -c")
