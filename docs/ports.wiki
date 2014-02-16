@@ -25,6 +25,7 @@ redisproduction:7768
 rediscache:7767
 
 
+sentry: 9000
 
 
 
