@@ -38,7 +38,7 @@ echo 'elasticsearch.cluster.name=mycluster' > /opt/jumpscale/cfg/hrd/elasticsear
 echo 'broker.id=1
 broker.domain=mydomain' > /opt/jumpscale/cfg/hrd/broker.hrd
 echo '
-grid.id=69
+grid.id=1
 grid.node.id=1
 grid.useavahi=1
 grid.ismaster=True
@@ -50,7 +50,7 @@ grid.master.superadminpasswd=6bde6ce08268a6d58ba96f27402bd7d4
 
 echo '
 gridmaster.useavahi=1
-gridmaster.grid.id=69' > /opt/jumpscale/cfg/hrd/grid_master.hrd
+gridmaster.grid.id=1' > /opt/jumpscale/cfg/hrd/grid_master.hrd
 
 echo 'osis.key=mykey' > /opt/jumpscale/cfg/hrd/osis.hrd
 
@@ -73,6 +73,8 @@ jpackage install -n processmanager
 jpackage install -n graphite
 jpackage install -n agentcontroller
 jpackage install -n agent
+
+echo 'secret=1234' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
 
 jsprocess start
 
