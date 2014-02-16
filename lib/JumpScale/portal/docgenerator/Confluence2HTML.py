@@ -138,6 +138,7 @@ class Confluence2HTML():
             return '&#{0};'.format(ord(char.group(1)))
 
         substitutions = [
+            (r'\\([^\n\r\\])',  escape_char),
             ('<',           '&lt;'),
             ('>',           '&gt;'),
             (limiter('*'),  limiter_replacement('strong')),
@@ -162,7 +163,6 @@ class Confluence2HTML():
             (r'bq\.\s+(.*?)\n', r'<blockquote>\1</blockquote>\n'),
 
             # Escape characters by putting \ in front of it, e.g. \*
-            (r'\\([^\n\r\\])',  escape_char)
         ]
         # First, divide the text into macros & non-macros
         blocks = re.split(r'({{.*?}})', content, flags=re.DOTALL)

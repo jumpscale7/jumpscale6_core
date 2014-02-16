@@ -8,14 +8,14 @@ h2. General Text Formatting
 Any text surrounded with one of the 
 
 || Marker || Function || Example || Result ||
-| `*`       | Bold | *strong text*    | *strong text*  |
-| `_`       | Italic     | _italic text_    | _italic text_  |
-| `+`       | Underline    | +inserted text+  | +inserted text+  |
-| `-`       | Strike-through | -strike text-    | -strike text-  |
-| `??`      | Cite, quote   | ??cite text??      | ??cite text??  |
-| `^`       | Superscript    | ^superscript^    | ^superscript^  |
-| `~`       | Subscript    | ~subscript~      | ~subscript~  |
-| ```   | No format   | `code`           |  `code` |
+| `\*`       | Bold              | \*strong text\*    | *strong text*    |
+| `\_`       | Italic            | \_italic text\_    | _italic text_    |
+| `\+`       | Underline         | \+inserted text\+  | +inserted text+  |
+| `\-`       | Strike-through    | \-strike text\-    | -strike text-    |
+| `\?\?`      | Cite, quote       | \?\?cite text\?\?  | ??cite text??    |
+| `\^`       | Superscript       | \^superscript\^    | ^superscript^    |
+| `\~`       | Subscript         | \~subscript\~      | ~subscript~      |
+| `\``       | Code              | \`code\`           |  `code`          |
 
 
 h2. Other Text Formatting
