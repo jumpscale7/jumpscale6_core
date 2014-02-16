@@ -220,7 +220,6 @@ class JumpscriptsCmds():
                         action.run()
                     except Exception,e:
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
-                        
                         eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(action.organization,action.name, \
                                 j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
                         eco.tags="jscategory:%s"%action.category
@@ -228,8 +227,8 @@ class JumpscriptsCmds():
                         eco.tags+=" jsname:%s"%action.name
                         j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
                 else:
-                    result = self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
-                
+                    self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
+
             action.lastrun = time.time()
             print "ok:%s"%action.name
 
@@ -237,9 +236,9 @@ class JumpscriptsCmds():
     def _loop(self, period):
         while True:
             self._run(period)
-            gevent.sleep(period) 
+            gevent.sleep(period)
 
-    def _configureScheduling(self):        
+    def _configureScheduling(self):
         for period in self.jumpscriptsByPeriod.keys():
             period=int(period)
             self.daemon.schedule("loop%s"%period, self._loop, period=period)
