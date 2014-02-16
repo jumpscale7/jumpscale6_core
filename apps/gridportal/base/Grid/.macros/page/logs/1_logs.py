@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
     pidstr = '[%(pid)s|/grid/process?id=%(pid)s]'
     jidstr = '[%(jid)s|/grid/job?id=%(jid)s]'
     fieldids = ['appname', 'category', 'epoch', 'message', 'level', 'pid', 'nid', 'jid']
-    fieldvalues = [appstr, 'category', makeTime, 'message', 'level', pidstr, nidstr, jidstr]
+    fieldvalues = ['appname', 'category', makeTime, 'message', 'level', pidstr, nidstr, jidstr]
     tableid = modifier.addTableForModel('system', 'log', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
 

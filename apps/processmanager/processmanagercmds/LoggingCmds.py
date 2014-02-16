@@ -39,7 +39,6 @@ class LoggingCmds(object):
         out = list()
         lastsynced = time.time()
         while self.enabled:
-            print 'FOUND LOG'
             log = ujson.decode(self.logqueue.get())
             log = j.logger.getLogObjectFromDict(log)
             log = self.log_te.executeV2(logobj=log)
@@ -52,7 +51,6 @@ class LoggingCmds(object):
 
     def _handleEco(self):
         while self.enabled:
-            print 'FOUND ECO'
             eco = ujson.decode(self.ecoqueue.get())
             eco["epoch"] = int(time.time())
             eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
