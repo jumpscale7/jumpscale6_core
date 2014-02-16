@@ -18,7 +18,7 @@ def action(name, fromIP, toIP, interface):
     import JumpScale.lib.lxc
 
     host = j.system.platform.lxc.getip(name)
-    password = j.application.config.get('vfw.password')
+    password = j.application.config.get('system.superadmin.passwd')
 
     cl = j.system.platform.dhcp.get(host, password)
     cl.configure(fromIP, toIP, interface)
