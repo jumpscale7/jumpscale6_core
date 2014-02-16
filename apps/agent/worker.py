@@ -11,24 +11,19 @@ from JumpScale import j
 j.application.start("jumpscale:worker")
 j.application.initGrid()
 
-
 # Preload libraries
 j.system.platform.psutil=psutil
 import JumpScale.baselib.graphite
 import JumpScale.lib.diskmanager
 import JumpScale.baselib.stataggregator
-import JumpScale.grid.geventws
-
+import JumpScale.grid.agentcontroller
+import JumpScale.baselib.redis
 
 
 class Worker(object):
 
     def __init__(self, redisaddr, redisport, queuename):
-
-        ipaddr=j.application.config.get("grid.master.ip")
-        adminpasswd = j.application.config.get('grid.master.superadminpasswd')
-        adminuser = 'root'#j.application.config.get('system.superadmin.login')
-        self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, category="agent",timeout=36000)
+        self.client = j.clients.agentcontroller.get()
         self.actions={}
 
         self.redis = j.clients.redis.getGeventRedisClient(redisaddr, redisport)
@@ -44,21 +39,19 @@ class Worker(object):
             try:
                 # print "check if work", comes from redis
                 jobid=self.queue.get()
-                if jobid<>None:                
+                if jobid:
                     data=self.redis.hget("workerjobs",jobid)
-                    if data<>None:
+                    if data:
                         job=ujson.loads(data)
                     else:
                         raise RuntimeError("cannot find job with id:%s"%jobid)
                 else:
                     job=None
-                
             except Exception,e:
                 j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
-                # self.register()
                 time.sleep(1)
                 continue
-                
+
             if job:
                 organization=job["category"]
                 name=job["cmd"]
@@ -66,13 +59,11 @@ class Worker(object):
                 jid = job["id"]
                 jscriptid = "%s_%s" % (organization, name)
                 j.application.jid=jid
-                
                 #eval action code, if not ok send error back, cache the evalled action
                 if self.actions.has_key(jscriptid):
                     action,jscript=self.actions[jscriptid]
                 else:
                     # print "CACHEMISS"
-                    # jscript=self.client.getJumpScript(organization, name)
                     jscript=ujson.loads(self.redis.hget("jumpscripts:%s"%(organization),name))
                     try:
                         self.log("Load script:%s %s"%(jscript["organization"],jscript["name"]))
@@ -86,11 +77,11 @@ class Worker(object):
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
                         eco.errormessage = msg
                         eco.jid = jid
-                        eco.category = LOGS['agent']
+                        eco.category = 'agent_exec'
                         # self.loghandler.logECO(eco)
                         self.notifyWorkCompleted(jid,result={},eco=eco.__dict__)
                         continue
-                    
+
                 eco=None
                 self.log("Job started: %s %s"%(jscript["organization"],jscript["name"]))
                 try:
@@ -106,7 +97,6 @@ class Worker(object):
                     self.notifyWorkCompleted(jid, {},eco.__dict__)
                     continue
 
-                
                 self.log("result:%s"%result)
                 self.notifyWorkCompleted(jid, result,{})
 
