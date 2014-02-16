@@ -5,7 +5,7 @@ cleanup () {
         fi
 }
 
-sudo lxc-clone -o saucy -n "$BUILD_TAG"
+sudo lxc-clone -o saucy -n "$BUILD_TAG" -s -B overlayfs
 sudo lxc-start -d -n "$BUILD_TAG"
 sudo lxc-wait -n "$BUILD_TAG" -s RUNNING
 vmip="-"
