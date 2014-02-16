@@ -14,7 +14,7 @@ category = "agentcontroller.basic"
 enable=True
 priority=2
 
-ROLE = ['node']
+ROLE = 'node'
 
 class TEST(unittest.TestCase):
 
