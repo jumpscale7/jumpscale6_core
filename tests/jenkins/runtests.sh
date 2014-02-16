@@ -86,7 +86,7 @@ nosetests --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/jumpscal
 
 exitcode=$?
 
-sudo cp "/var/lib/lxc/${BUILD_TAG}/rootfs/opt/tests.xml" $WORKSPACE/tests.xml
+sudo cp "/var/lib/lxc/${BUILD_TAG}/delta0/opt/tests.xml" $WORKSPACE/tests.xml
 
 if [ $exitcode -eq 0 ]; then
 	cleanup
