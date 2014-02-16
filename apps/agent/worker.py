@@ -133,13 +133,13 @@ if __name__ == '__main__':
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
     parser.add_argument("-pw", '--auth', help='Authentication of redis')
     parser.add_argument("-a", '--addr', help='Address of redis', required=True)
-    parser.add_argument("-p", '--port', help='Port of redis', required=True)
+    parser.add_argument("-p", '--port', type=int, help='Port of redis', required=True)
 
     opts = parser.parse_args()
 
     j.logger.consoleloglevel = 2
     j.logger.maxlevel=7
 
-    worker=Worker()
+    worker=Worker(opts.addr, opts.port, opts.queuename)
     worker.run()
 
