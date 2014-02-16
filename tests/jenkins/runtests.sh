@@ -78,7 +78,7 @@ jsprocess start
 
 pip install nose
 
-nosetests --with-xunit --xunit-file=/opt/tests.xml  /opt/jumpscale/apps/osis/tests/* /opt/jumpscale/apps/gridportal/tests/* /opt/jumpscale/apps/agentcontroller/tests/*
+nosetests --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/jumpscale_grid/apps/osis/tests/* /opt/code/jumpscale/jumpscale_grid/apps/gridportal/tests/* /opt/code/jumpscale/jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/jumpscale_grid/apps/processmanager/tests/*
 
 "
 
