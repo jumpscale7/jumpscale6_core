@@ -4,8 +4,8 @@ import JumpScale.grid.osis
 
 j.application.start("logger")
 
-
-j.core.grid.startLocalLogger()
+raise RuntimeError("do not use, outdated, now we use redis & processmanager")
+# j.core.grid.startLocalLogger()
 
 
 j.application.stop()

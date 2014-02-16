@@ -71,55 +71,8 @@ class JumpscriptsCmds():
             category="agent",id=agentid,timeout=36000)       
 
 
-
-    def startAgent(self):
+    def _init(self):
         self.loadJumpscripts()
-        self.agentcontroller_client.register()
-        gevent.Greenlet(self._runAgent).start()
-
-    def _runAgent(self):
-        while True:
-            print 'getting work'
-            work = self.agentcontroller_client.getWork()
-            if work:
-                category, name, kwargs, jid = work
-                jscriptkey = "%s_%s" % (category, name)
-                jscript = self.jumpscripts.get(jscriptkey)
-                try:
-                    result = jscript.run(**kwargs)
-                except Exception, e:
-                    msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript.organization,jscript.name,j.application.getWhoAmiStr(),\
-                        jscript.source,e)
-                    eco=j.errorconditionhandler.parsePythonErrorObject(e)
-                    eco.errormessage = msg
-                    eco.jid = jid
-                    # self.loghandler.logECO(eco)
-                    self.notifyWorkCompleted(jid, {},eco.__dict__)
-                    continue
-                self.notifyWorkCompleted(jid, result)
-
-
-    def notifyWorkCompleted(self,jid, result,eco=None):
-        try:
-            if not eco:
-                eco = dict()
-            else:
-                eco = eco.copy()
-                eco.pop('tb', None)
-            result=self.agentcontroller_client.notifyWorkCompleted(jid, result=result,eco=eco)
-        except Exception,e:
-            eco = j.errorconditionhandler.lastEco
-            j.errorconditionhandler.lastEco = None
-            # self.loghandler.logECO(eco)
-
-            print "******************* SERIOUS BUG **************"
-            print "COULD NOT EXECUTE JOB, COULD NOT PROCESS RESULT OF WORK."
-            try:
-                print "ERROR WAS:%s"%eco, e
-            except:
-                print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
-            print "******************* SERIOUS BUG **************"
-
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
