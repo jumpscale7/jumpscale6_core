@@ -45,7 +45,9 @@ def action():
     else:
         eventhandlingTE = None
 
-    log=redisqueue.get_nowait()
+    log = None
+    if loghandlingTE:
+        log=redisqueue.get_nowait()
     out=[]
     while log<>None:
         log=ujson.decode(log)
@@ -60,7 +62,9 @@ def action():
     if len(out)>0:
         OSISclientLogger.set(out)
 
-    eco=redisqueueEco.get_nowait()
+    eco = None
+    if loghandlingTE:
+        eco=redisqueueEco.get_nowait()
     while eco<>None:
         eco=ujson.decode(eco)
         eco["epoch"] = int(time.time())
