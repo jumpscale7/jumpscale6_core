@@ -75,23 +75,23 @@ class HRDPos():
         self._treeposition=  treeposition
         self.changed=False
 
-    def set(self,key,value,persistent=True,position=""):
-
+    def set(self,key,value,persistent=True):
         key2=j.core.hrd._normalizeKey(key)
         # print "set:'%s':'%s'"%(key,value)        
         self.__dict__[key2]=value
         if persistent==True:
-            hrd=self.getHRD(key,position)
+            hrd=self.getHRD(key)
             hrd.set(key,value,persistent)
 
-    def getHRD(self,key,position=""):
+    def getHRD(self,key):
         if len(self._hrds.keys())==1:
             return self._hrds[self._hrds.keys()[0]]
         key=key.replace(".","_")
         if key not in self._key2hrd:
             self._reloadCache()
             if key not in self._key2hrd:
-                j.errorconditionhandler.raiseBug(message="Cannot find hrd on position '%s'"%(self._treeposition),category="osis.gethrd")
+                j.errorconditionhandler.raiseBug(message="Cannot find key:'%s' in hrd on position:'%s'"%\
+                    (key,(self._treeposition)),category="osis.gethrd")
         return self._hrds[self._key2hrd[key]]
 
     def _reloadCache(self):
@@ -157,6 +157,14 @@ class HRDPos():
                 key,val=item.split(":")
                 res2[key]=val
         return res2
+
+    def setDict(self,key,ddict):
+        out=""
+        for key2,value in ddict.iteritems():
+            out+="%s:%s,"%(key2,value)
+        out=out.rstrip(",")
+        self.set(key,out)
+
 
     def getInt(self,key):
         res=self.get(key)
@@ -350,6 +358,13 @@ class HRD():
                 res2[key]=val
         return res2
 
+    def setDict(self,key,ddict):        
+        out=""
+        for key2,value in ddict.iteritems():
+            out+="%s:%s,"%(key2,value)
+        out=out.rstrip(",")
+        self.set(key,out)        
+
     def getInt(self,key):
         res=self.get(key)
         if res.strip()=="":
@@ -514,8 +529,8 @@ class HRD():
     def has_key(self, key):
         return self.__dict__.has_key(key)
 
-    def setDict(self,dictObject):
-        self.__dict__.update(dictObject)
+    # def setDict(self,dictObject):
+    #     self.__dict__.update(dictObject)
 
     def applyOnDir(self,path,filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
         j.core.hrd.log("hrd:%s apply on dir:%s "%(self._path,path),category="apply")
@@ -701,6 +716,10 @@ class HumanReadableDataTree():
     def getDict(self,key,position=""):
         hrd=self.getHrd(position)
         return hrd.getDict(key)
+
+    def setDict(self,key,ddict,position=""):                
+        hrd=self.getHrd(position,checkExists=False)
+        return hrd.setDict(key,ddict)
 
     def getHrd(self,position="",checkExists=False):
         position=position.strip("/")

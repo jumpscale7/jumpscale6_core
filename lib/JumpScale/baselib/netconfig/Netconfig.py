@@ -54,17 +54,25 @@ class Netconfig:
         j.system.fs.writeFile(path,"auto lo\n\n")
         
 
-    def enableDhcpInterface(self,dev="eth0",start=False):
+    def enableInterface(self,dev="eth0",start=False,dhcp=True):
 
-        C="""
+        if dhcp:
+
+            C="""
 auto $int
 iface eth0 inet dhcp
 """
+        else:
+            C="""
+auto $int
+iface eth0 inet static
+"""
+
         C=C.replace("$int",dev)
         path=self._getInterfacePath()
         ed=j.codetools.getTextFileEditor(path)
         ed.setSection(dev,C)
-        if start:
+        if start and dhcp==False:
             cmd="ifup %s"%dev
             print "up:%s"%dev
             print cmd
@@ -90,7 +98,7 @@ iface eth0 inet dhcp
         j.system.fs.writeFile(path,C)
 
 
-    def addIpaddrStatic(self,dev,ipaddr,gw=None,start=False):
+    def enableInterfaceStatic(self,dev,ipaddr,gw=None,start=False):
         """
         ipaddr in form of 192.168.10.2/24 (can be list)
         gateway in form of 192.168.10.254
@@ -102,15 +110,15 @@ iface $int inet static
        netmask $mask
        network $net
 """
+        if gw<>None:
+            C+="       gateway %s"%gw
+
         args={}
         args["dev"]=dev
         args["ipaddr"]=ipaddr
-        if gw<>None:
-            args["gw"]=gw
-
         self._applyNetconfig(dev,C,args,start=start)
 
-    def addIpaddrStaticBridge(self,dev,ipaddr,bridgedev,gw=None,start=False):
+    def enableInterfaceBridgeStatic(self,dev,ipaddr,bridgedev,gw=None,start=False):
         """
         ipaddr in form of 192.168.10.2/24 (can be list)
         gateway in form of 192.168.10.254
@@ -125,31 +133,67 @@ iface $int inet static
        netmask $mask
        network $net
 """
-        future="""
-       #broadcast <broadcast IP here, e.g. 192.168.1.255>
-       # dns-* options are implemented by the resolvconf package, if installed
-       #dns-nameservers <name server IP address here, e.g. 192.168.1.1>
-       #dns-search your.search.domain.here
+        if gw<>None:
+            C+="       gateway %s"%gw
 
-"""
+#         future="""
+#        #broadcast <broadcast IP here, e.g. 192.168.1.255>
+#        # dns-* options are implemented by the resolvconf package, if installed
+#        #dns-nameservers <name server IP address here, e.g. 192.168.1.1>
+#        #dns-search your.search.domain.here
+
+# """
         args={}
         args["dev"]=dev
         args["ipaddr"]=ipaddr
         args["bridgedev"]=bridgedev        
-        if gw<>None:
-            args["gw"]=gw
-
         self._applyNetconfig(dev,C,args,start=start)        
 
-    def _applyNetconfig(self,dev,template,args,start=False):
+    def enableInterfaceBridgeDhcp(self,dev,bridgedev,start=False):
+        """
+        """
+        C="""
+auto $int        
+iface $int inet dhcp
+       bridge_ports $bridgedev
+       bridge_fd 0
+       bridge_maxwait 0
+"""
+
+        args={}
+        args["dev"]=dev
+        args["bridgedev"]=bridgedev        
+        self._applyNetconfig(dev,C,args,start=start)        
+
+    def addIpToInterface(self,dev,ipaddr,aliasnr=1,start=False):
+
+        C="""
+auto $int:$aliasnr        
+iface $int:$aliasnr inet static
+       name $int Alias
+       address $ip
+       netmask $mask
+       network $net
+""" 
+        C=C.replace("$aliasnr",str(aliasnr))
+        C=C.replace("$int",dev)
+
+        args={}
+        args["dev"]=dev
+        args["ipaddr"]=ipaddr        
+        self._applyNetconfig(dev+":%s"%aliasnr,C,args,start=start)  
+
+    def _applyNetconfig(self,devToApplyTo,template,args,start=False):
         C=template
         dev=args["dev"]
-        ipaddr=args["ipaddr"]
+        if args.has_key("ipaddr"):
+            ipaddr=args["ipaddr"]
+            ip = netaddr.IPNetwork(ipaddr)
+            C=C.replace("$ip",str(ip.ip))
+            C=C.replace("$mask",str(ip.netmask))
+            C=C.replace("$net",str(ip.network))
+
         C=C.replace("$int",dev)
-        ip = netaddr.IPNetwork(ipaddr)
-        C=C.replace("$ip",str(ip.ip))
-        C=C.replace("$mask",str(ip.netmask))
-        C=C.replace("$net",str(ip.network))
         
         if args.has_key("gw"):
             C=C.replace("$gw","gateway %s"%args["gw"])
@@ -157,11 +201,13 @@ iface $int inet static
             C=C.replace("$bridgedev",args["bridgedev"])
         path=self._getInterfacePath()
         ed=j.codetools.getTextFileEditor(path)
-        ed.setSection(dev,C)
+        ed.setSection(devToApplyTo,C)
+
         if start:
-            cmd="ifup %s"%dev
-            print "up:%s"%dev
-            print cmd
+            print "up:%s"%devToApplyTo
+            cmd="ifdown %s"%devToApplyTo
+            j.system.process.execute(cmd) 
+            cmd="ifup %s"%devToApplyTo
             j.system.process.execute(cmd) 
 
 

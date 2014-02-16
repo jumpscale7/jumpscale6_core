@@ -116,10 +116,6 @@ class TextLineEditor():
         """
         if blocknr==None:
             if not self.existsBlock(blockname):
-                from IPython import embed
-                print "DEBUG NOW ooo"
-                embed()
-                
                 return
         else:
             self.getBlock(blockname,blocknr) #just to check if block exists
