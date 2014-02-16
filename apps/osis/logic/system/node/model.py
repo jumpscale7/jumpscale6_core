@@ -14,6 +14,7 @@ class Node(OsisBaseObject):
             self.load(ddict)
         else:
             self.gid = 0
+            self.id = 0
             self.name = ""
             self.roles = []
             self.netaddr = None
