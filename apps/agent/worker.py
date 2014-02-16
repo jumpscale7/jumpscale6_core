@@ -1,71 +1,40 @@
 #!/usr/bin/env python
+
 import sys
-from redis import * 
-# from rq import Queue, Connection, Worker
+import time
+import ujson
+import psutil
 
 from JumpScale.baselib import cmdutils
 from JumpScale import j
-sys.path.insert(0,j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts"))
-
-import time
-import ujson
 
 j.application.start("jumpscale:worker")
 j.application.initGrid()
 
-parser = cmdutils.ArgumentParser()
-parser.add_argument("-wn", '--workername', help='Worker name')
-parser.add_argument("-qn", '--queuename', help='Queue name')
-parser.add_argument("-pw", '--auth', help='Authentication of redis')
-parser.add_argument("-a", '--addr', help='Address of redis')
-parser.add_argument("-p", '--port', help='Port of redis')
-
-opts = parser.parse_args()
 
 # Preload libraries
-import psutil
 j.system.platform.psutil=psutil
 import JumpScale.baselib.graphite
 import JumpScale.lib.diskmanager
 import JumpScale.baselib.stataggregator
-
-
-# Provide queue names to listen to as arguments to this script,
-# similar to rqworker
-
-if opts.addr==None or opts.port==None:
-    raise RuntimeError("Please provide addr & port")
-
 import JumpScale.grid.geventws
 
-j.logger.consoleloglevel = 2
-j.logger.maxlevel=7
 
-import ujson as json
 
-import sys
+class Worker(object):
 
-REDISSERVER = '127.0.0.1'
-REDISPORT = 7768
-
-class Agent():
-
-    def __init__(self):
+    def __init__(self, redisaddr, redisport, queuename):
 
         ipaddr=j.application.config.get("grid.master.ip")
         adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         adminuser = 'root'#j.application.config.get('system.superadmin.login')
         self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, category="agent",timeout=36000)
-
         self.actions={}
-        # self.serverurl=self.client._client.transport.url
 
-        self.redis = j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT)
+        self.redis = j.clients.redis.getGeventRedisClient(redisaddr, redisport)
 
         #@todo check if queue exists if not raise error
-        self.queue=j.clients.redis.getRedisQueue(REDISSERVER,REDISPORT,"workers:work:%s"%opts.queuename)
-
-        self.run()
+        self.queue=j.clients.redis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % queuename)
 
     def run(self):
         print "STARTED"
@@ -137,16 +106,6 @@ class Agent():
                     self.notifyWorkCompleted(jid, {},eco.__dict__)
                     continue
 
-                #if not j.basetype.dictionary.check(result):
-                #    msg="agentcontroller: notifywork completed needs to have dicts as input for result & eco.\nScript started was: %s_%s.\n"%(jscript["organization"],jscript["name"])
-                #   try:
-                #        msg+="result was:%s\n"%result
-                #    except:
-                #        print "***ERROR***: could not print result"
-                #    eco=j.errorconditionhandler.getErrorConditionObject(msg=msg)
-                #    self.notifyWorkCompleted({},eco.__dict__)
-                #    continue
-                    
                 
                 self.log("result:%s"%result)
                 self.notifyWorkCompleted(jid, result,{})
@@ -178,7 +137,19 @@ class Agent():
         print message
 
 
+if __name__ == '__main__':
+    parser = cmdutils.ArgumentParser()
+    parser.add_argument("-wn", '--workername', help='Worker name')
+    parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
+    parser.add_argument("-pw", '--auth', help='Authentication of redis')
+    parser.add_argument("-a", '--addr', help='Address of redis', required=True)
+    parser.add_argument("-p", '--port', help='Port of redis', required=True)
 
-agent=Agent()
-agent.run()
+    opts = parser.parse_args()
+
+    j.logger.consoleloglevel = 2
+    j.logger.maxlevel=7
+
+    worker=Worker()
+    worker.run()
 
