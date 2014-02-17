@@ -104,12 +104,16 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         result = list()
         vfws = self.osisclient.list()
+        fields = ('domain', 'name', 'gid', 'guid')
         for vfwid in vfws:
+            vfwdict = {}
             vfw = self.osisclient.get(vfwid)
+            for field in fields:
+                vfwdict[field] = getattr(vfw, field, None)
             if not domain and str(vfw.gid) == str(gid):
-                result.append(vfw)
+                result.append(vfwdict)
             if domain and vfw.domain == domain and str(vfw.gid) == str(gid):
-                result.append(vfw)
+                result.append(vfwdict)
         return result
     
 

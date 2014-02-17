@@ -1,4 +1,6 @@
 import time
+from JumpScale import j
+
 class MonObjectBaseFactory():
     def __init__(self,host,classs):
         """
@@ -8,22 +10,59 @@ class MonObjectBaseFactory():
         self.classs=classs
         self.monitorobjects={} #key is id of monitor object
 
-    def get(self,id,monobject=None,lastcheck=0):
+    def get(self,id=None,lastcheck=None):
         """
         """
         if self.monitorobjects.has_key(id):
-            if (time.time()-4.99)>self.monitorobjects[id].lastcheck:
+            #we do this short term caching 5 sec to make sure if 10 people are polling from a ui we dont each time create a new object
+            if (time.time()-self.monitorobjects[id]._expire)>self.monitorobjects[id].lastcheck:
                 self.monitorobjects.pop(id)
             else:
                 return self.monitorobjects[id]
-        self.monitorobjects[id]=  self.classs(id,monobject,lastcheck=lastcheck)     
+        self.monitorobjects[id]=  self.classs(self)     
+
+        if lastcheck<>None:
+            self.monitorobjects[id].lastcheck=lastcheck
+
         return self.monitorobjects[id]
 
-    def set(self,monobject,lastcheck=0):
+    def exists(self,id):
+        """
+        """
+        if self.monitorobjects.has_key(id):
+            return True
+        else:
+            return False
+
+
+    def set(self,id,monobject,lastcheck=0):
         """
         """
         if lastcheck<>0:
             monobject.lastcheck=lastcheck
         else:
-            lastcheck=time.time()
-        self.monitorobjects[monobject.getGuid()]=monobject
+            monobject.lastcheck=time.time()
+        self.monitorobjects[id]=monobject
+
+
+class MonObjectBase(object):
+
+    def __init__(self,cache):
+        self.lastcheck=time.time()
+        self._expire=60 #means after X sec the cache will create new one
+        self.cache=cache
+        self.db=self.cache.osis.new()
+        self.db.gid=j.application.whoAmI.gid
+        self.db.nid=j.application.whoAmI.nid
+        self.ckeyOld=""
+
+    def send2osis(self):
+        return self.cache.osis.set(self.db)
+
+    def getGuid(self):
+        return self.db.getSetGuid()
+
+    def __repr__(self):
+        return str(self.db)
+
+    __str__ = __repr__

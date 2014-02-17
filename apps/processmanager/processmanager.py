@@ -16,9 +16,11 @@ import JumpScale.lib.diskmanager
 
 import JumpScale.baselib.stataggregator
 
-j.application.start("jsprocess_manager")
+j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
+
+j.core.grid.init()
 
 class Empty():
     pass
@@ -29,34 +31,38 @@ class MgrCmds():
         self.daemon = daemon
         j.processmanager=self
 
-        self.adminpasswd = j.application.config.get('system.superadmin.passwd')
-        self.adminuser = j.application.config.get('system.superadmin.login')
+        self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
+        self.adminuser = 'root'#j.application.config.get('system.superadmin.login')
 
         self.daemon._adminAuth=self._adminAuth
         
         masterip=j.application.config.get("grid.master.ip")
-        self.daemon.osis = j.core.osis.getClient(masterip)
+        self.daemon.osis = j.core.osis.getClient(masterip, user='root')
 
     def _init(self):
         
         self.loadMonitorObjectTypes()
-
     
         for key,cmdss in self.daemon.cmdsInterfaces.iteritems():
 
             for cmds in cmdss:
-                print cmds            
-                if key not in ["core"] and cmds.__dict__.has_key("_name"):
-                    exec("self.%s=cmds"%cmds._name)
+                print cmds
+                if key != 'core':
+                    if hasattr(cmds, '_name'):
+                        setattr(self, cmds._name, cmds)
+                    if hasattr(cmds, '_init'):
+                        cmds._init()
         
         self.childrenPidsFound={} #children already found, to not double count
 
         self.jumpscripts.loadJumpscripts()
 
-        self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")        
-        self.osis_nic=j.core.osis.getClientForCategory(self.daemon.osis,"system","nic")
-        self.osis_vdisk=j.core.osis.getClientForCategory(self.daemon.osis,"system","vdisk")
-        self.osis_machine=j.core.osis.getClientForCategory(self.daemon.osis,"system","machine")
+        # self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")
+        # self.osis_nic=j.core.osis.getClientForCategory(self.daemon.osis,"system","nic")
+        # self.osis_vdisk=j.core.osis.getClientForCategory(self.daemon.osis,"system","vdisk")
+        # self.osis_disk=j.core.osis.getClientForCategory(self.daemon.osis,"system","disk")
+        # self.osis_machine=j.core.osis.getClientForCategory(self.daemon.osis,"system","machine")
+
         
 
     def loadMonitorObjectTypes(self):
@@ -64,10 +70,11 @@ class MgrCmds():
         for item in j.system.fs.listFilesInDir("monitoringobjects",filter="*.py"):
             name=j.system.fs.getBaseName(item).replace(".py","")
             if name[0]<>"_":
-                exec ("from monitoringobjects.%s import *"%(name))
-                classs=eval("%s"%name)
+                monmodule = __import__('monitoringobjects.%s' % name)
+                monmodule = getattr(monmodule, name)
+                classs=getattr(monmodule, name)
                 print "load factory:%s"%name
-                factory=eval("%sFactory(self,classs)"%name)
+                factory = getattr(monmodule, '%sFactory' % name)(self, classs)
                 j.processmanager.cache.__dict__[name.lower()]=factory        
 
     def getMonitorObject(self,name,id,monobject=None,lastcheck=0,session=None):
@@ -136,7 +143,6 @@ for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
 
 cmds.daemon.schedule=daemon.schedule
 cmds.daemon.parentdaemon=daemon
-
 cmds._init()
 
 daemon.start()

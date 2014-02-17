@@ -14,8 +14,8 @@ roles = ["*"]
 
 
 def action(logmsg):
-    j.logger.setLogTargetLogForwarder()
     j.logger.log(logmsg, level=5, category="test_category")
+    j.logger.log(logmsg, level=5)
 
 
 

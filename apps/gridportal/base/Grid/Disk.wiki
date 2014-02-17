@@ -1,8 +1,22 @@
 @usedefault
-
-h2. Disks details
 {{disk: id:$$id}}
+{{diskstat id:$$id}}
 
-<br>
-h3. Virtual Disks
-{{vdisks: disk_id:$$id}}
+h2. Disk $$id
+|*Node*|[$$nid|node?id=$$nid|]|
+|*Active*|$$active|
+|*SSD*|$$ssd|
+|*Model*|$$model|
+|*Path*|$$path|
+|*Size*|$$size|
+|*Free*|$$free|
+|*Usage*|$$usage|
+|*File System*|$$fs|
+|*Mounted*|$$mounted|
+|*Description*|$$description|
+|*Type*|$$type|
+|*Mount Point*|$$mountpoint|
+
+h3. Disk Statistics
+{{stat key:$$diskkey.space_free_mb,$$id.space_used_mb title=Used%%20Space width:800 height:400 graphType=pie }}
+{{stat key:$$diskkey.kbytes_read,$$id.kbytes_write&title=IO width:800 height:400}}

@@ -1,42 +1,34 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
+    id = args.getTag('id')
+    if not id:
+        out = 'Missing machine id param "id"'
+        params.result = (out, args.doc)
+        return params
 
-    params.merge(args)
-    doc = params.doc
-    # tags = params.tags
+    machines = j.apps.system.gridmanager.getMachines(id=id)
+    if not machines:
+        params.result = ('Machine with id %s not found' % id, args.doc)
+        return params
 
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
+    def objFetchManipulate(id):
+        obj = machines[0]
+        for attr in ['roles', 'ipaddr']:
+            obj[attr] = ', '.join([str(x) for x in obj[attr]]) 
 
-    id = int(args.tags.getDict()["id"])
+        netaddr = obj['netaddr']
+        netinfo = ''
+        for k, v in netaddr.iteritems():
+            netinfo += 'mac address: %s, interface: %s, ip: %s<br>' % (k, v[0], v[1])
+        obj['netaddr'] = netinfo
 
-    obj = actor.getMachines(id=id)[0]
+        obj['lastcheck'] = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
+        return obj
 
-    out = ['||Property||Value||']
+    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-    fields = ['id', 'otherid', 'name', 'description', 'roles', 'mem', 'netaddr', 'ipaddr', 'nid', 'lastcheck', 'state', 'gid', 'active', 'cpucore', 'type']
-    for field in fields:
-        if field == 'nid':
-            out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
-        elif field in ('roles', 'ipaddr'):
-            out.append("|%s|%s|" % (field.capitalize(), ', '.join(obj[field])))
-        elif field == 'netaddr':
-            netaddr = obj[field]
-            netinfo = ''
-            for k, v in netaddr.iteritems():
-                netinfo += 'mac address: %s, interface: %s, ip: %s<br>' % (k, v[0], v[1])
-            out.append("|%s|%s|" % (field.capitalize(), netinfo))
-        elif field == 'lastcheck':
-            lastchecked = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|%s|%s|" % (field.capitalize(), lastchecked))
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
-
-
-    params.result = ('\n'.join(out), doc)
-
-    return params
-
+    return push2doc(args,params,objFetchManipulate)
 
 def match(j, args, params, tags, tasklet):
     return True

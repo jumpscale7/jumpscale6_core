@@ -8,7 +8,8 @@ import JumpScale.grid.agentcontroller
 
 import sys
 
-j.application.start("agentcontrollertest")
+j.application.start("jumpscale:agentcontrollertest")
+j.application.initGrid()
 
 j.logger.consoleloglevel = 5
 
@@ -16,9 +17,9 @@ j.logger.consoleloglevel = 5
 
 client=j.clients.agentcontroller
 
-# print client.listSessions()
-
-jp= client.execute('jumpscale', 'jpackage_info', role="master", domain="jumpscale", pname="osis", version="1.0",timeout=10)
+#job=client.execute("opencode","wait","node",msg="test:%s"%0,timeout=5,wait=True,lock="")
+jp= client.execute('jumpscale', 'error', 'node', timeout=10)
+#jp= client.execute('jumpscale', 'jpackage_info', role="master", domain="jumpscale", pname="osis", version="1.0",timeout=10)
 
 print jp
 

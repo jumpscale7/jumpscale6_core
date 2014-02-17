@@ -13,22 +13,18 @@ class ECO(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("eco","1.0")
-
             self.errormessage=errormessage
             self.errormessagePub=errormessagePub
             self.level=int(level) #1:critical, 2:warning, 3:info
             self.category=category #dot notation e.g. machine.start.failed
             self.tags=tags #e.g. machine:2323
 
-            self.errormessage=errormessage
-            self.errormessagePub=errormessagePub
-
             self.code=""
             self.funcname=""
             self.funcfilename=""
             self.funclinenr=0
             self.backtrace=""
+            self.backtraceDetailed=""
 
             self.appname=j.application.appname #name as used by application
 
@@ -53,14 +49,16 @@ class ECO(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        return self.guid
+        C= "%s_%s_%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.errormessage,self.level,self.category,self.funcname,self.funcfilename,self.appname,self.pid,self.jid)
+        return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):
         """
         use osis to define & set unique guid (sometimes also id)
         """
-        self.gid = int(self.gid)
-        self.id = int(self.id)
-        self.guid = "%s_%s" % (self.gid, self.id)
+        if not self.guid:
+            self.gid = int(self.gid)
+            self.id = int(self.id)
+            self.guid = "%s_%s" % (self.gid, self.id)
         return self.guid
 

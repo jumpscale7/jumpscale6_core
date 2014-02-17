@@ -9,7 +9,9 @@ from random import randrange
 class Session():
 
     def __init__(self, id, organization, user, passwd, encrkey, netinfo, roles):
-        self.id = id
+        self.id = id #is unique session id
+        self.gid=j.application.whoAmI.gid
+        self.nid=j.application.whoAmI.nid
         self.encrkey = encrkey
         self.user = user
         self.passwd = passwd
@@ -17,7 +19,6 @@ class Session():
         self.netinfo = netinfo
         self.start = int(time.time())
         self.roles = roles
-        self.agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
 
     def __repr__(self):
         return str(self.__dict__)
@@ -46,6 +47,7 @@ class DaemonClient(object):
             #     1, end), j.base.idgenerator.generateRandomInt(1, end), j.base.idgenerator.generateRandomInt(1, end))
             random = uuid.uuid4()
             self._id="%s_%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid, random)
+        print "ZMQ ID:%s"%self._id
 
         self.retry = True
         self.blocksize = 8 * 1024 * 1024
@@ -62,12 +64,12 @@ class DaemonClient(object):
         # if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:
         #     raise RuntimeError("gid or nid cannot be 0, see grid.hrd file in main config of jumpscale hrd dir")
 
-        roles2=[]
-        for role in roles:
-            role+=".%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
-            roles2.append(role)
+        #WILL NOT LONGER ADD GID & NID
+        # roles2=[]
+        # for role in roles:
+        #     role+=".%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+        #     roles2.append(role)
 
-        roles=roles2
         self.roles = roles
         self.keystor = None
         self.key = None
@@ -178,19 +180,20 @@ class DaemonClient(object):
             msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             raise MethodNotFoundException(msg)
         if str(returncode) != returnCodes.OK:
-            
+            frames= j.errorconditionhandler.getFrames()            
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
             ddict = s.loads(parts[2])
             eco = j.errorconditionhandler.getErrorConditionObject(ddict)
             eco.category="rpc.exec"
+            eco.frames=frames
+
             msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
-            print "*** error in client to zdaemon ***"
-            print eco            
+            # print "*** error in client to zdaemon ***"
+            if eco.errormessage.find("Authentication error")<>-1:
+                eco.errormessage="Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user)
             j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=die)
-            # raise RuntimeError(str(eco))
-            result=eco
 
         returnformat = parts[1]
         if returnformat <> "":
@@ -241,7 +244,7 @@ class Klass(object):
             params_spec = spec['args'][0]
             if spec['args'][3]:
                 params_spec = list(spec['args'][0])
-                for cnt, default in enumerate(spec['args'][3]):
+                for cnt, default in enumerate(spec['args'][3][::-1]):
                     cnt += 1
                     params_spec[-cnt] += "=%r" % default
             params = ', '.join(params_spec)

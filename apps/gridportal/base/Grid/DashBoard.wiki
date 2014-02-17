@@ -1,0 +1,63 @@
+#http://$$addr:8081/dashboard
+
+
+{{title:GRIDDashboard}}
+
+{{projectname:GRID}}
+
+{{find}}
+
+{{menu:
+System:/System
+Dashboard:/grid/dashboard
+}}
+
+{{menuadmin_grid}}
+
+
+@block
+@row
+
+@col 4
+#{{html:<center>}}
+h5. Total Used Capacity Of Environment
+{{jgauge: id:1 width:200 height:114 val:20 style:black start:0 end:10 end:100 labelsuffix:%}}
+#{{html:</center>}}
+@divend 
+@col 4
+#{{html:<center>}}
+h5. Nr Of Events Per Day
+{{jgauge: id:4 width:200 height:114 val:103 start:0 end:300}}
+#   {{html:</center>}}
+@divend 
+@col 4
+h5. Nr Of Vmachines Running 
+#*From Total Deployed:45*
+{{jgauge: id:5 width:200 height:114 val:17 start:0 end:45 }}
+@divend 
+
+@divend
+
+@col 6
+h4. Links
+
+
+|[Performance Dashboard|http://localhost:8081/dashboard|||target='_blank']|[Events Dashboard|http://localhost:9000/incubaidcom/test/|||target='_blank']|
+|[Grid Nodes|/grid/nodes]|[Failed Jobs|http://localhost:9181/failed|||target='_blank'|]|
+@divend 
+@col 6
+@divend 
+
+#block
+@divend 
+
+
+{{cssstyle
+td {
+    max-width:500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;}
+}}
+
+

@@ -2,6 +2,7 @@ from JumpScale import j
 import JumpScale.baselib.serializers
 from JumpScale.grid.serverbase import returnCodes
 import inspect
+import copy
 import time
 
 class Session():
@@ -33,7 +34,7 @@ class DaemonCMDS(object):
     def getpubkeyserver(self, session):
         return self.daemon.keystor.getPubKey(self.daemon.sslorg, self.daemon.ssluser, returnAsString=True)
 
-    def registersession(self, sessiondata, session, ssl):
+    def registersession(self, sessiondata, ssl,session):
         """
         @param sessiondata is encrypted data (SSL)
         """
@@ -62,7 +63,7 @@ class DaemonCMDS(object):
         eco = j.errorconditionhandler.getErrorConditionObject(ddict=eco)
         self.daemon.eventhandlingTE.executeV2(eco=eco, history=self.daemon.eventsMemLog)
 
-    def introspect(self, session, cat):
+    def introspect(self, cat,session=None):
         methods = {}
         interfaces = self.daemon.cmdsInterfaces[cat]
         for interface in interfaces:
@@ -73,6 +74,8 @@ class DaemonCMDS(object):
                 # Remove the 'session' parameter
                 if 'session' in args.args:
                     session_index = args.args.index('session')
+                    if session_index<>len(args.args)-1:
+                        raise RuntimeError("session arg needs to be last argument of method. Cat:%s Method:%s \nArgs:%s"%(cat,name,args))
                     del args.args[session_index]
                     if args.defaults:
                         session_default_index = session_index - len(args.args) - 1
@@ -167,9 +170,13 @@ class Daemon(object):
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco
-            eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
-            eco.errormessage = "ERROR IN RPC CALL:\n"+ eco.errormessage
+            # eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
+            if len(str(data))>1024:
+                data="too much data to show."
+            eco.errormessage = "ERROR IN RPC CALL %s: %s\nData:%s\n"%(cmdkey,eco.errormessage ,data)
             j.errorconditionhandler.processErrorConditionObject(eco)
+            eco.__dict__.pop("tb")
+            eco.tb=None
             result = self.errorconditionserializer.dumps(eco.__dict__)
             return returnCodes.ERROR, "", result
 
@@ -202,6 +209,7 @@ class Daemon(object):
                 data = ser.loads(data)
         except Exception,e:
             eco=j.errorconditionhandler.parsePythonErrorObject(e)
+            eco.tb=""
             return returnCodes.SERIALIZATIONERRORIN, "", self.errorconditionserializer.dumps(eco.__dict__)
 
 

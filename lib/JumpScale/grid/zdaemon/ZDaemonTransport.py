@@ -6,12 +6,19 @@ from JumpScale.grid.serverbase.DaemonClient import Transport
 
 
 class ZDaemonTransport(Transport):
-    def __init__(self, addr="localhost", port=9999):
+    def __init__(self, addr="localhost", port=9999,gevent=False):
 
         self._timeout = 60
         self._addr = addr
         self._port = port
         self._id = None
+        if gevent==False:
+            import zmq
+            self.zmq=zmq
+        else:
+            import zmq.green as zmq
+            self.zmq=zmq
+        
 
     def connect(self, sessionid):
         """
@@ -48,11 +55,11 @@ class ZDaemonTransport(Transport):
             j.errorconditionhandler.raiseOperationalCritical(msgpub=msg, message="", category="zdaemonclient.init", die=True)
         j.logger.log("server is reachable on %s on port %s" % (self._addr, self._port), level=4, category='zdaemon.client.init')
 
-        self._context = zmq.Context()
+        self._context = self.zmq.Context()
 
-        self._cmdchannel = self._context.socket(zmq.REQ)
+        self._cmdchannel = self._context.socket(self.zmq.REQ)
 
-        self._cmdchannel.setsockopt(zmq.IDENTITY, self._id)
+        self._cmdchannel.setsockopt(self.zmq.IDENTITY, str(self._id))
 
         # if self.port == 4444 and j.system.platformtype.isLinux():
         #     self.cmdchannel.connect("ipc:///tmp/cmdchannel_clientdaemon")
@@ -61,13 +68,13 @@ class ZDaemonTransport(Transport):
         self._cmdchannel.connect("tcp://%s:%s" % (self._addr, self._port))
         print "TCP channel open to %s:%s with id:%s" % (self._addr, self._port,self._id)
 
-        self._poll = zmq.Poller()
-        self._poll.register(self._cmdchannel, zmq.POLLIN)
+        self._poll = self.zmq.Poller()
+        self._poll.register(self._cmdchannel, self.zmq.POLLIN)
         print "TCP channel OK"
 
     def close(self):
         try:
-            self._cmdchannel.setsockopt(zmq.LINGER, 0)
+            self._cmdchannel.setsockopt(self.zmq.LINGER, 0)
             self._cmdchannel.close()
         except:
             print "error in close for cmdchannel"

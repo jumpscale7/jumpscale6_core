@@ -1,30 +1,42 @@
 from JumpScale import j
 import gevent
 import copy
+import inspect
+import imp
+import time
+import sys
+import ujson
+from redis import Redis
+from rq import Queue
 
-class Jumpscript():
 
-    def __init__(self, name,organization, author, license, version, action, source, path, descr,category,period):
-        self.name = name
-        self.descr = descr
-        self.category = category
-        self.organization = organization
-        self.author = author
-        self.license = license
-        self.version = version 
-        self.source = source
-        self.path = path
-        self.action=action
-        self.category=category
-        self.period=period
-        self.order=1
-        self.enable=True
-        self._name="jumpscripts"
+class JumpScript(object):
+    def __init__(self, ddict):
+        self.period = 0
+        self.lastrun = 0
+        self.startatboot = False
+        self.__dict__.update(ddict)
+        self.write()
+        self.load()
 
-    def __repr__(self):
-        return "%s %s"%(self.name,self.descr)
+    def write(self):
+        jscriptdir = j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts", self.organization)
+        j.system.fs.createDir(jscriptdir)
+        self.path=j.system.fs.joinPaths(jscriptdir, "%s.py" % self.name)
 
-    __str__ = __repr__
+        content="""
+from JumpScale import j
+
+"""
+        content += self.source
+        j.system.fs.writeFile(filename=self.path, contents=content)
+
+    def load(self):
+        md5sum = j.tools.hash.md5_string(self.path)
+        self.module = imp.load_source('JumpScale.jumpscript_%s' % md5sum, self.path)
+
+    def run(self, *args, **kwargs):
+        return self.module.action(*args, **kwargs)
 
 
 class JumpscriptsCmds():
@@ -40,60 +52,51 @@ class JumpscriptsCmds():
         # self.lastMonitorResult=None
         self.lastMonitorTime=None
 
+        self.redis = Redis("127.0.0.1", 7768, password=None)
+
+        self.q_i = Queue(name="io",connection=self.redis)
+        self.q_h = Queue(name="hypervisor",connection=self.redis)
+        self.q_d = Queue(name="default",connection=self.redis)
+
+        self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
+        self.adminuser = "root"
+        self.osisclient = j.core.osis.getClient(user="root",gevent=True)
+        self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript') 
+
+        agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+
+        ipaddr=j.application.config.get("grid.master.ip")        
+
+        self.agentcontroller_client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=self.adminuser , passwd=self.adminpasswd, \
+            category="agent",id=agentid,timeout=36000)       
+
+
+    def _init(self):
+        self.loadJumpscripts()
+
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-        for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
-            C = j.system.fs.fileGetContents(path2)
-            C2 = ""
-            name = j.system.fs.getBaseName(path2)
-            name=name.strip(".py")
-            organization = "unknown"
-            author = "unknown"
-            license = "unknown"
-            version = "1.0"
-            roles = ["*"]
-            source = ""
 
-            state = "start"
+        #ASK agentcontroller about known jumpscripts 
+        jumpscripts = self.agentcontroller_client.listJumpScripts()
+        for organization, name, category, descr in jumpscripts:
+            jumpscript_data=self.agentcontroller_client.getJumpScript(organization, name)
+            jumpscript = JumpScript(jumpscript_data)
 
-            enable=True
-            order=1
-
-            for line in C.split("\n"):
-                line = line.replace("\t", "    ")
-                line = line.rstrip()
-                if line.strip() == "":
-                    continue
-                if line.find("###########") != -1:
-                    break
-                C2 += "%s\n" % line
-                if state == "start" and line.find("def action") == 0:
-                    state = "action"
-                if state == "action":
-                    source += "%s\n" % line
-
-            try:
-                #loads all params
-                exec(C2)
-            except Exception as e:
-                msg="Could not load jumpscript:%s\n" % path2
-                msg+="Error was:%s\n" % e
-                # print msg
-                j.errorconditionhandler.raiseInputError(msgpub="",message=msg,category="agentcontroller.load",tags="",die=False)
-                continue
-
-            t = Jumpscript(name,  organization, author, license, version, action, source, path2, descr=descr,category=category,period=period)
-            t.order=order
-            t.enable=enable
             print "found jumpscript:%s " %("%s_%s" % (organization, name))
-            self.jumpscripts["%s_%s" % (organization, name)] = t
-            if not self.jumpscriptsByPeriod.has_key(period):
-                self.jumpscriptsByPeriod[period]=[]
-            self.jumpscriptsByPeriod[period].append(t)
+            self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
+            period = jumpscript.period
+            if period:
+                if period and period not in self.jumpscriptsByPeriod:
+                    self.jumpscriptsByPeriod[period]=[]
+                self.jumpscriptsByPeriod[period].append(jumpscript)
+
+            self.redis.hset("jumpscripts:%s"%(jumpscript.organization),jumpscript.name, ujson.dumps(jumpscript_data))
+
         self._killGreenLets()       
         self._configureScheduling()
-        
+
     def getJumpscript(self, organization, name, session=None):
 
         if session<>None:
@@ -130,6 +133,14 @@ class JumpscriptsCmds():
         return [[t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
 
+    def executeJumpscript(self, organization, name, args={},all=False, timeout=600,wait=True,lock="", session=None):
+        key = "%s_%s" % (organization, name)
+        if wait:
+            return self.jumpscripts[key].run(**args)
+        else:
+            gevent.Greenlet(self.jumpscripts[key].run, **args).start()
+
+
     ####SCHEDULING###
     def _killGreenLets(self,session=None):
         """
@@ -137,43 +148,51 @@ class JumpscriptsCmds():
         """
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
+        todelete=[]
         for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
-            greenlet.kill()     
+            if key.find("loop")==0:
+                greenlet.kill()
+                todelete.append(key)
+        for key in todelete:
+            self.daemon.parentdaemon.greenlets.pop(key)
 
-    def _configureScheduling(self):        
-        for period in self.jumpscriptsByPeriod.keys():
-            period=int(period)
+    def _run(self,period=None):
+        if period==None:
+            for period in j.processmanager.jumpscripts.jumpscriptsByPeriod.keys():
+                self._run(period)
 
-            C="""
-def loop_$period():
-    while True:
-        for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[$period]:
+        for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[period]:
             if not action.enable:
                 continue
             #print "start action:%s"%action
-            try:
-                action.action()
-            except Exception,e:
-                eco=j.errorconditionhandler.parsePythonErrorObject(e)
-                eco.errormessage+='\\n'
-                for key in action.__dict__.keys():
-                    if key not in ["license"]:
-                        eco.errormessage+="%s:%s\\n"%(key,action.__dict__[key]) 
-                eco.tags="category:%s"%action.category
-                print eco
-                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                continue
-            print "ok"
-        gevent.sleep($period) 
-"""
+            if action.lastrun == 0 and action.startatboot == False:
+                print "did not start at boot:%s"%action.name
+            else:
+                if not action.async:
+                    try:
+                        action.run()
+                    except Exception,e:
+                        eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                        eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(action.organization,action.name, \
+                                j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
+                        eco.tags="jscategory:%s"%action.category
+                        eco.tags+=" jsorganization:%s"%action.organization
+                        eco.tags+=" jsname:%s"%action.name
+                        j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+                else:
+                    self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
 
-            C=C.replace("$period",str(period))
-            # print C
-            exec(C)
-            CC="loop_$period"
-            CC=CC.replace("$period",str(period))
-            
-            loopmethod=eval(CC)
-            
-            self.daemon.schedule("loop%s"%period,loopmethod)
+            action.lastrun = time.time()
+            print "ok:%s"%action.name
+
+
+    def _loop(self, period):
+        while True:
+            self._run(period)
+            gevent.sleep(period)
+
+    def _configureScheduling(self):
+        for period in self.jumpscriptsByPeriod.keys():
+            period=int(period)
+            self.daemon.schedule("loop%s"%period, self._loop, period=period)
 

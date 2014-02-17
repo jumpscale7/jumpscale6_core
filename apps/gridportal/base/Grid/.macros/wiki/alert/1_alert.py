@@ -2,34 +2,25 @@ import datetime
 
 def main(j, args, params, tags, tasklet):
 
-    params.merge(args)
-    doc = params.doc
-    # tags = params.tags
+    id = args.getTag('id')
+    if not id:
+        out = 'Missing alert id param "id"'
+        params.result = (out, args.doc)
+        return params
 
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
+    alert = j.apps.system.gridmanager.getAlerts(id=id)
+    if not alert:
+        params.result = ('Alert with id %s not found' % id, args.doc)
+        return params
 
-    id = int(args.tags.getDict()["id"])
+    def objFetchManipulate(id):
+        obj = alert[0]
+        for attr in ['lasttime', 'inittime', 'closetime']:
+            obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
+        obj['errorconditions'] = ', '.join([str(x) for x in obj['errorconditions']])
+        return obj
 
-    obj = actor.getAlerts(id=id)[0]
+    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-    out = ['||Property||Value||']
+    return push2doc(args,params,objFetchManipulate)
 
-    fields = ['id', 'category', 'state', 'description', 'descriptionpub', 'level', 'inittime', 'tags', 'closetime', 'gid', 'lasttime', 'nrerrorconditions', 'errorconditions']
-
-    for field in fields:
-        if field in ('errorconditions'):
-            out.append("|%s|%s|" % (field.capitalize(), ', '.join(obj[field])))
-        elif field == ('lasttime', 'inittime', 'closetime'):
-            time = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|%s|%s|" % (field.capitalize(), time))
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
-
-
-    params.result = ('\n'.join(out), doc)
-
-    return params
-
-
-def match(j, args, params, tags, tasklet):
-    return True

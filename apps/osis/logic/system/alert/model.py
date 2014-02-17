@@ -12,7 +12,6 @@ class Alert(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("eco","1.0")
             self.id=id  #is unique where alert has been created
             if guid=="":
                 self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes

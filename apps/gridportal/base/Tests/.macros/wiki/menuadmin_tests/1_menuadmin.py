@@ -8,7 +8,7 @@ def main(j, args, params, tags, tasklet):
     params.result = ""
 
 
-    # spaces = sorted(j.core.portal.runningPortal.webserver.getSpaces())
+    # spaces = sorted(j.core.portal.active.getSpaces())
     # spacestxt=""
     # for item in spaces:
     #     if item[0] != "_" and item.strip() != "" and item.find("space_system")==-1 and item.find("test")==-1 and  item.find("gridlogs")==-1:
@@ -17,16 +17,15 @@ def main(j, args, params, tags, tasklet):
 
     C = """
 {{menudropdown: name:Portal
-Edit:/system/edit?space=$$space&page=$$page
+Edit:/system/edit?space=$$space&page=$$page&$$querystr
 --------------
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
 System:/system
 --------------
-agentcontroller:/agentcontroller
-grid:/grid
-logs_errors:/gridlogs
-jpackages:/jpackages
+Grid:/grid
+Logs_errors:/gridlogs
+JPackages:/jpackages
 --------------
 Machines:/grid/Machines
 Disks:/grid/Disks
@@ -50,7 +49,8 @@ Stats:/grid/stat
 #Pages:/system/Pages?space=$$space
 #ReloadAll:javascript:(function loadAll() {$.ajax({'url': '/system/ReloadApplication'});(function checkSpaceIsUp(trials) {if (trials <= 0) return;setTimeout(function() {$.ajax({'url': '/system/'}).done(function(){location.reload();console.log('Reloaded');}).error(function(){checkSpaceIsUp(trials - 1)});}, 1000);})(10);})();void(0);
 
-    if j.apps.system.usermanager.extensions.usermanager.checkUserIsAdminFromCTX(params.requestContext):
+    if j.core.portal.active.isAdminFromCTX(params.requestContext):
+
         params.result = C
 
     params.result = (params.result, doc)

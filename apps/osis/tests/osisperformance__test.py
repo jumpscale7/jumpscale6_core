@@ -14,8 +14,8 @@ author = "incubaid"
 license = "bsd"
 version = "1.0"
 category = "osis.basic.testset"
-enable=True
-priority=9
+enable=False
+priority=50
 
 import JumpScale.grid.osis
 

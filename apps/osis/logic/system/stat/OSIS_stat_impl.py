@@ -13,7 +13,6 @@ class mainclass(OSISStore):
         OSISStore.__init__(self)
         self.indexTTL=3600*24*30 #30 days
 
-
     def set(self,key,value):
         obj=self.getObject(value)
         obj.getSetGuid()

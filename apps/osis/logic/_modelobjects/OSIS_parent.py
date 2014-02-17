@@ -10,7 +10,7 @@ class mainclass(OSISStore):
     """
 
     def set(self, key, value):
-        id = value['id']
+        id = value.get('id')
         if id and self.db.exists(self.dbprefix, id):
             orig = self.get(id)
             orig.update(value)
@@ -29,22 +29,3 @@ class mainclass(OSISStore):
         self.index(value)
         return [id, new, changed]
 
-    def index(self, obj):
-        """
-        """
-        obj = obj.copy()
-        if self.elasticsearch <> None:
-            index = self.getIndexName()
-            for key5 in obj.keys():
-                if key5[0] == "_":
-                    obj.pop(key5)
-            obj.pop("sguid", None)
-            if self.indexTTL <> "":
-                self.elasticsearch.index(index=index, id=str(obj['id']), doc_type=self.hrd.category_name, doc=obj, ttl=self.indexTTL, replication="async")
-            else:
-                self.elasticsearch.index(index=index, id=str(obj['id']), doc_type=self.hrd.category_name, doc=obj, replication="async")
-
-    def removeFromIndex(self, key):
-        index = self.getIndexName()
-        result = self.elasticsearch.delete(index, self.hrd.category_name, key)
-        return result

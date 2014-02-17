@@ -3,12 +3,15 @@ def main(j, args, params, tags, tasklet):
     params.merge(args)
 
     doc = params.doc
-    tags = params.tags
 
-    
-    p=args.tags.getDict()
+    #key always starts with n$nr.$key
+    #e.g. n1.process....
 
-    out='!/restmachine/system/gridmanager/getStatImage?statKey=%s&_png=1&width=%s&height=%s&.png!'%(p["key"],p["width"],p["height"])
+    key = args.getTag('key')
+    width = args.getTag('width', 800)
+    height = args.getTag('height', 400)
+
+    out = '!/restmachine/system/gridmanager/getStatImage?statKey=%s&width=%s&height=%s!'%(key,width,height)
     
     params.result = (out, doc)
 

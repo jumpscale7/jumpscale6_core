@@ -1,34 +1,29 @@
 import datetime
+import JumpScale.grid.osis
 
 def main(j, args, params, tags, tasklet):
+    id = args.getTag('id')
+    if not id:
+        out = 'Missing ECO id param "id"'
+        params.result = (out, args.doc)
+        return params
 
-    params.merge(args)
-    doc = params.doc
-    # tags = params.tags
+    oscl = j.core.osis.getClient(user='root')
+    ecocl = j.core.osis.getClientForCategory(oscl, 'system', 'eco')
+    try:
+        obj = ecocl.get(id)
+    except:
+        out = 'Could not find Error Condition Object with id %s'  % id
+        params.result = (out, args.doc)
+        return params
 
-    actor=j.apps.actorsloader.getActor("system","gridmanager")
+    def objFetchManipulate(id):
+        obj['epoch'] = datetime.datetime.fromtimestamp(obj['epoch']).strftime('%Y-%m-%d %H:%M:%S')
+        for attr in ['errormessage', 'errormessagePub']:
+            obj[attr] = obj[attr].replace('\n', '<br>')
+        obj['id'] = id
+        return obj
 
-    id = int(args.tags.getDict()["id"])
+    push2doc = j.apps.system.contentmanager.extensions.macrohelper.push2doc
 
-    obj = actor.getMachines(id=id)[0]
-
-    out = ['||Property||Value||']
-
-    fields = ['appname', 'category', 'jid', 'code', 'level', 'backtrace', 'pid', 'nid', 'funcname', 'epoch', 'errormessagePub', 'funclinenr', 'gid', 'masterjid', 'errormessage', 'type', 'funcfilename', 'tags']
-    for field in fields:
-        if field == 'nid':
-            out.append("|Node|[%s|/grid/node?id=%s]|" % (obj[field], obj[field]))
-        elif field == 'epoch':
-            epoch = datetime.datetime.fromtimestamp(obj[field]).strftime('%Y-%m-%d %H:%M:%S')
-            out.append("|%s|%s|" % (field.capitalize(), epoch))
-        else:
-            out.append("|%s|%s|" % (field.capitalize(), obj[field]))
-
-
-    params.result = ('\n'.join(out), doc)
-
-    return params
-
-
-def match(j, args, params, tags, tasklet):
-    return True
+    return push2doc(args,params,objFetchManipulate)

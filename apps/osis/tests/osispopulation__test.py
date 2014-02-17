@@ -2,6 +2,7 @@
 import unittest
 import re
 import time
+import sys
 from JumpScale import j
 
 import JumpScale.grid.osis
@@ -15,14 +16,14 @@ author = "despiegk"
 license = "bsd"
 version = "1.0"
 category = "osis.basic.testdata.populate,grid.testdata.populate"
-enable=True
+enable=False
 priority=2
 
 
-class TEST():
+class TEST(unittest.TestCase):
 
     def setUp(self):
-        self.client = j.core.osis.getClient()
+        self.client = j.core.osis.getClient(user='root')
 
     def tearDown(self):
         pass
@@ -94,7 +95,7 @@ class TEST():
         print 'process'
         client=j.core.osis.getClientForCategory(self.client,"system","process")        
 
-        for i in xrange(30,1000):
+        for i in xrange(30,100):
 
             obj=client.new()            
             obj.gid=1
@@ -111,7 +112,8 @@ class TEST():
             domains=["jumpscale","incubaid","adomain"]
             obj.jpdomain=domains[r]
             obj.jpname="jpname%s"%i
-            obj.name="process%s"%i
+            obj.pname="process%s"%i
+            obj.sname="process%s"%i
             client.set(obj)
 
     def test_disk(self):

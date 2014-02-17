@@ -12,12 +12,11 @@ class Grid(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("node","1.0")
             self.name = name
             self.useavahi = useavahi
             self.nid=0
             self.id=id
-            self.guid=id
+            self.guid=id            
 
     def initFromLocalNodeInfo(self):
         """

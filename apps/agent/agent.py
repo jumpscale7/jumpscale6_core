@@ -1,4 +1,6 @@
 from JumpScale import j
+import gevent
+from gevent import Greenlet
 
 import time
 
@@ -6,30 +8,31 @@ import JumpScale.grid.geventws
 
 import Queue
 
-import threading
-
-j.application.start("agent")
+j.application.start("jumpscale:agent")
+j.application.initGrid()
 
 j.logger.consoleloglevel = 2
 j.logger.maxlevel=7
 
 import ujson as json
 
-LOGCATEGORY = 'agent_exec'
+LOGS = {'current':'agent',
+        'agent': 'agent',
+        'job': 'agent_job' }
 
-class LogHandler():
+class LogHandler(Greenlet):
 
     def __init__(self,agent):
+        Greenlet.__init__(self)
         self.enabled = True
         self.agent=agent
         self.queue = Queue.Queue()
-        self.jid=""
-        self._running = False
+        self.jid=j.application.jid
 
     def log(self,logitem):
         logitem.jid=self.jid
         if not logitem.category:
-            logitem.category = LOGCATEGORY
+            logitem.category = LOGS['current']
         self.queue.put(logitem.__dict__)
         print logitem
 
@@ -37,7 +40,7 @@ class LogHandler():
         eco.jid = self.jid
         if not isinstance(eco.type, int):
             eco.type = eco.type.level
-        self.agent.client.escalateError(eco.__dict__)
+        self.agent.client.escalateError(eco)
 
     def flushLogs(self):
         logs = []
@@ -46,58 +49,35 @@ class LogHandler():
         if logs:
             self.agent.client.log(logs)
 
-    def start(self, interval=5):
-        self._running = True
-        class MyFlush(threading.Thread):
-            def run(s):
-                while self._running:
-                    time.sleep(interval)
-                    self.flushLogs()
-        print "log thread started, will flush each %s sec"%interval
-        self._t = MyFlush()
-        self._t.setDaemon(True)
-        self._t.start()  
-
-    def stop(self):
-        self._running = False
-
-    def __exit__(self):
-        self._running = False
+    def _run(self, interval=5):
+        while True:
+            gevent.sleep(interval)
+            self.flushLogs()
 
     def close(self):
-        self.stop()
+        self.flushLogs()
 
 import sys
 
-class Agent():
+class Agent(Greenlet):
 
     def __init__(self):
-
+        Greenlet.__init__(self)
         self.loghandler=LogHandler(self)
-
-        
 
         j.logger.logTargets=[]
         j.logger.logTargetLogForwarder=False
 
-        self.similarProcessPIDs=[process.pid for process in j.system.process.getSimularProcesses()]
-        
-        self.agentid = j.application.getWhoAmiStr()
-
         ipaddr=j.application.config.get("grid.master.ip")
-        adminpasswd = j.application.config.get('system.superadmin.passwd')
-        adminuser = j.application.config.get('system.superadmin.login')
-        self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, \
-            category="agent",id=self.agentid,timeout=36000)
-
+        adminpasswd = j.application.config.get('grid.master.superadminpasswd')
+        adminuser = 'root'#j.application.config.get('system.superadmin.login')
+        self.client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=adminuser, passwd=adminpasswd, category="agent",timeout=36000)
 
         j.logger.logTargetAdd(self.loghandler)
         self.loghandler.start()        
         # setup logger
         if not j.logger.logTargetLogForwarder:
             j.logger.logTargetLogForwarder = self.loghandler
-
-        print "agent: %s"%self.agentid
 
         sys.excepthook=self.exceptHook
 
@@ -120,21 +100,22 @@ class Agent():
                 print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
         print "******************* SERIOUS BUG **************"   
         self.register()
-        self.start()     
+        self._run()
 
     def register(self):
-        print "REGISTERED"
+        print "REGISTER:",
         ok=False
         while ok==False:
             try:
-                self.client.register(similarProcessPIDs=self.similarProcessPIDs)
+                self.client.register()
                 ok=True
             except Exception,e:
                 print e
                 print "retry registration"
-                time.sleep(2)
+                gevent.sleep(2)
+        print "OK"
 
-    def start(self):
+    def _run(self):
         print "STARTED"
         while True:
 
@@ -142,23 +123,25 @@ class Agent():
             while ok==False:
                 try:
                     # print "check if work"
-                    havework=self.client.getWork()
+                    job=self.client.getWork()
                     ok=True
                 except Exception,e:
                     self.register()
                     continue
-                
-            if havework<>None and ok:
-                jscriptid,args,jid=havework
-                args=json.loads(args)
-                self.loghandler.jid=jid
-                
+
+            if job and ok:
+                organization=job["category"]
+                name=job["cmd"]
+                kwargs=job["args"]
+                jid = job["id"]
+                jscriptid = "%s_%s" % (organization, name)
+                j.application.jid=jid
                 #eval action code, if not ok send error back, cache the evalled action
                 if self.actions.has_key(jscriptid):
                     action,jscript=self.actions[jscriptid]
                 else:
                     # print "CACHEMISS"
-                    jscript=self.client.getJumpscriptFromKey(jscriptid)
+                    jscript=self.client.getJumpScript(organization, name)
                     try:
                         self.log("Load script:%s %s"%(jscript["organization"],jscript["name"]))
                         exec(jscript["source"])
@@ -171,22 +154,27 @@ class Agent():
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
                         eco.errormessage = msg
                         eco.jid = jid
-                        eco.category = LOGCATEGORY
+                        eco.category = LOGS['agent']
+                        # self.loghandler.logECO(eco)
                         self.notifyWorkCompleted(result={},eco=eco.__dict__)
                         continue
                     
                 eco=None
                 self.log("Job started: %s %s"%(jscript["organization"],jscript["name"]))
                 try:
-                    result=action(**args)
+                    LOGS['current'] = LOGS['job']
+                    result=action(**kwargs)
+                    LOGS['current'] = LOGS['agent']
                 except Exception,e:
+                    LOGS['current'] = LOGS['agent']
                     msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
                         jscript["source"],e)
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.errormessage = msg
                     eco.jid = jid
-                    eco.category = LOGCATEGORY
-                    self.notifyWorkCompleted({},eco.__dict__)
+                    eco.category = LOGS['agent']
+                    # self.loghandler.logECO(eco)
+                    self.notifyWorkCompleted(jid, {},eco.__dict__)
                     continue
 
                 #if not j.basetype.dictionary.check(result):
@@ -201,26 +189,29 @@ class Agent():
                     
                 
                 self.log("result:%s"%result)
-                self.notifyWorkCompleted(result,{})
+                self.notifyWorkCompleted(jid, result,{})
 
 
-    def notifyWorkCompleted(self,result,eco):
+    def notifyWorkCompleted(self,jid, result,eco):
         try:
-            result=self.client.notifyWorkCompleted(result=result,eco=eco,transporttimeout=5)
+            eco = eco.copy()
+            eco.pop('tb', None)
+            result=self.client.notifyWorkCompleted(jid, result=result,eco=eco)
         except Exception,e:
-            eco=j.errorconditionhandler.lastEco
-            j.errorconditionhandler.lastEco=None
+            eco = j.errorconditionhandler.lastEco
+            j.errorconditionhandler.lastEco = None
+            # self.loghandler.logECO(eco)
 
             print "******************* SERIOUS BUG **************"
             print "COULD NOT EXECUTE JOB, COULD NOT PROCESS RESULT OF WORK."
             try:
-                print "ERROR WAS:%s"%eco
+                print "ERROR WAS:%s"%eco, e
             except:
                 print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
             print "******************* SERIOUS BUG **************"
 
 
-    def log(self, message, category=LOGCATEGORY,level=5):
+    def log(self, message, category=LOGS['agent'],level=5):
         #queue saving logs        
         j.logger.log(message,category=category,level=level)
         print message
@@ -229,3 +220,5 @@ class Agent():
 
 agent=Agent()
 agent.start()
+agent.join()
+

@@ -13,9 +13,8 @@ class Node(OsisBaseObject):
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.init("node","1.0")
-            self.id = 0
             self.gid = 0
+            self.id = 0
             self.name = ""
             self.roles = []
             self.netaddr = None
@@ -28,6 +27,8 @@ class Node(OsisBaseObject):
             self.peer_backup=0 #node which has backups for this node
             self.description=""
             self.lastcheck=0 #epoch of last time the info was checked from reality
+            self.roles=[]
+            self._meta=["osisrootobj","system","fake4test",1] # osisrootobj,$namespace,$category,$version
 
 
     def getUniqueKey(self):
@@ -60,6 +61,7 @@ class Node(OsisBaseObject):
         self.ipaddr=[item for item in j.system.net.getIpAddresses() if item <>"127.0.0.1"]        
         
         self.netaddr=j.system.net.getNetworkInfo()
+        self.name = j.system.net.getHostname()
 
         self.gid=j.application.config.getInt("grid.id")
         if self.gid==0:

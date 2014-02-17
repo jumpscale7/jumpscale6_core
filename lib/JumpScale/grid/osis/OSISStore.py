@@ -1,29 +1,35 @@
 from JumpScale import j
 import copy
-json=j.db.serializers.getSerializerType("j")
-
+import imp
+# import ujson as json
 
 class OSISStore(object):
-
     """
     Default object implementation (is for one specific namespace_category)
     """
 
-    def init(self, path, hrd):
+    def __init__(self):
+        pass
+        
+
+    def init(self, path, namespace,categoryname):
+        """
+        gets executed when catgory in osis gets loaded by osiscmds.py (.init method)
+        """
+        self.json=j.db.serializers.getSerializerType("j")
 
         self.path = path
-        self.hrd = hrd
         self.tasklets = {}
 
-        for tasklettype in j.system.fs.listDirsInDir(self.path, dirNameOnly=True):
-            self.tasklets[tasklettype] = j.core.taskletengine.get(j.system.fs.joinPaths(self.path, tasklettype))
+        # for tasklettype in j.system.fs.listDirsInDir(self.path, dirNameOnly=True):
+        #     self.tasklets[tasklettype] = j.core.taskletengine.get(j.system.fs.joinPaths(self.path, tasklettype))
 
         self.db = None
 
         self.db = self._getDB()
 
-        self.namespace = self.hrd.get("namespace.name")
-        self.categoryname = self.hrd.get("category.name")
+        self.namespace = namespace
+        self.categoryname = categoryname
 
         if self.namespace=="" or self.categoryname=="":
             raise RuntimeError("namespace & category cannot be empty")
@@ -31,56 +37,77 @@ class OSISStore(object):
         self.dbprefix = "%s_%s" % (self.namespace, self.categoryname)
         self.dbprefix_incr = "%s_incr" % (self.dbprefix)
 
-        indexEnabled = self.hrd.getInt("category.index") == 1
-        elasticsearchEnabled = self.hrd.getInt("category.elasticsearch") == 1
-
         self.buildlist = False
 
-        if elasticsearchEnabled:
-        # put on None if no elastic search
-            self.elasticsearch = self._getElasticSearch()
-            status = self.elasticsearch.status()
-            indexname = self.getIndexName()
-            if indexname not in status['indices'].keys():
-                import pyelasticsearch
-                try:
-                    self.elasticsearch.create_index(self.getIndexName())
-                except pyelasticsearch.IndexAlreadyExistsError:
-                    pass # we pass this cause elasticsearch can have some delays
-        else:
-            self.elasticsearch = None
-            if indexEnabled:
-                self.buildlist = True
+        self.elasticsearch = self._getElasticSearch()
+        status = self.elasticsearch.status()
+        indexname = self.getIndexName()
+        if indexname not in status['indices'].keys():
+            import pyelasticsearch
+            try:
+                self.elasticsearch.create_index(self.getIndexName())
+            except pyelasticsearch.IndexAlreadyExistsError:
+                pass 
 
-        if self.tasklets.has_key("init"):
-            self.tasklets["init"].executeV2(osis=self)
-
-        self.indexTTL = self.hrd.get("category.indexttl")
+        # if self.tasklets.has_key("init"):
+        #     self.tasklets["init"].executeV2(osis=self)
 
         self.objectclass=None
 
-    def _getModelClass(self):
-        if self.objectclass==None:
+        authpath=j.system.fs.joinPaths(self.path,"OSIS_auth.py")
+        auth=None
+        authparent=None
 
-            path=j.system.fs.joinPaths(self.path, "model.py")
-            if j.system.fs.exists(path):
-                klass= j.system.fs.fileGetContents(path)
-            else:
-                self.objectclass= ""
-                # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
+        if j.system.fs.exists(authpath):
+            testmod = imp.load_source("auth_%s"%self.dbprefix, authpath)
+            auth=testmod.AUTH()
+            auth.load(self)
 
-            name=""
+        authpath=j.system.fs.joinPaths(j.system.fs.getParent(self.path),"OSIS_auth.py")
+        if j.system.fs.exists(authpath):
+            testmod = imp.load_source("auth_%s"%self.dbprefix, authpath)
+            authparent=testmod.AUTH()
+            authparent.load(self)
 
-            for line in klass.split("\n"):
-                if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
-                    name=line.split("(")[0].lstrip("class ")
-            if name=="":
-                raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
-            exec(klass)
-            resultclass=eval(name)
-            self.objectclass=resultclass
+        self.auth=auth
+        if self.auth==None and authparent<>None:
+            self.auth=authparent
 
-        return self.objectclass
+    # def _getModelClass(self):
+    #     """
+    #     is called when someone needs an object
+    #     """
+    #     if self.objectclass==None:
+
+    #         #need to check if there is a specfile or we go from model.py
+    #         specpath=j.system.fs.joinPaths(self.path, "model.spec")    
+    #         print "SPECPATH:%s" %specpath
+    #         if j.system.fs.exists(path=specpath):
+    #             j.core.specparser.parseSpecs(self.path, appname=self.categoryname, actorname="osismodel")
+    #             spec = j.core.specparser.getActorSpec(appname, actorname, raiseError=False)            
+    #             from IPython import embed
+    #             print "DEBUG NOW uuuuu"
+    #             embed()
+                
+    #         path=j.system.fs.joinPaths(self.path, "model.py")
+    #         if j.system.fs.exists(path):
+    #             klass= j.system.fs.fileGetContents(path)
+    #         else:
+    #             self.objectclass= ""
+    #             # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
+
+    #         name=""
+
+    #         for line in klass.split("\n"):
+    #             if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
+    #                 name=line.split("(")[0].lstrip("class ")
+    #         if name=="":
+    #             raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there.\nClass file on %s"%)
+    #         exec(klass)
+    #         resultclass=eval(name)
+    #         self.objectclass=resultclass
+
+    #     return self.objectclass
 
     def _getDB(self):
         if j.core.osis.db == None:
@@ -98,36 +125,108 @@ class OSISStore(object):
         """
         return self.db.get(self.dbprefix, key)
 
+    def exists(self, key):
+        """
+        get dict value
+        """
+        return self.db.exists(self.dbprefix, key)
+
     def getObject(self, ddict={}):
-        klass=self._getModelClass()
+        klass=j.core.osis.getOsisModelClass(self.namespace,self.categoryname)
         if klass=="":
             return ddict            
         obj = klass(ddict=ddict)
         return obj
 
-    def set(self, key, value):
-        obj = self.getObject(value)
+    def setObjIds(self,obj):
+        """
+        for osis object get unique id & set it in object
+        return (new,changed,obj) #new & changed=boolean
+        """        
+        ckey=obj.getContentKey()
+        # print "ckey:%s"%ckey
+        ukey=obj.getUniqueKey()
+        # print "ukey:%s"%ukey
+        if ukey==None or str(ukey)=="":
+            # print "UKEY NONE SO NEW"
+            changed=True
+            new=True
+            ukey=None
+        else:
+            changed=False
+            new=False
+        
+        if ukey<>None and self.db.exists(self.dbprefix_incr, ukey):
+            # print "ukey exists"
+            new=False            
+            id,guid,ckey2=self.json.loads(self.db.get(self.dbprefix_incr, ukey))
+            guid=str(guid)
+            ckey=str(ckey)
+            ckey2=str(ckey2)
+            # print "guid,ckey in db: %s:%s"%(guid,ckey2)
+            if obj.id<>id:
+                obj.id=id
+            obj.getSetGuid()
+            if obj.guid<>guid:
+                # print "GUID changed"
+                changed=True
+            ckey=obj.getContentKey()
+            if ckey2<>ckey:
+                # print "content changed"
+                changed=True
+            if changed:
+                json=self.json.dumps([obj.id,obj.guid,ckey])
+                self.db.set(self.dbprefix_incr, ukey, json)       
+            # print "ret:%s %s" %(new,changed)         
+            return (new,changed,obj)
+        else:
+            # print "ukey not in db"
+            new=True
+            changed=True    
+            if not hasattr(obj, 'id') or not obj.id:
+                id=self.db.increment(self.dbprefix_incr)
+                # print "newid:%s"%id
+                obj.id=id
+            obj.getSetGuid()
+            ukey=obj.getUniqueKey()
+            ckey=obj.getContentKey()
+            obj._ckey=ckey
+            # print "ukey,ckey for new object: %s:%s"%(ukey,ckey)
+            if ukey<>None:
+                json=self.json.dumps([obj.id,obj.guid,ckey])
+                self.db.set(self.dbprefix_incr, ukey, json)
+            return (new,changed,obj)
 
-        if self.tasklets.has_key("set_pre"):
+    def set(self, key, value):
+        """
+        value can be a dict or a raw value (seen as string)
+        if raw value then will not try to index
+        """
+        if j.basetype.dictionary.check(value):
+            #is probably an osis object
+            if value.has_key("_meta") and  value.has_key("_ckey"):
+                #is an osis object
+                obj=self.getObject(value)
+                # obj.getSetGuid()
+                new,changed,obj=self.setObjIds(obj)
+                key=obj.guid
+                self.index(obj)
+                value=self.json.dumps(obj.obj2dict())
+            else:
+                value=self.json.dumps(value)
+                new=None
+                changed=None
+        else:
+            new=True
+            changed=True
             from IPython import embed
-            print "DEBUG NOW setpre tasklets"
+            print "DEBUG NOW osisstoreset should be dict"
             embed()
             
-            self.tasklets["set_pre"].executeV2()
-
-        self.db.set(self.dbprefix, key=obj.guid, value=value)
-
-        if self.tasklets.has_key("set_post"):
-            from IPython import embed
-            print "DEBUG NOW set_post tasklets"
-            embed()
-            self.tasklets["set_post"].executeV2()
-
-        if obj<>value:
-            #means there is a model found
-            self.index(obj)
-
-        return [None, None, None]
+        
+        #not an osis obj, need to stor as raw value, there will be no indexing
+        self.db.set(self.dbprefix, key=key, value=value)
+        return (key,new,changed)
 
     def getIndexName(self):
         """
@@ -135,28 +234,51 @@ class OSISStore(object):
         """
         return self.dbprefix
 
-    def index(self, obj):
+    def index(self, obj,ttl=0):
         """
+        @param ttl = time to live in seconds of the index
         """
-        obj = copy.copy(obj)
-        if self.elasticsearch <> None:
-            index = self.getIndexName()
+        if self.elasticsearch == None:
+            raise RuntimeError("Cannot find index")
 
-            guid = obj.guid
-            obj.__dict__.pop("guid")  # remove guid from object before serializing to json
-            for key5 in obj.__dict__.keys():
-                if key5[0] == "_":
-                    obj.__dict__.pop(key5)
-            try:
-                obj.__dict__.pop("sguid")
-            except:
-                pass
-            data = obj.__dict__
-            
-            if self.indexTTL <> "":
-                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=self.indexTTL, replication="async")
+        index = self.getIndexName()
+
+        if j.basetype.dictionary.check(obj):
+            data=copy.copy(obj)
+            data=obj
+        else:
+            if hasattr(obj,"getDictForIndex"):
+                data=obj.getDictForIndex()
+            else:
+                data=copy.copy(obj.__dict__)
+
+        guid=data["guid"]
+
+        # data.pop("guid")  # remove guid from object before serializing to json
+        for key5 in data.keys():
+            if key5[0] == "_":
+                data.pop(key5)
+        try:
+            data.pop("sguid")
+        except:
+            pass
+        
+        try:
+            if ttl <> 0:
+                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=ttl, replication="async")
             else:
                 self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
+        except Exception,e:
+            if str(e).find("Index failed")<>-1:
+                try:
+                    msg="cannot index object:\n%s"%obj
+                except Exception,ee:
+                    msg="cannot index object, cannot even print object"                
+                print e
+                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index', msgpub='', die=True, tags='', eco=None)
+            else:
+                j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))
+            
 
     def exists(self, key):
         return self.db.exists(self.dbprefix, key)
@@ -172,14 +294,16 @@ class OSISStore(object):
 
     def find(self, query, start=0, size=None):
         if not isinstance(query, dict):
-            query = json.loads(query)
+            query = self.json.loads(query)
         
         index = self.getIndexName()
-        if size:
+        size = size or 100000
+
+        try:
             result = self.elasticsearch.search(query=query, index=index, es_from=start,
                                            size=size)
-        else:
-            result = self.elasticsearch.search(query=query, index=index, es_from=0, size=100000)
+        except:
+            result = {'hits': {'hits': list(), 'total': 0}}
         if not isinstance(result, dict):
             result = result()
         return {'result': result['hits']['hits'],
@@ -208,7 +332,6 @@ class OSISStore(object):
         return all object id's stored in DB
         """
         db = self.db
-
         if withcontent == False:
             return db.list(self.dbprefix, prefix)
 

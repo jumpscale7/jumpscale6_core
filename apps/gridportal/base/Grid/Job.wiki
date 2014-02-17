@@ -1,3 +1,30 @@
 @usedefaults
 
-{{job: id:$$id logs children details scriptsource}}
+{{job: id:$$id }}
+
+h2. Job $$id
+
+* *Grid ID*: $$gid
+* *Node ID*: $$nid
+* *Roles*: $$roles
+* *Jumpscript*: [$$category:$$cmd|jumpscript?category=$$category&cmd=$$cmd]
+* *Description*: $$description
+* *Start*: $$timestart (*Timeout*: $$timeout)
+* *Lock*: $$lock (*Duration*: $$lockduration)
+* *State*: $$state
+* {{tableforarg title:Args data:$$args }}
+
+h3. Result
+{{$$includemacro}}
+{{Grid.logs: jid:$$id astext}}
+
+h3. Additional Info
+|*Lock Duration*|$$lockduration|
+|*Children*|$$children|
+|*Job Completed*|$$timestop|
+|*Category*|$$category|
+|*Source*|$$source|
+|*Children Active*|$$childrenactive|
+|*Parent*|$$parent|
+|*Session ID*|$$sessionid|
+|*Result Code*|$$result|

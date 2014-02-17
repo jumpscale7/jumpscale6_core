@@ -1,6 +1,3 @@
 @usedefault
 
-h2. Overview of the grid
-
-{{nodes}}
-
+{{include:dashboard}}

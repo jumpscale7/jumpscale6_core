@@ -2,7 +2,8 @@ from JumpScale import j
 import JumpScale.grid.geventws
 import JumpScale.grid.osis
 import JumpScale.grid.agentcontroller
-import requests
+import JumpScale.baselib.serializers
+import grequests as requests
 
 def mbToKB(value):
     if not value:
@@ -21,9 +22,9 @@ class system_gridmanager(j.code.classGetBase()):
         self._nodeMap = dict()
         self.clientsIp = dict()
 
-        self.passwd = j.application.config.get("system.superadmin.passwd")
+        self.passwd = j.application.config.get("grid.master.superadminpasswd")
 
-        osis = j.core.osis.getClient(j.application.config.get("grid.master.ip"), passwd=self.passwd)
+        osis = j.core.osis.getClient(j.application.config.get("grid.master.ip"), passwd=self.passwd, user='root')
         self.osis_node = j.core.osis.getClientForCategory(osis,"system","node")
         self.osis_job = j.core.osis.getClientForCategory(osis,"system","job")
         self.osis_eco = j.core.osis.getClientForCategory(osis,"system","eco")
@@ -35,6 +36,7 @@ class system_gridmanager(j.code.classGetBase()):
         self.osis_vdisk = j.core.osis.getClientForCategory(osis,"system","vdisk")
         self.osis_alert = j.core.osis.getClientForCategory(osis,"system","alert")
         self.osis_log = j.core.osis.getClientForCategory(osis,"system","log")
+        self.osis_nic = j.core.osis.getClientForCategory(osis,"system","nic")
 
     def getClient(self,nid,category):
         nid = int(nid)
@@ -45,8 +47,8 @@ class system_gridmanager(j.code.classGetBase()):
                 raise RuntimeError('Could not get client for node %s!' % nid)
             for ip in self._nodeMap[nid]['ipaddr']:
                 if j.system.net.tcpPortConnectionTest(ip, 4445):
-                    user=j.application.config.get('system.superadmin.login')
-                    passwd=j.application.config.get('system.superadmin.passwd')
+                    user="root"#j.application.config.get('system.superadmin.login')
+                    passwd=self.passwd
                     self.clients[nid] = j.servers.geventws.getClient(ip, 4445, org="myorg", user=user, passwd=passwd,category=category)
                     self.clientsIp[nid] = ip
                     return self.clients[nid]
@@ -60,8 +62,25 @@ class system_gridmanager(j.code.classGetBase()):
         param:nid id of node
         result json
         """
-        client=self.getClient(nid)
-        return client.monitorSystem()
+        nid = int(nid)
+        client = self.getClient(nid, 'stats') 
+
+        try:
+            stats = client.listStatKeys('n%s.system.' % nid)
+        except Exception,e:
+            from IPython import embed
+            print "DEBUG NOW getNodeSystemStats"
+            embed()
+            
+
+        cpupercent = [ stats['n%s.system.cpu.percent' % nid][-1] ]
+        mempercent = [ stats['n%s.system.memory.percent' % nid][-1] ]
+        netstat = [ stats['n%s.system.network.kbytes.recv' % nid][-1], stats['n%s.system.network.kbytes.send' % nid][-1] ]
+
+        result = {'cpupercent': [cpupercent, {'series': [{'label': 'CPU PERCENTAGE'}]}], 
+                  'mempercent': [mempercent, {'series': [{'label': 'MEMORY PERCENTAGE'}]}], 
+                  'netstat': [netstat, {'series': [{'label': 'KBytes Recieved'}, {'label': 'KBytes Sent'}]}]}
+        return result
 
     def _getNode(self, nid):
         node=self.osis_node.get(nid)
@@ -117,7 +136,6 @@ class system_gridmanager(j.code.classGetBase()):
 
         return filter(myfilter, results)
 
-
     def getProcessStats(self, nid, domain="", name="", **kwargs):
         """
         ask the right processmanager on right node to get the information
@@ -133,25 +151,81 @@ class system_gridmanager(j.code.classGetBase()):
         client=self.getClient(nid)
         return client.monitorProcess(domain=domain,name=name)
 
-    def getStatImage(self,statKey,width=500,height=250, **kwargs):
+    def _showUnavailable(self, width, height, message="STATS UNAVAILABLE"):
+        import PIL.Image as Image
+        import PIL.ImageDraw as ImageDraw
+        import StringIO
+
+        size = (int(width), int(height))
+        im = Image.new('RGB', size, 'white') 
+        draw = ImageDraw.Draw(im)   
+        red = (255,0,0)
+        text_pos = (size[0]/2,size[1]/2)
+        text = message
+        draw.text(text_pos, text, fill=red)
+        
+        del draw 
+        output = StringIO.StringIO()
+        im.save(output, 'PNG')
+        del im
+        response = output.getvalue()
+        output.close()
+        return response
+
+    def getStatImage(self, statKey, title=None, aliases={}, width=500, height=250, **kwargs):
         """
         @param statkey e.g. n1.disk.mbytes.read.sda1.last
         """
+        import urllib
+        query = list()
+        ctx = kwargs['ctx']
+        ctx.start_response('200', (('content-type', 'image/png'),))
         statKey=statKey.strip()
         if statKey[0]=="n":
             #node info
             nid=int(statKey.split(".")[0].replace("n",""))
+        elif statKey[0] == 'i':
+            statKeyInfo = statKey.split(".")
+            nid = int(statKeyInfo.pop(1).replace("n",""))
+            statKey = '.'.join(statKeyInfo)
         else:
             raise RuntimeError("Could not parse statKey, only node stats supported for now (means starting with n)")
+        try: 
+            self.getClient(nid, 'core') # load ip in ipmap
+        except:
+            return self._showUnavailable(width, height, message='PROCESSMANAGER UNAVAILABLE')
 
-        self.getClient(nid) # load ip in ipmap
-        ip=self.clientsIp[nid] 
+        ip=self.clientsIp[nid]
+        for target in statKey.split(','):
 
-        url="http://%s:8081/render/?width=%s&height=%s&target=%s&lineWidth=2&graphOnly=false&hideAxes=false&hideGrid=false&areaMode=first&tz=CET"%(ip,width,height,statKey)
+            if target in aliases:
+                target = "alias(%s, '%s')" % (target, aliases[target])
+            query.append(('target', target))
+        if title:
+            query.append(('title', title))
 
+        query.append(('height', height))
+        query.append(('width', width))
+        query.append(('lineWidth', '2'))
+        query.append(('graphOnly', 'false'))
+        query.append(('hidexAxes', 'false'))
+        query.append(('hidexGrid', 'false'))
+        query.append(('areaMode', 'none'))
+        query.append(('tz', 'CET'))
+
+        params = kwargs.copy()
+        params.pop('ctx')
+        for key, value in params.iteritems():
+            query.append((key, value))
+
+        querystr = urllib.urlencode(query)
+        url="http://%s:8081/render?%s"%(ip, querystr)
         r = requests.get(url)
-
-        return r.content
+        try:
+            result = r.send()
+        except Exception:        
+            return self._showUnavailable(width, height, "GRAPHITE UNAVAILABLE")
+        return result.content
 
     def getProcessesActive(self, nid, name, domain, **kwargs):
         """
@@ -283,7 +357,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'id': id,
                   'jsorganization': jsorganization,
                   'jsname': jsname}
-        return self.osis_eco.simpleSearch(params)
+        return self.osis_eco.simpleSearch(params, withguid=True)
 
 
     def getProcesses(self, id=None, guid=None, name=None, nid=None, gid=None, from_=None, to=None, active=None, jpdomain=None, jpname=None, instance=None, systempid=None, lastcheckFrom=None, lastcheckTo=None, **kwargs):
@@ -594,5 +668,32 @@ class system_gridmanager(j.code.classGetBase()):
                   'active': active,
                  }
         return self.osis_disk.simpleSearch(params)
+
+
+    def getNics(self, id=None, guid=None, gid=None, nid=None, active=None, ipaddr=None, lastcheck=None, mac=None, name=None, **kwargs):
+        """
+        list found disks (are really partitions) (comes from osis)
+        param:id find based on id
+        param:guid find based on guid
+        param:gid find disks for specified grid
+        param:nid find disks for specified node
+        param:active
+        param:ipaddr
+        param:lastcheck
+        param:mac
+        param:name
+        result list(list)
+        """
+        params = {'id': id,
+                  'guid': guid,
+                  'gid': gid,
+                  'nid': nid,
+                  'lastcheck': lastcheck,
+                  'mac': mac,
+                  'name': name,
+                  'ipaddr': ipaddr,
+                  'active': active
+                 }
+        return self.osis_nic.simpleSearch(params)
 
 

@@ -34,7 +34,7 @@ class GeventWSFactory():
 
         key="%s_%s"%(addr,port)
         keycat="%s_%s_%s"%(addr,port,category)
-
+        
         if self.cachecat.has_key(keycat):
             return self.cachecat[keycat]
 

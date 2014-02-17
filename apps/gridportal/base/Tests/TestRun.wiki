@@ -1,10 +1,15 @@
 @usedefaults
 
-h2. TestRun Failed
+{{testrun_getdata: id:$$id}}
 
-{{testrun: id:$$id  status:failed }}
+h2. TestRun $$name $$state 
 
-h2. TestRun Ok
+* gid: $$gid nid: $$nid
+* Categories: $$categories
+* Description: $$descr
+* Start: $$starttime
+* EndTime: $$endtime
 
-{{testrun: id:$$id  status:ok }}
+h3. TestRun details
 
+{{testrun_details: cache:$$cachekey}}

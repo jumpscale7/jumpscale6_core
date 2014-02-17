@@ -2,8 +2,16 @@ from JumpScale import j
 
 j.application.start("osisclient")
 j.application.initGrid()
+import JumpScale.grid.osis
 
-client = j.core.osis.getClient()
+cl=j.core.osis.getOsisModelClass("test_complextype","project")
+
+from IPython import embed
+print "DEBUG NOW uiuiui"
+embed()
+
+
+client = j.core.osis.getClient(user='root')
 # getNameIDsInfo
 
 # eco=q.errorconditionhandler.getErrorConditionObject(msg="this is error",msgpub="pubmessage",category="a.cat")
@@ -24,13 +32,14 @@ def testSet(client):
 
     return obj
 
-client.createNamespace(name="testcoreobjects",template="coreobjects",incrementName=False)
-
 print client.listNamespaces()
 
-clientnode=j.core.osis.getClientForCategory(client,"testcoreobjects","node")
+# clientnode=j.core.osis.getClientForCategory(client,"system","node")
 
-obj=testSet(clientnode)
+clientvfs=j.core.osis.getClientForCategory(client,"osismodel","vfs")
+vfs=clientvfs.new()
+
+# obj=testSet(clientnode)
 
 
 

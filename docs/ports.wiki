@@ -19,7 +19,13 @@ nginx 80
 
 graphite:8081
 
+shellinabox:5577
 
+redisproduction:7768
+rediscache:7767
+
+
+sentry: 9000
 
 
 

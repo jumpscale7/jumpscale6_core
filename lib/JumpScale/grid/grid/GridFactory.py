@@ -4,7 +4,7 @@ from CoreModel.ModelObject import ModelObject
 import JumpScale.grid.osis
 #from ZBrokerClient import ZBrokerClient
 from collections import namedtuple
-
+import JumpScale.grid.geventws
 import time
 
 
@@ -59,7 +59,7 @@ class GridFactory():
         if not j.system.net.waitConnectionTest(self.masterip,5544,10):
             raise RuntimeError("Could not connect to master osis")
 
-        self.gridOsisClient=j.core.osis.getClient(self.masterip)
+        self.gridOsisClient=j.core.osis.getClient(self.masterip, user='root')
 
         if self.nid == 0:
             jp=j.packages.findNewest("jumpscale","grid_node")
@@ -74,19 +74,38 @@ class GridFactory():
 
         clientprocess=j.core.osis.getClientForCategory(self.gridOsisClient,"system","process")
 
-        obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,\
-            nid=j.application.whoAmI.nid,\
-            systempid=j.application.systempid,\
-            instance=instance)
-        key,new2,changed2=clientprocess.set(obj2)
-        obj=clientprocess.get(key)
-        pid=obj.id
+        ps=j.system.process.getProcessObject(j.application.systempid)
+        workingdir=ps.getcwd()
 
-        self.pid = pid
-        self.processObject=obj
+        if False:#j.system.net.tcpPortConnectionTest("127.0.0.1",4445):  #@todo to fix later
+            #means there is a process manager, we can ask the pid
+            clientpm=j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user="root", \
+                passwd="",category="process")
+            if j.application.appname.find(":")<>-1:
+                #domain & sname known
+                domain,name=j.application.appname.split(":")
+            else:
+                domain=None
+                name=j.application.appname
+            
+            grid_guid=clientpm.registerProcess(j.application.systempid,domain,name,workingdir=workingdir)
+            grid_pid=int(grid_guid.split("_")[1])
+
+        else:
+            obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,\
+                nid=j.application.whoAmI.nid,\
+                systempid=j.application.systempid,\
+                instance=instance)
+            obj2.workingdir=workingdir
+
+
+            grid_guid,new2,changed2=clientprocess.set(obj2)
+            grid_pid=int(grid_guid.split("_")[1])
+
+        self.pid = grid_pid
 
         WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
-        j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=pid)
+        j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=grid_pid)
 
         j.logger.consoleloglevel = 5
 
