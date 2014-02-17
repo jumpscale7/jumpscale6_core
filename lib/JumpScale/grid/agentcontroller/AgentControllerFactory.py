@@ -21,11 +21,11 @@ class AgentControllerClient():
         client= j.servers.geventws.getClient(self.ipaddr, 4444, user=login, passwd=passwd,category="agent")
         self.__dict__.update(client.__dict__)
 
-    def execute(self,organization,name,role,timeout=60,wait=True,lock="",dieOnFailure=True,**kwargs):
+    def execute(self,organization,name,role,timeout=60,wait=True,queue="",dieOnFailure=True,**kwargs):
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
-        job = self.executeJumpScript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,lock=lock,transporttimeout=timeout)
+        job = self.executeJumpScript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,queue=queue,transporttimeout=timeout)
         if job["state"]=="ERROR":
             eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(job["result"]))
             print eco
