@@ -17,7 +17,7 @@ class StatManager():
         self.hourId=None
         self.fiveMinuteId=None
 
-        self.osisclient= j.core.osis.getClient()
+        self.osisclient= j.core.osis.getClient(user='root')
         self.osis = j.core.osis.getClientForCategory(self.osisclient, 'stats', 'history')
 
     def getFiveMinuteId(self):
@@ -33,8 +33,8 @@ class StatManager():
             return self.base.time.getHourId()
 
     def scheduleSaveClean(self):
-        j.core.portal.runningPortal.webserver.addSchedule1MinPeriod("saveInfomgr", self.save)
-        j.core.portal.runningPortal.webserver.addSchedule15MinPeriod("cleanCacheInfoMgr", self.cleanCache)
+        j.core.portal.active.addSchedule1MinPeriod("saveInfomgr", self.save)
+        j.core.portal.active.addSchedule15MinPeriod("cleanCacheInfoMgr", self.cleanCache)
 
         # per hour we keep: nritems,maxitem,minitem,total  (so out of this we can calc average)
 
@@ -70,8 +70,8 @@ class StatManager():
         self.fiveMinuteId=j.base.time.get5MinuteId()
 
         ttime = self.getEpoch()
-        now5min = j.core.portal.runningPortal.webserver.fiveMinuteId
-        nowh = j.core.portal.runningPortal.webserver.hourId
+        now5min = j.core.portal.active.fiveMinuteId
+        nowh = j.core.portal.active.hourId
         # walk over history obj and save if needed
         for key in self.historyObjs.keys():
             if force or ttime > (self.historyObjsLastSave[key] + 900):

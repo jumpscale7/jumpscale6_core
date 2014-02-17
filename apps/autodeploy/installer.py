@@ -1,6 +1,6 @@
 from JumpScale import j
 
-j.application.appname = "autostarter"
+j.application.appname = "jumpscale:autodeploy_installer"
 j.application.start()
 
 
@@ -8,29 +8,39 @@ from optparse import OptionParser
 
 parser = OptionParser()
 parser.add_option('-r', '--remote', help='Ip address of node',default="")
+parser.add_option('-l', '--local', action='store_true', help='To execute locally.')
 parser.add_option('-s', '--seedpasswd', help='Originalpasswd (used to login first time)',default="")
 parser.add_option('-p', '--passwd', help='New Passwd To Set Or Use',default="rooter")
 parser.add_option('-g', '--gridnr', help='Id of grid, make sure is unique.',default="")
+parser.add_option('-c', '--cfgname', help='Name of cfg directory.',default="")
+parser.add_option('-t','--type', help='Type of action (platform,core,desktop,grid), is comma separated.',default="")
+parser.add_option('--nopasswd', help='work with ssh key',default=False)
 
 (options, args) = parser.parse_args()
 
+if options.local:
+    options.remote="127.0.0.1"
+    options.seedpasswd=""
 
-if options.remote =="":
-    options.remote=j.console.askString("Ip address of remote")
+else:
+    if options.remote =="":
+        options.remote=j.console.askString("Ip address of remote")
 
-if options.seedpasswd =="":
-    options.seedpasswd=j.console.askString("Seedpasswd if any, press enter if none.",defaultparam="")
-
-if options.passwd =="":
-    options.passwd=j.console.askString("New Passwd To Set Or Use (default rooter)",defaultparam="rooter")
+    if options.seedpasswd =="":
+        options.seedpasswd=j.console.askString("Seedpasswd if any, press enter if none.",defaultparam="")
 
 if options.gridnr =="":
     options.gridnr=j.console.askString("Grid id, make sure is unique.")
+
+if options.passwd =="":
+    options.passwd=j.console.askString("New Passwd To Set Or Use (default rooter)",defaultparam="rooter")
 
 remote = options.remote
 seedpasswd = options.seedpasswd
 passwd = options.passwd
 
+if options.cfgname=="":
+    options.cfgname=j.console.askChoice(j.system.fs.listDirsInDir("cfgs",False,True),"Please select configuration templates for the remote machine.")
 
 import JumpScale.baselib.remote
 
@@ -43,78 +53,110 @@ passwd
 """
 print help
 
-result=j.console.askChoiceMultiple(["platform","core","grid","desktop"])
+
+if options.type=="":
+    result=j.console.askChoiceMultiple(["platform","core","configure","grid","desktop"])
+else:
+    result=options.type.split(",")
 
 cuapi = j.remote.cuisine.api
-j.remote.cuisine.fabric.env["password"]=passwd
+if options.nopasswd==False:
+    j.remote.cuisine.fabric.env["password"]=passwd
 cuapi.connect(remote)
 
-#this will make sure new password is set
-cl=j.tools.expect.new("sh")
-cl.login(remote=remote,passwd=passwd,seedpasswd=seedpasswd)
+def setpasswd():
+    #this will make sure new password is set
+    cl=j.tools.expect.new("sh")
+    cl.login(remote=remote,passwd=passwd,seedpasswd=seedpasswd)
+
+if options.nopasswd==False:
+    setpasswd()
 
 def prepare_platform():
     print cuapi.apt_get("update")
     print cuapi.apt_get("upgrade")
     print cuapi.apt_get("install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython mc -y")
     
-
 def install_jscore():
     try:
         print cuapi.run("pip uninstall JumpScale-core -y")
     except:
         pass
-    print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
-    print cuapi.dir_ensure("/opt/jumpscale/cfg/jsconfig/", True)    
-    print cuapi.dir_ensure("/opt/jumpscale/cfg/jpackages/", True)
-    print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/blobstor.cfg","cfg/jsconfig/blobstor.cfg")
-    print cuapi.file_upload("/opt/jumpscale/cfg/jsconfig/bitbucket.cfg", "/opt/jumpscale/cfg/jsconfig/bitbucket.cfg")
-    print cuapi.file_upload("/opt/jumpscale/cfg/jpackages/sources.cfg","cfg/jpackages/sources.cfg")
-    print cuapi.run("jpackage_update")
+    print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/unstable.zip")
+    install_configure()
+
+    print cuapi.run("jpackage mdupdate")
     try:
-        print cuapi.run("jscode_update")
+        print cuapi.run("jscode update -f -a* -r*")
     except:
         pass    
-    print cuapi.run("jpackage_install -n core -r --debug")
+    print cuapi.run("jpackage install -n core -r --debug")
+
+def install_configure():
+
+    items=j.system.fs.listFilesInDir("cfgs/%s"%options.cfgname,True)
+    done=[]
+    for item in items:
+        cfgdirpath=j.system.fs.getDirName(j.system.fs.pathRemoveDirPart(item,"cfgs/%s"%options.cfgname)).rstrip("/")
+        if cfgdirpath not in done:
+            print cuapi.dir_ensure("/opt/jumpscale/cfg/%s"%cfgdirpath, True)
+            done.append(cfgdirpath)            
+        cuapi.file_upload("/opt/jumpscale/cfg/%s/%s"%(cfgdirpath,j.system.fs.getBaseName(item)),item)#,True,True)
+
+    cmd="jsconfig hrdset -n system.superadmin.passwd -v %s"%passwd
+    print cuapi.run(cmd)            
+
+    print cuapi.run("jpackage mdupdate")
 
 def install_grid():
-    print cuapi.dir_ensure("/opt/jumpscale/cfg/hrd/", True)
+
+    cmd="jsconfig hrdset -n grid.id -v %s"%options.gridnr
+    print cuapi.run(cmd)
+
+    cmd="jsconfig hrdset -n grid.master.superadminpasswd -v %s"%j.tools.hash.md5_string(passwd)
+    print cuapi.run(cmd)
     
-    hrd=j.core.hrd.getHRD("cfg/hrd")
+    cmd="jsconfig hrdset -n gridmaster.grid.id -v %s"%options.gridnr
+    print cuapi.run(cmd)
 
-    
-    hrd.set("grid.id",options.gridnr)
-    hrd.set("system.superadmin.passwd",passwd)
-    hrd.set("gridmaster.grid.id",options.gridnr)
-    hrd.set("elasticsearch.cluster.name","cl_%s"%options.gridnr)
+    cmd="jsconfig hrdset -n elasticsearch.cluster.name -v cl_%s"%options.gridnr
+    print cuapi.run(cmd)
 
-    names= [j.system.fs.getBaseName(item)[:-4] for item in j.system.fs.listFilesInDir("cfg/hrd") if item.find(".hrd")<>-1]
-    
-    for hrdname in names:
-        print cuapi.file_upload("/opt/jumpscale/cfg/hrd/", "cfg/hrd/%s.hrd"%hrdname)
+    print cuapi.run("jpackage install -n sentry -r")
+    print cuapi.run("jsprocess start -n sentry")
 
+    print cuapi.run("jpackage install -n elasticsearch -r")
+    print cuapi.run("jpackage install -n osis -r --debug")
+    print cuapi.run("jsprocess start -c")
+    print cuapi.run("jpackage install -n grid -r --debug")
+    print cuapi.run("jpackage install -n grid_master -r --debug")
+    print cuapi.run("jpackage install -n grid_node -r --debug")
+    print cuapi.run("jsprocess start -c")
 
-    print cuapi.run("jpackage_install -n elasticsearch -r")
-    print cuapi.run("jpackage_install -n osis -r --debug")
-    print cuapi.run("jsprocess start")
-    print cuapi.run("jpackage_install -n grid -r --debug")
-    print cuapi.run("jpackage_install -n grid_master -r --debug")
-    print cuapi.run("jpackage_install -n grid_node -r --debug")
-    print cuapi.run("jpackage_install -n logger -r --debug")
-    print cuapi.run("jsprocess start")
-    print cuapi.run("jpackage_install -n grid_portal -r --debug")
-    print cuapi.run("jpackage_install -n portal -r --debug")
-    print cuapi.run("jpackage_install -n agentcontroller -r --debug")
-    print cuapi.run("jpackage_install -n agent -r --debug")
-    print cuapi.run("jsprocess start")
+    #@todo should run but now die
+    # print cuapi.run("jsprocess disable -n logger")
 
+    print cuapi.run("jsuser add -d admin:admin:admin::incubaid")
+
+    print cuapi.run("jpackage install -n grid_portal -r --debug")
+    print cuapi.run("jpackage install -n portal -r --debug")
+    print cuapi.run("jpackage install -n agentcontroller -r --debug")
+    print cuapi.run("jpackage install -n workers -r --debug")
+    print cuapi.run("jsprocess start -c")
+
+    print cuapi.run("jpackage install -n blobserver2 -r --debug")
+    print cuapi.run("jpackage install -n jumpscale_examples -r --debug")
+    print cuapi.run("jpackage install -n doc_jumpscale -r --debug")
+
+    print cuapi.run("jpackage install -n shorewall")
+    print cuapi.run("shorewall stop")
 
 def install_desktop():
 
-    names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway"]#,"sublimetext"]
-    names=["xfce4desktop","xrdp"]
+    names=["xfce4desktop","xrdp","kingsoftoffice","sparkgateway","sublimetext"]
+    # names=["xfce4desktop","xrdp"]
     for name in names:
-        print cuapi.run("jpackage_install -n %s -r"%name)
+        print cuapi.run("jpackage install -n %s -r"%name)
     cmd='update-rc.d xrdp defaults'
     print cuapi.run(cmd)
 
@@ -124,6 +166,9 @@ if "platform" in result:
 
 if "core" in result:
     install_jscore()
+
+if "configure" in result and not "core" in result:
+    install_configure()
 
 if "grid" in result:
     install_grid()

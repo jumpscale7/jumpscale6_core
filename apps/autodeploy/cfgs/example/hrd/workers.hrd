@@ -1,0 +1,6 @@
+
+workers.queues=default:2,hypervisor:1,io:1
+agent.redis.addr=localhost
+agent.redis.port=7768
+agent.redis.auth=
+

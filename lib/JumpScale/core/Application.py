@@ -30,6 +30,8 @@ class Application:
 
         self.gridInitialized=False
 
+        self.jid=0
+
     def initWhoAmI(self):
         """
         when in grid:
@@ -50,7 +52,7 @@ class Application:
 
             self.systempid=os.getpid()
 
-            self.whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=self.systempid)
+            self.whoAmI = WhoAmI(gid=gridid, nid=nodeid, pid=0)
 
             self.whoAmIBytestr = struct.pack("<hhh", self.whoAmI.pid, self.whoAmI.nid, self.whoAmI.gid)
 
@@ -64,13 +66,12 @@ class Application:
             #     import JumpScale.grid
             #     j.core.grid.init()
 
-
     def initGrid(self):
         if not self.gridInitialized:
             import JumpScale.grid
             j.core.grid.init()
             self.gridInitialized=True
-
+            
     def getWhoAmiStr(self):
         return "_".join([str(item) for item in self.whoAmI])
 
@@ -151,10 +152,13 @@ class Application:
 
         #tell gridmaster the process stopped
         if self.gridInitialized:
-            client=j.core.grid.gridOsisClient
+            client=j.core.grid.gridOsisClient            
             clientprocess=j.core.osis.getClientForCategory(client,"system","process")
-            j.core.grid.processObject.epochstop=j.base.time.getTimeEpoch()
-            clientprocess.set(j.core.grid.processObject)
+            obj=clientprocess.get("%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.pid))
+            obj.epochstop=j.base.time.getTimeEpoch()
+            obj.active=False
+            clientprocess.set(obj)
+            
         sys.exit(exitcode)
 
     def _exithandler(self):

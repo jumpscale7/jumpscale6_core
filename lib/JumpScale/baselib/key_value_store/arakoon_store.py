@@ -20,7 +20,7 @@ class ArakoonKeyValueStore(KeyValueStoreBase):
         value = self._client.get(categoryKey)
         return self.unserialize(value)
 
-    def set(self, category, key, value, pymodelSerializer=None):
+    def set(self, category, key, value, JSModelSerializer=None):
         if category not in self.categories:
             self.categories[category]=True
             self.set("dbsystem", "categories", self.categories)

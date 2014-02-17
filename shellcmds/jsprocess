@@ -2,12 +2,13 @@
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
-j.application.start("jsprocess_start")
+j.application.start("jsprocess")
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['logs', 'attach', 'list', 'status', 'start', 'stop', 'restart', 'disable', 'enable'], help='Command to perform')
 parser.add_argument("-n", '--name', help='Process name')
 parser.add_argument("-d", '--domain', help='Process domain')
+parser.add_argument("-c", '--carefull', action='store_true', default=False, help='Check each startup status, die if one could not start.')
 
 FORMAT = "%-20s %-20s %-10s %-8s %-10s"
 
@@ -17,11 +18,20 @@ if opts.action in ('list', 'status'):
     print '-'* 71
     print
 
+#@todo is not correct, does not work no all pds
+if opts.action == 'disable':
+    #make sure is stopped first
+    j.tools.startupmanager.stopProcess(opts.domain, opts.name)
+
+if opts.domain==None and  opts.name==None and  opts.action=="start" and not opts.carefull:
+    j.tools.startupmanager.startAll()
+    j.application.stop(0)
+
 pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name)
 
 # single process commands
 if opts.action in ('attach', 'logs'):
-    if len(pds) != 1 or not pds[0].isRunning():
+    if len(pds) != 1:
         print 'Could not find exactly one running process %s %s' % (opts.domain, opts.name)
         j.application.stop(1)
     elif opts.action == 'attach':
@@ -30,17 +40,31 @@ if opts.action in ('attach', 'logs'):
         pds[0].showLogs()
     j.application.stop(0)
 
+
+#@todo does not work on all jpackages
 if opts.action == 'restart':
     j.tools.startupmanager.restartProcess(opts.domain, opts.name)
     j.application.stop(0)
 
+
 # commands applying on list of processes
+if opts.action == 'stop':
+    pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
+    for pd in pds_rev:
+        pd.stop()
+    j.application.stop(0)
+
+
 for pd in pds:
     if opts.action in ('list', 'status'):
+        
         status = ''
-        active = 'enabled' if pd.autostart == '1' else 'disabled'
+        active = 'enabled' if pd.autostart else 'disabled'
         if opts.action == 'status':
             status = 'RUNNING' if pd.isRunning() else 'HALTED'
+        else:
+            status = 'RUNNING' if pd.isRunning(quicktest=True) else 'HALTED'
+
         print FORMAT % (pd.domain, pd.name, pd.priority, status, active)
     else:
         getattr(pd, opts.action)()

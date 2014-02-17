@@ -120,7 +120,7 @@ class Domain():
                     "based domain is not yet supported")
         else:
             sourcePath = j.system.fs.joinPaths(j.dirs.codeDir,
-                    self.bitbucketaccount, self.bitbucketreponame)
+                    self.bitbucketaccount, "default__%s"%self.bitbucketreponame)
             return sourcePath
 
     def saveConfig(self):
@@ -163,7 +163,7 @@ class Domain():
         if self.metadataFromTgz:
             raise RuntimeError('Meta data is comming from tar, cannot make connection to mercurial server ')
 
-        self._bitbucketclient = j.clients.bitbucket.getBitbucketConnection(self.bitbucketaccount)
+        self._bitbucketclient = j.clients.bitbucket.getBitbucketRepoClient(self.bitbucketaccount, self.bitbucketreponame)
         self._mercurialclient = self.bitbucketclient.getMercurialClient(self.bitbucketreponame,branch="default")
 
     def hasModifiedMetadata(self):
@@ -247,13 +247,15 @@ class Domain():
     def hasDomainChanged(self):
         return self.hasModifiedMetadata() or self.hasModifiedFiles()
 
-    def publishMetadata(self, commitMessage=''): # tars are not uploadable
+    def publishMetadata(self, commitMessage='',force=False): # tars are not uploadable
         """
         Publishes all metadata of the currently active domain
         """
         j.logger.log("Publish metadata for domain %s" % self.domainname,2)
         if not self.metadataFromTgz:
-            self.bitbucketclient.push(self.bitbucketreponame, message=commitMessage)
+            hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+            hg.commit(message=commitMessage,force=force)
+            hg.push()
         else:
             raise RuntimeError('Meta data is comming from tar for domain ' + self.domainname + ', cannot publish modified metadata.')
 
@@ -395,11 +397,9 @@ class Domain():
                            "go to directory %s and update the metadata yourself using mercurial" % self.metadatadir)
                   
             #self.bitbucketclient.checkoutMerge    
-            if force:
-                print "FORCE METADATA UPDATE"
-                self.bitbucketclient.pull(self.bitbucketreponame,message=commitMessage,update=True,merge=False,checkIgnore=False,force=True)   
-            else:
-                self.bitbucketclient.pull(self.bitbucketreponame,message=commitMessage,update=True,merge=True,checkIgnore=False,force=False)   
+            mercurialclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+            
+            mercurialclient.pullupdate(force=force)
        
             #link code to right metadata location
             sourcepath = self.getMetadataDir()

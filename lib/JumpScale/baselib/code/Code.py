@@ -2,10 +2,12 @@ import inspect
 from JumpScale import j
 
 from Appserver6GreenletScheduleBase import Appserver6GreenletScheduleBase
-from ClassBase import ClassBase, PyModelBase, PyRootModelBase
+from ClassBase import ClassBase, JSModelBase, JSRootModelBase
 from Appserver6GreenletBase import Appserver6GreenletBase
 from Appserver6GreenletTaskletsBase import Appserver6GreenletTaskletsBase
 
+import ujson
+import json
 
 def isPrimAttribute(obj, key):
     if key[-1]=="s":
@@ -58,21 +60,20 @@ class Code():
     def classGetBase(self):
         return ClassBase
 
-    def classGetPyModelBase(self):
-        return PyModelBase
+    def classGetJSModelBase(self):
+        return JSModelBase
 
+    def classGetJSRootModelBase(self):
+        return JSRootModelBase
 
-    def classGetPyRootModelBase(self):
-        return PyRootModelBase
+    # def classGetAppserver6GreenletSchedule(self):
+    #     return Appserver6GreenletScheduleBase
 
-    def classGetAppserver6GreenletSchedule(self):
-        return Appserver6GreenletScheduleBase
+    # def classGetAppserver6Greenlet(self):
+    #     return Appserver6GreenletBase
 
-    def classGetAppserver6Greenlet(self):
-        return Appserver6GreenletBase
-
-    def classGetAppserver6GreenletTasklets(self):
-        return Appserver6GreenletTaskletsBase
+    # def classGetAppserver6GreenletTasklets(self):
+    #     return Appserver6GreenletTaskletsBase
 
     def dict2object(self,obj,data):
         if hasattr(obj,"_dict2obj"):
@@ -114,7 +115,7 @@ class Code():
             return data
 
 
-    def dict2pymodelobject(self,obj,data):
+    def dict2JSModelobject(self,obj,data):
         if isinstance(data, dict):
             for key, value in data.iteritems():
                 #is for new obj functionname
@@ -127,7 +128,7 @@ class Code():
                         method = getattr(obj, funcprop)
                         for valkey, valval in value.iteritems():
                             newobj = method(valkey)
-                            self.dict2pymodelobject(newobj,valval)
+                            self.dict2JSModelobject(newobj,valval)
                     else:
                         for valkey, valval in value.iteritems():
                             attr = getattr(obj, key)
@@ -142,7 +143,7 @@ class Code():
                         method = getattr(obj, funcprop)
                         for valval in value:
                             newobj = method()
-                            self.dict2pymodelobject(newobj,valval)
+                            self.dict2JSModelobject(newobj,valval)
                     else:
                         for valval in value:
                             attr = getattr(obj, key)
@@ -150,7 +151,7 @@ class Code():
 
                 elif isinstance(value, dict) and not isinstance(obj.__dict__[objpropname], dict) :
                     #is a dict which represents another object
-                    obj.__dict__[objpropname]= self.dict2pymodelobject(obj.__dict__[objpropname],value)
+                    obj.__dict__[objpropname]= self.dict2JSModelobject(obj.__dict__[objpropname],value)
                 else:
                     obj.__dict__[objpropname]=value
             return obj
@@ -209,21 +210,25 @@ class Code():
         return result
         
 
-    def object2dict(self,obj,dieOnUnknown=False):
+    def object2dict(self,obj,dieOnUnknown=False,ignoreKeys=[],ignoreUnderscoreKeys=False):
         if j.basetype.dictionary.check(obj):
             return obj
         data={}
 
-        def todict(obj,data):
+        def todict(obj,data,ignoreKeys):
             if isinstance(obj, dict):
                 value={}
                 for key in obj.keys():
-                    value[key]=todict(obj[key],{})
+                    if key in ignoreKeys:
+                        continue
+                    if ignoreUnderscoreKeys and key[0]=="_":
+                        continue
+                    value[key]=todict(obj[key],{},ignoreKeys)
                 return value
-            elif isinstance(obj, list):
+            elif isinstance(obj, (tuple,list)):
                 value=[]
                 for item in obj:
-                    value.append(todict(item,{}))
+                    value.append(todict(item,{},ignoreKeys))
                 return value
             elif isinstance(obj, (int,basestring,float,bool)) or obj==None:
                 return obj
@@ -234,9 +239,11 @@ class Code():
                     for key, value in obj.__dict__.iteritems():
                         if key[0:3]=="_P_":
                             key=key[3:]
-                        elif key[0]=="_":
+                        if key in ignoreKeys:
                             continue
-                        data[key] = todict(value,{})
+                        elif ignoreUnderscoreKeys and key[0]=="_":
+                            continue
+                        data[key] = todict(value,{},ignoreKeys)
                 return data
             else:
                 #from JumpScale.core.Shell import ipshellDebug,ipshell
@@ -250,14 +257,19 @@ class Code():
                     val="__UNKNOWN__"
                 return val
 
-        return todict(obj,data)
+        out =todict(obj,data,ignoreKeys)
+        # print out
+        return out
 
     def object2yaml(self,obj):
         return j.tools.yaml.encode(self.object2dict(obj))
 
-    def object2json(self,obj,pretty=False):
-        import json
-        return json.dumps(obj,pretty)
+    def object2json(self,obj,pretty=False,skiperrors=False,ignoreKeys=[],ignoreUnderscoreKeys=False):
+        obj=self.object2dict(obj,dieOnUnknown=not skiperrors,ignoreKeys=ignoreKeys,ignoreUnderscoreKeys=ignoreUnderscoreKeys)
+        if pretty:            
+            return json.dumps(obj, skipkeys=skiperrors, ensure_ascii=False, check_circular=True, indent=2, separators=(", ",": "),encoding='utf-8', default=None, sort_keys=True)
+        else:
+            return ujson.dumps(obj)
 
     def pprint(self,obj):
         result=self.object2yaml(obj)

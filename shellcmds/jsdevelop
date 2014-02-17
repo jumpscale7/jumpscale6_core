@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 from JumpScale import j
 
-j.application.start("jsinstallrepos",basedir="/opt/jumpscale/",appdir="/opt/jumpscale/apps/exampleapp/")
-import JumpScale.baselib.platforms #gets access to ubuntu code
-import JumpScale.baselib.jsdeveltools
+j.application.start("jsdevelop")
 
-do=j.system.installtools
-j.develtools.installer.preparePlatform()
-if j.system.platformtype.isLinux():
-    j.develtools.installer.deployExamplesLibsGridPortal()
-    # j.develtools.installer.deployDFS_IO()
+j.system.process.executeWithoutPipe("chmod 7770 /opt/jumpscale/apps/autodeploy/install_grid_local.sh")
+j.system.process.executeWithoutPipe("sh /opt/jumpscale/apps/autodeploy/install_grid_local.sh")
 
 j.application.stop()

@@ -1204,7 +1204,7 @@ class SystemFS:
         if filename is None:
             raise TypeError('File name is None in system.fs.fileGetContents')
         self.log('Opened file %s for reading'% filename,6)
-        self.log('Reading file %s'% filename,9)
+        # self.log('Reading file %s'% filename,9)
         with open(filename) as fp:
             data = fp.read()
         self.log('File %s is closed after reading'%filename,9)
@@ -1225,6 +1225,21 @@ class SystemFS:
                 s = s.replace(bom, '', 1)
                 break
         return s
+
+    def touch(self,paths,overwrite=True):
+        """
+        can be single path or multiple (then list)
+        """
+        if  j.basetype.list.check(paths):
+            for item in paths:
+                self.touch(item,overwrite=overwrite)
+        path=paths
+        self.createDir(j.system.fs.getDirName(path))
+        if overwrite:
+            self.remove(path)
+        if not self.exists(path=path):
+            self.writeFile(path,"")
+        
 
     def writeFile(self,filename, contents, append=False):
         """

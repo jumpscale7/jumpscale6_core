@@ -1,5 +1,5 @@
 import json
-#import pymodel
+#import JSModel
 import time
 from abc import ABCMeta, abstractmethod
 from JumpScale import j

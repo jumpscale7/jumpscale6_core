@@ -12,8 +12,8 @@ parser.add_argument("action", choices=['reinit','reconfigure','testall'], help='
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
 
-#parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
-#parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
+parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
 
 
 opts = parser.parse_args()
@@ -34,18 +34,32 @@ if opts.action =='reconfigure':
 
 ############PS
 if opts.action =='reinit':
+
+    jp=j.packages.findNewest(name="osis")
+    jp.start()
     
     if opts.force<>None:
         j.system.process.executeWithoutPipe("osis deleteall")
     else:
         j.system.process.executeWithoutPipe("osis deleteall --force=1")
 
-    
+    for item in ["/opt/graphite/storage/whisper/","/opt/jumpscale/var/log/","/opt/jumpscale/var/tmp/"]:
+
+        j.system.fs.removeDirTree(item)
+        j.system.fs.createDir(item)
+
 
     packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
     for package in packages:
         jp=j.packages.findNewest(name=package)
-        jp.configure()
+        if not jp.isInstalled():
+            jp.install()
+        elif jp.isInstalled():
+            print "RECONFIGURE:%s"%jp
+            jp.configure()
+
+    jp=j.packages.findNewest(name="grid_portal")
+    jp.restart()
 
 # packages=["osis","logger"]
 #     for package in packages:
@@ -54,5 +68,8 @@ if opts.action =='reinit':
 
     j.tools.startupmanager.startAll()
 
+    j.system.process.executeWithoutPipe("jsuser add -d admin:admin:admin::")
+
+    print "has set user admin with passwd admin, please change using command 'jsuser' if required."
 
 j.application.stop()

@@ -63,9 +63,10 @@ class RecipeItem(object):
         account=self.repoinfo.get("jp.code.account")
         repo=self.repoinfo.get("jp.code.repo")
         ttype=self.repoinfo.get("jp.code.type")
+        branch=self.repoinfo.get("jp.code.branch")
         if ttype<>"bitbucket":
             raise RuntimeError("only bitbucket repo's supported.")        
-        return j.system.fs.joinPaths(j.dirs.codeDir,account,repo,self.source)
+        return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),self.source)
 
     def exportToSystem(self,force=True):
         '''
@@ -176,8 +177,18 @@ class RecipeItem(object):
                                 return        
         
                     self._removeDest(destination)
+                if not j.system.fs.exists(path=source):
+                    raise RuntimeError("Cannot find source to put link to, link was from %s to %s"%(source,destination))
                 j.system.fs.symlink(source, destination)
                 j.dirs.addProtectedDir(destination)
+
+    def addToProtectedDirs(self):
+        if not self.tags.labelExists("config"):
+            j.dirs.addProtectedDir(self.systemdest)
+
+    def removeFromProtectedDirs(self):
+        if not self.tags.labelExists("config"):
+            j.dirs.removeProtectedDir(self.systemdest)
 
     def unlinkSystem(self,force=False):
         '''
@@ -227,15 +238,17 @@ class CodeManagementRecipe:
         self.configpath=configpath
         self.hrd=j.core.hrd.getHRD(hrdpath)
         self.items = []
+        self._getRepoConnection()
         self._process()
 
     def _getSource(self,source):
         account=self.hrd.get("jp.code.account")
         repo=self.hrd.get("jp.code.repo")
         ttype=self.hrd.get("jp.code.type")
+        branch=self.hrd.get("jp.code.branch")
         if ttype<>"bitbucket":
             raise RuntimeError("only bitbucket repo's supported.")        
-        return j.system.fs.joinPaths(j.dirs.codeDir,account,repo,source)
+        return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),source)
 
     def _process(self):
         content=j.system.fs.fileGetContents(self.configpath)
@@ -278,6 +291,14 @@ class CodeManagementRecipe:
         for item in self.items:
             item.exportToSystem()
             
+    def addToProtectedDirs(self):
+        for item in self.items:
+            item.addToProtectedDirs()
+
+    def removeFromProtectedDirs(self):
+        for item in self.items:
+            item.removeFromProtectedDirs()
+
     def link(self,force=False):
         repoconnection = self._getRepoConnection()
         for item in self.items:
@@ -295,40 +316,34 @@ class CodeManagementRecipe:
     #         item.importFromSystem(jpackages)                
 
     def package(self, jpackage,*args,**kwargs):
-        # clean up files
-        # filesPath = jpackages.getPathFiles()
-        # j.system.fs.removeDirTree(filesPath)
-        ##DO TNO REMOVE, TOO DANGEROUS HAPPENS NOW PER ITEM
-        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.codeToFiles(jpackage)
 
         
     def push(self):
         repoconnection = self._getRepoConnection()
-        for item in self.items:
-            item.push()       
+        if repoconnection:
+            repoconnection.push()
             
     def update(self,force=False):        
         repoconnection = self._getRepoConnection()
-        return self.pullupdate(force=force)
+        if repoconnection:
+            return repoconnection.pullupdate(force=force)
     
     def pullupdate(self,force=False):
         repoconnection = self._getRepoConnection()
-        repoconnection.pullupdate()
+        if repoconnection:
+            repoconnection.pullupdate()
 
     def pullmerge(self):
         repoconnection = self._getRepoConnection()
-        repoconnection.pullmerge()        
+        if repoconnection:
+            repoconnection.pullmerge()        
             
     def commit(self):
         repoconnection = self._getRepoConnection()
-        repoconnection.commit()                
-
-
-    def _getSource(self, source):
-        con = self._getRepoConnection()
-        return j.system.fs.joinPaths(con.basedir, source)
+        if repoconnection:
+            repoconnection.commit()                
 
     def _getRepoConnection(self):
         if self._repoconnection:
@@ -338,13 +353,13 @@ class CodeManagementRecipe:
         if repo=="":
             print "repo not filled in, so coderecipe probably not used for %s"%self
             return 
-            # raise RuntimeError("Cannot load repo when repo is not filled in in code.hrd of jpackage.")
+
         branch=self.hrd.get("jp.code.branch")
         ttype=self.hrd.get("jp.code.type")
         if ttype == "bitbucket":
             branch = branch or 'default'
             print "getrepo connection: %s %s %s"%(account, repo, branch)
-            self._repoconnection = j.clients.bitbucket.getRepoConnection(account, repo, branch)
+            self._repoconnection = j.clients.bitbucket.getMecurialRepoClient(account, repo, branch)
             return self._repoconnection
         # elif ttype == "github":
         #     pass

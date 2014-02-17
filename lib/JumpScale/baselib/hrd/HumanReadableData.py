@@ -75,23 +75,23 @@ class HRDPos():
         self._treeposition=  treeposition
         self.changed=False
 
-    def set(self,key,value,persistent=True,position=""):
-
+    def set(self,key,value,persistent=True):
         key2=j.core.hrd._normalizeKey(key)
         # print "set:'%s':'%s'"%(key,value)        
         self.__dict__[key2]=value
         if persistent==True:
-            hrd=self.getHRD(key,position)
+            hrd=self.getHRD(key)
             hrd.set(key,value,persistent)
 
-    def getHRD(self,key,position=""):
+    def getHRD(self,key):
         if len(self._hrds.keys())==1:
             return self._hrds[self._hrds.keys()[0]]
         key=key.replace(".","_")
         if key not in self._key2hrd:
             self._reloadCache()
             if key not in self._key2hrd:
-                j.errorconditionhandler.raiseBug(message="Cannot find hrd on position '%s'"%(self._treeposition),category="osis.gethrd")
+                j.errorconditionhandler.raiseBug(message="Cannot find key:'%s' in hrd on position:'%s'"%\
+                    (key,(self._treeposition)),category="osis.gethrd")
         return self._hrds[self._key2hrd[key]]
 
     def _reloadCache(self):
@@ -157,6 +157,14 @@ class HRDPos():
                 key,val=item.split(":")
                 res2[key]=val
         return res2
+
+    def setDict(self,key,ddict):
+        out=""
+        for key2,value in ddict.iteritems():
+            out+="%s:%s,"%(key2,value)
+        out=out.rstrip(",")
+        self.set(key,out)
+
 
     def getInt(self,key):
         res=self.get(key)
@@ -350,6 +358,13 @@ class HRD():
                 res2[key]=val
         return res2
 
+    def setDict(self,key,ddict):        
+        out=""
+        for key2,value in ddict.iteritems():
+            out+="%s:%s,"%(key2,value)
+        out=out.rstrip(",")
+        self.set(key,out)        
+
     def getInt(self,key):
         res=self.get(key)
         if res.strip()=="":
@@ -398,8 +413,18 @@ class HRD():
         else:
             default=""
 
+        if tags.tagExists("retry"):
+            retry = int(tags.tagGet("retry"))
+        else:
+            retry = None
+
+        if tags.tagExists("regex"):
+            regex = tags.tagGet("regex")
+        else:
+            regex = None
+
         if ttype=="str":
-            result=j.console.askString(question=descr, defaultparam=default, regex=None)
+            result=j.console.askString(question=descr, defaultparam=default, regex=regex, retry=retry)
 
         elif ttype=="float":
             result=j.console.askString(question=descr, defaultparam=default, regex=None)
@@ -411,7 +436,19 @@ class HRD():
             result=str(result)
         
         elif ttype=="int":
-            result=str(j.console.askInteger(question=descr, defaultValue=default))
+            if tags.tagExists("minValue"):
+                minValue = int(tags.tagGet("minValue"))
+            else:
+                minValue = None
+
+            if tags.tagExists("maxValue"):
+                maxValue = int(tags.tagGet("maxValue"))
+            else:
+                maxValue = None
+
+            if not default:
+                default=None
+            result=j.console.askInteger(question=descr,  defaultValue=default, minValue=minValue, maxValue=maxValue, retry=retry)
 
         elif ttype=="bool":
             if descr<>"":
@@ -444,10 +481,8 @@ class HRD():
             line=line.strip()
             if line=="" or line[0]=="#":
                 continue
-            if line.find("=")<>-1:
-                items=line.split("=")
-                if len(items)>2:
-                    raise RuntimeError("in template only 1 '=' sign' per line")
+            if line.find("=") != -1:
+                items=line.split("=", 1)
                 key=items[0].strip()
                 defvalue=items[1].strip()
                 if not self.exists(key):
@@ -465,7 +500,7 @@ class HRD():
             line=line.strip()
             if line=="" or line[0]=="#":
                 continue
-            if line.find("=")<>-1:
+            if line.find("=") != -1:
                 #found line
                 if line.find("#")<>-1:
                     line=line.split("#")[0]
@@ -494,8 +529,8 @@ class HRD():
     def has_key(self, key):
         return self.__dict__.has_key(key)
 
-    def setDict(self,dictObject):
-        self.__dict__.update(dictObject)
+    # def setDict(self,dictObject):
+    #     self.__dict__.update(dictObject)
 
     def applyOnDir(self,path,filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
         j.core.hrd.log("hrd:%s apply on dir:%s "%(self._path,path),category="apply")
@@ -681,6 +716,10 @@ class HumanReadableDataTree():
     def getDict(self,key,position=""):
         hrd=self.getHrd(position)
         return hrd.getDict(key)
+
+    def setDict(self,key,ddict,position=""):                
+        hrd=self.getHrd(position,checkExists=False)
+        return hrd.setDict(key,ddict)
 
     def getHrd(self,position="",checkExists=False):
         position=position.strip("/")

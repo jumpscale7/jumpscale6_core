@@ -31,19 +31,19 @@ if opts.action =='deleteall':
 
     j.system.fs.removeDirTree(path)
 
-    print "Remove code & metadata on osisserver for namespaces?"
-    cl=j.core.osis.getClient()
-    namespaces=cl.listNamespaces()
-    if "system" in namespaces:
-        namespaces.pop(namespaces.index("system"))
-    if "logger" in namespaces:
-        namespaces.pop(namespaces.index("logger"))
+    # print "Remove code & metadata on osisserver for namespaces?"
+    # cl=j.core.osis.getClient(user='root')
+    # namespaces=cl.listNamespaces()
+    # if "system" in namespaces:
+    #     namespaces.pop(namespaces.index("system"))
+    # if "logger" in namespaces:
+    #     namespaces.pop(namespaces.index("logger"))
 
-    if opts.force==None:
-        namespaces=j.console.askChoiceMultiple(namespaces)
-    for namespace in namespaces:
-        path="/opt/jumpscale/apps/osis/logic/%s"%namespace
-        j.system.fs.removeDirTree(path)
+    # if opts.force==None:
+    #     namespaces=j.console.askChoiceMultiple(namespaces)
+    # for namespace in namespaces:
+    #     path="/opt/jumpscale/apps/osis/logic/%s"%namespace
+    #     j.system.fs.removeDirTree(path)
 
     j.tools.startupmanager.restartProcess("jumpscale","osis")
     
@@ -53,7 +53,7 @@ if opts.action =='delete':
     import JumpScale.grid.osis
     import JumpScale.baselib.elasticsearch
     es = j.clients.elasticsearch.get()
-    cl=j.core.osis.getClient()
+    cl=j.core.osis.getClient(user='root')
 
     if opts.namespace==None:
         print "Namespace:"

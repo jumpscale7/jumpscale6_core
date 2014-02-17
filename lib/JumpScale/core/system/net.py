@@ -53,6 +53,22 @@ class SystemNet:
             now=j.base.time.getTimeEpoch()
         return False
 
+    def checkUrlReachable(self, url):
+        """
+        raise operational critical if unreachable
+        return True if reachable
+        """
+        import urllib
+        try:
+            code = urllib.urlopen(url).getcode()
+        except Exception:
+            j.errorconditionhandler.raiseOperationalCritical("Url %s is unreachable" % url)
+        
+        if code != 200:
+            j.logger.setLogTargetLogForwarder()
+            j.errorconditionhandler.raiseOperationalCritical("Url %s is unreachable" % url)
+        return True
+
 
     def checkListenPort(self, port):
         """
@@ -487,12 +503,10 @@ class SystemNet:
         mac = mac[:-1]
         return mac
 
-    def isIpInDifferentNetwork(self, ipaddress):
-        for nic in j.system.net.getNics():
-            for ip in j.system.net.getIpAddress(nic):
-                if jumpscale.pmtypes.IPv4Address(ipaddress) in jumpscale.pmtypes.IPv4Range(netIp=ip[0], netMask=ip[1]):
-                    return False
-        return True
+    def isIpLocal(self, ipaddress):
+        if ipaddress=="127.0.0.1" or ipaddress=="localhost":
+            return True
+        return ipaddress in self.getIpAddresses()
 
     def getMacAddressForIp(self, ipaddress):
         """Search the MAC address of the given IP address in the ARP table

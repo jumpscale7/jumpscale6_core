@@ -19,7 +19,8 @@ class ActionManager:
             if name[0]=="_":
                 continue
             name=name[:-3]
-            modname = "jpactions_%s" % j.tools.hash.md5_string(path)
+            
+            modname = "jpactions_%s_%s_%s" % (jp.domain,jp.name,name)
             module = imp.load_source(modname, path)
             self._actions[name]= module.main
                 
@@ -37,7 +38,11 @@ class ActionManager:
         if found==True:
             C="""
 def method(self{args}):
-    result=self._actions['{name}'](j,self._jpackage{args})
+    try:
+        result=self._actions['{name}'](j,self._jpackage{args})
+    except Exception,e:
+        j.errorconditionhandler.processPythonExceptionObject(e)
+        j.application.stop()
     return result"""
 
         else:
@@ -47,7 +52,11 @@ def method(self{args}):
     if self._done.has_key(key):
         print "already executed %s"%key
         return True
-    result=self._actions['{name}'](j,self._jpackage{args2})
+    try:
+        result=self._actions['{name}'](j,self._jpackage{args2})
+    except Exception,e:
+        j.errorconditionhandler.processPythonExceptionObject(e)
+        j.application.stop()
     self._done[key]=True
     return result"""
 

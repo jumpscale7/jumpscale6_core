@@ -48,21 +48,34 @@ class ErrorConditionObject():
     - j.enumerators.ErrorConditionLevel.
     - j.enumerators.ErrorConditionType.
     """
-    def __init__(self,ddict={},msg="",msgpub="",category="",level=1,type=0):
+    def __init__(self,ddict={},msg="",msgpub="",category="",level=1,type=0,tb=None):
         if ddict<>{}:
             self.__dict__=ddict
         else:
+            self.id=""
+            self.backtrace=""
+            self.backtraceDetailed=""
+            btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS(tb=tb)
+            if len(btkis)>1:
+                self.getBacktrace(btkis,filename0,linenr0,func0)
+                
             self.guid=j.base.idgenerator.generateGUID()
             self.category=category #is category in dot notation
             self.errormessage=msg
             self.errormessagePub=msgpub
             self.level=int(level) #1:critical, 2:warning, 3:info see j.enumerators.ErrorConditionLevel.
-
-            self.code=""
-            self.funcname=""
-            self.funcfilename=""
-            self.funclinenr=0
-            self.backtrace=""
+            
+            if len(btkis)>1:
+                
+                self.code=btkis[-1][0]
+                self.funcname=func0
+                self.funcfilename=filename0
+                self.funclinenr=linenr0
+            else:
+                self.code=""
+                self.funcname=""
+                self.funcfilename=""
+                self.funclinenr=""
 
             self.appname=j.application.appname #name as used by application
             self.gid = j.application.whoAmI.gid
@@ -75,7 +88,9 @@ class ErrorConditionObject():
 
             self.epoch= j.base.time.getTimeEpoch()
             self.tags=""
-            self.type=int(type) #j.enumerators.ErrorConditionType            
+            self.type=int(type) #j.enumerators.ErrorConditionType  
+            self.tb=tb          
+
 
     def toAscii(self):
         def _toAscii(s):
@@ -88,7 +103,8 @@ class ErrorConditionObject():
                                                 
         self.errormessage=_toAscii(self.errormessage)
         self.errormessagePub=_toAscii(self.errormessagePub)
-        self.backtrace=_toAscii(self.backtrace)
+        self.errormessagePub=_toAscii(self.errormessagePub)
+        self.backtraceDetailed=_toAscii(self.backtraceDetailed)
 
 
     def __str__(self):
@@ -131,21 +147,59 @@ class ErrorConditionObject():
         j.system.fs.writeFile(path,msg)
         return path    
     
-    def getBacktrace(self):
-        stack=""
-        if j.application.skipTraceback:
-            return stack
-        for x in traceback.format_stack():
-            ignore=False            
-            #if x.find("IPython")<>-1 or x.find("MessageHandler")<>-1 \
-            #   or x.find("EventHandler")<>-1 or x.find("ErrorconditionObject")<>-1 \
-            #   or x.find("traceback.format")<>-1 or x.find("ipython console")<>-1:
-            #    ignore=True
-            stack = "%s"%(stack+x if not ignore else stack)
-            if len(stack)>50:
-                self.backtrace=stack
-                return 
-        self.backtrace=stack
+    def getBacktrace(self,btkis=None,filename0=None,linenr0=None,func0=None):
+        if btkis==None:
+            btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS()
+        out="File:'%s':function:'%s'\n"%(filename0,func0)
+        out+="Linenr:%s\n*************************************************************\n\n"%linenr0
+        btkis.reverse()
+        for filename,func,linenr,code in btkis:
+            # print "AAAAAA:%s"%filename
+            out+="%-25s : %s\n"%(func,filename)
+            c=0
+
+            code2=""
+            for line in code.split("\n"):
+                if c==linenr:
+                    pre="  *** "
+                else:
+                    pre="      "
+                code2+="%s%s\n"%(pre,line)
+                c+=1
+
+            for line in code2.split("\n"):
+                if len(line)>90:
+                    out+="%s\n"%line[0:90]
+                    line=line[90:]
+                    while len(line)>90:
+                        line0=line[0:75]
+                        out+="                 ...%s\n"%line0
+                        line=line[75:]
+                    out+="                 ...%s\n"%line
+                else:
+                    out+="%s\n"%line
+
+            out+="-------------------------------------------------------------------\n"
+        self.backtraceDetailed=out
+
+        return out
+
+
+
+        # stack=""
+        # if j.application.skipTraceback:
+        #     return stack
+        # for x in traceback.format_stack():
+        #     ignore=False            
+        #     if x.find("IPython")<>-1 or x.find("MessageHandler")<>-1 \
+        #       or x.find("EventHandler")<>-1 or x.find("ErrorconditionObject")<>-1 \
+        #       or x.find("traceback.format")<>-1 or x.find("ipython console")<>-1:
+        #        ignore=True
+        #     stack = "%s"%(stack+x if not ignore else stack)
+        #     if len(stack)>50:
+        #         self.backtrace=stack
+        #         return 
+        # self.backtrace=stack
         
     def _filterLocals(self,k,v):
         try:

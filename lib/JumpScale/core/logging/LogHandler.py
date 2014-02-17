@@ -37,7 +37,6 @@ def toolStripNonAsciFromText(text):
     """
     return SAFE_CHARS_REGEX.sub("", text)
 
-
 class LogUtils(object):
     """
     Some log related utilities.
@@ -90,7 +89,6 @@ class LogUtils(object):
                 return func
         return decorator
 
-
 class LogItem(object):
     def __init__(self, message="", category="", tags="", level=5, jid="", parentjid="", masterjid="", private=False, epoch=0):
         self.message = message.strip().replace("\r\n", "/n").replace("\n", "/n")
@@ -102,16 +100,19 @@ class LogItem(object):
         if j.application.whoAmI:
             
             self.gid = j.application.whoAmI.gid
-            self.nid = j.application.whoAmI.nid
+            self.nid = j.application.whoAmI.nid            
             self.pid = j.application.whoAmI.pid
-            if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
-                self.aid = j.core.grid.aid
-            else:
-                self.aid = 0
+            # if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
+            #     self.aid = j.core.grid.aid
+            # else:
+            #     self.aid = 0
 
         self.appname = j.application.appname
         self.tags = str(tags).strip().replace("\r\n", "/n").replace("\n", "/n").replace("|", "/|")
-        self.jid = str(jid)
+        if jid=="" and j.application.jid<>0:
+            self.jid=j.application.jid
+        else:
+            self.jid = str(jid)
         self.parentjid = str(parentjid)
         self.masterjid = str(masterjid)
         self.epoch = int(epoch) or j.base.time.getTimeEpoch()
@@ -123,6 +124,18 @@ class LogItem(object):
             self.private = 1
         else:
             self.private = 0
+
+    def getSetGuid(self):
+        """
+        use osis to define & set unique guid (sometimes also id)
+        """
+        self.gid = int(self.gid)
+        if self.pid<>0:
+            self.guid = "%s_%s_%s"%(self.gid,self.pid,self.order)
+        else:
+            self.guid = "%s_%s_%s_%s"%(self.gid,self.nid,self.epoch,self.order)
+
+        return self.guid
 
     def toJson(self):
         return j.db.serializers.ujson.dumps(self.__dict__)
@@ -147,7 +160,7 @@ class LogHandler(object):
         This empties the log targets
         '''
         self.utils = LogUtils()
-        self.reset()
+        self.reset()        
 
     def getLogObjectFromDict(self, ddict):
         return LogItemFromDict(ddict)
@@ -164,6 +177,25 @@ class LogHandler(object):
             finally:
                 self.enabled = previousvalue
         return wrapper
+
+    def nostdout(self):
+        class NoStdout(object):
+            def __init__(self):
+                self._original_stderr = sys.stderr
+                self._original_stdout = sys.stdout
+                self._buffer = StringIO()
+
+            def __enter__(self):
+                sys.stdout = self._buffer
+                sys.stderr = self._buffer
+                return self._buffer
+
+            def __exit__(self, *args, **kwargs):
+                sys.stdout = self._original_stdout
+                sys.stderr = self._original_stderr
+                self._buffer.close()
+
+        return NoStdout()
 
     def reset(self):
         self.maxlevel = 6
@@ -194,7 +226,7 @@ class LogHandler(object):
     def addLogTargetLocalFS(self):
         self.logTargetAdd(LogTargetFS())
 
-    def setLogTargetLogForwarder(self, serverip=None, bulk=False):
+    def setLogTargetLogForwarder(self, serverip="127.0.0.1",port=7768):
         """
         there will be only logging to stdout (if q.loghandler.consoleloglevel set properly)
         & to the LogForwarder
@@ -203,7 +235,7 @@ class LogHandler(object):
         self.logs=[]
         self.inlog=False
         self.order=0
-        self.logTargetLogForwarder = LogTargetLogForwarder(serverip, bulk)
+        self.logTargetLogForwarder = LogTargetLogForwarder(serverip=serverip, port=port)
 
     def disable(self):
         self.enabled = False
@@ -254,7 +286,6 @@ class LogHandler(object):
             return
             
         log = LogItem(message=message, level=level, category=category, tags=tags, jid=jid, parentjid=parentjid,masterjid=masterjid, private=private)
-
 
         if level < (self.consoleloglevel + 1):
 

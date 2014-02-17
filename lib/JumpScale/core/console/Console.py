@@ -56,7 +56,7 @@ class Console:
             raise ValueError("Could not convert text to string in system class.")
         return line
 
-    def formatMessage(self,message,prefix="",withStar=False,indent=0,width=0):
+    def formatMessage(self,message,prefix="",withStar=False,indent=0,width=0,removeemptylines=True):
         '''
         Reformat the message to display to the user and calculate length
         @param withStar means put * in front of message
@@ -88,7 +88,7 @@ class Console:
         
         out=[]
         for line in message.split("\n"):
-            if line=="":
+            if removeemptylines and line=="":
                 continue
             linelength=maxMessageLength
             linelength2=maxMessageLength-4
@@ -101,6 +101,7 @@ class Console:
                 prepend="    "
             linenow="%s%s"%(prepend,line[:linelength])
             out.append(linenow)
+        
 
         return "\n".join(out)+"\n"
     
@@ -503,14 +504,12 @@ class Console:
         
         return valuearray[result-1]
 
-    def askChoiceMultiple(self, choicearray, descr=None, sort=None):
+    def askChoiceMultiple(self, choicearray, descr=None, sort=True):
         if j.application.shellconfig.interactive<>True:
             raise RuntimeError ("Cannot ask a choice in an list of items in a non interactive mode.")
         if not choicearray:
             return []
-        if len(choicearray) == 1:
-            self.echo("Found exactly one choice: %s"%(choicearray[0]))
-            return choicearray
+
         descr = descr or "\nMake a selection please: "
         if sort:
             choicearray.sort()

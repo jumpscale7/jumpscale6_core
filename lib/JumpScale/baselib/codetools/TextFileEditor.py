@@ -143,17 +143,31 @@ class TextFileEditor:
         if section does not exist yet then it will be added at end of file
 
         """
-
+        content=content.strip()
         lineEditor=self.getTextLineEditor()
         lineEditor.matchBlocks("main",["### %s"%sectionName],[],["###END %s"%sectionName],[])
 
         if not lineEditor.existsBlock("main"):
-            lineEditor.addBlock("main","### %s\n\n###END %s\n"%(sectionName,sectionName))
-
-        lineEditor.replaceBlock("main","### %s\n%s\n###END %s\n"%(sectionName,content.rstrip(),sectionName))
+            lineEditor.addBlock("main","### %s\n%s\n###END %s\n"%(sectionName,content,sectionName))
+        else:
+            lineEditor.replaceBlock("main","### %s\n%s\n###END %s\n"%(sectionName,content,sectionName))
 
         lineEditor.save()
+        self.content=j.system.fs.fileGetContents(self.filepath)
         
+
+    def removeSection(self,sectionName):
+        """
+        look for section starting with ### $sectionName
+        end of section starts with ###END $sectionName
+        delete that part
+        """
+        lineEditor=self.getTextLineEditor()
+        lineEditor.matchBlocks("main",["### %s"%sectionName],[],["###END %s"%sectionName],[])        
+        lineEditor.deleteBlock("main")
+        lineEditor.save()
+        self.content=j.system.fs.fileGetContents(self.filepath)
+
 
     def replace(self,regexFind,regexFindsubsetToReplace,replaceWith):
         """

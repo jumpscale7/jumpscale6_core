@@ -4,6 +4,10 @@ import JumpScale.baselib.screen
 import time
 import threading
 
+
+class ProcessNotFoundException(Exception):
+    pass
+
 class ProcessDef:
     def __init__(self, hrd,path):
         self.autostart=hrd.getInt("process.autostart")==1
@@ -30,6 +34,9 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
+        if not j.system.fs.exists(self.logfile):
+            j.system.fs.createDir(StartupManager.LOGDIR)
+            j.system.fs.createEmptyFile(self.logfile)
         self._nameLong=self.name
         while len(self._nameLong)<20:
             self._nameLong+=" "
@@ -66,9 +73,8 @@ class ProcessDef:
         jp.processDepCheck(timeout=timeout)
         self.log("process dependency OK")
         self.log("start process")
-        j.system.fs.remove(self.logfile)
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
-        # j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
+        j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
         time.sleep(2)#need to wait because maybe error did not happen yet (is not the nicest method, but dont know how we can do else?) kds
 
@@ -175,7 +181,7 @@ class ProcessDef:
             return pid
         raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
-    def isRunning(self):
+    def isRunning(self,quicktest=False):
         hrd = j.core.hrd.getHRD(self.path)
         pid=self.getPid(ifNoPidFail=False)
         if pid==0:
@@ -186,8 +192,13 @@ class ProcessDef:
             hrd.set('process_active', False)
             return False
 
+        if quicktest:
+            return True
+
         for port in self.ports:
-            if port<>None and port.strip()<>"":
+            if port:
+                if isinstance(port, basestring) and not port.strip():
+                    continue
                 port = int(port)
                 if not j.system.net.checkListenPort(port):
                     hrd.set('process_active', False)
@@ -303,7 +314,7 @@ class StartupManager:
             if jpackage:
                 domain = jpackage.domain
             else:
-                domain = StartupManager.DEFAULT_DOMAIN
+                raise RuntimeError("domain should be specified or in jpackage or as argument to addProcess method.")
 
         hrd+="process.domain=%s\n"%domain
         hrd+="process.cmd=%s\n"%cmd
@@ -380,6 +391,8 @@ class StartupManager:
 
         processes = filter(processFilter, self.processdefs.values())
         processes.sort(key=lambda pd: pd.priority)
+        if not processes and (domain or name ):
+            raise ProcessNotFoundException("Could not find process with domain:%s and name:%s" % (domain, name))
         return processes
 
     def getDomains(self):
@@ -408,16 +421,16 @@ class StartupManager:
                 result.append(pd)
         return result
 
-    def _start(self,j,pd):
-        # print "thread start:%s"%pd
-        try:
-            pd.start()
-        except Exception,e:
-            print "********** ERROR **********"
-            print pd
-            print e
-            print "********** ERROR **********"
-        # print "thread started:%s"%pd
+    # def _start(self,j,pd):
+    #     # print "thread start:%s"%pd
+    #     try:
+    #         pd.start()
+    #     except Exception,e:
+    #         print "********** ERROR **********"
+    #         print pd
+    #         print e
+    #         print "********** ERROR **********"
+    #     # print "thread started:%s"%pd
 
     def startAll(self):
         l=self.getProcessDefs()
@@ -426,7 +439,17 @@ class StartupManager:
         
         for pd in self.getProcessDefs():
             # pd.start()
-            pd.start()
+            errors=[]
+            
+            try:
+                pd.start()
+            except Exception,e:                
+                errors.append("could not start: %s."%pd)
+                j.errorconditionhandler.processPythonExceptionObject(e)
+
+        if len(errors)>0:
+            print "COULD NOT START:"
+            print "\n".join(errors)
 
 
     # def startAll(self):

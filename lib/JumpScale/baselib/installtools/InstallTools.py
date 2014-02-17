@@ -79,7 +79,8 @@ class InstallTools():
     #     return stdout
 
     def log(self,msg,level=0):
-        print(msg)
+        # print(msg)
+        pass
 
     def isUnix(self):
         if sys.platform.lower().find("linux")!=-1:
@@ -167,7 +168,7 @@ class InstallTools():
                     selflog('failed to set child signal, error %s'%ex, 2)
                 childprocess = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, shell=True, env=os.environ)
                 (output,error) = childprocess.communicate()
-                exitcode = childprocess.returncode
+                exitcode = childprocess.returncode                
                 
             elif self.isWindows():
                 import subprocess, win32pipe, msvcrt, pywintypes
@@ -197,6 +198,7 @@ class InstallTools():
                 raise RuntimeError("Non supported OS for self.execute()")
 
         except Exception as e:
+            print "ERROR IN EXECUTION, SHOULD NOT GET HERE."
             raise
 
         if exitcode!=0 or error!="":

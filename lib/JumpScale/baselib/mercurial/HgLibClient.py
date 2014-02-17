@@ -23,9 +23,9 @@ class HgLibClient:
         """
         self.remoteUrl = remoteUrl.strip()
         self.basedir = hgbasedir
-        if not branchname:
-            branchname = 'default'
         self.branchname = branchname
+        if not self.branchname:
+            self.branchname = 'default'
 
         if remoteUrl<>"":
             self._log("mercurial remoteurl:%s"%(remoteUrl),category="config")
@@ -37,11 +37,6 @@ class HgLibClient:
         if not self.isInitialized() and not self.remoteUrl:
             raise RuntimeError(".hg not found and remote url is not supplied")
 
-        ##use branchname from hg itself
-        # branchmarker=j.system.fs.joinPaths(self.basedir,".branch")
-        # if j.system.fs.exists(branchmarker):
-        #     #found branch marker
-        #     self.branchname=j.system.fs.fileGetContents(j.system.fs.joinPaths(self.basedir,".branch"))/replace("\n","").strip()
 
         if j.system.fs.exists(self.basedir) and not self.isInitialized():
             if len(j.system.fs.listFilesInDir(self.basedir,recursive=True))==0:
@@ -66,7 +61,12 @@ class HgLibClient:
         else:
             self.client = hglib.open(self.basedir, configs=self._configs)
             self.remoteUrl = self.getUrl()
-            self.branchname = self.getbranchname()                
+            currentbranchname = self.getbranchname()
+            if branchname and branchname != currentbranchname:
+                self.switchbranch(branchname)
+                currentbranchname = branchname
+            self.branchname = currentbranchname
+
             
         self.reponame, self.repokey = self._getRepoNameAndKey()
 
@@ -239,71 +239,91 @@ syntax: regexp
         else:
             return False            
             
-    def updatemerge(self, commitMessage="", ignorechanges=False,
-            addRemoveUntrackedFiles=False, trymerge=True, pull=True, user=None):
-        if ignorechanges:
-            raise NotImplemented("Need to verify this code path, not implemented for now")
+    def updatemerge(self, commitMessage="", addRemoveUntrackedFiles=True, pull=False, user=None,force=False):
         self._log("updatemerge %s" % (self.basedir))
-        if ignorechanges and trymerge:
-            self._raise("Cannot ignore changes and try to do a merge at the same time")
-        if ignorechanges and addRemoveUntrackedFiles:
-            self._raise("Cannot ignore changes and try to add remove untracked files at same time")
         self.checkbranch()
         if pull:
             self.pull()
-        result=self.update(die=False)
-        if not result:
-            if trymerge:
-                j.console.echo("cannot update will try a merge")
-                result = self.merge(commitMessage=commitMessage, user=user)
-                if result == 1 or result == 2:
-                    j.console.log("There was nothing to merge")
-                else:
-                    self.commit("Automatic Merge")                
-                result = self.update()            
+        updateresult=self.update(die=False)
+        if addRemoveUntrackedFiles:
+            self.addRemoveInteractive(commitMessage,user,force)
+        self.commitInteractive(commitMessage,user,force)
+        result = self.merge(commit=False)
+        if result == 1 or result == 2:
+            # j.console.log("There was nothing to merge")
+            pass
+        else:
+            print "MERGE DONE: WILL COMMIT NOW."
+            self.commitInteractive(commitMessage,user,force)
+        updateresult=self.update(die=False)
+        if updateresult==False:
+            raise RuntimeError("BUG:update should not fail at this point, because all addedremoved, merged & committed.")
+        if self.hasModifiedFiles():
+            raise RuntimeError("BUG: there should be no uncommitted files at this point")
             
+    def addRemoveInteractive(self,commitMessage="", user=None,force=False):
+
         result= self.getModifiedFiles()
 
-        # means files are in repo but no longer on filesystem
-        if any([result["ignored"], result["nottracked"], result["missing"]]):
-            #there are files not added yet
-            if j.application.shellconfig.interactive:
-                j.console.echo("\n\nFound files not added yet to repo or deleted from filesystem")
-
-                if result["missing"]:
-                    j.console.echo("\n".join(["Missing: %s" % item for item in result["missing"]]))
-                    if not j.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?"):
-                        self._raise("Cannot update repo because files are deleted on filesystem which should not have.")
+        def remove(items):
+            for item in items:
+                path=j.system.fs.joinPaths(self.basedir,item)
+                if j.system.fs.exists(path):
+                    if j.system.fs.isDir(path):
+                        j.system.fs.removeDir(path)
                     else:
-                        self.addremove(message="add remove missing files for %s" % commitMessage) #@todo P1 check if this is ok?
-                        #for path in result["missing"]:
-                            #self.remove(path)
-                            
-                if len(result["nottracked"])>0 or len(result["ignored"])>0:
-                    j.console.echo("\n".join(["Nottracked/Ignored: %s" % item for item in result["nottracked"] + result["ignored"]]))
-                    j.console.echo("\n\Above files are not added yet to repo but on filesystem")
-                    action = j.gui.dialog.askChoice("What do you want to do with these files" , ["RemoveTheseFiles", "AddRemove", "Abort"])
-                    if action == "RemoveTheseFiles":
-                        for path in result["nottracked"] + result["ignored"]:
-                            if j.system.fs.exists(j.system.fs.joinPaths(self.basedir,path)):
-                                if j.system.fs.isDir(j.system.fs.joinPaths(self.basedir,path)):
-                                    j.system.fs.removeDir(j.system.fs.joinPaths(self.basedir,path))
-                                else:
-                                    j.system.fs.remove(j.system.fs.joinPaths(self.basedir,path))
-                    elif action == "AddRemove":
-                        message = "commit missing jpackage files, addremove"
-                        if commitMessage:
-                            message = commitMessage
-                        self.addremove(message=message)
-                    elif action == "Abort":
-                        self._raise("Cannot update repo because there are files which are not added or removed yet to local repo." )                    
-                
+                        j.system.fs.remove(path)
+
+        remove(result["ignored"])
+
+        addremove=False
+
+        #means files not added to repo
+        if len(result["nottracked"])>0:
+            if force==False and j.application.shellconfig.interactive:
+                j.console.echo("\n\nFound files not added yet to repo.")
+                j.console.echo("\n".join(["To Add: %s" % item for item in result["nottracked"]]))
+                add=j.gui.dialog.askYesNo("Above files are not added yet to repo but on filesystem, is it ok to add these files (No will remove)?")
+                if add==False:
+                    j.console.echo("remove the nontracked files.\n\n")
+                    j.console.echo("\n".join(["Will Remove: %s" % item for item in result["nottracked"]]))
+                    sure=j.gui.dialog.askYesNo("are you sure you want to remove above mentioned files.")
+                    if sure:
+                        remove(result["nottracked"])
+                    else:
+                        j.console.echo("Please manually add your files and restart operation.")
+                        j.application.stop()                        
+                else:
+                    addremove=True
+            elif force:
+                addremove=True
             else:
-                if result["missing"] and not ignorechanges:
-                    self._raise("Cannot update repo because files are deleted on filesystem which should not be.")
-                if result["nottracked"] and not addRemoveUntrackedFiles:
-                    self._raise("Cannot update repo because there are files which are not added or removed yet to local repo.")
-                self.addremove(message="add remove untracked files for %s" % commitMessage)
+                raise RuntimeError("Cannot addremove, did not force operation.")
+
+        #means files are in repo but no longer on filesystem
+        if len(result["missing"])>0:
+            if force==False and j.application.shellconfig.interactive:
+                j.console.echo("\n\nFound files in repo which are no longer on filesystem, so probably deleted.")
+                j.console.echo("\n".join(["To remove from repo: %s" % item for item in result["missing"]]))
+                remove=j.gui.dialog.askYesNo("Above files are in repo but no longer on filesystem, is it ok to delete these files from repo?")
+                if remove==False:
+                    j.console.echo("Please manually get your missing files back and restart operation.")
+                    j.application.stop()
+            elif force:
+                addremove=True                
+            else:
+                raise RuntimeError("Cannot addremove, did not force operation.")
+
+        # if addremove:
+        #     from IPython import embed
+        #     print "DEBUG NOW ooo"
+        #     embed()
+            
+        self.addremove() #does not commit yet
+
+        self.commitInteractive(commitMessage,user=user,force=force)
+
+    def commitInteractive(self,commitMessage="",user=None,force=False):
             
         result=self.getModifiedFiles()   
         if any([result["added"], result["removed"], result["modified"]]):
@@ -312,14 +332,18 @@ syntax: regexp
                 j.console.echo("\n".join(["Added:    %s" % item for item in result["added"]]))
                 j.console.echo("\n".join(["Removed:  %s" % item for item in result["removed"]]))
                 j.console.echo("\n".join(["Modified: %s" % item for item in result["modified"]]))                    
-                if j.gui.dialog.askYesNo("\nDo you want to commit the files?"):
+                if force or j.gui.dialog.askYesNo("\nDo you want to commit the files?"):
                     commitMessage=self.commit(commitMessage, user=user)
                 elif j.gui.dialog.askYesNo("\nDo you want to ignore the changed files? The changes will be lost"):
-                    self.update(force=True) #@todo P1 not implemented
+                    self.update(force=True)
                 else:
                     self._raise("Cannot update repo because uncommitted files in %s" % self.basedir)        
             else:
-                self.commit(commitMessage, user=user)
+                if force:
+                    self.commit(commitMessage, user=user)
+                else:
+                    self._raise("Cannot update repo because uncommitted files in %s" % self.basedir)
+
 
     def update(self, die=True, force=False, rev=None):
         self._log("update %s " % (self.basedir))
@@ -344,37 +368,44 @@ syntax: regexp
     def merge(self, commitMessage="", commit=True, user=None):
         self._log("merge '%s'" % (self.basedir))
         self.checkbranch()
-        self._removeRedundantFiles()
+        # self._removeRedundantFiles()
         if self.hasModifiedFiles():
             self._raise("Cannot merge %s because there are untracked files." % self.basedir)
 
-        try:
-            self.client.merge()
-            returncode = 0
-            out = ''
-        except hglib.client.error.CommandError, e:
-            self._log("merge %s" % e)
-            out = e.err
-            returncode = e.ret
-
-        if out.find("nothing to merge")<>-1 or out.find("has one head")<>-1 :
-            self._log("Nothing to merge",5)
+        heads=[item for item in  self.client.heads() if item.branch==self.branchname]
+        if len(heads)==1:
+            #no need to merge
             return 1
-        if out.find("conflicts during merge")<>-1:
-            self._raise("conflicts in merge")
-        
-        if returncode > 0:
-            self._raise("cannot merge, cmd was hg merge in dir %s" % self.basedir)            
+        elif len(heads)==0:
+            raise RuntimeError("BUG: there should always be at least 1 head with the expected branchname:%s"%self.branchname)
+        else:
+            #need merge
+            try:
+                self.client.merge()
+                returncode = 0
+                out = ''
+            except hglib.client.error.CommandError, e:
+                self._log("merge %s" % e)
+                out = e.err
+                returncode = e.ret
 
-        if commit:
-            self.commit(commitMessage, force=True, user=user)
-        return 0
+            if out.find("nothing to merge")<>-1 or out.find("has one head")<>-1 :
+                self._log("Nothing to merge",5)
+                return 1
+            if out.find("conflicts during merge")<>-1:
+                self._raise("conflicts in merge")
+            
+            if returncode > 0:
+                self._raise("cannot merge, cmd was hg merge in dir %s" % self.basedir)            
+
+            if commit:
+                self.commit(commitMessage, force=True, user=user)
+            return 0
                     
     def switchbranch(self,branchname):
-        raise NotImplementedError("no support for switchbrand, do this manually")
-        #self._log("switchbranch %s" % (self.basedir))
-        #if branchname<>self.getbranchname():
-            #self.updatemerge(commitMessage="switch branch",ignorechanges=False,addRemoveUntrackedFiles=False,trymerge=True, release=branchname)
+        self._log("switchbranch %s" % (self.basedir))
+        if branchname != self.getbranchname():
+            self.update(rev=branchname)
         
     def pullupdate(self, force=False):
         self._log("pullupdate %s" % (self.basedir),category="pullupdate")
@@ -384,7 +415,7 @@ syntax: regexp
     def _clone(self):
         self._log("clone %s" % (self.basedir),category="clone")
         self.client = hglib.clone(self.remoteUrl, self.basedir, branch=self.branchname, configs=self._configs)
-        self.client.open()
+        self.pull()
         self.verify()
 
     def getbranchname(self):
@@ -439,7 +470,7 @@ syntax: regexp
         if not user:
             self._assertCommitterInfo()
 
-        self.checkbranch()   
+        self.checkbranch()
 
         if not self.status():
             self._log("Nothing to commit, e.g. after a merge which had nothing to do.",5)
@@ -467,10 +498,16 @@ syntax: regexp
         if message:
             self.commit(message)        
         
-    def push(self):
+    def push(self,branch=None,newbranch=False):
         self._log("push %s to %s" % (self.basedir, self.remoteUrl))
         url = self.getUrl()
-        self.client.push(dest=url)
+        if branch<>None:
+            if newbranch:
+                self.client.push(dest=url,newbranch=newbranch)
+            else:
+                self.client.push(dest=url,branch=branch)
+        else:
+            self.client.push(dest=url,newbranch=newbranch)
         
     def commitpush(self, commitMessage="", ignorechanges=False,
             addRemoveUntrackedFiles=False, trymerge=True, pull=True, user=None):

@@ -46,6 +46,7 @@ class JPackageClient():
         self.logenable=True
         self.loglevel=5
         self.errors=[]
+        self.inInstall=[] #jpackages which are being installed
 
     def reportError(self,msg):
         self.errors.append(msg)
@@ -412,7 +413,7 @@ class JPackageClient():
 
         res = self._find(domain=domain, name=name, version=version)
         if not res:
-            j.console.echo('No packages found, did you forget to run jpackage_update?')
+            j.console.echo('No packages found, did you forget to run "jpackage mdupdate"?')
 
         if installed==True:
             res=[item for item in res if item.isInstalled()]
@@ -498,7 +499,9 @@ class JPackageClient():
                     packagepath=j.system.fs.joinPaths(domainpath,packagename)
                     versions=j.system.fs.listDirsInDir(packagepath,dirNameOnly=True)
                     for version in versions:
-                        res.append([domainName,packagename,version])
+                        hrdfile = j.system.fs.joinPaths(packagepath, version, 'hrd', 'main.hrd')
+                        if j.system.fs.exists(hrdfile):
+                            res.append([domainName,packagename,version])
         return res
 
     def getJPackageObjects(self, platform=None, domain=None):
