@@ -81,10 +81,9 @@ class TEST(unittest.TestCase):
                     task.priority=i
                 key,new,changed=self.osisclient.set(obj)
 
-        q='{"query":{"bool":{"must":[{"text":{"json.name":"name1"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
-        items=self.osisclient.search(q)
+        items=self.osisclient.simpleSearch({'name': 'name1'})
 
-        self.assertEqual(items["total"], 1) #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
+        self.assertEqual(len(items), 1) #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
 
         items=self.osisclient.simpleSearch(params={"name":"name3"})
 
