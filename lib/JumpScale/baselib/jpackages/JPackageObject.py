@@ -1074,11 +1074,19 @@ class JPackageObject():
 
         when dependencies the reinstall will not be asked for there
 
-        """        
+        """
+
+        key="%s_%s"%(self.domain,self.name)
+        if key in j.packages.inInstall:
+            print "are already in install of jpackage"
+            return
+
         # If I am already installed assume my dependencies are also installed
         if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
             self.log('already installed')
             return # Nothing to do
+
+        j.packages.inInstall.append(key)
 
         if dependencies:
             deps = self.getDependencies()
@@ -1117,6 +1125,8 @@ class JPackageObject():
             self.configure(dependencies=False)
 
         self.state.setLastInstalledBuildNr(self.buildNr)
+
+        j.packages.inInstall.pop(j.packages.inInstall.index(key))
 
 
     def uninstall(self, unInstallDependingFirst=False):

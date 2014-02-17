@@ -63,9 +63,10 @@ class RecipeItem(object):
         account=self.repoinfo.get("jp.code.account")
         repo=self.repoinfo.get("jp.code.repo")
         ttype=self.repoinfo.get("jp.code.type")
+        branch=self.repoinfo.get("jp.code.branch")
         if ttype<>"bitbucket":
             raise RuntimeError("only bitbucket repo's supported.")        
-        return j.system.fs.joinPaths(j.dirs.codeDir,account,repo,self.source)
+        return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),self.source)
 
     def exportToSystem(self,force=True):
         '''
@@ -176,6 +177,8 @@ class RecipeItem(object):
                                 return        
         
                     self._removeDest(destination)
+                if not j.system.fs.exists(path=source):
+                    raise RuntimeError("Cannot find source to put link to, link was from %s to %s"%(source,destination))
                 j.system.fs.symlink(source, destination)
                 j.dirs.addProtectedDir(destination)
 

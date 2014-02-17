@@ -314,7 +314,7 @@ class StartupManager:
             if jpackage:
                 domain = jpackage.domain
             else:
-                domain = StartupManager.DEFAULT_DOMAIN
+                raise RuntimeError("domain should be specified or in jpackage or as argument to addProcess method.")
 
         hrd+="process.domain=%s\n"%domain
         hrd+="process.cmd=%s\n"%cmd

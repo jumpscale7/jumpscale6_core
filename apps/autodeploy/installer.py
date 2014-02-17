@@ -85,6 +85,13 @@ def install_jscore():
     print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/unstable.zip")
     install_configure()
 
+    print cuapi.run("jpackage mdupdate")
+    try:
+        print cuapi.run("jscode update -f -a* -r*")
+    except:
+        pass    
+    print cuapi.run("jpackage install -n core -r --debug")
+
 def install_configure():
 
     items=j.system.fs.listFilesInDir("cfgs/%s"%options.cfgname,True)
@@ -100,11 +107,6 @@ def install_configure():
     print cuapi.run(cmd)            
 
     print cuapi.run("jpackage mdupdate")
-    try:
-        print cuapi.run("jscode update -f -a* -r*")
-    except:
-        pass    
-    print cuapi.run("jpackage install -n core -r --debug")
 
 def install_grid():
 

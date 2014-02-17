@@ -46,6 +46,7 @@ class JPackageClient():
         self.logenable=True
         self.loglevel=5
         self.errors=[]
+        self.inInstall=[] #jpackages which are being installed
 
     def reportError(self,msg):
         self.errors.append(msg)
