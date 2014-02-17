@@ -2,7 +2,7 @@ def main(j, args, params, tags, tasklet):
     params.merge(args)
 
     # temporary hack to get the application name
-    j.core.portal.runningPortal.restartInProcess('')
+    j.core.portal.active.restartInProcess('')
 
     params.result = ("", params.doc)
 

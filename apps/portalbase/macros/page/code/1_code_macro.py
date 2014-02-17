@@ -1,7 +1,7 @@
 
 def main(j, args, params, tags, tasklet):
     page = args.page
-    template = args.tags.tagGet('template', 'python')
+    template = args.getTag('template', 'python')
     wrap = 'nowrap' not in args.tags.labels
     page.addBootstrap()
     macrostr = args.macrostr.strip()

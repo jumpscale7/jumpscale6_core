@@ -8,6 +8,8 @@ class DocPreprocessorFactory():
         """
         @param contentDirs are the dirs where we will load wiki files from & parse
         """
+        if spacename=="":
+            raise RuntimeError("spacename cannot be empty")
         return DocPreprocessor(contentDirs, varsPath, spacename)
 
     def _getMacroExecutor(self, paths):

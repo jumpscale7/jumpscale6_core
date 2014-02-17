@@ -124,9 +124,8 @@
         """
         @todo describe what the goal is of this method
         """
-        var:appname str,,
-        var:actorname str,,
-        var:modelname str,,
+        var:namespace str,,
+        var:category str,,
         var:key str,,
         result:list
 

@@ -36,84 +36,34 @@ class ActorExtensionsGroup(PMExtensionsGroup):
             extension = self.pm_extensions[extensionName]
             extension.activate()
 
-
 class Class():
     pass
-
-
-class ActorLoader(LoaderBaseObject):
-
-    def __init__(self):
-        LoaderBaseObject.__init__(self, "actor")
-
-    def createDefaults(self, path):
-        self._createDefaults(path, ["users.cfg"])
-        base = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), ".%s" % self.type, "dirstructure")
-        j.system.fs.copyDirTree(base, path, overwriteFiles=False)
-
-    def raiseError(self, msg, path=None):
-        # if path==None:
-        #    path=self.model.path
-        # j.system.fs.writeFile(j.system.fs.joinPaths(path,"ERROR.TXT"),msg)
-        #@todo kristof use proper event mgmt
-        return False
-
-    def loadFromDisk(self, path, reset=False):
-        # the name is $appname__actorname all in lowercase
-        name = j.system.fs.getDirName(path, True)
-        if name.find("__") != -1:
-            app, actor = name.split("__", 1)
-        else:
-            return self.raiseError("Cannot create actor, name of directory needs to be $appname__$actorname", path=path)
-        self._loadFromDisk(path, reset=False)
-        self.model.application = app
-        self.model.actor = actor
-        self.save()
-
-    def _removeFromMem(self):
-        print "remove actor %s from memory" % self.model.id
-        j.core.specparser.removeSpecsForActor(self.model.application, self.model.actor)
-        j.core.codegenerator.removeFromMem(self.model.application, self.model.actor)
-        j.core.portal.runningPortal.webserver.unloadActorFromRoutes(self.model.application, self.model.actor)
-        key = "%s_%s" % (self.model.application.lower(), self.model.actor.lower())
-        if key in j.core.portal.runningPortal.actors:
-            j.core.portal.runningPortal.actors.pop(key)
-
-    def reset(self):
-        self._removeFromMem()
-        self.loadFromDisk(self.model.path, reset=True)
-        j.core.portal.runningPortal.actorsloader.getActor(self.model.application, self.model.actor)
-
-    def activate(self):
-        print "activate actor: %s %s" % (self.model.application, self.model.actor)
-        result = j.apps.actorsloader._generateLoadActor(self.model.application, self.model.actor, self.model.path)
-        return result
-
-    def loadSpace(self):
-        self.activate()
     
 class GroupAppsClass(object):
     def __init__(self, actorsloader):
         self.actorsloader = actorsloader
 
     def __getattr__(self, appname):
-        app = AppClass(self.actorsloader, appname)
+        app = AppClass(appname)
         setattr(self, appname, app)
         return app
 
 class AppClass(object):
-    def __init__(self, actorsloader, appname):
+    def __init__(self, appname):
         self._appname = appname
-        self._actorsloader = actorsloader
 
     def __getattr__(self, actorname):
         if actorname in ('__members__', '__methods__', 'trait_names', '_getAttributeNames'):
             return object.__getattr__(self, actorname)
-        actor = self._actorsloader.getActor(self._appname, actorname)
+        actor = j.apps.actorsloader.getActor(self._appname, actorname)
         setattr(self, actorname, actor)
         return actor
 
+
 class ActorsLoader(LoaderBase):
+    """
+    loader for all actors
+    """
 
     def __init__(self):
         """
@@ -132,7 +82,7 @@ class ActorsLoader(LoaderBase):
         j.core.specparser.roles = {}
         j.core.specparser.specs = {}
         j.core.codegenerator.classes = {}
-        # j.core.portal.runningPortal._init()
+        # j.core.portal.active._init()
 
     def getApps(self):
         result = {}
@@ -154,16 +104,16 @@ class ActorsLoader(LoaderBase):
 
         key = "%s__%s" % (appname.lower(), actorname.lower())
 
-        if key in j.core.portal.runningPortal.actors:
-            return j.core.portal.runningPortal.actors[key]
+        if key in j.core.portal.active.actors:
+            return j.core.portal.active.actors[key]
 
         print "get actor cache miss for %s %s" % (appname, actorname)
 
         if key in self.actorIdToActorLoader:
             loader = self.actorIdToActorLoader[key]
             aobj = loader.activate()
-            j.core.portal.runningPortal.actors[key] = aobj
-            return j.core.portal.runningPortal.actors[key]
+            j.core.portal.active.actors[key] = aobj
+            return j.core.portal.active.actors[key]
         else:
             raise RuntimeError("Cannot find actor from app %s with name %s" % (appname, actorname))
 
@@ -173,7 +123,53 @@ class ActorsLoader(LoaderBase):
 
     def existsActor(self, appname, actorname):
         key = "%s__%s" % (appname.lower(), actorname.lower())
-        return key in j.core.portal.runningPortal.actors
+        return key in j.core.portal.active.actors
+
+    def loadOsisTasklets(self, actorobject, actorpath, modelname):
+        path = j.system.fs.joinPaths(actorpath, "osis", modelname)
+        if j.system.fs.exists(path):
+            for method in ["set", "get", "delete", "list", "find", "datatables"]:
+                path2 = j.system.fs.joinPaths(path, "method_%s" % method)
+                actorobject._te["model_%s_%s" % (modelname, method)] = j.core.taskletengine.get(path2)
+
+class ActorLoader(LoaderBaseObject):
+
+    def __init__(self):
+        LoaderBaseObject.__init__(self, "actor")
+        self.osiscl = None
+
+    def createDefaults(self, path):
+        base = j.system.fs.joinPaths(j.core.portalloader.getTemplatesPath(), "%s" % self.type)
+        j.system.fs.copyDirTree(base, path, overwriteFiles=False)
+
+    def raiseError(self, msg, path=None):
+        raise RuntimeError("%s\npath was:%s"%(msg,path))
+
+    def loadFromDisk(self, path, reset=False):
+        # the name is $appname__actorname all in lowercase
+        name = j.system.fs.getDirName(path, True)
+        # print "load actor dir:%s"%path
+        if name.find("__") != -1:
+            app, actor = name.split("__", 1)
+        else:
+            return self.raiseError("Cannot create actor, name of directory needs to be $appname__$actorname", path=path)
+        self._loadFromDisk(path, reset=False)
+        self.model.application = app
+        self.model.actor = actor
+        
+    def _removeFromMem(self):
+        print "remove actor %s from memory" % self.model.id
+        j.core.specparser.removeSpecsForActor(self.model.application, self.model.actor)
+        j.core.codegenerator.removeFromMem(self.model.application, self.model.actor)
+        j.core.portal.active.unloadActorFromRoutes(self.model.application, self.model.actor)
+        key = "%s_%s" % (self.model.application.lower(), self.model.actor.lower())
+        if key in j.core.portal.active.actors:
+            j.core.portal.active.actors.pop(key)
+
+    def reset(self):
+        self._removeFromMem()
+        self.loadFromDisk(self.model.path, reset=True)
+        j.core.portal.active.actorsloader.getActor(self.model.application, self.model.actor)
 
     def _descrTo1Line(self, descr):
         if descr == "":
@@ -183,14 +179,13 @@ class ActorsLoader(LoaderBase):
         # descr=descr.replace("'n","")
         return descr
 
-    def loadOsisTasklets(self, actorobject, actorpath, modelname):
-        path = j.system.fs.joinPaths(actorpath, "osis", modelname)
-        if j.system.fs.exists(path):
-            for method in ["set", "get", "delete", "list", "find", "datatables"]:
-                path2 = j.system.fs.joinPaths(path, "method_%s" % method)
-                actorobject._te["model_%s_%s" % (modelname, method)] = j.core.taskletengine.get(path2)
 
-    def _generateLoadActor(self, appname, actorname, actorpath):
+    def activate(self):
+        print "activate actor: %s %s" % (self.model.application, self.model.actor)
+
+        appname=self.model.application
+        actorname=self.model.actor
+        actorpath=self.model.path
         # parse the specs
         j.core.specparser.parseSpecs("%s/specs" % actorpath, appname=appname, actorname=actorname)
 
@@ -217,24 +212,6 @@ class ActorsLoader(LoaderBase):
         actorobject = j.core.codegenerator.generate(spec, "actorclass", codepath=actorpath, classpath=classpath,
                                                     args=args, makeCopy=True)()             
 
-        # # create spacedir if needed
-        # # create space for actor if it does not exist yet
-        # ppathx = j.system.fs.joinPaths(actorpath, "space_%s__%s" % (appname, actorname))
-        # if not j.system.fs.exists(ppathx):
-        #     j.system.fs.createDir(ppathx)
-        #     ppath2 = j.system.fs.joinPaths(ppathx, ".space")
-        #     j.system.fs.createDir(ppath2)
-        #     ppath2 = j.system.fs.joinPaths(ppathx, ".macros")
-        #     j.system.fs.createDir(ppath2)
-#             ppath2 = j.system.fs.joinPaths(ppathx, "space_%s.wiki" % actorname)
-#             C = """
-# h3. home page for space $$space
-
-# ...
-
-# """
-#             j.system.fs.writeFile(ppath2, C)
-
         if len(modelNames) > 0:
             actorobject.models = Class()
 
@@ -250,7 +227,7 @@ class ActorsLoader(LoaderBase):
                 if spec.hasTasklets:
                     self.loadOsisTasklets(actorobject, actorpath, modelname=modelspec.name)
 
-                classs = j.core.codegenerator.getClassPymodel(appname, actorname, modelName, codepath=actorpath)
+                classs = j.core.codegenerator.getClassJSModel(appname, actorname, modelName, codepath=actorpath)
                 if modelspec.tags == None:
                     modelspec.tags = ""
                 index = j.core.tags.getObject(modelspec.tags).labelExists("index")
@@ -279,7 +256,7 @@ class ActorsLoader(LoaderBase):
                     namespacename = actorname
                     if not self.osiscl:
                         import JumpScale.grid.osis
-                        self.osiscl = j.core.osis.getClient()
+                        self.osiscl = j.core.osis.getClient(user='root')
                     if actorname not in self.osiscl.listNamespaces():
                         template = tags.tagGet('osis_template', 'modelobjects')
                         self.osiscl.createNamespace(actorname, template=template)
@@ -316,7 +293,7 @@ def match(j, args, params, actor, tags, tasklet):
                     j.system.fs.writeFile(methodtasklet, taskletContent)
                 actorobject._te[methodspec.name] = j.core.taskletengine.get(taskletpath)
 
-            if "runningPortal" in j.core.portal.__dict__:
+            if j.core.portal.active<>None:
 
                 paramvalidation = {}
                 for var in methodspec.vars:
@@ -345,13 +322,16 @@ def match(j, args, params, actor, tags, tasklet):
 
                 auth = not tags.labelExists("noauth")
                 methodcall = getattr(actorobject, methodspec.name)
-                j.core.portal.runningPortal.webserver.addRoute(methodcall, appname, actorname, methodspec.name,
+                j.core.portal.active.addRoute(methodcall, appname, actorname, methodspec.name,
                                                                paramvalidation=paramvalidation, paramdescription=paramdescription, paramoptional=paramoptional,
                                                                description=methodspec.description, auth=auth, returnformat=returnformat)
-                actorobjects = modelNames
-                j.core.portal.runningPortal.webserver.addExtRoute(methodcall, appname, actorname, methodspec.name,
-                                                                  actorobjects,
-                                                                  paramvalidation=paramvalidation, paramdescription=paramdescription, paramoptional=paramoptional, description=methodspec.description, auth=auth, returnformat=returnformat)
+                # actorobjects = modelNames
+                # j.core.portal.active.addExtRoute(methodcall, appname, actorname, methodspec.name,
+                #                                                   actorobjects,
+                #                                                   paramvalidation=paramvalidation, 
+                #                                                   paramdescription=paramdescription, 
+                #                                                   paramoptional=paramoptional, 
+                #                                                   description=methodspec.description, auth=auth, returnformat=returnformat)
 
         # load taskletengines if they do exist
         tepath = j.system.fs.joinPaths(actorpath, "taskletengines")
@@ -364,27 +344,16 @@ def match(j, args, params, actor, tags, tasklet):
 
         # LOAD actorobject to qbase tree
         if appname not in j.apps.__dict__:
-            j.apps.__dict__[appname] = AppClass(self, appname)
+            j.apps.__dict__[appname] = AppClass(appname)
 
         if actorname not in j.apps.__dict__[appname].__dict__:
             j.apps.__dict__[appname].__dict__[actorname] = actorobject
 
         if "runningAppserver" in j.core.portal.__dict__:
             key = "%s_%s" % (spec.appname.lower(), spec.actorname.lower())
-            j.core.portal.runningPortal.actors[key] = actorobject
+            j.core.portal.active.actors[key] = actorobject
 
         # load extensions
         actorobject.__dict__['extensions'] = ActorExtensionsGroup(j.system.fs.joinPaths(actorpath, "extensions"))
-
-        ##ACTOR DOES NOT NEED MACROS
-        # # load macros
-        # macropath = j.system.fs.joinPaths(actorpath, "macros")
-        # if j.system.fs.exists(macropath):
-        #     macropath2 = j.system.fs.joinPaths(macropath, "preprocess")
-        #     j.core.portal.runningPortal.webserver.macroexecutorPreprocessor.taskletsgroup.addTasklets(macropath2)
-        #     macropath2 = j.system.fs.joinPaths(macropath, "page")
-        #     j.core.portal.runningPortal.webserver.macroexecutorPage.taskletsgroup.addTasklets(macropath2)
-        #     macropath2 = j.system.fs.joinPaths(macropath, "wiki")
-        #     j.core.portal.runningPortal.webserver.macroexecutorWiki.taskletsgroup.addTasklets(macropath2)
 
         return actorobject

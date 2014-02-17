@@ -183,8 +183,10 @@ class PageHTML(Page):
         @param headers [header1, header2, ...]
         @param linkcolumns has pos (starting 0) of columns which should be formatted as links  (in that column format needs to be $description__$link
         """
+        if rows==[[]]:
+            return 
         if "datatables" in self.functionsAdded:
-            classparams += 'cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered display dataTable'
+            classparams += 'cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered display JSdataTable dataTable'
         if len(rows) == 0:
             return False
         l = len(rows[0])
@@ -256,7 +258,7 @@ class PageHTML(Page):
         self.addList(arr)
         self.addNewLine()
 
-    def getLink(self, description, link, link_id=None, link_class=None):
+    def getLink(self, description, link, link_id=None, link_class=None,htmlelements=""):
         if link_id:
             link_id = ' id="%s"' % link_id.strip()
         else:
@@ -267,7 +269,7 @@ class PageHTML(Page):
         else:
             link_class = ''
 
-        anchor = '<a href="%s" %s %s>%s</a>' % (link.strip(), link_id.strip(), link_class, description)
+        anchor = "<a href='%s' %s %s %s>%s</a>" % (link.strip(), link_id.strip(), link_class,htmlelements, description)
         return anchor
 
     def addLink(self, description, link):
@@ -768,7 +770,7 @@ function copyText$id() {
 	    'quicklook', 'reload', 'home', 'up', 'back', 'forward', 'getfile',
 	    'rm', 'duplicate', 'rename', 'mkdir', 'mkfile', 'upload', 'copy',
 	    'cut', 'paste','extract', 'archive', 'help',
-	    'resize', 'sort', 'edit', 'ping'
+	    'resize', 'sort', 'edit', 'ping', 'download'
 	    ],"""
             dircmd = "'reload', 'back', 'ping', '|', 'upload', 'mkdir', 'mkfile', 'paste'"
             filecmd = "'quicklook', '|', 'download', '|', 'copy', 'cut', 'paste', 'duplicate', '|',\
@@ -831,6 +833,7 @@ function copyText$id() {
                                 editor1.setLineClass(hlLine, null, null);
                                 hlLine = editor1.setLineClass(editor1.getCursor().line, null, "activeline");
                         }});
+                        this.myCodeMirror.setSize(790, 600);
                     },
                     close : function(textarea, instance) {
                         this.myCodeMirror = null;
@@ -854,7 +857,7 @@ function copyText$id() {
                 dblclick : function(event, elfinderInstance) {
                     event.preventDefault();
                     elfinderInstance.exec('getfile')
-                        .done(function() { elfinderInstance.exec('quicklook'); })
+                        .done(function() { elfinderInstance.exec('download'); })
                         .fail(function() { elfinderInstance.exec('open'); });
                 },
 	            upload : function(event, instance)
@@ -889,7 +892,7 @@ function copyText$id() {
             {
                 toolbar : [
 		['back', 'forward'],
-        ['reload'],
+        ['reload', 'download'],
         ['home', 'up']
 	],
             	tree :

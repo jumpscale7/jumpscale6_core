@@ -113,7 +113,7 @@ class test_taskmanager_osis(j.code.classGetBase()):
 
     def model_group_set(self, data='', **kwargs):
         """
-        Saves model group instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+        Saves model group instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
         param:data data is object to save default=
         result bool 
         
@@ -221,7 +221,7 @@ class test_taskmanager_osis(j.code.classGetBase()):
 
     def model_organization_set(self, data='', **kwargs):
         """
-        Saves model organization instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+        Saves model organization instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
         param:data data is object to save default=
         result bool 
         
@@ -331,7 +331,7 @@ class test_taskmanager_osis(j.code.classGetBase()):
 
     def model_project_set(self, data='', **kwargs):
         """
-        Saves model project instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+        Saves model project instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
         param:data data is object to save default=
         result bool 
         
@@ -451,7 +451,7 @@ class test_taskmanager_osis(j.code.classGetBase()):
 
     def model_task_set(self, data='', **kwargs):
         """
-        Saves model task instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+        Saves model task instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
         param:data data is object to save default=
         result bool 
         
@@ -561,7 +561,7 @@ class test_taskmanager_osis(j.code.classGetBase()):
 
     def model_tasktype_set(self, data='', **kwargs):
         """
-        Saves model tasktype instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+        Saves model tasktype instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
         param:data data is object to save default=
         result bool 
         
@@ -684,7 +684,7 @@ class test_taskmanager_osis(j.code.classGetBase()):
 
     def model_user_set(self, data='', **kwargs):
         """
-        Saves model user instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+        Saves model user instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
         param:data data is object to save default=
         result bool 
         

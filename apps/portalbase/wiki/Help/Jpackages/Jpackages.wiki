@@ -1,5 +1,0 @@
-h2. Jpackage docs
-
-{{children}}
-
-@todo move from bitbucket wiki
