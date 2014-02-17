@@ -20,20 +20,20 @@ class BlobserverCMDS():
         # j.logger.setLogTargetLogForwarder()
 
     def _getPaths(self,namespace,key):
-        backuppath=j.system.fs.joinPaths(self.STORpath,namespace,key[0:2],key[2:4],key)
-        mdpath=backuppath+".md"
-        return backuppath,mdpath
+        storpath=j.system.fs.joinPaths(self.STORpath,namespace,key[0:2],key[2:4],key)
+        mdpath=storpath+".md"
+        return storpath,mdpath
 
     def set(self,namespace,key,value,repoId="",serialization="",session=None):
         if serialization=="":
             serialization="lzma"
 
-        backuppath,mdpath=self._getPaths(namespace,key)
+        storpath,mdpath=self._getPaths(namespace,key)
 
         if not(key<>"" and self.exists(namespace,key)):
             md5=j.tools.hash.md5_string(value)            
-            j.system.fs.createDir(j.system.fs.getDirName(backuppath))
-            j.system.fs.writeFile(backuppath,value)
+            j.system.fs.createDir(j.system.fs.getDirName(storpath))
+            j.system.fs.writeFile(storpath,value)
 
         
         if not j.system.fs.exists(path=mdpath):
@@ -47,19 +47,19 @@ class BlobserverCMDS():
         md["repos"][str(repoId)]=True
         mddata=ujson.dumps(md)        
         # print "Set:%s"%md
-        j.system.fs.writeFile(backuppath+".md",mddata)
+        j.system.fs.writeFile(storpath+".md",mddata)
         return [key,True,True]
 
     def get(self,namespace,key,serialization="",session=None):
         if serialization=="":
             serialization="lzma"
         
-        backuppath,mdpath=self._getPaths(namespace,key)
+        storpath,mdpath=self._getPaths(namespace,key)
 
         md=ujson.loads(j.system.fs.fileGetContents(mdpath))
         if md["format"]<>serialization:
             raise RuntimeError("Serialization specified does not exist.") #in future can convert but not now
-        with open(backuppath) as fp:
+        with open(storpath) as fp:
             data2 = fp.read()
             fp.close()
         return data2
@@ -68,7 +68,7 @@ class BlobserverCMDS():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
-        backuppath,mdpath=self._getPaths(namespace,key)
+        storpath,mdpath=self._getPaths(namespace,key)
 
         return ujson.loads(j.system.fs.fileGetContents(mdpath))       
 
@@ -79,15 +79,15 @@ class BlobserverCMDS():
             self._adminAuth(session.user,session.passwd)
 
         if force:
-            backuppath,mdpath=self._getPaths(namespace,key)            
-            j.system.fs.remove(backuppath)
+            storpath,mdpath=self._getPaths(namespace,key)            
+            j.system.fs.remove(storpath)
             j.system.fs.remove(mdpath)
             return             
 
         if key<>"" and not self.exists(namespace,key):
             return 
         
-        backuppath,mdpath=self._getPaths(namespace,key)
+        storpath,mdpath=self._getPaths(namespace,key)
 
         if not j.system.fs.exists(path=mdpath):       
             raise RuntimeError("did not find metadata")
@@ -97,17 +97,17 @@ class BlobserverCMDS():
         if md["repos"].has_key(str(repoId)):
             md["repos"].pop(str(repoId))
         if md["repos"]=={}:
-            j.system.fs.remove(backuppath)
+            j.system.fs.remove(storpath)
             j.system.fs.remove(mdpath)
         else:
             mddata=ujson.dumps(md)        
-            j.system.fs.writeFile(backuppath+".md",mddata)
+            j.system.fs.writeFile(storpath+".md",mddata)
 
     def exists(self,namespace,key,repoId="",session=None):
-        backuppath,mdpath=self._getPaths(namespace,key)
+        storpath,mdpath=self._getPaths(namespace,key)
         if repoId=="":
-            return j.system.fs.exists(path=backuppath)
-        if j.system.fs.exists(path=backuppath):
+            return j.system.fs.exists(path=storpath)
+        if j.system.fs.exists(path=storpath):
             md=ujson.loads(j.system.fs.fileGetContents(mdpath))
             return md["repos"].has_key(str(repoId))
         return False
@@ -115,8 +115,8 @@ class BlobserverCMDS():
     def deleteNamespace(self,namespace,session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-        backuppath=j.system.fs.joinPaths(self.STORpath,namespace)        
-        j.system.fs.removeDirTree(backuppath)
+        storpath=j.system.fs.joinPaths(self.STORpath,namespace)        
+        j.system.fs.removeDirTree(storpath)
 
 
     def _adminAuth(self,user,passwd):
@@ -134,7 +134,7 @@ class BlobStorServer2:
 
         daemon.setCMDsInterface(BlobserverCMDS, category="blobserver")  # pass as class not as object !!! chose category if only 1 then can leave ""
 
-        cmds=daemon.daemon.cmdsInterfaces["blobserver"][0]
+        #cmds=daemon.daemon.cmdsInterfaces["blobserver"][0]
         # cmds.loadJumpscripts()
 
         daemon.start()
