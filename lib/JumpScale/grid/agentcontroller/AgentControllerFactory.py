@@ -25,17 +25,14 @@ class AgentControllerClient():
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
-        job = self.executeJumpScript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,queue=queue,transporttimeout=timeout)
-        if job["state"]=="ERROR":
-            eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(job["result"]))
-            print eco
-            if dieOnFailure:
-                raise RuntimeError("Could not execute %s %s for role:%s, jobid was:%s"%(organization,name,role,job["id"]))
+        result = self.executeJumpScript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,queue=queue,transporttimeout=timeout)
+        if wait and isinstance(result, dict) and result.get('sate') != "OK":
+            if result['state'] == 'NOWORK' and dieOnFailure:
+                raise RuntimeError('Could not find agent with role:%s' %  role)
+            if result['result']:
+                eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(result["result"]))
+                print eco
+                if dieOnFailure:
+                    raise RuntimeError("Could not execute %s %s for role:%s, jobid was:%s"%(organization,name,role,result["id"]))
                 #j.errorconditionhandler.processErrorConditionObject(eco)
-        if wait:
-            if job["result"]==None:
-                return None
-            else:
-                return ujson.loads(job["result"])
-        else:
-            return job
+        return result
