@@ -187,7 +187,7 @@ class BitbucketConnection(object):
         result = requests.get(url)
         return result.ok
 
-    def getRepoPathLocal(self,repoName="",die=True,branch=None):
+    def getRepoPathLocal(self,repoName="",branch="default",die=True):
         if repoName=="":
             repoName=j.gui.dialog.askChoice("Select repo",self.getRepoNamesLocal(branch=branch))
             if repoName==None:
@@ -195,7 +195,10 @@ class BitbucketConnection(object):
                     raise RuntimeError("Cannot find repo for accountName %s" % self.accountName)
                 else:
                     return ""
-        path=j.system.fs.joinPaths(self.accountPathLocal,repoName)
+            if repoName.find("__")<>-1:
+                repoName,branch=repoName.split("__",1)
+
+        path=self.getCodeFolder(repoName,branch)
         j.system.fs.createDir(path)
         return path
 
@@ -268,12 +271,11 @@ class BitbucketConnection(object):
 
         url += "%s/"%repoName
 
-
         hgrcpath=j.system.fs.joinPaths(self.getCodeFolder(repoName,branch=branch),".hg","hgrc")
         if j.system.fs.exists(hgrcpath):
             editor=j.codetools.getTextFileEditor(hgrcpath)
             editor.replace1Line("default=%s" % url,["default *=.*"])
-        j.clients.bitbucket.log("init mercurial client ##%s## on path:%s"%(repoName,self.getRepoPathLocal(repoName)),category="getclient")
+        j.clients.bitbucket.log("init mercurial client ##%s## on path:%s"%(repoName,self.getCodeFolder(repoName,branch)),category="getclient")
         cl = j.clients.mercurial.getClient(self.getCodeFolder(repoName,branch=branch), url, branchname=branch)
         # j.clients.bitbucket.log("mercurial client inited for repo:%s"%repoName,category="getclient")
         self.mercurialclients[rkey]=cl

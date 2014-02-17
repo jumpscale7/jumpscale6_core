@@ -94,6 +94,7 @@ class BitbucketInterface():
             return  self.__dict__[accountname]
         
     def _populate1account(self,account):
+        raise RuntimeError("not implemented")
         bbc=o.clients.bitbucket.getBitbucketAccountClient(account)
         self.__dict__[account]=Account()
         self.__dict__[account].name=account
