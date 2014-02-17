@@ -75,7 +75,7 @@ class DataTables():
         return cache.cacheGet(key)
 
     def processLink(self, line):
-        if line.find("[") != -1:
+        if line and line.find("[") != -1:
             r = "\[[-:@|_.?\w\s\\=/]*\]"
             if j.codetools.regex.match(r, line):  # find links
                 for match in j.codetools.regex.yieldRegexMatches(r, line):
