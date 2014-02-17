@@ -242,9 +242,10 @@ class CodeManagementRecipe:
         account=self.hrd.get("jp.code.account")
         repo=self.hrd.get("jp.code.repo")
         ttype=self.hrd.get("jp.code.type")
+        branch=self.hrd.get("jp.code.branch")
         if ttype<>"bitbucket":
             raise RuntimeError("only bitbucket repo's supported.")        
-        return j.system.fs.joinPaths(j.dirs.codeDir,account,repo,source)
+        return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),source)
 
     def _process(self):
         content=j.system.fs.fileGetContents(self.configpath)

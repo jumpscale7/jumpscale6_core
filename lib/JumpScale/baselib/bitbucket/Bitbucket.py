@@ -85,6 +85,7 @@ class Bitbucket:
         loginInfo = ''
         login = None
         passwd = None
+
         repoInfo = self.getRepoInfo(accountName, repoName)
 
         config = self._accountGetConfig(accountName)
@@ -186,9 +187,9 @@ class BitbucketConnection(object):
         result = requests.get(url)
         return result.ok
 
-    def getRepoPathLocal(self,repoName="",die=True):
+    def getRepoPathLocal(self,repoName="",die=True,branch=None):
         if repoName=="":
-            repoName=j.gui.dialog.askChoice("Select repo",self.getRepoNamesLocal())
+            repoName=j.gui.dialog.askChoice("Select repo",self.getRepoNamesLocal(branch=branch))
             if repoName==None:
                 if die:
                     raise RuntimeError("Cannot find repo for accountName %s" % self.accountName)
@@ -198,9 +199,15 @@ class BitbucketConnection(object):
         j.system.fs.createDir(path)
         return path
 
-    def getRepoNamesLocal(self,checkIgnore=True,checkactive=True):
+    def getCodeFolder(self, repoName,branch="default"):
+        return "%s/%s/%s__%s/" % (j.dirs.codeDir,self.accountName,branch,repoName)
+
+
+    def getRepoNamesLocal(self,checkIgnore=True,checkactive=True,branch=None):
         if j.system.fs.exists(self.accountPathLocal):
             items=j.system.fs.listDirsInDir(self.accountPathLocal,False,True)
+            if branch<>None:
+                items=[item for item in items if item.find(branch)==0]
             return items
         else:
             return []
@@ -242,15 +249,16 @@ class BitbucketConnection(object):
 
         return repoNames
 
-    def getMercurialClient(self,repoName="",branch=None):
+    def getMercurialClient(self,repoName="",branch="default"):
         """
         """
-        #if self.mercurialclients.has_key(repoName):
-            #return self.mercurialclients[repoName]
-        #@todo P2 cache the connections but also use branchnames
 
+        rkey="%s_%s"%(repoName,branch)
+        if self.mercurialclients.has_key(rkey):
+            return self.mercurialclients[rkey]
         if repoName=="":
             repoName=self.findRepoFromBitbucket(repoName)
+            branch=j.gui.dialog.askString("branchname",defaultValue="default")
         if repoName=="":
             raise RuntimeError("reponame cannot be empty")
 
@@ -261,18 +269,16 @@ class BitbucketConnection(object):
         url += "%s/"%repoName
 
 
-        hgrcpath=j.system.fs.joinPaths(self.getRepoPathLocal(repoName),".hg","hgrc")
+        hgrcpath=j.system.fs.joinPaths(self.getCodeFolder(repoName,branch=branch),".hg","hgrc")
         if j.system.fs.exists(hgrcpath):
             editor=j.codetools.getTextFileEditor(hgrcpath)
             editor.replace1Line("default=%s" % url,["default *=.*"])
         j.clients.bitbucket.log("init mercurial client ##%s## on path:%s"%(repoName,self.getRepoPathLocal(repoName)),category="getclient")
-        cl = j.clients.mercurial.getClient(self.getCodeFolder(repoName), url, branchname=branch)
+        cl = j.clients.mercurial.getClient(self.getCodeFolder(repoName,branch=branch), url, branchname=branch)
         # j.clients.bitbucket.log("mercurial client inited for repo:%s"%repoName,category="getclient")
-        self.mercurialclients[repoName]=cl
+        self.mercurialclients[rkey]=cl
         return cl
 
-    def getCodeFolder(self, repoName):
-        return "%s/%s/%s/" % (j.dirs.codeDir,self.accountName,repoName)
 
     def getGroups(self):
         """

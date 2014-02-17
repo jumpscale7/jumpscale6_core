@@ -236,6 +236,12 @@ class JPackageObject():
 
         self.debug=self.state.debugMode
 
+        if (self.debug==False or self.debug==0) and self.hrd.exists("jp.debug"):
+            if int(self.hrd.get("jp.debug"))==1:
+                self.debug=1
+            #DO NOT SET 0, 0 means we don't count the stat from the hrd
+
+
     def getCodeMgmtRecipe(self):
         hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
         if not j.system.fs.exists(path=hrdpath):
@@ -303,8 +309,14 @@ class JPackageObject():
     def getDebugMode(self):
         return self.state.debugMode
 
-    def setDebugMode(self,dependencies=False):
+    def getDebugModeInJpackage(self):
+        if self.hrd.exists("jp.debug"):
+            if int(self.hrd.get("jp.debug"))==1:
+                return True
+        return False
 
+
+    def setDebugMode(self,dependencies=False):
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -316,6 +328,26 @@ class JPackageObject():
         
         self.load()
         self.log("set debug mode",category="init")
+
+    def setDebugModeInJpackage(self,dependencies=False):
+        
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.setDebugModeInJpackage(dependencies=False)
+        self.hrd.set("jp.debug",1)
+        self.load()
+        self.log("set debug mode in jpackage",category="init")
+
+    def removeDebugModeInJpackage(self,dependencies=False):
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.removeDebugModeInJpackage(dependencies=False)
+        if self.hrd.exists("jp.debug"):
+            self.hrd.set("jp.debug",0)
+        self.load()
+        self.log("remove debug mode in jpackage",category="init")        
 
     def removeDebugMode(self,dependencies=False):
 
@@ -1076,14 +1108,16 @@ class JPackageObject():
             if self.buildNr==-1:
                 self.buildNr=0
 
+        if self.debug:
+            self.log('install for debug (link)')
+            self.codeLink(dependencies=False, update=False, force=True)
+
+
         if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
             self.configure(dependencies=False)
 
         self.state.setLastInstalledBuildNr(self.buildNr)
 
-        if self.debug:
-            self.log('install for debug (link)')
-            self.codeLink(dependencies=False, update=False, force=True)
 
     def uninstall(self, unInstallDependingFirst=False):
         """

@@ -58,13 +58,22 @@ def getRepos():
                 reponames=[item.strip() for item in opts.repos.split(",")]
 
             for reponame in reponames:
-                repodir="%s/%s"%(accountdir,reponame)
+
+                if reponame.find("__")<>-1:
+                    branch,reponame=reponame.split("__",1)
+
+                    repodir="%s/%s__%s"%(accountdir,branch,reponame)
+                else:
+                    raise RuntimeError("branch not specified in reponame.")
+
                 if not j.system.fs.exists(path=repodir):
                     raise RuntimeError("Could not find mercurial repo on %s"%repodir)
+
                 bitbucket = j.clients.bitbucket.getBitbucketRepoClient(account, reponame)
-                cl=bitbucket.getMercurialClient(reponame)
+                
+                cl=bitbucket.getMercurialClient(reponame,branch=branch)
                 # cl=j.clients.mercurial.getClient(item)
-                result.append((bitbucket,account,reponame,cl,repodir))
+                result.append((bitbucket,account,reponame,branch,cl,repodir))
     return result
 
 
@@ -75,7 +84,7 @@ if opts.action == "status":
     print "==============================================================================================="
 
 
-for bitbucket,account,reponame,client,path in repos:
+for bitbucket,account,reponame,branch,client,path in repos:
 
     if opts.action in ['status','commit','push','update']:
 

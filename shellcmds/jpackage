@@ -25,7 +25,7 @@ group.add_argument('-f','--force',required=False, action='store_true',help='auto
 group = parser.add_argument_group(title="Install/Update")
 group.add_argument('-r', '--reinstall', required=False, action='store_true', help='Reinstall found package')
 group.add_argument('-s', '--single', required=False, action='store_true', help='Do not install dependencies')
-group.add_argument('--debug', required=False, action='store_true', help='Sets debug_mode for package')
+group.add_argument('--debug', required=False, action='store_true',default=False, help='Sets debug_mode for package')
 group.add_argument('--nodownload', required=False, action='store_true', help='skips download')
 
 #debug
@@ -33,6 +33,7 @@ group = parser.add_argument_group(title="Debug")
 engroup = group.add_mutually_exclusive_group()
 engroup.add_argument('--enable', dest='debug', default=True, action='store_true')
 engroup.add_argument('--disable', dest='debug', default=True, action='store_false')
+group.add_argument('--injpackage', dest='injpackage', default=False, action='store_true',help="if set then will set jpackage in debug mode on repo, so will count for all.")
 group.add_argument('--list', action='store_true')
 
 #download
@@ -76,20 +77,30 @@ elif args.action == 'debug':
             print item
         j.application.stop()
 
-    if not args.debug:
-        #to disable debug
-        choicearray=[]
-        for item in j.packages.getDebugPackages():
-            # choicearray.append([str(item),item])
-            choicearray.append(item)
-
-        for item in j.console.askChoiceMultiple(choicearray,"select packages to disable debug"):
-            item.removeDebugMode()
-    else:
-        print "SELECT which packages to enable debug for. First select domain, then select jpackages."
-        packages = cmdutils.getJPackage(args,installed=False,debug=False)
+    if args.injpackage:
+        print "SELECT which packages to enable debug for in jpackage. First select domain, then select jpackages."
+        packages = cmdutils.getJPackage(args)
+        
         for package in packages:
-            package.setDebugMode(dependencies=args.deps)
+            if not args.debug:
+                package.removeDebugModeInJpackage(dependencies=args.deps)
+            else:
+                package.setDebugModeInJpackage(dependencies=args.deps)
+    else:
+        if not args.debug:
+            #to disable debug
+            choicearray=[]
+            for item in j.packages.getDebugPackages():
+                # choicearray.append([str(item),item])
+                choicearray.append(item)
+
+            for item in j.console.askChoiceMultiple(choicearray,"select packages to disable debug"):
+                item.removeDebugMode()
+        else:
+            print "SELECT which packages to enable debug for. First select domain, then select jpackages."
+            packages = cmdutils.getJPackage(args,installed=False,debug=False)
+            for package in packages:
+                package.setDebugMode(dependencies=args.deps)
 
 elif args.action == 'download':
     packages = cmdutils.getJPackage(args)
@@ -217,12 +228,15 @@ elif args.action == 'list':
         domains=j.console.askChoiceMultiple(j.packages.getDomainNames(),"chose jpackages to list for")
     for domain in domains:
         packages=j.packages.find(domain=domain,name="*", installed=True)
-        form = '%(domain)-15s %(name)-20s %(version)8s %(buildnr)8s %(debug)5s'
-        print form % {'domain': 'DOMAIN', 'name': 'NAME', 'version': 'VERSION', 'debug': 'DEBUG', 'buildnr':'BUILDNR'}
-        print '=' * 60
+        form = '%(domain)-15s %(name)-20s %(version)8s %(buildnr)8s %(debug)5s %(debugInJpackage)5s'
+        print form % {'domain': 'DOMAIN', 'name': 'NAME', 'version': 'VERSION', 'debug': 'DEBUG', \
+            'buildnr':'BUILDNR','debugInJpackage':'DEBUG_JP'}
+        print '=' * 70
         print ''
         for package in packages:
+            debugINJP = 'yes' if package.getDebugModeInJpackage() else 'no'
             debug = 'yes' if package.debug else 'no'
-            print form % {'name': package.name, 'domain': package.domain, 'version': package.version, 'debug': debug, 'buildnr': package.buildNr}
+            print form % {'name': package.name, 'domain': package.domain, 'version': package.version, \
+            'debug': debug, 'buildnr': package.buildNr,'debugInJpackage':debugINJP}
 
 j.application.stop()

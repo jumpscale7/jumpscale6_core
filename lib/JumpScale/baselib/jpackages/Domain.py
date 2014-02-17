@@ -164,7 +164,7 @@ class Domain():
             raise RuntimeError('Meta data is comming from tar, cannot make connection to mercurial server ')
 
         self._bitbucketclient = j.clients.bitbucket.getBitbucketRepoClient(self.bitbucketaccount, self.bitbucketreponame)
-        self._mercurialclient = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+        self._mercurialclient = self.bitbucketclient.getMercurialClient(self.bitbucketreponame,branch="default")
 
     def hasModifiedMetadata(self):
         """
