@@ -41,7 +41,7 @@ class RecipeItem(object):
             base=j.application.config.applyOnContent(self.type)
             self.systemdest = j.system.fs.joinPaths(base, self.destination)
         
-        self.tags=j.core.tags.getObject(tags)
+        self.tags=tags
         
         # determine supported platforms 
         hostPlatform = j.system.platformtype.myplatform
@@ -163,8 +163,6 @@ class RecipeItem(object):
             if self.tags.labelExists("config"):
                 print "CONFIG:%s"%self
                 self.exportToSystem(force=force)
-            elif self.tags.labelExists("nodirs") and j.system.fs.isDir(source):
-                print "NODIR:%s"%self
             else:
                 print "link:%s to %s"%(source,destination)
                 if j.system.fs.isLink(destination):
@@ -261,6 +259,7 @@ class CodeManagementRecipe:
                 raise RuntimeError("error in coderecipe config file: %s on line:%s"%(self.configpath,line))
             splitted=[item.strip() for item in splitted]
             source,dest,platform,ttype,tags=splitted
+            tags=j.core.tags.getObject(tags)
             if source.find("*")<>-1:
                 source=source.replace("*","")
                 source2=self._getSource(source)
@@ -272,6 +271,8 @@ class CodeManagementRecipe:
                     idest = j.system.fs.joinPaths(dest, item)
                     item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags)
                     self.items.append(item)                                                
+                if tags.labelExists("nodirs"):
+                    continue
                 for item in j.system.fs.listDirsInDir(source2,recursive=False):
                     item=j.system.fs.getBaseName(item+"/")                    
                     idest = j.system.fs.joinPaths(dest, item)
