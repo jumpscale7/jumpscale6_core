@@ -1,6 +1,9 @@
 from JumpScale import j
 import signal
 
+
+DOMAIN = 'network'
+
 class DNSMasq(object):
 
     def __init__(self):
@@ -22,7 +25,7 @@ class DNSMasq(object):
             self._startupmanagername = 'dnsmasq_%s' % (namespace)
         else: 
             self._startupmanagername = 'dnsmasq'
-        startname = '%s__%s' % ('generic', self._startupmanagername)
+        startname = '%s__%s' % ('network', self._startupmanagername)
         if startname not in j.tools.startupmanager.listProcesses():
             self.addToStartupManager()
         self._configured = True
@@ -33,8 +36,8 @@ class DNSMasq(object):
             cmd = 'ip netns exec %(namespace)s dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'namespace':self._namespace,'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
         else:
             cmd = 'dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
-        j.tools.startupmanager.addProcess(self._startupmanagername, cmd, reload_signal=signal.SIGHUP, domain='network')
-        j.tools.startupmanager.startProcess('network', self._startupmanagername)
+        j.tools.startupmanager.addProcess(self._startupmanagername, cmd, reload_signal=signal.SIGHUP, domain=DOMAIN)
+        j.tools.startupmanager.startProcess(DOMAIN, self._startupmanagername)
 
     
     def _checkFile(self, filename):
@@ -71,10 +74,10 @@ class DNSMasq(object):
         if not self._configured:
             raise Exception('Please run first setConfigPath to select the correct paths')
         j.tools.startupmanager.load()
-        j.tools.startupmanager.restartProcess('generic', self._startupmanagername)
+        j.tools.startupmanager.restartProcess(DOMAIN, self._startupmanagername)
 
     def reload(self):
         if not self._configured:
             raise Exception("Please run first setConfigPath to select the correct paths")
         j.tools.startupmanager.load()
-        j.tools.startupmanager.reloadProcess('generic', self._startupmanagername)
+        j.tools.startupmanager.reloadProcess(DOMAIN, self._startupmanagername)
