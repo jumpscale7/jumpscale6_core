@@ -12,7 +12,7 @@ import JumpScale.baselib.blobstor2
 j.logger.consoleloglevel = 2
 
 
-j.servers.blobstor2.start
+j.servers.blobstor2.start()
 
 
 j.application.stop()
