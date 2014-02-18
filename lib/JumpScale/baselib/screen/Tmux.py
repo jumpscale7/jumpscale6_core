@@ -78,7 +78,7 @@ class Tmux:
         # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,")
         if user<>"root":
             cmd="cd %s;%s"%(cwd,cmd)
-            sudocmd="sudo -u %s -c '%s'"%(user,cmd)
+            sudocmd="su -c \"%s\" %s"%(cmd,user)
             cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,sudocmd)
         else:
             cmd2="tmux send-keys -t '%s' '%s;%s\n'" % (pane,"cd %s"%cwd,cmd)
