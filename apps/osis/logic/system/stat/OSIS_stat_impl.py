@@ -1,7 +1,6 @@
 from JumpScale import j
 from JumpScale.grid.osis.OSISStore import OSISStore
-import JumpScale.grid.grid
-import uuid
+import JumpScale.baselib.graphite
 
 ujson = j.db.serializers.getSerializerType('j')
 
@@ -14,10 +13,22 @@ class mainclass(OSISStore):
         self.indexTTL=3600*24*30 #30 days
 
     def set(self,key,value):
-        obj=self.getObject(value)
-        obj.getSetGuid()
-        self.index(obj)
-        return [obj.key,False,False]
+        out = ""
+        if isinstance(value, (tuple, list)):
+            for stat in value:
+                obj=self.getObject(stat)
+                obj.getSetGuid()
+                self.index(obj)
+                out += "%s %s\n" % (obj.key, obj.value)
+            key = None
+        else:
+            obj=self.getObject(value)
+            obj.getSetGuid()
+            self.index(obj)
+            out += "%s %s\n" % (obj.key, obj.value)
+            key = obj.key
+        j.clients.graphite.send(out)
+        return [key, False, False]
 
     def find(self,query, start=0, size =100):
         return self.elasticsearch.search(index='system_stat', query=query)

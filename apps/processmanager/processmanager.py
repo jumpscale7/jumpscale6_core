@@ -60,16 +60,6 @@ class MgrCmds():
         
         self.childrenPidsFound={} #children already found, to not double count
 
-        self.jumpscripts.loadJumpscripts()
-
-        # self.osis_node=j.core.osis.getClientForCategory(self.daemon.osis,"system","node")
-        # self.osis_nic=j.core.osis.getClientForCategory(self.daemon.osis,"system","nic")
-        # self.osis_vdisk=j.core.osis.getClientForCategory(self.daemon.osis,"system","vdisk")
-        # self.osis_disk=j.core.osis.getClientForCategory(self.daemon.osis,"system","disk")
-        # self.osis_machine=j.core.osis.getClientForCategory(self.daemon.osis,"system","machine")
-
-        
-
     def loadMonitorObjectTypes(self):
         j.processmanager.cache=Empty()
         for item in j.system.fs.listFilesInDir("monitoringobjects",filter="*.py"):
