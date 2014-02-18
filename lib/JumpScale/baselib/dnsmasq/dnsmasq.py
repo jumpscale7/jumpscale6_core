@@ -33,8 +33,8 @@ class DNSMasq(object):
             cmd = 'ip netns exec %(namespace)s dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'namespace':self._namespace,'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
         else:
             cmd = 'dnsmasq -k --conf-file=%(configfile)s --pid-file=%(pidfile)s --dhcp-hostsfile=%(hosts)s --dhcp-leasefile=%(leases)s' % {'configfile':self._configfile, 'pidfile': self._pidfile, 'hosts': self._hosts, 'leases': self._leasesfile}
-        j.tools.startupmanager.addProcess(self._startupmanagername, cmd, reload_signal=signal.SIGHUP)
-        j.tools.startupmanager.startProcess('generic', self._startupmanagername)
+        j.tools.startupmanager.addProcess(self._startupmanagername, cmd, reload_signal=signal.SIGHUP, domain='network')
+        j.tools.startupmanager.startProcess('network', self._startupmanagername)
 
     
     def _checkFile(self, filename):
