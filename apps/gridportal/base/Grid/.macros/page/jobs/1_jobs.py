@@ -28,7 +28,7 @@ def main(j, args, params, tags, tasklet):
             result = ujson.loads(result)
         except:
             pass
-        return result
+        return str(result)
 
     fieldnames = ['Id', 'Category', 'Command', 'Result', 'State']
     fieldvalues = [linkstr, 'category', 'cmd', makeResult, 'state']
