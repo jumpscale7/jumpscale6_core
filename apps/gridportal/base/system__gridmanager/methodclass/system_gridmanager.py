@@ -181,21 +181,7 @@ class system_gridmanager(j.code.classGetBase()):
         ctx = kwargs['ctx']
         ctx.start_response('200', (('content-type', 'image/png'),))
         statKey=statKey.strip()
-        if statKey[0]=="n":
-            #node info
-            nid=int(statKey.split(".")[0].replace("n",""))
-        elif statKey[0] == 'i':
-            statKeyInfo = statKey.split(".")
-            nid = int(statKeyInfo.pop(1).replace("n",""))
-            statKey = '.'.join(statKeyInfo)
-        else:
-            raise RuntimeError("Could not parse statKey, only node stats supported for now (means starting with n)")
-        try: 
-            self.getClient(nid, 'core') # load ip in ipmap
-        except:
-            return self._showUnavailable(width, height, message='PROCESSMANAGER UNAVAILABLE')
 
-        ip=self.clientsIp[nid]
         for target in statKey.split(','):
 
             if target in aliases:
@@ -219,7 +205,7 @@ class system_gridmanager(j.code.classGetBase()):
             query.append((key, value))
 
         querystr = urllib.urlencode(query)
-        url="http://%s:8081/render?%s"%(ip, querystr)
+        url="http://127.0.0.1:8081/render?%s"%(querystr)
         r = requests.get(url)
         try:
             result = r.send()
