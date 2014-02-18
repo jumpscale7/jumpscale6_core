@@ -141,6 +141,7 @@ class Confluence2HTML():
             (r'\\([^\n\r\\])',  escape_char),
             ('<',           '&lt;'),
             ('>',           '&gt;'),
+            (r'\@LF\b',     '<br>'), # This should come after <>
             (limiter('*'),  limiter_replacement('strong')),
             (limiter('_'),  limiter_replacement('em')),
             (limiter('+'),  limiter_replacement('ins')),
@@ -256,7 +257,7 @@ class Confluence2HTML():
                 params = ""
 
             # PAGEBREAK
-            if state == "start" and (line.find("@LF") == 0 or line.find("&nbsp;") != -1):  # or line=="":
+            if state == "start" and (line.find("&nbsp;") != -1):  # or line=="":
                 page.addNewLine()
                 continue
 
