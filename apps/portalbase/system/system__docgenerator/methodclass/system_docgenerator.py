@@ -7,16 +7,16 @@ class system_docgenerator(j.code.classGetBase()):
         self._te = {}
         self.actorname = "docgenerator"
         self.appname = "system"
-        self.host = j.core.portal.runningPortal.dns
+
 
     def getDocForActor(self, actorname, **args):
         apppart, actorpart = actorname.split('__')
-        j.core.portal.runningPortal.actorsloader.getActor(apppart, actorpart)
+        j.core.portal.active.actorsloader.getActor(apppart, actorpart)
         actorjson = {'swaggerVersion': '1.1', 'basePath': '/',
                      'resourcePath': '/%s' % actorname, 'apis': []}
-        routes = j.core.portal.runningPortal.webserver.routes
+        routes = j.core.portal.active.routes
         for path, route in routes.iteritems():
-            (app, actor, method) = path.split('_')
+            (ttype,app, actor, method) = path.split('_')
             if actor == actorname.split('__')[1]:
                 methodjson = {'path': '/restmachine/%s/%s/%s' % (app, actor, method), 'description': route[4], 'operations': []}
                 operationjson = {'httpMethod': 'GET', 'summary': route[4], 'notes': route[4], 'nickname': method.replace('.', '_')}
@@ -36,7 +36,7 @@ class system_docgenerator(j.code.classGetBase()):
         if 'actors' in args and args['actors']:
             actors = args['actors'].split(',')
         else:
-            actors = j.core.portal.runningPortal.webserver.getActors()
+            actors = j.core.portal.active.getActors()
 
         for actor in sorted(actors):
             catalog['apis'].append({'path': '%s' % actor})

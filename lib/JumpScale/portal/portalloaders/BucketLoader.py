@@ -8,7 +8,7 @@ class Bucket(LoaderBaseObject):
         LoaderBaseObject.__init__(self, "bucket")
 
     def createDefaults(self, path):
-        return self._createDefaults(path, ["users.cfg"])
+        return self._createDefaults(path)
 
     def loadFromDisk(self, path, reset=False):
         self._loadFromDisk(path, reset=False)

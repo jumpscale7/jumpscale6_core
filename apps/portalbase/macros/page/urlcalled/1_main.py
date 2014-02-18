@@ -5,7 +5,7 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     e = args.requestContext.env
 
-    addr = j.core.portal.runningPortal.ipaddr
+    addr = j.core.portal.active.ipaddr
 
     querystr = e["QUERY_STRING"]
     querystr = querystr.replace("&format=text", "")
@@ -13,7 +13,7 @@ def main(j, args, params, tags, tasklet):
     querystr = querystr.replace("&authkey=", "")
     querystr = querystr.replace("authkey=,", "")
     querystr = querystr.replace("authkey=", "")
-    querystr += "authkey=%s" % j.apps.system.usermanager.extensions.usermanager.getUserFromCTX(args.requestContext).secret
+    querystr += "authkey=???" #@todo fill in use authenticator
 
     if "machine" in args:
         url = "http://" + addr +\

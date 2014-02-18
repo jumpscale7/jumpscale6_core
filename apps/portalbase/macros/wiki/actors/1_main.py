@@ -12,13 +12,13 @@ def main(j, args, params, tags, tasklet):
     if table:
         rows = []
 
-        for item in sorted(j.core.portal.runningPortal.webserver.getActors()):
+        for item in sorted(j.core.portal.active.getActors()):
             app, actor = item.split("__")
             out += "|[%s|/rest/%s/%s]|\n" % (item, app.lower().strip("/"), actor.lower().strip("/"))
 
     else:
 
-        for item in sorted(j.core.portal.runningPortal.webserver.getActors()):
+        for item in sorted(j.core.portal.active.getActors()):
             if item[0] != "_" and item.strip() != "":
                 app, actor = item.split("__")
                 if bullets:

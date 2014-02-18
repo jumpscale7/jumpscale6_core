@@ -1,5 +1,0 @@
-
-h2. group
-
-{{form_usermanager_group}}
-

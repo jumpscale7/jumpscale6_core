@@ -15,7 +15,7 @@ class CodeGeneratorActorRemote(CodeGeneratorBase):
         if wsclient != None:
             self.ip = wsclient.ip
             self.port = wsclient.port
-            self.secret = ""
+            self.secret = wsclient.secret
         else:
             self.ip, self.port, self.secret = j.core.appserver6.gridmap.get(spec.appname, spec.actorname, instance)
 
@@ -82,7 +82,7 @@ else:
     def generate(self):
         self.addClass()
 
-        s = "self._appserverclient=j.core.portal._appserverclients[\"%s_%s\"]" % (self.ip, self.port)
+        s = "self._appserverclient=j.core.portal._portalClients[\"%s_%s_%s\"]" % (self.ip, self.port, self.secret)
         self.initprops += j.code.indent(s, 2)
 
         for method in self.spec.methods:

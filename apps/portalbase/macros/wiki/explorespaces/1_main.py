@@ -1,4 +1,5 @@
 import os
+import urllib
 
 
 def main(j, args, params, tags, tasklet):
@@ -6,15 +7,15 @@ def main(j, args, params, tags, tasklet):
 
     out = ""
 
-    spaces = j.core.portal.runningPortal.webserver.spacesloader.spaces
+    spaces = j.core.portal.active.spacesloader.spaces
 
     for spacename in sorted(spaces.keys()):
         model = spaces[spacename].model  # @todo security breach
+        path = os.path.abspath(model.path)
+        querystr = urllib.urlencode({'ppath': path})
 
-        path = os.path.join(j.core.portal.runningPortal.cfgdir.rpartition('/')[0], 'wiki', model.id) 
-
-        out += "| [%s | /system/Explorer/?ppath=%s] | [Reload | /system/ReloadSpace/?name=%s]|\n" % \
-            (model.id, path, model.id)
+        out += "| [%s | /system/Explorer?%s] | [Reload | /system/ReloadSpace?name=%s]|\n" % \
+            (model.id, querystr, model.id)
 
     params.result = (out, params.doc)
 

@@ -1,16 +1,17 @@
 
-{{title:QWiki}}
+{{title:Help}}
 
-{{projectname:Documentation}}
+{{projectname:Help}}
 
 {{find}}
 
 {{menu:
-System:/System
+#System:/System
 }}
 
-{{menuadmin}}
-
+{{menuloggedin:
+Home:/System
+}}
 
 @block
 @row
@@ -25,5 +26,14 @@ System:/System
 
 @divend
 @divend
+
+
+{{cssstyle
+td {
+    max-width:500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;}
+}}
 
 

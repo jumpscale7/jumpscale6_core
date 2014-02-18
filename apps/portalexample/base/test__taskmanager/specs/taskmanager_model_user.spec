@@ -1,7 +1,7 @@
 
 [actor]
 	"""
-	is actor to manipulate pymodel user
+	is actor to manipulate JSModel user
 	"""
 	method:model_user_delete
 		"""
@@ -29,11 +29,11 @@
         A new object will be created and a new id & guid generated
         """
         @tasklettemplate:modelnew
-        result:object    #the pymodel object
+        result:object    #the JSModel object
 
 	method:model_user_set
 		"""
-		Saves model user instance starting from an existing pymodel object (data is serialized as json dict if required e.g. over rest)
+		Saves model user instance starting from an existing JSModel object (data is serialized as json dict if required e.g. over rest)
 		"""
         @tasklettemplate:modelupdate
         var:data str,"",data is object to save

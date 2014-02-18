@@ -8,8 +8,8 @@ def main(j, args, params, tags, tasklet):
     out = ""
     cmdstr = params.macrostr.split(":", 1)[1].replace("}}", "").strip()
     md5 = j.base.byteprocessor.hashMd5(cmdstr)
-    j.system.fs.createDir(j.system.fs.joinPaths(j.core.portal.runningPortal.webserver.filesroot, "dot"))
-    path = j.system.fs.joinPaths(j.core.portal.runningPortal.webserver.filesroot, "dot", md5)
+    j.system.fs.createDir(j.system.fs.joinPaths(j.core.portal.active.filesroot, "dot"))
+    path = j.system.fs.joinPaths(j.core.portal.active.filesroot, "dot", md5)
     if not j.system.fs.exists(path + ".png"):
         j.system.fs.writeFile(path + ".dot", cmdstr)
         cmd = "dot -Tpng %s.dot -o %s.png" % (path, path)
@@ -30,7 +30,7 @@ def main(j, args, params, tags, tasklet):
 
             return params
 
-    out = "!/root/dot/%s.png!" % md5
+    out = "!/files/dot/%s.png!" % md5
 
     params.result = (out, doc)
 

@@ -5,11 +5,9 @@ from CodeGeneratorBase import CodeGeneratorBase
 
 class CodeGeneratorModel(CodeGeneratorBase):
 
-    def __init__(self, spec, typecheck=True, dieInGenCode=True, codepath="", writeForm=True):
-        self.codepath = codepath
-        self._writeForm = writeForm
+    def __init__(self, spec, typecheck=True, dieInGenCode=True):
         CodeGeneratorBase.__init__(self, spec, typecheck, dieInGenCode)
-        self.type = "pymodel"
+        self.type = "JSModel"
 
     def getPropertyCode(self, name, type, indent=1):
         value = ""
@@ -46,7 +44,7 @@ if not isinstance(value, %(type)s) and value is not None:
                 type = "enumerator:%s or int" % type
                 value = "int(value)"
             elif specfound.type == "model":
-                pre = "classs=j.core.codegenerator.getClassPymodel(\"%s\",\"%s\",\"%s\")\n" % (specfound.appname, specfound.actorname, specfound.name)
+                pre = "classs=j.core.codegenerator.getClassJSModel(\"%s\",\"%s\",\"%s\")\n" % (specfound.appname, specfound.actorname, specfound.name)
                 s = "isinstance(value, classs)"
                 init = pre
                 init += "self._P_%s=classs()" % name
@@ -92,7 +90,7 @@ if not isinstance(value, %(type)s) and value is not None:
         s = ""
 
         if spec not in ["int", "bool", "float", "str", "list", "dict"]:
-            classstr = "j.core.codegenerator.getClassPymodel(\"%s\",\"%s\",\"%s\")()" % (spec.appname, spec.actorname, spec.name)
+            classstr = "j.core.codegenerator.getClassJSModel(\"%s\",\"%s\",\"%s\")()" % (spec.appname, spec.actorname, spec.name)
         else:
             if spec == "int":
                 classstr = "0"
@@ -127,89 +125,6 @@ return self._P_{name}[-1]\n
 
         self.content += "\n%s" % j.code.indent(s, 2)
 
-    def getModelFormMacroContent(self):
-
-        C = """
-def main(j,args,params,tags,tasklet):
-    
-    page=args.page
-
-    mod=j.html.getPageModifierBootstrapForm(page)
-
-    appname="{appname}"
-    actorname="{actor}"
-    modelname="{modelname}"
-
-    if not args.paramsExtra.has_key("guid"):
-        raise RuntimeError("ERROR: guid was not known when requesting this page, needs to be an arg")
-    guid=args.paramsExtra["guid"]
-
-    actor=j.apps.{appname}.{actor}
-    model=actor.models.{modelname}.get(guid=guid)
-
-    form=mod.getForm("{modelname}",actor)
-
-{formbuild}
-
-    params.result=mod.addForm(form)    
-
-    return params
-
-
-def match(j,args,params,tags,tasklet):
-    return True
-
-"""
-        C = C.replace("{modelname}", self.spec.name)
-        C = C.replace("{appname}", self.spec.appname)
-        C = C.replace("{actor}", self.spec.actorname)
-
-        modelspec = j.core.specparser.getModelSpec(self.spec.appname, self.spec.actorname, self.spec.name)
-
-        C2 = ""
-
-        for prop in modelspec.properties:
-            if prop.name != "guid":
-                C3 = """    form.addTextInput("$name",reference=form.getReference(model,"$name"),default="$default",help="")\n"""
-                C3 = C3.replace("$name", prop.name)
-                if prop.default == None:
-                    default = ""
-                else:
-                    default = str(prop.default)
-                C3 = C3.replace("$default", default)
-                C2 += C3
-
-        C = C.replace("{formbuild}", C2)
-
-        return C
-
-    def writeForm(self):  # @todo will have to be moved to other generator because now this generator cannot be used client side
-
-        ppath = j.system.fs.joinPaths(self.codepath, "space_%s__%s" % (self.spec.appname, self.spec.actorname))
-
-        ppath3 = j.system.fs.joinPaths(ppath, "form_%s" % (self.spec.name))
-        if not j.system.fs.exists(ppath3):
-            j.system.fs.createDir(ppath3)
-
-            C = """
-h2. {modelname}
-
-{{form_{actor}_{modelname}}}
-
-"""
-            C = C.replace("{modelname}", self.spec.name)
-            C = C.replace("{actor}", self.spec.actorname)
-
-            ppath2 = j.system.fs.joinPaths(ppath3, "form_%s.wiki" % (self.spec.name))
-            j.system.fs.writeFile(ppath2, C)
-
-        # create macro
-        ppath3 = j.system.fs.joinPaths(ppath, ".macros", "page", "form_%s_%s" % (self.spec.actorname, self.spec.name))
-        if True or not j.system.fs.exists(ppath3):  # @todo despiegk loader
-            j.system.fs.createDir(ppath3)
-
-            ppath2 = j.system.fs.joinPaths(ppath3, "5_form_%s_%s.py" % (self.spec.actorname, self.spec.name))
-            j.system.fs.writeFile(ppath2, self.getModelFormMacroContent())
 
     def addInitExtras(self):
         # following code will be loaded at runtime
@@ -223,9 +138,9 @@ h2. {modelname}
 
     def generate(self):
         if self.spec.rootobject:
-            self.addClass(baseclass="j.code.classGetPyRootModelBase()")
+            self.addClass(baseclass="j.code.classGetJSRootModelBase()")
         else:
-            self.addClass(baseclass="j.code.classGetPyModelBase()")
+            self.addClass(baseclass="j.code.classGetJSModelBase()")
 
         for prop in self.spec.properties:
             self.addProperty(propertyname=prop.name, type=prop.type, default=prop.default, description=prop.description)
@@ -248,7 +163,5 @@ h2. {modelname}
                         self.addNewObjectMethod(prop.name, rtype, spec)
 
         self.addInitExtras()
-        if self._writeForm:
-            self.writeForm()
 
         return self.getContent()

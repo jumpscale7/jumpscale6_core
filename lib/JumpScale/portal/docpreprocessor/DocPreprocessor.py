@@ -77,7 +77,7 @@ class Doc(object):
 
     def getPageKey(self):
         key = j.base.byteprocessor.hashMd5("%s_%s" % (self.pagename, self.getSpaceName()))
-        j.core.portal.runningPortal.webserver.pageKey2doc[key] = self
+        j.core.portal.active.pageKey2doc[key] = self
         return key
 
     def checkVisible(self, visibility):
@@ -110,7 +110,6 @@ class Doc(object):
             self.usedefault = True
         elif "@nodefault" in self.content:
             self.usedefault = False
-
         templates_def = re.findall(r'^@template\s+(.*?)\n', self.content)
         if templates_def:
             template_name = templates_def[0]
@@ -167,6 +166,7 @@ class Doc(object):
         """
         if self.source == "":
             self.loadFromDisk()
+       
         # print "preprocess %s" % self.name
         self._convertToInternalFormat()
         self.findParams()
@@ -182,7 +182,7 @@ class Doc(object):
             self.loadFromDisk()
             self.preprocess()
         content, doc = self.executeMacrosDynamicWiki(paramsExtra, ctx)
-        ws = j.core.portal.runningPortal.webserver
+        ws = j.core.portal.active
         content, page = ws.confluence2htmlconvertor.convert(content, doc=self, page=ws.getpage())
         return page.body
 
@@ -216,9 +216,9 @@ class Doc(object):
             for param in self.params:
                 if param in params:
                     if content == None:
-                        content = self.content.replace("$$%s" % param, str(params[param]))                            
+                        content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), self.content)
                     else:
-                        content = content.replace("$$%s" % param, str(params[param]))
+                        content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), content)
         return content
 
     def executeMacrosPreprocess(self):
@@ -240,7 +240,6 @@ class Doc(object):
 
         if "space" not in paramsExtra:
             paramsExtra["space"] = self.getSpaceName()
-
 
         return self.preprocessor.macroexecutorWiki.execMacrosOnContent(content=self.content, doc=self, paramsExtra=paramsExtra, ctx=ctx)
 
@@ -272,10 +271,10 @@ class Doc(object):
                 continue
             linenr += 1
             if line.strip() == "":
-                if lastLineWasEmpty:
-                    continue
+                # if lastLineWasEmpty:
+                #     continue
                 out += "\n"
-                lastLineWasEmpty = True
+                # lastLineWasEmpty = True
                 continue
             if lastLineWasHeading and lastLineWasEmpty == False:
                 out += "\n"
@@ -324,9 +323,10 @@ class DocPreprocessor():
 
         """
         self.varsPath = varsPath
-        self.macroexecutorPreprocessor = j.core.portal.runningPortal.webserver.macroexecutorPreprocessor
-        self.macroexecutorPage = j.core.portal.runningPortal.webserver.macroexecutorPage
-        self.macroexecutorWiki = j.core.portal.runningPortal.webserver.macroexecutorWiki
+
+        self.macroexecutorPreprocessor = j.core.portal.active.macroexecutorPreprocessor
+        self.macroexecutorPage = j.core.portal.active.macroexecutorPage
+        self.macroexecutorWiki = j.core.portal.active.macroexecutorWiki
 
         if spacename == "":
             raise RuntimeError("spacename cannot be empty")
@@ -468,7 +468,7 @@ class DocPreprocessor():
         return result
 
     def scan(self, path):
-        print "SCAN space:%s" % path
+        print "DOCPREPROCESSOR SCAN space:%s" % path
         self.space_path = path
 
         spaceconfigdir = j.system.fs.getDirName(path + "/" + ".space" + "/")

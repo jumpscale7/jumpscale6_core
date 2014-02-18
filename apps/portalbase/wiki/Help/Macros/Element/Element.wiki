@@ -1,5 +1,0 @@
-h1. Element Macros
-
-Element macros are macros which can add various elements to your page, such as contact forms, graphics, table of contents, and so on.
-
-{{children}}

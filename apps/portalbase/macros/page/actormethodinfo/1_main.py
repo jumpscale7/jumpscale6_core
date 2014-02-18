@@ -17,7 +17,7 @@ def main(j, args, params, tags, tasklet):
     else:
         method = ""
 
-    page2 = j.core.portal.runningPortal.webserver.getServiceInfo(appname=appname, actorname=actorname, methodname=method)
+    page2 = j.core.portalloader.actorsinfo.getActorsInfoPage(appname=appname, actorname=actorname, methodname=method)
 
     page.addBootstrap()
     page.addMessage(page2.body)

@@ -57,7 +57,8 @@ class connector():
 		'mkfile': '__mkfile',
 		'rename': '__rename',
 		'upload': '__upload',
-		'download': '__download',
+		'download': '__open',
+		'file': '__open',
 		'paste': '__paste',
 		'rm': '__rm',
 		'duplicate': '__duplicate',
@@ -113,7 +114,7 @@ class connector():
 	_yesterday = 0
 
 	# public variables
-	httpAllowedParameters = ('cmd', 'target', 'targets[]', 'current', 'tree', 'name',
+	httpAllowedParameters = ('cmd', 'download', 'target', 'targets[]', 'current', 'tree', 'name',
 		'content', 'src', 'dst', 'cut', 'init', 'type', 'width', 'height', 'upload[]')
 	# return variables
 	httpStatusCode = 0
@@ -276,7 +277,11 @@ class connector():
 			self.httpHeader['Content-Transfer-Encoding'] = 'binary'
 			self.httpHeader['Content-Length'] = str(os.lstat(curFile).st_size)
 			self.httpHeader['Connection'] = 'close'
-			self._response['file'] = open(curFile, 'r')
+			if 'download' in self._request:
+				self.httpHeader['Content-type'] = 'application/octet-stream'
+				self._response['content'] = open(curFile, 'r').read()
+			else:
+				self._response['file'] = open(curFile, 'r')
 			return
 		# try dir
 		else:

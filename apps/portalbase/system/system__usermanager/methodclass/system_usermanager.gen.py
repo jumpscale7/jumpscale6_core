@@ -105,16 +105,6 @@ class system_usermanager(j.code.classGetBase()):
         raise NotImplementedError ("not implemented method userexistsFromId")
     
 
-    def userget(self, name, **kwargs):
-        """
-        get userinformation of a user
-        param:name name
-        result list
-        """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method userget")
-    
-
     def userregister(self, name, passwd, emails, config, reference="''", remarks="''", **kwargs):
         """
         param:name name of user

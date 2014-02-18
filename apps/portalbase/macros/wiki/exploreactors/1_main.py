@@ -6,7 +6,7 @@ def main(j, args, params, tags, tasklet):
 
     out = ""
 
-    actors = j.core.portal.runningPortal.actorsloader.actors
+    actors = j.core.portal.active.actorsloader.actors
 
     for ttype in ["specs", "methodtasklets", "extensions", "wikimacros"]:
 

@@ -12,6 +12,8 @@ class system_usermanager(j.code.classGetBase()):
         self._te = {}
         self.actorname = "usermanager"
         self.appname = "system"
+        self.cache = {} #cache for users
+        self.cacheg = {} #cache for 
 
     def authenticate(self, name, secret, **args):
         """
@@ -21,8 +23,8 @@ class system_usermanager(j.code.classGetBase()):
         result str 
         
         """
-        usermanager = j.apps.system.usermanager
-        user = usermanager.extensions.usermanager.userGet(name, usecache=False)
+        raise NotImplementedError("not implemented method authenticate")
+        user = self._userGet(name, usecache=False)
 
         if user == None:
             return False
@@ -40,8 +42,9 @@ class system_usermanager(j.code.classGetBase()):
         result list(str) 
         
         """
+        raise NotImplementedError("not implemented method getusergroups")
         usermanager = j.apps.system.usermanager
-        user = usermanager.extensions.usermanager.userGet(user)
+        user = self._userGet(user)
 
         if user == None:
             # did not find user
@@ -109,17 +112,6 @@ class system_usermanager(j.code.classGetBase()):
         result = j.apps.system.usermanager.extensions.usermanager.usercreate(name=name, passwd=passwd, groups=groups, emails=emails, userid=userid)
         return result
 
-    def userget(self, name, **args):
-        """
-        """
-        usermanager = j.apps.system.usermanager
-        user = usermanager.extensions.usermanager.userGet(name, usecache=False)
-        if user == None:
-            return {}
-        else:
-            return {'username': user.id, "emails": user.emails}
-
-
     def userexists(self, name, **args):
         """
         param:name name
@@ -127,7 +119,7 @@ class system_usermanager(j.code.classGetBase()):
         
         """
         usermanager = j.apps.system.usermanager
-        user = usermanager.extensions.usermanager.userGet(name)
+        user = self._userGet(name)
         if user == None:
             return False
         else:
