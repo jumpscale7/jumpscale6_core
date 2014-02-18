@@ -510,7 +510,7 @@ class PortalServer:
 
         headers.append(('Content-Type', contenttype))
         headers.append(("Content-length", str(size)))
-        headers.append(("Cache-Control", 'public,max-aget=3600'))
+        headers.append(("Cache-Control", 'public,max-age=3600'))
 
         start_response(status, headers)
 
