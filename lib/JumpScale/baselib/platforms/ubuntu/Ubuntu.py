@@ -182,25 +182,18 @@ stop on runlevel [016]
 
     def startService(self, servicename):
         j.logger.log("start service on ubuntu for:%s"%servicename,category="ubuntu.start")  #@todo P1 add log statements for all other methods of this class
-        # self._service(servicename, 'start')
-        return j.system.process.execute("start %s" % servicename)
+        if not self.statusService(servicename):
+            return j.system.process.execute("start %s" % servicename)
 
     def stopService(self, servicename):
-        # self._service(servicename, 'stop')
         return j.system.process.execute("stop %s" % servicename,False)
 
-    # def _service(self, servicename, action):
-    #     return j.system.process.execute("service %s %s" % (servicename, action))
-
-
-#     def serviceDisableStartAtBoot(self, servicename):
-#         self.check()
-#         j.system.process.execute("update-rc.d -f %s remove" % servicename)
-
-#     def serviceEnableStartAtBoot(self, servicename):
-#         self.check()
-#         j.system.process.execute("update-rc.d -f %s defaults" % servicename)
-
+    def statusService(self, servicename):
+        exitcode, output = j.system.process.execute("status %s" % servicename,False)
+        parts = output.split(' ')
+        if len(parts) >=2 and parts[1].startswith('start'):
+            return True
+        return False
 
     def updatePackageMetadata(self, force=True):
         self.check()
