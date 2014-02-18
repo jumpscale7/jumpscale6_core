@@ -19,28 +19,28 @@ for i in range(1024*1024*4):
 hash=j.tools.hash.md5_string(blob)
 namespace="test"
 
-client.deleteNamespace("test")
+# client.deleteNamespace("test")
 
 print "start"
 
-client.set(hash,namespace,blob,repoId="repo1") 
-client.set(hash,namespace,blob,repoId="repo2")
+client.set(namespace,hash,blob,repoId="repo1")
+client.set(namespace,hash,blob,repoId="repo2")
 
-blob2=client.get(hash,namespace)
+blob2=client.get(namespace,hash)
 
 assert blob2==blob
 
-md=client.getMD(hash,namespace)
+md=client.getMD(namespace,hash)
 print md
 
-blob2=client.delete(hash,namespace,repoId="repo1")
+blob2=client.delete(namespace,hash,repoId="repo1")
 
-md=client.getMD(hash,namespace)
+md=client.getMD(namespace,hash)
 print md
 
-assert client.exists(hash,namespace,repoId="repo2")==True
-assert client.exists(hash,namespace,repoId="repo1")==False
-assert client.exists(hash,namespace)==True
+assert client.exists(namespace,hash,repoId="repo2")==True
+assert client.exists(namespace,hash,repoId="repo1")==False
+assert client.exists(namespace,hash)==True
 
 blob2=client.delete(hash,namespace,repoId="repo2")
 assert client.exists(hash,namespace)==False
