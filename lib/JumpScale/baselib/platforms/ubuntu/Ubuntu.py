@@ -163,13 +163,15 @@ class Ubuntu:
         self._cache.commit()
         self._cache.clear()
 
-    def serviceInstall(self,servicename, daemonpath, args='', respawn=True):
+    def serviceInstall(self,servicename, daemonpath, args='', respawn=True, pwd=None):
         C="""
 start on runlevel [2345]
 stop on runlevel [016]
 """
         if respawn:
             C += "respawn\n"
+        if pwd:
+            C += "chdir %s\n" % pwd
         C+="exec %s %s\n"%(daemonpath,args)
 
         j.system.fs.writeFile("/etc/init/%s.conf"%servicename,C)
