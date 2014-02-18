@@ -20,6 +20,11 @@ j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
 
+
+masterip=j.application.config.get("grid.master.ip")
+if masterip in j.system.net.getIpAddresses():
+    j.tools.startupmanager.startAll()
+
 j.core.grid.init()
 
 class Empty():
