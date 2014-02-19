@@ -395,6 +395,11 @@ class StartupManager:
             raise ProcessNotFoundException("Could not find process with domain:%s and name:%s" % (domain, name))
         return processes
 
+    def exists(self,domain=None,name=None):
+        if len(self.getProcessDefs(domain,name))>0:
+            return True
+        return False
+
     def getDomains(self):
         result=[]
         for pd in self.processdefs.itervalues():

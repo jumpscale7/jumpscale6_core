@@ -135,10 +135,13 @@ iface $int inet static
        netmask $mask
        network $net            
 """
+        else:
+            C=C.replace("static","manual")
+            
         if bridgedev<>None:
-            C+="""
-bridge_ports $bridgedev
-"""
+            C+="       bridge_ports $bridgedev"
+        else:
+            C+="       bridge_ports none"
 
         if gw<>None:
             C+="       gateway %s"%gw
