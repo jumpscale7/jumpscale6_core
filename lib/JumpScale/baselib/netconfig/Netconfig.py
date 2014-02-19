@@ -65,7 +65,7 @@ iface eth0 inet dhcp
         else:
             C="""
 auto $int
-iface eth0 inet static
+iface eth0 inet manual
 """
 
         C=C.replace("$int",dev)
@@ -118,7 +118,7 @@ iface $int inet static
         args["ipaddr"]=ipaddr
         self._applyNetconfig(dev,C,args,start=start)
 
-    def enableInterfaceBridgeStatic(self,dev,ipaddr,bridgedev,gw=None,start=False):
+    def enableInterfaceBridgeStatic(self,dev,ipaddr=None,bridgedev=None,gw=None,start=False):
         """
         ipaddr in form of 192.168.10.2/24 (can be list)
         gateway in form of 192.168.10.254
@@ -126,13 +126,20 @@ iface $int inet static
         C="""
 auto $int        
 iface $int inet static
-       bridge_ports $bridgedev
        bridge_fd 0
        bridge_maxwait 0
+"""
+        if ipaddr<>None:
+            C+="""
        address $ip
        netmask $mask
-       network $net
+       network $net            
 """
+        if bridgedev<>None:
+            C+="""
+bridge_ports $bridgedev
+"""
+
         if gw<>None:
             C+="       gateway %s"%gw
 
@@ -146,7 +153,8 @@ iface $int inet static
         args={}
         args["dev"]=dev
         args["ipaddr"]=ipaddr
-        args["bridgedev"]=bridgedev        
+        if bridgedev<>None:
+            args["bridgedev"]=bridgedev        
         self._applyNetconfig(dev,C,args,start=start)        
 
     def enableInterfaceBridgeDhcp(self,dev,bridgedev,start=False):
@@ -188,10 +196,11 @@ iface $int:$aliasnr inet static
         dev=args["dev"]
         if args.has_key("ipaddr"):
             ipaddr=args["ipaddr"]
-            ip = netaddr.IPNetwork(ipaddr)
-            C=C.replace("$ip",str(ip.ip))
-            C=C.replace("$mask",str(ip.netmask))
-            C=C.replace("$net",str(ip.network))
+            if ipaddr<>None:
+                ip = netaddr.IPNetwork(ipaddr)
+                C=C.replace("$ip",str(ip.ip))
+                C=C.replace("$mask",str(ip.netmask))
+                C=C.replace("$net",str(ip.network))
 
         C=C.replace("$int",dev)
         
