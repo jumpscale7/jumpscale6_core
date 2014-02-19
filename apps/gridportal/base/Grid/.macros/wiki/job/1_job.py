@@ -2,6 +2,7 @@ import datetime
 import json
 
 def main(j, args, params, tags, tasklet):    
+    import urllib
 
     id = args.getTag('id')
     if not id:
@@ -24,7 +25,7 @@ def main(j, args, params, tags, tasklet):
 
         obj['nid'] = obj.get('nid', 0)
         obj['roles'] = ', '.join(obj['roles'])
-        obj['args'] = json.dumps(obj['args'])
+        obj['args'] = urllib.quote(json.dumps(obj['args']))
 
         if obj["state"] == "ERROR":
             obj['state'] = "FAILED"

@@ -181,8 +181,8 @@
         var:parent str,,find jobs which are children of specified parent @tags: optional
         var:roles str,,match on comma separated list of roles (subsets also ok e.g. kvm.  would match all roles starting with kvm.) @tags: optional
         var:state str,,OK;ERROR;... @tags: optional
-        var:jsorganization str,, @tags: optional
-        var:jsname str,, @tags: optional
+        var:organization str,, @tags: optional
+        var:name str,, @tags: optional
         var:description str,, any description when asked for the job @tags: optional
         var:category str,,category in dot notation
         var:source str,, who asked for the job is free text @tags: optional
@@ -260,20 +260,20 @@
         result:list(list)
 
 
-    method:getJumpscripts
+    method:getJumpScripts
         """
         calls internally the agentcontroller
         return: lists the jumpscripts with main fields (organization, name, category, descr)
         """
-        var:jsorganization str,,find jumpscripts @tags: optional
+        var:organization str,,find jumpscripts @tags: optional
         var:active bool,,is session active or not @tags: optional
         
-    method:getJumpscript
+    method:getJumpScript
         """
         calls internally the agentcontroller to fetch detail for 1 jumpscript
         """
-        var:jsorganization str,,
-        var:jsname str,,
+        var:organization str,,
+        var:name str,,
 
     method:getAgentControllerSessions
         """

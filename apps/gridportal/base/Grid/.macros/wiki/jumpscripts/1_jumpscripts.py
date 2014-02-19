@@ -3,7 +3,6 @@ def main(j, args, params, tags, tasklet):
 
     params.merge(args)
     doc = params.doc
-    tags = params.tags
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
@@ -17,15 +16,16 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||organization||name||category||description||')
 
-    for jscript in actor.getJumpscripts():
+    for jscript in actor.getJumpScripts():
         line = [""]
 
-        for i in range(0, len(fields)):
+        for field in fields:
             # add links
-            if i == 1:
-                line.append('[%s|/grid/jumpscript?jsorganization=%s&jsname=%s]' % (jscript[1], jscript[0], jscript[1]))
+            value = jscript[field]
+            if field == 'name':
+                line.append('[%s|/grid/jumpscript?organization=%s&name=%s]' % (value, jscript['organization'], value))
             else:
-                text = jscript[i].replace('\n', '')
+                text = str(value).replace('\n', '')
                 line.append(str(text))
 
         line.append("")

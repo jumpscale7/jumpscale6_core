@@ -11,8 +11,8 @@ version = "1.0"
 category = "monitoring.machine"
 period = 20 #always in sec
 order = 1
-enable=False
-async=True
+enable=True
+async=False
 
 roles = ["grid.node.vmachine"]
 
@@ -31,6 +31,7 @@ try:
                 libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
 
 except Exception, e:
+    eanble = False
     con = None
 
 def action():
@@ -44,14 +45,18 @@ def action():
         machine.db.name = domain.name()
         machine.db.nid = j.application.whoAmI.nid
         machine.db.gid = j.application.whoAmI.gid
-        machine.db.mem = domain.memoryStats()['actual']
         machine.db.type = 'KVM'
         xml = ElementTree.fromstring(domain.XMLDesc())
         netaddr = dict()
         for interface in xml.findall('devices/interface'):
             mac = interface.find('mac').attrib['address']
-            name = interface.find('alias').attrib['name']
+            alias = interface.find('alias')
+            name = None
+            if alias is not None:
+                name = alias.attrib['name']
             netaddr[mac] = [ name, None ]
+
+        machine.db.mem = int(xml.find('memory').text)
 
         machine.db.netaddr = netaddr
         machine.db.lastcheck = machine.lastcheck
@@ -66,12 +71,12 @@ def action():
             if disk.attrib['device'] != 'disk':
                 continue
             path = disk.find('source').attrib['dev']
-            vdisk = j.processmanager.vdiskobject.get(id=path)
+            vdisk = j.processmanager.cache.vdiskobject.get(id=path)
             vdisk.ckeyOld = vdisk.db.getContentKey()
             vdisk.db.path = path
             vdisk.db.type = disk.find('driver').attrib['type']
             vdisk.db.devicename = disk.find('target').attrib['dev']
-            vdisk.db.machine_id = machine.db.id
+            vdisk.db.machineid = machine.db.id
             vdisk.db.active = j.system.fs.exists(path)
             if vdisk.db.active:
                 diskinfo = j.system.platform.qemu_img.info(path)

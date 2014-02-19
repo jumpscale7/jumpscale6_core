@@ -16,8 +16,6 @@ class VDisk(OsisBaseObject):
             self.guid = None
             self.gid = 0
             self.nid = 0
-            self.disk_id = 0 #diskid
-            self.machine_id=0 #machine which is running on top of disk
             self.path = ""
             self.size = 0 #KB
             self.free = 0 #KB
@@ -26,7 +24,7 @@ class VDisk(OsisBaseObject):
             self.active = True
             self.description=""
             self.role=""  #BOOT,DATA,...
-            self.machineid=""  #who is using it
+            self.machineid=0  #who is using it
             self.order=0
             self.type="" #QCOW2,FS
             self.backup=False

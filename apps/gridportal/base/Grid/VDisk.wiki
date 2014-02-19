@@ -3,18 +3,13 @@
 
 h2. VDisk
 
-|*VDisk ID*|$$id|
-|*Name*|$$name|
-|*Other ID*|$$otherid|
-|*Type*|$$type|
-|*Description*|$$description|
-|*Roles*|$$roles|
-|*Menory*|$$mem|
-|*Net Address*|$$netaddr|
-|*IP Address*|$$ipaddr|
+|*ID*|$$id|
 |*Node*|[$$nid|node?id=$$nid]|
-|*Last Checked*|$$lastcheck|
-|*State*|$$state|
 |*Grid ID*|[$$gid|grid?id=$$gid]|
+|*Name*|$$devicename|
+|*Path*|$$path|
+|*Type*|$$type|
+|*Free Size*|$$free|
+|*Full Size*|$$size|
+|*Last Checked*|$$lastcheck|
 |*Active*|$$active|
-|*CPU Core*|$$cpucore|

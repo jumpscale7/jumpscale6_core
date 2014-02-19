@@ -7,24 +7,20 @@ h2. Job $$id
 * *Grid ID*: $$gid
 * *Node ID*: $$nid
 * *Roles*: $$roles
-* *Jumpscript*: [$$category:$$cmd|jumpscript?category=$$category&cmd=$$cmd]
-* *Description*: $$description
+* *Jumpscript*: [$$category:$$cmd|jumpscript?organization=$$category&name=$$cmd]
 * *Start*: $$timestart (*Timeout*: $$timeout)
-* *Lock*: $$lock (*Duration*: $$lockduration)
+* *Queue*: $$queue
 * *State*: $$state
 * {{tableforarg title:Args data:$$args }}
 
 h3. Result
 {{$$includemacro}}
+
+h4. Logs
 {{Grid.logs: jid:$$id astext}}
 
 h3. Additional Info
-|*Lock Duration*|$$lockduration|
-|*Children*|$$children|
 |*Job Completed*|$$timestop|
 |*Category*|$$category|
-|*Source*|$$source|
-|*Children Active*|$$childrenactive|
 |*Parent*|$$parent|
-|*Session ID*|$$sessionid|
 |*Result Code*|$$result|

@@ -1,5 +1,5 @@
-import time
 from JumpScale import j
+import time
 
 class MonObjectBaseFactory():
     def __init__(self,host,classs):
@@ -57,7 +57,8 @@ class MonObjectBase(object):
         self.ckeyOld=""
 
     def send2osis(self):
-        return self.cache.osis.set(self.db)
+        guid, new, update = self.cache.osis.set(self.db)
+        self.db = self.cache.osis.get(guid)
 
     def getGuid(self):
         return self.db.getSetGuid()

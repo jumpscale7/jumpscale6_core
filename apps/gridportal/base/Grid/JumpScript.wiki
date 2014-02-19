@@ -1,8 +1,8 @@
 @usedefaults
 
 h5. JumpScript Details
-{{jumpscript: jsorganization:$$jsorganization jsname:$$jsname}}
+{{jumpscript: organization:$$organization name:$$name}}
 
 <br><br>
 h5. Jobs that have executed this JumpScript
-{{jobs: jsorganization:$$jsorganization jsname:$$jsname}}
+{{jobs: organization:$$organization name:$$name}}

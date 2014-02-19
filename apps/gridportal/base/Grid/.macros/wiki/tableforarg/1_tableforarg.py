@@ -7,7 +7,6 @@ def main(j, args, params, tags, tasklet):
     title = args.getTag('title')
 
     out = "*%s*\n" % title
-
     if data:
         objargs = json.loads(data)
         for key,value in objargs.iteritems():
