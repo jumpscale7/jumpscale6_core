@@ -16,15 +16,9 @@ async=False
 
 roles = ["grid.node.disk"]
 
-if not hasattr(j, 'processmanager'):
-    enable = False
-else:
-    j.processmanager.disks = dict()
-
 def action():
 
     psutil=j.system.platform.psutil
-    results={}
 
     def aggregate(cacheobj,disk_key,key,value,avg=True,ttype="N",percent=False):
         aggrkey="n%s.disk.%s.%s"%(j.application.whoAmI.nid,disk_key,key)
