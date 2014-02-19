@@ -3,6 +3,6 @@
 h5. JumpScript Details
 {{jumpscript: organization:$$organization name:$$name}}
 
-<br><br>
+
 h5. Jobs that have executed this JumpScript
 {{jobs: organization:$$organization name:$$name}}

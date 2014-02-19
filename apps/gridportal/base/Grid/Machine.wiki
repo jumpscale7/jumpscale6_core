@@ -18,6 +18,6 @@ h2. Machine
 |*CPU Core*|$$cpucore|
 |*Type*|$$type|
 
-<br>
+
 h3. Virtual Disks
 {{vdisks: machineid:$$id}}

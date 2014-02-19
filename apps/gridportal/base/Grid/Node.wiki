@@ -23,18 +23,18 @@ h3. Statistics
 h3. NICs
 {{nics: nid:$$id}}
 
-<br>
+
 h3. Jobs
 {{jobs: nid:$$id}}
 
-<br>
+
 h3. Processes
 {{processes nid:$$id}}
 
-<br>
+
 h3. Logs
 {{logs: nid:$$id}}
 
-<br>
+
 h3. Disks
 {{disks: nid:$$id}}

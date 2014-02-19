@@ -21,7 +21,8 @@ def main(j, args, params, tags, tasklet):
 
     nidstr = '[%(nid)s|/grid/node?id=%(nid)s]'
     fieldvalues = [pidFormat, nidstr, 'sname', 'jpname', 'jpdomain', makeTime, 'active']
-    modifier.addTableForModel('system', 'process', fieldids, fieldnames, fieldvalues, filters)
+    tableid = modifier.addTableForModel('system', 'process', fieldids, fieldnames, fieldvalues, filters)
+    modifier.addSearchOptions('#%s' % tableid)
     params.result = page
     return params
 
