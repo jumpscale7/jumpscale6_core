@@ -23,7 +23,7 @@ class Lxc():
         return rootpath
 
 
-    def resetNetworkConfigHostSystemDhcpSimple(self,nameserver=None,pubinterface="eth0"):
+    def resetNetworkConfigHostSystemDhcpSimple(self):
         """
         works on host 
         will remove all network config (DANGEROUS)
@@ -31,25 +31,35 @@ class Lxc():
         will create bridge linked to pub interface with specified privnet
         gw will be applied
         """
-        if not nameserver:
-            nameserver=j.application.config.get("lxc.nameserver")
 
-        mgmtnet = netaddr.IPNetwork(j.application.config.get("lxc.management.iprange"))
-        mgmtbridge=j.application.config.get("lxc.bridge.management")
-
-        j.system.netconfig.reset(shutdown=True)        
+        #generic settings 
+        j.system.netconfig.reset(shutdown=True)  
+        nameserver=j.application.config.get("lxc.nameserver")      
         j.system.netconfig.setNameserver(nameserver)
-        j.system.netconfig.enableInterface(pubinterface,start=False,dhcp=False)
-        j.system.netconfig.enableInterfaceBridgeDhcp(mgmtbridge,bridgedev=pubinterface,start=True)
 
+        #start main interface, do not attach ip to it
+        pubinterface=j.application.config.get("lxc.defaults.pubinterface")
+        j.system.netconfig.enableInterface(pubinterface,start=False,dhcp=False) #dont start, bridge will get ip
+
+        #create bride attached to pub ip addr, DHCP will be enabled here otherwise machine cannot go to internet
+        pubBridgeName=j.application.config.get("lxc.bridge.public.name")
+        pubBridgeGW=j.application.config.get("lxc.bridge.public.gw")
+        j.system.netconfig.enableInterfaceBridgeDhcp(pubBridgeName,bridgedev=pubinterface,start=True)
+
+
+        #create mgmt bridge not connected, used to be able to access machines
+        mgmtipRange=j.application.config.get("lxc.management.iprange")
         #look for first ip addr of network
-        ip=netaddr.IPNetwork(mgmtnet)
-
+        ip=netaddr.IPNetwork(mgmtipRange)
         mgmtnetIpAddr=str(netaddr.ip.IPAddress(ip.first+1))
+        mgmtnetWithIpAddr="%s/%s"%(mgmtnetIpAddr,ip.prefixlen)
+        j.system.netconfig.enableInterfaceBridgeStatic(dev="mgmt",ipaddr=mgmtnetWithIpAddr,bridgedev=None,gw=None,start=True)
 
-        mgmtnet="%s/%s"%(mgmtnetIpAddr,ip.prefixlen)
 
-        j.system.netconfig.addIpToInterface(mgmtbridge,mgmtnet,aliasnr=1,start=True)    
+        #create mgmt bridge not connected, used to be able to access machines
+        j.system.netconfig.enableInterfaceBridgeStatic(dev="dmz0",ipaddr=None,bridgedev=None,gw=None,start=True)
+
+
 
     def list(self):
         """
@@ -136,7 +146,7 @@ ipaddr=
             print "TOTAL: mem:%-8s cpu:%-8s" % (mem, cpu)
         return result
 
-    def create(self,name="",stdout=True,base="base",start=False,nameserver=None):
+    def create(self,name="",stdout=True,base="saucy-amd64-base",start=False,nameserver=None):
         """
         @param name if "" then will be an incremental nr
         """
@@ -178,9 +188,8 @@ ipaddr=
             ipaddrs[name]=ipaddr
             j.application.config.setDict("lxc.management.ipaddr",ipaddrs)
 
-        mgmtbridge=j.application.config.get("lxc.bridge.management")
         # mgmtiprange=j.application.config.get("lxc.management.iprange")
-        self.networkSetPrivateOnBridge( name,netname="mgmt0", bridge=mgmtbridge, ipaddresses=["%s/24"%ipaddr]) #@todo make sure other ranges also supported
+        self.networkSetPrivateOnBridge( name,netname="mgmt0", bridge="mgmt", ipaddresses=["%s/24"%ipaddr]) #@todo make sure other ranges also supported
 
         #set ipaddr in hrd file
         hrd.set("ipaddr",ipaddr)
