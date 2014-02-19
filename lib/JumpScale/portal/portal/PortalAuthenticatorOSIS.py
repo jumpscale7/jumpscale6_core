@@ -58,6 +58,7 @@ class PortalAuthenticatorOSIS():
             try:
                 userinfo = self.getUserInfo(user).__dict__
                 self.users[user] = userinfo
+                self.usersLastCheck[user] = time.time()
                 return userinfo['groups']
             except:
                 pass
@@ -81,7 +82,7 @@ class PortalAuthenticatorOSIS():
             self.usersLastCheck[login]=time.time()
             self.key2user[result["authkey"]]=login
         else:
-            if self.usersLastCheck[login]<time.time()-300:
+            if self.usersLastCheck.get(login, 0) < time.time()-300:
                 #5 min since last check   
                 self.users.pop(login)
                 return self.authenticate(login,passwd)
