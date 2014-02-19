@@ -193,7 +193,7 @@ class DaemonClient(object):
             # print "*** error in client to zdaemon ***"
             if eco.errormessage.find("Authentication error")<>-1:
                 eco.errormessage="Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user)
-            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=die)
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
 
         returnformat = parts[1]
         if returnformat <> "":

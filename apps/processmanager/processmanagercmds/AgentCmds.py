@@ -44,40 +44,33 @@ class AgentCmds():
         """
         fetch work from agentcontroller & put on redis queue
         """
-        self.client.register()
-
         while True:
 
-            ok=False
-            while ok==False:
+            while True:
                 try:
                     # print "check if work"
                     job=self.client.getWork()
-                    ok=True
-                except Exception,e:
-                    # self.register()
+                    if not job or 'queue' not in job:
+                        continue
+                    break
+                except Exception:
                     continue
 
-            if not job:
-                print 'no work here'
+            # jscriptid = "%s_%s" % (job["category"], job["cmd"])
+            qname=job["queue"]
+            if not qname or qname.strip()=="":
+                qname="default"
 
-            if job and ok:
-                # jscriptid = "%s_%s" % (job["category"], job["cmd"])
+            if not self.queue.has_key(qname):
+                raise RuntimeError("Could not find queue to execute job:%s ((ops:processmanager.agent.schedulework L:1))"%job)
 
-                qname=job["queue"]
-                if not qname or qname.strip()=="":
-                    qname="default"
+            queue=self.queue[qname]
 
-                if not self.queue.has_key(qname):
-                    raise RuntimeError("Could not find queue to execute job:%s ((ops:processmanager.agent.schedulework L:1))"%job)
-
-                queue=self.queue[qname]
-
-                # result = queue.enqueue_call('%s_%s.action'%(job["category"],job["cmd"]),kwargs=job["args"],\
-                #     timeout=int(job["timeout"]))
-                self.redis.hset("workerjobs",job["id"], ujson.dumps(job))
-                queue.put(job["id"])
-                #need to do something here to make sure they are both in redis #@todo P1
+            # result = queue.enqueue_call('%s_%s.action'%(job["category"],job["cmd"]),kwargs=job["args"],\
+            #     timeout=int(job["timeout"]))
+            self.redis.hset("workerjobs",job["id"], ujson.dumps(job))
+            queue.put(job["id"])
+            #need to do something here to make sure they are both in redis #@todo P1
 
     def _killGreenLets(self,session=None):
         """

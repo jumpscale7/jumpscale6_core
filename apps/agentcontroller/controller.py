@@ -107,14 +107,11 @@ class ControllerCMDS():
 
 
     def register(self,session):
-        print "new agent:"
         roles=session.roles
         agentid="%s_%s"%(session.gid,session.nid)
         for role in roles:
             self._setRole2Agent(role, agentid)
-        
         self.sessionsUpdateTime[agentid]=j.base.time.getTimeEpoch()
-        print "register done:%s"%agentid
 
     # def _markSessionFree(self,session):
     #     self.agent2freeSessions[session.agentid][session.id]=Event()
@@ -283,6 +280,7 @@ class ControllerCMDS():
         """
         is for agent to ask for work
         """
+        self.register(session)
         jobid = self._getCmdQueue(session).get(timeout=30)
         if not jobid:
             return
