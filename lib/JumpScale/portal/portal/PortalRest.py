@@ -111,7 +111,7 @@ class PortalRest():
                     page = self.ws.returnDoc(ctx, start_response, "system",
                                           "restvalidationerror", extraParams=params)
                     return (False, ctx, [str(page)])
-                else:                    
+                else:
                     return (False, ctx, self.ws.raiseError(ctx, msg))
             else:
                 return (True, ctx, routekey)
@@ -119,11 +119,14 @@ class PortalRest():
             msg = "Could not find method, path was %s" % (path)
             appname = paths[0]
             actor = paths[1]
+            contentType, data = self.ws.reformatOutput(ctx, msg, restreturn=not human)
+            ctx.start_response("404 Not Found", [('Content-Type', contentType)])
             if human:
                 page = self.getServicesInfo(appname, actor)
                 return (False, ctx, self.ws.raiseError(ctx=ctx, msg=msg,msginfo=str(page)))
             else:
-                return (False, ctx, self.ws.raiseError(ctx=ctx, msg=msg,msginfo=""))
+                contentType, data = self.ws.reformatOutput(ctx, msg, restreturn=False)
+                return (False, ctx, data)
 
     def execute_rest_call(self, ctx, routekey, ext=False):
         routes = self.ws.routes
@@ -161,7 +164,10 @@ class PortalRest():
                                           extraParams=params)
                     return [str(page)]
                 else:
-                    return self.ws.raiseError(ctx, msg)
+                    httpcode = "404 Not Found"
+                    contentType, data = self.ws.reformatOutput(ctx, msg, restreturn=True)
+                    ctx.start_response(httpcode, [('Content-Type', contentType)])
+                    return data
             paths = params['paths']
 
             success, ctx, routekey = self.restRouter(env, start_response, path,
@@ -297,7 +303,10 @@ class PortalRest():
     def activateActor(self, appname, actor):
         if not "%s_%s" % (appname, actor) in self.ws.actors.keys():
             # need to activate
-            result = self.ws.actorsloader.getActor(appname, actor)
+            try:
+                result = self.ws.actorsloader.getActor(appname, actor)
+            except:
+                return False
             if result == None:
                 # there was no actor
                 return False
