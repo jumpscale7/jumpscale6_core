@@ -18,35 +18,57 @@ import JumpScale.lib.diskmanager
 import JumpScale.baselib.stataggregator
 import JumpScale.grid.agentcontroller
 import JumpScale.baselib.redis
-
+import JumpScale.baselib.redisworker
 
 class Worker(object):
 
     def __init__(self, redisaddr, redisport, queuename):
-        self.client = j.clients.agentcontroller.get()
+        
         self.actions={}
+        self.redisport=redisport
+        self.redisaddr=redisaddr
+        self.queuename=queuename
+        self.init()
 
-        self.redis = j.clients.redis.getGeventRedisClient(redisaddr, redisport)
+    def init(self):
+
+        def checkagentcontroller():
+            masterip=j.application.config.get("grid.master.ip")            
+            success=False
+            try:
+                self.acclient=j.clients.agentcontroller.get(masterip)
+                success=True
+            except Exception,e:
+                msg="Cannot connect to agentcontroller on %s."%(masterip)
+                j.events.opserror(msg, category='worker.startup', e=e)
+                self.acclient=None
+
+        def checkredis():
+            success=False
+            while success==False:
+                try:
+                    self.redis = j.clients.redis.getGeventRedisClient(self.redisaddr, self.redisport)
+                    success=True
+                except Exception,e:
+                    msg="Cannot connect to redis on %s:%s, will retry in 5 sec."%(self.redisaddr,self.redisport)
+                    j.events.opserror(msg, category='worker.startup', e=e)
+                    time.sleep(5)
+
+        checkredis()
+        checkagentcontroller()
 
         #@todo check if queue exists if not raise error
-        self.queue=j.clients.redis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % queuename)
+        self.queue=j.clients.redis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
 
     def run(self):
         print "STARTED"
+        w=j.clients.redisworker
         while True:
             # jobid=self.queue.get()
             # data=self.redis.hget("workerjobs",jobid)
             try:
                 # print "check if work", comes from redis
-                jobid=self.queue.get()
-                if jobid:
-                    data=self.redis.hget("workerjobs",jobid)
-                    if data:
-                        job=ujson.loads(data)
-                    else:
-                        raise RuntimeError("cannot find job with id:%s"%jobid)
-                else:
-                    job=None
+                job=getWork(self,qname,timeout=0)
             except Exception,e:
                 j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
                 time.sleep(1)
@@ -64,6 +86,7 @@ class Worker(object):
                     action,jscript=self.actions[jscriptid]
                 else:
                     # print "CACHEMISS"
+                    jscript=w.getJumpscriptFromId(jscriptid)
                     jscript=ujson.loads(self.redis.hget("jumpscripts:%s"%(organization),name))
                     try:
                         self.log("Load script:%s %s"%(jscript["organization"],jscript["name"]))
@@ -105,7 +128,7 @@ class Worker(object):
         try:
             eco = eco.copy()
             eco.pop('tb', None)
-            result=self.client.notifyWorkCompleted(jid, result=result,eco=eco)
+            result=self.acclient.notifyWorkCompleted(jid, result=result,eco=eco)
 
         except Exception,e:
             eco = j.errorconditionhandler.lastEco

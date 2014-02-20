@@ -20,10 +20,61 @@ j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
 
+def checkosis():
+    masterip=j.application.config.get("grid.master.ip")
+    osis = j.core.osis.getClient(masterip, user='root')
+
+def checkagentcontroller():
+    masterip=j.application.config.get("grid.master.ip")
+    client=j.clients.agentcontroller.get(masterip)
+    return client
+    
+import JumpScale.grid.agentcontroller
 
 masterip=j.application.config.get("grid.master.ip")
 if masterip in j.system.net.getIpAddresses():
-    j.tools.startupmanager.startAll()
+
+    if not j.tools.startupmanager.exists("jumpscale","osis"):
+        raise RuntimeError("Could not find osis installed on local system, please install.")
+
+    if not j.tools.startupmanager.exists("jumpscale","agentcontroller"):
+        raise RuntimeError("Could not find osis installed on local system, please install.")
+        
+    j.tools.startupmanager.startProcess("jumpscale","osis")
+    j.tools.startupmanager.startProcess("jumpscale","agentcontroller")
+
+success=False
+while success==False:
+    try:
+        checkosis()
+        cl=checkagentcontroller()
+        success=True
+    except Exception,e:
+        msg="Cannot connect to osis or agentcontroller on %s, will retry in 5 sec."%(masterip)
+        j.events.opserror(msg, category='processmanager.startup', e=e)
+        time.sleep(5)
+    
+
+
+#delete previous scripts
+todel=["eventhandling","loghandling","monitoringobjects","processmanagercmds"]
+for delitem in todel:
+    j.system.fs.removeDirTree(delitem)
+
+#import new code
+#download all monitoring & cmd scripts
+
+import tarfile
+scripttgz=cl.getProcessmanagerScripts()
+ppath="/tmp/processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000)
+j.system.fs.writeFile(ppath,scripttgz)
+tar = tarfile.open(ppath, "r:bz2")
+for tarinfo in tar:
+    if tarinfo.isfile():
+        if tarinfo.name.find("processmanager/")==0:
+            dest=tarinfo.name.replace("processmanager/","")
+            tar.extract(tarinfo.name, path=dest)
+
 
 j.core.grid.init()
 
@@ -127,6 +178,11 @@ daemon.addCMDsInterface(MgrCmds, category="core")  # pass as class not as object
 
 cmds=daemon.daemon.cmdsInterfaces["core"][1]
 
+
+class DummyDaemon():
+    def _adminAuth(self,user,passwd):
+        raise RuntimeError("permission denied")           
+
 for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
     name=j.system.fs.getBaseName(item).replace(".py","")
     if name[0]<>"_":
@@ -134,6 +190,8 @@ for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
         classs=eval("%s"%name)
         tmp=classs(cmds)
         daemon.addCMDsInterface(classs, category=tmp._name)
+
+
 
 
 cmds.daemon.schedule=daemon.schedule

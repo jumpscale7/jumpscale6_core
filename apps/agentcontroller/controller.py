@@ -15,7 +15,7 @@ j.logger.consoleloglevel = 2
 import JumpScale.baselib.redis
 
 REDISSERVER = '127.0.0.1'
-REDISPORT = 7768
+REDISPORT = 7769
 
 class ControllerCMDS():
 
@@ -383,6 +383,21 @@ class ControllerCMDS():
         for log in logs:
             j.logger.logTargetLogForwarder.log(log)
             
+    def getProcessmanagerScripts(self, session=None):
+        """
+        create tar.gz of cmds & monitoring objects & return as binary info
+        """
+        import tarfile
+        ppath="/tmp/processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000)
+        tar = tarfile.open(ppath, "w:bz2")
+        for path in j.system.fs.listFilesInDir("processmanager",True):
+            if j.system.fs.getFileExtension(path)<>"pyc":
+                tar.add(path)
+        tar.close()
+        data=j.system.fs.fileGetContents(ppath)
+        j.system.fs.remove(ppath)
+        return data
+
     def listSessions(self,session=None):
         #result=[]
         #for sessionid, session in self.sessions.iteritems():
@@ -448,6 +463,20 @@ class ControllerCMDS():
 daemon = j.servers.geventws.getServer(port=4444)
 
 daemon.addCMDsInterface(ControllerCMDS, category="agent")  # pass as class not as object !!! chose category if only 1 then can leave ""
+
+print "load processmanager cmds"
+# j.system.fs.changeDir("processmanager")
+import sys
+sys.path.append(j.system.fs.joinPaths(j.system.fs.getcwd(),"processmanager"))
+for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filter="*.py"):
+    name=j.system.fs.getBaseName(item).replace(".py","")
+    if name[0]<>"_":
+        exec ("from processmanagercmds.%s import *"%(name))
+        classs=eval("%s"%name)
+        tmp=classs()
+        daemon.addCMDsInterface(classs, category="processmanager_%s"%tmp._name,proxy=True)
+
+# j.system.fs.changeDir("..")
 
 cmds=daemon.daemon.cmdsInterfaces["agent"][0]
 cmds.loadJumpscripts()

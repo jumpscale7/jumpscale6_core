@@ -133,7 +133,7 @@ class DaemonClient(object):
         self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__, ssl=ssl, returnformat="")
         print "registered session"
 
-    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, \
+    def sendMsgOverCMDChannel(self, cmd, data,sendformat=None, returnformat=None, retry=0, maxretry=1, \
         category=None,die=True,transporttimeout=5):
         """
         cmd is command on server (is asci text)
@@ -172,7 +172,7 @@ class DaemonClient(object):
                 print "session lost"
                 self.initSession()
                 retry += 1
-                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat, returnformat, retry, maxretry, category,transporttimeout=transporttimeout)
+                return self.sendMsgOverCMDChannel(cmd, rawdata, agentid,sendformat, returnformat, retry, maxretry, category,transporttimeout=transporttimeout)
             else:
                 msg = "Authentication error on server.\n"
                 raise AuthenticationError(msg)
@@ -247,8 +247,10 @@ class Klass(object):
                 for cnt, default in enumerate(spec['args'][3][::-1]):
                     cnt += 1
                     params_spec[-cnt] += "=%r" % default
+            args.append("_agentid=_agentid")
             params = ', '.join(params_spec)
             params += ",transporttimeout=5"
+            params += ",_agentid=0"
             strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
             strmethod=strmethod.replace(", ,",",")
             try:
@@ -257,15 +259,18 @@ class Klass(object):
                 raise RuntimeError("could not exec the client method, error:%s, code was:%s"%(e,strmethod))
             klass = Klass(self, category)
             setattr(client, key, klass.method)
+            # print strmethod
         return client
 
-    def sendcmd(self, cmd, sendformat=None, returnformat=None, category=None,transporttimeout=5, **args):
+    def sendcmd(self, cmd, sendformat=None, returnformat=None, category=None,transporttimeout=5,**args):
         """
         formatstring is right order of formats e.g. mc means messagepack & then compress
         formats see: j.db.serializers.get(?
 
         return is the deserialized data object
         """
+        if not args.has_key("_agentid"):
+            args["_agentid"]=0
         return self.sendMsgOverCMDChannel(cmd, args, sendformat, returnformat, category=category,transporttimeout=transporttimeout)
 
     def perftest(self):

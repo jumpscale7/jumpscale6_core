@@ -17,11 +17,17 @@ j.logger.consoleloglevel = 5
 
 client=j.clients.agentcontroller
 
+# ac=client.get("127.0.0.1")
+
+jpclient=client.getClientProxy(category="jpackages",agentControllerIP="127.0.0.1")
+
+print jpclient.listJPackages(_agentid=1)
+
 #job=client.execute("opencode","wait","node",msg="test:%s"%0,timeout=5,wait=True,lock="")
-jp= client.execute('jumpscale', 'error', 'node', timeout=10)
+# jp= client.execute('jumpscale', 'error', 'node', timeout=10)
 #jp= client.execute('jumpscale', 'jpackage_info', role="master", domain="jumpscale", pname="osis", version="1.0",timeout=10)
 
-print jp
+# print jp
 
 j.application.stop()
 
