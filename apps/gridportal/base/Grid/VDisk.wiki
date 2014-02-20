@@ -7,9 +7,11 @@ h2. VDisk
 |*Node*|[$$nid|node?id=$$nid]|
 |*Grid ID*|[$$gid|grid?id=$$gid]|
 |*Name*|$$devicename|
-|*Path*|$$path|
-|*Type*|$$type|
-|*Free Size*|$$free|
-|*Full Size*|$$size|
-|*Last Checked*|$$lastcheck|
 |*Active*|$$active|
+|*Path*|$$path|
+|*Backing Path*|$$backingpath|
+|*File Size*|$$sizeondisk|
+|*Full Size*|$$size|
+|*Free Size*|$$free|
+|*Last Checked*|$$lastcheck|
+|*Type*|$$type|

@@ -17,6 +17,7 @@ class VDisk(OsisBaseObject):
             self.gid = 0
             self.nid = 0
             self.path = ""
+            self.backingpath = ""
             self.size = 0 #KB
             self.free = 0 #KB
             self.sizeondisk = 0 #size on physical disk after e.g. compression ... KB

@@ -11,7 +11,7 @@ def main(j, args, params, tags, tasklet):
     oscl = j.core.osis.getClient(user='root')
     ecocl = j.core.osis.getClientForCategory(oscl, 'system', 'eco')
     try:
-        obj = ecocl.get(id)
+        obj = ecocl.get(id).__dict__
     except:
         out = 'Could not find Error Condition Object with id %s'  % id
         params.result = (out, args.doc)

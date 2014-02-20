@@ -82,6 +82,7 @@ def action():
                 diskinfo = j.system.platform.qemu_img.info(path)
                 vdisk.db.size = diskinfo['virtual size']
                 vdisk.db.sizeondisk = diskinfo['disk size']
+                vdisk.db.backingpath = diskinfo.get('backing file', '')
 
 
 

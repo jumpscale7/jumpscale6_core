@@ -1,5 +1,6 @@
 import json
 
+
 def main(j, args, params, tags, tasklet):
     params.merge(args)
     doc = params.doc
@@ -10,7 +11,7 @@ def main(j, args, params, tags, tasklet):
     if data:
         objargs = json.loads(data)
         for key,value in objargs.iteritems():
-            out += "|%s|%s|\n"%(str(key),str(value))
+            out += "|%s|%s|\n"%(str(key),j.html.escape(str(value)))
     else:
         out = ''
     params.result = (out, doc)

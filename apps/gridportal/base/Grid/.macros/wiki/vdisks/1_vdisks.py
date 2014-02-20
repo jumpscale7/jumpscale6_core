@@ -37,7 +37,10 @@ def main(j, args, params, tags, tasklet):
             elif field == 'free':
                 diskfree = vdisk[field]
                 disksize = vdisk['sizeondisk']
-                diskusage = 100 - int(100.0 * diskfree / disksize)
+                if disksize:
+                    diskusage = 100 - int(100.0 * diskfree / disksize)
+                else:
+                    diskusage = 0
                 line.append('%s%%' % diskusage)
             else:
                 line.append(str(vdisk[field]))
