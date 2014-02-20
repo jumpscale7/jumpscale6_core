@@ -4,7 +4,7 @@ import gevent
 
 import JumpScale.grid.zdaemon
 
-j.application.start("jumpscale:blobserver2_child")
+j.application.start("jumpscale:blobserver2_parent")
 j.application.initGrid()
 
 import JumpScale.baselib.blobstor2
@@ -12,7 +12,7 @@ import JumpScale.baselib.blobstor2
 j.logger.consoleloglevel = 2
 
 
-j.servers.blobstor2.start(port=2345)
+j.servers.blobstor2.start(port=2346)
 
 
 j.application.stop()
