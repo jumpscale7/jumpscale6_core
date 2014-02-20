@@ -2,6 +2,7 @@ import sys
 import traceback
 import string
 import inspect
+import imp
 
 from JumpScale import j
 
@@ -83,12 +84,11 @@ class ErrorConditionHandler():
         if j.application.config.get('system.debug', checkExists=True, defaultval='0') == '1':
             msg=str(eco)
 
-        print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg
-        print 
+        print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n\n"% msg
         if die:
             self.halt()
 
-    def raiseRuntimeErrorWithEco(self,eco,tostdout=False):
+    def raiseRuntimeErrorWithEco(self, eco, message="", category="", tostdout=False):
         if eco.tags<>"":
             message+="((tags:%s))\n"%eco.tags
         if category<>"":
@@ -214,6 +214,15 @@ class ErrorConditionHandler():
         
 
         errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
+        try:
+            import ujson
+            errorobject.exceptioninfo = ujson.dumps(pythonExceptionObject)
+        except ImportError:
+            import json
+            errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
+        errorobject.exceptionclassname = pythonExceptionObject.__class__.__name__
+        module = inspect.getmodule(pythonExceptionObject)
+        errorobject.exceptionmodule = module.__name__ if module else None
         
         # errorobject.tb=tb
 
@@ -238,6 +247,18 @@ class ErrorConditionHandler():
             pass
                         
         return errorobject        
+
+    def reRaiseECO(self, eco):
+        import json
+        if eco.exceptionmodule:
+            mod = imp.load_package(eco.exceptionmodule, eco.exceptionmodule)
+        else:
+            import __builtin__ as mod
+        Klass = getattr(mod, eco.exceptionclassname, RuntimeError)
+        exc = Klass(eco.errormessage)
+        for key, value in json.loads(eco.exceptioninfo).iteritems():
+            setattr(exc, key, value)
+        raise exc
     
     def parsepythonExceptionObject(self,*args,**kwargs):
         raise RuntimeError("Do not use .parsepythonExceptionObject method use .parsePythonErrorObject")
@@ -403,29 +424,15 @@ class ErrorConditionHandler():
             extra={}
             tb=errorConditionObject.tb
 
-            if errorConditionObject.__dict__.has_key("frames"):
-                frames=errorConditionObject.frames
-            else:
-                frames=[]
             if errorConditionObject.backtrace<>"":
                 extra["tb"]=errorConditionObject.backtrace
 
             if errorConditionObject.backtraceDetailed<>"":
                 extra["tb_detail"]=errorConditionObject.backtraceDetailed
 
-            
             extra["category"]=errorConditionObject.category
             
             self.sendMessageToSentry(modulename=modulename,message=errorConditionObject.errormessage,ttype="error",tags=None,extra=extra,level="error",tb=tb)
-            # client=self.getSentryClient()            
-            # print client.capture('raven.events.Message', message=errorConditionObject.errormessage,extra={
-            #     'gid': j.application.whoAmI.gid,
-            #     'nid': j.application.whoAmI.nid,
-            #     'appname':j.application.appname,
-            #     'tb':errorConditionObject.backtrace,
-            #     'category':errorConditionObject.category,
-            #     'appname':errorConditionObject.appname
-            #     })
             
         return errorConditionObject
 
