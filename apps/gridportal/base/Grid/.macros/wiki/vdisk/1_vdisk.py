@@ -1,6 +1,7 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
+    import JumpScale.baselib.units
 
     id = args.getTag('id')
     if not id:
@@ -22,8 +23,10 @@ def main(j, args, params, tags, tasklet):
             else:
                 obj[attr] = 'N/A'
         for attr in ['size', 'free', 'sizeondisk']:
-            size, unit = j.tools.units.bytes.converToBestUnit(attr[attr], 'K')
-            obj[attr] = "%s %siB" % (size, unit)
+            size, unit = j.tools.units.bytes.converToBestUnit(obj[attr], 'K')
+            if unit:
+                unit += "i"
+            obj[attr] = "%s %sB" % (size, unit)
         return obj
 
     push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc

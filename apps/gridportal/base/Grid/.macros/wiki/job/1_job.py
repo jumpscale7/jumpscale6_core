@@ -31,10 +31,16 @@ def main(j, args, params, tags, tasklet):
             obj['state'] = "FAILED"
             eco = json.loads(obj['result'])
             obj['includemacro'] = 'errorresult ecoguid:%s' % eco['guid']
-            obj['result'] = eco['errormessage'].replace('\n', '<br>')
+            obj['result'] = eco['errormessage'].replace('\n', '$LF')
+        else:
+            try:
+                result = json.loads(obj['result'])
+            except:
+                result = obj['result']
+            obj['result'] = j.html.escape(str(result))
 
         if not obj.get('includemacro', None):
-            obj['includemacro'] = 'successfulresult result:%s' % obj['result']
+            obj['includemacro'] = 'successfulresult result:%s' % urllib.quote(obj['result'])
         return obj
 
     push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc

@@ -32,7 +32,7 @@ def main(j, args, params, tags, tasklet):
             result = ujson.loads(result)
         except:
             pass
-        return str(result)
+        return j.html.escape(str(result))
 
     fieldnames = ['Id', 'Category', 'Command', 'Result', 'State']
     fieldvalues = [linkstr, 'category', 'cmd', makeResult, 'state']
