@@ -224,7 +224,7 @@ class PageHTML(Page):
         c += "<tbody>\n"
         for row in rows3:
             c += "<tr>\n"
-            if row[0] in columnAliases:
+            if row and row[0] in columnAliases:
                 row[0] = columnAliases[row[0]]
             colnr = 0
             for col in row:
