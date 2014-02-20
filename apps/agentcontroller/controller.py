@@ -270,7 +270,7 @@ class ControllerCMDS():
             if res:
                 job = self._getJobFromRedis(session.gid, jobid)
                 self.redis.hdel("jobs:%s"%job.gid,job.id)
-                return json.loads(job.result)
+                return job.__dict__
             else:
                 job.resultcode=1
                 print "timeout on execution"
