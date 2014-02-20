@@ -195,7 +195,7 @@ class DaemonClient(object):
                 eco.errormessage="Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user)
             j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
             if die:
-                j.errorconditionhandler.raiseRuntimeErrorWithEco(eco)
+                j.errorconditionhandler.reRaiseECO(eco)
 
         returnformat = parts[1]
         if returnformat <> "":
