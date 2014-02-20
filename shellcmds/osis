@@ -7,12 +7,16 @@ import sys,time
 j.application.start("cmdosistools")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['delete','deleteall'], help='Command to perform')
+parser.add_argument("action", choices=['delete','deleteall','emptyredis'], help='Command to perform')
 parser.add_argument("-m", '--model',help='name of model')
 parser.add_argument("-n", '--namespace', help='namespace of osis')
 parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
 
 opts = parser.parse_args()
+
+if opts.action =='emptyredis':
+    import JumpScale.baselib.redis
+    j.clients.redis.emptyAllInstances()
 
 ############DELETEALL
 if opts.action =='deleteall':

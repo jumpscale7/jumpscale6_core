@@ -249,6 +249,8 @@ class ErrorConditionHandler():
         @ttype : is the description of the error
         @tb : can be a python data object or a Event
         """
+        if str(pythonExceptionObject)=="halt app because of critical error.":
+            j.application.stop()
 
         # print "jumpscale EXCEPTIONHOOK"
         
@@ -653,4 +655,5 @@ class ErrorConditionHandler():
             j.application.stop(1)
 
     def halt(self):
-        j.application.stop(1)
+        raise RuntimeError("halt app because of critical error.")
+        # j.application.stop(1)
