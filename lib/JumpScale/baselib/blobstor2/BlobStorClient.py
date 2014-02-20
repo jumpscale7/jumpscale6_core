@@ -37,6 +37,8 @@ class BlobStorClient2:
     def deleteNamespace(self):
         return self.client.deleteNamespace(self.namespace)
 
+    def getBlobPatch(self, keyList):
+        return self.client.getBlobPatch(self.namespace, keyList)
 
     def download(self, key, destination):
         pass
@@ -101,10 +103,6 @@ class BlobStorClient2:
                 j.errorconditionhandler.processPythonExceptionObject(e)
 
         j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
-
-
-
-
 
     def put(self, path, type="", expiration=0, tags="", blobstors=[]):
         """
