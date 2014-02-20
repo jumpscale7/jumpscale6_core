@@ -45,7 +45,7 @@ class BlobserverCMDS():
         mdpath=storpath + ".md"
         return storpath, mdpath
 
-    def set(self,namespace,key,value,repoId="",serialization="",session=None):
+    def set(self, namespace, key, value, repoId="",serialization="",session=None):
         if serialization=="":
             serialization="lzma"
 
