@@ -180,7 +180,7 @@ class DaemonClient(object):
             msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             raise MethodNotFoundException(msg)
         if str(returncode) != returnCodes.OK:
-            frames= j.errorconditionhandler.getFrames()            
+            frames= j.errorconditionhandler.getFrames()
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
             ddict = s.loads(parts[2])
             eco = j.errorconditionhandler.getErrorConditionObject(ddict)
@@ -194,6 +194,8 @@ class DaemonClient(object):
             if eco.errormessage.find("Authentication error")<>-1:
                 eco.errormessage="Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user)
             j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+            if die:
+                j.errorconditionhandler.raiseRuntimeErrorWithEco(eco)
 
         returnformat = parts[1]
         if returnformat <> "":
