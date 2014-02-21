@@ -303,14 +303,6 @@ class ControllerCMDS():
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         job = self._getJobFromRedis(session.gid, jobid)
         job.timeStop=self.sessionsUpdateTime[session.id]
-        if job.queue:
-            lq = self._getCmdQueue(session, job.queue)
-            q = self._getCmdQueue(session)
-            lq.get()
-            newjobid = lq.get()
-            if newjobid:
-                q.put(newjobid)
-
         if eco:
             job.resultcode=2
             job.state="ERROR"
