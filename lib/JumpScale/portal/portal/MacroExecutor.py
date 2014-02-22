@@ -256,6 +256,7 @@ class MacroExecutorWiki(MacroExecutorBase):
                     result = "***ERROR***: Could not execute macro %s on %s, did not return (out,doc)." % (macro, doc.name)
                 else:
                     result = "***ERROR***: Could not execute macro %s on %s, error in macro. Error was:\n%s " % (macro, doc.name, e)
+                result = j.html.escape(result)
             if result == doc:
                 # means we did manipulate the doc.content
                 doc.content = doc.content.replace(macrostr, "")
