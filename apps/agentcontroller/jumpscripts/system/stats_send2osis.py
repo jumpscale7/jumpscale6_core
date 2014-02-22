@@ -8,7 +8,7 @@ organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-category = "monitoring.send2carbon"
+category = "monitoring.send2osis.carbon"
 period = 10#120 #always in sec
 enable=True
 async=False
@@ -22,5 +22,10 @@ def action():
         avg, mag = stat.getAvgMax()
         stats.append({'key': key, 'value': avg})
     if stats:
-        j.processmanager.cache.statobject.osis.set(stats)
+        try:
+            j.processmanager.cache.statobject.osis.set(stats)
+        except Exception,e:
+            if str(e).find("Connection refused")<>-1:
+                j.events.opserror_critical("cannot forward stats to osis, there is probably no carbon running on osis", category='processmanager.send2osis.stats', e=None)
+            j.errorconditionhandler.processPythonExceptionObject(e)            
 

@@ -12,11 +12,6 @@ def main(j, args, params, tags, tasklet):
 
     out=""
 
-    def getJobLine(jobid):
-        job=ujson.loads(r.hget(nodejobKey,jobid))
-        start=j.base.time.epoch2HRDateTime(job["timeStart"])
-        stop=j.base.time.epoch2HRDateTime(job["timeStop"])
-        line="|%s|%s|%s|%s|%s|%s|%s|"%(job["id"],job["category"],job["cmd"],start,stop,job["state"],job["queue"])
 
     #get jobs per node
     for nodeid in nodeids:

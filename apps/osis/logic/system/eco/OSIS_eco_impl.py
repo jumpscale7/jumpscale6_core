@@ -5,7 +5,8 @@ parentclass=j.core.osis.getOsisImplementationParentClass("system")  #is the name
 class mainclass(parentclass):
     def set(self, key, value):
         obj = self.getObject(value)
-        new,changed,obj=self.setObjIds(obj)
+        if obj.id==0 or len(obj.guid)>30:
+            new,changed,obj=self.setObjIds(obj)
         key=obj.guid
         self.index(obj)
         value=self.json.dumps(obj.obj2dict())

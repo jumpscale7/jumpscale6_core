@@ -69,11 +69,17 @@ scripttgz=cl.getProcessmanagerScripts()
 ppath="/tmp/processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000)
 j.system.fs.writeFile(ppath,scripttgz)
 tar = tarfile.open(ppath, "r:bz2")
+
+# tmppath="/tmp/%s"%j.base.idgenerator.generateRandomInt(1,100000)
 for tarinfo in tar:
     if tarinfo.isfile():
         if tarinfo.name.find("processmanager/")==0:
-            dest=tarinfo.name.replace("processmanager/","")
-            tar.extract(tarinfo.name, path=dest)
+            dest=tarinfo.name.replace("processmanager/","")           
+            tar.extract(tarinfo.name, "/opt/jumpscale/apps")
+            # j.system.fs.createDir(j.system.fs.getDirName(dest))
+            # j.system.fs.moveFile("%s/%s"%(tmppath,tarinfo.name),dest)
+# j.system.fs.removeDirTree(tmppath)
+j.system.fs.remove(ppath)
 
 
 j.core.grid.init()
@@ -183,6 +189,8 @@ class DummyDaemon():
     def _adminAuth(self,user,passwd):
         raise RuntimeError("permission denied")           
 
+import sys
+sys.path.append(j.system.fs.getcwd())
 for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
     name=j.system.fs.getBaseName(item).replace(".py","")
     if name[0]<>"_":

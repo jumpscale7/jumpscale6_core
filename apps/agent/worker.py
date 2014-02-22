@@ -9,7 +9,11 @@ from JumpScale.baselib import cmdutils
 from JumpScale import j
 
 j.application.start("jumpscale:worker")
-j.application.initGrid()
+try:
+    print "try to init grid, will not fail if it does not work."
+    j.application.initGrid()
+except Exception,e:
+    print "could not init grid, maybe no osis or work gridless"
 
 # Preload libraries
 j.system.platform.psutil=psutil
@@ -68,85 +72,103 @@ class Worker(object):
             # data=self.redis.hget("workerjobs",jobid)
             try:
                 # print "check if work", comes from redis
-                job=getWork(self,qname,timeout=0)
+                job=w._getWork(self.queuename,timeout=0)
             except Exception,e:
                 j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
                 time.sleep(1)
                 continue
 
             if job:
-                organization=job["category"]
-                name=job["cmd"]
-                kwargs=job["args"]
-                jid = job["id"]
-                jscriptid = "%s_%s" % (organization, name)
-                j.application.jid=jid
+                j.application.jid=job.id
                 #eval action code, if not ok send error back, cache the evalled action
-                if self.actions.has_key(jscriptid):
-                    action,jscript=self.actions[jscriptid]
+                if self.actions.has_key(job.jscriptid):
+                    action,jscript=self.actions[job.jscriptid]
                 else:
-                    # print "CACHEMISS"
-                    jscript=w.getJumpscriptFromId(jscriptid)
-                    jscript=ujson.loads(self.redis.hget("jumpscripts:%s"%(organization),name))
+                    print "JSCRIPT CACHEMISS"
+                    jscript=w.getJumpscriptFromId(job.jscriptid)
+                    if jscript==None:
+                        msg="cannot find jumpscript with id:%s"%jscriptid
+                        print "ERROR:%s"%msg
+                        j.events.bug_warning(msg,category="worker.jscript.notfound")
+                        job.result=msg
+                        job.state="ERROR"
+                        self.notifyWorkCompleted(job)
+                        continue
                     try:
-                        self.log("Load script:%s %s"%(jscript["organization"],jscript["name"]))
-                        exec(jscript["source"])
-                        self.actions[jscriptid]=(action,jscript)
+                        self.log("Load script:%s %s %s"%(jscript.id,jscript.organization,jscript.name))
+                        exec(jscript.source)                        
+                        self.actions[job.jscriptid]=(action,jscript)
                         #result is method action
                     except Exception,e:
-                        msg="could not compile jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
-                            jscript["source"],e)
-
+                        msg="could not compile jscript:%s %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,\
+                            j.application.getWhoAmiStr(),jscript.source,e)
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
                         eco.errormessage = msg
                         eco.jid = jid
                         eco.category = 'agent_exec'
+                        j.errorconditionhandler.processErrorConditionObject(eco)
+                        # j.events.bug_warning(msg,category="worker.jscript.notcompile")
                         # self.loghandler.logECO(eco)
-                        self.notifyWorkCompleted(jid,result={},eco=eco.__dict__)
+                        self.notifyWorkCompleted(job)
                         continue
 
-                eco=None
-                self.log("Job started: %s %s"%(jscript["organization"],jscript["name"]))
+                self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
-                    result=action(**kwargs)
+                    result=action(**job.args)
+                    job.result=result
+                    job.state="OK"
+                    job.resultcode=0
+
                 except Exception,e:
-                    msg="could not execute jscript: %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript["organization"],jscript["name"],j.application.getWhoAmiStr(),\
-                        jscript["source"],e)
+                    msg="could not execute jscript:%s %s_%s on agent:%s\nCode was:\n%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,\
+                        j.application.getWhoAmiStr(),jscript.source,e)
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.errormessage = msg
-                    eco.jid = jid
+                    eco.jid = job.id
                     eco.category = "workers.executejob"
+                    j.errorconditionhandler.processErrorConditionObject(eco)
+                    # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                     # self.loghandler.logECO(eco)
-                    self.notifyWorkCompleted(jid, {},eco.__dict__)
-                    continue
-
-                self.log("result:%s"%result)
-                self.notifyWorkCompleted(jid, result,{})
+                    job.state="ERROR"
+                    job.result=eco.errormessage
+                self.notifyWorkCompleted(job)
 
 
-    def notifyWorkCompleted(self,jid, result,eco):
-        try:
-            eco = eco.copy()
-            eco.pop('tb', None)
-            result=self.acclient.notifyWorkCompleted(jid, result=result,eco=eco)
+    def notifyWorkCompleted(self,job):
+        w=j.clients.redisworker
+        job.timeStop=int(time.time())
+        
+        if job.state[0:2]<>"OK":
+            self.log("result:%s"%job.result)
 
-        except Exception,e:
-            eco = j.errorconditionhandler.lastEco
-            j.errorconditionhandler.lastEco = None
-            # self.loghandler.logECO(eco)
-
-            print "******************* SERIOUS BUG **************"
-            print "COULD NOT EXECUTE JOB, COULD NOT PROCESS RESULT OF WORK."
-            try:
-                print "ERROR WAS:%s"%eco, e
-            except:
-                print "COULD NOT EVEN PRINT THE ERRORCONDITION OBJECT"
-            print "******************* SERIOUS BUG **************"
+        if job.jscriptid>10000:
+            # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
+            w.redis.rpush("workers:return:%s"%job.id,time.time())
+            self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
+        else:
+            #jumpscripts coming from AC
+            if job.state<>"OK":
+                try:
+                    self.acclient.notifyWorkCompleted(job.__dict__)
+                except Exception,e:
+                    j.events.opserror("could not report job in error to agentcontroller", category='workers.errorreporting', e=e)
+                    return
+                #lets keep the errors
+                # self.redis.hdel("workers:jobs",job.id)
+            else:
+                try:
+                    self.acclient.notifyWorkCompleted(job.__dict__)
+                except Exception,e:
+                    j.events.opserror("could not report job result to agentcontroller", category='workers.jobreporting', e=e)
+                    return
+                # job.state=="OKR" #means ok reported
+                #we don't have to keep status of local job result, has been forwarded to AC
+                self.redis.hdel("workers:jobs",job.id)
 
 
     def log(self, message, category='',level=5):
         #queue saving logs        
-        j.logger.log(message,category=category,level=level)
+        # j.logger.log(message,category=category,level=level)
         print message
 
 
@@ -155,8 +177,8 @@ if __name__ == '__main__':
     parser.add_argument("-wn", '--workername', help='Worker name')
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
     parser.add_argument("-pw", '--auth', help='Authentication of redis')
-    parser.add_argument("-a", '--addr', help='Address of redis', required=True)
-    parser.add_argument("-p", '--port', type=int, help='Port of redis', required=True)
+    parser.add_argument("-a", '--addr', help='Address of redis',default="127.0.0.1")
+    parser.add_argument("-p", '--port', type=int, help='Port of redis',default=7768)
 
     opts = parser.parse_args()
 

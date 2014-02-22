@@ -180,20 +180,24 @@ class DaemonClient(object):
             msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             raise MethodNotFoundException(msg)
         if str(returncode) != returnCodes.OK:
-            frames= j.errorconditionhandler.getFrames()            
-            s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            ddict = s.loads(parts[2])
-            eco = j.errorconditionhandler.getErrorConditionObject(ddict)
-            eco.category="rpc.exec"
-            eco.frames=frames
-
-            msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
             # print "*** error in client to zdaemon ***"
-            if eco.errormessage.find("Authentication error")<>-1:
-                eco.errormessage="Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user)
-            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=die)
+
+            s = j.db.serializers.getMessagePack()  # get messagepack serializer
+            ecodict = s.loads(parts[2])   
+
+            if ecodict["errormessage"].find("Authentication error")<>-1:
+                raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
+                     
+            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' ecoid:'%s' error:'%s'" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["guid"],ecodict["errormessage"]))
+            # frames= j.errorconditionhandler.getFrames()            
+            # s = j.db.serializers.getMessagePack()  # get messagepack serializer
+            # ddict = s.loads(parts[2])
+            # eco = j.errorconditionhandler.getErrorConditionObject(ddict)
+            # eco.category="rpc.exec"
+            # eco.frames=frames
+            # msg = "execution error on server  %s:%s" % (gid,nid,ecoid,cmd,category)
 
         returnformat = parts[1]
         if returnformat <> "":

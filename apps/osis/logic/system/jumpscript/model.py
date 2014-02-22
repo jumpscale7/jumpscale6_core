@@ -56,7 +56,7 @@ class Jumpscript(OsisBaseObject):
         """
         return unique key for object, is used to define unique id
         """
-        return j.base.byteprocessor.hashTiger160(str([self.source, self.roles]))  # need to make sure roles & source cannot be changed
+        return j.base.byteprocessor.hashTiger160(str([self.organization,self.category,self.version,self.name,self.gid,self.source, self.roles]))  # need to make sure roles & source cannot be changed
 
     def getSetGuid(self):
         """
@@ -64,8 +64,7 @@ class Jumpscript(OsisBaseObject):
         """
         self.gid = int(self.gid)
         self.id = int(self.id)
-        self.guid = j.base.byteprocessor.hashTiger160(str([self.source, self.roles]))  # need to make sure roles & source cannot be changed
-
+        self.guid = "%s_%s"%(self.gid,self.id)
         return self.guid
 
     def getContentKey(self):

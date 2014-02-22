@@ -59,6 +59,6 @@ class ECO(OsisBaseObject):
         if not self.guid:
             self.gid = int(self.gid)
             self.id = int(self.id)
-            self.guid = "%s_%s" % (self.gid, self.id)
+            self.guid = "%s_%s_%s" % (self.gid, self.nid,self.id)
         return self.guid
 

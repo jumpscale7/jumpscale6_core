@@ -26,6 +26,7 @@ class ControllerCMDS():
         self.daemon = daemon
         self.jumpscripts = {}
         self.jumpscriptsFromKeys = {}
+        self.jumpscriptsId={}
 
         self.roles2agents = {}  # key=role in all depths
         self.agentqueues = dict()
@@ -69,42 +70,45 @@ class ControllerCMDS():
         jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         job.id=jobid
         job.getSetGuid()
-        self._setJob(job, True)
+        jobs=json.dumps(job)
+        self._setJob(job.__dict__, True,jobs)
         q = self._getCmdQueue(gid=gid, nid=nid)
-        q.put(str(job.id))  
+        q.put(jobs)
         return job
 
-    def _setJob(self, job, osis=False):
-        self.redis.hmset("jobs:%s"%job.gid,{job.id:json.dumps(job.__dict__)})
+    def _setJob(self, job, osis=False,jobs=None):
+        if not j.basetype.dictionary.check(job):
+            raise RuntimeError("job needs to be dict")  
+        if jobs==None:
+            jobs=json.dumps(job)
+        self.redis.hset("jobs:%s"%job["gid"],job["id"],jobs)
         if osis:
             self.jobclient.set(job)
 
     def _getJobFromRedis(self, gid, jobid):
-        jobdict = json.loads(self.redis.hmget("jobs:%s"%gid, [jobid])[0])
-        return self.jobclient.new(ddict=jobdict)
+        jobdict = json.loads(self.redis.hget("jobs:%s"%gid, jobid))
+        return jobdict
+        # return self.jobclient.new(ddict=jobdict)
 
     def _getCmdQueue(self, session=None, gid=None, nid=None):
+        """
+        is qeueue where commands are scheduled for processmanager to be picked up
+        """
         if not gid and not nid:
             gid = session.gid
             nid = session.nid
-
-        queuename = "cmdq_%s_%s" % (gid, nid)
-        if queuename not in self.agentqueues:
-            #self.agentqueues[agentid] = j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
-            return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
-        return self.agentqueues[queuename]
+        queuename = "commands:%s:%s" % (gid, nid)
+        return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=True)
 
     def _getJobQueue(self, jobid):
-        queuename = "jobq_%s" % jobid
+        queuename = "jobqueue:%s" % jobid
         return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
         
-
     def _setRole2Agent(self,role,agent):
         if not self.roles2agents.has_key(role):
             self.roles2agents[role]=[]
         if agent not in self.roles2agents[role]:
             self.roles2agents[role].append(agent)   
-
 
     def register(self,session):
         print "new agent:"
@@ -115,17 +119,6 @@ class ControllerCMDS():
         
         self.sessionsUpdateTime[agentid]=j.base.time.getTimeEpoch()
         print "register done:%s"%agentid
-
-    # def _markSessionFree(self,session):
-    #     self.agent2freeSessions[session.agentid][session.id]=Event()
-    #     return self.agent2freeSessions[session.agentid][session.id]
-
-    # def _unmarkSessionFree(self,session):
-    #     if not self.agent2freeSessions.has_key(session.agentid):
-    #         raise RuntimeError("bug in _unmarkSessionFree in agentcontroller, sessionfree needs to have agentid")
-
-    #     if self.agent2freeSessions[session.agentid].has_key(session.id):
-    #         self.agent2freeSessions[session.agentid].pop(session.id)
 
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
@@ -177,28 +170,49 @@ class ControllerCMDS():
             t.gid=getattr(script, 'gid', j.application.whoAmI.gid)
 
 
-            self.jumpscriptclient.set(t)
-            print "found jumpscript:%s " %("%s_%s" % (t.organization, t.name))
-            # self.jumpscripts["%s_%s_%s" % (t.gid,t.organization, t.name)] = True
+            guid,r,r=self.jumpscriptclient.set(t)
+            t=self.jumpscriptclient.get(guid)
+            
+            print "found jumpscript:%s " %("id:%s %s_%s" % (t.id,t.organization, t.name))
 
-            key = "%s_%s_%s" % (j.application.whoAmI.gid,t.organization, t.name)
+            key0 = "%s_%s" % (t.gid,t.id)
+            key = "%s_%s_%s" % (t.gid,t.organization, t.name)
             self.jumpscripts[key] = t
+            self.jumpscriptsId[key0] = t
        
     def getJumpScript(self, organization, name,gid=None, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
+            
+        if gid==None and session <> None:
             gid = session.gid
-            nid = session.nid
-        else:
-            if gid==None:
-                gid=j.application.whoAmI.gid
+        elif id==None and session == None:
+            gid=j.application.whoAmI.gid
 
         key = "%s_%s_%s" % (gid,organization, name)
         
         if key in self.jumpscripts:
             return self.jumpscripts[key]
         else:
+
             j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s:%s" % (organization, name), category="action.notfound", die=False)
+            return ""
+
+    def getJumpScriptFromId(self,id,gid=None,session=None):
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
+        else:
+            if gid==None and session <> None:
+                gid = session.gid
+            elif id==None and session == None:
+                gid=j.application.whoAmI.gid
+
+        key = "%s_%s" % (gid,id)
+        
+        if key in self.jumpscriptsId:
+            return self.jumpscriptsId[key]
+        else:
+            j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s" % (key), category="action.notfound", die=False)
 
     def existsJumpScript(self, organization, name,gid=None, session=None):
         if session<>None:
@@ -228,7 +242,7 @@ class ControllerCMDS():
             if cat and entry.category != cat:
                 return False
             return True
-        return [[t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
+        return [[t.id,t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
     def executeJumpScript(self, organization, name, nid=None, role=None, args={},all=False, timeout=600,wait=True,queue="", session=None):
         """
@@ -245,92 +259,99 @@ class ControllerCMDS():
             for agentid in self.roles2agents[role]:
                 gid,nid=agentid.split("_")                
                 job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session)
-
             if wait:
-                return self.waitJumpscript(job.id,session)
-
+                return self.waitJumpscript(job=job,session=session)
             return job.__dict__
         else:
             job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout) 
             print "nothingtodo"
             job.state="NOWORK"
             job.timeStop=job.timeStart
-            self.jobclient.set(job)
+            self._setJob(job.__dict__, osis=True)
             return job.__dict__
 
-    def waitJumpscript(self,jobid,session):
+    def waitJumpscript(self,jobid=None,job=None,session=None):
         """
-        @return returncode,result
-        returncode 0 = ok
-        returncode 1 = timeout
-        returncode 2 = error (then result is eco)
+        @return job as ujson encoded job dict
+        """
+        if job==None:
+            if jobid==None:
+                raise RuntimeError("job or jobid need to be given as argument")
+            job = self._getJobFromRedis(session.gid, jobid)
 
-        """
-        job = self._getJobFromRedis(session.gid, jobid)
-        if job:
-            args = [] if not job.timeout else [job.timeout]
-            res = self._getJobQueue(jobid).get(*args)
-            if res:
-                job = self._getJobFromRedis(session.gid, jobid)
-                self.redis.hdel("jobs:%s"%job.gid,job.id)
-                return json.loads(job.result)
-            else:
-                job.resultcode=1
-                print "timeout on execution"
-                return job.__dict__
+        if job["timeout"]<>0:
+            res = self._getJobQueue(job["id"]).get(job["timeout"])
+        else:
+            res = self._getJobQueue(job["id"]).get()
+        if res:            
+            return ujson.loads(res)
+        else:
+            ujson.loads(job)
+            job["resultcode"]=1
+            job["state"]="TIMEOUT"
+            self._setJob(job, osis=True)
+            print "timeout on execution"
+            return job
 
     def getWork(self, session=None):
         """
         is for agent to ask for work
+        returns ujson encoded job
         """
-        jobid = self._getCmdQueue(session).get(timeout=30)
-        if not jobid:
-            return
+        job = self._getCmdQueue(session).get(timeout=30)
+        return ujson.loads(job)
+        # # job=ujson.loads(job)
+        # if not job:
+        #     return
+        # self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
+        # try:
+        #     # GET JOB object
+        #     # job = self._getJobFromRedis(session.gid, jobid)
+        #     # agentid = "%s_%s" % (session.gid, session.nid)
+        #     #self.activeJobSessions[session.id]=job
+        #     return job
+
+        # except Exception,e:
+        #     raise
+        #     print 'something went wrong %s' % e
+        #     #because of timeout max wait is 2 min
+        #     print "timeout (if too fast timeouts then error in getWork while loop)"
+
+    def notifyWorkCompleted(self, job,session=None):
+        """
+        job here is a dict
+        """
+        if not j.basetype.dictionary.check(job):
+            raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-        try:
-            #check locking
-            # GET JOB object
-            job = self._getJobFromRedis(session.gid, jobid)
-            agentid = "%s_%s" % (session.gid, session.nid)
-            #self.activeJobSessions[session.id]=job
-            return (job.__dict__)
-
-        except Exception,e:
-            raise
-            print 'something went wrong %s' % e
-            #because of timeout max wait is 2 min
-            print "timeout (if too fast timeouts then error in getWork while loop)"
-
-    def notifyWorkCompleted(self, jobid, result=None,eco=None,session=None):
-        self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-        job = self._getJobFromRedis(session.gid, jobid)
-        job.timeStop=self.sessionsUpdateTime[session.id]
-        if job.queue:
-            lq = self._getCmdQueue(session, job.queue)
-            q = self._getCmdQueue(session)
-            lq.get()
-            newjobid = lq.get()
-            if newjobid:
-                q.put(newjobid)
-
-        if eco:
-            job.resultcode=2
-            job.state="ERROR"
-            ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
-            print "#####ERROR ON AGENT######"
-            try:
-                j.errorconditionhandler.processErrorConditionObject(ecobj)
-            except:
-                print ecobj
-            print "#########################"
-            job.result = json.dumps(eco)
-        else:
-            eco = ''
-            job.resultcode=0
-            job.state="OK"
-            job.result = json.dumps(result)
         self._setJob(job, osis=True)
-        self._getJobQueue(jobid).put(job.state)
+        self._getJobQueue(job["id"]).put(job)
+
+        # if job.queue:
+        #     lq = self._getCmdQueue(session, job.queue)
+        #     q = self._getCmdQueue(session)
+        #     lq.get()
+        #     newjobid = lq.get()
+        #     if newjobid:
+        #         q.put(newjobid)
+        # if eco:
+        #     job.resultcode=2
+        #     job.state="ERROR"
+        #     ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
+        #     print "#####ERROR ON AGENT######"
+        #     try:
+        #         j.errorconditionhandler.processErrorConditionObject(ecobj)
+        #     except:
+        #         print ecobj
+        #     print "#########################"
+        #     job.result = json.dumps(eco)
+        # else:
+        #     eco = ''
+        #     job.resultcode=0
+        #     job.state="OK"
+        #     job.result = json.dumps(result)
+        # self._setJob(job, osis=True)
+        #self._getJobQueue(jobid).put(job.state)
 
 
         #NO PARENT SUPPORT YET
@@ -358,6 +379,7 @@ class ControllerCMDS():
         """
         list all work scheduled for 1 agent
         """
+        raise RuntimeError("need to be implemented")
         self._adminAuth(session.user,session.passwd)
         result=[]
         for sessionid in self.agent2session[agentid]:
@@ -372,7 +394,7 @@ class ControllerCMDS():
         """
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-
+        raise RuntimeError("need to be implemented")
         result=[]
         if self.workqueue.has_key(session.agentid):
             if len(self.workqueue[session.agentid])>0:
@@ -387,6 +409,7 @@ class ControllerCMDS():
         """
         create tar.gz of cmds & monitoring objects & return as binary info
         """
+        #@todo make async with local workers
         import tarfile
         ppath="/tmp/processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000)
         tar = tarfile.open(ppath, "w:bz2")
@@ -417,11 +440,13 @@ class ControllerCMDS():
         return self.roles2agents
 
     def getJobInfo(self, jobid, session=None):
+        raise RuntimeError("need to be implemented")
         job = self.jobs.get(jobid)
         if job:
             return job.db.__dict__
 
     def getActiveJobs(self, session=None):
+        raise RuntimeError("need to be implemented")
         results = list()
         for value in self.activeJobSessions.itervalues():
             results.append(value.db.__dict__)
@@ -432,6 +457,7 @@ class ControllerCMDS():
         list all jobs waiting for which roles, show for each role which agents should be answering
         also list jobs which are running and running in which sessions
         """
+        raise RuntimeError("need to be implemented")
         result = []
         jobresult = {}
 
