@@ -54,37 +54,65 @@ class RedisFactory:
         for name in j.system.fs.listDirsInDir(path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
             self.deleteInstance(name)
 
-    def getProcessPid(self,name):
-        return j.system.process.getProcessPid(name)
+    def getPort(self,name):
+        self.getProcessPids(name)
+        dpath="/opt/redis/%s"%name
+        cpath=j.system.fs.joinPaths(dpath,"redis.conf")
+        j.system.fs.writeFile(cpath,C)
+        config=j.system.fs.fileGetContents(cpath)
+        for line in config.split("\n"):
+            if line.find("port")==0:
+                port=int(line.split("port ")[1])
+                return port
+        raise RuntimeError("Could not find redis port in config file %s"%cpath)
 
-    def stopInstance(self,name):
-        pids=self.getProcessPid(name)
+
+    def getProcessPids(self,name):
+        if name=="":
+            raise RuntimeError("name cannot be empty to start redis")        
+        dpath="/opt/redis/%s"%name        
+        cpath=j.system.fs.joinPaths(dpath,"redis.conf") 
+        if not j.system.fs.exists(path=cpath):
+            raise RuntimeError("Cannot find redis instance on %s"%cpath)
+        pids=j.system.process.getProcessPid(name)
+        if pids==None:
+            return []
+        if len(pids)>1:
+            return pids
+        return []
+
+    def stopInstance(self,name):        
+        pids=self.getProcessPids(name)
         for pid in pids:
             j.system.platform.ubuntu.stopService(name)
-
         counter=0
         while counter<30:
             for pid in pids:
                 j.system.process.kill(pid)
             time.sleep(0.1)
-            pids=self.getProcessPid(name)
+            pids=self.getProcessPids(name)
             if len(pids)==0:
                 return
             counter+=1
         raise RuntimeError("could not stop redis with name %s"%name)
 
     def startInstance(self,name):
-        pids=self.getProcessPid(name)
+        j.logger.log("start redis:%s"%name, level=5, category="")
+        pids=self.getProcessPids(name)
         if len(pids)>1:
-            self.stopInstance(name)
-        
+            self.stopInstance(name)        
         if len(pids)==1:
+            j.logger.log("Not need to start redis:%s, is already started."%name, level=5, category="redis.start")
             return
-        dpath="/opt/redis/%s"%name
-        cpath=j.system.fs.joinPaths(dpath,"redis.conf")    
         # cmd="redis-server %s"%cpath
-        # j.system.process.execute(cmd)                
+        # j.system.process.execute(cmd)                 
         j.system.platform.ubuntu.startService(name)
+        timeout=time.time()+10
+        port=self.getPort(name)
+        while check==False and time.time()<timeout:
+            check=j.system.net.tcpPortConnectionTest(port)
+        if check==False:
+            raise RuntimeError("Could not start redis %s on port %s"%(name,port))
 
     def deleteInstance(self,name):
         self.stopInstance(name)

@@ -16,6 +16,12 @@ parser.add_argument('--force',required=False, action='store_true',help='dont ask
 parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
 
 
+#check redis is there if not try to start
+if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+    j.packages.findNewest(name="redis").install()
+    j.packages.findNewest(name="redis").start()
+
+
 opts = parser.parse_args()
 
 ############RECONFIGURE
@@ -49,7 +55,7 @@ if opts.action =='reinit':
         j.system.fs.createDir(item)
 
 
-    packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
+    packages=["grid_master","grid_node","osis","agentcontroller","workers"]
     for package in packages:
         jp=j.packages.findNewest(name=package)
         if not jp.isInstalled():

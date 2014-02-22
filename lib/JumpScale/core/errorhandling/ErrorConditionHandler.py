@@ -406,6 +406,12 @@ class ErrorConditionHandler():
                 eco.id=redis.incr("eco:incr:%s"%incrkey,1)
                 eco.guid = "%s_%s_%s"%(eco.gid,eco.nid,eco.id)
 
+        if len(eco.guid)>30:
+            from IPython import embed
+            print "DEBUG NOW yyyy12"
+            embed()
+            
+
         if j.logger.logTargetLogForwarder and j.logger.logTargetLogForwarder.enabled:
             j.logger.logTargetLogForwarder.logECO(eco)
 

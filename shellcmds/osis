@@ -14,7 +14,7 @@ parser.add_argument('--force',required=False, action='store_true',help='dont ask
 
 opts = parser.parse_args()
 
-if opts.action =='emptyredis':
+if opts.action =='emptyredis' or  opts.action =='deleteall':
     import JumpScale.baselib.redis
     j.clients.redis.emptyAllInstances()
 
