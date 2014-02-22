@@ -17,6 +17,10 @@ import JumpScale.baselib.redis
 REDISSERVER = '127.0.0.1'
 REDISPORT = 7769
 
+#check redis is there if not try to start
+if not j.system.net.tcpPortConnectionTest("127.0.0.1",7769):
+    raise RuntimeError("did not find redis on port %s"%7769)
+
 class ControllerCMDS():
 
     def __init__(self, daemon):

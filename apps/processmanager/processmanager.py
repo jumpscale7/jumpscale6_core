@@ -20,6 +20,12 @@ j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
 
+#check redis is there if not try to start
+if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+    j.packages.findNewest(name="redis").install()
+    j.packages.findNewest(name="redis").start()
+
+
 def checkosis():
     masterip=j.application.config.get("grid.master.ip")
     osis = j.core.osis.getClient(masterip, user='root')

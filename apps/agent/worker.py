@@ -24,6 +24,11 @@ import JumpScale.grid.agentcontroller
 import JumpScale.baselib.redis
 import JumpScale.baselib.redisworker
 
+#check redis is there if not try to start
+if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+    j.packages.findNewest(name="redis").install()
+    j.packages.findNewest(name="redis").start()
+
 class Worker(object):
 
     def __init__(self, redisaddr, redisport, queuename):

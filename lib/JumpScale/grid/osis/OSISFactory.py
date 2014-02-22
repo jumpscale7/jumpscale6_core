@@ -85,6 +85,17 @@ class OSISFactory:
         """
         start deamon
         """
+
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
+            j.packages.findNewest(name="elasticsearch").install()
+            j.packages.findNewest(name="elasticsearch").start()
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003):
+            j.packages.findNewest(name="graphite").install()
+            j.packages.findNewest(name="graphite").start()
+
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003) or not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
+            raise RuntimeError("cannot start osis, could not find running elastic search and/or carbon/graphite")
+
         zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
         zd.setCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
         zd.daemon.cmdsInterfaces["osis"][-1].init()
@@ -269,4 +280,8 @@ class OSISFactory:
         #     j.errorconditionhandler.raiseBug(message="there must be only 1 class implemented in %s"%path,category="osis.init")
         # classname=classes[0]
         # return module.__dict__[classname]
-        return module.mainclass
+        try:
+            return module.mainclass
+        except Exception,e:
+            raise RuntimeError("Could not load module on %s, could not find 'mainclass', check code on path. Error:%s"% (path,e))
+            
