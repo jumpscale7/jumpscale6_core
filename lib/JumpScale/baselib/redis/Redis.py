@@ -40,7 +40,7 @@ class RedisFactory:
             return RedisQueue(self.getGeventRedisClient(ipaddr,port, False),name,namespace=namespace)
         key="%s_%s_%s_%s"%(ipaddr,port,name,namespace)
         if not self.gredisq.has_key(key):
-            self.gredisq[key]=RedisQueue(self.getGeventRedisClient(ipaddr,port),name,appendonly=True,namespace=namespace)
+            self.gredisq[key]=RedisQueue(self.getGeventRedisClient(ipaddr,port),name,namespace=namespace)
         return self.gredisq[key]
 
     def emptyAllInstances(self):
