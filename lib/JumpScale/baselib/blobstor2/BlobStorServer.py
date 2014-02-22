@@ -4,6 +4,8 @@ import JumpScale.grid.zdaemon
 
 import inspect
 import ujson
+import tarfile
+import tempfile
 
 class BlobserverCMDS():
 
@@ -40,12 +42,12 @@ class BlobserverCMDS():
             passwd=self.adminpasswd,
             ssl=False, sendformat='m', returnformat='m', category="blobserver")
 
-    def _getPaths(self,namespace,key):
+    def _getPaths(self, namespace, key):
         storpath=j.system.fs.joinPaths(self.STORpath, namespace, key[0:2], key[2:4], key)
         mdpath=storpath + ".md"
         return storpath, mdpath
 
-    def set(self,namespace,key,value,repoId="",serialization="",session=None):
+    def set(self, namespace, key, value, repoId="",serialization="",session=None):
         if serialization=="":
             serialization="lzma"
 
@@ -132,7 +134,7 @@ class BlobserverCMDS():
             mddata=ujson.dumps(md)
             j.system.fs.writeFile(storpath+".md",mddata)
 
-    def exists(self,namespace,key,repoId="",session=None):
+    def exists(self,namespace,key, repoId="", session=None):
         storpath,mdpath=self._getPaths(namespace,key)
         if repoId=="":
             return j.system.fs.exists(path=storpath)
@@ -141,17 +143,41 @@ class BlobserverCMDS():
             return md["repos"].has_key(str(repoId))
         return False
 
-    def deleteNamespace(self,namespace,session=None):
+    def deleteNamespace(self, namespace, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         storpath=j.system.fs.joinPaths(self.STORpath,namespace)
         j.system.fs.removeDirTree(storpath)
 
+    def getBlobPatch(self, namespace, keyList, session=None):
+        """
+        Takes a list of Keys, and returns a TAR Archive with All Blobs
+        """
+        if not keyList:
+            raise RuntimeError("Invalid Blobs Key List")
+
+        patch_name = tempfile.mktemp(prefix="blob", suffix=".tar")
+        blob_patch = tarfile.open(patch_name, 'w')
+
+        for key in keyList:
+            blob_path, _ = self._getPaths(namespace, key)
+            if j.system.fs.exists(blob_path):
+                # TODO: change blob_path to be easier in extraction instead of full path
+                # Now it is added as /opt/STOR/<namespace>/<key0:2>/<key2:4>/<key>
+                blob_patch.add(blob_path)
+
+        blob_patch.close()
+
+        # TODO: What if very large Tar?!
+        with open(patch_name) as fp:
+            data = fp.read()
+            fp.close()
+
+        return data
 
     def _adminAuth(self,user,passwd):
         if user != self.adminuser or passwd != self.adminpasswd:
             raise RuntimeError("permission denied")
-
 
 
 class BlobStorServer2:
