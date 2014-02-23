@@ -172,7 +172,8 @@ class DaemonClient(object):
                 print "session lost"
                 self.initSession()
                 retry += 1
-                return self.sendMsgOverCMDChannel(cmd, rawdata, agentid,sendformat, returnformat, retry, maxretry, category,transporttimeout=transporttimeout)
+                agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat=sendformat, returnformat=returnformat, retry=retry, maxretry=maxretry, category=category,transporttimeout=transporttimeout)
             else:
                 msg = "Authentication error on server.\n"
                 raise AuthenticationError(msg)
@@ -190,7 +191,7 @@ class DaemonClient(object):
             if ecodict["errormessage"].find("Authentication error")<>-1:
                 raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
                      
-            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' ecoid:'%s' error:'%s'" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["guid"],ecodict["errormessage"]))
+            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
             # frames= j.errorconditionhandler.getFrames()            
             # s = j.db.serializers.getMessagePack()  # get messagepack serializer
             # ddict = s.loads(parts[2])

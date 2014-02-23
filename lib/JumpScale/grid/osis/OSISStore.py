@@ -262,6 +262,14 @@ class OSISStore(object):
             data.pop("sguid")
         except:
             pass
+
+        #@todo why is this????
+        if data.has_key("log"):
+            data["_log"]=data["log"]
+            data.pop("log")
+        # if data.has_key("value"):
+        #     data["_value"]=data["value"]
+        #     data.pop("value")            
         
         try:
             if ttl <> 0:
@@ -269,13 +277,24 @@ class OSISStore(object):
             else:
                 self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
         except Exception,e:
+
             if str(e).find("Index failed")<>-1:
                 try:
-                    msg="cannot index object:\n%s"%obj
+                    msg="cannot index object:\n%s"%data
                 except Exception,ee:
                     msg="cannot index object, cannot even print object"                
                 print e
-                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index', msgpub='', die=True, tags='', eco=None)
+                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index', msgpub='', die=False, tags='', eco=None)
+            elif str(e).find("failed to parse")<>-1:
+                try:
+                    msg="indexer cannot parse object:\n%s"%data
+                except Exception,ee:
+                    msg="indexer cannot parse object, cannot even print object.\n%s"%ee
+                from IPython import embed
+                print "DEBUG NOW iuiuiui"
+                embed()
+                
+                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None)                
             else:
                 j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))
             

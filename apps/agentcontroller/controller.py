@@ -170,6 +170,7 @@ class ControllerCMDS():
             t.async = getattr(script, 'async',False)
             t.period=getattr(script, 'period',0)
             t.order=getattr(script, 'order', 1)
+            t.log=getattr(script, 'log', True)
             t.enable=getattr(script, 'enable', True)
             t.gid=getattr(script, 'gid', j.application.whoAmI.gid)
 
@@ -303,7 +304,8 @@ class ControllerCMDS():
         returns ujson encoded job
         """
         job = self._getCmdQueue(session).get(timeout=30)
-        return ujson.loads(job)
+        if job<>None:
+            return ujson.loads(job)
         # # job=ujson.loads(job)
         # if not job:
         #     return

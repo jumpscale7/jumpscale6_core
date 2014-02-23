@@ -10,7 +10,7 @@ license = "bsd"
 version = "1.0"
 category = "monitoring.send2osis.carbon"
 period = 10#120 #always in sec
-enable=True
+enable=False
 async=False
 roles = ["osis.db.graphite"]
 
@@ -23,6 +23,7 @@ def action():
         stats.append({'key': key, 'value': avg})
     if stats:
         try:
+            #where does this come from???
             j.processmanager.cache.statobject.osis.set(stats)
         except Exception,e:
             if str(e).find("Connection refused")<>-1:

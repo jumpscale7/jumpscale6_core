@@ -4,6 +4,8 @@ import sys
 import time
 import ujson
 import psutil
+import imp
+import random
 
 from JumpScale.baselib import cmdutils
 from JumpScale import j
@@ -41,6 +43,8 @@ class Worker(object):
 
     def init(self):
 
+        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
+
         def checkagentcontroller():
             masterip=j.application.config.get("grid.master.ip")            
             success=False
@@ -51,6 +55,7 @@ class Worker(object):
                 msg="Cannot connect to agentcontroller on %s."%(masterip)
                 j.events.opserror(msg, category='worker.startup', e=e)
                 self.acclient=None
+
 
         def checkredis():
             success=False
@@ -68,6 +73,21 @@ class Worker(object):
 
         #@todo check if queue exists if not raise error
         self.queue=j.clients.redis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
+
+    def _loadModule(self, path):
+        '''Load the Python module from disk using a random name'''
+        j.logger.log('Loading tasklet module %s' % path, 7)
+        # Random name -> name in sys.modules
+
+        def generate_module_name():
+            '''Generate a random unused module name'''
+            return '_tasklet_module_%d' % random.randint(0, sys.maxint)
+        modname = generate_module_name()
+        while modname in sys.modules:
+            modname = generate_module_name()
+
+        module = imp.load_source(modname, path)
+        return module
 
     def run(self):
         print "STARTED"
@@ -91,31 +111,43 @@ class Worker(object):
                 else:
                     print "JSCRIPT CACHEMISS"
                     jscript=w.getJumpscriptFromId(job.jscriptid)
+
                     if jscript==None:
-                        msg="cannot find jumpscript with id:%s"%jscriptid
+                        msg="cannot find jumpscript with id:%s"%job.jscriptid
                         print "ERROR:%s"%msg
                         j.events.bug_warning(msg,category="worker.jscript.notfound")
                         job.result=msg
                         job.state="ERROR"
                         self.notifyWorkCompleted(job)
                         continue
+
+                    if jscript.organization<>"" and jscript.name<>"":
+                        #this is to make sure when there is a new version of script since we launched this original script we take the newest one
+                        jscript=w.getJumpscriptFromName(jscript.organization,jscript.name)
+                        job.jscriptid=jscript.id
+
+                    jscriptpath=j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts","%s_%s.py"%(jscript.organization,jscript.name))
+                    j.system.fs.writeFile(jscriptpath,jscript.source)
+                    self.log("Load script:%s %s %s"%(jscript.id,jscript.organization,jscript.name))
                     try:
-                        self.log("Load script:%s %s %s"%(jscript.id,jscript.organization,jscript.name))
-                        exec(jscript.source)                        
-                        self.actions[job.jscriptid]=(action,jscript)
+                        module=self._loadModule(jscriptpath)
+                        action=module.action                        
                         #result is method action
                     except Exception,e:
-                        msg="could not compile jscript:%s %s_%s on agent:%s.\nCode was:\n%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,\
-                            j.application.getWhoAmiStr(),jscript.source,e)
+                        agentid=j.application.getAgentId()
+                        msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
                         eco.errormessage = msg
-                        eco.jid = jid
-                        eco.category = 'agent_exec'
+                        eco.code=jscript.source
+                        eco.jid = job.id
+                        eco.category = 'workers.compilescript'
                         j.errorconditionhandler.processErrorConditionObject(eco)
                         # j.events.bug_warning(msg,category="worker.jscript.notcompile")
                         # self.loghandler.logECO(eco)
                         self.notifyWorkCompleted(job)
                         continue
+
+                self.actions[job.jscriptid]=(action,jscript)
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
@@ -123,13 +155,13 @@ class Worker(object):
                     job.result=result
                     job.state="OK"
                     job.resultcode=0
-
-                except Exception,e:
-                    msg="could not execute jscript:%s %s_%s on agent:%s\nCode was:\n%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,\
-                        j.application.getWhoAmiStr(),jscript.source,e)
+                except Exception,e:                    
+                    agentid=j.application.getAgentId()
+                    msg="could not execute jscript:%s %s_%s on agent:%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.errormessage = msg
                     eco.jid = job.id
+                    eco.code=jscript.source
                     eco.category = "workers.executejob"
                     j.errorconditionhandler.processErrorConditionObject(eco)
                     # j.events.bug_warning(msg,category="worker.jscript.notexecute")
@@ -161,13 +193,14 @@ class Worker(object):
                 #lets keep the errors
                 # self.redis.hdel("workers:jobs",job.id)
             else:
-                try:
-                    self.acclient.notifyWorkCompleted(job.__dict__)
-                except Exception,e:
-                    j.events.opserror("could not report job result to agentcontroller", category='workers.jobreporting', e=e)
-                    return
-                # job.state=="OKR" #means ok reported
-                #we don't have to keep status of local job result, has been forwarded to AC
+                if job.log:
+                    try:
+                        self.acclient.notifyWorkCompleted(job.__dict__)
+                    except Exception,e:
+                        j.events.opserror("could not report job result to agentcontroller", category='workers.jobreporting', e=e)
+                        return
+                    # job.state=="OKR" #means ok reported
+                    #we don't have to keep status of local job result, has been forwarded to AC
                 self.redis.hdel("workers:jobs",job.id)
 
 
