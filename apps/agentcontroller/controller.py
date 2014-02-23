@@ -67,17 +67,25 @@ class ControllerCMDS():
         new preferred method for scheduling work
         @name is name of cmdserver method or name of jumpscript 
         """
+        print "schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname)
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
+        print "getjob osis client"
         job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
+        print "redis incr for job"
         jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
+        print "jobid found (incr done)"
         job.id=jobid
         job.getSetGuid()
         job.jscriptid=jscriptid
         jobs=json.dumps(job)
+        print "save 2 osis"
         self._setJob(job.__dict__, True,jobs)
+        print "getqueue"
         q = self._getCmdQueue(gid=gid, nid=nid)
+        print "put on queue"
         q.put(jobs)
+        print "schedule done"
         return job
 
     def _setJob(self, job, osis=False,jobs=None):
@@ -101,12 +109,15 @@ class ControllerCMDS():
         if not gid and not nid:
             gid = session.gid
             nid = session.nid
-        print "get queue for %s %s"%(gid,nid)
+        if session==None:
+            print "get cmd queue NOSESSION"
+        print "get cmd queue for %s %s"%(gid,nid)
         queuename = "commands:queue:%s:%s" % (gid, nid)
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=True)
 
     def _getJobQueue(self, jobid):
         queuename = "jobqueue:%s" % jobid
+        print "get job queue for job:%s"%(jobid)
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=False)
         
     def _setRole2Agent(self,role,agent):
@@ -258,6 +269,7 @@ class ControllerCMDS():
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         if role<>None:
+            print "ROLE NOT NONE"
             role = role.lower()
             if role in self.roles2agents:
                 for agentid in self.roles2agents[role]:
@@ -267,6 +279,7 @@ class ControllerCMDS():
                     return self.waitJumpscript(job=job,session=session)
                 return job.__dict__
         elif nid<>None:
+            print "NID KNOWN"
             job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session,jscriptid=action.id)
             if wait:
                 return self.waitJumpscript(job=job.__dict__,session=session)
@@ -306,22 +319,29 @@ class ControllerCMDS():
         is for agent to ask for work
         returns job as dict
         """
+        print "getwork"
         q = self._getCmdQueue(session)
-        job=q.get(timeout=30)
+        jobstr=q.get(timeout=30)
+        if jobstr==None:
+            print "NO WORK"
+            return None
+        job=json.loads(jobstr)
         if job<>None:
-            print "getwork %s for jsid:%s"%(session.nid,job.jscriptid)
-            return json.loads(job)
+            print "getwork found for node:%s for jsid:%s"%(session.nid,job["jscriptid"])
+            return job
 
 
     def notifyWorkCompleted(self, job,session=None):
         """
         job here is a dict
-        """        
+        """
+        print "NOTIFY WORK COMPLETED: jobid:%s"%job["id"]        
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         self._setJob(job, osis=True)
-        self._getJobQueue(job["id"]).put(json.dumps(job))
+        q=self._getJobQueue(job["id"])
+        q.put(json.dumps(job))
 
 
         #NO PARENT SUPPORT YET

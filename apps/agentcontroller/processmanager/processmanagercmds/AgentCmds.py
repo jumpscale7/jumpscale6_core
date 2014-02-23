@@ -2,6 +2,7 @@ from JumpScale import j
 import JumpScale.grid.agentcontroller
 import ujson
 import JumpScale.baselib.redisworker
+import time
 
 REDISIP = '127.0.0.1'
 REDISPORT = 7768
@@ -49,17 +50,23 @@ class AgentCmds():
         fetch work from agentcontroller & put on redis queue
         """
         self.client.register()
-
+        time.sleep(2)
+        print "start loop to fetch work"
         while True:
-
             ok=False
             while ok==False:
                 try:
                     print "check if work"
                     job=self.client.getWork()
-                    print "WORK FOUND:%s"%job["name"]
-                    ok=True
+                    print "check work returns"
+                    if job<>None:
+                        print "WORK FOUND: jobid:%s"%job["id"]
+                        ok=True
+                    else:
+                        print "no work"  
+                        continue                  
                 except Exception,e:
+                    j.errorconditionhandler.processPythonExceptionObject(e)
                     # self.register()
                     continue
 
