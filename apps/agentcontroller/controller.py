@@ -272,7 +272,7 @@ class ControllerCMDS():
 
     def waitJumpscript(self,jobid=None,job=None,session=None):
         """
-        @return job as ujson encoded job dict
+        @return job as json encoded job dict
         """
         if job==None:
             if jobid==None:
@@ -284,9 +284,9 @@ class ControllerCMDS():
         else:
             res = self._getJobQueue(job["id"]).get()
         if res:            
-            return ujson.loads(res)
+            return json.loads(res)
         else:
-            ujson.loads(job)
+            json.loads(job)
             job["resultcode"]=1
             job["state"]="TIMEOUT"
             self._setJob(job, osis=True)
@@ -296,11 +296,11 @@ class ControllerCMDS():
     def getWork(self, session=None):
         """
         is for agent to ask for work
-        returns ujson encoded job
+        returns json encoded job
         """
         job = self._getCmdQueue(session).get(timeout=30)
-        return ujson.loads(job)
-        # # job=ujson.loads(job)
+        return json.loads(job)
+        # # job=json.loads(job)
         # if not job:
         #     return
         # self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()

@@ -168,7 +168,6 @@ class Daemon(object):
 
         try:
             if inputisdict:
-                print data
                 if data.has_key("_agentid"):
                     if data["_agentid"]<>0:
                         cmds=self.cmdsInterfaces["agent"][0]
