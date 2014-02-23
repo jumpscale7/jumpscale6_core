@@ -1,7 +1,7 @@
 from JumpScale import j
 import JumpScale.grid.agentcontroller
 import ujson
-
+import JumpScale.baselib.redisworker
 
 REDISIP = '127.0.0.1'
 REDISPORT = 7768
@@ -14,7 +14,7 @@ class AgentCmds():
 
         if daemon==None:
             return
-
+            
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
 
@@ -48,7 +48,10 @@ class AgentCmds():
         """
         fetch work from agentcontroller & put on redis queue
         """
+        self.client.register()
+
         while True:
+
             ok=False
             while ok==False:
                 try:
@@ -63,20 +66,24 @@ class AgentCmds():
                 print 'no work here'
 
             if job and ok:
-                qname=job["queue"]
-                if not qname or qname.strip()=="":
-                    qname="default"
+                # jscriptid = "%s_%s" % (job["category"], job["cmd"])
 
-                if not self.queue.has_key(qname):
-                    raise RuntimeError("Could not find queue to execute job:%s ((ops:processmanager.agent.schedulework L:1))"%job)
+                j.clients.redisworker.execJumpscript(jumpscriptid=job["jscriptid"],jumpscript=None,_timeout=60,_queue=job["queue"],_log=True,_sync=False,**job["args"])
 
-                queue=self.queue[qname]
+                # qname=job["queue"]
+                # if not qname or qname.strip()=="":
+                #     qname="default"
 
-                # result = queue.enqueue_call('%s_%s.action'%(job["category"],job["cmd"]),kwargs=job["args"],\
-                #     timeout=int(job["timeout"]))
-                self.redis.hset("workerjobs",job["id"], ujson.dumps(job))
-                queue.put(job["id"])
-                #need to do something here to make sure they are both in redis #@todo P1
+                # if not self.queue.has_key(qname):
+                #     raise RuntimeError("Could not find queue to execute job:%s ((ops:processmanager.agent.schedulework L:1))"%job)
+
+                # queue=self.queue[qname]
+
+                # # result = queue.enqueue_call('%s_%s.action'%(job["category"],job["cmd"]),kwargs=job["args"],\
+                # #     timeout=int(job["timeout"]))
+                # self.redis.hset("workerjobs",job["id"], ujson.dumps(job))
+                # queue.put(job["id"])
+                # #need to do something here to make sure they are both in redis #@todo P1
 
     def _killGreenLets(self,session=None):
         """

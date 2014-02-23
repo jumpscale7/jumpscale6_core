@@ -115,11 +115,13 @@ class ControllerCMDS():
             self.roles2agents[role].append(agent)   
 
     def register(self,session):
+        print "new agent:"
         roles=session.roles
         agentid="%s_%s"%(session.gid,session.nid)
         for role in roles:
             self._setRole2Agent(role, agentid)
         self.sessionsUpdateTime[agentid]=j.base.time.getTimeEpoch()
+        print "register done:%s"%agentid
 
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
@@ -254,11 +256,17 @@ class ControllerCMDS():
         action = self.getJumpScript(organization, name, session=session)
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
-        role = role.lower()
-        if role in self.roles2agents:
-            for agentid in self.roles2agents[role]:
-                gid,nid=agentid.split("_")                
-                job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session)
+        if role<>None:
+            role = role.lower()
+            if role in self.roles2agents:
+                for agentid in self.roles2agents[role]:
+                    gid,nid=agentid.split("_")                
+                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session)
+                if wait:
+                    return self.waitJumpscript(job=job,session=session)
+                return job.__dict__
+        elif nid<>None:
+            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session)
             if wait:
                 return self.waitJumpscript(job=job.__dict__,session=session)
             return job.__dict__
@@ -272,13 +280,12 @@ class ControllerCMDS():
 
     def waitJumpscript(self,jobid=None,job=None,session=None):
         """
-        @return job as json encoded job dict
+        @return job as dict
         """
-        if not job:
-            if not jobid:
+        if job==None:
+            if jobid==None:
                 raise RuntimeError("job or jobid need to be given as argument")
             job = self._getJobFromRedis(session.gid, jobid)
-
         if job["timeout"]<>0:
             res = self._getJobQueue(job["id"]).get(job["timeout"])
         else:
@@ -296,14 +303,27 @@ class ControllerCMDS():
     def getWork(self, session=None):
         """
         is for agent to ask for work
-        returns json encoded job
+        returns job as dict
         """
-        self.register(session)
         job = self._getCmdQueue(session).get(timeout=30)
-        if job:
-            return json.loads(job)
-        else:
-            return None
+        if job<>None:
+            return ujson.loads(job)
+        # # job=ujson.loads(job)
+        # if not job:
+        #     return
+        # self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
+        # try:
+        #     # GET JOB object
+        #     # job = self._getJobFromRedis(session.gid, jobid)
+        #     # agentid = "%s_%s" % (session.gid, session.nid)
+        #     #self.activeJobSessions[session.id]=job
+        #     return job
+
+        # except Exception,e:
+        #     raise
+        #     print 'something went wrong %s' % e
+        #     #because of timeout max wait is 2 min
+        #     print "timeout (if too fast timeouts then error in getWork while loop)"
 
     def notifyWorkCompleted(self, job,session=None):
         """
@@ -360,6 +380,7 @@ class ControllerCMDS():
         #         parentjob.save()
         #         parentjob.done()
 
+        print "completed job"
         return
 
     def getScheduledWork(self,agentid,session=None):
