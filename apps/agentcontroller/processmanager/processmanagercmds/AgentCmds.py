@@ -14,7 +14,7 @@ class AgentCmds():
 
         if daemon==None:
             return
-            
+
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
 
@@ -48,10 +48,7 @@ class AgentCmds():
         """
         fetch work from agentcontroller & put on redis queue
         """
-        self.client.register()
-
         while True:
-
             ok=False
             while ok==False:
                 try:
@@ -66,13 +63,6 @@ class AgentCmds():
                 print 'no work here'
 
             if job and ok:
-                # jscriptid = "%s_%s" % (job["category"], job["cmd"])
-
-                from IPython import embed
-                print "DEBUG NOW jobnew"
-                embed()
-                
-
                 qname=job["queue"]
                 if not qname or qname.strip()=="":
                     qname="default"
