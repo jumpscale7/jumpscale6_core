@@ -5,7 +5,7 @@ OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 class Stats(OsisBaseObject):
 
     """
-    identifies a stat key in the grid
+    NEEDS TO BE EMPTY, NOTHING GOES TO ES OR DB
     """
 
     def __init__(self, ddict={}):

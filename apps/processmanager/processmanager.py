@@ -20,6 +20,12 @@ j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
 
+#check redis is there if not try to start
+if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+    j.packages.findNewest(name="redis").install()
+    j.packages.findNewest(name="redis").start()
+
+
 def checkosis():
     masterip=j.application.config.get("grid.master.ip")
     osis = j.core.osis.getClient(masterip, user='root')
@@ -39,9 +45,11 @@ if masterip in j.system.net.getIpAddresses():
 
     if not j.tools.startupmanager.exists("jumpscale","agentcontroller"):
         raise RuntimeError("Could not find osis installed on local system, please install.")
-        
-    j.tools.startupmanager.startProcess("jumpscale","osis")
-    j.tools.startupmanager.startProcess("jumpscale","agentcontroller")
+    
+    if not j.system.net.tcpPortConnectionTest("127.0.0.1",5544):
+        j.tools.startupmanager.startProcess("jumpscale","osis")
+    if not j.system.net.tcpPortConnectionTest("127.0.0.1",4444):        
+        j.tools.startupmanager.startProcess("jumpscale","agentcontroller")
 
 success=False
 while success==False:
@@ -80,7 +88,6 @@ for tarinfo in tar:
             # j.system.fs.moveFile("%s/%s"%(tmppath,tarinfo.name),dest)
 # j.system.fs.removeDirTree(tmppath)
 j.system.fs.remove(ppath)
-
 
 j.core.grid.init()
 

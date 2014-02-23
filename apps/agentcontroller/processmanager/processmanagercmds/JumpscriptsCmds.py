@@ -99,7 +99,9 @@ class JumpscriptsCmds():
                     self.jumpscriptsByPeriod[period]=[]
                 self.jumpscriptsByPeriod[period].append(jumpscript)
 
-            self.redis.hset("workers:jumpscripts",jumpscript.id, ujson.dumps(jumpscript_data))
+            self.redis.hset("workers:jumpscripts:id",jumpscript.id, ujson.dumps(jumpscript_data))
+            if jumpscript.organization<>"" and jumpscript.name<>"":
+                self.redis.hset("workers:jumpscripts:name","%s__%s"%(jumpscript.organization,jumpscript.name), ujson.dumps(jumpscript_data))
 
         self._killGreenLets()       
         self._configureScheduling()

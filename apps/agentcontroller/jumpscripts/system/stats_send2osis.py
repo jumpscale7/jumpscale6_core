@@ -12,6 +12,7 @@ category = "monitoring.send2osis.carbon"
 period = 10#120 #always in sec
 enable=True
 async=False
+log = False
 roles = ["osis.db.graphite"]
 
 def action():
@@ -20,10 +21,13 @@ def action():
         if stat.memonly:
             continue
         avg, mag = stat.getAvgMax()
-        stats.append({'key': key, 'value': avg})
+        stats.append([key,avg])
+    masterip=j.application.config.get("grid.master.ip")
+    OSISclient = j.core.osis.getClient(masterip, user='root')        
     if stats:
         try:
-            j.processmanager.cache.statobject.osis.set(stats)
+            OSISclientStat=j.core.osis.getClientForCategory(OSISclient,"system","stats")
+            OSISclientStat.set(stats)
         except Exception,e:
             if str(e).find("Connection refused")<>-1:
                 j.events.opserror_critical("cannot forward stats to osis, there is probably no carbon running on osis", category='processmanager.send2osis.stats', e=None)

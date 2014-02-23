@@ -40,6 +40,7 @@ class Jumpscript(OsisBaseObject):
             self.period=0
             self.order=0
             self.queue=""
+            self.log=True
 
     def setArgs(self,action):
         import inspect

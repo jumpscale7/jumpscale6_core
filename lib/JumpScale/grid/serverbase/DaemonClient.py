@@ -172,7 +172,8 @@ class DaemonClient(object):
                 print "session lost"
                 self.initSession()
                 retry += 1
-                return self.sendMsgOverCMDChannel(cmd, rawdata, agentid,sendformat, returnformat, retry, maxretry, category,transporttimeout=transporttimeout)
+                agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat=sendformat, returnformat=returnformat, retry=retry, maxretry=maxretry, category=category,transporttimeout=transporttimeout)
             else:
                 msg = "Authentication error on server.\n"
                 raise AuthenticationError(msg)
@@ -185,15 +186,19 @@ class DaemonClient(object):
             # print "*** error in client to zdaemon ***"
 
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            ecodict = s.loads(parts[2])
-            eco = j.errorconditionhandler.getErrorConditionObject(ddict)
+            ecodict = s.loads(parts[2])   
 
-            if ecodict.errormessage.find("Authentication error")<>-1:
+            if ecodict["errormessage"].find("Authentication error")<>-1:
                 raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
                      
-            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-            if die:
-                j.errorconditionhandler.reRaiseECO(eco)
+            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
+            # frames= j.errorconditionhandler.getFrames()            
+            # s = j.db.serializers.getMessagePack()  # get messagepack serializer
+            # ddict = s.loads(parts[2])
+            # eco = j.errorconditionhandler.getErrorConditionObject(ddict)
+            # eco.category="rpc.exec"
+            # eco.frames=frames
+            # msg = "execution error on server  %s:%s" % (gid,nid,ecoid,cmd,category)
 
         returnformat = parts[1]
         if returnformat <> "":
