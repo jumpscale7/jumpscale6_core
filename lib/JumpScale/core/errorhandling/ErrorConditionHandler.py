@@ -2,6 +2,7 @@ import sys
 import traceback
 import string
 import inspect
+import imp
 
 from JumpScale import j
 
@@ -214,18 +215,15 @@ class ErrorConditionHandler():
         
 
         errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
-
-        if tag<>"":
-            tag=tag.replace("((","")
-            tag=tag.replace("))","")
-            tag=j.core.tags.getObject(tag)
-            #see HowToThrowErrorTxtLonly.wiki in doc jumpscale (howto) for how to parse
-
-
-            from IPython import embed
-            print "DEBUG NOW parsePythonErrorObject in errorcondition handler"
-            embed()
-            
+        try:
+            import ujson
+            errorobject.exceptioninfo = ujson.dumps(pythonExceptionObject)
+        except ImportError:
+            import json
+            errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
+        errorobject.exceptionclassname = pythonExceptionObject.__class__.__name__
+        module = inspect.getmodule(pythonExceptionObject)
+        errorobject.exceptionmodule = module.__name__ if module else None
         
         # errorobject.tb=tb
 
@@ -249,6 +247,18 @@ class ErrorConditionHandler():
             pass
                         
         return errorobject        
+
+    def reRaiseECO(self, eco):
+        import json
+        if eco.exceptionmodule:
+            mod = imp.load_package(eco.exceptionmodule, eco.exceptionmodule)
+        else:
+            import __builtin__ as mod
+        Klass = getattr(mod, eco.exceptionclassname, RuntimeError)
+        exc = Klass(eco.errormessage)
+        for key, value in json.loads(eco.exceptioninfo).iteritems():
+            setattr(exc, key, value)
+        raise exc
     
     def parsepythonExceptionObject(self,*args,**kwargs):
         raise RuntimeError("Do not use .parsepythonExceptionObject method use .parsePythonErrorObject")
