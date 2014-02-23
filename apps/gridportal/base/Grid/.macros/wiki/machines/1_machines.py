@@ -14,7 +14,7 @@ def main(j, args, params, tags, tasklet):
     #[u'otherid', u'description', u'roles', u'mem', u'netaddr', u'ipaddr', u'nid', u'lastcheck', u'state', u'gid', u'active', u'cpucore', u'type', u'id', u'name']
     fields = ["id", "nid", "name", "description", "active", "state", "mem", "netaddr", "cpucore"]
 
-    out.append('||id||node||name||description||active||state||mem||macaddr||ip||cpucore||')
+    out.append('||ID||Node||Name||Description||Active||State||Mem||Macaddr||IP||CPUCore||')
     machines = actor.getMachines()
     if not machines:
         out = 'No machines available'
@@ -32,12 +32,15 @@ def main(j, args, params, tags, tasklet):
                 line.append('[%s|/grid/node?id=%s]' % (str(machine[field]), str(machine[field])))
             elif field == 'netaddr':
                 netaddr = machine[field]
-                macs = ''
-                ips = ''
+                macs = list()
+                ips = list()
                 for k, v in netaddr.iteritems():
-                    macs += '%s<br>' % k
-                    ips += '%s:%s<br>' % (v[0], v[1])
-                line.append('%s|%s' % (macs, ips))
+                    macs.append('%s' % k)
+                    iface, ip = v
+                    if not ip:
+                        ip = 'N/A'
+                    ips.append('%s %s' % (iface, ip))
+                line.append('%s|%s' % ('@LF '.join(macs), '@LF '.join(ips)))
             else:
                 line.append(str(machine[field]))
 

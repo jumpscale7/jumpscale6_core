@@ -3,7 +3,6 @@ def main(j, args, params, tags, tasklet):
 
     params.merge(args)
     doc = params.doc
-    tags = params.tags
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
 
@@ -15,9 +14,9 @@ def main(j, args, params, tags, tasklet):
     #this makes sure bootstrap datatables functionality is used
     out.append("{{datatables_use}}}}\n")
 
-    fields = ['id', 'nid', 'name', 'description', 'active', 'sizeondisk', 'free', 'path']
+    fields = ['id', 'nid', 'devicename', 'description', 'active', 'sizeondisk', 'free', 'path']
 
-    out.append('||id||node||name||description||active||free||path||')
+    out.append('||id||node||devicename||description||active||free||path||')
     vdisks = actor.getVDisks(machineid=machineid, disk_id=disk_id)
 
     if not vdisks:
@@ -38,7 +37,10 @@ def main(j, args, params, tags, tasklet):
             elif field == 'free':
                 diskfree = vdisk[field]
                 disksize = vdisk['sizeondisk']
-                diskusage = 100 - int(100.0 * diskfree / disksize)
+                if disksize:
+                    diskusage = 100 - int(100.0 * diskfree / disksize)
+                else:
+                    diskusage = 0
                 line.append('%s%%' % diskusage)
             else:
                 line.append(str(vdisk[field]))

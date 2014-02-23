@@ -16,6 +16,10 @@ def main(j, args, params, tags, tasklet):
             filters['from_'] = {'name': 'timeStart', 'value': j.base.time.getEpochAgo(val), 'eq': 'gte'}
         elif tag == 'to' and val:
             filters['to'] = {'name': 'timeStop', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
+        elif tag == 'organization':
+            filters['category'] = val
+        elif tag == 'name':
+            filters['cmd'] = val
         elif val:
             filters[tag] = val
 
@@ -28,7 +32,7 @@ def main(j, args, params, tags, tasklet):
             result = ujson.loads(result)
         except:
             pass
-        return result
+        return j.html.escape(str(result))
 
     fieldnames = ['Id', 'Category', 'Command', 'Result', 'State']
     fieldvalues = [linkstr, 'category', 'cmd', makeResult, 'state']

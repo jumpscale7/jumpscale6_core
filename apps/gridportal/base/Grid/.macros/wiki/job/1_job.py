@@ -2,6 +2,7 @@ import datetime
 import json
 
 def main(j, args, params, tags, tasklet):    
+    import urllib
 
     id = args.getTag('id')
     if not id:
@@ -24,16 +25,22 @@ def main(j, args, params, tags, tasklet):
 
         obj['nid'] = obj.get('nid', 0)
         obj['roles'] = ', '.join(obj['roles'])
-        obj['args'] = json.dumps(obj['args'])
+        obj['args'] = urllib.quote(json.dumps(obj['args']))
 
         if obj["state"] == "ERROR":
             obj['state'] = "FAILED"
             eco = json.loads(obj['result'])
             obj['includemacro'] = 'errorresult ecoguid:%s' % eco['guid']
-            obj['result'] = eco['errormessage'].replace('\n', '<br>')
+            obj['result'] = eco['errormessage'].replace('\n', '$LF')
+        else:
+            try:
+                result = json.loads(obj['result'])
+            except:
+                result = obj['result']
+            obj['result'] = j.html.escape(str(result))
 
         if not obj.get('includemacro', None):
-            obj['includemacro'] = 'successfulresult result:%s' % obj['result']
+            obj['includemacro'] = 'successfulresult result:%s' % urllib.quote(obj['result'])
         return obj
 
     push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
