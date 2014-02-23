@@ -180,7 +180,7 @@ class RedisWorkerFactory:
         if jsdict:
             jsdict=ujson.loads(jsdict)
         else:
-            return None
+            raise RuntimeError("Cannot find jumpscript with id:%s"%jscriptid)
         return Jumpscript(ddict=jsdict)
 
     def getJumpscriptFromName(self,organization,name):
@@ -221,7 +221,13 @@ class RedisWorkerFactory:
         self._scheduleJob(job)
         if _sync:
             job=self.waitJob(job,timeout=_timeout)
-        return job        
+        return job   
+
+    def execJobAsync(self,job):
+        print "execJobAsync:%s"%job.name
+        job=Job(ddict=job)
+        self._scheduleJob(job)
+        return job   
 
     def _getWork(self,qname,timeout=0):
         if not self.queue.has_key(qname):
