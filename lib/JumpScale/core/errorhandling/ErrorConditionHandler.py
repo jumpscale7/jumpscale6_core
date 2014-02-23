@@ -282,6 +282,9 @@ class ErrorConditionHandler():
             
         self.inException=True
 
+        print "ERROR"
+        print pythonExceptionObject
+
                
         errorobject=self.parsePythonErrorObject(pythonExceptionObject,ttype=ttype,tb=tb)
 
@@ -415,6 +418,7 @@ class ErrorConditionHandler():
         eco.toAscii()
 
         if self.checkErrorIgnore(eco):
+            print "IGNORE ERROR"
             return
 
         if j.system.net.tcpPortConnectionTest("127.0.0.1",7768):

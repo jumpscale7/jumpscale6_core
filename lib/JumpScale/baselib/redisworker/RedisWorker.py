@@ -224,7 +224,7 @@ class RedisWorkerFactory:
         return job   
 
     def execJobAsync(self,job):
-        print "execJobAsync:%s"%job.name
+        print "execJobAsync:%s"%job["id"]
         job=Job(ddict=job)
         self._scheduleJob(job)
         return job   
