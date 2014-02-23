@@ -169,7 +169,7 @@ class RedisWorkerFactory:
             #jumpscript does not exist yet
             js.id=self.redis.incr("workers:jumpscriptlastid")
             jumpscript_data=ujson.dumps(js.__dict__)
-            self.redis.hset("workers:jumpscripts:id",jumpscript.id, jumpscript_data)
+            self.redis.hset("workers:jumpscripts:id",js.id, js)
             if js.organization<>"" and js.name<>"":
                 self.redis.hset("workers:jumpscripts:name","%s__%s"%(js.organization,js.name), jumpscript_data)            
             self.redis.hset("workers:jumpscripthashes",key,jumpscript_data)
@@ -249,6 +249,8 @@ class RedisWorkerFactory:
     def _scheduleJob(self,job):
         """
         """
+
+        
         qname=job.queue
         if not qname or qname.strip()=="":
             qname="default"

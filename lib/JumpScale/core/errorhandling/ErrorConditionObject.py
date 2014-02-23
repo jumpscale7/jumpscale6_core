@@ -83,8 +83,8 @@ class ErrorConditionObject():
             if hasattr(j, 'core') and hasattr(j.core, 'grid') and hasattr(j.core.grid, 'aid'):
                 self.aid = j.core.grid.aid
             self.pid = j.application.whoAmI.pid
-            self.jid = ""
-            self.masterjid = ""
+            self.jid = 0
+            self.masterjid = 0
 
             self.epoch= j.base.time.getTimeEpoch()
             self.tags=""
