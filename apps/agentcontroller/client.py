@@ -36,7 +36,7 @@ for i in range(1):
     print i
     args={}
     args["msg"]="test"
-    result=client.executeJumpScript(organization="jumpscale", name="echo", nid=j.application.whoAmI.nid, role=None, args=args, all=False, timeout=600, wait=True, queue='default', transporttimeout=5, _agentid=0)
+    result=client.executeJumpScript(organization="jumpscale", name="echo", nid=j.application.whoAmI.nid, role=None, args=args, all=False, timeout=600, wait=True, queue='io', transporttimeout=5, _agentid=0)
     print result
     # job=client.execute(,,msg="test:%s"%i,timeout=5,wait=True,lock="")
     # job=client.waitJumpscript(job["id"])

@@ -14,9 +14,6 @@ j.application.initGrid()
 j.logger.consoleloglevel = 2
 import JumpScale.baselib.redis
 
-REDISSERVER = '127.0.0.1'
-REDISPORT = 7769
-
 #check redis is there if not try to start
 if not j.system.net.tcpPortConnectionTest("127.0.0.1",7769):
     raise RuntimeError("did not find redis on port %s"%7769)
@@ -51,8 +48,10 @@ class ControllerCMDS():
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
+
+        self.redisport=7769
         
-        self.redis = j.clients.redis.getGeventRedisClient(REDISSERVER, REDISPORT)
+        self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
 
         j.logger.setLogTargetLogForwarder()
 
@@ -63,7 +62,7 @@ class ControllerCMDS():
     def authenticate(self, session):
         return False  # to make sure we dont use it
 
-    def scheduleCmd(self,gid,nid,cmdcategory,cmdname,args={},queue="",log=True,timeout=0,roles=[],session=None): 
+    def scheduleCmd(self,gid,nid,cmdcategory,cmdname,args={},jscriptid=None,queue="",log=True,timeout=0,roles=[],session=None): 
         """ 
         new preferred method for scheduling work
         @name is name of cmdserver method or name of jumpscript 
@@ -74,6 +73,7 @@ class ControllerCMDS():
         jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         job.id=jobid
         job.getSetGuid()
+        job.jscriptid=jscriptid
         jobs=json.dumps(job)
         self._setJob(job.__dict__, True,jobs)
         q = self._getCmdQueue(gid=gid, nid=nid)
@@ -101,12 +101,13 @@ class ControllerCMDS():
         if not gid and not nid:
             gid = session.gid
             nid = session.nid
-        queuename = "commands:%s:%s" % (gid, nid)
-        return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=True)
+        print "get queue for %s %s"%(gid,nid)
+        queuename = "commands:queue:%s:%s" % (gid, nid)
+        return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=True)
 
     def _getJobQueue(self, jobid):
         queuename = "jobqueue:%s" % jobid
-        return j.clients.redis.getGeventRedisQueue(REDISSERVER, REDISPORT, queuename, fromcache=False)
+        return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=False)
         
     def _setRole2Agent(self,role,agent):
         if not self.roles2agents.has_key(role):
@@ -252,7 +253,7 @@ class ControllerCMDS():
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
         self._adminAuth(session.user,session.passwd)
-
+        print "AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid)
         action = self.getJumpScript(organization, name, session=session)
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
@@ -261,12 +262,12 @@ class ControllerCMDS():
             if role in self.roles2agents:
                 for agentid in self.roles2agents[role]:
                     gid,nid=agentid.split("_")                
-                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session)
+                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session,jscriptid=action.id)
                 if wait:
                     return self.waitJumpscript(job=job,session=session)
                 return job.__dict__
         elif nid<>None:
-            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session)
+            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session,jscriptid=action.id)
             if wait:
                 return self.waitJumpscript(job=job.__dict__,session=session)
             return job.__dict__
@@ -305,61 +306,22 @@ class ControllerCMDS():
         is for agent to ask for work
         returns job as dict
         """
-        job = self._getCmdQueue(session).get(timeout=30)
+        q = self._getCmdQueue(session)
+        job=q.get(timeout=30)
         if job<>None:
-            return ujson.loads(job)
-        # # job=ujson.loads(job)
-        # if not job:
-        #     return
-        # self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-        # try:
-        #     # GET JOB object
-        #     # job = self._getJobFromRedis(session.gid, jobid)
-        #     # agentid = "%s_%s" % (session.gid, session.nid)
-        #     #self.activeJobSessions[session.id]=job
-        #     return job
+            print "getwork %s for jsid:%s"%(session.nid,job.jscriptid)
+            return json.loads(job)
 
-        # except Exception,e:
-        #     raise
-        #     print 'something went wrong %s' % e
-        #     #because of timeout max wait is 2 min
-        #     print "timeout (if too fast timeouts then error in getWork while loop)"
 
     def notifyWorkCompleted(self, job,session=None):
         """
         job here is a dict
-        """
+        """        
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         self._setJob(job, osis=True)
         self._getJobQueue(job["id"]).put(json.dumps(job))
-
-        # if job.queue:
-        #     lq = self._getCmdQueue(session, job.queue)
-        #     q = self._getCmdQueue(session)
-        #     lq.get()
-        #     newjobid = lq.get()
-        #     if newjobid:
-        #         q.put(newjobid)
-        # if eco:
-        #     job.resultcode=2
-        #     job.state="ERROR"
-        #     ecobj = j.errorconditionhandler.getErrorConditionObject(eco)
-        #     print "#####ERROR ON AGENT######"
-        #     try:
-        #         j.errorconditionhandler.processErrorConditionObject(ecobj)
-        #     except:
-        #         print ecobj
-        #     print "#########################"
-        #     job.result = json.dumps(eco)
-        # else:
-        #     eco = ''
-        #     job.resultcode=0
-        #     job.state="OK"
-        #     job.result = json.dumps(result)
-        # self._setJob(job, osis=True)
-        #self._getJobQueue(jobid).put(job.state)
 
 
         #NO PARENT SUPPORT YET
