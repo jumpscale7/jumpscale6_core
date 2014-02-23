@@ -67,6 +67,7 @@ class Jumpscript(OsisBaseObject):
             self.period=0
             self.order=0
             self.queue=""
+            self.log=True
 
             if action<>None:
                 self.setArgs(action)
@@ -93,7 +94,11 @@ class Jumpscript(OsisBaseObject):
         self.source="\n".join(splitted)
         if self.name=="":
             self.name=action.func_name
-
+        if self.organization=="":
+            from IPython import embed
+            print "DEBUG NOW uuuorg setArgs redisworker"
+            embed()
+            
     def getSetGuid(self):
         """
         use osis to define & set unique guid (sometimes also id)
@@ -158,21 +163,34 @@ class RedisWorkerFactory:
         js=Jumpscript(name=name, category=category, organization=organization, action=action, source=source, path=path, descr=descr)
         key=js.getContentKey()
         if self.redis.hexists("workers:jumpscripthashes",key):
-            return self.redis.hget("workers:jumpscripthashes",key)
+            jumpscript_data=self.redis.hget("workers:jumpscripthashes",key)
+            js=Jumpscript(ddict=ujson.loads(jumpscript_data))
         else:
             #jumpscript does not exist yet
             js.id=self.redis.incr("workers:jumpscriptlastid")
-            self.redis.hset("workers:jumpscripts",js.id,ujson.dumps(js.__dict__))
-            self.redis.hset("workers:jumpscripthashes",key,js.id)
-            return js
+            jumpscript_data=ujson.dumps(js.__dict__)
+            self.redis.hset("workers:jumpscripts:id",jumpscript.id, jumpscript_data)
+            if js.organization<>"" and js.name<>"":
+                self.redis.hset("workers:jumpscripts:name","%s__%s"%(js.organization,js.name), jumpscript_data)            
+            self.redis.hset("workers:jumpscripthashes",key,jumpscript_data)
+        return js
 
     def getJumpscriptFromId(self,jscriptid):
-        jsdict=self.redis.hget("workers:jumpscripts",jscriptid)
+        jsdict=self.redis.hget("workers:jumpscripts:id",jscriptid)
         if jsdict:
             jsdict=ujson.loads(jsdict)
         else:
             return None
         return Jumpscript(ddict=jsdict)
+
+    def getJumpscriptFromName(self,organization,name):
+        key="%s__%s"%(organization,name)
+        jsdict=self.redis.hget("workers:jumpscripts:name",key)
+        if jsdict:
+            jsdict=ujson.loads(jsdict)
+        else:
+            return None
+        return Jumpscript(ddict=jsdict)        
         
     def execFunction(self,method,_category="unknown", _organization="unknown",_timeout=60,_queue="default",_log=True,_sync=True,**args):
         """
@@ -191,11 +209,13 @@ class RedisWorkerFactory:
         """
         @return job
         """
-        if jumpscript==None:
+        js=jumpscript
+        if js==None:
             js=self.getJumpscriptFromId(jumpscriptid)
         job=self._getJob(js.id,args=args,timeout=_timeout,log=_log,queue=_queue)
         job.cmd="%s/%s"%(js.organization,js.name)
         job.category="jumpscript"
+        job.log=js.log
         self._scheduleJob(job)
         if _sync:
             job=self.waitJob(job,timeout=_timeout)

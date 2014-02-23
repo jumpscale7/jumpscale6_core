@@ -194,11 +194,10 @@ class ErrorConditionHandler():
         except:
             message2=str(pythonExceptionObject)
             
-        if message2.find("{category:")<>-1:
-            cat=j.codetools.regex.findOne("\{ *category.*\:.*}",message2)
-            cat=cat.split(":")[1].replace("}","").strip()
+        if message2.find("((")<>-1:
+            tag=j.codetools.regex.findOne("\(\(.*\)\)",message2)         
         else:
-            cat=""
+            tag=""
             
         message+=message2
         
@@ -215,11 +214,22 @@ class ErrorConditionHandler():
         
 
         errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
+
+        if tag<>"":
+            tag=tag.replace("((","")
+            tag=tag.replace("))","")
+            tag=j.core.tags.getObject(tag)
+            #see HowToThrowErrorTxtLonly.wiki in doc jumpscale (howto) for how to parse
+
+
+            from IPython import embed
+            print "DEBUG NOW parsePythonErrorObject in errorcondition handler"
+            embed()
+            
         
         # errorobject.tb=tb
 
         # try:
-        errorobject.category=cat
         try:
             backtrace = "~ ".join([res for res in traceback.format_exception(ttype, pythonExceptionObject, tb)])
             if len(backtrace)>10000:

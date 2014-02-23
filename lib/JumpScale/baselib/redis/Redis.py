@@ -58,7 +58,6 @@ class RedisFactory:
         self.getProcessPids(name)
         dpath="/opt/redis/%s"%name
         cpath=j.system.fs.joinPaths(dpath,"redis.conf")
-        j.system.fs.writeFile(cpath,C)
         config=j.system.fs.fileGetContents(cpath)
         for line in config.split("\n"):
             if line.find("port")==0:
@@ -77,7 +76,7 @@ class RedisFactory:
         pids=j.system.process.getProcessPid(name)
         if pids==None:
             return []
-        if len(pids)>1:
+        if len(pids)>0:
             return pids
         return []
 
@@ -86,7 +85,7 @@ class RedisFactory:
         for pid in pids:
             j.system.platform.ubuntu.stopService(name)
         counter=0
-        while counter<30:
+        while counter<100:
             for pid in pids:
                 j.system.process.kill(pid)
             time.sleep(0.1)
@@ -108,9 +107,10 @@ class RedisFactory:
         # j.system.process.execute(cmd)                 
         j.system.platform.ubuntu.startService(name)
         timeout=time.time()+10
-        port=self.getPort(name)
+        port=self.getPort(name)        
+        check=False
         while check==False and time.time()<timeout:
-            check=j.system.net.tcpPortConnectionTest(port)
+            check=j.system.net.tcpPortConnectionTest("localhost",port)
         if check==False:
             raise RuntimeError("Could not start redis %s on port %s"%(name,port))
 
@@ -200,7 +200,7 @@ loglevel notice
 # Specify the log file name. Also 'stdout' can be used to force
 # Redis to log on the standard output. Note that if you use standard
 # output for logging but daemonize, logs will be sent to /dev/null
-logfile /opt/redis/$name/redis_ac.log
+logfile /opt/redis/$name/redis.log
 
 # To enable logging to the system logger, just set 'syslog-enabled' to yes,
 # and optionally update the other syslog parameters to suit your needs.

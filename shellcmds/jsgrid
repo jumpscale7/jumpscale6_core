@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit','reconfigure','testall'], help='Command to perform')
+parser.add_argument("action", choices=['reinit','reconfigure','testall','reinitsentry'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
@@ -23,6 +23,12 @@ if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
 
 
 opts = parser.parse_args()
+
+if opts.action =='reinit' or opts.action =='reinitsentry':
+    j.packages.findNewest(name="sentry").stop()
+    j.system.fs.copyFile("/opt/sentry/data/sentry_template.db","/opt/sentry/data/sentry.db")
+    j.packages.findNewest(name="sentry").start()
+
 
 ############RECONFIGURE
 if opts.action =='reconfigure':
@@ -49,11 +55,15 @@ if opts.action =='reinit':
     else:
         j.system.process.executeWithoutPipe("osis deleteall --force=1")
 
-    for item in ["/opt/graphite/storage/whisper/","/opt/jumpscale/var/log/","/opt/jumpscale/var/tmp/"]:
 
+
+    j.packages.findNewest(name="graphite").stop()
+
+    for item in ["/opt/graphite/storage/whisper/","/opt/jumpscale/var/log/","/opt/jumpscale/var/tmp/"]:
         j.system.fs.removeDirTree(item)
         j.system.fs.createDir(item)
-
+    
+    j.packages.findNewest(name="graphite").start()
 
     packages=["grid_master","grid_node","osis","agentcontroller","workers"]
     for package in packages:
@@ -63,6 +73,8 @@ if opts.action =='reinit':
         elif jp.isInstalled():
             print "RECONFIGURE:%s"%jp
             jp.configure()
+
+
 
     jp=j.packages.findNewest(name="grid_portal")
     jp.restart()

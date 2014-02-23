@@ -75,6 +75,9 @@ class Application:
     def getWhoAmiStr(self):
         return "_".join([str(item) for item in self.whoAmI])
 
+    def getAgentId(self):
+        return "%s_%s"%(self.whoAmI.gid,self.whoAmI.nid)
+
     def loadConfig(self):
         path = j.system.fs.joinPaths(j.dirs.cfgDir, "hrd")
         self.config=None
