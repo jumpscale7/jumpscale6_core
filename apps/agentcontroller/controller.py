@@ -299,23 +299,10 @@ class ControllerCMDS():
         returns json encoded job
         """
         job = self._getCmdQueue(session).get(timeout=30)
-        return json.loads(job)
-        # # job=json.loads(job)
-        # if not job:
-        #     return
-        # self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-        # try:
-        #     # GET JOB object
-        #     # job = self._getJobFromRedis(session.gid, jobid)
-        #     # agentid = "%s_%s" % (session.gid, session.nid)
-        #     #self.activeJobSessions[session.id]=job
-        #     return job
-
-        # except Exception,e:
-        #     raise
-        #     print 'something went wrong %s' % e
-        #     #because of timeout max wait is 2 min
-        #     print "timeout (if too fast timeouts then error in getWork while loop)"
+        if job:
+            return json.loads(job)
+        else:
+            return None
 
     def notifyWorkCompleted(self, job,session=None):
         """
@@ -372,7 +359,6 @@ class ControllerCMDS():
         #         parentjob.save()
         #         parentjob.done()
 
-        print "completed job"
         return
 
     def getScheduledWork(self,agentid,session=None):
