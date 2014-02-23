@@ -81,9 +81,8 @@ class RedisFactory:
         return []
 
     def stopInstance(self,name):        
+        j.system.platform.ubuntu.stopService(name)
         pids=self.getProcessPids(name)
-        for pid in pids:
-            j.system.platform.ubuntu.stopService(name)
         counter=0
         while counter<100:
             for pid in pids:

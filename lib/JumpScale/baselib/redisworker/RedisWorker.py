@@ -212,6 +212,8 @@ class RedisWorkerFactory:
         js=jumpscript
         if js==None:
             js=self.getJumpscriptFromId(jumpscriptid)
+        else:
+            js = jumpscript
         job=self._getJob(js.id,args=args,timeout=_timeout,log=_log,queue=_queue)
         job.cmd="%s/%s"%(js.organization,js.name)
         job.category="jumpscript"

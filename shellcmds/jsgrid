@@ -26,8 +26,10 @@ opts = parser.parse_args()
 
 if opts.action =='reinit' or opts.action =='reinitsentry':
     j.packages.findNewest(name="sentry").stop()
-    j.system.fs.copyFile("/opt/sentry/data/sentry_template.db","/opt/sentry/data/sentry.db")
-    j.packages.findNewest(name="sentry").start()
+    sentrytemplate = "/opt/sentry/data/sentry_template.db"
+    if j.system.fs.exists(sentrytemplate):
+        j.system.fs.copyFile(sentrytemplate,"/opt/sentry/data/sentry.db")
+        j.packages.findNewest(name="sentry").start()
 
 
 ############RECONFIGURE
