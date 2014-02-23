@@ -144,8 +144,10 @@ class Confluence2HTML():
             return '&#{0};'.format(ord(char.group(1)))
 
         substitutions = [
+            (r'\\([^\n\r\\])',  escape_char),
             ('<',           '&lt;'),
             ('>',           '&gt;'),
+            (r'\@LF\b',     '<br>'), # This should come after <>
             (limiter('*'),  limiter_replacement('strong')),
             (limiter('_'),  limiter_replacement('em')),
             (limiter('+'),  limiter_replacement('ins')),
@@ -168,7 +170,6 @@ class Confluence2HTML():
             (r'bq\.\s+(.*?)\n', r'<blockquote>\1</blockquote>\n'),
 
             # Escape characters by putting \ in front of it, e.g. \*
-            (r'\\([^\n\r\\])',  escape_char)
         ]
         # First, divide the text into macros & non-macros
         blocks = re.split(r'({{.*?}})', content, flags=re.DOTALL)
@@ -263,7 +264,7 @@ class Confluence2HTML():
                 params = ""
 
             # PAGEBREAK
-            if state == "start" and (line.find("@LF") == 0 or line.find("&nbsp;") != -1):  # or line=="":
+            if state == "start" and (line.find("&nbsp;") != -1):  # or line=="":
                 page.addNewLine()
                 continue
 
