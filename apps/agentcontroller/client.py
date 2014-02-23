@@ -15,13 +15,13 @@ j.logger.consoleloglevel = 5
 
 
 
-client=j.clients.agentcontroller
+client=j.clients.agentcontroller.get("127.0.0.1")
 
 # ac=client.get("127.0.0.1")
 
-jpclient=client.getClientProxy(category="jpackages",agentControllerIP="127.0.0.1")
+# jpclient=client.getClientProxy(category="jpackages",agentControllerIP="127.0.0.1")
 
-print jpclient.listJPackages(_agentid=1)
+# print jpclient.listJPackages(_agentid=1)
 
 #job=client.execute("opencode","wait","node",msg="test:%s"%0,timeout=5,wait=True,lock="")
 # jp= client.execute('jumpscale', 'error', 'node', timeout=10)
@@ -29,14 +29,18 @@ print jpclient.listJPackages(_agentid=1)
 
 # print jp
 
-j.application.stop()
+# j.application.stop()
 
 print "start test"
-for i in range(10):
+for i in range(1):
     print i
-    job=client.execute("opencode","wait","node",msg="test:%s"%i,timeout=5,wait=True,lock="")
+    args={}
+    args["msg"]="test"
+    result=client.executeJumpScript(organization="jumpscale", name="echo", nid=j.application.whoAmI.nid, role=None, args=args, all=False, timeout=600, wait=True, queue='default', transporttimeout=5, _agentid=0)
+    print result
+    # job=client.execute(,,msg="test:%s"%i,timeout=5,wait=True,lock="")
     # job=client.waitJumpscript(job["id"])
-    print job
+    # print job
 
 
 

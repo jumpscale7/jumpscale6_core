@@ -14,7 +14,7 @@ period = 1 #always in sec
 order = 1
 enable=True
 async=True
-log = 0
+log = False
 
 
 import ujson

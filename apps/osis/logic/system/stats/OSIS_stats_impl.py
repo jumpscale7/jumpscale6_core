@@ -2,6 +2,7 @@ from JumpScale import j
 from JumpScale.grid.osis.OSISStore import OSISStore
 
 ujson = j.db.serializers.getSerializerType('j')
+import JumpScale.baselib.graphite
 
 class mainclass(OSISStore):
     """
@@ -12,11 +13,13 @@ class mainclass(OSISStore):
         # self.elasticsearch=j.core.grid.getstatTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
 
     def set(self,key,value):
-        from IPython import embed
-        print "DEBUG NOW stats set"
-        embed()
-                                      
-        return ["",True,True]
+        out = ""
+        if isinstance(value, list):
+            for key,val in value:
+                out += "%s %s\n" % (key, val)
+            key = None
+        j.clients.graphite.send(out)
+        return [key, False, False]
 
     def find(self,query, start=0, size =100):
         raise RuntimeError("osis 'find' for stat not implemented")

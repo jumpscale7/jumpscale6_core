@@ -261,15 +261,7 @@ class OSISStore(object):
         try:
             data.pop("sguid")
         except:
-            pass
-
-        #@todo why is this????
-        if data.has_key("log"):
-            data["_log"]=data["log"]
-            data.pop("log")
-        # if data.has_key("value"):
-        #     data["_value"]=data["value"]
-        #     data.pop("value")            
+            pass       
         
         try:
             if ttl <> 0:
@@ -290,10 +282,6 @@ class OSISStore(object):
                     msg="indexer cannot parse object:\n%s"%data
                 except Exception,ee:
                     msg="indexer cannot parse object, cannot even print object.\n%s"%ee
-                from IPython import embed
-                print "DEBUG NOW iuiuiui"
-                embed()
-                
                 j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None)                
             else:
                 j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))

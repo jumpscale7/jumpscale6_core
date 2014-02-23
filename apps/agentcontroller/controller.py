@@ -259,14 +259,19 @@ class ControllerCMDS():
         action = self.getJumpScript(organization, name)
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
-        role = role.lower()
-        if role in self.roles2agents:
-            for agentid in self.roles2agents[role]:
-                gid,nid=agentid.split("_")                
-                job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session)
+        if role<>None:
+            role = role.lower()
+            if role in self.roles2agents:
+                for agentid in self.roles2agents[role]:
+                    gid,nid=agentid.split("_")                
+                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session)
+                if wait:
+                    return self.waitJumpscript(job=job,session=session)
+                return job.__dict__
+        elif nid<>None:
+            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session)
             if wait:
                 return self.waitJumpscript(job=job,session=session)
-            return job.__dict__
         else:
             job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout) 
             print "nothingtodo"
