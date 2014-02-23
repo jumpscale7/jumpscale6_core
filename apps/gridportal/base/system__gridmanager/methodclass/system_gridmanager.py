@@ -37,6 +37,7 @@ class system_gridmanager(j.code.classGetBase()):
         self.osis_alert = j.core.osis.getClientForCategory(osis,"system","alert")
         self.osis_log = j.core.osis.getClientForCategory(osis,"system","log")
         self.osis_nic = j.core.osis.getClientForCategory(osis,"system","nic")
+        self.osis_jumpscript = j.core.osis.getClientForCategory(osis,"system","jumpscript")
 
     def getClient(self,nid,category):
         nid = int(nid)
@@ -273,7 +274,7 @@ class system_gridmanager(j.code.classGetBase()):
                   }
         return self.osis_log.simpleSearch(params)
 
-    def getJobs(self, id=None, guid=None, from_=None, to=None, nid=None, gid=None, parent=None, roles=None, state=None, jsorganization=None, jsname=None, description=None, category=None, source=None, **kwargs):
+    def getJobs(self, id=None, guid=None, from_=None, to=None, nid=None, gid=None, parent=None, roles=None, state=None, organization=None, name=None, description=None, category=None, source=None, **kwargs):
         """
         interface to get job information
         param:id only find 1 job entry
@@ -303,8 +304,8 @@ class system_gridmanager(j.code.classGetBase()):
                   'source': source,
                   'parent': parent,
                   'state': state,
-                  'jsorganization': jsorganization,
-                  'jsname': jsname}
+                  'category': organization,
+                  'cmd': name}
         return self.osis_job.simpleSearch(params)
 
     def getErrorconditions(self, id=None, level=None, descr=None, descrpub=None, from_=None, to=None, nid=None, gid=None, category=None, tags=None, type=None, jid=None, jidparent=None, jsorganization=None, jsname=None, **kwargs):
@@ -392,21 +393,21 @@ class system_gridmanager(j.code.classGetBase()):
         """
         return self.osis_grid.simpleSearch({})
 
-    def getJumpscript(self, jsorganization, jsname, **kwargs):
+    def getJumpScript(self, organization, name, **kwargs):
         """
         calls internally the agentcontroller to fetch detail for 1 jumpscript
         param:jsorganization
         param:jsname
         """
-        return j.clients.agentcontroller.getJumpScript(jsorganization, jsname)
+        return self.osis_jumpscript.simpleSearch({'organization': organization, 'name': name})[0]
 
-    def getJumpscripts(self, jsorganization=None, **kwargs):
+    def getJumpScripts(self, organization=None, **kwargs):
         """
         calls internally the agentcontroller
         return: lists the jumpscripts with main fields (organization, name, category, descr)
         param:jsorganization find jumpscripts
         """
-        return j.clients.agentcontroller.listJumpScripts(jsorganization)
+        return self.osis_jumpscript.simpleSearch({'organization': organization})
 
     def getAgentControllerActiveJobs(self, **kwargs):
         """

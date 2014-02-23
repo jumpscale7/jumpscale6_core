@@ -185,19 +185,15 @@ class DaemonClient(object):
             # print "*** error in client to zdaemon ***"
 
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            ecodict = s.loads(parts[2])   
+            ecodict = s.loads(parts[2])
+            eco = j.errorconditionhandler.getErrorConditionObject(ddict)
 
-            if ecodict["errormessage"].find("Authentication error")<>-1:
+            if ecodict.errormessage.find("Authentication error")<>-1:
                 raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
                      
-            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' ecoid:'%s' error:'%s'" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["guid"],ecodict["errormessage"]))
-            # frames= j.errorconditionhandler.getFrames()            
-            # s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            # ddict = s.loads(parts[2])
-            # eco = j.errorconditionhandler.getErrorConditionObject(ddict)
-            # eco.category="rpc.exec"
-            # eco.frames=frames
-            # msg = "execution error on server  %s:%s" % (gid,nid,ecoid,cmd,category)
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+            if die:
+                j.errorconditionhandler.reRaiseECO(eco)
 
         returnformat = parts[1]
         if returnformat <> "":

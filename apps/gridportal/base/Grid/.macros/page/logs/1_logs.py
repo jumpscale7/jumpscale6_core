@@ -19,12 +19,15 @@ def main(j, args, params, tags, tasklet):
     def makeTime(row, field):
         return datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or ''
 
+    def cleanUp(row, field):
+        return j.html.escape(row[field])
+
     appstr = '[%(appname)s|/grid/log?id=%(id)s]'
     nidstr = '[%(nid)s|/grid/node?id=%(nid)s]'
     pidstr = '[%(pid)s|/grid/process?id=%(pid)s]'
     jidstr = '[%(jid)s|/grid/job?id=%(jid)s]'
     fieldids = ['appname', 'category', 'epoch', 'message', 'level', 'pid', 'nid', 'jid']
-    fieldvalues = ['appname', 'category', makeTime, 'message', 'level', pidstr, nidstr, jidstr]
+    fieldvalues = ['appname', 'category', makeTime, cleanUp, 'level', pidstr, nidstr, jidstr]
     tableid = modifier.addTableForModel('system', 'log', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
 

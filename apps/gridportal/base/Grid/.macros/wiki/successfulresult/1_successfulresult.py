@@ -4,6 +4,9 @@ def main(j, args, params, tags, tasklet):
     result = args.getTag('result')
     if result == 'None':
         result = ''
+    result = """{{code
+%s
+}}""" % result
     params.result = (result, doc)
     return params
     
