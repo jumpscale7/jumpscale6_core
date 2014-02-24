@@ -3,12 +3,10 @@ from JumpScale import j
 
 import JumpScale.grid.geventws
 import time
-import gevent
-from gevent.event import Event
 # import JumpScale.baselib.statmanager
 import JumpScale.baselib.graphite
 import psutil
-import inspect
+import importlib
 
 j.system.platform.psutil=psutil
 
@@ -196,16 +194,16 @@ cmds=daemon.daemon.cmdsInterfaces["core"][1]
 
 class DummyDaemon():
     def _adminAuth(self,user,passwd):
-        raise RuntimeError("permission denied")           
+        raise RuntimeError("permission denied")
 
 import sys
 sys.path.append(j.system.fs.getcwd())
 for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
     name=j.system.fs.getBaseName(item).replace(".py","")
     if name[0]<>"_":
-        exec ("from processmanagercmds.%s import *"%(name))
-        classs=eval("%s"%name)
-        tmp=classs(cmds)
+        module = importlib.import_module('processmanagercmds.%s' % name)
+        classs = getattr(module, name)
+        tmp=classs()
         daemon.addCMDsInterface(classs, category=tmp._name)
 
 

@@ -5,6 +5,7 @@ import gevent
 from gevent.event import Event
 import JumpScale.grid.osis
 import imp
+import importlib
 import inspect
 import ujson as json
 
@@ -496,8 +497,8 @@ sys.path.append(j.system.fs.joinPaths(j.system.fs.getcwd(),"processmanager"))
 for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filter="*.py"):
     name=j.system.fs.getBaseName(item).replace(".py","")
     if name[0]<>"_":
-        exec ("from processmanagercmds.%s import *"%(name))
-        classs=eval("%s"%name)
+        module = importlib.import_module('processmanagercmds.%s' % name)
+        classs = getattr(module, name)
         tmp=classs()
         daemon.addCMDsInterface(classs, category="processmanager_%s"%tmp._name,proxy=True)
 
