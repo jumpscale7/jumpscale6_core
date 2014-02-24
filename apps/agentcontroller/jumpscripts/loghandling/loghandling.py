@@ -35,21 +35,23 @@ def action():
     OSISclientLogger=j.core.osis.getClientForCategory(OSISclient,"system","log")
     OSISclientEco=j.core.osis.getClientForCategory(OSISclient,"system","eco")
 
+    log = None
     path = "/opt/jumpscale/apps/processmanager/loghandling/"
     if j.system.fs.exists(path=path):
         loghandlingTE = j.core.taskletengine.get(path)
+        log=redisqueue.get_nowait()
         # j.core.grid.logger.osis = OSISclientLogger
     else:
         loghandlingTE = None
 
+    eco = None
     path = "/opt/jumpscale/apps/processmanager/eventhandling"
     if j.system.fs.exists(path=path):
         eventhandlingTE = j.core.taskletengine.get(path)
-        # j.core.grid.logger.osiseco = OSISclientEco
+        eco=redisqueueEco.get_nowait()
     else:
         eventhandlingTE = None
 
-    log=redisqueue.get_nowait()
     out=[]
     while log<>None:
         log2=ujson.decode(log)
@@ -64,7 +66,6 @@ def action():
     if len(out)>0:
         OSISclientLogger.set(out)
 
-    eco=redisqueueEco.get_nowait()
     while eco<>None:
         eco2=ujson.decode(eco)
         eco2["epoch"] = int(time.time())
