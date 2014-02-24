@@ -307,10 +307,14 @@ class ControllerCMDS():
             if jobid==None:
                 raise RuntimeError("job or jobid need to be given as argument")
             job = self._getJobFromRedis(session.gid, jobid)
+        if job['state'] != 'SCHEDULED':
+            return job
+        q = self._getJobQueue(job["id"])
         if job["timeout"]<>0:
-            res = self._getJobQueue(job["id"]).get(job["timeout"])
+            res = q.fetch(timeout=job["timeout"])
         else:
-            res = self._getJobQueue(job["id"]).get()
+            res = q.fetch()
+        q.set_expire(5)
         if res:
             return json.loads(res)
         else:
