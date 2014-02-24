@@ -15,7 +15,7 @@ version = "1.0"
 roles = ["vfw.host"]
 
 
-def action(name, base):
+def action(name, base='base'):
     templatespath = j.system.fs.joinPaths('/opt', 'lxc', 'templates')
     j.system.platform.lxc.create(name=name, base=j.system.fs.joinPaths(templatespath, base))
     j.system.platform.lxc.start(name)

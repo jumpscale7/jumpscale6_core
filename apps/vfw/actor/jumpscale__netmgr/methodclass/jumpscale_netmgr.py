@@ -1,4 +1,7 @@
 from JumpScale import j
+import JumpScale.grid.agentcontroller
+import JumpScale.lib.lxc
+import JumpScale.baselib.serializers
 
 class jumpscale_netmgr(j.code.classGetBase()):
     """
@@ -13,6 +16,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         #jumpscale_netmgr_osis.__init__(self)
         self.client = j.core.osis.getClient(user='root')
         self.osisclient = j.core.osis.getClientForCategory(self.client, 'vfw', 'virtualfirewall')
+        self.agentcontroller = j.clients.agentcontroller.get()
+        self.json = j.db.serializers.getSerializerType('j')
 
     def fw_check(self, fwid, gid, **kwargs):
         """
@@ -20,7 +25,9 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
-        return True
+        fwobj = self.osisclient.get(fwid)
+        host = j.system.platform.lxc.getIp(fwobj.name)
+        return j.system.net.pingMachine(host, 5)
     
 
     def fw_create(self, domain, name, gid, nid, masquerade, **kwargs):
@@ -31,6 +38,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:nid node id
         param:masquerade do you want to allow masquerading?
         """
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', args={'name': name}, wait=False)
         fwobj = self.osisclient.new()
         fwobj.domain = domain
         fwobj.name = name
@@ -45,6 +53,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
+        fwobj = self.osisclient.get(fwid)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', args={'name': fwobj.name}, wait=False)
         self.osisclient.delete(fwid)
         return True
     
@@ -63,6 +73,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.toAddr = destip
         rule.toPort = destport
         self.osisclient.set(fwobj)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': fwobj.name, 'fwobject': self.json.dumps(fwobj)}, wait=False)
         return True
 
     def fw_forward_delete(self, fwid, gid, fwport, destip, destport, **kwargs):
@@ -77,6 +88,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         for rule in fwobj.tcpForwardRules:
             if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport:
                 fwobj.tcpForwardRules.remove(rule)
+                self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': fwobj.name, 'fwobject': self.json.dumps(fwobj)}, wait=False)
                 return True
 
         return False
@@ -122,6 +134,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
+        fwobj = self.osisclient.get(fwid)
+        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', args={'name': fwobj.name, 'action': 'start'}, wait=False)
         return True
     
 
@@ -130,6 +144,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
+        fwobj = self.osisclient.get(fwid)
+        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', args={'name': fwobj.name, 'action': 'stop'}, wait=False)
         return True
     
 
