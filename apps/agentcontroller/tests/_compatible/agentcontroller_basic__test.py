@@ -32,7 +32,7 @@ class TEST(unittest.TestCase):
         nid = j.application.whoAmI.nid
         kwargs = {'msg': 'test msg'}
         result1 = self.client.executeJumpScript('jumpscale', 'echo', nid, ROLE, args=kwargs, wait=True)
-        self.assertEqual(result1, kwargs['msg'])
+        self.assertEqual(result1['result'], kwargs['msg'])
 
         kwargs = {'logmsg': 'test log msg'}
         self.client.executeJumpScript('jumpscale', 'log', nid, ROLE, args=kwargs, wait=True)
