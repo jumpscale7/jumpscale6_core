@@ -112,7 +112,7 @@ class HRDPos():
             if key not in self.__dict__:
                 if checkExists:
                     return False
-                raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
+                raise KeyError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
 
         val=self.__dict__[key]
 
