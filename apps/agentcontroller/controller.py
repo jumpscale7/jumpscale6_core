@@ -79,7 +79,10 @@ class ControllerCMDS():
         self._log("jobid found (incr done)")
         job.id=jobid
         job.getSetGuid()
-        job.jscriptid=jscriptid
+        if not jscriptid:
+            action = self.getJumpScript(cmdcategory, cmdname, session=session)
+            jscriptid = action.id
+        job.jscriptid = jscriptid
         jobs=json.dumps(job)
         self._log("save 2 osis")
         self._setJob(job.__dict__, True,jobs)
@@ -88,7 +91,7 @@ class ControllerCMDS():
         self._log("put on queue")
         q.put(jobs)
         self._log("schedule done")
-        return job
+        return job.__dict__
 
     def _setJob(self, job, osis=False,jobs=None):
         if not j.basetype.dictionary.check(job):
@@ -286,16 +289,16 @@ class ControllerCMDS():
                     gid,nid=agentid.split("_")
                     job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session,jscriptid=action.id)
                 if wait:
-                    return self.waitJumpscript(job=job.__dict__,session=session)
-                return job.__dict__
+                    return self.waitJumpscript(job=job,session=session)
+                return job
             else:
                 return noWork()
         elif nid<>None:
             self._log("NID KNOWN")
             job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session,jscriptid=action.id)
             if wait:
-                return self.waitJumpscript(job=job.__dict__,session=session)
-            return job.__dict__
+                return self.waitJumpscript(job=job,session=session)
+            return job
         else:
             return noWork()
 
@@ -353,7 +356,6 @@ class ControllerCMDS():
         self._setJob(job, osis=True)
         q=self._getJobQueue(job["id"])
         q.put(json.dumps(job))
-
 
         #NO PARENT SUPPORT YET
         # #now need to return it to the client who asked for the work 

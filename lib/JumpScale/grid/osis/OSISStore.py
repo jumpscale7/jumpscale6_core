@@ -204,10 +204,8 @@ class OSISStore(object):
         """
         if j.basetype.dictionary.check(value):
             #is probably an osis object
-            if value.has_key("_meta") and  value.has_key("_ckey"):
-                #is an osis object
-                obj=self.getObject(value)
-                # obj.getSetGuid()
+            obj=self.getObject(value)
+            if not j.basetype.dictionary.check(obj):
                 new,changed,obj=self.setObjIds(obj)
                 key=obj.guid
                 self.index(obj)
