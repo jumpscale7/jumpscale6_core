@@ -161,6 +161,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.url = sourceurl
         rule.toUrls = desturls
         self.osisclient.set(wsfobj)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': wsfobj.name, 'fwobject': self.json.dumps(wsfobj)}, wait=False)
         return True
     
 
@@ -183,6 +184,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 rule.toUrls = ','.join(urls)
                 if len(urls) == 0:
                     wsfr.remove(rule)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': vfws.name, 'fwobject': self.json.dumps(vfws)}, wait=False)
         return True
     
 
