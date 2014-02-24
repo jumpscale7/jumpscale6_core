@@ -64,6 +64,8 @@ if opts.action =='cmd':
 
     import JumpScale.baselib.remote
 
+    import JumpScale.baselib.remote
+
     if opts.passwd==None:
         opts.passwd="rooter"
 

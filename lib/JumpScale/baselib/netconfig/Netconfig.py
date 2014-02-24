@@ -1,5 +1,6 @@
 from JumpScale import j
 import netaddr
+import JumpScale.lib.ovsnetconfig
 
 class Netconfig:
     """
@@ -27,7 +28,6 @@ class Netconfig:
                 cmd="ifdown %s --force"%nic
                 print "shutdown:%s"%nic
                 j.system.process.execute(cmd)
-
         
     def _getInterfacePath(self):
         path=j.system.fs.joinPaths(self.root,"etc/network/interfaces")
@@ -82,6 +82,8 @@ iface eth0 inet manual
         path=self._getInterfacePath()
         ed=j.codetools.getTextFileEditor(path)
         ed.removeSection(dev)
+
+        
 
     def setNameserver(self,addr):
         """
@@ -195,6 +197,7 @@ iface $int:$aliasnr inet static
         self._applyNetconfig(dev+":%s"%aliasnr,C,args,start=start)  
 
     def _applyNetconfig(self,devToApplyTo,template,args,start=False):
+
         C=template
         dev=args["dev"]
         if args.has_key("ipaddr"):
