@@ -62,6 +62,6 @@ class AgentControllerClient():
                     raise RuntimeError("Could not execute %s %s for role:%s, jobid was:%s"%(organization,name,role,result["id"]))
                 #j.errorconditionhandler.processErrorConditionObject(eco)
         if wait:
-            return ujson.loads(result["result"])
+            return result["result"]
         else:
             return result

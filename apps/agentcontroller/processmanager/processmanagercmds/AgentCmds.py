@@ -1,8 +1,7 @@
 from JumpScale import j
 import JumpScale.grid.agentcontroller
-import ujson
 import JumpScale.baselib.redisworker
-import time
+import gevent
 
 REDISIP = '127.0.0.1'
 REDISPORT = 7768
@@ -44,64 +43,46 @@ class AgentCmds():
         self._killGreenLets()
         self.daemon.schedule("agent", self.loop)
 
+    def reconnect(self):
+        while True:
+            try:
+                self.client.register()
+                return
+            except:
+                gevent.sleep(5)
 
     def loop(self):
         """
         fetch work from agentcontroller & put on redis queue
         """
         self.client.register()
-        time.sleep(2)
+        gevent.sleep(2)
         print "start loop to fetch work"
         while True:
-            ok=False
-            while ok==False:
-                try:
-                    print "check if work"
-                    job=self.client.getWork()
-                    print "check work returns"
-                    if job<>None:
-                        print "WORK FOUND: jobid:%s"%job["id"]
-                        ok=True
-                    else:
-                        print "no work"  
-                        continue                  
-                except Exception,e:
-                    j.errorconditionhandler.processPythonExceptionObject(e)
-                    # self.register()
+            try:
+                print "check if work"
+                job=self.client.getWork()
+                print "check work returns"
+                if job<>None:
+                    print "WORK FOUND: jobid:%s"%job["id"]
+                else:
+                    print "no work"
                     continue
-
-            if not job:
-                print 'no work here'
+            except Exception,e:
+                j.errorconditionhandler.processPythonExceptionObject(e)
+                self.reconnect()
                 continue
 
-            # jscriptid = "%s_%s" % (job["category"], job["cmd"])
             if job["jscriptid"]==None:
                 raise RuntimeError("jscript id needs to be filled in")
-                
-            # j.clients.redisworker.execJumpscript(jumpscriptid=job["jscriptid"],jumpscript=None,_timeout=60,_queue=job["queue"],_log=True,_sync=False,**job["args"])
             j.clients.redisworker.execJobAsync(job)
-
-            # qname=job["queue"]
-            # if not qname or qname.strip()=="":
-            #     qname="default"
-
-            # if not self.queue.has_key(qname):
-            #     raise RuntimeError("Could not find queue to execute job:%s ((ops:processmanager.agent.schedulework L:1))"%job)
-
-            # queue=self.queue[qname]
-
-            # # result = queue.enqueue_call('%s_%s.action'%(job["category"],job["cmd"]),kwargs=job["args"],\
-            # #     timeout=int(job["timeout"]))
-            # self.redis.hset("workerjobs",job["id"], ujson.dumps(job))
-            # queue.put(job["id"])
-            # #need to do something here to make sure they are both in redis #@todo P1
 
     def _killGreenLets(self,session=None):
         """
         make sure all running greenlets stop
         """
         if session<>None:
-            self._adminAuth(session.user,session.passwd)        
+            self._adminAuth(session.user,session.passwd)
         todelete=[]
         for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
             if key.find("agent")==0:

@@ -21,6 +21,7 @@ if not j.system.net.tcpPortConnectionTest("127.0.0.1",7769):
 class ControllerCMDS():
 
     def __init__(self, daemon):
+        self.debug = False # set true for verbose output
 
         j.application.initGrid()
 
@@ -67,25 +68,25 @@ class ControllerCMDS():
         new preferred method for scheduling work
         @name is name of cmdserver method or name of jumpscript 
         """
-        print "schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname)
+        self._log("schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname))
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
-        print "getjob osis client"
+        self._log("getjob osis client")
         job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
-        print "redis incr for job"
+        self._log("redis incr for job")
         jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
-        print "jobid found (incr done)"
+        self._log("jobid found (incr done)")
         job.id=jobid
         job.getSetGuid()
         job.jscriptid=jscriptid
         jobs=json.dumps(job)
-        print "save 2 osis"
+        self._log("save 2 osis")
         self._setJob(job.__dict__, True,jobs)
-        print "getqueue"
+        self._log("getqueue")
         q = self._getCmdQueue(gid=gid, nid=nid)
-        print "put on queue"
+        self._log("put on queue")
         q.put(jobs)
-        print "schedule done"
+        self._log("schedule done")
         return job
 
     def _setJob(self, job, osis=False,jobs=None):
@@ -110,14 +111,14 @@ class ControllerCMDS():
             gid = session.gid
             nid = session.nid
         if session==None:
-            print "get cmd queue NOSESSION"
-        print "get cmd queue for %s %s"%(gid,nid)
+            self._log("get cmd queue NOSESSION")
+        self._log("get cmd queue for %s %s"%(gid,nid))
         queuename = "commands:queue:%s:%s" % (gid, nid)
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=True)
 
     def _getJobQueue(self, jobid):
         queuename = "jobqueue:%s" % jobid
-        print "get job queue for job:%s"%(jobid)
+        self._log("get job queue for job:%s"%(jobid))
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=False)
         
     def _setRole2Agent(self,role,agent):
@@ -127,13 +128,13 @@ class ControllerCMDS():
             self.roles2agents[role].append(agent)   
 
     def register(self,session):
-        print "new agent:"
+        self._log("new agent:")
         roles=session.roles
         agentid="%s_%s"%(session.gid,session.nid)
         for role in roles:
             self._setRole2Agent(role, agentid)
         self.sessionsUpdateTime[agentid]=j.base.time.getTimeEpoch()
-        print "register done:%s"%agentid
+        self._log("register done:%s"%agentid)
 
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
@@ -189,7 +190,7 @@ class ControllerCMDS():
             guid,r,r=self.jumpscriptclient.set(t)
             t=self.jumpscriptclient.get(guid)
             
-            print "found jumpscript:%s " %("id:%s %s_%s" % (t.id,t.organization, t.name))
+            self._log("found jumpscript:%s " %("id:%s %s_%s" % (t.id,t.organization, t.name)))
 
             key0 = "%s_%s" % (t.gid,t.id)
             key = "%s_%s_%s" % (t.gid,t.organization, t.name)
@@ -264,12 +265,12 @@ class ControllerCMDS():
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
         self._adminAuth(session.user,session.passwd)
-        print "AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid)
+        self._log("AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid))
         action = self.getJumpScript(organization, name, session=session)
         if action==None:
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         if role<>None:
-            print "ROLE NOT NONE"
+            self._log("ROLE NOT NONE")
             role = role.lower()
             if role in self.roles2agents:
                 for agentid in self.roles2agents[role]:
@@ -279,14 +280,14 @@ class ControllerCMDS():
                     return self.waitJumpscript(job=job,session=session)
                 return job.__dict__
         elif nid<>None:
-            print "NID KNOWN"
+            self._log("NID KNOWN")
             job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session,jscriptid=action.id)
             if wait:
                 return self.waitJumpscript(job=job.__dict__,session=session)
             return job.__dict__
         else:
             job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout) 
-            print "nothingtodo"
+            self._log("nothingtodo")
             job.state="NOWORK"
             job.timeStop=job.timeStart
             self._setJob(job.__dict__, osis=True)
@@ -311,7 +312,7 @@ class ControllerCMDS():
             job["resultcode"]=1
             job["state"]="TIMEOUT"
             self._setJob(job, osis=True)
-            print "timeout on execution"
+            self._log("timeout on execution")
             return job
 
     def getWork(self, session=None):
@@ -319,15 +320,15 @@ class ControllerCMDS():
         is for agent to ask for work
         returns job as dict
         """
-        print "getwork"
+        self._log("getwork %s" % session)
         q = self._getCmdQueue(session)
         jobstr=q.get(timeout=30)
         if jobstr==None:
-            print "NO WORK"
+            self._log("NO WORK")
             return None
         job=json.loads(jobstr)
         if job<>None:
-            print "getwork found for node:%s for jsid:%s"%(session.nid,job["jscriptid"])
+            self._log("getwork found for node:%s for jsid:%s"%(session.nid,job["jscriptid"]))
             return job
 
 
@@ -335,7 +336,7 @@ class ControllerCMDS():
         """
         job here is a dict
         """
-        print "NOTIFY WORK COMPLETED: jobid:%s"%job["id"]        
+        self._log("NOTIFY WORK COMPLETED: jobid:%s"%job["id"])
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
@@ -362,7 +363,7 @@ class ControllerCMDS():
         #         parentjob.save()
         #         parentjob.done()
 
-        print "completed job"
+        self._log("completed job")
         return
 
     def getScheduledWork(self,agentid,session=None):
@@ -394,7 +395,11 @@ class ControllerCMDS():
     def log(self, logs, session=None):
         for log in logs:
             j.logger.logTargetLogForwarder.log(log)
-            
+
+    def _log(self, msg):
+        if self.debug:
+            print msg
+
     def getProcessmanagerScripts(self, session=None):
         """
         create tar.gz of cmds & monitoring objects & return as binary info
@@ -402,11 +407,10 @@ class ControllerCMDS():
         #@todo make async with local workers
         import tarfile
         ppath="/tmp/processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000)
-        tar = tarfile.open(ppath, "w:bz2")
-        for path in j.system.fs.listFilesInDir("processmanager",True):
-            if j.system.fs.getFileExtension(path)<>"pyc":
-                tar.add(path)
-        tar.close()
+        with tarfile.open(ppath, "w:bz2") as tar:
+            for path in j.system.fs.listFilesInDir("processmanager",True):
+                if j.system.fs.getFileExtension(path)<>"pyc":
+                    tar.add(path)
         data=j.system.fs.fileGetContents(ppath)
         j.system.fs.remove(ppath)
         return data
