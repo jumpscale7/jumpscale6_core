@@ -227,12 +227,12 @@ class RedisWorkerFactory:
         print "execJobAsync:%s"%job["id"]
         job=Job(ddict=job)
         self._scheduleJob(job)
-        return job   
+        return job
 
     def _getWork(self,qname,timeout=0):
         if not self.queue.has_key(qname):
-            raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%job)
-        queue=self.queue[qname]        
+            raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
+        queue=self.queue[qname]
         if timeout<>0:
             jobdict=queue.get(timeout=timeout)
         else:
