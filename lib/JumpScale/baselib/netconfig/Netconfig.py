@@ -1,6 +1,9 @@
 from JumpScale import j
 import netaddr
-import JumpScale.lib.ovsnetconfig
+try:
+    import JumpScale.lib.ovsnetconfig
+except Exception,e:
+    pass
 
 class Netconfig:
     """
@@ -83,7 +86,7 @@ iface eth0 inet manual
         ed=j.codetools.getTextFileEditor(path)
         ed.removeSection(dev)
 
-        
+
 
     def setNameserver(self,addr):
         """
