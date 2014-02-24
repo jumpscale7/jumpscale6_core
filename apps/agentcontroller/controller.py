@@ -264,6 +264,14 @@ class ControllerCMDS():
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
+        def noWork():
+            job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout)
+            self._log("nothingtodo")
+            job.state="NOWORK"
+            job.timeStop=job.timeStart
+            self._setJob(job.__dict__, osis=True)
+            return job.__dict__
+
         self._adminAuth(session.user,session.passwd)
         self._log("AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid))
         action = self.getJumpScript(organization, name, session=session)
@@ -274,11 +282,13 @@ class ControllerCMDS():
             role = role.lower()
             if role in self.roles2agents:
                 for agentid in self.roles2agents[role]:
-                    gid,nid=agentid.split("_")                
+                    gid,nid=agentid.split("_")
                     job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session,jscriptid=action.id)
                 if wait:
                     return self.waitJumpscript(job=job.__dict__,session=session)
                 return job.__dict__
+            else:
+                return noWork()
         elif nid<>None:
             self._log("NID KNOWN")
             job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session,jscriptid=action.id)
@@ -286,12 +296,7 @@ class ControllerCMDS():
                 return self.waitJumpscript(job=job.__dict__,session=session)
             return job.__dict__
         else:
-            job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout) 
-            self._log("nothingtodo")
-            job.state="NOWORK"
-            job.timeStop=job.timeStart
-            self._setJob(job.__dict__, osis=True)
-            return job.__dict__
+            return noWork()
 
     def waitJumpscript(self,jobid=None,job=None,session=None):
         """
