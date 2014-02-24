@@ -46,7 +46,7 @@ if opts.action =='new':
         opts.base="saucy-amd64-base"
     if opts.name==None:
         raise RuntimeError("need to specify name")
-    l.create(name=opts.name,stdout=True,base=opts.base,start=True)
+    l.create(name=opts.name,stdout=True,base=opts.base,start=False)
     if opts.pubip<>None:
         j.system.platform.lxc.networkSetPublic(opts.name, netname="pub0",bridge="br0",pubips=["%s"%opts.pubip]) 
 
