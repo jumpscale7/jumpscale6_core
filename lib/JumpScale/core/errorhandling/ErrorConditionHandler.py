@@ -216,8 +216,8 @@ class ErrorConditionHandler():
 
         errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
         try:
-            import ujson
-            errorobject.exceptioninfo = ujson.dumps(pythonExceptionObject)
+            import json
+            errorobject.exceptioninfo = json.dumps(pythonExceptionObject)
         except ImportError:
             import json
             errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
@@ -484,7 +484,7 @@ class ErrorConditionHandler():
 
         if j.application.config.exists("sentry.server"):
             import requests
-            import ujson
+            import json
             import uuid
             import datetime
             server=j.application.config.get("sentry.server")
@@ -581,7 +581,7 @@ class ErrorConditionHandler():
             headers = {'X-Sentry-Auth': auth}
 
             try:
-                r = requests.post(url2,data=ujson.dumps(data), headers=headers, timeout=1)
+                r = requests.post(url2,data=json.dumps(data), headers=headers, timeout=1)
             except Exception,e:  
                 pass              
                 # print "COULD NOT SEND \n%s \nTO SENTRY.\nReason:%s"%(data,e)
