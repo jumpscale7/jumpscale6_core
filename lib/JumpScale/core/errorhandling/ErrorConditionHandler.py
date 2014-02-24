@@ -217,10 +217,10 @@ class ErrorConditionHandler():
         errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
         try:
             import json
-            errorobject.exceptioninfo = json.dumps(pythonExceptionObject)
+            errorobject.exceptioninfo = json.dumps(pythonExceptionObject.__dict__)
         except ImportError:
-            import json
             errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
+
         errorobject.exceptionclassname = pythonExceptionObject.__class__.__name__
         module = inspect.getmodule(pythonExceptionObject)
         errorobject.exceptionmodule = module.__name__ if module else None
