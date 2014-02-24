@@ -277,7 +277,7 @@ class ControllerCMDS():
                     gid,nid=agentid.split("_")                
                     job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session,jscriptid=action.id)
                 if wait:
-                    return self.waitJumpscript(job=job,session=session)
+                    return self.waitJumpscript(job=job.__dict__,session=session)
                 return job.__dict__
         elif nid<>None:
             self._log("NID KNOWN")

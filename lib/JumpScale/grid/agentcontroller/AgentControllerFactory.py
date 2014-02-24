@@ -47,7 +47,7 @@ class AgentControllerClient():
         self.__dict__.update(client.__dict__)
 
 
-    def execute(self,organization,name,role,timeout=60,wait=True,queue="",dieOnFailure=True,**kwargs):
+    def execute(self,organization,name,role=None,nid=None,timeout=60,wait=True,queue="",dieOnFailure=True,**kwargs):
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
@@ -56,10 +56,8 @@ class AgentControllerClient():
             if result['state'] == 'NOWORK' and dieOnFailure:
                 raise RuntimeError('Could not find agent with role:%s' %  role)
             if result['result']:
-                eco=j.errorconditionhandler.getErrorConditionObject(ujson.loads(result["result"]))
-                print eco
                 if dieOnFailure:
-                    raise RuntimeError("Could not execute %s %s for role:%s, jobid was:%s"%(organization,name,role,result["id"]))
+                    raise RuntimeError("Could not execute %s %s for role:%s, jobid was:%s error: %s"%(organization,name,role,result["id"], result['result']))
                 #j.errorconditionhandler.processErrorConditionObject(eco)
         if wait:
             return result["result"]
