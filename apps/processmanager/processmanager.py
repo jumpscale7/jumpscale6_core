@@ -7,6 +7,7 @@ import time
 import JumpScale.baselib.graphite
 import psutil
 import importlib
+import sys
 
 j.system.platform.psutil=psutil
 
@@ -109,9 +110,7 @@ class MgrCmds():
         self.daemon.osis = j.core.osis.getClient(masterip, user='root')
 
     def _init(self):
-        
         self.loadMonitorObjectTypes()
-    
         for key,cmdss in self.daemon.cmdsInterfaces.iteritems():
 
             for cmds in cmdss:
@@ -129,8 +128,7 @@ class MgrCmds():
         for item in j.system.fs.listFilesInDir("monitoringobjects",filter="*.py"):
             name=j.system.fs.getBaseName(item).replace(".py","")
             if name[0]<>"_":
-                monmodule = __import__('monitoringobjects.%s' % name)
-                monmodule = getattr(monmodule, name)
+                monmodule = importlib.import_module('monitoringobjects.%s' % name)
                 classs=getattr(monmodule, name)
                 print "load factory:%s"%name
                 factory = getattr(monmodule, '%sFactory' % name)(self, classs)
@@ -145,9 +143,7 @@ class MgrCmds():
 
         if lastcheck==0:
             lastcheck=time.time()
-
         val=j.processmanager.__dict__[name].get(id,monobject=monobject,lastcheck=lastcheck)
-
         if session<>None:
             return val.__dict__
         else:
@@ -158,32 +154,6 @@ class MgrCmds():
             raise RuntimeError("permission denied")           
 
 
-    # def monitorProcess(self, domain="",name="",remember=False,**args):
-    #     results={}
-    #     for pd in self.manager.getProcessDefs(domain,name):
-    #         t=pd.getStatInfo()
-    #         t2={}
-    #         for key in t.keys():
-    #             results["processes.%s.%s.%s"%(pd.domain,pd.name,key)]=t[key]
-
-    #     result2={}
-    #     for key in results.keys():
-    #         result2[key]=j.system.stataggregator.set(key,results[key],remember=remember)
-
-    #     return result2
-
-
-    # def monitorSystem(self,remember=False,session=None):
-    #     from IPython import embed
-    #     print "DEBUG NOW monitorSystem"
-    #     embed()
-        
-        
-        # results={}
-
-        # return result2
-
-
 
 daemon = j.servers.geventws.getServer(port=4445)
 
@@ -191,12 +161,10 @@ daemon.addCMDsInterface(MgrCmds, category="core")  # pass as class not as object
 
 cmds=daemon.daemon.cmdsInterfaces["core"][1]
 
-
 class DummyDaemon():
     def _adminAuth(self,user,passwd):
         raise RuntimeError("permission denied")
 
-import sys
 sys.path.append(j.system.fs.getcwd())
 for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
     name=j.system.fs.getBaseName(item).replace(".py","")
@@ -205,9 +173,6 @@ for item in j.system.fs.listFilesInDir("processmanagercmds",filter="*.py"):
         classs = getattr(module, name)
         tmp=classs()
         daemon.addCMDsInterface(classs, category=tmp._name)
-
-
-
 
 cmds.daemon.schedule=daemon.schedule
 cmds.daemon.parentdaemon=daemon
