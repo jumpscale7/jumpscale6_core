@@ -175,6 +175,7 @@ stop on runlevel [016]
         C+="exec %s %s\n"%(daemonpath,args)
 
         j.system.fs.writeFile("/etc/init/%s.conf"%servicename,C)
+        j.system.process.execute("initctl reload-configuration")
 
     def serviceUninstall(self,servicename):
         self.stopService(servicename)
