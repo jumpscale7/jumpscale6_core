@@ -25,13 +25,17 @@ class AgentCmds():
         self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
         self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
         self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
+        
+        self.serverip = j.application.config.get('grid.master.ip')
+        self.masterport = j.application.config.get('grid.master.port')
+        
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
-        self.osisclient = j.core.osis.getClient(user="root",gevent=True)
+        self.osisclient = j.core.osis.getClient(ipaddr=self.serverip, port=self.masterport, user="root",gevent=True)
         # self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript') 
 
-        self.client = j.clients.agentcontroller.get()
+        self.client = j.clients.agentcontroller.get(agentControllerIP=self.serverip)
 
     def _init(self):
         self.init()
