@@ -35,8 +35,8 @@ def checkagentcontroller():
     return client
     
 import JumpScale.grid.agentcontroller
-
-j.tools.startupmanager.startProcess("jumpscale","osis")
+if 'jumpscale__osis' in j.tools.startupmanager.listProcesses():
+    j.tools.startupmanager.startProcess("jumpscale","osis")
 
 masterip=j.application.config.get("grid.master.ip")
 if masterip in j.system.net.getIpAddresses():
