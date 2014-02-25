@@ -51,18 +51,20 @@ def install_lxc():
     ipaddr,mask=options.ipaddr.split("/")
     mask=int(mask)
 
-    update=True
-    updateimage=True
-    base=True
+    update=False
+    updateimage=False
+    base=False
     master=True
+    branch="unstable"
 
     if update:
-        print cuapi.run("jscode update -a jumpscale -r unstable__jumpscale_core -u -f")
-        print cuapi.run("jpackage install -n libs -r --debug")
-        print cuapi.run("jscode update -a jumpscale -r unstable__jumpscale_lib -u -f")    
-        print cuapi.run("jpackage link -n core")
-        print cuapi.run("apt-get install lxc cloud-utils python-netaddr -y")
+        print cuapi.run("jscode update -a jumpscale -r %s__jumpscale_core -u -f"%branch)
+        print cuapi.run("jscode update -a jumpscale -r %s__jumpscale_lib -u -f"%branch)    
         print cuapi.run("jpackage mdupdate")
+        print cuapi.run("jpackage link -n core")
+        print cuapi.run("jpackage install -n libs -r --debug")
+        print cuapi.run("apt-get install lxc cloud-utils python-netaddr -y")
+        
 
     if updateimage:
         print cuapi.run("rm -rf /var/lib/lxc/saucy-amd64-base")
@@ -70,6 +72,7 @@ def install_lxc():
         #print cuapi.run("jpackage install -n lxc -r") #this will reset the interfaces & put std briding config on it (DANGEROUS)
         print cuapi.run("jpackage download -n lxc --copy") #this will only copy the files
 
+    #do not use had side effects
     # #install ssh in saucy-base
     # print cuapi.run("rm -f /var/lib/lxc/saucy-amd64-base/rootfs/etc/resolv.conf")
     # print cuapi.run("cp /etc/resolv.conf /var/lib/lxc/saucy-amd64-base/rootfs/etc/resolv.conf")
@@ -92,7 +95,7 @@ def install_lxc():
         print cuapi.run("jsmachine stop -n base")
 
     if master:
-        print cuapi.run("jsmachine new -n gridmaster -b mach_base --pubip=%s/%s"%(ipaddr,mask))
+        print cuapi.run("jsmachine new -n gridmaster -b base --pubip=%s/%s"%(ipaddr,mask))
         print cuapi.run("jsmachine start -n gridmaster")
 
 
