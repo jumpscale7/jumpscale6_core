@@ -42,7 +42,7 @@ def method(self{args}):
         result=self._actions['{name}'](j,self._jpackage{args})
     except Exception,e:
         j.errorconditionhandler.processPythonExceptionObject(e)
-        j.application.stop()
+        j.application.stop(1)
     return result"""
 
         else:
@@ -56,7 +56,7 @@ def method(self{args}):
         result=self._actions['{name}'](j,self._jpackage{args2})
     except Exception,e:
         j.errorconditionhandler.processPythonExceptionObject(e)
-        j.application.stop()
+        j.application.stop(1)
     self._done[key]=True
     return result"""
 
