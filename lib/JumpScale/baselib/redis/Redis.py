@@ -58,7 +58,7 @@ class RedisFactory:
 
     def getPort(self, name):
         self.getProcessPids(name)
-        cpath, _ = self._getPaths(name)
+        _, cpath = self._getPaths(name)
         config = j.system.fs.fileGetContents(cpath)
         for line in config.split("\n"):
             if line.find("port") == 0:
