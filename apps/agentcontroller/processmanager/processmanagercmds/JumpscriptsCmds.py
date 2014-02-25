@@ -87,12 +87,14 @@ class JumpscriptsCmds():
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
-        self.osisclient = j.core.osis.getClient(user="root",gevent=True)
+        ipaddr=j.application.config.get("grid.master.ip")        
+        self.masterport = j.application.config.get('grid.master.port')
+
+        self.osisclient = j.core.osis.getClient(ipaddr=ipaddr, port=self.masterport, user="root",gevent=True)
         self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript') 
 
         agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
 
-        ipaddr=j.application.config.get("grid.master.ip")        
 
         self.agentcontroller_client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=self.adminuser , passwd=self.adminpasswd, \
             category="agent",id=agentid,timeout=36000)       
