@@ -67,6 +67,7 @@ def install_lxc():
     # print cuapi.run("cp /etc/resolv.conf /var/lib/lxc/saucy-amd64-base/rootfs/etc/resolv.conf")
     # print cuapi.run("chroot /var/lib/lxc/saucy-amd64-base/rootfs apt-get install ssh")
     
+    print cuapi.run('ssh-keygen -f "/root/.ssh/known_hosts" -R '+str(ipaddr)) #make sure there is no old ssh stuff unside
     print cuapi.run("jsmachine new -n base -b saucy-amd64-base --start --pubip=%s/%s"%(ipaddr,mask))
 
     # print cuapi.run("lxc-start -n base -d")
