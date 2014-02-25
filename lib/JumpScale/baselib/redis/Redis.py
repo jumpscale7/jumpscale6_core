@@ -6,133 +6,137 @@ from .geventredis.RedisQueue import RedisQueue
 
 
 class RedisFactory:
+
     """
     """
 
     def __init__(self):
-        self.gredis={}
-        self.redis={}
-        self.gredisq={}
-        self.redisq={}
+        self.gredis = {}
+        self.redis = {}
+        self.gredisq = {}
+        self.redisq = {}
 
-    def getGeventRedisClient(self,ipaddr,port, fromcache=True):
+    def getGeventRedisClient(self, ipaddr, port, fromcache=True):
         if not fromcache:
             return geventredis.connect(ipaddr, port)
-        key="%s_%s"%(ipaddr,port)
+        key = "%s_%s" % (ipaddr, port)
         if key not in self.gredis:
-            self.gredis[key]=geventredis.connect(ipaddr, port)
+            self.gredis[key] = geventredis.connect(ipaddr, port)
         return self.gredis[key]
 
-    def getRedisClient(self,ipaddr,port):
-        key="%s_%s"%(ipaddr,port)
+    def getRedisClient(self, ipaddr, port):
+        key = "%s_%s" % (ipaddr, port)
         if not self.redis.has_key(key):
-            self.redis[key]=redis.Redis(ipaddr, port)
+            self.redis[key] = redis.Redis(ipaddr, port)
         return self.redis[key]
 
-    def getRedisQueue(self,ipaddr,port,name,namespace="queues"):
-        key="%s_%s_%s_%s"%(ipaddr,port,name,namespace)
+    def getRedisQueue(self, ipaddr, port, name, namespace="queues"):
+        key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.redisq.has_key(key):
-            self.redisq[key]=RedisQueue(self.getRedisClient(ipaddr,port),name,namespace=namespace)
+            self.redisq[key] = RedisQueue(self.getRedisClient(ipaddr, port), name, namespace=namespace)
         return self.redisq[key]
 
-    def getGeventRedisQueue(self,ipaddr,port,name,namespace="queues", fromcache=False):
-        fromcache=False #@todo remove
-        print "GET REDIS QUEUE GEVENT:%s %s"%(ipaddr,port)
+    def getGeventRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=False):
+        fromcache = False  # @todo remove
+        print "GET REDIS QUEUE GEVENT:%s %s" % (ipaddr, port)
         if not fromcache:
-            return RedisQueue(self.getGeventRedisClient(ipaddr,port, False),name,namespace=namespace)
-        key="%s_%s_%s_%s"%(ipaddr,port,name,namespace)
+            return RedisQueue(self.getGeventRedisClient(ipaddr, port, False), name, namespace=namespace)
+        key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.gredisq.has_key(key):
-            self.gredisq[key]=RedisQueue(self.getGeventRedisClient(ipaddr,port),name,namespace=namespace)
+            self.gredisq[key] = RedisQueue(self.getGeventRedisClient(ipaddr, port), name, namespace=namespace)
         return self.gredisq[key]
 
     def emptyAllInstances(self):
-        path="/opt/redis/"
+        path = "/opt/redis/"
         for name in j.system.fs.listDirsInDir(path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
             self.emptyInstance(name)
 
-
     def deleteAllInstances(self):
-        path="/opt/redis/"
+        path = "/opt/redis/"
         for name in j.system.fs.listDirsInDir(path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
             self.deleteInstance(name)
 
-    def getPort(self,name):
+    def getPort(self, name):
         self.getProcessPids(name)
-        dpath="/opt/redis/%s"%name
-        cpath=j.system.fs.joinPaths(dpath,"redis.conf")
-        config=j.system.fs.fileGetContents(cpath)
+        cpath, _ = self._getPaths(name)
+        config = j.system.fs.fileGetContents(cpath)
         for line in config.split("\n"):
-            if line.find("port")==0:
-                port=int(line.split("port ")[1])
+            if line.find("port") == 0:
+                port = int(line.split("port ")[1])
                 return port
-        raise RuntimeError("Could not find redis port in config file %s"%cpath)
+        raise RuntimeError("Could not find redis port in config file %s" % cpath)
 
+    def _getPaths(self, name):
+        dpath = "/opt/redis/%s" % name
+        return dpath, j.system.fs.joinPaths(dpath, "redis.conf")
 
-    def getProcessPids(self,name):
-        if name=="":
-            raise RuntimeError("name cannot be empty to start redis")        
-        dpath="/opt/redis/%s"%name        
-        cpath=j.system.fs.joinPaths(dpath,"redis.conf") 
+    def getProcessPids(self, name):
+        if name == "":
+            raise RuntimeError("name cannot be empty to start redis")
+        _, cpath = self._getPaths(name)
         if not j.system.fs.exists(path=cpath):
-            raise RuntimeError("Cannot find redis instance on %s"%cpath)
-        pids=j.system.process.getProcessPid(name)
-        if pids==None:
+            raise RuntimeError("Cannot find redis instance on %s" % cpath)
+        pids = j.system.process.getProcessPid(name)
+        if pids == None:
             return []
-        if len(pids)>0:
+        if len(pids) > 0:
             return pids
         return []
 
-    def stopInstance(self,name):        
+    def stopInstance(self, name):
         j.system.platform.ubuntu.stopService(name)
-        pids=self.getProcessPids(name)
-        counter=0
-        while counter<100:
+        _, cpath = self._getPaths(name)
+        if not j.system.fs.exists(name):
+            return
+        pids = self.getProcessPids(name)
+        counter = 0
+        while counter < 100:
             for pid in pids:
                 j.system.process.kill(pid)
             time.sleep(0.1)
-            pids=self.getProcessPids(name)
-            if len(pids)==0:
+            pids = self.getProcessPids(name)
+            if len(pids) == 0:
                 return
-            counter+=1
-        raise RuntimeError("could not stop redis with name %s"%name)
+            counter += 1
+        raise RuntimeError("could not stop redis with name %s" % name)
 
-    def startInstance(self,name):
-        j.logger.log("start redis:%s"%name, level=5, category="")
-        pids=self.getProcessPids(name)
-        if len(pids)>1:
-            self.stopInstance(name)        
-        if len(pids)==1:
-            j.logger.log("Not need to start redis:%s, is already started."%name, level=5, category="redis.start")
+    def startInstance(self, name):
+        j.logger.log("start redis:%s" % name, level=5, category="")
+        pids = self.getProcessPids(name)
+        if len(pids) > 1:
+            self.stopInstance(name)
+        if len(pids) == 1:
+            j.logger.log("Not need to start redis:%s, is already started." % name, level=5, category="redis.start")
             return
         # cmd="redis-server %s"%cpath
-        # j.system.process.execute(cmd)                 
+        # j.system.process.execute(cmd)
         j.system.platform.ubuntu.startService(name)
-        timeout=time.time()+10
-        port=self.getPort(name)        
-        check=False
-        while check==False and time.time()<timeout:
-            check=j.system.net.tcpPortConnectionTest("localhost",port)
-        if check==False:
-            raise RuntimeError("Could not start redis %s on port %s"%(name,port))
+        timeout = time.time() + 10
+        port = self.getPort(name)
+        check = False
+        while check == False and time.time() < timeout:
+            check = j.system.net.tcpPortConnectionTest("localhost", port)
+        if check == False:
+            raise RuntimeError("Could not start redis %s on port %s" % (name, port))
 
-    def deleteInstance(self,name):
+    def deleteInstance(self, name):
         self.stopInstance(name)
-        dpath="/opt/redis/%s"%name
+        dpath, _ = self._getPaths(name)
         j.system.fs.removeDirTree(dpath)
 
-    def emptyInstance(self,name):
+    def emptyInstance(self, name):
         self.stopInstance(name)
-        dpath="/opt/redis/%s/db"%name        
-        j.system.fs.removeDirTree(dpath) 
+        dpath = "/opt/redis/%s/db" % name
+        j.system.fs.removeDirTree(dpath)
         j.system.fs.createDir(dpath)
-        self.startInstance(name)       
+        self.startInstance(name)
 
-    def configureInstance(self,name,port,maxram=200,appendonly=True):
+    def configureInstance(self, name, port, maxram=200, appendonly=True):
         """
         @param maxram = MB of ram
         """
 
-        C="""
+        C = """
 # Redis configuration file example
 
 # Note on units: when memory size is needed, it is possible to specify
@@ -281,9 +285,9 @@ dbfilename dump.rdb
 #
 # The DB will be written inside this directory, with the filename specified
 # above using the 'dbfilename' configuration directive.
-# 
+#
 # The Append Only File will also be created inside this directory.
-# 
+#
 # Note that you must specify a directory here, not a file name.
 dir /opt/redis/$name/db/
 
@@ -385,7 +389,7 @@ slave-priority 100
 #
 # This should stay commented out for backward compatibility and because most
 # people do not need auth (e.g. they run their own servers).
-# 
+#
 # Warning: since Redis is pretty fast an outside user can try up to
 # 150k passwords per second against a good box. This means that you should
 # use a very strong password otherwise it will be very easy to break.
@@ -451,14 +455,14 @@ maxmemory $maxrammb
 
 # MAXMEMORY POLICY: how Redis will select what to remove when maxmemory
 # is reached. You can select among five behaviors:
-# 
+#
 # volatile-lru -> remove the key with an expire set using an LRU algorithm
 # allkeys-lru -> remove any key accordingly to the LRU algorithm
 # volatile-random -> remove a random key with an expire set
 # allkeys-random -> remove a random key, any key
 # volatile-ttl -> remove the key with the nearest expire time (minor TTL)
 # noeviction -> don't expire at all, just return an error on write operations
-# 
+#
 # Note: with any of the above policies, Redis will return an error on write
 #       operations, when there are not suitable keys for eviction.
 #
@@ -507,7 +511,7 @@ appendonly $appendonly
 # appendfilename appendonly.aof
 
 # The fsync() call tells the Operating System to actually write data on disk
-# instead to wait for more data in the output buffer. Some OS will really flush 
+# instead to wait for more data in the output buffer. Some OS will really flush
 # data on disk, some other OS will just try to do it ASAP.
 #
 # Redis supports three different modes:
@@ -548,7 +552,7 @@ appendfsync everysec
 # the same as "appendfsync none". In practical terms, this means that it is
 # possible to lose up to 30 seconds of log in the worst scenario (with the
 # default Linux settings).
-# 
+#
 # If you have latency problems turn this to "yes". Otherwise leave it as
 # "no" that is the safest pick from the point of view of durability.
 no-appendfsync-on-rewrite no
@@ -556,7 +560,7 @@ no-appendfsync-on-rewrite no
 # Automatic rewrite of the append only file.
 # Redis is able to automatically rewrite the log file implicitly calling
 # BGREWRITEAOF when the AOF log size grows by the specified percentage.
-# 
+#
 # This is how it works: Redis remembers the size of the AOF file after the
 # latest rewrite (if no rewrite has happened since the restart, the size of
 # the AOF at startup is used).
@@ -599,7 +603,7 @@ lua-time-limit 5000
 # but just the time needed to actually execute the command (this is the only
 # stage of command execution where the thread is blocked and can not serve
 # other requests in the meantime).
-# 
+#
 # You can configure the slow log with two parameters: one tells Redis
 # what is the execution time, in microseconds, to exceed in order for the
 # command to get logged, and the other parameter is the length of the
@@ -649,7 +653,7 @@ zset-max-ziplist-value 64
 # that is rehashing, the more rehashing "steps" are performed, so if the
 # server is idle the rehashing is never complete and some more memory is used
 # by the hash table.
-# 
+#
 # The default is to use this millisecond 10 times every second in order to
 # active rehashing the main dictionaries, freeing memory when possible.
 #
@@ -731,23 +735,22 @@ aof-rewrite-incremental-fsync yes
 #
 # include /path/to/local.conf
 # include /path/to/other.conf
-"""        
+"""
 
-        C=C.replace("$name",name)
-        C=C.replace("$maxram",str(maxram))
-        C=C.replace("$port",str(port))
+        C = C.replace("$name", name)
+        C = C.replace("$maxram", str(maxram))
+        C = C.replace("$port", str(port))
         if appendonly:
-            C=C.replace("$appendonly","yes")
+            C = C.replace("$appendonly", "yes")
         else:
-            C=C.replace("$appendonly","no")
+            C = C.replace("$appendonly", "no")
 
-        dpath="/opt/redis/%s"%name
-        dbpath=j.system.fs.joinPaths(dpath,"db")
+        dpath = "/opt/redis/%s" % name
+        dbpath = j.system.fs.joinPaths(dpath, "db")
         j.system.fs.createDir(dbpath)
-        cpath=j.system.fs.joinPaths(dpath,"redis.conf")
-        j.system.fs.writeFile(cpath,C)
-        
+        cpath = j.system.fs.joinPaths(dpath, "redis.conf")
+        j.system.fs.writeFile(cpath, C)
+
         j.system.platform.ubuntu.serviceInstall(name, "redis-server", cpath, pwd='/')
 
         self.startInstance(name)
-
