@@ -188,6 +188,7 @@ class ControllerCMDS():
             t.order=getattr(script, 'order', 1)
             t.log=getattr(script, 'log', True)
             t.enable=getattr(script, 'enable', True)
+            t.startatboot=getattr(script, 'startatboot', False)
             t.gid=getattr(script, 'gid', j.application.whoAmI.gid)
 
 
