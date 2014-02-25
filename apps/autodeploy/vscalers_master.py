@@ -51,40 +51,49 @@ def install_lxc():
     ipaddr,mask=options.ipaddr.split("/")
     mask=int(mask)
 
-    print cuapi.run("jscode update -a jumpscale -r unstable__jumpscale_core -u -f")
-    print cuapi.run("jpackage install -n libs -r --debug")
-    print cuapi.run("jscode update -a jumpscale -r unstable__jumpscale_lib -u -f")    
-    print cuapi.run("jpackage link -n core")
-    print cuapi.run("apt-get install lxc cloud-utils python-netaddr -y")
-    print cuapi.run("rm -rf /var/lib/lxc/saucy-amd64-base")
-    print cuapi.run("lxc-create -n saucy-amd64-base -t ubuntu-cloud -- --release=saucy --arch=amd64")
+    update=True
+    updateimage=True
+    base=True
+    master=True
 
-    print cuapi.run("jpackage mdupdate")
-    print cuapi.run("jpackage install -n lxc -r")
+    if update:
+        print cuapi.run("jscode update -a jumpscale -r unstable__jumpscale_core -u -f")
+        print cuapi.run("jpackage install -n libs -r --debug")
+        print cuapi.run("jscode update -a jumpscale -r unstable__jumpscale_lib -u -f")    
+        print cuapi.run("jpackage link -n core")
+        print cuapi.run("apt-get install lxc cloud-utils python-netaddr -y")
+        print cuapi.run("jpackage mdupdate")
+
+    if updateimage:
+        print cuapi.run("rm -rf /var/lib/lxc/saucy-amd64-base")
+        print cuapi.run("lxc-create -n saucy-amd64-base -t ubuntu-cloud -- --release=saucy --arch=amd64")      
+        #print cuapi.run("jpackage install -n lxc -r") #this will reset the interfaces & put std briding config on it (DANGEROUS)
+        print cuapi.run("jpackage download -n lxc --copy") #this will only copy the files
 
     # #install ssh in saucy-base
     # print cuapi.run("rm -f /var/lib/lxc/saucy-amd64-base/rootfs/etc/resolv.conf")
     # print cuapi.run("cp /etc/resolv.conf /var/lib/lxc/saucy-amd64-base/rootfs/etc/resolv.conf")
     # print cuapi.run("chroot /var/lib/lxc/saucy-amd64-base/rootfs apt-get install ssh")
     
-    print cuapi.run('ssh-keygen -f "/root/.ssh/known_hosts" -R '+str(ipaddr)) #make sure there is no old ssh stuff unside
-    print cuapi.run("jsmachine new -n base -b saucy-amd64-base --start --pubip=%s/%s"%(ipaddr,mask))
-
-    # print cuapi.run("lxc-start -n base -d")
-
-    cmd="python vscalers_basenode.py -r %s -p rooter -s rooter -g 241 -c vscalers_computenode -t platform,core,configure"%ipaddr
+    cmd='ssh-keygen -f "/root/.ssh/known_hosts" -R '+str(ipaddr) #make sure there is no old ssh stuff unside
     j.system.process.executeWithoutPipe(cmd)
 
-    #commando's to do in base
-    def do(cmd):
-        print cuapi.run("jsmachine cmd -n base -c '%s'"%cmd)
-    do("jscode update -f -a* -r*")
-    do("jpackage install -n libs -r --debug")
+    if base:
+        print cuapi.run("jsmachine new -n base -b saucy-amd64-base --start --pubip=%s/%s"%(ipaddr,mask))
+        cmd="python vscalers_basenode.py -r %s -p rooter -s rooter -g 241 -c vscalers_computenode -t platform,core,configure"%ipaddr
+        j.system.process.executeWithoutPipe(cmd)
 
-    print cuapi.run("jsmachine stop -n base")
+        #commando's to do in base
+        def do(cmd):
+            print cuapi.run("jsmachine cmd -n base -c '%s'"%cmd)
+        do("jscode update -f -a* -r*")
+        do("jpackage install -n libs -r --debug")
 
-    print cuapi.run("jsmachine new -n gridmaster -b mach_base --pubip=%s/%s"%(ipaddr,mask))
-    print cuapi.run("jsmachine start -n gridmaster")
+        print cuapi.run("jsmachine stop -n base")
+
+    if master:
+        print cuapi.run("jsmachine new -n gridmaster -b mach_base --pubip=%s/%s"%(ipaddr,mask))
+        print cuapi.run("jsmachine start -n gridmaster")
 
 
 

@@ -11,3 +11,4 @@ python vscalers_master.py -r 10.101.175.1 -p rooter --ipaddr=10.101.175.200/16
 
 
 
+python vscalers_master.py -r 127.0.0.1 -p rooter --ipaddr=10.0.2.99/24
