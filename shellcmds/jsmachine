@@ -44,7 +44,7 @@ if opts.action =='list':
 
 if opts.action =='new':
     if opts.base==None:
-        opts.base="mach_base"
+        opts.base="base"
     if opts.name==None:
         raise RuntimeError("need to specify name")
     l.create(name=opts.name,stdout=True,base=opts.base,start=False)
