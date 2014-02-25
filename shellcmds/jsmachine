@@ -14,7 +14,8 @@ parser.add_argument("-b", '--base', help='base to clone from')
 parser.add_argument("-p",'--passwd', help='password for machine')
 parser.add_argument("-r",'--prefix', help='prefix')
 parser.add_argument("-c",'--cmd', help='cmd to execute')
-parser.add_argument('--pubip', help='set pub ip addr of machine',default='192.168.1.207/24')
+parser.add_argument('--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
+parser.add_argument('--start', help='start after creation', action='store_true', default=False)
 
 
 opts = parser.parse_args()
@@ -43,12 +44,14 @@ if opts.action =='list':
 
 if opts.action =='new':
     if opts.base==None:
-        opts.base="saucy-amd64-base"
+        opts.base="mach_base"
     if opts.name==None:
         raise RuntimeError("need to specify name")
     l.create(name=opts.name,stdout=True,base=opts.base,start=False)
-    if opts.pubip<>None:
+    if opts.pubip<>"":
         j.system.platform.lxc.networkSetPublic(opts.name, netname="pub0",bridge="br0",pubips=["%s"%opts.pubip]) 
+    if opts.start:
+        j.system.platform.lxc.start(opts.name)
 
 if opts.action =='getip':
     if opts.name==None:
