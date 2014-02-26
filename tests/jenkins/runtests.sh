@@ -22,7 +22,7 @@ if [ "$vmip" = "-" ]; then
 fi
 ssh root@$vmip mkdir -p /opt/code/jumpscale
 for repo in grid portal core lib; do
-    rsync -a "$WORKSPACE/jumpscale/jumpscale_$repo" root@$vmip:/opt/code/jumpscale/${BRANCH}__jumpscale_${repo}
+    rsync -a "$WORKSPACE/jumpscale/jumpscale_$repo/" root@$vmip:/opt/code/jumpscale/${BRANCH}__jumpscale_${repo}
 done
 set +e
 ssh root@$vmip "
