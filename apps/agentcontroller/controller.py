@@ -101,6 +101,7 @@ class ControllerCMDS():
         if osis:
             # we need to make sure that job['resul'] is always of the same type hence we serialize
             # otherwise elasticsearch will have issues
+            job = job.copy()
             if 'result' in job:
                 job['result'] = json.dumps(job['result'])
             self.jobclient.set(job)
