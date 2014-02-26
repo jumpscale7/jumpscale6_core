@@ -72,7 +72,7 @@ jpackage install -n grid_node
 jpackage install -n grid_portal
 jpackage install -n graphite
 jpackage install -n agentcontroller
-jpackage install -n agent
+jpackage install -n workers
 jpackage install -n processmanager
 
 echo '[main]
