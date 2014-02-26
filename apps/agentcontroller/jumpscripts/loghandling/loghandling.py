@@ -32,7 +32,10 @@ def action():
     redisqueue = j.clients.redis.getGeventRedisQueue("127.0.0.1", 7768, "logs")
     redisqueueEco = j.clients.redis.getGeventRedisQueue("127.0.0.1", 7768, "eco")
 
-    OSISclient = j.core.osis.getClient(user='root')
+    masterip = j.application.config.get('grid.master.ip')
+    masterport = j.application.config.get('grid.master.port')
+
+    OSISclient = j.core.osis.getClient(ipaddr=masterip, port=masterport, user='root')
 
     OSISclientLogger = j.core.osis.getClientForCategory(OSISclient, "system", "log")
     OSISclientEco = j.core.osis.getClientForCategory(OSISclient, "system", "eco")

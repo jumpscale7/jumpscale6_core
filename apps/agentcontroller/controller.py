@@ -102,7 +102,7 @@ class ControllerCMDS():
             # we need to make sure that job['resul'] is always of the same type hence we serialize
             # otherwise elasticsearch will have issues
             if 'result' in job:
-                job['result'] = json.dumps(json['result'])
+                job['result'] = json.dumps(job['result'])
             self.jobclient.set(job)
 
     def _getJobFromRedis(self, gid, jobid):
