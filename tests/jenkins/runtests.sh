@@ -30,7 +30,7 @@ chown -R root:root /opt/code/jumpscale/${BRANCH}__jumpscale_core
 set -e
 apt-get update
 apt-get install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
-cd /opt/code/jumpscale/jumpscale_core/
+cd /opt/code/jumpscale/${BRANCH}__jumpscale_core/
 pip install .
 
 mkdir -p /opt/jumpscale/cfg/hrd/
