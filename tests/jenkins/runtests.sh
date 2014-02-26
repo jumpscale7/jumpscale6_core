@@ -21,10 +21,11 @@ if [ "$vmip" = "-" ]; then
 	exit 1
 fi
 ssh root@$vmip mkdir -p /opt/code/jumpscale
-rsync -a "$WORKSPACE/" root@$vmip:/opt/code/
+for repo in grid portal core lib; do
+    rsync -a "$WORKSPACE/jumpscale/jumpscale_$repo" root@$vmip:/opt/code/jumpscale/${BRANCH}__${repo}
 set +e
 ssh root@$vmip "
-chown -R root:root /opt/code/jumpscale/jumpscale_core
+chown -R root:root /opt/code/jumpscale/${BRANCH}__jumpscale_core
 set -e
 apt-get update
 apt-get install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
