@@ -19,8 +19,9 @@ class ActionManager:
             if name[0]=="_":
                 continue
             name=name[:-3]
-            
-            modname = "jpactions_%s_%s_%s" % (jp.domain,jp.name,name)
+           
+            md5 = j.tools.hash.md5_string(path)
+            modname = "JumpScale.baselib.jpackages.%s" % md5
             module = imp.load_source(modname, path)
             self._actions[name]= module.main
                 
