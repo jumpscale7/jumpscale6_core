@@ -16,7 +16,7 @@ author = "despiegk"
 license = "bsd"
 version = "1.0"
 category = "osis.basic.testdata.populate,grid.testdata.populate"
-enable=False
+enable=True
 priority=2
 
 
@@ -29,20 +29,17 @@ class TEST(unittest.TestCase):
         pass
 
     def test_stat(self):
-
-        client=j.core.osis.getClientForCategory(self.client,"system","stat")
-    
+        client=j.core.osis.getClientForCategory(self.client,"system","stats")
+        keys=["cpu.percent",\
+            "process.nrconnections",\
+            "memory.rss",\
+            "memory.vms",\
+            "contentswitches"]
+        values = list()
         for i in xrange(10):
-            keys=["cpu.percent",\
-                "process.nrconnections",\
-                "memory.rss",\
-                "memory.vms",\
-                "contentswitches"]
             for key in keys:
-                obj=client.new()
-                obj.key="n%s.test.%s"%(i,key)
-                obj.nid=i
-                client.set(obj)
+                values.append((key, i))
+        client.set(values)
 
     def test_node(self):
         print 'node'
