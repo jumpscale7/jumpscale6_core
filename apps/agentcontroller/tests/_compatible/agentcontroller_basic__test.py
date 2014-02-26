@@ -1,5 +1,6 @@
 from JumpScale import j
 import unittest
+import time
 
 
 descr = """
@@ -21,32 +22,38 @@ class TEST(unittest.TestCase):
     def setUp(self):
         import JumpScale.grid.agentcontroller
         self.client=j.clients.agentcontroller.get()
+        self.osisclient = j.core.osis.getClient(user='root')
+        self.nid = j.application.whoAmI.nid
 
     def test_basic_execution(self):
-        #@todo this is just a basic test to see if agent controller works
-        #execute the 4 test jumpscripts, test the right behaviour
-        #did we see log (log msg in ES)
-        #was there an eco in ES (search)
-        #was there an eco in KVS (osis DB)
-        #is it indeed waiting, so agent should be blocked
-        nid = j.application.whoAmI.nid
         kwargs = {'msg': 'test msg'}
-        result1 = self.client.executeJumpScript('jumpscale', 'echo', nid, ROLE, args=kwargs, wait=True)
+        result1 = self.client.executeJumpScript('jumpscale', 'echo', self.nid, ROLE, args=kwargs, wait=True)
         self.assertEqual(result1['result'], kwargs['msg'])
 
+    def test_log(self):
         kwargs = {'logmsg': 'test log msg'}
-        self.client.executeJumpScript('jumpscale', 'log', nid, ROLE, args=kwargs, wait=True)
+        job = self.client.executeJumpScript('jumpscale', 'log', self.nid, ROLE, args=kwargs, wait=True)
+        self.assertIsInstance(job, dict)
+        self.assertEqual(job['state'], 'OK')
         query = {"query":{"bool":{"must":[{"term":{"category":"test_category"}}]}}}
         import JumpScale.grid.osis
-        osisclient = j.core.osis.getClient(user='root')
-        osis_logs = j.core.osis.getClientForCategory(osisclient, "system", "log")
-        # self.assertGreater( len(osis_logs.search(query)['hits']['hits']), 0)
+        osis_logs = j.core.osis.getClientForCategory(self.osisclient, "system", "log")
 
+        start = time.time()
+        while start + 5 > time.time():
+            result = osis_logs.search(query)['hits']['hits']
+            if result:
+                break
+        self.assertGreater(result, 0)
+
+    def test_error(self):
         self.client.execute('jumpscale', 'error', ROLE, dieOnFailure=False)
-        query = {"query":{"bool":{"must":[{"term":{"state":"error"}}, {"term":{"jsname":"error"}}]}}}
-        osis_jobs = j.core.osis.getClientForCategory(osisclient, "system", "job")
-        self.assertGreater(len(osis_jobs.search(query)['result']), 0)
-
-        kwargs = {'msg': 'test msg', 'waittime': 5}
-        result2 = self.client.executeKwargs('jumpscale', 'wait', ROLE, kwargs=kwargs)
+        query = {"query":{"bool":{"must":[{"term":{"state":"error"}}, {"term":{"cmd":"error"}}]}}}
+        osis_jobs = j.core.osis.getClientForCategory(self.osisclient, "system", "job")
+        start = time.time()
+        while start + 5 > time.time():
+            result = osis_jobs.search(query)['result']
+            if result:
+                break
+        self.assertGreater(len(result), 0)
 
