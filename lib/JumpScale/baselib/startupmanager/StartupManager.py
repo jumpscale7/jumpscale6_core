@@ -68,7 +68,7 @@ class ProcessDef:
 
         if not self.autostart:
             return
-            
+
         self.log("process dependency CHECK")
         jp.processDepCheck(timeout=timeout)
         self.log("process dependency OK")

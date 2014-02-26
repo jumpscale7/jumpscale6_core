@@ -69,27 +69,19 @@ jpackage install -n core
 
 jpackage install -n grid_master
 jpackage install -n grid_node
-jpackage install -n logger
 jpackage install -n grid_portal
-jpackage install -n processmanager
 jpackage install -n graphite
 jpackage install -n agentcontroller
 jpackage install -n agent
+jpackage install -n processmanager
 
 echo '[main]
 appdir = /opt/jumpscale/apps/portalbase
-
 filesroot = $vardir/portal/files
-
 actors = *
 webserverport = 81
-
-#leave 0 if disabled (this is like secret which gives access to all)
 secret=1234
-
-#groups which get access to admin features of portal
 admingroups=admin,gridadmin,superadmin
-
 pubipaddr=127.0.0.1
 ' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
 
