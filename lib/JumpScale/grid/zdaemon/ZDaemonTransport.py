@@ -14,10 +14,14 @@ class ZDaemonTransport(Transport):
         self._id = None
         if gevent==False:
             import zmq
+            import threading
             self.zmq=zmq
+            self._lock = threading.RLock()
         else:
             import zmq.green as zmq
+            import gevent.coros
             self.zmq=zmq
+            self._lock = gevent.coros.RLock()
         
 
     def connect(self, sessionid):
@@ -41,8 +45,9 @@ class ZDaemonTransport(Transport):
 
         @param timeout is not used
         """
-        self._cmdchannel.send_multipart([category, cmd, sendformat, returnformat, data])
-        result=self._cmdchannel.recv_multipart()
+        with self._lock:
+            self._cmdchannel.send_multipart([category, cmd, sendformat, returnformat, data])
+            result=self._cmdchannel.recv_multipart()
         return result
 
     def _init(self):
