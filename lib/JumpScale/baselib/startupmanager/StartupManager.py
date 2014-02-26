@@ -333,12 +333,11 @@ class StartupManager:
         hrd+="process.pid=%s\n"%pid
         hrd+="process.active=%s\n"%active
         pstring=""
-        for port in ports:
-            pstring+="%s,"%port
+        ports = ports[:]
         if jpackage and jpackage.hrd.exists('jp.process.tcpports'):
             for port in jpackage.hrd.getList('jp.process.tcpports'):
-                pstring+="%s,"%port
-        pstring=pstring.rstrip(",")
+                ports.append(port)
+        pstring = ",".join( str(x) for x in set(ports) )
 
         hrd+="process.ports=%s\n"%pstring
         if jpackage==None:
