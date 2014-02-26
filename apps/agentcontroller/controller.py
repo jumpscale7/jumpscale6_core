@@ -3,7 +3,6 @@ from JumpScale import j
 import JumpScale.grid.geventws
 import gevent
 import gevent.coros
-from gevent.event import Event
 import JumpScale.grid.osis
 import imp
 import importlib
@@ -28,7 +27,6 @@ class ControllerCMDS():
         j.application.initGrid()
 
         self.daemon = daemon
-        self.osislock = gevent.coros.RLock()
         self.jumpscripts = {}
         self.jumpscriptsFromKeys = {}
         self.jumpscriptsId={}
@@ -54,7 +52,6 @@ class ControllerCMDS():
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
 
         self.redisport=7769
-        
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
 
         j.logger.setLogTargetLogForwarder()
@@ -102,8 +99,7 @@ class ControllerCMDS():
             jobs=json.dumps(job)
         self.redis.hset("jobs:%s"%job["gid"],job["id"],jobs)
         if osis:
-            with self.osislock:
-                self.jobclient.set(job)
+            self.jobclient.set(job)
 
     def _getJobFromRedis(self, gid, jobid):
         jobdict = json.loads(self.redis.hget("jobs:%s"%gid, jobid))
