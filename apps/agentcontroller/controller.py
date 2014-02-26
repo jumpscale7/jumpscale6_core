@@ -99,6 +99,10 @@ class ControllerCMDS():
             jobs=json.dumps(job)
         self.redis.hset("jobs:%s"%job["gid"],job["id"],jobs)
         if osis:
+            # we need to make sure that job['resul'] is always of the same type hence we serialize
+            # otherwise elasticsearch will have issues
+            if 'result' in job:
+                job['result'] = json.dumps(json['result'])
             self.jobclient.set(job)
 
     def _getJobFromRedis(self, gid, jobid):
