@@ -40,7 +40,6 @@ class Gitlab(object):
         self.search_url = self.api_url + "/projects/search/"
         self.verify_ssl = verify_ssl
 
-        self.load()
 
     def login(self, user, password):
         """

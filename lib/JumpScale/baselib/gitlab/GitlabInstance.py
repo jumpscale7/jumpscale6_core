@@ -14,17 +14,33 @@ import JumpScale.baselib.git
 
 class GitlabInstance(Gitlab):
 
-    def __init__(self, addr, login, passwd, token):
-        self.addr=addr
-        Gitlab.__init__(self, addr, token=token)
+    def __init__(self,account ):
+
+        id=0
+        for key in j.application.config.getKeysFromPrefix("gitlabclient.server"):
+            # key=key.replace("gitlabclient.server.","")
+            if key.find("name")<>-1:
+                if j.application.config.get(key)==account:
+                    key2=key.replace("gitlabclient.server.","")
+                    id=key2.split(".")[0]
+        if id==0:
+            raise RuntimeError("Did not find account:%s for gitlab")
+
+        prefix="gitlabclient.server.%s"%id
+
+        self.addr=j.application.config.get("%s.addr"%prefix)
+        Gitlab.__init__(self, self.addr)#, token=token)
         # self.accountPathLocal = j.system.fs.joinPaths("/opt/code",accountName)
         # j.system.fs.createDir(self.accountPathLocal)
         # self._gitlab = gitlab.Gitlab(self.addr)
+        login=j.application.config.get("%s.login"%prefix)
+        passwd=j.application.config.get("%s.passwd"%prefix)
         self.login(login, passwd)
         # for item in dir(self._gitlab):
         #     if item[0]<>"_":
         #         setattr(self,item,getattr(self._gitlab,item))
         self.gitclients={}
+        self.load()
 
     def getGitClient(self, accountName, repoName="", branch=None, clean=False):
         """

@@ -9,7 +9,11 @@ class BlobStorFactory:
         self.loglevel=5
         self.blobstorCache={}
 
-    def getClient(self, namespace, ipaddr="127.0.0.1", port=2345, login="", passwd=""):
+    def getClient(self, namespace, name="default"):
+        from IPython import embed
+        print "DEBUG NOW BlobStorFactory"
+        embed()
+        
         name="%s_%s"%(ipaddr,port)
         if self.blobstorCache.has_key(name):
             return self.blobstorCache[name]
