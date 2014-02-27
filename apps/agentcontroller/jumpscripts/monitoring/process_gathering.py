@@ -70,6 +70,7 @@ def action():
             processinfo = {'cpu_times': (0.0, 0.0),
                            'create_time': 0.0,
                            'connections': [],
+                           'memory_info': (0.0, 0.0),
                            'io_counters': (0, 0, 0, 0),
                            'cwd': '',
                            'parent': 0,
