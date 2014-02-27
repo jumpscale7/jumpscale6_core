@@ -3,6 +3,8 @@ from PortalServer import PortalServer
 from PortalClient import PortalClient
 #from ActorLoaderLocal import *
 
+import JumpScale.baselib.redis
+
 from JumpScale import j
 
 
