@@ -75,7 +75,7 @@ def action():
                            'cwd': '',
                            'parent': 0,
                            'num_fds': 0,
-                           'num_ctx_switches': 0,
+                           'num_ctx_switches': (0.0, 0.0),
                            'num_threads': 0,
                            'cpu_percent': 0.0,
                            'username': '',
