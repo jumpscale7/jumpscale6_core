@@ -1,8 +1,0 @@
-
-logger.elasticsearch.enable=0 
-logger.elasticsearch.ip=localhost #fill in an ip addr if you want to log to an elastic search
-
-logger.osis.enable=1 #set 1 if osis connection used
-logger.osis.ip=localhost
-logger.osis.port=5544
-

@@ -47,7 +47,7 @@
         
     method:fw_forward_list @noauth
         """     
-        list all portformarding rules,
+        list all portforwarding rules,
         is list of list [[$fwport,$destip,$destport]]
         1 port on source can be forwarded to more ports at back in which case the FW will do loadbalancing
         """
@@ -59,7 +59,8 @@
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
-        var:fwport int,,port on fw which will be visble to external world
+        var:sourceip str,,adr where we forward to e.g. a ssh server in DMZ
+        var:sourceport int,,port on fw which will be visble to external world
         var:destip str,,adr where we forward to e.g. a ssh server in DMZ
         var:destport int,,port where we forward to e.g. a ssh server in DMZ
 

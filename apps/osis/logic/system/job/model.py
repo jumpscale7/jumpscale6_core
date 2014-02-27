@@ -36,13 +36,14 @@ class Job(OsisBaseObject):
             self.log=log
 
     def getUniqueKey(self):
-        return self.getSetGuid()
+        return j.base.idgenerator.generateGUID()
 
     def getSetGuid(self):
         """
         use osis to define & set unique guid (sometimes also id)
         """
         self.gid = int(self.gid)
+        self.nid = int(self.nid)
         self.id = int(self.id)
-        self.guid = "%s_%s" % (self.gid, self.id)
+        self.guid = "%s_%s_%s" % (self.gid, self.nid,self.id)
         return self.guid

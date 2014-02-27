@@ -1,7 +1,7 @@
 from JumpScale import j
 import JumpScale.grid.agentcontroller
-import ujson
-
+import JumpScale.baselib.redisworker
+import gevent
 
 REDISIP = '127.0.0.1'
 REDISPORT = 7768
@@ -9,10 +9,14 @@ REDISPORT = 7768
 
 class AgentCmds():
 
-    def __init__(self,daemon):
+    def __init__(self,daemon=None):
+        self._name="agent"
+
+        if daemon==None:
+            return
+            
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
-        self._name="agent"
 
         self.redis = j.clients.redis.getGeventRedisClient(REDISIP, REDISPORT)
 
@@ -21,13 +25,17 @@ class AgentCmds():
         self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
         self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
         self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
+        
+        self.serverip = j.application.config.get('grid.master.ip')
+        self.masterport = j.application.config.get('grid.master.port')
+        
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
-        self.osisclient = j.core.osis.getClient(user="root",gevent=True)
+        self.osisclient = j.core.osis.getClient(ipaddr=self.serverip, port=self.masterport, user="root",gevent=True)
         # self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript') 
 
-        self.client = j.clients.agentcontroller.get()
+        self.client = j.clients.agentcontroller.get(agentControllerIP=self.serverip)
 
     def _init(self):
         self.init()
@@ -39,45 +47,46 @@ class AgentCmds():
         self._killGreenLets()
         self.daemon.schedule("agent", self.loop)
 
+    def reconnect(self):
+        while True:
+            try:
+                self.client.register()
+                return
+            except:
+                gevent.sleep(5)
 
     def loop(self):
         """
         fetch work from agentcontroller & put on redis queue
         """
+        self.client.register()
+        gevent.sleep(2)
+        print "start loop to fetch work"
         while True:
-
-            while True:
-                try:
-                    # print "check if work"
-                    job=self.client.getWork()
-                    if not job or 'queue' not in job:
-                        continue
-                    break
-                except Exception:
+            try:
+                print "check if work"
+                job=self.client.getWork()
+                print "check work returns"
+                if job<>None:
+                    print "WORK FOUND: jobid:%s"%job["id"]
+                else:
+                    print "no work"
                     continue
+            except Exception,e:
+                j.errorconditionhandler.processPythonExceptionObject(e)
+                self.reconnect()
+                continue
 
-            # jscriptid = "%s_%s" % (job["category"], job["cmd"])
-            qname=job["queue"]
-            if not qname or qname.strip()=="":
-                qname="default"
-
-            if not self.queue.has_key(qname):
-                raise RuntimeError("Could not find queue to execute job:%s ((ops:processmanager.agent.schedulework L:1))"%job)
-
-            queue=self.queue[qname]
-
-            # result = queue.enqueue_call('%s_%s.action'%(job["category"],job["cmd"]),kwargs=job["args"],\
-            #     timeout=int(job["timeout"]))
-            self.redis.hset("workerjobs",job["id"], ujson.dumps(job))
-            queue.put(job["id"])
-            #need to do something here to make sure they are both in redis #@todo P1
+            if job["jscriptid"]==None:
+                raise RuntimeError("jscript id needs to be filled in")
+            j.clients.redisworker.execJobAsync(job)
 
     def _killGreenLets(self,session=None):
         """
         make sure all running greenlets stop
         """
         if session<>None:
-            self._adminAuth(session.user,session.passwd)        
+            self._adminAuth(session.user,session.passwd)
         todelete=[]
         for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
             if key.find("agent")==0:

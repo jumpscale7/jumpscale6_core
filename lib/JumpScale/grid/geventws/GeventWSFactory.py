@@ -38,7 +38,7 @@ class GeventWSFactory():
         if self.cachecat.has_key(keycat):
             return self.cachecat[keycat]
 
-        if self.cache.has_key(key):
+        if False and self.cache.has_key(key):
             cl=self.cache[key]
         else:
             from .GeventWSTransport import GeventWSTransport

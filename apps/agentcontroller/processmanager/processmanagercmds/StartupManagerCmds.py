@@ -3,11 +3,15 @@ from JumpScale import j
 
 class StartupManagerCmds():
 
-    def __init__(self,daemon):
+    def __init__(self,daemon=None):
+        self._name="startupmanager"
+
+        if daemon==None:
+            return
+
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
         self.manager= j.tools.startupmanager        
-        self._name="startupmanager"
 
     def _getJPackage(self, domain, name):
         jps = j.packages.find(domain, name, installed=True)

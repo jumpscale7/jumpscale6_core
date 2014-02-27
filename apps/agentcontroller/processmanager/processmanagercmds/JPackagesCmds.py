@@ -3,10 +3,14 @@ from JumpScale import j
 
 class JPackagesCmds():
 
-    def __init__(self,daemon):
+    def __init__(self,daemon=None):
+        self._name="jpackages"
+        if daemon==None:
+            return
+
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
-        self._name="jpackages"
+
         self.manager=j.tools.startupmanager
 
     def _getJPackage(self, domain, name):

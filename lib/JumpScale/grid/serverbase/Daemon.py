@@ -94,6 +94,7 @@ class Daemon(object):
         self.name = name
         self.cmds = {}
         self.cmdsInterfaces = {}
+        self.cmdsInterfacesProxy = {}
         self._now = 0
         self.sessions = {}
         self.key = ""
@@ -120,14 +121,19 @@ class Daemon(object):
         else:
             return message
 
-    def addCMDsInterface(self, cmdInterfaceClass, category=""):
+    def addCMDsInterface(self, cmdInterfaceClass, category,proxy=False):
         if not self.cmdsInterfaces.has_key(category):
             self.cmdsInterfaces[category] = []
-        self.cmdsInterfaces[category].append(cmdInterfaceClass(self))
+        if proxy==False:
+            self.cmdsInterfaces[category].append(cmdInterfaceClass(self))
+        else:
+            self.cmdsInterfaces[category].append(cmdInterfaceClass())
+        self.cmdsInterfacesProxy[category]=proxy
 
-    def setCMDsInterface(self, cmdInterfaceClass, category=""):
+    def setCMDsInterface(self, cmdInterfaceClass, category,proxy=False):
         self.cmdsInterfaces[category] = []
         self.cmdsInterfaces[category].append(cmdInterfaceClass(self))
+        self.cmdsInterfacesProxy[category]=proxy
 
     def processRPC(self, cmd, data, returnformat, session, category=""):
         """
@@ -162,7 +168,33 @@ class Daemon(object):
 
         try:
             if inputisdict:
-                data['session'] = session
+                if data.has_key("_agentid"):
+                    if data["_agentid"]<>0:
+                        cmds=self.cmdsInterfaces["agent"][0]
+                        gid=j.application.whoAmI.gid
+                        nid=int(data["_agentid"])
+                        data.pop("_agentid")
+                        category2=category.replace("processmanager_","")
+                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,cmdname=cmd,args=data,queue="internal",log=True,timeout=0,roles=[],session=session)
+                        jobqueue = cmds._getJobQueue(job.id)
+                        www=jobqueue.get(True,60)
+                        from IPython import embed
+                        print "DEBUG NOW return"
+                        embed()
+                        
+
+                        # if res:
+                        #     job = self._getJobFromRedis(session.gid, jobid)
+                        #     self.redis.hdel("jobs:%s"%job.gid,job.id)
+                        #     return json.loads(job.result)
+                        # else:
+                        #     job.resultcode=1
+                        #     print "timeout on execution"
+                        #     return job.__dict__                        
+                    else:
+                        data['session'] = session
+                        data.pop("_agentid")
+                            
                 result = ffunction(**data)
             else:
                 result = ffunction(data, session=session)

@@ -3,11 +3,14 @@ from JumpScale import j
 
 class StatsCmds():
 
-    def __init__(self,daemon):
+    def __init__(self,daemon=None):
+        self._name="stats"
+
+        if daemon==None:
+            return
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
         self.manager= j.tools.startupmanager        
-        self._name="stats"
 
     def listStatKeys(self,prefix="",memonly=False,avgmax=False,session=None):        
         if session<>None:

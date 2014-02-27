@@ -3,10 +3,14 @@ from JumpScale import j
 
 class ProcessCmds():
 
-    def __init__(self,daemon):
+    def __init__(self,daemon=None):
+        self._name="process"
+
+        if daemon==None:
+            return
+
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
-        self._name="process"
 
     def getProcessObjFromSystemPid(self,pid,session=None):
         #no security required, everyone can ask this

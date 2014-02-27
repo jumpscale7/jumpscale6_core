@@ -104,5 +104,5 @@ class GeventWSServer():
         print "started on %s" % self.port
         self.server.serve_forever()
 
-    def addCMDsInterface(self, MyCommands, category=""):
-        self.daemon.addCMDsInterface(MyCommands, category)
+    def addCMDsInterface(self, MyCommands, category="",proxy=False):
+        self.daemon.addCMDsInterface(MyCommands, category,proxy=proxy)

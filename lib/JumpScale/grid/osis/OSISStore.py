@@ -204,10 +204,8 @@ class OSISStore(object):
         """
         if j.basetype.dictionary.check(value):
             #is probably an osis object
-            if value.has_key("_meta") and  value.has_key("_ckey"):
-                #is an osis object
-                obj=self.getObject(value)
-                # obj.getSetGuid()
+            obj=self.getObject(value)
+            if not j.basetype.dictionary.check(obj):
                 new,changed,obj=self.setObjIds(obj)
                 key=obj.guid
                 self.index(obj)
@@ -261,7 +259,7 @@ class OSISStore(object):
         try:
             data.pop("sguid")
         except:
-            pass
+            pass       
         
         try:
             if ttl <> 0:
@@ -269,13 +267,20 @@ class OSISStore(object):
             else:
                 self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
         except Exception,e:
+
             if str(e).find("Index failed")<>-1:
                 try:
-                    msg="cannot index object:\n%s"%obj
+                    msg="cannot index object:\n%s"%data
                 except Exception,ee:
                     msg="cannot index object, cannot even print object"                
                 print e
-                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index', msgpub='', die=True, tags='', eco=None)
+                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index', msgpub='', die=False, tags='', eco=None)
+            elif str(e).find("failed to parse")<>-1:
+                try:
+                    msg="indexer cannot parse object:\n%s"%data
+                except Exception,ee:
+                    msg="indexer cannot parse object, cannot even print object.\n%s"%ee
+                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None)                
             else:
                 j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))
             

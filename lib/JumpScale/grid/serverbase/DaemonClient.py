@@ -133,7 +133,7 @@ class DaemonClient(object):
         self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__, ssl=ssl, returnformat="")
         print "registered session"
 
-    def sendMsgOverCMDChannel(self, cmd, data, sendformat=None, returnformat=None, retry=0, maxretry=1, \
+    def sendMsgOverCMDChannel(self, cmd, data,sendformat=None, returnformat=None, retry=0, maxretry=1, \
         category=None,die=True,transporttimeout=5):
         """
         cmd is command on server (is asci text)
@@ -172,7 +172,8 @@ class DaemonClient(object):
                 print "session lost"
                 self.initSession()
                 retry += 1
-                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat, returnformat, retry, maxretry, category,transporttimeout=transporttimeout)
+                agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+                return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat=sendformat, returnformat=returnformat, retry=retry, maxretry=maxretry, category=category,transporttimeout=transporttimeout)
             else:
                 msg = "Authentication error on server.\n"
                 raise AuthenticationError(msg)
@@ -180,22 +181,24 @@ class DaemonClient(object):
             msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             raise MethodNotFoundException(msg)
         if str(returncode) != returnCodes.OK:
-            frames= j.errorconditionhandler.getFrames()
-            s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            ddict = s.loads(parts[2])
-            eco = j.errorconditionhandler.getErrorConditionObject(ddict)
-            eco.category="rpc.exec"
-            eco.frames=frames
-
-            msg = "execution error on server cmd:%s error=%s" % (cmd, eco)
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
             # print "*** error in client to zdaemon ***"
-            if eco.errormessage.find("Authentication error")<>-1:
-                eco.errormessage="Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user)
-            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-            if die:
-                j.errorconditionhandler.reRaiseECO(eco)
+
+            s = j.db.serializers.getMessagePack()  # get messagepack serializer
+            ecodict = s.loads(parts[2])   
+
+            if ecodict["errormessage"].find("Authentication error")<>-1:
+                raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
+                     
+            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
+            # frames= j.errorconditionhandler.getFrames()            
+            # s = j.db.serializers.getMessagePack()  # get messagepack serializer
+            # ddict = s.loads(parts[2])
+            # eco = j.errorconditionhandler.getErrorConditionObject(ddict)
+            # eco.category="rpc.exec"
+            # eco.frames=frames
+            # msg = "execution error on server  %s:%s" % (gid,nid,ecoid,cmd,category)
 
         returnformat = parts[1]
         if returnformat <> "":
@@ -249,8 +252,10 @@ class Klass(object):
                 for cnt, default in enumerate(spec['args'][3][::-1]):
                     cnt += 1
                     params_spec[-cnt] += "=%r" % default
+            args.append("_agentid=_agentid")
             params = ', '.join(params_spec)
             params += ",transporttimeout=5"
+            params += ",_agentid=0"
             strmethod = strmethod % (params, spec['doc'], key, ", ".join(args), )
             strmethod=strmethod.replace(", ,",",")
             try:
@@ -259,15 +264,18 @@ class Klass(object):
                 raise RuntimeError("could not exec the client method, error:%s, code was:%s"%(e,strmethod))
             klass = Klass(self, category)
             setattr(client, key, klass.method)
+            # print strmethod
         return client
 
-    def sendcmd(self, cmd, sendformat=None, returnformat=None, category=None,transporttimeout=5, **args):
+    def sendcmd(self, cmd, sendformat=None, returnformat=None, category=None,transporttimeout=5,**args):
         """
         formatstring is right order of formats e.g. mc means messagepack & then compress
         formats see: j.db.serializers.get(?
 
         return is the deserialized data object
         """
+        if not args.has_key("_agentid"):
+            args["_agentid"]=0
         return self.sendMsgOverCMDChannel(cmd, args, sendformat, returnformat, category=category,transporttimeout=transporttimeout)
 
     def perftest(self):

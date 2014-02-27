@@ -1,5 +1,6 @@
 import unittest
 from JumpScale import j
+import time
 
 descr = """
 basic functioning of osis (test set) for complex types
@@ -81,10 +82,17 @@ class TEST(unittest.TestCase):
                     task.priority=i
                 key,new,changed=self.osisclient.set(obj)
 
-        items=self.osisclient.simpleSearch({'name': 'name1'})
-
+        start = time.time()
+        while start + 5 > time.time():
+            items=self.osisclient.simpleSearch({'name': 'name1'})
+            if items:
+                break
+    
         self.assertEqual(len(items), 1) #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
 
-        items=self.osisclient.simpleSearch(params={"name":"name3"})
+        while start + 5 > time.time():
+            items=self.osisclient.simpleSearch(params={"name":"name3"})
+            if items:
+                break
 
         self.assertEqual(len(items), 1) #there should be only 1 (even the fact we stored in 2x, this because of overrule on setguid method)
