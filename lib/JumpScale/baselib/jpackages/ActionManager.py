@@ -19,8 +19,9 @@ class ActionManager:
             if name[0]=="_":
                 continue
             name=name[:-3]
-            
-            modname = "jpactions_%s_%s_%s" % (jp.domain,jp.name,name)
+           
+            md5 = j.tools.hash.md5_string(path)
+            modname = "JumpScale.baselib.jpackages.%s" % md5
             module = imp.load_source(modname, path)
             self._actions[name]= module.main
                 
@@ -42,7 +43,7 @@ def method(self{args}):
         result=self._actions['{name}'](j,self._jpackage{args})
     except Exception,e:
         j.errorconditionhandler.processPythonExceptionObject(e)
-        j.application.stop()
+        j.application.stop(1)
     return result"""
 
         else:
@@ -56,7 +57,7 @@ def method(self{args}):
         result=self._actions['{name}'](j,self._jpackage{args2})
     except Exception,e:
         j.errorconditionhandler.processPythonExceptionObject(e)
-        j.application.stop()
+        j.application.stop(1)
     self._done[key]=True
     return result"""
 

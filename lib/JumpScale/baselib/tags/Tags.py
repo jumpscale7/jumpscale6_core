@@ -44,7 +44,10 @@ class Tags():
             if tag.find(':') > 0:
                 key = tag.split(':')[0]
                 value = tag.split(':')[1]
-                self.tags[unquote(key)] = unquote(value).replace("-|-"," ")
+                key=unquote(key)
+                value=unquote(value).replace("-|-"," ")
+                self.tags[key] = value
+                self.tags[key.lower()] = value
 
             else:
                 self.labels.add(unquote(tag))

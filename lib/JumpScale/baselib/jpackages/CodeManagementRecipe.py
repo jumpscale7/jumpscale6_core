@@ -64,6 +64,8 @@ class RecipeItem(object):
         repo=self.repoinfo.get("jp.code.repo")
         ttype=self.repoinfo.get("jp.code.type")
         branch=self.repoinfo.get("jp.code.branch")
+        if branch=="":
+            branch="default"
         if ttype<>"bitbucket":
             raise RuntimeError("only bitbucket repo's supported.")        
         return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),self.source)
@@ -244,6 +246,8 @@ class CodeManagementRecipe:
         repo=self.hrd.get("jp.code.repo")
         ttype=self.hrd.get("jp.code.type")
         branch=self.hrd.get("jp.code.branch")
+        if branch=="":
+            branch="default"
         if ttype<>"bitbucket":
             raise RuntimeError("only bitbucket repo's supported.")        
         return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),source)

@@ -9,34 +9,36 @@ class BlobStorClient2:
         self.namespace=namespace
         self.client= j.servers.zdaemon.getZDaemonClient(addr,port=port,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
 
-    def exists(self, key,repoId=""):
+    def exists(self, key, repoId=""):
         """
         Checks if the blobstor contains an entry for the given key
         @param key: key to
         """
-        return self.client.exists(key,self.namespace,repoId=repoId)
+        return self.client.exists(self.namespace, key, repoId=repoId)
 
     def getMD(self, key):
-        return self.client.getMD(key,self.namespace)
+        return self.client.getMD(self.namespace, key)
 
-    def delete(self, key,force=False,repoId=""):
-        return self.client.delete(key,self.namespace,repoId=repoId,force=force)
+    def delete(self, key, force=False,repoId=""):
+        return self.client.delete(self.namespace, key, repoId=repoId, force=force)
 
-    def set(self, key,data,repoId=""):
+    def set(self, key, data, repoId=""):
         """
         set 1 block of data, data is preformatted (e.g. compressed, encrypted, ...)
         """
-        return self.client.set(key,self.namespacedata,repoId=repoId)
+        return self.client.set(self.namespace, key, data, repoId=repoId)
 
     def get(self, key):
         """
         get the block back
         """
-        return self.client.delete(key,self.namespace)
+        return self.client.get(self.namespace, key)
 
     def deleteNamespace(self):
         return self.client.deleteNamespace(self.namespace)
 
+    def getBlobPatch(self, keyList):
+        return self.client.getBlobPatch(self.namespace, keyList)
 
     def download(self, key, destination):
         pass
@@ -99,12 +101,8 @@ class BlobStorClient2:
                         blobstor.loadConfig()
                         return self._put(blobstor, metadata, tmpfile)
                 j.errorconditionhandler.processPythonExceptionObject(e)
-                
+
         j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
-
-
-
-
 
     def put(self, path, type="", expiration=0, tags="", blobstors=[]):
         """
@@ -182,5 +180,3 @@ class BlobStorClient2:
 
         j.system.fs.remove(tmpfile)
         return hashh, descr, anyPutDone
-
-

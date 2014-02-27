@@ -7,12 +7,16 @@ import JumpScale.lib.diskmanager
 j.application.start("jsmachine_lxc")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['ps','new','list','destroyall','destroy','cmd','rdp','ssh','start','stop','restart','mountdisks','unmountdisks'], help='Command to perform')
+#'mountdisks','unmountdisks'
+parser.add_argument("action", choices=['ps','new','list','destroyall','destroy','cmd','rdp','ssh','start','stop','restart','getip'], help='Command to perform')
 parser.add_argument("-n", '--name', help='machine name')
 parser.add_argument("-b", '--base', help='base to clone from')
 parser.add_argument("-p",'--passwd', help='password for machine')
 parser.add_argument("-r",'--prefix', help='prefix')
 parser.add_argument("-c",'--cmd', help='cmd to execute')
+parser.add_argument('--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
+parser.add_argument('--start', help='start after creation', action='store_true', default=False)
+
 
 opts = parser.parse_args()
 
@@ -38,34 +42,58 @@ if opts.action =='list':
     for item in stopped:
         print "  machine: %s"%item
 
-
 if opts.action =='new':
     if opts.base==None:
-        opts.base="saucy-amd64-base"
+        opts.base="base"
     if opts.name==None:
-        opts.name=""
-    l.createMachine(name=opts.name,stdout=True,base=opts.base)
+        raise RuntimeError("need to specify name")
+    l.create(name=opts.name,stdout=True,base=opts.base,start=False)
+    if opts.pubip<>"":
+        j.system.platform.lxc.networkSetPublic(opts.name, netname="pub0",bridge="br0",pubips=["%s"%opts.pubip]) 
+    if opts.start:
+        j.system.platform.lxc.start(opts.name)
+
+if opts.action =='getip':
+    if opts.name==None:
+        raise RuntimeError("specify machine name")    
+    ip=l.getIp(opts.name)
+    print "%s"%ip
 
 if opts.action =='cmd':
     if opts.name==None:
         raise RuntimeError("specify machine name")    
-    if ip=="":
-        ip=getip(opts.nr)
+    ip=l.getIp(opts.name)
+    print "ipaddr:%s"%ip
+
     import JumpScale.baselib.remote
 
-    # #this will make sure new password is set
-    # seedpasswd="rooter"
-    cl=j.tools.expect.new("sh")
+    import JumpScale.baselib.remote
 
     if opts.passwd==None:
         opts.passwd="rooter"
+
+    if j.system.net.waitConnectionTest(ip,22,4)==False:
+        print "could not connect over ssh to ip:%s"%(22)
+        j.application.stop(1)        
     
+    j.remote.cuisine.fabric.env["password"]= opts.passwd
+    cuapi = j.remote.cuisine.api
+    cuapi.connect(ip)    
 
-    if j.system.net.waitConnectionTest(ip,22,5)==False:
-        print "could not connect to port:%s on ip:%s"%(22,ip)
-        j.application.stop(1)
+    print cuapi.run(opts.cmd)
 
-    cl.login(remote=ip,passwd=opts.passwd,seedpasswd="",initial=True)
+    # #this will make sure new password is set
+    # seedpasswd="rooter"
+    # cl=j.tools.expect.new("sh")
+
+    # if opts.passwd==None:
+    #     opts.passwd="rooter"
+    
+    # if j.system.net.waitConnectionTest(ip,22,5)==False:
+    #     print "could not connect to port:%s on ip:%s"%(22,ip)
+    #     j.application.stop(1)
+
+    # cl.login(remote=ip,passwd=opts.passwd,seedpasswd="",initial=True)
 
     # cl.send("/etc/init.d/xrdp start")
 
@@ -79,7 +107,7 @@ if opts.action =='cmd':
     #         j.application.stop(1)            
     #     nr+=1
 
-    print "machine:%s:%s:started"%(nr,ip)
+    # print "machine:%s:%s:started"%(nr,ip)
 
 if opts.action =='rdp':
     if opts.name==None:

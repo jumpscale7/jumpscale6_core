@@ -1092,6 +1092,9 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.install(False, download, reinstall=reinstalldeps)
+
+        self.installActiveHrd()
+
         self.loadActions() #reload actions to make sure new hrdactive are applied
 
         self.stop()
@@ -1106,8 +1109,9 @@ class JPackageObject():
                 raise RuntimeError("jpackages is in inconsistent state, ...")
 
             self.prepare(dependencies=False)
+            
 
-            self.installActiveHrd()
+            self.loadActions()            
 
             self.copyfiles(dependencies=False)
 

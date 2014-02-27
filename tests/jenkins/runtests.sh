@@ -21,14 +21,16 @@ if [ "$vmip" = "-" ]; then
 	exit 1
 fi
 ssh root@$vmip mkdir -p /opt/code/jumpscale
-rsync -a "$WORKSPACE/" root@$vmip:/opt/code/
+for repo in grid portal core lib; do
+    rsync -a "$WORKSPACE/jumpscale/jumpscale_$repo/" root@$vmip:/opt/code/jumpscale/${BRANCH}__jumpscale_${repo}
+done
 set +e
 ssh root@$vmip "
-chown -R root:root /opt/code/jumpscale/jumpscale_core
+chown -R root:root /opt/code/jumpscale/${BRANCH}__jumpscale_core
 set -e
 apt-get update
 apt-get install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
-cd /opt/code/jumpscale/jumpscale_core/
+cd /opt/code/jumpscale/${BRANCH}__jumpscale_core/
 pip install .
 
 mkdir -p /opt/jumpscale/cfg/hrd/
@@ -67,27 +69,19 @@ jpackage install -n core
 
 jpackage install -n grid_master
 jpackage install -n grid_node
-jpackage install -n logger
 jpackage install -n grid_portal
-jpackage install -n processmanager
 jpackage install -n graphite
 jpackage install -n agentcontroller
-jpackage install -n agent
+jpackage install -n workers
+jpackage install -n processmanager
 
 echo '[main]
 appdir = /opt/jumpscale/apps/portalbase
-
 filesroot = $vardir/portal/files
-
 actors = *
 webserverport = 81
-
-#leave 0 if disabled (this is like secret which gives access to all)
 secret=1234
-
-#groups which get access to admin features of portal
 admingroups=admin,gridadmin,superadmin
-
 pubipaddr=127.0.0.1
 ' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
 
@@ -95,7 +89,7 @@ jsprocess start
 
 pip install nose
 
-nosetests --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/jumpscale_grid/apps/osis/tests/*  /opt/code/jumpscale/jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/jumpscale_grid/apps/processmanager/tests/*
+nosetests --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/osis/tests/*  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/processmanager/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/test/*
 
 "
 #/opt/code/jumpscale/jumpscale_grid/apps/gridportal/tests/*

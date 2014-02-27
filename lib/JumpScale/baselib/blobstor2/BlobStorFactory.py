@@ -7,13 +7,17 @@ class BlobStorFactory:
     def __init__(self):
         self.logenable=True
         self.loglevel=5
-        self.blobstorCache={} 
+        self.blobstorCache={}
 
-    def getClient(self, namespace,ipaddr="127.0.0.1",port=2345):
+    def getClient(self, namespace, name="default"):
+        from IPython import embed
+        print "DEBUG NOW BlobStorFactory"
+        embed()
+        
         name="%s_%s"%(ipaddr,port)
         if self.blobstorCache.has_key(name):
             return self.blobstorCache[name]
-        self.blobstorCache[name]= BlobStorClient2(namespace,ipaddr,port)
+        self.blobstorCache[name]= BlobStorClient2(namespace, ipaddr, port, login, passwd)
         return self.blobstorCache[name]
 
     def log(self,msg,category="",level=5):

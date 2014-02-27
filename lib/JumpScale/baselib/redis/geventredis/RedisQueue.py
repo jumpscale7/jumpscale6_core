@@ -35,6 +35,17 @@ class RedisQueue(object):
 
         return item
 
+    def fetch(self, block=True, timeout=None):
+        """ Like get but without remove"""
+        if block:
+            item = self.__db.brpoplpush(self.key, self.key, timeout)
+        else:
+            item = self.__db.lindex(self.key, 0)
+        return item
+
+    def set_expire(self, time):
+        self.__db.expire(self.key, time)
+
     def get_nowait(self):
         """Equivalent to get(False)."""
         return self.get(False)

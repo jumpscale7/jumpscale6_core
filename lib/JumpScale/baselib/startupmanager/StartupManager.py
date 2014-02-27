@@ -68,7 +68,7 @@ class ProcessDef:
 
         if not self.autostart:
             return
-            
+
         self.log("process dependency CHECK")
         jp.processDepCheck(timeout=timeout)
         self.log("process dependency OK")
@@ -333,12 +333,11 @@ class StartupManager:
         hrd+="process.pid=%s\n"%pid
         hrd+="process.active=%s\n"%active
         pstring=""
-        for port in ports:
-            pstring+="%s,"%port
+        ports = ports[:]
         if jpackage and jpackage.hrd.exists('jp.process.tcpports'):
             for port in jpackage.hrd.getList('jp.process.tcpports'):
-                pstring+="%s,"%port
-        pstring=pstring.rstrip(",")
+                ports.append(port)
+        pstring = ",".join( str(x) for x in set(ports) )
 
         hrd+="process.ports=%s\n"%pstring
         if jpackage==None:
@@ -394,6 +393,11 @@ class StartupManager:
         if not processes and (domain or name ):
             raise ProcessNotFoundException("Could not find process with domain:%s and name:%s" % (domain, name))
         return processes
+
+    def exists(self,domain=None,name=None):
+        if len(self.getProcessDefs(domain,name))>0:
+            return True
+        return False
 
     def getDomains(self):
         result=[]

@@ -175,6 +175,7 @@ stop on runlevel [016]
         C+="exec %s %s\n"%(daemonpath,args)
 
         j.system.fs.writeFile("/etc/init/%s.conf"%servicename,C)
+        j.system.process.execute("initctl reload-configuration")
 
     def serviceUninstall(self,servicename):
         self.stopService(servicename)
@@ -183,16 +184,17 @@ stop on runlevel [016]
     def startService(self, servicename):
         j.logger.log("start service on ubuntu for:%s"%servicename,category="ubuntu.start")  #@todo P1 add log statements for all other methods of this class
         if not self.statusService(servicename):
-            return j.system.process.execute("start %s" % servicename)
+            return j.system.process.execute("sudo start %s" % servicename)
 
     def stopService(self, servicename):
         return j.system.process.execute("stop %s" % servicename,False)
 
     def statusService(self, servicename):
-        exitcode, output = j.system.process.execute("status %s" % servicename,False)
+        exitcode, output = j.system.process.execute("sudo status %s" % servicename,False)
         parts = output.split(' ')
         if len(parts) >=2 and parts[1].startswith('start'):
             return True
+
         return False
 
     def updatePackageMetadata(self, force=True):

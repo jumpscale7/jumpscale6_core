@@ -230,7 +230,7 @@ class Code():
                 for item in obj:
                     value.append(todict(item,{},ignoreKeys))
                 return value
-            elif isinstance(obj, (int,basestring,float,bool)) or obj==None:
+            elif isinstance(obj, (int,basestring,float,bool,long)) or obj==None:
                 return obj
             elif isinstance(obj, ClassBase):
                 if hasattr(obj,"_obj2dict"):
