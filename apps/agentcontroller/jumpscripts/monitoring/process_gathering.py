@@ -18,6 +18,7 @@ roles = ["grid.node.process"]
 
 def action():
     import time
+    import psutil
     result={}
     
     def processStopped(cacheobj):
@@ -48,19 +49,49 @@ def action():
         return cacheobj
 
     def loadFromSystemProcessInfo(process_key,cacheobj,pid):
-        cacheobj.p = j.system.process.getProcessObject(pid)
+        processinfo = None
+        try:
+            cacheobj.p = j.system.process.getProcessObject(pid)
+        except:
+            cacheobj.p = None
+        try:
+            if cacheobj.p:
+                args = ['get_cpu_times', 'get_memory_info', 'create_time',
+                        'get_connections', 'get_io_counters', 'getcwd',
+                        'get_num_fds', 'get_num_ctx_switches', 'get_num_threads',
+                        'get_cpu_percent', 'username']
+
+                processinfo = cacheobj.p.as_dict(args)
+                processinfo['parent'] = cacheobj.p.parent.pid
+                processinfo['children'] = [ x.pid for x in cacheobj.p.get_children() ]
+        except psutil.NoSuchProcess:
+            pass
+        if not processinfo:
+            processinfo = {'cpu_times': (0.0, 0.0),
+                           'create_time': 0.0,
+                           'connections': [],
+                           'io_counters': (0, 0, 0, 0),
+                           'cwd': '',
+                           'parent': 0,
+                           'num_fds': 0,
+                           'num_ctx_switches': 0,
+                           'num_threads': 0,
+                           'cpu_percent': 0.0,
+                           'username': '',
+                           'children': []}
+
 
         cacheobj.db.systempids=[pid]
 
-        cacheobj.db.epochstart = cacheobj.p.create_time
+        cacheobj.db.epochstart = processinfo['create_time']
 
         #MEMORY
-        mem_rss,mem_vms=cacheobj.p.get_memory_info()
+        mem_rss,mem_vms= processinfo['memory_info']
 
         cacheobj=aggregate(cacheobj,process_key,"mem_rss",round(mem_rss/1024/1024,1))
         cacheobj=aggregate(cacheobj,process_key,"mem_vms",round(mem_vms/1024/1024,1))
 
-        connections= cacheobj.p.get_connections()
+        connections = processinfo['connections']
         if len(connections)>0:
             cacheobj.db.nr_connections=len(connections)
             for c in connections:
@@ -78,16 +109,16 @@ def action():
         cacheobj=aggregate(cacheobj,process_key,"nr_connections_in",len(cacheobj.netConnectionsIn),avg=False)
         cacheobj=aggregate(cacheobj,process_key,"nr_connections_out",len(cacheobj.netConnectionsOut),avg=False)
 
-        cacheobj.db.io_read_count, cacheobj.db.io_write_count, cacheobj.db.io_read_mbytes, cacheobj.db.io_write_mbytes=cacheobj.p.get_io_counters()
+        cacheobj.db.io_read_count, cacheobj.db.io_write_count, cacheobj.db.io_read_mbytes, cacheobj.db.io_write_mbytes = processinfo['io_counters']
         for item in ["io_read_count","io_write_count","io_read_mbytes","io_write_mbytes"]:
             cacheobj=aggregate(cacheobj,process_key,item,cacheobj.db.__dict__[item],ttype="D")
 
-        cacheobj.db.cmd=cacheobj.p.getcwd()
-        cacheobj.db.parent=cacheobj.p.parent.pid
-        nr_file_descriptors=cacheobj.p.get_num_fds()
+        cacheobj.db.workingdir= processinfo['cwd']
+        cacheobj.db.parent= processinfo['parent']
+        nr_file_descriptors = processinfo['num_fds']
         cacheobj=aggregate(cacheobj,process_key,"nr_file_descriptors",nr_file_descriptors)
 
-        nr_ctx_switches_voluntary,nr_ctx_switches_involuntary=cacheobj.p.get_num_ctx_switches()
+        nr_ctx_switches_voluntary,nr_ctx_switches_involuntary = processinfo['num_ctx_switches']
         cacheobj=aggregate(cacheobj,process_key,"nr_ctx_switches_voluntary",nr_ctx_switches_voluntary)
         cacheobj=aggregate(cacheobj,process_key,"nr_ctx_switches_involuntary",nr_ctx_switches_involuntary)
 
@@ -95,21 +126,16 @@ def action():
         cacheobj=aggregate(cacheobj,process_key,"nr_threads",nr_threads)
 
         # cacheobj.nr_openfiles=cacheobj.p.get_open_files()
-        cpu_time_user,cpu_time_system=cacheobj.p.get_cpu_times()
+        cpu_time_user,cpu_time_system= processinfo['cpu_times']
         cacheobj=aggregate(cacheobj,process_key,"cpu_time_user",cpu_time_user,ttype="D",percent=True)
         cacheobj=aggregate(cacheobj,process_key,"cpu_time_system",cpu_time_system,ttype="D",percent=True)
 
-        cpu_percent=cacheobj.p.get_cpu_percent(0)
+        cpu_percent= processinfo['cpu_percent']
         cacheobj=aggregate(cacheobj,process_key,"cpu_percent",cpu_percent,percent=True)
 
-        cacheobj.db.user=cacheobj.p.username
+        cacheobj.db.user= processinfo['username']
 
-        for child in cacheobj.p.get_children():
-            if hasattr(child, 'pid'):
-                childpid = child.pid
-            else:
-                childpid = child.getPid()
-
+        for childpid in processinfo['children']:
             childcache = j.processmanager.cache.processobject.get(id=childpid)
             result[childpid]=childcache
             loadFromSystemProcessInfo(childpid,childcache, childpid)
