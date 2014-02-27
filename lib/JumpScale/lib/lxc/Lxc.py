@@ -9,7 +9,7 @@ import netaddr
 class Lxc():
 
     def __init__(self):
-        self._prefix="mach_"
+        self._prefix="" #no longer use prefixes
 
     def _getChildren(self,pid,children):
         process=j.system.process.getProcessObject(pid)
@@ -23,7 +23,7 @@ class Lxc():
         return rootpath
 
 
-    def resetNetworkConfigHostSystemDhcpSimple(self,nameserver=None,pubinterface="eth0"):
+    def resetNetworkConfigHostSystemDhcpSimple(self):
         """
         works on host 
         will remove all network config (DANGEROUS)
@@ -31,25 +31,36 @@ class Lxc():
         will create bridge linked to pub interface with specified privnet
         gw will be applied
         """
-        if not nameserver:
-            nameserver=j.application.config.get("lxc.nameserver")
 
-        mgmtnet = netaddr.IPNetwork(j.application.config.get("lxc.management.iprange"))
-        mgmtbridge=j.application.config.get("lxc.bridge.management")
+        #generic settings 
+        j.system.netconfig.reset(shutdown=True)  
 
-        j.system.netconfig.reset(shutdown=True)        
+        ovsw=j.application.config.getInt("lxc.openvswitch")==1
+
+        nameserver=j.application.config.get("lxc.nameserver")      
         j.system.netconfig.setNameserver(nameserver)
-        j.system.netconfig.enableInterface(pubinterface,start=False,dhcp=False)
-        j.system.netconfig.enableInterfaceBridgeDhcp(mgmtbridge,bridgedev=pubinterface,start=True)
 
+        #start main interface, do not attach ip to it
+        pubinterface=j.application.config.get("lxc.defaults.pubinterface")
+        j.system.netconfig.enableInterface(pubinterface,start=False,dhcp=False) #dont start, bridge will get ip
+
+        #create bride attached to pub ip addr, DHCP will be enabled here otherwise machine cannot go to internet
+        pubBridgeName=j.application.config.get("lxc.bridge.public.name")
+        pubBridgeGW=j.application.config.get("lxc.bridge.public.gw")
+        j.system.netconfig.enableInterfaceBridgeDhcp(pubBridgeName,bridgedev=pubinterface,start=True)
+
+
+        #create mgmt bridge not connected, used to be able to access machines
+        mgmtipRange=j.application.config.get("lxc.management.iprange")
         #look for first ip addr of network
-        ip=netaddr.IPNetwork(mgmtnet)
-
+        ip=netaddr.IPNetwork(mgmtipRange)
         mgmtnetIpAddr=str(netaddr.ip.IPAddress(ip.first+1))
+        mgmtnetWithIpAddr="%s/%s"%(mgmtnetIpAddr,ip.prefixlen)
+        j.system.netconfig.enableInterfaceBridgeStatic(dev="mgmt",ipaddr=mgmtnetWithIpAddr,bridgedev=None,gw=None,start=True)
 
-        mgmtnet="%s/%s"%(mgmtnetIpAddr,ip.prefixlen)
 
-        j.system.netconfig.addIpToInterface(mgmtbridge,mgmtnet,aliasnr=1,start=True)    
+        #create mgmt bridge not connected, used to be able to access machines
+        j.system.netconfig.enableInterfaceBridgeStatic(dev="dmz0",ipaddr=None,bridgedev=None,gw=None,start=True)
 
     def list(self):
         """
@@ -136,11 +147,14 @@ ipaddr=
             print "TOTAL: mem:%-8s cpu:%-8s" % (mem, cpu)
         return result
 
-    def create(self,name="",stdout=True,base="base",start=False,nameserver=None):
+    def create(self,name="",stdout=True,base="base",start=False,nameserver="8.8.8.8",replace=True):
         """
         @param name if "" then will be an incremental nr
         """
         print "create:%s"%name
+        if replace:
+            if j.system.fs.exists(self._getMachinePath(name)):
+                self.destroy(name)        
         if not nameserver:
             nameserver = j.application.config.get('lxc.nameserver')        
         running,stopped=self.list()
@@ -154,8 +168,14 @@ ipaddr=
             nr += 1
             name = nr
         lxcname="%s%s"%(self._prefix,name)
+
         cmd="lxc-clone --snapshot -B overlayfs -o %s -n %s"%(base,lxcname)
+        print cmd
         resultcode,out=j.system.process.execute(cmd)
+       
+        # if lxcname=="base":
+        self._setConfig(lxcname,base)
+
         j.system.netconfig.setRoot(self._get_rootpath(name)) #makes sure the network config is done on right spot
         j.system.netconfig.reset()
         j.system.netconfig.setNameserver(nameserver)
@@ -178,9 +198,8 @@ ipaddr=
             ipaddrs[name]=ipaddr
             j.application.config.setDict("lxc.management.ipaddr",ipaddrs)
 
-        mgmtbridge=j.application.config.get("lxc.bridge.management")
         # mgmtiprange=j.application.config.get("lxc.management.iprange")
-        self.networkSetPrivateOnBridge( name,netname="mgmt0", bridge=mgmtbridge, ipaddresses=["%s/24"%ipaddr]) #@todo make sure other ranges also supported
+        self.networkSetPrivateOnBridge( name,netname="mgmt0", bridge="mgmt", ipaddresses=["%s/24"%ipaddr]) #@todo make sure other ranges also supported
 
         #set ipaddr in hrd file
         hrd.set("ipaddr",ipaddr)
@@ -211,7 +230,7 @@ ipaddr=
         cmd="lxc-stop -n %s%s"%(self._prefix,name)
         resultcode,out=j.system.process.execute(cmd)
 
-    def start(self,name,stdout=True):
+    def start(self,name,stdout=True,test=True):
         print "start:%s"%name
         cmd="lxc-start -d -n %s%s"%(self._prefix,name)
         resultcode,out=j.system.process.execute(cmd)
@@ -225,11 +244,21 @@ ipaddr=
                 break
             time.sleep(0.2)
             now=time.time()
+
         if found==False:
             msg= "could not start new machine, did not start in 20 sec."
             if stdout:
                 print msg
             raise RuntimeError(msg)
+    
+        ipaddr=self.getIp(name)
+        print "test ssh access to %s"%ipaddr
+        timeout=time.time()+10        
+        while time.time()<timeout:  
+            if j.system.net.tcpPortConnectionTest(ipaddr,22):
+                return
+            time.sleep(0.1)
+        raise RuntimeError("Could not connect to machine %s over port 22 (ssh)"%ipaddr)
 
     def networkSetPublic(self, machinename,netname="pub0",pubips=[],bridge=None,gateway=None):
         print "set pub network %s on %s" %(pubips,machinename)
@@ -268,10 +297,17 @@ lxc.network.name = %s
         j.system.netconfig.root=""#set back to normal
 
 
+    def _getMachinePath(self,machinename,append=""):
+        if machinename=="":
+            raise RuntimeError("Cannot be empty")
+        base = j.system.fs.joinPaths('/var', 'lib', 'lxc', '%s%s' % (self._prefix, machinename))
+        if append<>"":
+            base=j.system.fs.joinPaths(base,append)
+        return base
 
     def networkSetPrivateOnBridge(self, machinename,netname="dmz0", bridge=None, ipaddresses=["192.168.30.20/24"]):
         print "set private network %s on %s" %(ipaddresses,machinename)
-        machine_cfg_file = j.system.fs.joinPaths('/var', 'lib', 'lxc', '%s%s' % (self._prefix, machinename), 'config')
+        machine_cfg_file = self._getMachinePath(machinename,'config')
         
         config = '''
 lxc.network.type = veth
@@ -288,9 +324,51 @@ lxc.network.name = %s
 
         j.system.netconfig.setRoot(self._get_rootpath(machinename)) #makes sure the network config is done on right spot
         for ipaddr in ipaddresses:        
-            j.system.netconfig.enableInterfaceBridgeStatic(dev=netname,ipaddr=ipaddr,bridgedev=bridge,gw=None,start=False)
+            j.system.netconfig.enableInterfaceStatic(dev=netname,ipaddr=ipaddr,gw=None,start=False)
         j.system.netconfig.root=""#set back to normal
 
 
     def networkSetPrivateVXLan(self, name, vxlanid, ipaddresses):
         raise RuntimeError("not implemented")
+
+    def _setConfig(self,name,parent):
+        print "SET CONFIG"
+        base=self._getMachinePath(name)
+        baseparent=self._getMachinePath(parent)
+        machine_cfg_file = self._getMachinePath(name,'config')
+        C="""
+lxc.mount = $base/fstab
+lxc.tty = 4
+lxc.pts = 1024
+lxc.arch = x86_64
+lxc.cgroup.devices.deny = a
+lxc.cgroup.devices.allow = c *:* m
+lxc.cgroup.devices.allow = b *:* m
+lxc.cgroup.devices.allow = c 1:3 rwm
+lxc.cgroup.devices.allow = c 1:5 rwm
+lxc.cgroup.devices.allow = c 5:1 rwm
+lxc.cgroup.devices.allow = c 5:0 rwm
+lxc.cgroup.devices.allow = c 1:9 rwm
+lxc.cgroup.devices.allow = c 1:8 rwm
+lxc.cgroup.devices.allow = c 136:* rwm
+lxc.cgroup.devices.allow = c 5:2 rwm
+lxc.cgroup.devices.allow = c 254:0 rm
+lxc.cgroup.devices.allow = c 10:229 rwm
+lxc.cgroup.devices.allow = c 10:200 rwm
+lxc.cgroup.devices.allow = c 1:7 rwm
+lxc.cgroup.devices.allow = c 10:228 rwm
+lxc.cgroup.devices.allow = c 10:232 rwm
+lxc.utsname = $name
+lxc.cap.drop = sys_module
+lxc.cap.drop = mac_admin
+lxc.cap.drop = mac_override
+lxc.cap.drop = sys_time
+lxc.hook.clone = /usr/share/lxc/hooks/ubuntu-cloud-prep
+lxc.rootfs = overlayfs:$baseparent/rootfs:$base/delta0
+lxc.pivotdir = lxc_putold
+"""        
+        C=C.replace("$name",name)    
+        C=C.replace("$baseparent",baseparent)
+        C=C.replace("$base",base)
+        j.system.fs.writeFile(machine_cfg_file,C)
+        

@@ -22,8 +22,17 @@ class Shorewall(object):
         tcpForwardRules = json.loads(fwObject).get('tcpForwardRules')
         config = ''
         for rule in tcpForwardRules:
-            config += 'DNAT net loc:%s:%s tcp %s\n' % (rule['toAddr'], rule['toPort'], rule['fromPort'])
+            config += 'DNAT net $FW:%s:%s tcp %s\n' % (rule['toAddr'], rule['toPort'], rule['fromPort'])
 
         self.remoteApi.run('touch %s' % policyfile)
         self.remoteApi.file_write(policyfile, config)
+        self.remoteApi.run('shorewall restart')
+
+    def start(self):
+        self.remoteApi.run('shorewall start')
+
+    def stop(self):
+        self.remoteApi.run('shorewall stop')
+
+    def restart(self):
         self.remoteApi.run('shorewall restart')
