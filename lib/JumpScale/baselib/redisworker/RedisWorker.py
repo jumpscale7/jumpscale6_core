@@ -143,6 +143,7 @@ class RedisWorkerFactory:
         self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
         self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
         self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
+        self.queue["monitoring"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:monitoring")
         # self.returnqueue=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%self.sessionid)
 
     def _getJob(self, jscriptid=None,args={}, timeout=60,log=True, queue="default",ddict={}):
@@ -156,10 +157,6 @@ class RedisWorkerFactory:
         if jobdict:
             jobdict=ujson.loads(jobdict)
         else:
-            from IPython import embed
-            print "DEBUG NOW ooo"
-            embed()
-            
             raise RuntimeError("cannot find job with id:%s"%jobid)
         return Job(ddict=jobdict)
 

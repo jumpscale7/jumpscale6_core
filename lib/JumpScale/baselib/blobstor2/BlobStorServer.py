@@ -289,9 +289,9 @@ class BlobStorServer2:
     def __init__(self, port=2345):
         daemon = j.servers.zdaemon.getZDaemon(port=port)
 
-        daemon.setCMDsInterface(BlobserverCMDS, category="blobserver")  # pass as class not as object !!! chose category if only 1 then can leave ""
+        daemon.addCMDsInterface(BlobserverCMDS, category="blobserver")  # pass as class not as object !!! chose category if only 1 then can leave ""
 
-        #cmds=daemon.daemon.cmdsInterfaces["blobserver"][0]
+        #cmds=daemon.daemon.cmdsInterfaces["blobserver"]
         # cmds.loadJumpscripts()
 
         daemon.start()

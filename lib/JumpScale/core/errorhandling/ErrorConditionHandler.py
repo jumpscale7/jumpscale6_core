@@ -62,7 +62,7 @@ class ErrorConditionHandler():
         if die:                         
             self.halt(eco.description)
         
-    def raiseOperationalCritical(self, message="", category="",msgpub="",die=True,tags="",eco=None):
+    def raiseOperationalCritical(self, message="", category="",msgpub="",die=True,tags="",eco=None,extra=None):
         """
         use this to raise an operational issue about the system
         @param message is message we want to use for operators
@@ -78,6 +78,7 @@ class ErrorConditionHandler():
             eco.level=1
 
         eco.errormessage=eco.errormessage.strip("\"")
+        eco.extra=extra
 
         self.processErrorConditionObject(eco,tostdout=False)
      
@@ -455,7 +456,9 @@ class ErrorConditionHandler():
             if eco.backtraceDetailed<>"":
                 extra["tb_detail"]=eco.backtraceDetailed
 
-            
+            if hasattr(eco,"extra") and eco.extra<>None:
+                extra["details"]=eco.extra
+
             extra["category"]=eco.category
             
             self.sendMessageToSentry(modulename=modulename,message=eco.errormessage,ttype="error",tags=None,extra=extra,level="error",tb=tb)
