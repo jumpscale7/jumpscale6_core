@@ -179,10 +179,11 @@ class Worker(object):
         if job.state[0:2]<>"OK":
             self.log("result:%s"%job.result)
 
+
         if job.jscriptid>10000:
             # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
-            w.redis.rpush("workers:return:%s"%job.id,time.time())
             self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
+            w.redis.rpush("workers:return:%s"%job.id,time.time())            
         else:
             #jumpscripts coming from AC
             if job.state<>"OK":
