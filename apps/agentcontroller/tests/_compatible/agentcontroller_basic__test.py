@@ -55,9 +55,6 @@ class TEST(unittest.TestCase):
             result = osis_jobs.search(query)['result']
             if result:
                 break
-        from IPython import embed
-        print "DEBUG NOW hhh"
-        embed()
-        
+
         self.assertGreater(len(result), 0)
 
