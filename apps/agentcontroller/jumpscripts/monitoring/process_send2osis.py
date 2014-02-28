@@ -16,6 +16,6 @@ async=False
 roles = ["grid.node.process"]
 
 def action():
-    for process in j.processmanager.cache.processobject.monitorobjects.itervalues():
+    for process in j.core.processmanager.monObjects.processobject.monitorobjects.itervalues():
         process.send2osis()
         

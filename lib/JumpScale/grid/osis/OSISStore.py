@@ -277,10 +277,12 @@ class OSISStore(object):
                 j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index', msgpub='', die=False, tags='', eco=None)
             elif str(e).find("failed to parse")<>-1:
                 try:
-                    msg="indexer cannot parse object:\n%s"%data
+                    msg="indexer cannot parse object (normally means 1 or more subtypes of doc was changed)"
                 except Exception,ee:
                     msg="indexer cannot parse object, cannot even print object.\n%s"%ee
-                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None)                
+                    j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None)
+                    return
+                j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None,extra=data)
             else:
                 j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))
             

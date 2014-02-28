@@ -40,7 +40,7 @@ def action():
 
     domains = con.listAllDomains()
     for domain in domains:
-        machine = j.processmanager.cache.machineobject.get(id=domain.ID())
+        machine = j.core.processmanager.monObjects.machineobject.get(id=domain.ID())
         machine.ckeyOld = machine.db.getContentKey()
         machine.db.name = domain.name()
         machine.db.nid = j.application.whoAmI.nid
@@ -71,7 +71,7 @@ def action():
             if disk.attrib['device'] != 'disk':
                 continue
             path = disk.find('source').attrib['dev']
-            vdisk = j.processmanager.cache.vdiskobject.get(id=path)
+            vdisk = j.core.processmanager.monObjects.vdiskobject.get(id=path)
             vdisk.ckeyOld = vdisk.db.getContentKey()
             vdisk.db.path = path
             vdisk.db.type = disk.find('driver').attrib['type']

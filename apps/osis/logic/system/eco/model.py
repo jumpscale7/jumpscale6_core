@@ -25,6 +25,7 @@ class ECO(OsisBaseObject):
             self.funclinenr=0
             self.backtrace=""
             self.backtraceDetailed=""
+            self.extra=""
 
             self.appname=j.application.appname #name as used by application
 

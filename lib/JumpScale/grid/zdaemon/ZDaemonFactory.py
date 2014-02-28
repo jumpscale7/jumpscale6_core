@@ -27,7 +27,7 @@ class ZDaemonFactory():
         #remark always need to add **args in method because user & returnformat are passed as params which can 
           be used in method
 
-        zd.setCMDsInterface(MyCommands)  #pass as class not as object !!!
+        zd.addCMDsInterface(MyCommands)  #pass as class not as object !!!
         zd.start()
 
         use self.getZDaemonClientClass as client to this daemon

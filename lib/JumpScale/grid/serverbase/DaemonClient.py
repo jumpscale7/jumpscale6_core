@@ -184,7 +184,7 @@ class DaemonClient(object):
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
             # print "*** error in client to zdaemon ***"
-
+            
             s = j.db.serializers.getMessagePack()  # get messagepack serializer
             ecodict = s.loads(parts[2])   
 

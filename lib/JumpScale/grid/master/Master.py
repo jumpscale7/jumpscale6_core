@@ -20,7 +20,7 @@ class MasterServer():
 
     def __init__(self, port=7788):
         self.daemon = j.core.grid.getZDaemon(port=port, nrCmdGreenlets=100)
-        self.daemon.setCMDsInterface(MasterServerCmds)  # pass as class not as object !!!
+        self.daemon.addCMDsInterface(MasterServerCmds)  # pass as class not as object !!!
 
     def start(self):
         self.daemon.start()

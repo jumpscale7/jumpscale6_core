@@ -26,7 +26,7 @@ def action():
         if processOsisObject.systempids<>[]:
             processOsisObject.systempids = []
             processOsisObject.epochstop = time.time()
-        # for item in j.processmanager.cache.processobject.getProcessStatProps():
+        # for item in j.core.processmanager.monObjects.processobject.getProcessStatProps():
         #     itemtot="%s_total"%item
         #     cacheobj.db.__dict__[item]=0
         #     cacheobj.db.__dict__[itemtot]=0
@@ -136,7 +136,7 @@ def action():
         cacheobj.db.user= processinfo['username']
 
         for childpid in processinfo['children']:
-            childcache = j.processmanager.cache.processobject.get(id=childpid)
+            childcache = j.core.processmanager.monObjects.processobject.get(id=childpid)
             result[childpid]=childcache
             loadFromSystemProcessInfo(childpid,childcache, childpid)
             if childpid not in j.processmanager.childrenPidsFound:
@@ -145,18 +145,18 @@ def action():
                 j.processmanager.childrenPidsFound[int(childpid)]=True
 
     #walk over startupmanager processes (make sure we don't double count)
-    for sprocess in j.processmanager.startupmanager.manager.getProcessDefs():
+    for sprocess in j.tools.startupmanager.getProcessDefs():
         pid = sprocess.getPid(ifNoPidFail=False)
 
-        if j.processmanager.cache.processobject.pid2name.has_key(pid):
-            sprocess.domain,sprocess.name=j.processmanager.cache.processobject.pid2name[pid]
+        if j.core.processmanager.monObjects.processobject.pid2name.has_key(pid):
+            sprocess.domain,sprocess.name=j.core.processmanager.monObjects.processobject.pid2name[pid]
         
         process_key="%s_%s"%(sprocess.domain,sprocess.name)
         print "process: '%s' pid:'%s'"%(process_key,pid)
 
-        # exists=j.processmanager.cache.processobject.exists(process_key)
+        # exists=j.core.processmanager.monObjects.processobject.exists(process_key)
 
-        cacheobj=j.processmanager.cache.processobject.get(id=process_key)
+        cacheobj=j.core.processmanager.monObjects.processobject.get(id=process_key)
 
         if cacheobj.ckeyOld=="":
             cacheobj.ckeyOld=cacheobj.db.getContentKey()
@@ -206,8 +206,8 @@ def action():
 
         print "systemprocess:%s %s"%(pname, pid)
 
-        if j.processmanager.cache.processobject.pid2name.has_key(pid):
-            domain0,name0=j.processmanager.cache.processobject.pid2name[pid]
+        if j.core.processmanager.monObjects.processobject.pid2name.has_key(pid):
+            domain0,name0=j.core.processmanager.monObjects.processobject.pid2name[pid]
             if domain0==None:
                 process_key="%s"%(name0)
             else:
@@ -217,11 +217,11 @@ def action():
 
         if result.has_key(process_key):
             #process with same name does already exist, lets first create temp getProcessObject, which will be done by pid
-            cacheobj=j.processmanager.cache.processobject.get(id=pid)
+            cacheobj=j.core.processmanager.monObjects.processobject.get(id=pid)
         else:
-            cacheobj=j.processmanager.cache.processobject.get(id=process_key)
+            cacheobj=j.core.processmanager.monObjects.processobject.get(id=process_key)
 
-        rootCacheObj=j.processmanager.cache.processobject.get(id=process_key)
+        rootCacheObj=j.core.processmanager.monObjects.processobject.get(id=process_key)
         if rootCacheObj.ckeyOld=="":
             rootCacheObj.ckeyOld=rootCacheObj.db.getContentKey() #get from prev version the content key
 
@@ -251,7 +251,7 @@ def action():
             cacheobjNow=cacheobj
             cacheobjPrev=result[process_key]
             #cacheobj+=...  aggregate with prev obj
-            for item in j.processmanager.cache.processobject.getProcessStatProps():
+            for item in j.core.processmanager.monObjects.processobject.getProcessStatProps():
                 cacheobjPrev.db.__dict__[item]+=float(cacheobjNow.db.__dict__[item])    
             #copy ports
             for systempid in cacheobjNow.db.systempids:
@@ -265,20 +265,20 @@ def action():
         cacheobj.db.statkey=process_key
         result[process_key]=cacheobj    
 
-        # exists=j.processmanager.cache.processobject.exists(process_key)
+        # exists=j.core.processmanager.monObjects.processobject.exists(process_key)
     for process_key,cacheobj in result.iteritems():
         if j.basetype.string.check(process_key):
             cacheobj.db.systempids.sort()
-            if cacheobj.db.getContentKey()<>cacheobj.ckeyOld:                    
+            newKey=cacheobj.db.getContentKey()
+            if newKey<>cacheobj.ckeyOld:                    
                 #need to store when fundamental change
                 print "STORE IN OSIS#########%s%s"%(cacheobj.db.pname,cacheobj.db.sname)
                 cacheobj.send2osis()
-                
-            cacheobj.ckeyOld=""
+            cacheobj.ckeyOld=newKey
 
 
     #find deleted processes
-    for process_key in j.processmanager.cache.processobject.monitorobjects.keys():
+    for process_key in j.core.processmanager.monObjects.processobject.monitorobjects.keys():
 
         #result is all found processobject in this run (needs to be str otherwise child obj)
         if process_key and not result.has_key(process_key):
@@ -286,16 +286,16 @@ def action():
             if j.basetype.string.check(process_key):
                 #no longer active
                 print "NO LONGER ACTIVE:%s"%cacheobj.db.pname
-                cacheobj=j.processmanager.cache.processobject.get(process_key) #is cached so low overhead
+                cacheobj=j.core.processmanager.monObjects.processobject.get(process_key) #is cached so low overhead
 
                 processStopped(cacheobj)
                 cacheobj.send2osis()
 
             #otherwise there is a memory leak
-            j.processmanager.cache.processobject.monitorobjects.pop(process_key)
+            j.core.processmanager.monObjects.processobject.monitorobjects.pop(process_key)
             #remove from aggregator
             aggrkey="n%s.process.%s"%(j.application.whoAmI.nid,process_key)
             j.system.stataggregator.delete(prefix=aggrkey)
             
-    j.processmanager.cache.processobject.monitorobjects=result
+    j.core.processmanager.monObjects.processobject.monitorobjects=result
 

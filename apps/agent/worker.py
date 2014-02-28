@@ -97,7 +97,7 @@ class Worker(object):
             # data=self.redis.hget("workerjobs",jobid)
             try:
                 # print "check if work", comes from redis
-                job=w._getWork(self.queuename,timeout=2)
+                job=w._getWork(self.queuename,timeout=60)
             except Exception,e:
                 j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
                 time.sleep(1)

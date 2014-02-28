@@ -75,7 +75,7 @@ class Process(OsisBaseObject):
         is like returning the hash, is used to see if object changed
         """
         out=""
-        for item in ["gid","nid","jpdomain","jpname","pname","sname","ports","systempids","epochstart","epochstop","active","cmd","workingdir","user"]:
+        for item in ["gid","nid","jpdomain","jpname","pname","sname","ports","systempids","epochstart","epochstop","active","cmd","workingdir"]:
             out+=str(self.__dict__[item])
         return j.tools.hash.md5_string(out)
 

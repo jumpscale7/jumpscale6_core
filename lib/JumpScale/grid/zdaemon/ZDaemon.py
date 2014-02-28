@@ -40,8 +40,8 @@ class ZDaemon(GeventLoop):
 
         self.key = ""
 
-    def setCMDsInterface(self, cmdInterfaceClass, category=""):
-        self.daemon.setCMDsInterface(cmdInterfaceClass, category)
+    def addCMDsInterface(self, cmdInterfaceClass, category=""):
+        self.daemon.addCMDsInterface(cmdInterfaceClass, category)
 
     def repCmdServer(self):
         cmdsocket = self.cmdcontext.socket(zmq.REP)

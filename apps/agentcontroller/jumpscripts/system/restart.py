@@ -17,9 +17,9 @@ roles = ["grid.node.processmanager"]
 import sys,fcntl,os
 
 def action():
-    jumpscript=j.processmanager.jumpscripts.jumpscripts["jumpscale_restart"]
+    jumpscript=j.core.processmanager.cmds.jumpscripts.jumpscripts["jumpscale_restart"]
     jumpscript.enable=False #this to make sure it wont run, will be reloaded after restart anyhow
-    j.processmanager.jumpscripts.run()
+    j.core.processmanager.cmds.jumpscripts.run()
     args = sys.argv[:]
     args.insert(0, sys.executable)
     max_fd = 1024

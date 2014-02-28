@@ -44,7 +44,7 @@ class ProcessObject(MonObjectBase):
         if totals:
             self.getTotalsChildren()
 
-        for name in j.processmanager.cache.processobject.getProcessStatProps(totals):
+        for name in j.core.processmanager.monObjects.processobject.getProcessStatProps(totals):
             result[name]=self.db.__dict__[name]
 
         return result
@@ -54,7 +54,7 @@ class ProcessObject(MonObjectBase):
         """
         calculate total for children
         """
-        for item in j.processmanager.cache.processobject.getProcessStatProps():
+        for item in j.core.processmanager.monObjects.processobject.getProcessStatProps():
             for child in self.children:
                 self.db.__dict__[item]+=float(child.db.__dict__[item])            
 

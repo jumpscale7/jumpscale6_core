@@ -14,13 +14,13 @@ class ProcessCmds():
 
     def getProcessObjFromSystemPid(self,pid,session=None):
         #no security required, everyone can ask this
-        data= j.processmanager.cache.processobject.getFromSystemPid(pid)
+        data= j.core.processmanager.monObjects.processobject.getFromSystemPid(pid)
         if data==None:
             return None
         return data.__dict__
 
     def registerProcess(self,pid,domain,name,workingdir="",session=None):
-        j.processmanager.cache.processobject.pid2name[pid]=(domain,name)
+        j.core.processmanager.monObjects.processobject.pid2name[pid]=(domain,name)
         if domain==None:
             process_key="%s_%s"%(domain,name)
         else:
@@ -28,7 +28,7 @@ class ProcessCmds():
 
         print "new process: '%s' pid:'%s'"%(process_key,pid)
 
-        cacheobj=j.processmanager.cache.processobject.get(id=process_key)
+        cacheobj=j.core.processmanager.monObjects.processobject.get(id=process_key)
         cacheobj.db.active=True
         cacheobj.db.sname = name
         cacheobj.db.pname = name

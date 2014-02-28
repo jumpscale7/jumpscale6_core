@@ -16,5 +16,5 @@ roles = ["grid.node.network"]
 from JumpScale import j
 
 def action():
-    for cacheobj in j.processmanager.cache.nicobject.monitorobjects.itervalues():
+    for cacheobj in j.core.processmanager.monObjects.nicobject.monitorobjects.itervalues():
         cacheobj.send2osis()

@@ -78,7 +78,7 @@ class ControllerCMDS():
         self._log("jobid found (incr done)")
         job.id=jobid
         job.getSetGuid()
-        if not jscriptid:
+        if jscriptid<>None:
             action = self.getJumpScript(cmdcategory, cmdname, session=session)
             jscriptid = action.id
         job.jscriptid = jscriptid
@@ -323,10 +323,9 @@ class ControllerCMDS():
         else:
             res = q.fetch()
         q.set_expire(5)
-        if res:
+        if res<>None:
             return json.loads(res)
         else:
-            json.loads(job)
             job["resultcode"]=1
             job["state"]="TIMEOUT"
             self._setJob(job, osis=True)
@@ -510,12 +509,13 @@ for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filte
     if name[0]<>"_":
         module = importlib.import_module('processmanagercmds.%s' % name)
         classs = getattr(module, name)
-        tmp=classs()
+        print "load cmds:%s"%name
+        tmp=classs()        
         daemon.addCMDsInterface(classs, category="processmanager_%s"%tmp._name,proxy=True)
 
 # j.system.fs.changeDir("..")
 
-cmds=daemon.daemon.cmdsInterfaces["agent"][0]
+cmds=daemon.daemon.cmdsInterfaces["agent"]
 cmds.loadJumpscripts()
 
 daemon.start()

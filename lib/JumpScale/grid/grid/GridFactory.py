@@ -135,7 +135,7 @@ class GridFactory():
         @param broker, if given then another connection will be made to the broker
         """
         if broker <> None:
-            self.brokerClient = broker.daemon.cmdsInterfaces['broker'][0]
+            self.brokerClient = broker.daemon.cmdsInterfaces['broker']
             return True
 
         brokerip = self.config.get("grid.broker.ip")

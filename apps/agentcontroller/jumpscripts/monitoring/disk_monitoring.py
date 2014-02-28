@@ -40,7 +40,7 @@ def action():
         path=disk.path.replace("/dev/","")
 
         disk_key=path
-        cacheobj=j.processmanager.cache.diskobject.get(id=disk_key)
+        cacheobj=j.core.processmanager.monObjects.diskobject.get(id=disk_key)
 
         cacheobj.ckeyOld=cacheobj.db.getContentKey()
         disk.nid = j.application.whoAmI.nid

@@ -2,6 +2,7 @@ from JumpScale import j
 import JumpScale.grid.agentcontroller
 import JumpScale.baselib.redisworker
 import gevent
+from JumpScale.grid.serverbase import returnCodes
 
 REDISIP = '127.0.0.1'
 REDISPORT = 7768
@@ -25,6 +26,7 @@ class AgentCmds():
         self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
         self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
         self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
+        self.queue["monitoring"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:monitoring")
         
         self.serverip = j.application.config.get('grid.master.ip')
         self.masterport = j.application.config.get('grid.master.port')
@@ -45,7 +47,7 @@ class AgentCmds():
             self._adminAuth(session.user,session.passwd)
 
         self._killGreenLets()
-        self.daemon.schedule("agent", self.loop)
+        j.core.processmanager.daemon.schedule("agent", self.loop)
 
     def reconnect(self):
         while True:
@@ -77,6 +79,21 @@ class AgentCmds():
                 self.reconnect()
                 continue
 
+            if job["queue"]=="internal":
+                #cmd needs to be executed internally (is for proxy functionality)
+                if self.daemon.cmdsInterfaces.has_key(job["category"]):
+                    job["resultcode"],returnformat,job["result"]=self.daemon.processRPC(job["cmd"], data=job["args"], returnformat="m", session=None, category=job["category"])
+                    if job["resultcode"]==returnCodes.OK:
+                        job["state"]="OK"
+                    else:
+                        job["state"]="ERROR"
+                else:
+                    job["resultcode"]=returnCodes.METHOD_NOT_FOUND
+                    job["state"]="ERROR"
+                    job["result"]="Could not find cmd category:%s"%job["category"]
+                self.client.notifyWorkCompleted(job)
+                continue
+
             if job["jscriptid"]==None:
                 raise RuntimeError("jscript id needs to be filled in")
             j.clients.redisworker.execJobAsync(job)
@@ -88,10 +105,11 @@ class AgentCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         todelete=[]
-        for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
+
+        for key,greenlet in j.core.processmanager.daemon.greenlets.iteritems():
             if key.find("agent")==0:
                 greenlet.kill()
                 todelete.append(key)
         for key in todelete:
-            self.daemon.parentdaemon.greenlets.pop(key)
+            j.core.processmanager.daemon.greenlets.pop(key)
 

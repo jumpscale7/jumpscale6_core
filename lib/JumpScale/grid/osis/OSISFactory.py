@@ -97,9 +97,9 @@ class OSISFactory:
             raise RuntimeError("cannot start osis, could not find running elastic search and/or carbon/graphite")
 
         zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
-        zd.setCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
-        zd.daemon.cmdsInterfaces["osis"][-1].init()
-        self.cmds=zd.daemon.cmdsInterfaces["osis"][-1]
+        zd.addCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
+        zd.daemon.cmdsInterfaces["osis"].init()
+        self.cmds=zd.daemon.cmdsInterfaces["osis"]
         zd.start()
 
     def getClient(self, ipaddr="localhost", port=5544,user=None,passwd=None,ssl=False,gevent=False):

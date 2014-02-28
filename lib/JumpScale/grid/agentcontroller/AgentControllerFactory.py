@@ -14,7 +14,6 @@ class AgentControllerFactory(object):
             self.agentControllerClients[agentControllerIP]=AgentControllerClient(agentControllerIP)
         return self.agentControllerClients[agentControllerIP]
         
-
     def getClientProxy(self,category="jpackages",agentControllerIP=None):
         key="%s_%s"%(category,agentControllerIP)
         if not self.agentControllerProxyClients.has_key(key):

@@ -99,7 +99,6 @@ class JumpscriptsCmds():
         self.agentcontroller_client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=self.adminuser , passwd=self.adminpasswd, \
             category="agent",id=agentid,timeout=36000)       
 
-
     def _init(self):
         self.loadJumpscripts()
 
@@ -115,54 +114,63 @@ class JumpscriptsCmds():
             if jumpscript_data=="":
                 raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
             jumpscript = JumpScript(jumpscript_data)
+            if jumpscript.enable:
 
-            print "found jumpscript:%s " %("%s_%s" % (organization, name))
-            # self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
-            period = jumpscript.period
-            if period:
-                if period and period not in self.jumpscriptsByPeriod:
-                    self.jumpscriptsByPeriod[period]=[]
-                self.jumpscriptsByPeriod[period].append(jumpscript)
+                self.jumpscripts["%s_%s"%(organization,name)]=jumpscript
 
-            if jumpscript.startatboot:
-                startatboot.append(jumpscript)
+                print "found jumpscript:%s " %("%s_%s" % (organization, name))
+                # self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
+                period = jumpscript.period
+                if period<>None:
+                    period=int(period)
+                    if period>0:
+                        if period not in self.jumpscriptsByPeriod:
+                            self.jumpscriptsByPeriod[period]=[]
+                        print "schedule jumpscript %s on period:%s"%(jumpscript.name,period)
+                        self.jumpscriptsByPeriod[period].append(jumpscript)
 
-            self.redis.hset("workers:jumpscripts:id",jumpscript.id, ujson.dumps(jumpscript_data))
+                if jumpscript.startatboot:
+                    startatboot.append(jumpscript)
 
-            if jumpscript.organization<>"" and jumpscript.name<>"":
-                self.redis.hset("workers:jumpscripts:name","%s__%s"%(jumpscript.organization,jumpscript.name), ujson.dumps(jumpscript_data))
+                self.redis.hset("workers:jumpscripts:id",jumpscript.id, ujson.dumps(jumpscript_data))
+
+                if jumpscript.organization<>"" and jumpscript.name<>"":
+                    self.redis.hset("workers:jumpscripts:name","%s__%s"%(jumpscript.organization,jumpscript.name), ujson.dumps(jumpscript_data))
 
         self._killGreenLets()
         self._configureScheduling()
         self._startAtBoot(startatboot)
 
     ####SCHEDULING###
+
     def _killGreenLets(self,session=None):
         """
         make sure all running greenlets stop
         """
         if session<>None:
-            self._adminAuth(session.user,session.passwd)        
+            self._adminAuth(session.user,session.passwd)
         todelete=[]
-        for key,greenlet in self.daemon.parentdaemon.greenlets.iteritems():
+
+        for key,greenlet in j.core.processmanager.daemon.greenlets.iteritems():
             if key.find("loop")==0:
                 greenlet.kill()
                 todelete.append(key)
         for key in todelete:
-            self.daemon.parentdaemon.greenlets.pop(key)
+            j.core.processmanager.daemon.greenlets.pop(key)            
 
     def _startAtBoot(self, jumpscripts):
         for jumpscript in jumpscripts:
             jumpscript.execute()
 
     def _run(self,period=None):
+        
         if period==None:
-            for period in j.processmanager.jumpscripts.jumpscriptsByPeriod.keys():
+            for period in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod.keys():
                 self._run(period)
 
-        for action in j.processmanager.jumpscripts.jumpscriptsByPeriod[period]:
+        for action in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod[period]:
+            # print "execute:%s"%action.name
             action.execute()
-
 
     def _loop(self, period):
         while True:
@@ -172,4 +180,4 @@ class JumpscriptsCmds():
     def _configureScheduling(self):
         for period in self.jumpscriptsByPeriod.keys():
             period=int(period)
-            self.daemon.schedule("loop%s"%period, self._loop, period=period)
+            j.core.processmanager.daemon.schedule("loop%s"%period, self._loop, period=period)

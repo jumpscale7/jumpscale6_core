@@ -42,7 +42,7 @@ class ZLogger(ZDaemon):
     def __init__(self, port=4443):
         ZDaemon.__init__(self, port=port, name="logger")
         self.daemon.logger = self
-        self.setCMDsInterface(ZLoggerCMDS, category='logger')
+        self.addCMDsInterface(ZLoggerCMDS, category='logger')
         self.init()
 
     def init(self):
