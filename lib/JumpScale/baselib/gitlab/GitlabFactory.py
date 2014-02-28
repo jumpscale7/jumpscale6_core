@@ -24,7 +24,7 @@ class GitlabFactory:
     def get(self,account):        
         return GitlabInstance(account)
 
-    def _log(self,msg,category="",level=5):
+    def log(self,msg,category="",level=5):
         category="gitlab.%s"%category
         category=category.rstrip(".")
         j.logger.log(msg,category=category,level=level)

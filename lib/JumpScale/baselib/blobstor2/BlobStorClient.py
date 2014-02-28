@@ -26,13 +26,19 @@ class BlobStorClient2:
         """
         set 1 block of data, data is preformatted (e.g. compressed, encrypted, ...)
         """
-        return self.client.set(self.namespace, key, data, repoId=repoId)
+        return self.client.set(namespace=self.namespace, key=key, value=data, repoId=repoId)
+
+    def exists(self,key,repoId=""):
+        return self.client.exists(namespace=self.namespace, key=key,repoId=repoId)
+
+    def existsBatch(self,keys,repoId=""):
+        return self.client.existsBatch(namespace=self.namespace, keys=keys,repoId=repoId)
 
     def get(self, key):
         """
         get the block back
         """
-        return self.client.get(self.namespace, key)
+        return self.client.get(namespace=self.namespace, key=key)
 
     def deleteNamespace(self):
         return self.client.deleteNamespace(self.namespace)

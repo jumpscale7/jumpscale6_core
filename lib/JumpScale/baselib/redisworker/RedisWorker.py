@@ -156,6 +156,10 @@ class RedisWorkerFactory:
         if jobdict:
             jobdict=ujson.loads(jobdict)
         else:
+            from IPython import embed
+            print "DEBUG NOW ooo"
+            embed()
+            
             raise RuntimeError("cannot find job with id:%s"%jobid)
         return Job(ddict=jobdict)
 
@@ -251,6 +255,9 @@ class RedisWorkerFactory:
             j.events.opserror("timeout on job:%s"%job, category='workers.job.wait.timeout', e=None)
         else:
             job=self.getJob(job.id)
+
+        if job.state<>"OK":
+            raise RuntimeError("could not execute job:%s error was:%s"%(job.id,job.result))
 
         return job
 

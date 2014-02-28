@@ -478,8 +478,12 @@ class Gitlab(object):
                 print(request.content)
                 raise RuntimeError("Your own projects limit is 0")
                 # return False
-        else:
-            raise RuntimeError("Could not create project")
+        elif request.status_code == 404:
+            print(request.content)
+            raise RuntimeError("error 404:%s"%request.content)
+
+        if request.status_code>0:            
+            raise RuntimeError("Could not create project, msg:%s"%request.content)
             # return False
 
 

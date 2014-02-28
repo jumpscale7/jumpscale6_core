@@ -2,7 +2,7 @@ import json
 from JumpScale import j
 from JumpScale.core.baseclasses import BaseEnumeration
 
-from GitlabConfigManagement import *
+# from GitlabConfigManagement import *
 # import urllib
 # import requests
 # from requests.auth import HTTPBasicAuth
@@ -25,25 +25,28 @@ class GitlabInstance(Gitlab):
                     id=key2.split(".")[0]
         if id==0:
             raise RuntimeError("Did not find account:%s for gitlab")
-
         prefix="gitlabclient.server.%s"%id
-
         self.addr=j.application.config.get("%s.addr"%prefix)
+
         Gitlab.__init__(self, self.addr)#, token=token)
         # self.accountPathLocal = j.system.fs.joinPaths("/opt/code",accountName)
         # j.system.fs.createDir(self.accountPathLocal)
         # self._gitlab = gitlab.Gitlab(self.addr)
         login=j.application.config.get("%s.login"%prefix)
         passwd=j.application.config.get("%s.passwd"%prefix)
+        self.passwd=passwd
         self.login(login, passwd)
         # for item in dir(self._gitlab):
         #     if item[0]<>"_":
         #         setattr(self,item,getattr(self._gitlab,item))
         self.gitclients={}
         self.load()
+        self.loginName=login
+        self.port=80
 
-    def getGitClient(self, accountName, repoName="", branch=None, clean=False):
+    def getGitClient(self, accountName, repoName="", branch="master", clean=False,path=None):
         """
+        @param path if not is std codefolder (best practice to leave this default)
         """
         #if self.gitclients.has_key(repoName):
             #return self.gitclients[repoName]
@@ -54,14 +57,18 @@ class GitlabInstance(Gitlab):
         if repoName=="":
             raise RuntimeError("reponame cannot be empty")
 
-        url = 'http://%s' % self.addr
+        url = 'http://%s:%s@%s' % (self.loginName,self.passwd,self.addr)
+        # url = 'http://%s' % (self.addr)
         if url[-1]<>"/":
             url=url+"/"
 
         url += "%s/%s.git" % (accountName, repoName)
 
         j.clients.gitlab.log("init git client ##%s## on path:%s"%(repoName,self.getCodeFolder(repoName)),category="getclient")
-        cl = j.clients.git.getClient(self.getCodeFolder(repoName), url, branchname=branch, cleandir=clean)
+        if path==None:
+            path=self.getCodeFolder(repoName)
+            j.system.fs.createDir(path)
+        cl = j.clients.git.getClient(path, url, branchname=branch, cleandir=clean,login=self.loginName,passwd=self.passwd)
         # j.clients.gitlab.log("git client inited for repo:%s"%repoName,category="getclient")
         self.gitclients[repoName]=cl
         return cl

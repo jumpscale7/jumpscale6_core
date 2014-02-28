@@ -10,9 +10,20 @@ class BlobStorFactory:
         self.blobstorCache={}
 
     def getClient(self, namespace, name="default"):
-        from IPython import embed
-        print "DEBUG NOW BlobStorFactory"
-        embed()
+        id=0
+        for key in j.application.config.getKeysFromPrefix("blobclient.blobserver"):
+            # key=key.replace("gitlabclient.server.","")
+            if key.find("name")<>-1:
+                if j.application.config.get(key)==name:
+                    key2=key.replace("blobclient.blobserver.","")
+                    id=key2.split(".")[0]
+        if id==0:
+            raise RuntimeError("Did not find account:%s for blobserverclient")
+        prefix="blobclient.blobserver.%s"%id
+        ipaddr=j.application.config.get("%s.addr"%prefix)
+        port=j.application.config.get("%s.port"%prefix)
+        login=j.application.config.get("%s.login"%prefix)
+        passwd=j.application.config.get("%s.passwd"%prefix)
         
         name="%s_%s"%(ipaddr,port)
         if self.blobstorCache.has_key(name):

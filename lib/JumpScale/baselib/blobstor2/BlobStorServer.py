@@ -6,6 +6,62 @@ import inspect
 import ujson
 import tarfile
 import tempfile
+import JumpScale.baselib.redisworker
+import marisa_trie
+
+def populateExistsCache(stor):
+    from JumpScale import j
+    import marisa_trie
+
+    w=j.base.fswalker.get()
+
+    keys=[]
+    mmax=1000000
+    nr=1
+
+    mtreepath="%s/mtreestmp/"%stor
+    mtreepathProd="%s/mtrees/"%stor
+
+    j.system.fs.removeDirTree(mtreepath)
+    j.system.fs.createDir(mtreepath)
+
+    def writetree(keys,nr):
+        tree=marisa_trie.Trie(keys)
+        tree.save("%s/%s.mtree"%(mtreepath,nr))
+        nr+=1
+        return nr
+
+    def processfile(path,stat,arg):
+        keys=arg["keys"]  
+        nr=arg["nr"]      
+        if path[-3:]==".md":
+            md5=j.system.fs.getBaseName(path)[:-3]
+            keys.append(md5)        
+        if len(keys)>mmax:
+            nr=writetree(keys,nr)
+            keys=[]
+
+    callbackFunctions={}
+    callbackFunctions["F"]=processfile
+
+    arg={}
+    arg["keys"] =keys
+    arg["nr"] =nr
+    w.walk(stor,callbackFunctions,arg=arg)#,childrenRegexExcludes=[".*/.git/.*"])
+
+    nr=writetree(keys,nr)
+
+    j.system.fs.removeDirTree(mtreepathProd)
+    j.system.fs.renameDir(mtreepath,mtreepathProd)
+
+    #try to reclaim mem    
+    del keys
+    import gc
+    gc.collect()
+
+    # import resource
+    # mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+
 
 class BlobserverCMDS():
 
@@ -30,6 +86,8 @@ class BlobserverCMDS():
             self.STORpath = "/opt/STOR2"
 
         # j.logger.setLogTargetLogForwarder()
+        self.mtrees={}
+        
 
     @property
     def _client(self):
@@ -46,6 +104,49 @@ class BlobserverCMDS():
         storpath=j.system.fs.joinPaths(self.STORpath, namespace, key[0:2], key[2:4], key)
         mdpath=storpath + ".md"
         return storpath, mdpath
+
+
+    def populateExistsCache(self,namespace="backup"):
+        print "POPULATE CACHE CAN TAKE A LONG TIME"
+        stor=j.system.fs.joinPaths(self.STORpath, namespace)
+        result=j.clients.redisworker.execFunction( method=populateExistsCache, _category='populateExistsCache', _organization='blobserver2', _timeout=1200, _queue='io', _log=True,_sync=True, stor=stor)
+        self.loadExistsCache(namespace)
+        # populateExistsCache(stor=j.system.fs.joinPaths(self.STORpath, namespace))
+
+    def loadExistsCache(self,namespace="backup"):
+        stor=self.STORpath
+        mtreepathProd="%s/%s/mtrees/"%(stor,namespace)
+        nr=1
+        path="%s/%s.mtree"%(mtreepathProd,nr)
+        while j.system.fs.exists(path):
+            trie = marisa_trie.Trie()
+            trie.load("%s/%s.mtree"%(mtreepathProd,nr))
+            if not self.mtrees.has_key(namespace):
+                self.mtrees[namespace]=[]
+            self.mtrees[namespace].append(trie)
+            nr+=1
+            path="%s/%s.mtree"%(mtreepathProd,nr)
+
+    def existsBatch(self,namespace,keys,repoId="",session=None):
+        if not self.mtrees.has_key(namespace):
+            self.populateExistsCache(namespace)
+
+        notfound=[]
+
+        for key in keys:
+            exists=False
+            for tree in self.mtrees[namespace]:
+                if tree.get(key)<>None:
+                    exists=True
+                    continue
+            if exists==False:
+                #check on fs
+                exists=self.exists(namespace,keys,repoId)
+
+            if exists==False:
+                notfound.append(key)
+                
+        return notfound        
 
     def set(self, namespace, key, value, repoId="",serialization="",session=None):
         if serialization=="":
@@ -69,6 +170,7 @@ class BlobserverCMDS():
             md["repos"] = {}
         md["repos"][str(repoId)] = True
         mddata = ujson.dumps(md)
+            
         # print "Set:%s"%md
         j.system.fs.writeFile(storpath + ".md", mddata)
         return [key, True, True]

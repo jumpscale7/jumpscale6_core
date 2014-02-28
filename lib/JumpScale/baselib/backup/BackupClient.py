@@ -1,5 +1,5 @@
 from JumpScale import j
-
+import lzma
 import JumpScale.baselib.gitlab
 import JumpScale.baselib.blobstor2
 
@@ -9,6 +9,8 @@ class Item():
         self.hash=""
         self.text=""
         self.size=""
+        self.mtime=0
+
         if data<>"":
             for line in data.split("\n"):
                 if line.strip()=="" or line[0]=="#":
@@ -52,8 +54,12 @@ class JSFileMgr():
         passwd = j.application.config.get('grid.master.superadminpasswd')
         login="root"
         # blobstor2 client
-        self.client = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
+        # self.client = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
         self.client=j.clients.blobstor2.getClient(namespace=namespace, name=blobclientname)
+        self.namespace=namespace
+        self.repoId=1 # will be implemented later with osis
+        self.compress=False
+        self.errors=[]
 
     def _normalize(self, path):
         path=path.replace("'","\\'")
@@ -80,15 +86,14 @@ class JSFileMgr():
                 print e
                 self.errors.append(["link",cmd,e])
 
-    def _dump2stor(self, namespace, data, compress=True):
+    def _dump2stor(self, data):
         if len(data)==0:
             return ""
 
         datahash = j.tools.hash.md5_string(data)
-        data2 = lzma.compress(data) if compress else data
-        if not self.client.exists(namespace, datahash):
-            self.client.set(namespace, datahash, data2)
-
+        data2 = lzma.compress(data) if self.compress else data
+        if not self.client.exists(key=datahash,repoId=self.repoId):
+            self.client.set(key=datahash, data=data2,repoId=self.repoId)
         return datahash
 
     def _read_file(self,path, block_size=0):
@@ -103,52 +108,97 @@ class JSFileMgr():
                 else:
                     return
 
-    def _action_backup(self, src, dest, namespace):
-        j.system.fs.createDir(j.system.fs.getDirName(dest))
-        print "backup:%s %s"%(src,dest)
-        # j.system.fs.hardlinkFile(srcfull2,dest)
+    def doError(self,path,msg):
+        self.errors.append([path,msg])
+
+    def _handleMetadata(self, path,prefix,ttype,linkdest=None,MD5=True):
+        """
+        @return (mdchange,contentchange) True if changed, False if not
+        """
+        print "MD:%s "%path,
+
+        srcpart=j.system.fs.pathRemoveDirPart(path,prefix,True)                        
+        dest=j.system.fs.joinPaths(self.MDPath,"MD",srcpart)
+
+        try:
+            stat=j.system.fs.statPath(path)
+        except Exception,e:
+            if not j.system.fs.exists(path):
+                #can be link which does not exist
+                #or can be file which is deleted in mean time
+                self.doError(path,"could not find, so could not backup.") 
+                return (False,False)
+
+        #next goes for all types
         if j.system.fs.exists(path=dest):
-            stat=j.system.fs.statPath(dest)
-            if not stat.st_nlink==1:
-                raise RuntimeError("cannot be backed up")
-        item=Item()
-        item.hash=j.tools.hash.md5(src)
-
-        stat=j.system.fs.statPath(src)
-
-        item.size=stat.st_size
-        item.mode=stat.st_mode
-        item.uid=stat.st_uid
-        item.gid=stat.st_gid
-        item.atime=stat.st_atime
-        item.ctime=stat.st_ctime
-        item.mtime=stat.st_mtime
-
-        hashes=[]
-
-        for data in self._read_file(src):
-            hashes.append(self._dump2stor(namespace, data))
-
-        if len(hashes)>1:
-            out = "##HASHLIST##\n"
-            hashparts = "\n".join(hashes)
-            out += hashparts
-            # Store in blobstor
-            out_hash = self._dump2stor(namespace, out, compress=False)
-
-            # The meta data part, this is how we will get this hash list!
-            item.hashlist = out_hash
+            item=self.getMDObjectFromFs(dest)
+            change=False
+            mdchange=False
         else:
-            if len(hashes)==0 or hashes[0]=="":
-                item.hash=""
+            j.system.fs.createDir(j.system.fs.getDirName(dest))
+            item=Item()
+            change=True
+            mdchange=True
 
-        j.system.fs.writeFile(dest, str(item))
+        if ttype=="F":          
+            if item.mtime<>stat.st_mtime or item.size<>stat.st_size:
+                if MD5:
+                    newMD5=j.tools.hash.md5(path)
+                    if item.hash<>newMD5:
+                        change=True
+                        mdchange=True
+                        item.hash=newMD5
+                else:
+                    change=True
+                    mdchange=True
+        elif ttype=="L":
+            if not item.__dict__.has_key("dest"):
+                mdchange=True                
+            elif linkdest<>item.dest:
+                mdchange=True
+
+        if mdchange==False:
+            #check metadata changed based on mode, uid, gid & mtime
+            if item.mtime<>stat.st_mtime or item.mode<>stat.st_mode or\
+                    item.uid<>stat.st_uid or item.gid<>stat.st_gid or item.size<>stat.st_size:
+                mdchange=True
+
+        if mdchange:
+            print "MDCHANGE"
+            item.mode=stat.st_mode
+            item.uid=stat.st_uid
+            item.gid=stat.st_gid
+            # item.atime=stat.st_atime
+            item.ctime=stat.st_ctime
+            item.mtime=stat.st_mtime            
+
+            if ttype=="F":
+                item.size=stat.st_size
+                item.type="F"
+            elif ttype=="D":
+                item.type="D"
+                dest=j.system.fs.joinPaths(self.MDPath,"dirs",srcpart,".meta")
+                j.system.fs.createDir(j.system.fs.getDirName(dest))
+            elif ttype=="L":                
+                item.dest=linkdest
+                if j.system.fs.isDir(path):
+                    dest=j.system.fs.joinPaths(self.MDPath,"links",srcpart,".meta")
+                    item.type="LD"
+                else:
+                    dest=j.system.fs.joinPaths(self.MDPath,"links",srcpart)
+                    item.type="LF"
+                j.system.fs.createDir(j.system.fs.getDirName(dest))
+
+            j.system.fs.writeFile(dest, str(item))
+
+        return (mdchange,change)
 
     def restore(self, src, dest, namespace):
         """
         src is location on metadata dir
         dest is where to restore to
         """
+        self.errors=[]
 
         if src[0] != "/":
             src = "%s/%s" % (self.MDPath, src.strip())
@@ -162,11 +212,15 @@ class JSFileMgr():
 
             self.restore1file(item, destfull, namespace)
 
+    def getMDObjectFromFs(self,path):
+        itemObj=Item(j.system.fs.fileGetContents(path))
+        return itemObj
+
     def restore1file(self, src, dest, namespace):
 
         print "restore: %s %s" % (src, dest)
 
-        itemObj=Item(j.system.fs.fileGetContents(src))
+        itemObj=self.getMDObjectFromFs(src)
 
         j.system.fs.createDir(j.system.fs.getDirName(dest))
 
@@ -215,63 +269,161 @@ class JSFileMgr():
         os.chmod(dest,int(item.mode))
         os.chown(dest,int(item.uid),int(item.gid))
 
-    def backupRecipe(self,recipe):
+    def backupBatch(self,batch):
         """
-        walk over recipe & execute action on it
-        example recipe
-
-
-        #when star will do for each dir
-        /tmp/JSAPPS/apps : * : /DEST/apps
-        #when no * then dir & below
-        /tmp/JSAPPS/bin :  : /DEST/bin
-        #now only for 1 subdir
-        /tmp/JSAPPS/apps : asubdirOfApps : /DEST/apps
-
+        batch is [[src,dest]]
         """
+        key2paths={}            
+        for src,dest in batch:
+            key2paths[j.tools.hash.md5(src)]=(src,dest)
+            self._storeMD(src,dest)
 
-        action=self._action_backup
+        notexist=self.client.existsBatch(keys=key2paths.keys()) 
 
-        def do(sourcedir, parts, dest, namespace, action):
-            """
-            read recipe & process
-            """
-            sourcedir=sourcedir.strip()
-            dest=dest.strip()
+        for notexistkey in notexist:
+            src,dest=key2paths[notexistkey]
 
-            if parts.find("*")<>-1:
-                parts=",".join(j.system.fs.listDirsInDir(sourcedir, recursive=False, dirNameOnly=True, findDirectorySymlinks=True))
+            hashes=[]
+            if src[-4:]==".pyc":
+                return
+            for data in self._read_file(src):
+                hashes.append(self._dump2stor(data))
 
-            for sourcepart in parts.split(","):
-                sourcepart=sourcepart.strip()
-                srcfull=j.system.fs.joinPaths(sourcedir,sourcepart)
-                if not j.system.fs.exists(path=srcfull):
-                    raise RuntimeError("Could not find %s"%srcfull)
+            if len(hashes)>1:
+                out = "##HASHLIST##\n"
+                hashparts = "\n".join(hashes)
+                out += hashparts
+                # Store in blobstor
+                out_hash = self._dump2stor(out)
 
-                for item in j.system.fs.listFilesInDir(srcfull,True,exclude=self.excludes):
-                    destpart=j.system.fs.pathRemoveDirPart(item,sourcedir,True)
-                    srcpart2=j.system.fs.pathRemoveDirPart(item,srcfull,True)
-                    destfull=j.system.fs.joinPaths(dest,destpart)
-                    srcfull2=j.system.fs.joinPaths(srcfull,srcpart2)
+                # The meta data part, this is how we will get this hash list!
+                item.hashlist = out_hash
+            else:
+                if len(hashes)==0 or hashes[0]=="":
+                    item.hash=""
 
-                    action(srcfull2,destfull, namespace)
+    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={".*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"]):
 
-        for line in recipe.split("\n"):
-            if line.strip()=="" or line[0]=="#":
-                continue
-            source, sourceparts, namespace, dest=line.split(":")
+        #check if there is a dev dir, if so will do a special tar
+        ##BACKUP:
+        #tar Szcvf testDev.tgz saucy-amd64-base/rootfs/dev/
+        ##restore
+        #tar xzvf testDev.tgz -C testd
 
-            # namespace in blobstor
-            namespace = namespace.strip()
+        self.errors=[]
 
-            if dest[0]<>"/":
-                dest="%s/%s"%(self.MDPath,dest.strip())
+        if j.system.fs.exists(j.system.fs.joinPaths(path,"dev")):
+            cmd="cd %s;tar Szcvf __dev.tgz dev"%path
+            j.system.process.execute(cmd)
 
-            do(source, sourceparts, dest, namespace, action)
+        destClist=j.system.fs.joinPaths(self.STORpath, "../TMP","changes","%s.changes"%self.namespace)
+        destFlist=j.system.fs.joinPaths(self.STORpath, "../TMP","changes","%s.found"%self.namespace)
+        j.system.fs.createDir(j.system.fs.getDirName(destClist))
+        j.system.fs.createDir(j.system.fs.getDirName(destFlist))
+        changes = open(destClist, 'w')
+        found = open(destFlist, 'w')
+
+        w=j.base.fswalker.get()
+        callbackMatchFunctions=w.getCallBackMatchFunctions(pathRegexIncludes,pathRegexExcludes,includeFolders=True,includeLinks=True)
+
+        def processfile(path,stat,arg):
+            self=arg["self"]
+            prefix=arg["prefix"]
+            changed=self._handleMetadata(path,prefix=prefix,ttype="F")
+            if changed:
+                arg["changes"].write("%s\n"%path)
+            arg["found"].write("%s\n"%path)
+
+        def processdir(path,stat,arg):
+            self=arg["self"]
+            prefix=arg["prefix"]
+            changed=self._handleMetadata(path,prefix=prefix,ttype="D")
+            if changed:
+                arg["changes"].write("%s\n"%path)
+            arg["found"].write("%s\n"%path)            
+
+        def processlink(src,dest,stat,arg):
+            path=src
+            self=arg["self"]
+            prefix=arg["prefix"]
+            destpart=j.system.fs.pathRemoveDirPart(dest,prefix,True)                                   
+            changed=self._handleMetadata(path,prefix=prefix,ttype="L",linkdest=destpart)
+            if changed:
+                arg["changes"].write("%s\n"%path)
+            arg["found"].write("%s\n"%path)            
+
+        callbackFunctions={}
+        callbackFunctions["F"]=processfile
+        callbackFunctions["D"]=processdir
+        callbackFunctions["L"]=processlink            
+
+        arg={}
+        arg["self"]=self
+        arg["prefix"]=path
+        arg["changes"]=changes
+        arg["found"]=found
+        # arg["destination"]=destination
+        # arg["batch"]=[]
+        w.walk(path,callbackFunctions,arg=arg,callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes)
+
+        changes.close()
+        found.close()
+        
+        # self.backupBatch(arg["batch"])
 
         if len(self.errors)>0:
-            print "#############ERRORS###################"
-            print "\n".join(errors)
+            out=""
+            for path,msg in self.errors:
+                out+="%s:%s\n"%(path,msg)
+            j.system.fs.writeFile(j.system.fs.joinPaths(self.MDPath,destination,"ERRORS.LOG"),out)
+
+    def createplist(self):
+
+        destF=j.system.fs.joinPaths(self.STORpath, "../TMP","plists","F_%s.plist"%self.namespace)
+        destL=j.system.fs.joinPaths(self.STORpath, "../TMP","plists","l_%s.plist"%self.namespace)
+        destD=j.system.fs.joinPaths(self.STORpath, "../TMP","plists","D_%s.plist"%self.namespace)
+        j.system.fs.createDir(j.system.fs.joinPaths(self.STORpath, "../TMP","plists"))
+        fileF = open(destF, 'w')
+        fileL = open(destL, 'w')
+        fileD = open(destD, 'w')
+
+        def processfile(path,stat,arg):
+            path2=j.system.fs.pathRemoveDirPart(path, arg["base"], True)
+            # print "%s  :   %s"%(path,path2)
+            md=self.getMDObjectFromFs(path)
+            fileF.write("%s|%s|%s|%s\n"%(path2,md.size,md.mtime,md.hash))
+
+        def processlink(path,stat,arg):
+            path2=j.system.fs.pathRemoveDirPart(path, arg["base"], True)
+            # print "%s  :   %s"%(path,path2)
+            md=self.getMDObjectFromFs(path)
+            fileL.write("%s|%s\n"%(path2,md.dest))
+
+        def processdir(path,stat,arg):
+            path2=j.system.fs.pathRemoveDirPart(path, arg["base"], True)
+            # print "%s  :   %s"%(path,path2)
+            md=self.getMDObjectFromFs(path)
+            fileD.write("%s\n"%(path))
+
+        callbackFunctions={}
+        callbackFunctions["F"]=processfile
+
+        arg={}
+        arg["base"]=self.MDPath
+        w=j.base.fswalker.get()
+        callbackFunctions["F"]=processfile
+        if j.system.fs.exists(path=self.MDPath+"/md"):
+            w.walk(self.MDPath+"/md",callbackFunctions,arg=arg,childrenRegexExcludes=[])
+        callbackFunctions["F"]=processlink
+        if j.system.fs.exists(path=self.MDPath+"/links"):
+            w.walk(self.MDPath+"/links",callbackFunctions,arg=arg,childrenRegexExcludes=[])
+        callbackFunctions["F"]=processdir
+        if j.system.fs.exists(path=self.MDPath+"/dirs"):
+            w.walk(self.MDPath+"/dirs",callbackFunctions,arg=arg,childrenRegexExcludes=[])
+
+        fileF.close()
+        fileL.close()
+        fileD.close()
 
     def _getBlobPath(self, namespace, key):
         """
@@ -292,7 +444,7 @@ class JSFileMgr():
         blob_hash = itemObj.hashlist if hasattr(itemObj, "hashlist") else itemObj.hash
 
         # Get blob from blobstor2
-        blob = self.client.get(namespace, blob_hash)
+        blob = self.client.get(key=blob_hash)
 
         # The path which this blob should be saved
         blob_path = self._getBlobPath(namespace, itemObj.hash)
@@ -331,11 +483,34 @@ class BackupClient:
     """
     """
 
-    def __init__(self,blobclientName,gitlabName="incubaid" ):
+    def __init__(self,backupname,blobclientName,gitlabName="incubaid"):
         self.blobclientName=blobclientName
         self.gitlabName=gitlabName        
         self.gitlab=j.clients.gitlab.get(gitlabName)
+        self.backupname=backupname
+        self.mdpath="/opt/backup/MD/%s"%backupname
+        if not j.system.fs.exists(path=self.mdpath):    
+            if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=backupname):
+                self.gitlab.createproject(backupname, description='backup set', issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)            
+        self.gitclient = self.gitlab.getGitClient(self.gitlab.loginName, backupname, clean=False,path=self.mdpath)
+            
+        self.filemanager=JSFileMgr(MDPath=self.mdpath,namespace="backup",blobclientname=blobclientName)
 
+    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={},childrenRegexExcludes=[".*/dev/.*","/proc/.*"]):
+        self._clean()
+        self.filemanager.backup(path,destination=destination, pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,childrenRegexExcludes=childrenRegexExcludes)
+        self.commitMD()
+
+    def createplist(self):
+        self.filemanager.createplist()
+
+    def _clean(self):
+        for ddir in j.system.fs.listDirsInDir(self.mdpath,False,True,findDirectorySymlinks=False):
+            if ddir.lower()<>".git":
+                j.system.fs.removeDirTree(j.system.fs.joinPaths(self.mdpath,ddir))
+        for ffile in j.system.fs.listFilesInDir(self.mdpath, recursive=False, followSymlinks=False):
+            j.system.fs.remove(ffile)
+        
 
     def backupRecipe(self,recipe):
         """
@@ -350,8 +525,16 @@ class BackupClient:
         /tmp/JSAPPS/apps : asubdirOfApps : /DEST/apps
 
         """
-        from IPython import embed
-        print "DEBUG NOW backupRecipe"
-        embed()
-        
-        JSFileMgr()
+        self._clean()
+        self.filemanager.backupRecipe(recipe)
+        self.commitMD()
+
+    def commitMD(self):
+        print "commit to git"
+        self.gitclient.commit("backup %s"%j.base.time.getLocalTimeHRForFilesystem())
+        if j.system.net.tcpPortConnectionTest(self.gitlab.addr,self.gitlab.port):
+            #found gitlab
+            print "push to git"
+            self.gitclient.push()
+        else:
+            print "WARNING COULD NOT COMMIT CHANGES TO GITLAB, no connection found.\nDO THIS LATER!!!!!!!!!!!!!!!!!!!!!!"

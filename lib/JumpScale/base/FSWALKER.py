@@ -70,15 +70,16 @@ class FSWalkerStats():
     def __repr__(self):
         self.callstop()
         duration=self.stop-self.start
-        out="nrsecs:%s"%duration
+        # out="nrsecs:%s"%duration
         out="nrfiles:%s\n"%self.nrTotal
         out+="nrfilesDuplicate:%s\n"%self.duplicateTotal
         sizeUncompressedTotal=(float(self.sizeUncompressedTotal)/1024/1024)
         out+="size uncompressed:%s\n"%sizeUncompressedTotal
         sizeCompressedTotal=(float(self.sizeCompressedTotal)/1024/1024)
         out+="size compressed:%s\n"%sizeCompressedTotal
-        out+="uncompressed send per sec in MB/sec: %s"% round(sizeUncompressedTotal/duration,2)
-        out+="compressed send per sec in MB/sec: %s"% round(sizeCompressedTotal/duration,2)
+        out+="uncompressed send per sec in MB/sec: %s\n"% round(sizeUncompressedTotal/duration,2)
+        out+="compressed send per sec in MB/sec: %s\n"% round(sizeCompressedTotal/duration,2)
+        return out
 
     __str__=__repr__
 
@@ -106,7 +107,6 @@ class LocalFS():
         return j.base.fs.list(path)
 
 
-
 class FSWalker():
 
     def __init__(self,filesystemobject=None):
@@ -127,11 +127,12 @@ class FSWalker():
         self.stats=FSWalkerStats()
 
     def statsPrint(self): 
-        print("lastpath:%s"%self.lastPath)
+        # print("lastpath:%s"%self.lastPath)
+        print "\n"
         try:
             print(str(self.stats))
-        except:
-            print('None')
+        except Exception,e:
+            pass
 
     def statsAdd(self,path="",ttype="F",sizeUncompressed=0,sizeCompressed=0,duplicate=False):
         self.stats.add2stat(ttype=ttype,sizeUncompressed=sizeUncompressed,sizeCompressed=sizeCompressed,duplicate=duplicate)
@@ -219,7 +220,8 @@ else:
         return callbackMatchFunctions
           
     def walk(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
-        childrenRegexExcludes=["/dev/.*","/proc/.*","/cdrom/.*","/mnt/.*","/media/.*","/run/.*","/tmp/.*"],pathRegexIncludes={},pathRegexExcludes={},mdserverclient=None):
+        childrenRegexExcludes=["/dev/.*","/proc/.*","/cdrom/.*","/mnt/.*","/media/.*","/run/.*","/tmp/.*"],\
+        pathRegexIncludes={},pathRegexExcludes={},mdserverclient=None,stat=False):
         '''
 
         Walk through filesystem and execute a method per file and dirname if the match function selected the item
@@ -254,18 +256,20 @@ else:
         root = os.path.abspath(root)
         if not self.fs.isDir(root):
             raise ValueError('Root path for walk should be a folder, now path:%s'%root)
-        
 
         # print "ROOT OF WALKER:%s"%root
         if mdserverclient==None:
             self._walkFunctional(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
-                childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
+                childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,stat=stat)
         else:
             self._walkFunctionalMDS(root,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
-                childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
+                childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,stat=stat)
 
     def _walkFunctional(self,root,callbackFunctions={},arg=None,callbackMatchFunctions={},followlinks=False,\
-        childrenRegexExcludes=[],pathRegexIncludes={},pathRegexExcludes={}):
+        childrenRegexExcludes=[],pathRegexIncludes={},pathRegexExcludes={},stat=False):
+        
+        statb=None
+        stat=None
 
         paths=self.fs.list(root)
         for path2 in paths:
@@ -286,17 +290,20 @@ else:
 
                 if callbackFunctions.has_key(ttype):
                     if ttype in "DF":
-                        stat=self.fs.stat(path2)
-                        statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
+                        if stat:
+                            stat=self.fs.stat(path2)
+                            statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
                         callbackFunctions[ttype](path=path2,stat=statb,arg=arg)
                     else:
-                        stat=self.fs.lstat(path2)
-                        statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
+                        if stat:
+                            stat=self.fs.lstat(path2)
+                            statb=struct.pack("<IHHII",stat.st_mode,stat.st_gid,stat.st_uid,stat.st_size,stat.st_mtime)
                         callbackFunctions[ttype](src=path2,dest=os.path.realpath(path2),arg=arg,stat=statb)
 
             if ttype=="D":
                 if path2[-1]<>"/":
                     path2+="/"
+                    
                 if REGEXTOOL.matchPath(path2,pathRegexIncludes.get(ttype,[]) ,childrenRegexExcludes):
                     self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
                         childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
