@@ -177,7 +177,7 @@ class JSFileMgr():
                 item.type="F"
             elif ttype=="D":
                 item.type="D"
-                dest=j.system.fs.joinPaths(self.MDPath,"dirs",srcpart,".meta")
+                dest=j.system.fs.joinPaths(self.MDPath,"MD",srcpart,".meta")
                 j.system.fs.createDir(j.system.fs.getDirName(dest))
             elif ttype=="L":                
                 item.dest=linkdest
