@@ -95,7 +95,7 @@ class ProcessDef:
             port = int(port)
             self.log("port check:%s START"%port)
             if not j.system.net.waitConnectionTest('localhost', port, timeout):
-                raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s, startuplog:\n%s' % (self.name, port, timeout,self.getStartupLog()))
+                raise RuntimeError('Process %s failed to start listening on port %s within timeout %s, startuplog:\n%s' % (self.name, port, timeout,self.getStartupLog()))
             self.log("port check:%s DONE"%port)
 
         if not self.isRunning():
