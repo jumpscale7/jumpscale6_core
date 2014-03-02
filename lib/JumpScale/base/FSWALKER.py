@@ -275,10 +275,11 @@ else:
         for path2 in paths:
             path2=path2.replace("//","/")
             # self.log("walker path:%s"% path2)
-            if self.fs.isFile(path2):
-                ttype="F"
-            elif self.fs.isLink(path2):
+            if self.fs.isLink(path2):
+                # print "LINK:%s"%path2
                 ttype="L"   
+            elif self.fs.isFile(path2):
+                ttype="F"
             elif self.fs.isDir(path2,followlinks):
                 ttype="D"
             else:
@@ -303,8 +304,12 @@ else:
             if ttype=="D":
                 if path2[-1]<>"/":
                     path2+="/"
-                    
-                if REGEXTOOL.matchPath(path2,pathRegexIncludes.get(ttype,[]) ,childrenRegexExcludes):
+
+                if pathRegexIncludes.get(ttype,[])==[] and childrenRegexExcludes==[]:
+                    self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
+                        childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
+
+                elif REGEXTOOL.matchPath(path2,pathRegexIncludes.get(ttype,[]) ,childrenRegexExcludes):
                     self._walkFunctional(path2,callbackFunctions, arg,callbackMatchFunctions,followlinks,\
                         childrenRegexExcludes=childrenRegexExcludes,pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes)
         

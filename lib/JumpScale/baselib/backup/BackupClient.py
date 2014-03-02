@@ -3,12 +3,13 @@ import lzma
 import JumpScale.baselib.gitlab
 import JumpScale.baselib.blobstor2
 
+
 class Item():
     def __init__(self,data=""):
         state="start"
         self.hash=""
         self.text=""
-        self.size=""
+        self.size=0
         self.mtime=0
 
         if data<>"":
@@ -86,15 +87,16 @@ class JSFileMgr():
                 print e
                 self.errors.append(["link",cmd,e])
 
-    def _dump2stor(self, data):
+    def _dump2stor(self, data,key=""):
         if len(data)==0:
             return ""
-
-        datahash = j.tools.hash.md5_string(data)
+        if key=="":
+            key = j.tools.hash.md5_string(data)
         data2 = lzma.compress(data) if self.compress else data
-        if not self.client.exists(key=datahash,repoId=self.repoId):
-            self.client.set(key=datahash, data=data2,repoId=self.repoId)
-        return datahash
+        if not self.client.exists(key=key,repoId=self.repoId):
+            self.client.set(key=key, data=data2,repoId=self.repoId)
+            
+        return key
 
     def _read_file(self,path, block_size=0):
         if block_size==0:
@@ -111,14 +113,18 @@ class JSFileMgr():
     def doError(self,path,msg):
         self.errors.append([path,msg])
 
-    def _handleMetadata(self, path,prefix,ttype,linkdest=None,MD5=True):
+    def _handleMetadata(self, path,destination,prefix,ttype,linkdest=None,fullcheck=False):
         """
         @return (mdchange,contentchange) True if changed, False if not
+        @param destination is destination inside target dir 
         """
-        print "MD:%s "%path,
+        # print "MD:%s "%path,
 
         srcpart=j.system.fs.pathRemoveDirPart(path,prefix,True)                        
-        dest=j.system.fs.joinPaths(self.MDPath,"MD",srcpart)
+        dest=j.system.fs.joinPaths(self.MDPath,"MD",destination,srcpart)
+        dest2=j.system.fs.joinPaths(destination,srcpart)
+        dest2=dest2.lstrip("/")
+        change=False
 
         try:
             stat=j.system.fs.statPath(path)
@@ -131,67 +137,80 @@ class JSFileMgr():
 
         #next goes for all types
         if j.system.fs.exists(path=dest):
+            if ttype=="D":
+                dest+="/.meta"
             item=self.getMDObjectFromFs(dest)
-            change=False
+            
             mdchange=False
+        elif ttype=="L":
+            dest=j.system.fs.joinPaths(self.MDPath,"LINKS",destination,srcpart)
+            if j.system.fs.exists(path=dest):
+                if j.system.fs.exists(j.system.fs.joinPaths(dest,".meta")):
+                    #is dir
+                    dest=j.system.fs.joinPaths(dest,".meta")
+                item=self.getMDObjectFromFs(dest)
+                mdchange=False
+            else:
+                item=Item()
+                mdchange=True
         else:
-            j.system.fs.createDir(j.system.fs.getDirName(dest))
             item=Item()
-            change=True
             mdchange=True
 
         if ttype=="F":          
-            if item.mtime<>stat.st_mtime or item.size<>stat.st_size:
-                if MD5:
-                    newMD5=j.tools.hash.md5(path)
-                    if item.hash<>newMD5:
-                        change=True
-                        mdchange=True
-                        item.hash=newMD5
-                else:
-                    change=True
+            if fullcheck or item.mtime<>stat.st_mtime or item.size<>stat.st_size:
+                newMD5=j.tools.hash.md5(path)
+                if item.hash<>newMD5:
                     mdchange=True
+                    change=True
+                    item.hash=newMD5
         elif ttype=="L":
             if not item.__dict__.has_key("dest"):
-                mdchange=True                
+                mdchange=True          
             elif linkdest<>item.dest:
                 mdchange=True
 
         if mdchange==False:
             #check metadata changed based on mode, uid, gid & mtime
-            if item.mtime<>stat.st_mtime or item.mode<>stat.st_mode or\
-                    item.uid<>stat.st_uid or item.gid<>stat.st_gid or item.size<>stat.st_size:
-                mdchange=True
+            if ttype=="F":
+                if int(item.size)<>int(stat.st_size):
+                    mdchange==True
+            if int(item.mtime)<>int(stat.st_mtime) or int(item.mode)<>int(stat.st_mode) or\
+                    int(item.uid)<>int(stat.st_uid) or int(item.gid)<>int(stat.st_gid):
+                mdchange=True                
 
         if mdchange:
-            print "MDCHANGE"
-            item.mode=stat.st_mode
-            item.uid=stat.st_uid
-            item.gid=stat.st_gid
+            print "MD:%s CHANGE"%path
+
+            # print "MDCHANGE"
+            item.mode=int(stat.st_mode)
+            item.uid=int(stat.st_uid)
+            item.gid=int(stat.st_gid)
             # item.atime=stat.st_atime
-            item.ctime=stat.st_ctime
-            item.mtime=stat.st_mtime            
+            item.ctime=int(stat.st_ctime)
+            item.mtime=int(stat.st_mtime)
 
             if ttype=="F":
                 item.size=stat.st_size
                 item.type="F"
+                j.system.fs.createDir(j.system.fs.getDirName(dest))
             elif ttype=="D":
                 item.type="D"
-                dest=j.system.fs.joinPaths(self.MDPath,"MD",srcpart,".meta")
+                dest=j.system.fs.joinPaths(self.MDPath,"MD",destination,srcpart,".meta")
                 j.system.fs.createDir(j.system.fs.getDirName(dest))
             elif ttype=="L":                
                 item.dest=linkdest
                 if j.system.fs.isDir(path):
-                    dest=j.system.fs.joinPaths(self.MDPath,"links",srcpart,".meta")
+                    dest=j.system.fs.joinPaths(self.MDPath,"LINKS",destination,srcpart,".meta")
                     item.type="LD"
                 else:
-                    dest=j.system.fs.joinPaths(self.MDPath,"links",srcpart)
+                    dest=j.system.fs.joinPaths(self.MDPath,"LINKS",destination,srcpart)
                     item.type="LF"
                 j.system.fs.createDir(j.system.fs.getDirName(dest))
 
             j.system.fs.writeFile(dest, str(item))
 
-        return (mdchange,change)
+        return (mdchange,change,item.hash,dest2)
 
     def restore(self, src, dest, namespace):
         """
@@ -269,87 +288,105 @@ class JSFileMgr():
         os.chmod(dest,int(item.mode))
         os.chown(dest,int(item.uid),int(item.gid))
 
-    def backupBatch(self,batch):
+    def backupBatch(self,batch,batchnr=None,total=None):
         """
-        batch is [[src,dest]]
+        batch is [[src,md5]]
         """
         key2paths={}            
-        for src,dest in batch:
-            key2paths[j.tools.hash.md5(src)]=(src,dest)
-            self._storeMD(src,dest)
+        for src,md5 in batch:
+            key2paths[md5]=(src,md5)
 
+        print "batch nr:%s check"%batchnr
         notexist=self.client.existsBatch(keys=key2paths.keys()) 
+        print "batch checked on unique data"
 
-        for notexistkey in notexist:
-            src,dest=key2paths[notexistkey]
+        nr=batchnr*1000
 
-            hashes=[]
-            if src[-4:]==".pyc":
-                return
-            for data in self._read_file(src):
-                hashes.append(self._dump2stor(data))
-
-            if len(hashes)>1:
-                out = "##HASHLIST##\n"
-                hashparts = "\n".join(hashes)
-                out += hashparts
-                # Store in blobstor
-                out_hash = self._dump2stor(out)
-
-                # The meta data part, this is how we will get this hash list!
-                item.hashlist = out_hash
+        for src,md5 in batch:
+            nr+=1
+            if md5 in notexist:
+                hashes=[]
+                if j.system.fs.statPath(src).st_size>self._MB4:
+                    print "%s/%s:upload file (>4MB) %s"%(nr,total,src)
+                    for data in self._read_file(src):
+                        hashes.append(self._dump2stor(data))
+                    if len(hashes)>1:
+                        out = "##HASHLIST##\n"
+                        hashparts = "\n".join(hashes)
+                        out += hashparts
+                        # Store in blobstor
+                        out_hash = self._dump2stor(out,key=md5) #hashlist is stored on md5 location of file
+                    else:
+                        raise RuntimeError("hashist needs to be more than 1.")
+                else:
+                    print "%s/%s:upload file (<4MB) %s"%(nr,total,src)
+                    for data in self._read_file(src):
+                        hashes.append(self._dump2stor(data,key=md5))
             else:
-                if len(hashes)==0 or hashes[0]=="":
-                    item.hash=""
+                print "%s/%s:no need to upload, exists: %s"%(nr,total,src)
 
-    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={".*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"]):
+
+
+
+    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={".*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"],fullcheck=False):
 
         #check if there is a dev dir, if so will do a special tar
         ##BACKUP:
         #tar Szcvf testDev.tgz saucy-amd64-base/rootfs/dev/
         ##restore
         #tar xzvf testDev.tgz -C testd
+        self._createExistsList(destination)
 
+        print "SCAN MD:%s"%path
+        
         self.errors=[]
 
         if j.system.fs.exists(j.system.fs.joinPaths(path,"dev")):
             cmd="cd %s;tar Szcvf __dev.tgz dev"%path
             j.system.process.execute(cmd)
 
-        destClist=j.system.fs.joinPaths(self.STORpath, "../TMP","changes","%s.changes"%self.namespace)
-        destFlist=j.system.fs.joinPaths(self.STORpath, "../TMP","changes","%s.found"%self.namespace)
-        j.system.fs.createDir(j.system.fs.getDirName(destClist))
+        destMDClist=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".mdchanges")
+        destFClist=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".fchanges")
+        destFlist=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".found")
+        j.system.fs.createDir(j.system.fs.getDirName(destMDClist))
+        j.system.fs.createDir(j.system.fs.getDirName(destFClist))
         j.system.fs.createDir(j.system.fs.getDirName(destFlist))
-        changes = open(destClist, 'w')
+        mdchanges = open(destMDClist, 'w')
+        changes = open(destFClist, 'w')
         found = open(destFlist, 'w')
 
         w=j.base.fswalker.get()
         callbackMatchFunctions=w.getCallBackMatchFunctions(pathRegexIncludes,pathRegexExcludes,includeFolders=True,includeLinks=True)
 
         def processfile(path,stat,arg):
+            if path[-4:]==".pyc":
+                return
             self=arg["self"]
             prefix=arg["prefix"]
-            changed=self._handleMetadata(path,prefix=prefix,ttype="F")
-            if changed:
-                arg["changes"].write("%s\n"%path)
-            arg["found"].write("%s\n"%path)
+            mdchange,fchange,md5,path2=self._handleMetadata(path,arg["destination"],prefix=prefix,ttype="F",fullcheck=arg["fullcheck"])
+            if mdchange:
+                arg["mdchanges"].write("%s\n"%(path2))
+            if arg["fullcheck"] or fchange:
+                arg["changes"].write("%s|%s\n"%(path,md5))
+            arg["found"].write("%s\n"%path2)
 
         def processdir(path,stat,arg):
             self=arg["self"]
             prefix=arg["prefix"]
-            changed=self._handleMetadata(path,prefix=prefix,ttype="D")
-            if changed:
-                arg["changes"].write("%s\n"%path)
+            mdchange,fchange,md5,path=self._handleMetadata(path,arg["destination"],prefix=prefix,ttype="D")
+            if mdchange:
+                arg["mdchanges"].write("%s\n"%path)
             arg["found"].write("%s\n"%path)            
 
         def processlink(src,dest,stat,arg):
+            # print "LINK: %s %s"%(src,dest)
             path=src
             self=arg["self"]
             prefix=arg["prefix"]
             destpart=j.system.fs.pathRemoveDirPart(dest,prefix,True)                                   
-            changed=self._handleMetadata(path,prefix=prefix,ttype="L",linkdest=destpart)
-            if changed:
-                arg["changes"].write("%s\n"%path)
+            mdchange,fchange,md5,path=self._handleMetadata(path,arg["destination"],prefix=prefix,ttype="L",linkdest=destpart)
+            if mdchange:
+                arg["mdchanges"].write("%s\n"%path)
             arg["found"].write("%s\n"%path)            
 
         callbackFunctions={}
@@ -361,13 +398,17 @@ class JSFileMgr():
         arg["self"]=self
         arg["prefix"]=path
         arg["changes"]=changes
+        arg["mdchanges"]=mdchanges
         arg["found"]=found
-        # arg["destination"]=destination
+        arg["destination"]=destination
+        arg["fullcheck"]=fullcheck
+
         # arg["batch"]=[]
         w.walk(path,callbackFunctions,arg=arg,callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes)
 
         changes.close()
         found.close()
+        mdchanges.close()
         
         # self.backupBatch(arg["batch"])
 
@@ -375,55 +416,100 @@ class JSFileMgr():
             out=""
             for path,msg in self.errors:
                 out+="%s:%s\n"%(path,msg)
-            j.system.fs.writeFile(j.system.fs.joinPaths(self.MDPath,destination,"ERRORS.LOG"),out)
+            j.system.fs.writeFile(j.system.fs.joinPaths(self.MDPath,"ERRORS",destination,"ERRORS.LOG"),out)
 
-    def createplist(self):
+        #now we need to find the deleted files
+        #sort all found files when going over fs
+        cmd="sort %s | uniq > %s_"%(destFlist,destFlist)
+        j.system.process.execute(cmd)
+        originalFiles=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".mdfound")
+        cmd="sort %s | uniq > %s_"%(originalFiles,originalFiles)
+        j.system.process.execute(cmd)
+        deleted=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".deleted")
+        #now find the diffs
+        cmd="diff %s_ %s_ -C 0 | grep ^'- ' > %s"%(originalFiles,destFlist,deleted)
+        rcode,result=j.system.process.execute(cmd,False)
+        # if not(rcode==1 and result.strip().replace("***ERROR***","")==""):
+        #     raise RuntimeError("Could not diff : cmd:%s error: %s"%(cmd,result))
 
-        destF=j.system.fs.joinPaths(self.STORpath, "../TMP","plists","F_%s.plist"%self.namespace)
-        destL=j.system.fs.joinPaths(self.STORpath, "../TMP","plists","l_%s.plist"%self.namespace)
-        destD=j.system.fs.joinPaths(self.STORpath, "../TMP","plists","D_%s.plist"%self.namespace)
-        j.system.fs.createDir(j.system.fs.joinPaths(self.STORpath, "../TMP","plists"))
+        f=open(deleted, "r")
+        for line in f:
+            line=line.strip()
+            path=line.lstrip("- ")
+            dest=j.system.fs.joinPaths(self.MDPath,"MD",path)
+            j.system.fs.removeDirTree(dest)
+            dest=j.system.fs.joinPaths(self.MDPath,"LINKS",path)
+            j.system.fs.removeDirTree(dest)
+        f.close()
+        print "SCAN DONE MD:%s"%path
+
+        print "START UPLOAD FILES."
+        #count lines
+        total=0
+        f=open(destFClist, "r")
+        for line in f:
+            total+=1
+        f.close()
+        print "count done"
+        f=open(destFClist, "r")
+        counter=0
+        batch=[]
+        batchnr=0
+        for line in f:
+            path,md5=line.strip().split("|")
+            batch.append([path,md5])
+            counter+=1
+            if counter>1000:                
+                self.backupBatch(batch,batchnr=batchnr,total=total)
+                batchnr+=1
+        #final batch
+        self.backupBatch(batch,batchnr=batchnr,total=total)
+        f.close()
+        print "BACKUP DONE."
+
+    def _createExistsList(self,dest):
+        # j.system.fs.pathRemoveDirPart(dest,prefix,True)
+        print "Walk over MD, to create files which we already have found."
+        destF=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,dest,".mdfound")
+        j.system.fs.createDir(j.system.fs.getDirName(destF))
         fileF = open(destF, 'w')
-        fileL = open(destL, 'w')
-        fileD = open(destD, 'w')
 
         def processfile(path,stat,arg):
             path2=j.system.fs.pathRemoveDirPart(path, arg["base"], True)
+            path2=path2.lstrip("/")
+            if path2[0:2]=="MD":
+                path2=path2[3:]
+            if path2[0:5]=="LINKS":
+                path2=path2[6:]
+            path2=path2.lstrip("/")
+            # print path2
+            if path2[-5:]==".meta":
+                return
             # print "%s  :   %s"%(path,path2)
-            md=self.getMDObjectFromFs(path)
-            fileF.write("%s|%s|%s|%s\n"%(path2,md.size,md.mtime,md.hash))
-
-        def processlink(path,stat,arg):
-            path2=j.system.fs.pathRemoveDirPart(path, arg["base"], True)
-            # print "%s  :   %s"%(path,path2)
-            md=self.getMDObjectFromFs(path)
-            fileL.write("%s|%s\n"%(path2,md.dest))
-
-        def processdir(path,stat,arg):
-            path2=j.system.fs.pathRemoveDirPart(path, arg["base"], True)
-            # print "%s  :   %s"%(path,path2)
-            md=self.getMDObjectFromFs(path)
-            fileD.write("%s\n"%(path))
+            # if j.system.fs.isDir(path2):
+            #     path=j.system.fs.joinPaths(path,".meta")
+            # md=self.getMDObjectFromFs(path)
+            # fileF.write("%s|%s|%s|%s\n"%(path2,md.size,md.mtime,md.hash))
+            fileF.write("%s\n"%(path2))
 
         callbackFunctions={}
         callbackFunctions["F"]=processfile
+        callbackFunctions["D"]=processfile
 
         arg={}
         arg["base"]=self.MDPath
         w=j.base.fswalker.get()
         callbackFunctions["F"]=processfile
-        if j.system.fs.exists(path=self.MDPath+"/md"):
-            w.walk(self.MDPath+"/md",callbackFunctions,arg=arg,childrenRegexExcludes=[])
-        callbackFunctions["F"]=processlink
-        if j.system.fs.exists(path=self.MDPath+"/links"):
-            w.walk(self.MDPath+"/links",callbackFunctions,arg=arg,childrenRegexExcludes=[])
-        callbackFunctions["F"]=processdir
-        if j.system.fs.exists(path=self.MDPath+"/dirs"):
-            w.walk(self.MDPath+"/dirs",callbackFunctions,arg=arg,childrenRegexExcludes=[])
+
+        wpath=j.system.fs.joinPaths(self.MDPath,"MD",dest)
+        if j.system.fs.exists(path=wpath):
+            w.walk(wpath,callbackFunctions=callbackFunctions,arg=arg,childrenRegexExcludes=[])
+        wpath=j.system.fs.joinPaths(self.MDPath,"LINKS",dest)
+        if j.system.fs.exists(path=wpath):
+            w.walk(wpath,callbackFunctions=callbackFunctions,arg=arg,childrenRegexExcludes=[])
 
         fileF.close()
-        fileL.close()
-        fileD.close()
+        print "Walk over MD, DONE"
 
     def _getBlobPath(self, namespace, key):
         """
@@ -496,13 +582,11 @@ class BackupClient:
             
         self.filemanager=JSFileMgr(MDPath=self.mdpath,namespace="backup",blobclientname=blobclientName)
 
-    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={},childrenRegexExcludes=[".*/dev/.*","/proc/.*"]):
-        self._clean()
-        self.filemanager.backup(path,destination=destination, pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,childrenRegexExcludes=childrenRegexExcludes)
+    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={},childrenRegexExcludes=[".*/dev/.*","/proc/.*"],fullcheck=False):
+        # self._clean()
+        self.filemanager.backup(path,destination=destination, pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,\
+            childrenRegexExcludes=childrenRegexExcludes,fullcheck=fullcheck)
         self.commitMD()
-
-    def createplist(self):
-        self.filemanager.createplist()
 
     def _clean(self):
         for ddir in j.system.fs.listDirsInDir(self.mdpath,False,True,findDirectorySymlinks=False):
