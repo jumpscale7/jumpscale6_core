@@ -74,7 +74,6 @@ jpackage install -n grid_portal
 jpackage install -n graphite
 jpackage install -n agentcontroller
 jpackage install -n workers
-jpackage install -n processmanager
 
 echo '[main]
 appdir = /opt/jumpscale/apps/portalbase
@@ -87,6 +86,7 @@ pubipaddr=127.0.0.1
 ' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
 
 jsprocess start
+jpackage install -n processmanager
 
 pip install nose
 
