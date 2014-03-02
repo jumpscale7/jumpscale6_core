@@ -11,13 +11,16 @@ except ImportError:
     from StringIO import StringIO
 
 class Tee(object):
-    def __init__(self, fileobj1, fileobj2):
-        self.fileobj1 = fileobj1
-        self.fileobj2 = fileobj2
+    def __init__(self, *fobjs):
+        self.fileobjs = fobjs
 
     def write(self, data):
-        self.fileobj1.write(data)
-        self.fileobj2.write(data)
+        for fileobj in self.fileobjs:
+            fileobj.write(data)
+
+    def flush(self):
+        for fileobj in self.fileobjs:
+            fileobj.flush()
 
 
 PRINTSTR = "\r%s %s"
