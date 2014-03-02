@@ -74,7 +74,7 @@ class TEST(unittest.TestCase):
         start = time.time()
         for i in range(1, 500):
             kwargs = {'msg': 'msg %s' % i}
-            self.client.executeJumpScript('jumpscale', 'echo', self.nid, ROLE, args=kwargs, wait=True)
+            self.client.executeJumpScript('jumpscale', 'echo', self.nid, ROLE, args=kwargs, wait=True, timeout=2)
         end = time.time()
         print 'It took %s seconds to execute 500 echo jobs' % (end - start)
 

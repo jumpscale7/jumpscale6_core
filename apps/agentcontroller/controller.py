@@ -78,7 +78,7 @@ class ControllerCMDS():
         self._log("jobid found (incr done)")
         job.id=jobid
         job.getSetGuid()
-        if jscriptid<>None:
+        if jscriptid is None:
             action = self.getJumpScript(cmdcategory, cmdname, session=session)
             jscriptid = action.id
         job.jscriptid = jscriptid
