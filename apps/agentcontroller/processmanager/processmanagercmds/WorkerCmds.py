@@ -5,6 +5,8 @@ class WorkerCmds():
 
     def __init__(self,daemon=None):
         self._name="worker"
+        if not daemon:
+            return
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
 

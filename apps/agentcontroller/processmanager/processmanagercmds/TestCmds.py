@@ -5,6 +5,8 @@ class TestCmds():
 
     def __init__(self,daemon=None):
         self._name="tests"
+        if not daemon:
+            return
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
 
