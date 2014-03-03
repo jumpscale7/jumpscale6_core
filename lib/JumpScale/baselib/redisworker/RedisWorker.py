@@ -304,5 +304,23 @@ class RedisWorkerFactory:
                 result.append(Job(ddict=jobdict))
             return result
 
+    def getFailedJobs(self, queue=None, hoursago=0):
+        jobs = dict()
+        queues = (queue,) if queue else ('io', 'hypervisor', 'default')
+        for q in queues:
+            jobsjson = self.redis.hgetall('queues:workers:work:%s' % q)
+            if jobsjson:
+                jobs.update(ujson.loads(jobsjson))
 
+        #get failed jobs
+        for k, job in jobs.iteritems():
+            if job['state'] not in ('ERROR', 'TIMEOUT'):
+                jobs.pop(k)
 
+        if hoursago:
+            epochago = j.base.time.getEpochAgo(hoursago)
+            for k, job in jobs.iteritems():
+                if job['timeStart'] <= epochago:
+                    jobs.pop(k)
+
+        return jobs
