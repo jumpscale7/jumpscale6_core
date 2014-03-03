@@ -3,7 +3,6 @@ from JumpScale import j
 j.application.appname = "jumpscale:autodeploy_installer"
 j.application.start()
 
-
 from optparse import OptionParser
 
 parser = OptionParser()
@@ -13,7 +12,7 @@ parser.add_option('-s', '--seedpasswd', help='Originalpasswd (used to login firs
 parser.add_option('-p', '--passwd', help='New Passwd To Set Or Use',default="rooter")
 parser.add_option('-g', '--gridnr', help='Id of grid, make sure is unique.',default="")
 parser.add_option('-c', '--cfgname', help='Name of cfg directory.',default="")
-parser.add_option('-t','--type', help='Type of action (platform,core,configure,grid), is comma separated.',default="platform,core,configure")
+parser.add_option('-t','--type', help='Type of action (platform,core,configure,grid), is comma separated.',default="platform,core,configure,grid,clean")
 parser.add_option('--nopasswd', help='work with ssh key',default=False)
 
 (options, args) = parser.parse_args()
@@ -42,6 +41,15 @@ passwd = options.passwd
 if options.cfgname=="":
     options.cfgname=j.console.askChoice(j.system.fs.listDirsInDir("cfgs",False,True),"Please select configuration templates for the remote machine.")
 
+
+if options.type=="":
+    result=j.console.askChoiceMultiple(["platform","core","configure","grid","desktop"])
+else:
+    result=options.type.split(",")
+
+import sys
+sys.path.append(j.system.fs.getcwd())
+
 import JumpScale.baselib.remote
 
 ### FIRST DO
@@ -54,29 +62,40 @@ passwd
 print help
 
 
-if options.type=="":
-    result=j.console.askChoiceMultiple(["platform","core","configure","grid","desktop"])
-else:
-    result=options.type.split(",")
-
-cuapi = j.remote.cuisine.api
-if options.nopasswd==False:
-    j.remote.cuisine.fabric.env["password"]=passwd
-cuapi.connect(remote)
-
 def setpasswd():
     #this will make sure new password is set
     cl=j.tools.expect.new("sh")
     cl.login(remote=remote,passwd=passwd,seedpasswd=seedpasswd)
 
-if options.nopasswd==False:
-    setpasswd()
-
 def prepare_platform():
     print cuapi.apt_get("update")
     print cuapi.apt_get("upgrade")
     print cuapi.apt_get("install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython mc -y")
-    
+
+def clean_history():
+    CMDS="""
+killall tmux
+rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale.pth
+rm -rf /usr/local/lib/python2.7/site-packages/JumpScale/
+rm -rf /usr/local/lib/python2.7/site-packages/jumpscale/
+rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale/
+rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale/
+rm -rf /opt/jumpscale
+rm /usr/local/bin/js*
+rm /usr/local/bin/jpack*
+killall python
+killall redis-server
+rm -rf /opt/sentry/
+rm -rf /opt/redis/
+"""
+    for line in CMDS.split("\n"):
+        if line.strip()<>"" and line[0]<>"#":
+            try:
+                print cuapi.run(line)
+            except:
+                pass
+
+
 def install_jscore():
     try:
         print cuapi.run("pip uninstall JumpScale-core -y")
@@ -151,6 +170,18 @@ def install_grid():
     print cuapi.run("jpackage install -n shorewall")
     print cuapi.run("shorewall stop")
 
+
+
+cuapi = j.remote.cuisine.api
+if options.nopasswd==False:
+    setpasswd()
+    j.remote.cuisine.fabric.env["password"]=passwd
+cuapi.connect(remote)
+
+
+
+if "cleam" in result:
+    clean_history()
 
 if "platform" in result:
     prepare_platform()

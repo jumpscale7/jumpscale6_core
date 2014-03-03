@@ -14,7 +14,6 @@ parser.add_option('--nopasswd', help='work with ssh key',default=False)
 parser.add_option('--ipaddr', help='ipaddr with mask',default="10.101.175.200/16")
 
 
-
 (options, args) = parser.parse_args()
 
 if options.local:

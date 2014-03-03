@@ -133,7 +133,7 @@ class JSFileMgr():
                 #can be link which does not exist
                 #or can be file which is deleted in mean time
                 self.doError(path,"could not find, so could not backup.") 
-                return (False,False)
+                return (False,False,"",dest2)
 
         #next goes for all types
         if j.system.fs.exists(path=dest):
@@ -325,9 +325,6 @@ class JSFileMgr():
             else:
                 print "%s/%s:no need to upload, exists: %s"%(nr,total,src)
 
-
-
-
     def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={".*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"],fullcheck=False):
 
         #check if there is a dev dir, if so will do a special tar
@@ -416,7 +413,9 @@ class JSFileMgr():
             out=""
             for path,msg in self.errors:
                 out+="%s:%s\n"%(path,msg)
-            j.system.fs.writeFile(j.system.fs.joinPaths(self.MDPath,"ERRORS",destination,"ERRORS.LOG"),out)
+            epath=j.system.fs.joinPaths(self.MDPath,"ERRORS",destination,"ERRORS.LOG")
+            j.system.fs.createDir(j.system.fs.getDirName(epath))
+            j.system.fs.writeFile(epath,out)
 
         #now we need to find the deleted files
         #sort all found files when going over fs
@@ -622,3 +621,4 @@ class BackupClient:
             self.gitclient.push()
         else:
             print "WARNING COULD NOT COMMIT CHANGES TO GITLAB, no connection found.\nDO THIS LATER!!!!!!!!!!!!!!!!!!!!!!"
+
