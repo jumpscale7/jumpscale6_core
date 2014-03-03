@@ -275,6 +275,9 @@ class RedisWorkerFactory:
         # self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
         queue.put(job)
 
+    def scheduleJob(self, job):
+        self._scheduleJob(job)
+
     def getJobLine(self,job=None,jobid=None):
         if jobid<>None:
             job=self.getJob(jobid)
