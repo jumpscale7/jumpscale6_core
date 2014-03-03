@@ -118,7 +118,7 @@ class ServerBaseFactory():
         if resultcode == None:
             resultcode = '\x00'
         lenreturnformat = len(returnformat)
-        return resultcode+struct.pack("<II", lenreturnformat, lendata) + returnformat + result
+        return str(resultcode)+struct.pack("<II", lenreturnformat, lendata) + returnformat + result
 
     def _unserializeBinReturn(self, data):
         """

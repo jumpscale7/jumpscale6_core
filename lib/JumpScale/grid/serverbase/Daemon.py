@@ -178,7 +178,7 @@ class Daemon(object):
                         jobr=jobqueue.get(True,60)
                         jobr=ujson.loads(jobr)
                         if jobr["state"]<>"OK":
-                            return jobr["resultcode"],"",jobr["result"]
+                            return jobr["resultcode"],returnformat,jobr["result"]
                         else:
                             return returnCodes.OK,returnformat,jobr["result"]
                     else:
@@ -198,8 +198,8 @@ class Daemon(object):
             j.errorconditionhandler.processErrorConditionObject(eco)
             eco.__dict__.pop("tb")
             eco.tb=None
-            result = self.errorconditionserializer.dumps(eco.__dict__)
-            return returnCodes.ERROR, "", result
+            errorres = eco.__dict__
+            return returnCodes.ERROR, returnformat, errorres 
 
         return returnCodes.OK, returnformat, result
 
