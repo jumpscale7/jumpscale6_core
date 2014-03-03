@@ -34,7 +34,6 @@ if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
 class Worker(object):
 
     def __init__(self, redisaddr, redisport, queuename):
-        
         self.actions={}
         self.redisport=redisport
         self.redisaddr=redisaddr
@@ -46,15 +45,16 @@ class Worker(object):
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
 
         def checkagentcontroller():
-            masterip=j.application.config.get("grid.master.ip")            
+            masterip=j.application.config.get("grid.master.ip")
             success=False
-            try:
-                self.acclient=j.clients.agentcontroller.get(masterip)
-                success=True
-            except Exception,e:
-                msg="Cannot connect to agentcontroller on %s."%(masterip)
-                j.events.opserror(msg, category='worker.startup', e=e)
-                self.acclient=None
+            while success == False:
+                try:
+                    self.acclient=j.clients.agentcontroller.get(masterip)
+                    success=True
+                except Exception,e:
+                    msg="Cannot connect to agentcontroller on %s."%(masterip)
+                    j.events.opserror(msg, category='worker.startup', e=e)
+                    time.sleep(5)
 
 
         def checkredis():
@@ -175,7 +175,7 @@ class Worker(object):
 
         w=j.clients.redisworker
         job.timeStop=int(time.time())
-        
+
         if job.state[0:2]<>"OK":
             self.log("result:%s"%job.result)
 
@@ -183,7 +183,7 @@ class Worker(object):
         if job.jscriptid>10000:
             # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
             self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
-            w.redis.rpush("workers:return:%s"%job.id,time.time())            
+            w.redis.rpush("workers:return:%s"%job.id,time.time())
         else:
             #jumpscripts coming from AC
             if job.state<>"OK":
