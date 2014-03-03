@@ -3,22 +3,22 @@ import ujson
 
 class AgentControllerFactory(object):
     def __init__(self):
-        self.agentControllerClients={}
-        self.agentControllerProxyClients={}
+        self._agentControllerClients={}
+        self._agentControllerProxyClients={}
 
     def get(self,agentControllerIP=None):
         """
         @if None will be same as master
         """
-        if not self.agentControllerClients.has_key(agentControllerIP):
-            self.agentControllerClients[agentControllerIP]=AgentControllerClient(agentControllerIP)
-        return self.agentControllerClients[agentControllerIP]
+        if not self._agentControllerClients.has_key(agentControllerIP):
+            self._agentControllerClients[agentControllerIP]=AgentControllerClient(agentControllerIP)
+        return self._agentControllerClients[agentControllerIP]
         
     def getClientProxy(self,category="jpackages",agentControllerIP=None):
         key="%s_%s"%(category,agentControllerIP)
-        if not self.agentControllerProxyClients.has_key(key):
-            self.agentControllerProxyClients[key]=AgentControllerProxyClient(category,agentControllerIP)
-        return self.agentControllerProxyClients[key]        
+        if not self._agentControllerProxyClients.has_key(key):
+            self._agentControllerProxyClients[key]=AgentControllerProxyClient(category,agentControllerIP)
+        return self._agentControllerProxyClients[key]        
 
 class AgentControllerProxyClient():
     def __init__(self,category,agentControllerIP):
