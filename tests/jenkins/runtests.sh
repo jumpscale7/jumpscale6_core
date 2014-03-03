@@ -5,6 +5,21 @@ cleanup () {
         fi
 }
 
+gettime () {
+    uglytime=$(stat "/var/lib/lxc/$1/config" | grep Change | cut -d ' ' -f2,3,4)
+    date -d "$uglytime" +'%s' 
+}
+
+#remove old machines
+machines=$(sudo lxc-ls jenkins)
+for machine in machines; do
+    time=$(gettime $machine)
+    if [ $time -lt $(($(date +'%s') - 3600*24)) ]; then
+        sudo lxc-destroy -fn $machine &
+    fi
+done
+
+
 sudo lxc-clone -o saucy -n "$BUILD_TAG" -s -B overlayfs
 sudo lxc-start -d -n "$BUILD_TAG"
 sudo lxc-wait -n "$BUILD_TAG" -s RUNNING
@@ -103,5 +118,3 @@ if [ $exitcode -eq 0 ]; then
 	exit 0
 fi
 echo "Failure happend leaving container behind as evidence"
-sudo lxc-stop -n "$BUILD_TAG"
-cleanup
