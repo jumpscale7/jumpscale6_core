@@ -83,7 +83,6 @@ def is_wiki_page(child):
     return os.path.isdir(child) or child.endswith('.wiki')
 
 
-
 def get_dir_tree(dir_name, max_depth=1, items=None):
     if max_depth == 0:
         return []
@@ -111,10 +110,10 @@ def format_dir_tree(dir_tree, space_name, bullets=False, tree=False, depth=1):
     s = StringIO()
     s.write(start_format)
     for node, children in dir_tree:
-        if os.path.isdir(node):
-            wiki_name = os.path.basename(node)
-        else:
+        if node.endswith('.wiki'):
             wiki_name = os.path.basename(os.path.splitext(node)[0])
+        else:
+            wiki_name = os.path.basename(node)
         s.write('<li><a href="/{1}/{0}">{0}</a>'.format(wiki_name, space_name))
         s.write(format_dir_tree(children, space_name, bullets, False, depth + 1))
         s.write('</li>')
@@ -146,10 +145,14 @@ def main(j, args, params, tags, tasklet):
     if depth == 0:
         depth = MAX_DEPTH
 
+    if args.tags.tagExists('items') and args.tags.tagExists('page'):
+        page.addMessage('MACRO CHILDRENTREE ERROR: You cannot use both `page` argument & `items` argument.')
+        return params
+
     items = None
     if args.tags.tagExists('items'):
-        # The tag "items" can contain spaces. Unfortunately the current implementation doesn't take care of spaces, so
-        # I must parse items myself
+        # The tag "items" can contain spaces. Unfortunately the macros parser implementation 
+        # doesn't take care of spaces, so I must parse items myself
         m = j.codetools.regex.getRegexMatches(r'items\:\[.*\]', args.cmdstr)
         if m and len(m.matches):
             items = m.matches[0].founditem
@@ -165,12 +168,12 @@ def main(j, args, params, tags, tasklet):
         if doc.preprocessor.docExists(docNameToFindChildrent):
             doc = doc.preprocessor.docGet(docNameToFindChildrent)
         else:
-            page.addMessage('MACRO CHILDREN ERROR: Could not find page with name %s to start from.' % docNameToFindChildrent)
+            page.addMessage('MACRO CHILDRENTREE ERROR: Could not find page with name %s to start from.' % docNameToFindChildrent)
             return params
 
     dir_name = j.system.fs.getDirName(doc.path)
     if j.basetype.list.check(items):
-        dir_tree = items+get_dir_tree(dir_name, depth)
+        dir_tree = items + get_dir_tree(dir_name, depth)
     else:
         dir_tree = get_dir_tree(dir_name, depth)
     
