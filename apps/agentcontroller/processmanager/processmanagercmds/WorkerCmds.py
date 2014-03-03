@@ -47,7 +47,9 @@ class WorkerCmds():
         if failed = True then also remove the failed jobs
         """
         if session<>None:
-            self._adminAuth(session.user,session.passwd) 
+            self._adminAuth(session.user,session.passwd)
+
+        self.redisworker.removeJobs(hoursago=hoursago, failed=failed):
 
     def resetQueue(self,queue="default",hoursago=0):
         """
