@@ -324,3 +324,22 @@ class RedisWorkerFactory:
                     jobs.pop(k)
 
         return jobs
+
+    def removeJobs(self, hoursago=48, failed=False):
+        epochago = j.base.time.getEpochAgo(hoursago)
+        for q in ('io', 'hypervisor', 'default'):
+            jobs = dict()
+            jobsjson = self.redis.hgetall('queues:workers:work:%s' % q)
+            if jobsjson:
+                jobs.update(ujson.loads(jobsjson))
+                for k, job in jobs.iteritems():
+                    if job['timeStart'] >= epochago:
+                        jobs.pop(k)
+
+                if not failed:
+                    for k, job in jobs.iteritems():
+                        if job['state'] in ('ERROR', 'TIMEOUT'):
+                            jobs.pop(k)
+
+                if jobs:
+                    self.redis.hdel('queues:workers:work:%s' % q, jobs.keys())
