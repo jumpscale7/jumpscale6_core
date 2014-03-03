@@ -173,7 +173,7 @@ def main(j, args, params, tags, tasklet):
 
     dir_name = j.system.fs.getDirName(doc.path)
     if j.basetype.list.check(items):
-        dir_tree = items + get_dir_tree(dir_name, depth)
+        dir_tree = items
     else:
         dir_tree = get_dir_tree(dir_name, depth)
     
