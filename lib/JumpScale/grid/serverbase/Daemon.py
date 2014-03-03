@@ -172,7 +172,8 @@ class Daemon(object):
                         nid=int(data["_agentid"])
                         data.pop("_agentid")
                         category2=category.replace("processmanager_","")
-                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,cmdname=cmd,args=data,queue="internal",log=True,timeout=0,roles=[],session=session)
+                        scriptid="%s_%s" % (category2, cmd)
+                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,jscriptid=scriptid,cmdname=cmd,args=data,queue="internal",log=True,timeout=0,roles=[],session=session)
                         jobqueue = cmds._getJobQueue(job["id"])
                         jobr=jobqueue.get(True,60)
                         jobr=ujson.loads(jobr)
@@ -183,7 +184,6 @@ class Daemon(object):
                     else:
                         data['session'] = session
                         data.pop("_agentid")
-                            
                 result = ffunction(**data)
             else:
                 result = ffunction(data, session=session)
