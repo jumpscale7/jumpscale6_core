@@ -1,5 +1,7 @@
 from JumpScale import j
 import time
+import JumpScale.baselib.redisworker
+import ujson
 
 class WorkerCmds():
 
@@ -9,26 +11,35 @@ class WorkerCmds():
             return
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
+        self.redisworker = j.clients.redisworker
 
-    def getQueuedJobs(self,queue="default",format="json",session=None):        
+    def getQueuedJobs(self,queue="default", format="json", session=None):
         """
         @format can be json or wiki
         @queue normally we have default,io,hypervisor
         """
         if session<>None:
-            self._adminAuth(session.user,session.passwd)  
-        # use complement RedisWorkerFactory class see getQueuedJobs
-        #only use local redis on port 6678
+            self._adminAuth(session.user,session.passwd)
+
+        if format == 'json':
+            return ujson.dumps(self.redisworker.getQueuedJobs(queue=queue, asWikiTable=False))
+        else:
+            return self.redisworker.getQueuedJobs(queue=queue)
         
-    def getFailedJobs(self,hoursago=0,format="json",session=None):
+        
+    def getFailedJobs(self, queue=None, hoursago=0, format='json', session=None):
         """
         @hoursago : only show failed jobs from X hours ago, if 0 then all
         @format can be json or wiki
         """
         if session<>None:
-            self._adminAuth(session.user,session.passwd)  
-        # use complement RedisWorkerFactory class make new method
-        #only use local redis on port 6678
+            self._adminAuth(session.user,session.passwd)
+
+        if format == 'json':
+            return ujson.dumps(self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago))
+        else:
+            return self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
+        
 
     def removeJobs(self,hoursago=48,failed=False):
         """
