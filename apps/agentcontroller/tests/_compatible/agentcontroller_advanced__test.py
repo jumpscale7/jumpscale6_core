@@ -74,7 +74,9 @@ class TEST(unittest.TestCase):
         start = time.time()
         for i in range(1, 500):
             kwargs = {'msg': 'msg %s' % i}
-            self.client.executeJumpScript('jumpscale', 'echo', self.nid, ROLE, args=kwargs, wait=True, timeout=2)
+            job = self.client.executeJumpScript('jumpscale', 'echo', self.nid, ROLE, args=kwargs, wait=True, timeout=2)
+            self.assertIsInstance(job, dict)
+            self.assertEqual(job['result'], kwargs['msg'])
         end = time.time()
         print 'It took %s seconds to execute 500 echo jobs' % (end - start)
 
