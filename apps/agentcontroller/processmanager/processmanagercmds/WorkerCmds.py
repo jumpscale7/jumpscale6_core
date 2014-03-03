@@ -41,7 +41,7 @@ class WorkerCmds():
             return self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
         
 
-    def removeJobs(self,hoursago=48,failed=False):
+    def removeJobs(self, hoursago=48, failed=False, session=None):
         """
         walk over jobs, remove jobs which are older than the specified hours
         if failed = True then also remove the failed jobs
@@ -49,7 +49,7 @@ class WorkerCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
-        self.redisworker.removeJobs(hoursago=hoursago, failed=failed):
+        self.redisworker.removeJobs(hoursago=hoursago, failed=failed)
 
     def resetQueue(self,queue="default",hoursago=0):
         """
@@ -57,10 +57,15 @@ class WorkerCmds():
         if hoursago==0 then all items in queue
         """
 
-    def resubmitJob(self,jobid):
+    def resubmitJob(self, jobid, session=None):
         """
         job which failed or had timeout, can be resubmitted to queue, so it can be executed again
         """
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
+
+        job = self.redisworker.getJob(jobid)
+        self.redisworker.scheduleJob(job)
 
     def checkTimeouts(self):
         """
@@ -68,11 +73,11 @@ class WorkerCmds():
         if job failed and on queue, remove put to jobs
         """
 
-    def getJob(self,session=None):        
+    def getJob(self, jobid, session=None):        
         """
         """
         if session<>None:
             self._adminAuth(session.user,session.passwd)  
-        # use complement RedisWorkerFactory class make new method
-        #only use local redis on port 6678
+
+        return self.redisworker.getJob(jobid)
 
