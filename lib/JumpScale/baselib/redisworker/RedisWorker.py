@@ -346,3 +346,7 @@ class RedisWorkerFactory:
 
                 if jobs:
                     self.redis.hdel('queues:workers:work:%s' % q, jobs.keys())
+
+    def deleteJob(self, jobid):
+        job = self.getJob(jobid)
+        self.redis.hdel('queues:workers:work:%s' % job.queue, jobid)
