@@ -1,0 +1,6 @@
+lxc.defaults.pubinterface=eth0
+lxc.bridge.public.name=br0
+lxc.bridge.public.gw=172.16.128.1
+lxc.nameserver=8.8.8.8
+lxc.management.iprange=10.99.99.0/24
+lxc.management.ipaddr=test3:10.99.99.2

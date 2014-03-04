@@ -709,6 +709,9 @@ class JPackageObject():
             systemdest = "/%s"%blobitempath.lstrip("/")
         elif ttype=="base":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir, blobitempath)
+        elif ttype=="opt":
+            base="/opt"
+            systemdest = j.system.fs.joinPaths(base, blobitempath)
         elif ttype=="deb":
             systemdest = "/tmp"
         elif ttype=="etc":

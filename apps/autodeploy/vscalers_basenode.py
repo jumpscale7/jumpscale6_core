@@ -25,11 +25,10 @@ else:
     if options.remote =="":
         options.remote=j.console.askString("Ip address of remote")
 
-    if options.seedpasswd =="":
-        options.seedpasswd=j.console.askString("Seedpasswd if any, press enter if none.",defaultparam="")
+    # if options.seedpasswd =="":
+    #     options.seedpasswd=j.console.askString("Seedpasswd if any, press enter if none.",defaultparam="")
 
-if options.gridnr =="":
-    options.gridnr=j.console.askString("Grid id, make sure is unique.")
+
 
 if options.passwd =="":
     options.passwd=j.console.askString("New Passwd To Set Or Use (default rooter)",defaultparam="rooter")
@@ -128,6 +127,9 @@ def install_configure():
     print cuapi.run("jpackage mdupdate")
 
 def install_grid():
+
+    if options.gridnr =="":
+        options.gridnr=j.console.askString("Grid id, make sure is unique.")
 
     cmd="jsconfig hrdset -n grid.id -v %s"%options.gridnr
     print cuapi.run(cmd)
