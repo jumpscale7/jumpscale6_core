@@ -70,15 +70,10 @@ class ProcessmanagerFactory:
                 msg="Cannot connect to osis or agentcontroller on %s, will retry in 5 sec."%(masterip)
                 j.events.opserror(msg, category='processmanager.startup', e=e)
                 time.sleep(5)
-            
 
         self.loadFromAgentController()
-
         self.daemon = j.servers.geventws.getServer(port=4445)
-
         self.loadCmds()
-        self.loadMonitorObjectTypes()
-
         self.daemon.start()
 
     def getCmdsObject(self,category):
@@ -101,6 +96,7 @@ class ProcessmanagerFactory:
                 self.daemon.addCMDsInterface(classs, category=tmp._name)
 
         self.cmds=Dummy()
+        self.loadMonitorObjectTypes()
 
         for key in self.daemon.daemon.cmdsInterfaces.keys():
             self.cmds.__dict__[key]=self.daemon.daemon.cmdsInterfaces[key]
@@ -119,7 +115,6 @@ class ProcessmanagerFactory:
                 self.monObjects.__dict__[name.lower()]=factory   
 
     def loadFromAgentController(self):
-
         #delete previous scripts
         todel=["eventhandling","loghandling","monitoringobjects","processmanagercmds"]
         for delitem in todel:
