@@ -79,6 +79,7 @@ rm -rf /usr/local/lib/python2.7/site-packages/JumpScale/
 rm -rf /usr/local/lib/python2.7/site-packages/jumpscale/
 rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale/
 rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale/
+rm -rf /opt/code
 rm -rf /opt/jumpscale
 rm /usr/local/bin/js*
 rm /usr/local/bin/jpack*

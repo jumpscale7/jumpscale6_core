@@ -1024,6 +1024,10 @@ class JPackageObject():
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
             if platform not in j.system.platformtype.getMyRelevantPlatforms():
                 continue
+            
+            #first do the debs otherwise the other dirs cannot overwrite what debs do
+            self.installDebs()
+
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
                 # print "type:%s,%s"%(ttype,ttype.find("cr_"))
@@ -1044,7 +1048,7 @@ class JPackageObject():
                     tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                     self.log("copy files from:%s to:%s"%(pathttype,destination))
                     self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
-            self.installDebs()
+            
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """
