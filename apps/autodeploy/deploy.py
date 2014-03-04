@@ -67,7 +67,7 @@ def setpasswd():
     cl.login(remote=remote,passwd=passwd,seedpasswd=seedpasswd)
 
 def prepare_platform():
-    print cuapi.apt_get("update")
+    print cuapi.apt_get("update")    
     print cuapi.apt_get("upgrade")
     print cuapi.apt_get("install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython mc -y")
 
@@ -111,16 +111,24 @@ def install_jscore():
         pass    
     print cuapi.run("jpackage install -n core -r --debug")
 
-def install_configure():
+def _upload(options,ttype,dest):
+    cfgdir="cfgs/%s/%s"%(options.cfgname,ttype)
+    if j.system.fs.exists(path=cfgdir):
+        print "upload %s to %s"%(cfgdir,dest)
+        items=j.system.fs.listFilesInDir(cfgdir,True)
+        done=[]
+        for item in items:
+            partpath=j.system.fs.pathRemoveDirPart(item,cfgdir)
+            partpathdir=j.system.fs.getDirName(partpath).rstrip("/")
+            if partpathdir not in done:
+                print cuapi.dir_ensure("%s/%s"%(dest,partpathdir), True)
+                done.append(partpathdir)            
+            cuapi.file_upload("%s/%s"%(dest,partpath),item)#,True,True)    
 
-    items=j.system.fs.listFilesInDir("cfgs/%s"%options.cfgname,True)
-    done=[]
-    for item in items:
-        cfgdirpath=j.system.fs.getDirName(j.system.fs.pathRemoveDirPart(item,"cfgs/%s"%options.cfgname)).rstrip("/")
-        if cfgdirpath not in done:
-            print cuapi.dir_ensure("/opt/jumpscale/cfg/%s"%cfgdirpath, True)
-            done.append(cfgdirpath)            
-        cuapi.file_upload("/opt/jumpscale/cfg/%s/%s"%(cfgdirpath,j.system.fs.getBaseName(item)),item)#,True,True)
+def install_configure():
+    _upload(options,"jscfg","/opt/jumpscale/cfg/")
+    _upload(options,"etc","/etc/")
+    _upload(options,"root","/root/")
 
     cmd="jsconfig hrdset -n system.superadmin.passwd -v %s"%passwd
     print cuapi.run(cmd)            
@@ -183,7 +191,7 @@ cuapi.connect(remote)
 
 
 
-if "cleam" in result:
+if "clean" in result:
     clean_history()
 
 if "platform" in result:
