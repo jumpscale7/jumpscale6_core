@@ -22,7 +22,7 @@ class WorkerCmds():
             self._adminAuth(session.user,session.passwd)
 
         if format == 'json':
-            return ujson.dumps(self.redisworker.getQueuedJobs(queue=queue, asWikiTable=False))
+            return self.redisworker.getQueuedJobs(queue=queue, asWikiTable=False)
         else:
             return self.redisworker.getQueuedJobs(queue=queue)
         
