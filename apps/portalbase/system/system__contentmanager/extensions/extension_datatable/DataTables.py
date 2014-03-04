@@ -1,4 +1,5 @@
 from JumpScale import j
+from JumpScale.portal.docgenerator.Confluence2HTML import Confluence2HTML
 
 
 class DataTables():
@@ -74,28 +75,6 @@ class DataTables():
         cache = j.db.keyvaluestore.getMemoryStore('datatables')
         return cache.cacheGet(key)
 
-    def processLink(self, line):
-        if line and line.find("[") != -1:
-            r = "\[[-:@|_.?\w\s\\=/]*\]"
-            if j.codetools.regex.match(r, line):  # find links
-                for match in j.codetools.regex.yieldRegexMatches(r, line):
-                    # print "link: %s" % match.founditem
-                    match2 = match.founditem.replace("[", "").replace("]", "")
-                    if match2.find("|") != -1:
-                        descr, link = match2.split("|", 1)
-                    elif match2.find(":") != -1:
-                        descr, link = match2.split(":", 1)
-                    else:
-                        link = match2
-                        descr = link
-                    if link.find(";") != -1:
-                        space, pagename = link.split(";", 1)
-                        link = "/%s/%s" % (space.lower().strip("/"), pagename.strip("/"))
-                    # print "match:%s"%match.founditem
-                    # print "getlink:%s" %page.getLink(descr,link)
-                    line = line.replace(match.founditem, "<a href='%s'>%s</a>" % (link, descr))
-        return line
-
     def executeMacro(self, row, field):
 
         try:
@@ -106,7 +85,7 @@ class DataTables():
             raise RuntimeError("Cannot process macro string for row, row was %s, field was %s" % (row, field))
 
         field = field % row
-        field = self.processLink(field)
+        field = Confluence2HTML.findLinks(field)
         if field.find("{{") != -1:
             field = j.core.portal.active.macroexecutorPage.processMacrosInWikiContent(field)
 
@@ -171,7 +150,7 @@ class DataTables():
                 else:
                     # is function
                     field = field(row, fieldid)
-                    field = self.processLink(field)
+                    field = Confluence2HTML.findLinks(field)
                     r.append(field)
 
             result["aaData"].append(r)

@@ -258,7 +258,8 @@ class PageHTML(Page):
         self.addList(arr)
         self.addNewLine()
 
-    def getLink(self, description, link, link_id=None, link_class=None,htmlelements=""):
+    @staticmethod
+    def getLink(description, link, link_id=None, link_class=None,htmlelements=""):
         if link_id:
             link_id = ' id="%s"' % link_id.strip()
         else:

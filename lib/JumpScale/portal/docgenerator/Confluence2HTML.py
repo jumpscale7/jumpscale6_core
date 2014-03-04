@@ -1,6 +1,7 @@
 import re
 from JumpScale import j
 from JumpScale.portal.macrolib import div_base
+from .PageHTML import PageHTML
 
 
 class Confluence2HTML():
@@ -43,10 +44,11 @@ class Confluence2HTML():
             else:
                 token += char
         lineout += processToken(token)
-        lineout = self.findLinks(lineout, page)
+        lineout = self.findLinks(lineout)
         return lineout
 
-    def findLinks(self, line, page):
+    @staticmethod
+    def findLinks(line):
         # r=r"\[[-:|_@#.?\w\s\\=/&]*\]"
         r = r"\[[^\[\]]+\]"
         if j.codetools.regex.match(r, line):  # find links
@@ -81,7 +83,7 @@ class Confluence2HTML():
                     link = "/%s/%s" % (space.lower().strip().strip("/"), pagename.strip().strip("/"))
                 # print "match:%s"%match.founditem
                 # print "getlink:%s" %page.getLink(descr,link)
-                line = line.replace(match.founditem, page.getLink(descr, link, link_id, link_class,htmlelements))
+                line = line.replace(match.founditem, PageHTML.getLink(descr, link, link_id, link_class,htmlelements))
         return line
 
     # This is copied from PageHTML.py
@@ -135,7 +137,7 @@ class Confluence2HTML():
             return re.compile(r'(\W){0}([^ #{0}]{1}[^ {0}]){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
 
         def limiter_replacement(sub):
-            return r'\1<{0}>\2</{0}>\3'.format(sub)
+            return r'\1\2</{0}>\3'.format(sub)
 
         def substitute_email(match):
             return r'<a href="{0}">{1}</a>'.format(match.group(1), match.group(1).replace('mailto:', '', 1))
@@ -312,7 +314,7 @@ class Confluence2HTML():
                         line = line.replace(match, self.createImage(image, imagePath, result["width"], result["height"], styles))
 
                     # continue
-                line = self.findLinks(line, page)
+                line = self.findLinks(line)
             if line.find("{center}") > -1:
                 continue
 
@@ -368,7 +370,7 @@ class Confluence2HTML():
 
             # print "linkcheck: %s" % j.codetools.regex.match("\[[-\\:|_\w\s/]*\]",line)
             # FIND LINKS
-            line = self.findLinks(line, page)
+            line = self.findLinks(line)
 
             # HEADING
             header = j.codetools.regex.getRegexMatch("^h(\d)\. (.+?)$", line)
