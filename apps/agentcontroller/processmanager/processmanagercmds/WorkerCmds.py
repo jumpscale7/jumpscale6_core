@@ -13,7 +13,7 @@ class WorkerCmds():
         self._adminAuth=daemon._adminAuth
         self.redisworker = j.clients.redisworker
 
-    def getQueuedJobs(self,queue="default", format="json", session=None):
+    def getQueuedJobs(self, queue="default", format="json", session=None):
         """
         @format can be json or wiki
         @queue normally we have default,io,hypervisor
@@ -67,13 +67,25 @@ class WorkerCmds():
         job = self.redisworker.getJob(jobid)
         self.redisworker.scheduleJob(job)
 
-    def checkTimeouts(self):
+    def checkTimeouts(self, session=None):
         """
         walk over all jobs in queue & not in queue, check that timeout is not expired, if expired, put job in failed mode 
         if job failed and on queue, remove put to jobs
         """
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
 
-    def getJob(self, jobid, session=None):        
+        jobs = self.redisworker.getQueuedJobs(asWikiTable=False)
+        result = list()
+        for job in jobs:
+            if (job.timeStart + job.timeout) > j.base.time.getTimeEpoch() and job.state not in ('OK', 'SCHEDULED'):
+                #job has timed out
+                #job.state = 'TIMEOUT'
+                result.append(job)
+
+        return result
+
+    def getJob(self, jobid, session=None):
         """
         """
         if session<>None:
