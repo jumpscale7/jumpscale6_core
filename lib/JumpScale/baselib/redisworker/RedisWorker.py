@@ -299,13 +299,12 @@ class RedisWorkerFactory:
                 for job in result:
                     out+="%s\n"%self.getJobLine(job=job)
                 return out
-            return result
         else:
-            for y in range(self.redis.llen("queues:workers:work:%s"%queue)):
-                jobdict=self.redis.lindex("queues:workers:work:%s"%queue,y)
-                jobdict=ujson.loads(jobdict)
-                result.append(Job(ddict=jobdict))
-            return result
+            jobsjson = self.redis.hgetall('queues:workers:work:%s' % queue)
+            if jobsjson:
+                result = ujson.loads(jobsjson)
+
+        return result
 
     def getFailedJobs(self, queue=None, hoursago=0):
         jobs = dict()
