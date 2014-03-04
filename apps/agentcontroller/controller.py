@@ -401,12 +401,21 @@ class ControllerCMDS():
         """
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-        raise RuntimeError("need to be implemented")
-        result=[]
-        if self.workqueue.has_key(session.agentid):
-            if len(self.workqueue[session.agentid])>0:
-                result=[item.__dict__ for item in self.workqueue[session.agentid]]
-        return result
+        jobs = list()
+        qname = 'queues:commands:queue:%s:%s' % (j.application.whoAmI.gid, agentid)
+        jobstrings = self.redis.lrange(qname, 0, -1)
+        for jobstring in jobstrings:
+            jobs.append(json.loads(jobstring))
+        return jobs
+
+    def getActiveJobs(self, session=None):
+        queues = self.redis.keys('queues:commands:queue*')
+        jobs = list()
+        for qname in queues:
+            jobstrings = self.redis.lrange(qname, 0, -1)
+            for jobstring in jobstrings:
+                jobs.append(json.loads(jobstring))
+        return jobs
 
     def log(self, logs, session=None):
         for log in logs:
@@ -455,12 +464,6 @@ class ControllerCMDS():
         if job:
             return job.db.__dict__
 
-    def getActiveJobs(self, session=None):
-        raise RuntimeError("need to be implemented")
-        results = list()
-        for value in self.activeJobSessions.itervalues():
-            results.append(value.db.__dict__)
-        return results
 
     def listJobs(self, session=None):
         """
