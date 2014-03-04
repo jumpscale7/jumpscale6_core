@@ -78,7 +78,7 @@ class WorkerCmds():
         jobs = self.redisworker.getQueuedJobs(asWikiTable=False)
         result = list()
         for job in jobs:
-            if (job.timeStart + job.timeout) > j.base.time.getTimeEpoch() and job.state not in ('OK', 'SCHEDULED'):
+            if (job['timeStart'] + job['timeout']) > j.base.time.getTimeEpoch() and job['state'] not in ('OK', 'SCHEDULED'):
                 #job has timed out
                 #job.state = 'TIMEOUT'
                 result.append(job)
