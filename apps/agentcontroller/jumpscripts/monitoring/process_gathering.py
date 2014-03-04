@@ -68,6 +68,7 @@ def action():
             pass
         if not processinfo:
             processinfo = {'cpu_times': (0.0, 0.0),
+                           'memory_info': (0.0, 0.0),
                            'create_time': 0.0,
                            'connections': [],
                            'io_counters': (0, 0, 0, 0),
