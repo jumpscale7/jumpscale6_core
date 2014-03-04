@@ -158,7 +158,7 @@ class RedisWorkerFactory:
             jobdict=ujson.loads(jobdict)
         else:
             raise RuntimeError("cannot find job with id:%s"%jobid)
-        return Job(ddict=jobdict)
+        return jobdict
 
     def _getJumpscript(self,name="", category="unknown", organization="unknown", action=None, source="", path="", descr=""):
         js=Jumpscript(name=name, category=category, organization=organization, action=action, source=source, path=path, descr=descr)
@@ -258,7 +258,7 @@ class RedisWorkerFactory:
 
         return job
 
-    def _scheduleJob(self,job):
+    def _scheduleJob(self, job):
         """
         """
 
@@ -276,7 +276,8 @@ class RedisWorkerFactory:
         queue.put(job)
 
     def scheduleJob(self, job):
-        self._scheduleJob(job)
+        jobobj = Job(ddict=job)
+        self._scheduleJob(jobobj)
 
     def getJobLine(self,job=None,jobid=None):
         if jobid<>None:
@@ -290,41 +291,38 @@ class RedisWorkerFactory:
         return line
 
 
-    def getQueuedJobs(self,queue=None,result=[],asWikiTable=True):
-        if queue==None:
-            for item in ["io","hypervisor","default"]:
-                result=self.getQueuedJobs(item,result)
-            if asWikiTable:
-                out=""
-                for job in result:
-                    out+="%s\n"%self.getJobLine(job=job)
-                return out
-        else:
-            jobsjson = self.redis.hgetall('queues:workers:work:%s' % queue)
-            if jobsjson:
-                result = ujson.loads(jobsjson)
-
+    def getQueuedJobs(self, queue=None, asWikiTable=True):
+        result = list()
+        queues = [queue] if queue else ["io","hypervisor","default"]
+        for item in queues:
+            jobs = self.redis.lrange('queues:workers:work:%s' % item, 0, -1)
+            for jobstring in jobs:
+                result.append(ujson.loads(jobstring))
+        if asWikiTable:
+            out=""
+            for job in result:
+                out+="%s\n"%self.getJobLine(job=job)
+            return out
         return result
 
     def getFailedJobs(self, queue=None, hoursago=0):
-        jobs = dict()
+        jobs = list()
         queues = (queue,) if queue else ('io', 'hypervisor', 'default')
         for q in queues:
-            jobsjson = self.redis.hgetall('queues:workers:work:%s' % q)
-            if jobsjson:
-                jobs.update(ujson.loads(jobsjson))
+            jobsjson = self.redis.lrange('queues:workers:work:%s' % q, 0, -1)
+            for jobstring in jobsjson:
+                jobs.append(ujson.loads(jobstring))
 
         #get failed jobs
-        for k, job in jobs.iteritems():
+        for job in jobs:
             if job['state'] not in ('ERROR', 'TIMEOUT'):
-                jobs.pop(k)
+                jobs.remove(job)
 
         if hoursago:
-            epochago = j.base.time.getEpochAgo(hoursago)
-            for k, job in jobs.iteritems():
+            epochago = j.base.time.getEpochAgo(str(hoursago))
+            for job in jobs:
                 if job['timeStart'] <= epochago:
-                    jobs.pop(k)
-
+                    jobs.remove(job)
         return jobs
 
     def removeJobs(self, hoursago=48, failed=False):
