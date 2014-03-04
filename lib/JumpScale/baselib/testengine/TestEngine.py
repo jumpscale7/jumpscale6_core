@@ -31,6 +31,7 @@ class TestResult(unittest.result.TestResult):
         self.tests = dict()
         self.errors = dict()
         self.failure = dict()
+        self.skipped = dict()
         self._debug = debug
         self._original_stdout = sys.stdout
         self._original_stderr = sys.stderr
@@ -52,6 +53,11 @@ class TestResult(unittest.result.TestResult):
         else:
             print PRINTSTR % (' ', test._testMethodName),
         sys.stdout.flush()
+
+    def addSkip(self, test, reason):
+        self._restore()
+        self.printStatus(test, 'S')
+        self.skipped[test] = reason
 
     def addFailure(self, test, err):
         self._restore()
