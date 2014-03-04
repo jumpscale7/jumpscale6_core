@@ -50,7 +50,7 @@ class AgentControllerClient():
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
-        result = self.executeJumpScript(organization,name,role=role,args=kwargs,timeout=timeout,wait=wait,queue=queue,transporttimeout=timeout)
+        result = self.executeJumpScript(organization,name,nid=nid,role=role,args=kwargs,timeout=timeout,wait=wait,queue=queue,transporttimeout=timeout)
         if wait and result['state'] != 'OK':
             if result['state'] == 'NOWORK' and dieOnFailure:
                 raise RuntimeError('Could not find agent with role:%s' %  role)
