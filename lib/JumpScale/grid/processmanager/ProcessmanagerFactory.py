@@ -67,9 +67,9 @@ class ProcessmanagerFactory:
                 self.acclient=checkagentcontroller()
                 success=True
             except Exception,e:
-                msg="Cannot connect to osis or agentcontroller on %s, will retry in 5 sec."%(masterip)
+                msg="Cannot connect to osis or agentcontroller on %s, will retry in 60 sec."%(masterip)
                 j.events.opserror(msg, category='processmanager.startup', e=e)
-                time.sleep(5)
+                time.sleep(60)
 
         self.loadFromAgentController()
         self.daemon = j.servers.geventws.getServer(port=4445)

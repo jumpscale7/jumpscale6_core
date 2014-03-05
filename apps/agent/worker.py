@@ -99,8 +99,12 @@ class Worker(object):
                 # print "check if work", comes from redis
                 job=w._getWork(self.queuename,timeout=60)
             except Exception,e:
-                j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
-                time.sleep(1)
+                if str(e).find("Could not find queue to execute job")<>-1:
+                    #create queue
+                    print "could not find queue:%s"%self.queuename
+                else:            
+                    j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
+                time.sleep(10)
                 continue
 
             if job:

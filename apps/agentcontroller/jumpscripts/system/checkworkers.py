@@ -9,10 +9,11 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "system.checkworkers"
-period = 2
+period = 10
 enable=True
 startatboot=False
 async=False
+log=False
 roles = ["*"]
 
 
