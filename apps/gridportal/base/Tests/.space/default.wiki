@@ -9,7 +9,7 @@
 System:/System
 }}
 
-{{menuadmin_tests}}
+{{grid.menuadmin_grid}}
 
 
 @block

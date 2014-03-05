@@ -31,6 +31,7 @@ Tests:/tests
 Alerts:/grid/alerts
 Disks:/grid/Disks
 ECOs:/grid/ECOs
+Jobs:/grid/Jobs
 JumpScripts:/grid/JumpScripts
 Logs:/grid/Logs
 Machines:/grid/Machines
