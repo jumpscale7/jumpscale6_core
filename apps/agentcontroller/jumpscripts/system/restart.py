@@ -1,7 +1,7 @@
 from JumpScale import j
 
 descr = """
-send all gathered statistics to carbon (backend of monitoring)
+restart processmanager process
 """
 
 organization = "jumpscale"

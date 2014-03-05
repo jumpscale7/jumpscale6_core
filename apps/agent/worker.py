@@ -99,8 +99,12 @@ class Worker(object):
                 # print "check if work", comes from redis
                 job=w._getWork(self.queuename,timeout=60)
             except Exception,e:
-                j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
-                time.sleep(1)
+                if str(e).find("Could not find queue to execute job")<>-1:
+                    #create queue
+                    print "could not find queue:%s"%self.queuename
+                else:            
+                    j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
+                time.sleep(10)
                 continue
 
             if job:
@@ -151,11 +155,13 @@ class Worker(object):
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
+                    j.logger.enabled = job.log
                     result=action(**job.args)
                     job.result=result
                     job.state="OK"
                     job.resultcode=0
-                except Exception,e:                    
+                except Exception,e:
+                    j.logger.enabled = True
                     agentid=j.application.getAgentId()
                     msg="could not execute jscript:%s %s_%s on agent:%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
@@ -168,6 +174,8 @@ class Worker(object):
                     # self.loghandler.logECO(eco)
                     job.state="ERROR"
                     job.result=eco.errormessage
+                finally:
+                    j.logger.enabled = True
                 self.notifyWorkCompleted(job)
 
 
