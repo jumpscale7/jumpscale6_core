@@ -151,6 +151,7 @@ class Worker(object):
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
+                    j.logger.logTargetLogForwarder.enabled = job.log
                     result=action(**job.args)
                     job.result=result
                     job.state="OK"
@@ -168,6 +169,8 @@ class Worker(object):
                     # self.loghandler.logECO(eco)
                     job.state="ERROR"
                     job.result=eco.errormessage
+                finally:
+                    j.logger.logTargetLogForwarder.enabled = True
                 self.notifyWorkCompleted(job)
 
 
