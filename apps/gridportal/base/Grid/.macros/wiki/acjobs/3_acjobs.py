@@ -5,7 +5,7 @@ def main(j, args, params, tags, tasklet):
     def _getJobLine(job):
         start=j.base.time.epoch2HRDateTime(job['timeStart'])
         if job['timeStop']==0:
-            stop=""
+            stop="N/A"
         else:
             stop=j.base.time.epoch2HRDateTime(job['timeStop'])
         line="|%s|%s|%s|%s|%s|%s|%s|%s|"%(job['id'],job['jscriptid'],job['category'],job['cmd'],start,stop,job['state'],job['queue'])
