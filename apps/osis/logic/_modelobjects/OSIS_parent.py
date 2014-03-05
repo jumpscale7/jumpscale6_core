@@ -22,7 +22,7 @@ class mainclass(OSISStore):
                 id = self.db.increment(self.dbprefix_incr)
                 value['id'] = id
             if not value.get('guid'):
-                value['guid'] = j.base.idgenerator.generateGUID()
+                value['guid'] = id
             changed = False
             new = True
         self.db.set(self.dbprefix, key=id, value=value)
