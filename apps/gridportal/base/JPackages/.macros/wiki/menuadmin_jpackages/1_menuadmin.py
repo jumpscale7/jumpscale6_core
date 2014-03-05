@@ -23,12 +23,9 @@ Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
 System:/system
 --------------
-agentcontroller:/agentcontroller
-grid:/grid
-logs_errors:/gridlogs
-jpackages:/jpackages
---------------
-jpackagesoveriew:/jpackages
+Grid:/grid
+JPackages:/jpackages
+Tests:/tests
 """
     # C+=spacestxt
     C+='}}'
