@@ -292,7 +292,7 @@ class ControllerCMDS():
             if role in self.roles2agents:
                 for agentid in self.roles2agents[role]:
                     gid,nid=agentid.split("_")
-                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,roles=[role],session=session,jscriptid=action.id)
+                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id)
                 if wait:
                     return self.waitJumpscript(job=job,session=session)
                 return job
@@ -300,7 +300,7 @@ class ControllerCMDS():
                 return noWork()
         elif nid<>None:
             self._log("NID KNOWN")
-            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=True,timeout=timeout,session=session,jscriptid=action.id)
+            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id)
             if wait:
                 return self.waitJumpscript(job=job,session=session)
             return job

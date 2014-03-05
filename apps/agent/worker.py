@@ -155,12 +155,13 @@ class Worker(object):
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
-                    j.logger.logTargetLogForwarder.enabled = job.log
+                    j.logger.enabled = job.log
                     result=action(**job.args)
                     job.result=result
                     job.state="OK"
                     job.resultcode=0
-                except Exception,e:                    
+                except Exception,e:
+                    j.logger.enabled = True
                     agentid=j.application.getAgentId()
                     msg="could not execute jscript:%s %s_%s on agent:%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
@@ -174,7 +175,7 @@ class Worker(object):
                     job.state="ERROR"
                     job.result=eco.errormessage
                 finally:
-                    j.logger.logTargetLogForwarder.enabled = True
+                    j.logger.enabled = True
                 self.notifyWorkCompleted(job)
 
 
