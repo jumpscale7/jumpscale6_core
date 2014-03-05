@@ -62,6 +62,10 @@ class LogTargetLogForwarder():
             eco["type"]=str(eco["type"])
             eco = j.errorconditionhandler.getErrorConditionObject(eco)
             if self.checkTarget():
+                if self.redisqueueEco.qsize()>100:
+                    print 'Failed to log error to redis,Queue full on redis'
+                    self.connected = False
+
                 try:
                     self.redisqueueEco.put(ujson.dumps(eco.__dict__))
                 except Exception, e:
@@ -73,7 +77,12 @@ class LogTargetLogForwarder():
         forward the already encoded message to the target destination
         """
         if self.enabled:
+            if  log.category=="":
+                return            
             if self.checkTarget():
+                if self.redisqueue.qsize()>500:
+                    print 'Failed to log to redis,Queue full on redis'
+                    self.connected = False
                 try:
                     if not isinstance(log, dict):
                         log = log.__dict__

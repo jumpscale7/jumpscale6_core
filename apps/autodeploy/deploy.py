@@ -103,7 +103,6 @@ def install_jscore():
         pass
     print cuapi.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/unstable.zip")
     install_configure()
-
     print cuapi.run("jpackage mdupdate")
     try:
         print cuapi.run("jscode update -f -a* -r*")
@@ -197,11 +196,12 @@ if "clean" in result:
 if "platform" in result:
     prepare_platform()
 
+if "configure" in result and not "core" in result:
+    install_configure()
+
 if "core" in result:
     install_jscore()
 
-if "configure" in result and not "core" in result:
-    install_configure()
 
 if "grid" in result:
     install_grid()

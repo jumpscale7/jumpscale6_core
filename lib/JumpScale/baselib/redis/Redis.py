@@ -137,45 +137,12 @@ class RedisFactory:
         """
 
         C = """
-# Redis configuration file example
-
-# Note on units: when memory size is needed, it is possible to specify
-# it in the usual form of 1k 5GB 4M and so forth:
-#
-# 1k => 1000 bytes
-# 1kb => 1024 bytes
-# 1m => 1000000 bytes
-# 1mb => 1024*1024 bytes
-# 1g => 1000000000 bytes
-# 1gb => 1024*1024*1024 bytes
-#
-# units are case insensitive so 1GB 1Gb 1gB are all the same.
-
-# By default Redis does not run as a daemon. Use 'yes' if you need it.
-# Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
 daemonize no
-
-# When running daemonized, Redis writes a pid file in /var/run/redis.pid by
-# default. You can specify a custom pid file location here.
 pidfile /var/run/redis/redis_ac.pid
-
-# Accept connections on the specified port, default is 6379.
-# If port 0 is specified Redis will not listen on a TCP socket.
 port $port
-
-# If you want you can bind a single interface, if the bind option is not
-# specified all the interfaces will listen for incoming connections.
-#
 bind 127.0.0.1
-
-# Specify the path for the unix socket that will be used to listen for
-# incoming connections. There is no default, so Redis will not listen
-# on a unix socket when not specified.
-#
 # unixsocket /var/run/redis/redis.sock
 # unixsocketperm 755
-
-# Close the connection after a client is idle for N seconds (0 to disable)
 timeout 0
 
 # TCP keepalive.
@@ -202,25 +169,10 @@ tcp-keepalive 0
 # warning (only very important / critical messages are logged)
 loglevel notice
 
-# Specify the log file name. Also 'stdout' can be used to force
-# Redis to log on the standard output. Note that if you use standard
-# output for logging but daemonize, logs will be sent to /dev/null
 logfile /opt/redis/$name/redis.log
-
-# To enable logging to the system logger, just set 'syslog-enabled' to yes,
-# and optionally update the other syslog parameters to suit your needs.
 syslog-enabled no
 
-# Specify the syslog identity.
-# syslog-ident redis
-
-# Specify the syslog facility. Must be USER or between LOCAL0-LOCAL7.
-# syslog-facility local0
-
-# Set the number of databases. The default database is DB 0, you can select
-# a different one on a per-connection basis using SELECT <dbid> where
-# dbid is a number between 0 and 'databases'-1
-databases 16
+databases 1
 
 ################################ SNAPSHOTTING  #################################
 #
@@ -243,7 +195,6 @@ databases 16
 #   like in the following example:
 #
 #   save ""
-
 # save 900 1
 # save 300 10
 # save 60 10000
@@ -279,7 +230,7 @@ rdbcompression yes
 rdbchecksum yes
 
 # The filename where to dump the DB
-dbfilename dump.rdb
+#dbfilename dump.rdb
 
 # The working directory.
 #
@@ -508,7 +459,7 @@ maxmemory-policy volatile-lru
 appendonly $appendonly
 
 # The name of the append only file (default: "appendonly.aof")
-# appendfilename appendonly.aof
+appendfilename appendonly.aof
 
 # The fsync() call tells the Operating System to actually write data on disk
 # instead to wait for more data in the output buffer. Some OS will really flush

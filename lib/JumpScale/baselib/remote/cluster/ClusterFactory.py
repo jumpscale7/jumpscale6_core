@@ -59,9 +59,9 @@ class ClusterFactory():
             ipaddresses2 = string.join([str(ipaddr).strip() for ipaddr in ipaddresses], ",")
 
             if clustername not in j.remote.cluster.config.list():
-                i.cluster.config.add(clustername, {'domain': domainname, 'ip': ipaddresses2, 'rootpasswd': superadminpassword})
+                j.remote.cluster.config.add(clustername, {'domain': domainname, 'ip': ipaddresses2, 'rootpasswd': superadminpassword})
             else:
-                i.cluster.config.configure(clustername, {'domain': domainname, 'ip': ipaddresses2, 'rootpasswd': superadminpassword})
+                j.remote.cluster.config.configure(clustername, {'domain': domainname, 'ip': ipaddresses2, 'rootpasswd': superadminpassword})
         if j.application.shellconfig.interactive:
             if domainname == "" or ipaddresses == [] or superadminpassword == "":
                 if clustername == "":
@@ -71,9 +71,9 @@ class ClusterFactory():
                     # Get the ip adresses and put them in ipaddresses
                     # so the constructor of Cluster does not use avahi, because its results or wrong!
                     clustername = j.gui.dialog.askString('Name for the cluster', 'myCluster')
-                    i.cluster.config.add(itemname=clustername)
+                    j.remote.cluster.config.add(itemname=clustername)
                 else:
-                    i.cluster.config.review(clustername)
+                    j.remote.cluster.config.review(clustername)
                 self.__init__()
                 return self.clusters[clustername]
 
