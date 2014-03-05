@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
         elif job['queue'] == 'io':
             io += 1
 
-    acout.append('|%s|%s|%s|[Details|/acjobs]|' % (default, hypervisor, io))
+    acout.append('|%s|%s|%s|[Details|acjobs]|' % (default, hypervisor, io))
     acout = '\n'.join(acout)
     out += acout
 
