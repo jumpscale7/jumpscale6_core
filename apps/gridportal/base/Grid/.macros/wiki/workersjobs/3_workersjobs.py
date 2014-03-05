@@ -11,7 +11,10 @@ def main(j, args, params, tags, tasklet):
 
     workerscl = j.clients.agentcontroller.getClientProxy(category="worker")
     jobs = workerscl.getQueuedJobs(format='wiki', _agentid=nid)
-    out.append(jobs)
+    if jobs:
+        out.append(jobs)
+    else:
+        out.append('No jobs to display.')
 
     params.result = ('\n'.join(out), doc)
 

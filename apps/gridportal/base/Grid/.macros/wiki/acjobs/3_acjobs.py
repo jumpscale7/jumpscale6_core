@@ -19,11 +19,13 @@ def main(j, args, params, tags, tasklet):
     
     acclient = j.clients.agentcontroller.get()
     jobs = acclient.getActiveJobs()
-    for job in jobs:
-        out.append(_getJobLine(job))
+    if jobs:
+        for job in jobs:
+            out.append(_getJobLine(job))
+    else:
+        out.append('No jobs to display.')
 
-    out = '\n'.join(out)
-    params.result = (out, doc)
+    params.result = ('\n'.join(out), doc)
 
     return params
 
