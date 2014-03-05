@@ -32,6 +32,7 @@ Alerts:/grid/alerts
 Disks:/grid/Disks
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs
+Job Queues:/grid/jobqueues
 JumpScripts:/grid/JumpScripts
 Logs:/grid/Logs
 Machines:/grid/Machines
