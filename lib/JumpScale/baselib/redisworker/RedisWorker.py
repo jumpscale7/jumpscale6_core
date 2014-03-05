@@ -282,12 +282,12 @@ class RedisWorkerFactory:
     def getJobLine(self,job=None,jobid=None):
         if jobid<>None:
             job=self.getJob(jobid)
-        start=j.base.time.epoch2HRDateTime(job.timeStart)
-        if job.timeStop==0:
-            stop=""
+        start=j.base.time.epoch2HRDateTime(job['timeStart'])
+        if job['timeStop']==0:
+            stop="N/A"
         else:
-            stop=j.base.time.epoch2HRDateTime(job.timeStop)
-        line="|%s|%s|%s|%s|%s|%s|%s|%s|"%(job.id,job.jscriptid,job.category,job.cmd,start,stop,job.state,job.queue)
+            stop=j.base.time.epoch2HRDateTime(job['timeStop'])
+        line="|%s|%s|%s|%s|%s|%s|%s|%s|"%(job['id'],job['jscriptid'],job['category'],job['cmd'],start,stop,job['state'],job['queue'])
         return line
 
 
