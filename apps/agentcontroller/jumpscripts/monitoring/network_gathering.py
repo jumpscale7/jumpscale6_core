@@ -15,12 +15,6 @@ enable=True
 async=False
 roles = ["grid.node.network"]
 
-#THINK NO LONGER REQUIRED
-# if not hasattr(j, 'processmanager'):
-#     enable = False
-# else:
-#     j.processmanager.nics = dict()
-
 def action():
 
     def aggregate(cacheobj,nic_key,key,value,avg=True,ttype="N",percent=False):
@@ -84,19 +78,18 @@ def action():
 
         #result is all found nicobject in this run (needs to be str otherwise child obj)
         if nic_key and not result.has_key(nic_key):
-                    
             if j.basetype.string.check(nic_key):
                 #no longer active
                 print "NO LONGER ACTIVE:%s"%cacheobj.db.name
-                cacheobj=j.nicmanager.cache.nicobject.get(nic_key) #is cached so low overhead
+                cacheobj=j.core.processmanager.monObjects.nicobject.get(nic_key) #is cached so low overhead
                 cacheobj.active=False
                 cacheobj.send2osis()
 
             #otherwise there is a memory leak
-            j.nicmanager.cache.nicobject.monitorobjects.pop(nic_key)
+            j.core.processmanager.monObjects.nicobject.monitorobjects.pop(nic_key)
             #remove from aggregator
             aggrkey="n%s.nic.%s"%(j.application.whoAmI.nid,nic_key)
-            j.system.stataggregator.delete(prefix=aggrkey)            
+            j.system.stataggregator.delete(prefix=aggrkey)
 
     j.core.processmanager.monObjects.nicobject.monitorobjects=result
 
