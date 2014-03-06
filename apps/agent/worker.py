@@ -173,7 +173,8 @@ class Worker(object):
                     # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                     # self.loghandler.logECO(eco)
                     job.state="ERROR"
-                    job.result=eco.errormessage
+                    eco.tb = None
+                    job.result=eco.__dict__
                 finally:
                     j.logger.enabled = True
                 self.notifyWorkCompleted(job)
