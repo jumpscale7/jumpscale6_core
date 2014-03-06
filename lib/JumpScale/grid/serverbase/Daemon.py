@@ -173,9 +173,12 @@ class Daemon(object):
                         data.pop("_agentid")
                         category2=category.replace("processmanager_","")
                         scriptid="%s_%s" % (category2, cmd)
-                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,jscriptid=scriptid,cmdname=cmd,args=data,queue="internal",log=True,timeout=0,roles=[],session=session)
+                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,jscriptid=scriptid,cmdname=cmd,args=data,queue="internal",log=False,timeout=60,roles=[],session=session)
                         jobqueue = cmds._getJobQueue(job["id"])
                         jobr=jobqueue.get(True,60)
+                        if not jobr:
+                            eco = j.errorconditionhandler.getErrorConditionObject(msg="Command %.%s with args: %s timeout" % (category2, cmd, data))
+                            return returnCodes.ERROR,returnformat,eco.__dict__
                         jobr=ujson.loads(jobr)
                         if jobr["state"]<>"OK":
                             return jobr["resultcode"],returnformat,jobr["result"]
