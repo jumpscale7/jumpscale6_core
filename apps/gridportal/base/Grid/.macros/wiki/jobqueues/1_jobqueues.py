@@ -32,10 +32,12 @@ def main(j, args, params, tags, tasklet):
     wout = ['||Node ID||Default||HyperVisor||IO||']
     for node in j.apps.system.gridmanager.getNodes():
         nid = node['id']
-        defaultq = wclient.getQueuedJobs(queue='default', _agentid=nid)
-        hypervisorq = wclient.getQueuedJobs(queue='hypervisor', _agentid=nid)
-        ioq = wclient.getQueuedJobs(queue='io', _agentid=nid)
-        wout.append('|[%s|workersjobs?nid=%s]|%s|%s|%s|' % (nid, nid, len(defaultq), len(hypervisorq), len(ioq)))
+        jobs = wclient.getQueuedJobs(queue=None, _agentid=nid)
+        cnt = {'default': 0, 'io': 0, 'hypervisor': 0}
+        for job in jobs:
+            if job['queue'] in cnt:
+                cnt[job['queue']] += 1
+        wout.append('|[%s|workersjobs?nid=%s]|%s|%s|%s|' % (nid, nid, cnt['default'], cnt['hypervisor'], cnt['io']))
 
     wout = '\n'.join(wout)
 
