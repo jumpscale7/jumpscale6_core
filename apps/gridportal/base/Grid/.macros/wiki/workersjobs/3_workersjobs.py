@@ -6,7 +6,7 @@ def main(j, args, params, tags, tasklet):
     nid = args.getTag('nid')
     out = list()
     out.append("{{datatables_use}}}}\n")
-    out.append('||ID||JScriptID||Category||Command||Start time||Stop time||State||Queue||')
+    out.append('||ID||State||Queue||Category||Command||JScriptID||Start time||Stop time||')
 
     workerscl = j.clients.agentcontroller.getClientProxy(category="worker")
     jobs = workerscl.getQueuedJobs(queue=None, format='wiki', _agentid=nid)

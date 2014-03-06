@@ -8,13 +8,14 @@ def main(j, args, params, tags, tasklet):
             stop="N/A"
         else:
             stop=j.base.time.epoch2HRDateTime(job['timeStop'])
-        line="|%s|%s|%s|%s|%s|%s|%s|%s|"%(job['id'],job['jscriptid'],job['category'],job['cmd'],start,stop,job['state'],job['queue'])
+        jobid = '[%s|/grid/job?id=%s]' % (job['id'], job['id'])
+        line="|%s|%s|%s|%s|%s|%s|%s|%s|" % (jobid, job['state'], job['queue'], job['category'], job['cmd'], job['jscriptid'], start, stop)
         return line
 
     doc = args.doc
     out = list()
     out.append("{{datatables_use}}}}\n")
-    out.append('||ID||JScriptID||Category||Command||Start time||Stop time||State||Queue||')
+    out.append('||ID||State||Queue||Category||Command||JScriptID||Start time||Stop time||')
     
     acclient = j.clients.agentcontroller.get()
     jobs = acclient.getActiveJobs()
