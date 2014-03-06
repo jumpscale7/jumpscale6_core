@@ -1047,13 +1047,13 @@ class PortalServer:
     def getActors(self):
         return self.actorsloader.id2object.keys()
 
-    def getSpace(self, name):
+    def getSpace(self, name, ignore_doc_processor=False):
 
         name = name.lower()
         if name not in self.spacesloader.spaces:
             raise RuntimeError("Could not find space %s" % name)
         space = self.spacesloader.spaces[name]
-        if space.docprocessor == None:
+        if space.docprocessor == None and not ignore_doc_processor:
             space.loadDocProcessor()
         return space
 
