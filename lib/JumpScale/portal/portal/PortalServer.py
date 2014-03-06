@@ -2,6 +2,7 @@ import re
 import urlparse
 import pprint
 import os
+import sys
 import redis
 
 from beaker.middleware import SessionMiddleware
