@@ -13,7 +13,6 @@ def main(j, args, params, tags, tasklet):
 
     doc = args.doc
     out = list()
-    out.append("h2. AgentController Jobs")
     out.append("{{datatables_use}}}}\n")
     out.append('||ID||JScriptID||Category||Command||Start time||Stop time||State||Queue||')
     
