@@ -223,21 +223,24 @@ class MacroExecutorWiki(MacroExecutorBase):
 
     def execMacrosOnContent(self, content, doc, paramsExtra={}, ctx=None):
         recursivedepth = 0
-        if ctx != None:
-            content = doc.applyParams(ctx.params, findfresh=True, content=content)
-        if paramsExtra != {}:
-            content = doc.applyParams(paramsExtra, findfresh=True, content=content)
-        macrostrs = self.findMacros(doc, content)
+        def process(content):
+            if ctx != None:
+                content = doc.applyParams(ctx.params, findfresh=True, content=content)
+            if paramsExtra != {}:
+                content = doc.applyParams(paramsExtra, findfresh=True, content=content)
+            return content, self.findMacros(doc, content)
 
+        content, macrostrs = process(content)
         while macrostrs:
             recursivedepth += 1
             if recursivedepth > 20:
                 content += 'ERROR: recursive error in executing macros'
                 return content, doc
-                
+
             for macrostr in macrostrs:
                 content, doc = self.executeMacroOnContent(content, macrostr, doc, paramsExtra, ctx=ctx)
-            macrostrs = self.findMacros(doc, content)
+
+            content, macrostrs = process(content)
         return content, doc
 
     def executeMacroOnContent(self, content, macrostr, doc, paramsExtra=None, ctx=None):
