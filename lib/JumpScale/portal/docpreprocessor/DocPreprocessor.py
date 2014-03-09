@@ -30,6 +30,7 @@ class Doc(object):
 
     def __init__(self, docpreprocessor):
         self.name = ""
+        self.appliedparams = dict()
         self.alias = []
         self.pagename = ""
         self.source = ""
@@ -211,7 +212,9 @@ class Doc(object):
         """
         if findfresh:
             self.findParams()
-        
+    
+        if params:
+            self.appliedparams.update(params)
         if len(self.params) > 0:
             for param in self.params:
                 if param in params:
