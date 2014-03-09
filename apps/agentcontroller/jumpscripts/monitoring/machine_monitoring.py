@@ -70,7 +70,8 @@ def action():
         for disk in xml.findall('devices/disk'):
             if disk.attrib['device'] != 'disk':
                 continue
-            path = disk.find('source').attrib['dev']
+            diskattrib = disk.find('source').attrib
+            path = diskattrib.get('dev', diskattrib.get('file'))
             vdisk = j.core.processmanager.monObjects.vdiskobject.get(id=path)
             vdisk.ckeyOld = vdisk.db.getContentKey()
             vdisk.db.path = path
