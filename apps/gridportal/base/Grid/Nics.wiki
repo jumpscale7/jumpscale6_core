@@ -1,0 +1,4 @@
+@usedefaults
+
+h3. NICs
+{{nics: nid:$$nid}}
