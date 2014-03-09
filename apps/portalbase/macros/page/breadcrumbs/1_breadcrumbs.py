@@ -7,7 +7,7 @@ def main(j, args, params, tags, tasklet):
 
     separator = '<i class="separator"></i>'
     breadcrumbs = [doc.original_name]
-    space = j.core.portal.runningPortal.webserver.getSpace(doc.getSpaceName())
+    space = j.core.portal.active.getSpace(doc.getSpaceName())
     while doc.parent:
         doc = space.docprocessor.name2doc.get(doc.parent)
         if not doc:

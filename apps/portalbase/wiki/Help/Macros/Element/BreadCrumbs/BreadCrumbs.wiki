@@ -7,13 +7,14 @@ h2. Examples
 h3. No default
 
 {{code:
-{{breadcrumbs}}
+\{\{breadcrumbs\}\}
 }}
 
 {{breadcrumbs}}
 
 h3. Customizing the separator
 {{code:
+
 \{\{cssstyle:
 .inner .separator:after { content: " => "; }
 \}\}
@@ -21,6 +22,7 @@ h3. Customizing the separator
 \{\{div: class=inner\}\}
 \{\{breadcrumbs\}\}
 \{\{div\}\}
+
 }}
 
 {{cssstyle:
