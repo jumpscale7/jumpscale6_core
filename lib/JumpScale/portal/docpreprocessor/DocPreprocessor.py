@@ -210,6 +210,7 @@ class Doc(object):
         """
         @param params is dict with as key the name (lowercase)
         """
+        isdoccontent = content == self.content
         if findfresh:
             self.findParams()
     
@@ -222,6 +223,8 @@ class Doc(object):
                         content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), self.content)
                     else:
                         content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), content)
+        if isdoccontent:
+            self.content = content
         return content
 
     def executeMacrosPreprocess(self):
