@@ -3,11 +3,8 @@ import re
 def main(j, args, inparams, tags, tasklet):
     page = args.page
     doc = args.doc
-    page.addCSS('/lib/breadcrumbs/breadcrumbs.css')    
-
     pagename = doc.original_name.lower()
-    separator = '<i class="separator"></i>'
-    breadcrumbs = [('', 'Grid'), ('Nodes', 'Nodes')]
+    breadcrumbs = [('/grid/', 'Grid'), ]
     params = args.requestContext.params.copy()
 
 
@@ -49,9 +46,19 @@ def main(j, args, inparams, tags, tasklet):
 
     if pagename == 'node' and params.get('id'):
         nid = params.get('id')
+        breadcrumbs.insert(1, ('Nodes', 'Nodes'))
         breadcrumbs.insert(2, ('node?id=%s' % nid, 'Node %s' % nid))
 
-    page.addMessage(separator.join('<a href="/Grid/{0}">{1}</a>'.format(link, title) for link, title in breadcrumbs))
+    if pagename == 'nodes':
+        breadcrumbs.insert(1, ('Nodes', 'Nodes'))
+
+    data = "<ul class='breadcrumb'>%s</ul>"
+    innerdata = ""
+    for link, title in breadcrumbs[:-1]:
+        innerdata += "<li><a href='%s'>%s</a><span style='opacity: 0.5; margin-right: 8px; margin-left: 2px;' class='icon-chevron-right'></span></li>" % (link, title)
+    innerdata += "<li class='active'>%s</li>" % breadcrumbs[-1][1]
+
+    page.addMessage(data % innerdata)
     inparams.result = page
     return inparams
 
