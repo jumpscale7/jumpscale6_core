@@ -4,6 +4,7 @@ from Page import Page
 import copy
 import json
 import inspect
+from urllib import quote
 
 class PageHTML(Page):
 
@@ -270,7 +271,7 @@ class PageHTML(Page):
         else:
             link_class = ''
 
-        anchor = "<a href='%s' %s %s %s>%s</a>" % (link.strip(), link_id.strip(), link_class,htmlelements, description)
+        anchor = "<a href='%s' %s %s %s>%s</a>" % (quote(link.strip()), link_id.strip(), link_class,htmlelements, description)
         return anchor
 
     def addLink(self, description, link):
