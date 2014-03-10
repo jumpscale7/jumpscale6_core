@@ -4,7 +4,7 @@
 h2. Log
 
 h3. Details
-|*Log ID*|$$id|
+|*Log ID*|$$guid|
 |*Application Name*|$$appname|
 |*Category*|$$category|
 |*Message*|$$message|

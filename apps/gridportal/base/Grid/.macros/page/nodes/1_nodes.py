@@ -3,12 +3,12 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
 
-    fieldnames = ['Id', 'Name', 'IP Address', 'Roles']
+    fieldnames = ['Name', 'IP Address', 'Roles']
     def makeLink(row, field):
-        return '[%s|/grid/node?id=%s]' % (row['id'], row['id'])
+        return '[%s|/grid/node?id=%s]' % (row['name'], row['id'])
 
-    fieldvalues = [makeLink, 'name', 'ipaddr', 'roles']
-    fieldids = ['id', 'name', 'ipaddr', 'roles']
+    fieldvalues = [makeLink, 'ipaddr', 'roles']
+    fieldids = ['name', 'ipaddr', 'roles']
     tableid = modifier.addTableForModel('system', 'node', fieldids, fieldnames, fieldvalues)
     modifier.addSearchOptions('#%s' % tableid)
 

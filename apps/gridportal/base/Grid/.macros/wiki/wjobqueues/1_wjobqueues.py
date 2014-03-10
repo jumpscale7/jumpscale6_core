@@ -14,23 +14,22 @@ def main(j, args, params, tags, tasklet):
         return params
 
     out = list()
-    out = ['||Node ID||Default||HyperVisor||IO||']
+    out = ['||Node Name||Default||HyperVisor||IO||']
     addnote = False
     for node in j.apps.system.gridmanager.getNodes():
-        nid = node['id']
-        data = {'default': 0, 'io': 0, 'hypervisor': 0, 'nid':nid}
+        data = {'default': 0, 'io': 0, 'hypervisor': 0, 'nid': node['id'], 'nodename': node['name']}
         jobs = None
         with gevent.Timeout(3, False):
-            jobs = wclient.getQueuedJobs(queue=None, _agentid=nid)
+            jobs = wclient.getQueuedJobs(queue=None, _agentid=data['nid'])
         if jobs is None:
             addnote = True
-            out.append('|[%(nid)s|workersjobs?nid=%(nid)s]|N/A*|N/A*|N/A*|' % (data))
+            out.append('|[%(nodename)s|workersjobs?nid=%(nid)s]|N/A*|N/A*|N/A*|' % (data))
             continue
 
         for job in jobs:
             if job['queue'] in data:
                 data[job['queue']] += 1
-        out.append('|[%(nid)s|workersjobs?nid=%(nid)s]|%(default)s|%(hypervisor)s|%(io)s|' % (data))
+        out.append('|[%(nodename)s|workersjobs?nid=%(nid)s]|%(default)s|%(hypervisor)s|%(io)s|' % (data))
 
     if addnote:
         out.append("&#42; Means data could not be retreived from ProcessManager of that node, likely it is not running.")

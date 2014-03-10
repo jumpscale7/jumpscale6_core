@@ -28,18 +28,14 @@ Grid:/grid
 JPackages:/jpackages
 Tests:/tests
 --------------
-Alerts:/grid/alerts
-Disks:/grid/Disks
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs
 Job Queues:/grid/jobqueues
 JumpScripts:/grid/JumpScripts
 Logs:/grid/Logs
-Machines:/grid/Machines
 Nodes:/grid/Nodes
 Processes:/grid/Processes
 Stats:/grid/stat
-VDisks:/grid/vdisks
 """
     # C+=spacestxt
     C+='}}'
