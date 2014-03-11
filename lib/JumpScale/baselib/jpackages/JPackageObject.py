@@ -610,11 +610,12 @@ class JPackageObject():
         buildNr=0
         for ql in self.getQualityLevels():
             path=self.getMetadataPathQualityLevel(ql)
-            path= j.system.fs.joinPaths(path,"hrd","main.hrd")
-            buildNr2=j.core.hrd.getHRD(path).getInt("jp.buildNr")
-            if buildNr2>buildNr:
-                buildNr=buildNr2
-       
+            if path != None:
+                path= j.system.fs.joinPaths(path,"hrd","main.hrd")
+                buildNr2=j.core.hrd.getHRD(path).getInt("jp.buildNr")
+                if buildNr2>buildNr:
+                    buildNr=buildNr2
+        
         buildNr+=1
         self.buildNr=buildNr
         self.save()
@@ -626,8 +627,8 @@ class JPackageObject():
             raise RuntimeError("%s needs to be link"%path)
         jpackagesdir=j.system.fs.getParent(j.system.fs.readlink(path))
         path= j.system.fs.joinPaths(jpackagesdir,ql,self.name,self.version)
-        if not j.system.fs.exists(path=path):         
-            raise RuntimeError("Cannot find ql dir on %s"%path)
+        if not j.system.fs.exists(path=path):
+            return None
         return path
 
     def getQualityLevels(self):
