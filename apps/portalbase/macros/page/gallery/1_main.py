@@ -32,7 +32,7 @@ def main(j, args, params, tags, tasklet):
         baseurlpath = "$$space/.files/img/%s" % pars['picturedir']
         fullimagepath = j.system.fs.joinPaths(imagedir, pars['picturedir'])
     else:
-        baseurlpath = "images/$$space/"
+        baseurlpath = "images/$$space"
         localpath = args.doc.path
         fullimagepath = j.system.fs.getDirName(localpath)
 
@@ -51,7 +51,7 @@ def main(j, args, params, tags, tasklet):
 
     for i in bigfiles:
         basefile = j.system.fs.getBaseName(i)
-        bigpath = "/%s/%s" % (baseurlpath, basefile)
+        bigpath = "/%s/%s" % (baseurlpath.strip('/'), basefile)
 
         smallpath = "/%s/s_%sx%s_%s" % (baseurlpath, thumb_size[0], thumb_size[1], basefile)
 
