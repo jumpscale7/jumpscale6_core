@@ -111,6 +111,13 @@ $fields
             });''' % tableid
         , header=False)
 
+    def addSorting(self, tableid=".dataTable", columnindx=0, order='asc'):
+        self.page.addJS(jsContent='''
+            $(document).ready( function() {
+              $('%s').dataTable().fnSort( [ [ %s, '%s' ] ] );
+            } );''' % (tableid, columnindx, order)
+        , header=False)
+
     def prepare4DataTables(self):
         self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
         self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
