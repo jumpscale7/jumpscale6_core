@@ -441,7 +441,7 @@ class JPackageObject():
             #walk over found id's
             for id in ids:
                 key="jp.dependency.%s.%%s"%id
-                if not self.hrd.exists('minversion'):
+                if not self.hrd.exists(key % 'minversion'):
                     self.hrd.set(key % 'minversion',"")
                 if not self.hrd.exists(key % 'maxversion'):
                     self.hrd.set(key % 'maxversion',"")
