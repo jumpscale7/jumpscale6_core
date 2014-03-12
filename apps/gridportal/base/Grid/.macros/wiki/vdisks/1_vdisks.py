@@ -25,11 +25,11 @@ def main(j, args, params, tags, tasklet):
 
     for vdisk in vdisks:
         line = [""]
-
+        
         for field in fields:
             # add links
             if field == 'id':
-                line.append('[%s|/grid/vdisk?id=%s]' % (str(vdisk[field]), str(vdisk[field])))
+                line.append('[%s|/grid/vdisk?id=%s]' % (str(vdisk[field]).replace("/","_"), str(vdisk[field])))
             elif field == 'nid':
                 line.append('[%s|/grid/node?id=%s]' % (str(vdisk[field]), str(vdisk[field])))
             elif field == 'sizeondisk':

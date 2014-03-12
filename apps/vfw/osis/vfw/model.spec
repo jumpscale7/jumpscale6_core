@@ -14,10 +14,10 @@
 [model:tcpForwardRule] #@index
     """
     """
+    prop:fromAddr str,,ip addr source
     prop:fromPort str,,tcp port incoming
     prop:toAddr str,,ip addr where to direct to
     prop:toPort str,,tcp port where it is redirected to
-
 
 [model:wsForwardRule] #@index
     prop:url str,,url domain name e.g. www.incubaid.com

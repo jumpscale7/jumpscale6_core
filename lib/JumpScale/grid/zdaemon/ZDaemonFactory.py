@@ -53,6 +53,21 @@ class ZDaemonFactory():
         cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
         return cl.getCmdClient(category,sendformat=sendformat, returnformat=returnformat)
 
+    def getZDaemonTransportClass(self):
+        """
+        #example usage:
+        import JumpScale.grid.zdaemon
+        class BlobStorTransport(j.core.zdaemon.getZDaemonTransportClass()):
+            def sendMsg(self,timeout=0, *args):
+                self._cmdchannel.send_multipart(args)
+                result=self._cmdchannel.recv_multipart()
+                return result
+        transp=BlobStorTransport(addr=ipaddr,port=port,gevent=True)        
+        """
+        from .ZDaemonTransport import ZDaemonTransport
+        return ZDaemonTransport
+
+
     def getZDaemonAgent(self, ipaddr="127.0.0.1", port=5651, org="myorg", user="root", passwd="1234", ssl=False, reset=False, roles=[]):
         """
         example usage, see example for server at self.getZDaemon

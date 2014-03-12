@@ -69,7 +69,8 @@
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
-        var:fwport int,,port on fw which will be visble to external world
+        var:sourceip str,,adr where we forward to e.g. a ssh server in DMZ
+        var:sourceport int,,port on fw which will be visble to external world
         var:destip str,,adr where we forward to e.g. a ssh server in DMZ
         var:destport int,,port where we forward to e.g. a ssh server in DMZ
 

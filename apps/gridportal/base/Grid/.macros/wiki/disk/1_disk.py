@@ -1,4 +1,4 @@
-
+    
 def main(j, args, params, tags, tasklet):
 
     id = args.getTag('id')
@@ -22,11 +22,11 @@ def main(j, args, params, tags, tasklet):
 
     def objFetchManipulate(id):
         obj = disks[0]
+        obj['usage'] = 100 - int(100.0 * float(obj['free']) / float(obj['size']))
         for attr in ['size', 'free']:
             obj[attr] = getSize(obj[attr])
-        obj['usage'] = 100 - int(100.0 * obj['free'] / obj['size'])
         obj['type'] = ', '.join([str(x) for x in obj['type']])
-        obj['systempids'] = ', '.join([str(x) for x in obj['systempids']])
+        # obj['systempids'] = ', '.join([str(x) for x in obj['systempids']])
         return obj
 
     push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc

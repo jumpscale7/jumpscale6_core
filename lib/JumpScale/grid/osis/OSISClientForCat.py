@@ -107,6 +107,10 @@ class OSISClientForCat():
                                   start=start, size=size)
 
     def simpleSearch(self, params, start=0, size=None, withguid=False, withtotal=False, sort=None, partials=None, nativequery=None):
+        """
+        @params is dict with key the propname you look for and the val = val of the prop
+        e.g. {"name":name,"country":"belgium"}
+        """
         if nativequery:
             query = nativequery.copy()
         else:
