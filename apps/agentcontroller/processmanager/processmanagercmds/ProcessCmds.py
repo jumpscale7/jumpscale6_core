@@ -38,5 +38,17 @@ class ProcessCmds():
         cacheobj.db.workingdir=workingdir
         guid,tmp,tmp=cacheobj.send2osis()
         return guid
+
+    def checkHeartbeat(self, session=None):
+        nid = j.application.whoAmI.nid
+        gid = j.application.whoAmI.gid
+
+        hearbeat = j.core.processmanager.monObjects.heartbeatobject.get('%s_%s' % (gid, nid))
+        lastchecked = hearbeat.lastcheck
+        now = j.base.time.getTimeEpoch()
+
+        if  now - j.base.time.getEpochAgo('-2m') > now - lastchecked:
+            return True
+        return False
     
                         
