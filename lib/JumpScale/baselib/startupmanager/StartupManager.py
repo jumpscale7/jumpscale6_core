@@ -10,6 +10,7 @@ class ProcessNotFoundException(Exception):
 
 class ProcessDef:
     def __init__(self, hrd,path):
+        self.hrd=hrd
         self.autostart=hrd.getInt("process.autostart")==1
         self.path=path
         self.name=hrd.get("process.name")
@@ -22,6 +23,16 @@ class ProcessDef:
         self.args=hrd.get("process.args")
         self.env=hrd.getDict("process.env")
         self.priority=hrd.getInt("process.priority")
+        if hrd.exists("process.check"):
+            self.checkpid=hrd.getInt("process.check")==1
+        else:
+            self.checkpid=True
+
+        if hrd.exists("process.timeoutcheck"):
+            self.timeoutcheck=hrd.getInt("process.timeoutcheck")
+        else:
+            self.timeoutcheck=5
+
         self.reload_signal=0
         if hrd.exists('process.reloadsignal'):
             self.reload_signal = hrd.getInt("process.reloadsignal")
@@ -30,9 +41,11 @@ class ProcessDef:
             self.stopcmd = hrd.get("process.stopcmd")
         self.workingdir=hrd.get("process.workingdir")
         self.ports=hrd.getList("process.ports")
+        self.ports=[port for port in self.ports if str(port).strip()<>""]
         self.jpackage_domain=hrd.get("process.jpackage.domain")
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
+
         self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
         if not j.system.fs.exists(self.logfile):
             j.system.fs.createDir(StartupManager.LOGDIR)
@@ -76,31 +89,19 @@ class ProcessDef:
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
-        time.sleep(2)#need to wait because maybe error did not happen yet (is not the nicest method, but dont know how we can do else?) kds
-
-        self.log("pid get")
+        if self.ports<>[]:
+            isrunning=self.isRunning(timeout=self.timeoutcheck)            
 
         pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=5)
         hrd = j.core.hrd.getHRD(self.path)
         hrd.set('pid', pid)
-        hrd.set('process_active', True)
         self.log("pid: %s"%pid)
 
-        if pid==0:
-            raise RuntimeError("Could not start process:%s, getpid did not return, an error occured:\n%s"%(self,self.getStartupLog()))
+        hrd.set('process_active', isrunning)
 
-        for port in self.ports:
-            if not port or not port.isdigit():
-                continue
-            port = int(port)
-            self.log("port check:%s START"%port)
-            if not j.system.net.waitConnectionTest('localhost', port, timeout):
-                raise RuntimeError('Process %s failed to start listening on port %s within timeout %s, startuplog:\n%s' % (self.name, port, timeout,self.getStartupLog()))
-            self.log("port check:%s DONE"%port)
+        if isrunning==False:
+            raise RuntimeError("Could not start process:%s, an error occured:\n%s"%(self,self.getStartupLog()))
 
-        if not self.isRunning():
-            raise RuntimeError("Could not start process:%s an error occured:\n%s"%(self,self.getStartupLog()))
-        
         self.log("*** STARTED ***")
         return pid
 
@@ -129,21 +130,21 @@ class ProcessDef:
         #first check screen is already there with window, max waiting 1 sec
         start=time.time()
         now=0
-        pid=None
-        while pid==None and now<start+timeouttmux:
-            pid = j.system.platform.screen.getPid(self.domain, self.name)
-            if pid:
+        pid0=None
+        while pid0==None and now<start+timeouttmux:
+            pid0 = j.system.platform.screen.getPid(self.domain, self.name)
+            if pid0:
                 break
             time.sleep(0.2)
             now=time.time()
 
-        if pid==None:
+        if pid0==None:
             if ifNoPidFail:
                 raise RuntimeError("Pid was not found for %s, because window not found."%self)
             else:
                 return 0
 
-        pr=j.system.process.getProcessObject(pid)
+        pr=j.system.process.getProcessObject(pid0)
 
         def check():
             pid=None
@@ -181,29 +182,45 @@ class ProcessDef:
             return pid
         raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
-    def isRunning(self,quicktest=False):
-        hrd = j.core.hrd.getHRD(self.path)
-        pid=self.getPid(ifNoPidFail=False)
-        if pid==0:
-            hrd.set('process_active', False)
-            return False
-        test=j.system.process.isPidAlive(pid)
-        if test==False:
-            hrd.set('process_active', False)
-            return False
-
-        if quicktest:
-            return True
-
+    def _portCheck(self):
         for port in self.ports:
             if port:
                 if isinstance(port, basestring) and not port.strip():
                     continue
                 port = int(port)
                 if not j.system.net.checkListenPort(port):
-                    hrd.set('process_active', False)
+                    self.hrd.set('process_active', False)
                     return False
-        hrd.set('process_active', True)
+        self.hrd.set('process_active', True)
+        return True        
+
+    def portCheck(self,timeout=0):
+        if timeout==0:
+            return self._portCheck()
+        timeout=time.time()+self.timeoutcheck
+        isrunning=False            
+        while time.time()<timeout:
+            if self._portCheck():
+                return True
+            time.sleep(0.05)
+        return False
+
+    def isRunning(self,quicktest=False,timeout=0):
+
+        if self.ports<>[]:
+            res= self.portCheck(timeout=timeout)
+            self.hrd.set('process_active', res)
+            return res
+
+        pid=self.getPid(ifNoPidFail=False)
+        if pid==0:
+            self.hrd.set('process_active', False)
+            return False
+        test=j.system.process.isPidAlive(pid)
+        if test==False:
+            self.hrd.set('process_active', False)
+            return False
+
         return True
 
     def stop(self, timeout=20):
@@ -223,9 +240,9 @@ class ProcessDef:
                 time.sleep(0.05)
                 now=j.base.time.getTimeEpoch()
 
-        hrd = j.core.hrd.getHRD(self.path)
-        hrd.set('pid', 0)
-        hrd.set('process_active', False)
+        # hrd = j.core.hrd.getHRD(self.path)
+        self.hrd.set('pid', 0)
+        self.hrd.set('process_active', False)
 
         for port in self.ports:        
             if not port or not port.isdigit():
@@ -303,7 +320,8 @@ class StartupManager:
             self.__init=True
 
     def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False,\
-        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None, pid=0, active=False):
+        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None, pid=0,\
+         active=False,check=True,timeoutcheck=5):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -329,9 +347,15 @@ class StartupManager:
         hrd+="process.user=%s\n"%user
         if autostart:
             autostart=1
+        hrd+="process.timeoutcheck=%s\n"%autostart
         hrd+="process.autostart=%s\n"%autostart
         hrd+="process.pid=%s\n"%pid
         hrd+="process.active=%s\n"%active
+        if check:
+            check=1
+        else:
+            check=0
+        hrd+="process.check=%s\n"%check
         pstring=""
         ports = ports[:]
         if jpackage and jpackage.hrd.exists('jp.process.tcpports'):
