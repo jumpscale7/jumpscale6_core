@@ -55,7 +55,7 @@ def main():
 
     root="/"
     
-    passwd=j.application.config.get("grid.master.superadminpasswd")
+    passwd=j.application.config.get("system.superadmin.passwd")
     authorizer.add_user('root', passwd, root, perm='elradfmwM')
     # authorizer.add_anonymous(os.getcwd())
 
@@ -69,7 +69,7 @@ def main():
     # Specify a masquerade address and the range of ports to use for
     # passive connections.  Decomment in case you're behind a NAT.
     #handler.masquerade_address = '151.25.42.11'
-    #handler.passive_ports = range(60000, 65535)
+    handler.passive_ports = range(2112, 2222)
 
     address = ('', 2111)
     server = FTPServer(address, handler)
