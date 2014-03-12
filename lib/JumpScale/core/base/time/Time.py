@@ -102,7 +102,7 @@ class Time:
 
     def getEpochAgo(self,txt):
         """
-        only supported now is -3d and -3h  (ofcourse 3 can be any int)
+        only supported now is -3m, -3d and -3h  (ofcourse 3 can be any int)
         and an int which would be just be returned
         means 3 days ago 3 hours ago
         if txt==None or 0 then will be 1 day ago
@@ -113,6 +113,9 @@ class Time:
             txt=txt.lower()
             if txt.find("-")==-1:
                 raise RuntimeError("Cannot find time, needs to be in format -3d and -3h  (ofcourse 3 can be any int)")
+            if txt.find("m")<>-1:
+                ago=int(txt.replace("m","").replace("-",""))
+                return self.getTimeEpoch()-(ago*60)
             if txt.find("d")<>-1:
                 ago=int(txt.replace("d","").replace("-",""))
                 return self.getTimeEpoch()-(ago*60*60*24)
