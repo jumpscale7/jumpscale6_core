@@ -77,6 +77,31 @@ class OSISCMDS(object):
             return oi.list()
         return oi.list(prefix)
 
+    def _rebuildindex(self, namespace, categoryname, session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"rebuildindex",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.rebuildindex()
+
+    def rebuildindex(self, namespace=None, categoryname=None, session=None):
+        if not namespace and not categoryname:
+            for ns in self.listNamespaces():
+                for cat in self.listNamespaceCategories(ns):
+                    try:
+                        self._rebuildindex(ns, cat, session)
+                    except Exception, e:
+                        j.errorconditionhandler.raiseOperationalWarning("Did not rebuild index for category '%s' in namespace '%s'. Error was: %s" % (cat, ns, e))
+        else:
+            self._rebuildindex(namespace, categoryname, session)
+
+    def export(self, namespace, categoryname, outputpath, session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"export",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.export(outputpath)
+
     def echo(self, msg="", session=None):
         return msg
 

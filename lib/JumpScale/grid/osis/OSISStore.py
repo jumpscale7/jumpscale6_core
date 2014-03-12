@@ -248,7 +248,11 @@ class OSISStore(object):
             if hasattr(obj,"getDictForIndex"):
                 data=obj.getDictForIndex()
             else:
-                data=copy.copy(obj.__dict__)
+                if isinstance(obj, basestring):
+                    obj = self.json.loads(obj)
+                    data=copy.copy(obj)
+                else:
+                    data=copy.copy(obj.__dict__)
 
         guid=data["guid"]
 
@@ -321,7 +325,7 @@ class OSISStore(object):
             j.errorconditionhandler.raiseBug(message="osis categoryname needs to be at least 3 chars.", category="osis.bug")
         indexes = self.elasticsearch.get_mapping().keys()
         for i in indexes:
-            if i.find(self.categoryname) == 0:
+            if i.find(self.dbprefix) == 0:
                 self.elasticsearch.delete_index(i)
 
     def destroy(self):
@@ -349,4 +353,18 @@ class OSISStore(object):
         for id in ids:
             obj = self.get(id)
             self.index(obj)
+
+    def export(self, outputpath):
+        """
+        export all objects of a category to json format.
+        Placed in outputpath
+        """
+        if not j.system.fs.isDir(outputpath):
+            j.system.fs.createDir(outputpath)
+        ids = self.list()
+        for id in ids:
+            obj = self.get(id)
+            filename = j.system.fs.joinPaths(outputpath, id)
+            j.system.fs.writeFile(filename, obj)
+            
 
