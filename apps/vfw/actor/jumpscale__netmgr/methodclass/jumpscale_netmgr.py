@@ -63,12 +63,13 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         fwobj = self.osisvfw.get(fwid)
         args={'name': "%s_%s"%(fwobj.domain,fwobj.name)}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', args=args, wait=False)
+        nid=self._getVFWHostNodeId(fwid)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=nid,args=args, wait=False)
         self.osisvfw.delete(fwid)
         return True
     
 
-    def fw_forward_create(self, fwid, gid, fwport, destip, destport, **kwargs):
+    def fw_forward_create(self, fwid, gid,  fwport, destip, destport, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
