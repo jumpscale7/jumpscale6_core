@@ -76,7 +76,7 @@ class DataTables():
 
     def processLink(self, line):
         if line and line.find("[") != -1:
-            r = "\[[-:@|_.?\w\s\\=/]*\]"
+            r = "\[[-:@|_.?\&\,\w\s\\=/]*\]"
             if j.codetools.regex.match(r, line):  # find links
                 for match in j.codetools.regex.yieldRegexMatches(r, line):
                     # print "link: %s" % match.founditem
@@ -159,10 +159,14 @@ class DataTables():
         result["iTotalRecords"] = total
         result["iTotalDisplayRecords"] = total
         result["aaData"] = []
+
+
         for row in inn:
             r = []
             for field, fieldid in zip(fieldvalues, fieldids):
                 if field in row:
+                    field = self.processLink(field)
+                    print "fieldinrow:%s"%field
                     r.append(row[field])
                 elif j.basetype.integer.check(field):
                     r.append(row[field])

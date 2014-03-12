@@ -48,7 +48,7 @@ class Confluence2HTML():
 
     def findLinks(self, line, page):
         # r=r"\[[-:|_@#.?\w\s\\=/&]*\]"
-        r = r"\[[^\[\]]+\]"
+        r = r"\[[^\[\]]+\]"  #@todo does not seem right to me
         if j.codetools.regex.match(r, line):  # find links
             # print "match %s"% line
             htmlelements=""
