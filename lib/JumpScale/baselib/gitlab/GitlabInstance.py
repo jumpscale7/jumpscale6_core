@@ -24,7 +24,7 @@ class GitlabInstance(Gitlab):
                     key2=key.replace("gitlabclient.server.","")
                     id=key2.split(".")[0]
         if id==0:
-            raise RuntimeError("Did not find account:%s for gitlab")
+            raise RuntimeError("Did not find account:%s for gitlab"%account)
         prefix="gitlabclient.server.%s"%id
         self.addr=j.application.config.get("%s.addr"%prefix)
 

@@ -9,11 +9,11 @@ class BackupFactory:
         self.loglevel=5
         self._cache={}
 
-    def get(self, backupname,blobclientName="incubaid",gitlabName="incubaid"):
-        name="%s_%s"%(blobclientName,gitlabName)
+    def get(self, backupdomain,backupname,blobclientName="incubaid",gitlabName="incubaid"):
+        name="%s_%s_%s_%s"%(backupdomain,backupname,blobclientName,gitlabName)
         if self._cache.has_key(name):
             return self._cache[name]
-        self._cache[name]= BackupClient(backupname,blobclientName, gitlabName)
+        self._cache[name]= BackupClient(backupdomain,backupname,blobclientName, gitlabName)
         return self._cache[name]
 
     def _log(self,msg,category="",level=5):

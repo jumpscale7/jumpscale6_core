@@ -43,24 +43,24 @@ class BlobStorClient:
         c=self._getBlobStorConnection(datasize)
         return c.exists(key=key, data=data,nsid=self.nsid,replicaCheck=replicaCheck)
 
-    # def queueCMD(self,cmd,key,data="",subkey="",sendnow=False):
-    #     if data=="":
-    #         self.queue.append((cmd,key))
-    #     else:
-    #         if subkey=="":
-    #             self.queue.append((cmd,key,data))
-    #         else:
-    #             self.queue.append((cmd,key,subkey,data))
-    #         self.queuedatasize+=len(data)
-    #     if sendnow or len(self.queue)>100 or self.queuedatasize>self.maxqueuedatasize:
-    #         self.sendNow()
+    def queueCMD(self,cmd,key,data="",subkey="",sendnow=False):
+        if data=="":
+            self.queue.append((cmd,key))
+        else:
+            if subkey=="":
+                self.queue.append((cmd,key,data))
+            else:
+                self.queue.append((cmd,key,subkey,data))
+            self.queuedatasize+=len(data)
+        if sendnow or len(self.queue)>100 or self.queuedatasize>self.maxqueuedatasize:
+            self.sendNow()
 
-    # def sendNow(self):
-    #     c=self._getBlobStorConnection(datasize=self.queuedatasize)
-    #     res=c.sendCmds(self.queue,transaction=True)
-    #     self.queue=[]
-    #     self.queuedatasize=0
-    #     return res
+    def sendNow(self):
+        c=self._getBlobStorConnection(datasize=self.queuedatasize)
+        res=c.sendCmds(self.queue,transaction=True)
+        self.queue=[]
+        self.queuedatasize=0
+        return res
 
     def getMD(self,key):
         c=self._getBlobStorConnection(datasize)

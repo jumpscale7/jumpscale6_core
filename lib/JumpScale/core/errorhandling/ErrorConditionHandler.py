@@ -59,8 +59,8 @@ class ErrorConditionHandler():
         #     else:
         #         eco.getBacktrace()
         #         return self.escalateBugToDeveloper(eco)   
-        if die:                         
-            self.halt(eco.description)
+        if die:                     
+            self.halt(eco.errormessage)
         
     def raiseOperationalCritical(self, message="", category="",msgpub="",die=True,tags="",eco=None,extra=None):
         """

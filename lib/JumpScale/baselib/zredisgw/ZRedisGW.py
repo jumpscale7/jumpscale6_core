@@ -14,14 +14,12 @@ import time
 
 GeventLoop = j.core.gevent.getGeventLoopClass()
 
-class BlobStorServer(GeventLoop):
+#@needs to be debugged
+
+class ZRedisGW(GeventLoop):
 
     def __init__(self, port=2345,path="/mnt/BLOBSTOR", nrCmdGreenlets=50):
 
-        j.application.initGrid()
-
-        self.path=path
-        
         j.application.initGrid()
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
@@ -32,61 +30,15 @@ class BlobStorServer(GeventLoop):
             j.packages.findNewest(name="redis").install()
             j.packages.findNewest(name="redis").start()
 
-        def checkblobstormaster():
-            masterip=j.application.config.get("grid.master.ip")
-            self.master=j.servers.zdaemon.getZDaemonClient(
-                masterip,
-                port=2344,
-                user=self.adminuser,
-                passwd=self.adminpasswd,
-                ssl=False, sendformat='m', returnformat='m', category="blobstormaster")
-
-        success=False
-        while success==False:
-            try:
-                print "connect to blobstormaster"
-                checkblobstormaster()
-                success=True
-            except Exception,e:
-                masterip=j.application.config.get("grid.master.ip")
-                msg="Cannot connect to blobstormaster %s, will retry in 60 sec."%(masterip)
-                j.events.opserror(msg, category='blobstorworker.startup', e=e)
-                time.sleep(60)
-
-        #registration of node & disk
-
-        C="""
-blobstor.disk.id=0
-blobstor.disk.size=100
-""" 
-        bsnid=self.master.registerNode(j.application.whoAmI.nid)
-        nid=j.application.whoAmI.nid
-        for item in j.system.fs.listDirsInDir(self.path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True):
-            cfigpath=j.system.fs.joinPaths(item,"main.hrd")
-            if not j.system.fs.exists(path=cfigpath):
-                j.system.fs.writeFile(filename=cfigpath,contents=C)
-            hrd=j.core.hrd.getHRD(path=cfigpath)
-            if hrd.get("blobstor.disk.id")=="0":
-                sizeGB=j.console.askInteger("please give datasize (GB) for this blobstor mount path:%s"%item)
-                diskid=self.master.registerDisk(nid=nid,bsnodeid=bsnid, path=item, sizeGB=sizeGB)
-                hrd.set("blobstor.disk.id",diskid)
-                hrd.set("blobstor.disk.size",sizeGB)
-            else:
-                diskid=self.master.registerDisk(nid=nid,bsnodeid=bsnid, path=item, sizeGB=hrd.getInt("blobstor.disk.size"),\
-                    diskId=hrd.getInt("blobstor.disk.id"))
-
-
         gevent.monkey.patch_socket()
         GeventLoop.__init__(self)
 
         self.port = port
         self.nrCmdGreenlets = nrCmdGreenlets
 
-        self.redis=j.clients.blobstor2.redis.redis
+        self.redis=...
 
         
-
-
 
     def cmd2Queue(self,qid=0,cmd="",args={},key="",data="",sync=True):
         rkeyQ="blobserver:cmdqueue:%s"%qid

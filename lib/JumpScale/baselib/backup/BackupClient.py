@@ -37,7 +37,7 @@ class Item():
     __str__=__repr__
 
 class JSFileMgr():
-    def __init__(self, MDPath, cachePath="",namespace="backup",blobclientname="default"):
+    def __init__(self, MDPath, cachePath="",domain="default",namespace="backup",blobclientname="default"):
         self.errors=[]
         self._MB4=1024*1024*4 #4Mbyte
         self.excludes=["*.pyc"]
@@ -55,12 +55,13 @@ class JSFileMgr():
         passwd = j.application.config.get('grid.master.superadminpasswd')
         login="root"
         # blobstor2 client
-        # self.client = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
-        self.client=j.clients.blobstor2.getClient(namespace=namespace, name=blobclientname)
+        # self.blobstor = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
+        self.blobstor=j.clients.blobstor2.getClient(name=blobclientname)
         self.namespace=namespace
-        self.repoId=1 # will be implemented later with osis
         self.compress=False
         self.errors=[]
+
+        self.blobstor.registerNamespace(domain,namespace)
 
     def _normalize(self, path):
         path=path.replace("'","\\'")
@@ -93,8 +94,8 @@ class JSFileMgr():
         if key=="":
             key = j.tools.hash.md5_string(data)
         data2 = lzma.compress(data) if self.compress else data
-        if not self.client.exists(key=key,repoId=self.repoId):
-            self.client.set(key=key, data=data2,repoId=self.repoId)
+        if not self.blobstor.exists(key=key,repoId=self.repoId):
+            self.blobstor.set(key=key, data=data2,repoId=self.repoId)
             
         return key
 
@@ -258,7 +259,7 @@ class JSFileMgr():
         blob_hash = itemObj.hashlist if hasattr(itemObj, "hashlist") else itemObj.hash
 
         # Get blob from blobstor2
-        blob = self.client.get(namespace, blob_hash)
+        blob = self.blobstor.get(namespace, blob_hash)
 
         # Write the blob
         self._writeBlob(dest, blob, itemObj, namespace)
@@ -276,7 +277,7 @@ class JSFileMgr():
             j.system.fs.writeFile(dest,"")
             for hashitem in hashlist.split("\n"):
                 if hashitem.strip() != "":
-                    blob_block = self.client.get(namespace, hashitem)
+                    blob_block = self.blobstor.get(namespace, hashitem)
                     data = lzma.decompress(blob_block)
                     j.system.fs.writeFile(dest, data, append=True)
         else:
@@ -297,7 +298,7 @@ class JSFileMgr():
             key2paths[md5]=(src,md5)
 
         print "batch nr:%s check"%batchnr
-        notexist=self.client.existsBatch(keys=key2paths.keys()) 
+        notexist=self.blobstor.existsBatch(keys=key2paths.keys()) 
         print "batch checked on unique data"
 
         nr=batchnr*1000
@@ -529,7 +530,7 @@ class JSFileMgr():
         blob_hash = itemObj.hashlist if hasattr(itemObj, "hashlist") else itemObj.hash
 
         # Get blob from blobstor2
-        blob = self.client.get(key=blob_hash)
+        blob = self.blobstor.get(key=blob_hash)
 
         # The path which this blob should be saved
         blob_path = self._getBlobPath(namespace, itemObj.hash)
@@ -568,18 +569,28 @@ class BackupClient:
     """
     """
 
-    def __init__(self,backupname,blobclientName,gitlabName="incubaid"):
+    def __init__(self,backupdomain,backupname,blobclientName,gitlabName="incubaid"):
         self.blobclientName=blobclientName
         self.gitlabName=gitlabName        
-        self.gitlab=j.clients.gitlab.get(gitlabName)
+        try:
+            self.gitlab=j.clients.gitlab.get(gitlabName)
+        except Exception,e:
+            self.gitlab=None
+        self.backupdomain=backupdomain
         self.backupname=backupname
-        self.mdpath="/opt/backup/MD/%s"%backupname
+        self.key="%s_%s"%(backupdomain,backupname)
+        self.mdpath="/opt/backup/MD/%s"%self.key
         if not j.system.fs.exists(path=self.mdpath):    
-            if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=backupname):
-                self.gitlab.createproject(backupname, description='backup set', issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)            
-        self.gitclient = self.gitlab.getGitClient(self.gitlab.loginName, backupname, clean=False,path=self.mdpath)
             
-        self.filemanager=JSFileMgr(MDPath=self.mdpath,namespace="backup",blobclientname=blobclientName)
+            if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=self.key):
+                self.gitlab.createproject(backupname, description='backup set', issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)            
+        
+        if self.gitlab<>None:
+            self.gitclient = self.gitlab.getGitClient(self.gitlab.loginName, backupname, clean=False,path=self.mdpath)
+        else:
+            self.gitclient=None
+            
+        self.filemanager=JSFileMgr(MDPath=self.mdpath,domain=backupdomain,namespace="backup",blobclientname=blobclientName)
 
     def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={},childrenRegexExcludes=[".*/dev/.*","/proc/.*"],fullcheck=False):
         # self._clean()
