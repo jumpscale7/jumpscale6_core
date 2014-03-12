@@ -20,9 +20,9 @@ import JumpScale.baselib.stataggregator
 j.application.start("jumpscale:jsprocessmanager")
 
 j.logger.consoleloglevel = 5
-
+print 'start init grid'
 j.core.grid.init()
-
+print 'start processmanger'
 j.core.processmanager.start()
 
 j.application.stop()
