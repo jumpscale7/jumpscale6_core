@@ -88,7 +88,10 @@ class ProcessDef:
         self.log("start process")
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
-
+        isrunning = False
+        if self.ports == []:
+            #processes which aren't listening to anything
+            isrunning = True
         if self.ports<>[]:
             isrunning=self.isRunning(timeout=self.timeoutcheck)            
 
