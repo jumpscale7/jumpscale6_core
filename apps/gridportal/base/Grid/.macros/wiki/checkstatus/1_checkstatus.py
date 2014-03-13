@@ -25,13 +25,25 @@ def main(j, args, params, tags, tasklet):
         heartbeat = None
         redisStatus = None
         redisSize = None
+        esdata = None
 
+        processclient = getClient('process')
         with gevent.Timeout(3, False):
-            heartbeat = getClient('process').checkHeartbeat(_agentid=nid)
+            heartbeat = processclient.checkHeartbeat(_agentid=nid)
         if heartbeat == None:
             heartbeat = 'N/A'
             addnote = True
         out.append('|[*%s*|node?id=%s]|Process manager|%s|Processmanager has been checked in the last two minutes||' % (node['name'], node['id'], heartbeat))
+
+        with gevent.Timeout(3, False):
+            esdata = processclient.checkES(_agentid=nid)
+        if esdata == None:
+            esdata = 'N/A'
+            addnote = True
+        if esdata['size']:
+            size = esdata['size']/1024
+            esnotes = 'Size = %sMB' % size
+        out.append('||Elasticsearch|%s|Health and size of ElasticSearch|%s|' % (esdata['health'], esnotes or ''))
 
         agentclient = getClient('agent')
         with gevent.Timeout(3, False):
