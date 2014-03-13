@@ -39,6 +39,11 @@ class NetConfigFactory():
         br.create()
         addVlanPair(parentbridge, name, vlanid)
 
+    def newVXlan(self,networkid):
+        vxlan = netcl.VXlan(netcl.NetID(networkid))
+        vxlan.create()
+        return vxlan.name
+
     def getType(self,interfaceName):
         layout=self.getConfigFromSystem()
         if not layout.has_key(interfaceName):
