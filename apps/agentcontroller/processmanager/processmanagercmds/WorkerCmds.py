@@ -93,3 +93,13 @@ class WorkerCmds():
 
         return self.redisworker.getJob(jobid)
 
+    def getWorkerStatus(self, session=None):
+        """
+        """
+        if session<>None:
+            self._adminAuth(session.user,session.passwd) 
+        nid = j.application.whoAmI.nid
+        acc = j.clients.agentcontroller.get()
+        result = acc.executeJumpScript('jumpscale', 'workerstatus', nid, timeout=5)
+        return result
+

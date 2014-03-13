@@ -13,7 +13,7 @@ class mainclass(OSISStore):
         OSISStore.__init__(self)
         # self.elasticsearch=j.core.grid.getLogTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
 
-    def set(self,key,value):
+    def set(self,key,value,waitIndex=False):
         ##no manipulation so no longer needed
         # docs = []
         # for logobject in value:            
