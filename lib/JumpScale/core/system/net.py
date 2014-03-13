@@ -649,7 +649,7 @@ class SystemNet:
             j.logger.log('[%s] is not a valid ip address'%ipaddress, 7)
             return False
 
-    def pingMachine(self, ip, pingtimeout=60, recheck = False, allowhostname = False):
+    def pingMachine(self, ip, pingtimeout=60, recheck = False, allowhostname = True):
         """Ping a machine to check if it's up/running and accessible
         @param ip: Machine Ip Address
         @param pingtimeout: time in sec after which ip will be declared as unreachable
