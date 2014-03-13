@@ -7,8 +7,8 @@ def main(j, args, params, tags, tasklet):
     path = ''
     space = args.paramsExtra.get('space')
     if space:
-        space = j.core.portal.runningPortal.webserver.getSpace(space)
-        path = os.path.join(j.core.portal.runningPortal.cfgdir.rpartition('/')[0], 'wiki', space.model.id)
+        space = j.core.portal.active.getSpace(space)
+        path = os.path.join(j.core.portal.active.cfgdir.rpartition('/')[0], 'wiki', space.model.id)
 
     if args.tags.tagExists("ppath"):
         path = args.tags.tagGet("ppath").replace("+", ":").replace("___", ":").replace("\\", "/")
