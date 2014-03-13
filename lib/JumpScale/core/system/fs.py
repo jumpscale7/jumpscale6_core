@@ -1210,6 +1210,25 @@ class SystemFS:
         self.log('File %s is closed after reading'%filename,9)
         return data
 
+    def fileGetUncommentedContents(self, filename): 
+        """Read a file and get uncommented contents of that file
+        @param filename: string (filename to open for reading )
+        @rtype: list of lines of uncommented file contents
+        """
+        if filename is None:
+            raise TypeError('File name is None in system.fs.fileGetContents')
+        self.log('Opened file %s for reading'% filename,6)
+        # self.log('Reading file %s'% filename,9)
+        with open(filename) as fp:
+            data = fp.readlines()
+        uncommented = list()
+        for line in data:
+            if not line.startswith('#') and not line.startswith('\n'):
+                line = line.replace('\n', '')
+                uncommented.append(line)
+        self.log('File %s is closed after reading'%filename,9)
+        return uncommented
+
     def fileGetTextContents(self, filename):
         """Read a UTF-8 file and get contents of that file. Takes care of the [BOM](http://en.wikipedia.org/wiki/Byte_order_mark)
         @param filename: string (filename to open for reading)
