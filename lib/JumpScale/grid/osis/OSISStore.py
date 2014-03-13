@@ -1,7 +1,8 @@
 from JumpScale import j
 import copy
 import imp
-# import ujson as json
+import ujson as json
+import time
 
 class OSISStore(object):
     """
@@ -10,12 +11,14 @@ class OSISStore(object):
 
     def __init__(self):
         pass
-        
 
     def init(self, path, namespace,categoryname):
         """
         gets executed when catgory in osis gets loaded by osiscmds.py (.init method)
         """
+        self.initall( path, namespace,categoryname,db=True)
+
+    def initall(self, path, namespace,categoryname,db):
         self.json=j.db.serializers.getSerializerType("j")
 
         self.path = path
@@ -23,10 +26,6 @@ class OSISStore(object):
 
         # for tasklettype in j.system.fs.listDirsInDir(self.path, dirNameOnly=True):
         #     self.tasklets[tasklettype] = j.core.taskletengine.get(j.system.fs.joinPaths(self.path, tasklettype))
-
-        self.db = None
-
-        self.db = self._getDB()
 
         self.namespace = namespace
         self.categoryname = categoryname
@@ -36,6 +35,11 @@ class OSISStore(object):
 
         self.dbprefix = "%s_%s" % (self.namespace, self.categoryname)
         self.dbprefix_incr = "%s_incr" % (self.dbprefix)
+
+        if db:
+
+            self.db = None
+            self.db = self._getDB()
 
         self.buildlist = False
 
@@ -72,42 +76,6 @@ class OSISStore(object):
         self.auth=auth
         if self.auth==None and authparent<>None:
             self.auth=authparent
-
-    # def _getModelClass(self):
-    #     """
-    #     is called when someone needs an object
-    #     """
-    #     if self.objectclass==None:
-
-    #         #need to check if there is a specfile or we go from model.py
-    #         specpath=j.system.fs.joinPaths(self.path, "model.spec")    
-    #         print "SPECPATH:%s" %specpath
-    #         if j.system.fs.exists(path=specpath):
-    #             j.core.specparser.parseSpecs(self.path, appname=self.categoryname, actorname="osismodel")
-    #             spec = j.core.specparser.getActorSpec(appname, actorname, raiseError=False)            
-    #             from IPython import embed
-    #             print "DEBUG NOW uuuuu"
-    #             embed()
-                
-    #         path=j.system.fs.joinPaths(self.path, "model.py")
-    #         if j.system.fs.exists(path):
-    #             klass= j.system.fs.fileGetContents(path)
-    #         else:
-    #             self.objectclass= ""
-    #             # raise RuntimeError("Cannot find class for %s"%self.dbprefix)
-
-    #         name=""
-
-    #         for line in klass.split("\n"):
-    #             if line.find("(OsisBaseObject)")<>-1 and line.find("class ")<>-1:
-    #                 name=line.split("(")[0].lstrip("class ")
-    #         if name=="":
-    #             raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there.\nClass file on %s"%)
-    #         exec(klass)
-    #         resultclass=eval(name)
-    #         self.objectclass=resultclass
-
-    #     return self.objectclass
 
     def _getDB(self):
         if j.core.osis.db == None:
@@ -197,7 +165,7 @@ class OSISStore(object):
                 self.db.set(self.dbprefix_incr, ukey, json)
             return (new,changed,obj)
 
-    def set(self, key, value):
+    def set(self, key, value,waitIndex=False):
         """
         value can be a dict or a raw value (seen as string)
         if raw value then will not try to index
@@ -208,22 +176,39 @@ class OSISStore(object):
             if not j.basetype.dictionary.check(obj):
                 new,changed,obj=self.setObjIds(obj)
                 key=obj.guid
-                self.index(obj)
-                value=self.json.dumps(obj.obj2dict())
+                if changed:                  
+                    self.index(obj)
+                    value2=self.json.dumps(obj.obj2dict())
+                    if waitIndex:
+                        time.sleep(0.2)
+                        if not self.existsIndex(key=obj.guid,timeout=1):
+                            raise RuntimeError("index not stored for key:%s in %s:%s"(key,self.namespace, self.categoryname))
             else:
-                value=self.json.dumps(value)
+                if key==None:
+                    if value.has_key("guid"):
+                        key=value["guid"]
+                    else:
+                        raise RuntimeError("could not find guid attr on obj for %s:%s"(self.namespace, self.categoryname))                
+                else:
+                    if not value.has_key("guid"):
+                        value["guid"]=key
+                value2=self.json.dumps(value)
+                self.db.set(self.dbprefix, key=key, value=value2)                
+                self.index(value)
+                if waitIndex:
+                    time.sleep(0.2)
+                    if not self.existsIndex(key=obj.guid,timeout=1):
+                        raise RuntimeError("index not stored for key:%s in %s:%s"(key,self.namespace, self.categoryname))               
                 new=None
                 changed=None
         else:
             new=True
             changed=True
-            from IPython import embed
-            print "DEBUG NOW osisstoreset should be dict"
-            embed()
+            raise RuntimeError("val should be dict or osisobj")
+
+        if changed:
+            self.db.set(self.dbprefix, key=key, value=value2)
             
-        
-        #not an osis obj, need to stor as raw value, there will be no indexing
-        self.db.set(self.dbprefix, key=key, value=value)
         return (key,new,changed)
 
     def getIndexName(self):
@@ -232,7 +217,7 @@ class OSISStore(object):
         """
         return self.dbprefix
 
-    def index(self, obj,ttl=0):
+    def index(self, obj,ttl=0,replication="sync",consistency="all",refresh=True):
         """
         @param ttl = time to live in seconds of the index
         """
@@ -267,9 +252,9 @@ class OSISStore(object):
         
         try:
             if ttl <> 0:
-                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=ttl, replication="async")
+                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, ttl=ttl, replication=replication,consistency=consistency,refresh=refresh,overwrite_existing=True)
             else:
-                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication="async")
+                self.elasticsearch.index(index=index, id=guid, doc_type="json", doc=data, replication=replication,consistency=consistency,refresh=refresh,overwrite_existing=True)
         except Exception,e:
 
             if str(e).find("Index failed")<>-1:
@@ -289,18 +274,53 @@ class OSISStore(object):
                 j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None,extra=data)
             else:
                 j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))
-            
 
-    def exists(self, key):
-        return self.db.exists(self.dbprefix, key)
+    def existsIndex(self,key,timeout=0):
+        if key==None:
+            raise RuntimeError("key cannot be None")
+        q='{"query":{"bool":{"must":[{"text":{"json.guid":"$guid"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
+        q=q.replace("$guid",key)
+        q=json.loads(q)            
+        ok=False
+        if timeout>0:
+            now=time.time()
+            end=now+timeout            
+            while now<end:
+                res=self.find(q)
+                if res["total"]>0:
+                    ok=True
+                    break
+                time.sleep(0.1)
+                # print "index not ready yet"
+        else:
+            res=self.find(q)
+            if res["total"]>0:
+                ok=True
+        return ok
 
     def delete(self, key):
         self.db.delete(self.dbprefix, key)
         self.removeFromIndex(key)
 
-    def removeFromIndex(self, key):
+    def deleteIndex(self, key,waitIndex=False,timeout=1):
+        self.removeFromIndex(key)
+        q='{"query":{"bool":{"must":[{"text":{"json.guid":"$guid"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
+        q=q.replace("$guid",key)
+        q=json.loads(q)        
+        if waitIndex and timeout>0:
+            now=time.time()
+            end=now+timeout            
+            while now<end:
+                res=self.find(q)
+                if res["total"]==0:
+                    return
+                time.sleep(0.1)
+                # print "index not ready yet for delete"
+            raise RuntimeError("Could not delete index in time for key:%s"%key)
+
+    def removeFromIndex(self, key,replication="sync",consistency="all",refresh=True):
         index = self.getIndexName()
-        result = self.elasticsearch.delete(index, 'json', key)
+        result = self.elasticsearch.delete(index, 'json', key, replication=replication,consistency=consistency,refresh=refresh)
         return result
 
     def find(self, query, start=0, size=None):

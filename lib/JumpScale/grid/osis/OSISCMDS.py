@@ -45,12 +45,21 @@ class OSISCMDS(object):
                 raise RuntimeError("Authentication error on exists %s_%s for user %s"%(namespace,categoryname,session.user))
         return oi.exists(key)
 
-    def set(self, namespace, categoryname, key=None, value=None, session=None):
+    def existsIndex(self, namespace, categoryname, key, timeout=1,session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"get",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on exists %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.existsIndex(key,timeout=timeout)
+
+
+    def set(self, namespace, categoryname, key=None, value=None, waitIndex=False,session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        # print "WAITINDEXCMDS:%s"%waitIndex
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"set",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.set(key=key, value=value)
+        return oi.set(key=key, value=value,waitIndex=waitIndex)
 
     def delete(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
