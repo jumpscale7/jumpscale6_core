@@ -113,3 +113,28 @@ class AgentCmds():
         for key in todelete:
             j.core.processmanager.daemon.greenlets.pop(key)
 
+    def checkRedisStatus(self, session=None):
+        notrunning = list()
+        for redisinstance in ['redisac', 'redisp', 'redisc']:
+            if not j.clients.redis.getProcessPids(redisinstance):
+                notrunning.append(redisinstance)
+        if not notrunning:
+            return True
+        return notrunning
+
+    def checkRedisSize(self, session=None):
+        redisinfo = j.clients.redisworker.redis.info().split('\r\n')
+        info = dict()
+        for entry in redisinfo:
+            if ':' in entry:
+                key, value = entry.split(':')
+                info[key] = value
+        size = info['used_memory']
+        maxsize = 50 * 1024 * 1024
+        if j.basetype.float.fromString(size) < maxsize:
+            return True
+        return False
+
+
+
+

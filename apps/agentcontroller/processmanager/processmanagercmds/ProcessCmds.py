@@ -38,5 +38,32 @@ class ProcessCmds():
         cacheobj.db.workingdir=workingdir
         guid,tmp,tmp=cacheobj.send2osis()
         return guid
-    
-                        
+
+    def checkHeartbeat(self, session=None):
+        nid = j.application.whoAmI.nid
+        gid = j.application.whoAmI.gid
+
+        hearbeat = j.core.processmanager.monObjects.heartbeatobject.get('%s_%s' % (gid, nid))
+        lastchecked = hearbeat.lastcheck
+        now = j.base.time.getTimeEpoch()
+
+        if  now - j.base.time.getEpochAgo('-2m') > now - lastchecked:
+            return True
+        return False
+
+    def checkES(self, session=None):
+        esc = j.clients.elasticsearch.get()
+        health = esc.health().get('status', 'N/A')
+
+        hrd = j.core.hrd.getHRD(j.system.fs.joinPaths(j.dirs.cfgDir, 'startup', 'jumpscale__elasticsearch.hrd'))
+        path = hrd.get('process.args').rsplit('es.config=')[1]
+        configdata = j.system.fs.fileGetUncommentedContents(path)
+        configs = dict()
+        for config in configdata:
+            if ':' in config:
+                key, value = config.split(':')
+                configs[key.strip()] = value.strip()
+        size = j.system.fs.fileSize(configs.get('path.data', '/opt/data/elasticsearch'))
+
+        return {'size': size, 'health': health}
+

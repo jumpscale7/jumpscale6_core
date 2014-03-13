@@ -43,12 +43,10 @@ class OSISClientForCat():
 
         return self.objectclass
 
-
     def authenticate(self, name,passwd,**args):
         """
         authenticates a user and returns the groups in which the user is
-        """
-        
+        """        
         return  self.client.authenticate(namespace=self.namespace, categoryname=self.cat,name=name,passwd=passwd,**args)     
 
     def new(self,**args):
@@ -57,17 +55,19 @@ class OSISClientForCat():
         obj.init(self.namespace,self.cat,1)
         return obj
 
-    def set(self, obj, key=None):
+    def set(self, obj, key=None,waitIndex=False):
         """
         if key none then key will be given by server
         @return (guid,new,changed)
         """
+        # print "WAITINDEX:%s"%waitIndex        
         if hasattr(obj,"dump"):
             obj=obj.dump()
-        return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
+        elif hasattr(obj,"__dict__"):
+            obj=obj.__dict__
+        return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj,waitIndex=waitIndex)
 
-    def get(self, key):
-        
+    def get(self, key):        
         value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
         if isinstance(value, basestring):
             try:
@@ -77,17 +77,18 @@ class OSISClientForCat():
         if isinstance(value, dict):
             try:
                 klass=self._getModelClass()
-                obj=klass()
-                obj.load(value)
+                obj=klass(ddict=value)
                 return obj
             except:
                 return valuee
         else:
             return value
 
-    def exists(self, key):
-            
-            return self.client.exists(namespace=self.namespace, categoryname=self.cat, key=key)
+    def exists(self, key):            
+        return self.client.exists(namespace=self.namespace, categoryname=self.cat, key=key)
+
+    def existsIndex(self,key,timeout=1):            
+        return self.client.existsIndex(namespace=self.namespace, categoryname=self.cat, key=key,timeout=timeout)
 
     def delete(self, key):
         
