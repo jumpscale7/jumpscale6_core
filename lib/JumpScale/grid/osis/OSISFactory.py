@@ -252,7 +252,7 @@ class OSISFactory:
                 name=""
                 for line in klass.split("\n"):
                     if line.find("(OsisBaseObject")<>-1 and line.find("class ")<>-1:
-                        name=line.split("(")[0].lstrip("class ")
+                        name=line.split("(")[0].lstrip("class").strip()
                 if name=="":
                     raise RuntimeError("could not find: class $modelName(OsisBaseObject) in model class file, should always be there")
 

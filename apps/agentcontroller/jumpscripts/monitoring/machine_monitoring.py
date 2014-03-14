@@ -65,7 +65,13 @@ def action():
 
         if machine.ckeyOld != machine.db.getContentKey():
             #obj changed
-            machine.send2osis()
+            try:
+                machine.send2osis()
+            except Exception,e:
+                pass
+                # from IPython import embed
+                # print "DEBUG NOW machine monitoring bug"
+                # embed()
 
         for disk in xml.findall('devices/disk'):
             if disk.attrib['device'] != 'disk':
