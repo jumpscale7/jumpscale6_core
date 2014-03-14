@@ -42,6 +42,7 @@ from pyftpdlib.servers import FTPServer
 
 from JumpScale import j
 
+
 j.application.appname = "jsftpserver"
 j.application.start()
 

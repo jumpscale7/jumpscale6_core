@@ -43,15 +43,28 @@ if opts.action in ('attach', 'logs'):
 
 #@todo does not work on all jpackages
 if opts.action == 'restart':
-    j.tools.startupmanager.restartProcess(opts.domain, opts.name)
+    pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
+    for pd in pds_rev:
+        print "restart: %s"%pd
+        pd.stop()
+        pd.start()
+    j.application.stop(0)
+
+# commands applying on list of processes
+if opts.action == 'stop':    
+    pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
+    for pd in pds_rev:
+        print "stop: %s"%pd
+        pd.stop()
     j.application.stop(0)
 
 
 # commands applying on list of processes
-if opts.action == 'stop':
+if opts.action == 'start':
     pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
     for pd in pds_rev:
-        pd.stop()
+        print "start: %s"%pd
+        pd.start()
     j.application.stop(0)
 
 
