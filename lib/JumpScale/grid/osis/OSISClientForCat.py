@@ -17,6 +17,8 @@ class OSISClientForCat():
             if retcode==1:
                 pathdir=j.system.fs.joinPaths(j.dirs.varDir,"code","osis",self.namespace)
                 path=j.system.fs.joinPaths(pathdir,"model.spec")
+                if not j.system.fs.exists(path=path):
+                    return None
                 j.system.fs.removeDirTree(pathdir)
                 j.system.fs.createDir(pathdir)
                 j.system.fs.writeFile(filename=path,contents=content)
@@ -75,13 +77,11 @@ class OSISClientForCat():
             except:
                 pass # might be normal string/data aswell
         if isinstance(value, dict):
-            try:
-                klass=self._getModelClass()
-                #obj=klass(ddict=value)
-                obj=klass()
-                obj.load(value)
+            klass=self._getModelClass()
+            if klass<>None:
+                obj=klass(ddict=value)
                 return obj
-            except:
+            else:
                 return value
         else:
             return value
