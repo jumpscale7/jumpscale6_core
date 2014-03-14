@@ -9,7 +9,7 @@ class mainclass(parentclass):
     def __init__(self):
         pass
         
-    def set(self,key,value):
+    def set(self,key,value,waitIndex=False):
         obj=self.getObject(value)        
         obj.getSetGuid()
 

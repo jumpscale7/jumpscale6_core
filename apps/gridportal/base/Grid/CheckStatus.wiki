@@ -1,5 +1,12 @@
 @usedefault
 
-h2. Status
+h2. Statuses
 
-{{checkstatus}}
+h3. Process Status
+{{processchecks}}
+
+h3. Redis Status/node
+{{redisstatus}}
+
+h3. Worker Status/node
+{{workerstatus}}
