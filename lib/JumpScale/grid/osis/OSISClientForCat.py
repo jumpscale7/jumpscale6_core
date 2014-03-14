@@ -80,7 +80,7 @@ class OSISClientForCat():
                 obj=klass(ddict=value)
                 return obj
             except:
-                return valuee
+                return value
         else:
             return value
 
