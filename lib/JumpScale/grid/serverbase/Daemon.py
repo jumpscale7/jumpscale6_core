@@ -191,6 +191,9 @@ class Daemon(object):
             else:
                 result = ffunction(data, session=session)
         except Exception, e:
+            # if str(e)=="STOP APPLICATION 112299":  #needs to be cryptic otherwise smart developers can fake this
+            #     j.application.stop()
+            
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco

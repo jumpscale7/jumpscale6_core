@@ -33,11 +33,12 @@ if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
 
 class Worker(object):
 
-    def __init__(self, redisaddr, redisport, queuename):
+    def __init__(self, redisaddr, redisport, queuename,name):
         self.actions={}
         self.redisport=redisport
         self.redisaddr=redisaddr
         self.queuename=queuename
+        self.name=name
         self.init()
 
     def init(self):
@@ -93,11 +94,18 @@ class Worker(object):
         print "STARTED"
         w=j.clients.redisworker
         while True:
-            # jobid=self.queue.get()
-            # data=self.redis.hget("workerjobs",jobid)
+            #check if we need to restart
+            if self.redis.exists("workers:action:%s"%self.name):
+                if self.redis.get("workers:action:%s"%self.name)=="STOP":
+                    print "RESTART ASKED"
+                    self.redis.delete("workers:action:%s"%self.name)
+                    j.application.stop()
+
+            self.redis.hset("workers:watchdog",self.name,int(time.time()))
+
             try:
                 # print "check if work", comes from redis
-                job=w._getWork(self.queuename,timeout=60)
+                job=w._getWork(self.queuename,timeout=4)
             except Exception,e:
                 if str(e).find("Could not find queue to execute job")<>-1:
                     #create queue
@@ -234,6 +242,6 @@ if __name__ == '__main__':
     j.logger.consoleloglevel = 2
     j.logger.maxlevel=7
 
-    worker=Worker(opts.addr, opts.port, opts.queuename)
+    worker=Worker(opts.addr, opts.port, opts.queuename,name=opts.workername)
     worker.run()
 

@@ -2,7 +2,8 @@ from JumpScale import j
 
 import importlib
 import sys
-
+import fcntl
+import os
 
 class Empty():
     pass
@@ -26,7 +27,22 @@ class AAProcessManagerCmds():
             self.daemon.osis = j.core.osis.getClient(masterip, user='root')
         
         
-        
+    def stop(self,session=None):
+        print "STOP PROCESS MANAGER\n\n\n\n\n"
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
+        # raise RuntimeError("STOP APPLICATION 112299")
+        args = sys.argv[:]
+        args.insert(0, sys.executable)
+        max_fd = 1024
+        for fd in range(3, max_fd):
+            try:
+                flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+            except IOError:
+                continue
+            fcntl.fcntl(fd, fcntl.F_SETFD, flags | fcntl.FD_CLOEXEC)
+        os.chdir("/opt/jumpscale/apps/processmanager/")
+        os.execv(sys.executable, args)    
 
     def _init(self):
 

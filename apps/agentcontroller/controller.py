@@ -71,18 +71,25 @@ class ControllerCMDS():
         self._log("schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname))
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
+            sessionid=session.id
+        else:
+            sessionid=None
         self._log("getjob osis client")
-        job=self.jobclient.new(sessionid=session.id,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
+        job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
         self._log("redis incr for job")
-        jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
+        if session<>None:
+            jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
+        else:
+            jobid=self.redis.hincrby("jobs:last",str(gid),1) 
         self._log("jobid found (incr done)")
         job.id=jobid
         job.getSetGuid()
-        if jscriptid is None:
+        if jscriptid is None and session<>None:
             action = self.getJumpScript(cmdcategory, cmdname, session=session)
             jscriptid = action.id
         job.jscriptid = jscriptid
         jobs=json.dumps(job)
+
         self._log("save 2 osis")
         self._setJob(job.__dict__, True,jobs)
         self._log("getqueue")
@@ -91,6 +98,12 @@ class ControllerCMDS():
         q.put(jobs)
         self._log("schedule done")
         return job.__dict__
+
+    def restartProcessmanagerWorkers(self,session=None):
+        for item in self.osisclient.list("system","node"):
+            gid,nid=item.split("_")
+            if int(gid)==j.application.whoAmI.gid:
+                cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="stop",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
 
     def _setJob(self, job, osis=False,jobs=None):
         if not j.basetype.dictionary.check(job):
@@ -348,7 +361,6 @@ class ControllerCMDS():
             self._log("getwork found for node:%s for jsid:%s"%(session.nid,job["jscriptid"]))
             return job
 
-
     def notifyWorkCompleted(self, job,session=None):
         """
         job here is a dict
@@ -520,6 +532,7 @@ for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filte
 
 cmds=daemon.daemon.cmdsInterfaces["agent"]
 cmds.loadJumpscripts()
+cmds.restartProcessmanagerWorkers()
 
 daemon.start()
 

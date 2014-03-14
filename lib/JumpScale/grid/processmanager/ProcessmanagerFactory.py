@@ -74,6 +74,27 @@ class ProcessmanagerFactory:
         self.loadFromAgentController()
         self.daemon = j.servers.geventws.getServer(port=4445)
         self.loadCmds()
+
+        #ask all running workers to restart
+        import JumpScale.baselib.credis
+        redis = j.clients.credis.getRedisClient("127.0.0.1", 7768)
+        #find workers in mem
+        import psutil
+        nrworkers=0
+
+        def donothing(): #not used yet
+            #just to make sure we dont keep waiting for 60 sec
+            import time
+            time.sleep(0.5)
+            print  "DIE"
+
+        for proc in psutil.process_iter():
+            name2=" ".join(proc.cmdline)
+            if name2.find("python worker.py")<>-1:
+                workername=name2.split("-wn")[1].strip()
+                redis.set("workers:action:%s"%workername,"STOP")
+                # job=w.execFunction( method=donothing, _category='workers_restart', _organization='jumpscale', _timeout=600, _queue=queue, _log=False,_sync=False)                
+
         self.daemon.start()
 
     def getCmdsObject(self,category):

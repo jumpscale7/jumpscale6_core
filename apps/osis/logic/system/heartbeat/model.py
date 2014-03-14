@@ -9,12 +9,11 @@ class heartbeat(OsisBaseObject):
     def __init__(self,ddict={}):
         if ddict <> {}:
             self.load(ddict)
-        else:        
+        else:
             self.nid=j.application.whoAmI.nid
             self.gid=j.application.whoAmI.gid
-            self.lastcheck=j.base.time.getTimeEpoch()   
+            self.lastcheck=j.base.time.getTimeEpoch()
             self.getSetGuid()
-            print "RRRRRRRR" 
 
     def getSetGuid(self):
         """

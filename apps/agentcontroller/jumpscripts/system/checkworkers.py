@@ -9,7 +9,7 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "system.checkworkers"
-period = 10
+period = 5
 enable=True
 startatboot=False
 async=False
@@ -18,13 +18,38 @@ roles = ["*"]
 
 
 def action():
-    import psutil
-    nrworkers=0
-    for proc in psutil.process_iter():
-        name2=" ".join(proc.cmdline)
-        if name2.find("python worker.py")<>-1:
-            nrworkers+=1
 
-    if nrworkers<4:
-        j.tools.startupmanager.startJPackage(j.packages.findNewest(name="workers"))
-    
+    import JumpScale.baselib.redis
+    import time
+
+    redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+
+    workerstimeout=[]
+
+    now=time.time()
+    for workername in redis.hkeys("workers:watchdog"):
+        last=int(redis.hget("workers:watchdog",workername))
+        if now>last+10:
+            #timeout on watchdog
+            workerstimeout.append(workername)
+
+    if workerstimeout==[]:
+        return
+
+    try:
+        import psutil
+        foundworkers=[]
+        for proc in psutil.process_iter():
+            name2=" ".join(proc.cmdline)
+            # print "**%s"%name2
+            if name2.find("python worker.py")<>-1:
+                workernamefound=name2.split("-wn")[-1].strip()
+                if workernamefound in workerstimeout:
+                    workerstimeout.pop(workerstimeout.index(workernamefound))
+
+        for workername in workerstimeout:
+            j.tools.startupmanager.startProcess("workers",workername)
+
+    except Exception,e:
+        print "ERROR IN MONITORING & TRYING TO RESTART WORKERS, error:\n%s"%e
+
