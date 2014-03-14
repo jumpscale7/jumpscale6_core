@@ -88,6 +88,8 @@ class ProcessmanagerFactory:
             time.sleep(0.5)
             print  "DIE"
 
+        j.tools.startupmanager.startAll()
+
         for proc in psutil.process_iter():
             name2=" ".join(proc.cmdline)
             if name2.find("python worker.py")<>-1:

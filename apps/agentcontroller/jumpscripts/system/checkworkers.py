@@ -16,22 +16,22 @@ async=False
 log=False
 roles = ["*"]
 
-
 def action():
-
     import JumpScale.baselib.redis
     import time
 
     redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
-
     workerstimeout=[]
-
     now=time.time()
     for workername in redis.hkeys("workers:watchdog"):
-        last=int(redis.hget("workers:watchdog",workername))
-        if now>last+10:
+        last=redis.hget("workers:watchdog",workername)
+        if last==None or now>int(last)+10:
             #timeout on watchdog
             workerstimeout.append(workername)
+
+        elif now>int(last)+7200:
+            #timeout on watchdog
+            j.tools.startupmanager.restartProcess("workers",workername)
 
     if workerstimeout==[]:
         return
@@ -42,6 +42,7 @@ def action():
         for proc in psutil.process_iter():
             name2=" ".join(proc.cmdline)
             # print "**%s"%name2
+
             if name2.find("python worker.py")<>-1:
                 workernamefound=name2.split("-wn")[-1].strip()
                 if workernamefound in workerstimeout:
@@ -52,4 +53,6 @@ def action():
 
     except Exception,e:
         print "ERROR IN MONITORING & TRYING TO RESTART WORKERS, error:\n%s"%e
+
+
 

@@ -9,7 +9,7 @@ class mainclass(OSISStore):
     Defeault object implementation
     """
 
-    def set(self, key, value,waitIndex=False):
+    def set(self, key, value, waitIndex=False):
         id = value.get('id')
         if id and self.db.exists(self.dbprefix, id):
             orig = self.get(id)
