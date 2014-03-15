@@ -69,14 +69,11 @@ if opts.action == 'start':
 
 
 for pd in pds:
-    if opts.action in ('list', 'status'):
+    if opts.action in ('status','list'):
         
         status = ''
         active = 'enabled' if pd.autostart else 'disabled'
-        if opts.action == 'status':
-            status = 'RUNNING' if pd.isRunning() else 'HALTED'
-        else:
-            status = 'RUNNING' if pd.isRunning(quicktest=True) else 'HALTED'
+        status = 'RUNNING' if pd.isRunning() else 'HALTED'
 
         print FORMAT % (pd.domain, pd.name, pd.priority, status, active)
     else:
