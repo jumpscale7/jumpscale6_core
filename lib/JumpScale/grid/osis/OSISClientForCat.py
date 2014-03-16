@@ -77,8 +77,8 @@ class OSISClientForCat():
         if isinstance(value, dict):
             klass=self._getModelClass()
             if klass<>None:
-                obj=klass()
-                obj.load(value)
+                obj=klass(ddict=value)
+                # obj.load(value)
                 return obj
             else:
                 return value

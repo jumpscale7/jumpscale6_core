@@ -18,21 +18,20 @@ def test1():
     client = j.clients.blobstor2.getClient(blobstorconnection,domain,namespace)
 
     blob=""
-    for i in range(10):#1024*1024*4):
+    for i in range(1*1024):#*1024*4):
         blob+="A"
     #4MB
-    key = j.tools.hash.md5_string(blob)
-
-    client.set(key, blob)
-    client.set(key, blob)
-    result=client.set(key, blob,sendnow=True)
-    from IPython import embed
-    print "DEBUG NOW jjj"
-    embed()
     
-    blobret=client.get(key)
+    for i in range(5):
+        blob2=blob+str(i)
+        key2=j.tools.hash.md5_string(blob2)
+        result=client.set(key =key2,data=blob2 ,repoid=1,sendnow=False)
 
-    assert blobret==blob
+    blobret=client.get(key2)
+
+    assert blobret==blob2
+
+    print "test1 ok"
 
 test1()
 
