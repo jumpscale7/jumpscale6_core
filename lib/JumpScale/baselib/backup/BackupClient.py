@@ -301,7 +301,7 @@ class JSFileMgr():
         notexist=self.blobstor.existsBatch(keys=key2paths.keys()) 
         print "batch checked on unique data"
 
-        nr=batchnr*1000
+        nr=batchnr*1000 #for print purposes, so we see which file is uploading
 
         for src,md5 in batch:
             nr+=1

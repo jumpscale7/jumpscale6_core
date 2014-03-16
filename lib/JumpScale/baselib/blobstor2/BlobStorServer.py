@@ -13,6 +13,8 @@ import zmq.green as zmq
 import time
 import tarfile
 import StringIO
+import msgpack
+import plyvel
 
 GeventLoop = j.core.gevent.getGeventLoopClass()
 
@@ -23,6 +25,9 @@ class BlobStorServer(GeventLoop):
         j.application.initGrid()
 
         self.path=path
+
+        self.sessions={}
+        self.sessions[""]=None
         
         j.application.initGrid()
 
@@ -62,6 +67,7 @@ blobstor.disk.id=0
 blobstor.disk.size=100
 """ 
         bsnid=self.master.registerNode(j.application.whoAmI.nid)
+        self.bsnid=bsnid
         nid=j.application.whoAmI.nid
         for item in j.system.fs.listDirsInDir(self.path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True):
             cfigpath=j.system.fs.joinPaths(item,"main.hrd")
@@ -85,13 +91,24 @@ blobstor.disk.size=100
 
         self.disks=[]
         self.diskid2path={}
+
         self.cidMax={}
+        
         self.nrdisks=0
-        self.activeContainer=None
-        self.activeContainerNrFilesAdded=0
-        self.activeContainerSize=0
+
+        self.activeContainer={}
+        self.activeContainerNrFilesAdded={}
+        self.activeContainerSize={}        
+        self.activeContainerModDate={}
+        self.activeContainerFiles={}
+
         self.activeContainerMaxSize=15*1024*1024
-        self.diskfreeMinSize=200*1024*1024
+        self.activeContainerExpiration=600
+        self.diskfreeMinSizeGB=5
+
+        self.monitorDisks()
+
+        self.db = plyvel.DB('/opt/blobstor/db/', create_if_missing=True)
 
     def monitorDisks(self):
         for item in j.system.fs.listDirsInDir(self.path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True):
@@ -107,43 +124,82 @@ blobstor.disk.size=100
                 diskid=hrd.getInt("blobstor.disk.id")
                 diskpath=item
                 diskfree=100 #@todo need to implement
-                diskid=self.master.registerDisk(nid=nid,bsnodeid=bsnid, path=item, sizeGB=size, diskId=diskid)
+                diskid=self.master.registerDisk(nid=j.application.whoAmI.nid,bsnodeid=self.bsnid, path=item, sizeGB=size, diskId=diskid)
                 self.disks.append((diskid,diskpath,diskfree))
                 self.diskid2path[diskid]=diskpath
                 self.nrdisks+=1
-                hlids=[int(item) for item in j.system.fs.listDirsInDir(diskpath, recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
-                if hlids=[]:
-                    maxid=0
-                else:
-                    maxid=max(hlids)
-                hlids2=[int(item) for item in j.system.fs.listDirsInDir("%s/%s"%(diskpath,maxid), recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
-                if hlids=[]:
-                    maxid2=1
-                else:
-                    maxid2=max(hlids2)                
-                self.cidMax[diskid]=maxid*1000+maxid2
 
-    def cid2path(self,diskid,cid):
+    def getCIDMax(self,namespace):
+        if self.cidMax.has_key(namespace):
+            return self.cidMax[namespace]
+
+        maxcidOverDisks=0
+
+        for diskid,diskpath,diskfree in self.disks:        
+            diskpath2=j.system.fs.joinPaths(diskpath,namespace)
+            if not j.system.fs.exists(path=diskpath2):
+                j.system.fs.createDir(diskpath2)            
+            hlids=[int(item) for item in j.system.fs.listDirsInDir(diskpath2, recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
+            if hlids==[]:
+                maxid=0
+            else:
+                maxid=max(hlids)
+            subdir="%s/%s"%(diskpath2,maxid)
+            if not j.system.fs.exists(path=subdir):
+                j.system.fs.createDir(subdir)
+
+            hlids2=[int(j.system.fs.getBaseName(item)[:-4]) for item in j.system.fs.listFilesInDir(subdir, recursive=False, filter=None)]
+            if hlids2==[]:
+                maxid2=1
+            else:
+                maxid2=max(hlids2)
+
+            maxcid=maxid*1000+maxid2
+
+            if maxcid>maxcidOverDisks:
+                maxcidOverDisks=maxcid
+
+        self.cidMax[namespace]=maxcidOverDisks
+
+    def cid2path(self,namespace,diskid,cid):
         hlcid=int(cid/1000)
         llcid=cid-(hlcid*1000)
-        return j.system.fs.joinPaths(self.diskid2path[diskid],str(hlcid),"%s.tar"%str(llcid))
+        dpath=j.system.fs.joinPaths(self.diskid2path[diskid],namespace,str(hlcid))
+        j.system.fs.createDir(dpath)
+        return j.system.fs.joinPaths(dpath,"%s.tar"%str(llcid))
 
-    def getActiveWriteContainer(self):
-        if self.activeContainer==None or self.activeContainerSize>activeContainerMaxSize or self.activeContainerNrFilesAdded>500:
+    def getActiveWriteContainer(self,namespace="default",checkonly=False):
+        if not self.activeContainer.has_key(namespace) \
+                or self.activeContainerSize[namespace]>self.activeContainerMaxSize \
+                or self.activeContainerNrFilesAdded[namespace]>200 \
+                or self.activeContainerModDate[namespace]<(time.time()-self.activeContainerExpiration):
+
+            print ("SELECT NEW ACTIVE WRITE CONTAINER")
+
             diskfreeMax=0
-            diskidfound=none
+            diskidfound=None
             for diskid,diskpath,diskfree in self.disks:
-                if diskfree>diskfreeMax and diskfree>self.diskfreeMinSize:
+                if diskfree>diskfreeMax and diskfree>self.diskfreeMinSizeGB:
                     diskfreeMax=diskfree
                     diskidfound=diskid
             if diskidfound==None:
                 raise RuntimeError("did not find disk with enough space free")
-            if self.activeContainer<>None:
-                self.activeContainer.close()
-            self.cidMax[diskidfound]+=1
-            path=self.cid2path(diskidfound,self.cidMax[diskidfound])
-            self.activeContainer=(self.cidMax[diskidfound],tarfile.open(name=path, mode='w:', fileobj=None, bufsize=10240))
-        return self.activeContainer
+
+            if self.activeContainer.has_key(namespace):
+                self.activeContainer[namespace][2].close()
+                self.activeContainer.pop(namespace)
+
+            self.activeContainerNrFilesAdded[namespace]=0
+            self.activeContainerSize[namespace]=0
+            self.activeContainerModDate[namespace]=0
+            self.activeContainerFiles[namespace]=[]       
+
+            self.getCIDMax(namespace)
+            self.cidMax[namespace]+=1
+            path=self.cid2path(namespace,diskidfound,self.cidMax[namespace])
+            self.activeContainer[namespace]=(diskidfound,self.cidMax[namespace],tarfile.open(name=path, mode='w:', fileobj=None, bufsize=10240))
+        
+        return self.activeContainer[namespace]
 
     def cmd2Queue(self,qid=0,cmd="",args={},key="",data="",sync=True):
         rkeyQ="blobserver:cmdqueue:%s"%qid
@@ -165,10 +221,6 @@ blobstor.disk.size=100
             self.blobstor.redis.redis.execute(cmd="HDEL", key="blobserver:cmds",subkey=jobguid)
         return jobguid
 
-
-    #         result=self.queueCMD(cmd="BLPOP", key="blobserver:return:%s"%jobguid, data=timeout,sendnow=True)
-    #         self.queueCMD(cmd="HDEL", key="blobserver:cmds",subkey=jobguid) 
-
     def repCmdServer(self):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
@@ -176,29 +228,30 @@ blobstor.disk.size=100
             parts = cmdsocket.recv_multipart()   
             parts=parts[:-1]         
             deny=False
-            for part in parts:
-                splitted=part.split("\r\n")
-                try:
-                    cmd=splitted[2]
-                    if len(splitted)>4:
-                        key=splitted[4]
-                    else:
-                        key=""
-                except Exception,e:                    
-                    raise RuntimeError("could not parse incoming cmds for redis. Error:%s"%e)
+            cmds=msgpack.loads(parts[0])
+            sync = "S" in parts[1]
+            timeout=int(parts[2])
+            key=parts[3]
 
-                # if cmd not in ("SET","GET","HSET","INCREMENT","RPUSH","LPUSH"):
-                #     deny=True
-                # if key.find("blobstor")<>0:
-                #     deny=True
-            if deny==True:
-                cmdsocket.send_multipart(["DENY"])
+            for cmd,args,data in cmds:
+                if not getattr(self, cmd):
+                    cmdsocket.send_multipart([str(1),cmd]) #1 means not found
+                    return
+                # print cmd               
+                if data<>"":
+                    method=getattr(self, cmd)
+                    res=method(data=data,session=self.sessions[key],**args)
+                else:
+                    method=getattr(self, cmd)                    
+                    res=method(session=self.sessions[key],**args)
+
+                if res=="DENY":
+                    cmdsocket.send_multipart([str(2),cmd]) #1 means not found
+                    return
+            if sync:
+                cmdsocket.send_multipart([str(0),msgpack.dumps(res)])
             else:
-                self.redis.send_packed_commands(parts)
-                result =self.redis.read_n_response(len(parts))            
-                if j.basetype.list.check(result[-1]):
-                    result=result[-1]
-                cmdsocket.send_multipart(result)
+                cmdsocket.send_multipart([str(0),""])  #will have to be a sort of jobguid which we will then return so followup can be done
 
     def cmdGreenlet(self):
         # Nonblocking
@@ -236,70 +289,99 @@ blobstor.disk.size=100
         mdpath=storpath + ".md"
         return storpath, mdpath
 
-    def set(self, namespace, key, data, repoId="",serialization="",session=None):
-        if serialization=="":
-            serialization="lzma"
+    def LOGIN(self,login="",passwd="",session=None):
+        key=j.base.idgenerator.generateGUID()
+        self.sessions[key]=(login,passwd)
+        return {"key":key}
+
+    def SET(self, namespace, key, data, repoid=0,serialization="",session=None):
+        # if serialization=="":
+        #     serialization="lzma"
 
         if key==None or key=="":
             raise RuntimeError("key cannot be None or empty.")
-
-        cid,tarfile=self.getActiveWriteContainer()
-
-        from IPython import embed
-        print "DEBUG NOW set"
-        embed()
-        s        
-
-        tarinfo=tarfile.TarInfo()
-        tarinfo.size=len(data)
-
-        md={}
-        md["md5"] = md5
-        md["format"] = serialization
-        md["repos"] = ""
-
-        if not j.system.fs.exists(path=mdpath):
+        key2=b'%s__%s'%(namespace,key)
+        mddata=self.db.get(key2)
+        if  mddata<>None:
+            size,repos,diskid,cid=msgpack.loads(mddata)
+            if int(repoid) not in repos:
+                repos.append(repoid)
+                self.db.put(key2,msgpack.dumps((size,repos,diskid,cid)))
+                mdchange=True
+            else:
+                mdchange=False
+            change=False
         else:
-            md = ujson.loads(j.system.fs.fileGetContents(mdpath))
-        if not md.has_key("repos"):
-            md["repos"] = {}
-        md["repos"][str(repoId)] = True
-        mddata = ujson.dumps(md)
-        # print "Set:%s"%md
-        j.system.fs.writeFile(storpath + ".md", mddata)
-        return [key, True, True]
+            diskid,cid,tf=self.getActiveWriteContainer(namespace)
+            tarinfo=tarfile.TarInfo()
+            tarinfo.size=len(data)
+            tarinfo.name=key
+            md={}
+            md["format"] = serialization
+            # md["repos"] = "%s"%repoid
+            tarinfo.pax_headers=md
 
-    def get(self, namespace, key, serialization="", session=None):
-        if serialization == "":
-            serialization = "lzma"
+            tf.addfile(tarinfo, StringIO.StringIO(data))
+            self.db.put(key2,msgpack.dumps([tarinfo.size,[int(repoid)],diskid,cid]))
 
-        storpath, mdpath = self._getPaths(namespace,key)
+            self.activeContainerModDate[namespace]=time.time()
+            self.activeContainerSize[namespace]+=len(data)
+            self.activeContainerNrFilesAdded[namespace]+=1
+            self.activeContainerFiles[namespace].append(key)
 
-        if not j.system.fs.exists(storpath):
-            # Blob doesn't exist here, let's check with Our Parent Blobstor(s)
-            if self._client.exists(namespace, key):
-                missing_blob = self._client.get(namespace, key, serialization, session)
-                # Set the blob in our BlobStor
-                self.set(namespace, key, missing_blob, serialization=serialization, session=session)
-                return missing_blob
+            mdchange=True
+            change=True
 
-        md = ujson.loads(j.system.fs.fileGetContents(mdpath))
-        if md["format"] != serialization:
-            raise RuntimeError("Serialization specified does not exist.") #in future can convert but not now
-        with open(storpath) as fp:
-            data2 = fp.read()
-            fp.close()
-        return data2
+        return [key, mdchange, change]
 
-    def getMD(self,namespace,key,session=None):
-        if session<>None:
-            self._adminAuth(session.user,session.passwd)
+    def GET(self, namespace, key, repoid=0,serialization="", session=None):
+        # if serialization == "":
+        #     serialization = "lzma"
+        if key==None or key=="":
+            raise RuntimeError("key cannot be None or empty.")
+        key2=b'%s__%s'%(namespace,key)
+        mddata=self.db.get(key2)
+        if  mddata<>None:
+            size,repos,diskid,cid=msgpack.loads(mddata)
+            if self.activeContainerFiles.has_key(namespace)and key in self.activeContainerFiles[namespace]:
+                diskid,cid,tf=self.getActiveWriteContainer(namespace)
+                close=False #dont close used for writing
+            else:
+                path=self.cid2path(namespace,diskid,cid)
+                tf=tarfile.open(name=path, mode='r:', fileobj=None, bufsize=10240)
+                close=True
 
-        storpath,mdpath=self._getPaths(namespace,key)
+            tarinfo=tf.getmember(key)
+            f=tf.extractfile(tarinfo)
+            data=f.read()
+            f.close()
+            if close:
+                tf.close()
+            return data
+        else:
+            return None
 
-        return ujson.loads(j.system.fs.fileGetContents(mdpath))
+    def GETMD(self,namespace,key,repoid=0,session=None):
+        if key==None or key=="":
+            raise RuntimeError("key cannot be None or empty.")
+        key2=b'%s__%s'%(namespace,key)
+        return msgpack.loads(self.db.get(key2))
 
-    def delete(self,namespace,key,repoId="",force=False,session=None):
+    def EXISTS(self,namespace,key,repoid=0,session=None):
+        if key==None or key=="":
+            raise RuntimeError("key cannot be None or empty.")
+        key2=b'%s__%s'%(namespace,key)
+        return self.db.get(key2)<>None
+
+    def EXISTSBATCH (self, namespace, keys, repoid=0,session=None):
+        exists=[]
+        for key in keys:
+            if self.EXISTS(namespace, key, repoid=repoid, session=session):
+                exists.append(key)
+        return exists
+
+    def DELETE(self,namespace,key,repoid="",force=False,session=None):
+        raise RuntimeError("not implemented")
         if force=='':
             force=False #@todo is workaround default datas dont work as properly, when not filled in always ''
         if session<>None:
@@ -321,8 +403,8 @@ blobstor.disk.size=100
         md=ujson.loads(j.system.fs.fileGetContents(mdpath))
         if not md.has_key("repos"):
             raise RuntimeError("error in metadata on path:%s, needs to have repos as key."%mdpath)
-        if md["repos"].has_key(str(repoId)):
-            md["repos"].pop(str(repoId))
+        if md["repos"].has_key(str(repoid)):
+            md["repos"].pop(str(repoid))
         if md["repos"]=={}:
             j.system.fs.remove(storpath)
             j.system.fs.remove(mdpath)
@@ -330,16 +412,9 @@ blobstor.disk.size=100
             mddata=ujson.dumps(md)
             j.system.fs.writeFile(storpath+".md",mddata)
 
-    def exists(self,namespace,key, repoId="", session=None):
-        storpath,mdpath=self._getPaths(namespace,key)
-        if repoId=="":
-            return j.system.fs.exists(path=storpath)
-        if j.system.fs.exists(path=storpath):
-            md=ujson.loads(j.system.fs.fileGetContents(mdpath))
-            return md["repos"].has_key(str(repoId))
-        return False
 
-    def deleteNamespace(self, namespace, session=None):
+    def DELNS(self, namespace, session=None):
+        raise RuntimeError("not implemented")
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         storpath=j.system.fs.joinPaths(self.STORpath,namespace)

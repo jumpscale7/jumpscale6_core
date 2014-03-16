@@ -20,8 +20,9 @@ class BlobstorMasterCMDS():
 
     def _load(self):
         result=self.blobstor._getNodesDisks()
-        self.nodes,self.disks=result
-        if result==None:
+        if result<>None:
+            self.nodes,self.disks=result
+        else:
             for guid in self.osis.node.list():
                 obj=self.osis.node.get(guid)
                 if obj.gid==j.application.whoAmI.gid:

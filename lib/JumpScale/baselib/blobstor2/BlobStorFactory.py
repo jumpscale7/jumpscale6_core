@@ -7,7 +7,7 @@ from BlobStorWorker import *
 
 import JumpScale.baselib.credis
 
-# import msgpack
+import msgpack
 
 # _pack_pipeline_command
 
@@ -16,49 +16,56 @@ import JumpScale.grid.zdaemon
 BSTRANSPPARENT=j.core.zdaemon.getZDaemonTransportClass()
 class BlobStorTransport(BSTRANSPPARENT):
 
-    def __init__(self,addr,port,gevent=True):
+    def __init__(self,addr,port,gevent=True,login="",passwd=""):
         BSTRANSPPARENT.__init__(self,addr=addr,port=port,gevent=gevent)
         self._init()
-        # self.redis=j.clients.blobstor2.redis.redis
-        self.packcmds=j.clients.blobstor2.redis.redis.pack_pipeline_command_list
+        self._cmdchannel.send_multipart([msgpack.dumps([["LOGIN",{"login":login,"passwd":passwd},""]]),"S",str(1),""])
+        session= self._cmdchannel.recv_multipart()
+        if session[0]<>"0":
+            raise RuntimeError("could not create session with blobserver")
+        session=msgpack.loads(session[1])
+        self.sessionkey=session["key"]
 
-    def sendCmds(self,cmds,transaction=True):
+    def sendCmds(self,cmds,sync=True,timeout=60):
         """
         list of cmds, each cmd is a tuple which can be understood by redis
         """
-        if transaction and len(cmds)>0:
-            cmds.insert(0,("MULTI",))
-            cmds.append(("EXEC",))
-            
-        args=self.packcmds(cmds)
-
-        self._cmdchannel.send_multipart(args)
-        result=self._cmdchannel.recv_multipart()
-
-        
-        if result[0]=="DENY":
-            raise RuntimeError("cmds could not be send, access denied.")
-        else:
-            return result
-
-    def queueCMD(self,cmd,key,data="",subkey="",sendnow=False):
-        if data=="":
-            self.queue.append((cmd,key))
-        else:
-            if subkey=="":
-                self.queue.append((cmd,key,data))
+        if len(cmds)>0:
+            if sync:
+                actions="S"
             else:
-                self.queue.append((cmd,key,subkey,data))
-            self.queuedatasize+=len(data)
-        if sendnow or len(self.queue)>100 or self.queuedatasize>self.maxqueuedatasize:
-            self.sendNow()
+                actions=""
+            self._cmdchannel.send_multipart([msgpack.dumps(cmds),actions,str(timeout),self.sessionkey])
+        else:
+            raise RuntimeError("need 1 or more commands")
+        result=self._cmdchannel.recv_multipart()
+        
+        if result[0]=="1":
+            raise RuntimeError("cmd not found:%s"%result[1])
+        if result[0]=="2":
+            raise RuntimeError("access denied:%s"%result[1])
+        else:
+            res=msgpack.loads(result[1])
+            return res
 
-    def sendNow(self):
-        c=self._getBlobStorConnection(datasize=self.queuedatasize)
-        res=c.sendCmds(self.queue,transaction=True)
-        self.queue=[]
-        self.queuedatasize=0
-        return res            
+    # def queueCMD(self,cmd,key,data="",subkey="",sendnow=False):
+    #     if data=="":
+    #         self.queue.append((cmd,key))
+    #     else:
+    #         if subkey=="":
+    #             self.queue.append((cmd,key,data))
+    #         else:
+    #             self.queue.append((cmd,key,subkey,data))
+    #         self.queuedatasize+=len(data)
+    #     if sendnow or len(self.queue)>100 or self.queuedatasize>self.maxqueuedatasize:
+    #         self.sendNow()
+
+    # def sendNow(self):
+    #     c=self._getBlobStorConnection(datasize=self.queuedatasize)
+    #     res=c.sendCmds(self.queue,transaction=True)
+    #     self.queue=[]
+    #     self.queuedatasize=0
+    #     return res            
 
 
 class BlobStorFactory:
@@ -97,7 +104,7 @@ class BlobStorFactory:
         self._blobstorMasterCache[name]= j.servers.zdaemon.getZDaemonClient(addr=ipaddr,port=port,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobstormaster")
         return self._blobstorMasterCache[name]        
 
-    def getBlobStorConnection(self,master,nsobj,datasize=0,random=False):
+    def getBlobStorConnection(self,master,nsobj,datasize=0,random=False,login="",passwd=""):
         rmsize=len(nsobj["routeMap"])
         if random or datasize>self.replicaMaxSize:
             #spread data
@@ -112,7 +119,7 @@ class BlobStorFactory:
         if self._blobstorCache.has_key(bsnodeid):
             return self._blobstorCache[bsnodeid]
         ipaddr, port,key=master.getNodeLoginDetails(bsnodeid)        
-        self._blobstorCache[bsnodeid]=  BlobStorTransport(addr=ipaddr,port=port,gevent=True)
+        self._blobstorCache[bsnodeid]=  BlobStorTransport(addr=ipaddr,port=port,gevent=True,login=login,passwd=passwd)
 
         return self._blobstorCache[bsnodeid]
 

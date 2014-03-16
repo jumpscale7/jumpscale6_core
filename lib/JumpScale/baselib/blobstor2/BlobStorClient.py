@@ -1,7 +1,7 @@
 from JumpScale import j
 
 import ujson
-import 
+# import 
 
 class BlobStorClient:
     """
@@ -14,7 +14,6 @@ class BlobStorClient:
         self.namespace=namespace
         self.setGetNamespace()
         self.rmsize=len(self.nsobj["routeMap"])
-        self.key=None #toimplement
         self.queue=[]
         self.queuedatasize=0
         self.maxqueuedatasize=1*1024*1024 #1MB
@@ -31,93 +30,53 @@ class BlobStorClient:
         self.nsid=self.nsobj["id"]
         return ns
 
-    def _getBlobStorConnection(self,datasize=0):
-        return j.clients.blobstor2.getBlobStorConnection(self.master,self.nsobj,datasize)
+    def _getBlobStorConnection(self,datasize=0,random=False):
+        return j.clients.blobstor2.getBlobStorConnection(self.master,self.nsobj,datasize,random=random)
 
-    def exists(self,key,replicaCheck=False):
-        """
-        Checks if the blobstor contains an entry for the given key
-        @param key: key to Check
-        @replicaCheck if True will check that there are enough replicas
-        the normal check is just against the metadata stor on the server, so can be data is lost
-        """
-        c=self._getBlobStorConnection(datasize)
-        return c.exists(key=key, data=data,nsid=self.nsid,replicaCheck=replicaCheck)
+    def _execCmd(self,cmd="",args={},data="",sendnow=True,sync=True,timeout=60):
 
-    # def queueCMD(self,cmd,key,data="",subkey="",sendnow=False):
-    #     if data=="":
-    #         self.queue.append((cmd,key))
-    #     else:
-    #         if subkey=="":
-    #             self.queue.append((cmd,key,data))
-    #         else:
-    #             self.queue.append((cmd,key,subkey,data))
-    #         self.queuedatasize+=len(data)
-    #     if sendnow or len(self.queue)>100 or self.queuedatasize>self.maxqueuedatasize:
-    #         self.sendNow()
-
-    # def sendNow(self):
-    #     c=self._getBlobStorConnection(datasize=self.queuedatasize)
-    #     res=c.sendCmds(self.queue,transaction=True)
-    #     self.queue=[]
-    #     self.queuedatasize=0
-    #     return res
-
-    def getMD(self,key):
-        c=self._getBlobStorConnection(datasize)
-        return c.getMD( key=key,nsid=self.nsid)
-
-    def delete(self,key, datasize=0,force=False):
-        c=self._getBlobStorConnection(datasize)
-        return c.delete(key=key,nsid=self.nsid,force=force)
-
-    # def _getJob(self,cmd,args={},key=""):
-    #     jobguid=j.base.idgenerator.generateGUID()     
-    #     if key<>"":
-    #         args["key"]=key
-    #     job=[int(time.time()),jobguid,cmd,args] 
-    #     return (jobguid,ujson.dumps(job))
-
-    # def _execCmd(self,qid=0,cmd="",args={},key="",data="",sendnow=True,sync=True,timeout=10):
-    #     jobguid,job=self._getJob("set",key=key)           
-    #     if data=="":
-    #         self.queueCMD(cmd="RPUSH", key="blobserver:cmdqueue:0", data=jobguid)
-    #         self.queueCMD(cmd="HSET", key="blobserver:cmds",subkey=jobguid, data=job)
-    #     elif data<>"":
-    #         self.queueCMD(cmd="RPUSH", key="blobserver:cmdqueue:0", data=jobguid)
-    #         self.queueCMD(cmd="HSET", key="blobserver:cmds",subkey=jobguid, data=job)
-    #         self.queueCMD(cmd="HSET", key="blobserver:blob", subkey=key,data=data)
-
-    #     if sync:
-    #         result=self.queueCMD(cmd="BLPOP", key="blobserver:return:%s"%jobguid, data=timeout,sendnow=True)
-    #         self.queueCMD(cmd="HDEL", key="blobserver:cmds",subkey=jobguid) 
-    #         return result[-1]
-    #     else:   
-    #         if sendnow:
-    #             result=self.sendNow()
-    #         else:
-    #             result=None
-
-    #         return jobguid,result
+        self.queue.append((cmd,args,data))
+        self.queuedatasize+=len(data)
+    
+        if sendnow or len(self.queue)>100 or self.queuedatasize>self.maxqueuedatasize:
+            c=self._getBlobStorConnection(datasize=self.queuedatasize)
+            res=c.sendCmds(self.queue,sync=sync,timeout=timeout)
+            print "send"
+            self.queue=[]
+            self.queuedatasize=0
+            return res
 
 
-    def set(self,key, data,sendnow=True,sync=True,timeout=60):
+    def set(self,key, data,repoid=0,sendnow=True,sync=True,timeout=60):
         """
         """
-        return self._execCmd(0,"SET",{},key=key,data=data,sendnow=sendnow,sync=sync,timeout=timeout)        
+        return self._execCmd("SET",{"key":key,"namespace":self.namespace,"repoid":repoid},data=data,sendnow=sendnow,sync=sync,timeout=timeout)        
 
-    def get(self, key,timeout=60):
+    def get(self, key,repoid=0,timeout=60):
         """
         get the block back
         """
-        return self._execCmd(0,"GET",{},key=key,sendnow=True,sync=True,timeout=timeout)  
+        return self._execCmd("GET",{"key":key,"namespace":self.namespace,"repoid":repoid},sendnow=True,sync=True,timeout=timeout)  
 
-    def existsBatch(self,keys,replicaCheck=False):
+    def existsBatch(self,keys,repoid=0,replicaCheck=False):
         c=self._getBlobStorConnection()
-        return c.existsBatch(keys=keys,nsid=self.nsid,replicaCheck=replicaCheck)
+        return self._execCmd("EXISTSBATCH",{"keys":keys,"namespace":self.namespace,"repoid":repoid},sendnow=True,sync=True,timeout=600) 
+
+    def exists(self,key,repoid=0,replicaCheck=False):
+        """
+        Checks if the blobstor contains an entry for the given key
+        @param key: key to Check
+        @replicaCheck if True will check that there are enough replicas (not implemented)
+        the normal check is just against the metadata stor on the server, so can be data is lost
+        """
+        return self.get( key,repoid=repoid,timeout=60)<>None
+
+    def getMD(self,key):
+        return self._execCmd("GETMD",{"key":key,"namespace":self.namespace,"repoid":repoid},sendnow=True,sync=True,timeout=2) 
+
+    def delete(self,key, repoid=0,force=False):
+        return self._execCmd("DELETE",{"key":key,"namespace":self.namespace,"repoid":repoid},sendnow=True,sync=True,timeout=60)
 
     def deleteNamespace(self):
-        c=self._getBlobStorConnection()
-        return c.deleteNamespace(nsid=self.nsid)
-
+        return self._execCmd("DELNS",{"namespace":self.namespace},sendnow=True,sync=True,timeout=600) 
 
