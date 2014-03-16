@@ -5,13 +5,11 @@ echo (return mesg)
 """
 
 organization = "jumpscale"
+name = "echo_async"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "tools.echo.async"
-period = 12*3600 #every 12h restart full process
-enable=False
-startatboot=False
 async=True
 roles = ["*"]
 
