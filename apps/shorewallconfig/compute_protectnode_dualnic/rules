@@ -7,8 +7,8 @@
 # http://www.shorewall.net/manpages/shorewall-rules.html
 #
 ###################################################################################################################################################################################
-#ACTION		SOURCE		DEST		PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK	CONNLIMIT	TIME         HEADERS         SWITCH
-#							PORT	PORT(S)		DEST		LIMIT		GROUP
+#ACTION     SOURCE      DEST        PROTO   DEST    SOURCE      ORIGINAL    RATE        USER/   MARK    CONNLIMIT   TIME         HEADERS         SWITCH
+#                           PORT    PORT(S)     DEST        LIMIT       GROUP
 #SECTION ALL
 #SECTION ESTABLISHED
 #SECTION RELATED
@@ -16,7 +16,7 @@
 
 SECTION NEW
 
-SSH(ACCEPT)	    net		$FW
-Ping(ACCEPT)	net		$FW
+SSH(ACCEPT)     net:172.16.1.0/24,172.16.2.0/24,172.16.3.0/24       $FW
+Ping(ACCEPT)    net:172.16.1.0/24,172.16.2.0/24,172.16.3.0/24       $FW
 
 
