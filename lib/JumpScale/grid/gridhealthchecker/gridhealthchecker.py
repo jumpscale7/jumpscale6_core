@@ -40,6 +40,6 @@ class GridHealthChecker(object):
         nodes = self._getNodesIds()
         result = dict()
         for nid in nodes:
-            response = self.client.executeJumpScript('jumpscale', 'echo_sync', args={'msg': 'test msg from nid:%s' % nid}, nid=nid, timeout=10)['result']
-            result[nid] = response if response else 'ProcessManager on node: %s is not reachable' % nid
+            response = self.client.executeJumpScript('jumpscale', 'echo_sync', args={'msg': 'ping'}, nid=nid, timeout=10)['result']
+            result[nid] = True if response else False
         return result
