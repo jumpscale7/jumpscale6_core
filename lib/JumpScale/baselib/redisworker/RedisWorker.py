@@ -181,7 +181,7 @@ class RedisWorkerFactory:
         if jsdict:
             jsdict=ujson.loads(jsdict)
         else:
-            raise RuntimeError("Cannot find jumpscript with id:%s"%jscriptid)
+            return None
         return Jumpscript(ddict=jsdict)
 
     def getJumpscriptFromName(self,organization,name):
