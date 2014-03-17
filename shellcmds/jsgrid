@@ -92,4 +92,44 @@ if opts.action =='reinit':
 
     print "has set user admin with passwd admin, please change using command 'jsuser' if required."
 
+#################HEALTHCHECK
+if opts.action == 'healthcheck':
+    import JumpScale.grid.gridhealthchecker
+
+    print '#############################'
+    print 'ElasticSearch status:'
+    esstatus = j.core.grid.healthchecker.checkElasticSearch()
+    for key, val in esstatus.iteritems():
+        print '%s: %s' % (key, val)
+
+    print '#############################'
+    print 'Redis Status:'
+    rstatus = j.core.grid.healthchecker.checkRedis()
+    for nid, status in rstatus.iteritems():
+        print 'Node %s:' % nid
+        print '----------'
+        for port, stat in status.iteritems():
+            statstr = 'RUNNING, Memory used: %s' % stat['memory_usage'] if stat['alive'] else 'HALTED'
+            print 'Port %s: %s' % (port, statstr)
+
+    print '#############################'
+    print 'Process Managers Status:'
+    pmstatus = j.core.grid.healthchecker.checkProcessManagers()
+    for nid, status in pmstatus.iteritems():
+        print 'Node %s:' % nid
+        print '----------'
+        print 'Process manager is %s' % ('RUNNING' if status else 'HALTED')
+    j.core.grid.healthchecker.checkWorkers()
+
+    print '#############################'
+    print 'Workers Status:'
+    wstatus = j.core.grid.healthchecker.checkWorkers()
+    for nid, workers in wstatus.iteritems():
+        print 'Node %s:' % nid
+        print '----------'
+        for worker, stat in workers.iteritems():
+            print "'%s': CPU percent: %s %%, Memory used: %.2f MB" % (worker, stat['cpu'], stat['mem']/1024.0/1024.0)
+
+    print '#############################'
+
 j.application.stop()
