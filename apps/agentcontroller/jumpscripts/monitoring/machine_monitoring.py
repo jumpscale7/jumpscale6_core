@@ -31,7 +31,7 @@ try:
                 libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
 
 except Exception, e:
-    eanble = False
+    enable = False
     con = None
 
 def action():
