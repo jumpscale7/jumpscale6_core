@@ -421,7 +421,7 @@ class JPackageClient():
         #sort jpackages
         tosortmeta={}        
         for item in res:
-            tosortmeta["%s_%s"%(item.name,item.domain)]=item
+            tosortmeta["%s_%s_%s"%(item.name,item.domain,item.version)]=item
         tosort=tosortmeta.keys()
         tosort.sort()
         res=[]
