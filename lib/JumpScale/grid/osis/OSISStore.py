@@ -386,5 +386,14 @@ class OSISStore(object):
             obj = self.get(id)
             filename = j.system.fs.joinPaths(outputpath, id)
             j.system.fs.writeFile(filename, obj)
-            
 
+    def importFromPath(self, path):
+        '''Imports OSIS category from file system'''
+        if not j.system.fs.exists(path):
+            raise RuntimeError("Can't find the specified path: %s" % path)
+
+        data_files = j.system.fs.listFilesInDir(path)
+        for data_file in data_files:
+            with open(data_file) as f:
+                obj = json.load(f)
+            self.set(obj['guid'], obj)

@@ -111,6 +111,13 @@ class OSISCMDS(object):
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
         return oi.export(outputpath)
 
+    def importFromPath(self, namespace, categoryname, path, session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"import",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.importFromPath(path)
+
     def echo(self, msg="", session=None):
         return msg
 
