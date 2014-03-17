@@ -171,7 +171,7 @@ blobstor.disk.size=100
     def getActiveWriteContainer(self,namespace="default",checkonly=False):
         if not self.activeContainer.has_key(namespace) \
                 or self.activeContainerSize[namespace]>self.activeContainerMaxSize \
-                or self.activeContainerNrFilesAdded[namespace]>200 \
+                or self.activeContainerNrFilesAdded[namespace]>500 \
                 or self.activeContainerModDate[namespace]<(time.time()-self.activeContainerExpiration):
 
             print ("SELECT NEW ACTIVE WRITE CONTAINER")
@@ -361,6 +361,15 @@ blobstor.disk.size=100
         else:
             return None
 
+    def SYNC(self,namespace,session=None):
+        if self.activeContainer.has_key(namespace):
+            self.activeContainer[namespace][2].close()
+            self.activeContainer.pop(namespace)
+            self.activeContainerNrFilesAdded[namespace]=0
+            self.activeContainerSize[namespace]=0
+            self.activeContainerModDate[namespace]=0
+            self.activeContainerFiles[namespace]=[]              
+
     def GETMD(self,namespace,key,repoid=0,session=None):
         if key==None or key=="":
             raise RuntimeError("key cannot be None or empty.")
@@ -370,7 +379,10 @@ blobstor.disk.size=100
     def EXISTS(self,namespace,key,repoid=0,session=None):
         if key==None or key=="":
             raise RuntimeError("key cannot be None or empty.")
-        key2=b'%s__%s'%(namespace,key)
+        if self.activeContainerFiles.has_key(namespace) and key in self.activeContainerFiles[namespace]:
+            return True
+        key2=b'%s__%s'%(namespace,key)        
+        # print "exist:%s %s"%(key,self.db.get(key2))
         return self.db.get(key2)<>None
 
     def EXISTSBATCH (self, namespace, keys, repoid=0,session=None):

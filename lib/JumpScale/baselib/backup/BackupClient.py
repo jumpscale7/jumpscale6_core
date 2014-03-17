@@ -2,7 +2,7 @@ from JumpScale import j
 import lzma
 import JumpScale.baselib.gitlab
 import JumpScale.baselib.blobstor2
-
+import os
 
 class Item():
     def __init__(self,data=""):
@@ -37,31 +37,31 @@ class Item():
     __str__=__repr__
 
 class JSFileMgr():
-    def __init__(self, MDPath, cachePath="",domain="default",namespace="backup",blobclientname="default"):
+    def __init__(self, MDPath,backupname,blobstorAccount,blobstorNamespace,repoId=1,compress=True,fullcheck=False,servercheck=True,storpath="/mnt/STOR"):
         self.errors=[]
         self._MB4=1024*1024*4 #4Mbyte
         self.excludes=["*.pyc"]
+        self.repoId=repoId
+
+        self.servercheck=servercheck
+        self.fullcheck=fullcheck
 
         self.MDPath = MDPath
 
-        if cachePath=="":
-            cachePath="/opt/backup/CACHE"
-
-        self.cachePath = cachePath  # Intermediate link path!
-
-        # Local blob STOR
-        self.STORpath="/opt/backup/STOR"
+        self.storpath = storpath  # Intermediate link path!
+        j.system.fs.createDir(self.storpath)
 
         passwd = j.application.config.get('grid.master.superadminpasswd')
         login="root"
         # blobstor2 client
         # self.blobstor = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
-        self.blobstor=j.clients.blobstor2.getClient(name=blobclientname)
-        self.namespace=namespace
-        self.compress=False
-        self.errors=[]
+        self.blobstor=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace=blobstorNamespace)
+        
+        self.namespace=blobstorNamespace
+        self.backupname=backupname
 
-        self.blobstor.registerNamespace(domain,namespace)
+        self.compress=compress
+        self.errors=[]
 
     def _normalize(self, path):
         path=path.replace("'","\\'")
@@ -69,7 +69,7 @@ class JSFileMgr():
         path=path.replace("]","\\]")
         return path
 
-    def action_link(self, src, dest):
+    def _link(self, src, dest):
         #DO NOT IMPLEMENT YET
         j.system.fs.createDir(j.system.fs.getDirName(dest))
         print "link:%s %s"%(src, dest)
@@ -94,9 +94,7 @@ class JSFileMgr():
         if key=="":
             key = j.tools.hash.md5_string(data)
         data2 = lzma.compress(data) if self.compress else data
-        if not self.blobstor.exists(key=key,repoId=self.repoId):
-            self.blobstor.set(key=key, data=data2,repoId=self.repoId)
-            
+        self.blobstor.set(key=key, data=data2,repoid=self.repoId)            
         return key
 
     def _read_file(self,path, block_size=0):
@@ -114,7 +112,7 @@ class JSFileMgr():
     def doError(self,path,msg):
         self.errors.append([path,msg])
 
-    def _handleMetadata(self, path,destination,prefix,ttype,linkdest=None,fullcheck=False):
+    def _handleMetadata(self, path,destination,prefix,ttype,linkdest=None):
         """
         @return (mdchange,contentchange) True if changed, False if not
         @param destination is destination inside target dir 
@@ -140,8 +138,7 @@ class JSFileMgr():
         if j.system.fs.exists(path=dest):
             if ttype=="D":
                 dest+="/.meta"
-            item=self.getMDObjectFromFs(dest)
-            
+            item=self.getMDObjectFromFs(dest)            
             mdchange=False
         elif ttype=="L":
             dest=j.system.fs.joinPaths(self.MDPath,"LINKS",destination,srcpart)
@@ -159,12 +156,14 @@ class JSFileMgr():
             mdchange=True
 
         if ttype=="F":          
-            if fullcheck or item.mtime<>stat.st_mtime or item.size<>stat.st_size:
-                newMD5=j.tools.hash.md5(path)
-                if item.hash<>newMD5:
-                    mdchange=True
-                    change=True
-                    item.hash=newMD5
+            sizeFromFS=int(stat.st_size)
+            if self.fullcheck or item.mtime<>str(int(stat.st_mtime)) or item.size<>str(sizeFromFS):
+                if sizeFromFS<>0:
+                    newMD5=j.tools.hash.md5(path)
+                    if item.hash<>newMD5:                        
+                        change=True
+                        item.hash=newMD5
+                mdchange=True
         elif ttype=="L":
             if not item.__dict__.has_key("dest"):
                 mdchange=True          
@@ -213,32 +212,75 @@ class JSFileMgr():
 
         return (mdchange,change,item.hash,dest2)
 
-    def restore(self, src, dest, namespace):
+    def restore(self, src, dest,link=False):
         """
         src is location on metadata dir
         dest is where to restore to
         """
         self.errors=[]
 
-        if src[0] != "/":
-            src = "%s/%s" % (self.MDPath, src.strip())
+        if src[0] == "/":
+            raise RuntimeError("not supported src path")
+    
+        #DIRS & FILES
+        src2 = "%s/%s/%s" % (self.MDPath, "MD",src.strip())
 
-        if not j.system.fs.exists(path=src):
-            raise RuntimeError("Could not find source (on mdstore)")
+        if not j.system.fs.exists(path=src2):
+            raise RuntimeError("Could not find MD source '%s'"%src2)
 
-        for item in j.system.fs.listFilesInDir(src, True):
-            destpart=j.system.fs.pathRemoveDirPart(item, src, True)
+        for item in j.system.fs.listFilesInDir(src2, True,filter=".meta"):
+            mdo=self.getMDObjectFromFs(item)
+            destpart=j.system.fs.pathRemoveDirPart(item, src2, True)
             destfull=j.system.fs.joinPaths(dest, destpart)
+            destfull=j.system.fs.getDirName(destfull)
+            self.restore1dir(item, destfull)
 
-            self.restore1file(item, destfull, namespace)
+        for item in j.system.fs.listFilesInDir(src2, True):
+            if j.system.fs.getBaseName(item)==".meta":
+                continue
+            destpart=j.system.fs.pathRemoveDirPart(item, src2, True)
+            destfull=j.system.fs.joinPaths(dest, destpart)
+            self.restore1file(item, destfull,link=link)
+
+        #LINKS
+        src2 = "%s/%s/%s" % (self.MDPath, "LINKS",src.strip())
+
+        if not j.system.fs.exists(path=src2):
+            raise RuntimeError("Could not find LINK source '%s'"%src2)
+
+        for item in j.system.fs.listFilesInDir(src2, True,filter=".meta"):
+            mdo=self.getMDObjectFromFs(item)
+            destpart=j.system.fs.pathRemoveDirPart(item, src2, True)
+            destfull=j.system.fs.joinPaths(dest, destpart)
+            destfull=j.system.fs.getDirName(destfull)
+            destlink=j.system.fs.joinPaths(dest, mdo.dest)
+            print "link %s to %s"%(destfull,destlink)
+            j.system.fs.symlink( destlink, destfull, overwriteTarget=True)
+            os.chmod(destfull,int(mdo.mode))
+            os.chown(destfull,int(mdo.uid),int(mdo.gid))                         
+
+        for item in j.system.fs.listFilesInDir(src2, True):
+            if j.system.fs.getBaseName(item)==".meta":
+                continue
+            mdo=self.getMDObjectFromFs(item)
+            destpart=j.system.fs.pathRemoveDirPart(item, src2, True)
+            destfull=j.system.fs.joinPaths(dest, destpart)
+            destlink=j.system.fs.joinPaths(dest, mdo.dest)
+            print "link %s to %s"%(destfull,destlink)
+            j.system.fs.symlink( destlink, destfull, overwriteTarget=True)
+            os.chmod(destfull,int(mdo.mode))
+            os.chown(destfull,int(mdo.uid),int(mdo.gid))   
+
+        #@todo restore the devs
+        'tar xzvf testDev.tgz -C testd'          
 
     def getMDObjectFromFs(self,path):
         itemObj=Item(j.system.fs.fileGetContents(path))
         return itemObj
 
-    def restore1file(self, src, dest, namespace):
+    def restore1file(self, src, dest,link=False):
 
-        print "restore: %s %s" % (src, dest)
+        print "restore file: %s %s" % (src, dest)
 
         itemObj=self.getMDObjectFromFs(src)
 
@@ -248,64 +290,61 @@ class JSFileMgr():
             j.system.fs.writeFile(dest,"")
             return
 
-        blob_path = self._getBlobPath(namespace, itemObj.hash)
+        blob_path = self._restoreBlobPath(itemObj.hash)
         if j.system.fs.exists(blob_path):
             # Blob exists in cache, we can get it from there!
             print "Blob FOUND in cache: %s" % blob_path
-            j.system.fs.copyFile(blob_path, dest)
+            if link:
+                self._link(blob_path,dest)
+            else:
+                j.system.fs.copyFile(blob_path, dest)
             return
 
         # Get the file directly or get the blob storing the hashes of file parts!
         blob_hash = itemObj.hashlist if hasattr(itemObj, "hashlist") else itemObj.hash
 
         # Get blob from blobstor2
-        blob = self.blobstor.get(namespace, blob_hash)
+        blob = self.blobstor.get( blob_hash)
 
+        if blob==None:
+            from IPython import embed
+            print "DEBUG NOW restore1file blob is None"
+            embed()
+            
         # Write the blob
-        self._writeBlob(dest, blob, itemObj, namespace)
-
-    def _writeBlob(self, dest, blob, item, namespace):
-        """
-        Write blob to destination
-        """
-
-        check="##HASHLIST##"
-        if blob.find(check)==0:
-            # found hashlist
-            print "FOUND HASHLIST %s" % blob
-            hashlist = blob[len(check) + 1:]
-            j.system.fs.writeFile(dest,"")
-            for hashitem in hashlist.split("\n"):
-                if hashitem.strip() != "":
-                    blob_block = self.blobstor.get(namespace, hashitem)
-                    data = lzma.decompress(blob_block)
-                    j.system.fs.writeFile(dest, data, append=True)
+        if link:
+            self._restoreBlobToDest(blob_path, blob, itemObj)
+            self._link(blob_path,dest)
         else:
-            # content is there
-            data = lzma.decompress(blob)
-            j.system.fs.writeFile(dest, data)
+            self._restoreBlobToDest(dest, blob, itemObj)
 
+    def restore1dir(self,src,dest):
+        print "restore dir: %s %s" % (src, dest)
+
+        itemObj=self.getMDObjectFromFs(src)
+        j.system.fs.createDir(dest)
         # chmod/chown
-        os.chmod(dest,int(item.mode))
-        os.chown(dest,int(item.uid),int(item.gid))
+        os.chmod(dest,int(itemObj.mode))
+        os.chown(dest,int(itemObj.uid),int(itemObj.gid))        
 
     def backupBatch(self,batch,batchnr=None,total=None):
         """
         batch is [[src,md5]]
         """
+
         key2paths={}            
         for src,md5 in batch:
-            key2paths[md5]=(src,md5)
+            if md5<>"":
+                key2paths[md5]=(src,md5)
 
         print "batch nr:%s check"%batchnr
-        notexist=self.blobstor.existsBatch(keys=key2paths.keys()) 
-        print "batch checked on unique data"
+        exists=self.blobstor.existsBatch(keys=key2paths.keys()) 
 
         nr=batchnr*1000 #for print purposes, so we see which file is uploading
 
         for src,md5 in batch:
             nr+=1
-            if md5 in notexist:
+            if not md5 in exists:
                 hashes=[]
                 if j.system.fs.statPath(src).st_size>self._MB4:
                     print "%s/%s:upload file (>4MB) %s"%(nr,total,src)
@@ -316,17 +355,19 @@ class JSFileMgr():
                         hashparts = "\n".join(hashes)
                         out += hashparts
                         # Store in blobstor
-                        out_hash = self._dump2stor(out,key=md5) #hashlist is stored on md5 location of file
+                        # out_hash = self._dump2stor(out,key=md5) #hashlist is stored on md5 location of file
+                        self.blobstor.set(key=md5, data=out,repoid=self.repoId)   
+
                     else:
                         raise RuntimeError("hashist needs to be more than 1.")
                 else:
                     print "%s/%s:upload file (<4MB) %s"%(nr,total,src)
                     for data in self._read_file(src):
                         hashes.append(self._dump2stor(data,key=md5))
-            else:
-                print "%s/%s:no need to upload, exists: %s"%(nr,total,src)
+            # else:
+            #     print "%s/%s:no need to upload, exists: %s"%(nr,total,src)
 
-    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={".*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"],fullcheck=False):
+    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={".*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"]):
 
         #check if there is a dev dir, if so will do a special tar
         ##BACKUP:
@@ -343,9 +384,9 @@ class JSFileMgr():
             cmd="cd %s;tar Szcvf __dev.tgz dev"%path
             j.system.process.execute(cmd)
 
-        destMDClist=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".mdchanges")
-        destFClist=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".fchanges")
-        destFlist=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".found")
+        destMDClist=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,destination,".mdchanges")
+        destFClist=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,destination,".fchanges")
+        destFlist=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,destination,".found")
         j.system.fs.createDir(j.system.fs.getDirName(destMDClist))
         j.system.fs.createDir(j.system.fs.getDirName(destFClist))
         j.system.fs.createDir(j.system.fs.getDirName(destFlist))
@@ -361,10 +402,10 @@ class JSFileMgr():
                 return
             self=arg["self"]
             prefix=arg["prefix"]
-            mdchange,fchange,md5,path2=self._handleMetadata(path,arg["destination"],prefix=prefix,ttype="F",fullcheck=arg["fullcheck"])
+            mdchange,fchange,md5,path2=self._handleMetadata(path,arg["destination"],prefix=prefix,ttype="F")
             if mdchange:
                 arg["mdchanges"].write("%s\n"%(path2))
-            if arg["fullcheck"] or fchange:
+            if self.servercheck or fchange:
                 arg["changes"].write("%s|%s\n"%(path,md5))
             arg["found"].write("%s\n"%path2)
 
@@ -399,7 +440,6 @@ class JSFileMgr():
         arg["mdchanges"]=mdchanges
         arg["found"]=found
         arg["destination"]=destination
-        arg["fullcheck"]=fullcheck
 
         # arg["batch"]=[]
         w.walk(path,callbackFunctions,arg=arg,callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes)
@@ -422,10 +462,10 @@ class JSFileMgr():
         #sort all found files when going over fs
         cmd="sort %s | uniq > %s_"%(destFlist,destFlist)
         j.system.process.execute(cmd)
-        originalFiles=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".mdfound")
+        originalFiles=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,destination,".mdfound")
         cmd="sort %s | uniq > %s_"%(originalFiles,originalFiles)
         j.system.process.execute(cmd)
-        deleted=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,destination,".deleted")
+        deleted=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,destination,".deleted")
         #now find the diffs
         cmd="diff %s_ %s_ -C 0 | grep ^'- ' > %s"%(originalFiles,destFlist,deleted)
         rcode,result=j.system.process.execute(cmd,False)
@@ -461,16 +501,22 @@ class JSFileMgr():
             counter+=1
             if counter>1000:                
                 self.backupBatch(batch,batchnr=batchnr,total=total)
+                batch=[]
+                counter=0
                 batchnr+=1
         #final batch
-        self.backupBatch(batch,batchnr=batchnr,total=total)
+        if batch<>[]:
+            self.backupBatch(batch,batchnr=batchnr,total=total)
         f.close()
+
+        self.blobstor.sync()
+
         print "BACKUP DONE."
 
     def _createExistsList(self,dest):
         # j.system.fs.pathRemoveDirPart(dest,prefix,True)
         print "Walk over MD, to create files which we already have found."
-        destF=j.system.fs.joinPaths(self.STORpath, "../TMP","plists",self.namespace,dest,".mdfound")
+        destF=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,dest,".mdfound")
         j.system.fs.createDir(j.system.fs.getDirName(destF))
         fileF = open(destF, 'w')
 
@@ -511,15 +557,15 @@ class JSFileMgr():
         fileF.close()
         print "Walk over MD, DONE"
 
-    def _getBlobPath(self, namespace, key):
+    def _restoreBlobPath(self, key):
         """
         Get the blob path in Cache dir
         """
         # Get the Intermediate path of a certain blob
-        storpath = j.system.fs.joinPaths(self.cachePath, namespace, key[0:2], key[2:4], key)
+        storpath = j.system.fs.joinPaths(self.storpath, key[0:2], key[2:4], key)
         return storpath
 
-    def _getBlob(self, src, namespace):
+    def _restoreBlob(self, src):
         """
         Retrieves the blobs in Cache path
         """
@@ -533,70 +579,115 @@ class JSFileMgr():
         blob = self.blobstor.get(key=blob_hash)
 
         # The path which this blob should be saved
-        blob_path = self._getBlobPath(namespace, itemObj.hash)
+        blob_path = self._restoreBlobPath(namespace, itemObj.hash)
         j.system.fs.createDir(j.system.fs.getDirName(blob_path))
 
-        self._writeBlob(blob_path, blob, itemObj, namespace)
+        self._restoreBlobToDest(blob_path, blob, itemObj)
 
         return blob_path
 
-    def linkRecipe(self, src, dest, namespace):
+    def _restoreBlobToDest(self, dest, blob, item):
         """
-        Hardlink Recipe from Cache Dir
+        Write blob to destination
         """
+        check="##HASHLIST##"
 
-        if not self.cachePath:
-            raise RuntimeError("Link Path is not Set!")
+        if blob.find(check)==0:
+            # found hashlist
+            # print "FOUND HASHLIST %s" % blob
+            hashlist = blob[len(check) + 1:]
+            j.system.fs.createDir(j.system.fs.getDirName(dest))
+            j.system.fs.writeFile(dest,"")
+            for hashitem in hashlist.split("\n"):
+                if hashitem.strip() != "":
+                    blob_block = self.blobstor.get(hashitem)
+                    if self.compress:
+                        blob_block = lzma.decompress(blob_block)
+                    j.system.fs.writeFile(dest, blob_block, append=True)
+        else:
+            # content is there
+            if self.compress:
+                blob = lzma.decompress(blob)
+            j.system.fs.createDir(j.system.fs.getDirName(dest))
+            j.system.fs.writeFile(dest, blob)
 
-        if src[0] != "/":
-            src = "%s/%s" % (self.MDPath, src.strip())
+        # chmod/chown
+        os.chmod(dest,int(item.mode))
+        os.chown(dest,int(item.uid),int(item.gid))        
 
-        if not j.system.fs.exists(path=src):
-            raise RuntimeError("Could not find source (on mdstore)")
+    # def linkRecipe(self, src, dest):
+    #     """
+    #     Hardlink Recipe from Cache Dir
+    #     """
 
-        for item in j.system.fs.listFilesInDir(src, True):
-            # Retrieve blob & blob_path in intermediate location
-            blob_path = self._getBlob(item, namespace)
+    #     if not self.storpath:
+    #         raise RuntimeError("Link Path is not Set!")
 
-            # the hardlink destination
-            destpart = j.system.fs.pathRemoveDirPart(item, src, True)
-            destfull = j.system.fs.joinPaths(dest, destpart)
+    #     if src[0] != "/":
+    #         src = "%s/%s" % (self.MDPath, src.strip())
 
-            # Now, make the link
-            self.action_link(blob_path, destfull)
+    #     if not j.system.fs.exists(path=src):
+    #         raise RuntimeError("Could not find source (on mdstore)")
+
+    #     for item in j.system.fs.listFilesInDir(src, True):
+    #         # Retrieve blob & blob_path in intermediate location
+    #         blob_path = self._restoreBlob(item, namespace)
+
+    #         # the hardlink destination
+    #         destpart = j.system.fs.pathRemoveDirPart(item, src, True)
+    #         destfull = j.system.fs.joinPaths(dest, destpart)
+
+    #         # Now, make the link
+    #         self._link(blob_path, destfull)
 
 class BackupClient:
     """
     """
 
-    def __init__(self,backupdomain,backupname,blobclientName,gitlabName="incubaid"):
-        self.blobclientName=blobclientName
-        self.gitlabName=gitlabName        
+    def __init__(self,backupname,blobstorAccount,blobstorNamespace,gitlabAccount,compress=True,fullcheck=False,servercheck=True,storpath="/mnt/STOR"):
+     
+        self.backupname=backupname
+        self.blobstorAccount=blobstorAccount
+        self.blobstorNamespace=blobstorNamespace
+        self.gitlabAccount=gitlabAccount
+        self.key="backup_%s"%self.backupname
+
+        self.gitlab=j.clients.gitlab.get(gitlabAccount)
+
         try:
-            self.gitlab=j.clients.gitlab.get(gitlabName)
+            self.gitlab=j.clients.gitlab.get(gitlabAccount)
         except Exception,e:
             self.gitlab=None
-        self.backupdomain=backupdomain
-        self.backupname=backupname
-        self.key="%s_%s"%(backupdomain,backupname)
-        self.mdpath="/opt/backup/MD/%s"%self.key
-        if not j.system.fs.exists(path=self.mdpath):    
-            
-            if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=self.key):
-                self.gitlab.createproject(backupname, description='backup set', issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)            
+
+        self.mdpath="/opt/backup/MD/%s"%self.backupname
+        if not j.system.fs.exists(path=self.mdpath):  
+            if self.gitlab.passwd<>"":              
+                if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=self.key):
+                    self.gitlab.createproject(self.key, description='backup set', \
+                    issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)            
+
         
         if self.gitlab<>None:
-            self.gitclient = self.gitlab.getGitClient(self.gitlab.loginName, backupname, clean=False,path=self.mdpath)
+            self.gitclient = self.gitlab.getGitClient(self.gitlab.loginName, self.key, clean=False,path=self.mdpath)
         else:
             self.gitclient=None
-            
-        self.filemanager=JSFileMgr(MDPath=self.mdpath,domain=backupdomain,namespace="backup",blobclientname=blobclientName)
 
-    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={},childrenRegexExcludes=[".*/dev/.*","/proc/.*"],fullcheck=False):
+        self.fullcheck=fullcheck
+        self.servercheck=servercheck
+            
+        self.filemanager=JSFileMgr(MDPath=self.mdpath,backupname=self.backupname,blobstorAccount=blobstorAccount,\
+                blobstorNamespace=blobstorNamespace,compress=compress,fullcheck=fullcheck,servercheck=servercheck)
+
+    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={},childrenRegexExcludes=[".*/dev/.*","/proc/.*"]):
         # self._clean()
         self.filemanager.backup(path,destination=destination, pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,\
-            childrenRegexExcludes=childrenRegexExcludes,fullcheck=fullcheck)
+            childrenRegexExcludes=childrenRegexExcludes)
         self.commitMD()
+
+    def restore(self,path,destination,link=False):
+        self.pullMD()
+        self.filemanager.restore(path,dest=destination,link=link)
+
 
     def _clean(self):
         for ddir in j.system.fs.listDirsInDir(self.mdpath,False,True,findDirectorySymlinks=False):
@@ -606,22 +697,22 @@ class BackupClient:
             j.system.fs.remove(ffile)
         
 
-    def backupRecipe(self,recipe):
-        """
-        do backup of sources as specified in recipe
-        example recipe
+    # def backupRecipe(self,recipe):
+    #     """
+    #     do backup of sources as specified in recipe
+    #     example recipe
 
-        #when star will do for each dir
-        /tmp/JSAPPS/apps : * : /DEST/apps
-        #when no * then dir & below
-        /tmp/JSAPPS/bin :  : /DEST/bin
-        #now only for 1 subdir
-        /tmp/JSAPPS/apps : asubdirOfApps : /DEST/apps
+    #     #when star will do for each dir
+    #     /tmp/JSAPPS/apps : * : /DEST/apps
+    #     #when no * then dir & below
+    #     /tmp/JSAPPS/bin :  : /DEST/bin
+    #     #now only for 1 subdir
+    #     /tmp/JSAPPS/apps : asubdirOfApps : /DEST/apps
 
-        """
-        self._clean()
-        self.filemanager.backupRecipe(recipe)
-        self.commitMD()
+    #     """
+    #     self._clean()
+    #     self.filemanager.backupRecipe(recipe)
+    #     self.commitMD()
 
     def commitMD(self):
         print "commit to git"
@@ -633,3 +724,12 @@ class BackupClient:
         else:
             print "WARNING COULD NOT COMMIT CHANGES TO GITLAB, no connection found.\nDO THIS LATER!!!!!!!!!!!!!!!!!!!!!!"
 
+    def pullMD(self):
+        print "pull from git"
+        
+        if j.system.net.tcpPortConnectionTest(self.gitlab.addr,self.gitlab.port):
+            #found gitlab
+            self.gitclient.pull()        
+            pass
+        else:
+            print "WARNING COULD NOT PULL CHANGES FROM GITLAB, no connection found.\nDO THIS LATER!!!!!!!!!!!!!!!!!!!!!!"

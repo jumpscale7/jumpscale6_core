@@ -41,16 +41,20 @@ class BlobStorClient:
         if sendnow or len(self.queue)>100 or self.queuedatasize>self.maxqueuedatasize:
             c=self._getBlobStorConnection(datasize=self.queuedatasize)
             res=c.sendCmds(self.queue,sync=sync,timeout=timeout)
-            print "send"
             self.queue=[]
             self.queuedatasize=0
             return res
-
 
     def set(self,key, data,repoid=0,sendnow=True,sync=True,timeout=60):
         """
         """
         return self._execCmd("SET",{"key":key,"namespace":self.namespace,"repoid":repoid},data=data,sendnow=sendnow,sync=sync,timeout=timeout)        
+
+    def sync(self):
+        """
+        """
+        return self._execCmd("SYNC",{"namespace":self.namespace},data="",sendnow=True,sync=True,timeout=2)        
+
 
     def get(self, key,repoid=0,timeout=60):
         """
@@ -69,7 +73,7 @@ class BlobStorClient:
         @replicaCheck if True will check that there are enough replicas (not implemented)
         the normal check is just against the metadata stor on the server, so can be data is lost
         """
-        return self.get( key,repoid=repoid,timeout=60)<>None
+        return self._execCmd("EXISTS",{"key":key,"namespace":self.namespace,"repoid":repoid},sendnow=True,sync=True,timeout=2)
 
     def getMD(self,key):
         return self._execCmd("GETMD",{"key":key,"namespace":self.namespace,"repoid":repoid},sendnow=True,sync=True,timeout=2) 
