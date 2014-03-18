@@ -63,17 +63,17 @@ class Popen(subprocess.Popen):
         def send(self, input):
             if not self.stdin:
                 return None
-
             try:
                 x = msvcrt.get_osfhandle(self.stdin.fileno())
                 (errCode, written) = WriteFile(x, input)
             except ValueError:
+                print "close stdin"
                 return self._close('stdin')
             except (subprocess.pywintypes.error, Exception), why:
                 if why[0] in (109, errno.ESHUTDOWN):
+                    print "close stdin"
                     return self._close('stdin')
                 raise
-
             return written
 
         def _recv(self, which, maxsize):
@@ -111,6 +111,7 @@ class Popen(subprocess.Popen):
                 written = os.write(self.stdin.fileno(), input)
             except OSError, why:
                 if why[0] == errno.EPIPE: #broken pipe
+                    print "close stdin"
                     return self._close('stdin')
                 raise
 
@@ -745,6 +746,6 @@ class Expect:
             return result
         except:
             msg='Failed to expect \"%s\", found \"%s\" instead'%(outputToExpect, self.receive())
-            print msg
+            # print msg
             j.logger.log(msg, 7)
         return "E"

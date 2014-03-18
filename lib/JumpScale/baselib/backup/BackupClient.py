@@ -343,6 +343,8 @@ class JSFileMgr():
         nr=batchnr*1000 #for print purposes, so we see which file is uploading
 
         for src,md5 in batch:
+            if md5=="":
+                continue
             nr+=1
             if not md5 in exists:
                 hashes=[]
@@ -652,8 +654,6 @@ class BackupClient:
         self.gitlabAccount=gitlabAccount
         self.key="backup_%s"%self.backupname
 
-        self.gitlab=j.clients.gitlab.get(gitlabAccount)
-
         try:
             self.gitlab=j.clients.gitlab.get(gitlabAccount)
         except Exception,e:
@@ -661,10 +661,34 @@ class BackupClient:
 
         self.mdpath="/opt/backup/MD/%s"%self.backupname
         if not j.system.fs.exists(path=self.mdpath):  
+            #init repo
             if self.gitlab.passwd<>"":              
                 if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=self.key):
                     self.gitlab.createproject(self.key, description='backup set', \
-                    issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)            
+                    issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)   
+                from IPython import embed
+                print "DEBUG NOW id"
+                embed()
+                    
+                url = 'git@%s:%s/%s.git' % (self.gitlab.addr,gitlabAccount,self.key)
+                j.system.fs.createDir(self.mdpath)
+                def do(cmd):
+                    cmd="cd %s;%s"%(self.mdpath,cmd)
+                    print cmd
+                    j.system.process.executeWithoutPipe(cmd)    
+                do("git init")                
+                do("touch README")
+                do("git add README")
+                do("git commit -m 'first commit'")
+                do("git remote add origin %s"%url)
+                do("git push -u origin master")
+            else:
+                from IPython import embed
+                print "DEBUG NOW id"
+                embed()
+                
+                j.system.fs.createDir(self.mdpath)
+       
 
         
         if self.gitlab<>None:
@@ -720,7 +744,7 @@ class BackupClient:
         if j.system.net.tcpPortConnectionTest(self.gitlab.addr,self.gitlab.port):
             #found gitlab
             print "push to git"
-            self.gitclient.push()
+            self.gitclient.push(force=True)
         else:
             print "WARNING COULD NOT COMMIT CHANGES TO GITLAB, no connection found.\nDO THIS LATER!!!!!!!!!!!!!!!!!!!!!!"
 

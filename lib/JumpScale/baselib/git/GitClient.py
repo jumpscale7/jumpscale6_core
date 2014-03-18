@@ -83,8 +83,11 @@ class GitClient(object):
             self.addRemoveFiles()
         self.repo.index.commit(message)
 
-    def push(self):
-        self.repo.git.push('--all')
+    def push(self,force=False):
+        if force:
+            self.repo.git.push('-f')
+        else:
+            self.repo.git.push('--all')
 
     def getUntrackedFiles(self):
         return self.repo.untracked_files

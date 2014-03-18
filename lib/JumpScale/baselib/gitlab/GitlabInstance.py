@@ -87,6 +87,7 @@ class GitlabInstance(Gitlab):
                 do("touch README")
                 do("git add README")
                 do("git commit -m 'first commit'")
+                raise RuntimeError("change, need to use specific repo names")
                 do("git remote add origin git@gitlab.a.incubaid.com:lenoir1/backup_lxc_ubuntu_13-10_base.git")
                 do("git push -u origin master")
 
