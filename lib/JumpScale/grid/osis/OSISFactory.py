@@ -235,10 +235,10 @@ class OSISFactory:
         """
         returns class generated from spec file or from model.py file
         """
-        print "getOsisModelClass: %s %s"%(namespace,category)
         key="%s_%s"%(namespace,category)
 
         if not self.osisModels.has_key(key):
+            print "getOsisModelClass: %s_%s"%(namespace, category)
             # #need to check if there is a specfile or we go from model.py  
             if specpath=="":
                 specpath=j.system.fs.joinPaths("logic", namespace, "model.spec")            
