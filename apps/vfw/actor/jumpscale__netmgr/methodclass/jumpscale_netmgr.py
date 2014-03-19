@@ -19,12 +19,6 @@ class jumpscale_netmgr(j.code.classGetBase()):
         self.agentcontroller = j.clients.agentcontroller.get()
         self.json = j.db.serializers.getSerializerType('j')
 
-    def _getVFWHostNodeId(self,fwid):
-        #@todo query osis to find nodeid which is hosting from this fwid
-        fwobj = self.osisvfw.get(fwid)
-        pass
-
-
     def fw_check(self, fwid, gid, **kwargs):
         """
         will do some checks on firewall to see is running, is reachable over ssh, is connected to right interfaces
@@ -32,6 +26,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:gid grid id
         """        
         fwobj = self.osisvfw.get(fwid)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args, wait=False)
         #@todo call jumpscript to check into machine e.g. ssh into vfw, test vfw is running e.g. iptables,nginx        
         return True
     
@@ -51,9 +47,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj.nid = nid
         fwobj.masquerade = masquerade
         self.osisvfw.set(fwobj)
-        nid=self._getVFWHostNodeId(fwid)
-        args={'name': "%s_%s"%(fwobj.domain,fwobj.name)}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid,args=args, wait=False) #@todo need to specify on which node
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid, args=args, wait=False)
         return fwobj.guid
 
     def fw_delete(self, fwid, gid, **kwargs):
@@ -62,9 +57,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:gid grid id
         """
         fwobj = self.osisvfw.get(fwid)
-        args={'name': "%s_%s"%(fwobj.domain,fwobj.name)}
-        nid=self._getVFWHostNodeId(fwid)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=nid,args=args, wait=False)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args, wait=False)
         self.osisvfw.delete(fwid)
         return True
     
@@ -83,7 +77,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.toAddr = destip
         rule.toPort = destport
         self.osisvfw.set(fwobj)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': fwobj.name, 'fwobject': self.json.dumps(fwobj)}, wait=False)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args, wait=False)
         return True
 
     def fw_forward_delete(self, fwid, gid, fwport, destip, destport, **kwargs):
@@ -98,7 +93,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         for rule in fwobj.tcpForwardRules:
             if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport:
                 fwobj.tcpForwardRules.remove(rule)
-                self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': fwobj.name, 'fwobject': self.json.dumps(fwobj)}, wait=False)
+                args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
+                self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args, wait=False)
                 return True
 
         return False
@@ -145,7 +141,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:gid grid id
         """
         fwobj = self.osisvfw.get(fwid)
-        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', args={'name': fwobj.name, 'action': 'start'}, wait=False)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'start'}
+        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args, wait=False)
         return True
     
 
@@ -155,7 +152,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:gid grid id
         """
         fwobj = self.osisvfw.get(fwid)
-        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', args={'name': fwobj.name, 'action': 'stop'}, wait=False)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'stop'}
+        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args, wait=False)
         return True
     
 
@@ -171,7 +169,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.url = sourceurl
         rule.toUrls = desturls
         self.osisvfw.set(wsfobj)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': wsfobj.name, 'fwobject': self.json.dumps(wsfobj)}, wait=False)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=wsfobj.nid, args={'name': wsfobj.name, 'fwobject': self.json.dumps(wsfobj)}, wait=False)
         return True
     
 
@@ -194,7 +192,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 rule.toUrls = ','.join(urls)
                 if len(urls) == 0:
                     wsfr.remove(rule)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': vfws.name, 'fwobject': self.json.dumps(vfws)}, wait=False)
+        args = {'name': '%s_%s' % (vfws.domain, vfws.name), 'action': 'start'}
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=vfws.nid, args={'name': vfws.name, 'fwobject': self.json.dumps(vfws)}, wait=False)
         return True
     
 
