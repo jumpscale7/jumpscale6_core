@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jsnet")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['removebridges','init','initdhcp','applyconfig'], help='Command to perform')
+
+parser.add_argument("-i", '--iface', help='ifacename e.g. eth0')
+parser.add_argument("-a", '--ipaddr', help='ipaddr like 192.168.1.3/24')
+parser.add_argument("-g", '--gw', help='gateway like 192.168.1.1')
+parser.add_argument("-b", '--backplaneid', help='backplaneid e.g. 1')
+parser.add_argument("-e", '--ifaceexcl', help='ifacename to not use in applyconfig (to not lock you out)')
+
+# parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
+# parser.add_argument('--passwd', help='password for desktop')
+
+# parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
+# parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+
+import JumpScale.lib.ovsnetconfig
+nc=j.system.ovsnetconfig
+
+opts = parser.parse_args()
+    
+
+############RECONFIGURE
+if opts.action =='removebridges':
+    nc.removeOldConfig()
+
+if opts.action =='init':
+    if opts.ipaddr==None:
+        raise RuntimeError("ipaddr needs to be specified")
+    if opts.iface==None:
+        raise RuntimeError("interface needs to be specified e.g. eth0")
+    if opts.gw==None:
+        raise RuntimeError("gw needs to be specified")
+    if opts.backplaneid==None:
+        raise RuntimeError("backplaneid needs to be specified")        
+    nc.setBackplane(interfacename=opts.iface,backplaneId=opts.backplaneid,ipaddr=opts.ipaddr,gw=opts.gw)
+    opts.action ='applyconfig'
+
+if opts.action =='initdhcp':
+    if opts.iface==None:
+        raise RuntimeError("interface needs to be specified e.g. eth0")
+    if opts.backplaneid==None:
+        raise RuntimeError("backplaneid needs to be specified")               
+    nc.setBackplaneDhcp(interfacename=opts.iface,backplaneId=opts.backplaneid)
+    opts.action ='applyconfig'
+
+if opts.action =='removebridges':
+    nc.removeOldConfig()
+
+if opts.action =='applyconfig':
+    if opts.ifaceexcl==None:
+        nc.applyconfig(interfacenameToExclude)
+    else:
+        nc.applyconfig(interfacenameToExclude=opts.ifaceexcl)
+
+
+j.application.stop()
