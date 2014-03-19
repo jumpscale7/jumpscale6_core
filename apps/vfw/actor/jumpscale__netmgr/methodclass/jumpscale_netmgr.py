@@ -27,10 +27,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """        
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args, wait=False)
-        #@todo call jumpscript to check into machine e.g. ssh into vfw, test vfw is running e.g. iptables,nginx        
-        return True
-    
+        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args, wait=False)['result']
 
     def fw_create(self, domain, name, gid, nid, masquerade, **kwargs):
         """
