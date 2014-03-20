@@ -72,14 +72,13 @@ if opts.action == 'addvxlans':
     start,stop = opts.networkids.split('-')
     backend = opts.backplanename
     for i in range(int(start), int(stop)+1):
-        bridgename = 'space_%s' % i
-        vxlan = nc.createVXLanBridge(i, backend, bridgename)
+        vxnet = nc.ensureVXNet(i, backend)
         xml = '''  <network>
         <name>space_%(networkid)s</name>
         <forward mode="bridge"/>
         <bridge name='space_%(networkid)s'/>
          <virtualport type='openvswitch'/>
-     </network>''' % {'networkid': vxlan.id.tostring()}
+     </network>''' % {'networkid': vxnet.netid.tostring()}
         private = conn.networkDefineXML(xml)
         private.create()
         private.setAutostart(True)
