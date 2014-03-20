@@ -70,7 +70,7 @@ if opts.action == 'addvxlans':
     import libvirt
     conn = libvirt.open()
     start,stop = opts.networkids.split('-')
-    backend = 'Backplane%s' % opts.backplanename
+    backend = opts.backplanename
     for i in range(int(start), int(stop)+1):
         bridgename = 'space_%s' % i
         vxlan = nc.createVXLanBridge(i, backend, bridgename)
