@@ -26,3 +26,5 @@ def action(name, fwobject):
 
     nginxclient.configure(fwobject)
     shorewallclient.configure(fwobject)
+
+    return True
