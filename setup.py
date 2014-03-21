@@ -32,6 +32,23 @@ def clean():
           if match:
               print "remove:%s" % os.path.join(r,path)
               os.remove(os.path.join(r,path))
+    cmds="""
+killall tmux
+rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale*
+rm -rf /usr/local/lib/python2.7/site-packages/jumpscale*
+rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale*
+rm -rf /usr/local/lib/python2.7/site-packages/JumpScale*
+rm -rf /usr/local/lib/python2.7/site-packages/JumpScale/
+rm -rf /usr/local/lib/python2.7/site-packages/jumpscale/
+rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale/
+rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale/
+rm /usr/local/bin/js*
+rm /usr/local/bin/jpack*
+killall python
+"""    
+    for cmd in cmds.split("\n"):
+      if cmd.strip()<>"":
+        j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
 
 clean()
 
