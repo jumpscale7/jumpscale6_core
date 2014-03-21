@@ -44,14 +44,12 @@ rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale/
 rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale/
 rm /usr/local/bin/js*
 rm /usr/local/bin/jpack*
-killall python
 """    
     for cmd in cmds.split("\n"):
       if cmd.strip()<>"":
           print cmd          
-          rc=os.system("%s 2>&1; echo"%cmd)
+          rc=os.system("%s 2>&1 > /dev/null; echo"%cmd)
           print rc
-
 clean()
 
 def list_files(basedir='.', subdir='.'):
