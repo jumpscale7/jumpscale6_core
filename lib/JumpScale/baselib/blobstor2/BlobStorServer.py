@@ -25,6 +25,7 @@ class BlobStorServer(GeventLoop):
         j.application.initGrid()
 
         self.path=path
+        j.system.fs.createDir(path)
 
         self.sessions={}
         self.sessions[""]=None
@@ -68,6 +69,7 @@ blobstor.disk.size=100
 """ 
         bsnid=self.master.registerNode(j.application.whoAmI.nid)
         self.bsnid=bsnid
+
         nid=j.application.whoAmI.nid
         for item in j.system.fs.listDirsInDir(self.path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True):
             cfigpath=j.system.fs.joinPaths(item,"main.hrd")

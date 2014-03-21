@@ -1,1 +1,0 @@
-new configuration format, from now on all future configs willb in this format
