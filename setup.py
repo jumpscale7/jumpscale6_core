@@ -48,7 +48,7 @@ killall python
 """    
     for cmd in cmds.split("\n"):
       if cmd.strip()<>"":
-        j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
+          os.system(cmd)
 
 clean()
 
