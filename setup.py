@@ -47,9 +47,7 @@ rm /usr/local/bin/jpack*
 """    
     for cmd in cmds.split("\n"):
       if cmd.strip()<>"":
-          print cmd          
           rc=os.system("%s 2>&1 > /dev/null; echo"%cmd)
-          print rc
 clean()
 
 def list_files(basedir='.', subdir='.'):
