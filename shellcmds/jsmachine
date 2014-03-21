@@ -14,7 +14,8 @@ parser.add_argument("-b", '--base', help='base to clone from')
 parser.add_argument("-p",'--passwd', help='password for machine')
 parser.add_argument("-r",'--prefix', help='prefix')
 parser.add_argument("-c",'--cmd', help='cmd to execute')
-parser.add_argument('--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
+parser.add_argument("-a",'--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
+parser.add_argument("-g",'--gw', help='set ip gateway of machine (192.168.1.1)',default='')
 parser.add_argument('--start', help='start after creation', action='store_true', default=False)
 
 
@@ -44,12 +45,13 @@ if opts.action =='list':
 
 if opts.action =='new':
     if opts.base==None:
-        opts.base="base"
+        opts.base="saucy-amd64-base"
     if opts.name==None:
         raise RuntimeError("need to specify name")
     l.create(name=opts.name,stdout=True,base=opts.base,start=False)
     if opts.pubip<>"":
-        j.system.platform.lxc.networkSetPublic(opts.name, netname="pub0",bridge="br0",pubips=["%s"%opts.pubip]) 
+        bridgename = j.application.config.get('lxc.pub.interface')        
+        j.system.platform.lxc.networkSet(opts.name, netname="pub0",bridge=bridgename,pubips=["%s"%opts.pubip],gateway=opts.gw) 
     if opts.start:
         j.system.platform.lxc.start(opts.name)
 

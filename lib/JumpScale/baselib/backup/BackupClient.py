@@ -56,6 +56,7 @@ class JSFileMgr():
         # blobstor2 client
         # self.blobstor = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
         self.blobstor=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace=blobstorNamespace)
+        self.blobstorMD=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace="md_%s"%blobstorNamespace)
         
         self.namespace=blobstorNamespace
         self.backupname=backupname
@@ -513,7 +514,12 @@ class JSFileMgr():
 
         self.blobstor.sync()
 
+        key=self.blobstorMD.uploadDirTAR(self.MDPath)
+        self.blobstorMD.sync()
+
         print "BACKUP DONE."
+
+        return key
 
     def _createExistsList(self,dest):
         # j.system.fs.pathRemoveDirPart(dest,prefix,True)
@@ -654,47 +660,47 @@ class BackupClient:
         self.gitlabAccount=gitlabAccount
         self.key="backup_%s"%self.backupname
 
-        try:
-            self.gitlab=j.clients.gitlab.get(gitlabAccount)
-        except Exception,e:
-            self.gitlab=None
+        # try:
+        #     self.gitlab=j.clients.gitlab.get(gitlabAccount)
+        # except Exception,e:
+        #     self.gitlab=None
 
         self.mdpath="/opt/backup/MD/%s"%self.backupname
         if not j.system.fs.exists(path=self.mdpath):  
-            #init repo
-            if self.gitlab.passwd<>"":              
-                if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=self.key):
-                    self.gitlab.createproject(self.key, description='backup set', \
-                    issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)   
-                from IPython import embed
-                print "DEBUG NOW id"
-                embed()
+            # #init repo
+            # if self.gitlab.passwd<>"":              
+            #     if not self.gitlab.existsProject(namespace=self.gitlab.loginName, name=self.key):
+            #         self.gitlab.createproject(self.key, description='backup set', \
+            #         issues_enabled=0, wall_enabled=0, merge_requests_enabled=0, wiki_enabled=0, snippets_enabled=0, public=0)#, group=accountname)   
+            #     from IPython import embed
+            #     print "DEBUG NOW id"
+            #     embed()
                     
-                url = 'git@%s:%s/%s.git' % (self.gitlab.addr,gitlabAccount,self.key)
-                j.system.fs.createDir(self.mdpath)
-                def do(cmd):
-                    cmd="cd %s;%s"%(self.mdpath,cmd)
-                    print cmd
-                    j.system.process.executeWithoutPipe(cmd)    
-                do("git init")                
-                do("touch README")
-                do("git add README")
-                do("git commit -m 'first commit'")
-                do("git remote add origin %s"%url)
-                do("git push -u origin master")
-            else:
-                from IPython import embed
-                print "DEBUG NOW id"
-                embed()
+            #     url = 'git@%s:%s/%s.git' % (self.gitlab.addr,gitlabAccount,self.key)
+            #     j.system.fs.createDir(self.mdpath)
+            #     def do(cmd):
+            #         cmd="cd %s;%s"%(self.mdpath,cmd)
+            #         print cmd
+            #         j.system.process.executeWithoutPipe(cmd)    
+            #     do("git init")                
+            #     do("touch README")
+            #     do("git add README")
+            #     do("git commit -m 'first commit'")
+            #     do("git remote add origin %s"%url)
+            #     do("git push -u origin master")
+            # else:
+            #     from IPython import embed
+            #     print "DEBUG NOW id"
+            #     embed()
                 
-                j.system.fs.createDir(self.mdpath)
+            j.system.fs.createDir(self.mdpath)
        
 
         
-        if self.gitlab<>None:
-            self.gitclient = self.gitlab.getGitClient(self.gitlab.loginName, self.key, clean=False,path=self.mdpath)
-        else:
-            self.gitclient=None
+        # if self.gitlab<>None:
+        #     self.gitclient = self.gitlab.getGitClient(self.gitlab.loginName, self.key, clean=False,path=self.mdpath)
+        # else:
+        #     self.gitclient=None
 
         self.fullcheck=fullcheck
         self.servercheck=servercheck
@@ -706,7 +712,7 @@ class BackupClient:
         # self._clean()
         self.filemanager.backup(path,destination=destination, pathRegexIncludes=pathRegexIncludes,pathRegexExcludes=pathRegexExcludes,\
             childrenRegexExcludes=childrenRegexExcludes)
-        self.commitMD()
+        # self.commitMD()
 
     def restore(self,path,destination,link=False):
         self.pullMD()
@@ -749,11 +755,9 @@ class BackupClient:
             print "WARNING COULD NOT COMMIT CHANGES TO GITLAB, no connection found.\nDO THIS LATER!!!!!!!!!!!!!!!!!!!!!!"
 
     def pullMD(self):
-        print "pull from git"
-        
+        print "pull from git"        
         if j.system.net.tcpPortConnectionTest(self.gitlab.addr,self.gitlab.port):
             #found gitlab
             self.gitclient.pull()        
-            pass
         else:
             print "WARNING COULD NOT PULL CHANGES FROM GITLAB, no connection found.\nDO THIS LATER!!!!!!!!!!!!!!!!!!!!!!"

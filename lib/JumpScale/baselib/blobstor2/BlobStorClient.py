@@ -84,3 +84,36 @@ class BlobStorClient:
     def deleteNamespace(self):
         return self._execCmd("DELNS",{"namespace":self.namespace},sendnow=True,sync=True,timeout=600) 
 
+    def _dump2stor(self, data,key=""):
+        if len(data)==0:
+            return ""
+        if key=="":
+            key = j.tools.hash.md5_string(data)
+        data2 = lzma.compress(data) if self.compress else data
+        self.set(key=key, data=data2,repoid=self.repoId)            
+        return key
+
+    def _read_file(self,path, block_size=0):
+        if block_size==0:
+            block_size=self._MB4
+
+        with open(path, 'rb') as f:
+            while True:
+                piece = f.read(block_size)
+                if piece:
+                    yield piece
+                else:
+                    return
+
+    def uploadDirTAR(self,dirpath):
+        name="backup_md_%s"%j.base.idgenerator.generateRandomInt(1,100000)
+        cmd="cd %s;tar czvfh /tmp/%s.tar.gz"%(dirpath,name)
+        j.system.process.execute(cmd)
+        # j.sysm.fs.remove("/tmp/%s.tar.gz"%name)
+        from IPython import embed
+        print "DEBUG NOW uploadDirTAR"
+        embed()
+
+    def uploadFile(self,path):
+        pass
+        

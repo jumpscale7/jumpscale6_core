@@ -1,7 +1,7 @@
 from JumpScale import j
 import git
 
-from gittle import *
+# from gittle import *
 
 class GitClient(object):
 
