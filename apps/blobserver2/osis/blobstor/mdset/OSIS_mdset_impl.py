@@ -7,4 +7,3 @@ class mainclass(parentclass):
     """
 
 
-      	
