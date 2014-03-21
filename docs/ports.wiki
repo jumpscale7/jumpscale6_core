@@ -27,6 +27,11 @@ rediscache:7767
 
 sentry: 9000
 
+blobserver2  2345
+blobmaster  2344
+
+
+
 
 
 
