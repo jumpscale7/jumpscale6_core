@@ -48,10 +48,7 @@ killall python
 """    
     for cmd in cmds.split("\n"):
       if cmd.strip()<>"":
-          try:
-            os.system(cmd)
-          except Exception,e:
-            pass
+          os.system("%s 2>&1; echo"%cmd)
 
 clean()
 
