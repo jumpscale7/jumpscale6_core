@@ -25,6 +25,7 @@ class mdset(OsisBaseObject):
             self.keys={}
             self.gitlabip="gitlab.incubaid.com"
             self.gitlabaccount=""
+            self.gitlabpasswd=""
             self.gitlabreponame=""
         self.getSetGuid()
 
