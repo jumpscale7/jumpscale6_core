@@ -22,10 +22,14 @@ class BlobStorServer(GeventLoop):
 
     def __init__(self, port=2345,path="/mnt/BLOBSTOR", nrCmdGreenlets=50):
 
+        if port<>2345:
+            raise RuntimeError("only port 2345 supported for now.")
+
         j.application.initGrid()
 
         self.path=path
-        j.system.fs.createDir(path)
+        if not j.system.fs.exists(path=path):
+            j.system.fs.createDir("%s/1/"%path)
 
         self.sessions={}
         self.sessions[""]=None
@@ -71,7 +75,10 @@ blobstor.disk.size=100
         self.bsnid=bsnid
 
         nid=j.application.whoAmI.nid
-        for item in j.system.fs.listDirsInDir(self.path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True):
+        ddisks=j.system.fs.listDirsInDir(self.path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True)
+        if len(ddisks)==0:
+            raise RuntimeError("Could not find disks, please configure in %s"%self.path)
+        for item in ddisks:
             cfigpath=j.system.fs.joinPaths(item,"main.hrd")
             if not j.system.fs.exists(path=cfigpath):
                 j.system.fs.writeFile(filename=cfigpath,contents=C)
@@ -230,6 +237,7 @@ blobstor.disk.size=100
             parts = cmdsocket.recv_multipart()   
             parts=parts[:-1]         
             deny=False
+
             cmds=msgpack.loads(parts[0])
             sync = "S" in parts[1]
             timeout=int(parts[2])
@@ -466,7 +474,7 @@ blobstor.disk.size=100
         # print "starting %s"%self.name
         self.schedule("cmdGreenlet", self.cmdGreenlet)
         # self.startClock()
-        # print "start %s on port:%s"%(self.name,self.port)
+        print "blobserver started on port:%s"%(self.port)
         if mainloop <> None:
             mainloop()
         else:

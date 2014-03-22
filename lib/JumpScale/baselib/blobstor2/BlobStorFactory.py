@@ -118,8 +118,15 @@ class BlobStorFactory:
 
         if self._blobstorCache.has_key(bsnodeid):
             return self._blobstorCache[bsnodeid]
-        ipaddr, port,key=master.getNodeLoginDetails(bsnodeid)        
-        self._blobstorCache[bsnodeid]=  BlobStorTransport(addr=ipaddr,port=port,gevent=True,login=login,passwd=passwd)
+        ipaddrs, port,key=master.getNodeLoginDetails(bsnodeid)  
+        ipaddrfound=None
+        for ipaddr in ipaddrs:
+            if j.system.net.tcpPortConnectionTest(ipaddr,2345):
+                ipaddrfound=ipaddr
+                break
+        if ipaddrfound==None:
+            raise RuntimeError("Could not find connection on port 2345 to the blobserver, possible ipaddr of blobserver='%s'"%(",".join(ipaddrs)))
+        self._blobstorCache[bsnodeid]=  BlobStorTransport(addr=ipaddrfound,port=port,gevent=True,login=login,passwd=passwd)
 
         return self._blobstorCache[bsnodeid]
 

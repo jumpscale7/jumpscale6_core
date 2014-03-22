@@ -122,8 +122,14 @@ class BlobstorMasterCMDS():
         """
         returns (ipaddr,port,key)
         """
-        #@todo
-        return ("127.0.0.1",2345,"1234")
+        bsnids=str(bsnid)
+        if not self.nodes.has_key(bsnids):
+            raise RuntimeError("Could not find node with id:%s"%bsnid)
+        node=self.nodes[bsnids]
+
+        gridnode=self.osis.gridnode.get("%s_%s"%(j.application.whoAmI.gid,node["nid"]))
+
+        return (gridnode.ipaddr,2345,"1234")
 
     def registerDisk(self,nid, bsnodeid, path, sizeGB,diskId=None,session=None):
         if diskId==None:
@@ -176,6 +182,20 @@ class BlobstorMasterCMDS():
         ns=self.osis.namespace.get(guid)
         ns=self._checkNS(ns.__dict__)
         return  ns
+
+    def setMDSet(self,domain,name,blobkey,gitlabip="",gitlabaccount="",gitlabreponame="",gitlabpasswd=""):
+        """
+        @return key of the mdset (metadata set)
+        """
+        from IPython import embed
+        print "DEBUG NOW oooo"
+        embed()
+        
+
+    def setMDSet(self,mdset_key):
+        from IPython import embed
+        print "DEBUG NOW oooo"
+        embed()
         
 
 class OsisGroup():
@@ -232,6 +252,8 @@ class BlobStorMaster:
         osis.node=j.core.osis.getClientForCategory(self.osis,"blobstor","bsnode")
         osis.namespace=j.core.osis.getClientForCategory(self.osis,"blobstor","bsnamespace")
         osis.disk=j.core.osis.getClientForCategory(self.osis,"blobstor","bsdisk")
+        osis.mdset=j.core.osis.getClientForCategory(self.osis,"blobstor","mdset")
+        osis.gridnode=j.core.osis.getClientForCategory(self.osis,"system","node")
 
 
         daemon.start()
