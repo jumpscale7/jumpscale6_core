@@ -1089,6 +1089,7 @@ class PortalServer:
                                 description=greenletObject.description, auth=greenletObject.auth)
 
     def restartInProcess(self, app):
+        import fcntl
         args = sys.argv[:]
         args.insert(0, sys.executable)
         apppath = j.system.fs.joinPaths(j.dirs.appDir, app)

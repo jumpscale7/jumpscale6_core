@@ -1,8 +1,8 @@
+import sys
 def main(j, args, params, tags, tasklet):
     params.merge(args)
 
-    # temporary hack to get the application name
-    j.core.portal.active.restartInProcess('')
+    j.core.portal.active.restartInProcess(sys.path[0])
 
     params.result = ("", params.doc)
 
