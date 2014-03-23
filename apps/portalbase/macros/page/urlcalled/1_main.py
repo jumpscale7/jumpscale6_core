@@ -4,8 +4,8 @@ def main(j, args, params, tags, tasklet):
     params.merge(args)
     page = args.page
     e = args.requestContext.env
-
-    addr = j.core.portal.active.ipaddr
+    
+    addr = j.core.portal.active.addr
 
     querystr = e["QUERY_STRING"]
     querystr = querystr.replace("&format=text", "")
