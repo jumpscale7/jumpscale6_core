@@ -504,7 +504,7 @@ class Confluence2HTML():
                     continue
                 page2 = j.tools.docgenerator.pageNewHTML("includeInConfluence2Wiki")
                 page2.liblocation = page.liblocation
-                content2, page2 = self.convert(doc2.content, page2, doc2, requestContext)
+                page2 = self.convert(doc2.content, page2, doc2, requestContext)
 
                 page.body = page.body.replace(item, page2.body)
 
