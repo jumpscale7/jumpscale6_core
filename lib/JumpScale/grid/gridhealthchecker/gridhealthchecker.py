@@ -29,9 +29,8 @@ class GridHealthChecker(object):
         if self.heartbeatcl.exists('%s_%s' % (gid, nid)):
             heartbeat = self.heartbeatcl.get('%s_%s' % (gid, nid))
             lastchecked = heartbeat.lastcheck
-            now = j.base.time.getTimeEpoch()
 
-            if  now - j.base.time.getEpochAgo('-2m') > now - lastchecked:
+            if  j.base.time.getEpochAgo('-2m') < lastchecked:
                 return True
         return False
 
@@ -42,5 +41,5 @@ class GridHealthChecker(object):
             if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
                 result[disk.path] = 'FREE SPACE LESS THAN 10%'
             else:
-                result[disk.path] = '%s free space available' % disk.free
+                result[disk.path] = '%.2f GB free space available' % (disk.free/1024.0)
         return result

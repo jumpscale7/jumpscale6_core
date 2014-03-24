@@ -21,7 +21,7 @@ def action():
     workers = {'worker_default_0': '-2m', 'worker_hypervisor_0': '-10m', 'worker_io_0': '-2h', 'worker_default_1': '-2m'}
     result = dict()
     for worker, timeout in workers.iteritems():
-        lastactive = rediscl.hget('workers:watchdog', worker)
+        lastactive = int(rediscl.hget('workers:watchdog', worker))
         pids = j.system.process.getProcessPid(worker)
         stats = {'cpu': 0, 'mem': 0, 'lastactive': lastactive, 'status': False}
         for pid in pids:

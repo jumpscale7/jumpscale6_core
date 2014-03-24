@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
     
     workers = j.core.grid.healthchecker.checkWorkers(nid)
     for worker, stat in workers.iteritems():
-        out.append('|%s|%s %%|%.2f MB|%s|%s|' % (worker, stat['cpu'], stat['mem']/1024.0/1024.0, stat['status'], j.base.time.epoch2HRDateTime(stat['lastactive'])))
+        out.append('|%s|%s %%|%.2f MB|%s|%s|' % (worker, stat['cpu'], stat['mem']/1024.0/1024.0, 'OK' if stat['status'] else 'HALTED', j.base.time.epoch2HRDateTime(stat['lastactive'])))
 
     out = '\n'.join(out)
 
