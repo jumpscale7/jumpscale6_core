@@ -30,4 +30,5 @@ def action(name, base='base'):
     #set root password
     passwd = j.application.config.get('system.superadmin.passwd')
     remoteApi.run("echo -e '%(passwd)s\n%(passwd)s'|passwd root" % {'passwd': passwd})
+    return True
 

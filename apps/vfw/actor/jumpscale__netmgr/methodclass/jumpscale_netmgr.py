@@ -27,7 +27,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """        
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
-        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args, wait=False)['result']
+        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args)['result']
 
     def fw_create(self, domain, name, gid, nid, masquerade, **kwargs):
         """
@@ -45,8 +45,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj.masquerade = masquerade
         self.osisvfw.set(fwobj)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid, args=args, wait=False)
-        return fwobj.guid
+        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid, args=args)['result']
 
     def fw_delete(self, fwid, gid, **kwargs):
         """
@@ -55,12 +54,13 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args, wait=False)
-        self.osisvfw.delete(fwid)
-        return True
-    
+        result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args)['result']
+        if result:
+            self.osisvfw.delete(fwid)
 
-    def fw_forward_create(self, fwid, gid,  fwport, destip, destport, **kwargs):
+        return result
+
+    def fw_forward_create(self, fwid, gid, fwport, destip, destport, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
@@ -73,10 +73,11 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.fromPort = fwport
         rule.toAddr = destip
         rule.toPort = destport
-        self.osisvfw.set(fwobj)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args, wait=False)
-        return True
+        result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args)['result']
+        if result:
+            self.osisvfw.set(fwobj)
+        return result
 
     def fw_forward_delete(self, fwid, gid, fwport, destip, destport, **kwargs):
         """
@@ -91,10 +92,9 @@ class jumpscale_netmgr(j.code.classGetBase()):
             if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport:
                 fwobj.tcpForwardRules.remove(rule)
                 args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
-                self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args, wait=False)
-                return True
+                result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args)['result']
 
-        return False
+        return result
     
 
     def fw_forward_list(self, fwid, gid, **kwargs):
@@ -119,7 +119,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         result = list()
         vfws = self.osisvfw.list()
-        fields = ('domain', 'name', 'gid', 'guid')
+        fields = ('domain', 'name', 'gid', 'nid', 'guid')
         for vfwid in vfws:
             vfwdict = {}
             vfw = self.osisvfw.get(vfwid)
@@ -139,9 +139,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'start'}
-        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args, wait=False)
-        return True
-    
+        return self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args)['result']
 
     def fw_stop(self, fwid, gid, **kwargs):
         """
