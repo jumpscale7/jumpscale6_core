@@ -1,45 +1,46 @@
 from JumpScale import j
 import JumpScale.grid.agentcontroller
 import JumpScale.grid.osis
+import JumpScale.lib.diskmanager
 
 class GridHealthChecker(object):
 
     def __init__(self):
         self.client = j.clients.agentcontroller.get()
-
-    def _getNodesIds(self):
-        result = list()
-        osiscl = j.core.osis.getClient(user='root')
-        nodecl = j.core.osis.getClientForCategory(osiscl, 'system', 'node')
-        nodes = nodecl.list()
-        for node in nodes:
-            nobj = nodecl.get(node)
-            result.append(nobj.id)
-        return result
+        self.osiscl = j.core.osis.getClient(user='root')
+        self.heartbeatcl = j.core.osis.getClientForCategory(self.osiscl, 'system', 'heartbeat')
 
     def checkElasticSearch(self):
         nid = j.application.whoAmI.nid
         result = self.client.executeJumpScript('jumpscale', 'check_elasticsearch', nid=nid)['result']
         return result
 
-    def checkRedis(self):
-        nodes = self._getNodesIds()
-        result = dict()
-        for nid in nodes:
-            result[nid] = self.client.executeJumpScript('jumpscale', 'check_redis', nid=nid)['result']
+    def checkRedis(self, nid):
+        result = self.client.executeJumpScript('jumpscale', 'check_redis', nid=nid)['result']
         return result
 
-    def checkWorkers(self):
-        nodes = self._getNodesIds()
-        result = dict()
-        for nid in nodes:
-            result[nid] = self.client.executeJumpScript('jumpscale', 'workerstatus', nid=nid)['result']
+    def checkWorkers(self, nid):
+        result = self.client.executeJumpScript('jumpscale', 'workerstatus', nid=nid)['result'] 
         return result
 
-    def checkProcessManagers(self):
-        nodes = self._getNodesIds()
+    def checkProcessManagers(self, nid):
+        self.client.executeJumpScript('jumpscale', 'heartbeat', nid=nid, timeout=10)
+        gid = j.application.whoAmI.gid
+
+        heartbeat = self.heartbeatcl.get('%s_%s' % (gid, nid))
+        lastchecked = heartbeat.lastcheck
+        now = j.base.time.getTimeEpoch()
+
+        if  now - j.base.time.getEpochAgo('-2m') > now - lastchecked:
+            return True
+        return False
+
+    def checkDisks(self, nid):
         result = dict()
-        for nid in nodes:
-            response = self.client.executeJumpScript('jumpscale', 'echo_sync', args={'msg': 'ping'}, nid=nid, timeout=10)['result']
-            result[nid] = True if response else False
+        disks = j.system.platform.diskmanager.partitionsFind(mounted=True)
+        for disk in disks:
+            if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
+                result[disk.path] = 'FREE SPACE LESS THAN 10%'
+            else:
+                result[disk.path] = '%s free space available' % disk.free
         return result

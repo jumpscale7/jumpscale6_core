@@ -17,7 +17,7 @@ roles = ["*"]
 
 def action():
     import JumpScale.baselib.redis
-    ports = (7768, 7769)
+    ports = (7767, 7768, 7769)
     result = dict()
     for port in ports:
         pids = j.system.process.getPidsByPort(port)

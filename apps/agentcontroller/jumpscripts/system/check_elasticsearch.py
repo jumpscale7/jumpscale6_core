@@ -19,5 +19,16 @@ def action():
     import JumpScale.baselib.elasticsearch
     escl = j.clients.elasticsearch.get()
     health = escl.health()
-    return health
+
+    hrd = j.core.hrd.getHRD(j.system.fs.joinPaths(j.dirs.cfgDir, 'startup', 'jumpscale__elasticsearch.hrd'))
+    path = hrd.get('process.args').rsplit('es.config=')[1]
+    configdata = j.system.fs.fileGetUncommentedContents(path)
+    configs = dict()
+    for config in configdata:
+        if ':' in config:
+            key, value = config.split(':')
+            configs[key.strip()] = value.strip()
+    size = j.system.fs.fileSize(configs.get('path.data', '/opt/data/elasticsearch'))
+
+    return {'size': size, 'health': health}
 

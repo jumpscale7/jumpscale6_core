@@ -2,11 +2,8 @@
 
 h2. Statuses
 
+h3. Elastic Search Status
+{{escheck}}
+
 h3. Process Status
 {{processchecks}}
-
-h3. Redis Status/node
-{{redisstatus}}
-
-h3. Worker Status/node
-{{workerstatus}}

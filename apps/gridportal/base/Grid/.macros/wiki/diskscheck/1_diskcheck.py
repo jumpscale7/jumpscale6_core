@@ -6,11 +6,11 @@ def main(j, args, params, tags, tasklet):
 
     out = list()
 
-    out.append('||Port||Status||Memory Used||')
+    out.append('||Disk||Status||')
     
-    rstatus = j.core.grid.healthchecker.checkRedis(nid)
-    for port, stat in rstatus.iteritems():
-        out.append('|%s|%s|%s|' % (port, stat['alive'], stat['memory_usage']))
+    workers = j.core.grid.healthchecker.checkDisks(nid)
+    for disk, msg in workers.iteritems():
+        out.append('|%s|%s|' % (disk, msg))
 
     out = '\n'.join(out)
 
