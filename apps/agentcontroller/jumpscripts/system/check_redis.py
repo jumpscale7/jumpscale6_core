@@ -21,6 +21,8 @@ def action():
     result = dict()
     for port in ports:
         pids = j.system.process.getPidsByPort(port)
+        if not pids:
+            continue
         rproc = j.system.process.getProcessObject(pids[0])
         rcl = j.clients.redis.getRedisClient('127.0.0.1', port)
         result[port] = {'alive': rcl.ping(), 'memory_usage': '%s MB' % '{:.2f}'.format(rproc.get_memory_info()[0]/1024.0/1024.0)}

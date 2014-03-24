@@ -11,8 +11,9 @@ def main(j, args, params, tags, tasklet):
         esdata = 'N/A'
     if esdata['size']:
         size = esdata['size']/1024
-        esnotes = '%sMB' % size
+        esnotes = '%sKB' % size
     for k, v in esdata['health'].iteritems():
+        k = k.replace('_', '')
         out.append('|%s|%s|' % (k, v))
     out.append('|Size|%s|' % esnotes)
 
