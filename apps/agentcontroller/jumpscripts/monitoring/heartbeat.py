@@ -1,4 +1,5 @@
 from JumpScale import j
+import JumpScale.grid.osis
 
 descr = """
 heartbeat
@@ -16,6 +17,8 @@ async = False
 
 
 def action():
-    obj = j.core.processmanager.monObjects.heartbeatobject.osis.new()
-    j.core.processmanager.monObjects.heartbeatobject.osis.set(obj.__dict__)
+    osiscl = j.core.osis.getClient(user='root')
+    hbcl = j.core.osis.getClientForCategory(osiscl, 'system', 'heartbeat')
+    obj = hbcl.new()
+    hbcl.set(obj)
 
