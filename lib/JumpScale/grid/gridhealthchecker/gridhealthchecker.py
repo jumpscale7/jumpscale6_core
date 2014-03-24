@@ -26,13 +26,13 @@ class GridHealthChecker(object):
     def checkProcessManagers(self, nid):
         self.client.executeJumpScript('jumpscale', 'heartbeat', nid=nid, timeout=10)
         gid = j.application.whoAmI.gid
+        if self.heartbeatcl.exists('%s_%s' % (gid, nid)):
+            heartbeat = self.heartbeatcl.get('%s_%s' % (gid, nid))
+            lastchecked = heartbeat.lastcheck
+            now = j.base.time.getTimeEpoch()
 
-        heartbeat = self.heartbeatcl.get('%s_%s' % (gid, nid))
-        lastchecked = heartbeat.lastcheck
-        now = j.base.time.getTimeEpoch()
-
-        if  now - j.base.time.getEpochAgo('-2m') > now - lastchecked:
-            return True
+            if  now - j.base.time.getEpochAgo('-2m') > now - lastchecked:
+                return True
         return False
 
     def checkDisks(self, nid):
