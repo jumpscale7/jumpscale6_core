@@ -172,7 +172,7 @@ class StatAggregator():
             stat.clean(self.getTime())
 
     def delete(self,prefix):
-        for key in self.stats:
+        for key in self.stats.keys():
             if key.find(prefix)==0:
                 self.stats.pop(key)
                 print "DELETE:%s"%key
