@@ -65,6 +65,9 @@ def action():
             cacheobj=aggregate(cacheobj,disk_key,"space_used_mb",disk.size-disk.free,avg=True,ttype="N",percent=False)
             cacheobj=aggregate(cacheobj,disk_key,"space_percent",round((float(disk.size-disk.free)/float(disk.size)),2),avg=True,ttype="N",percent=True)
 
+        if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
+            j.errorconditionhandler.raiseOperationalWarning('Disk %s has less then 10% free space' % disk.path, 'monitoring')
+
         for key,value in disk.__dict__.iteritems():
             cacheobj.db.__dict__[key]=value
 
