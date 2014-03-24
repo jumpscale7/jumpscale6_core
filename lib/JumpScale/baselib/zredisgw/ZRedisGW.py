@@ -11,6 +11,7 @@ import gevent
 import gevent.monkey
 import zmq.green as zmq
 import time
+import ujson
 
 GeventLoop = j.core.gevent.getGeventLoopClass()
 
@@ -36,7 +37,7 @@ class ZRedisGW(GeventLoop):
         self.port = port
         self.nrCmdGreenlets = nrCmdGreenlets
 
-        self.redis=...
+        #self.redis=...
 
         
 
