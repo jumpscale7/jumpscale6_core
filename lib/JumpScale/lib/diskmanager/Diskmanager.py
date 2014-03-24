@@ -1,11 +1,59 @@
 from JumpScale import j
 import os
+import errno
+import stat
+
+
+def _is_block(file):
+    try:
+        st = os.stat(file)
+    except OSError, err:
+        if err.errno == errno.ENOENT:
+            return False
+        raise
+    return stat.S_ISBLK(st.st_mode)
+
+def get_open_blks(pid):
+    retlist = set()
+    files = os.listdir("/proc/%s/fd" % pid)
+    hit_enoent = False
+    for fd in files:
+        file = "/proc/%s/fd/%s" % (pid, fd)
+        if os.path.islink(file):
+            try:
+                file = os.readlink(file)
+            except OSError, err:
+                if err.errno == errno.ENOENT:
+                    hit_enoent = True
+                    continue
+                raise
+            else:
+                if file.startswith('/') and _is_block(file):
+                    retlist.add(int(fd))
+    if hit_enoent:
+        # raise NSP if the process disappeared on us
+        os.stat('/proc/%s' % pid)
+    return retlist
 
 try:
     import parted
 except:
     j.system.platform.ubuntu.install("python-parted")
     import parted
+
+#patch parted
+_orig_getAllDevices = parted.getAllDevices
+def _patchedGetAllDevices():
+    pid = os.getpid()
+    fds = get_open_blks(pid)
+    try:
+        return _orig_getAllDevices()
+    finally:
+        afds = get_open_blks(pid)
+        for fd in afds.difference(fds):
+            os.close(fd)
+
+parted.getAllDevices = _patchedGetAllDevices
 
 class Disk():
     """
