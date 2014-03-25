@@ -243,7 +243,7 @@ class system_gridmanager(j.code.classGetBase()):
         job = self.osis_job.get(id)
         return {'result': job}
 
-    def getLogs(self, id=None, level=None, category=None, text=None, from_=None, to=None, jid=None, nid=None, gid=None, pid=None, tags=None, **kwargs):
+    def getLogs(self, id=None, level=None, category=None, text=None, from_=None, to=None, jid=None, nid=None, gid=None, pid=None, tags=None, guid=None, **kwargs):
         """
         interface to get log information
         param:id only find 1 log entry
@@ -261,6 +261,7 @@ class system_gridmanager(j.code.classGetBase()):
         from_ = self._getEpoch(from_)
         to = self._getEpoch(to)
         params = {'id': id,
+                  'guid': guid,
                   'level': {'name': 'level', 'value': level, 'eq': 'lte'},
                   'category': category,
                   'text': text,
