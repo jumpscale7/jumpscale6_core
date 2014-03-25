@@ -198,6 +198,42 @@ iface $interface inet static
         ed.save()
 
 
+    def setBackplaneNoAddressWithBond(self,bondname, bondinterfaces,backplanename='backplane'):
+        """
+        DANGEROUS, will remove old configuration
+        """
+        C="""
+auto $BPNAME
+allow-ovs $BPNAME
+iface $BPNAME inet static
+ ovs_type OVSBridge
+ ovs_ports $bondname
+
+allow-$BPNAME $bondname
+iface $bondname inet manual
+ ovs_bridge $BPNAME
+ ovs_type OVSPort
+ ovs_bonds $bondinterfaces
+ $disable_ipv6
+ up ip link set $bondname mtu $MTU
+"""
+        interfaces = ''
+        disable_ipv6 = ''
+        for interface in bondinterfaces:
+            interfaces += '%s ' % interface
+            disable_ipv6 += ' up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % interface
+        C=C.replace("$BPNAME", str(backplanename))
+        C=C.replace("$bondname", bondname)
+        C=C.replace("$MTU", str(self.PHYSMTU))
+        C=C.replace("$bondinterfaces" , interfaces)
+        C=C.replace("$disable_ipv6" , disable_ipv6)
+
+        ed=j.codetools.getTextFileEditor("/etc/network/interfaces")
+        ed.setSection(backplanename,C)
+        ed.save()
+
+
+
 
     def setBackplane(self,interfacename="eth0",backplanename=1,ipaddr="192.168.10.10/24",gw=""):
         """
@@ -235,6 +271,52 @@ iface $iname inet manual
         ed=j.codetools.getTextFileEditor("/etc/network/interfaces")
         ed.setSection(backplanename,C)
         ed.save()
+
+    def setBackplaneWithBond(self,bondname, bondinterfaces,backplanename='backplane',ipaddr="192.168.10.10/24",gw=""):
+        """
+        DANGEROUS, will remove old configuration
+        """
+        C="""
+auto $BPNAME
+allow-ovs $BPNAME
+iface $BPNAME inet static
+ address $ipbase 
+ netmask $mask
+ dns-nameserver 8.8.8.8 8.8.4.4
+ ovs_type OVSBridge
+ ovs_ports $bondname
+ $gw
+
+allow-$BPNAME $bondname
+iface $bondname inet manual
+ ovs_bridge $BPNAME
+ ovs_type OVSPort
+ ovs_bonds $bondinterfaces
+ $disable_ipv6
+ up ip link set $bondname mtu $MTU
+"""
+        n=netaddr.IPNetwork(ipaddr)
+        interfaces = ''
+        disable_ipv6 = ''
+        for interface in bondinterfaces:
+            interfaces += '%s ' % interface
+            disable_ipv6 += ' up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % interface
+        C=C.replace("$BPNAME", str(backplanename))
+        C=C.replace("$bondname", bondname)
+        C=C.replace("$ipbase", str(n.ip))
+        C=C.replace("$mask", str(n.netmask))
+        C=C.replace("$MTU", str(self.PHYSMTU))
+        if gw<>"" and gw<>None:
+            C=C.replace("$gw", "gateway %s"%gw)
+        else:
+            C=C.replace("$gw", "")
+        C=C.replace("$bondinterfaces" , interfaces)
+        C=C.replace("$disable_ipv6" , disable_ipv6)
+
+        ed=j.codetools.getTextFileEditor("/etc/network/interfaces")
+        ed.setSection(backplanename,C)
+        ed.save()
+
 
     def applyconfig(self,interfacenameToExclude=None,backplanename=None):
         """
