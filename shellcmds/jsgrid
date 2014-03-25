@@ -7,13 +7,15 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit','reconfigure','testall','reinitsentry','healthcheck'], help='Command to perform')
+parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
 
 parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
 parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
+parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
 
 
 #check redis is there if not try to start
@@ -153,5 +155,35 @@ if opts.action == 'healthcheck':
             print "%s : %s" % (disk, msg)
 
     print '#############################'
+
+#################PURGELOGS
+if opts.action == 'purgelogs':
+    import JumpScale.baselib.elasticsearch
+    def _getEpoch(time):
+        if not time:
+            return time
+        if isinstance(time, int):
+            return time
+        if time.startswith('-'):
+            return j.base.time.getEpochAgo(time)
+        return j.base.time.getEpochFuture(time)
+
+    esclient = j.clients.elasticsearch.get()
+    query = dict()
+    if opts.ffrom:
+        query['range'] = dict()
+        query['range']['epoch'] = dict()
+        query['range']['epoch']['from'] = _getEpoch(opts.ffrom)
+
+    if opts.to:
+        if 'range' not in query:
+            query['range'] = dict()
+            query['range']['epoch'] = dict()
+        query['range']['epoch']['to'] = _getEpoch(opts.to)
+    if query:
+        result = esclient.delete_by_query(index='system_log', query=query, doc_type='json')
+        if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
+            print 'purgelogs executed successfullly'
+
 
 j.application.stop()
