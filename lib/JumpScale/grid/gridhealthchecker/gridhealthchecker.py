@@ -43,3 +43,7 @@ class GridHealthChecker(object):
             else:
                 result[disk.path] = '%.2f GB free space available' % (disk.free/1024.0)
         return result
+
+    def gatherNodeChecks(self, nid):
+        result = self.client.executeJumpScript('jumpscale', 'healthchecker_gathering', nid=nid, timeout=10)
+        return result

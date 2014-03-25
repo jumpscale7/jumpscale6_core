@@ -52,6 +52,9 @@ h4. Links
 @divend 
 
 
+{{healthcheck}}
+
+
 {{cssstyle
 td {
     max-width:500px;

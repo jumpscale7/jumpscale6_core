@@ -1,4 +1,5 @@
 from JumpScale import j
+import JumpScale.baselib.redis
 
 descr = """
 gather statistics about disks
@@ -34,6 +35,7 @@ def action():
 
     #disk counters
     counters=psutil.disk_io_counters(True)
+    healthy = True
 
     for disk in disks:
 
@@ -66,6 +68,7 @@ def action():
             cacheobj=aggregate(cacheobj,disk_key,"space_percent",round((float(disk.size-disk.free)/float(disk.size)),2),avg=True,ttype="N",percent=True)
 
         if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
+            healthy = False
             j.errorconditionhandler.raiseOperationalWarning('Disk %s has less then 10% free space' % disk.path, 'monitoring')
 
         for key,value in disk.__dict__.iteritems():
@@ -75,3 +78,6 @@ def action():
             #obj changed
             cacheobj.send2osis()
 
+
+    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+    rediscl.set("healthcheck:disks", healthy)
