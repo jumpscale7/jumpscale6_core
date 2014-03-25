@@ -102,7 +102,12 @@ class OSISFactory:
         self.cmds=zd.daemon.cmdsInterfaces["osis"]
         zd.start()
 
-    def getClient(self, ipaddr="localhost", port=5544,user=None,passwd=None,ssl=False,gevent=False):
+    def getClient(self, ipaddr=None, port=5544,user=None,passwd=None,ssl=False,gevent=False):
+        if ipaddr is None:
+            if j.application.config.exists('grid.master.ip'):
+                ipaddr = j.application.config.get('grid.master.ip')
+            else:
+                ipaddr = 'localhost'
         with j.logger.nostdout() as stdout:
             try:
                 key = "%s_%s_%s_%s" % (ipaddr, port,user,passwd)
