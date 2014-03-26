@@ -152,7 +152,8 @@ class BlobStorClient:
             key = j.tools.hash.md5_string(data)
         if compress==True or (len(data)>self._compressMin and self.compress):
             compress=self.compress
-            print "compress"
+            # print "compress"
+            print ".",
             data=lzma.compress(data)
             serialization="L"
         else:

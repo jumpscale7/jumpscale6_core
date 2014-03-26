@@ -246,7 +246,6 @@ class JSFileMgr():
                 os.chmod(destfull,int(mdo.mode))
                 os.chown(destfull,int(mdo.uid),int(mdo.gid))   
 
-
     def getMDObjectFromFs(self,path):
         itemObj=Item(j.system.fs.fileGetContents(path))
         return itemObj
