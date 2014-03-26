@@ -55,6 +55,8 @@ class JSFileMgr():
         # blobstor2 client
         # self.blobstor = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
         self.blobstor=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace=blobstorNamespace)
+        self.blobstor.cachepath="/mnt/BLOBCACHEC"
+        j.system.fs.createDir(self.blobstor.cachepath)
         self.blobstorMD=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace="md_%s"%blobstorNamespace)
         
         self.namespace=blobstorNamespace
@@ -64,10 +66,12 @@ class JSFileMgr():
         self.blobstorMD.compress=compress
         self.errors=[]
 
-        self.blobstor.cachepath=self.storpath
         self.blobstorMD.cachepath=""
 
         self.link=False
+
+        self.restorebatch=[]
+        self.restorebatchSize=0
 
     def _normalize(self, path):
         path=path.replace("'","\\'")
@@ -178,22 +182,24 @@ class JSFileMgr():
 
         return (mdchange,change,item.hash,dest2)
 
-    def restore(self, src, dest,link=False):
+    def restore(self, src,dest,link=False):
         """
-        src is location on metadata dir
         dest is where to restore to
         """
+
+        j.system.fs.removeDirTree(dest)
         self.errors=[]
 
         # if src[0] == "/":
         #     raise RuntimeError("not supported src path")
     
         #DIRS & FILES
-        src2 = "%s/%s/%s" % (self.MDPath, "MD",src.strip())
+        src2 = "%s/%s/%s" % (self.MDPath, "MD",src)
 
         if not j.system.fs.exists(path=src2):
             raise RuntimeError("Could not find MD source '%s'"%src2)
 
+        #restore dirs
         for item in j.system.fs.listFilesInDir(src2, True,filter=".meta"):
             mdo=self.getMDObjectFromFs(item)
             destpart=j.system.fs.pathRemoveDirPart(item, src2, True)
@@ -201,15 +207,20 @@ class JSFileMgr():
             destfull=j.system.fs.getDirName(destfull)
             self.restore1dir(item, destfull)
 
+        #restore files
         for item in j.system.fs.listFilesInDir(src2, True):
             if j.system.fs.getBaseName(item)==".meta":
                 continue
             destpart=j.system.fs.pathRemoveDirPart(item, src2, True)
             destfull=j.system.fs.joinPaths(dest, destpart)
-            self.restore1file(item, destfull,link=link)
+
+            self.restore1file(item, destfull,link=link,sync=False)
+
+        print "done downloading files, make sure we have the last batch."
+        self.blobstor.downloadBatch() #this will make sure we get last batch
 
         #LINKS
-        src2 = "%s/%s/%s" % (self.MDPath, "LINKS",src.strip())
+        src2 = "%s/%s" % (self.MDPath, "LINKS")
 
         if j.system.fs.exists(path=src2):
             for item in j.system.fs.listFilesInDir(src2, True,filter=".meta"):
@@ -218,7 +229,7 @@ class JSFileMgr():
                 destfull=j.system.fs.joinPaths(dest, destpart)
                 destfull=j.system.fs.getDirName(destfull)
                 destlink=j.system.fs.joinPaths(dest, mdo.dest)
-                print "link %s to %s"%(destfull,destlink)
+                # print "link %s to %s"%(destfull,destlink)
                 j.system.fs.symlink( destlink, destfull, overwriteTarget=True)
                 os.chmod(destfull,int(mdo.mode))
                 os.chown(destfull,int(mdo.uid),int(mdo.gid))                         
@@ -230,32 +241,40 @@ class JSFileMgr():
                 destpart=j.system.fs.pathRemoveDirPart(item, src2, True)
                 destfull=j.system.fs.joinPaths(dest, destpart)
                 destlink=j.system.fs.joinPaths(dest, mdo.dest)
-                print "link %s to %s"%(destfull,destlink)
+                # print "link %s to %s"%(destfull,destlink)
                 j.system.fs.symlink( destlink, destfull, overwriteTarget=True)
                 os.chmod(destfull,int(mdo.mode))
                 os.chown(destfull,int(mdo.uid),int(mdo.gid))   
-
-        #@todo restore the devs
-        'tar xzvf testDev.tgz -C testd'
 
 
     def getMDObjectFromFs(self,path):
         itemObj=Item(j.system.fs.fileGetContents(path))
         return itemObj
 
-    def restore1file(self, src, dest,link=False):
+    def restore1file(self, src, dest,sync=True,link=False):
+        """
+        """
 
         print "restore file: %s" % (dest)
 
-        itemObj=self.getMDObjectFromFs(src)
+        if j.system.fs.getBaseName(src).find("__dev")==0:
+            #restore device files
+            itemObj=self.getMDObjectFromFs(src)
+            dest2=j.system.fs.getTmpFilePath()+".tgz"
+            self.blobstor.downloadFile(key=itemObj.hash,dest=dest2,link=False,repoid=self.repoid,chmod=0,chownuid=0,chowngid=0,sync=True)
+            destDev=j.system.fs.getDirName(dest)
+            cmd="cd %s;tar xzvf %s -C ."%(destDev,dest2)
+            j.system.process.execute(cmd)
+            j.system.fs.remove(dest2)            
+        else:
+            itemObj=self.getMDObjectFromFs(src)
+            j.system.fs.createDir(j.system.fs.getDirName(dest))
 
-        j.system.fs.createDir(j.system.fs.getDirName(dest))
-
-        if itemObj.hash.strip()=="":
-            j.system.fs.writeFile(dest,"")
-            return
-
-        self.blobstor.downloadFile(key=itemObj.hash,dest=dest,link=link,repoid=self.repoid,chmod=int(itemObj.mode),chownuid=int(itemObj.uid),chowngid=int(itemObj.gid))      
+            if itemObj.hash.strip()=="":
+                j.system.fs.writeFile(dest,"")
+                return
+            self.blobstor.downloadFile(key=itemObj.hash,dest=dest,link=link,repoid=self.repoid,chmod=int(itemObj.mode),chownuid=int(itemObj.uid),chowngid=int(itemObj.gid)\
+               ,sync=sync,size=itemObj.size)      
 
     def restore1dir(self,src,dest):
         print "restore dir: %s %s" % (src, dest)
@@ -286,9 +305,12 @@ class JSFileMgr():
                 continue
             nr+=1
             if not md5 in exists:
-                self.blobstor.uploadFile(path,key=md5,repoid=self.repoid)
+                self.blobstor.uploadFile(src,key=md5,repoid=self.repoid)
 
-    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={".*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"]):
+        self.blobstor.sync() #to make sure all is send because batching is being used
+        print "uploaded batch:%s %s/%s"%(batchnr,nr,total)
+
+    def backup(self,path,destination="", pathRegexIncludes={},pathRegexExcludes={"F":"*\\.pyc"},childrenRegexExcludes=[".*/dev/.*",".*/proc/.*"]):
 
         #check if there is a dev dir, if so will do a special tar
         ##BACKUP:
@@ -297,13 +319,26 @@ class JSFileMgr():
         #tar xzvf testDev.tgz -C testd
         self._createExistsList(destination)
 
+        #DEAL WITH DEV dirs
+        print "SCAN for dev dirs"
+        # for ddir in j.system.fs.listDirsInDir( path=path, recursive=True, dirNameOnly=False, findDirectorySymlinks=False):
+        w=j.base.fswalker.get()
+        callbackMatchFunctions=w.getCallBackMatchFunctions(pathRegexIncludes={},pathRegexExcludes={},includeFolders=True,includeLinks=False)
+
+        def processdir(path,stat,arg):
+            if j.system.fs.getDirName(path+"/", lastOnly=True, levelsUp=0)=="dev":
+                pathdev=j.system.fs.getDirName(path)
+                cmd="cd %s;tar Szcvf __dev.tgz dev"%pathdev
+                j.system.process.execute(cmd)
+
+        callbackFunctions={}
+        callbackFunctions["D"]=processdir
+        arg={}
+        w.walk(path,callbackFunctions,arg=arg,callbackMatchFunctions=callbackMatchFunctions,childrenRegexExcludes=childrenRegexExcludes)
+
         print "SCAN MD:%s"%path
         
         self.errors=[]
-
-        if j.system.fs.exists(j.system.fs.joinPaths(path,"dev")):
-            cmd="cd %s;tar Szcvf __dev.tgz dev"%path
-            j.system.process.execute(cmd)
 
         destMDClist=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,destination,".mdchanges")
         destFClist=j.system.fs.joinPaths(self.storpath, "../TMP","plists",self.namespace,destination,".fchanges")
@@ -373,8 +408,8 @@ class JSFileMgr():
 
         if len(self.errors)>0:
             out=""
-            for path,msg in self.errors:
-                out+="%s:%s\n"%(path,msg)
+            for path0,msg in self.errors:
+                out+="%s:%s\n"%(path0,msg)
             epath=j.system.fs.joinPaths(self.MDPath,"ERRORS",destination,"ERRORS.LOG")
             j.system.fs.createDir(j.system.fs.getDirName(epath))
             j.system.fs.writeFile(epath,out)
@@ -393,13 +428,14 @@ class JSFileMgr():
         # if not(rcode==1 and result.strip().replace("***ERROR***","")==""):
         #     raise RuntimeError("Could not diff : cmd:%s error: %s"%(cmd,result))
 
+        #DEAL WITH DELETED FILES
         f=open(deleted, "r")
         for line in f:
             line=line.strip()
-            path=line.lstrip("- ")
-            dest=j.system.fs.joinPaths(self.MDPath,"MD",path)
+            path0=line.lstrip("- ")
+            dest=j.system.fs.joinPaths(self.MDPath,"MD",path0)
             j.system.fs.removeDirTree(dest)
-            dest=j.system.fs.joinPaths(self.MDPath,"LINKS",path)
+            dest=j.system.fs.joinPaths(self.MDPath,"LINKS",path0)
             j.system.fs.removeDirTree(dest)
         f.close()
         print "SCAN DONE MD:%s"%path
@@ -417,8 +453,8 @@ class JSFileMgr():
         batch=[]
         batchnr=0
         for line in f:
-            path,md5=line.strip().split("|")
-            batch.append([path,md5])
+            path0,md5=line.strip().split("|")
+            batch.append([path0,md5])
             counter+=1
             if counter>1000:                
                 self.backupBatch(batch,batchnr=batchnr,total=total)
@@ -432,11 +468,15 @@ class JSFileMgr():
 
         self.blobstor.sync()
 
-        key=self.blobstorMD.uploadDir(self.MDPath)
-        self.blobstorMD.sync()
+        key=self.sendMDToBlobStor()
 
         print "BACKUP DONE."
 
+        return key
+
+    def sendMDToBlobStor(self):
+        key=self.blobstorMD.uploadDir(self.MDPath,compress=True)
+        self.blobstorMD.sync()
         return key
 
     def _createExistsList(self,dest):
@@ -521,6 +561,9 @@ class BackupClient:
         self.gitlabAccount=gitlabAccount
         self.key="backup_%s"%self.backupname
 
+        j.logger.disable()
+        
+
         # try:
         #     self.gitlab=j.clients.gitlab.get(gitlabAccount)
         # except Exception,e:
@@ -580,11 +623,15 @@ class BackupClient:
         """
         get metadata from blobstor
         """
-        self.filemanager.blobstorMD.downloadDir(key,dest=self.filemanager.MDPath,repoid=self.filemanager.repoid)
+        self.filemanager.blobstorMD.downloadDir(key,dest=self.filemanager.MDPath,repoid=self.filemanager.repoid,compress=True)
 
-    def restore(self,path,destination,link=False):
+
+    def sendMDToBlobStor(self):
+        return self.filemanager.sendMDToBlobStor()
+
+    def restore(self,src,destination,link=False):
         # self.pullMD()
-        self.filemanager.restore(path,dest=destination,link=link)
+        self.filemanager.restore(src=src,dest=destination,link=link)
 
 
     def _clean(self):

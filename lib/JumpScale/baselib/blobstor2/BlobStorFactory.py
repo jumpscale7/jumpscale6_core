@@ -19,12 +19,23 @@ class BlobStorTransport(BSTRANSPPARENT):
     def __init__(self,addr,port,gevent=True,login="",passwd=""):
         BSTRANSPPARENT.__init__(self,addr=addr,port=port,gevent=gevent)
         self._init()
-        self._cmdchannel.send_multipart([msgpack.dumps([["LOGIN",{"login":login,"passwd":passwd},""]]),"S",str(1),""])
-        session= self._cmdchannel.recv_multipart()
-        if session[0]<>"0":
-            raise RuntimeError("could not create session with blobserver")
-        session=msgpack.loads(session[1])
-        self.sessionkey=session["key"]
+        self._cmdchannel.send_multipart([msgpack.dumps([[1,"LOGIN",{"login":login,"passwd":passwd},""]]),"S",str(1),""])
+        res= self._cmdchannel.recv_multipart()
+        
+        if len(res)<>1:
+            raise RuntimeError("error in login request")
+        
+        res=msgpack.loads(res[0])
+
+        if res[1]<>0:
+
+            raise RuntimeError("could not create session with blobserver, result code was %s"%res[1])
+
+        key=res[2]["key"]
+        
+        self.sessionkey=key
+
+        self.lastjid=0
 
     def sendCmds(self,cmds,sync=True,timeout=60):
         """
@@ -35,19 +46,37 @@ class BlobStorTransport(BSTRANSPPARENT):
                 actions="S"
             else:
                 actions=""
+            if self.sessionkey=="":
+                raise RuntimeError("sessionkey cannot be empty")
             self._cmdchannel.send_multipart([msgpack.dumps(cmds),actions,str(timeout),self.sessionkey])
         else:
             raise RuntimeError("need 1 or more commands")
-        result=self._cmdchannel.recv_multipart()
-        
-        if result[0]=="1":
-            raise RuntimeError("cmd not found:%s"%result[1])
-        if result[0]=="2":
-            raise RuntimeError("access denied:%s"%result[1])
-        else:
-            res=msgpack.loads(result[1])
-            return res
+        received=self._cmdchannel.recv_multipart()
 
+        results={}
+        nr=0
+
+        full=False
+
+        for data in received:
+            if data=="":
+                continue
+            jid,rcode,res=msgpack.loads(data)
+                
+            if rcode==0:
+                results[jid]=res
+            elif rcode==1:
+                raise RuntimeError("cmd not found:%s"%res)
+            elif rcode==2:
+                raise RuntimeError("access denied:%s"%res)
+            elif rcode==999:
+                #too much to send back at once
+                full=True
+            else:
+                raise RuntimeError("could not execute %s, rcode was %s, %s"%(cmds[nr],rcode,res))
+            nr+=1
+        return full,results
+        
     # def queueCMD(self,cmd,key,data="",subkey="",sendnow=False):
     #     if data=="":
     #         self.queue.append((cmd,key))
@@ -78,6 +107,7 @@ class BlobStorFactory:
         self.nodes={}
         self.disks={}
         self.replicaMaxSize=256*1024
+        # self.cache={}
 
     def getClient(self, name,domain,namespace):
         return BlobStorClient(self.getMasterClient(name=name),domain,namespace)

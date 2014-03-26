@@ -30,7 +30,7 @@ class BlobstorMasterCMDS():
                     obj.__dict__.pop("_ckey")
                     obj.size=0
                     obj.free=0
-                    self.nodes[obj.id]=obj.__dict__
+                    self.nodes[str(obj.id)]=obj.__dict__
             for guid in self.osis.disk.list():
                 obj=self.osis.disk.get(guid)
                 obj.__dict__.pop("_meta")
@@ -39,10 +39,10 @@ class BlobstorMasterCMDS():
                     if obj.free==0:
                         obj.free=100 #is for not to continue, need to read better from FS
                     if not obj.size==0:
-                        node=self.nodes[obj.bsnodeid]
+                        node=self.nodes[str(obj.bsnodeid)]
                         node["size"]+=obj.size
                         node["free"]+=obj.free
-                        self.disks[obj.id]=obj.__dict__
+                        self.disks[str(obj.id)]=obj.__dict__
             self.blobstor._setNodesDisks()
 
     def getNodesDisks(self,session=None):
@@ -122,10 +122,10 @@ class BlobstorMasterCMDS():
         """
         returns (ipaddr,port,key)
         """
-        bsnids=str(bsnid)
-        if not self.nodes.has_key(bsnids):
+        bsnid=str(bsnid)
+        if not self.nodes.has_key(bsnid):
             raise RuntimeError("Could not find node with id:%s"%bsnid)
-        node=self.nodes[bsnids]
+        node=self.nodes[bsnid]
 
         gridnode=self.osis.gridnode.get("%s_%s"%(j.application.whoAmI.gid,node["nid"]))
 
@@ -135,6 +135,7 @@ class BlobstorMasterCMDS():
         if diskId==None:
             disk=self.osis.disk.new()
         else:
+            diskId=str(diskId)
             disk=self.osis.disk.get("%s_%s"%(j.application.whoAmI.gid,diskId))
 
         disk.gid=j.application.whoAmI.gid

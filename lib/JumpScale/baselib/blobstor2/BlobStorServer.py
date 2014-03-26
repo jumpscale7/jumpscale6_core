@@ -119,6 +119,12 @@ blobstor.disk.size=100
 
         self.db = plyvel.DB('/opt/blobstor/db/', create_if_missing=True)
 
+        self.results={}
+        self.resultsSize={}
+
+        self.cachepath="/mnt/BLOBCACHES"
+        j.system.fs.createDir(self.cachepath)
+
     def monitorDisks(self):
         for item in j.system.fs.listDirsInDir(self.path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True):
             cfigpath=j.system.fs.joinPaths(item,"main.hrd")
@@ -230,38 +236,85 @@ blobstor.disk.size=100
             self.blobstor.redis.redis.execute(cmd="HDEL", key="blobserver:cmds",subkey=jobguid)
         return jobguid
 
+    def rememberResult(self,sessionkey,jid,rcode,result,cmd,sync):
+        print "remember:%s %s %s (%s)"%(cmd,jid,rcode,sync)
+        if not self.results.has_key(sessionkey):
+            self.results[sessionkey]={}
+            self.resultsSize[sessionkey]=0
+        result=msgpack.dumps((jid,rcode,result))
+        self.resultsSize[sessionkey]+=len(result)
+        self.results[sessionkey][jid]=result
+
     def repCmdServer(self):
         cmdsocket = self.cmdcontext.socket(zmq.REP)
         cmdsocket.connect("inproc://cmdworkers")
         while True:
-            parts = cmdsocket.recv_multipart()   
+
+            parts = cmdsocket.recv_multipart()  
+            # print parts
+              
             parts=parts[:-1]         
             deny=False
 
             cmds=msgpack.loads(parts[0])
             sync = "S" in parts[1]
             timeout=int(parts[2])
-            key=parts[3]
+            key=parts[3] #sessionkey
 
-            for cmd,args,data in cmds:
-                if not getattr(self, cmd):
-                    cmdsocket.send_multipart([str(1),cmd]) #1 means not found
-                    return
-                # print cmd               
-                if data<>"":
-                    method=getattr(self, cmd)
-                    res=method(data=data,session=self.sessions[key],**args)
+
+            for jid,cmd,args,data in cmds:
+                # print "cmd:%s %s %s"%(key,jid,cmd)
+
+                if cmd<>"LOGIN" and key=="":
+                    raise RuntimeError("error, sessionkey cannot be empty.")
+
+                if cmd=="getresults":
+                    sync=False
+                elif not getattr(self, cmd):                    
+                    self.rememberResult(key,jid,1,"",cmd,sync)
                 else:
-                    method=getattr(self, cmd)                    
-                    res=method(session=self.sessions[key],**args)
+                    #normal function
+                    if data<>"":
+                        method=getattr(self, cmd)
+                        res=method(data=data,session=self.sessions[key],**args)
+                    else:
+                        method=getattr(self, cmd)                    
+                        res=method(session=self.sessions[key],**args)
 
-                if res=="DENY":
-                    cmdsocket.send_multipart([str(2),cmd]) #1 means not found
-                    return
+                    if res=="DENY":
+                        self.rememberResult(key,jid,2,"",cmd,sync)
+                    else:
+                        self.rememberResult(key,jid,0,res,cmd,sync)
+
             if sync:
-                cmdsocket.send_multipart([str(0),msgpack.dumps(res)])
+                # #return data still in mem
+                # cmdsResult=[]
+                # cmdsSize=0
+                # full=False
+                # while len(self.results[key])>0 and full==False:
+                #     if len(cmdsResult)<200 and cmdsSize<5000000: #+-5MB
+                #         res=self.results[key].pop(0)                        
+                #         cmdsSize+=len(res)
+                #         cmdsResult.append(res) 
+                #     else:
+                #         full=True
+                #         cmdsResult.append(msgpack.dumps((0,999,""))) #make sure client knows            
+                #cmdsocket.send_multipart(cmdsResult)
+                res=self.results[key].pop(jid)
+                cmdsocket.send_multipart([res])
+            elif cmd=="getresults":
+                results=[]
+                for jid in data:
+                    if not self.results[key].has_key(jid):
+                        raise RuntimeError("did not find job:%s"%jid)
+                    else:
+                        res=self.results[key].pop(jid)
+                        results.append(res)    
+                if results==[]:
+                    results=[""]            
+                cmdsocket.send_multipart(results)
             else:
-                cmdsocket.send_multipart([str(0),""])  #will have to be a sort of jobguid which we will then return so followup can be done
+                cmdsocket.send_multipart( [""] )
 
     def cmdGreenlet(self):
         # Nonblocking
@@ -292,7 +345,7 @@ blobstor.disk.size=100
 
             if socks.get(backend) == zmq.POLLIN:
                 parts = backend.recv_multipart()
-                frontend.send_multipart(parts[1:])  # @todo dont understand why I need to remove first part of parts?
+                frontend.send_multipart(parts[1:])
 
     def _getPaths(self, namespace, key):
         storpath=j.system.fs.joinPaths(self.STORpath, namespace, key[0:2], key[2:4], key)
@@ -304,6 +357,16 @@ blobstor.disk.size=100
         self.sessions[key]=(login,passwd)
         return {"key":key}
 
+    def _getBlobCachePath(self, namespace,key,createdir=False):
+        """
+        Get the blob path in Cache dir
+        """
+        # Get the Intermediate path of a certain blob
+        storpath = j.system.fs.joinPaths(self.cachepath,namespace, key[0:2], key[2:4], key)
+        if createdir:
+            j.system.fs.createDir(j.system.fs.getDirName(storpath))
+        return storpath
+
     def SET(self, namespace, key, data, repoid=0,serialization="",session=None):
         # if serialization=="":
         #     serialization="lzma"
@@ -313,31 +376,33 @@ blobstor.disk.size=100
         key2=b'%s__%s'%(namespace,key)
         mddata=self.db.get(key2)
         if  mddata<>None:
-            size,repos,diskid,cid=msgpack.loads(mddata)
+            size,repos,diskid,cid,serializationold=msgpack.loads(mddata)
             if int(repoid) not in repos:
                 repos.append(repoid)
-                self.db.put(key2,msgpack.dumps((size,repos,diskid,cid)))
+                self.db.put(key2,msgpack.dumps((size,repos,diskid,cid,serializationold)))
                 mdchange=True
             else:
                 mdchange=False
             change=False
         else:
-            diskid,cid,tf=self.getActiveWriteContainer(namespace)
-            tarinfo=tarfile.TarInfo()
-            tarinfo.size=len(data)
-            tarinfo.name=key
-            md={}
-            md["format"] = serialization
-            # md["repos"] = "%s"%repoid
-            tarinfo.pax_headers=md
+            size=len(data)
+            # diskid,cid,tf=self.getActiveWriteContainer(namespace)
+            # tarinfo=tarfile.TarInfo()
+            # tarinfo.size=len(data)
+            # tarinfo.name=key
 
-            tf.addfile(tarinfo, StringIO.StringIO(data))
-            self.db.put(key2,msgpack.dumps([tarinfo.size,[int(repoid)],diskid,cid]))
+            # tf.addfile(tarinfo, StringIO.StringIO(data))
+            diskid=0
+            cid=0
+            self.db.put(key2,msgpack.dumps([size,[int(repoid)],diskid,cid,serialization]))
 
-            self.activeContainerModDate[namespace]=time.time()
-            self.activeContainerSize[namespace]+=len(data)
-            self.activeContainerNrFilesAdded[namespace]+=1
-            self.activeContainerFiles[namespace].append(key)
+            # self.activeContainerModDate[namespace]=time.time()
+            # self.activeContainerSize[namespace]+=len(data)
+            # self.activeContainerNrFilesAdded[namespace]+=1
+            # self.activeContainerFiles[namespace].append(key)
+
+            path=self._getBlobCachePath(namespace, key,createdir=True)
+            j.system.fs.writeFile(filename=path,contents=data)
 
             mdchange=True
             change=True
@@ -345,29 +410,37 @@ blobstor.disk.size=100
         return [key, mdchange, change]
 
     def GET(self, namespace, key, repoid=0,serialization="", session=None):
-        # if serialization == "":
-        #     serialization = "lzma"
+
+        if serialization<>"":
+            raise RuntimeError("not implemented yet, will always return serialization as stored on FS for now")
+
         if key==None or key=="":
             raise RuntimeError("key cannot be None or empty.")
         key2=b'%s__%s'%(namespace,key)
         mddata=self.db.get(key2)
         if  mddata<>None:
-            size,repos,diskid,cid=msgpack.loads(mddata)
-            if self.activeContainerFiles.has_key(namespace)and key in self.activeContainerFiles[namespace]:
-                diskid,cid,tf=self.getActiveWriteContainer(namespace)
-                close=False #dont close used for writing
-            else:
-                path=self.cid2path(namespace,diskid,cid)
-                tf=tarfile.open(name=path, mode='r:', fileobj=None, bufsize=10240)
-                close=True
+            size,repos,diskid,cid,serialization=msgpack.loads(mddata)
 
-            tarinfo=tf.getmember(key)
-            f=tf.extractfile(tarinfo)
-            data=f.read()
-            f.close()
-            if close:
-                tf.close()
-            return data
+            # if self.activeContainerFiles.has_key(namespace)and key in self.activeContainerFiles[namespace]:
+            #     diskid,cid,tf=self.getActiveWriteContainer(namespace)
+            #     close=False #dont close used for writing
+            # else:
+            #     path=self.cid2path(namespace,diskid,cid)
+            #     tf=tarfile.open(name=path, mode='r:', fileobj=None, bufsize=10240)
+            #     close=True
+
+            # tarinfo=tf.getmember(key)
+
+            # f=tf.extractfile(tarinfo)            
+            # data=f.read()
+            # f.close()
+            # if close:
+            #     tf.close()
+
+            path=self._getBlobCachePath(namespace,key)
+            data=j.system.fs.fileGetContents(path)
+
+            return [key,serialization,data]
         else:
             return None
 

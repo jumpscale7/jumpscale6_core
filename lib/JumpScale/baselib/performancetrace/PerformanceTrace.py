@@ -4,7 +4,7 @@ class PerformanceTraceFactory():
     """
     """
     
-    def profile(self,methodstatement, locals,globals={}):
+    def profile(self,methodstatement, locals={},globals={}):
         """
         create a wrapper method which has no args and then pass that wrapper method to this method as first arg
         method is passed as a string e.g. 'listDirTest()'
@@ -13,11 +13,9 @@ class PerformanceTraceFactory():
 
         example:
 
-        locals={}
-        locals["params"]=params
-        locals["q"]=q
-        do=j.tools.performancetrace.profile('j.apps.system.infomgr.extensions.infomgr.addInfo(params.info)', locals)
-        
+        import JumpScale.baselib.performancetrace
+        do=j.tools.performancetrace.profile('test0b()', globals=globals())
+
         """
         import cProfile
         import pstats
@@ -31,9 +29,11 @@ class PerformanceTraceFactory():
         globals.update(globs)
         cProfile.runctx(methodstatement, globals, locals, path)
         p1 = pstats.Stats(path)
-        p1.strip_dirs().sort_stats('cum').print_stats(100)
+
+        # p1.strip_dirs().sort_stats('cum').print_stats(100)
         p1.strip_dirs().sort_stats('time').print_stats(100)
         j.system.fs.removeDirTree(path)
+        return p1
 
 
 
