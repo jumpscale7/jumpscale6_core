@@ -234,6 +234,8 @@ class BlobStorClient:
                     self._link(blob_path,dest)
                 else:
                     j.system.fs.copyFile(blob_path, dest)
+                    os.chmod(dest, chmod)
+                    os.chown(dest, chownuid, chowngid)
                 return
 
         if self._downloadbatchSize>self.maxqueuedatasize or len(self._downloadbatch)>200:
@@ -296,6 +298,8 @@ class BlobStorClient:
                 self._link(blob_path,dest)
             else:
                 j.system.fs.copyFile(blob_path, dest)            
+                os.chmod(dest, chmod) 
+                os.chown(dest, chownuid, chowngid) 
         else:
             self._restoreBlobToDest(dest, blob, chmod=chmod,chownuid=chownuid,chowngid=chowngid,serialization=serialization)
 

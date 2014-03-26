@@ -231,8 +231,8 @@ class JSFileMgr():
                 destlink=j.system.fs.joinPaths(dest, mdo.dest)
                 # print "link %s to %s"%(destfull,destlink)
                 j.system.fs.symlink( destlink, destfull, overwriteTarget=True)
-                os.chmod(destfull,int(mdo.mode))
-                os.chown(destfull,int(mdo.uid),int(mdo.gid))                         
+                #os.chmod(destfull,int(mdo.mode))
+                #os.chown(destfull,int(mdo.uid),int(mdo.gid))                         
 
             for item in j.system.fs.listFilesInDir(src2, True):
                 if j.system.fs.getBaseName(item)==".meta":
@@ -243,8 +243,8 @@ class JSFileMgr():
                 destlink=j.system.fs.joinPaths(dest, mdo.dest)
                 # print "link %s to %s"%(destfull,destlink)
                 j.system.fs.symlink( destlink, destfull, overwriteTarget=True)
-                os.chmod(destfull,int(mdo.mode))
-                os.chown(destfull,int(mdo.uid),int(mdo.gid))   
+                #os.chmod(destfull,int(mdo.mode))
+                #os.chown(destfull,int(mdo.uid),int(mdo.gid))   
 
     def getMDObjectFromFs(self,path):
         itemObj=Item(j.system.fs.fileGetContents(path))
