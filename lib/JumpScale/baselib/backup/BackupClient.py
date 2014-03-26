@@ -96,7 +96,7 @@ class JSFileMgr():
         change=False
 
         try:
-            stat=j.system.fs.statPath(path)
+            stat=os.lstat(path)
         except Exception,e:
             if not j.system.fs.exists(path):
                 #can be link which does not exist
