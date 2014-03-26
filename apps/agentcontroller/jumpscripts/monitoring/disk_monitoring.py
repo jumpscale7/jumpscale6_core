@@ -31,7 +31,7 @@ def action():
         # cacheobj.db.__dict__[key]=a
         return cacheobj
 
-    disks = j.system.platform.diskmanager.partitionsFind(mounted=True)
+    disks = j.system.platform.diskmanager.partitionsFind(mounted=True, prefix='', minsize=0, maxsize=None)
 
     #disk counters
     counters=psutil.disk_io_counters(True)

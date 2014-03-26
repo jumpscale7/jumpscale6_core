@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
         obj['usage'] = 100 - int(100.0 * float(obj['free']) / float(obj['size']))
         obj['dpath'] = obj['path'] # path is reserved variable for path of request
         for attr in ['size', 'free']:
-            obj[attr] = "%.2f %siB" % j.tools.units.bytes.converToBestUnit(obj[attr], 'K')
+            obj[attr] = "%.2f %siB" % j.tools.units.bytes.converToBestUnit(obj[attr], 'M')
         obj['type'] = ', '.join([str(x) for x in obj['type']])
         # obj['systempids'] = ', '.join([str(x) for x in obj['systempids']])
         return obj
