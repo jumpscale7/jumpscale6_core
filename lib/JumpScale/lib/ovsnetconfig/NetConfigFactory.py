@@ -208,24 +208,23 @@ iface $interface inet static
         C="""
 auto $BPNAME
 allow-ovs $BPNAME
-iface $BPNAME inet static
+iface $BPNAME inet manual
  ovs_type OVSBridge
  ovs_ports $bondname
 
 allow-$BPNAME $bondname
 iface $bondname inet manual
  ovs_bridge $BPNAME
- ovs_type OVSPort
+ ovs_type OVSBond
  ovs_bonds $bondinterfaces
  ovs_options bond_mode=balance-tcp lacp=active bond_fake_iface=false other_config:lacp-time=fast bond_updelay=2000 bond_downdelay=400
  $disable_ipv6
- up ip link set $bondname mtu $MTU
 """
         interfaces = ''
         disable_ipv6 = ''
         for interface in bondinterfaces:
             interfaces += '%s ' % interface
-            disable_ipv6 += ' up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % interface
+            disable_ipv6 += 'pre-up ip l set %s mtu 2000 \n up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % (interface, interface)
         C=C.replace("$BPNAME", str(backplanename))
         C=C.replace("$bondname", bondname)
         C=C.replace("$MTU", str(self.PHYSMTU))
@@ -294,18 +293,17 @@ iface $BPNAME inet static
 allow-$BPNAME $bondname
 iface $bondname inet manual
  ovs_bridge $BPNAME
- ovs_type OVSPort
+ ovs_type OVSBond
  ovs_bonds $bondinterfaces
  ovs_options bond_mode=balance-tcp lacp=active bond_fake_iface=false other_config:lacp-time=fast bond_updelay=2000 bond_downdelay=400
  $disable_ipv6
- up ip link set $bondname mtu $MTU
 """
         n=netaddr.IPNetwork(ipaddr)
         interfaces = ''
         disable_ipv6 = ''
         for interface in bondinterfaces:
             interfaces += '%s ' % interface
-            disable_ipv6 += ' up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % interface
+            disable_ipv6 += 'pre-up ip l set %s mtu 2000 \n up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % (interface, interface)
         C=C.replace("$BPNAME", str(backplanename))
         C=C.replace("$bondname", bondname)
         C=C.replace("$ipbase", str(n.ip))
