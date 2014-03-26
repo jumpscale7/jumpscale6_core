@@ -13,7 +13,7 @@ category = "system.esstatus"
 
 async = True
 roles = ["*"]
-
+enable = False
 period=0
 
 def action():
@@ -23,6 +23,6 @@ def action():
 
     #@todo check memory usage elastic search
     #@todo check index sizes
-
+    size = 0
     return {'size': size, 'health': health}
 

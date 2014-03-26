@@ -14,7 +14,7 @@ version = "1.0"
 category = "gather.healthchecker"
 
 period = 0 #always in sec
-enable = True
+enable = False
 async = False
 roles = ["*"]
 
