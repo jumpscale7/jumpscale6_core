@@ -5,7 +5,7 @@ Checks ElasticSearch status
 """
 
 organization = "jumpscale"
-name = 'check_elasticsearch'
+name = 'info_gather_elasticsearch'
 author = "zains@codescalers.com"
 license = "bsd"
 version = "1.0"
@@ -13,7 +13,7 @@ category = "system.esstatus"
 
 async = True
 roles = ["*"]
-enable = False
+enable = True
 period=0
 
 def action():
@@ -21,8 +21,12 @@ def action():
     escl = j.clients.elasticsearch.get()
     health = escl.health()
 
-    #@todo check memory usage elastic search
-    #@todo check index sizes
     size = 0
+    indices = escl.status()['indices']
+    for index, data in indices.iteritems():
+        size += data['index']['size_in_bytes']
+
+
+    #@todo check memory usage elastic search
     return {'size': size, 'health': health}
 

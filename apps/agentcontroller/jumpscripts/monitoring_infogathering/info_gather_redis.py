@@ -5,7 +5,7 @@ Checks Redis server status
 """
 
 organization = "jumpscale"
-name = 'check_redis'
+name = 'info_gather_redis'
 author = "zains@codescalers.com"
 license = "bsd"
 version = "1.0"
@@ -27,8 +27,7 @@ def action():
             continue
         rproc = j.system.process.getProcessObject(pids[0])
         rcl = j.clients.redis.getRedisClient('127.0.0.1', port)
-        #@todo make sure machine info is send
-        result[port] = {'alive': rcl.ping(), 'memory_usage': '%s MB' % '{:.2f}'.format(rproc.get_memory_info()[0]/1024.0/1024.0)}
+        result[port] = {'alive': rcl.ping(), 'memory_usage': rproc.get_memory_info()[0]}
 
     return result
     

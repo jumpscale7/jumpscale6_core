@@ -14,17 +14,28 @@ version = "1.0"
 category = "gather.healthchecker"
 
 period = 0 #always in sec
-enable = False
+enable = True
 async = False
 roles = ["*"]
 
 
 def action():
-    redisclient = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
-    checks = ['processmanager', 'redis', 'disks', 'workers']
     result = dict()
-    for check in checks:
+    def get(check):
         if redisclient.exists("healthcheck:%s" % check):
-            result[check] = redisclient.hget("healthcheck:status",check) #should return True or false
-            result[check] = redisclient.hget("healthcheck:lastcheck",check) #should return time
+            status = redisclient.hget("healthcheck:status", check) #should return True or false
+            lastcheck = redisclient.hget("healthcheck:lastcheck", check) #should return time
+            return status, lastcheck
+
+
+    redisclient = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+    workers = ['worker_hypervisor_0', 'worker_default_0', 'worker_default_1', 'worker_io_0']
+    get('disks')
+    for port in [7767, 7768, 7769]:
+        check = 'redis:%s' % port
+        result[check] = get(check)
+    for worker in workers:
+        check = 'workers:%s' % worker
+        result[check] = get(check)
+
     return result
