@@ -3,7 +3,7 @@ import time
 import JumpScale.baselib.redis
 
 descr = """
-Gather node's healthchecks
+Gather node's healthchecks (used in macro in portal)
 """
 
 organization = "jumpscale"
@@ -13,7 +13,7 @@ license = "bsd"
 version = "1.0"
 category = "gather.healthchecker"
 
-period = 1 #always in sec
+period = 0 #always in sec
 enable = True
 async = False
 roles = ["*"]
@@ -25,9 +25,6 @@ def action():
     result = dict()
     for check in checks:
         if redisclient.exists("healthcheck:%s" % check):
-            result[check] = redisclient.get("healthcheck:%s" % check)
-    if redisclient.exists("healthcheck:time"):
-        result['time'] = redisclient.get("healthcheck:time")
-    else:
-        result['time'] = time.time()
+            result[check] = redisclient.hget("healthcheck:status",check) #should return True or false
+            result[check] = redisclient.hget("healthcheck:lastcheck",check) #should return time
     return result

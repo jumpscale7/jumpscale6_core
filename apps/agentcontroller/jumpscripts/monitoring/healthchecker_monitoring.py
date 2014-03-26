@@ -13,8 +13,8 @@ license = "bsd"
 version = "1.0"
 category = "monitor.healthchecker"
 
-period = 1 #always in sec
-enable = True
+period = 600 #always in sec
+enable = False
 async = False
 roles = ["*"]
 
@@ -26,16 +26,18 @@ def action():
     healthy = {'processmanager':True, 'redis': True}
     nodeid = j.application.whoAmI.nid
     
-    status = j.core.grid.healthchecker.checkProcessManagers(nodeid)
+    status = j.core.grid.healthchecker.checkProcessManager(nodeid)  #execute heartbeat on each node and see if result came in osis
     if not status:
         healthy['processmanager'] = False
-        j.errorconditionhandler.raiseOperationalWarning('ProcessManager on node with id %s is not running.' % nodeid, 'monitoring')
+        msg='ProcessManager on node with id %s is not running.' % nodeid
+        j.events.opserror_critical( msg, category='monitoring')
 
     rstatus = j.core.grid.healthchecker.checkRedis(nodeid)
     for port, stat in rstatus.iteritems():
         if not stat['alive']:
             healthy['redis'] = False
-            j.errorconditionhandler.raiseOperationalWarning('Redis on node with id %s with port %s is not running.' % (nodeid, port), 'monitoring')
+            msg='Redis on node with id %s with port %s is not running.' % (nodeid, port)
+            j.events.opserror_critical( msg, category='monitoring')
 
     for check in ['processmanager', 'redis']:
         redisclient.set("healthcheck:%s" % check, healthy[check])

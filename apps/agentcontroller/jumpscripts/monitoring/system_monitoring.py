@@ -10,7 +10,7 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "monitoring.processes"
-period = 10 #always in sec
+period = 30 #always in sec
 enable=True
 async=False
 

@@ -12,7 +12,7 @@ license = "bsd"
 version = "1.0"
 category = "monitor.workerswatchdog"
 
-period = 900 #always in sec
+period = 10#always in sec
 enable = True
 async = False
 roles = ["*"]
@@ -26,6 +26,7 @@ def action():
         lastactive = int(rediscl.hget('workers:watchdog', worker))
         if j.base.time.getEpochAgo(timeout) > lastactive:
             j.errorconditionhandler.raiseOperationalWarning('Worker %s seems to have timed out' % worker, 'monitoring')
+            #@todo use events ops error
             healthy = False
     
     rediscl.set("healthcheck:workers", healthy)

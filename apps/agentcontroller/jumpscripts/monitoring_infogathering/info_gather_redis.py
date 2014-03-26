@@ -14,6 +14,8 @@ category = "system.redisstatus"
 async = True
 roles = ["*"]
 
+period=0
+
 
 def action():
     import JumpScale.baselib.redis
@@ -25,6 +27,7 @@ def action():
             continue
         rproc = j.system.process.getProcessObject(pids[0])
         rcl = j.clients.redis.getRedisClient('127.0.0.1', port)
+        #@todo make sure machine info is send
         result[port] = {'alive': rcl.ping(), 'memory_usage': '%s MB' % '{:.2f}'.format(rproc.get_memory_info()[0]/1024.0/1024.0)}
 
     return result
