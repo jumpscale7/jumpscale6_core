@@ -6,12 +6,15 @@ def main(j, args, params, tags, tasklet):
     status = None
     out = list()
 
-    out.append('||Node||Node ID||Process Manager Status||Details||')
-    for node in j.apps.system.gridmanager.getNodes():
-        nid = node['id']
-        status = j.core.grid.healthchecker.checkProcessManagers(nid)
-        link = '[Details|nodestatus?nid=%s]' % nid if status else ''
-        out.append('|[*%s*|node?id=%s]|%s|%s|%s|' % (node['name'], nid, nid, 'RUNNING' if status else 'HALTED', link))
+    out.append('||Node ID||Process Manager Status||Details||')
+    status, errors = j.core.grid.healthchecker.checkProcessManagerAllNodes()
+
+    for data in [status, errors]:
+        if len(data) > 0:
+            for nid, status in data.iteritems():
+                status = status['processmanager']
+                link = '[Details|nodestatus?nid=%s]' % nid if status['status'] else ''
+                out.append('|[%s|node?id=%s]|%s|%s|' % (nid, nid, 'RUNNING' if status else 'HALTED', link))
 
     out = '\n'.join(out)
     params.result = (out, doc)

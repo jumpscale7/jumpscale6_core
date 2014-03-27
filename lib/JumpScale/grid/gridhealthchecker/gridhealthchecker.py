@@ -18,8 +18,6 @@ class GridHealthChecker(object):
         self.getNodes()
 
     def _clean(self):
-        self._nids = list()
-        self._runningnids = list()
         self._errors = dict()
         self._status = dict()
 
@@ -114,11 +112,11 @@ class GridHealthChecker(object):
         redis = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid)['result']
         for port, result in redis.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(result['memory_usage'])
-            result['memory_usage'] = '%s %sB' % (size, unit)
+            redis[port]['memory_usage'] = '%s %sB' % (size, unit)
             if result['alive']:
-                self._addResult(nid, result, 'redis')
+                self._addResult(nid, redis, 'redis')
             else:
-                self._addError(nid, result, 'redis')
+                self._addError(nid, redis, 'redis')
         if clean:
             return self._status, self._errors
 
@@ -136,9 +134,9 @@ class GridHealthChecker(object):
         workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid)['result']
         for worker, stats in workers.iteritems():
             if stats['status']:
-                self._addResult(nid, stats, 'workers')
+                self._addResult(nid, workers, 'workers')
             else:
-                self._addError(nid, stats, 'workers')
+                self._addError(nid, workers, 'workers')
         if clean:
             return self._status, self._errors
 

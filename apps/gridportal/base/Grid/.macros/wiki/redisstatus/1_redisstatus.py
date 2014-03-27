@@ -8,9 +8,12 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||Port||Status||Memory Used||')
     
-    rstatus = j.core.grid.healthchecker.checkRedis(nid)
-    for port, stat in rstatus.iteritems():
-        out.append('|%s|%s|%s|' % (port, stat['alive'], stat['memory_usage']))
+    rstatus, errors = j.core.grid.healthchecker.checkRedis(nid)
+    for data in [rstatus, errors]:
+        if len(data) > 0:
+            rstatus = rstatus[nid]['redis']
+            for port, stat in rstatus.iteritems():
+                out.append('|%s|%s|%s|' % (port, 'RUNNING' if stat['alive'] else 'HALTED', stat['memory_usage']))
 
     out = '\n'.join(out)
 
