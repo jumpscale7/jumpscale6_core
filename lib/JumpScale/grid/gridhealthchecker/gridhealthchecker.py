@@ -2,6 +2,7 @@ from JumpScale import j
 import JumpScale.grid.agentcontroller
 import JumpScale.grid.osis
 import JumpScale.baselib.units
+import gevent
 
 class GridHealthChecker(object):
 
@@ -34,6 +35,24 @@ class GridHealthChecker(object):
         self._status.setdefault(nid, {})
         self._status[nid].setdefault(category, {})
         self._status[nid][category].update(result)
+
+    def _parallize(self, functionname, clean=False):
+        greens = list()
+        for nid in self._runningnids:
+            greenlet = gevent.Greenlet(functionname, nid, clean)
+            greenlet.start()
+            greens.append(greenlet)
+        gevent.joinall(greens)
+        for green in greens:
+            results, errors = green.value
+            self._returnResults(results, errors)
+
+    def _returnResults(self, results, errors):
+        for nid, result, category in results:
+            self._addResult(nid, result, category)
+        for nid, result, category in errors:
+            self._addError(nid, result, category)
+        return self._status, self._errors
 
     def _checkRunningNIDs(self):
         self._runningnids = list()
@@ -104,46 +123,51 @@ class GridHealthChecker(object):
     def checkRedisAllNodes(self, clean=True):
         if clean:
             self._clean()
-        for nid in self._runningnids:
-            self.checkRedis(nid, clean=False)
+        self._parallize(self.checkRedis, False)
         if clean:
             return self._status, self._errors
 
     def checkRedis(self, nid, clean=True):
         if clean:
             self._clean()
+
+        results = list()
+        errors = list()
         redis = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid)['result']
         for port, result in redis.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(result['memory_usage'])
             result['memory_usage'] = '%s %sB' % (size, unit)
             if result['alive']:
-                self._addResult(nid, {port: result}, 'redis')
+                results.append((nid, {port: result}, 'redis'))
             else:
-                self._addError(nid, {port: result}, 'redis')
+                errors.append((nid, {port: result}, 'redis'))
         if clean:
-            return self._status, self._errors
+            return self._returnResults(results, errors)
+        return results, errors
 
     def checkWorkersAllNodes(self,clean=True):
         if clean:
             self._clean()
-        for nid in self._runningnids:
-            self.checkWorkers(nid, clean=False)
+        self._parallize(self.checkWorkers, False)
         if clean:
             return self._status, self._errors
 
     def checkWorkers(self, nid, clean=True):
         if clean:
             self._clean()
+        results = list()
+        errors = list()
         workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid)['result']
         for worker, stats in workers.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
             stats['mem'] = '%s %sB' % (size, unit)
             if stats['status']:
-                self._addResult(nid, {worker: stats}, 'workers')
+                results.append((nid, {worker: stats}, 'workers'))
             else:
-                self._addError(nid, {worker: stats}, 'workers')
+                errors.append((nid, {worker: stats}, 'workers'))
         if clean:
-            return self._status, self._errors
+            return self._returnResults(results, errors)
+        return results, errors
 
 
     def checkProcessManagerAllNodes(self, clean=True):
@@ -181,20 +205,21 @@ class GridHealthChecker(object):
     def checkDisksAllNodes(self, clean=True):
         if clean:
             self._clean()
-        for nid in self._runningnids:
-            self.checkDisks(nid, clean=False)
+        self._parallize(self.checkDisks, clean=False)
         if clean:
             return self._status, self._errors
 
     def checkDisks(self, nid, clean=True):
         if clean:
             self._clean()
+        results = list()
+        errors = list()
         disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid)['result']
         for path, disk in disks.iteritems():
             if (disk['free'] and disk['size']) and (disk['free'] / float(disk['size'])) * 100 < 10:
                 disk['message'] = 'FREE SPACE LESS THAN 10%% on disk %s' % path
                 disk['status'] = False
-                self._addError(nid, {path: disk}, 'disks')
+                errors.append((nid, {path: disk}, 'disks'))
             else:
                 if disk['free']:
                     size, unit = j.tools.units.bytes.converToBestUnit(disk['free'], 'M')
@@ -203,15 +228,21 @@ class GridHealthChecker(object):
                 else:
                     disk['message'] = 'Disk is not mounted, Info is not available'
                 disk['status'] = True
-                self._addResult(nid, {path: disk}, 'disks')
+                results.append((nid, {path: disk}, 'disks'))
         if clean:
-            return self._status, self._errors
+            return self._returnResults(results, errors)
+        return results, errors
 
     def checkStatusAllNodes(self, clean=True):
         if clean:
             self._clean()
-        for nid in self._runningnids:
-            self.checkStatus(nid, clean=False)
+
+        self._parallize(self.checkStatus, False)
+
+        haltednodes = set(self._nids)-set(self._runningnids)
+        for nid in haltednodes:
+            self._addError(nid, {'processmanager': False}, 'healthchecker')
+
         if clean:
             return self._status, self._errors
 
@@ -220,11 +251,14 @@ class GridHealthChecker(object):
             self._clean()
         stats = self._client.executeJumpScript('jumpscale', 'info_gather_healthcheck_results', nid=nid)['result']
 
-        health = True
+        results = list()
+        errors = list()
+
         for check, state in stats.iteritems():
             if state == False:
-                health = False
-        stats['health'] = health
-        self._addResult(nid, stats, 'healthcheck')
+                errors.append((nid, {check: state}, 'healthchecker'))
+            else:
+                results.append((nid, {check: state}, 'healthchecker'))
         if clean:
-            return self._status, self._errors
+            return self._returnResults(results, errors)
+        return results, errors

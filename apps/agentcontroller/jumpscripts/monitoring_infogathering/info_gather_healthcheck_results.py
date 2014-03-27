@@ -29,12 +29,11 @@ def action():
 
 
     redisclient = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
-    workers = ['worker_hypervisor_0', 'worker_default_0', 'worker_default_1', 'worker_io_0']
     result['disks'] = get('disks')
     for port in [7767, 7768, 7769]:
         check = 'redis:%s' % port
         result[check] = get(check)
-    for worker in workers:
+    for worker in ['worker_hypervisor_0', 'worker_default_0', 'worker_default_1', 'worker_io_0']:
         check = 'workers:%s' % worker
         result[check] = get(check)
 
