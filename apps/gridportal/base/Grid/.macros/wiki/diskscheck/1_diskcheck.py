@@ -6,16 +6,15 @@ def main(j, args, params, tags, tasklet):
 
     out = list()
 
-    out.append('||Disk||Status||')
-    
     disks, errors = j.core.grid.healthchecker.checkDisks(nid)
 
-    for message, data in {'OK': disks, 'Not Okay': errors}.iteritems():
-        if len(data) < 0:
-            out.append('|*STATUS*|%s|' % message)
+    out.append('||Disk||Free Space||Status||')
+    for data in [disks, errors]:
+        if len(data) > 0:
             data = data[nid]['disks']
-            for disk, msg in data.iteritems():
-                out.append('|%s|%s|' % (disk, msg))
+            for path, diskstat in data.iteritems():
+                out.append('|%s|%s|%s|' % (path, diskstat['message'], 'OK' if diskstat['status'] else 'Not OK'))
+            out.append('\n')
 
     out = '\n'.join(out)
 

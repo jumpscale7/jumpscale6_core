@@ -187,13 +187,21 @@ class GridHealthChecker(object):
         if clean:
             self._clean()
         disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid)['result'] 
+        result = dict()
         for path, disk in disks.iteritems():
+            result[path] = dict()
             if (disk['free'] and disk['size']) and (disk['free'] / float(disk['size'])) * 100 < 10:
-                message = 'FREE SPACE LESS THAN 10%% on disk %s' % path
-                self._addError(nid, {'status': False, 'message': message}, 'disks')
+                result[path]['message'] = 'FREE SPACE LESS THAN 10%% on disk %s' % path
+                result[path]['status'] = False
+                self._addError(nid, result, 'disks')
             else:
-                size, unit = j.tools.units.bytes.converToBestUnit(disk['free'], 'M')
-                message = '%.2f %siB free space available' % (size, unit)
-                self._addResult(nid, {'status': True, 'message': message}, 'disks')
+                if disk['free']:
+                    size, unit = j.tools.units.bytes.converToBestUnit(disk['free'], 'M')
+                    result[path]['message'] = '%.2f %siB free space available' % (size, unit)
+
+                else:
+                    result[path]['message'] = 'Disk is not mounted, Info is not available'
+                result[path]['status'] = True
+                self._addResult(nid, result, 'disks')
         if clean:
             return self._status, self._errors
