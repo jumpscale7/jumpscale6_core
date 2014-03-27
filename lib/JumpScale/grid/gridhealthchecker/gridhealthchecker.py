@@ -24,8 +24,8 @@ class GridHealthChecker(object):
     def _addError(self, nid, result, category):
         if self._tostdout:
             print "*ERROR*: %s on node %s. Details: %s" % (category, nid, result)
-        self._status.setdefault(nid, {category: result})
-        self._status[nid].setdefault(category, result)
+        self._errors.setdefault(nid, {category: result})
+        self._errors[nid].setdefault(category, result)
 
     def _addResult(self, nid, result, category):
         if self._tostdout:
@@ -203,5 +203,27 @@ class GridHealthChecker(object):
                     result[path]['message'] = 'Disk is not mounted, Info is not available'
                 result[path]['status'] = True
                 self._addResult(nid, result, 'disks')
+        if clean:
+            return self._status, self._errors
+
+    def checkStatusAllNodes(self, clean=True):
+        if clean:
+            self._clean()
+        for nid in self._runningnids:
+            self.checkStatus(nid, clean=False)
+        if clean:
+            return self._status, self._errors
+
+    def checkStatus(self, nid, clean=True):
+        if clean:
+            self._clean()
+        stats = self._client.executeJumpScript('jumpscale', 'info_gather_healthcheck_results', nid=nid)['result']
+
+        health = True
+        for check, state in stats.iteritems():
+            if state == False:
+                health = False
+        stats['health'] = health
+        self._addResult(nid, stats, 'healthcheck')
         if clean:
             return self._status, self._errors
