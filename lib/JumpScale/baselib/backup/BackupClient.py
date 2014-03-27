@@ -271,6 +271,8 @@ class JSFileMgr():
 
             if itemObj.hash.strip()=="":
                 j.system.fs.writeFile(dest,"")
+                os.chmod(dest, int(itemObj.mode))
+                os.chown(dest, int(itemObj.uid), int(itemObj.gid))
                 return
             self.blobstor.downloadFile(key=itemObj.hash,dest=dest,link=link,repoid=self.repoid,chmod=int(itemObj.mode),chownuid=int(itemObj.uid),chowngid=int(itemObj.gid)\
                ,sync=sync,size=itemObj.size)      
