@@ -26,7 +26,9 @@ def action():
     for index, data in indices.iteritems():
         size += data['index']['size_in_bytes']
 
+    pid = j.system.process.getPidsByPort(9200)[0]
+    process = j.system.process.getProcessObject(pid)
+    memoryusage, _ = process.get_memory_info()
 
-    #@todo check memory usage elastic search
-    return {'size': size, 'health': health}
+    return {'size': size, 'health': health, 'memory_usage': memoryusage}
 

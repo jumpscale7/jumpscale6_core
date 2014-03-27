@@ -90,6 +90,9 @@ class GridHealthChecker(object):
         eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid)['result']
         size, unit = j.tools.units.bytes.converToBestUnit(eshealth['size'])
         eshealth['size'] = '%s %sB' % (size, unit)
+        size, unit = j.tools.units.bytes.converToBestUnit(eshealth['memory_usage'])
+        eshealth['memory_usage'] = '%s %sB' % (size, unit)
+
         if eshealth['health']['status'] in ['red']:
             self._addError(self.masternid, eshealth, 'elasticsearch')
         else:
