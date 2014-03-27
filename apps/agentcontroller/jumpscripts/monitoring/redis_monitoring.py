@@ -25,12 +25,15 @@ def action():
 
     nodeid = j.application.whoAmI.nid
 
-    rstatus = j.core.grid.healthchecker.checkRedis(nodeid)
-    for port, stat in rstatus.iteritems():
-        if not stat['alive']:
-            redisclient.hset("healthcheck:status", 'redis:%s' % port, False)
-            msg='Redis on node with id %s with port %s is not running.' % (nodeid, port)
-            j.events.opserror_critical( msg, category='monitoring')
-        else:
-            redisclient.hset("healthcheck:status", 'redis:%s' % port, True)
-        redisclient.hset("healthcheck:lastcheck", 'redis:%s' % port, time.time())
+    rstatus, errors = j.core.grid.healthchecker.checkRedis(nodeid)
+    for data in [rstatus, errors]:
+        if len(data) > 0:
+            rstatus = rstatus[nodeid]['redis']
+            for port, stat in rstatus.iteritems():
+                if not stat['alive']:
+                    redisclient.hset("healthcheck:status", 'redis:%s' % port, False)
+                    msg='Redis on node with id %s with port %s is not running.' % (nodeid, port)
+                    j.events.opserror_critical( msg, category='monitoring')
+                else:
+                    redisclient.hset("healthcheck:status", 'redis:%s' % port, True)
+                redisclient.hset("healthcheck:lastcheck", 'redis:%s' % port, time.time())
