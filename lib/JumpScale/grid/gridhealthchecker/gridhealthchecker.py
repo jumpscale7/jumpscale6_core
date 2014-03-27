@@ -133,6 +133,8 @@ class GridHealthChecker(object):
             self._clean()
         workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid)['result']
         for worker, stats in workers.iteritems():
+            size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
+            workers[worker]['mem'] = '%s %sB' % (size, unit)
             if stats['status']:
                 self._addResult(nid, workers, 'workers')
             else:

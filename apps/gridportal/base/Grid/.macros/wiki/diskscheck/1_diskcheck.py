@@ -8,9 +8,14 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||Disk||Status||')
     
-    workers = j.core.grid.healthchecker.checkDisks(nid)
-    for disk, msg in workers.iteritems():
-        out.append('|%s|%s|' % (disk, msg))
+    disks, errors = j.core.grid.healthchecker.checkDisks(nid)
+
+    for message, data in {'OK': disks, 'Not Okay': errors}.iteritems():
+        if len(data) < 0:
+            out.append('|*STATUS*|%s|' % message)
+            data = data[nid]['disks']
+            for disk, msg in data.iteritems():
+                out.append('|%s|%s|' % (disk, msg))
 
     out = '\n'.join(out)
 
