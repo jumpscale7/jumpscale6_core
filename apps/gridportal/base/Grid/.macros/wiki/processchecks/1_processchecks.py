@@ -13,7 +13,7 @@ def main(j, args, params, tags, tasklet):
         if len(data) > 0:
             for nid, status in data.iteritems():
                 status = status['processmanager']
-                link = '[Details|nodestatus?nid=%s]' % nid if status['status'] else ''
+                link = '[Details|nodestatus?nid=%s]' % nid if status[nid] else ''
                 out.append('|[%s|node?id=%s]|%s|%s|' % (nid, nid, 'RUNNING' if status else 'HALTED', link))
 
     out = '\n'.join(out)

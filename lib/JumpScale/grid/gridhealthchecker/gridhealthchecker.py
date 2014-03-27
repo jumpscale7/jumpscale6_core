@@ -24,14 +24,16 @@ class GridHealthChecker(object):
     def _addError(self, nid, result, category):
         if self._tostdout:
             print "*ERROR*: %s on node %s. Details: %s" % (category, nid, result)
-        self._errors.setdefault(nid, {category: result})
-        self._errors[nid].setdefault(category, result)
+        self._errors.setdefault(nid, {})
+        self._errors[nid].update({category:{}})
+        self._errors[nid][category].update(result)
 
     def _addResult(self, nid, result, category):
         if self._tostdout:
             print "*OK*   : %s on node %s. Details: %s" % (category, nid, result)
-        self._status.setdefault(nid, {category: result})
-        self._status[nid].setdefault(category, result)
+        self._status.setdefault(nid, {})
+        self._status[nid].setdefault(category, {})
+        self._status[nid][category].update(result)
 
     def _checkRunningNIDs(self):
         self._runningnids = list()
@@ -75,11 +77,12 @@ class GridHealthChecker(object):
     def runAll(self):
         self._clean()
         self.getNodes()
-        self.checkElasticSearch(clean=False)
-        self.checkRedisAllNodes(clean=False)
-        self.checkWorkersAllNodes(clean=False)
         self.checkProcessManagerAllNodes(clean=False)
-        self.checkDisksAllNodes(clean=False)
+        if self._runningnids:
+            self.checkElasticSearch(clean=False)
+            self.checkRedisAllNodes(clean=False)
+            self.checkWorkersAllNodes(clean=False)
+            self.checkDisksAllNodes(clean=False)
         return self._status, self._errors
 
     def checkElasticSearch(self, clean=True):
@@ -112,11 +115,11 @@ class GridHealthChecker(object):
         redis = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid)['result']
         for port, result in redis.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(result['memory_usage'])
-            redis[port]['memory_usage'] = '%s %sB' % (size, unit)
+            result['memory_usage'] = '%s %sB' % (size, unit)
             if result['alive']:
-                self._addResult(nid, redis, 'redis')
+                self._addResult(nid, {port: result}, 'redis')
             else:
-                self._addError(nid, redis, 'redis')
+                self._addError(nid, {port: result}, 'redis')
         if clean:
             return self._status, self._errors
 
@@ -134,11 +137,11 @@ class GridHealthChecker(object):
         workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid)['result']
         for worker, stats in workers.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
-            workers[worker]['mem'] = '%s %sB' % (size, unit)
+            stats['mem'] = '%s %sB' % (size, unit)
             if stats['status']:
-                self._addResult(nid, workers, 'workers')
+                self._addResult(nid, {worker: stats}, 'workers')
             else:
-                self._addError(nid, workers, 'workers')
+                self._addError(nid, {worker: stats}, 'workers')
         if clean:
             return self._status, self._errors
 
@@ -150,9 +153,9 @@ class GridHealthChecker(object):
 
         haltednodes = set(self._nids)-set(self._runningnids)
         for nid in haltednodes:
-            self._addError(nid, {'status': False}, 'processmanager')
+            self._addError(nid, {nid: False}, 'processmanager')
         for nid in self._runningnids:
-            self._addResult(nid, {'status': True}, 'processmanager')
+            self._addResult(nid, {nid: True}, 'processmanager')
         if clean:
             return self._status, self._errors
 
@@ -167,11 +170,11 @@ class GridHealthChecker(object):
             heartbeat = self._heartbeatcl.get('%s_%s' % (gid, nid))
             lastchecked = heartbeat.lastcheck
             if  j.base.time.getEpochAgo('-2m') < lastchecked:
-                self._addResult(nid, {'status': True}, 'processmanager')
+                self._addResult(nid, {nid: True}, 'processmanager')
             else:
-                self._addError(nid, {'status': False}, 'processmanager')
+                self._addError(nid, {nid: False}, 'processmanager')
         else:
-            self._addError(nid, {'status': False}, 'processmanager')
+            self._addError(nid, {nid: False}, 'processmanager')
         if clean:
             return self._status, self._errors
 
@@ -186,23 +189,21 @@ class GridHealthChecker(object):
     def checkDisks(self, nid, clean=True):
         if clean:
             self._clean()
-        disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid)['result'] 
-        result = dict()
+        disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid)['result']
         for path, disk in disks.iteritems():
-            result[path] = dict()
             if (disk['free'] and disk['size']) and (disk['free'] / float(disk['size'])) * 100 < 10:
-                result[path]['message'] = 'FREE SPACE LESS THAN 10%% on disk %s' % path
-                result[path]['status'] = False
-                self._addError(nid, result, 'disks')
+                disk['message'] = 'FREE SPACE LESS THAN 10%% on disk %s' % path
+                disk['status'] = False
+                self._addError(nid, {path: disk}, 'disks')
             else:
                 if disk['free']:
                     size, unit = j.tools.units.bytes.converToBestUnit(disk['free'], 'M')
-                    result[path]['message'] = '%.2f %siB free space available' % (size, unit)
+                    disk['message'] = '%.2f %siB free space available' % (size, unit)
 
                 else:
-                    result[path]['message'] = 'Disk is not mounted, Info is not available'
-                result[path]['status'] = True
-                self._addResult(nid, result, 'disks')
+                    disk['message'] = 'Disk is not mounted, Info is not available'
+                disk['status'] = True
+                self._addResult(nid, {path: disk}, 'disks')
         if clean:
             return self._status, self._errors
 
