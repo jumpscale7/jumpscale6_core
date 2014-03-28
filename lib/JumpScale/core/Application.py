@@ -32,6 +32,8 @@ class Application:
 
         self.jid=0
 
+
+
     def initWhoAmI(self):
         """
         when in grid:

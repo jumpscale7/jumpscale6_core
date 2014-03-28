@@ -125,6 +125,14 @@ class Dirs(object):
         self._createDir(self.configsDir)
 
 
+    def replaceBaseDirVar(self,txt):
+        """
+        replace $base with j.application.basedir if it exists
+        """
+        if hasattr("j","basepath"):
+            txt=txt.replace("$base",j.basepath)
+        return txt
+
     def _createDir(self,path):
         if not os.path.exists(path):
             os.makedirs(path)

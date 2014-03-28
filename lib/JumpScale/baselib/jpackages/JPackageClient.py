@@ -30,6 +30,9 @@ class JPackageClient():
         else:
             self.packageDirFiles=j.system.fs.joinPaths(j.dirs.packageDir, "files")
 
+        # if hasattr("j","basepath"):
+        #     self.packageDirFiles=self.packageDirFiles.replace("$base",j.basepath)
+
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metadata"))
         j.system.fs.createDir(self.packageDirFiles)
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metatars"))
