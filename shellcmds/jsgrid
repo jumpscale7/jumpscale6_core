@@ -97,64 +97,67 @@ if opts.action =='reinit':
 #################HEALTHCHECK
 if opts.action == 'healthcheck':
     import JumpScale.grid.gridhealthchecker
-    import JumpScale.grid.osis
-    osiscl = j.core.osis.getClient(user='root')
-    nodecl = j.core.osis.getClientForCategory(osiscl, 'system', 'node')
+    j.core.grid.healthchecker.runAll()
+    # import JumpScale.grid.osis
+    # osiscl = j.core.osis.getClient(user='root')
+    # nodecl = j.core.osis.getClientForCategory(osiscl, 'system', 'node')
 
-    print '#############################'
-    print 'ElasticSearch status:'
-    esstatus = j.core.grid.healthchecker.checkElasticSearch()
-    for key, val in esstatus.iteritems():
-        if isinstance(val, dict):
-            for k, v in val.iteritems():
-                print '%s: %s' % (k, v)
-        else:
-            print '%s: %s' % (key, val)
+    # print '#############################'
+    # print 'ElasticSearch status:'
+    # esstatus,errors = j.core.grid.healthchecker.checkElasticSearch()
+    # print "result"
+    # for key, val in esstatus.iteritems():
+    #     if isinstance(val, dict):
+    #         for k, v in val.iteritems():
+    #             print '%s: %s' % (k, v)
+    #     else:
+    #         print '%s: %s' % (key, val)
 
-    nodeids = list()
-    nodes = nodecl.list()
-    for node in nodes:
-        nobj = nodecl.get(node)
-        nodeid = nobj.id
-        nodeids.append(nobj.id)
 
-    print '#############################'
-    print 'Process Managers Status:'
-    for nodeid in nodeids:
-        status = j.core.grid.healthchecker.checkProcessManagers(nodeid)
-        print 'Node %s:' % nodeid
-        print '----------'
-        print 'Process manager is %s' % ('RUNNING' if status else 'HALTED')
+    # nodeids = list()
+    # nodes = nodecl.list()
+    # for node in nodes:
+    #     nobj = nodecl.get(node)
+    #     nodeid = nobj.id
+    #     nodeids.append(nobj.id)
 
-    print '#############################'
-    print 'Redis Status:'
-    for nodeid in nodeids:
-        rstatus = j.core.grid.healthchecker.checkRedis(nodeid)
-        print 'Node %s:' % nodeid
-        print '----------'
-        for port, stat in rstatus.iteritems():
-            statstr = 'RUNNING, Memory used: %s' % stat['memory_usage'] if stat['alive'] else 'HALTED'
-            print 'Port %s: %s' % (port, statstr)
+    # print '#############################'
+    # print 'Process Managers Status:'
+    # for nodeid in nodeids:
+    #     status = j.core.grid.healthchecker.checkProcessManagers(nodeid)
+    #     print 'Node %s:' % nodeid
+    #     print '----------'
+    #     print 'Process manager is %s' % ('RUNNING' if status else 'HALTED')
 
-    print '#############################'
-    print 'Workers Status:'
-    for nodeid in nodeids:
-        workers = j.core.grid.healthchecker.checkWorkers(nodeid)
-        print 'Node %s:' % nodeid
-        print '----------'
-        for worker, stat in workers.iteritems():
-            print "'%s': CPU percent: %s %%, Memory used: %.2f MB, Running: %s, Last Active: %s" % (worker, stat['cpu'], stat['mem']/1024.0/1024.0, stat['status'], j.base.time.epoch2HRDateTime(stat['lastactive']))
+    # print '#############################'
+    # print 'Redis Status:'
+    # for nodeid in nodeids:
+    #     rstatus = j.core.grid.healthchecker.checkRedis(nodeid)
+    #     print 'Node %s:' % nodeid
+    #     print '----------'
+    #     for port, stat in rstatus.iteritems():
+    #         statstr = 'RUNNING, Memory used: %s' % stat['memory_usage'] if stat['alive'] else 'HALTED'
+    #         print 'Port %s: %s' % (port, statstr)
 
-    print '#############################'
-    print 'Disks Status:'
-    for nodeid in nodeids:
-        workers = j.core.grid.healthchecker.checkDisks(nodeid)
-        print 'Node %s:' % nodeid
-        print '----------'
-        for disk, msg in workers.iteritems():
-            print "%s : %s" % (disk, msg)
+    # print '#############################'
+    # print 'Workers Status:'
+    # for nodeid in nodeids:
+    #     workers = j.core.grid.healthchecker.checkWorkers(nodeid)
+    #     print 'Node %s:' % nodeid
+    #     print '----------'
+    #     for worker, stat in workers.iteritems():
+    #         print "'%s': CPU percent: %s %%, Memory used: %.2f MB, Running: %s, Last Active: %s" % (worker, stat['cpu'], stat['mem']/1024.0/1024.0, stat['status'], j.base.time.epoch2HRDateTime(stat['lastactive']))
 
-    print '#############################'
+    # print '#############################'
+    # print 'Disks Status:'
+    # for nodeid in nodeids:
+    #     workers = j.core.grid.healthchecker.checkDisks(nodeid)
+    #     print 'Node %s:' % nodeid
+    #     print '----------'
+    #     for disk, msg in workers.iteritems():
+    #         print "%s : %s" % (disk, msg)
+
+    # print '#############################'
 
 #################PURGELOGS
 if opts.action == 'purgelogs':
