@@ -297,7 +297,7 @@ class ControllerCMDS():
         self._adminAuth(session.user,session.passwd)
         self._log("AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid))
         action = self.getJumpScript(organization, name, session=session)
-        if action==None:
+        if action==None or str(action).strip()=="":
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         if role<>None:
             self._log("ROLE NOT NONE")
@@ -314,6 +314,7 @@ class ControllerCMDS():
         elif nid<>None:
             self._log("NID KNOWN")
             job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id)
+
             if wait:
                 return self.waitJumpscript(job=job,session=session)
             return job
