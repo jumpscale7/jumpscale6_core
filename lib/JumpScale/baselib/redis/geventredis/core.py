@@ -80,7 +80,7 @@ class RedisSocket(socket):
     
     def _read_response(self):
         response = self._readline()
-        print 'redis received %s' % str(response)
+        # print 'redis received %s' % str(response)
         try:
             return self._response_dict[ response[0] ]( self, response )
         except IndexError:

@@ -38,6 +38,9 @@ class Dirs(object):
 
     def __init__(self):
         '''jumpscale sandbox base folder'''
+
+        import sys
+        
         curdir=os.path.abspath(".")
 
         if os.path.exists("library.zip"):
@@ -51,6 +54,9 @@ class Dirs(object):
             self.baseDir=curdir
         else:
             self.baseDir = "/opt/jumpscale" ##string
+
+        if hasattr(sys,"basepath"):
+            self.baseDir=sys.basepath
 
         self.baseDir=self.baseDir.replace("\\","/")
 
@@ -93,7 +99,6 @@ class Dirs(object):
 
         if self.libDir not in sys.path:
             sys.path.insert(1,self.libDir)
-        
 
         self.logDir = os.path.join(self.varDir,"log")
         self._createDir(self.logDir)
@@ -103,12 +108,7 @@ class Dirs(object):
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
 
-        self.pidDir = os.path.join(self.varDir,"log")   
-        
-
-        '''CMDB storage folder (vardir/cmdb)'''
-        self.cmdbDir = os.path.join(self.varDir,"cmdb")
-        self._createDir(self.cmdbDir)
+        self.pidDir = os.path.join(self.varDir,"log")           
 
         self.binDir = os.path.join(self.baseDir, 'bin')
 
@@ -116,6 +116,7 @@ class Dirs(object):
             self.codeDir=os.path.join(self.varDir,"code")
         else:
             self.codeDir="/opt/code"
+
         self._createDir(self.codeDir)
 
         self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
@@ -123,7 +124,6 @@ class Dirs(object):
 
         self.configsDir = os.path.join(self.baseDir,"cfg","jsconfig")
         self._createDir(self.configsDir)
-
 
     def replaceBaseDirVar(self,txt):
         """

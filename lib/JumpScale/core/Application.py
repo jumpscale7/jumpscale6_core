@@ -252,10 +252,6 @@ class Application:
     def _setWriteExitcodeOnExit(self, value):
         if not j.basetype.boolean.check(value):
             raise TypeError
-        j.logger.log("Setting j.application.writeExitcodeOnExit = %s"%str(value), 5)
-        exitcodefilename = j.system.fs.joinPaths(j.dirs.tmpDir, 'qapplication.%d.exitcode'%os.getpid())
-        if value and j.system.fs.exists(exitcodefilename):
-            j.system.fs.remove(exitcodefilename)
         self._writeExitcodeOnExit = value
 
     def _getWriteExitcodeOnExit(self):
