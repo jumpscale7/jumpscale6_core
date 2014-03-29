@@ -622,7 +622,7 @@ class JPackageObject():
         return self.buildNr
             
     def getMetadataPathQualityLevel(self,ql):
-        path=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", self.domain)
+        path=j.system.fs.joinPaths(j.dirs.packageDirMD, self.domain)
         if not j.system.fs.isLink(path):
             raise RuntimeError("%s needs to be link"%path)
         jpackagesdir=j.system.fs.getParent(j.system.fs.readlink(path))
@@ -632,7 +632,7 @@ class JPackageObject():
         return path
 
     def getQualityLevels(self):
-        path=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", self.domain)
+        path=j.system.fs.joinPaths(j.dirs.packageDirMD, self.domain)
         if not j.system.fs.isLink(path):
             raise RuntimeError("%s needs to be link"%path)
         jpackageconfig = j.config.getConfig('sources', 'jpackages')

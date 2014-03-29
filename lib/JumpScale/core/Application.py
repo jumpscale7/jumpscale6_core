@@ -32,7 +32,10 @@ class Application:
 
         self.jid=0
 
-
+        if hasattr(sys,"basepath"):
+            self.sandbox=True
+        else:
+            self.sandbox=False
 
     def initWhoAmI(self):
         """

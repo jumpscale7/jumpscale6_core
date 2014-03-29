@@ -1,0 +1,18 @@
+process.name=elasticsearch
+process.domain=jumpscale
+process.cmd=/opt/jumpscale/apps/elasticsearch/bin/elasticsearch
+process.args=-fD es.config=/etc/elasticsearch/elasticsearch.yml
+process.env=
+process.numprocesses=1
+process.reloadsignal=0
+process.priority=1
+process.workingdir=
+process.user=root
+process.timeoutcheck=60
+process.autostart=1
+process.check=1
+process.ports=9200,9200
+process.jpackage.domain=jumpscale
+process.jpackage.name=elasticsearch
+process.jpackage.version=0.90.5
+process_active=1

@@ -33,11 +33,17 @@ class JPackageClient():
         # if hasattr("j","basepath"):
         #     self.packageDirFiles=self.packageDirFiles.replace("$base",j.basepath)
 
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metadata"))
-        j.system.fs.createDir(self.packageDirFiles)
-        j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.packageDir, "metatars"))
+        if j.application.sandbox:
+            j.dirs.packageDirMD=j.system.fs.joinPaths(j.dirs.packageDirMD)
+        else:
+            j.dirs.packageDirMD=j.system.fs.joinPaths(j.dirs.varDir, "jpackages","metadata")
+
+        j.system.fs.createDir(j.dirs.packageDirMD)
+
         self.domains=[]
+
         self._metadatadirTmp=j.system.fs.joinPaths(j.dirs.varDir,"tmp","jpackages","md")
+
         j.system.fs.createDir(self._metadatadirTmp)        
         # can't ask username here
         # because jumpscale is not interactive yet
@@ -130,7 +136,8 @@ class JPackageClient():
             for domain in cfg.getSections():
                 if domain in domainDict.keys():
                     self.domains.remove(domainDict[domain])
-                self.domains.append(Domain(domainname=domain))
+                if j.system.fs.exists(path=j.system.fs.joinPaths(j.dirs.packageDirMD,domain)):
+                    self.domains.append(Domain(domainname=domain))
 
 
     def create(self, domain="", name="", version="1.0", description="", supportedPlatforms=None):
@@ -304,7 +311,7 @@ class JPackageClient():
         @param version: string - The version of the jpackages
         @param fromtmp: boolean
         """
-        return j.system.fs.joinPaths(j.dirs.packageDir, "metadata", domain,name,version)
+        return j.system.fs.joinPaths(j.dirs.packageDirMD, domain,name,version)
 
     def getDataPath(self,domain,name,version):
         """
@@ -495,7 +502,7 @@ class JPackageClient():
         res = list()
         domains=self.getDomainNames()
         for domainName in domains:
-            domainpath=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", domainName)
+            domainpath=j.system.fs.joinPaths(j.dirs.packageDirMD, domainName)
             if j.system.fs.exists(domainpath): #this follows the link
                 packages= [p for p in j.system.fs.listDirsInDir(domainpath,dirNameOnly=True) if p != '.hg'] # skip hg file
                 for packagename in packages:
@@ -931,11 +938,11 @@ class JPackageClient():
             s.delete_node(n)
         
         g.layout(prog='dot')    
-        graphPath = j.system.fs.joinPaths(j.dirs.packageDir, 'metadata','dependencyGraph.png')
+        graphPath = j.system.fs.joinPaths(j.dirs.packageDirMD,'dependencyGraph.png')
         g.draw(graphPath)
     
         s.layout(prog='dot')
-        graphPath = j.system.fs.joinPaths(j.dirs.packageDir, 'metadata','dependencyGraph_singleNodes.png')
+        graphPath = j.system.fs.joinPaths(j.dirs.packageDirMD,'dependencyGraph_singleNodes.png')
         s.draw(graphPath)
 
         j.console.echo("Dependency graph successfully created. Open file at /opt/qbase5/var/jpackages/metadata/dependencyGraph.png")

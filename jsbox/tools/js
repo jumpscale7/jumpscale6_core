@@ -1,0 +1,14 @@
+#!/opt/jsbox/bin/python
+
+import sys
+sys.path=['/etc/jumpscale']
+
+import jsinit
+from JumpScale import j
+
+
+
+from IPython import embed
+print "DEBUG NOW id"
+embed()
+

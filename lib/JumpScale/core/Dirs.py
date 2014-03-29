@@ -104,6 +104,9 @@ class Dirs(object):
         self._createDir(self.logDir)
 
         self.packageDir = os.path.join(self.varDir,"jpackages")
+
+        
+        
         self._createDir(self.packageDir)
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
