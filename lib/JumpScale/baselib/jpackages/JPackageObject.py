@@ -1371,10 +1371,7 @@ class JPackageObject():
 
     def _calculateBlobInfo(self):
         result = False
-        # clean old .info files (might be invalid anymore)
         filesdir = j.system.fs.joinPaths(self.getPathMetadata(),"files")
-        for crfile in j.system.fs.listFilesInDir(filesdir, filter='*.info'):
-            j.system.fs.remove(crfile)
 
         pathfiles = self.getPathFiles()
         if not j.system.fs.exists(pathfiles):
@@ -1546,12 +1543,14 @@ class JPackageObject():
         Does always a jp.package() first
         """
 
+
         self.loadActions(force=True)
         self._calculateBlobInfo()
 
         for platform,ttype in self.getBlobPlatformTypes():
 
             key0,blobitems=self.getBlobInfo(platform,ttype)
+
 
             pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
@@ -1580,6 +1579,8 @@ class JPackageObject():
 
             if key0<>key:
                 raise RuntimeError("Corruption in upload for %s"%self)
+
+
 
     def waitUp(self, timeout=60,dependencies=False):        
         self.loadActions()
