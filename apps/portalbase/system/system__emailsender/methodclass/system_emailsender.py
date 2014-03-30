@@ -1,4 +1,4 @@
-import smtplib
+import smtplib, os
 from JumpScale import j
 from email.mime.text import MIMEText
 
@@ -19,7 +19,8 @@ class system_emailsender(j.code.classGetBase()):
         self._te = {}
         self.actorname = "emailsender"
         self.appname = "system"
-        self.server = 'msp.aserver.com:25'
+        #self.server = 'msp.aserver.com:25'
+        self.server = 'smtp.gmail.com:587'
 
     def format(self, obj, format=None):
         if not format or format not in self.output_format_mapping:
@@ -73,6 +74,8 @@ class system_emailsender(j.code.classGetBase()):
 
             body = body + '<br /><table border=1>{0}</table>'.format(''.join(other_params))
 
+        self.save_emails(sender_name, sender_email, receiver_email, subject, body, *args, **kwargs)
+
         msg = MIMEText(body, 'html')
         msg['Subject'] = subject
         msg['From'] = sender
@@ -81,9 +84,31 @@ class system_emailsender(j.code.classGetBase()):
         smtp = None
         try:
             smtp = smtplib.SMTP(self.server, timeout=5)
+            smtp.starttls()
+            smtp.login('smtp@incubaid.com', 'smtp987smtp')
             smtp.sendmail(sender, receivers, msg.as_string())
         finally:
             if smtp:
                 smtp.quit()
 
         return 'Success'
+
+    def save_emails(self, sender_name, sender_email, receiver_email, subject, body, *args, **kwargs):
+        system_path = j.core.portal.active.getSpace('system').model.path
+        emails_file = os.path.join(system_path, '.space', 'emails.json')
+        try:
+            emails = j.db.serializers.ujson.loads(open(emails_file).read())
+        except IOError: # File doesn't exist yet
+            emails = []
+
+        emails.append({
+            'sender_name': sender_name,
+            'sender_email': sender_email,
+            'receiver_email': receiver_email,
+            'subject': subject,
+            'body': body,
+            'args': args,
+            'other_data': kwargs
+        })
+
+        open(emails_file, 'w').write(j.db.serializers.ujson.dumps(emails))
