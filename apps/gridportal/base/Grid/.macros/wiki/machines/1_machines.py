@@ -3,6 +3,7 @@ def main(j, args, params, tags, tasklet):
 
     params.merge(args)
     doc = params.doc
+    nid = args.getTag('nid')
 
     actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
@@ -15,7 +16,7 @@ def main(j, args, params, tags, tasklet):
     fields = ["name", "nid", "description", "active", "state", "mem", "netaddr", "cpucore"]
 
     out.append('||Name||Node||Description||Active||State||Mem||Macaddr||IP||CPUCore||')
-    machines = actor.getMachines()
+    machines = actor.getMachines(nid=nid)
     if not machines:
         out = 'No machines available'
         params.result = (out, doc)
