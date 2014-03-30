@@ -96,7 +96,6 @@ if opts.action =='reinit':
 #################HEALTHCHECK
 if opts.action == 'healthcheck':
     import JumpScale.grid.gridhealthchecker
-    j.core.grid.healthchecker.toStdout()
     j.core.grid.healthchecker.runAll()
     # import JumpScale.grid.osis
     # osiscl = j.core.osis.getClient(user='root')
