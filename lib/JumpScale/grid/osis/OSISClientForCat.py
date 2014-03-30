@@ -126,6 +126,8 @@ class OSISClientForCat():
                     myranges = {v['name']: dict()}
                 myranges[v['name']] = {v['eq']: v['value']}
             elif v:
+                if isinstance(v, basestring):
+                    v = v.lower()
                 term = {'term': {k: v}}
                 query['query']['bool']['must'].append(term)
         for key, value in myranges.iteritems():
