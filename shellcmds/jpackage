@@ -171,20 +171,27 @@ elif args.action == 'publish':
 
 elif args.action == 'repackage':
     packages = cmdutils.getJPackage(args)
-    domains = { jp.domain for jp in packages }
-    for domain in domains:
-        j.packages.updateMetaData(domain)
 
+    # domains = { jp.domain for jp in packages }
+    # for domain in domains:
+    #     j.packages.updateMetaData(domain)
+
+    domains2pub=[]
     for package in packages:
         if not args.merge:
             j.system.fs.removeDirTree(package.getPathFiles())
-        package.package(update=True)
+        package.package(update=False,dependencies=args.deps)
         if not args.message:
             args.message = 'Building JPackage "%s"' % package.name
         package.upload(remote=not args.local)
-        if args.publish:
-            j.packages.publish(args.message, package.domain)
+        domains2pub.append(package.domain)
         print 'New %s %s' % (package, package.buildNr)
+
+    domains = { jp.domain for jp in packages }
+    for domain in domains:
+        if args.publish and domain in domains2pub:
+            j.packages.publish(args.message, domain)
+
 
 elif args.action == 'restart':
     packages= cmdutils.getJPackage(args,installed=True)
