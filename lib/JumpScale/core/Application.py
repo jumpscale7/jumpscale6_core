@@ -89,7 +89,7 @@ class Application:
         if j.system.fs.exists(path=path):
             self.config = j.core.hrd.getHRD(path=path)
 
-    def start(self,name=None,basedir="/opt/jumpscale",appdir="."):
+    def start(self,name=None,appdir="."):
         '''Start the application
 
         You can only stop the application with return code 0 by calling
@@ -106,7 +106,6 @@ class Application:
 
 
         j.dirs.appDir=appdir
-        j.dirs.baseDir=basedir
 
         j.dirs.init(reinit=True)
 

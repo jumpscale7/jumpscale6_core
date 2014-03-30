@@ -48,7 +48,7 @@ class ProcessDef:
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
 
-        self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
+        self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s_%s.log" % (self.domain, self.name,j.base.time.get5MinuteId()))
         if not j.system.fs.exists(self.logfile):
             j.system.fs.createDir(StartupManager.LOGDIR)
             j.system.fs.createEmptyFile(self.logfile)

@@ -83,7 +83,7 @@ class TestEngineKds():
     def __init__(self):
         self.paths=[]
         self.tests=[]
-        self.outputpath="/opt/jumpscale/apps/gridportal/base/Tests/TestRuns/"
+        self.outputpath="%s/apps/gridportal/base/Tests/TestRuns/"%j.dirs.baseDir
         self.sysstdout=sys.stdout
         self.sysstderr=sys.stderr        
 

@@ -48,7 +48,7 @@ if opts.action =='deleteall':
     # if opts.force==None:
     #     namespaces=j.console.askChoiceMultiple(namespaces)
     # for namespace in namespaces:
-    #     path="/opt/jumpscale/apps/osis/logic/%s"%namespace
+    #     path="%s/apps/osis/logic/%s"%(j.dirs.baseDir,namespace)
     #     j.system.fs.removeDirTree(path)
 
     j.tools.startupmanager.restartProcess("jumpscale","osis")

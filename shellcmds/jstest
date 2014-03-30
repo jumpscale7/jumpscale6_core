@@ -42,7 +42,7 @@ if opts.reinit:
 import JumpScale.baselib.testengine
 
 if opts.path==None:
-    j.tools.testengine.paths=["/opt/jumpscale/apps"]
+    j.tools.testengine.paths=["%s/apps"%j.dirs.baseDir]
 else:
     j.tools.testengine.paths=[opts.path]
 

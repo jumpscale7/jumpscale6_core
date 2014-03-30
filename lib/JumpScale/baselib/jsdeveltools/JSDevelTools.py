@@ -5,6 +5,7 @@ import JumpScale.baselib.screen
 class JSDevelTools:
 
     def __init__(self):
+        raise RuntimeError("outdated")
         pass
 
     def initSystemLocal(self,domain="adomain.com",gridid=0,roles=[]):

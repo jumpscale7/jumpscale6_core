@@ -63,7 +63,7 @@ if opts.action =='reinit':
 
     j.packages.findNewest(name="graphite").stop()
 
-    for item in ["/opt/graphite/storage/whisper/","/opt/jumpscale/var/log/","/opt/jumpscale/var/tmp/"]:
+    for item in ["%s/graphite/storage/whisper/"%j.dirs.baseDir,"%s/var/log/"%j.dirs.baseDir,"%s/var/tmp/"%j.dirs.baseDir]:
         j.system.fs.removeDirTree(item)
         j.system.fs.createDir(item)
     
@@ -77,7 +77,6 @@ if opts.action =='reinit':
         elif jp.isInstalled():
             print "RECONFIGURE:%s"%jp
             jp.configure()
-
 
 
     jp=j.packages.findNewest(name="grid_portal")

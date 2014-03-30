@@ -157,7 +157,7 @@ class TestEngine():
     def __init__(self):
         self.paths=[]
         self.tests=[]
-        self.outputpath="/opt/jumpscale/apps/gridportal/base/Tests/TestRuns/"
+        self.outputpath="%s/apps/gridportal/base/Tests/TestRuns/"%j.dirs.baseDir
 
     def initTests(self,noOsis, osisip="127.0.0.1",login="",passwd=""): #@todo implement remote osis
         self.noOsis = noOsis
