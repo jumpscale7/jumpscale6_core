@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ -z "$JSBASE" ]; then
+    python "$@"
+else
+    $JSBASE/bin/python "$@"
+fi
+
+
+
+
+

@@ -3,18 +3,23 @@ import sys, os, inspect
 
 from JumpScale import j
 
-
 home = os.curdir                        # Default
-if 'HOME' in os.environ:
-    home = os.environ['HOME']
+if 'JSBASE' in os.environ:
+    home = os.environ['JSBASE']
+    sys.path=['', '%s/bin'%home,'%s/bin/core.zip'%home,'%s/lib'%home,'%s/libjs'%home,\
+        '%s/lib/python.zip'%home,'%s/lib/JumpScale.zip'%home]
 elif os.name == 'posix':
-    home = os.path.expanduser("~/")
+    # home = os.path.expanduser("~/")
+    home="/opt/jumpscale"
 elif os.name == 'nt':                   # Contributed by Jeff Bauer
     if 'HOMEPATH' in os.environ:
         if 'HOMEDRIVE' in os.environ:
             home = os.environ['HOMEDRIVE'] + os.environ['HOMEPATH']
         else:
             home = os.environ['HOMEPATH']
+
+if not 'JSBASE' in os.environ:
+    print "WARNING: did not find JSBASE env environment, please set and point to your sandbox"
 
 def pathToUnicode(path):
     """
@@ -41,8 +46,6 @@ class Dirs(object):
 
         import sys
         
-        curdir=os.path.abspath(".")
-
         if os.path.exists("library.zip"):
             self.frozen=True
         else:
@@ -50,18 +53,11 @@ class Dirs(object):
 
         iswindows=os.name=="nt"
 
-        if iswindows or self.frozen:
-            self.baseDir=curdir
-        else:
-            self.baseDir = "/opt/jumpscale" ##string
-
-        if hasattr(sys,"basepath"):
-            self.baseDir=sys.basepath
-
+        self.baseDir=home
         self.baseDir=self.baseDir.replace("\\","/")
 
         '''Application installation base folder (basedir/apps)'''
-        self.appDir = curdir
+        self.appDir = os.path.abspath(".")
         
         '''Configuration file folder (appdir/etc)'''
         self.cfgDir = os.path.join(self.baseDir,"cfg")

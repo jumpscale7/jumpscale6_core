@@ -9,7 +9,7 @@ j.application.start("jssync")
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['jsboxupload','jsboxdownload','system2sandbox','jpackagesupload','jpackagesdownload'], help='Command to perform')
 
-parser.add_argument("-q", '--qualitylevel', help='qualitylevel e.g. unstable')
+parser.add_argument("-q", '--qualitylevel', help='qualitylevel e.g. unstable,test,stable', default="unstable")
 parser.add_argument("-s", '--system2sandbox', help='will copy jumpscale & jpackage files from system before uploading',action='store_true', default=False)
 
 # parser.add_argument("-i", '--iface', help='ifacename e.g. eth0')
@@ -28,18 +28,25 @@ parser.add_argument("-s", '--system2sandbox', help='will copy jumpscale & jpacka
 
 
 opts = parser.parse_args()
-    
+
+def sync(src,dest,delete=True):
+    if delete:
+        d="--delete-after "
+    else:
+        d="--max-delete=0 "
+    cmd="rsync -Lrpo %s%s %s"%(d,src,dest)
+    j.system.process.executeWithoutPipe(cmd)
 
 if opts.action =='system2sandbox' or opts.action =='jsboxupload':
     if opts.action =='system2sandbox' or opts.system2sandbox:
-        cmd="rsync -Lrv /opt/code/jumpscale/default__jp_jumpscale/unstable/ /opt/jsbox/jpackages/jp_jumpscale/"
-        j.system.process.executeWithoutPipe(cmd)
-        cmd="rsync -Lrv /opt/code/jumpscale/default__jp_serverapps/unstable/ /opt/jsbox/jpackages/jp_serverapps/"
-        j.system.process.executeWithoutPipe(cmd)
-        cmd="rsync -Lrv /opt/code/jumpscale/default__jp_desktop/unstable/ /opt/jsbox/jpackages/jp_desktop/"
-        j.system.process.executeWithoutPipe(cmd)
-        cmd="rsync -Lrv /usr/local/lib/python2.7/site-packages/JumpScale/ /opt/jsbox/libjs/JumpScale/"
-        j.system.process.executeWithoutPipe(cmd)
+        sync("/opt/code/jumpscale/default__jp_jumpscale/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/jumpscale/")
+        sync("/opt/code/jumpscale/default__jp_serverapps/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/serverapps/")
+        sync("/opt/code/jumpscale/default__jp_desktop/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/jsdesktop/")
+        sync("/usr/local/lib/python2.7/site-packages/JumpScale/","/opt/jsbox/libjs/JumpScale/")
+        sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.qualitylevel,"/opt/jsbox/tools/")
+        sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/bin/"%opts.qualitylevel,"/opt/jsbox/bin/")
+        sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.qualitylevel,"/opt/jsbox/cfg/")
+        sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.qualitylevel,"/opt/jsbox/tools/",delete=False)
 
 if opts.action =='jpackagesupload' or opts.action =='jsboxupload':        
     if opts.qualitylevel==None:
@@ -54,7 +61,7 @@ if opts.action =='jpackagesdownload':
     if opts.qualitylevel==None:
         raise RuntimeError("specify qualitylevel name")   
     ipaddr=j.application.config.get("jssync.addr")
-    cmd="rsync -av -v %s::upload/jsbox/%s/jpackages/ /opt/jsbox/jpackages/  --delete-after --modify-window=60 --compress --stats  --progress"%(ipaddr,opts.qualitylevel)
+    cmd="rsync -avz -v %s::upload/jsbox/%s/jpackages/ /opt/jsbox/jpackages/  --delete-after --modify-window=60 --compress --stats  --progress"%(ipaddr,opts.qualitylevel)
     print cmd
     j.system.process.executeWithoutPipe(cmd)
 
@@ -64,7 +71,7 @@ if opts.action =='jsboxupload':
         raise RuntimeError("specify qualitylevel name")     
     ipaddr=j.application.config.get("jssync.addr")
     for name in ["bin","lib","tools","libjs"]:#,"cfg","apps"]:
-        cmd="rsync -av -v /opt/jsbox/%s/ %s::upload/jsbox/%s/%s/ --delete-after --modify-window=60 --compress --stats  --progress"%(name,ipaddr,opts.qualitylevel,name)
+        cmd="rsync -avz -v /opt/jsbox/%s/ %s::upload/jsbox/%s/%s/ --delete-after --modify-window=60 --compress --stats  --progress"%(name,ipaddr,opts.qualitylevel,name)
         print cmd
         j.system.process.executeWithoutPipe(cmd)
 
