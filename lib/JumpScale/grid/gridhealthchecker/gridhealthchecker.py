@@ -80,8 +80,8 @@ class GridHealthChecker(object):
         nid2hb = dict([(x['nid'], x['lastcheck']) for x in heartbeats])
         print "check heartbeats for all nodes"
         for nid in self._nids:
-            lastchecked = nid2hb[nid]
             if nid in nid2hb.keys():
+                lastchecked = nid2hb[nid]
                 if j.base.time.getEpochAgo('-2m') < lastchecked:
                     # print "%s"%nid,
                     self._runningnids.append(nid)
