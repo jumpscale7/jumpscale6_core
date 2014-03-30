@@ -134,10 +134,10 @@ class Confluence2HTML():
             limiter_re = ''.join('\\' + c for c in char)
 
             # This is the RE which is used to replace wiki text formatting with equivalent HTML tag
-            return re.compile(r'(\W){0}([^ #{0}]{1}[^ {0}]){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
+            return re.compile(r'(\W){0}([^ #{0}]{1}[^ {0}]?){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
 
         def limiter_replacement(sub):
-            return r'\1\2</{0}>\3'.format(sub)
+            return r'\1<{0}>\2</{0}>\3'.format(sub)
 
         def substitute_email(match):
             return r'<a href="{0}">{1}</a>'.format(match.group(1), match.group(1).replace('mailto:', '', 1))
@@ -150,6 +150,7 @@ class Confluence2HTML():
             ('<',           '&lt;'),
             ('>',           '&gt;'),
             (r'\@LF\b',     '<br>'), # This should come after <>
+            (limiter('`'),  limiter_replacement('code')),
             (limiter('*'),  limiter_replacement('strong')),
             (limiter('_'),  limiter_replacement('em')),
             (limiter('+'),  limiter_replacement('ins')),
@@ -157,7 +158,6 @@ class Confluence2HTML():
             (limiter('??'), limiter_replacement('cite')),
             (limiter('^'),  limiter_replacement('sup')),
             (limiter('~'),  limiter_replacement('sub')),
-            (limiter('`'),  limiter_replacement('code')),
             
 
             # {color: red}text goes here{color}
