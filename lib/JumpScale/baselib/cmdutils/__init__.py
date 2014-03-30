@@ -50,10 +50,10 @@ def getJPackage(args, installed=None,domain=None,debug=None):
     else:
         if domain==None:
             domain=""
-
+    packagesall=[]
     for pname in args.name.split(","):
         if pname<>"":
-            packages = j.packages.find(name=pname, domain=domain, version=args.version,installed=False)
+                packages = j.packages.find(name=pname, domain=domain, version=args.version,installed=False)
         else:
             packages = j.packages.find(name=pname, domain=domain, version=args.version,installed=installed)
 
@@ -81,8 +81,13 @@ def getJPackage(args, installed=None,domain=None,debug=None):
                 for dep in p.getDependencies():
                     if dep not in packages:
                         packages.append(dep)
+        packagesall+=packages
 
-    return packages
+    from IPython import embed
+    print "DEBUG NOW ooo"
+    embed()
+    
+    return packagesall
 
 def getProcess(parser=None):
     parser = parser or ArgumentParser()
