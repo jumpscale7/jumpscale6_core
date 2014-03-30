@@ -53,6 +53,7 @@ class PortalProcess():
 
         if ini.checkParam("main", "appdir"):
             self.appdir = self._replaceVar(ini.getValue("main", "appdir"))
+            self.appdir=self.appdir.replace("$base",j.dirs.baseDir)
         else:
             self.appdir = j.system.fs.getcwd()
 
