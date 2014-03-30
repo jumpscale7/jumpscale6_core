@@ -33,7 +33,7 @@ class GridHealthChecker(object):
 
     def _addError(self, nid, result, category=""):
         if self._tostdout:
-            print "\t**ERROR**: Check for '%s' on node '%s' with id %s failed" % (category, self._nodenames[nid], nid)
+            print "\t**ERROR**: Check for '%s' on node '%s' with id %s failed" % (category, self._nodenames.get(nid, 'N/A'), nid)
         self._errors.setdefault(nid, {})
         self._errors[nid].update({category:{}})
         if isinstance(result, basestring):
@@ -68,6 +68,7 @@ class GridHealthChecker(object):
         return self._status, self._errors
 
     def _checkRunningNIDs(self):
+        print 'CHECK HEARTBEATS'
         self._runningnids = list()
         print "get all heartbeats (just query from ES):",
         heartbeats = self._heartbeatcl.simpleSearch({})
