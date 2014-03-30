@@ -9,7 +9,7 @@ class OSISCMDS(object):
         self.osisInstances = {}  # key is namespace_categoryname
         self.db = None  # default db
         self.elasticsearch = None  # default elastic search connection
-        self.path="/opt/jumpscale/apps/osis/logic"
+        self.path="%s/apps/osis/logic"%j.dirs.baseDir
 
     def authenticate(self, namespace, categoryname, name,passwd, session=None):
         """

@@ -40,7 +40,7 @@ def action():
     OSISclientEco = j.core.osis.getClientForCategory(OSISclient, "system", "eco")
 
     log = None
-    path = "/opt/jumpscale/apps/processmanager/loghandling/"
+    path = "%s/apps/processmanager/loghandling/"%j.dirs.baseDir
     if j.system.fs.exists(path=path):
         loghandlingTE = j.core.taskletengine.get(path)
         log=redisqueue.get_nowait()
@@ -49,7 +49,7 @@ def action():
         loghandlingTE = None
 
     eco = None
-    path = "/opt/jumpscale/apps/processmanager/eventhandling"
+    path = "%s/apps/processmanager/eventhandling"%j.dirs.baseDir
     if j.system.fs.exists(path=path):
         eventhandlingTE = j.core.taskletengine.get(path)
         eco=redisqueueEco.get_nowait()

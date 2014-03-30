@@ -24,7 +24,7 @@ class ProcessmanagerFactory:
     """
     def __init__(self):
         self.daemon=DummyDaemon()
-        self.basedir="/opt/jumpscale/apps/processmanager"
+        self.basedir="%s/apps/processmanager"%j.dirs.baseDir
         j.system.platform.psutil=psutil
 
     def start(self):

@@ -10,7 +10,7 @@ class MasterServerCmds(ZDaemonCMDS):
 
     def __init__(self, daemon=None):
         self.db = j.db.keyvaluestore.getFileSystemStore("master")  # will serialize in ujson
-        # self.db=j.db.keyvaluestore.getLevelDBStore('DFSIO_%s'%nsid, '/opt/jumpscale/var/db/leveldb')
+        # self.db=j.db.keyvaluestore.getLevelDBStore('DFSIO_%s'%nsid, '%s/var/db/leveldb'%j.dirs.baseDir)
 
     def gridNew(self):
         return 1

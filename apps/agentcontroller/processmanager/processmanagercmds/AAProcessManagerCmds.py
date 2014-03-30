@@ -41,7 +41,7 @@ class AAProcessManagerCmds():
             except IOError:
                 continue
             fcntl.fcntl(fd, fcntl.F_SETFD, flags | fcntl.FD_CLOEXEC)
-        os.chdir("/opt/jumpscale/apps/processmanager/")
+        os.chdir("%s/apps/processmanager/"%j.dirs.baseDir)
         os.execv(sys.executable, args)    
 
     def _init(self):
