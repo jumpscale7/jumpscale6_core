@@ -82,10 +82,6 @@ def getJPackage(args, installed=None,domain=None,debug=None):
                     if dep not in packages:
                         packages.append(dep)
         packagesall+=packages
-
-    from IPython import embed
-    print "DEBUG NOW ooo"
-    embed()
     
     return packagesall
 
