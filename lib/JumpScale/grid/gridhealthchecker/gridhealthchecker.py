@@ -147,9 +147,9 @@ class GridHealthChecker(object):
             self._addError(self.masternid,"elasticsearch did not return info for healthcheck","elasticsearch")
             return self._status, self._errors
         size, unit = j.tools.units.bytes.converToBestUnit(eshealth['size'])
-        eshealth['size'] = '%s %sB' % (size, unit)
+        eshealth['size'] = '%.2f %sB' % (size, unit)
         size, unit = j.tools.units.bytes.converToBestUnit(eshealth['memory_usage'])
-        eshealth['memory_usage'] = '%s %sB' % (size, unit)
+        eshealth['memory_usage'] = '%.2f %sB' % (size, unit)
 
         if eshealth['health']['status'] in ['red']:
             self._addError(self.masternid, eshealth, 'elasticsearch')
@@ -175,7 +175,7 @@ class GridHealthChecker(object):
         redis = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid)['result']
         for port, result in redis.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(result['memory_usage'])
-            result['memory_usage'] = '%s %sB' % (size, unit)
+            result['memory_usage'] = '%.2f %sB' % (size, unit)
             if result['alive']:
                 results.append((nid, {port: result}, 'redis'))
             else:
@@ -199,7 +199,7 @@ class GridHealthChecker(object):
         workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid)['result']
         for worker, stats in workers.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
-            stats['mem'] = '%s %sB' % (size, unit)
+            stats['mem'] = '%.2f %sB' % (size, unit)
             if stats['status']:
                 results.append((nid, {worker: stats}, 'workers'))
             else:
