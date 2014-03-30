@@ -1,4 +1,4 @@
-set -e
+set -ex
 #!/bin/bash
 rm -rf /etc/jumpscale
 cp /opt/jsbox/tools/jspython /usr/bin/jspython
