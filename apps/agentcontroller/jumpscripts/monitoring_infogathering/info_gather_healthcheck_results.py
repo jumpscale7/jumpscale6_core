@@ -23,7 +23,7 @@ def action():
     result = dict()
     def get(check):
         if redisclient.hexists("healthcheck:status",  check):
-            status = redisclient.hget("healthcheck:status", check) #should return True or false
+            status = j.basetype.boolean.fromString(redisclient.hget("healthcheck:status", check)) #should return True or false
             lastcheck = redisclient.hget("healthcheck:lastcheck", check) #should return time
             return status, lastcheck
 

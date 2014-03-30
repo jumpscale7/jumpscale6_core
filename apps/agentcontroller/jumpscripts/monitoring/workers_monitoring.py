@@ -25,9 +25,8 @@ def action():
     for worker, timeout in workers.iteritems():
         lastactive = int(rediscl.hget('workers:watchdog', worker))
         if j.base.time.getEpochAgo(timeout) > lastactive:
-            j.events.opserror_critical('Worker %s seems to have timed out' % worker, 'monitoring')
-            
-            rediscl.hset("healthcheck:status", 'workers:%s' % worker, True)
+            j.events.opserror('Worker %s seems to have timed out' % worker, 'monitoring')
+            rediscl.hset("healthcheck:status", 'workers:%s' % worker, False)
             rediscl.hset("healthcheck:lastcheck", 'workers:%s' % worker, time.time())
         else:
             rediscl.hset("healthcheck:status", 'workers:%s' % worker, True)

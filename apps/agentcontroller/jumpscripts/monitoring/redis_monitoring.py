@@ -33,7 +33,7 @@ def action():
                 if not stat['alive']:
                     redisclient.hset("healthcheck:status", 'redis:%s' % port, False)
                     msg='Redis on node with id %s with port %s is not running.' % (nodeid, port)
-                    j.events.opserror_critical( msg, category='monitoring')
+                    j.events.opserror( msg, category='monitoring')
                 else:
                     redisclient.hset("healthcheck:status", 'redis:%s' % port, True)
                 redisclient.hset("healthcheck:lastcheck", 'redis:%s' % port, time.time())

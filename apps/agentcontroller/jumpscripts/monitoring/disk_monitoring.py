@@ -71,7 +71,7 @@ def action():
 
         if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
             healthy = False
-            j.events.opserror_critical('Disk %s has less then 10%% free space' % disk.path, 'monitoring')
+            j.events.opserror('Disk %s has less then 10%% free space' % disk.path, 'monitoring')
 
         for key,value in disk.__dict__.iteritems():
             cacheobj.db.__dict__[key]=value
