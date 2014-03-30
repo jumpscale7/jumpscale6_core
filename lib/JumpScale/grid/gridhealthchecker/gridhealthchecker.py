@@ -21,6 +21,7 @@ class GridHealthChecker(object):
         print "OK"
         self._runningnids = list()
         self._nids = list()
+        self._nodenames = dict()
         self._errors = dict()
         self._status = dict()
         self._tostdout = True
@@ -32,12 +33,14 @@ class GridHealthChecker(object):
 
     def _addError(self, nid, result, category=""):
         if self._tostdout:
-            print "*ERROR*: %s on node %s. Details: %s" % (category, nid, result)
-        if j.basetype.string.check(result):
-            result={"msg":result}
+            print "\t**ERROR**: Check for '%s' on node '%s' with id %s failed" % (category, self._nodenames[nid], nid)
         self._errors.setdefault(nid, {})
         self._errors[nid].update({category:{}})
-        self._errors[nid][category].update(result)
+        if isinstance(result, basestring):
+            print '\t           %s' % result
+            self._errors[nid][category].update({'errormessage': result})
+        else:
+            self._errors[nid][category].update(result)
 
     def _addResult(self, nid, result, category):
         # if self._tostdout:
@@ -101,37 +104,20 @@ class GridHealthChecker(object):
         if heartbeat nodes found not in gridnodes -> error
         all the ones found in self._nids (return if populated)
         """
-        print "get nodes from osis: ",
         nodes = self._nodecl.simpleSearch({})
-        out=[]
-        for node in nodes:
-            out.append("NODE: %s:%s:%s"%(node["id"],node["name"],node["ipaddr"]))
-        out.sort()
-        print "\n".join(out)
-        print "OK"
         self._nids = [node['id'] for node in nodes]
-        self._nids.sort()
         gridmasterip = j.application.config.get('grid.master.ip')
-        print "look for masternid:",
-        self.masternid=None
+        for node in nodes:
+            self._nodenames[node['id']] = node['name']
+            if gridmasterip in node['ipaddr']:
+                self.masternid = node['id'] 
         if gridmasterip == '127.0.0.1':
             self.masternid = j.application.whoAmI.nid
-        else:
-            for node in nodes:
-                if gridmasterip in node['ipaddr']:
-                    self.masternid = node['id'] 
-                    break
-        if self.masternid==None:
-            raise RuntimeError("Could not find masternid.")
-        print "MASTER:%s"%self.masternid
-        print "OK"
-        print "Did find %s nodes"%len(self._nids)
         self._checkRunningNIDs()
 
     def runAll(self):
         self._clean()
-        self.getNodes()
-        # self.checkProcessManagerAllNodes(clean=False) #DONT DO is part of the getNodes()
+        self.checkProcessManagerAllNodes(clean=False)
         if self._runningnids:
             self.checkElasticSearch(clean=False)
             self.checkRedisAllNodes(clean=False)
@@ -140,6 +126,7 @@ class GridHealthChecker(object):
         return self._status, self._errors
 
     def checkElasticSearch(self, clean=True):
+        print "CHECK ELASTICSEARCH"
         if clean:
             self._clean()
         eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid,timeout=2)['result']
@@ -187,6 +174,7 @@ class GridHealthChecker(object):
     def checkWorkersAllNodes(self,clean=True):
         if clean:
             self._clean()
+        print "CHECK WORKERS"
         self._parallize(self.checkWorkers, False)
         if clean:
             return self._status, self._errors
@@ -212,8 +200,7 @@ class GridHealthChecker(object):
     def checkProcessManagerAllNodes(self, clean=True):
         if clean:
             self._clean()
-            self._checkRunningNIDs()
-
+        print "CHECK PROCESSMANAGERS"
         haltednodes = set(self._nids)-set(self._runningnids)
         for nid in haltednodes:
             self._addError(nid, {nid: False}, 'processmanager')
@@ -228,7 +215,6 @@ class GridHealthChecker(object):
         """
         if clean:
             self._clean()
-            self._checkRunningNIDs()
         gid = j.application.whoAmI.gid
         if self._heartbeatcl.exists('%s_%s' % (gid, nid)):
             heartbeat = self._heartbeatcl.get('%s_%s' % (gid, nid))
@@ -245,6 +231,7 @@ class GridHealthChecker(object):
     def checkDisksAllNodes(self, clean=True):
         if clean:
             self._clean()
+        print "CHECK DISKS"
         self._parallize(self.checkDisks, clean=False)
         if clean:
             return self._status, self._errors
