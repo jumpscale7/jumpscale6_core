@@ -51,32 +51,36 @@ def getJPackage(args, installed=None,domain=None,debug=None):
         if domain==None:
             domain=""
 
-    if args.name<>"":
-        packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=False)
-    else:
-        packages = j.packages.find(name=args.name, domain=domain, version=args.version,installed=installed)
-
-    if debug==False and args.name=="":
-        debugpackages=j.packages.getDebugPackages()
-        packages=[item for item in packages if item not in debugpackages]        
-
-    if len(packages) == 0:
-        if installed:
-            print "Could not find package with name '%s' in domain '%s' with version '%s' which is installed." % (args.name, domain, args.version)
+    for pname in args.name.split(","):
+        if pname<>"":
+            packages = j.packages.find(name=pname, domain=domain, version=args.version,installed=False)
         else:
-            print "Could not find package with name '%s' in domain '%s' with version '%s'" % (args.name, domain, args.version)
-        j.application.stop(1)
-    elif len(packages) > 1:
-        if not j.application.shellconfig.interactive:
-            print "Found multiple packages %s" % (packages)
+            packages = j.packages.find(name=pname, domain=domain, version=args.version,installed=installed)
+
+        if debug==False and pname=="":
+            debugpackages=j.packages.getDebugPackages()
+            packages=[item for item in packages if item not in debugpackages]        
+
+        if len(packages) == 0:
+            if installed:
+                print "Could not find package with name '%s' in domain '%s' with version '%s' which is installed." % (pname, domain, args.version)
+            else:
+                print "Could not find package with name '%s' in domain '%s' with version '%s'" % (pname, domain, args.version)
             j.application.stop(1)
-        else:
-            packages = j.console.askChoiceMultiple(packages, "Multiple packages found. Select:")
-            if args.deps:
-                for p in packages:
-                    for dep in p.getDependencies():
-                        if dep not in packages:
-                            packages.append(dep)
+        elif len(packages) > 1 and pname.find("*"):
+            pass #no need to ask interactive
+        elif len(packages) > 1:
+            if not j.application.shellconfig.interactive:
+                print "Found multiple packages %s" % (packages)
+                j.application.stop(1)
+            else:
+                packages = j.console.askChoiceMultiple(packages, "Multiple packages found. Select:")
+
+        if args.deps:
+            for p in packages:
+                for dep in p.getDependencies():
+                    if dep not in packages:
+                        packages.append(dep)
 
     return packages
 
