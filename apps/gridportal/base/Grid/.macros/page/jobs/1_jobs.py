@@ -27,7 +27,7 @@ def main(j, args, params, tags, tasklet):
     modifier = j.html.getPageModifierGridDataTables(page)
     def makeLink(row, field):
         time = datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or 'N/A'
-        return '[%s|/grid/job?id=%s]'  % (time, row['id'])
+        return '[%s|/grid/job?id=%s]'  % (time, row['guid'])
 
     def makeResult(row, field):
         result = row[field]

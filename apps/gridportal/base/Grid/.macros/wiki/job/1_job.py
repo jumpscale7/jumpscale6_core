@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
         params.result = (out, args.doc)
         return params
 
-    job = j.apps.system.gridmanager.getJobs(id=id)
+    job = j.apps.system.gridmanager.getJobs(guid=id)
     if not job:
         params.result = ('Job with id %s not found' % id, args.doc)
         return params
