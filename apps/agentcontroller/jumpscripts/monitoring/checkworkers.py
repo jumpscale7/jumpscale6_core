@@ -23,8 +23,8 @@ def action():
     redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
     workerstimeout=[]
     now=time.time()
-    for workername in redis.hkeys("workers:watchdog"):
-        last=redis.hget("workers:watchdog",workername)
+    workers = redis.hgetall("workers:watchdog")
+    for workername, last in zip(workers[0::2], workers[1::2]):
         if last==None or now>int(last)+10:
             #timeout on watchdog
             workerstimeout.append(workername)
@@ -39,14 +39,9 @@ def action():
     try:
         import psutil
         foundworkers=[]
-        for proc in psutil.process_iter():
-            name2=" ".join(proc.cmdline)
-            # print "**%s"%name2
-
-            if name2.find("python worker.py")<>-1:
-                workernamefound=name2.split("-wn")[-1].strip()
-                if workernamefound in workerstimeout:
-                    workerstimeout.pop(workerstimeout.index(workernamefound))
+        for timeout in workerstimeout[:]:
+            if j.tools.startupmanager.getStatus('workers', timeout):
+                workerstimeout.remove(timeout)
 
         for workername in workerstimeout:
             j.tools.startupmanager.startProcess("workers",workername)
