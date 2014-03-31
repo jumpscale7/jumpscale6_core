@@ -136,8 +136,7 @@ class JPackageClient():
             for domain in cfg.getSections():
                 if domain in domainDict.keys():
                     self.domains.remove(domainDict[domain])
-                if j.system.fs.exists(path=j.system.fs.joinPaths(j.dirs.packageDirMD,domain)):
-                    self.domains.append(Domain(domainname=domain))
+                self.domains.append(Domain(domainname=domain))
 
 
     def create(self, domain="", name="", version="1.0", description="", supportedPlatforms=None):
