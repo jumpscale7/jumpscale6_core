@@ -7,13 +7,19 @@ def main(j, args, params, tags, tasklet):
     out = list()
 
     out.append('||Port||Status||Memory Used||')
-    
+
     rstatus, errors = j.core.grid.healthchecker.checkRedis(nid)
     for data in [rstatus, errors]:
         if len(data) > 0:
-            rstatus = rstatus[nid]['redis']
+            rstatus = data[nid]['redis']
             for port, stat in rstatus.iteritems():
-                out.append('|%s|%s|%s|' % (port, '{color:green}*RUNNING*{color}' if stat['alive'] else '{color:red}HALTED{color}', stat['memory_usage']))
+                if stat['alive'] is True:
+                    state = '{color:green}*RUNNING*{color}'
+                elif stat['alive'] is False:
+                    state = '{color:red}HALTED*{color}'
+                else:
+                    state = '{color:orange}UNKOWN{color}'
+                out.append('|%s|%s|%s|' % (port, state, stat['memory_usage']))
 
     out = '\n'.join(out)
 

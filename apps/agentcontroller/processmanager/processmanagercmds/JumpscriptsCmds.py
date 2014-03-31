@@ -9,58 +9,7 @@ import ujson
 from redis import Redis
 # from rq import Queue
 import JumpScale.baselib.redisworker
-
-
-class JumpScript(object):
-    def __init__(self, ddict):
-        self.period = 0
-        self.lastrun = 0
-        self.startatboot = False
-        self.__dict__.update(ddict)
-        self.write()
-        self.load()
-
-    def write(self):
-        jscriptdir = j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts", self.organization)
-        j.system.fs.createDir(jscriptdir)
-        self.path=j.system.fs.joinPaths(jscriptdir, "%s.py" % self.name)
-
-        content="""
-from JumpScale import j
-
-"""
-        content += self.source
-        j.system.fs.writeFile(filename=self.path, contents=content)
-
-    def load(self):
-        md5sum = j.tools.hash.md5_string(self.path)
-        self.module = imp.load_source('JumpScale.jumpscript_%s' % md5sum, self.path)
-
-    def run(self, *args, **kwargs):
-        return self.module.action(*args, **kwargs)
-
-    def execute(self):
-        if not self.enable:
-            return
-        if not self.async:
-            try:
-                self.run()
-            except Exception,e:
-                eco=j.errorconditionhandler.parsePythonErrorObject(e)
-                eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
-                        j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
-                eco.tags="jscategory:%s"%self.category
-                eco.tags+=" jsorganization:%s"%self.organization
-                eco.tags+=" jsname:%s"%self.name
-                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-        else:
-            # self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
-            #NO LONGER USE redisq, now use our own queuing mechanism
-            j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue="default",_log=self.log,_sync=False)
-
-        self.lastrun = time.time()
-        print "ok:%s"%self.name
-
+from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
 
 class JumpscriptsCmds():
 

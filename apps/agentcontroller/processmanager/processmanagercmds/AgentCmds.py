@@ -97,7 +97,16 @@ class AgentCmds():
 
             if job["jscriptid"]==None:
                 raise RuntimeError("jscript id needs to be filled in")
-            j.clients.redisworker.execJobAsync(job)
+
+            jscriptkey = "%(category)s_%(cmd)s" % job
+            jscript = j.core.processmanager.cmds.jumpscripts.jumpscripts[jscriptkey]
+            if jscript.async:
+                j.clients.redisworker.execJobAsync(job)
+            else:
+                status, result = jscript.execute()
+                job['state'] = 'OK' if status else 'ERROR'
+                job['result'] = result
+                self.client.notifyWorkCompleted(job)
 
     def _killGreenLets(self,session=None):
         """
