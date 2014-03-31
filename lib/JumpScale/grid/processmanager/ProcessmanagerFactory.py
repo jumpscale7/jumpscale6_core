@@ -106,7 +106,7 @@ class ProcessmanagerFactory:
             raise RuntimeError("Could not find cmds with category:%s"%category)
 
     def loadCmds(self):
-        sys.path.append(self.basedir)        
+        sys.path.insert(0, self.basedir)
         cmds=j.system.fs.listFilesInDir(j.system.fs.joinPaths(self.basedir,"processmanagercmds"),filter="*.py")
         cmds.sort()
         for item in cmds:
