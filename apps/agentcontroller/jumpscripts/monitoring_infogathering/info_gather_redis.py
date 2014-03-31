@@ -11,7 +11,7 @@ license = "bsd"
 version = "1.0"
 category = "system.redisstatus"
 
-async = True
+async = False
 roles = ["*"]
 
 period=0
@@ -30,5 +30,3 @@ def action():
         result[port] = {'alive': rcl.ping(), 'memory_usage': rproc.get_memory_info()[0]}
 
     return result
-    
-
