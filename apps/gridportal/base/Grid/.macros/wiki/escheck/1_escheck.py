@@ -8,6 +8,15 @@ def main(j, args, params, tags, tasklet):
 
     esdata, errors = j.core.grid.healthchecker.checkElasticSearch()
 
+    if errors:
+        errors = errors.values()
+        for error in errors:
+            if error['elasticsearch'].get('state') == 'TIMEOUT':
+                out.append('{color:red}*ElasticSearch unreachable, likely ProcessManager on Master Node is not running.*{color}')
+                out = '\n'.join(out)
+                params.result = (out, doc)
+                return params
+
     for message, data in {'OK': esdata, 'HALTED': errors}.iteritems():
         if len(data) > 0:
             data = data.values()[0]['elasticsearch']

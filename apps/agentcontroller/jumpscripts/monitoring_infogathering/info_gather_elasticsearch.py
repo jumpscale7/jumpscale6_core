@@ -11,7 +11,7 @@ license = "bsd"
 version = "1.0"
 category = "system.esstatus"
 
-async = True
+async = False
 roles = ["*"]
 enable = True
 period=0

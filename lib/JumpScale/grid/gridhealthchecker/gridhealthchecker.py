@@ -130,19 +130,23 @@ class GridHealthChecker(object):
         print "CHECK ELASTICSEARCH"
         if clean:
             self._clean()
-        eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid,timeout=2)['result']
-        if eshealth==None:
-            self._addError(self.masternid,"elasticsearch did not return info for healthcheck","elasticsearch")
-            return self._status, self._errors
-        size, unit = j.tools.units.bytes.converToBestUnit(eshealth['size'])
-        eshealth['size'] = '%.2f %sB' % (size, unit)
-        size, unit = j.tools.units.bytes.converToBestUnit(eshealth['memory_usage'])
-        eshealth['memory_usage'] = '%.2f %sB' % (size, unit)
-
-        if eshealth['health']['status'] in ['red']:
-            self._addError(self.masternid, eshealth, 'elasticsearch')
+        eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=2)
+        if eshealth['state'] == 'TIMEOUT':
+            self._addError(self.masternid, {'state': 'TIMEOUT'}, 'elasticsearch')
         else:
-            self._addResult(self.masternid, eshealth, 'elasticsearch')
+            eshealth = eshealth['result']
+            if eshealth==None:
+                self._addError(self.masternid,"elasticsearch did not return info for healthcheck","elasticsearch")
+                return self._status, self._errors
+            size, unit = j.tools.units.bytes.converToBestUnit(eshealth['size'])
+            eshealth['size'] = '%.2f %sB' % (size, unit)
+            size, unit = j.tools.units.bytes.converToBestUnit(eshealth['memory_usage'])
+            eshealth['memory_usage'] = '%.2f %sB' % (size, unit)
+
+            if eshealth['health']['status'] in ['red']:
+                self._addError(self.masternid, eshealth, 'elasticsearch')
+            else:
+                self._addResult(self.masternid, eshealth, 'elasticsearch')
         if clean:
             return self._status, self._errors
 
