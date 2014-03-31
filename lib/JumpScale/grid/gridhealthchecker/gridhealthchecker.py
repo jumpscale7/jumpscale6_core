@@ -283,10 +283,13 @@ class GridHealthChecker(object):
         errors = list()
 
         for check, state in stats.iteritems():
-            if state[0] == False:
-                errors.append((nid, {check: state}, 'healthchecker'))
+            if state:
+                if state[0] == False:
+                    errors.append((nid, {check: state}, 'healthchecker'))
+                else:
+                    results.append((nid, {check: state}, 'healthchecker'))
             else:
-                results.append((nid, {check: state}, 'healthchecker'))
+                results.append((nid, {check: None}, 'healthchecker'))
         if clean:
             return self._returnResults(results, errors)
         return results, errors
