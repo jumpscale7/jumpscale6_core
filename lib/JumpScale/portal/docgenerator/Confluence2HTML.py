@@ -159,7 +159,7 @@ class Confluence2HTML():
             
 
             # {color: red}text goes here{color}
-            (re.compile(r'\{{color\:(.*?)\}}({0})\{{color\}}'.format(styled_text),
+            (re.compile(r'\{{color\:(.*?)\}}({0})\{{color\}}'.format(styled_text.format('{}')),
                         flags=re.DOTALL | re.MULTILINE | re.IGNORECASE),
              r'<span style="color:\1">\2</span>'),
 
