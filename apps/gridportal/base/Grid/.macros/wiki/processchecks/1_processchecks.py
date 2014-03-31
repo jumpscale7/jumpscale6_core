@@ -18,12 +18,17 @@ def main(j, args, params, tags, tasklet):
                 runningstring = '{color:green}*RUNNING*{color}'
             status = checks['processmanager']
             link = '[Details|nodestatus?nid=%s]' % nid if status[nid] else ''
-            out.append('|[%s|node?id=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker._nodenames[nid], runningstring if status[nid] else 'HALTED', link))
+            out.append('|[%s|node?id=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker._nodenames[nid], runningstring, link))
+
+    if len(errors) > 0:
+        for nid, checks in errors.iteritems():
+            status = checks.get('processmanager', None)
+            if status and not status[nid]:
+                out.append("|[%s|node?id=%s]|%s|{color:red}*HALTED*{color}| |" % (nid, nid, j.core.grid.healthchecker._nodenames[nid]))
 
     out = '\n'.join(out)
     params.result = (out, doc)
     return params
-
 
 def match(j, args, params, tags, tasklet):
     return True
