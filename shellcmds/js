@@ -1,4 +1,4 @@
-#!/usr/bin/env jspython
+#!/usr/bin/env python
 
 from JumpScale import j
 import JumpScale.baselib.jpackages
