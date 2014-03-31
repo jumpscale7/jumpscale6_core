@@ -81,6 +81,7 @@ login = qp5' > /opt/jumpscale/cfg/jsconfig/bitbucket.cfg
 
 
 jpackage mdupdate
+jpackage install -n base
 jpackage install -n core
 
 jpackage install -n elasticsearch
