@@ -11,11 +11,11 @@ def main(j, args, params, tags, tasklet):
     for message, data in {'OK': esdata, 'HALTED': errors}.iteritems():
         if len(data) > 0:
             data = data.values()[0]['elasticsearch']
-            out.append('|Status|{color:green}*%s*{color}|' % message)
-            out.append('|%s|%s|' % ('Size', data['size']))
-            out.append('|%s|%s|' % ('Memory Usage', data['memory_usage']))
+            out.append('|Status|{color:%s}*%s*{color}|' % ('green' if message=='OK' else 'red', message))
+            out.append('|%s|%s|' % ('Size', data.get('size', 'N/A')))
+            out.append('|%s|%s|' % ('Memory Usage', data.get('memory_usage', 'N/A')))
 
-            for k, v in data['health'].iteritems():
+            for k, v in data.get('health', {}).iteritems():
                 if k == 'status':
                     out.append('|%s|{color:%s}*%s*{color}|' % (k.title(), v, v.upper()))
                     continue
