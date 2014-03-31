@@ -83,6 +83,7 @@ login = qp5' > /opt/jumpscale/cfg/jsconfig/bitbucket.cfg
 jpackage mdupdate
 jpackage install -n core
 
+jpackage install -n elasticsearch
 jpackage install -n grid_master
 jpackage install -n grid_node
 jpackage install -n grid_portal
