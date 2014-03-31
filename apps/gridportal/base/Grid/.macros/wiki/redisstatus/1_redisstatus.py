@@ -13,7 +13,7 @@ def main(j, args, params, tags, tasklet):
         if len(data) > 0:
             rstatus = rstatus[nid]['redis']
             for port, stat in rstatus.iteritems():
-                out.append('|%s|%s|%s|' % (port, 'RUNNING' if stat['alive'] else 'HALTED', stat['memory_usage']))
+                out.append('|%s|%s|%s|' % (port, '{color:green}*RUNNING*{color}' if stat['alive'] else '{color:red}HALTED{color}', stat['memory_usage']))
 
     out = '\n'.join(out)
 

@@ -8,17 +8,11 @@ def main(j, args, params, tags, tasklet):
     out = list()
     results, errors = j.core.grid.healthchecker.checkStatusAllNodes()
     if errors:
-        nodes = errors.keys()
-        out.append('h4. Something on node(s) %s is not running.' % ', '.join([str(x) for x in nodes]))
+        nodeids = errors.keys()
+        out.append('h5. {color:red}Something on node(s) %s is not running.{color}' % ', '.join(["'%s'" % j.core.grid.healthchecker._nodenames[nodeid] for nodeid in nodeids]))
         out.append('For more details, check [here|/grid/checkstatus]')
-        out.append("""{{cssstyle
-                    h4 { color: red;}
-                }}""")
     else:
-        out.append("""{{cssstyle\n
-                h4 { color: green;  }\n
-                }}""")
-        out.append('h4. Everything seems to be OK')
+        out.append('h5. {color:green}Everything seems to be OK{color}')
 
     results.update(errors)
 
@@ -33,7 +27,7 @@ def main(j, args, params, tags, tasklet):
         lastchecked = datetime.datetime.fromtimestamp(lastchecked).strftime('%Y-%m-%d %H:%M:%S')
     else:
         lastchecked = 'N/A'
-    out.append('h5. last checked at: %s.' % lastchecked)
+    out.append('The whole grid was last checked at: *%s*.' % lastchecked)
 
     out = '\n'.join(out)
 

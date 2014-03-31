@@ -8,13 +8,17 @@ def main(j, args, params, tags, tasklet):
 
     esdata, errors = j.core.grid.healthchecker.checkElasticSearch()
 
-    for message, data in {'OK': esdata, 'Not OK': errors}.iteritems():
+    for message, data in {'OK': esdata, 'HALTED': errors}.iteritems():
         if len(data) > 0:
             data = data.values()[0]['elasticsearch']
-            out.append('|*STATUS*|%s|' % message)
-            for field in ['size', 'memory_usage']:
-                out.append('|%s|%s|' % (field.title(), data[field]))
+            out.append('|Status|{color:green}*%s*{color}|' % message)
+            out.append('|%s|%s|' % ('Size', data['size']))
+            out.append('|%s|%s|' % ('Memory Usage', data['memory_usage']))
+
             for k, v in data['health'].iteritems():
+                if k == 'status':
+                    out.append('|%s|{color:%s}*%s*{color}|' % (k.title(), v, v.upper()))
+                    continue
                 k = k.replace('_', ' ')
                 out.append('|%s|%s|' % (k.title(), v))
 

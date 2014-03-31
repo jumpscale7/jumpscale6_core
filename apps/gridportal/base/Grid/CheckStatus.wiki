@@ -1,8 +1,6 @@
 @usedefault
 
-h2. Statuses
-
-h3. Elastic Search Status
+h3. ElasticSearch Status
 {{escheck}}
 
 h3. Process Status

@@ -6,18 +6,19 @@ def main(j, args, params, tags, tasklet):
     status = None
     out = list()
 
-    out.append('||Node ID||Process Manager Status||Details||')
+    out.append('||Node ID||Node Name||Process Manager Status||Details||')
     data, errors = j.core.grid.healthchecker.runAll()
 
     if len(data) > 0:
         for nid, checks in data.iteritems():
-            runningstring = 'RUNNING'
             if nid in errors:
                 categories = errors[nid].keys()
-                runningstring += '*(issues in %s)' % ', '.join(categories)
+                runningstring = '{color:orange}*RUNNING** (issues in %s){color}' % ', '.join(categories)
+            else:
+                runningstring = '{color:green}*RUNNING*{color}'
             status = checks['processmanager']
             link = '[Details|nodestatus?nid=%s]' % nid if status[nid] else ''
-            out.append('|[%s|node?id=%s]|%s|%s|' % (nid, nid, runningstring if status[nid] else 'HALTED', link))
+            out.append('|[%s|node?id=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker._nodenames[nid], runningstring if status[nid] else 'HALTED', link))
 
     out = '\n'.join(out)
     params.result = (out, doc)

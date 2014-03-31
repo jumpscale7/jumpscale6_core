@@ -1,5 +1,7 @@
 @usedefaults
 
+h2. Node '$$nid'
+
 h3. Redis Status
 {{redisstatus nid:$$nid}}
 
