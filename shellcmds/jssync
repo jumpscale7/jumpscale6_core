@@ -64,6 +64,13 @@ if opts.action =='system2sandbox' or opts.action =='jsboxupload' or opts.action 
     sync("/opt/code/jumpscale/default__jp_jumpscale/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/jumpscale/")
     sync("/opt/code/jumpscale/default__jp_serverapps/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/serverapps/")
     sync("/opt/code/jumpscale/default__jp_desktop/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/jsdesktop/")
+
+    for dname in ["jsdesktop","jumpscale","serverapps"]:
+        dpath=j.system.fs.joinPaths("opt","jsbox","jpackages",dname)
+        for path in j.system.fs.listFilesInDir(dpath,True,"main.hrd"):
+            hrd=j.core.hrd.getHRD(path)
+            hrd.set("jp.debug",0)
+
     for name in ["base","baselib","core","lib","grid","portal"]:
         sync("/usr/local/lib/python2.7/site-packages/JumpScale/%s/"%name,"/opt/jsbox/libjs/JumpScale/%s/"%name)
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.qualitylevel,"/opt/jsbox/tools/")

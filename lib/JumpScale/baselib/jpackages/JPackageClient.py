@@ -34,7 +34,7 @@ class JPackageClient():
         #     self.packageDirFiles=self.packageDirFiles.replace("$base",j.basepath)
 
         if j.application.sandbox:
-            j.dirs.packageDirMD=j.system.fs.joinPaths(j.dirs.packageDirMD)
+            j.dirs.packageDirMD=j.system.fs.joinPaths(j.dirs.baseDir,"jpackages")
         else:
             j.dirs.packageDirMD=j.system.fs.joinPaths(j.dirs.varDir, "jpackages","metadata")
 
@@ -88,7 +88,7 @@ class JPackageClient():
         @param redo means, restart from existing links in qbase, do not use the config file
         @checkInteractive if False, will not ask just execute on it
         """
-     
+        raise RuntimeError("reimplement")
         result,llist=j.system.process.execute("find /opt/qbase5 -type l")
         lines=[item for item in llist.split("\n") if item.strip()<>""]
         if len(lines)>0:
@@ -502,6 +502,7 @@ class JPackageClient():
         domains=self.getDomainNames()
         for domainName in domains:
             domainpath=j.system.fs.joinPaths(j.dirs.packageDirMD, domainName)
+            
             if j.system.fs.exists(domainpath): #this follows the link
                 packages= [p for p in j.system.fs.listDirsInDir(domainpath,dirNameOnly=True) if p != '.hg'] # skip hg file
                 for packagename in packages:

@@ -32,7 +32,7 @@ class Application:
 
         self.jid=0
 
-        if hasattr(sys,"basepath"):
+        if 'JSBASE' in os.environ:
             self.sandbox=True
         else:
             self.sandbox=False

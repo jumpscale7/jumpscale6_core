@@ -67,7 +67,7 @@ def getJPackage(args, installed=None,domain=None,debug=None):
             else:
                 print "Could not find package with name '%s' in domain '%s' with version '%s'" % (pname, domain, args.version)
             j.application.stop(1)
-        elif len(packages) > 1 and pname.find("*"):
+        elif len(packages) > 1 and pname.find("*")<>-1:
             pass #no need to ask interactive
         elif len(packages) > 1:
             if not j.application.shellconfig.interactive:
@@ -82,7 +82,7 @@ def getJPackage(args, installed=None,domain=None,debug=None):
                     if dep not in packages:
                         packages.append(dep)
         packagesall+=packages
-    
+
     return packagesall
 
 def getProcess(parser=None):
