@@ -84,7 +84,7 @@ class Domain():
         metadataDir = self.getMetadataDir(qualitylevel)
         return j.system.fs.joinPaths(metadataDir, name, version)
 
-    def getMetadataDir(self, qualitylevel):
+    def getMetadataDir(self, qualitylevel=None):
         """
         Get the meta data dir for the argument quality level, or for the current
         quality level if no quality level is passed.
