@@ -20,18 +20,18 @@ Dashboard:/grid/dashboard
 
 @col 4
 #{{html:<center>}}
-h5. Total Used Capacity Of Environment
+h5. Total Used Capacity of Environment
 {{jgauge: id:1 width:200 height:114 val:20 style:black start:0 end:10 end:100 labelsuffix:%}}
 #{{html:</center>}}
 @divend 
 @col 4
 #{{html:<center>}}
-h5. Nr Of Events Per Day
-{{jgauge: id:4 width:200 height:114 val:103 start:0 end:300}}
+h5. No. of Events in Last 24hours
+{{eventgauge: id:4 width:200 height:114}}
 #   {{html:</center>}}
 @divend 
 @col 4
-h5. Nr Of Vmachines Running 
+h5. No. of vMachines Running 
 #*From Total Deployed:45*
 {{vmgauge: id:5 width:200 height:114}}
 @divend 
