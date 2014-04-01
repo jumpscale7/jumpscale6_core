@@ -1524,6 +1524,7 @@ class JPackageObject():
         self.actions.restore()        
 
     def upload(self, remote=True, local=True,dependencies=False,onlycode=False):
+
         if dependencies==None and j.application.shellconfig.interactive:
             dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
         else:
@@ -1544,6 +1545,7 @@ class JPackageObject():
         """
 
 
+
         self.loadActions(force=True)
         self._calculateBlobInfo()
 
@@ -1554,23 +1556,27 @@ class JPackageObject():
 
             pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
-            if not j.system.fs.exists(pathttype):
-                raise RuntimeError("Could not find files section:%s, check the files directory in your jpackages metadata dir, maybe there is a .info file which is wrong & does not exist here."%pathttype)
-
             if ttype[0:3]<>"cr_" and onlycode:
                 print "no need to upload (onlycode option):%s %s %s"%(self,platform,ttype)
                 continue
 
+            if not j.system.fs.exists(pathttype):
+
+                raise RuntimeError("Could not find files section:%s, check the files directory in your jpackages metadata dir, maybe there is a .info file which is wrong & does not exist here."%pathttype)
+
             self.log("Upload platform:'%s', type:'%s' files:'%s'"%(platform,ttype,pathttype),category="upload")
         
             if local and remote and self.blobstorRemote <> None and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[self.blobstorRemote])
+                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype)
+                key, descr,uploadedAnything  = self.blobstorRemote.put(pathttype)
             elif local and self.blobstorLocal <> None:
                 key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[])
             elif remote and self.blobstorRemote <> None:
                 key, descr, uploadedAnything = self.blobstorRemote.put(pathttype, blobstors=[])
             else:
                 raise RuntimeError("need to upload to local or remote")
+
+
 
             # if uploadedAnything:
             #     self.log("Uploaded blob for %s:%s:%s to blobstor."%(self,platform,ttype))

@@ -183,7 +183,7 @@ elif args.action == 'repackage':
         package.package(update=False,dependencies=args.deps)
         if not args.message:
             args.message = 'Building JPackage "%s"' % package.name
-        package.upload(remote=not args.local)
+        package.upload(remote=not args.local,onlycode=args.onlycode)
         domains2pub.append(package.domain)
         print 'New %s %s' % (package, package.buildNr)
 
@@ -212,7 +212,7 @@ elif args.action == 'mdupdate':
     j.packages.updateMetaData(force=args.force)
 
 elif args.action == 'upload':
-    packages = cmdutils.getJPackage(args,installed=False)
+    packages = cmdutils.getJPackage(args,installed=False)    
     for package in packages:
         package.upload(dependencies=args.deps,onlycode=args.onlycode)
 
