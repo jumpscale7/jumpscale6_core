@@ -139,7 +139,7 @@ class GridHealthChecker(object):
         print "CHECK ELASTICSEARCH"
         if clean:
             self._clean()
-        eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=2)
+        eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=5)
         if eshealth['state'] == 'TIMEOUT':
             self._addError(self.masternid, {'state': 'TIMEOUT'}, 'elasticsearch')
         else:
@@ -173,7 +173,7 @@ class GridHealthChecker(object):
 
         results = list()
         errors = list()
-        redis = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=2)['result']
+        redis = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=5)['result']
         if not redis:
             errors.append((nid, {-1: {'alive': 'UNKOWN', 'memory_usage': 0}}, 'redis'))
             redis = dict()
@@ -201,7 +201,7 @@ class GridHealthChecker(object):
             self._clean()
         results = list()
         errors = list()
-        workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid, timeout=2)['result']
+        workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid, timeout=5)['result']
         if not workers:
             errors.append((nid, {}, 'workers'))
             workers = dict()
@@ -261,7 +261,7 @@ class GridHealthChecker(object):
             self._clean()
         results = list()
         errors = list()
-        disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=2)['result']
+        disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=5)['result']
         if not disks:
             errors.append((nid, {}, 'disks'))
             disks = dict()
@@ -299,7 +299,7 @@ class GridHealthChecker(object):
     def checkStatus(self, nid, clean=True):
         if clean:
             self._clean()
-        stats = self._client.executeJumpScript('jumpscale', 'info_gather_healthcheck_results', nid=nid)['result']
+        stats = self._client.executeJumpScript('jumpscale', 'info_gather_healthcheck_results', nid=nid, timeout=5)['result']
 
         results = list()
         errors = list()
