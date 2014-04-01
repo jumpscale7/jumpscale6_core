@@ -100,7 +100,7 @@ class AgentCmds():
 
             jscriptkey = "%(category)s_%(cmd)s" % job
             jscript = j.core.processmanager.cmds.jumpscripts.jumpscripts[jscriptkey]
-            if jscript.async:
+            if jscript.async or job['queue']:
                 j.clients.redisworker.execJobAsync(job)
             else:
                 status, result = jscript.execute()
