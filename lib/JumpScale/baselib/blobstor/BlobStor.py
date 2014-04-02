@@ -171,7 +171,7 @@ class BlobStor:
 
         ok=False
 
-        if self.config["type"] == "local":
+        if self.config["type"] == "local" or targetFileNameTgz.find("file://")==0:
             print "local"
             targetFileNameTgz = targetFileNameTgz.replace("file://", "")
             j.system.fs.createDir(j.system.fs.getDirName(targetFileNameTgz))

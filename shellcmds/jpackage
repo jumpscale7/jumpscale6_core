@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env jspython
 from JumpScale.baselib import cmdutils
 import JumpScale.baselib.jpackages
 from JumpScale import j
@@ -191,7 +191,6 @@ elif args.action == 'repackage':
     for domain in domains:
         if args.publish and domain in domains2pub:
             j.packages.publish(args.message, domain)
-
 
 elif args.action == 'restart':
     packages= cmdutils.getJPackage(args,installed=True)

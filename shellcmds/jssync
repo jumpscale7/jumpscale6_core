@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env jspython
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
@@ -66,7 +66,7 @@ if opts.action =='system2sandbox' or opts.action =='jsboxupload' or opts.action 
     sync("/opt/code/jumpscale/default__jp_desktop/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/jsdesktop/")
 
     for dname in ["jsdesktop","jumpscale","serverapps"]:
-        dpath=j.system.fs.joinPaths("opt","jsbox","jpackages",dname)
+        dpath=j.system.fs.joinPaths("/opt","jsbox","jpackages",dname)
         for path in j.system.fs.listFilesInDir(dpath,True,"main.hrd"):
             hrd=j.core.hrd.getHRD(path)
             hrd.set("jp.debug",0)
@@ -87,7 +87,7 @@ if opts.action =='jsboxupload':
     if opts.qualitylevel==None:
         raise RuntimeError("specify qualitylevel name")     
     ipaddr=j.application.config.get("jssync.addr")
-    for name in ["bin","lib","tools","libjs"]:#,"cfg","apps"]:
+    for name in ["cfg","bin","lib","tools","libjs"]:#,"cfg","apps"]:
         upload(name,name)
 
 if opts.action =='jpackagesdownload':

@@ -1,8 +1,8 @@
 #!/bin/bash
 if [ -z "$JSBASE" ]; then
-    export PYTHONPATH=$JSBASE/libjs
     python "$@"
 else
+    export PYTHONPATH=$JSBASE/libjs
     $JSBASE/bin/python "$@"
 fi
 
