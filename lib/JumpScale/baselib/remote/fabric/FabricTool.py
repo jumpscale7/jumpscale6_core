@@ -26,10 +26,6 @@ class FabricTool():
         # self.api.env.hosts = ['user1@host1:port1', 'user2@host2.port2']
         # self.api.env.passwords = {'user1@host1:port1': 'password1', 'user2@host2.port2': 'password2'}
 
-    def install(self):
-        codename, descr, id, release = j.system.platform.ubuntu.getVersion()
-        j.system.process.executeWithoutPipe("pip install fabric")
-
     def setHost(self, host="localhost"):
         self.api.env["host_string"] = host
 

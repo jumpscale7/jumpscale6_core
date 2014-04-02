@@ -3,12 +3,6 @@ from JumpScale import j
 import JumpScale.baselib.remote.fabric
 
 j.system.platform.ubuntu.check()
-do = j.develtools.installer._do
-
-try:
-    import cuisine
-except:
-    do.execute("easy_install cuisine")
 
 import cuisine
 
@@ -19,11 +13,6 @@ class Cuisine():
         self.api = cuisine
         self.fabric = j.remote.fabric.api
         j.remote.fabric.setHost()
-
-    def install(self):
-        codename, descr, id, release = j.system.platform.ubuntu.getVersion()
-        do = j.develtools.installer._do
-        do.execute("easy_install cuisine")
 
     def help(self):
         C = """
