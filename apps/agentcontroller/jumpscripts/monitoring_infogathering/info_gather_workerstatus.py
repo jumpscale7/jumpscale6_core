@@ -28,7 +28,7 @@ def action():
             processobj = j.system.process.getProcessObject(pid)
             stats['cpu'] += processobj.get_cpu_percent()
             stats['mem'] += processobj.get_memory_info()[0]
-        if j.base.time.getEpochAgo(timeout) < lastactive:
+        if j.base.time.getEpochAgo(timeout) < lastactive and pids:
             stats['status'] = True
         result[worker] = stats
     return result
