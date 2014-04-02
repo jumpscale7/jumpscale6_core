@@ -1,20 +1,28 @@
 import JumpScale.grid.gridhealthchecker
+import JumpScale.baselib.redis
+import ujson
 
 def main(j, args, params, tags, tasklet):
     doc = args.doc
     nid = args.getTag('nid')
+    nidstr = str(nid)
+    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
 
     out = list()
 
-    disks, errors = j.core.grid.healthchecker.checkDisks(nid)
+    disks = rediscl.hget('healthcheck:monitoring', 'results')
+    errors = rediscl.hget('healthcheck:monitoring', 'errors')
+    disks = ujson.loads(disks) if disks else dict()
+    errors = ujson.loads(errors) if errors else dict()
 
     out.append('||Disk||Free Space||Status||')
     for data in [disks, errors]:
-        if len(data) > 0:
-            data = data[nid]['disks']
-            for path, diskstat in data.iteritems():
-                out.append('|%s|%s|%s|' % (path, diskstat['message'], '{color:green}*OK*{color}' if diskstat['status'] else '{color:red}*NOT OK*{color}'))
-            out.append('\n')
+        if nidstr in data:
+            if 'disks' in data.get(nidstr, dict()):
+                ddata = data[nidstr].get('disks', dict())
+                for path, diskstat in ddata.iteritems():
+                    out.append('|%s|%s|%s|' % (path, diskstat['message'], '{color:green}*OK*{color}' if diskstat['status'] else '{color:red}*NOT OK*{color}'))
+                out.append('\n')
 
     out = '\n'.join(out)
 

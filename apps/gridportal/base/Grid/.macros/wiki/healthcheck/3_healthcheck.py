@@ -7,6 +7,9 @@ def main(j, args, params, tags, tasklet):
     
     out = list()
     results, errors = j.core.grid.healthchecker.checkStatusAllNodes()
+    results = results or dict()
+    errors = errors or dict()
+
     if errors:
         nodeids = errors.keys()
         out.append('h5. {color:red}Something on node(s) %s is not running.{color}' % ', '.join(["'%s'" % j.core.grid.healthchecker._nodenames[nodeid] for nodeid in nodeids]))
@@ -18,7 +21,9 @@ def main(j, args, params, tags, tasklet):
 
     lastchecked = j.base.time.getEpochFuture('+3d')
     for nid, result in results.iteritems():
-        for category, stats in result.iteritems():
+        result = result or dict()
+        for _, stats in result.iteritems():
+            stats = stats or dict()
             times = [float(x[1]) if x else lastchecked for x in stats.values()]
             times.append(lastchecked)
             times.sort()

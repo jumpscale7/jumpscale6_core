@@ -1,8 +1,7 @@
 from JumpScale import j
-import time
 
 descr = """
-Monitor worker status
+Monitor system status
 """
 
 organization = "jumpscale"
@@ -20,13 +19,17 @@ roles = ["*"]
 
 def action():
     import JumpScale.grid.gridhealthchecker
+    import JumpScale.baselib.redis
+    import ujson
+
     nodeid = j.application.whoAmI.nid
     if nodeid == j.core.grid.healthchecker.masternid:
-        results, errors = j.core.grid.healthchecker.checkProcessManagerAllNodes()
+        rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+        results, errors = j.core.grid.healthchecker.runAll()
+        rediscl.hset('healthcheck:monitoring', 'results', ujson.dumps(results))
+        rediscl.hset('healthcheck:monitoring', 'errors', ujson.dumps(errors))
+
         if errors:
-            for nid in errors:
-                j.events.opserror('ProcessManager on node %s seems to have timed out' % nid, 'monitoring')
-        results, errors = j.core.grid.healthchecker.checkElasticSearch()
-        if errors:
-            for nid in errors:
-                j.events.opserror('ElasticSearch on node %s is not running' % nid, 'monitoring')
+            for nid, categories in errors.iteritems():
+                for cat, data in categories.iteritems():
+                    j.events.opserror('%s on node %s seems to be having issues' % (cat, nid), 'monitoring')

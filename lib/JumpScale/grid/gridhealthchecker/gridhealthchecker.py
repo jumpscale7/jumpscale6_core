@@ -264,7 +264,7 @@ class GridHealthChecker(object):
         errors = list()
         disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=5)['result']
         if not disks:
-            errors.append((nid, {}, 'disks'))
+            results.append((nid, {}, 'disks'))
             disks = dict()
         for path, disk in disks.iteritems():
             if (disk['free'] and disk['size']) and (disk['free'] / float(disk['size'])) * 100 < 10:
@@ -300,7 +300,7 @@ class GridHealthChecker(object):
     def checkStatus(self, nid, clean=True):
         if clean:
             self._clean()
-        stats = self._client.executeJumpScript('jumpscale', 'info_gather_healthcheck_results', nid=nid, timeout=5)['result']
+        stats = self._client.executeJumpScript('jumpscale', 'info_gather_healthcheck_results', nid=nid, timeout=5)['result'] or dict()
 
         results = list()
         errors = list()
