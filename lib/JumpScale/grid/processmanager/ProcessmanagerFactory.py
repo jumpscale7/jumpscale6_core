@@ -40,6 +40,10 @@ from JumpScale import j
         result = None, None
         if not self.enable:
             return
+
+        
+        
+        
         if not self.async:
             try:
                 result = True, self.run()
