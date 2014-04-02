@@ -2,7 +2,6 @@ from JumpScale import j
 
 j.system.platform.ubuntu.check()
 
-do = j.develtools.installer._do
 import fabric
 import fabric.api
 
