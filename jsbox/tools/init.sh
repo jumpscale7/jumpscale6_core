@@ -1,6 +1,8 @@
 set -ex
 #!/bin/bash
 rm -rf /etc/jumpscale
+rm -rf /tmp/jumpscale
+rm -rf /tmp/jpackages
 rm -rf /usr/local/bin/jspython
 rm -rf /usr/bin/jspython
 ln -s /opt/jsbox/tools/jspython /usr/local/bin/jspython
