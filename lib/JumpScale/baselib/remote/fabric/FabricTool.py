@@ -17,7 +17,6 @@ import fabric.api
 class FabricTool():
 
     def __init__(self):
-        self._do = j.develtools.installer._do
         self.api = fabric.api
         self.setHost()
         self.api.env.passwords = {}
@@ -30,8 +29,7 @@ class FabricTool():
 
     def install(self):
         codename, descr, id, release = j.system.platform.ubuntu.getVersion()
-        do = j.develtools.installer._do
-        do.execute("pip install fabric")
+        j.system.process.executeWithoutPipe("pip install fabric")
 
     def setHost(self, host="localhost"):
         self.api.env["host_string"] = host
