@@ -53,6 +53,7 @@ from JumpScale import j
                 eco.tags+=" jsname:%s"%self.name
                 j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
                 eco.tb = None
+                eco.type = str(eco.type)
                 result = False, eco.__dict__
         else:
             # self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
