@@ -52,7 +52,8 @@ from JumpScale import j
                 eco.tags+=" jsorganization:%s"%self.organization
                 eco.tags+=" jsname:%s"%self.name
                 j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                result = False, eco.guid
+                eco.tb = None
+                result = False, eco.__dict__
         else:
             # self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
             #NO LONGER USE redisq, now use our own queuing mechanism

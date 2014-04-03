@@ -154,6 +154,9 @@ class Worker(object):
                         eco.jid = job.id
                         eco.category = 'workers.compilescript'
                         j.errorconditionhandler.processErrorConditionObject(eco)
+                        job.state="ERROR"
+                        eco.tb = None
+                        job.result=eco.__dict__
                         # j.events.bug_warning(msg,category="worker.jscript.notcompile")
                         # self.loghandler.logECO(eco)
                         self.notifyWorkCompleted(job)
