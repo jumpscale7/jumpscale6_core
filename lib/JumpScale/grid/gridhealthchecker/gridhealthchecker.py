@@ -33,8 +33,6 @@ class GridHealthChecker(object):
         self._status = dict()
 
     def _addError(self, nid, result, category=""):
-        if self._tostdout:
-            print "\t**ERROR**: Check for '%s' on node '%s' with id %s failed" % (category, self._nodenames.get(nid, 'N/A'), nid)
         self._errors.setdefault(nid, {})
         self._errors[nid].update({category:{}})
         if isinstance(result, basestring):
@@ -44,8 +42,6 @@ class GridHealthChecker(object):
             self._errors[nid][category].update(result)
 
     def _addResult(self, nid, result, category):
-        # if self._tostdout:
-        #     print "*OK*   : %s on node %s. Details: %s" % (category, nid, result)
         self._status.setdefault(nid, {})
         self._status[nid].setdefault(category, {})
         self._status[nid][category].update(result)
@@ -136,6 +132,17 @@ class GridHealthChecker(object):
             self.checkDisksAllNodes(clean=False)
         return self._status, self._errors
 
+    def printStatus(self, category):
+        if self._errors:
+            errors = False
+            if self._errors:
+                for nid, categories in self._errors.iteritems():
+                    if category in categories:
+                        errors = True
+                        print "\t**ERROR**: %s is not running on node '%s' whose ID '%s'" % (category.title(), self._nodenames.get(nid, 'N/A'), nid)
+            if not errors:
+                print '\t**OK**'
+
     def checkElasticSearch(self, clean=True):
         print "CHECK ELASTICSEARCH"
         if clean:
@@ -157,6 +164,9 @@ class GridHealthChecker(object):
                 self._addError(self.masternid, eshealth, 'elasticsearch')
             else:
                 self._addResult(self.masternid, eshealth, 'elasticsearch')
+
+        if self._tostdout:
+            self.printStatus('elasticsearch')
         if clean:
             return self._status, self._errors
 
@@ -165,6 +175,8 @@ class GridHealthChecker(object):
         if clean:
             self._clean()
         self._parallize(self.checkRedis, False, 'redis')
+        if self._tostdout:
+            self.printStatus('redis')
         if clean:
             return self._status, self._errors
 
@@ -194,6 +206,8 @@ class GridHealthChecker(object):
             self._clean()
         print "CHECK WORKERS"
         self._parallize(self.checkWorkers, False, 'workers')
+        if self._tostdout:
+            self.printStatus('workers')
         if clean:
             return self._status, self._errors
 
@@ -227,6 +241,8 @@ class GridHealthChecker(object):
             self._addError(nid, {nid: False}, 'processmanager')
         for nid in self._runningnids:
             self._addResult(nid, {nid: True}, 'processmanager')
+        if self._tostdout:
+            self.printStatus('processmanager')
         if clean:
             return self._status, self._errors
 
@@ -254,6 +270,8 @@ class GridHealthChecker(object):
             self._clean()
         print "CHECK DISKS"
         self._parallize(self.checkDisks, False, 'disks')
+        if self._tostdout:
+            self.printStatus('disks')
         if clean:
             return self._status, self._errors
 
