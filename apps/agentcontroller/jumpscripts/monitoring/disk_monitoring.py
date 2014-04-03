@@ -65,7 +65,8 @@ def action():
 
             write_bytes=int(round(write_bytes/1024,0))            
 
-            cacheobj=aggregate(cacheobj,disk_key,"space_free_mb",disk.free,avg=True,ttype="N",percent=False)
+            if disk.free is not None:
+                cacheobj=aggregate(cacheobj,disk_key,"space_free_mb",disk.free,avg=True,ttype="N",percent=False)
             cacheobj=aggregate(cacheobj,disk_key,"space_used_mb",disk.size-disk.free,avg=True,ttype="N",percent=False)
             cacheobj=aggregate(cacheobj,disk_key,"space_percent",round((float(disk.size-disk.free)/float(disk.size)),2),avg=True,ttype="N",percent=True)
 
