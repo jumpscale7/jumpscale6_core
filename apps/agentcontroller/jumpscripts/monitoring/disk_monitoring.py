@@ -14,11 +14,15 @@ category = "disk.monitoring"
 period = 300 #always in sec
 order = 1
 enable=True
-async=False
+async=True
+queue='process'
 
 roles = ["grid.node.disk"]
 
 def action():
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
 
     psutil=j.system.platform.psutil
 
