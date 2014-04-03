@@ -81,7 +81,7 @@ class AgentCmds():
 
             if job["queue"]=="internal":
                 #cmd needs to be executed internally (is for proxy functionality)
-                
+               
                 if self.daemon.cmdsInterfaces.has_key(job["category"]):
                     job["resultcode"],returnformat,job["result"]=self.daemon.processRPC(job["cmd"], data=job["args"], returnformat="m", session=None, category=job["category"])
                     if job["resultcode"]==returnCodes.OK:

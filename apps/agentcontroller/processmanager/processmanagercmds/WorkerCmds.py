@@ -12,6 +12,8 @@ class WorkerCmds():
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
         self.redisworker = j.clients.redisworker
+        self.acclient = j.clients.agentcontroller.get()
+        self.redis=self.redisworker.redis
 
     def getQueuedJobs(self, queue="default", format="json", session=None):
         """
@@ -40,6 +42,26 @@ class WorkerCmds():
         else:
             return self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
         
+    def getWorkersWatchdogTime(self):
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)        
+        workers2 = self.redis.hgetall("workers:watchdog")
+        foundworkers={}
+        for workername, timeout in zip(workers2[0::2], workers2[1::2]):    
+            foundworkers[workername]=timeout
+        return foundworkers
+
+    def stopWorkers(self):
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)        
+        for workername in self.getWorkersWatchdogTime.keys():
+            redis.set("workers:action:%s"%workername,"STOP")
+
+    def reloadWorkers(self):
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
+        for workername in self.getWorkersWatchdogTime.keys():
+            redis.set("workers:action:%s"%workername,"RELOAD")
 
     def removeJobs(self, hoursago=48, failed=False, session=None):
         """
@@ -75,15 +97,49 @@ class WorkerCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
+        print "CHECKTIMEOUT"
+
+
         jobs = self.redisworker.getQueuedJobs(asWikiTable=False)
         result = list()
         for job in jobs:
             if (job['timeStart'] + job['timeout']) > j.base.time.getTimeEpoch() and job['state'] not in ('OK', 'SCHEDULED'):
                 #job has timed out
-                #job.state = 'TIMEOUT'
-                result.append(job)
+                job.state = 'TIMEOUT'
+                self.acclient.notifyWorkCompleted(job)
+
+        # self.redisworker.removeJobs(hoursago=2)#@todo does not work
+
+        #@todo more logic required here for old jobs
+        
 
         return result
+
+    def notifyWorkCompleted(self,job):
+
+        w=self.redisworker
+        job["timeStop"]=int(time.time())
+
+        if job["jscriptid"]<10000:
+            #jumpscripts coming from AC
+            if job["state"]<>"OK":
+                try:
+                    self.acclient.notifyWorkCompleted(job)
+                except Exception,e:
+                    j.events.opserror("could not report job in error to agentcontroller", category='workers.errorreporting', e=e)
+                    return
+                #lets keep the errors
+                # self.redis.hdel("workers:jobs",job.id)
+            else:
+                if job["log"]:
+                    try:
+                        self.acclient.notifyWorkCompleted(job)
+                    except Exception,e:
+                        j.events.opserror("could not report job result to agentcontroller", category='workers.jobreporting', e=e)
+                        return
+                    # job.state=="OKR" #means ok reported
+                    #we don't have to keep status of local job result, has been forwarded to AC
+            self.redisworker.redis.hdel("workers:jobs",job["id"])
 
     def getJob(self, jobid, session=None):
         """
@@ -99,7 +155,7 @@ class WorkerCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd) 
         nid = j.application.whoAmI.nid
-        acc = j.clients.agentcontroller.get()
-        result = acc.executeJumpScript('jumpscale', 'workerstatus', nid, timeout=5)
+        
+        result = self.acclient.executeJumpScript('jumpscale', 'workerstatus', nid, timeout=5)
         return result
 

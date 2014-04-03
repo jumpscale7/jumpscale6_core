@@ -40,9 +40,6 @@ from JumpScale import j
         result = None, None
         if not self.enable:
             return
-
-        
-        
         
         if not self.async:
             try:
@@ -136,13 +133,7 @@ class ProcessmanagerFactory:
 
         #check we are mounted over nfs, if not raise error (only when not master)
         if j.system.net.tcpPortConnectionTest("127.0.0.1",int(j.application.config.get("grid.master.port")))==False:
-            rc,out=j.system.process.execute("mount")
-            found=False
-            for line in out.split("\n"):
-                if line.find("/opt/code/jumpscale")<>-1:
-                    found=True
-
-            if found==False:
+            if self._checkIsNFSMounted()==False:
                 raise RuntimeError("code is not mounted to gridmaster")
 
         self.loadFromAgentController()
@@ -155,6 +146,10 @@ class ProcessmanagerFactory:
         #find workers in mem
         import psutil
         nrworkers=0
+
+        self.starttime=j.base.time.getTimeEpoch()
+
+
 
         def donothing(): #not used yet
             #just to make sure we dont keep waiting for 60 sec
@@ -169,9 +164,17 @@ class ProcessmanagerFactory:
             if name2.find("python worker.py")<>-1:
                 workername=name2.split("-wn")[1].strip()
                 redis.set("workers:action:%s"%workername,"STOP")
-                # job=w.execFunction( method=donothing, _category='workers_restart', _organization='jumpscale', _timeout=600, _queue=queue, _log=False,_sync=False)                
 
         self.daemon.start()
+
+    def _checkIsNFSMounted(self,check="/opt/code/jumpscale"):
+        rc,out=j.system.process.execute("mount")
+        found=False
+        for line in out.split("\n"):
+            if line.find(check)<>-1:
+                found=True
+        return found
+
 
     def getCmdsObject(self,category):
         if self.cmds.has_key(category):
@@ -212,27 +215,34 @@ class ProcessmanagerFactory:
                 self.monObjects.__dict__[name.lower()]=factory   
 
     def loadFromAgentController(self):
-        #delete previous scripts
-        todel=["eventhandling","loghandling","monitoringobjects","processmanagercmds"]
-        for delitem in todel:
-            j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))
 
-        #import new code
-        #download all monitoring & cmd scripts
+        if self._checkIsNFSMounted(check="/opt/code/master"):
+            from IPython import embed
+            print "DEBUG NOW loadFromAgentController"
+            embed()
+            
+        else:
+            #delete previous scripts
+            todel=["eventhandling","loghandling","monitoringobjects","processmanagercmds"]
+            for delitem in todel:
+                j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))
 
-        import tarfile
-        scripttgz=self.acclient.getProcessmanagerScripts()
-        ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000))
-        j.system.fs.writeFile(ppath,scripttgz)
-        tar = tarfile.open(ppath, "r:bz2")
+            #import new code
+            #download all monitoring & cmd scripts
 
-        # tmppath="/tmp/%s"%j.base.idgenerator.generateRandomInt(1,100000)
-        for tarinfo in tar:
-            if tarinfo.isfile():
-                if tarinfo.name.find("processmanager/")==0:
-                    # dest=tarinfo.name.replace("processmanager/","")           
-                    tar.extract(tarinfo.name, j.system.fs.getParent(self.basedir))
-                    # j.system.fs.createDir(j.system.fs.getDirName(dest))
-                    # j.system.fs.moveFile("%s/%s"%(tmppath,tarinfo.name),dest)
-        # j.system.fs.removeDirTree(tmppath)
-        j.system.fs.remove(ppath)
+            import tarfile
+            scripttgz=self.acclient.getProcessmanagerScripts()
+            ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000))
+            j.system.fs.writeFile(ppath,scripttgz)
+            tar = tarfile.open(ppath, "r:bz2")
+
+            # tmppath="/tmp/%s"%j.base.idgenerator.generateRandomInt(1,100000)
+            for tarinfo in tar:
+                if tarinfo.isfile():
+                    if tarinfo.name.find("processmanager/")==0:
+                        # dest=tarinfo.name.replace("processmanager/","")           
+                        tar.extract(tarinfo.name, j.system.fs.getParent(self.basedir))
+                        # j.system.fs.createDir(j.system.fs.getDirName(dest))
+                        # j.system.fs.moveFile("%s/%s"%(tmppath,tarinfo.name),dest)
+            # j.system.fs.removeDirTree(tmppath)
+            j.system.fs.remove(ppath)

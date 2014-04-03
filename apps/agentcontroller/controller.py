@@ -105,6 +105,22 @@ class ControllerCMDS():
             if int(gid)==j.application.whoAmI.gid:
                 cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="stop",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
 
+    def reloadjumpscripts(self,session=None):
+        self.jumpscripts = {}
+        self.jumpscriptsFromKeys = {}
+        self.jumpscriptsId={}        
+        self.loadJumpscripts()
+        for item in self.osisclient.list("system","node"):
+            gid,nid=item.split("_")
+            if int(gid)==j.application.whoAmI.gid:
+                cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
+
+    def restartWorkers(self,session=None):
+        for item in self.osisclient.list("system","node"):
+            gid,nid=item.split("_")
+            if int(gid)==j.application.whoAmI.gid:
+                cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="restartWorkers",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
+
     def _setJob(self, job, osis=False,jobs=None):
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")  
@@ -533,7 +549,7 @@ for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filte
 
 cmds=daemon.daemon.cmdsInterfaces["agent"]
 cmds.loadJumpscripts()
-cmds.restartProcessmanagerWorkers()
+# cmds.restartProcessmanagerWorkers()
 
 daemon.start()
 

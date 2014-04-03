@@ -29,6 +29,7 @@ class AAProcessManagerCmds():
         
     def stop(self,session=None):
         print "STOP PROCESS MANAGER\n\n\n\n\n"
+
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         # raise RuntimeError("STOP APPLICATION 112299")
@@ -42,7 +43,25 @@ class AAProcessManagerCmds():
                 continue
             fcntl.fcntl(fd, fcntl.F_SETFD, flags | fcntl.FD_CLOEXEC)
         os.chdir("%s/apps/processmanager/"%j.dirs.baseDir)
-        os.execv(sys.executable, args)    
+        os.execv(sys.executable, args)
+
+    def reloadjumpscripts (self,session=None):
+        print "RELOAD JUMPSCRIPTS\n\n\n\n\n"
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
+
+        s=self.daemon.cmdsInterfaces["jumpscripts"]
+        s.loadJumpscripts()
+
+        s=self.daemon.cmdsInterfaces["worker"] #this will make sure workers reload
+        s.reloadWorkers()
+
+    def restartWorkers(self,session=None):
+        print "RESTART WORKERS\n\n\n\n\n"
+        if session<>None:
+            self._adminAuth(session.user,session.passwd)
+        s=self.daemon.cmdsInterfaces["worker"] #this will make sure workers reload
+        s.stopWorkers()            
 
     def _init(self):
 

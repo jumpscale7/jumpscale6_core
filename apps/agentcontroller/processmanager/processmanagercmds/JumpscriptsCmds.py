@@ -36,17 +36,11 @@ class JumpscriptsCmds():
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
-        ipaddr=j.application.config.get("grid.master.ip")        
+                
         self.masterport = j.application.config.get('grid.master.port')
-
+        ipaddr=j.application.config.get("grid.master.ip")
         self.osisclient = j.core.osis.getClient(ipaddr=ipaddr, port=self.masterport, user="root",gevent=True)
         self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript') 
-
-        agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
-
-
-        self.agentcontroller_client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=self.adminuser , passwd=self.adminpasswd, \
-            category="agent",id=agentid,timeout=36000)       
 
     def _init(self):
         self.loadJumpscripts()
@@ -54,6 +48,15 @@ class JumpscriptsCmds():
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
+
+        agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
+        ipaddr=j.application.config.get("grid.master.ip")
+
+        self.agentcontroller_client = j.servers.geventws.getClient(ipaddr, 4444, org="myorg", user=self.adminuser , passwd=self.adminpasswd, \
+            category="agent",id=agentid,timeout=60)       
+
+        self.jumpscriptsByPeriod={}
+        self.jumpscripts={}
 
         #ASK agentcontroller about known jumpscripts 
         startatboot = list()
@@ -89,6 +92,7 @@ class JumpscriptsCmds():
         self._killGreenLets()
         self._configureScheduling()
         self._startAtBoot(startatboot)
+        return "ok"
 
     ####SCHEDULING###
 
