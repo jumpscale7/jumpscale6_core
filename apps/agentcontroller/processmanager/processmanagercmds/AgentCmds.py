@@ -103,10 +103,17 @@ class AgentCmds():
             if jscript.async or job['queue']:
                 j.clients.redisworker.execJobAsync(job)
             else:
-                status, result = jscript.execute()
-                job['state'] = 'OK' if status else 'ERROR'
-                job['result'] = result
-                self.client.notifyWorkCompleted(job)
+                def run():
+                    timeout = gevent.Timeout(job['timeout'])
+                    timeout.start()
+                    try:
+                        status, result = jscript.execute()
+                        job['state'] = 'OK' if status else 'ERROR'
+                        job['result'] = result
+                        self.client.notifyWorkCompleted(job)
+                    finally:
+                        timeout.cancel()
+                gevent.spawn(run)
 
     def _killGreenLets(self,session=None):
         """
