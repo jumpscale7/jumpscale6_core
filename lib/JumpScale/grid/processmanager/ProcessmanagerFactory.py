@@ -87,7 +87,7 @@ class ProcessmanagerFactory:
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
-        j.system.process.checkstop("sudo stop processmanager","processmanager.py")
+        j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1)
         
 
     def start(self):
