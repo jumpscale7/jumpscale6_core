@@ -1556,7 +1556,7 @@ class SystemProcess:
         if len(found)<>nrtimes:
             raise RuntimeError("could not start %s, found %s nr of instances. Needed %s."%(cmd,len(found),nrtimes))
 
-    def checkstop(self,cmd,filterstr,retry=1):
+    def checkstop(self,cmd,filterstr,retry=1,nrinstances=0):
         """
         @param cmd is which command to execute to start e.g. a daemon
         @param filterstr is what to check on if its running
@@ -1565,12 +1565,16 @@ class SystemProcess:
 
         found=self.getPidsByFilter(filterstr)
         for i in range(retry):
-            if len(found)==0:
+            if len(found)==nrinstances:
                 return
             # print "START:%s"%cmd
-            self.execute(cmd)
+            self.execute(cmd,dieOnNonZeroExitCode=False)
             time.sleep(1)
             found=self.getPidsByFilter(filterstr)
+            for item in found:
+                self.kill(int(item),9)
+            found=self.getPidsByFilter(filterstr)
+                
         if len(found)<>0:
             raise RuntimeError("could not stop %s, found %s nr of instances."%(cmd,len(found)))
 
