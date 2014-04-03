@@ -137,9 +137,9 @@ class JPackageObject():
             j.system.fs.removeDirTree(path)
             # print "remove:%s"%path
 
-        j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
+        # j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
         # j.system.fs.remove("%s/actions/code.link.py"%self.getPathMetadata())
-        j.system.fs.remove("%s/actions/upload.py"%self.getPathMetadata())
+        # j.system.fs.remove("%s/actions/upload.py"%self.getPathMetadata())
         
 
         # if j.system.fs.exists(self.getPathMetadata()):

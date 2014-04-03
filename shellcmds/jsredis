@@ -1,0 +1,46 @@
+#!/usr/bin/env jspython
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jsredis")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['workerwatchdog','heartbeat','keys'], help='Command to perform')
+
+opts = parser.parse_args()
+
+import JumpScale.baselib.redis
+
+redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+
+def timeago(t):
+    t=float(t)
+    ago=j.base.time.getTimeEpoch()-int(t)
+    if ago>3600:
+        return "%sh"%round(ago/3600,1)
+    if ago>30:
+        return "%sm"%round(ago/60,1)
+    return "%ss"%ago
+
+
+if opts.action =='workerwatchdog':
+    print "hget:workers:watchdog"
+    workers = redis.hgetall("workers:watchdog")
+    workers2=zip(workers[0::2], workers[1::2])
+    for workername, last in workers2:
+        print "%-20s %s"%(workername,timeago(last))
+
+if opts.action =='keys':
+    print "\n".join(redis.keys())
+    
+if opts.action =='heartbeat':
+    print "hget:healthcheck:lastcheck"
+    items=redis.hgetall("healthcheck:lastcheck")
+    items2=zip(items[0::2], items[1::2])
+    for name, last in items2:
+        print "%-40s %s"%(name,timeago(last))
+    
+
+j.application.stop()

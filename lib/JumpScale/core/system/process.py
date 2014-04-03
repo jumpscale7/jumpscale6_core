@@ -1523,6 +1523,58 @@ class SystemProcess:
 
     kill = staticmethod(kill)
 
+    def getPidsByFilter(self,filterstr):
+        cmd="ps ax | grep %s"%filterstr
+        rcode,out=j.system.process.execute(cmd)
+        # print out
+        found=[]
+        for line in out.split("\n"):
+            if line.find("grep")<>-1 or line.strip()=="":
+                continue
+            if line.strip()<>"":
+                if line.find(filterstr)<>-1:
+                    line=line.strip()
+                    # print "found pidline:%s"%line
+                    found.append(int(line.split(" ")[0]))   
+        return found
+
+    def checkstart(self,cmd,filterstr,nrtimes=1,retry=1):
+        """
+        @param cmd is which command to execute to start e.g. a daemon
+        @param filterstr is what to check on if its running
+        @param nrtimes is how many processes need to run
+        """
+
+        found=self.getPidsByFilter(filterstr)
+        for i in range(retry):
+            if len(found)==nrtimes:
+                return
+            # print "START:%s"%cmd
+            self.execute(cmd)
+            time.sleep(1)
+            found=self.getPidsByFilter(filterstr)
+        if len(found)<>nrtimes:
+            raise RuntimeError("could not start %s, found %s nr of instances. Needed %s."%(cmd,len(found),nrtimes))
+
+    def checkstop(self,cmd,filterstr,retry=1):
+        """
+        @param cmd is which command to execute to start e.g. a daemon
+        @param filterstr is what to check on if its running
+        @param nrtimes is how many processes need to run
+        """
+
+        found=self.getPidsByFilter(filterstr)
+        for i in range(retry):
+            if len(found)==0:
+                return
+            # print "START:%s"%cmd
+            self.execute(cmd)
+            time.sleep(1)
+            found=self.getPidsByFilter(filterstr)
+        if len(found)<>0:
+            raise RuntimeError("could not stop %s, found %s nr of instances."%(cmd,len(found)))
+
+
     def getProcessPid(self, process):
         if j.system.platformtype.isUnix():
             # Need to set $COLUMNS such that we can grep full commandline
