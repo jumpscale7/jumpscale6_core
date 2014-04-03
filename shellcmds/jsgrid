@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs',\
+parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'deletenode',\
         'restartprocessmgrs','reloadjumpscripts','restartWorkers'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
@@ -17,6 +17,7 @@ parser.add_argument('--force',required=False, action='store_true',help='dont ask
 parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
 parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
 parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
+parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='used with deletenode, ex: -nid=1(note the = sign)')
 
 
 #check redis is there if not try to start
@@ -142,7 +143,29 @@ if opts.action == 'purgelogs':
     if query:
         result = esclient.delete_by_query(index='system_log', query=query, doc_type='json')
         if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
-            print 'purgelogs executed successfullly'
+            print 'purgelogs executed successfully'
+
+
+#################DELETE NODE####################################
+if opts.action == 'deletenode':
+    import JumpScale.baselib.elasticsearch
+
+    esclient = j.clients.elasticsearch.get()
+    query = {"term":{"nid":opts.nid}}
+    
+    result = esclient.delete_by_query(index='system_node', doc_type='json', query={"term":{"id":opts.nid}})
+    if result['ok']:
+        print 'Node %s deleted successfully' % (opts.nid)
+    else:
+        print 'Node %s deletion failed' % (opts.nid)
+
+    indices = esclient.get_mapping().keys()
+    for index in indices:
+        result = esclient.delete_by_query(index=index, doc_type='json', query=query)
+        if not result['ok']:
+            print '%s for node %s deleted successfully' % (index.replace('system_', ''), opts.nid)
+
+
 
 
 j.application.stop()
