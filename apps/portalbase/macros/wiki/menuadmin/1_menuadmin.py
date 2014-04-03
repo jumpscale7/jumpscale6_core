@@ -25,11 +25,18 @@ Files:/system/files?space=$$space
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
 Reload:javascript:$.ajax({'url': '/system/ReloadSpace?name=$$space'}).done(function(){location.reload()});void(0);
-ReloadAll:javascript:(function loadAll() {$.ajax({'url': '/system/ReloadApplication'});(function checkSpaceIsUp(trials) {if (trials <= 0) return;setTimeout(function() {$.ajax({'url': '/system/'}).done(function(){location.reload();console.log('Reloaded');}).error(function(){checkSpaceIsUp(trials - 1)});}, 1000);})(10);})();void(0);
+ReloadAll:javascript:reloadAll();void 0;
+Pull latest changes & update:javascript:pullUpdate('$$space');void 0;
 --------------
 """
     C+=spacestxt
     C+='}}'
+
+    C+='''
+    {{htmlhead:
+    <script type="text/javascript" src="/lib/adminmenu/adminmenu.js"></script>
+    }}
+    '''
 
 #was inside
 #ShowLogs:/system/ShowSpaceAccessLog?space=$$space
