@@ -27,7 +27,7 @@ def action():
 
     rstatus, errors = j.core.grid.healthchecker.checkRedis(nodeid)
     for data in [rstatus, errors]:
-        if len(data) > 0:
+        if len(data) > 0 and nodeid in rstatus:
             rstatus = rstatus[nodeid]['redis']
             for port, stat in rstatus.iteritems():
                 if not stat['alive']:
