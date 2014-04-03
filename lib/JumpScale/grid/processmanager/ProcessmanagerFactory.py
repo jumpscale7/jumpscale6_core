@@ -85,6 +85,11 @@ class ProcessmanagerFactory:
         self.basedir="%s/apps/processmanager"%j.dirs.baseDir
         j.system.platform.psutil=psutil
 
+        #check we are not running yet, if so kill the other guy
+        #make sure no service running with processmanager
+        j.system.process.checkstop("sudo stop processmanager","processmanager.py")
+        
+
     def start(self):
         #check redis is there if not try to start
         if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
@@ -128,6 +133,17 @@ class ProcessmanagerFactory:
                 msg="Cannot connect to osis or agentcontroller on %s, will retry in 60 sec."%(masterip)
                 j.events.opserror(msg, category='processmanager.startup', e=e)
                 time.sleep(60)
+
+        #check we are mounted over nfs, if not raise error (only when not master)
+        if j.system.net.tcpPortConnectionTest("127.0.0.1",int(j.application.config.get("grid.master.port")))==False:
+            rc,out=j.system.process.execute("mount")
+            found=False
+            for line in out.split("\n"):
+                if line.find("/opt/code/jumpscale")<>-1:
+                    found=True
+
+            if found==False:
+                raise RuntimeError("code is not mounted to gridmaster")
 
         self.loadFromAgentController()
         self.daemon = j.servers.geventws.getServer(port=4445)
