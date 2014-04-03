@@ -101,6 +101,11 @@ class Worker(object):
                     self.redis.delete("workers:action:%s"%self.name)
                     j.application.stop()
 
+                if self.redis.get("workers:action:%s"%self.name)=="RELOAD":
+                    print "RELOAD ASKED"
+                    self.redis.delete("workers:action:%s"%self.name)
+                    self.actions={}
+
             self.redis.hset("workers:watchdog",self.name,int(time.time()))
 
             try:
@@ -162,7 +167,7 @@ class Worker(object):
                         self.notifyWorkCompleted(job)
                         continue
 
-                self.actions[job.jscriptid]=(action,jscript)
+                    self.actions[job.jscriptid]=(action,jscript)
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
