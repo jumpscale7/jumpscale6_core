@@ -12,7 +12,8 @@ category = "monitoring.machine"
 period = 20 #always in sec
 order = 1
 enable=True
-async=False
+async=True
+queue='process'
 
 roles = ["grid.node.vmachine"]
 
@@ -37,6 +38,9 @@ except Exception, e:
 def action():
     if not con:
         return
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
 
     domains = con.listAllDomains()
     for domain in domains:

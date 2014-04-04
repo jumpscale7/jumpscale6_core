@@ -34,8 +34,6 @@ class AgentCmds():
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
-        self.osisclient = j.core.osis.getClient(ipaddr=self.serverip, port=self.masterport, user="root",gevent=True)
-        # self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript') 
 
         self.client = j.clients.agentcontroller.get(agentControllerIP=self.serverip)
 
