@@ -23,6 +23,10 @@ def main(j, args, params, tags, tasklet):
             if 'workers' in data.get(nidstr, dict()):
                 wdata = data[nidstr].get('workers', dict())
                 for worker, stat in wdata.iteritems():
+                    if 'mem' not in stat:
+                        status = '{color:orange}UNKNOWN{color}'
+                        out.append('|%s|%s %%|%s|%s|%s|' % (worker, '0', '0', status, 'UKNOWN'))
+                        continue
                     size, unit = stat['mem'].split(' ')
                     size = j.tools.units.bytes.toSize(float(size), unit.replace('B', ''), 'M')
                     if size > 100:
