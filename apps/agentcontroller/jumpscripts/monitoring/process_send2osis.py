@@ -11,11 +11,14 @@ version = "1.0"
 category = "process.send2osis"
 period = 300 #always in sec
 enable=True
-async=False
+async=True
+queue='process'
 
 roles = ["grid.node.process"]
 
 def action():
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
     for process in j.core.processmanager.monObjects.processobject.monitorobjects.itervalues():
         process.send2osis()
-        

@@ -14,11 +14,15 @@ category = "disk.monitoring"
 period = 300 #always in sec
 order = 1
 enable=True
-async=False
+async=True
+queue='process'
 
 roles = ["grid.node.disk"]
 
 def action():
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
 
     psutil=j.system.platform.psutil
 
@@ -52,7 +56,6 @@ def action():
         if counters.has_key(path):
             counter=counters[path]
             read_count, write_count, read_bytes, write_bytes, read_time, write_time=counter
-
             cacheobj=aggregate(cacheobj,disk_key,"time_read",read_time,avg=True,ttype="D",percent=True)
             cacheobj=aggregate(cacheobj,disk_key,"time_write",write_time,avg=True,ttype="D",percent=True)
             cacheobj=aggregate(cacheobj,disk_key,"count_read",read_count,avg=True,ttype="D",percent=False)
@@ -65,8 +68,7 @@ def action():
 
             write_bytes=int(round(write_bytes/1024,0))            
 
-            if disk.free is not None:
-                cacheobj=aggregate(cacheobj,disk_key,"space_free_mb",disk.free,avg=True,ttype="N",percent=False)
+            cacheobj=aggregate(cacheobj,disk_key,"space_free_mb",disk.free,avg=True,ttype="N",percent=False)
             cacheobj=aggregate(cacheobj,disk_key,"space_used_mb",disk.size-disk.free,avg=True,ttype="N",percent=False)
             cacheobj=aggregate(cacheobj,disk_key,"space_percent",round((float(disk.size-disk.free)/float(disk.size)),2),avg=True,ttype="N",percent=True)
 

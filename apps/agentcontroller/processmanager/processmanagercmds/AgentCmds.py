@@ -34,8 +34,6 @@ class AgentCmds():
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
-        self.osisclient = j.core.osis.getClient(ipaddr=self.serverip, port=self.masterport, user="root",gevent=True)
-        # self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript') 
 
         self.client = j.clients.agentcontroller.get(agentControllerIP=self.serverip)
 
@@ -103,10 +101,17 @@ class AgentCmds():
             if jscript.async or job['queue']:
                 j.clients.redisworker.execJobAsync(job)
             else:
-                status, result = jscript.execute()
-                job['state'] = 'OK' if status else 'ERROR'
-                job['result'] = result
-                self.client.notifyWorkCompleted(job)
+                def run():
+                    timeout = gevent.Timeout(job['timeout'])
+                    timeout.start()
+                    try:
+                        status, result = jscript.execute()
+                        job['state'] = 'OK' if status else 'ERROR'
+                        job['result'] = result
+                        self.client.notifyWorkCompleted(job)
+                    finally:
+                        timeout.cancel()
+                gevent.spawn(run)
 
     def _killGreenLets(self,session=None):
         """

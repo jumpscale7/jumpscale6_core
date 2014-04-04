@@ -67,6 +67,4 @@ class mainclass(OSISStore):
     def list(self,**args):
         j.errorconditionhandler.raiseBug(message="osis method list is not relevant for logger namespace",category="osis.notimplemented")
 
-    def removeFromIndex(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method removeFromIndex is not relevant for logger namespace",category="osis.notimplemented")
 

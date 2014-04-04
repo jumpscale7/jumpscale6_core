@@ -1,4 +1,6 @@
 from JumpScale import j
+import JumpScale.grid.osis
+import JumpScale.baselib.stataggregator
 import sys
 import psutil
 import importlib
@@ -52,11 +54,14 @@ from JumpScale import j
                 eco.tags+=" jsorganization:%s"%self.organization
                 eco.tags+=" jsname:%s"%self.name
                 j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                result = False, eco.guid
+                eco.tb = None
+                eco.type = str(eco.type)
+                result = False, eco.__dict__
         else:
             # self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
             #NO LONGER USE redisq, now use our own queuing mechanism
-            j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue="default",_log=self.log,_sync=False)
+            queue = getattr(self, 'queue', 'default')
+            j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue=queue,_log=self.log,_sync=False)
 
         self.lastrun = time.time()
         print "ok:%s"%self.name
@@ -65,8 +70,17 @@ from JumpScale import j
 class DummyDaemon():
     def __init__(self):
         self.cmdsInterfaces={}
+        self._osis = None
+
     def _adminAuth(self,user,passwd):
         raise RuntimeError("permission denied")
+
+    @property
+    def osis(self):
+        if not self._osis:
+            masterip=j.application.config.get("grid.master.ip")
+            self._osis = j.core.osis.getClient(masterip, user='root')
+        return self._osis
 
     def addCMDsInterface(self, cmdInterfaceClass, category):
         if not self.cmdsInterfaces.has_key(category):
@@ -94,8 +108,7 @@ class ProcessmanagerFactory:
             j.packages.findNewest(name="redis").start()
 
         def checkosis():
-            masterip=j.application.config.get("grid.master.ip")
-            osis = j.core.osis.getClient(masterip, user='root')
+            self.daemon.osis
 
         def checkagentcontroller():
             masterip=j.application.config.get("grid.master.ip")
@@ -137,7 +150,10 @@ class ProcessmanagerFactory:
                 raise RuntimeError("code is not mounted to gridmaster")
 
         self.loadFromAgentController()
+        osis = self.daemon.osis
         self.daemon = j.servers.geventws.getServer(port=4445)
+        self.daemon.osis = osis
+        self.daemon.daemon.osis = osis
         self.loadCmds()
 
         #ask all running workers to restart
@@ -183,7 +199,8 @@ class ProcessmanagerFactory:
             raise RuntimeError("Could not find cmds with category:%s"%category)
 
     def loadCmds(self):
-        sys.path.insert(0, self.basedir)
+        if self.basedir not in sys.path:
+            sys.path.insert(0, self.basedir)
         cmds=j.system.fs.listFilesInDir(j.system.fs.joinPaths(self.basedir,"processmanagercmds"),filter="*.py")
         cmds.sort()
         for item in cmds:
@@ -204,6 +221,8 @@ class ProcessmanagerFactory:
                 self.cmds.__dict__[key]._init()
 
     def loadMonitorObjectTypes(self):
+        if self.basedir not in sys.path:
+            sys.path.insert(0, self.basedir)
         self.monObjects=Dummy()
         for item in j.system.fs.listFilesInDir(j.system.fs.joinPaths(self.basedir,"monitoringobjects"),filter="*.py"):
             name=j.system.fs.getBaseName(item).replace(".py","")

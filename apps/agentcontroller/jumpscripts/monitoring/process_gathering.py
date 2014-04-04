@@ -11,12 +11,17 @@ license = "bsd"
 version = "1.0"
 category = "info.gather.process"
 period = 120 #always in sec
-enable=False
-async=False
+enable=True
+async=True
+queue='process'
 
 roles = ["grid.node.process"]
 
 def action():
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
+
     import time
     import psutil
     result={}
@@ -140,10 +145,10 @@ def action():
             childcache = j.core.processmanager.monObjects.processobject.get(id=childpid)
             result[childpid]=childcache
             loadFromSystemProcessInfo(childpid,childcache, childpid)
-            if childpid not in j.processmanager.childrenPidsFound:
+            if childpid not in j.core.processmanager.childrenPidsFound:
                 if childpid not in cacheobj.children:
                     cacheobj.children.append(childcache)
-                j.processmanager.childrenPidsFound[int(childpid)]=True
+                j.core.processmanager.childrenPidsFound[int(childpid)]=True
 
     #walk over startupmanager processes (make sure we don't double count)
     for sprocess in j.tools.startupmanager.getProcessDefs():

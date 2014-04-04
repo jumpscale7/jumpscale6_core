@@ -23,10 +23,7 @@ class AAProcessManagerCmds():
 
         if daemon<>None:
             self.daemon._adminAuth=self._adminAuth
-            masterip=j.application.config.get("grid.master.ip")
-            self.daemon.osis = j.core.osis.getClient(masterip, user='root')
-        
-        
+
     def stop(self,session=None):
         print "STOP PROCESS MANAGER\n\n\n\n\n"
 
