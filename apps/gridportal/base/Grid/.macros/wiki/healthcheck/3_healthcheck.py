@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
         result = result or dict()
         for _, stats in result.iteritems():
             stats = stats or dict()
-            times = [float(x[1]) if x else lastchecked for x in stats.values()]
+            times = [float(x[1]) if isinstance(x, list) and len(x) >= 2 else lastchecked for x in stats.values()]
             times.append(lastchecked)
             times.sort()
             lastchecked = times[0]
