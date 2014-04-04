@@ -11,7 +11,7 @@ license = "bsd"
 version = "1.0"
 category = "info.gather.process"
 period = 120 #always in sec
-enable=True
+enable=False
 async=False
 
 roles = ["grid.node.process"]

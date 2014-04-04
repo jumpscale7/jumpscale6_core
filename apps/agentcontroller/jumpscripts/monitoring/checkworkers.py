@@ -9,7 +9,7 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "system.checkworkers"
-period = 5
+period = 10
 enable=True
 startatboot=False
 async=False
@@ -31,7 +31,9 @@ def action():
 
     nrworkersrequired=len(foundworkers.keys())
 
-    j.system.process.checkstart("jpackage start -n workers","worker.py",nrworkersrequired,retry=3)
+    nrworkersrequired=5 #for now fix it, our way of knowing how many is not reliable
+
+    j.system.process.checkstart("jpackage start -n workers","worker.py",nrworkersrequired,retry=1)
 
 
 

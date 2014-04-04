@@ -167,7 +167,7 @@ class ProcessmanagerFactory:
 
         self.daemon.start()
 
-    def _checkIsNFSMounted(self,check="/opt/code/jumpscale"):
+    def _checkIsNFSMounted(self,check="/opt/code"):
         rc,out=j.system.process.execute("mount")
         found=False
         for line in out.split("\n"):
