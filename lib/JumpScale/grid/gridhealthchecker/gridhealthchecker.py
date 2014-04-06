@@ -46,7 +46,7 @@ class GridHealthChecker(object):
         self._status[nid].setdefault(category, {})
         self._status[nid][category].update(result)
 
-    def _parallize(self, functionname, clean=False, category=""):
+    def _parallelize(self, functionname, clean=False, category=""):
         greens = list()
         for nid in self._runningnids:
             greenlet = gevent.Greenlet(functionname, nid, clean)
@@ -60,7 +60,7 @@ class GridHealthChecker(object):
                 results, errors = green.value
             else:
                 results = list()
-                errors = [(green.nid, str(green.error), category)]
+                errors = [(green.nid, {'message': str(green.exception), 'state': 'UNKOWN'}, category)]
 
             self._returnResults(results, errors)
 
@@ -150,6 +150,8 @@ class GridHealthChecker(object):
         eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=5)
         if eshealth['state'] == 'TIMEOUT':
             self._addError(self.masternid, {'state': 'TIMEOUT'}, 'elasticsearch')
+        elif eshealth['state'] != 'OK':
+            self._addError(self.masternid, {'state': 'UNKOWN'}, 'elasticsearch')
         else:
             eshealth = eshealth['result']
             if eshealth==None:
@@ -174,11 +176,16 @@ class GridHealthChecker(object):
         print "CHECK REDIS"
         if clean:
             self._clean()
-        self._parallize(self.checkRedis, False, 'redis')
+        self._parallelize(self.checkRedis, False, 'redis')
         if self._tostdout:
             self.printStatus('redis')
         if clean:
             return self._status, self._errors
+
+    def getWikiStatus(self, status):
+        colormap = {'RUNNING': 'green', 'HALTED': 'red', 'UNKOWN': 'orange',
+                    'BROKEN': 'red', 'OK': 'green', 'NOT OK': 'red'}
+        return '{color:%s}*%s*{color}' % (colormap.get(status, 'orange'), status)
 
     def checkRedis(self, nid, clean=True):
         if clean:
@@ -186,14 +193,16 @@ class GridHealthChecker(object):
 
         results = list()
         errors = list()
-        redis = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=5)['result']
-        if not redis:
-            errors.append((nid, {-1: {'alive': 'UNKOWN', 'memory_usage': 0}}, 'redis'))
+        result = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=5)
+        redis = result['result']
+        if result['state'] != 'OK' or not redis:
+            errors.append((nid, {-1: {'state': 'UNKOWN', 'memory_usage': 0}}, 'redis'))
             redis = dict()
+
         for port, result in redis.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(result['memory_usage'])
             result['memory_usage'] = '%.2f %sB' % (size, unit)
-            if result['alive']:
+            if result['state'] == 'RUNNING':
                 results.append((nid, {port: result}, 'redis'))
             else:
                 errors.append((nid, {port: result}, 'redis'))
@@ -205,7 +214,7 @@ class GridHealthChecker(object):
         if clean:
             self._clean()
         print "CHECK WORKERS"
-        self._parallize(self.checkWorkers, False, 'workers')
+        self._parallelize(self.checkWorkers, False, 'workers')
         if self._tostdout:
             self.printStatus('workers')
         if clean:
@@ -216,14 +225,15 @@ class GridHealthChecker(object):
             self._clean()
         results = list()
         errors = list()
-        workers = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid, timeout=5)['result']
-        if not workers:
-            errors.append((nid, {}, 'workers'))
+        result = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid, timeout=5)
+        workers = result['result']
+        if result['state'] != 'OK' or not workers:
+            errors.append((nid, {'state':'UNKOWN', 'mem': '0 B'}, 'workers'))
             workers = dict()
         for worker, stats in workers.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
             stats['mem'] = '%.2f %sB' % (size, unit)
-            if stats['status']:
+            if stats['state'] == 'RUNNING':
                 results.append((nid, {worker: stats}, 'workers'))
             else:
                 errors.append((nid, {worker: stats}, 'workers'))
@@ -238,9 +248,9 @@ class GridHealthChecker(object):
         print "CHECK PROCESSMANAGERS"
         haltednodes = set(self._nids)-set(self._runningnids)
         for nid in haltednodes:
-            self._addError(nid, {nid: False}, 'processmanager')
+            self._addError(nid, {'state': 'HALTED'}, 'processmanager')
         for nid in self._runningnids:
-            self._addResult(nid, {nid: True}, 'processmanager')
+            self._addResult(nid, {'state': 'RUNNING'}, 'processmanager')
         if self._tostdout:
             self.printStatus('processmanager')
         if clean:
@@ -257,11 +267,11 @@ class GridHealthChecker(object):
             heartbeat = self._heartbeatcl.get('%s_%s' % (gid, nid))
             lastchecked = heartbeat.lastcheck
             if  j.base.time.getEpochAgo('-2m') < lastchecked:
-                self._addResult(nid, {nid: True}, 'processmanager')
+                self._addResult(nid, {'state': 'RUNNING'}, 'processmanager')
             else:
-                self._addError(nid, {nid: False}, 'processmanager')
+                self._addError(nid, {'state': 'HALTED'}, 'processmanager')
         else:
-            self._addError(nid, {nid: False}, 'processmanager')
+            self._addError(nid, {'state': 'UNKOWN'}, 'processmanager')
         if clean:
             return self._status, self._errors
 
@@ -269,7 +279,7 @@ class GridHealthChecker(object):
         if clean:
             self._clean()
         print "CHECK DISKS"
-        self._parallize(self.checkDisks, False, 'disks')
+        self._parallelize(self.checkDisks, False, 'disks')
         if self._tostdout:
             self.printStatus('disks')
         if clean:
@@ -280,14 +290,15 @@ class GridHealthChecker(object):
             self._clean()
         results = list()
         errors = list()
-        disks = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=5)['result']
-        if not disks:
-            results.append((nid, {}, 'disks'))
+        result = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=5)
+        disks = result['result']
+        if result['state'] != 'OK' or not disks:
+            errors.append((nid, {}, 'disks'))
             disks = dict()
         for path, disk in disks.iteritems():
             if (disk['free'] and disk['size']) and (disk['free'] / float(disk['size'])) * 100 < 10:
                 disk['message'] = 'FREE SPACE LESS THAN 10%% on disk %s' % path
-                disk['status'] = False
+                disk['state'] = 'NOT OK'
                 errors.append((nid, {path: disk}, 'disks'))
             else:
                 if disk['free']:
@@ -296,7 +307,7 @@ class GridHealthChecker(object):
 
                 else:
                     disk['message'] = 'Disk is not mounted, Info is not available'
-                disk['status'] = True
+                disk['state'] = 'OK'
                 results.append((nid, {path: disk}, 'disks'))
         if clean:
             return self._returnResults(results, errors)

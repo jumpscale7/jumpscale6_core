@@ -30,9 +30,9 @@ def main(j, args, params, tags, tasklet):
                     size, unit = stat['mem'].split(' ')
                     size = j.tools.units.bytes.toSize(float(size), unit.replace('B', ''), 'M')
                     if size > 100:
-                        status = '{color:orange}*RUNNING**{color}' if stat['status'] else '{color:red}*HALTED*{color}'
+                        status = '{color:orange}*RUNNING**{color}'
                     else:
-                        status = '{color:green}*RUNNING*{color}' if stat['status'] else '{color:red}*HALTED*{color}'
+                        status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
                     out.append('|%s|%s %%|%s|%s|%s|' % (worker, stat['cpu'], stat['mem'], status, j.base.time.epoch2HRDateTime(stat['lastactive'])))
 
     out = '\n'.join(out)

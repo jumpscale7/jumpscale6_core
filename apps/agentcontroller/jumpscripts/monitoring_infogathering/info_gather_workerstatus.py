@@ -18,18 +18,21 @@ roles = ["*"]
 
 def action():
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
-    workers = {'worker_default_0': '-2m', 'worker_hypervisor_0': '-10m', 'worker_io_0': '-2h', 'worker_default_1': '-2m'}
+    timemap = {'default': '-2m', 'io': '-2h', 'hypervisor': '-10m'}
     result = dict()
-    for worker, timeout in workers.iteritems():
-        lastactive = int(rediscl.hget('workers:watchdog', worker))
+    prefix = 'workers__worker_'
+    workers = [ x[len(prefix):] for x in j.tools.startupmanager.listProcesses() if x.startswith(prefix) ]
+    for worker in workers:
+        timeout = timemap.get(worker.split('_')[0])
+        lastactive = int(rediscl.hget('workers:watchdog', 'worker_%s' % worker))
         pids = j.system.process.getProcessPid(worker)
-        stats = {'cpu': 0, 'mem': 0, 'lastactive': lastactive, 'status': False}
+        stats = {'cpu': 0, 'mem': 0, 'lastactive': lastactive, 'state': 'HALTED'}
         for pid in pids:
             processobj = j.system.process.getProcessObject(pid)
             stats['cpu'] += processobj.get_cpu_percent()
             stats['mem'] += processobj.get_memory_info()[0]
         if j.base.time.getEpochAgo(timeout) < lastactive and pids:
-            stats['status'] = True
+            stats['state'] = 'RUNNING'
         result[worker] = stats
     return result
     

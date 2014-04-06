@@ -22,12 +22,7 @@ def main(j, args, params, tags, tasklet):
             if 'redis' in data.get(nidstr, dict()):
                 rnstatus = data[nidstr].get('redis', dict())
                 for port, stat in rnstatus.iteritems():
-                    if stat['alive'] is True:
-                        state = '{color:green}*RUNNING*{color}'
-                    elif stat['alive'] is False:
-                        state = '{color:red}HALTED*{color}'
-                    else:
-                        state = '{color:orange}UNKOWN{color}'
+                    state = j.core.grid.healthchecker.getWikiStatus(stat['state'])
                     out.append('|%s|%s|%s|' % (port, state, stat['memory_usage']))
 
     out = '\n'.join(out)

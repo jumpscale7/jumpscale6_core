@@ -19,14 +19,19 @@ period=0
 
 def action():
     import JumpScale.baselib.redis
-    ports = (7767, 7768, 7769)
+    ports = [7767, 7768]
+    masterip = j.application.config.get('grid.master.ip')
+    if j.system.net.isIpLocal(masterip):
+        ports.append(7769)
     result = dict()
     for port in ports:
         pids = j.system.process.getPidsByPort(port)
         if not pids:
-            continue
-        rproc = j.system.process.getProcessObject(pids[0])
-        rcl = j.clients.redis.getRedisClient('127.0.0.1', port)
-        result[port] = {'alive': rcl.ping(), 'memory_usage': rproc.get_memory_info()[0]}
+            result[port] = {'state': 'HALTED', 'memory_usage': 0}
+        else:
+            rproc = j.system.process.getProcessObject(pids[0])
+            rcl = j.clients.redis.getRedisClient('127.0.0.1', port)
+            state = 'RUNNING' if rcl.ping() else 'BROKEN'
+            result[port] = {'state': state, 'memory_usage': rproc.get_memory_info()[0]}
 
     return result

@@ -23,13 +23,13 @@ def main(j, args, params, tags, tasklet):
             else:
                 runningstring = '{color:green}*RUNNING*{color}'
             status = checks.get('processmanager', dict())
-            link = '[Details|nodestatus?nid=%s]' % nid if status.get(nid, False) else ''
+            link = '[Details|nodestatus?nid=%s]' % nid if status['state'] == 'RUNNING' else ''
             out.append('|[%s|node?id=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker._nodenames.get(int(nid), 'UNKNOWN'), runningstring, link))
 
     if len(errors) > 0:
         for nid, checks in errors.iteritems():
             status = checks.get('processmanager', dict())
-            if status and not status.get(nid, False):
+            if status and status['state'] != 'RUNNING':
                 out.append("|[%s|node?id=%s]|%s|{color:red}*HALTED*{color}| |" % (nid, nid, j.core.grid.healthchecker._nodenames.get(int(nid), 'UNKNOWN')))
 
     out = '\n'.join(out)
