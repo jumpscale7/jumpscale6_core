@@ -174,7 +174,7 @@ class Daemon(object):
                         category2=category.replace("processmanager_","")
                         scriptid="%s_%s" % (category2, cmd)
                         job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,jscriptid=scriptid,cmdname=cmd,args=data,queue="internal",log=False,timeout=60,roles=[],session=session)
-                        jobqueue = cmds._getJobQueue(job["id"])
+                        jobqueue = cmds._getJobQueue(job["guid"])
                         jobr=jobqueue.get(True,60)
                         if not jobr:
                             eco = j.errorconditionhandler.getErrorConditionObject(msg="Command %.%s with args: %s timeout" % (category2, cmd, data))

@@ -126,7 +126,7 @@ class ControllerCMDS():
             raise RuntimeError("job needs to be dict")  
         if jobs==None:
             jobs=json.dumps(job)
-        self.redis.hset("jobs:%s"%job["gid"],job["id"],jobs)
+        self.redis.hset("jobs:%s"%job["gid"],job["guid"],jobs)
         if osis:
             # we need to make sure that job['resul'] is always of the same type hence we serialize
             # otherwise elasticsearch will have issues
@@ -135,8 +135,8 @@ class ControllerCMDS():
                 job['result'] = json.dumps(job['result'])
             self.jobclient.set(job)
 
-    def _getJobFromRedis(self, gid, jobid):
-        jobdict = json.loads(self.redis.hget("jobs:%s"%gid, jobid))
+    def _getJobFromRedis(self, gid, jobguid):
+        jobdict = json.loads(self.redis.hget("jobs:%s"%gid, jobguid))
         return jobdict
         # return self.jobclient.new(ddict=jobdict)
 
@@ -153,9 +153,9 @@ class ControllerCMDS():
         queuename = "commands:queue:%s:%s" % (gid, nid)
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=True)
 
-    def _getJobQueue(self, jobid):
-        queuename = "jobqueue:%s" % jobid
-        self._log("get job queue for job:%s"%(jobid))
+    def _getJobQueue(self, jobguid):
+        queuename = "jobqueue:%s" % jobguid
+        self._log("get job queue for job:%s"%(jobguid))
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=False)
         
     def _setRole2Agent(self,role,agent):
@@ -337,17 +337,17 @@ class ControllerCMDS():
         else:
             return noWork()
 
-    def waitJumpscript(self,jobid=None,job=None,session=None):
+    def waitJumpscript(self,jobguid=None,job=None,session=None):
         """
         @return job as dict
         """
         if job==None:
-            if jobid==None:
+            if jobguid==None:
                 raise RuntimeError("job or jobid need to be given as argument")
-            job = self._getJobFromRedis(session.gid, jobid)
+            job = self._getJobFromRedis(session.gid, jobguid)
         if job['state'] != 'SCHEDULED':
             return job
-        q = self._getJobQueue(job["id"])
+        q = self._getJobQueue(job["guid"])
         if job["timeout"]<>0:
             res = q.fetch(timeout=job["timeout"])
         else:
@@ -387,7 +387,7 @@ class ControllerCMDS():
             raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         self._setJob(job, osis=True)
-        q=self._getJobQueue(job["id"])
+        q=self._getJobQueue(job["guid"])
         q.put(json.dumps(job))
 
         #NO PARENT SUPPORT YET
