@@ -20,6 +20,7 @@ roles = ["*"]
 def action():
     import JumpScale.grid.gridhealthchecker
     import JumpScale.baselib.redis
+    import time
     import ujson
 
     nodeid = j.application.whoAmI.nid
@@ -28,6 +29,7 @@ def action():
         results, errors = j.core.grid.healthchecker.runAll()
         rediscl.hset('healthcheck:monitoring', 'results', ujson.dumps(results))
         rediscl.hset('healthcheck:monitoring', 'errors', ujson.dumps(errors))
+        rediscl.hset('healthcheck:monitoring', 'lastcheck', time.time())
 
         if errors:
             for nid, categories in errors.iteritems():

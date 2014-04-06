@@ -301,36 +301,3 @@ class GridHealthChecker(object):
         if clean:
             return self._returnResults(results, errors)
         return results, errors
-
-    def checkStatusAllNodes(self, clean=True):
-        if clean:
-            self._clean()
-
-        self._parallize(self.checkStatus, False, 'healthchecker')
-
-        haltednodes = set(self._nids)-set(self._runningnids)
-        for nid in haltednodes:
-            self._addError(nid, {'processmanager': False}, 'healthchecker')
-
-        if clean:
-            return self._status, self._errors
-
-    def checkStatus(self, nid, clean=True):
-        if clean:
-            self._clean()
-        stats = self._client.executeJumpScript('jumpscale', 'info_gather_healthcheck_results', nid=nid, timeout=5)['result'] or dict()
-
-        results = list()
-        errors = list()
-
-        for check, state in stats.iteritems():
-            if state:
-                if state[0] == False:
-                    errors.append((nid, {check: state}, 'healthchecker'))
-                else:
-                    results.append((nid, {check: state}, 'healthchecker'))
-            else:
-                results.append((nid, {check: None}, 'healthchecker'))
-        if clean:
-            return self._returnResults(results, errors)
-        return results, errors

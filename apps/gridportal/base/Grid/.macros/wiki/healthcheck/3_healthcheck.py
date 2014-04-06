@@ -1,4 +1,6 @@
 import JumpScale.grid.gridhealthchecker
+import JumpScale.baselib.redis
+import ujson
 import datetime
 import time
 
@@ -6,33 +8,28 @@ def main(j, args, params, tags, tasklet):
     doc = args.doc
     
     out = list()
-    results, errors = j.core.grid.healthchecker.checkStatusAllNodes()
-    results = results or dict()
-    errors = errors or dict()
+    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+
+    out.append('||Node ID||Node Name||Process Manager Status||Details||')
+    data = rediscl.hget('healthcheck:monitoring', 'results')
+    errors = rediscl.hget('healthcheck:monitoring', 'errors')
+    data = ujson.loads(data) if data else dict()
+    errors = ujson.loads(errors) if errors else dict()
 
     if errors:
         nodeids = errors.keys()
-        out.append('h5. {color:red}Something on node(s) %s is not running.{color}' % ', '.join(["'%s'" % j.core.grid.healthchecker._nodenames[nodeid] for nodeid in nodeids]))
+        nodenames = [j.core.grid.healthchecker._nodenames.get(j.basetype.integer.fromString(nodeid), 'N/A') for nodeid in nodeids]
+        out.append('h5. {color:red}Something on node(s) %s is not running.{color}' % ', '.join(nodenames))
         out.append('For more details, check [here|/grid/checkstatus]')
     else:
         out.append('h5. {color:green}Everything seems to be OK{color}')
 
-    results.update(errors)
-
-    lastchecked = j.base.time.getEpochFuture('+3d')
-    for nid, result in results.iteritems():
-        result = result or dict()
-        for _, stats in result.iteritems():
-            stats = stats or dict()
-            times = [float(x[1]) if isinstance(x, list) and len(x) >= 2 else lastchecked for x in stats.values()]
-            times.append(lastchecked)
-            times.sort()
-            lastchecked = times[0]
-    if lastchecked < time.time():
+    if rediscl.hexists('healthcheck:monitoring', 'lastcheck'):
+        lastchecked = j.basetype.float.fromString(rediscl.hget('healthcheck:monitoring', 'lastcheck'))
         lastchecked = datetime.datetime.fromtimestamp(lastchecked).strftime('%Y-%m-%d %H:%M:%S')
     else:
         lastchecked = 'N/A'
-    out.append('The whole grid was last checked at: *%s*.' % lastchecked)
+    out.append('Grid was last checked at: *%s*.' % lastchecked)
 
     out = '\n'.join(out)
 
