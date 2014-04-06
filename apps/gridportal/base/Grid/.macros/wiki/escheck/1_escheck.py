@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
     if errors:
         errors = errors.values()
         for error in errors:
-            if error.get('elasticsearch', dict()).get('state', '') == 'TIMEOUT':
+            if error.get('elasticsearch', [{}])[0].get('state', '') == 'TIMEOUT':
                 out.append('{color:red}*ElasticSearch unreachable, likely ProcessManager on Master Node is not running.*{color}')
                 out = '\n'.join(out)
                 params.result = (out, doc)
@@ -27,7 +27,7 @@ def main(j, args, params, tags, tasklet):
     for message, data in {'OK': esdata, 'HALTED': errors}.iteritems():
         if nidstr in data:
             if 'elasticsearch' in data.get(nidstr, dict()):
-                data = data[nidstr].get('elasticsearch', dict())
+                data = data[nidstr].get('elasticsearch', [{}])[0]
                 out.append('|Status|{color:%s}*%s*{color}|' % ('green' if message=='OK' else 'red', message))
                 out.append('|%s|%s|' % ('Size', data.get('size', 'N/A')))
                 out.append('|%s|%s|' % ('Memory Usage', data.get('memory_usage', 'N/A')))

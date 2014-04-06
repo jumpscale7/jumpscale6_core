@@ -34,17 +34,17 @@ class GridHealthChecker(object):
 
     def _addError(self, nid, result, category=""):
         self._errors.setdefault(nid, {})
-        self._errors[nid].update({category:{}})
+        self._errors[nid].update({category:list()})
         if isinstance(result, basestring):
             print '\t           %s' % result
-            self._errors[nid][category].update({'errormessage': result})
+            self._errors[nid][category].append({'errormessage': result})
         else:
-            self._errors[nid][category].update(result)
+            self._errors[nid][category].append(result)
 
     def _addResult(self, nid, result, category):
         self._status.setdefault(nid, {})
-        self._status[nid].setdefault(category, {})
-        self._status[nid][category].update(result)
+        self._status[nid].setdefault(category, list())
+        self._status[nid][category].append(result)
 
     def _parallelize(self, functionname, clean=False, category=""):
         greens = list()
@@ -202,10 +202,11 @@ class GridHealthChecker(object):
         for port, result in redis.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(result['memory_usage'])
             result['memory_usage'] = '%.2f %sB' % (size, unit)
+            result['port'] = port
             if result['state'] == 'RUNNING':
-                results.append((nid, {port: result}, 'redis'))
+                results.append((nid, result, 'redis'))
             else:
-                errors.append((nid, {port: result}, 'redis'))
+                errors.append((nid, result, 'redis'))
         if clean:
             return self._returnResults(results, errors)
         return results, errors
@@ -233,10 +234,11 @@ class GridHealthChecker(object):
         for worker, stats in workers.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
             stats['mem'] = '%.2f %sB' % (size, unit)
+            stats['name'] = worker
             if stats['state'] == 'RUNNING':
-                results.append((nid, {worker: stats}, 'workers'))
+                results.append((nid, stats, 'workers'))
             else:
-                errors.append((nid, {worker: stats}, 'workers'))
+                errors.append((nid, stats, 'workers'))
         if clean:
             return self._returnResults(results, errors)
         return results, errors
@@ -296,6 +298,7 @@ class GridHealthChecker(object):
             errors.append((nid, {}, 'disks'))
             disks = dict()
         for path, disk in disks.iteritems():
+            disk['path'] = path
             if (disk['free'] and disk['size']) and (disk['free'] / float(disk['size'])) * 100 < 10:
                 disk['message'] = 'FREE SPACE LESS THAN 10%% on disk %s' % path
                 disk['state'] = 'NOT OK'
@@ -308,7 +311,7 @@ class GridHealthChecker(object):
                 else:
                     disk['message'] = 'Disk is not mounted, Info is not available'
                 disk['state'] = 'OK'
-                results.append((nid, {path: disk}, 'disks'))
+                results.append((nid, disk, 'disks'))
         if clean:
             return self._returnResults(results, errors)
         return results, errors

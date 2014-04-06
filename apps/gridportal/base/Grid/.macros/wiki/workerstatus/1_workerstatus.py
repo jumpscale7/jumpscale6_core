@@ -21,11 +21,11 @@ def main(j, args, params, tags, tasklet):
     for data in [workers, errors]:
         if nidstr in data:
             if 'workers' in data.get(nidstr, dict()):
-                wdata = data[nidstr].get('workers', dict())
-                for worker, stat in wdata.iteritems():
+                wdata = data[nidstr].get('workers', list())
+                for stat in wdata:
                     if 'mem' not in stat:
                         status = '{color:orange}UNKNOWN{color}'
-                        out.append('|%s|%s %%|%s|%s|%s|' % (worker, '0', '0', status, 'UKNOWN'))
+                        out.append('|%s|%s %%|%s|%s|%s|' % (stat.get('name', ''), '0', '0', status, 'UKNOWN'))
                         continue
                     size, unit = stat['mem'].split(' ')
                     size = j.tools.units.bytes.toSize(float(size), unit.replace('B', ''), 'M')
@@ -33,7 +33,7 @@ def main(j, args, params, tags, tasklet):
                         status = '{color:orange}*RUNNING**{color}'
                     else:
                         status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
-                    out.append('|%s|%s %%|%s|%s|%s|' % (worker, stat['cpu'], stat['mem'], status, j.base.time.epoch2HRDateTime(stat['lastactive'])))
+                    out.append('|%s|%s %%|%s|%s|%s|' % (stat.get('name', ''), stat.get('cpu', 0), stat.get('mem', 0), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
 
     out = '\n'.join(out)
     params.result = (out, doc)

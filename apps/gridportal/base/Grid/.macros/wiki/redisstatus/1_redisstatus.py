@@ -21,9 +21,9 @@ def main(j, args, params, tags, tasklet):
         if nidstr in data:
             if 'redis' in data.get(nidstr, dict()):
                 rnstatus = data[nidstr].get('redis', dict())
-                for port, stat in rnstatus.iteritems():
+                for stat in rnstatus:
                     state = j.core.grid.healthchecker.getWikiStatus(stat['state'])
-                    out.append('|%s|%s|%s|' % (port, state, stat['memory_usage']))
+                    out.append('|%s|%s|%s|' % (stat.get('port', -1), state, stat.get('memory_usage', '')))
 
     out = '\n'.join(out)
 

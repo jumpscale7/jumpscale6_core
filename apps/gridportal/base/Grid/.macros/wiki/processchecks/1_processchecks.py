@@ -22,7 +22,7 @@ def main(j, args, params, tags, tasklet):
                 runningstring = '{color:orange}*RUNNING** (issues in %s){color}' % ', '.join(categories)
             else:
                 runningstring = '{color:green}*RUNNING*{color}'
-            status = checks.get('processmanager', dict())
+            status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             link = '[Details|nodestatus?nid=%s]' % nid if status['state'] == 'RUNNING' else ''
             out.append('|[%s|node?id=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker._nodenames.get(int(nid), 'UNKNOWN'), runningstring, link))
 
