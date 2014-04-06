@@ -19,7 +19,7 @@ def main(j, args, params, tags, tasklet):
     for data in [disks, errors]:
         if nidstr in data:
             if 'disks' in data.get(nidstr, dict()):
-                ddata = data[nidstr].get('disks', dict())
+                ddata = data[nidstr].get('disks', list())
                 for diskstat in ddata:
                     state = j.core.grid.healthchecker.getWikiStatus(diskstat['state'])
                     out.append('|%s|%s|%s|' % (diskstat.get('path', ''), diskstat.get('message', ''), state))
