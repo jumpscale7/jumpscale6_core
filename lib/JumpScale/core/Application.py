@@ -39,7 +39,8 @@ class Application:
         else:
             self.sandbox=False
 
-        self.redis=j.clients.credis.getRedisClient("127.0.0.1",7768)
+        self.redis=None
+        # self.redis=j.clients.credis.getRedisClient("127.0.0.1",7768)
 
     def initWhoAmI(self):
         """
@@ -118,13 +119,14 @@ class Application:
 
         j.dirs.init(reinit=True)
 
-        if self.redis.hexists("application",self.appname):
-            pids=ujson.loads(self.redis.hget("application",self.appname))
-        else:
-            pids=[]
-        if self.systempid not in pids:
-            pids.append(self.systempid)
-        self.redis.hset("application",self.appname,ujson.dumps(pids))
+        if self.redis<>None:
+            if self.redis.hexists("application",self.appname):
+                pids=ujson.loads(self.redis.hget("application",self.appname))
+            else:
+                pids=[]
+            if self.systempid not in pids:
+                pids.append(self.systempid)
+            self.redis.hset("application",self.appname,ujson.dumps(pids))
 
         # Set state
         self.state = AppStatusType.RUNNING
