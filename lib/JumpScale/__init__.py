@@ -12,7 +12,7 @@ import os
 if 'JSBASE' in os.environ:
     home = os.environ['JSBASE']
     sys.path=['', '%s/bin'%home,'%s/bin/core.zip'%home,'%s/lib'%home,'%s/libjs'%home,\
-        '%s/lib/python.zip'%home,'%s/lib/JumpScale.zip'%home]
+        '%s/lib/python.zip'%home,'%s/libext'%home,'%s/lib/JumpScale.zip'%home]
 
 class JumpScale():
 	def __init__(self):

@@ -704,7 +704,10 @@ class JPackageObject():
             ttype=ttype[3:]
 
         if ttype in ('sitepackages', 'site-packages'):
-            base=j.application.config.get("python.paths.local.sitepackages")
+            if j.application.sandbox:
+                base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
+            else:
+                base=j.application.config.get("python.paths.local.sitepackages")
             systemdest = j.system.fs.joinPaths(base, blobitempath)
         elif ttype=="root":
             systemdest = "/%s"%blobitempath.lstrip("/")

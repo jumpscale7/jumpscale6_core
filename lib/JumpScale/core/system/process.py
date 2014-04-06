@@ -9,6 +9,7 @@ import time
 import subprocess
 import inspect
 import signal
+import ujson
 
 from JumpScale import j
 
@@ -20,7 +21,6 @@ def kill(pid, sig=None):
     """
     j.logger.log('Killing process %d' % pid, 7)
     if j.system.platformtype.isUnix():
-        import signal
         try:
             if sig is None:
                 sig = signal.SIGKILL
@@ -1511,14 +1511,12 @@ class SystemProcess:
             import signal
             try:
                 os.kill(pid, 0)
-
             except OSError:
                 return False
 
             return True
 
         elif j.system.platformtype.isWindows():
-
             return j.system.windows.isPidAlive(pid)
 
     kill = staticmethod(kill)
@@ -1765,6 +1763,38 @@ class SystemProcess:
             return None
         else:
             raise RuntimeError("This platform is not supported in j.system.process.getProcessByPort()")
+
     run = staticmethod(run)
     runScript = staticmethod(runScript)
     runDaemon = staticmethod(runDaemon)
+
+    def appCheckActive(self,appname):
+        return self.appNrInstances(appname)>0
+
+    def appNrInstances(self,appname):
+        return len(self.appGetPids(appname))
+
+    def appNrInstancesActive(self,appname):
+        return len(self.appGetPidsActive(appname))
+
+    def appGetPids(self,appname):
+        if not j.application.redis.hexists("application",appname):
+            raise RuntimeError("could not find application:%s to check nr instances")
+        pids=ujson.loads(j.application.redis.hget("application",appname))
+        return pids
+
+    def appGetPidsActive(self,appname):
+        pids=self.appGetPids(appname)
+        todelete=[]
+        for pid in pids:
+            if not self.isPidAlive(pid):
+                # print "not active:%s"%pid
+                todelete.append(pid)                
+        if todelete<>[]:
+            for item in todelete:
+                pids.pop(pids.index(item))
+            j.application.redis.hset("application",appname,ujson.dumps(pids))
+
+        return pids
+
+

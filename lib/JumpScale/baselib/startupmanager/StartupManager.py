@@ -19,9 +19,11 @@ class ProcessDef:
         self.user=hrd.get("process.user",checkExists=True)
         if self.user==False:
             self.user="root"
-        self.cmd=hrd.get("process.cmd")
-        self.args=hrd.get("process.args")
+        self.cmd=self._replaceSysVars(hrd.get("process.cmd"))
+        self.args=self._replaceSysVars(hrd.get("process.args"))
         self.env=hrd.getDict("process.env")
+        self.procname="%s:%s"%(self.name,self.domain)
+        self.env["JSPROCNAME"]=self.procname
         self.priority=hrd.getInt("process.priority")
         if hrd.exists("process.check"):
             self.checkpid=hrd.getInt("process.check")==1
@@ -38,10 +40,22 @@ class ProcessDef:
         self.reload_signal=0
         if hrd.exists('process.reloadsignal'):
             self.reload_signal = hrd.getInt("process.reloadsignal")
+
+        if hrd.exists('process.filterstring'):
+            self.processfilterstr = hrd.getInt("process.filterstring")
+        else:
+            self.processfilterstr=""
+
         self.stopcmd = None
         if hrd.exists('process.stopcmd'):
-            self.stopcmd = hrd.get("process.stopcmd")
-        self.workingdir=hrd.get("process.workingdir")
+            self.stopcmd = self._replaceSysVars(hrd.get("process.stopcmd"))
+
+        if hrd.exists('process.log'):
+            self.log=hrd.getBool("process.log")
+        else:
+            self.log=True
+
+        self.workingdir=self._replaceSysVars(hrd.get("process.workingdir"))
         self.ports=hrd.getList("process.ports")
         self.ports=[port for port in self.ports if str(port).strip()<>""]
         self.jpackage_domain=hrd.get("process.jpackage.domain")
@@ -60,6 +74,18 @@ class ProcessDef:
         self.active=None
         self.pid=0
 
+        if self.checkpid==False and self.processfilterstr=="":
+            self.raiseError("Need to specify process.filterstring if checkpid==False")
+
+    def raiseError(self,msg):
+        msg="Error for process %s:%s\n%s"%(self.domain,self.name,msg)
+        raise RuntimeError(msg,category="jsprocess")
+
+
+    def _replaceSysVars(self,txt):
+        txt=txt.replace("$base",j.dirs.baseDir)
+        return txt
+
     def getJSPid(self):
         return "g%s.n%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,self.name)
 
@@ -77,17 +103,20 @@ class ProcessDef:
             self.log("no need to start, already started.")
             return
 
-        try:
-            jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
-        except Exception,e:
-            raise RuntimeError("COULD NOT FIND JPACKAGE:%s:%s"%(self.domain,self.name))
+        if jpackage_domain<>"":
+            try:
+                jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
+            except Exception,e:
+                self.raiseError("COULD NOT FIND JPACKAGE")
 
         self.log("process dependency CHECK")
         jp.processDepCheck()
         self.log("process dependency OK")
         self.log("start process")
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
-        j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
+
+        if self.log:
+            j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
                 
         isrunning=self.isRunning(wait=True)
 
@@ -98,7 +127,7 @@ class ProcessDef:
         self.log("pid: %s"%self.pid)
 
         if isrunning==False:
-            raise RuntimeError("Could not start process:%s, an error occured:\n%s"%(self,self.getStartupLog()))
+            self.raiseError("Could not start process:%s, an error occured:\n%s"%(self,self.getStartupLog()))
             
         self.log("*** STARTED ***")
         return self.pid
@@ -124,6 +153,20 @@ class ProcessDef:
         self.processobject=j.system.process.getProcessObject(pid)
         return self.processobject
 
+    def _getPidFromRedis(self):
+        pids=j.system.process.appGetPidsActive(self.procname)
+        if len(pids)==0:
+            return None
+        elif len(pids)>1:
+            self.raiseError("Cannot get pid, there is more than 1 instance running.")
+        else:
+            return pids[0]
+
+    def _getPidFromPS(self):
+        cmd="ps ax|grep %s"%self.processfilterstr
+        rc,out=j.system.process.execute(cmd)
+        
+
     def getPid(self,ifNoPidFail=True,wait=False):
         #first check screen is already there with window, max waiting 1 sec        
         now=0
@@ -133,54 +176,28 @@ class ProcessDef:
             start=time.time()
             timeout=start+self.timeout
         else:
-            timeout=1 #should not be 0 otherwise dont go in while loop
+            timeout=2 #should not be 0 otherwise dont go in while loop
 
-        while pid0==None and now<timeout:
-            pid0 = j.system.platform.screen.getPid(self.domain, self.name)
-            if pid0<>0 or wait==False:
-                break
-            time.sleep(0.2)
-            now=time.time()
+        if self.checkpid:
 
-        if pid0==None:
-            if ifNoPidFail:
-                raise RuntimeError("Pid was not found for %s, because window not found."%self)
-            else:
-                return 0
-
-        pr=j.system.process.getProcessObject(pid0)
-
-        def check():
-            pid=None
-            children=pr.get_children()
-            if len(children)>0:
-                if len(children)>1:
-                    raise RuntimeError("Can max have 1 child")
-                child=children[0]
-
-                if child.is_running():
-                    pid=child.pid
-                    return pid
-                else:
-                    return 0
-            return 0
-
-        pid=0
-        now=0
-        while pid==0 and now<timeout:
-            pid=check()
-            if pid<>0 or wait==False:
-                break            
-            # print "timecheck:%s"%pid
-            time.sleep(0.1)
-            now=time.time()
-
-        self.pid=pid
+            while pid0==None and now<timeout:
+                pid0 = self._getPidFromRedis()
+                if pid0<>0 or wait==False:
+                    return pid0
+                time.sleep(0.05)
+                now=time.time()
+        else:
+            #look at system str
+            while pid0==None and now<timeout:
+                pid0 = self._getPidFromPS()
+                if pid0<>0 or wait==False:
+                    return pid0
+                time.sleep(0.05)
+                now=time.time()
 
         if ifNoPidFail==False:
-            return self.pid
-        if self.pid>0:
-            return self.pid
+            return None
+
         raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
     def _portCheck(self):
@@ -242,7 +259,7 @@ class ProcessDef:
 
         for port in self.ports:        
             if port=="" or port==None or not port.isdigit():                
-                raise RuntimeError("port cannot be none for %s"%self)    
+                self.raiseError("port cannot be none")    
             j.system.process.killProcessByPort(port)
 
         if self.ports<>[]:
@@ -254,7 +271,7 @@ class ProcessDef:
                     break
                 time.sleep(0.05)
             if isrunning:
-                raise RuntimeError("Cannot stop, tried portkill, %s"%self)
+                self.raiseError("Cannot stop, tried portkill")
 
         j.system.platform.screen.killWindow(self.domain, self.name)
 
@@ -269,7 +286,7 @@ class ProcessDef:
             now=j.base.time.getTimeEpoch()
 
         if windowdown==False:
-            raise RuntimeError("Window was not down yet within 2 sec for %s"%self)
+            self.raiseError("Window was not down yet within 2 sec.")
 
     def disable(self):
         self.stop()

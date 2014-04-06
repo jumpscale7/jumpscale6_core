@@ -6,8 +6,6 @@ from JumpScale import j
 home = os.curdir                        # Default
 if 'JSBASE' in os.environ:
     home = os.environ['JSBASE']
-    sys.path=['', '%s/bin'%home,'%s/bin/core.zip'%home,'%s/lib'%home,'%s/libjs'%home,\
-        '%s/lib/python.zip'%home,'%s/lib/JumpScale.zip'%home]
 elif os.name == 'posix':
     # home = os.path.expanduser("~/")
     home="/opt/jumpscale"
@@ -18,8 +16,8 @@ elif os.name == 'nt':                   # Contributed by Jeff Bauer
         else:
             home = os.environ['HOMEPATH']
 
-if not 'JSBASE' in os.environ:
-    print "WARNING: did not find JSBASE env environment, please set and point to your sandbox"
+# if not 'JSBASE' in os.environ:
+#     print "WARNING: did not find JSBASE env environment, please set and point to your sandbox"
 
 def pathToUnicode(path):
     """
@@ -60,7 +58,10 @@ class Dirs(object):
         self.appDir = os.path.abspath(".")
         
         '''Configuration file folder (appdir/etc)'''
-        self.cfgDir = os.path.join(self.baseDir,"cfg")
+        if 'JSBASE' in os.environ:
+            self.cfgDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s_data"%os.path.basename(self.baseDir),"cfg")
+        else:
+            self.cfgDir = os.path.join(self.baseDir,"cfg")
         self._createDir(self.cfgDir)
 
         tpath = os.path.join(self.cfgDir,"debug")
@@ -75,6 +76,8 @@ class Dirs(object):
         '''Var folder (basedir/var)'''
         if self.frozen:
             self.varDir = "/var/jumpscale"
+        elif 'JSBASE' in os.environ:
+            self.varDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s_data"%os.path.basename(self.baseDir),"var")
         else:
             self.varDir = os.path.join(self.baseDir,"var")
         self._createDir(self.varDir)
@@ -101,8 +104,6 @@ class Dirs(object):
 
         self.packageDir = os.path.join(self.varDir,"jpackages")
 
-        
-        
         self._createDir(self.packageDir)
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
@@ -118,11 +119,12 @@ class Dirs(object):
 
         self._createDir(self.codeDir)
 
-        self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
+        self.hrdDir = os.path.join(self.cfgDir,"hrd")
         self._createDir(self.hrdDir)
 
-        self.configsDir = os.path.join(self.baseDir,"cfg","jsconfig")
+        self.configsDir = os.path.join(self.cfgDir,"jsconfig")
         self._createDir(self.configsDir)
+        
 
     def replaceBaseDirVar(self,txt):
         """
@@ -237,7 +239,7 @@ class Dirs(object):
         #@todo P3 let it work for windows as well
         bindest=j.system.fs.joinPaths(self.baseDir,"bin")
         utilsdest=j.system.fs.joinPaths(self.baseDir,"utils")
-        cfgdest=j.system.fs.joinPaths(self.baseDir,"cfg")
+        cfgdest=self.cfgDir
 
         if not os.path.exists(bindest) or not os.path.exists(utilsdest) or not os.path.exists(cfgdest):
             cfgsource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","cfg")
