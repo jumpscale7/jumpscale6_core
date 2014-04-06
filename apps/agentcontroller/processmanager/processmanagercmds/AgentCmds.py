@@ -105,7 +105,7 @@ class AgentCmds():
                     timeout = gevent.Timeout(job['timeout'])
                     timeout.start()
                     try:
-                        status, result = jscript.execute()
+                        status, result = jscript.execute(**job['args'])
                         job['state'] = 'OK' if status else 'ERROR'
                         job['result'] = result
                         self.client.notifyWorkCompleted(job)

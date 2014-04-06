@@ -38,14 +38,13 @@ from JumpScale import j
     def run(self, *args, **kwargs):
         return self.module.action(*args, **kwargs)
 
-    def execute(self):
+    def execute(self, *args, **kwargs):
         result = None, None
         if not self.enable:
             return
-        
         if not self.async:
             try:
-                result = True, self.run()
+                result = True, self.run(*args, **kwargs)
             except Exception,e:
                 eco=j.errorconditionhandler.parsePythonErrorObject(e)
                 eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
