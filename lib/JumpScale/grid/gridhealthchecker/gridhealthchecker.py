@@ -196,7 +196,7 @@ class GridHealthChecker(object):
         result = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=5)
         redis = result['result']
         if result['state'] != 'OK' or not redis:
-            errors.append((nid, {-1: {'state': 'UNKOWN', 'memory_usage': 0}}, 'redis'))
+            errors.append((nid, {'state': 'UNKOWN'}, 'redis'))
             redis = dict()
 
         for port, result in redis.iteritems():
@@ -295,7 +295,7 @@ class GridHealthChecker(object):
         result = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=5)
         disks = result['result']
         if result['state'] != 'OK' or not disks:
-            errors.append((nid, {}, 'disks'))
+            errors.append((nid, {'state': 'UNKOWN'}, 'disks'))
             disks = dict()
         for path, disk in disks.iteritems():
             disk['path'] = path
