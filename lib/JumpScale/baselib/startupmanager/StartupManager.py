@@ -51,9 +51,9 @@ class ProcessDef:
             self.stopcmd = self._replaceSysVars(hrd.get("process.stopcmd"))
 
         if hrd.exists('process.log'):
-            self.log=hrd.getBool("process.log")
+            self.plog=hrd.getBool("process.log")
         else:
-            self.log=True
+            self.plog=True
 
         self.workingdir=self._replaceSysVars(hrd.get("process.workingdir"))
         self.ports=hrd.getList("process.ports")
@@ -103,7 +103,7 @@ class ProcessDef:
             self.log("no need to start, already started.")
             return
 
-        if jpackage_domain<>"":
+        if self.jpackage_domain<>"":
             try:
                 jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
             except Exception,e:
@@ -115,7 +115,7 @@ class ProcessDef:
         self.log("start process")
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
 
-        if self.log:
+        if self.plog:
             j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
                 
         isrunning=self.isRunning(wait=True)
