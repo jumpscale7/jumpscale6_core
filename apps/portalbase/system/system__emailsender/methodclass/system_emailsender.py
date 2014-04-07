@@ -64,7 +64,8 @@ class system_emailsender(j.code.classGetBase()):
             return 'Error: your email is not formatted well.'
 
         receivers = [receiver_email]
-
+        kwargs['sender'] = sender_email
+        
         if kwargs:
             other_params = []
             for k, v in kwargs.items():
