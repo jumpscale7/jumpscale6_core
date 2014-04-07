@@ -21,6 +21,13 @@ class mainclass(OSISStore):
         j.clients.graphite.send(out)
         return [key, False, False]
 
+    def delete(self, nodeid):
+        path = '/opt/graphite/storage/whisper/n%s' % nodeid
+        if j.system.fs.exists(path):
+            j.system.fs.removeDirTree(path)
+            return True
+        return False
+
     def find(self,query, start=0, size =100):
         raise RuntimeError("osis 'find' for stat not implemented")
 

@@ -25,6 +25,12 @@ class mainclass(OSISStore):
             self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=value, id_field="guid")                        
         return ["",True,True]
 
+    def delete_by_query(self, query):
+        try:
+            return self.elasticsearch.delete_by_query(index='system_log', query=query, doc_type='json')
+        except:
+            return {'hits': {'hits': list(), 'total': 0}}
+
     def find(self, query, start=0, size=100):
         kwargs = dict()
         if start:
