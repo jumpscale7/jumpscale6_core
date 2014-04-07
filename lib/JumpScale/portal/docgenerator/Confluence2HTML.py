@@ -134,7 +134,7 @@ class Confluence2HTML():
             limiter_re = ''.join('\\' + c for c in char)
 
             # This is the RE which is used to replace wiki text formatting with equivalent HTML tag
-            return re.compile(r'(\W){0}([^ #{0}]{1}[^ {0}]?){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
+            return re.compile(r'(\W){0}([^ #{0}]{1}[^ \n{0}]?){0}(\W)'.format(limiter_re, styled_text.format(limiter_re)))
 
         def limiter_replacement(sub):
             return r'\1<{0}>\2</{0}>\3'.format(sub)
