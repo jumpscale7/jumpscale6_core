@@ -7,7 +7,7 @@ class PortalAuthenticatorOSIS():
         addr=j.application.config.get("portal.auth.source.addr")
         passwd=j.application.config.get("portal.auth.source.passwd")
         if passwd=="":
-            passwd=j.application.config.get("system.superadmin.passwd")
+            passwd = None # let osis figure it out
 
         osis=j.core.osis.getClient(addr,5544,"root",passwd)
         self.osis=j.core.osis.getClientForCategory(osis,"system","user")
