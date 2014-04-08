@@ -4,6 +4,8 @@ import atexit
 import struct
 from JumpScale.core.enumerators import AppStatusType
 from collections import namedtuple
+import JumpScale.baselib.credis
+import ujson
 
 WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
 
@@ -37,6 +39,9 @@ class Application:
         else:
             self.sandbox=False
 
+        self.redis=None
+        # self.redis=j.clients.credis.getRedisClient("127.0.0.1",7768)
+
     def initWhoAmI(self):
         """
         when in grid:
@@ -61,10 +66,11 @@ class Application:
 
             self.whoAmIBytestr = struct.pack("<hhh", self.whoAmI.pid, self.whoAmI.nid, self.whoAmI.gid)
 
-            if self.config.exists("python.paths.local.sitepackages"):
-                sitepath=self.config.get("python.paths.local.sitepackages")            
-                if sitepath not in sys.path:
-                    sys.path.append(sitepath)
+            if not self.sandbox:
+                if self.config.exists("python.paths.local.sitepackages"):
+                    sitepath=self.config.get("python.paths.local.sitepackages")            
+                    if sitepath not in sys.path:
+                        sys.path.append(sitepath)
 
 
             # if gridid<>0:
@@ -98,6 +104,10 @@ class Application:
         '''
         if name:
             self.appname = name
+
+        if os.environ.has_key("JSPROCNAME"):
+            self.appname=os.environ["JSPROCNAME"]
+
         if self.state == AppStatusType.RUNNING:
             raise RuntimeError("Application %s already started" % self.appname)
 
@@ -109,13 +119,21 @@ class Application:
 
         j.dirs.init(reinit=True)
 
+        if self.redis<>None:
+            if self.redis.hexists("application",self.appname):
+                pids=ujson.loads(self.redis.hget("application",self.appname))
+            else:
+                pids=[]
+            if self.systempid not in pids:
+                pids.append(self.systempid)
+            self.redis.hset("application",self.appname,ujson.dumps(pids))
+
         # Set state
         self.state = AppStatusType.RUNNING
 
         # self.initWhoAmI()
 
         j.logger.log("***Application started***: %s" % self.appname, level=8, category="jumpscale.app")
-
 
     def stop(self, exitcode=0):
 

@@ -127,6 +127,7 @@ class JPackageClient():
 
         if not j.system.fs.exists(cfgpath):
             j.system.fs.createDir(j.system.fs.getDirName(cfgpath))
+            raise RuntimeError("did not find jpackage sources file on %s"%cfgpath)            
         else:
             cfg = j.tools.inifile.open(cfgpath)
             self.sourcesConfig=cfg

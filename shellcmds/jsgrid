@@ -148,24 +148,39 @@ if opts.action == 'purgelogs':
 
 #################DELETE NODE####################################
 if opts.action == 'deletenode':
-    import JumpScale.baselib.elasticsearch
+    import JumpScale.grid.osis
 
-    esclient = j.clients.elasticsearch.get()
-    query = {"term":{"nid":opts.nid}}
-    
-    result = esclient.delete_by_query(index='system_node', doc_type='json', query={"term":{"id":opts.nid}})
-    if result['ok']:
-        print 'Node %s deleted successfully' % (opts.nid)
+    oscl = j.core.osis.getClient(user='root')
+    ncl = j.core.osis.getClientForCategory(oscl, 'system', 'node')
+    node = ncl.simpleSearch({'id':opts.nid}, withguid=True)
+
+    if not opts.nid:
+        print "'nid' needs to be supplied"
     else:
-        print 'Node %s deletion failed' % (opts.nid)
+        if not node:
+            print "Node %s does not exist." % opts.nid
+        else:
+            nodeguid = node[0]['guid']
+            ncl.delete(nodeguid)
+            print 'Node %s with guid %s deleted successfully' % (opts.nid, nodeguid)
 
-    indices = esclient.get_mapping().keys()
-    for index in indices:
-        result = esclient.delete_by_query(index=index, doc_type='json', query=query)
-        if not result['ok']:
-            print '%s for node %s deleted successfully' % (index.replace('system_', ''), opts.nid)
+            print "Deleting relevant data... this may take a while"
+            categories = oscl.listNamespaceCategories('system')
 
-
+            for category in categories:
+                print "Deleting %s..." % category
+                catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
+                if category == 'stats':
+                    catclient.delete(opts.nid)
+                    break
+                if category == 'log':
+                    catclient.delete_by_query(query={"term":{"id":opts.nid}})
+                    break
+                total, results = catclient.simpleSearch({'nid':opts.nid}, size=0, withguid=True, withtotal=True)
+                results = catclient.simpleSearch({'nid':opts.nid}, size=total, withguid=True)
+                for result in results:
+                    guid = result['guid']
+                    catclient.delete(guid)
 
 
 j.application.stop()

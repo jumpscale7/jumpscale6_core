@@ -74,7 +74,7 @@ if opts.action =='system2sandbox' or opts.action =='jsboxupload' or opts.action 
     for name in ["base","baselib","core","lib","grid","portal"]:
         sync("/usr/local/lib/python2.7/site-packages/JumpScale/%s/"%name,"/opt/jsbox/libjs/JumpScale/%s/"%name)
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.qualitylevel,"/opt/jsbox/tools/")
-    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.qualitylevel,"/opt/jsbox/cfg/")
+    #sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.qualitylevel,"/opt/jsbox/cfg/")
     sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.qualitylevel,"/opt/jsbox/tools/",delete=False)
 
 if opts.action =='jpackagesupload' or opts.action =='jsboxupload':        

@@ -23,7 +23,10 @@ class RecipeItem(object):
         self.type=type.lower().strip()
 
         if self.type=="sitepackages":
-            base=j.application.config.get("python.paths.local.sitepackages")
+            if j.application.sandbox:
+                base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
+            else:
+                base=j.application.config.get("python.paths.local.sitepackages")
             self.systemdest = j.system.fs.joinPaths(base, self.destination)
         elif self.type=="root":
             self.systemdest = destination

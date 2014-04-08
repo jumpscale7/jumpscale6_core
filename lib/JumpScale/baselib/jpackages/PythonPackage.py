@@ -35,14 +35,8 @@ class PythonPackage(object):
         return  self._usrPathCache
 
     def check(self):
-        if self._checked:
-            return
-        if not j.application.config.exists("python.paths.local.sitepackages"):
-            print "need to deploy python package jpackage"
-            p=j.packages.get("jumpscale","base","2.7")
-            p.install()
-        self._checked=True
-
+        return
+        
     def install(self, name, version=None, latest=True):
         self.check()
         if version:
@@ -104,7 +98,12 @@ class PythonPackage(object):
 
     def getSitePackagePathLocal(self):
         self.check()
-        return j.application.config.get("python.paths.local.sitepackages")
+        if j.application.sandbox:
+            base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
+        else:
+            base=j.application.config.get("python.paths.local.sitepackages")
+
+        return base
 
     def copyLibsToLocalSitePackagesDir(self,rootpath,remove=True):
         """
