@@ -47,6 +47,7 @@ elif opts.action =='heartbeat':
 elif opts.action =='clearjobqueue':
     keys = redis.keys('queues:jobqueue*')
     keys.extend(redis.keys('queues:commmands*'))
+    keys.append('jobs:%s' % j.application.whoAmI.gid)
     total = len(keys)
     for idx, key in enumerate(keys):
         print '\rRemoving keys %s/%s %s' % (idx+1, total, key),
