@@ -1,0 +1,57 @@
+#!/usr/bin/env jspython
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jsredis")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['workerwatchdog','heartbeat','keys', 'clearjobqueue'], help='Command to perform')
+parser.add_argument('-a', '--agentcontroller', required=False, action='store_true', help='Run commands on Agentcontroller redis')
+
+opts = parser.parse_args()
+
+import JumpScale.baselib.redis
+
+port = 7769 if opts.agentcontroller or opts.action == 'clearjobqueue' else 7769
+redis = j.clients.redis.getGeventRedisClient("127.0.0.1", port)
+
+def timeago(t):
+    t=float(t)
+    ago=j.base.time.getTimeEpoch()-int(t)
+    if ago>3600:
+        return "%sh"%round(ago/3600,1)
+    if ago>30:
+        return "%sm"%round(ago/60,1)
+    return "%ss"%ago
+
+
+if opts.action =='workerwatchdog':
+    print "hget:workers:watchdog"
+    workers = redis.hgetall("workers:watchdog")
+    workers2=zip(workers[0::2], workers[1::2])
+    for workername, last in workers2:
+        print "%-20s %s"%(workername,timeago(last))
+
+elif opts.action =='keys':
+    print "\n".join(redis.keys())
+    
+elif opts.action =='heartbeat':
+    print "hget:healthcheck:lastcheck"
+    items=redis.hgetall("healthcheck:lastcheck")
+    items2=zip(items[0::2], items[1::2])
+    for name, last in items2:
+        print "%-40s %s"%(name,timeago(last))
+
+elif opts.action =='clearjobqueue':
+    keys = redis.keys('queues:jobqueue*')
+    keys.extend(redis.keys('queues:commmands*'))
+    total = len(keys)
+    for idx, key in enumerate(keys):
+        print '\rRemoving keys %s/%s %s' % (idx+1, total, key),
+        redis.delete(key)
+    print '\nDone'
+    
+
+j.application.stop()

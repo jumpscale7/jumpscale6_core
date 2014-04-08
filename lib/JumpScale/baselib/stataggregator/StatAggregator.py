@@ -102,7 +102,7 @@ class StatAggregator():
 
     def __init__(self):
         self.stats={}
-        self.log=True
+        self.log=False
         if self.log:
             self.logdir=j.system.fs.joinPaths(j.dirs.logDir,"stats_aggregator")
             self.logdirCarbon=j.system.fs.joinPaths(j.dirs.logDir,"stats_carbon")
@@ -130,6 +130,8 @@ class StatAggregator():
                 j.system.fs.createDir(path)
             if j.system.fs.isDir(path2):
                 path2=j.system.fs.joinPaths(path2,splitted1[-1])
+
+            path2="%s_%s"%(path2,j.base.time.getDayId())
 
             j.system.fs.writeFile(path2,"%s %-100s %s\n"%(self.getTime(),key,val),True)
                 
@@ -172,7 +174,7 @@ class StatAggregator():
             stat.clean(self.getTime())
 
     def delete(self,prefix):
-        for key in self.stats:
+        for key in self.stats.keys():
             if key.find(prefix)==0:
                 self.stats.pop(key)
                 print "DELETE:%s"%key

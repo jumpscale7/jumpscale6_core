@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env jspython
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 import JumpScale.lib.lxc
@@ -8,13 +8,15 @@ j.application.start("jsmachine_lxc")
 
 parser = cmdutils.ArgumentParser()
 #'mountdisks','unmountdisks'
-parser.add_argument("action", choices=['ps','new','list','destroyall','destroy','cmd','rdp','ssh','start','stop','restart','getip'], help='Command to perform')
+parser.add_argument("action", choices=['ps','new','list','destroyall','destroy','cmd','rdp','ssh','start','stop','restart','getip','exportTGZ','importTGZ','exportR','importR'], help='Command to perform')
 parser.add_argument("-n", '--name', help='machine name')
+parser.add_argument("-m", '--bname', help='name of backup (used for import/export)')
 parser.add_argument("-b", '--base', help='base to clone from')
 parser.add_argument("-p",'--passwd', help='password for machine')
 parser.add_argument("-r",'--prefix', help='prefix')
 parser.add_argument("-c",'--cmd', help='cmd to execute')
-parser.add_argument('--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
+parser.add_argument("-a",'--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
+parser.add_argument("-g",'--gw', help='set ip gateway of machine (192.168.1.1)',default='')
 parser.add_argument('--start', help='start after creation', action='store_true', default=False)
 
 
@@ -44,12 +46,13 @@ if opts.action =='list':
 
 if opts.action =='new':
     if opts.base==None:
-        opts.base="base"
+        opts.base="saucy-amd64-base"
     if opts.name==None:
         raise RuntimeError("need to specify name")
     l.create(name=opts.name,stdout=True,base=opts.base,start=False)
     if opts.pubip<>"":
-        j.system.platform.lxc.networkSetPublic(opts.name, netname="pub0",bridge="br0",pubips=["%s"%opts.pubip]) 
+        bridgename = j.application.config.get('lxc.pub.interface')        
+        j.system.platform.lxc.networkSet(opts.name, netname="pub0",bridge=bridgename,pubips=["%s"%opts.pubip],gateway=opts.gw) 
     if opts.start:
         j.system.platform.lxc.start(opts.name)
 
@@ -58,6 +61,41 @@ if opts.action =='getip':
         raise RuntimeError("specify machine name")    
     ip=l.getIp(opts.name)
     print "%s"%ip
+
+if opts.action =='exportTGZ':
+    if opts.name==None:
+        raise RuntimeError("specify machine name")    
+    if opts.bname==None:
+        raise RuntimeError("specify backup name")    
+    print "export %s to %s"%(opts.name,opts.bname)
+    l.exportTgz(opts.name,opts.bname)
+
+if opts.action =='importTGZ':
+    if opts.name==None:
+        raise RuntimeError("specify machine name")    
+    if opts.bname==None:
+        raise RuntimeError("specify backup name")    
+    print "import %s to %s"%(opts.bname,opts.name)
+    l.importTgz(opts.bname,opts.name)
+
+if opts.action =='exportR':
+    if opts.name==None:
+        raise RuntimeError("specify machine name")    
+    if opts.bname==None:
+        raise RuntimeError("specify backup name")    
+    print "export %s to %s"%(opts.name,opts.bname)
+    l.exportRsync(opts.name,opts.bname)
+
+if opts.action =='importR':
+    if opts.name==None:
+        raise RuntimeError("specify machine name")    
+    if opts.bname==None:
+        raise RuntimeError("specify backup name")    
+    print "import %s to %s"%(opts.bname,opts.name)
+    if opts.base<>None:
+        l.importRsync(opts.bname,opts.name,basename=opts.base)
+    else:
+        l.importRsync(opts.bname,opts.name)
 
 if opts.action =='cmd':
     if opts.name==None:

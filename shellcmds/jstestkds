@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env jspython
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 import JumpScale.grid
@@ -42,7 +42,7 @@ if opts.reinit:
 import JumpScale.baselib.testengine
 
 if opts.path==None:
-    j.tools.testengineKds.paths=["/opt/jumpscale/apps"]
+    j.tools.testengineKds.paths=["%s/apps"%j.dirs.baseDir]
 else:
     j.tools.testengineKds.paths=[opts.path]
 

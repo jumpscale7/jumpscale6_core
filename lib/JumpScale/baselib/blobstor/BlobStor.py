@@ -64,6 +64,8 @@ class BlobStor:
         targetDirPath = j.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
 
         try:
+            if self.config["type"] <> "local":
+                print "exists %s: "%key,
             resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key})) #@todo gives error when source not found, need other method
             resultGz = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key})) or \
                        j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key}))
@@ -72,7 +74,10 @@ class BlobStor:
                 raise RuntimeError("Check network connection to %s"%j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key}))
             msg="Could not check existence of key %s in blobstor %s in namespace %s, there was error:\n%s" % (key, self.name, self.namespace,e)
             raise RuntimeError(msg)
-        return resultMeta and resultGz
+        res= resultMeta and resultGz
+        if self.config["type"] <> "local":
+            print res
+        return res
 
     def getMetadata(self, key):
         if self.exists(key):
@@ -155,6 +160,7 @@ class BlobStor:
             j.clients.blobstor.log("No need to download '%s' to blobstor, because is already there" % key, "download")
 
     def _put(self, blobstor, metadata, tmpfile):
+        print "put"
         hashh = metadata.hash
         targetDirName = j.system.fs.joinPaths(blobstor._getDestination(('ftp',)), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
@@ -163,14 +169,22 @@ class BlobStor:
             targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".tgz")
         targetFileNameMeta = j.system.fs.joinPaths(targetDirName, hashh + ".meta")
 
-        if blobstor.config["type"] == "local":
+        ok=False
+
+        if self.config["type"] == "local" or targetFileNameTgz.find("file://")==0:
+            print "local"
             targetFileNameTgz = targetFileNameTgz.replace("file://", "")
             j.system.fs.createDir(j.system.fs.getDirName(targetFileNameTgz))
             j.system.fs.copyFile(tmpfile, targetFileNameTgz)
+            ok=True
+            print "ok"
         else:
             #@todo P1 need to create the required dir (do directly with FTP)
-            try:
+            print "start upload ",
+            try:                
                 j.cloud.system.fs.copyFile('file://' + tmpfile, targetFileNameTgz)
+                print "OK."
+                ok=True
             except Exception,e:
                 if str(e).find("Failed to login on ftp server")<>-1:
                     if j.application.shellconfig.interactive:
@@ -186,12 +200,15 @@ class BlobStor:
                         ftpurl="ftp://%s:%s@%s"%(login,passwd,end)
                         config.setParam(blobstor.name,"ftp",ftpurl)
                         blobstor.loadConfig()
-                        return self._put(blobstor, metadata, tmpfile)
+                        return self._put(blobstor, metadata, tmpfile) 
+                print "ERROR:could not upload"
                 j.errorconditionhandler.processPythonExceptionObject(e)
-                
-        j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
+                j.errorconditionhandler.raiseOperationalCritical("cannot upload file to %s (ftp), error %s"%(targetFileNameTgz,e), category='ftp.upload')
+                    
+        if ok:
+            j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)            
 
-    def put(self, path, type="", expiration=0, tags="", blobstors=[]):
+    def put(self, path, type="", expiration=0, tags=""):
         """
         put file or directory to blobstor
         @param expiration in hours
@@ -219,7 +236,8 @@ class BlobStor:
             #means empty dir
             return "", "", False
 
-        j.clients.blobstor.log("Path:'%s' Hash:%s" % (path,hashh),category="upload",level=5)
+        if not self.config["type"]=="local":
+            j.clients.blobstor.log("Path:'%s' Hash:%s" % (path,hashh),category="upload",level=5)
 
         tmpfile = j.system.fs.getTempFileName()
 
@@ -249,21 +267,23 @@ class BlobStor:
         metadata = BlobMetadata(descr, hashh)
 
         if self.exists(hashh):
-            j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,self.name,self.namespace),category="upload",level=5)
+            if not self.config["type"]=="local":
+                j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,self.name,self.namespace),category="upload",level=5)
 
             #return hashh,descr,anyPutDone
         else:
             self._put(self, metadata, tmpfile)
             anyPutDone = True
-            j.clients.blobstor.log('Successfully uploaded blob: ' + path,category="upload",level=5)
+            if not self.config["type"]=="local":
+                j.clients.blobstor.log('Successfully uploaded blob: ' + path,category="upload",level=5)
 
-        for blobstor in blobstors:
-            if blobstor.exists(hashh):
-                j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,blobstor.name,self.namespace),category="upload",level=5)
-            else:
-                self._put(blobstor, metadata, tmpfile)
-                anyPutDone = True
-                j.clients.blobstor.log("Successfully uploaded '%s' to blobstor:'%s/%s'" % (path,blobstor.name,self.namespace) ,category="upload",level=5)
+        # for blobstor in blobstors:
+        #     if blobstor.exists(hashh):
+        #         j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,blobstor.name,self.namespace),category="upload",level=5)
+        #     else:
+        #         self._put(blobstor, metadata, tmpfile)
+        #         anyPutDone = True
+        #         j.clients.blobstor.log("Successfully uploaded '%s' to blobstor:'%s/%s'" % (path,blobstor.name,self.namespace) ,category="upload",level=5)
 
         j.system.fs.remove(tmpfile)
         return hashh, descr, anyPutDone

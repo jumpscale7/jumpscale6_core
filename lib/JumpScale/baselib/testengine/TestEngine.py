@@ -11,13 +11,16 @@ except ImportError:
     from StringIO import StringIO
 
 class Tee(object):
-    def __init__(self, fileobj1, fileobj2):
-        self.fileobj1 = fileobj1
-        self.fileobj2 = fileobj2
+    def __init__(self, *fobjs):
+        self.fileobjs = fobjs
 
     def write(self, data):
-        self.fileobj1.write(data)
-        self.fileobj2.write(data)
+        for fileobj in self.fileobjs:
+            fileobj.write(data)
+
+    def flush(self):
+        for fileobj in self.fileobjs:
+            fileobj.flush()
 
 
 PRINTSTR = "\r%s %s"
@@ -28,6 +31,7 @@ class TestResult(unittest.result.TestResult):
         self.tests = dict()
         self.errors = dict()
         self.failure = dict()
+        self.skipped = dict()
         self._debug = debug
         self._original_stdout = sys.stdout
         self._original_stderr = sys.stderr
@@ -49,6 +53,11 @@ class TestResult(unittest.result.TestResult):
         else:
             print PRINTSTR % (' ', test._testMethodName),
         sys.stdout.flush()
+
+    def addSkip(self, test, reason):
+        self._restore()
+        self.printStatus(test, 'S')
+        self.skipped[test] = reason
 
     def addFailure(self, test, err):
         self._restore()
@@ -148,7 +157,7 @@ class TestEngine():
     def __init__(self):
         self.paths=[]
         self.tests=[]
-        self.outputpath="/opt/jumpscale/apps/gridportal/base/Tests/TestRuns/"
+        self.outputpath="%s/apps/gridportal/base/Tests/TestRuns/"%j.dirs.baseDir
 
     def initTests(self,noOsis, osisip="127.0.0.1",login="",passwd=""): #@todo implement remote osis
         self.noOsis = noOsis

@@ -37,6 +37,7 @@ class AlertObject():
         self.closetime=0  #alert is closed, no longer active
         self.nrerrorconditions=1 #nr of times this error condition happened
         self.transactionsinfo="" 
+        self.extra=""
         
     def getLastECO(self):
         pass #@todo

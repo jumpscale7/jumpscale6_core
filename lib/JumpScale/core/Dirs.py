@@ -3,18 +3,23 @@ import sys, os, inspect
 
 from JumpScale import j
 
-
 home = os.curdir                        # Default
-if 'HOME' in os.environ:
-    home = os.environ['HOME']
+if 'JSBASE' in os.environ:
+    home = os.environ['JSBASE']
+    sys.path=['', '%s/bin'%home,'%s/bin/core.zip'%home,'%s/lib'%home,'%s/libjs'%home,\
+        '%s/lib/python.zip'%home,'%s/lib/JumpScale.zip'%home]
 elif os.name == 'posix':
-    home = os.path.expanduser("~/")
+    # home = os.path.expanduser("~/")
+    home="/opt/jumpscale"
 elif os.name == 'nt':                   # Contributed by Jeff Bauer
     if 'HOMEPATH' in os.environ:
         if 'HOMEDRIVE' in os.environ:
             home = os.environ['HOMEDRIVE'] + os.environ['HOMEPATH']
         else:
             home = os.environ['HOMEPATH']
+
+if not 'JSBASE' in os.environ:
+    print "WARNING: did not find JSBASE env environment, please set and point to your sandbox"
 
 def pathToUnicode(path):
     """
@@ -38,8 +43,9 @@ class Dirs(object):
 
     def __init__(self):
         '''jumpscale sandbox base folder'''
-        curdir=os.path.abspath(".")
 
+        import sys
+        
         if os.path.exists("library.zip"):
             self.frozen=True
         else:
@@ -47,15 +53,11 @@ class Dirs(object):
 
         iswindows=os.name=="nt"
 
-        if iswindows or self.frozen:
-            self.baseDir=curdir
-        else:
-            self.baseDir = "/opt/jumpscale" ##string
-
+        self.baseDir=home
         self.baseDir=self.baseDir.replace("\\","/")
 
         '''Application installation base folder (basedir/apps)'''
-        self.appDir = curdir
+        self.appDir = os.path.abspath(".")
         
         '''Configuration file folder (appdir/etc)'''
         self.cfgDir = os.path.join(self.baseDir,"cfg")
@@ -93,22 +95,19 @@ class Dirs(object):
 
         if self.libDir not in sys.path:
             sys.path.insert(1,self.libDir)
-        
 
         self.logDir = os.path.join(self.varDir,"log")
         self._createDir(self.logDir)
 
         self.packageDir = os.path.join(self.varDir,"jpackages")
+
+        
+        
         self._createDir(self.packageDir)
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
 
-        self.pidDir = os.path.join(self.varDir,"log")   
-        
-
-        '''CMDB storage folder (vardir/cmdb)'''
-        self.cmdbDir = os.path.join(self.varDir,"cmdb")
-        self._createDir(self.cmdbDir)
+        self.pidDir = os.path.join(self.varDir,"log")           
 
         self.binDir = os.path.join(self.baseDir, 'bin')
 
@@ -116,6 +115,7 @@ class Dirs(object):
             self.codeDir=os.path.join(self.varDir,"code")
         else:
             self.codeDir="/opt/code"
+
         self._createDir(self.codeDir)
 
         self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
@@ -124,6 +124,13 @@ class Dirs(object):
         self.configsDir = os.path.join(self.baseDir,"cfg","jsconfig")
         self._createDir(self.configsDir)
 
+    def replaceBaseDirVar(self,txt):
+        """
+        replace $base with j.application.basedir if it exists
+        """
+        if hasattr("j","basepath"):
+            txt=txt.replace("$base",j.basepath)
+        return txt
 
     def _createDir(self,path):
         if not os.path.exists(path):

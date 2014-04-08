@@ -10,6 +10,7 @@ class ProcessNotFoundException(Exception):
 
 class ProcessDef:
     def __init__(self, hrd,path):
+        self.hrd=hrd
         self.autostart=hrd.getInt("process.autostart")==1
         self.path=path
         self.name=hrd.get("process.name")
@@ -22,6 +23,18 @@ class ProcessDef:
         self.args=hrd.get("process.args")
         self.env=hrd.getDict("process.env")
         self.priority=hrd.getInt("process.priority")
+        if hrd.exists("process.check"):
+            self.checkpid=hrd.getInt("process.check")==1
+        else:
+            self.checkpid=True
+
+        if hrd.exists("process.timeoutcheck"):
+            self.timeout=hrd.getInt("process.timeoutcheck")
+        else:
+            self.timeout=10
+        if self.timeout<2:
+            self.timeout=2
+
         self.reload_signal=0
         if hrd.exists('process.reloadsignal'):
             self.reload_signal = hrd.getInt("process.reloadsignal")
@@ -30,10 +43,12 @@ class ProcessDef:
             self.stopcmd = hrd.get("process.stopcmd")
         self.workingdir=hrd.get("process.workingdir")
         self.ports=hrd.getList("process.ports")
+        self.ports=[port for port in self.ports if str(port).strip()<>""]
         self.jpackage_domain=hrd.get("process.jpackage.domain")
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
-        self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s.log" % (self.domain, self.name))
+
+        self.logfile = j.system.fs.joinPaths(StartupManager.LOGDIR, "%s_%s_%s.log" % (self.domain, self.name,j.base.time.get5MinuteId()))
         if not j.system.fs.exists(self.logfile):
             j.system.fs.createDir(StartupManager.LOGDIR)
             j.system.fs.createEmptyFile(self.logfile)
@@ -43,7 +58,7 @@ class ProcessDef:
         self.lastCheck=0
         self.lastMeasurements={}
         self.active=None
-
+        self.pid=0
 
     def getJSPid(self):
         return "g%s.n%s.%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,self.name)
@@ -51,58 +66,42 @@ class ProcessDef:
     def log(self,msg):
         print "%s: %s"%(self._nameLong,msg)
 
-    def start(self, timeout=100):
+    def start(self):
         # self.logToStartupLog("***START***")
 
         if self.autostart==False:
             self.log("no need to start, disabled.")
             return
 
-        if self.isRunning():
+        if self.isRunning(wait=False):
             self.log("no need to start, already started.")
             return
+
         try:
             jp=j.packages.find(self.jpackage_domain,self.jpackage_name)[0]
         except Exception,e:
             raise RuntimeError("COULD NOT FIND JPACKAGE:%s:%s"%(self.domain,self.name))
 
-        if not self.autostart:
-            return
-
         self.log("process dependency CHECK")
-        jp.processDepCheck(timeout=timeout)
+        jp.processDepCheck()
         self.log("process dependency OK")
         self.log("start process")
         j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
+                
+        isrunning=self.isRunning(wait=True)
 
-        time.sleep(2)#need to wait because maybe error did not happen yet (is not the nicest method, but dont know how we can do else?) kds
+        if isrunning and self.checkpid and self.pid==0:
+            #means we did not check pid yet as part of isRunning test
+            self.getPid(ifNoPidFail=False,wait=False) #we already waited for running test
 
-        self.log("pid get")
+        self.log("pid: %s"%self.pid)
 
-        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=5)
-        hrd = j.core.hrd.getHRD(self.path)
-        hrd.set('pid', pid)
-        hrd.set('process_active', True)
-        self.log("pid: %s"%pid)
-
-        if pid==0:
-            raise RuntimeError("Could not start process:%s, getpid did not return, an error occured:\n%s"%(self,self.getStartupLog()))
-
-        for port in self.ports:
-            if not port or not port.isdigit():
-                continue
-            port = int(port)
-            self.log("port check:%s START"%port)
-            if not j.system.net.waitConnectionTest('localhost', port, timeout):
-                raise RuntimeError('Process %s failed to start listening on port %s withing timeout %s, startuplog:\n%s' % (self.name, port, timeout,self.getStartupLog()))
-            self.log("port check:%s DONE"%port)
-
-        if not self.isRunning():
-            raise RuntimeError("Could not start process:%s an error occured:\n%s"%(self,self.getStartupLog()))
-        
+        if isrunning==False:
+            raise RuntimeError("Could not start process:%s, an error occured:\n%s"%(self,self.getStartupLog()))
+            
         self.log("*** STARTED ***")
-        return pid
+        return self.pid
 
     def getStartupLog(self):
         if j.system.fs.exists(self.logfile):
@@ -119,31 +118,37 @@ class ProcessDef:
             print "No logs found for %s" % self
 
     def getProcessObject(self):
-        pid=self.getPid(timeout=2,ifNoPidFail=False,timeouttmux=5)
+        pid=self.getPid(ifNoPidFail=False,wait=False)
         if pid==0:
             return None
         self.processobject=j.system.process.getProcessObject(pid)
         return self.processobject
 
-    def getPid(self,timeout=0,ifNoPidFail=True,timeouttmux=0):
-        #first check screen is already there with window, max waiting 1 sec
-        start=time.time()
+    def getPid(self,ifNoPidFail=True,wait=False):
+        #first check screen is already there with window, max waiting 1 sec        
         now=0
-        pid=None
-        while pid==None and now<start+timeouttmux:
-            pid = j.system.platform.screen.getPid(self.domain, self.name)
-            if pid:
+        pid0=None
+
+        if wait:
+            start=time.time()
+            timeout=start+self.timeout
+        else:
+            timeout=1 #should not be 0 otherwise dont go in while loop
+
+        while pid0==None and now<timeout:
+            pid0 = j.system.platform.screen.getPid(self.domain, self.name)
+            if pid0<>0 or wait==False:
                 break
             time.sleep(0.2)
             now=time.time()
 
-        if pid==None:
+        if pid0==None:
             if ifNoPidFail:
                 raise RuntimeError("Pid was not found for %s, because window not found."%self)
             else:
                 return 0
 
-        pr=j.system.process.getProcessObject(pid)
+        pr=j.system.process.getProcessObject(pid0)
 
         def check():
             pid=None
@@ -155,60 +160,72 @@ class ProcessDef:
 
                 if child.is_running():
                     pid=child.pid
-                    self.pid=pid
-                    return self.pid
+                    return pid
                 else:
                     return 0
-            return None
+            return 0
 
-        if timeout==0:
-            timeout=0.1
-
-        pid=None
-        start=time.time()
+        pid=0
         now=0
-        while pid==None and now<start+timeout:
+        while pid==0 and now<timeout:
             pid=check()
+            if pid<>0 or wait==False:
+                break            
             # print "timecheck:%s"%pid
             time.sleep(0.1)
             now=time.time()
 
+        self.pid=pid
+
         if ifNoPidFail==False:
-            if pid==None:
-                pid=0
-            return pid
-        if pid>0:
-            return pid
+            return self.pid
+        if self.pid>0:
+            return self.pid
         raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
-    def isRunning(self,quicktest=False):
-        hrd = j.core.hrd.getHRD(self.path)
-        pid=self.getPid(ifNoPidFail=False)
-        if pid==0:
-            hrd.set('process_active', False)
-            return False
-        test=j.system.process.isPidAlive(pid)
-        if test==False:
-            hrd.set('process_active', False)
-            return False
-
-        if quicktest:
-            return True
-
+    def _portCheck(self):
         for port in self.ports:
             if port:
                 if isinstance(port, basestring) and not port.strip():
                     continue
                 port = int(port)
                 if not j.system.net.checkListenPort(port):
-                    hrd.set('process_active', False)
+                    self.hrd.set('process_active', False)
                     return False
-        hrd.set('process_active', True)
+        self.hrd.set('process_active', True)
+        return True        
+
+    def portCheck(self,wait=False):
+        if wait==False:
+            return self._portCheck()
+        timeout=time.time()+self.timeout
+        isrunning=False            
+        while time.time()<timeout:
+            if self._portCheck():
+                return True
+            time.sleep(0.05)
+        return False
+
+    def isRunning(self,wait=False):
+
+        if self.autostart==False:
+            return False
+
+        if self.ports<>[]:
+            res= self.portCheck(wait=wait)
+            return res
+
+        pid=self.getPid(ifNoPidFail=False,wait=wait)
+        if pid==0:
+            return False
+        test=j.system.process.isPidAlive(pid)
+        if test==False:
+            return False
         return True
 
-    def stop(self, timeout=20):
+    def stop(self):    
                      
-        pid=self.getPid(timeout=0,ifNoPidFail=False)
+        pid=self.getPid(ifNoPidFail=False,wait=False)
         if pid<>0 and self.getProcessObject() and self.processobject.is_running():
             if not self.stopcmd:
                 self.processobject.kill()
@@ -216,24 +233,28 @@ class ProcessDef:
                 j.system.process.execute(self.stopcmd)
             start=time.time()
             now=0
-            while now<start+timeout:
+            while now<start+self.timeout:
                 if self.processobject.is_running()==False:
-                    print "isdown:%s"%self
+                    self.log("isdown:%s"%self)
                     break
                 time.sleep(0.05)
                 now=j.base.time.getTimeEpoch()
 
-        hrd = j.core.hrd.getHRD(self.path)
-        hrd.set('pid', 0)
-        hrd.set('process_active', False)
-
         for port in self.ports:        
-            if not port or not port.isdigit():
-                continue
-            #@todo above disables below, need to check why are these ports wrongly filled in (jo)
-            if port=="" or port==None:                
+            if port=="" or port==None or not port.isdigit():                
                 raise RuntimeError("port cannot be none for %s"%self)    
             j.system.process.killProcessByPort(port)
+
+        if self.ports<>[]:
+            timeout=time.time()+self.timeout
+            isrunning=True            
+            while time.time()<timeout:
+                if self._portCheck()==False:
+                    isrunning=False
+                    break
+                time.sleep(0.05)
+            if isrunning:
+                raise RuntimeError("Cannot stop, tried portkill, %s"%self)
 
         j.system.platform.screen.killWindow(self.domain, self.name)
 
@@ -303,7 +324,8 @@ class StartupManager:
             self.__init=True
 
     def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False,\
-        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None, pid=0, active=False):
+        workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None, pid=0,\
+         active=False,check=True,timeoutcheck=10):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -329,9 +351,13 @@ class StartupManager:
         hrd+="process.user=%s\n"%user
         if autostart:
             autostart=1
+        hrd+="process.timeoutcheck=%s\n"%timeoutcheck
         hrd+="process.autostart=%s\n"%autostart
-        hrd+="process.pid=%s\n"%pid
-        hrd+="process.active=%s\n"%active
+        if check:
+            check=1
+        else:
+            check=0
+        hrd+="process.check=%s\n"%check
         pstring=""
         ports = ports[:]
         if jpackage and jpackage.hrd.exists('jp.process.tcpports'):
@@ -406,14 +432,14 @@ class StartupManager:
                 result.append(pd.domain)
         return result
 
-    def startJPackage(self,jpackage,timeout=20):
+    def startJPackage(self,jpackage):
         for pd in self.getProcessDefs4JPackage(jpackage):
-            pd.start(timeout)
+            pd.start()
 
-    def stopJPackage(self,jpackage,timeout=20):        
+    def stopJPackage(self,jpackage):        
         for pd in self.getProcessDefs4JPackage(jpackage):
             print "stop:%s"%pd
-            pd.stop(timeout)
+            pd.stop()
 
     def existsJPackage(self,jpackage):
         return len(self.getProcessDefs4JPackage(jpackage))>0
@@ -507,23 +533,23 @@ class StartupManager:
             result.append(file_)
         return result
 
-    def startProcess(self, domain, name, timeout=20):
+    def startProcess(self, domain, name):
         for pd in self.getProcessDefs(domain, name):
-            pd.start(timeout)
+            pd.start()
 
-    def stopProcess(self, domain,name, timeout=20):
+    def stopProcess(self, domain,name):
         for pd in self.getProcessDefs(domain, name):
-            pd.stop(timeout)
+            pd.stop()
 
-    def disableProcess(self, domain,name, timeout=20):
+    def disableProcess(self, domain,name):
         for pd in self.getProcessDefs(domain, name):
             pd.disable()
 
-    def enableProcess(self, domain,name, timeout=20):
+    def enableProcess(self, domain,name):
         for pd in self.getProcessDefs(domain, name):
             pd.enable()
 
-    def monitorProcess(self, domain,name, timeout=20):
+    def monitorProcess(self, domain,name):
         for pd in self.getProcessDefs(domain, name):
             pd.monitor()
 

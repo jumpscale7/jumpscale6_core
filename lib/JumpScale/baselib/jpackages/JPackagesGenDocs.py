@@ -3,7 +3,7 @@ from JumpScale import j
 class JPackagesGenDocs:
 
     def __init__(self):
-        self.outpath="/opt/jumpscale/apps/gridportal/base/jpackagedocs"
+        self.outpath="%s/apps/gridportal/base/jpackagedocs"%j.dirs.baseDir
         self.docs=JPdata()
         self.docsLastGen=0
         self.getHrdLists=self.docs.getHrdLists

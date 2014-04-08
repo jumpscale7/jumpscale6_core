@@ -46,8 +46,10 @@ class RemoteSystem(object):
     name = "j.remote.system"
 
     exceptions = Exceptions
+    def __init__(self):
+        self.connections={}
 
-    def connect(self, ip, login, password, timeout=10.0, port=22):
+    def connect(self, ip, login="", password="", timeout=120.0, port=22):
         """Creates a connection object to a remote system via ssh.
         
         @param ip: Ipaddress of the remote system
@@ -62,14 +64,17 @@ class RemoteSystem(object):
         @rtype: RemoteSystemConnection
         @return: A connection object to the remote system
         
-        @raise InvalidIpAddressError: The IP address was not valid
         @raise RemoteSystemNotReachableError: An error occurred while connecting to the remote system
         @raise RemoteSystemAuthenticationError: Could not authenticate to the remote system
         @raise socket.error: Unhandeld network error
         """
 
-        if not j.basetype.ipaddress.check(ip):
-            raise InvalidIpAddressError("IP address is not a valid IPv4 address")
+        # if not j.basetype.ipaddress.check(ip):
+        #     raise InvalidIpAddressError("IP address is not a valid IPv4 address")
+
+        key="%s_%s_%s_%s"%(ip,login,password,port)
+        if self.connections.has_key(key):
+            return self.connections[key]
 
         try:
             remoteConnection = RemoteSystemConnection(ip, login, password, timeout, port)
@@ -90,19 +95,22 @@ class RemoteSystem(object):
                 reraise = True
             if reraise:
                 raise
-
+        self.connections[key]=RemoteSystem
         return remoteConnection
 
 
 class RemoteSystemConnection(object):
 
-    def __init__(self, ip, login, password, timeout, port):
+    def __init__(self, ip, login="", password="", timeout=120, port=22):
         self._closed = False
         self._ipaddress = ip
         self._port = port
         self._client = paramiko.SSHClient()
         self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self._client.connect(ip, username=login, password=password, timeout=timeout, port=port)
+        if password=="":
+            self._client.connect(hostname=ip, timeout=timeout,port=port, allow_agent=True, look_for_keys=True)
+        else:
+            self._client.connect(ip, username=login, password=password, timeout=timeout, port=port)
         self._process = None
         self._fs = None
         self._portforward = None

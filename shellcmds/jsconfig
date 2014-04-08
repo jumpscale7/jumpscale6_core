@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env jspython
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
@@ -20,11 +20,11 @@ opts = parser.parse_args()
 
 
 if opts.action == "hrdset":
-    hrd=j.core.hrd.getHRD("/opt/jumpscale/cfg/hrd")    
+    hrd=j.core.hrd.getHRD("%s/cfg/hrd")%j.dirs.baseDir
     hrd.set(opts.name,opts.value)
 
 if opts.action == "hrdget":
-    hrd=j.core.hrd.getHRD("/opt/jumpscale/cfg/hrd")    
+    hrd=j.core.hrd.getHRD("%s/cfg/hrd")%j.dirs.baseDir
     print hrd.get(opts.name)
 
 j.application.stop()

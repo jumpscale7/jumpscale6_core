@@ -2,7 +2,6 @@ from JumpScale import j
 
 j.system.platform.ubuntu.check()
 
-do = j.develtools.installer._do
 import fabric
 import fabric.api
 
@@ -17,7 +16,6 @@ import fabric.api
 class FabricTool():
 
     def __init__(self):
-        self._do = j.develtools.installer._do
         self.api = fabric.api
         self.setHost()
         self.api.env.passwords = {}
@@ -27,11 +25,6 @@ class FabricTool():
         self.api.env.passwords["root@%s"%host]=passwd
         # self.api.env.hosts = ['user1@host1:port1', 'user2@host2.port2']
         # self.api.env.passwords = {'user1@host1:port1': 'password1', 'user2@host2.port2': 'password2'}
-
-    def install(self):
-        codename, descr, id, release = j.system.platform.ubuntu.getVersion()
-        do = j.develtools.installer._do
-        do.execute("pip install fabric")
 
     def setHost(self, host="localhost"):
         self.api.env["host_string"] = host

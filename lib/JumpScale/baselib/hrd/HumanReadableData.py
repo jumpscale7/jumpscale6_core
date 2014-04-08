@@ -3,7 +3,7 @@ import JumpScale.baselib.codeexecutor
 
 class HumanReadableDataFactory:
     def __init__(self):
-        self.logenable=True
+        self.logenable=False
         self.loglevel=5
 
     def log(self,msg,category="",level=5):

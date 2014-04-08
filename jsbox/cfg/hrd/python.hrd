@@ -1,0 +1,8 @@
+
+#can always make this dynamic depending platform
+
+python.paths.local.sitepackages=/opt/jsbox/lib/
+python.paths.local.distpackages=/opt/jsbox/lib/
+python.paths.shared=/opt/jsbox/lib/
+python.paths.distpackages=/opt/jsbox/lib/
+

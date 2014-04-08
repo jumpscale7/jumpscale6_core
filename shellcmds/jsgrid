@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env jspython
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
@@ -7,13 +7,17 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit','reconfigure','testall','reinitsentry'], help='Command to perform')
+parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'deletenode',\
+        'restartprocessmgrs','reloadjumpscripts','restartWorkers'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
 
 parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
 parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
+parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
+parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='used with deletenode, ex: -nid=1(note the = sign)')
 
 
 #check redis is there if not try to start
@@ -61,7 +65,7 @@ if opts.action =='reinit':
 
     j.packages.findNewest(name="graphite").stop()
 
-    for item in ["/opt/graphite/storage/whisper/","/opt/jumpscale/var/log/","/opt/jumpscale/var/tmp/"]:
+    for item in ["%s/graphite/storage/whisper/"%j.dirs.baseDir,"%s/var/log/"%j.dirs.baseDir,"%s/var/tmp/"%j.dirs.baseDir]:
         j.system.fs.removeDirTree(item)
         j.system.fs.createDir(item)
     
@@ -77,7 +81,6 @@ if opts.action =='reinit':
             jp.configure()
 
 
-
     jp=j.packages.findNewest(name="grid_portal")
     jp.restart()
 
@@ -91,5 +94,78 @@ if opts.action =='reinit':
     j.system.process.executeWithoutPipe("jsuser add -d admin:admin:admin::")
 
     print "has set user admin with passwd admin, please change using command 'jsuser' if required."
+
+#################HEALTHCHECK
+if opts.action == 'healthcheck':
+    import JumpScale.grid.gridhealthchecker
+    j.core.grid.healthchecker.runAll()
+
+if opts.action == 'restartprocessmgrs':
+    import JumpScale.grid.agentcontroller
+    ac=j.clients.agentcontroller.get()
+    ac.restartProcessmanagerWorkers()
+
+if opts.action == 'reloadjumpscripts':
+    import JumpScale.grid.agentcontroller
+    ac=j.clients.agentcontroller.get()
+    ac.reloadjumpscripts()
+
+if opts.action == 'restartWorkers':
+    import JumpScale.grid.agentcontroller
+    ac=j.clients.agentcontroller.get()
+    ac.restartWorkers()
+
+
+#################PURGELOGS
+if opts.action == 'purgelogs':
+    import JumpScale.baselib.elasticsearch
+    def _getEpoch(time):
+        if not time:
+            return time
+        if isinstance(time, int):
+            return time
+        if time.startswith('-'):
+            return j.base.time.getEpochAgo(time)
+        return j.base.time.getEpochFuture(time)
+
+    esclient = j.clients.elasticsearch.get()
+    query = dict()
+    if opts.ffrom:
+        query['range'] = dict()
+        query['range']['epoch'] = dict()
+        query['range']['epoch']['from'] = _getEpoch(opts.ffrom)
+
+    if opts.to:
+        if 'range' not in query:
+            query['range'] = dict()
+            query['range']['epoch'] = dict()
+        query['range']['epoch']['to'] = _getEpoch(opts.to)
+    if query:
+        result = esclient.delete_by_query(index='system_log', query=query, doc_type='json')
+        if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
+            print 'purgelogs executed successfully'
+
+
+#################DELETE NODE####################################
+if opts.action == 'deletenode':
+    import JumpScale.baselib.elasticsearch
+
+    esclient = j.clients.elasticsearch.get()
+    query = {"term":{"nid":opts.nid}}
+    
+    result = esclient.delete_by_query(index='system_node', doc_type='json', query={"term":{"id":opts.nid}})
+    if result['ok']:
+        print 'Node %s deleted successfully' % (opts.nid)
+    else:
+        print 'Node %s deletion failed' % (opts.nid)
+
+    indices = esclient.get_mapping().keys()
+    for index in indices:
+        result = esclient.delete_by_query(index=index, doc_type='json', query=query)
+        if not result['ok']:
+            print '%s for node %s deleted successfully' % (index.replace('system_', ''), opts.nid)
+
+
+
 
 j.application.stop()

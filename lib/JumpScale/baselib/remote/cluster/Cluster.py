@@ -110,33 +110,33 @@ class Cluster(BaseType):
     def listnodes(self):
         return [node.hostname for node in self.nodes]
 
-    def copyQbase(self, sandboxname="", hostnames=[], deletesandbox=None):
-        """
-        sandboxes are $sandboxname.tgz in /opt/sandboxes
-        @param sandboxname is name of a sandbox in that directory
-        """
-        nodes = self.selectNodes("Select which nodes", hostnames)
-        j.transaction.start("Copy qbase onto cluster.")
-        sandboxdir = j.system.fs.joinPaths(j.dirs.baseDir, "..", "sandboxes")
-        sandboxes = j.system.fs.listFilesInDir(sandboxdir)
-        if sandboxname == "":
-            sandboxname = j.console.askChoice(sandboxes, "Select sandbox to copy", True)
-        if deletesandbox == None:
-            deletesandbox = j.console.askYesNo("    Do you want to remove remote qbase6 directory (if it exists?)")
-        for node in nodes:
-            node.copyQbase(sandboxname=sandboxname, deletesandbox=deletesandbox)
-        j.transaction.stop()
+    # def copyQbase(self, sandboxname="", hostnames=[], deletesandbox=None):
+    #     """
+    #     sandboxes are $sandboxname.tgz in /opt/sandboxes
+    #     @param sandboxname is name of a sandbox in that directory
+    #     """
+    #     nodes = self.selectNodes("Select which nodes", hostnames)
+    #     j.transaction.start("Copy qbase onto cluster.")
+    #     sandboxdir = j.system.fs.joinPaths(j.dirs.baseDir, "..", "sandboxes")
+    #     sandboxes = j.system.fs.listFilesInDir(sandboxdir)
+    #     if sandboxname == "":
+    #         sandboxname = j.console.askChoice(sandboxes, "Select sandbox to copy", True)
+    #     if deletesandbox == None:
+    #         deletesandbox = j.console.askYesNo("    Do you want to remove remote qbase6 directory (if it exists?)")
+    #     for node in nodes:
+    #         node.copyQbase(sandboxname=sandboxname, deletesandbox=deletesandbox)
+    #     j.transaction.stop()
 
-    def sendExportedQbase(self, sandboxname=None, hostnames=[]):
-        nodes = self.selectNodes("Select which nodes", hostnames)
-        j.transaction.start("Copy exported qbase6 onto cluster.")
-        sandboxdir = j.system.fs.joinPaths(j.dirs.baseDir, "..", "sandboxes")
-        choices = [j.system.fs.getBaseName(item).replace(".tgz", "") for item in j.system.fs.listFilesInDir(sandboxdir)]
-        j.console.echo("Select sandbox to sent to cluster")
-        sandboxname = j.console.askChoice(choices)
-        for node in nodes:
-            node.sendExportedQbase(sandboxname)
-        j.transaction.stop()
+    # def sendExportedQbase(self, sandboxname=None, hostnames=[]):
+    #     nodes = self.selectNodes("Select which nodes", hostnames)
+    #     j.transaction.start("Copy exported qbase6 onto cluster.")
+    #     sandboxdir = j.system.fs.joinPaths(j.dirs.baseDir, "..", "sandboxes")
+    #     choices = [j.system.fs.getBaseName(item).replace(".tgz", "") for item in j.system.fs.listFilesInDir(sandboxdir)]
+    #     j.console.echo("Select sandbox to sent to cluster")
+    #     sandboxname = j.console.askChoice(choices)
+    #     for node in nodes:
+    #         node.sendExportedQbase(sandboxname)
+    #     j.transaction.stop()
 
     def do(self, method, hostnames=[], all=False, dieOnError=True, **args):
         """
@@ -262,14 +262,14 @@ class Cluster(BaseType):
 
     # ccopy ("/opt/code/incubaid/jumpscale-core-6.0/apps/worker/","/opt/qbase6/apps/worker/")
 
-    def syncQbase(self, hostnames=[]):
-        j.transaction.start("Sync Qbase")
-        nodes = self.selectNodes("Select which nodes you want to sync qbase to", hostnames)
-        for node in nodes:
-            node.syncQbase()
-        j.transaction.stop()
+    # def syncQbase(self, hostnames=[]):
+    #     j.transaction.start("Sync Qbase")
+    #     nodes = self.selectNodes("Select which nodes you want to sync qbase to", hostnames)
+    #     for node in nodes:
+    #         node.syncQbase()
+    #     j.transaction.stop()
 
-    def executeQshell(self, command, hostnames=[], dieOnError=True):
+    def executeJS(self, command, hostnames=[], dieOnError=True):
         """
         execute a command on every node of the cluster, only output the result
         """
@@ -277,7 +277,7 @@ class Cluster(BaseType):
         nodes = self.selectNodes("Select which nodes", hostnames)
         results = {}
         for node in nodes:
-            returncode, stdout = node.executeQshell(command, dieOnError)
+            returncode, stdout = node.executeJS(command, dieOnError)
             # stdout=j.console.formatMessage(stdout,prefix="stdout")
             results[node.hostname] = [returncode, stdout]
             if j.application.shellconfig.interactive:
@@ -285,16 +285,16 @@ class Cluster(BaseType):
         j.transaction.stop()
         return results
 
-    def syncRootPasswords(self, newPasswd):
-        '''
-        Reset all root passwords of nodes in this cluster to the specified value.
-        Remark: requires that cluster is created with correct root passwords provided.
+    # def syncRootPasswords(self, newPasswd):
+    #     '''
+    #     Reset all root passwords of nodes in this cluster to the specified value.
+    #     Remark: requires that cluster is created with correct root passwords provided.
 
-        @param newPasswd The root password to set on the nodes
-        @type newPasswd String
-        '''
-        for node in self.nodes:
-            node.changeRootPassword(newPasswd)
+    #     @param newPasswd The root password to set on the nodes
+    #     @type newPasswd String
+    #     '''
+    #     for node in self.nodes:
+    #         node.changeRootPassword(newPasswd)
 
     def get(self, name):
         for node in self.nodes:
@@ -497,25 +497,25 @@ class Cluster(BaseType):
         for node in nodes:
             node.symlink(target, linkname)
 
-    def backupQbase(self, hostnames=[]):
-        nodes = self.selectNodes("Select which nodes ", hostnames)
-        for node in nodes:
-            node.backupQbase()
+    # def backupQbase(self, hostnames=[]):
+    #     nodes = self.selectNodes("Select which nodes ", hostnames)
+    #     for node in nodes:
+    #         node.backupQbase()
 
-    def restoreQbase(self, hostnames=[]):
-        nodes = self.selectNodes("Select which nodes ", hostnames)
-        for node in nodes:
-            node.restoreQbase()
+    # def restoreQbase(self, hostnames=[]):
+    #     nodes = self.selectNodes("Select which nodes ", hostnames)
+    #     for node in nodes:
+    #         node.restoreQbase()
 
-    def backupQbaseCode(self, hostnames=[]):
-        nodes = self.selectNodes("Select which nodes ", hostnames)
-        for node in nodes:
-            node.backupQbaseCode()
+    # def backupQbaseCode(self, hostnames=[]):
+    #     nodes = self.selectNodes("Select which nodes ", hostnames)
+    #     for node in nodes:
+    #         node.backupQbaseCode()
 
-    def restoreQbaseCode(self, hostnames=[]):
-        nodes = self.selectNodes("Select which nodes ", hostnames)
-        for node in nodes:
-            node.restoreQbaseCode()
+    # def restoreQbaseCode(self, hostnames=[]):
+    #     nodes = self.selectNodes("Select which nodes ", hostnames)
+    #     for node in nodes:
+    #         node.restoreQbaseCode()
 
     def mkdir(self, path, hostnames=[]):
         nodes = self.selectNodes("Select which nodes you want to create a dir on", hostnames)

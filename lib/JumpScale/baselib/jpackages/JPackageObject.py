@@ -137,9 +137,9 @@ class JPackageObject():
             j.system.fs.removeDirTree(path)
             # print "remove:%s"%path
 
-        j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
+        # j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
         # j.system.fs.remove("%s/actions/code.link.py"%self.getPathMetadata())
-        j.system.fs.remove("%s/actions/upload.py"%self.getPathMetadata())
+        # j.system.fs.remove("%s/actions/upload.py"%self.getPathMetadata())
         
 
         # if j.system.fs.exists(self.getPathMetadata()):
@@ -441,7 +441,7 @@ class JPackageObject():
             #walk over found id's
             for id in ids:
                 key="jp.dependency.%s.%%s"%id
-                if not self.hrd.exists('minversion'):
+                if not self.hrd.exists(key % 'minversion'):
                     self.hrd.set(key % 'minversion',"")
                 if not self.hrd.exists(key % 'maxversion'):
                     self.hrd.set(key % 'maxversion',"")
@@ -610,28 +610,29 @@ class JPackageObject():
         buildNr=0
         for ql in self.getQualityLevels():
             path=self.getMetadataPathQualityLevel(ql)
-            path= j.system.fs.joinPaths(path,"hrd","main.hrd")
-            buildNr2=j.core.hrd.getHRD(path).getInt("jp.buildNr")
-            if buildNr2>buildNr:
-                buildNr=buildNr2
-       
+            if path != None:
+                path= j.system.fs.joinPaths(path,"hrd","main.hrd")
+                buildNr2=j.core.hrd.getHRD(path).getInt("jp.buildNr")
+                if buildNr2>buildNr:
+                    buildNr=buildNr2
+        
         buildNr+=1
         self.buildNr=buildNr
         self.save()
         return self.buildNr
             
     def getMetadataPathQualityLevel(self,ql):
-        path=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", self.domain)
+        path=j.system.fs.joinPaths(j.dirs.packageDirMD, self.domain)
         if not j.system.fs.isLink(path):
             raise RuntimeError("%s needs to be link"%path)
         jpackagesdir=j.system.fs.getParent(j.system.fs.readlink(path))
         path= j.system.fs.joinPaths(jpackagesdir,ql,self.name,self.version)
-        if not j.system.fs.exists(path=path):         
-            raise RuntimeError("Cannot find ql dir on %s"%path)
+        if not j.system.fs.exists(path=path):
+            return None
         return path
 
     def getQualityLevels(self):
-        path=j.system.fs.joinPaths(j.dirs.packageDir, "metadata", self.domain)
+        path=j.system.fs.joinPaths(j.dirs.packageDirMD, self.domain)
         if not j.system.fs.isLink(path):
             raise RuntimeError("%s needs to be link"%path)
         jpackageconfig = j.config.getConfig('sources', 'jpackages')
@@ -709,6 +710,9 @@ class JPackageObject():
             systemdest = "/%s"%blobitempath.lstrip("/")
         elif ttype=="base":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir, blobitempath)
+        elif ttype=="opt":
+            base="/opt"
+            systemdest = j.system.fs.joinPaths(base, blobitempath)
         elif ttype=="deb":
             systemdest = "/tmp"
         elif ttype=="etc":
@@ -1021,6 +1025,10 @@ class JPackageObject():
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
             if platform not in j.system.platformtype.getMyRelevantPlatforms():
                 continue
+            
+            #first do the debs otherwise the other dirs cannot overwrite what debs do
+            self.installDebs()
+
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
                 # print "type:%s,%s"%(ttype,ttype.find("cr_"))
@@ -1041,7 +1049,7 @@ class JPackageObject():
                     tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                     self.log("copy files from:%s to:%s"%(pathttype,destination))
                     self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
-            self.installDebs()
+            
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """
@@ -1363,10 +1371,7 @@ class JPackageObject():
 
     def _calculateBlobInfo(self):
         result = False
-        # clean old .info files (might be invalid anymore)
         filesdir = j.system.fs.joinPaths(self.getPathMetadata(),"files")
-        for crfile in j.system.fs.listFilesInDir(filesdir, filter='*.info'):
-            j.system.fs.remove(crfile)
 
         pathfiles = self.getPathFiles()
         if not j.system.fs.exists(pathfiles):
@@ -1519,6 +1524,7 @@ class JPackageObject():
         self.actions.restore()        
 
     def upload(self, remote=True, local=True,dependencies=False,onlycode=False):
+
         if dependencies==None and j.application.shellconfig.interactive:
             dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
         else:
@@ -1538,6 +1544,8 @@ class JPackageObject():
         Does always a jp.package() first
         """
 
+
+
         self.loadActions(force=True)
         self._calculateBlobInfo()
 
@@ -1545,25 +1553,30 @@ class JPackageObject():
 
             key0,blobitems=self.getBlobInfo(platform,ttype)
 
-            pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
-            if not j.system.fs.exists(pathttype):
-                raise RuntimeError("Could not find files section:%s, check the files directory in your jpackages metadata dir, maybe there is a .info file which is wrong & does not exist here."%pathttype)
+            pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
             if ttype[0:3]<>"cr_" and onlycode:
                 print "no need to upload (onlycode option):%s %s %s"%(self,platform,ttype)
                 continue
 
+            if not j.system.fs.exists(pathttype):
+
+                raise RuntimeError("Could not find files section:%s, check the files directory in your jpackages metadata dir, maybe there is a .info file which is wrong & does not exist here."%pathttype)
+
             self.log("Upload platform:'%s', type:'%s' files:'%s'"%(platform,ttype,pathttype),category="upload")
         
             if local and remote and self.blobstorRemote <> None and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[self.blobstorRemote])
+                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype)
+                key, descr,uploadedAnything  = self.blobstorRemote.put(pathttype)
             elif local and self.blobstorLocal <> None:
                 key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[])
             elif remote and self.blobstorRemote <> None:
                 key, descr, uploadedAnything = self.blobstorRemote.put(pathttype, blobstors=[])
             else:
                 raise RuntimeError("need to upload to local or remote")
+
+
 
             # if uploadedAnything:
             #     self.log("Uploaded blob for %s:%s:%s to blobstor."%(self,platform,ttype))
@@ -1572,6 +1585,8 @@ class JPackageObject():
 
             if key0<>key:
                 raise RuntimeError("Corruption in upload for %s"%self)
+
+
 
     def waitUp(self, timeout=60,dependencies=False):        
         self.loadActions()

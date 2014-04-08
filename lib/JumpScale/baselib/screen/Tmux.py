@@ -109,12 +109,12 @@ class Tmux:
 
     def getPid(self, session, name):
         cmd = 'tmux list-panes -t "%s" -F "#{pane_pid};#{window_name}" -a' % session
-        
         exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
-        if exitcode:
+        if exitcode>0:
             return None
         for line in output.split():
             pid, windowname = line.split(';')
+            # print "%s '%s'"%(pid,windowname)
             if windowname == name:
                 return int(pid)
         return None

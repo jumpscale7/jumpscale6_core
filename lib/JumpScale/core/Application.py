@@ -32,6 +32,11 @@ class Application:
 
         self.jid=0
 
+        if 'JSBASE' in os.environ:
+            self.sandbox=True
+        else:
+            self.sandbox=False
+
     def initWhoAmI(self):
         """
         when in grid:
@@ -84,7 +89,7 @@ class Application:
         if j.system.fs.exists(path=path):
             self.config = j.core.hrd.getHRD(path=path)
 
-    def start(self,name=None,basedir="/opt/jumpscale",appdir="."):
+    def start(self,name=None,appdir="."):
         '''Start the application
 
         You can only stop the application with return code 0 by calling
@@ -101,7 +106,6 @@ class Application:
 
 
         j.dirs.appDir=appdir
-        j.dirs.baseDir=basedir
 
         j.dirs.init(reinit=True)
 
@@ -250,10 +254,6 @@ class Application:
     def _setWriteExitcodeOnExit(self, value):
         if not j.basetype.boolean.check(value):
             raise TypeError
-        j.logger.log("Setting j.application.writeExitcodeOnExit = %s"%str(value), 5)
-        exitcodefilename = j.system.fs.joinPaths(j.dirs.tmpDir, 'qapplication.%d.exitcode'%os.getpid())
-        if value and j.system.fs.exists(exitcodefilename):
-            j.system.fs.remove(exitcodefilename)
         self._writeExitcodeOnExit = value
 
     def _getWriteExitcodeOnExit(self):

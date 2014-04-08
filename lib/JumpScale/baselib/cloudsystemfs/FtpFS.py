@@ -50,6 +50,7 @@ class FtpFS(object):
             self.ftp = FTP(self.server)
             #self.ftp.set_debuglevel(2)
             self.ftp.connect()
+            self.ftp.set_pasv(True)
             if self.username != None and self.password != None:
                 self.ftp.login(self.username,self.password)
             else:
@@ -118,6 +119,7 @@ class FtpFS(object):
                 remotefile = j.system.fs.getBaseName(uploadPath)
             else:
                 remotefile = self.filename
+
             self.storeFile(remotefile,uploadPath)
 
     def download(self):
@@ -177,7 +179,9 @@ class FtpFS(object):
         Ftp upload file
         """
         j.logger.log("FtpFS: storing [%s] from [%s]" % (file,uploadPath))
-        self.ftp.storbinary('STOR %s' % file, open(uploadPath, 'rb'), 1024)
+        # print "%s:%s:%s %s %s"%(self.server,self.username,self.password,file,uploadPath)
+        self.ftp.storbinary('STOR %s' % file, open(uploadPath, 'rb'), 8192)
+        print "done"
 
     def handleUploadDir(self,dir,upload_path):
         """

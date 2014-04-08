@@ -19,6 +19,6 @@ class BlobStorConfigManagementItem(ConfigManagementItem):
         self.dialogAskString('namespace', 'Optional Namespace', 'j.')
         self.dialogAskString('ftp', 'Optional FTP Location (full url location with login/passwd)')
         self.dialogAskString('http', 'Optional HTTP Location (for download only)')
-        self.dialogAskString('localpath', 'Optional localpath', '/opt/jumpscale/var/blobstor')
+        self.dialogAskString('localpath', 'Optional localpath', '/tmp/jumpscale/blobstor')
 
 BlobStorConfigManagement = ItemGroupClass(BlobStorConfigManagementItem)

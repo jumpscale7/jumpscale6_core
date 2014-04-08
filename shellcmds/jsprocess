@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env jspython
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
@@ -43,27 +43,37 @@ if opts.action in ('attach', 'logs'):
 
 #@todo does not work on all jpackages
 if opts.action == 'restart':
-    j.tools.startupmanager.restartProcess(opts.domain, opts.name)
-    j.application.stop(0)
-
-
-# commands applying on list of processes
-if opts.action == 'stop':
     pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
     for pd in pds_rev:
+        print "restart: %s"%pd
+        pd.stop()
+        pd.start()
+    j.application.stop(0)
+
+# commands applying on list of processes
+if opts.action == 'stop':    
+    pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
+    for pd in pds_rev:
+        print "stop: %s"%pd
         pd.stop()
     j.application.stop(0)
 
 
+# commands applying on list of processes
+if opts.action == 'start':
+    pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
+    for pd in pds_rev:
+        print "start: %s"%pd
+        pd.start()
+    j.application.stop(0)
+
+
 for pd in pds:
-    if opts.action in ('list', 'status'):
+    if opts.action in ('status','list'):
         
         status = ''
         active = 'enabled' if pd.autostart else 'disabled'
-        if opts.action == 'status':
-            status = 'RUNNING' if pd.isRunning() else 'HALTED'
-        else:
-            status = 'RUNNING' if pd.isRunning(quicktest=True) else 'HALTED'
+        status = 'RUNNING' if pd.isRunning() else 'HALTED'
 
         print FORMAT % (pd.domain, pd.name, pd.priority, status, active)
     else:

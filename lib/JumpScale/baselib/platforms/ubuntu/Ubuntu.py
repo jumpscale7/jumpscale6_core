@@ -189,6 +189,9 @@ stop on runlevel [016]
     def stopService(self, servicename):
         return j.system.process.execute("stop %s" % servicename,False)
 
+    def restartService(self, servicename):
+        return j.system.process.execute("restart %s" % servicename,False)
+
     def statusService(self, servicename):
         exitcode, output = j.system.process.execute("sudo status %s" % servicename,False)
         parts = output.split(' ')

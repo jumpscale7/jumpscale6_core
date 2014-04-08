@@ -5,6 +5,7 @@ import JumpScale.baselib.mercurial
 class JSDevelToolsInstaller:
 
     def __init__(self):
+        raise RuntimeError("not longer relevant")
         self._do=j.system.installtools
         self.login=""
         self.passwd=""

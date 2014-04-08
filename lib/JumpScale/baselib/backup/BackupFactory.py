@@ -9,11 +9,15 @@ class BackupFactory:
         self.loglevel=5
         self._cache={}
 
-    def get(self, blobclientName="incubaid",gitlabName="incubaid"):
-        name="%s_%s"%(blobclientName,gitlabName)
+    def get(self, backupname,blobstorAccount,blobstorNamespace,gitlabAccount,compress=True,fullcheck=False,servercheck=True,storpath="/mnt/STOR"):
+        """
+        @param backupdomain is domain used in blobstor
+        """
+        name="%s_%s_%s_%s"%(backupname,blobstorAccount,blobstorNamespace,gitlabAccount)
         if self._cache.has_key(name):
             return self._cache[name]
-        self._cache[name]= BackupClient(blobclientName, gitlabName)
+        self._cache[name]= BackupClient(backupname=backupname,blobstorAccount=blobstorAccount,blobstorNamespace=blobstorNamespace, \
+            gitlabAccount=gitlabAccount,compress=compress,servercheck=servercheck,fullcheck=fullcheck,storpath=storpath)
         return self._cache[name]
 
     def _log(self,msg,category="",level=5):

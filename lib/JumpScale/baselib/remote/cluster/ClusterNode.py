@@ -1,7 +1,8 @@
 from JumpScale import j
-from ClusterSSHClient import ClusterSSHClient
+# from ClusterSSHClient import ClusterSSHClient
 import random
 
+import JumpScale.baselib.remote
 
 class ClusterNode():
 
@@ -12,7 +13,8 @@ class ClusterNode():
         self.isPreparedForSSODebug = False
         self.ubuntuPackagesUpdated = False
         self.ubuntuPackagesInstalled = []
-        self.sshclient = ClusterSSHClient(cluster, self)
+        # self.sshclient = ClusterSSHClient(cluster, self)
+
 
     def execute(self, commands, dieOnError=True, silent=False, timeout=60):
         j.transaction.start("Execute %s on node %s %s" % (commands, self.hostname, self.ipaddr), silent=silent)
@@ -20,7 +22,7 @@ class ClusterNode():
         j.transaction.stop()
         return [exitcode, output, error]
 
-    def executeQshell(self, commands, dieOnError=True, silent=False, timeout=60):
+    def executeJS(self, commands, dieOnError=True, silent=False, timeout=60):
         if not commands:
             raise RuntimeError('Commands is empty!')
         print 'COMMANDS: ' + commands
@@ -45,7 +47,7 @@ j.application.stop()
 
         j.system.fs.writeFile(tmpfilepath, commands)
         self.sendfile(tmpfilepath, tmpfilepath)
-        result = self.sshclient.execute("/opt/qbase6/jshell -f %s" % tmpfilepath, dieOnError, timeout=timeout)
+        result = self.sshclient.execute("js-f %s" % tmpfilepath, dieOnError, timeout=timeout)
         j.system.fs.remove(tmpfilepath)
         j.transaction.stop()
         return [0, result, ""]

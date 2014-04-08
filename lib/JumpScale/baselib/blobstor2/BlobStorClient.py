@@ -1,182 +1,366 @@
 from JumpScale import j
+import lzma
+import msgpack
+import os
+import ujson
+# import 
 
-class BlobStorClient2:
+class BlobStorClient:
     """
-    generic usable storage system for larger blobs =  a blob is e.g. a file or a directory (which is then compressed)
+    client to blobstormaster
     """
 
-    def __init__(self, namespace,addr,port,login,passwd):
+    def __init__(self, master,domain,namespace):        
+        self.master=master
+        self.domain=domain
         self.namespace=namespace
-        self.client= j.servers.zdaemon.getZDaemonClient(addr,port=port,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
+        self.setGetNamespace()
+        self.rmsize=len(self.nsobj["routeMap"])
+        self.queue=[]
+        self.queuedatasize=0
+        self.maxqueuedatasize=1*1024*1024 #1MB
+        self._MB4=4*1024*1024
+        self._compressMin=32*1024
+        self.compress=True
+        self.cachepath=""
+        self.lastjid=0
 
-    def exists(self, key, repoId=""):
+        self._downloadbatch={}
+        self._downloadbatchSize=0
+
+        self.results={}
+        self.blobstor=self._getBlobStorConnection()
+
+        self.errors=[]
+
+    def _normalize(self, path):
+        path=path.replace("'","\\'")
+        path=path.replace("[","\\[")
+        path=path.replace("]","\\]")
+        return path
+
+    def setGetNamespace(self,nsobj=None):
+        if nsobj==None:            
+            ns=self.master.getNamespace(domain=self.domain,name=self.namespace)
+            if ns==None:            
+                ns=self.master.newNamespace(domain=self.domain,name=self.namespace)        
+        else:
+            ns=self.master.setNamespace(namespaceobject=nsobj.__dict__)
+        self.nsobj=ns
+        self.replicaMaxSize=self.nsobj["replicaMaxSizeKB"]*1024
+        self.nsid=self.nsobj["id"]
+        return ns
+
+    def _getBlobStorConnection(self,datasize=0,random=False):
+        return j.clients.blobstor2.getBlobStorConnection(self.master,self.nsobj,datasize,random=random)
+
+    def _execCmd(self,cmd="",args={},data="",sync=True,timeout=60):
+        # print "cmd:%s args:%s"%(cmd,args)
+        self.lastjid+=1
+        if self.lastjid>1000000 and self.results=={}: #cannot have risk to restart the nr when there are results still in mem
+            self.lastjid=1
+
+        self.queue.append((self.lastjid,cmd,args,data))
+        self.queuedatasize+=len(data)
+    
+        if sync or len(self.queue)>200 or self.queuedatasize>self.maxqueuedatasize:
+            full,res=self._send(sync,timeout)
+            
+            for jid,val in res.iteritems():
+                self.results[jid]=val
+
+            if full:
+                #too many to send back at once
+                self._getResults()
+
+            self.queue=[]
+            self.queuedatasize=0
+        
+        if sync:
+            return self.results.pop(self.lastjid)            
+        else:
+            return self.lastjid
+
+    def _send(self,sync=False,timeout=60):
+        if self.queuedatasize>0:
+            print "send: %s KB nr cmds:%s"%(int(self.queuedatasize/1024),len(self.queue))
+        if len(self.queue)>0:
+            full,res=self.blobstor.sendCmds(self.queue,sync=sync,timeout=timeout)
+            return full,res
+        else:
+            return False,None
+        
+
+
+    # def _getResults(self):
+    #     for i in range(1000):
+    #         res=self.blobstor.sendCmds([(0,"",{},"")],sync=True)
+    #         from IPython import embed
+    #         print "DEBUG NOW _getResults"
+    #         embed()
+            
+    #         if len(res.keys())==0:
+    #             return
+    #         for key,val in res.iteritems():
+    #             self.results[key]=val #@todo there was something faster to do this
+    #     if i>990:
+    #         raise RuntimeError("Could not get results, server keeps on sending.")
+
+    def set(self,key, data,repoid=0,sync=True,timeout=60,serialization=""):
         """
-        Checks if the blobstor contains an entry for the given key
-        @param key: key to
         """
-        return self.client.exists(self.namespace, key, repoId=repoId)
+        return self._execCmd("SET",{"key":key,"namespace":self.namespace,"repoid":repoid,"serialization":serialization},data=data,sync=sync,timeout=timeout)        
 
-    def getMD(self, key):
-        return self.client.getMD(self.namespace, key)
-
-    def delete(self, key, force=False,repoId=""):
-        return self.client.delete(self.namespace, key, repoId=repoId, force=force)
-
-    def set(self, key, data, repoId=""):
+    def sync(self):
         """
-        set 1 block of data, data is preformatted (e.g. compressed, encrypted, ...)
         """
-        return self.client.set(self.namespace, key, data, repoId=repoId)
+        return self._execCmd("SYNC",{"namespace":self.namespace},data="",sync=True,timeout=2)        
 
-    def get(self, key):
+
+    def get(self, key,repoid=0,timeout=60,sync=True):
         """
         get the block back
         """
-        return self.client.get(self.namespace, key)
+        res=self._execCmd("GET",{"key":key,"namespace":self.namespace,"repoid":repoid},sync=sync,timeout=timeout) 
+        return res
+
+    def existsBatch(self,keys,repoid=0,replicaCheck=False):
+        return self._execCmd("EXISTSBATCH",{"keys":keys,"namespace":self.namespace,"repoid":repoid},sync=True,timeout=600) 
+
+    def exists(self,key,repoid=0,replicaCheck=False):
+        """
+        Checks if the blobstor contains an entry for the given key
+        @param key: key to Check
+        @replicaCheck if True will check that there are enough replicas (not implemented)
+        the normal check is just against the metadata stor on the server, so can be data is lost
+        """
+        return self._execCmd("EXISTS",{"key":key,"namespace":self.namespace,"repoid":repoid},sync=True,timeout=2)
+
+    def getMD(self,key):
+        return self._execCmd("GETMD",{"key":key,"namespace":self.namespace,"repoid":repoid},sync=True,timeout=2) 
+
+    def delete(self,key, repoid=0,force=False):
+        return self._execCmd("DELETE",{"key":key,"namespace":self.namespace,"repoid":repoid},sync=True,timeout=60)
 
     def deleteNamespace(self):
-        return self.client.deleteNamespace(self.namespace)
+        return self._execCmd("DELNS",{"namespace":self.namespace},sync=True,timeout=600) 
 
-    def getBlobPatch(self, keyList):
-        return self.client.getBlobPatch(self.namespace, keyList)
-
-    def download(self, key, destination):
-        pass
-
-    def checkIdentical(self, key, destination):
-        """
-        return True if destination is still same as on blobsystem
-        else False
-        """
-        raise RuntimeError("not implemented")
-        metadata = self.getMetadata(key)
-        filetype = metadata.filetype
-        if filetype == "file":
-            hashh = j.tools.hash.md5(destination)
+    def _dump2stor(self, data,key="",repoid=0,compress=None):
+        if len(data)==0:
+            return ""
+        if key=="":
+            key = j.tools.hash.md5_string(data)
+        if compress==True or (len(data)>self._compressMin and self.compress):
+            compress=self.compress
+            # print "compress"
+            print ".",
+            data=lzma.compress(data)
+            serialization="L"
         else:
-            hashh, filesdescr = j.tools.hash.hashDir(destination)
-        return metadata.hash == hashh
+            serialization=""
 
-    def copyToOtherBlobStor(self, key, blobstor):
-        raise RuntimeError("not implemented")
-        if True or not blobstor.exists(key):
-            tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
-            self._put(blobstor, metadata, tmpfile)
-            if not self.config['type'] == 'local':
-                j.system.fs.remove(tmpfile)
+        self.set(key=key, data=data,repoid=repoid,serialization=serialization,sync=False)
+        return key
+
+    def _read_file(self,path, block_size=0):
+        if block_size==0:
+            block_size=self._MB4
+
+        with open(path, 'rb') as f:
+            while True:
+                piece = f.read(block_size)
+                if piece:
+                    yield piece
+                else:
+                    return
+
+    def uploadDir(self,dirpath,compress=False):
+        name="backup_md_%s"%j.base.idgenerator.generateRandomInt(1,100000)
+        tarpath="/tmp/%s.tar"%name
+        if compress:
+            cmd="cd %s;tar czf %s ."%(dirpath,tarpath)
         else:
-            j.clients.blobstor.log("No need to download '%s' to blobstor, because is already there" % key, "download")
+            cmd="cd %s;tar cf %s ."%(dirpath,tarpath)
+        j.system.process.execute(cmd)
+        key=self.uploadFile(tarpath,compress=False)
+        j.system.fs.remove(tarpath)
+        return key
 
-    def _put(self, blobstor, metadata, tmpfile):
-        hashh = metadata.hash
-        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(('ftp',)), hashh[0:2], hashh[2:4])
-        if metadata.filetype == "file":
-            targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
+    def downloadDir(self,key,dest,repoid=0,compress=None):
+        j.system.fs.removeDirTree(dest)
+        j.system.fs.createDir(dest)
+        name="backup_md_%s"%j.base.idgenerator.generateRandomInt(1,100000)
+        tarpath="/tmp/%s.tar"%name
+        self.downloadFile(key,tarpath,False,repoid=repoid)
+        if compress:
+            cmd="cd %s;tar xzf %s"%(dest,tarpath)
         else:
-            targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".tgz")
-        targetFileNameMeta = j.system.fs.joinPaths(targetDirName, hashh + ".meta")
+            cmd="cd %s;tar xf %s"%(dest,tarpath)
+        j.system.process.execute(cmd)
+        j.system.fs.remove(tarpath)
 
-        if blobstor.config["type"] == "local":
-            targetFileNameTgz = targetFileNameTgz.replace("file://", "")
-            j.system.fs.createDir(j.system.fs.getDirName(targetFileNameTgz))
-            j.system.fs.copyFile(tmpfile, targetFileNameTgz)
-        else:
-            #@todo P1 need to create the required dir (do directly with FTP)
-            try:
-                j.cloud.system.fs.copyFile('file://' + tmpfile, targetFileNameTgz)
-            except Exception,e:
-                if str(e).find("Failed to login on ftp server")<>-1:
-                    if j.application.shellconfig.interactive:
-                        j.console.echo("Could not login to FTP server for blobstor, please give your login details.")
-                        login=j.console.askString("login")
-                        passwd=j.console.askPassword("passwd", False)
-                        config=j.config.getInifile("blobstor")
-                        ftpurl=config.getValue(blobstor.name,"ftp")
-                        if ftpurl.find("@")<>-1:
-                            end=ftpurl.split("@")[1].strip()
-                        else:
-                            end=ftpurl.split("//")[1].strip()
-                        ftpurl="ftp://%s:%s@%s"%(login,passwd,end)
-                        config.setParam(blobstor.name,"ftp",ftpurl)
-                        blobstor.loadConfig()
-                        return self._put(blobstor, metadata, tmpfile)
-                j.errorconditionhandler.processPythonExceptionObject(e)
-
-        j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
-
-    def put(self, path, type="", expiration=0, tags="", blobstors=[]):
-        """
-        put file or directory to blobstor
-        @param expiration in hours
-        """
-        raise RuntimeError("not implemented")
-
-        anyPutDone = False
-
-        if not j.system.fs.exists(path):
-            raise RuntimeError("Cannot find file %s" % path)
-        if j.system.fs.isFile(path):
-            filetype = "file"
-        elif j.system.fs.isDir(path):
-            filetype = "dir"
-        else:
-            raise RuntimeError("Cannot find file (exists but is not a file or dir) %s" % path)
-
-        if filetype == "file":
-            hashh = j.tools.hash.md5(path)
-            filesdescr = ""
-        else:
-            hashh, filesdescr = j.tools.hash.hashDir(path)
-
-        if hashh=="":
-            #means empty dir
-            return "", "", False
-
-        j.clients.blobstor.log("Path:'%s' Hash:%s" % (path,hashh),category="upload",level=5)
-
-        tmpfile = j.system.fs.getTempFileName()
-
-        if filetype == "file":
-            # @TODO: Check what realpath should be.
-            #if not j.system.windows.checkFileToIgnore(realpath):
-            #    j.system.fs.gzip(path, tmpfile)
-            pass
-        else:
-            j.system.fs.targzCompress(path, tmpfile, followlinks=False)
-
-        hashFromCompressed = j.tools.hash.md5(tmpfile)
-        descr = ""
-        descr += "whoami=%s\n" %  j.application.getWhoAmiStr()
-        descr += "appname=%s\n" % j.application.appname
-        descr += "tags=%s\n" % tags
-        descr += "expiration=%s\n" % expiration
-        descr += "type=%s\n" % type
-        descr += "epochtime=%s\n" % j.base.time.getTimeEpoch()
-        descr += "filepath=%s\n" % path
-        descr += "filetype=%s\n" % filetype
-        descr += "md5=%s\n" % hashFromCompressed
-        descr += "\n"
-        descr += "================================================================\n"
-        descr += filesdescr + "\n"
-
-        metadata = BlobMetadata(descr, hashh)
-
-        if self.exists(hashh):
-            j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,self.name,self.namespace),category="upload",level=5)
-
-            #return hashh,descr,anyPutDone
-        else:
-            self._put(self, metadata, tmpfile)
-            anyPutDone = True
-            j.clients.blobstor.log('Successfully uploaded blob: ' + path,category="upload",level=5)
-
-        for blobstor in blobstors:
-            if blobstor.exists(hashh):
-                j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,blobstor.name,self.namespace),category="upload",level=5)
+    def uploadFile(self,path,key="",repoid=0,compress=None):
+        
+        if key=="":
+            key=j.tools.hash.md5(path)
+        if j.system.fs.statPath(path).st_size>self._MB4:
+            hashes=[]
+            # print "upload file (>4MB) %s"%(path)
+            for data in self._read_file(path):
+                hashes.append(self._dump2stor(data,repoid=repoid,compress=compress))
+            if len(hashes)>1:
+                out = "##HASHLIST##\n"
+                hashparts = "\n".join(hashes)
+                out += hashparts
+                # Store in blobstor
+                # out_hash = self._dump2stor(out,key=md5) #hashlist is stored on md5 location of file
+                self.set(key=key, data=out,repoid=repoid)   
             else:
-                self._put(blobstor, metadata, tmpfile)
-                anyPutDone = True
-                j.clients.blobstor.log("Successfully uploaded '%s' to blobstor:'%s/%s'" % (path,blobstor.name,self.namespace) ,category="upload",level=5)
+                raise RuntimeError("hashist needs to be more than 1.")
+        else:
+            # print "upload file (<4MB) %s"%(path)
+            for data in self._read_file(path):
+                self._dump2stor(data,key=key,repoid=repoid,compress=compress)
+        return key
 
-        j.system.fs.remove(tmpfile)
-        return hashh, descr, anyPutDone
+    def downloadFile(self,key,dest,link=False,repoid=0, chmod=0,chownuid=0,chowngid=0,sync=False,size=0):
+
+        if self.cachepath<>"":
+            blob_path = self._getBlobCachePath(key)
+            if j.system.fs.exists(blob_path):
+                # Blob exists in cache, we can get it from there!
+                print "Blob FOUND in cache: %s" % blob_path
+                if link:
+                    self._link(blob_path,dest)
+                else:
+                    j.system.fs.copyFile(blob_path, dest)
+                    os.chmod(dest, chmod)
+                    os.chown(dest, chownuid, chowngid)
+                return
+
+        if self._downloadbatchSize>self.maxqueuedatasize or len(self._downloadbatch)>200:
+            self.downloadBatch()
+
+        #now normally on server we should have results ready
+
+        if size<>0 and sync==False:
+            jid=self.get( key,repoid=repoid,sync=False)
+            # print [jid,key,dest,link,repoid,chmod,chownuid,chowngid]
+            self._downloadbatch[jid]=(jid,key,dest,link,repoid,chmod,chownuid,chowngid)
+            self._downloadbatchSize+=int(size)
+        else:
+            # Get blob from blobstor2 
+            if key<>"":
+                key,serialization,blob = self.get( key,repoid=repoid,sync=True)
+                self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
+
+
+    def downloadBatch(self):
+        self._send()        
+        jids=self._downloadbatch.keys()
+        self.blobstor._cmdchannel.send_multipart([msgpack.dumps([[0,"getresults",{},jids]]),"S",str(60),self.blobstor.sessionkey])
+        res= self.blobstor._cmdchannel.recv_multipart()
+       
+        for item in res:
+            if item=="":
+                continue
+            else:                
+                jid,rcode,result=msgpack.loads(item)
+                if rcode==0:
+                    jid,key,dest,link,repoid,chmod,chownuid,chowngid=self._downloadbatch[jid]
+                    key2=result[0]
+                    if key2<>key:
+                        raise RuntimeError("Keys need to be the same")
+                    blob=result[2]
+                    serialization=result[1]
+                    
+                    self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
+                else:
+                    from IPython import embed
+                    print "DEBUG NOW could not download in batch"
+                    embed()
+
+        self._downloadbatchSize=0
+        self._downloadbatch={}
+            
+    def _downloadFilePhase2(self,blob,dest,key,chmod,chownuid,chowngid,link,serialization):
+        if key=="":
+            return
+        if blob==None:
+            raise RuntimeError("Cannot find blob with key:%s"%key)
+                
+        if self.cachepath<>"":
+            blob_path = self._getBlobCachePath(key)
+            self._restoreBlobToDest(blob_path, blob, chmod=chmod,chownuid=chownuid,chowngid=chowngid,serialization=serialization)
+            j.system.fs.createDir(j.system.fs.getDirName(dest))
+
+            if link:
+                self._link(blob_path,dest)
+            else:
+                j.system.fs.copyFile(blob_path, dest)            
+                os.chmod(dest, chmod) 
+                os.chown(dest, chownuid, chowngid) 
+        else:
+            self._restoreBlobToDest(dest, blob, chmod=chmod,chownuid=chownuid,chowngid=chowngid,serialization=serialization)
+
+
+    def _getBlobCachePath(self, key):
+        """
+        Get the blob path in Cache dir
+        """
+        # Get the Intermediate path of a certain blob
+        storpath = j.system.fs.joinPaths(self.cachepath, key[0:2], key[2:4], key)
+        return storpath
+
+
+    def _restoreBlobToDest(self, dest, blob, chmod=0,chownuid=0,chowngid=0,serialization=""):
+        """
+        Write blob to destination
+        """
+        check="##HASHLIST##"
+        j.system.fs.createDir(j.system.fs.getDirName(dest))
+        if blob.find(check)==0:
+            # found hashlist
+            # print "FOUND HASHLIST %s" % blob
+            hashlist = blob[len(check) + 1:]            
+            j.system.fs.writeFile(dest,"")
+            for hashitem in hashlist.split("\n"):
+                if hashitem.strip() != "":
+                    key,serialization,blob_block = self.get(hashitem)
+                    if serialization=="L":
+                         blob_block= lzma.decompress(blob_block)
+                    j.system.fs.writeFile(dest, blob_block, append=True)                        
+        else:
+            # content is there
+            if serialization=="L":
+                blob = lzma.decompress(blob)
+            j.system.fs.writeFile(dest, blob)
+
+        # chmod/chown
+        if chmod<>0:
+            os.chmod(dest,chmod)
+        if chownuid<>0:
+            os.chown(dest,chownuid,chowngid)       
+
+    def _link(self, src, dest):
+        if dest=="":
+            raise RuntimeError("dest cannot be empty")
+
+        os.link(src, dest)
+
+        # j.system.fs.createDir(j.system.fs.getDirName(dest))
+        # print "link:%s %s"%(src, dest)
+
+        # if j.system.fs.exists(path=dest):
+        #     stat=j.system.fs.statPath(dest)
+        #     if stat.st_nlink<2:
+        #         raise RuntimeError("only support linked files")
+        # else:
+        #     cmd="ln '%s' '%s'"%(self._normalize(src),self._normalize(dest))
+        #     try:
+        #         j.system.process.execute(cmd)
+        #     except Exception,e:                
+        #         print "ERROR LINK FILE",
+        #         print cmd
+        #         print e
+        #         self.errors.append(["link",cmd,e])

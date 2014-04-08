@@ -1,5 +1,5 @@
 from JumpScale import j
-
+import os
 import JumpScale.baselib.mercurial
 
 class Domain(): 
@@ -22,28 +22,30 @@ class Domain():
         cfgFilePath = j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')
         cfg = j.tools.inifile.open(cfgFilePath)
 
-        self.bitbucketreponame=cfg.getValue( self.domainname, 'bitbucketreponame')
-        self.bitbucketaccount=cfg.getValue( self.domainname, 'bitbucketaccount')
-
-        if qualityLevel==None:
-            self.qualitylevel = cfg.getValue( self.domainname, 'qualitylevel')
-        else:
-            self.qualitylevel = qualityLevel
-        
         self.metadataFromTgz = cfg.getValue(self.domainname, 'metadatafromtgz') in ('1', 'True')        
-            
+
+        if not 'JSBASE' in os.environ:
+            self.bitbucketreponame=cfg.getValue( self.domainname, 'bitbucketreponame')
+            self.bitbucketaccount=cfg.getValue( self.domainname, 'bitbucketaccount')
+
+            if qualityLevel==None:
+                self.qualitylevel = cfg.getValue( self.domainname, 'qualitylevel')
+            else:
+                self.qualitylevel = qualityLevel
+
+            self._sourcePath = self._getSourcePath() #link to source of metadata (the repo's)
+
+        else:
+            self.qualitylevel=""
+                    
         if self.metadataFromTgz :
             self.metadatadir=j.system.fs.joinPaths(j.dirs.varDir,"jpackages","metadata",self.domainname)
-            j.system.fs.createDir(self.metadatadir)
-            
-        else:
-            self._sourcePath = self._getSourcePath()
+            j.system.fs.createDir(self.metadatadir)            
+        else:            
             self.metadatadir = self.getMetadataDir(self.qualitylevel)
         
         self.blobstorremote=cfg.getValue(self.domainname, 'blobstorremote')
         self.blobstorlocal=cfg.getValue(self.domainname, 'blobstorlocal')
-        
-        
         
         self.metadataUpload=cfg.getValue(self.domainname, 'metadataupload')
         self.metadataDownload=cfg.getValue(self.domainname, 'metadatadownload')
@@ -67,18 +69,18 @@ class Domain():
 
     def getJPackageMetadataDir(self, qualitylevel, name, version):
         """
-        Get the meta data dir for the Q-Package with `name` and `version` on
+        Get the meta data dir for the JPackage with `name` and `version` on
         `qualitylevel`.
 
         @param qualitylevel: quality level
         @type qualitylevel: string
-        @param name: name of the Q-Package
+        @param name: name of the JPackage
         @type name: string
-        @param version: version of the Q-Package
+        @param version: version of the JPackage
         @type version: string
-        @return: path of the meta data dir for the Q-Package
+        @return: path of the meta data dir for the JPackage
         @rtype: string
-        """
+        """        
         metadataDir = self.getMetadataDir(qualitylevel)
         return j.system.fs.joinPaths(metadataDir, name, version)
 
@@ -92,7 +94,9 @@ class Domain():
         @return: metadata dir for the argument quality level or the current quality level if no quality level argument is passed
         @rtype: str
         """
-        if self.metadataFromTgz:
+        if 'JSBASE' in os.environ:
+            return j.system.fs.joinPaths(os.environ['JSBASE'],"jpackages")
+        elif self.metadataFromTgz:
             raise NotImplementedError("Getting the metadata dir for a tar-gz "
                     "based domain is not yet supported")
         else:
@@ -106,6 +110,8 @@ class Domain():
         @return: the available quality levels for this domain
         @rtype: list(string)
         """
+        if 'JSBASE' in os.environ:
+            raise RuntimeError("No qualitylevels in sandboxed mode")
         if self.metadataFromTgz:
             raise NotImplementedError("Getting the quality levels for a tar-gz "
                     "based domain is not yet supported")
@@ -119,7 +125,10 @@ class Domain():
             raise NotImplementedError("Getting the source path for a tar-gz "
                     "based domain is not yet supported")
         else:
-            sourcePath = j.system.fs.joinPaths(j.dirs.codeDir,
+            if 'JSBASE' in os.environ:
+                raise RuntimeError("No sourcepath in sandboxed mode")
+            else:
+                sourcePath = j.system.fs.joinPaths(j.dirs.codeDir,
                     self.bitbucketaccount, "default__%s"%self.bitbucketreponame)
             return sourcePath
 
@@ -127,6 +136,8 @@ class Domain():
         """
         Saves changes to the jpackages config file
         """
+        if 'JSBASE' in os.environ:
+            raise RuntimeError("No changes allowed in sandboxed mode")        
         cfg = j.tools.inifile.open(j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg'))
         if not cfg.checkSection(self.domainname):
             cfg.addSection(self.domainname)
@@ -159,6 +170,8 @@ class Domain():
         Don't do this in the constructor because the mercurial extension may noy yet have been loaded
 
         """
+        if 'JSBASE' in os.environ:
+            raise RuntimeError("No changes allowed in sandboxed mode, so no bitbucket connection.")        
         self._ensureInitialized()
         if self.metadataFromTgz:
             raise RuntimeError('Meta data is comming from tar, cannot make connection to mercurial server ')
@@ -268,6 +281,8 @@ class Domain():
                 Use a combination of updateMetadata(), publishMetadata() and upload() instead.
                 Reason publish() changes the build numbers on top of update()
         """
+        if 'JSBASE' in os.environ:
+            raise RuntimeError("No publishing allowed in sandboxed mode")        
         j.logger.log("Publish metadata for jpackages domain: %s " % self.domainname ,2)
 
         # determine which packages changed
@@ -505,6 +520,9 @@ class Domain():
         """
         return j.packages._find(domain=self.domainname)
     
+    def removeDebugStateFromAll(self):
+        for package in self.getJPackages():
+            package.removeDebugModeInJpackage()
     
     def switchQualityLevel(self, qlevel):
         '''
@@ -513,7 +531,8 @@ class Domain():
         NO active removal of unneeded packages.
         Includes a check that the repository has the new quality level
         '''
-                  
+        if 'JSBASE' in os.environ:
+            raise RuntimeError("No switchQualityLevel in sandboxed mode")                  
         j.console.echo("\nDomain:  %s\n %s (Repo)\n %s (Quality Level)\n %s (MetaFromTgz)\n" % (self.domainname,self.bitbucketreponame,self.qualitylevel,self.metadataFromTgz))
         self.updateMetadata()
         

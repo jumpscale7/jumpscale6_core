@@ -1,0 +1,12 @@
+#!/bin/bash
+if [ -z "$JSBASE" ]; then
+    python "$@"
+else
+    export PYTHONPATH=$JSBASE/libjs
+    $JSBASE/bin/python "$@"
+fi
+
+
+
+
+
