@@ -7,7 +7,7 @@ import sys,time
 j.application.start("cmdosistools")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['delete','deleteall','emptyredis', 'export', 'import'], help='Command to perform')
+parser.add_argument("action", choices=['delete','deleteall','emptyredis', 'export', 'import', 'exportall', 'importall'], help='Command to perform')
 parser.add_argument("-m", '--model',help='name of model')
 parser.add_argument("-n", '--namespace', help='OSIS namesdpace')
 parser.add_argument("-c", '--category', help='OSIS category')
@@ -104,7 +104,55 @@ if opts.action =='export':
     else:
         outputpath = opts.outputpath.strip()
 
+    if not j.system.fs.exists(outputpath):
+        j.system.fs.createDir(outputpath)
+
     cl.export(namespace, category, outputpath)
+
+############exportall
+if opts.action =='exportall':
+    print 'This command might take a few minutes to finish...'
+    import JumpScale.grid.osis
+    cl = j.core.osis.getClient(user='root')
+
+    if not opts.outputpath:
+        outputpath = j.console.askString("Output path")
+    else:
+        outputpath = opts.outputpath.strip()
+
+    if not j.system.fs.exists(outputpath):
+        j.system.fs.createDir(outputpath)
+
+    namespaces = cl.listNamespaces()
+    for namespace in namespaces:
+        categories = cl.listNamespaceCategories(namespace)
+        for category in categories:
+            catpath = j.system.fs.joinPaths(outputpath, namespace, category)
+            j.system.fs.createDir(catpath)
+            try:
+                cl.export(namespace, category, catpath)
+            except:
+                print "Can't export: %s_%s category" % (namespace, category)
+                continue
+
+############importall
+if opts.action =='importall':
+    print 'This command might take a few minutes to finish...'
+    import JumpScale.grid.osis
+    cl = j.core.osis.getClient(user='root')
+
+    if not opts.path:
+        path = j.console.askString("Path")
+    else:
+        path = opts.path.strip()
+
+    namespaces = [j.system.fs.getBaseName(_dir) for _dir in j.system.fs.listDirsInDir(path)]
+    for namespace in namespaces:
+        cl.createNamespace(namespace)
+        categories = [j.system.fs.getBaseName(_dir) for _dir in j.system.fs.listDirsInDir(j.system.fs.joinPaths(path, namespace))]
+        for category in categories:
+            cl.createNamespaceCategory(namespace, category)
+            cl.importFromPath(namespace, category, j.system.fs.joinPaths(path, namespace, category))
 
 ############import
 if opts.action =='import':
