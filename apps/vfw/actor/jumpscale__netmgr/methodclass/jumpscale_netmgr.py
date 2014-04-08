@@ -15,7 +15,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         self.appname = "jumpscale"
         #jumpscale_netmgr_osis.__init__(self)
         self.client = j.core.osis.getClient(user='root')
-        self.osisclient = j.core.osis.getClientForCategory(self.client, 'vfw', 'virtualfirewall')
+        self.osisvfw = j.core.osis.getClientForCategory(self.client, 'vfw', 'virtualfirewall')
         self.agentcontroller = j.clients.agentcontroller.get()
         self.json = j.db.serializers.getSerializerType('j')
 
@@ -24,11 +24,10 @@ class jumpscale_netmgr(j.code.classGetBase()):
         will do some checks on firewall to see is running, is reachable over ssh, is connected to right interfaces
         param:fwid firewall id
         param:gid grid id
-        """
-        fwobj = self.osisclient.get(fwid)
-        host = j.system.platform.lxc.getIp(fwobj.name)
-        return j.system.net.pingMachine(host, 5)
-    
+        """        
+        fwobj = self.osisvfw.get(fwid)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
+        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args)['result']
 
     def fw_create(self, domain, name, gid, nid, masquerade, **kwargs):
         """
@@ -38,26 +37,28 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:nid node id
         param:masquerade do you want to allow masquerading?
         """
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', args={'name': name}, wait=False)
-        fwobj = self.osisclient.new()
+        fwobj = self.osisvfw.new()
         fwobj.domain = domain
         fwobj.name = name
         fwobj.gid = gid
         fwobj.nid = nid
         fwobj.masquerade = masquerade
-        self.osisclient.set(fwobj)
-        return fwobj.guid
+        self.osisvfw.set(fwobj)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
+        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid, args=args)['result']
 
     def fw_delete(self, fwid, gid, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
         """
-        fwobj = self.osisclient.get(fwid)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', args={'name': fwobj.name}, wait=False)
-        self.osisclient.delete(fwid)
-        return True
-    
+        fwobj = self.osisvfw.get(fwid)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
+        result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args)['result']
+        if result:
+            self.osisvfw.delete(fwid)
+
+        return result
 
     def fw_forward_create(self, fwid, gid, fwport, destip, destport, **kwargs):
         """
@@ -67,14 +68,16 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:destip adr where we forward to e.g. a ssh server in DMZ
         param:destport port where we forward to e.g. a ssh server in DMZ
         """
-        fwobj = self.osisclient.get(fwid)
+        fwobj = self.osisvfw.get(fwid)
         rule = fwobj.new_tcpForwardRule()
         rule.fromPort = fwport
         rule.toAddr = destip
         rule.toPort = destport
-        self.osisclient.set(fwobj)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': fwobj.name, 'fwobject': self.json.dumps(fwobj)}, wait=False)
-        return True
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
+        result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args)['result']
+        if result:
+            self.osisvfw.set(fwobj)
+        return result
 
     def fw_forward_delete(self, fwid, gid, fwport, destip, destport, **kwargs):
         """
@@ -84,14 +87,14 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:destip adr where we forward to e.g. a ssh server in DMZ
         param:destport port where we forward to e.g. a ssh server in DMZ
         """
-        fwobj = self.osisclient.get(fwid)
+        fwobj = self.osisvfw.get(fwid)
         for rule in fwobj.tcpForwardRules:
             if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport:
                 fwobj.tcpForwardRules.remove(rule)
-                self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': fwobj.name, 'fwobject': self.json.dumps(fwobj)}, wait=False)
-                return True
+                args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
+                result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args)['result']
 
-        return False
+        return result
     
 
     def fw_forward_list(self, fwid, gid, **kwargs):
@@ -102,7 +105,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
-        fwobj = self.osisclient.get(fwid)
+        fwobj = self.osisvfw.get(fwid)
         result = list()
         for rule in fwobj.tcpForwardRules:
             result.append([rule.fromPort, rule.toAddr, rule.toPort])
@@ -115,11 +118,11 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:domain if not specified then all domains
         """
         result = list()
-        vfws = self.osisclient.list()
-        fields = ('domain', 'name', 'gid', 'guid')
+        vfws = self.osisvfw.list()
+        fields = ('domain', 'name', 'gid', 'nid', 'guid')
         for vfwid in vfws:
             vfwdict = {}
-            vfw = self.osisclient.get(vfwid)
+            vfw = self.osisvfw.get(vfwid)
             for field in fields:
                 vfwdict[field] = getattr(vfw, field, None)
             if not domain and str(vfw.gid) == str(gid):
@@ -134,18 +137,18 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:fwid firewall id
         param:gid grid id
         """
-        fwobj = self.osisclient.get(fwid)
-        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', args={'name': fwobj.name, 'action': 'start'}, wait=False)
-        return True
-    
+        fwobj = self.osisvfw.get(fwid)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'start'}
+        return self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args)['result']
 
     def fw_stop(self, fwid, gid, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
         """
-        fwobj = self.osisclient.get(fwid)
-        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', args={'name': fwobj.name, 'action': 'stop'}, wait=False)
+        fwobj = self.osisvfw.get(fwid)
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'stop'}
+        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args, wait=False)
         return True
     
 
@@ -156,12 +159,12 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:sourceurl url which will match (e.g. http://www.incubaid.com:80/test/)
         param:desturls url which will be forwarded to (e.g. http://192.168.10.1/test/) can be more than 1 then loadbalancing; if only 1 then like a portforward but matching on url
         """
-        wsfobj = self.osisclient.get(wsid)
+        wsfobj = self.osisvfw.get(wsid)
         rule = wsfobj.new_wsForwardRule()
         rule.url = sourceurl
         rule.toUrls = desturls
-        self.osisclient.set(wsfobj)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': wsfobj.name, 'fwobject': self.json.dumps(wsfobj)}, wait=False)
+        self.osisvfw.set(wsfobj)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=wsfobj.nid, args={'name': wsfobj.name, 'fwobject': self.json.dumps(wsfobj)}, wait=False)
         return True
     
 
@@ -172,7 +175,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:sourceurl url which will match (e.g. http://www.incubaid.com:80/test/)
         param:desturls url which will be forwarded to
         """
-        vfws = self.osisclient.get(wsid)
+        vfws = self.osisvfw.get(wsid)
         wsfr = vfws.wsForwardRules
         for rule in wsfr:
             if rule.url == sourceurl:
@@ -184,7 +187,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 rule.toUrls = ','.join(urls)
                 if len(urls) == 0:
                     wsfr.remove(rule)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', args={'name': vfws.name, 'fwobject': self.json.dumps(vfws)}, wait=False)
+        args = {'name': '%s_%s' % (vfws.domain, vfws.name), 'action': 'start'}
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=vfws.nid, args={'name': vfws.name, 'fwobject': self.json.dumps(vfws)}, wait=False)
         return True
     
 
@@ -198,7 +202,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:gid grid id
         """
         result = list()
-        vfws = self.osisclient.get(wsid)
+        vfws = self.osisvfw.get(wsid)
         wsfr = vfws.wsForwardRules
         for rule in wsfr:
             result.append([rule.url, rule.toUrls])

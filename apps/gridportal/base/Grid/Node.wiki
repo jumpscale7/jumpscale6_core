@@ -23,13 +23,15 @@ h3. Statistics
 h3. NICs
 {{nics: nid:$$id}}
 
-
 h3. Jobs
 {{jobs: nid:$$id}}
 
 
 h3. Processes
 {{processes nid:$$id}}
+
+h3. Machines
+{{machines nid:$$id}}
 
 
 h3. Logs

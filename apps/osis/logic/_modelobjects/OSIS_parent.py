@@ -9,7 +9,7 @@ class mainclass(OSISStore):
     Defeault object implementation
     """
 
-    def set(self, key, value):
+    def set(self, key, value, waitIndex=False):
         id = value.get('id')
         if id and self.db.exists(self.dbprefix, id):
             orig = self.get(id)
@@ -21,10 +21,9 @@ class mainclass(OSISStore):
             if not id:
                 id = self.db.increment(self.dbprefix_incr)
                 value['id'] = id
-            if not value.get('guid'):
-                value['guid'] = j.base.idgenerator.generateGUID()
             changed = False
             new = True
+        value['guid'] = id
         self.db.set(self.dbprefix, key=id, value=value)
         self.index(value)
         return [id, new, changed]

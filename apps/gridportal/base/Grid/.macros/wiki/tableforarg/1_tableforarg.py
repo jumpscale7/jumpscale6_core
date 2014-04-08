@@ -11,6 +11,8 @@ def main(j, args, params, tags, tasklet):
     if data:
         objargs = json.loads(data)
         for key,value in objargs.iteritems():
+            if not value:
+                value = ''
             out += "|%s|%s|\n"%(str(key),j.html.escape(str(value)))
     else:
         out = ''

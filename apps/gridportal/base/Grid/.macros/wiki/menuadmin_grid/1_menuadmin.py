@@ -25,20 +25,18 @@ Access:/system/OverviewAccess?space=$$space
 System:/system
 --------------
 Grid:/grid
-Tests:/tests
-Logs_errors:/gridlogs
 JPackages:/jpackages
+Tests:/tests
 --------------
-Machines:/grid/Machines
-Disks:/grid/Disks
-VDisks:/grid/vdisks
+ECOs:/grid/ECOs
+Jobs:/grid/Jobs
+Job Queues:/grid/jobqueues
+JumpScripts:/grid/JumpScripts
+Logs:/grid/Logs
 Nodes:/grid/Nodes
 Processes:/grid/Processes
-ECOs:/grid/ECOs
-Logs:/grid/Logs
-Alerts:/grid/alerts
-JumpScripts:/grid/JumpScripts
 Stats:/grid/stat
+Status Check:/grid/checkstatus
 """
     # C+=spacestxt
     C+='}}'

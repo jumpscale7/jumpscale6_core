@@ -1,5 +1,6 @@
-
+    
 def main(j, args, params, tags, tasklet):
+    import JumpScale.baselib.units
 
     id = args.getTag('id')
     if not id:
@@ -12,21 +13,14 @@ def main(j, args, params, tags, tasklet):
         params.result = ('Disk with id %s not found' % id, args.doc)
         return params
 
-    sizes = ['KiB', 'MiB', 'GiB', 'TiB', 'ZiB']
-    def getSize(size):
-        cnt = 0
-        while size > 1200 or len(sizes) < cnt:
-            size /= 1024.
-            cnt  += 1
-        return "%.2f %s" % (size, sizes[cnt])
-
     def objFetchManipulate(id):
         obj = disks[0]
+        obj['usage'] = 100 - int(100.0 * float(obj['free']) / float(obj['size']))
+        obj['dpath'] = obj['path'] # path is reserved variable for path of request
         for attr in ['size', 'free']:
-            obj[attr] = getSize(obj[attr])
-        obj['usage'] = 100 - int(100.0 * obj['free'] / obj['size'])
+            obj[attr] = "%.2f %siB" % j.tools.units.bytes.converToBestUnit(obj[attr], 'M')
         obj['type'] = ', '.join([str(x) for x in obj['type']])
-        obj['systempids'] = ', '.join([str(x) for x in obj['systempids']])
+        # obj['systempids'] = ', '.join([str(x) for x in obj['systempids']])
         return obj
 
     push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc

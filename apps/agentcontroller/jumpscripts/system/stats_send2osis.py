@@ -29,7 +29,6 @@ def action():
             OSISclientStat=j.core.osis.getClientForCategory(OSISclient,"system","stats")
             OSISclientStat.set(stats)
         except Exception,e:
+            j.errorconditionhandler.processPythonExceptionObject(e)
             if str(e).find("Connection refused")<>-1:
                 j.events.opserror_critical("cannot forward stats to osis, there is probably no carbon running on osis", category='processmanager.send2osis.stats', e=None)
-            j.errorconditionhandler.processPythonExceptionObject(e)            
-

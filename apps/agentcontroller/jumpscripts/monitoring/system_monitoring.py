@@ -10,13 +10,17 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "monitoring.processes"
-period = 10 #always in sec
+period = 30 #always in sec
 enable=True
-async=False
+async=True
+queue='process'
 
 roles = ["grid.node.system"]
 
 def action():
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
     psutil=j.system.platform.psutil
     results={}
     nr=0

@@ -12,9 +12,9 @@ def main(j, args, params, tags, tasklet):
     out.append("{{datatables_use}}}}\n")
 
     #[u'otherid', u'description', u'roles', u'mem', u'netaddr', u'ipaddr', u'nid', u'lastcheck', u'state', u'gid', u'active', u'cpucore', u'type', u'id', u'name']
-    fields = ['organization', 'name', 'category', 'descr']
+    fields = ['name', 'organization', 'category', 'descr']
 
-    out.append('||organization||name||category||description||')
+    out.append('||Name||Organization||Category||Description||')
 
     for jscript in actor.getJumpScripts():
         line = [""]

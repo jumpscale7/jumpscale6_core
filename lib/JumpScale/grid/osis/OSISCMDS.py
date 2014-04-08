@@ -9,7 +9,7 @@ class OSISCMDS(object):
         self.osisInstances = {}  # key is namespace_categoryname
         self.db = None  # default db
         self.elasticsearch = None  # default elastic search connection
-        self.path="/opt/jumpscale/apps/osis/logic"
+        self.path="%s/apps/osis/logic"%j.dirs.baseDir
 
     def authenticate(self, namespace, categoryname, name,passwd, session=None):
         """
@@ -45,12 +45,21 @@ class OSISCMDS(object):
                 raise RuntimeError("Authentication error on exists %s_%s for user %s"%(namespace,categoryname,session.user))
         return oi.exists(key)
 
-    def set(self, namespace, categoryname, key=None, value=None, session=None):
+    def existsIndex(self, namespace, categoryname, key, timeout=1,session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"get",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on exists %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.existsIndex(key,timeout=timeout)
+
+
+    def set(self, namespace, categoryname, key=None, value=None, waitIndex=False,session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        # print "WAITINDEXCMDS:%s"%waitIndex
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"set",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.set(key=key, value=value)
+        return oi.set(key=key, value=value,waitIndex=waitIndex)
 
     def delete(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
@@ -76,6 +85,38 @@ class OSISCMDS(object):
         if prefix==None:
             return oi.list()
         return oi.list(prefix)
+
+    def _rebuildindex(self, namespace, categoryname, session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"rebuildindex",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.rebuildindex()
+
+    def rebuildindex(self, namespace=None, categoryname=None, session=None):
+        if not namespace and not categoryname:
+            for ns in self.listNamespaces():
+                for cat in self.listNamespaceCategories(ns):
+                    try:
+                        self._rebuildindex(ns, cat, session)
+                    except Exception, e:
+                        j.errorconditionhandler.raiseOperationalWarning("Did not rebuild index for category '%s' in namespace '%s'. Error was: %s" % (cat, ns, e))
+        else:
+            self._rebuildindex(namespace, categoryname, session)
+
+    def export(self, namespace, categoryname, outputpath, session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"export",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.export(outputpath)
+
+    def importFromPath(self, namespace, categoryname, path, session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"import",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
+        return oi.importFromPath(path)
 
     def echo(self, msg="", session=None):
         return msg

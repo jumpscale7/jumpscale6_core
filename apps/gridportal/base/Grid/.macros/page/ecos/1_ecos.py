@@ -29,6 +29,8 @@ def main(j, args, params, tags, tasklet):
     fieldvalues = [makeTime, nidstr, 'appname', 'category', errormessage, jidstr]
     tableid = modifier.addTableForModel('system', 'eco', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
+    modifier.addSorting('#%s' % tableid, 0, 'desc')
+
 
     params.result = page
 

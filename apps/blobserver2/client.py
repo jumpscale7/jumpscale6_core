@@ -10,80 +10,92 @@ j.application.start("jumpscale:blobserver2test")
 
 j.logger.consoleloglevel = 5
 
-passwd = j.application.config.get('grid.master.superadminpasswd')
-login="root"
-
 namespace="test"
+domain="adomain"
+blobstorconnection="default"
 
-client = j.clients.blobstor2.getClient(namespace,login=login, passwd=passwd)
-client2 = j.clients.blobstor2.getClient(namespace, port=2346, login=login, passwd=passwd)
+def test1():
+    client = j.clients.blobstor2.getClient(blobstorconnection,domain,namespace)
 
-blob=""
-for i in range(1024*1024*4):
-    blob+="A"
-#4MB
+    blob=""
+    for i in range(1*1024):#*1024*4):
+        blob+="A"
+    #4MB
+    
+    for i in range(5):
+        blob2=blob+str(i)
+        key2=j.tools.hash.md5_string(blob2)
+        result=client.set(key =key2,data=blob2 ,repoid=1,sendnow=False)
 
-hash = j.tools.hash.md5_string(blob)
+    blobret=client.get(key2)
 
-blob2 = "EXISTS IN PARENT BLOB"
-hash2 = j.tools.hash.md5_string(blob2)
-client2.set(hash2, blob2, repoId="repo1")
+    assert blobret==blob2
 
-client.deleteNamespace()
+    print "test1 ok"
 
-print "start"
+test1()
 
-blob_missing = client.get(hash2)
-print "CHECKING MISSING BLOB"
-assert blob_missing == blob2 , "MISSING BLOB CANNOT BE FOUND"
+def test2():
+    client = j.clients.blobstor2.getClient(namespace,login=login, passwd=passwd)
 
-print "SUCCESS"
+    client2 = j.clients.blobstor2.getClient(namespace, port=2346, login=login, passwd=passwd)
 
-client.set(hash, blob, repoId="repo1")
-client.set(hash, blob, repoId="repo2")
 
-blob2 = client.get(hash)
+    client.deleteNamespace()
 
-assert blob2==blob
+    print "start"
 
-md = client.getMD(hash)
-print md
+    blob_missing = client.get(hash2)
+    print "CHECKING MISSING BLOB"
+    assert blob_missing == blob2 , "MISSING BLOB CANNOT BE FOUND"
 
-blob2 = client.delete(hash, repoId="repo1")
+    print "SUCCESS"
 
-md = client.getMD(hash)
-print md
+    client.set(hash, blob, repoId="repo1")
+    client.set(hash, blob, repoId="repo2")
 
-assert client.exists(hash, repoId="repo2")==True
-assert client.exists(hash, repoId="repo1")==False
-assert client.exists(hash)==True
+    blob2 = client.get(hash)
 
-blob2 = client.delete(hash, repoId="repo2")
-assert client.exists(hash)==False
+    assert blob2==blob
 
-# TESTING Blob Patches
+    md = client.getMD(hash)
+    print md
 
-print "TESTING BLOB PATCH"
-client.deleteNamespace()
+    blob2 = client.delete(hash, repoId="repo1")
 
-blob = "THIS IS A BLOB"
-hash = j.tools.hash.md5_string(blob)
+    md = client.getMD(hash)
+    print md
 
-# Set the Blob
-client.set(hash, blob)
+    assert client.exists(hash, repoId="repo2")==True
+    assert client.exists(hash, repoId="repo1")==False
+    assert client.exists(hash)==True
 
-keyList = [hash]
-blob_tar = client.getBlobPatch(keyList)
+    blob2 = client.delete(hash, repoId="repo2")
+    assert client.exists(hash)==False
 
-blob_patch = tempfile.mktemp(prefix="blob_", suffix=".tar")
-j.system.fs.writeFile(blob_patch, blob_tar)
+    # TESTING Blob Patches
 
-blob_target = tempfile.mkdtemp(prefix="blobtarget_")
-tar = tarfile.open(blob_patch)
-tar.extractall(path=blob_target)
-tar.close()
+    print "TESTING BLOB PATCH"
+    client.deleteNamespace()
 
-print "DONE!"
+    blob = "THIS IS A BLOB"
+    hash = j.tools.hash.md5_string(blob)
+
+    # Set the Blob
+    client.set(hash, blob)
+
+    keyList = [hash]
+    blob_tar = client.getBlobPatch(keyList)
+
+    blob_patch = tempfile.mktemp(prefix="blob_", suffix=".tar")
+    j.system.fs.writeFile(blob_patch, blob_tar)
+
+    blob_target = tempfile.mkdtemp(prefix="blobtarget_")
+    tar = tarfile.open(blob_patch)
+    tar.extractall(path=blob_target)
+    tar.close()
+
+    print "DONE!"
 
 j.application.stop()
 

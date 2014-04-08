@@ -97,12 +97,17 @@ class OSISFactory:
             raise RuntimeError("cannot start osis, could not find running elastic search and/or carbon/graphite")
 
         zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
-        zd.setCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
-        zd.daemon.cmdsInterfaces["osis"][-1].init()
-        self.cmds=zd.daemon.cmdsInterfaces["osis"][-1]
+        zd.addCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
+        zd.daemon.cmdsInterfaces["osis"].init()
+        self.cmds=zd.daemon.cmdsInterfaces["osis"]
         zd.start()
 
-    def getClient(self, ipaddr="localhost", port=5544,user=None,passwd=None,ssl=False,gevent=False):
+    def getClient(self, ipaddr=None, port=5544,user=None,passwd=None,ssl=False,gevent=False):
+        if ipaddr is None:
+            if j.application.config.exists('grid.master.ip'):
+                ipaddr = j.application.config.get('grid.master.ip')
+            else:
+                ipaddr = 'localhost'
         with j.logger.nostdout() as stdout:
             try:
                 key = "%s_%s_%s_%s" % (ipaddr, port,user,passwd)
@@ -235,10 +240,10 @@ class OSISFactory:
         """
         returns class generated from spec file or from model.py file
         """
-        print "getOsisModelClass: %s %s"%(namespace,category)
         key="%s_%s"%(namespace,category)
 
         if not self.osisModels.has_key(key):
+            print "getOsisModelClass: %s_%s"%(namespace, category)
             # #need to check if there is a specfile or we go from model.py  
             if specpath=="":
                 specpath=j.system.fs.joinPaths("logic", namespace, "model.spec")            
@@ -252,7 +257,7 @@ class OSISFactory:
                 name=""
                 for line in klass.split("\n"):
                     if line.find("(OsisBaseObject")<>-1 and line.find("class ")<>-1:
-                        name=line.split("(")[0].lstrip("class ")
+                        name=line.split("(")[0].lstrip("class").strip()
                 if name=="":
                     raise RuntimeError("could not find: class $modelName(OsisBaseObject) in model class file, should always be there")
 

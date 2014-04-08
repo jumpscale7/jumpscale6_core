@@ -33,12 +33,12 @@ if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
 
 class Worker(object):
 
-    def __init__(self, redisaddr, redisport, queuename):
-        
+    def __init__(self, redisaddr, redisport, queuename,name):
         self.actions={}
         self.redisport=redisport
         self.redisaddr=redisaddr
         self.queuename=queuename
+        self.name=name
         self.init()
 
     def init(self):
@@ -46,15 +46,16 @@ class Worker(object):
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
 
         def checkagentcontroller():
-            masterip=j.application.config.get("grid.master.ip")            
+            masterip=j.application.config.get("grid.master.ip")
             success=False
-            try:
-                self.acclient=j.clients.agentcontroller.get(masterip)
-                success=True
-            except Exception,e:
-                msg="Cannot connect to agentcontroller on %s."%(masterip)
-                j.events.opserror(msg, category='worker.startup', e=e)
-                self.acclient=None
+            while success == False:
+                try:
+                    self.acclient=j.clients.agentcontroller.get(masterip)
+                    success=True
+                except Exception,e:
+                    msg="Cannot connect to agentcontroller on %s."%(masterip)
+                    j.events.opserror(msg, category='worker.startup', e=e)
+                    time.sleep(5)
 
 
         def checkredis():
@@ -93,14 +94,30 @@ class Worker(object):
         print "STARTED"
         w=j.clients.redisworker
         while True:
-            # jobid=self.queue.get()
-            # data=self.redis.hget("workerjobs",jobid)
+            #check if we need to restart
+            if self.redis.exists("workers:action:%s"%self.name):
+                if self.redis.get("workers:action:%s"%self.name)=="STOP":
+                    print "RESTART ASKED"
+                    self.redis.delete("workers:action:%s"%self.name)
+                    j.application.stop()
+
+                if self.redis.get("workers:action:%s"%self.name)=="RELOAD":
+                    print "RELOAD ASKED"
+                    self.redis.delete("workers:action:%s"%self.name)
+                    self.actions={}
+
+            self.redis.hset("workers:watchdog",self.name,int(time.time()))
+
             try:
                 # print "check if work", comes from redis
-                job=w._getWork(self.queuename,timeout=2)
+                job=w._getWork(self.queuename,timeout=4)
             except Exception,e:
-                j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
-                time.sleep(1)
+                if str(e).find("Could not find queue to execute job")<>-1:
+                    #create queue
+                    print "could not find queue:%s"%self.queuename
+                else:            
+                    j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
+                time.sleep(10)
                 continue
 
             if job:
@@ -142,20 +159,25 @@ class Worker(object):
                         eco.jid = job.id
                         eco.category = 'workers.compilescript'
                         j.errorconditionhandler.processErrorConditionObject(eco)
+                        job.state="ERROR"
+                        eco.tb = None
+                        job.result=eco.__dict__
                         # j.events.bug_warning(msg,category="worker.jscript.notcompile")
                         # self.loghandler.logECO(eco)
                         self.notifyWorkCompleted(job)
                         continue
 
-                self.actions[job.jscriptid]=(action,jscript)
+                    self.actions[job.jscriptid]=(action,jscript)
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
+                    j.logger.enabled = job.log
                     result=action(**job.args)
                     job.result=result
                     job.state="OK"
                     job.resultcode=0
-                except Exception,e:                    
+                except Exception,e:
+                    j.logger.enabled = True
                     agentid=j.application.getAgentId()
                     msg="could not execute jscript:%s %s_%s on agent:%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
@@ -167,7 +189,10 @@ class Worker(object):
                     # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                     # self.loghandler.logECO(eco)
                     job.state="ERROR"
-                    job.result=eco.errormessage
+                    eco.tb = None
+                    job.result=eco.__dict__
+                finally:
+                    j.logger.enabled = True
                 self.notifyWorkCompleted(job)
 
 
@@ -175,14 +200,15 @@ class Worker(object):
 
         w=j.clients.redisworker
         job.timeStop=int(time.time())
-        
+
         if job.state[0:2]<>"OK":
             self.log("result:%s"%job.result)
 
+
         if job.jscriptid>10000:
             # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
-            w.redis.rpush("workers:return:%s"%job.id,time.time())
             self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
+            w.redis.rpush("workers:return:%s"%job.id,time.time())
         else:
             #jumpscripts coming from AC
             if job.state<>"OK":
@@ -224,6 +250,6 @@ if __name__ == '__main__':
     j.logger.consoleloglevel = 2
     j.logger.maxlevel=7
 
-    worker=Worker(opts.addr, opts.port, opts.queuename)
+    worker=Worker(opts.addr, opts.port, opts.queuename,name=opts.workername)
     worker.run()
 

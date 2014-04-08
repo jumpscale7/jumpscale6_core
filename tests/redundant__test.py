@@ -16,7 +16,7 @@ class ControllerCMDS():
 
 def startServer():
     daemon = j.core.zdaemon.getZDaemon(port=PORT, name='test')
-    daemon.setCMDsInterface(ControllerCMDS, category="agent")
+    daemon.addCMDsInterface(ControllerCMDS, category="agent")
     daemon.start()
 
 class TEST(unittest.TestCase):

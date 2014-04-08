@@ -57,7 +57,7 @@ class GridFactory():
         self.masterip=j.application.config.get("grid.master.ip")
 
         if not j.system.net.waitConnectionTest(self.masterip,5544,10):
-            raise RuntimeError("Could not connect to master osis")
+            raise RuntimeError("Could not connect to master osis (%s:%s)"%(self.masterip,5544))
 
         self.gridOsisClient=j.core.osis.getClient(self.masterip, user='root')
 
@@ -135,7 +135,7 @@ class GridFactory():
         @param broker, if given then another connection will be made to the broker
         """
         if broker <> None:
-            self.brokerClient = broker.daemon.cmdsInterfaces['broker'][0]
+            self.brokerClient = broker.daemon.cmdsInterfaces['broker']
             return True
 
         brokerip = self.config.get("grid.broker.ip")

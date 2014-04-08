@@ -9,7 +9,7 @@ class mainclass(OSISStore):
     Defeault object implementation
     """
 
-    def set(self, key, value):
+    def set(self, key, value, waitIndex=False):
         if self.db.exists(self.dbprefix, key):
             changed = True
             new = False

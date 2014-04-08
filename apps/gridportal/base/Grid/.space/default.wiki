@@ -19,6 +19,7 @@ Dashboard:/grid/dashboard
 
 @col 10
 
+{{breadcrumbs}}
 {content}
 
 @divend

@@ -1,9 +1,9 @@
 
 def main(j, args, params, tags, tasklet):
-    domain = args.requestContext.params.get('domain')
-    name = args.requestContext.params.get('name')
-    version = args.requestContext.params.get('version')
-    nid = args.requestContext.params.get('nid')
+    domain = args.getTag('domain')
+    name = args.getTag('name')
+    version = args.getTag('version')
+    nid = args.getTag('nid')
 
     actor = j.apps.actorsloader.getActor('system', 'packagemanager')
 
@@ -24,21 +24,19 @@ def main(j, args, params, tags, tasklet):
    
     jp = actor.getJPackageInfo(nid=nid, domain=domain, pname=name, version=version)
     
-    out+="h2. %s\n"%jp['name']
-    out+="* Installed: %s\n" % (jp['isInstalled'])
-    info = ('domain', 'version', 'buildNr')
-    for i in info:
-        out+='* %s: %s\n' % (i.capitalize(), jp[i])
+    out += "h2. JPackage: %s\n"%jp['name']
+    # for i in info:
+    out += '|*Domain*|%s|*Installed*|%s|\n' % (jp['domain'], jp['isInstalled'])
+    out += "|*Version*|%s|*Supported platforms*|%s|\n" % (jp['version'], ', '.join([x for x in jp['supportedPlatforms']]))
+    out += '|*Build Number*|%s|||' % jp['buildNr']
 
-    out += 'h2. Description\n'
+    out += 'h3. Description\n'
     descr = jp['description'].replace('$(jp.name)', jp['name'])
     descr = descr.replace('$(jp.version)', jp['version'])
     descr = descr.replace('$(jp.description)', '')
     out +=  descr + "\n"
 
-    out+="Supported platforms: %s\n" % ', '.join([x for x in jp['supportedPlatforms']])
-
-    out+="h2. Dependencies\n"
+    out+="h3. Dependencies\n"
     dependencies = sorted(jp['dependencies'], key=lambda x: x.name)
     for dep in dependencies:
         href = '/jpackages/JPackageShow?nid=%s&domain=%s&name=%s&version=%s' % (nid, dep.domain, dep.name, dep.version)
@@ -46,7 +44,7 @@ def main(j, args, params, tags, tasklet):
 
     jp['nid'] = nid
     out+="""
-h2. Explorers
+h3. Explorers
 
 |[JPackage Code Editors|/jpackages/JPackageCodeEditors?nid=%(nid)s&domain=%(domain)s&name=%(name)s&version=%(version)s]|
 |[JPackage Browser|/jpackages/JPackageBrowser?nid=%(nid)s&domain=%(domain)s&name=%(name)s&version=%(version)s]|
@@ -54,14 +52,14 @@ h2. Explorers
 """ % jp
 
     out+="""
-h2. Actions
+h3. Actions
 
-|[start|/jpackages/JPackageAction?action=start&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-|[stop|/jpackages/JPackageAction?action=stop&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-|[restart|/jpackages/JPackageAction?action=restart&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-|[update|/jpackages/JPackageAction?action=update&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-|[package|/jpackages/JPackageAction?action=package&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-|[upload|/jpackages/JPackageAction?action=upload&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+|[Start|/jpackages/JPackageAction?action=start&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+[Stop|/jpackages/JPackageAction?action=stop&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+[Restart|/jpackages/JPackageAction?action=restart&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+|[Update|/jpackages/JPackageAction?action=update&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+|[Package|/jpackages/JPackageAction?action=package&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+|[Upload|/jpackages/JPackageAction?action=upload&domain=%(domain)s&name=%(name)s&version=%(version)s]|
 """ % jp
 
     params.result = (out, args.doc)

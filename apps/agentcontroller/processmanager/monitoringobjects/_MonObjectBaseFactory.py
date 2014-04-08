@@ -57,9 +57,9 @@ class MonObjectBase(object):
         self.ckeyOld=""
 
     def send2osis(self):
-        result = self.cache.osis.set(self.db)
-        self.db = self.cache.osis.get(result[0])
-        return result
+        guid, new, update = self.cache.osis.set(self.db)
+        self.db = self.cache.osis.get(guid)
+        return guid, new, update
 
     def getGuid(self):
         return self.db.getSetGuid()

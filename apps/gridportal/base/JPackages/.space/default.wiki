@@ -9,7 +9,7 @@
 Help:/Help
 }}
 
-{{menuadmin_jpackages}}
+{{grid.menuadmin_grid}}
 
 @block
 @row

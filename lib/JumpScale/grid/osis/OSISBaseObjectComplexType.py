@@ -9,7 +9,10 @@ import JumpScale.baselib.code
 class OSISBaseObjectComplexType(j.code.classGetJSRootModelBase()):
 
     def init(self,namespace,category,version):
-        self.guid=j.base.idgenerator.generateGUID()
+        if not hasattr(self,"guid"):
+            self.guid=""
+        if self.guid=="":
+            self.guid=j.base.idgenerator.generateGUID()
         self._ckey=""
         self._meta=[namespace,category,int(version)] #$namespace,$category,$version
 
@@ -53,5 +56,20 @@ class OSISBaseObjectComplexType(j.code.classGetJSRootModelBase()):
         """
         return j.code.object2dict(self,ignoreKeys=ignoreKeys+["passwd","password","secret"],ignoreUnderscoreKeys=True)
 
+    def __eq__(self,other):
+        if not hasattr(other, "__dict__"):
+            return False
+        def clean(obj):
+            dd={}
+            keys=obj.__dict__.keys()
+            keys.sort()
+            for key in keys:
+                val= obj.__dict__[key]
+                if key[0]<>"_":
+                    dd[str(key)]=val
+            return dd
 
+        # print "'%s'"%clean(self)
+        # print "'%s'"%clean(other)
 
+        return clean(self)==clean(other)

@@ -1,15 +1,15 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
-    id = args.getTag('id')
-    if not id:
-        out = 'Missing log id param "id"'
+    guid = args.getTag('id')
+    if not guid:
+        out = 'Missing log guid param "id"'
         params.result = (out, args.doc)
         return params
 
-    logs = j.apps.system.gridmanager.getLogs(id=id)
+    logs = j.apps.system.gridmanager.getLogs(guid=guid)
     if not logs:
-        params.result = ('Log with id %s not found' % id, args.doc)
+        params.result = ('Log with guid %s not found' % guid, args.doc)
         return params
 
     def objFetchManipulate(id):

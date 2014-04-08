@@ -12,7 +12,7 @@ class mainclass(OSISStore):
         OSISStore.__init__(self)
         # self.elasticsearch=j.core.grid.getstatTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
 
-    def set(self,key,value):
+    def set(self,key,value,waitIndex=False):
         out = ""
         if isinstance(value, list):
             for key,val in value:

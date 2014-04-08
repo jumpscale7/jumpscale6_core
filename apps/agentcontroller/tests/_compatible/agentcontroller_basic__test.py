@@ -55,5 +55,6 @@ class TEST(unittest.TestCase):
             result = osis_jobs.search(query)['result']
             if result:
                 break
+
         self.assertGreater(len(result), 0)
 

@@ -7,10 +7,10 @@ h2. Disk $$id
 |*Active*|$$active|
 |*SSD*|$$ssd|
 |*Model*|$$model|
-|*Path*|$$path|
+|*Path*|$$dpath|
 |*Size*|$$size|
 |*Free*|$$free|
-|*Usage*|$$usage|
+|*Usage*|$$usage %|
 |*File System*|$$fs|
 |*Mounted*|$$mounted|
 |*Description*|$$description|

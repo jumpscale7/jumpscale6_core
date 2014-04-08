@@ -1,0 +1,22 @@
+#
+# Shorewall version 4 - Interfaces File
+#
+# For information about entries in this file, type "man shorewall-interfaces"
+#
+# The manpage is also online at
+# http://www.shorewall.net/manpages/shorewall-interfaces.html
+#
+###############################################################################
+?format 2
+###############################################################################
+#ZONE	INTERFACE	OPTIONS
+-	lo		ignore
+
+##uncomment next for defining network outside of OOB
+#net	all		physical=+,routeback,optional
+
+#all ethernet interfaces
+net eth+
+net br+
+
+

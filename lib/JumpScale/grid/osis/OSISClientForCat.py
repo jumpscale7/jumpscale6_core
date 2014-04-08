@@ -43,12 +43,10 @@ class OSISClientForCat():
 
         return self.objectclass
 
-
     def authenticate(self, name,passwd,**args):
         """
         authenticates a user and returns the groups in which the user is
-        """
-        
+        """        
         return  self.client.authenticate(namespace=self.namespace, categoryname=self.cat,name=name,passwd=passwd,**args)     
 
     def new(self,**args):
@@ -57,17 +55,19 @@ class OSISClientForCat():
         obj.init(self.namespace,self.cat,1)
         return obj
 
-    def set(self, obj, key=None):
+    def set(self, obj, key=None,waitIndex=False):
         """
         if key none then key will be given by server
         @return (guid,new,changed)
         """
+        # print "WAITINDEX:%s"%waitIndex        
         if hasattr(obj,"dump"):
             obj=obj.dump()
-        return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj)
+        elif hasattr(obj,"__dict__"):
+            obj=obj.__dict__
+        return self.client.set(namespace=self.namespace, categoryname=self.cat, key=key, value=obj,waitIndex=waitIndex)
 
-    def get(self, key):
-        
+    def get(self, key):        
         value = self.client.get(namespace=self.namespace, categoryname=self.cat, key=key)
         if isinstance(value, basestring):
             try:
@@ -75,19 +75,21 @@ class OSISClientForCat():
             except:
                 pass # might be normal string/data aswell
         if isinstance(value, dict):
-            try:
-                klass=self._getModelClass()
-                obj=klass()
-                obj.load(value)
+            klass=self._getModelClass()
+            if klass<>None:
+                obj=klass(ddict=value)
+                # obj.load(value)
                 return obj
-            except:
-                return valuee
+            else:
+                return value
         else:
             return value
 
-    def exists(self, key):
-            
-            return self.client.exists(namespace=self.namespace, categoryname=self.cat, key=key)
+    def exists(self, key):            
+        return self.client.exists(namespace=self.namespace, categoryname=self.cat, key=key)
+
+    def existsIndex(self,key,timeout=1):            
+        return self.client.existsIndex(namespace=self.namespace, categoryname=self.cat, key=key,timeout=timeout)
 
     def delete(self, key):
         
@@ -107,6 +109,10 @@ class OSISClientForCat():
                                   start=start, size=size)
 
     def simpleSearch(self, params, start=0, size=None, withguid=False, withtotal=False, sort=None, partials=None, nativequery=None):
+        """
+        @params is dict with key the propname you look for and the val = val of the prop
+        e.g. {"name":name,"country":"belgium"}
+        """
         if nativequery:
             query = nativequery.copy()
         else:
@@ -120,6 +126,8 @@ class OSISClientForCat():
                     myranges = {v['name']: dict()}
                 myranges[v['name']] = {v['eq']: v['value']}
             elif v:
+                if isinstance(v, basestring):
+                    v = v.lower()
                 term = {'term': {k: v}}
                 query['query']['bool']['must'].append(term)
         for key, value in myranges.iteritems():

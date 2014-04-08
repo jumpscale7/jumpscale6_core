@@ -1,4 +1,5 @@
 def main(j, args, params, tags, tasklet):
+    import JumpScale.baselib.units
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
 
@@ -17,10 +18,13 @@ def main(j, args, params, tags, tasklet):
             diskusage = '%s%%' % (100 - int(100.0 * diskfree / disksize))
         return diskusage
 
+    def _diskSize(disk, field):
+        return "%.2f %siB" % j.tools.units.bytes.converToBestUnit(disk[field], 'M')
+
     fieldnames = ["Path", "Size", "Mount Point", "SSD", "Free", "Mounted"]
     path = '[%(path)s|/grid/disk?id=%(id)s&nid=%(nid)s]'
     fieldids = ['path', 'size', 'mountpoint', 'ssd', 'free', 'mounted']
-    fieldvalues = [path, 'size', 'mountpoint', 'ssd', _getDiskUsage, 'mounted']
+    fieldvalues = [path, _diskSize, 'mountpoint', 'ssd', _getDiskUsage, 'mounted']
     tableid = modifier.addTableForModel('system', 'disk', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
 

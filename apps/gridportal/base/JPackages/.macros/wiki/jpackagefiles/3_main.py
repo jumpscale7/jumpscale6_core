@@ -12,7 +12,7 @@ def main(j, args, params, tags, tasklet):
     result = j.apps.system.packagemanager.getJPackageFilesInfo(nid=nid, domain=domain, pname=name, version=version)
 
     if not result:
-        out = 'Could not find jpackage'
+        out = 'Could not find jpackage files'
         params.result = (out, args.doc)
         return params
 

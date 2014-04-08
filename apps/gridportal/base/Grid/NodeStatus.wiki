@@ -1,0 +1,12 @@
+@usedefaults
+
+h2. Node '$$nid'
+
+h3. Redis Status
+{{redisstatus nid:$$nid}}
+
+h3. Worker Status
+{{workerstatus nid:$$nid}}
+
+h3. Disks Status
+{{diskscheck nid:$$nid}}

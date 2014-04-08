@@ -33,7 +33,7 @@ class ZBroker(ZDaemon):
 
         self.actions = {}
 
-        self.setCMDsInterface(BrokerMainActions, category='broker')
+        self.addCMDsInterface(BrokerMainActions, category='broker')
 
         self.HEARTBEAT_LIVENESS = 3     # 3..5 is reasonable
         self.HEARTBEAT_INTERVAL = 1.0   # Seconds

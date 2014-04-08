@@ -184,13 +184,11 @@ class DaemonClient(object):
             if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
             # print "*** error in client to zdaemon ***"
-
-            s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            ecodict = s.loads(parts[2])   
+            s = j.db.serializers.get(returnformat)
+            ecodict = s.loads(parts[2])
 
             if ecodict["errormessage"].find("Authentication error")<>-1:
                 raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
-                     
             raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
             # frames= j.errorconditionhandler.getFrames()            
             # s = j.db.serializers.getMessagePack()  # get messagepack serializer

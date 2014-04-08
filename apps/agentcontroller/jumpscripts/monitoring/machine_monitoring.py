@@ -12,7 +12,8 @@ category = "monitoring.machine"
 period = 20 #always in sec
 order = 1
 enable=True
-async=False
+async=True
+queue='process'
 
 roles = ["grid.node.vmachine"]
 
@@ -31,16 +32,19 @@ try:
                 libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
 
 except Exception, e:
-    eanble = False
+    enable = False
     con = None
 
 def action():
     if not con:
         return
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
 
     domains = con.listAllDomains()
     for domain in domains:
-        machine = j.processmanager.cache.machineobject.get(id=domain.ID())
+        machine = j.core.processmanager.monObjects.machineobject.get(id=domain.ID())
         machine.ckeyOld = machine.db.getContentKey()
         machine.db.name = domain.name()
         machine.db.nid = j.application.whoAmI.nid
@@ -65,13 +69,20 @@ def action():
 
         if machine.ckeyOld != machine.db.getContentKey():
             #obj changed
-            machine.send2osis()
+            try:
+                machine.send2osis()
+            except Exception,e:
+                pass
+                # from IPython import embed
+                # print "DEBUG NOW machine monitoring bug"
+                # embed()
 
         for disk in xml.findall('devices/disk'):
             if disk.attrib['device'] != 'disk':
                 continue
-            path = disk.find('source').attrib['dev']
-            vdisk = j.processmanager.cache.vdiskobject.get(id=path)
+            diskattrib = disk.find('source').attrib
+            path = diskattrib.get('dev', diskattrib.get('file'))
+            vdisk = j.core.processmanager.monObjects.vdiskobject.get(id=path)
             vdisk.ckeyOld = vdisk.db.getContentKey()
             vdisk.db.path = path
             vdisk.db.type = disk.find('driver').attrib['type']

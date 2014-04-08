@@ -10,17 +10,16 @@ def main(j, args, params, tags, tasklet):
     if nid:
         filters['nid'] = nid
 
-    fieldids = ["systempids", "nid", "sname", "jpname", "jpdomain", "epochstart", "active"]
-    fieldnames = ['Pids', 'Node', 'Name', 'Process Name', 'Process Domain', 'Start', 'Active']
+    fieldids = ["sname", "nid", "jpname", "jpdomain", "epochstart", "active"]
+    fieldnames = ['Name', 'Node', 'Process Name', 'Process Domain', 'Start', 'Active']
     def pidFormat(row, field):
-        pids = ', '.join([ str(x) for x in row[field]])
-        return '[%s|/grid/process?id=%s]' % (pids, row['id'])
+        return '[%s|/grid/process?id=%s]' % (row['sname'], row['id'])
 
     def makeTime(row, field):
         return datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S')
 
     nidstr = '[%(nid)s|/grid/node?id=%(nid)s]'
-    fieldvalues = [pidFormat, nidstr, 'sname', 'jpname', 'jpdomain', makeTime, 'active']
+    fieldvalues = [pidFormat, nidstr, 'jpname', 'jpdomain', makeTime, 'active']
     tableid = modifier.addTableForModel('system', 'process', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
     params.result = page

@@ -8,7 +8,7 @@ class OSISBaseObject(OSISBaseObjectComplexType):
     def __init__(self, ddict=None, **kwargs):
         if ddict:
             kwargs = ddict
-        for key, value in kwargs:
+        for key, value in kwargs.iteritems():
             setattr(self, key, value)
 
     def load(self, ddict):

@@ -39,7 +39,7 @@ class Disk(OsisBaseObject):
         return j.tools.hash.md5_string(C)
 
     def getContentKey(self):
-        C="%s_%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.ssd,self.model,self.size,self.mountpoint,self.mounted,self.partnr)
+        C="%s_%s_%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.path,self.ssd,self.model,self.free,self.size,self.mountpoint,self.mounted,self.partnr)
         return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):

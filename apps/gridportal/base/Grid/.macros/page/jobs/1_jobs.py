@@ -1,3 +1,4 @@
+import datetime
 
 def main(j, args, params, tags, tasklet):
     import ujson
@@ -24,7 +25,9 @@ def main(j, args, params, tags, tasklet):
             filters[tag] = val
 
     modifier = j.html.getPageModifierGridDataTables(page)
-    linkstr = '[%(id)s|/grid/job?id=%(id)s]'
+    def makeLink(row, field):
+        time = datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or 'N/A'
+        return '[%s|/grid/job?id=%s]'  % (time, row['guid'])
 
     def makeResult(row, field):
         result = row[field]
@@ -34,11 +37,12 @@ def main(j, args, params, tags, tasklet):
             pass
         return j.html.escape(str(result))
 
-    fieldnames = ['Id', 'Category', 'Command', 'Result', 'State']
-    fieldvalues = [linkstr, 'category', 'cmd', makeResult, 'state']
-    fieldids = ['id', 'category', 'cmd', 'result', 'state']
+    fieldnames = ['Time Start', 'Category', 'Command', 'Result', 'State']
+    fieldvalues = [makeLink, 'category', 'cmd', makeResult, 'state']
+    fieldids = ['timeStart', 'category', 'cmd', 'result', 'state']
     tableid = modifier.addTableForModel('system', 'job', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
+    modifier.addSorting('#%s' % tableid, 0, 'desc')
 
     params.result = page
     return params

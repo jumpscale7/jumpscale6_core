@@ -4,12 +4,7 @@ import JumpScale.grid.serverbase
 from JumpScale.grid.serverbase.DaemonClient import Transport
 
 
-try:
-    import requests
-except:
-    j.system.installtools.execute("pip install requests")
-    import requests
-
+import requests
 
 class TornadoTransport(Transport):
     def __init__(self, addr="localhost", port=9999):

@@ -26,7 +26,7 @@ class ServerBaseFactory():
                     def echo(self,msg="",session=session):
                         return msg
 
-        daemon.setCMDsInterface(MyCommands,category="optional")  #pass as class not as object !!! chose category if only 1 then can leave ""
+        daemon.addCMDsInterface(MyCommands,category="optional")  #pass as class not as object !!! chose category if only 1 then can leave ""
 
         #now you need to pass this to a protocol server, its not usable by itself
 
@@ -118,7 +118,7 @@ class ServerBaseFactory():
         if resultcode == None:
             resultcode = '\x00'
         lenreturnformat = len(returnformat)
-        return resultcode+struct.pack("<II", lenreturnformat, lendata) + returnformat + result
+        return str(resultcode)+struct.pack("<II", lenreturnformat, lendata) + returnformat + result
 
     def _unserializeBinReturn(self, data):
         """

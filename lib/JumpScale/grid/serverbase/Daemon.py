@@ -4,6 +4,8 @@ from JumpScale.grid.serverbase import returnCodes
 import inspect
 import copy
 import time
+import ujson
+
 
 class Session():
 
@@ -65,25 +67,24 @@ class DaemonCMDS(object):
 
     def introspect(self, cat,session=None):
         methods = {}
-        interfaces = self.daemon.cmdsInterfaces[cat]
-        for interface in interfaces:
-            for name, method in inspect.getmembers(interface, inspect.ismethod):
-                if name.startswith('_'):
-                    continue
-                args = inspect.getargspec(method)
-                # Remove the 'session' parameter
-                if 'session' in args.args:
-                    session_index = args.args.index('session')
-                    if session_index<>len(args.args)-1:
-                        raise RuntimeError("session arg needs to be last argument of method. Cat:%s Method:%s \nArgs:%s"%(cat,name,args))
-                    del args.args[session_index]
-                    if args.defaults:
-                        session_default_index = session_index - len(args.args) - 1
-                        defaults = list(args.defaults)
-                        del defaults[session_default_index]
-                        args = inspect.ArgSpec(args.args, args.varargs, args.keywords, defaults)
+        interface = self.daemon.cmdsInterfaces[cat]
+        for name, method in inspect.getmembers(interface, inspect.ismethod):
+            if name.startswith('_'):
+                continue
+            args = inspect.getargspec(method)
+            # Remove the 'session' parameter
+            if 'session' in args.args:
+                session_index = args.args.index('session')
+                if session_index<>len(args.args)-1:
+                    raise RuntimeError("session arg needs to be last argument of method. Cat:%s Method:%s \nArgs:%s"%(cat,name,args))
+                del args.args[session_index]
+                if args.defaults:
+                    session_default_index = session_index - len(args.args) - 1
+                    defaults = list(args.defaults)
+                    del defaults[session_default_index]
+                    args = inspect.ArgSpec(args.args, args.varargs, args.keywords, defaults)
 
-                methods[name] = {'args': args, 'doc': inspect.getdoc(method)}
+            methods[name] = {'args': args, 'doc': inspect.getdoc(method)}
         return methods
 
 
@@ -125,15 +126,11 @@ class Daemon(object):
         if not self.cmdsInterfaces.has_key(category):
             self.cmdsInterfaces[category] = []
         if proxy==False:
-            self.cmdsInterfaces[category].append(cmdInterfaceClass(self))
+            obj=cmdInterfaceClass(self)
         else:
-            self.cmdsInterfaces[category].append(cmdInterfaceClass())
-        self.cmdsInterfacesProxy[category]=proxy
-
-    def setCMDsInterface(self, cmdInterfaceClass, category,proxy=False):
-        self.cmdsInterfaces[category] = []
-        self.cmdsInterfaces[category].append(cmdInterfaceClass(self))
-        self.cmdsInterfacesProxy[category]=proxy
+            obj=cmdInterfaceClass()
+            self.cmdsInterfacesProxy[category]=obj
+        self.cmdsInterfaces[category]=obj
 
     def processRPC(self, cmd, data, returnformat, session, category=""):
         """
@@ -155,13 +152,13 @@ class Daemon(object):
             ffunction = self.cmds[cmdkey]
         else:
             ffunction = None
+            if not self.cmdsInterfaces.has_key(category):
+                return returnCodes.METHOD_NOT_FOUND, "", None
 
-            for cmdinterface in self.cmdsInterfaces[category]:
-                if hasattr(cmdinterface, cmd):
-                    ffunction = getattr(cmdinterface, cmd)
-
-            if ffunction == None:
-                # means could not find method
+            cmdinterface= self.cmdsInterfaces[category]
+            if hasattr(cmdinterface, cmd):
+                ffunction = getattr(cmdinterface, cmd)
+            else:
                 return returnCodes.METHOD_NOT_FOUND, "", None
 
             self.cmds[cmdkey] = ffunction
@@ -170,35 +167,33 @@ class Daemon(object):
             if inputisdict:
                 if data.has_key("_agentid"):
                     if data["_agentid"]<>0:
-                        cmds=self.cmdsInterfaces["agent"][0]
+                        cmds=self.cmdsInterfaces["agent"]
                         gid=j.application.whoAmI.gid
                         nid=int(data["_agentid"])
                         data.pop("_agentid")
                         category2=category.replace("processmanager_","")
-                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,cmdname=cmd,args=data,queue="internal",log=True,timeout=0,roles=[],session=session)
-                        jobqueue = cmds._getJobQueue(job.id)
-                        www=jobqueue.get(True,60)
-                        from IPython import embed
-                        print "DEBUG NOW return"
-                        embed()
-                        
-
-                        # if res:
-                        #     job = self._getJobFromRedis(session.gid, jobid)
-                        #     self.redis.hdel("jobs:%s"%job.gid,job.id)
-                        #     return json.loads(job.result)
-                        # else:
-                        #     job.resultcode=1
-                        #     print "timeout on execution"
-                        #     return job.__dict__                        
+                        scriptid="%s_%s" % (category2, cmd)
+                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,jscriptid=scriptid,cmdname=cmd,args=data,queue="internal",log=False,timeout=60,roles=[],session=session)
+                        jobqueue = cmds._getJobQueue(job["guid"])
+                        jobr=jobqueue.get(True,60)
+                        if not jobr:
+                            eco = j.errorconditionhandler.getErrorConditionObject(msg="Command %.%s with args: %s timeout" % (category2, cmd, data))
+                            return returnCodes.ERROR,returnformat,eco.__dict__
+                        jobr=ujson.loads(jobr)
+                        if jobr["state"]<>"OK":
+                            return jobr["resultcode"],returnformat,jobr["result"]
+                        else:
+                            return returnCodes.OK,returnformat,jobr["result"]
                     else:
                         data['session'] = session
                         data.pop("_agentid")
-                            
                 result = ffunction(**data)
             else:
                 result = ffunction(data, session=session)
         except Exception, e:
+            # if str(e)=="STOP APPLICATION 112299":  #needs to be cryptic otherwise smart developers can fake this
+            #     j.application.stop()
+            
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco
@@ -209,8 +204,8 @@ class Daemon(object):
             j.errorconditionhandler.processErrorConditionObject(eco)
             eco.__dict__.pop("tb")
             eco.tb=None
-            result = self.errorconditionserializer.dumps(eco.__dict__)
-            return returnCodes.ERROR, "", result
+            errorres = eco.__dict__
+            return returnCodes.ERROR, returnformat, errorres 
 
         return returnCodes.OK, returnformat, result
 

@@ -7,7 +7,6 @@ h3. Details
 |*Application Name*|$$appname|
 |*Category*|$$category|
 |*Job*|[$$jid|job?id=$$jid]|
-|*Code*|$$code|
 |*level*|$$level|
 |*Process ID*|[$$pid|process?id=$$pid]|
 |*Function Name*|$$funcname|
@@ -21,5 +20,9 @@ h3. Details
 |*Grid*|[$$gid|grid?id=$$gid]|
 |*Type*|$$type|
 |*Tags*|$$tags|
+
+*Code*
+{{code: $$code}}
+
 *BackTrace*
 {{code: $$backtrace}}

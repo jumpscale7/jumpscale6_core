@@ -19,9 +19,9 @@ client=j.clients.agentcontroller.get("127.0.0.1")
 
 # ac=client.get("127.0.0.1")
 
-# jpclient=client.getClientProxy(category="jpackages",agentControllerIP="127.0.0.1")
+jpclient=j.clients.agentcontroller.getClientProxy(category="jpackages",agentControllerIP="127.0.0.1")
 
-# print jpclient.listJPackages(_agentid=1)
+print jpclient.listJPackages(_agentid=1)
 
 #job=client.execute("opencode","wait","node",msg="test:%s"%0,timeout=5,wait=True,lock="")
 # jp= client.execute('jumpscale', 'error', 'node', timeout=10)
@@ -29,7 +29,7 @@ client=j.clients.agentcontroller.get("127.0.0.1")
 
 # print jp
 
-# j.application.stop()
+j.application.stop()
 
 print "start test"
 for i in range(1):

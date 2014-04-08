@@ -13,3 +13,4 @@ roles = ["vfw.host"]
 
 def action(name):
     j.system.platform.lxc.destroy(name)
+    return True
