@@ -61,9 +61,7 @@ class OSISStoreES(OSISStore):
         """
         get dict value
         """
-        q='{"query":{"bool":{"must":[{"text":{"json.guid":"$guid"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
-        q=q.replace("$guid",key)
-        q=json.loads(q)
+        q={"query":{"bool":{"must":[{"text":{"json.guid":key}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}
         res=self.find(q)
         if res["total"]==0:
             raise RuntimeError("cannot find %s on %s:%s"%(key,self.namespace,self.categoryname))
@@ -83,5 +81,6 @@ class OSISStoreES(OSISStore):
         """
         return all object id's stored in DB
         """
-        raise RuntimeError("not implemented, use find")
+        result = self.find({})
+        return [r['_source']['guid'] for r in result['result']]
 
