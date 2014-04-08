@@ -38,6 +38,7 @@ class PortalFactory():
         j.db.keyvaluestore
         ini = j.tools.inifile.open("cfg/appserver.cfg")
         appdir = ini.getValue("main", "appdir")
+        appdir=appdir.replace("$base",j.dirs.baseDir)
         cfgdir = j.system.fs.joinPaths(j.system.fs.getcwd(), "cfg")
         curdir = j.system.fs.getcwd()
         j.system.fs.changeDir(appdir)

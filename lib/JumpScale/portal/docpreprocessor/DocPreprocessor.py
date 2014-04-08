@@ -30,6 +30,7 @@ class Doc(object):
 
     def __init__(self, docpreprocessor):
         self.name = ""
+        self.appliedparams = dict()
         self.alias = []
         self.pagename = ""
         self.source = ""
@@ -209,9 +210,12 @@ class Doc(object):
         """
         @param params is dict with as key the name (lowercase)
         """
+        isdoccontent = content == self.content
         if findfresh:
             self.findParams()
-        
+    
+        if params:
+            self.appliedparams.update(params)
         if len(self.params) > 0:
             for param in self.params:
                 if param in params:
@@ -219,6 +223,8 @@ class Doc(object):
                         content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), self.content)
                     else:
                         content = re.sub("\$\$%s(?!\w)" % param, str(params[param]), content)
+        if isdoccontent:
+            self.content = content
         return content
 
     def executeMacrosPreprocess(self):

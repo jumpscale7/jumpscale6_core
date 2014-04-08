@@ -221,22 +221,26 @@ class MacroExecutorPage(MacroExecutorBase):
 
 class MacroExecutorWiki(MacroExecutorBase):
 
-    def execMacrosOnContent(self, content, doc, paramsExtra={}, recursivedepth=0, ctx=None):
-        recursivedepth += 1
-        if ctx != None:
-            content = doc.applyParams(ctx.params, findfresh=True, content=content)
-        if paramsExtra != {}:
-            content = doc.applyParams(paramsExtra, findfresh=True, content=content)
-        macrostrs = self.findMacros(doc, content)
-        for macrostr in macrostrs:
-            # print "EXEC MACRO ONCONTENT:"
-            # print macrostr
-            # print recursivedepth
+    def execMacrosOnContent(self, content, doc, paramsExtra={}, ctx=None):
+        recursivedepth = 0
+        def process(content):
+            if ctx != None:
+                content = doc.applyParams(ctx.params, findfresh=True, content=content)
+            if paramsExtra != {}:
+                content = doc.applyParams(paramsExtra, findfresh=True, content=content)
+            return content, self.findMacros(doc, content)
+
+        content, macrostrs = process(content)
+        while macrostrs:
+            recursivedepth += 1
             if recursivedepth > 20:
-                content += 'ERROR: recursive error in executing macro %s' % macrostr
+                content += 'ERROR: recursive error in executing macros'
                 return content, doc
-            content, doc = self.executeMacroOnContent(content, macrostr, doc, paramsExtra, ctx=ctx)
-            content, doc = self.execMacrosOnContent(content, doc, paramsExtra, recursivedepth, ctx=ctx)  # work recursive see if other macro's
+
+            for macrostr in macrostrs:
+                content, doc = self.executeMacroOnContent(content, macrostr, doc, paramsExtra, ctx=ctx)
+
+            content, macrostrs = process(content)
         return content, doc
 
     def executeMacroOnContent(self, content, macrostr, doc, paramsExtra=None, ctx=None):
