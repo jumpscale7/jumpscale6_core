@@ -7,11 +7,12 @@ import sys,time
 j.application.start("cmdosistools")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['delete','deleteall','emptyredis', 'export'], help='Command to perform')
+parser.add_argument("action", choices=['delete','deleteall','emptyredis', 'export', 'import'], help='Command to perform')
 parser.add_argument("-m", '--model',help='name of model')
 parser.add_argument("-n", '--namespace', help='OSIS namesdpace')
 parser.add_argument("-c", '--category', help='OSIS category')
 parser.add_argument("-o", '--outputpath', help='Output path for the export')
+parser.add_argument("-p", '--path', help='Path to import category from')
 parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
 
 opts = parser.parse_args()
@@ -104,9 +105,29 @@ if opts.action =='export':
         outputpath = opts.outputpath.strip()
 
     cl.export(namespace, category, outputpath)
-            
-    
-    
-    # cl.delete_all_indexes()
+
+############import
+if opts.action =='import':
+    import JumpScale.grid.osis
+    cl = j.core.osis.getClient(user='root')
+
+    if not opts.namespace:
+        print "Namespace: "
+        namespace = j.console.askChoice(cl.listNamespaces())
+    else:
+        namespace = opts.namespace.strip()
+
+    if not opts.category:
+        print "Category: "
+        category = j.console.askChoice(cl.listNamespaceCategories(namespace))
+    else:
+        category = opts.category.strip()
+
+    if not opts.path:
+        path = j.console.askString("Path to import from")
+    else:
+        path = opts.path.strip()
+
+    cl.importFromPath(namespace, category, path)
 
 j.application.stop()
