@@ -9,7 +9,7 @@ class Job(OsisBaseObject):
     """
 
     def __init__(self, ddict={}, gid="", roles=None, args=None, timeout=60, sessionid=None, jscriptid=None,\
-            nid=0,cmd="",category="",log=True, queue=None):
+            nid=0,cmd="",category="",log=True, queue=None, wait=False):
         if ddict <> {}:
             self.load(ddict)
         else:
@@ -18,6 +18,7 @@ class Job(OsisBaseObject):
             self.gid =gid
             self.nid =nid
             self.cmd = cmd
+            self.wait = wait
             self.category = category
             if not roles:
                 roles = list()
