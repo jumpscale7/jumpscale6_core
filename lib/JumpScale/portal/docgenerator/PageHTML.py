@@ -377,12 +377,12 @@ var editor$id = CodeMirror.fromTextArea(document.getElementById("code$id"),
     lineWrapping: $wrap,
     mode: "{template}",
     onCursorActivity: function() {
-        editor$id.setLineClass(hlLine, null, null);
-        hlLine = editor$id.setLineClass(editor$id.getCursor().line, null, "activeline");
+        editor$id.addLineClass(hlLine, null, null);
+        hlLine = editor$id.addLineClass(editor$id.getCursor().line, null, "activeline");
         }
     }
 );
-var hlLine = editor$id.setLineClass(0, "activeline");
+var hlLine = editor$id.addLineClass(0, "activeline");
 
 function copyText$id() {
     var text=editor$id.getValue()
@@ -831,8 +831,8 @@ function copyText$id() {
                             extraKeys: {"Ctrl-Space": "autocomplete"},
 
                             onCursorActivity: function() {
-                                editor1.setLineClass(hlLine, null, null);
-                                hlLine = editor1.setLineClass(editor1.getCursor().line, null, "activeline");
+                                editor1.addLineClass(hlLine, null, null);
+                                hlLine = editor1.addLineClass(editor1.getCursor().line, null, "activeline");
                         }});
                         this.myCodeMirror.setSize(790, 600);
                     },
