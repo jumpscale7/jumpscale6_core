@@ -39,8 +39,10 @@ class Application:
         else:
             self.sandbox=False
 
-        self.redis=None
-        # self.redis=j.clients.credis.getRedisClient("127.0.0.1",7768)
+        if j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+            self.redis=j.clients.credis.getRedisClient("127.0.0.1",7768)
+        else:
+            self.redis=None
 
     def initWhoAmI(self):
         """

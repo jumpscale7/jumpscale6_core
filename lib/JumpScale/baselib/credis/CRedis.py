@@ -3,7 +3,7 @@ import credis
 #see https://github.com/yihuang/credis
 import time
 from JumpScale import j
-import JumpScale.baselib.redis
+# import JumpScale.baselib.redis
 
 from .CRedisQueue import CRedisQueue
 
@@ -41,7 +41,10 @@ class CRedis():
     def __init__(self, addr="127.0.0.1",port=7768,timeout=None):
         self.port=port
         self.redis=credis.Connection(host=addr,port=port,socket_timeout=timeout)
-        self.connect()            
+        self.connect()    
+        self.fallbackredis=None
+
+    def getFallBackRedis(self):        
         self.fallbackredis=j.clients.redis.getRedisClient(addr,port)
         #certain commands (which are not performance sensitive need normal pyredis)
 
@@ -106,7 +109,6 @@ class CRedis():
     def hexists(self,hkey,key):
         return self.execute('HEXISTS',hkey,key)==1
 
-
     def incr(self,key):
         return self.execute('INCR',key)
 
@@ -120,6 +122,7 @@ class CRedis():
         return self.execute('EXPIRE',key,timeout)
 
     def scriptload(self,script):
+        self.getFallBackRedis()
         return self.fallbackredis.script_load(script)
         # return self.execute('SCRIPTLOAD',script)
 

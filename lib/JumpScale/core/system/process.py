@@ -1778,6 +1778,8 @@ class SystemProcess:
         return len(self.appGetPidsActive(appname))
 
     def appGetPids(self,appname):
+        if j.application.redis==None:
+            raise RuntimeError("Redis was not running when applications started, cannot get pid's")
         if not j.application.redis.hexists("application",appname):
             raise RuntimeError("could not find application:%s to check nr instances")
         pids=ujson.loads(j.application.redis.hget("application",appname))

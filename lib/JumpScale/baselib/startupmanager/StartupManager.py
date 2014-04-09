@@ -23,12 +23,14 @@ class ProcessDef:
         self.args=self._replaceSysVars(hrd.get("process.args"))
         self.env=hrd.getDict("process.env")
         self.procname="%s:%s"%(self.name,self.domain)
-        self.env["JSPROCNAME"]=self.procname
+        self.env["JSPROCNAME"]=self.procname #set env variable so app can start using right name
+
         self.priority=hrd.getInt("process.priority")
+
         if hrd.exists("process.check"):
-            self.checkpid=hrd.getInt("process.check")==1
+            self.isJSapp=hrd.getInt("process.check")==1
         else:
-            self.checkpid=True
+            self.isJSapp=False
 
         if hrd.exists("process.timeoutcheck"):
             self.timeout=hrd.getInt("process.timeoutcheck")
@@ -40,11 +42,6 @@ class ProcessDef:
         self.reload_signal=0
         if hrd.exists('process.reloadsignal'):
             self.reload_signal = hrd.getInt("process.reloadsignal")
-
-        if hrd.exists('process.filterstring'):
-            self.processfilterstr = hrd.getInt("process.filterstring")
-        else:
-            self.processfilterstr=""
 
         self.stopcmd = None
         if hrd.exists('process.stopcmd'):
@@ -58,6 +55,7 @@ class ProcessDef:
         self.workingdir=self._replaceSysVars(hrd.get("process.workingdir"))
         self.ports=hrd.getList("process.ports")
         self.ports=[port for port in self.ports if str(port).strip()<>""]
+
         self.jpackage_domain=hrd.get("process.jpackage.domain")
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
@@ -72,15 +70,17 @@ class ProcessDef:
         self.lastCheck=0
         self.lastMeasurements={}
         self.active=None
-        self.pid=0
 
-        if self.checkpid==False and self.processfilterstr=="":
-            self.raiseError("Need to specify process.filterstring if checkpid==False")
+        self.upstart=self.hrd.getBool("process.upstart")
+
+        self.processfilterstr=self.hrd.get("process.processfilterstr")
+
+        if self.isJSapp==False and self.processfilterstr=="":
+            self.raiseError("Need to specify process.filterstring if isJSapp==False")
 
     def raiseError(self,msg):
         msg="Error for process %s:%s\n%s"%(self.domain,self.name,msg)
         raise RuntimeError(msg,category="jsprocess")
-
 
     def _replaceSysVars(self,txt):
         txt=txt.replace("$base",j.dirs.baseDir)
@@ -113,16 +113,16 @@ class ProcessDef:
         jp.processDepCheck()
         self.log("process dependency OK")
         self.log("start process")
-        j.system.platform.screen.executeInScreen(self.domain,self.name,self.cmd+" "+self.args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
+
+        cmd=self._replaceSysVars(self.cmd)
+        args=self._replaceSysVars(self.args)
+        
+        j.system.platform.screen.executeInScreen(self.domain,self.name,cmd+" "+args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
 
         if self.plog:
             j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
                 
         isrunning=self.isRunning(wait=True)
-
-        if isrunning and self.checkpid and self.pid==0:
-            #means we did not check pid yet as part of isRunning test
-            self.getPid(ifNoPidFail=False,wait=False) #we already waited for running test
 
         self.log("pid: %s"%self.pid)
 
@@ -158,16 +158,19 @@ class ProcessDef:
         if len(pids)==0:
             return None
         elif len(pids)>1:
-            self.raiseError("Cannot get pid, there is more than 1 instance running.")
+            return pids
         else:
             return pids[0]
 
     def _getPidFromPS(self):
         cmd="ps ax|grep %s"%self.processfilterstr
         rc,out=j.system.process.execute(cmd)
+        from IPython import embed
+        print "DEBUG NOW _getPidFromPS"
+        embed()
         
 
-    def getPid(self,ifNoPidFail=True,wait=False):
+    def getPids(self,ifNoPidFail=True,wait=False):
         #first check screen is already there with window, max waiting 1 sec        
         now=0
         pid0=None
@@ -178,27 +181,25 @@ class ProcessDef:
         else:
             timeout=2 #should not be 0 otherwise dont go in while loop
 
-        if self.checkpid:
+        if self.isJSapp:
 
-            while pid0==None and now<timeout:
-                pid0 = self._getPidFromRedis()
-                if pid0<>0 or wait==False:
-                    return pid0
+            while pids0==None and now<timeout:
+                pids0 = self._getPidFromRedis()
+                if pids0<>0 or wait==False:
+                    return pids0
                 time.sleep(0.05)
                 now=time.time()
         else:
             #look at system str
-            while pid0==None and now<timeout:
-                pid0 = self._getPidFromPS()
-                if pid0<>0 or wait==False:
-                    return pid0
+            while pids0==None and now<timeout:
+                pids0 = self._getPidFromPS()
+                if pids0<>0 or wait==False:
+                    return pids0
                 time.sleep(0.05)
                 now=time.time()
 
         if ifNoPidFail==False:
             return None
-
-        raise RuntimeError("Timeout on wait for childprocess for tmux for processdef:%s"%self)
 
     def _portCheck(self):
         for port in self.ports:
@@ -232,12 +233,13 @@ class ProcessDef:
             res= self.portCheck(wait=wait)
             return res
 
-        pid=self.getPid(ifNoPidFail=False,wait=wait)
-        if pid==0:
+        pids=self.getPids(ifNoPidFail=False,wait=wait)
+        if pids<>self.numprocesses:
             return False
-        test=j.system.process.isPidAlive(pid)
-        if test==False:
-            return False
+        for pid in pids:
+            test=j.system.process.isPidAlive(pid)
+            if test==False:
+                return False
         return True
 
     def stop(self):    
@@ -342,7 +344,7 @@ class StartupManager:
 
     def addProcess(self, name, cmd, args="", env={}, numprocesses=1, priority=100, shell=False,\
         workingdir='',jpackage=None,domain="",ports=[],autostart=True, reload_signal=0,user="root", stopcmd=None, pid=0,\
-         active=False,check=True,timeoutcheck=10):
+         active=False,check=True,timeoutcheck=10,isJSapp=1,upstart=True,processfilterstr=""):
         envstr=""
         for key in env.keys():
             envstr+="%s:%s,"%(key,env[key])
@@ -366,6 +368,18 @@ class StartupManager:
         hrd+="process.priority=%s\n"%priority
         hrd+="process.workingdir=%s\n"%workingdir
         hrd+="process.user=%s\n"%user
+        hrd+="process.processfilterstr=%s\n"%processfilterstr
+        
+        if isJSapp:
+            isJSapp=1
+        else:
+            isJSapp=0
+        hrd+="process.isJSapp=%s\n"%isJSapp
+        if upstart:
+            upstart=1
+        else:
+            upstart=0
+        hrd+="process.upstart=%s\n"%upstart
         if autostart:
             autostart=1
         hrd+="process.timeoutcheck=%s\n"%timeoutcheck
@@ -468,16 +482,6 @@ class StartupManager:
                 result.append(pd)
         return result
 
-    # def _start(self,j,pd):
-    #     # print "thread start:%s"%pd
-    #     try:
-    #         pd.start()
-    #     except Exception,e:
-    #         print "********** ERROR **********"
-    #         print pd
-    #         print e
-    #         print "********** ERROR **********"
-    #     # print "thread started:%s"%pd
 
     def startAll(self):
         l=self.getProcessDefs()
@@ -497,21 +501,6 @@ class StartupManager:
         if len(errors)>0:
             print "COULD NOT START:"
             print "\n".join(errors)
-
-
-    # def startAll(self):
-    #     # q = Queue.Queue()
-    #     started=[]
-    #     for pd in self.getProcessDefs():          
-    #         if pd.autostart:
-    #             t = threading.Thread(target=self._start, args = (j,pd))
-    #             t.daemon = True
-    #             started.append(t)
-    #             t.start()                  
-    #             # pd.start()
-    #     while True:
-    #         time.sleep(10)
-            
 
     def restartAll(self):
         for pd in self.getProcessDefs():

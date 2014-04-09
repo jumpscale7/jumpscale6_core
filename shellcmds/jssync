@@ -7,28 +7,26 @@ import sys,time
 j.application.start("jssync")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['jsboxupload','jsboxdownload','jsboxupdate','system2sandbox','jpackagesupload','jpackagesdownload'], help='Command to perform')
+parser.add_argument("action", choices=['jsboxupload','jsboxdownload','jsboxupdate','system2sandbox',\
+    'jpackagesupload','jpackagesdownload','jsboxuploadcfg'], help='Command to perform')
 
-parser.add_argument("-q", '--qualitylevel', help='qualitylevel e.g. unstable,test,stable', default="unstable")
-
-# parser.add_argument("-i", '--iface', help='ifacename e.g. eth0')
-# parser.add_argument("-a", '--ipaddr', help='ipaddr like 192.168.1.3/24')
-# parser.add_argument("-g", '--gw', help='gateway like 192.168.1.1')
-
-# parser.add_argument("-e", '--ifaceexcl', help='ifacename to not use in applyconfig (to not lock you out)')
-# parser.add_argument("-n", '--networkids', help='range of networkids e.g 20-100')
-
-
-# parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
-# parser.add_argument('--passwd', help='password for desktop')
-
-# parser.add_argument('--force',required=False, action='store_true',help='dont ask yes, do immediate')
-# parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
+parser.add_argument("-q", '--qualitylevel', help='qualitylevel e.g. unstable,test,stable', default="")
+parser.add_argument("-k", '--key', help='secret key which will be prepended to quality level if ql exists', default="")
+parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
 
 
 opts = parser.parse_args()
 
 ipaddr=j.application.config.get("jssync.addr")
+
+def getkey():
+    if opts.qualitylevel=="" and opts.key=="":
+        raise RuntimeError("specify qualitylevel name or key")        
+    if opts.qualitylevel<>"" and opts.key<>"":
+        key="%s_%s"%(opts.key,opts.qualitylevel)
+    else:
+        key="%s%s"%(opts.key,opts.qualitylevel)
+    return key
 
 def sync(src,dest,delete=True):
     print "SYNC: %s %s"%(src,dest)
@@ -39,31 +37,41 @@ def sync(src,dest,delete=True):
     cmd="rsync -Lrpo %s%s %s"%(d,src,dest)
     j.system.process.executeWithoutPipe(cmd)
 
-def download(src,dest):
-    print "DOWNLOAD: %s %s"%(src,dest)
-    if src[-1]<>"/":
-        src+="/"
-    if dest[-1]<>"/":
-        dest+="/"
-    cmd="rsync -az %s::upload/jsbox/%s/%s /opt/jsbox/%s  --delete-after --modify-window=60 --compress"%(ipaddr,opts.qualitylevel,src,dest)
-    # print cmd
+def download(category,path="",data=False):
+    print "DOWNLOAD: %s %s"%(category,path)
+    key=getkey()
+    if path=="" or path[0]<>"/":
+        path="/%s"%path
+    if path[-1]<>"/":
+        path="%s/"%path
+    if data:
+        path+="_data"
+    cmd="rsync -azv %s::download/%s/%s%s %s%s  --delete-after --modify-window=60 --compress"%(ipaddr,\
+        key,category,path,opts.sbpath,path)
+    print cmd
     j.system.process.executeWithoutPipe(cmd)    
 
-def upload(src,dest):
-    print "UPLOAD: %s %s"%(src,dest)
-    if src[-1]<>"/":
-        src+="/"
-    if dest[-1]<>"/":
-        dest+="/"
-    cmd="rsync -az /opt/jsbox/%s %s::upload/jsbox/%s/%s  --delete-after --modify-window=60 --compress"%(src,ipaddr,opts.qualitylevel,dest)
-    # print cmd
+def upload(category,path="",data=False):
+    print "UPLOAD: %s %s"%(category,path)
+    key=getkey()
+    if path=="" or path[0]<>"/":
+        path="/%s"%path    
+    if path[-1]<>"/":
+        path="%s/"%path  
+    if data:
+        path+="_data"
+    cmd="rsync -azv %s%s %s::upload/%s/%s%s  --delete-after --modify-window=60 --compress"%(opts.sbpath,\
+        path,ipaddr,key,category,path)
+    print cmd
     j.system.process.executeWithoutPipe(cmd)    
 
-
+#COPY FROM SYSTEM TO SANDBOX JPACKAGES
 if opts.action =='system2sandbox' or opts.action =='jsboxupload' or opts.action =='jpackagesupload':
-    sync("/opt/code/jumpscale/default__jp_jumpscale/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/jumpscale/")
-    sync("/opt/code/jumpscale/default__jp_serverapps/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/serverapps/")
-    sync("/opt/code/jumpscale/default__jp_desktop/%s/"%opts.qualitylevel,"/opt/jsbox/jpackages/jsdesktop/")
+    if opts.qualitylevel=="":
+        raise RuntimeError("quality level needs to be specified")
+    sync("/opt/code/jumpscale/default__jp_jumpscale/%s/"%opts.qualitylevel,"%s/jpackages/jumpscale/"%opts.sbpath)
+    sync("/opt/code/jumpscale/default__jp_serverapps/%s/"%opts.qualitylevel,"%s/jpackages/serverapps/"%opts.sbpath)
+    sync("/opt/code/jumpscale/default__jp_desktop/%s/"%opts.qualitylevel,"/%s/jpackages/jsdesktop/"%opts.sbpath)
 
     for dname in ["jsdesktop","jumpscale","serverapps"]:
         dpath=j.system.fs.joinPaths("/opt","jsbox","jpackages",dname)
@@ -71,40 +79,40 @@ if opts.action =='system2sandbox' or opts.action =='jsboxupload' or opts.action 
             hrd=j.core.hrd.getHRD(path)
             hrd.set("jp.debug",0)
 
+#COPY FROM SYSTEM TO SANDBOX for LIBS
+if opts.action =='system2sandbox' or opts.action =='jsboxupload':
+    if opts.qualitylevel=="":
+        raise RuntimeError("quality level needs to be specified")
     for name in ["base","baselib","core","lib","grid","portal"]:
-        sync("/usr/local/lib/python2.7/site-packages/JumpScale/%s/"%name,"/opt/jsbox/libjs/JumpScale/%s/"%name)
-    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.qualitylevel,"/opt/jsbox/tools/")
+        sync("/usr/local/lib/python2.7/site-packages/JumpScale/%s/"%name,"%s/libjs/JumpScale/%s/"%(opts.sbpath,name))
+    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.qualitylevel,"%s/tools/"%opts.sbpath)
     #sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.qualitylevel,"/opt/jsbox/cfg/")
-    sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.qualitylevel,"/opt/jsbox/tools/",delete=False)
+    sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.qualitylevel,"%s/tools/"%opts.sbpath,delete=False)
 
-if opts.action =='jpackagesupload' or opts.action =='jsboxupload':        
-    ipaddr=j.application.config.get("jssync.addr")        
-    for name in ["jsdesktop","serverapps","jumpscale"]:
-        name="jpackages/%s"%name
-        upload(name,name)
+#UPLOAD JPACKAGES
+if opts.action =='jpackagesupload':        
+    upload("jsbox","jpackages")
 
-if opts.action =='jsboxupload':        
-    if opts.qualitylevel==None:
-        raise RuntimeError("specify qualitylevel name")     
-    ipaddr=j.application.config.get("jssync.addr")
-    for name in ["cfg","bin","lib","tools","libjs"]:#,"cfg","apps"]:
-        upload(name,name)
+#UPLOAD ALL
+if opts.action =='jsboxuploadall':
+    upload("jsbox")
+
+if opts.action =='jsboxupload':
+    raise RuntimeError("to implement")
+    #upload jpackages & libs
+
+
+if opts.action =='jsboxuploadcfg':
+    upload("jsbox",data=True)
 
 if opts.action =='jpackagesdownload':
-    download("jpackages/","jpackages/")    
+    download("jsbox","jpackages")    
 
-if opts.action =='jsboxdownloadall':
-    if opts.qualitylevel==None:
-        raise RuntimeError("specify qualitylevel name")     
-    download("/","/")
+if opts.action =='jsboxdownloadall':  
+    download("jsbox")
+    download("jsbox",data=True)
 
 if opts.action =='jsboxupdate':
-    for name in ["bin","jpackages","lib","tools"]:
-        name="%s/"%name
-        download(name,name)
-    for name in ["base","baselib","core","lib","grid","portal"]:
-        name="libjs/JumpScale/%s/"%name
-        download(name,name)
-
+    download("jsbox")
 
 j.application.stop()
