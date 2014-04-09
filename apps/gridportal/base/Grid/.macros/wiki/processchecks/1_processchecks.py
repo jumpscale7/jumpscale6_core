@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
     if len(data) > 0:
         for nid, checks in data.iteritems():
             if nid in errors:
-                categories = errors.get(nid, dict()).keys()
+                categories = errors.get(nid, {}).keys()
                 runningstring = '{color:orange}*RUNNING** (issues in %s){color}' % ', '.join(categories)
             else:
                 runningstring = '{color:green}*RUNNING*{color}'
@@ -28,7 +28,9 @@ def main(j, args, params, tags, tasklet):
 
     if len(errors) > 0:
         for nid, checks in errors.iteritems():
-            status = checks.get('processmanager', dict())
+            if nid in data:
+                continue
+            status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             if status and status['state'] != 'RUNNING':
                 out.append("|[%s|node?id=%s]|%s|{color:red}*HALTED*{color}| |" % (nid, nid, j.core.grid.healthchecker._nodenames.get(int(nid), 'UNKNOWN')))
 
