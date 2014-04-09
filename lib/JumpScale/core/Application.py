@@ -4,8 +4,11 @@ import atexit
 import struct
 from JumpScale.core.enumerators import AppStatusType
 from collections import namedtuple
-import JumpScale.baselib.credis
-import ujson
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
 
@@ -40,6 +43,7 @@ class Application:
             self.sandbox=False
 
         if j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+            import JumpScale.baselib.credis # leave import here to make bootrap work
             self.redis=j.clients.credis.getRedisClient("127.0.0.1",7768)
         else:
             self.redis=None
@@ -123,12 +127,12 @@ class Application:
 
         if self.redis<>None:
             if self.redis.hexists("application",self.appname):
-                pids=ujson.loads(self.redis.hget("application",self.appname))
+                pids=json.loads(self.redis.hget("application",self.appname))
             else:
                 pids=[]
             if self.systempid not in pids:
                 pids.append(self.systempid)
-            self.redis.hset("application",self.appname,ujson.dumps(pids))
+            self.redis.hset("application",self.appname,json.dumps(pids))
 
         # Set state
         self.state = AppStatusType.RUNNING

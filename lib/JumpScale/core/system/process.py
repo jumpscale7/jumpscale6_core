@@ -2,14 +2,16 @@
 import sys
 import os
 import os.path
-import shutil
 import re
 import select
 import time
 import subprocess
-import inspect
 import signal
-import ujson
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 from JumpScale import j
 
@@ -1783,7 +1785,7 @@ class SystemProcess:
         if not j.application.redis.hexists("application",appname):
             return list()
         else:
-            pids=ujson.loads(j.application.redis.hget("application",appname))
+            pids=json.loads(j.application.redis.hget("application",appname))
             return pids
 
     def appGetPidsActive(self,appname):
@@ -1794,7 +1796,7 @@ class SystemProcess:
                 todelete.append(pid)
         for item in todelete:
             pids.remove(item)
-        j.application.redis.hset("application",appname,ujson.dumps(pids))
+        j.application.redis.hset("application",appname,json.dumps(pids))
 
         return pids
 

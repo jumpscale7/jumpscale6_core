@@ -120,13 +120,8 @@ class JPackageClient():
         cfgpath=j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')
 
         if not j.system.fs.exists(cfgpath):
-            #check if there is old jpackages dir
-            cfgpathOld=j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')            
-            if j.system.fs.exists(cfgpathOld):
-                j.system.fs.renameDir(j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages'),j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages'))
-
-        if not j.system.fs.exists(cfgpath):
             j.system.fs.createDir(j.system.fs.getDirName(cfgpath))
+            return
             raise RuntimeError("did not find jpackage sources file on %s"%cfgpath)            
         else:
             cfg = j.tools.inifile.open(cfgpath)
