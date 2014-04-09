@@ -15,7 +15,6 @@ class ProcessDef:
         self.path=path
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
-        
         self.user=hrd.get("process.user",checkExists=True)
         if self.user==False:
             self.user="root"
@@ -51,6 +50,10 @@ class ProcessDef:
             self.plog=hrd.getBool("process.log")
         else:
             self.plog=True
+        if hrd.exists('process.numprocesses'):
+            self.numprocesses = hrd.getInt('process.numprocesses')
+        else:
+            self.numprocesses = 1
 
         self.workingdir=self._replaceSysVars(hrd.get("process.workingdir"))
         self.ports=hrd.getList("process.ports")
@@ -71,16 +74,22 @@ class ProcessDef:
         self.lastMeasurements={}
         self.active=None
 
-        self.upstart=self.hrd.getBool("process.upstart")
+        if hrd.exists('process.upstart'):
+            self.upstart = self.hrd.getBool("process.upstart")
+        else:
+            self.upstart = False
 
-        self.processfilterstr=self.hrd.get("process.processfilterstr")
+        if hrd.exists('process.processfilterstr'):
+            self.processfilterstr=self.hrd.get("process.processfilterstr")
+        else:
+            self.processfilterstr = None
 
         if self.isJSapp==False and self.processfilterstr=="":
             self.raiseError("Need to specify process.filterstring if isJSapp==False")
 
     def raiseError(self,msg):
         msg="Error for process %s:%s\n%s"%(self.domain,self.name,msg)
-        raise RuntimeError(msg,category="jsprocess")
+        j.errorconditionhandler.raiseOperationalCritical(msg,category="jsprocess")
 
     def _replaceSysVars(self,txt):
         txt=txt.replace("$base",j.dirs.baseDir)
@@ -116,21 +125,16 @@ class ProcessDef:
 
         cmd=self._replaceSysVars(self.cmd)
         args=self._replaceSysVars(self.args)
-        
+
         j.system.platform.screen.executeInScreen(self.domain,self.name,cmd+" "+args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)        
 
         if self.plog:
             j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
-                
         isrunning=self.isRunning(wait=True)
-
-        self.log("pid: %s"%self.pid)
 
         if isrunning==False:
             self.raiseError("Could not start process:%s, an error occured:\n%s"%(self,self.getStartupLog()))
-            
         self.log("*** STARTED ***")
-        return self.pid
 
     def getStartupLog(self):
         if j.system.fs.exists(self.logfile):
@@ -138,7 +142,7 @@ class ProcessDef:
             return content
         else:
             content=""
-        return content        
+        return content
 
     def showLogs(self, command='less -R'):
         if j.system.fs.exists(self.logfile):
@@ -146,34 +150,25 @@ class ProcessDef:
         else:
             print "No logs found for %s" % self
 
-    def getProcessObject(self):
-        pid=self.getPid(ifNoPidFail=False,wait=False)
-        if pid==0:
-            return None
-        self.processobject=j.system.process.getProcessObject(pid)
-        return self.processobject
+    def getProcessObjects(self):
+        pids=self.getPids(ifNoPidFail=False,wait=False)
+        results = list()
+        for pid in pids:
+            results.append(j.system.process.getProcessObject(pid))
+        return results
 
-    def _getPidFromRedis(self):
-        pids=j.system.process.appGetPidsActive(self.procname)
-        if len(pids)==0:
-            return None
-        elif len(pids)>1:
-            return pids
-        else:
-            return pids[0]
+    def _getPidsFromRedis(self):
+        return j.system.process.appGetPidsActive(self.procname)
 
     def _getPidFromPS(self):
-        cmd="ps ax|grep %s"%self.processfilterstr
+        cmd="pgrep -f '%s'"%self.processfilterstr
         rc,out=j.system.process.execute(cmd)
-        from IPython import embed
-        print "DEBUG NOW _getPidFromPS"
-        embed()
-        
+        return [ int(x) for x in out.splitlines() ]
 
     def getPids(self,ifNoPidFail=True,wait=False):
         #first check screen is already there with window, max waiting 1 sec        
         now=0
-        pid0=None
+        pids = list()
 
         if wait:
             start=time.time()
@@ -182,24 +177,23 @@ class ProcessDef:
             timeout=2 #should not be 0 otherwise dont go in while loop
 
         if self.isJSapp:
-
-            while pids0==None and now<timeout:
-                pids0 = self._getPidFromRedis()
-                if pids0<>0 or wait==False:
-                    return pids0
+            while not pids and now<timeout:
+                pids = self._getPidsFromRedis()
+                if len(pids) != 0 or wait==False:
+                    return pids
                 time.sleep(0.05)
                 now=time.time()
         else:
             #look at system str
-            while pids0==None and now<timeout:
-                pids0 = self._getPidFromPS()
-                if pids0<>0 or wait==False:
-                    return pids0
+            while not pids and now<timeout:
+                pids = self._getPidFromPS()
+                if pids<>0 or wait==False:
+                    return pids
                 time.sleep(0.05)
                 now=time.time()
 
         if ifNoPidFail==False:
-            return None
+            return list()
 
     def _portCheck(self):
         for port in self.ports:
@@ -211,13 +205,12 @@ class ProcessDef:
                     self.hrd.set('process_active', False)
                     return False
         self.hrd.set('process_active', True)
-        return True        
+        return True
 
     def portCheck(self,wait=False):
         if wait==False:
             return self._portCheck()
         timeout=time.time()+self.timeout
-        isrunning=False            
         while time.time()<timeout:
             if self._portCheck():
                 return True
@@ -225,7 +218,6 @@ class ProcessDef:
         return False
 
     def isRunning(self,wait=False):
-
         if self.autostart==False:
             return False
 
@@ -234,7 +226,7 @@ class ProcessDef:
             return res
 
         pids=self.getPids(ifNoPidFail=False,wait=wait)
-        if pids<>self.numprocesses:
+        if len(pids) != self.numprocesses:
             return False
         for pid in pids:
             test=j.system.process.isPidAlive(pid)
@@ -242,26 +234,26 @@ class ProcessDef:
                 return False
         return True
 
-    def stop(self):    
-                     
-        pid=self.getPid(ifNoPidFail=False,wait=False)
-        if pid<>0 and self.getProcessObject() and self.processobject.is_running():
-            if not self.stopcmd:
-                self.processobject.kill()
-            else:
-                j.system.process.execute(self.stopcmd)
-            start=time.time()
-            now=0
-            while now<start+self.timeout:
-                if self.processobject.is_running()==False:
-                    self.log("isdown:%s"%self)
-                    break
-                time.sleep(0.05)
-                now=j.base.time.getTimeEpoch()
+    def stop(self):
+        pids=self.getPids(ifNoPidFail=False,wait=False)
+        for pid in pids:
+            if pid<>0 and j.system.process.isPidAlive(pid):
+                if not self.stopcmd:
+                    j.system.process.kill(pid)
+                else:
+                    j.system.process.execute(self.stopcmd)
+                start=time.time()
+                now=0
+                while now<start+self.timeout:
+                    if j.system.process.isPidAlive(pid)==False:
+                        self.log("isdown:%s"%self)
+                        break
+                    time.sleep(0.05)
+                    now=j.base.time.getTimeEpoch()
 
-        for port in self.ports:        
-            if port=="" or port==None or not port.isdigit():                
-                self.raiseError("port cannot be none")    
+        for port in self.ports:
+            if port=="" or port==None or not port.isdigit():
+                self.raiseError("port cannot be none")
             j.system.process.killProcessByPort(port)
 
         if self.ports<>[]:

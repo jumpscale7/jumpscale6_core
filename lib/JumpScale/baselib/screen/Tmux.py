@@ -71,10 +71,13 @@ class Tmux:
         self.createWindow(sessionname, screenname)
         pane = self._getPane(sessionname, screenname)
         # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,"echo ***STARTED***")
+        env = os.environ.copy()
+        env.pop('TMUX', None)
 
         if envstr<>"":
             cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,envstr)
         #go to right directory
+        j.system.process.run(cmd2, env=env)
         # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,")
         if user<>"root":
             cmd="cd %s;%s"%(cwd,cmd)
@@ -83,9 +86,7 @@ class Tmux:
         else:
             cmd2="tmux send-keys -t '%s' '%s;%s\n'" % (pane,"cd %s"%cwd,cmd)
 
-        env = os.environ.copy()
-        env.pop('TMUX', None)
-        j.system.process.run(cmd2, env=env)  
+        j.system.process.run(cmd2, env=env)
         time.sleep(wait)
         if wait and j.system.fs.exists(ppath):
             resultcode=j.system.fs.fileGetContents(ppath).strip()

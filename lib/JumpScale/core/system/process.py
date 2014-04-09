@@ -1781,21 +1781,20 @@ class SystemProcess:
         if j.application.redis==None:
             raise RuntimeError("Redis was not running when applications started, cannot get pid's")
         if not j.application.redis.hexists("application",appname):
-            raise RuntimeError("could not find application:%s to check nr instances")
-        pids=ujson.loads(j.application.redis.hget("application",appname))
-        return pids
+            return list()
+        else:
+            pids=ujson.loads(j.application.redis.hget("application",appname))
+            return pids
 
     def appGetPidsActive(self,appname):
         pids=self.appGetPids(appname)
         todelete=[]
         for pid in pids:
             if not self.isPidAlive(pid):
-                # print "not active:%s"%pid
-                todelete.append(pid)                
-        if todelete<>[]:
-            for item in todelete:
-                pids.pop(pids.index(item))
-            j.application.redis.hset("application",appname,ujson.dumps(pids))
+                todelete.append(pid)
+        for item in todelete:
+            pids.remove(item)
+        j.application.redis.hset("application",appname,ujson.dumps(pids))
 
         return pids
 
