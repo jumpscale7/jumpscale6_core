@@ -15,13 +15,14 @@ class system_emailsender(j.code.classGetBase()):
 
         pass
 
-    def send(self, sender_name, sender_email, receiver_email, subject, body, **kwargs):
+    def send(self, sender_name, sender_email, receiver_email, subject, body, smtp_key, **kwargs):
         """
         param:sender_name Sender full name
         param:sender_email Sender email
         param:receiver_email Receiver email.
         param:subject Email subject
         param:body Email body
+        param:smtp_key Email body
         result str
         """
         #put your code here to implement this method

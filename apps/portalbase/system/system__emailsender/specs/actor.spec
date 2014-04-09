@@ -8,4 +8,5 @@
         var:receiver_email str,, Receiver email.
         var:subject str,, Email subject
         var:body str,, Email body
+        var:smtp_key str,, Email body
         result:str

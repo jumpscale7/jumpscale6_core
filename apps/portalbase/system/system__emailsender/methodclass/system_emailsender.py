@@ -19,8 +19,7 @@ class system_emailsender(j.code.classGetBase()):
         self._te = {}
         self.actorname = "emailsender"
         self.appname = "system"
-        #self.server = 'msp.aserver.com:25'
-        self.server = 'smtp.gmail.com:587'
+        
 
     def format(self, obj, format=None):
         if not format or format not in self.output_format_mapping:
@@ -28,7 +27,7 @@ class system_emailsender(j.code.classGetBase()):
         output_formatter = self.output_format_mapping[format]
         return output_formatter(obj)
 
-    def send(self, sender_name, sender_email, receiver_email, subject, body, format, *args, **kwargs):
+    def send(self, sender_name, sender_email, receiver_email, subject, body, smtp_key, format, *args, **kwargs):
         """
         param:sender_name The name of the sender
         param:sender_email The email of the sender
@@ -49,6 +48,11 @@ class system_emailsender(j.code.classGetBase()):
             return 'Error: SPAMMER'
 
         kwargs.pop('ctx', None)
+
+        try:
+            smtp_server, smtp_login, smtp_password = j.apps.system.contentmanager.dbmem.cacheGet(smtp_key)
+        except:
+            smtp_server, smtp_login, smtp_password = 'smtp.gmail.com:587', 'smtp@incubaid.com', 'smtp987smtp'
 
         if sender_name:
             sender = '{0} <{1}>'.format(sender_name, sender_email)
@@ -84,9 +88,9 @@ class system_emailsender(j.code.classGetBase()):
 
         smtp = None
         try:
-            smtp = smtplib.SMTP(self.server, timeout=5)
+            smtp = smtplib.SMTP(smtp_server, timeout=5)
             smtp.starttls()
-            smtp.login('smtp@incubaid.com', 'smtp987smtp')
+            smtp.login(smtp_login, smtp_password)
             smtp.sendmail(sender, receivers, msg.as_string())
         finally:
             if smtp:

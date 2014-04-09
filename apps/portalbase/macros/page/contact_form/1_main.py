@@ -17,6 +17,14 @@ def main(j, args, params, tags, tasklet):
 
     params.result = page = args.page
 
+    smtp_server     = args.tags.tagGet('smtp_server',   '')
+    smtp_login      = args.tags.tagGet('smtp_login',    '')
+    smtp_password   = args.tags.tagGet('smtp_password', '')
+    if smtp_server and smtp_login and smtp_password:
+        smtp_key        = j.apps.system.contentmanager.dbmem.cacheSet('', (smtp_server, smtp_login, smtp_password), 3600) # 1 hour
+    else:
+        smtp_key = None
+
     if not getattr(page, 'tags_stack', None):
         page.tags_stack = []
 
@@ -70,11 +78,12 @@ def main(j, args, params, tags, tasklet):
     page.addMessage('''
         <form class="form-horizontal contact_form" method="get" action="/restmachine/system/emailsender/send">
             <div class="alert" style="display: none"></div>
+            <input type="hidden" name="smtp_key" value="{smtp_key}" />
             <input type="hidden" name="receiver_email" value="{receiver_email}" />
             <input type="hidden" name="format" value="json" />
             <input type="hidden" name="subject" value="{subject}" />
             <div style="display: none"><input type="text" id="honeypot" name="honeypot"></input></div>
-            '''.format(receiver_email=receiver_email, subject=subject))
+            '''.format(smtp_key=smtp_key, receiver_email=receiver_email, subject=subject))
 
     custom = args.tags.labelExists('custom')
     if not custom:
