@@ -26,7 +26,7 @@ class Bitbucket:
         hgini = j.tools.inifile.open(hgpath)
         hgini.addSection('hostfingerprints')
         if not hgini.checkParam('hostfingerprints', 'bitbucket.org'):
-            hgini.addParam('hostfingerprints', 'bitbucket.org', '67:b3:bf:9f:c5:38:0e:4c:dd:4e:8a:da:3d:11:1b:c2:a5:d1:6c:6b')
+            hgini.addParam('hostfingerprints', 'bitbucket.org', '45:ad:ae:1a:cf:0e:73:47:06:07:e0:88:f5:cc:10:e5:fa:1c:f7:99')
 
     def getRepoInfo(self, accountName, repoName):
         url = "https://bitbucket.org/api/1.0/repositories/%s/%s" % (accountName, repoName)
