@@ -6,6 +6,7 @@ import uuid
 ujson = j.db.serializers.getSerializerType('j')
 
 class mainclass(OSISStore):
+    TTL = '5d'
     """
     """
 
@@ -22,7 +23,9 @@ class mainclass(OSISStore):
         # print "batch log:%s"%len(value)            
         #self.elasticsearch.bulk_index(index="clusterlog_%s_%s"%(logobject["bid"],logobject["gid"]), doc_type="json", docs=docs, id_field="id")                                                    
         if len(value)>0:
-            self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=value, id_field="guid")                        
+            for log in value:
+                log['_ttl'] = self.TTL
+            self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=value, id_field="guid")
         return ["",True,True]
 
     def delete_by_query(self, query):
@@ -43,9 +46,7 @@ class mainclass(OSISStore):
             return {'hits': {'hits': list(), 'total': 0}}
 
     def destroyindex(self):
-        import ipdb
-        print "implement destroy of index for logs"
-        ipdb.set_trace()
+        raise NotImplementedError()
         
     destroy=destroyindex
 

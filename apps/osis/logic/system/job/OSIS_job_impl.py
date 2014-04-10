@@ -1,7 +1,5 @@
 from JumpScale import j
-ujson = j.db.serializers.getSerializerType('j')
-parentclass=j.core.osis.getOsisImplementationParentClass("system")  #is the name of the namespace
+from JumpScale.grid.osis.OSISStoreES import OSISStoreES
 
-class mainclass(parentclass):
-    """
-    """
+class mainclass(OSISStoreES):
+    TTL = '5d'

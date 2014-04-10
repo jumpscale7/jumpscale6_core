@@ -8,6 +8,7 @@ import time
 from OSISStore import OSISStore
 
 class OSISStoreES(OSISStore):
+    TTL = 0
     """
     Default object implementation (is for one specific namespace_category)
     """
@@ -31,7 +32,7 @@ class OSISStoreES(OSISStore):
                 if waitIndex:#need to make sure is out first
                     if self.existsIndex(key=key):
                         self.deleteIndex(key=key,waitIndex=True)
-                self.index(obj)
+                self.index(obj, ttl=self.TTL)
                 if waitIndex:
                     time.sleep(0.2)
                     if not self.existsIndex(key=obj.guid,timeout=1):
@@ -45,8 +46,7 @@ class OSISStoreES(OSISStore):
                 else:
                     if not value.has_key("guid"):
                         value["guid"]=key
-                self.db.set(self.dbprefix, key=key, value=value2)                
-                self.index(value)
+                self.index(value, ttl=self.TTL)
                 if waitIndex:
                     time.sleep(0.2)
                     if not self.existsIndex(key=obj.guid,timeout=1):
@@ -76,7 +76,7 @@ class OSISStoreES(OSISStore):
 
     def delete(self, key):
         self.removeFromIndex(key)
-        
+
     def list(self, prefix="", withcontent=False):
         """
         return all object id's stored in DB

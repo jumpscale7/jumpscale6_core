@@ -1,6 +1,5 @@
 from JumpScale import j
+from JumpScale.grid.osis.OSISStoreES import OSISStoreES
 
-parentclass=j.core.osis.getOsisImplementationParentClass("system")  #is the name of the namespace
-
-class mainclass(parentclass):
-    pass
+class mainclass(OSISStoreES):
+    TTL = '5d'
