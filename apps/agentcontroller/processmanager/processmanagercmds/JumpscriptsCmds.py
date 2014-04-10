@@ -12,6 +12,7 @@ import JumpScale.baselib.redisworker
 from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
 
 class JumpscriptsCmds():
+    ORDER = 20
 
     def __init__(self,daemon=None):
         self._name="jumpscripts"

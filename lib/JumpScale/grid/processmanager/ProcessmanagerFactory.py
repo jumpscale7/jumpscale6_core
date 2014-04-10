@@ -214,8 +214,12 @@ class ProcessmanagerFactory:
         self.cmds=Dummy()
         self.loadMonitorObjectTypes()
 
-        for key in self.daemon.daemon.cmdsInterfaces.keys():
-            self.cmds.__dict__[key]=self.daemon.daemon.cmdsInterfaces[key]
+        def sort(item):
+            key, cmd = item
+            return getattr(cmd, 'ORDER', 10000)
+
+        for key, cmd in sorted(self.daemon.daemon.cmdsInterfaces.iteritems(), key=sort):
+            self.cmds.__dict__[key]=cmd
             if hasattr(self.cmds.__dict__[key],"_init"):
                 self.cmds.__dict__[key]._init()
 

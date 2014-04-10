@@ -5,6 +5,8 @@ import ujson
 
 class WorkerCmds():
 
+    ORDER = 10
+
     def __init__(self,daemon=None):
         self._name="worker"
         if not daemon:
