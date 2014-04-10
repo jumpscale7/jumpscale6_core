@@ -234,7 +234,9 @@ j.basetype=pmtypes.register_types()
 from . import errorhandling
 
 # j.pm_hooked_extension_dirs = dict()
-
+import JumpScale.baselib.codeexecutor
+import JumpScale.baselib.jpackages
+import JumpScale.baselib.tags
 import JumpScale.baselib.platforms
 import JumpScale.core.config
 import JumpScale.baselib.hrd

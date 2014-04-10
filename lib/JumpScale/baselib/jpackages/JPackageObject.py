@@ -713,6 +713,18 @@ class JPackageObject():
             systemdest = "/%s"%blobitempath.lstrip("/")
         elif ttype=="base":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir, blobitempath)
+        elif ttype=="cfg":
+            systemdest = j.system.fs.joinPaths(j.dirs.cfgDir, blobitempath)
+        elif ttype=="code":
+            systemdest = j.system.fs.joinPaths(j.dirs.codeDir, blobitempath)
+        elif ttype=="var":
+            systemdest = j.system.fs.joinPaths(j.dirs.varDir, blobitempath)
+        elif ttype=="lib":
+            systemdest = j.system.fs.joinPaths(j.dirs.libDir, blobitempath)
+        elif ttype=="libext":
+            systemdest = j.system.fs.joinPaths(j.dirs.libExtDir, blobitempath)
+        elif ttype=="jsbin":
+            systemdest = j.system.fs.joinPaths(j.dirs.binDir, blobitempath)
         elif ttype=="opt":
             base="/opt"
             systemdest = j.system.fs.joinPaths(base, blobitempath)
@@ -1043,7 +1055,7 @@ class JPackageObject():
                     pathttype=j.system.fs.joinPaths(pathplatform,ttype)
                     j.system.fs.removeIrrelevantFiles(pathttype)
 
-                    if ttype in ["etc"]:
+                    if ttype in ["etc","cfg"]:
                         applyhrd=True
                     else:
                         applyhrd=False
@@ -1056,7 +1068,7 @@ class JPackageObject():
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """
-        Copy the files from package dirs (/opt/js/var/jpackages/...) to their proper location in the sandbox.
+        Copy the files from package dirs to their proper location in the sandbox.
 
         @param destination: destination of the files
         """
@@ -1070,6 +1082,7 @@ class JPackageObject():
             tmpdir=j.system.fs.getTmpDirPath()
             j.system.fs.copyDirTree(path,tmpdir)
             j.application.config.applyOnDir(tmpdir)
+            j.dirs.replaceFilesDirVars(tmpdir)
             j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
             j.system.fs.removeDirTree(tmpdir)
         else:

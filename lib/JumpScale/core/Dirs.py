@@ -59,17 +59,21 @@ class Dirs(object):
         
         '''Configuration file folder (appdir/etc)'''
         if 'JSBASE' in os.environ:
-            self.cfgDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s_data"%os.path.basename(self.baseDir),"cfg")
+            self.cfgDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s_data"%os.path.basename(self.baseDir.rstrip("/")),"cfg")
         else:
             self.cfgDir = os.path.join(self.baseDir,"cfg")
+
         self._createDir(self.cfgDir)
 
         tpath = os.path.join(self.cfgDir,"debug")
         self._createDir(tpath)
+
         tpath = os.path.join(self.cfgDir,"debug","protecteddirs")
         self._createDir(tpath)
+
         tpath = os.path.join(self.cfgDir,"grid")
         self._createDir(tpath)
+
         tpath = os.path.join(self.cfgDir,"hrd")
         self._createDir(tpath)
 
@@ -89,21 +93,25 @@ class Dirs(object):
             self.tmpDir = "/tmp/jumpscale"
         self._createDir(self.tmpDir)
 
-        
         if iswindows or self.frozen:
             self.libDir = os.path.join(self.baseDir,"library.zip")
         else:
             self.libDir = os.path.join(self.baseDir,"lib")
         self._createDir(self.libDir)
 
+        self.libExtDir = os.path.join(self.baseDir,"libext")
+        self._createDir(os.path.join(self.baseDir,"libext"))
+
         if self.libDir not in sys.path:
             sys.path.insert(1,self.libDir)
+
+        if self.libExtDir not in sys.path:
+            sys.path.insert(1,self.libExtDir)
 
         self.logDir = os.path.join(self.varDir,"log")
         self._createDir(self.logDir)
 
         self.packageDir = os.path.join(self.varDir,"jpackages")
-
         self._createDir(self.packageDir)
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
@@ -126,13 +134,29 @@ class Dirs(object):
         self._createDir(self.configsDir)
         
 
-    def replaceBaseDirVar(self,txt):
+    def replaceTxtDirVars(self,txt):
         """
-        replace $base with j.application.basedir if it exists
+        replace $base,$vardir,$cfgdir,$bindir,$codedir,$tmpdir,$logdir,$appdir with props of this class
         """
-        if hasattr("j","basepath"):
-            txt=txt.replace("$base",j.basepath)
+        txt=txt.replace("$base",self.baseDir)
+        txt=txt.replace("$appdir",self.appDir)
+        txt=txt.replace("$codedir",self.codeDir)
+        txt=txt.replace("$vardir",self.varDir)
+        txt=txt.replace("$cfgdir",self.cfgDir)
+        txt=txt.replace("$bindir",self.binDir)
+        txt=txt.replace("$logdir",self.logDir)
+        txt=txt.replace("$tmpdir",self.tmpDir)
+        txt=txt.replace("$jslibdir",self.libDir)
+        txt=txt.replace("$jslibextdir",self.libExtDir)
+        txt=txt.replace("$jsbindir",self.binDir)
         return txt
+
+    def replaceFilesDirVars(self,path,recursive=True, filter=None):
+        for path in j.system.fs.listFilesInDir(path,recursive,filter):
+            content=j.system.fs.fileGetContents(path)
+            content2=self.replaceTxtDirVars(content)
+            if content2<>content:
+                j.system.fs.writeFile(filename=path,contents=content2)
 
     def _createDir(self,path):
         if not os.path.exists(path):

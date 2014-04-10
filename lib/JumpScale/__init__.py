@@ -21,6 +21,3 @@ class JumpScale():
 j = JumpScale()
 from . import base
 from . import core
-import baselib.codeexecutor
-import baselib.jpackages
-import baselib.tags
