@@ -10,7 +10,7 @@ author = "deboeckj@codescalers.com"
 license = "bsd"
 version = "1.0"
 category = "redis.cleanup"
-period = 7200  # always in sec
+period = 300  # always in sec
 order = 1
 enable = True
 async = True
@@ -23,6 +23,8 @@ def action():
     EXTRATIME = 120
     now = time.time()
     import ujson
+    ocl = j.core.osis.getClient(user='root')
+    jcl = j.core.osis.getClientForCategory(ocl, 'system', 'job')
     masterip = j.application.config.get('grid.master.ip')
     if j.system.net.isIpLocal(masterip):
         rcl = j.clients.redis.getRedisClient('127.0.0.1', 7769)
@@ -30,5 +32,15 @@ def action():
         jobs = rcl.hgetall(jobkey)
         for jobguid, jobstring in jobs.iteritems():
             job = ujson.loads(jobstring)
-            if job['timeStart'] + job['timeout'] + EXTRATIME < now:
+            if job['state'] in ['OK', 'ERROR', 'TIMEOUT']:
                 rcl.hdel(jobkey, jobguid)
+            elif job['timeStart'] + job['timeout'] + EXTRATIME < now:
+                rcl.hdel(jobkey, jobguid)
+                job['state'] = 'TIMEOUT'
+                eco = j.errorconditionhandler.getErrorConditionObject(msg='Job timed out')
+                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+                eco.tb = None
+                eco.type = str(eco.type)
+                job['result'] = ujson.dumps(eco.__dict__)
+                jcl.set(job)
+
