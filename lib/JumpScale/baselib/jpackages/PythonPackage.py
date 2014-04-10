@@ -29,6 +29,8 @@ class PythonPackage(object):
         if self._usrPathCache==[]:
             j.logger.log("get /usr path names and cache.",level=5,category="python.package")
             for path in j.application.config.getItemsFromPrefix("python.paths"):
+                if not path:
+                    continue
                 for item in j.system.fs.listFilesAndDirsInDir(path,recursive=True):
                     item=item.lower()
                     self._usrPathCache.append(item)   
