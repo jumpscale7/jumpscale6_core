@@ -27,6 +27,6 @@ def action():
         if len(data) > 0 and nodeid in rstatus:
             rstatus = rstatus[nodeid]['redis']
             for stat in rstatus:
-                if not stat['alive']:
+                if stat['state'] != 'RUNNING':
                     msg='Redis on node with id %s with port %s is not running.' % (nodeid, stat['port'])
                     j.events.opserror( msg, category='monitoring')
