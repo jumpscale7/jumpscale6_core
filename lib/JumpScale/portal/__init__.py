@@ -5,7 +5,6 @@ import JumpScale.baselib.taskletengine
 import JumpScale.baselib.specparser
 
 import codegentools
-import codegentools
 import docgenerator
 import docpreprocessor
 import portal
