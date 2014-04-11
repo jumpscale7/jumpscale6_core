@@ -14,7 +14,7 @@ opts = parser.parse_args()
 
 import JumpScale.baselib.redis
 
-port = 7769 if opts.agentcontroller or opts.action == 'clearjobqueue' else 7769
+port = 7769 if opts.agentcontroller or opts.action == 'clearjobqueue' else 7768
 redis = j.clients.redis.getGeventRedisClient("127.0.0.1", port)
 
 def timeago(t):

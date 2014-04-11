@@ -35,6 +35,7 @@ def connect(host='localhost', port=6379, timeout=None):
     specification, but it does enough to work with major redis server APIs
     (mostly tested against the LIST/HASH/PUBSUB API so far).
     """
+    print "connect redis:%s:%s"%(host,port)
     redis_client = RedisClient()
     redis_client.timeout = timeout
     redis_client.connect((host, port))
