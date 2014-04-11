@@ -237,7 +237,7 @@ class ProcessDef:
             self.raiseError(msg)
             return
 
-        if self.upstart:
+        if self.upstart or self.isJSapp==False:
             self.getPids()
             self.registerToRedis()
 
@@ -276,11 +276,13 @@ class ProcessDef:
 
         pids=[]
         for line in out.splitlines():
+            line=line.strip()
             if line.strip()=="" or line.find("grep")<>-1:
                 continue
             pid=line.split(" ")[0]
-            pid=int(pid)
-            pids.append(pid)
+            if pid.strip()<>"":
+                pid=int(pid)
+                pids.append(pid)
         self.pids=pids
         return pids
 
