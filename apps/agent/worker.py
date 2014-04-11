@@ -10,6 +10,20 @@ import random
 from JumpScale.baselib import cmdutils
 from JumpScale import j
 
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
+
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
+
+ipaddr=j.application.config.get("grid_master_ip")
+while j.system.net.tcpPortConnectionTest(ipaddr,4444)==False:
+    time.sleep(0.1)
+    print "cannot connect to agent controller (port 4444)"
+
+
 j.application.start("jumpscale:worker")
 try:
     print "try to init grid, will not fail if it does not work."
@@ -26,10 +40,6 @@ import JumpScale.grid.agentcontroller
 import JumpScale.baselib.redis
 import JumpScale.baselib.redisworker
 
-#check redis is there if not try to start
-if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
-    j.packages.findNewest(name="redis").install()
-    j.packages.findNewest(name="redis").start()
 
 class Worker(object):
 

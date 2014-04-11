@@ -8,6 +8,16 @@ import imp
 import importlib
 import inspect
 import ujson as json
+import time
+
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
+
+ipaddr=j.application.config.get("grid_master_ip")
+while j.system.net.tcpPortConnectionTest(ipaddr,5544)==False:
+    time.sleep(0.1)
+    print "cannot connect to osis (port 5544)"
 
 j.application.start("jumpscale:agentcontroller")
 j.application.initGrid()
@@ -15,9 +25,13 @@ j.application.initGrid()
 j.logger.consoleloglevel = 2
 import JumpScale.baselib.redis
 
-#check redis is there if not try to start
-if not j.system.net.tcpPortConnectionTest("127.0.0.1",7769):
-    raise RuntimeError("did not find redis on port %s"%7769)
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
+
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
 
 class ControllerCMDS():
 

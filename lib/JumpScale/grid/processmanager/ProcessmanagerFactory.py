@@ -97,14 +97,14 @@ class ProcessmanagerFactory:
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
-        j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1)
+        # j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1) #@todo
         
 
     def start(self):
-        #check redis is there if not try to start
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
-            j.packages.findNewest(name="redis").install()
-            j.packages.findNewest(name="redis").start()
+        # #check redis is there if not try to start
+        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+        #     j.packages.findNewest(name="redis").install()
+        #     j.packages.findNewest(name="redis").start()
 
         def checkosis():
             self.daemon.osis
