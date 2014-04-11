@@ -42,9 +42,9 @@ class Application:
         else:
             self.sandbox=False
 
-        if j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+        if j.system.net.tcpPortConnectionTest("127.0.0.1",7766):
             import JumpScale.baselib.credis # leave import here to make bootrap work
-            self.redis=j.clients.credis.getRedisClient("127.0.0.1",7768)
+            self.redis=j.clients.credis.getRedisClient("127.0.0.1",7766)
         else:
             self.redis=None
 

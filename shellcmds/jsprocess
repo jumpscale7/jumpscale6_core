@@ -45,17 +45,19 @@ if opts.action in ('attach', 'logs'):
 if opts.action == 'restart':
     pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
     for pd in pds_rev:
-        print "restart: %s"%pd
-        pd.stop()
-        pd.start()
+        if pd.system==False:            
+            print "restart: %s"%pd
+            pd.stop()
+            pd.start()
     j.application.stop(0)
 
 # commands applying on list of processes
 if opts.action == 'stop':    
     pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
     for pd in pds_rev:
-        print "stop: %s"%pd
-        pd.stop()
+        if pd.system==False:
+            print "stop: %s"%pd
+            pd.stop()
     j.application.stop(0)
 
 
@@ -63,8 +65,9 @@ if opts.action == 'stop':
 if opts.action == 'start':
     pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
     for pd in pds_rev:
-        print "start: %s"%pd
-        pd.start()
+        if pd.system==False:        
+            print "start: %s"%pd
+            pd.start()
     j.application.stop(0)
 
 

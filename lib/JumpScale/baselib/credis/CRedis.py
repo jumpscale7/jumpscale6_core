@@ -112,6 +112,9 @@ class CRedis():
     def hget(self,hkey,key):
         return self.execute('HGET',hkey,key)
     
+    def hgetall(self,hkey):
+        return self.execute('HGETALL',hkey)
+
     def hdelete(self,hkey,key):
         return self.execute('HDEL',hkey,key)
 

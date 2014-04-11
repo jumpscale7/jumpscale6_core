@@ -3,7 +3,7 @@ import os
 import JumpScale.baselib.screen
 import time
 import threading
-
+import ujson as json
 
 class ProcessNotFoundException(Exception):
     pass
@@ -40,6 +40,7 @@ class ProcessDefEmpty:
         self.lastCheck=int(time.time())
         self.upstart = False
         self.processfilterstr=""
+        self.system=True
 
     def isRunning(self):
         return True
@@ -47,6 +48,7 @@ class ProcessDefEmpty:
 class ProcessDef:
     def __init__(self, hrd,path):
         self.hrd=hrd
+        self.system=False
         self.autostart=hrd.getInt("process.autostart")==1
         self.path=path
         self.name=hrd.get("process.name")
@@ -144,6 +146,17 @@ class ProcessDef:
     def log(self,msg):
         print "%s: %s"%(self._nameLong,msg)
 
+    def registerToRedis(self):
+        if j.application.redis.hexists("application",self.procname):
+            pids=json.loads(j.application.redis.hget("application",self.procname))
+        else:
+            pids=[]
+        
+        for pid in self.pids:
+            if pid not in pids:
+                pids.append(pid)
+        j.application.redis.hset("application",self.procname,json.dumps(pids))        
+
     def start(self):
         # self.logToStartupLog("***START***")
 
@@ -192,7 +205,7 @@ class ProcessDef:
                 if self.plog:
                     j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
-        else:
+        else:            
             j.system.platform.ubuntu.startService(self.name)
 
         isrunning=self.isRunning(wait=True)
@@ -224,6 +237,10 @@ class ProcessDef:
             self.raiseError(msg)
             return
 
+        if self.upstart:
+            self.getPids()
+            self.registerToRedis()
+
         self.log("*** STARTED ***")
 
     def getStartupLog(self):
@@ -254,6 +271,9 @@ class ProcessDef:
         # cmd="pgrep -f '%s'"%self.processfilterstr
         cmd="ps ax | grep '%s'"%self.processfilterstr
         rc,out=j.system.process.execute(cmd)
+        # print cmd
+        # print out
+
         pids=[]
         for line in out.splitlines():
             if line.strip()=="" or line.find("grep")<>-1:
@@ -326,6 +346,7 @@ class ProcessDef:
             return res
 
         pids=self.getPids(ifNoPidFail=False,wait=wait)
+
         if len(pids) != self.numprocesses:
             return False
         for pid in pids:
@@ -335,6 +356,10 @@ class ProcessDef:
         return True
 
     def stop(self):
+
+        if self.name=="redism":
+            print "will not shut down application redis (port 7766)"
+            return
 
         if self.upstart:
             j.system.platform.ubuntu.stopService(self.name)
