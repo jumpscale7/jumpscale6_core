@@ -45,6 +45,7 @@ class JumpscriptsCmds():
         self.loadJumpscripts()
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
+        print "LOAD JUMPSCRIPTS"
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
@@ -120,9 +121,10 @@ class JumpscriptsCmds():
             for period in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod.keys():
                 self._run(period)
 
-        for action in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod[period]:
-            # print "execute:%s"%action.name
-            action.execute()
+        if j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod.has_key(period):
+            for action in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod[period]:
+                # print "execute:%s"%action.name
+                action.execute()
 
     def _loop(self, period):
         while True:

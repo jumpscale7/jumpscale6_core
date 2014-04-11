@@ -44,7 +44,7 @@ class WorkerCmds():
         else:
             return self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
         
-    def getWorkersWatchdogTime(self, session):
+    def getWorkersWatchdogTime(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         workers2 = self.redis.hgetall("workers:watchdog")
@@ -53,16 +53,16 @@ class WorkerCmds():
             foundworkers[workername]=timeout
         return foundworkers
 
-    def stopWorkers(self, session):
+    def stopWorkers(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
-        for workername in self.getWorkersWatchdogTime.keys():
+        for workername in self.getWorkersWatchdogTime().keys():
             redis.set("workers:action:%s"%workername,"STOP")
 
-    def reloadWorkers(self, session):
+    def reloadWorkers(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-        for workername in self.getWorkersWatchdogTime.keys():
+        for workername in self.getWorkersWatchdogTime().keys():
             redis.set("workers:action:%s"%workername,"RELOAD")
 
     def removeJobs(self, hoursago=48, failed=False, session=None):

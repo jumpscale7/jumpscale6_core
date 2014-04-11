@@ -184,6 +184,7 @@ class ControllerCMDS():
         j.errorconditionhandler.processErrorConditionObject(eco)
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
+        print "LOADJUMPSCRIPTS"
 
         if session<>None:
             self._adminAuth(session.user,session.passwd)

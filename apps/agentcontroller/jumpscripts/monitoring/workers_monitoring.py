@@ -18,15 +18,15 @@ roles = ["*"]
 
 
 def action():
-    
+
     import JumpScale.baselib.redis
 
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
     workersCheck = {'worker_default_0': '-2m', 'worker_hypervisor_0': '-10m', 'worker_io_0': '-2h', 'worker_default_1': '-2m'}
-    
+
     workers2 = rediscl.hgetall("workers:watchdog")
     foundworkers={}
-    for workername, timeout in zip(workers2[0::2], workers2[1::2]):    
+    for workername, timeout in zip(workers2[0::2], workers2[1::2]):
         foundworkers[workername]=timeout
 
     for worker, timeout in workersCheck.iteritems():
@@ -34,4 +34,4 @@ def action():
         if j.base.time.getEpochAgo(timeout) > lastactive:
             j.events.opserror('Worker %s seems to have timed out' % worker, 'monitoring')
 
-    
+

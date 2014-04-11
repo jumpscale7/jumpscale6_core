@@ -59,6 +59,7 @@ def action():
             cacheobj.p = j.system.process.getProcessObject(pid)
         except:
             cacheobj.p = None
+            return
         try:
             if cacheobj.p:
                 args = ['get_cpu_times', 'get_memory_info', 'create_time',

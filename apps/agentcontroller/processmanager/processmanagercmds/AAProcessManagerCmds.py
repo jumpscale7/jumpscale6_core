@@ -48,10 +48,10 @@ class AAProcessManagerCmds():
             self._adminAuth(session.user,session.passwd)
 
         s=self.daemon.cmdsInterfaces["jumpscripts"]
-        s.loadJumpscripts()
+        s.loadJumpscripts(None)
 
         s=self.daemon.cmdsInterfaces["worker"] #this will make sure workers reload
-        s.reloadWorkers()
+        s.reloadWorkers(None)
 
     def restartWorkers(self,session=None):
         print "RESTART WORKERS\n\n\n\n\n"

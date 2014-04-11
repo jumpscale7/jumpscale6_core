@@ -16,6 +16,7 @@ enable = True
 async = True
 roles = ["*"]
 
+queue = "process"
 
 def action():
     import JumpScale.grid.gridhealthchecker
@@ -34,4 +35,6 @@ def action():
         if errors:
             for nid, categories in errors.iteritems():
                 for cat, data in categories.iteritems():
-                    j.events.opserror('%s on node %s seems to be having issues' % (cat, nid), 'monitoring')
+                    msg='%s on node %s seems to be having issues' % (cat, nid)
+                    print msg
+                    # j.events.opserror(msg, 'monitoring')
