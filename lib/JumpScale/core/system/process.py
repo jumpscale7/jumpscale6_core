@@ -1788,6 +1788,19 @@ class SystemProcess:
             pids=json.loads(j.application.redis.hget("application",appname))
             return pids
 
+    def appsGetNames(self):
+        return j.application.redis.hkeys("application")
+
+    def appsGet(self):
+        result={}
+        for item in self.appsGetNames():
+            pids=self.appGetPidsActive(item)
+            if pids==[]:
+                j.application.redis.hdelete("application",item)
+            else:
+                result[item]=pids
+        return result
+
     def appGetPidsActive(self,appname):
         pids=self.appGetPids(appname)
         todelete=[]

@@ -83,49 +83,49 @@ class RedisFactory:
             return pids
         return []
 
-    def stopInstance(self, name):
-        j.system.platform.ubuntu.stopService(name)
-        _, cpath = self._getPaths(name)
-        if not j.system.fs.exists(name):
-            return
-        pids = self.getProcessPids(name)
-        counter = 0
-        while counter < 100:
-            for pid in pids:
-                j.system.process.kill(pid)
-            time.sleep(0.1)
-            pids = self.getProcessPids(name)
-            if len(pids) == 0:
-                return
-            counter += 1
-        raise RuntimeError("could not stop redis with name %s" % name)
+    # def stopInstance(self, name):
+    #     j.system.platform.ubuntu.stopService(name)
+    #     _, cpath = self._getPaths(name)
+    #     if not j.system.fs.exists(name):
+    #         return
+    #     pids = self.getProcessPids(name)
+    #     counter = 0
+    #     while counter < 100:
+    #         for pid in pids:
+    #             j.system.process.kill(pid)
+    #         time.sleep(0.1)
+    #         pids = self.getProcessPids(name)
+    #         if len(pids) == 0:
+    #             return
+    #         counter += 1
+    #     raise RuntimeError("could not stop redis with name %s" % name)
 
-    def startInstance(self, name):
-        j.logger.log("start redis:%s" % name, level=5, category="")
-        pids = self.getProcessPids(name)
-        if len(pids) > 1:
-            self.stopInstance(name)
-        if len(pids) == 1:
-            j.logger.log("Not need to start redis:%s, is already started." % name, level=5, category="redis.start")
-            return
-        # cmd="redis-server %s"%cpath
-        # j.system.process.execute(cmd)
-        j.system.platform.ubuntu.startService(name)
-        timeout = time.time() + 10
-        port = self.getPort(name)
-        check = False
-        while check == False and time.time() < timeout:
-            check = j.system.net.tcpPortConnectionTest("localhost", port)
-        if check == False:
-            raise RuntimeError("Could not start redis %s on port %s" % (name, port))
+    # def startInstance(self, name):
+    #     j.logger.log("start redis:%s" % name, level=5, category="")
+    #     pids = self.getProcessPids(name)
+    #     if len(pids) > 1:
+    #         self.stopInstance(name)
+    #     if len(pids) == 1:
+    #         j.logger.log("Not need to start redis:%s, is already started." % name, level=5, category="redis.start")
+    #         return
+    #     # cmd="redis-server %s"%cpath
+    #     # j.system.process.execute(cmd)
+    #     j.system.platform.ubuntu.startService(name)
+    #     timeout = time.time() + 10
+    #     port = self.getPort(name)
+    #     check = False
+    #     while check == False and time.time() < timeout:
+    #         check = j.system.net.tcpPortConnectionTest("localhost", port)
+    #     if check == False:
+    #         raise RuntimeError("Could not start redis %s on port %s" % (name, port))
 
     def deleteInstance(self, name):
-        self.stopInstance(name)
+        # self.stopInstance(name)
         dpath, _ = self._getPaths(name)
         j.system.fs.removeDirTree(dpath)
 
     def emptyInstance(self, name):
-        self.stopInstance(name)
+        # self.stopInstance(name)
         dpath = "/opt/redis/%s/db" % name
         j.system.fs.removeDirTree(dpath)
         j.system.fs.createDir(dpath)
@@ -138,10 +138,10 @@ class RedisFactory:
 
         C = """
 daemonize no
-pidfile /var/run/redis/redis_ac.pid
+pidfile $vardir/redis/$name/redis.pid
 port $port
 bind 127.0.0.1
-# unixsocket /var/run/redis/redis.sock
+# unixsocket $vardir/redis/$name/redis.sock
 # unixsocketperm 755
 timeout 0
 
@@ -169,7 +169,7 @@ tcp-keepalive 0
 # warning (only very important / critical messages are logged)
 loglevel notice
 
-logfile /opt/redis/$name/redis.log
+logfile $vardir/redis/$name/redis.log
 syslog-enabled no
 
 databases 1
@@ -240,7 +240,7 @@ rdbchecksum yes
 # The Append Only File will also be created inside this directory.
 #
 # Note that you must specify a directory here, not a file name.
-dir /opt/redis/$name/db/
+dir $vardir/redis/$name/db/
 
 ################################# REPLICATION #################################
 
@@ -691,17 +691,15 @@ aof-rewrite-incremental-fsync yes
         C = C.replace("$name", name)
         C = C.replace("$maxram", str(maxram))
         C = C.replace("$port", str(port))
+        C = C.replace("$vardir", j.dirs.varDir)
         if appendonly:
             C = C.replace("$appendonly", "yes")
         else:
             C = C.replace("$appendonly", "no")
 
-        dpath = "/opt/redis/%s" % name
+        dpath = "%s/redis/%s" % (j.dirs.varDir,name)
         dbpath = j.system.fs.joinPaths(dpath, "db")
         j.system.fs.createDir(dbpath)
         cpath = j.system.fs.joinPaths(dpath, "redis.conf")
         j.system.fs.writeFile(cpath, C)
 
-        j.system.platform.ubuntu.serviceInstall(name, "redis-server", cpath, pwd='/')
-
-        self.startInstance(name)

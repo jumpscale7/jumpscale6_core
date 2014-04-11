@@ -291,6 +291,7 @@ class JPackageObject():
         self.hrd.applyOnDir(self.getPathActions()) #make sure params are filled in in actions dir
         #apply hrd configu from system on actions active
         j.application.config.applyOnDir(self.getPathActions())
+        j.dirs.replaceFilesDirVars(self.getPathActions())
 
         self.actions = ActionManager(self)
 

@@ -10,12 +10,12 @@ parser.add_argument("-n", '--name', help='Process name')
 parser.add_argument("-d", '--domain', help='Process domain')
 parser.add_argument("-c", '--carefull', action='store_true', default=False, help='Check each startup status, die if one could not start.')
 
-FORMAT = "%-20s %-20s %-10s %-8s %-10s"
+FORMAT = "%-20s %-20s %-10s %-12s %-10s %-2s %s"
 
 opts = parser.parse_args()
 if opts.action in ('list', 'status'):
-    print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART')
-    print '-'* 71
+    print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART','#','PIDS')
+    print '-'* 100
     print
 
 #@todo is not correct, does not work no all pds
@@ -27,7 +27,7 @@ if opts.domain==None and  opts.name==None and  opts.action=="start" and not opts
     j.tools.startupmanager.startAll()
     j.application.stop(0)
 
-pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name)
+pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=True)
 
 # single process commands
 if opts.action in ('attach', 'logs'):
@@ -69,13 +69,24 @@ if opts.action == 'start':
 
 
 for pd in pds:
+    if pd.name=="jsprocess":
+        continue
     if opts.action in ('status','list'):
         
         status = ''
         active = 'enabled' if pd.autostart else 'disabled'
         status = 'RUNNING' if pd.isRunning() else 'HALTED'
 
-        print FORMAT % (pd.domain, pd.name, pd.priority, status, active)
+        if len(pd.pids)>0 and pd.numprocesses<>len(pd.pids):
+            status = 'INCOMPLETE'
+
+        if pd.pids==[]:
+            pd.getPids()
+
+        pids=[str(item) for item in pd.pids ]
+        pids=",".join(pids)
+
+        print FORMAT % (pd.domain, pd.name, pd.priority, status, active,pd.numprocesses,pids)
     else:
         getattr(pd, opts.action)()
 

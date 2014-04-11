@@ -7,7 +7,10 @@ import sys,time
 j.application.start("jsredis")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['workerwatchdog','heartbeat','keys', 'clearjobqueue'], help='Command to perform')
+
+parser.add_argument("action", choices=['workerwatchdog','heartbeat','keys',\
+        'clearjobqueue','apps','appsreset'], help='Command to perform')
+
 parser.add_argument('-a', '--agentcontroller', required=False, action='store_true', help='Run commands on Agentcontroller redis')
 
 opts = parser.parse_args()
@@ -33,6 +36,16 @@ if opts.action =='workerwatchdog':
     workers2=zip(workers[0::2], workers[1::2])
     for workername, last in workers2:
         print "%-20s %s"%(workername,timeago(last))
+
+elif opts.action =='apps':
+    items = redis.hgetall("application")
+    items2=zip(items[0::2], items[1::2])
+    for name, val in items2:
+        # val=",".join(val)
+        print "%-40s %s"%(name,val) 
+
+elif opts.action =='appsreset':
+    redis.delete("application")
 
 elif opts.action =='keys':
     print "\n".join(redis.keys())

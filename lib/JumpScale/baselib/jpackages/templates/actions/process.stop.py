@@ -8,9 +8,11 @@ def main(j,jp):
         
         j.tools.startupmanager.stopJPackage(jp)
 
-        for port in jp.tcpPorts:
-            j.system.process.killProcessByPort(port)
+        # for port in jp.tcpPorts:
+        #     j.system.process.killProcessByPort(port)
 
-        jp.waitDown(timeout=20)
+        # jp.waitDown(timeout=20)
+
+    
 
 

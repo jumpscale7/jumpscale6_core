@@ -184,13 +184,17 @@ stop on runlevel [016]
     def startService(self, servicename):
         j.logger.log("start service on ubuntu for:%s"%servicename,category="ubuntu.start")  #@todo P1 add log statements for all other methods of this class
         if not self.statusService(servicename):
-            return j.system.process.execute("sudo start %s" % servicename)
+            cmd="sudo start %s" % servicename
+            # print cmd
+            return j.system.process.execute(cmd)
 
     def stopService(self, servicename):
-        return j.system.process.execute("stop %s" % servicename,False)
+        cmd="sudo stop %s" % servicename
+        # print cmd
+        return j.system.process.execute(cmd,False)
 
     def restartService(self, servicename):
-        return j.system.process.execute("restart %s" % servicename,False)
+        return j.system.process.execute("sudo restart %s" % servicename,False)
 
     def statusService(self, servicename):
         exitcode, output = j.system.process.execute("sudo status %s" % servicename,False)

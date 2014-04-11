@@ -261,7 +261,7 @@ class BitbucketConnection(object):
             return self.mercurialclients[rkey]
         if repoName=="":
             repoName=self.findRepoFromBitbucket(repoName)
-            branch=j.gui.dialog.askString("branchname",defaultValue="default")
+            branch=j.gui.dialog.askString("branchname",default="default")
         if repoName=="":
             raise RuntimeError("reponame cannot be empty")
 

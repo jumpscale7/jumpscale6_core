@@ -83,7 +83,7 @@ class ErrorConditionHandler():
         self.processErrorConditionObject(eco,tostdout=False)
      
         msg = eco.errormessage 
-        if j.application.config.get('system.debug', checkExists=True, defaultval='0') == '1':
+        if j.application.config.get('system.debug', checkExists=True, default='0') == '1':
             msg=str(eco)
 
         print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg

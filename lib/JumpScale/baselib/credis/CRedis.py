@@ -91,6 +91,12 @@ class CRedis():
     def lpop(self,key):
         return self.execute('LPOP',key)
 
+    def keys(self,key):
+        return self.execute('KEYS',key)
+
+    def hkeys(self,key):
+        return self.execute('HKEYS',key)
+
     def exists(self,key):
         return self.execute('EXISTS',key)==1
         
@@ -105,6 +111,9 @@ class CRedis():
 
     def hget(self,hkey,key):
         return self.execute('HGET',hkey,key)
+    
+    def hdelete(self,hkey,key):
+        return self.execute('HDEL',hkey,key)
 
     def hexists(self,hkey,key):
         return self.execute('HEXISTS',hkey,key)==1
