@@ -35,6 +35,6 @@ blobmaster  2344
 
 tracker 3444
 
-
+memcache:9997
 
 
