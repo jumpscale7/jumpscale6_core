@@ -648,6 +648,17 @@ class SystemFS:
             ext=""
         return ext
 
+    def chown(self,path,user):
+        from pwd import getpwnam  
+        getpwnam(user)[2]
+        uid=getpwnam(user).pw_uid
+        gid=getpwnam(user).pw_gid
+        os.chown(path, uid, gid)
+
+    def chmod(self,path,permissions):
+        os.chmod(path,permissions)
+                        
+
     def parsePath(self,path, baseDir="",existCheck=True, checkIsFile=False):
         """
         parse paths of form /root/tmp/33_adoc.doc into the path, priority which is numbers before _ at beginning of path

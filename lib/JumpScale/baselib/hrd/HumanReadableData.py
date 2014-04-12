@@ -412,7 +412,8 @@ class HRD():
         res2={}
         for item in res.split(","):
             if item.strip()<>"":
-                key,val=item.split(":")
+                key,val=item.split(":",1)
+                val=val.replace("\k",",")
                 res2[key]=val
         return res2
 
