@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jssync")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['jsboxupload','jsboxdownload','jsboxupdate','system2sandbox',\
+parser.add_argument("action", choices=['jsboxupload','jsboxuploadall','jsboxdownload','jsboxupdate','system2sandbox',\
     'jpackagesupload','jpackagesdownload','jsboxuploadcfg'], help='Command to perform')
 
 parser.add_argument("-q", '--qualitylevel', help='qualitylevel e.g. unstable,test,stable', default="")
@@ -60,13 +60,13 @@ def upload(category,path="",data=False):
         path="%s/"%path  
     if data:
         path+="_data"
-    cmd="rsync -azv %s%s %s::upload/%s/%s%s  --delete-after --modify-window=60 --compress"%(opts.sbpath,\
+    cmd="rsync -azvPh %s%s %s::upload/%s/%s%s  --delete-after --modify-window=60 --compress --progress  "%(opts.sbpath,\
         path,ipaddr,key,category,path)
     print cmd
     j.system.process.executeWithoutPipe(cmd)    
 
 #COPY FROM SYSTEM TO SANDBOX JPACKAGES
-if opts.action =='system2sandbox' or opts.action =='jsboxupload' or opts.action =='jpackagesupload':
+if opts.action =='system2sandbox' or opts.action.find('jsboxupload')==0 or opts.action =='jpackagesupload':
     if opts.qualitylevel=="":
         raise RuntimeError("quality level needs to be specified")
     sync("/opt/code/jumpscale/default__jp_jumpscale/%s/"%opts.qualitylevel,"%s/jpackages/jumpscale/"%opts.sbpath)
@@ -80,7 +80,7 @@ if opts.action =='system2sandbox' or opts.action =='jsboxupload' or opts.action 
             hrd.set("jp.debug",0)
 
 #COPY FROM SYSTEM TO SANDBOX for LIBS
-if opts.action =='system2sandbox' or opts.action =='jsboxupload':
+if opts.action =='system2sandbox' or opts.action.find('jsboxupload')==0:
     if opts.qualitylevel=="":
         raise RuntimeError("quality level needs to be specified")
     for name in ["base","baselib","core","lib","grid","portal"]:
@@ -100,7 +100,6 @@ if opts.action =='jsboxuploadall':
 if opts.action =='jsboxupload':
     raise RuntimeError("to implement")
     #upload jpackages & libs
-
 
 if opts.action =='jsboxuploadcfg':
     upload("jsbox",data=True)
