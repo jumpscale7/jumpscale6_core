@@ -23,7 +23,7 @@ import JumpScale.lib.diskmanager
 
 import JumpScale.baselib.stataggregator
 
-j.application.start("jumpscale:jsprocessmanager")
+j.application.start("jumpscale:processmanager")
 
 j.logger.consoleloglevel = 5
 print 'start init grid'
