@@ -105,6 +105,7 @@ def finddomain(name):
                 dname2=dname.split("__jp_",1)[1]
                 if dname2.lower().strip()==name.lower().strip():
                     return "/opt/code/%s/%s"%(cat,dname)
+    raise RuntimeError("could not find domain for name:'%s'"%name)
 
 #COPY FROM SYSTEM TO SANDBOX JPACKAGES
 if opts.action =='system2sandbox' or opts.action =='jpackages2sandbox':
@@ -116,19 +117,21 @@ if opts.action =='system2sandbox' or opts.action =='jpackages2sandbox':
 
     doms=opts.jpdomains.split(",")
     for item in ["jumpscale","serverapps","desktop"]:
-        if item not in doms:
-            doms.append(item)
+        if item<>None or item.strip()<>"":
+            if item not in doms:
+                doms.append(item)
 
     for dom in doms:
-        path=finddomain(dom)
-        # print "JPACKAGEDOM:%s"%path
-        sync("%s/%s/"%(path,opts.qualitylevel),"%s/jpackages/%s/"%(opts.sbpath,dom))
+        if dom.strip()<>"":
+            path=finddomain(dom)
+            # print "JPACKAGEDOM:%s"%path
+            sync("%s/%s/"%(path,opts.qualitylevel),"%s/jpackages/%s/"%(opts.sbpath,dom))
 
-        dpath=j.system.fs.joinPaths("/opt","jsbox","jpackages",dom)
-        for path in j.system.fs.listFilesInDir(dpath,True,"main.hrd"):
-            hrd=j.core.hrd.getHRD(path)
-            hrd.set("jp.debug",0)
-
+            dpath=j.system.fs.joinPaths("/opt","jsbox","jpackages",dom)
+            for path in j.system.fs.listFilesInDir(dpath,True,"main.hrd"):
+                hrd=j.core.hrd.getHRD(path)
+                hrd.set("jp.debug",0)
+                
 #COPY FROM SYSTEM TO SANDBOX for LIBS
 if opts.action =='system2sandbox':
     if opts.branch=="":
@@ -150,12 +153,14 @@ if opts.action =='system2sandbox':
 
     #grid apps
     sync("/opt/code/jumpscale/%s__jumpscale_grid/apps/agent/"%opts.branch,"%s/apps/agent/"%opts.sbpath)
+    sync("/opt/code/jumpscale/%s__jumpscale_core/apps/blobserver/"%opts.branch,"%s/apps/blobserver/"%opts.sbpath)
     sync("/opt/code/jumpscale/%s__jumpscale_grid/apps/processmanager/"%opts.branch,"%s/apps/processmanager/"%opts.sbpath)
 
     #tools
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.branch,"%s/tools/"%opts.sbpath)
     #sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch,"/opt/jsbox/cfg/")
     sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.branch,"%s/tools/"%opts.sbpath,delete=False)
+    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/libjs/"%opts.branch,"%s/libjs/"%opts.sbpath,delete=False)
 
 #UPLOAD JPACKAGES
 if opts.action =='jpackagesupload':        
@@ -184,7 +189,6 @@ if opts.action =='jsboxuploadcfg' or  opts.action =='jsboxuploadall':
     cmd="rsync -azvPh %s %s::www/cmds/ --modify-window=60 --compress --progress  "%(path,ipaddr)
     print cmd
     j.system.process.executeWithoutPipe(cmd)   
-
 
 if opts.action =='jpackagesdownload':
     download("jsbox","jpackages")    

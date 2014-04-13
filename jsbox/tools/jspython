@@ -2,7 +2,8 @@
 if [ -z "$JSBASE" ]; then
     python "$@"
 else
-    export PYTHONPATH=$JSBASE/libjs
+    export PYTHONPATH=$JSBASE/lib:$JSBASE/python.zip:$JSBASE/libjs
+    echo sandbox:$JSBASE
     $JSBASE/bin/python "$@"
 fi
 
