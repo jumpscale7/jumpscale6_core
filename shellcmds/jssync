@@ -8,11 +8,13 @@ j.application.start("jssync")
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['jsboxupload','jsboxuploadall','jsboxdownload','jsboxupdate','system2sandbox',\
-    'jpackagesupload','jpackagesdownload','jsboxuploadcfg'], help='Command to perform')
+    'jpackagesupload','jpackages2sandbox','jpackagesdownload','jsboxuploadcfg'], help='Command to perform')
 
-parser.add_argument("-q", '--qualitylevel', help='qualitylevel e.g. unstable,test,stable', default="")
-parser.add_argument("-k", '--key', help='secret key which will be prepended to quality level if ql exists', default="")
+parser.add_argument("-b", '--branch', help='branch of jumpscale', default="unstable")
+parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable', default="")
+parser.add_argument("-k", '--key', help='secret key (can have ql inside or anything)', default="")
 parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
+parser.add_argument("-j", '--jpdomains', help='specify add domains to look for when syncing/uploading jpackages.', default="")
 
 
 opts = parser.parse_args()
@@ -20,13 +22,9 @@ opts = parser.parse_args()
 ipaddr=j.application.config.get("jssync.addr")
 
 def getkey():
-    if opts.qualitylevel=="" and opts.key=="":
-        raise RuntimeError("specify qualitylevel name or key")        
-    if opts.qualitylevel<>"" and opts.key<>"":
-        key="%s_%s"%(opts.key,opts.qualitylevel)
-    else:
-        key="%s%s"%(opts.key,opts.qualitylevel)
-    return key
+    if opts.key=="" :
+        raise RuntimeError("specify key")
+    return opts.key
 
 def sync(src,dest,delete=True):
     print "SYNC: %s %s"%(src,dest)
@@ -35,6 +33,11 @@ def sync(src,dest,delete=True):
     else:
         d="--max-delete=0 "
     cmd="rsync -Lrpo %s%s %s"%(d,src,dest)
+
+    if not j.system.fs.exists(path="%s"%(src)):
+        print "ERROR:could not find dir:%s"%(src)
+        j.application.stop(1)
+
     j.system.process.executeWithoutPipe(cmd)
 
 def download(category,path="",data=False):
@@ -51,6 +54,26 @@ def download(category,path="",data=False):
     print cmd
     j.system.process.executeWithoutPipe(cmd)    
 
+def createdir(path):
+    # 
+    
+    order=[]
+    order.insert(0,path)
+    while path[-7:]<>":upload":
+        path=j.system.fs.getParent(path)
+        order.insert(0,path)
+
+    j.system.fs.createDir("/tmp/empty")
+    # j.system.fs.writeFile(filename="/tmp/empty/_empty",contents=".")
+
+    order.pop(0)
+    for item in order:
+        if item[-1]<>"/":
+            item+="/"
+        cmd="rsync /tmp/empty/ %s"%item
+        j.system.process.execute(cmd)
+    
+
 def upload(category,path="",data=False):
     print "UPLOAD: %s %s"%(category,path)
     key=getkey()
@@ -62,40 +85,77 @@ def upload(category,path="",data=False):
         path+="_data"
     src="%s/%s"%(opts.sbpath,path)
     j.system.fs.removeIrrelevantFiles(src)    
-    cmd="rsync -azvPh %s%s %s::upload/%s/%s%s  --delete-after --modify-window=60 --compress --progress  "%(opts.sbpath,\
+    cmd="rsync -azvPh %s%s %s::upload/%s/%s%s --delete-after --modify-window=60 --compress --progress  "%(opts.sbpath,\
         path,ipaddr,key,category,path)
     for i in range(100):
         try:
             print cmd
-            j.system.process.executeWithoutPipe(cmd)    
+            j.system.process.execute(cmd)    
             return
         except Exception,e:
+            if str(e).find("No such file or directory")<>-1:
+                createdir("%s::upload/%s/%s%s"%(ipaddr,key,category,path))            
             print "error in sync:%s"%e
             print "RETRY"
 
+def finddomain(name):
+    for cat in j.system.fs.listDirsInDir("/opt/code/", recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+        for dname in j.system.fs.listDirsInDir("/opt/code/%s"%cat, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+            if dname.find("__jp_")<>-1:
+                dname2=dname.split("__jp_",1)[1]
+                if dname2.lower().strip()==name.lower().strip():
+                    return "/opt/code/%s/%s"%(cat,dname)
+
 #COPY FROM SYSTEM TO SANDBOX JPACKAGES
-if opts.action =='system2sandbox' or opts.action.find('jsboxupload')==0 or opts.action =='jpackagesupload':
+if opts.action =='system2sandbox' or opts.action =='jpackages2sandbox':
     if opts.qualitylevel=="":
         raise RuntimeError("quality level needs to be specified")
-    sync("/opt/code/jumpscale/default__jp_jumpscale/%s/"%opts.qualitylevel,"%s/jpackages/jumpscale/"%opts.sbpath)
-    sync("/opt/code/jumpscale/default__jp_serverapps/%s/"%opts.qualitylevel,"%s/jpackages/serverapps/"%opts.sbpath)
-    sync("/opt/code/jumpscale/default__jp_desktop/%s/"%opts.qualitylevel,"/%s/jpackages/jsdesktop/"%opts.sbpath)
 
-    for dname in ["jsdesktop","jumpscale","serverapps"]:
-        dpath=j.system.fs.joinPaths("/opt","jsbox","jpackages",dname)
+    j.system.fs.removeDirTree("%s/jpackages/"%opts.sbpath)
+    j.system.fs.createDir("%s/jpackages/"%opts.sbpath)
+
+    doms=opts.jpdomains.split(",")
+    for item in ["jumpscale","serverapps","desktop"]:
+        if item not in doms:
+            doms.append(item)
+
+    for dom in doms:
+        path=finddomain(dom)
+        # print "JPACKAGEDOM:%s"%path
+        sync("%s/%s/"%(path,opts.qualitylevel),"%s/jpackages/%s/"%(opts.sbpath,dom))
+
+        dpath=j.system.fs.joinPaths("/opt","jsbox","jpackages",dom)
         for path in j.system.fs.listFilesInDir(dpath,True,"main.hrd"):
             hrd=j.core.hrd.getHRD(path)
             hrd.set("jp.debug",0)
 
 #COPY FROM SYSTEM TO SANDBOX for LIBS
-if opts.action =='system2sandbox' or opts.action.find('jsboxupload')==0:
-    if opts.qualitylevel=="":
-        raise RuntimeError("quality level needs to be specified")
-    for name in ["base","baselib","core","lib","grid","portal"]:
-        sync("/usr/local/lib/python2.7/site-packages/JumpScale/%s/"%name,"%s/libjs/JumpScale/%s/"%(opts.sbpath,name))
-    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.qualitylevel,"%s/tools/"%opts.sbpath)
-    #sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.qualitylevel,"/opt/jsbox/cfg/")
-    sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.qualitylevel,"%s/tools/"%opts.sbpath,delete=False)
+if opts.action =='system2sandbox':
+    if opts.branch=="":
+        raise RuntimeError("branch name needs to be specified")
+
+    j.system.fs.removeDirTree("%s/apps/"%opts.sbpath)
+    j.system.fs.createDir("%s/apps/"%opts.sbpath)    
+
+    j.system.fs.removeDirTree("%s/libjs/JumpScale/"%opts.sbpath)
+    j.system.fs.createDir("%s/libjs/JumpScale/"%opts.sbpath)    
+
+    for item in ["base","baselib","core"]:
+        sync("/opt/code/jumpscale/%s__jumpscale_core/lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
+    item="grid"
+    sync("/opt/code/jumpscale/%s__jumpscale_grid/lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
+    item="lib"
+    sync("/opt/code/jumpscale/%s__jumpscale_lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
+
+
+    #grid apps
+    sync("/opt/code/jumpscale/%s__jumpscale_grid/apps/agent/"%opts.branch,"%s/apps/agent/"%opts.sbpath)
+    sync("/opt/code/jumpscale/%s__jumpscale_grid/apps/processmanager/"%opts.branch,"%s/apps/processmanager/"%opts.sbpath)
+
+    #tools
+    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.branch,"%s/tools/"%opts.sbpath)
+    #sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch,"/opt/jsbox/cfg/")
+    sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.branch,"%s/tools/"%opts.sbpath,delete=False)
 
 #UPLOAD JPACKAGES
 if opts.action =='jpackagesupload':        
@@ -110,16 +170,17 @@ if opts.action =='jsboxupload':
     #upload jpackages & libs
 
 if opts.action =='jsboxuploadcfg' or  opts.action =='jsboxuploadall':
-    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.qualitylevel
+    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch
     key=getkey()
     category="jsbox_data"
     path2="cfg"
+    createdir("%s::upload/%s/%s/%s"%(ipaddr,key,category,path2))       
     cmd="rsync -azvPh %s %s::upload/%s/%s/%s  --delete-after --modify-window=60 --compress --progress  "%(\
         path,ipaddr,key,category,path2)
     print cmd
     j.system.process.executeWithoutPipe(cmd)    
 
-    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.qualitylevel
+    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.branch
     cmd="rsync -azvPh %s %s::www/cmds/ --modify-window=60 --compress --progress  "%(path,ipaddr)
     print cmd
     j.system.process.executeWithoutPipe(cmd)   
