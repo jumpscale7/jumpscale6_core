@@ -139,7 +139,7 @@ class GridHealthChecker(object):
                 for nid, categories in self._errors.iteritems():
                     if category in categories:
                         errors = True
-                        print "\t**ERROR**: %s is not running on node '%s' whose ID '%s'" % (category.title(), self._nodenames.get(nid, 'N/A'), nid)
+                        print "\t**ERROR**: %s is not running or unreachable on node '%s' whose ID '%s'" % (category.title(), self._nodenames.get(nid, 'N/A'), nid)
             if not errors:
                 print '\t**OK**'
 
@@ -147,25 +147,29 @@ class GridHealthChecker(object):
         print "CHECK ELASTICSEARCH"
         if clean:
             self._clean()
-        eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=5)
-        if eshealth['state'] == 'TIMEOUT':
-            self._addError(self.masternid, {'state': 'TIMEOUT'}, 'elasticsearch')
-        elif eshealth['state'] != 'OK':
+
+        if self.masternid not in self._runningnids:
             self._addError(self.masternid, {'state': 'UNKOWN'}, 'elasticsearch')
         else:
-            eshealth = eshealth['result']
-            if eshealth==None:
-                self._addError(self.masternid,"elasticsearch did not return info for healthcheck","elasticsearch")
-                return self._status, self._errors
-            size, unit = j.tools.units.bytes.converToBestUnit(eshealth['size'])
-            eshealth['size'] = '%.2f %sB' % (size, unit)
-            size, unit = j.tools.units.bytes.converToBestUnit(eshealth['memory_usage'])
-            eshealth['memory_usage'] = '%.2f %sB' % (size, unit)
-
-            if eshealth['health']['status'] in ['red']:
-                self._addError(self.masternid, eshealth, 'elasticsearch')
+            eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=5)
+            if eshealth['state'] == 'TIMEOUT':
+                self._addError(self.masternid, {'state': 'TIMEOUT'}, 'elasticsearch')
+            elif eshealth['state'] != 'OK':
+                self._addError(self.masternid, {'state': 'UNKOWN'}, 'elasticsearch')
             else:
-                self._addResult(self.masternid, eshealth, 'elasticsearch')
+                eshealth = eshealth['result']
+                if eshealth==None:
+                    self._addError(self.masternid,"elasticsearch did not return info for healthcheck","elasticsearch")
+                    return self._status, self._errors
+                size, unit = j.tools.units.bytes.converToBestUnit(eshealth['size'])
+                eshealth['size'] = '%.2f %sB' % (size, unit)
+                size, unit = j.tools.units.bytes.converToBestUnit(eshealth['memory_usage'])
+                eshealth['memory_usage'] = '%.2f %sB' % (size, unit)
+
+                if eshealth['health']['status'] in ['red']:
+                    self._addError(self.masternid, eshealth, 'elasticsearch')
+                else:
+                    self._addResult(self.masternid, eshealth, 'elasticsearch')
 
         if self._tostdout:
             self.printStatus('elasticsearch')
