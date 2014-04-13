@@ -8,7 +8,7 @@ j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'deletenode',\
-        'restartprocessmgrs','reloadjumpscripts','restartWorkers'], help='Command to perform')
+        'restartprocessmgrs','reloadjumpscripts','restartWorkers', 'listnodes', 'enablenode', 'disablenode', 'setrole'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
@@ -18,6 +18,7 @@ parser.add_argument('--debug',required=False, action='store_true',help='will sto
 parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
 parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
 parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='used with deletenode, ex: -nid=1(note the = sign)')
+parser.add_argument('-roles', dest='roles', required=False, type=str, help='Used with setroles. Overrides roles, ex: -roles=node, computenode.kvm(note the = sign). List is comma seperated')
 
 
 #check redis is there if not try to start
@@ -146,41 +147,74 @@ if opts.action == 'purgelogs':
             print 'purgelogs executed successfully'
 
 
-#################DELETE NODE####################################
-if opts.action == 'deletenode':
+#################NODE ACTIONS####################################
+def _deleteNode(node):
+    nid = node['id']
+    if not node:
+        print "Node %s does not exist." % nid
+    else:
+        nodeguid = node[0]['guid']
+        ncl.delete(nodeguid)
+        print 'Node %s with guid %s deleted successfully' % (nid, nodeguid)
+
+        print "Deleting relevant data... this may take a while"
+        categories = oscl.listNamespaceCategories('system')
+
+        for category in categories:
+            print "Deleting %s..." % category
+            catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
+            if category == 'stats':
+                catclient.delete(nid)
+                break
+            if category == 'log':
+                catclient.delete_by_query(query={"term":{"id":nid}})
+                break
+            total, results = catclient.simpleSearch({'nid':nid}, size=0, withguid=True, withtotal=True)
+            results = catclient.simpleSearch({'nid':nid}, size=total, withguid=True)
+            for result in results:
+                guid = result['guid']
+                catclient.delete(guid)
+
+if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listnodes']:
     import JumpScale.grid.osis
 
     oscl = j.core.osis.getClient(user='root')
     ncl = j.core.osis.getClientForCategory(oscl, 'system', 'node')
-    node = ncl.simpleSearch({'id':opts.nid}, withguid=True)
 
-    if not opts.nid:
-        print "'nid' needs to be supplied"
+
+    if opts.action == 'listnodes':
+        form = '%(nid)-8s %(name)-20s %(ips)20s %(active)8s %(roles)25s'
+        print form % {'nid': 'NODE ID', 'name': 'NAME', 'ips': 'IP ADDRESS', 'active': 'ACTIVE', \
+            'roles':'ROLES'}
+        print '=' * 100
+        print ''
+        for node in ncl.simpleSearch({}, size=0):
+            print form % {'nid': node['id'], 'name': node['name'], 'ips': ', '.join(node['ipaddr']), 'active': node['active'], 'roles': ', '.join(node['roles'])}
     else:
-        if not node:
-            print "Node %s does not exist." % opts.nid
+        if not opts.nid:
+            choicearray = [node['name'] for node in ncl.simpleSearch({}, size=0)]
+            for item in j.console.askChoiceMultiple(choicearray,"Select node"):
+                node = ncl.simpleSearch({'name': item}, size=0)[0]
+                if opts.action == 'deletenode':
+                    _deleteNode(item)
+                elif opts.action == 'enablenode':
+                    node['active'] = True
+                    ncl.set(node)
+                elif opts.action == 'disablenode':
+                    node['active'] = False
+                    ncl.set(node)
+                elif opts.action == 'setrole':
+                    if not opts.roles:
+                        roles = str(j.console.askString("Enter node roles (Seperated by ',')", node['roles']))
+                    noderoles = opts.roles or roles
+                    noderoles = noderoles.split(',')
+                    node['roles'] = noderoles
+                    ncl.set(node)
         else:
-            nodeguid = node[0]['guid']
-            ncl.delete(nodeguid)
-            print 'Node %s with guid %s deleted successfully' % (opts.nid, nodeguid)
+            node = ncl.simpleSearch({'id':opts.nid}, withguid=True)
+            _deleteNode(node)
 
-            print "Deleting relevant data... this may take a while"
-            categories = oscl.listNamespaceCategories('system')
 
-            for category in categories:
-                print "Deleting %s..." % category
-                catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
-                if category == 'stats':
-                    catclient.delete(opts.nid)
-                    break
-                if category == 'log':
-                    catclient.delete_by_query(query={"term":{"id":opts.nid}})
-                    break
-                total, results = catclient.simpleSearch({'nid':opts.nid}, size=0, withguid=True, withtotal=True)
-                results = catclient.simpleSearch({'nid':opts.nid}, size=total, withguid=True)
-                for result in results:
-                    guid = result['guid']
-                    catclient.delete(guid)
 
 
 j.application.stop()
