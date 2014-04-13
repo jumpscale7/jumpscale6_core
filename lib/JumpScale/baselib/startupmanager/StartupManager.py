@@ -367,6 +367,7 @@ class ProcessDef:
             j.system.platform.ubuntu.stopService(self.name)
 
         pids=self.getPids(ifNoPidFail=False,wait=False)
+        
         for pid in pids:
             if pid<>0 and j.system.process.isPidAlive(pid):
                 if self.stopcmd=="":

@@ -96,11 +96,10 @@ if opts.action =='jpackagesupload':
 #UPLOAD ALL
 if opts.action =='jsboxuploadall':
     upload("jsbox")
+    upload("jsbox",data=True)
 
 if opts.action =='jsboxupload':
-    raise RuntimeError("to implement")
-    #upload jpackages & libs
-
+    upload("jsbox")
 
 if opts.action =='jsboxuploadcfg':
     upload("jsbox",data=True)
