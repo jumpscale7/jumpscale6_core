@@ -1,14 +1,7 @@
 import math
 from JumpScale import j
 from JPackageObject import JPackageObject
-from Domain import Domain
 
-try:
-    import JumpScale.baselib.expect
-except:
-    pass
-    
-from JumpScale.baselib import platforms
 
 class JPackageClient():
     sourcesFile = None
@@ -27,6 +20,14 @@ class JPackageClient():
     def _init(self):
         if self.__init:
             return
+        from Domain import Domain
+
+        # try:
+        #     import JumpScale.baselib.expect
+        # except:
+        #     pass
+            
+        from JumpScale.baselib import platforms
 
         import JumpScale.baselib.actions
         import JumpScale.baselib.bitbucket
@@ -130,6 +131,7 @@ class JPackageClient():
         """
         Reload all jpackages config data from disk
         """
+        from Domain import Domain
         cfgpath=j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')
 
         if not j.system.fs.exists(cfgpath):

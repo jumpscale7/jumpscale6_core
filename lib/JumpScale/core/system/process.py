@@ -1789,6 +1789,8 @@ class SystemProcess:
             return pids
 
     def appsGetNames(self):
+        if j.application.redis==None:
+            raise RuntimeError("Make sure redis is running for port 7766")
         return j.application.redis.hkeys("application")
 
     def appsGet(self):

@@ -60,10 +60,18 @@ def upload(category,path="",data=False):
         path="%s/"%path  
     if data:
         path+="_data"
+    src="%s/%s"%(opts.sbpath,path)
+    j.system.fs.removeIrrelevantFiles(src)    
     cmd="rsync -azvPh %s%s %s::upload/%s/%s%s  --delete-after --modify-window=60 --compress --progress  "%(opts.sbpath,\
         path,ipaddr,key,category,path)
-    print cmd
-    j.system.process.executeWithoutPipe(cmd)    
+    for i in range(100):
+        try:
+            print cmd
+            j.system.process.executeWithoutPipe(cmd)    
+            return
+        except Exception,e:
+            print "error in sync:%s"%e
+            print "RETRY"
 
 #COPY FROM SYSTEM TO SANDBOX JPACKAGES
 if opts.action =='system2sandbox' or opts.action.find('jsboxupload')==0 or opts.action =='jpackagesupload':
@@ -101,8 +109,21 @@ if opts.action =='jsboxupload':
     raise RuntimeError("to implement")
     #upload jpackages & libs
 
-if opts.action =='jsboxuploadcfg':
-    upload("jsbox",data=True)
+if opts.action =='jsboxuploadcfg' or  opts.action =='jsboxuploadall':
+    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.qualitylevel
+    key=getkey()
+    category="jsbox_data"
+    path2="cfg"
+    cmd="rsync -azvPh %s %s::upload/%s/%s/%s  --delete-after --modify-window=60 --compress --progress  "%(\
+        path,ipaddr,key,category,path2)
+    print cmd
+    j.system.process.executeWithoutPipe(cmd)    
+
+    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.qualitylevel
+    cmd="rsync -azvPh %s %s::www/cmds/ --modify-window=60 --compress --progress  "%(path,ipaddr)
+    print cmd
+    j.system.process.executeWithoutPipe(cmd)   
+
 
 if opts.action =='jpackagesdownload':
     download("jsbox","jpackages")    

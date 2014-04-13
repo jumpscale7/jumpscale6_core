@@ -11,5 +11,5 @@ j.packages.releaseMgmt=ReleaseMgmt()
 from .JPackagesGenDocs import JPackagesGenDocs
 j.packages.docGenerator=JPackagesGenDocs()
 
-from .PythonPackage import PythonPackage
-j.system.platform.python = PythonPackage()
+# from .PythonPackage import PythonPackage
+# j.system.platform.python = PythonPackage()

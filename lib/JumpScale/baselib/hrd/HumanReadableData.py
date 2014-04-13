@@ -316,6 +316,8 @@ class HRD():
         if self.__dict__.has_key(key):
             self.__dict__.pop(key)
 
+        out=""
+
         for line in j.system.fs.fileGetContents(self._path).split("\n"):
             delete=False
             line=line.strip()
