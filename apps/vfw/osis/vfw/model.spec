@@ -6,7 +6,11 @@
     prop:nid int,,node on which firewall is running
     prop:name str,,
     prop:descr str,,
+    prop:type str,,
     prop:domain str,,free to choose domain e.g. space of customer
+    prop:host str,, host ipaddress of the virtual firewall
+    prop:username str,, username to manage the virtual firewall
+    prop:password str,, password to manage the virtual firewall
     prop:tcpForwardRules list(tcpForwardRule),,set of rules for tcp forwarding; when more than 1 and same source port then tcp loadbalancing
     prop:masquerade bool,True,if True then masquerading done from internal network to external
     prop:wsForwardRules list(wsForwardRule),,set of rules for reverse proxy
