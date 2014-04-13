@@ -2,8 +2,10 @@ from JumpScale import j
 import os
 import JumpScale.baselib.screen
 import time
-import threading
-import ujson as json
+try:
+    import usjon as json
+except ImportError:
+    import json
 
 class ProcessNotFoundException(Exception):
     pass
