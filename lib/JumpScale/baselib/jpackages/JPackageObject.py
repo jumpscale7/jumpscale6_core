@@ -1585,7 +1585,7 @@ class JPackageObject():
             print self,
             if not bservernew.exists(key):
                 #does not exist on remote bserver yet
-                print "did not find blob %s"%(key),
+                print "blob %s not on dest."%(key),
                 if self.blobstorLocal.exists(key):
                     print "upload from local."
                     self.blobstorLocal.copyToOtherBlobStor(key, bservernew)
@@ -1593,7 +1593,7 @@ class JPackageObject():
                     print "upload from remote."
                     self.blobstorRemote.copyToOtherBlobStor(key, bservernew)
                 else:
-                    print "NOT FOUND"
+                    print "blob %s not on sources."%key
                     notfound.append(key)
         return notfound
 
@@ -1624,8 +1624,9 @@ class JPackageObject():
             self.log("Upload platform:'%s', type:'%s' files:'%s'"%(platform,ttype,pathttype),category="upload")
         
             if local and remote and self.blobstorRemote <> None and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype)
-                key, descr,uploadedAnything  = self.blobstorRemote.put(pathttype)
+                key, descr,uploadedAnything = self.blobstorLocal.put(pathttype)
+                self.blobstorLocal.copyToOtherBlobStor(key,self.blobstorRemote)
+                # key, descr,uploadedAnything  = self.blobstorRemote.put(pathttype)
             elif local and self.blobstorLocal <> None:
                 key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[])
             elif remote and self.blobstorRemote <> None:

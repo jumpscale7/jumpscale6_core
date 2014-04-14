@@ -185,7 +185,7 @@ elif args.action == 'repackage':
         package.package(update=False,dependencies=args.deps)
         if not args.message:
             args.message = 'Building JPackage "%s"' % package.name
-        package.upload(remote=not args.local,onlycode=args.onlycode)
+        package.upload(onlycode=args.onlycode)
         domains2pub.append(package.domain)
         print 'New %s %s' % (package, package.buildNr)
 

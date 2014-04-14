@@ -7,7 +7,7 @@ import sys,time
 j.application.start("cmddisk")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['init','list'], help='Command to perform')
+parser.add_argument("action", choices=['init','list','listmirrors'], help='Command to perform')
 
 opts = parser.parse_args()
 
@@ -27,6 +27,10 @@ if opts.action =='list':
         print "%-25s %-15s %-6s %-6s %-4s %-30s %-30s %s"%(disk.description,disk.path,\
             round(float(disk.size)/1024/1024,1),round(float(disk.free)/1024/1024,1),\
             ssd ,disk.mountpoint,",".join(disk.type),disk.model)
+
+if opts.action =='listmirrors':
+    disks=j.system.platform.diskmanager.mirrorsFind()
+
 
 if opts.action =='init':
 

@@ -181,7 +181,6 @@ class FtpFS(object):
         j.logger.log("FtpFS: storing [%s] from [%s]" % (file,uploadPath))
         # print "%s:%s:%s %s %s"%(self.server,self.username,self.password,file,uploadPath)
         self.ftp.storbinary('STOR %s' % file, open(uploadPath, 'rb'), 8192)
-        print "done"
 
     def handleUploadDir(self,dir,upload_path):
         """
