@@ -52,6 +52,8 @@ group.add_argument('--merge', dest="merge", default=False, action="store_true", 
 #upload
 group = parser.add_argument_group(title="Upload")
 group.add_argument('--onlycode', required=False, action='store_true', help='to only upload jpackage files which are for coderecipes')
+group.add_argument('--onlyexistingblobs', required=False, action='store_true', help='to only upload jpackage blobs which do exist in one of existing blobstores',default=False)
+group.add_argument('--blobserver', required=False,  help='only upload to specified blobserver',default="")
 
 #switchbranch
 group = parser.add_argument_group(title="Switch Branch")
@@ -212,8 +214,23 @@ elif args.action == 'mdupdate':
 
 elif args.action == 'upload':
     packages = cmdutils.getJPackage(args,installed=False)    
-    for package in packages:
-        package.upload(dependencies=args.deps,onlycode=args.onlycode)
+
+    if args.onlyexistingblobs:
+        if args.blobserver=="":
+            raise RuntimeError("please specify blobserver")
+        errors=[]
+        for package in packages:
+                notfound=package.uploadExistingBlobs(args.blobserver,dependencies=args.deps)
+                if len(notfound)>0:
+                    errors.append(str(package))
+        if len(errors)>0:
+            print "JPACKAGES WITH INCOMPLETE BLOBS ON REMOTE SERVER:"
+            for error in errors:
+                print error
+
+    else:
+        for package in packages:
+            package.upload(dependencies=args.deps,onlycode=args.onlycode)
 
 elif args.action == 'mirror':
     packages=j.packages.find(domain="*",name="*")

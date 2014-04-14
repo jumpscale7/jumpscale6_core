@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jssync")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['jsboxupload','jsboxuploadall','jsboxdownload','jsboxupdate','system2sandbox',\
+parser.add_argument("action", choices=['jsboxupload','jsboxuploadall','jsboxdownload','jsboxdownloadall','jsboxupdate','system2sandbox',\
     'jpackagesupload','jpackages2sandbox','jpackagesdownload','jsboxuploadcfg'], help='Command to perform')
 
 parser.add_argument("-b", '--branch', help='branch of jumpscale', default="unstable")
@@ -45,10 +45,12 @@ def download(category,path="",data=False):
     key=getkey()
     if path=="" or path[0]<>"/":
         path="/%s"%path
+    if data:
+        if path[-1]=="/":
+            path=path[:-1]
+        path+="_data"
     if path[-1]<>"/":
         path="%s/"%path
-    if data:
-        path+="_data"
     cmd="rsync -azv %s::download/%s/%s%s %s%s  --delete-after --modify-window=60 --compress"%(ipaddr,\
         key,category,path,opts.sbpath,path)
     print cmd
@@ -149,7 +151,6 @@ if opts.action =='system2sandbox':
     sync("/opt/code/jumpscale/%s__jumpscale_grid/lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
     item="lib"
     sync("/opt/code/jumpscale/%s__jumpscale_lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
-
 
     #grid apps
     sync("/opt/code/jumpscale/%s__jumpscale_grid/apps/agent/"%opts.branch,"%s/apps/agent/"%opts.sbpath)

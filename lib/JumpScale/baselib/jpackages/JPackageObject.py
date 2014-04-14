@@ -274,7 +274,7 @@ class JPackageObject():
                     j.application.loadConfig() #will load that underneath
 
     def loadActions(self, force=False,hrd=True):
-        print "loadactions:%s"%self
+        # print "loadactions:%s"%self
 
         force=True #@todo need more checks, now for first release do always
 
@@ -1555,13 +1555,48 @@ class JPackageObject():
 
         self.actions.upload(onlycode=onlycode)
 
+    def getBlobKeysActive(self):
+        keys=[]
+        for platform,ttype in self.getBlobPlatformTypes():
+            key0,blobitems=self.getBlobInfo(platform,ttype)
+            keys.append(key0)
+        return keys
+
+    def uploadExistingBlobs(self,blobserver,dependencies=False):
+        """
+        @return the non found keys
+        """
+        self.loadActions(force=True)
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.uploadExistingBlobs(blobserver=blobserver)
+
+        keys=self.getBlobKeysActive()
+        bservernew=j.clients.blobstor.get(blobserver)
+        notfound=[]
+        for key in keys:
+            print self,
+            if not bservernew.exists(key):
+                #does not exist on remote bserver yet
+                print "did not find blob %s"%(key),
+                if self.blobstorLocal.exists(key):
+                    print "upload from local."
+                    self.blobstorLocal.copyToOtherBlobStor(key, bservernew)
+                elif self.blobstorRemote.exists(key):
+                    print "upload from remote."
+                    self.blobstorRemote.copyToOtherBlobStor(key, bservernew)
+                else:
+                    print "NOT FOUND"
+                    notfound.append(key)
+        return notfound
+
+
     def _upload(self, remote=True, local=True,onlycode=False):
         """
         Upload jpackages to Blobstor, default remote and local
         Does always a jp.package() first
         """
-
-
 
         self.loadActions(force=True)
         self._calculateBlobInfo()
@@ -1569,7 +1604,6 @@ class JPackageObject():
         for platform,ttype in self.getBlobPlatformTypes():
 
             key0,blobitems=self.getBlobInfo(platform,ttype)
-
 
             pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
@@ -1592,7 +1626,6 @@ class JPackageObject():
                 key, descr, uploadedAnything = self.blobstorRemote.put(pathttype, blobstors=[])
             else:
                 raise RuntimeError("need to upload to local or remote")
-
 
 
             # if uploadedAnything:
