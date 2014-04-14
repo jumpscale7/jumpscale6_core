@@ -163,7 +163,7 @@ class Ubuntu:
         self._cache.commit()
         self._cache.clear()
 
-    def serviceInstall(self,servicename, daemonpath, args='', respawn=True, pwd=None):
+    def serviceInstall(self,servicename, daemonpath, args='', respawn=True, pwd=None,reload=True):
         C="""
 start on runlevel [2345]
 stop on runlevel [016]
@@ -175,7 +175,8 @@ stop on runlevel [016]
         C+="exec %s %s\n"%(daemonpath,args)
 
         j.system.fs.writeFile("/etc/init/%s.conf"%servicename,C)
-        j.system.process.execute("initctl reload-configuration")
+        if reload:
+            j.system.process.execute("initctl reload-configuration")
 
     def serviceUninstall(self,servicename):
         self.stopService(servicename)

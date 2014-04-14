@@ -570,7 +570,7 @@ class StartupManager:
         self._upstartDel(domain,name)
 
         if pd.upstart:
-            j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir)
+            j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir,reload=False)
 
         return pd
 

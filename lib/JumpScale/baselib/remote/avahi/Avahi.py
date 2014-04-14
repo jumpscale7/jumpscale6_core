@@ -2,8 +2,9 @@ from JumpScale import j
 
 class Avahi():
 
-    def __init__(self):
-        j.system.platform.ubuntu.checkInstall(["avahi-utils"],"avahi-browse")
+    # def __init__(self):
+    #     raise RuntimeError("should not init auto")
+    #     j.system.platform.ubuntu.checkInstall(["avahi-utils"],"avahi-browse")
 
     def registerService(self,servicename,port):
         content = """<?xml version=\"1.0\" standalone=\'no\'?>
