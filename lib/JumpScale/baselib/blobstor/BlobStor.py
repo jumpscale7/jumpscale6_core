@@ -63,10 +63,12 @@ class BlobStor:
         """
         targetDirPath = j.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
 
+        resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key})) #@todo gives error when source not found, need other method
+
         try:
             if self.config["type"] <> "local":
                 print "exists %s: "%key,
-            resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key})) #@todo gives error when source not found, need other method
+            
             resultGz = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key})) or \
                        j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key}))
         except Exception, e:

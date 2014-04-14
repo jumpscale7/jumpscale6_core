@@ -1486,8 +1486,9 @@ class JPackageObject():
             self.log("key found:%s for platform:%s type:%s"%(checksum,platform,ttype),category="download",level=6)
             
             key="%s_%s"%(platform,ttype)
-
+            
             if not self.blobstorLocal.exists(checksum):
+                print "try to find remote"
                 self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
 
             force=True

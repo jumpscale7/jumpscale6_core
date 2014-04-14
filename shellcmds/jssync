@@ -7,15 +7,15 @@ import sys,time
 j.application.start("jssync")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['jsboxupload','jsboxuploadall','jsboxdownload','jsboxdownloadall','jsboxupdate','system2sandbox',\
-    'jpackagesupload','jpackages2sandbox','jpackagesdownload','jsboxuploadcfg'], help='Command to perform')
+parser.add_argument("action", choices=['jsboxupload','jsboxuploadall','jpackagesupload','libsupload','cfgupload','baseupload','installerupload',\
+    'jsboxdownload','jsboxdownloadall','jpackagesdownload','libsdownload','basedownload','cfgdownload',\
+    'system2sandbox','libs2sandbox','jpackages2sandbox','cfg2sandbox','base2sandbox'], help='Command to perform')
 
 parser.add_argument("-b", '--branch', help='branch of jumpscale', default="unstable")
 parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable', default="")
 parser.add_argument("-k", '--key', help='secret key (can have ql inside or anything)', default="")
 parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
 parser.add_argument("-j", '--jpdomains', help='specify add domains to look for when syncing/uploading jpackages.', default="")
-
 
 opts = parser.parse_args()
 
@@ -43,16 +43,20 @@ def sync(src,dest,delete=True):
 def download(category,path="",data=False):
     print "DOWNLOAD: %s %s"%(category,path)
     key=getkey()
-    if path=="" or path[0]<>"/":
-        path="/%s"%path
+    category=category.strip("/")
+    path=path.strip("/")
+    path="/%s/"%path
+
     if data:
-        if path[-1]=="/":
-            path=path[:-1]
-        path+="_data"
-    if path[-1]<>"/":
-        path="%s/"%path
-    cmd="rsync -azv %s::download/%s/%s%s %s%s  --delete-after --modify-window=60 --compress"%(ipaddr,\
-        key,category,path,opts.sbpath,path)
+        base="%s_data"%(opts.sbpath)
+        category="%s_data"%(category)
+    else:
+        base=opts.sbpath
+
+    pathfs="%s%s"%(base,path)
+
+    cmd="rsync -azv %s::download/%s/%s%s %s  --delete-after --modify-window=60 --compress"%(ipaddr,\
+        key,category,path,pathfs)
     print cmd
     j.system.process.executeWithoutPipe(cmd)    
 
@@ -75,20 +79,27 @@ def createdir(path):
         cmd="rsync /tmp/empty/ %s"%item
         j.system.process.execute(cmd)
     
-
 def upload(category,path="",data=False):
     print "UPLOAD: %s %s"%(category,path)
     key=getkey()
-    if path=="" or path[0]<>"/":
-        path="/%s"%path    
-    if path[-1]<>"/":
-        path="%s/"%path  
+
+    category=category.strip("/")
+    path=path.strip("/")
+    path="/%s/"%path
+
     if data:
-        path+="_data"
-    src="%s/%s"%(opts.sbpath,path)
-    j.system.fs.removeIrrelevantFiles(src)    
-    cmd="rsync -azvPh %s%s %s::upload/%s/%s%s --delete-after --modify-window=60 --compress --progress  "%(opts.sbpath,\
-        path,ipaddr,key,category,path)
+        base="%s_data"%(opts.sbpath)
+        category="%s_data"%(category)
+    else:
+        base=opts.sbpath
+
+    pathfs="%s%s"%(base,path)
+
+    if not data:
+        j.system.fs.removeIrrelevantFiles(pathfs)
+
+    cmd="rsync -azvPh %s %s::upload/%s/%s%s --delete-after --modify-window=60 --compress --progress  "%(pathfs,\
+        ipaddr,key,category,path)
     for i in range(100):
         try:
             print cmd
@@ -135,7 +146,7 @@ if opts.action =='system2sandbox' or opts.action =='jpackages2sandbox':
                 hrd.set("jp.debug",0)
                 
 #COPY FROM SYSTEM TO SANDBOX for LIBS
-if opts.action =='system2sandbox':
+if opts.action =='system2sandbox' or opts.action =='libs2sandbox':
     if opts.branch=="":
         raise RuntimeError("branch name needs to be specified")
 
@@ -163,42 +174,70 @@ if opts.action =='system2sandbox':
     sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.branch,"%s/tools/"%opts.sbpath,delete=False)
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/libjs/"%opts.branch,"%s/libjs/"%opts.sbpath,delete=False)
 
+
+#COPY FROM SYSTEM TO SANDBOX for LIBS
+if opts.action =='system2sandbox' or opts.action =='cfg2sandbox':
+    if opts.branch=="":
+        raise RuntimeError("branch name needs to be specified")
+
+    cfgdir="%s_data/cfg/"%opts.sbpath
+    j.system.fs.removeDirTree(cfgdir)
+    j.system.fs.createDir(cfgdir)
+
+    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch,cfgdir,delete=False)
+
+if opts.action =='base2sandbox':
+    cmd='jpackage download -n base'
+    j.system.process.executeWithoutPipe(cmd)
+    src="$vardir/jpackages/files/jumpscale/base/2.7/linux64/base/"
+    src=j.dirs.replaceTxtDirVars(src)
+    dest="%s/"%opts.sbpath
+    sync(src,dest,delete=False)
+
 #UPLOAD JPACKAGES
-if opts.action =='jpackagesupload':        
+if opts.action.find('jsboxupload')==0 or opts.action =='jpackagesupload':        
     upload("jsbox","jpackages")
 
-#UPLOAD ALL
-if opts.action =='jsboxuploadall':
-    upload("jsbox")
+if opts.action =='jsboxuploadall'or opts.action =='cfgupload':
+    upload("jsbox","cfg",data=True)
 
-if opts.action =='jsboxupload':
-    raise RuntimeError("to implement")
-    #upload jpackages & libs
-
-if opts.action =='jsboxuploadcfg' or  opts.action =='jsboxuploadall':
-    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch
-    key=getkey()
-    category="jsbox_data"
-    path2="cfg"
-    createdir("%s::upload/%s/%s/%s"%(ipaddr,key,category,path2))       
-    cmd="rsync -azvPh %s %s::upload/%s/%s/%s  --delete-after --modify-window=60 --compress --progress  "%(\
-        path,ipaddr,key,category,path2)
-    print cmd
-    j.system.process.executeWithoutPipe(cmd)    
-
-    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.branch
+if opts.action=='installerupload':
+    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.branch    
     cmd="rsync -azvPh %s %s::www/cmds/ --modify-window=60 --compress --progress  "%(path,ipaddr)
     print cmd
     j.system.process.executeWithoutPipe(cmd)   
 
-if opts.action =='jpackagesdownload':
+if opts.action.find('jsboxupload')==0 or opts.action =='libsupload':
+    upload("jsbox","libjs")
+    upload("jsbox","libext")
+    upload("jsbox","apps/agent")
+    upload("jsbox","apps/blobserver")
+    upload("jsbox","apps/processmanager")
+
+if opts.action.find('jsboxupload')==0 or opts.action =='baseupload':    
+    upload("jsbox","lib")
+    upload("jsbox","bin")
+
+
+#################################
+#DOWNLOAD
+
+if opts.action.find('jsboxdownload')==0 or opts.action =='basedownload':
+    download("jsbox","lib")
+    download("jsbox","bin")
+
+if opts.action.find('jsboxdownload')==0 or opts.action =='jpackagesdownload':
     download("jsbox","jpackages")    
 
-if opts.action =='jsboxdownloadall':  
-    download("jsbox")
-    download("jsbox",data=True)
+if opts.action.find('jsboxdownload')==0 or opts.action =='libsdownload':
+    download("jsbox","libjs")
+    download("jsbox","libext")
+    download("jsbox","apps/agent")
+    download("jsbox","apps/blobserver")
+    download("jsbox","apps/processmanager")
 
-if opts.action =='jsboxupdate':
-    download("jsbox")
+if opts.action =='jsboxdownloadall' or opts.action =='cfgdownload': 
+    download("jsbox","cfg",data=True) 
+
 
 j.application.stop()
