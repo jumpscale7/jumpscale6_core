@@ -95,6 +95,7 @@ class BlobStor:
     def _download(self, key, destination, uncompress=True, keepTempFile=False):
         metadata = self.getMetadata(key)
         hashh = metadata.hash
+        filetype = metadata.filetype
         targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
             targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")

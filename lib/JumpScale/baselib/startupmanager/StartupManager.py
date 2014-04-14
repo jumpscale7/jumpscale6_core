@@ -11,10 +11,10 @@ class ProcessNotFoundException(Exception):
     pass
 
 class ProcessDefEmpty:
-    def __init__(self,name,pids=[]):
+    def __init__(self,name):
         self.autostart=False
         self.path=""
-        self.pids=pids
+        self.pids=[]
         self.procname=name
         if name.find(":")<>-1:
             domain,name=name.split(":")
@@ -33,7 +33,7 @@ class ProcessDefEmpty:
         self.reload_signal=0
         self.stopcmd = ""
         self.plog=False
-        self.numprocesses = len(pids)
+        self.numprocesses = 0
         self.workingdir=""
         self.ports=[]
         self.jpackage_domain=""
@@ -43,9 +43,15 @@ class ProcessDefEmpty:
         self.upstart = False
         self.processfilterstr=""
         self.system=True
+        self.isRunning()
 
     def isRunning(self):
-        return True
+        self.pids=j.system.process.appGetPidsActive(self.name)
+        self.numprocesses=len(self.pids)
+        return len(self.pids)>0
+
+    def getPids(self):
+        return j.system.process.appGetPidsActive(self.name)
 
 class ProcessDef:
     def __init__(self, hrd,path):
@@ -627,7 +633,7 @@ class StartupManager:
 
             for sname,spids in j.system.process.appsGet().iteritems():
                 if sname not in names:
-                    processes.append(ProcessDefEmpty(sname,spids))
+                    processes.append(ProcessDefEmpty(sname))
 
         processes.sort(key=lambda pd: pd.priority)
             

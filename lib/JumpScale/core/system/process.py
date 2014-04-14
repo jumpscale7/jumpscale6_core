@@ -1418,6 +1418,10 @@ class SystemProcess:
 
         if exitcode !=0 and dieOnNonZeroExitCode:
             j.logger.log("command: [%s]\nexitcode:%s\noutput:%s\nerror:%s" % (command, exitcode, output, error), 3)
+            from IPython import embed
+            print "DEBUG NOW ooo"
+            embed()
+            
             raise RuntimeError("Error during execution! (system.process.execute())\n\nCommand: [%s]\n\nExitcode: %s\n\nProgram output:\n%s\n\nErrormessage:\n%s\n" % (command, exitcode, output, error))
 
         return exitcode, output
@@ -1793,10 +1797,29 @@ class SystemProcess:
             raise RuntimeError("Make sure redis is running for port 7766")
         return j.application.redis.hkeys("application")
 
+    def getDefunctProcesses(self):
+        rc,out=j.system.process.execute("ps ax")
+        llist=[]
+        for line in out.split("\n"):
+            if line.strip()=="":
+                continue
+            if line.find("<defunct>")<>-1:
+                # print "defunct:%s"%line
+                line=line.strip()
+                pid=line.split(" ",1)[0]
+                pid=int(pid.strip())
+                llist.append(pid)
+
+        return llist
+
     def appsGet(self):
+
+        defunctlist=self.getDefunctProcesses()
         result={}
         for item in self.appsGetNames():
             pids=self.appGetPidsActive(item)
+            pids=[pid for pid in pids if pid not in defunctlist]
+                
             if pids==[]:
                 j.application.redis.hdelete("application",item)
             else:
@@ -1808,7 +1831,7 @@ class SystemProcess:
         todelete=[]
         for pid in pids:
             if not self.isPidAlive(pid):
-                todelete.append(pid)
+                todelete.append(pid)        
         for item in todelete:
             pids.remove(item)
         j.application.redis.hset("application",appname,json.dumps(pids))

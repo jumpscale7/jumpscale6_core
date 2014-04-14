@@ -10,11 +10,11 @@ parser.add_argument("-n", '--name', help='Process name')
 parser.add_argument("-d", '--domain', help='Process domain')
 parser.add_argument("-c", '--carefull', action='store_true', default=False, help='Check each startup status, die if one could not start.')
 
-FORMAT = "%-20s %-20s %-10s %-12s %-10s %-2s %s"
+FORMAT = "%-20s %-20s %-10s %-12s %-10s %-1s %-2s %s"
 
 opts = parser.parse_args()
 if opts.action in ('list', 'status'):
-    print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART','#','PIDS')
+    print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART','S','#','PIDS')
     print '-'* 100
     print
 
@@ -89,7 +89,11 @@ for pd in pds:
         pids=[str(item) for item in pd.pids ]
         pids=",".join(pids)
 
-        print FORMAT % (pd.domain, pd.name, pd.priority, status, active,pd.numprocesses,pids)
+        if pd.system:
+            syst="S"
+        else:
+            syst=" "
+        print FORMAT % (pd.domain, pd.name, pd.priority, status, active,syst,pd.numprocesses,pids)
     else:
         getattr(pd, opts.action)()
 

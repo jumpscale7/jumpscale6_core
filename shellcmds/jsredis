@@ -36,6 +36,7 @@ if opts.action =='workerwatchdog':
         print "%-20s %s"%(workername,timeago(last))
 
 elif opts.action =='apps':
+    j.system.process.appsGet()
     items = redism.hgetall("application")
     items2=zip(items[0::2], items[1::2])
     for name, val in items2:
