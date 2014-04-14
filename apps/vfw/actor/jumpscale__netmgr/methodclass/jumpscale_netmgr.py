@@ -68,7 +68,6 @@ class jumpscale_netmgr(j.code.classGetBase()):
         result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args)['result']
         if result:
             self.osisvfw.delete(fwid)
-
         return result
 
     def _applyconfig(self, nid, args):
@@ -116,6 +115,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 fwobj.tcpForwardRules.remove(rule)
                 args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': fwobj.obj2dict()}
                 result = self._applyconfig(fwobj.nid, args)
+                if result:
+                    self.osisvfw.set(fwobj)
         return result
     
 
