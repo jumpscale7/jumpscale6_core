@@ -21,10 +21,11 @@ graphite:8081
 
 shellinabox:5577
 
-redisac:7769
 webdis:7779
 
+redisac:7769
 redisproduction:7768
+reidismain: 7766 (for process manager)
 rediscache:7767
 
 redis for apps & processes & watchdog:7766
