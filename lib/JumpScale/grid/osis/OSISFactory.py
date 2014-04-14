@@ -89,9 +89,6 @@ class OSISFactory:
         if not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
             j.packages.findNewest(name="elasticsearch").install()
             j.packages.findNewest(name="elasticsearch").start()
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003):
-            j.packages.findNewest(name="graphite").install()
-            j.packages.findNewest(name="graphite").start()
 
         if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003) or not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
             raise RuntimeError("cannot start osis, could not find running elastic search and/or carbon/graphite")
