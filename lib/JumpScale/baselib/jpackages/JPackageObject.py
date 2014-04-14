@@ -295,6 +295,12 @@ class JPackageObject():
 
         self.actions = ActionManager(self)
 
+        self.loadBlobStores()
+
+        # print "loadactionsdone:%s"%self
+
+    def loadBlobStores(self):
+
         do = j.packages.getDomainObject(self.domain)
         if do.blobstorremote.strip() <> "":
             self.blobstorRemote = j.clients.blobstor.get(do.blobstorremote)
@@ -305,7 +311,7 @@ class JPackageObject():
         if self.blobstorRemote ==None or   self.blobstorLocal==None:
             raise RuntimeError("DEBUG NOW blobstorremote or blobstorlocal needs to be available")
 
-        # print "loadactionsdone:%s"%self
+        
             
     def getDebugMode(self):
         return self.state.debugMode
@@ -1566,7 +1572,7 @@ class JPackageObject():
         """
         @return the non found keys
         """
-        self.loadActions(force=True)
+        self.loadBlobStores()
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
