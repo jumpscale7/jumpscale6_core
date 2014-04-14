@@ -1418,10 +1418,6 @@ class SystemProcess:
 
         if exitcode !=0 and dieOnNonZeroExitCode:
             j.logger.log("command: [%s]\nexitcode:%s\noutput:%s\nerror:%s" % (command, exitcode, output, error), 3)
-            from IPython import embed
-            print "DEBUG NOW ooo"
-            embed()
-            
             raise RuntimeError("Error during execution! (system.process.execute())\n\nCommand: [%s]\n\nExitcode: %s\n\nProgram output:\n%s\n\nErrormessage:\n%s\n" % (command, exitcode, output, error))
 
         return exitcode, output
