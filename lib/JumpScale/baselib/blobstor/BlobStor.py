@@ -94,7 +94,6 @@ class BlobStor:
 
     def _download(self, key, destination, uncompress=True, keepTempFile=False):
         metadata = self.getMetadata(key)
-        filetype = metadata.filetype
         hashh = metadata.hash
         targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
@@ -151,14 +150,29 @@ class BlobStor:
         return metadata.hash == hashh
 
     def copyToOtherBlobStor(self, key, blobstor):
-        if True or not blobstor.exists(key):
-            tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
+        if self.exists(key):
             if not blobstor.exists(key):
-                self._put(blobstor, metadata, tmpfile)
-            # if not self.config['type'] == 'local':
-            j.system.fs.remove(tmpfile)
+                if self.config['type'] == 'local':
+                    metadata = self.getMetadata(key)                    
+                    hashh = metadata.hash
+                    targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
+                    if metadata.filetype == "file":
+                        targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
+                    else:
+                        targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".tgz")
+                    targetFileNameTgz=targetFileNameTgz.replace("file://","")
+                    md5=j.tools.hash.md5(targetFileNameTgz)
+                    if md5<> metadata.md5:
+                        raise RuntimeError("source file not ok, hash error: %s"%targetFileNameTgz)
+                    self._put(blobstor, metadata, targetFileNameTgz)
+                else:                
+                    tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
+                    self._put(blobstor, metadata, tmpfile)
+                    j.system.fs.remove(tmpfile)
+            else:
+                j.clients.blobstor.log("No need to download '%s' to blobstor, because is already there" % key, "download")
         else:
-            j.clients.blobstor.log("No need to download '%s' to blobstor, because is already there" % key, "download")
+            print "COULD NOT FIND %s on %s"%(key,blobstor)
 
     def _put(self, blobstor, metadata, tmpfile):
         # print "put:%s"%tmpfile

@@ -1591,6 +1591,7 @@ class JPackageObject():
                     self.blobstorLocal.copyToOtherBlobStor(key, bservernew)
                 elif self.blobstorRemote.exists(key):
                     print "upload from remote."
+                    
                     self.blobstorRemote.copyToOtherBlobStor(key, bservernew)
                 else:
                     print "blob %s not on sources."%key

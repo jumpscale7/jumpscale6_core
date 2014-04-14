@@ -224,7 +224,7 @@ elif args.action == 'upload':
                 if len(notfound)>0:
                     errors.append(str(package))
         if len(errors)>0:
-            print "JPACKAGES WITH INCOMPLETE BLOBS ON REMOTE SERVER:"
+            print "\nJPACKAGES WITH NO BLOBS ON REMOTE SERVER:"
             for error in errors:
                 print error
 
