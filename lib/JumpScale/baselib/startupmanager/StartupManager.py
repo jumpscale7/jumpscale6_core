@@ -306,7 +306,10 @@ class ProcessDef:
             timeout=2 #should not be 0 otherwise dont go in while loop
 
         if self.isJSapp:
+            if not j.system.net.tcpPortConnectionTest("localhost",7766):
+                return []
             while len(pids) <> self.numprocesses and now<timeout:
+
                 pids = self._getPidsFromRedis()
                 if len(pids) == self.numprocesses or wait==False:
                     self.pids=pids
