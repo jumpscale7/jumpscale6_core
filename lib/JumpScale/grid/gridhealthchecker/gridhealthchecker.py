@@ -25,7 +25,8 @@ class GridHealthChecker(object):
         self._errors = dict()
         self._status = dict()
         self._tostdout = True
-        with j.logger.nostdout() as _:
+        self.masternid = 0
+        with j.logger.nostdout():
             self.getNodes()
 
     def _clean(self):

@@ -22,16 +22,16 @@ def action():
     import JumpScale.baselib.redis
 
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
-    workersCheck = {'worker_default_0': '-2m', 'worker_hypervisor_0': '-10m', 'worker_io_0': '-2h', 'worker_default_1': '-2m'}
-
+    timemap = {'default': '-2m', 'io': '-2h', 'hypervisor': '-10m'}
+    prefix = 'workers__worker_'
+    workers = [ x[len(prefix):] for x in j.tools.startupmanager.listProcesses() if x.startswith(prefix) ]
     workers2 = rediscl.hgetall("workers:watchdog")
     foundworkers={}
     for workername, timeout in zip(workers2[0::2], workers2[1::2]):
         foundworkers[workername]=timeout
 
-    for worker, timeout in workersCheck.iteritems():
-        lastactive=foundworkers[worker]
+    for worker in workers:
+        timeout = timemap.get(worker.split('_')[0])
+        lastactive=foundworkers.get('worker_%s' % worker, 0)
         if j.base.time.getEpochAgo(timeout) > lastactive:
             j.events.opserror('Worker %s seems to have timed out' % worker, 'monitoring')
-
-
