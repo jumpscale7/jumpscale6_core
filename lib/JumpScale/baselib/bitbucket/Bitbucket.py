@@ -272,9 +272,9 @@ class BitbucketConnection(object):
         url += "%s/"%repoName
 
         hgrcpath=j.system.fs.joinPaths(self.getCodeFolder(repoName,branch=branch),".hg","hgrc")
-        if j.system.fs.exists(hgrcpath):
-            editor=j.codetools.getTextFileEditor(hgrcpath)
-            editor.replace1Line("default=%s" % url,["default *=.*"])
+        # if j.system.fs.exists(hgrcpath):
+        #     editor=j.codetools.getTextFileEditor(hgrcpath)
+        #     editor.replace1Line("default=%s" % url,["default *=.*"])
         j.clients.bitbucket.log("init mercurial client ##%s## on path:%s"%(repoName,self.getCodeFolder(repoName,branch)),category="getclient")
         cl = j.clients.mercurial.getClient(self.getCodeFolder(repoName,branch=branch), url, branchname=branch)
         # j.clients.bitbucket.log("mercurial client inited for repo:%s"%repoName,category="getclient")

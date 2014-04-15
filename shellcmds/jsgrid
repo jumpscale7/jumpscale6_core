@@ -135,6 +135,9 @@ if opts.action == 'purgelogs':
         query['range'] = dict()
         query['range']['epoch'] = dict()
         query['range']['epoch']['from'] = _getEpoch(opts.ffrom)
+    
+    if opts.to==None:
+        opts.to="-1h"
 
     if opts.to:
         if 'range' not in query:
@@ -144,8 +147,13 @@ if opts.action == 'purgelogs':
     if query:
         result = esclient.delete_by_query(index='system_log', query=query, doc_type='json')
         if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
-            print 'purgelogs executed successfully'
-
+            print 'purge logs executed successfully'
+        result = esclient.delete_by_query(index='system_eco', query=query, doc_type='json')        
+        if result['_indices']['system_eco']['_shards']['successful'] == result['_indices']['system_eco']['_shards']['total'] and result['ok']:
+            print 'purge ecos executed successfully'
+        result = esclient.delete_by_query(index='system_job', query=query, doc_type='json')
+        if result['_indices']['system_job']['_shards']['successful'] == result['_indices']['system_job']['_shards']['total'] and result['ok']:
+            print 'purge jobs executed successfully'
 
 #################NODE ACTIONS####################################
 def _deleteNode(node):
