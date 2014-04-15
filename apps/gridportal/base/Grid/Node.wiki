@@ -37,6 +37,9 @@ h3. Machines
 h3. Logs
 {{logs: nid:$$id}}
 
+h3. ECOs
+{{ecos: nid:$$id}}
+
 
 h3. Disks
 {{disks: nid:$$id}}
