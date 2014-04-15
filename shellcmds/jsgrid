@@ -7,7 +7,7 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'deletenode',\
+parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'purgejobs', 'purgeecos', 'deletenode',\
         'restartprocessmgrs','reloadjumpscripts','restartWorkers', 'listnodes', 'enablenode', 'disablenode', 'setrole', 'deleterole'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
@@ -149,11 +149,23 @@ if opts.action == 'purgelogs':
         if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
             print 'purge logs executed successfully'
         result = esclient.delete_by_query(index='system_eco', query=query, doc_type='json')        
-        if result['_indices']['system_eco']['_shards']['successful'] == result['_indices']['system_eco']['_shards']['total'] and result['ok']:
-            print 'purge ecos executed successfully'
-        result = esclient.delete_by_query(index='system_job', query=query, doc_type='json')
-        if result['_indices']['system_job']['_shards']['successful'] == result['_indices']['system_job']['_shards']['total'] and result['ok']:
-            print 'purge jobs executed successfully'
+
+#################PURGEJOBS AND PURGEECOs
+if opts.action in ['purgejobs', 'purgeecos']:
+    import JumpScale.grid.osis
+    print "This may take a while"
+    oscl = j.core.osis.getClient(user='root')
+    if opts.action == 'purgejobs':
+        catclient = j.core.osis.getClientForCategory(oscl, 'system', 'job')
+    if opts.action == 'purgeecos':
+        catclient = j.core.osis.getClientForCategory(oscl, 'system', 'eco')
+
+    total, results = catclient.simpleSearch({}, size=0, withguid=True, withtotal=True)
+    results = catclient.simpleSearch({}, size=total, withguid=True)
+    for result in results:
+        guid = result['guid']
+        catclient.delete(guid)
+    print 'purge executed successfully'
 
 #################NODE ACTIONS####################################
 def _deleteNode(node):
