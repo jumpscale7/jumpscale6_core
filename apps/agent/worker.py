@@ -6,7 +6,7 @@ import ujson
 import psutil
 import imp
 import random
-
+import JumpScale.baselib.taskletengine
 from JumpScale.baselib import cmdutils
 from JumpScale import j
 
