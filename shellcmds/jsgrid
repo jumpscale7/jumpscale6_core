@@ -8,7 +8,7 @@ j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'deletenode',\
-        'restartprocessmgrs','reloadjumpscripts','restartWorkers', 'listnodes', 'enablenode', 'disablenode', 'setrole'], help='Command to perform')
+        'restartprocessmgrs','reloadjumpscripts','restartWorkers', 'listnodes', 'enablenode', 'disablenode', 'setrole', 'deleterole'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
@@ -18,7 +18,7 @@ parser.add_argument('--debug',required=False, action='store_true',help='will sto
 parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
 parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
 parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='used with deletenode, ex: -nid=1(note the = sign)')
-parser.add_argument('-roles', dest='roles', required=False, type=str, help='Used with setroles. Overrides roles, ex: -roles=node, computenode.kvm(note the = sign). List is comma seperated')
+parser.add_argument('-roles', dest='roles', required=False, type=str, help='Used with setroles or deleterole. ex: -roles=node, computenode.kvm(note the = sign). List is comma seperated')
 
 
 #check redis is there if not try to start
@@ -183,7 +183,7 @@ def _deleteNode(node):
                 guid = result['guid']
                 catclient.delete(guid)
 
-if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listnodes']:
+if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listnodes', 'deleterole']:
     import JumpScale.grid.osis
 
     oscl = j.core.osis.getClient(user='root')
@@ -225,15 +225,30 @@ if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listno
                     node['active'] = False
                     ncl.set(node)
                 elif opts.action == 'setrole':
-                    r=[]
-                    for role in opts.roles.split(","):
-                        if role.lower().strip() not in r:
-                            r.append(role)
-                    if not opts.roles:
-                        roles = str(j.console.askString("Enter node roles (Seperated by ',')", default=node['roles']))
+                    r = node['roles']
+                    if opts.roles:
+                        for role in opts.roles.split(","):
+                            if role.lower().strip() not in r:
+                                r.append(role)
+                    else:
+                        roles = str(j.console.askString("Enter node roles (Seperated by ',')", defaultparam=','.join(node['roles'])))
                         for role in roles.split(","):
                             if role.lower().strip() not in r:
                                 r.append(role)
+                    r.sort()
+                    node['roles'] = r
+                    ncl.set(node)
+                elif opts.action == 'deleterole':
+                    r = node['roles']
+                    if opts.roles:
+                        for role in opts.roles.split(","):
+                            if role.lower().strip() in r:
+                                r.remove(role)
+                    else:
+                        roles = j.console.askChoiceMultiple(r, "Choose which roles to remove")
+                        for role in roles:
+                            if role.lower().strip() in r:
+                                r.remove(role)
                     r.sort()
                     node['roles'] = r
                     ncl.set(node)
