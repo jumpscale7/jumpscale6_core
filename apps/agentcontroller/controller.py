@@ -9,6 +9,7 @@ import importlib
 import inspect
 import ujson as json
 import time
+from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
     time.sleep(0.1)
@@ -208,8 +209,7 @@ class ControllerCMDS():
                 continue
 
             try:
-                fname="%s_%s"%(j.system.fs.getParentDirName(j.system.fs.getDirName(path2)),j.system.fs.getBaseName(path2).replace(".py",""))                
-                script = imp.load_source('jumpscript_pm_%s' % fname, path2)
+                script = JumpScript(path=path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
@@ -223,27 +223,8 @@ class ControllerCMDS():
                 name=j.system.fs.getBaseName(path2)
                 name=name.replace(".py","").lower()
 
-            source = inspect.getsource(script)
-            t=self.jumpscriptclient.new(name=name,action=script.action)
-            t.name=name
-            t.author=getattr(script, 'author', "unknown")
-            t.organization=getattr(script, 'organization', "unknown")
-            t.category=getattr(script, 'category', "unknown")
-            t.license=getattr(script, 'license', "unknown")
-            t.version=getattr(script, 'version', "1.0")
-            t.roles=getattr(script, 'roles', ["*"])
-            t.source=source
-            t.path=path2
-            t.descr=script.descr
-            t.queue=getattr(script, 'queue',"default")
-            t.async = getattr(script, 'async',False)
-            t.period=getattr(script, 'period',0)
-            t.order=getattr(script, 'order', 1)
-            t.log=getattr(script, 'log', True)
-            t.enable=getattr(script, 'enable', True)
-            t.startatboot=getattr(script, 'startatboot', False)
-            t.gid=getattr(script, 'gid', j.application.whoAmI.gid)
-
+            t=self.jumpscriptclient.new(name=script.name, action=script.module.action)
+            t.__dict__.update(script.getDict())
 
             guid,r,r=self.jumpscriptclient.set(t)
             t=self.jumpscriptclient.get(guid)

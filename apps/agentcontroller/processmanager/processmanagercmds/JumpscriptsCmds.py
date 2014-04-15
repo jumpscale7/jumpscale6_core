@@ -1,10 +1,5 @@
 from JumpScale import j
 import gevent
-import copy
-import inspect
-import imp
-import time
-import sys
 import ujson
 from redis import Redis
 # from rq import Queue
@@ -58,7 +53,28 @@ class JumpscriptsCmds():
         self.jumpscriptsByPeriod={}
         self.jumpscripts={}
 
-        #ASK agentcontroller about known jumpscripts 
+        jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager', 'jumpscripts')
+        if j.system.fs.exists(jspath):
+            startatboot = self._loadFromPath(jspath)
+        else:
+            startatboot = self._loadFromAC()
+
+        self._killGreenLets()
+        self._configureScheduling()
+        self._startAtBoot(startatboot)
+        return "ok"
+
+    def _loadFromPath(self, path):
+        startatboot = list()
+        jumpscripts = self.agentcontroller_client.listJumpScripts()
+        iddict = { (org, name): jsid for jsid, org, name, _,_ in jumpscripts }
+        for jscriptpath in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
+            js = JumpScript(path=jscriptpath)
+            js.id = iddict[(js.organization, js.name)]
+            self._processJumpScript(js, startatboot)
+        return startatboot
+
+    def _loadFromAC(self):
         startatboot = list()
         jumpscripts = self.agentcontroller_client.listJumpScripts()
         for jsid,organization, name, category, descr in jumpscripts:
@@ -66,33 +82,33 @@ class JumpscriptsCmds():
             if jumpscript_data=="":
                 raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
             jumpscript = JumpScript(jumpscript_data)
-            if jumpscript.enable:
+            self._processJumpScript(jumpscript, startatboot)
+        return startatboot
 
-                self.jumpscripts["%s_%s"%(organization,name)]=jumpscript
+    def _processJumpScript(self, jumpscript, startatboot):
+        if jumpscript.enable:
+            organization = jumpscript.organization
+            name = jumpscript.name
+            self.jumpscripts["%s_%s"%(organization,name)]=jumpscript
 
-                print "found jumpscript:%s " %("%s_%s" % (organization, name))
-                # self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
-                period = jumpscript.period
-                if period<>None:
-                    period=int(period)
-                    if period>0:
-                        if period not in self.jumpscriptsByPeriod:
-                            self.jumpscriptsByPeriod[period]=[]
-                        print "schedule jumpscript %s on period:%s"%(jumpscript.name,period)
-                        self.jumpscriptsByPeriod[period].append(jumpscript)
+            print "found jumpscript:%s " %("%s_%s" % (organization, name))
+            # self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
+            period = jumpscript.period
+            if period<>None:
+                period=int(period)
+                if period>0:
+                    if period not in self.jumpscriptsByPeriod:
+                        self.jumpscriptsByPeriod[period]=[]
+                    print "schedule jumpscript %s on period:%s"%(jumpscript.name,period)
+                    self.jumpscriptsByPeriod[period].append(jumpscript)
 
-                if jumpscript.startatboot:
-                    startatboot.append(jumpscript)
+            if jumpscript.startatboot:
+                startatboot.append(jumpscript)
 
-                self.redis.hset("workers:jumpscripts:id",jumpscript.id, ujson.dumps(jumpscript_data))
+            self.redis.hset("workers:jumpscripts:id",jumpscript.id, ujson.dumps(jumpscript.getDict()))
 
-                if jumpscript.organization<>"" and jumpscript.name<>"":
-                    self.redis.hset("workers:jumpscripts:name","%s__%s"%(jumpscript.organization,jumpscript.name), ujson.dumps(jumpscript_data))
-
-        self._killGreenLets()
-        self._configureScheduling()
-        self._startAtBoot(startatboot)
-        return "ok"
+            if jumpscript.organization<>"" and jumpscript.name<>"":
+                self.redis.hset("workers:jumpscripts:name","%s__%s"%(jumpscript.organization,jumpscript.name), ujson.dumps(jumpscript.getDict()))
 
     ####SCHEDULING###
 
