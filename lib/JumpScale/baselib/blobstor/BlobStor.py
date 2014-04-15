@@ -185,7 +185,7 @@ class BlobStor:
         # print "put:%s"%tmpfile
         hashh = metadata.hash
 
-        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(), hashh[0:2], hashh[2:4])
+        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(['ftp']), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
             targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
         else:
