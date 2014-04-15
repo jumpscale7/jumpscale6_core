@@ -208,6 +208,8 @@ class JPackageClient():
         @param name:    string - The name of the jpackages
         @param version: string - The version of the jpackages
         """
+        if domain.find("jp_")==0:
+            raise RuntimeError("domain should not start with jp_")
         self._init()
         # return a package from the default repo
         key = '%s%s%s' % (domain,name,version)
@@ -533,6 +535,7 @@ class JPackageClient():
                         hrdfile = j.system.fs.joinPaths(packagepath, version, 'hrd', 'main.hrd')
                         if j.system.fs.exists(hrdfile):
                             res.append([domainName,packagename,version])
+
         return res
 
     def getJPackageObjects(self, platform=None, domain=None):

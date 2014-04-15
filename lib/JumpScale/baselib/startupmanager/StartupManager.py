@@ -53,6 +53,20 @@ class ProcessDefEmpty:
     def getPids(self):
         return j.system.process.appGetPidsActive(self.name)
 
+    def __str__(self):
+        if self.system:
+            s="S"
+        else:
+            s=" "
+        if self.isJSapp:
+            j="J"
+        else:
+            j=" "
+        out="%-20s %-20s %-2s %-2s %s"%(self.domain,self.name,s,j,self.processfilterstr)
+        return out
+
+    __repr__=__str__
+
 class ProcessDef:
     def __init__(self, hrd,path):
         self.hrd=hrd
@@ -454,7 +468,19 @@ class ProcessDef:
             self.restart()
 
     def __str__(self):
-        return str("Process: %s_%s"%(self.domain,self.name))
+        if self.system:
+            s="S"
+        else:
+            s=" "
+        if self.isJSapp:
+            j="J"
+        else:
+            j=" "
+        out="%-20s %-20s %-2s %-2s %s"%(self.domain,self.name,s,j,self.processfilterstr)
+        return out
+
+    __repr__=__str__
+
 
     __repr__ = __str__
 

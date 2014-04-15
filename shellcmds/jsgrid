@@ -183,13 +183,26 @@ if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listno
 
 
     if opts.action == 'listnodes':
-        form = '%(nid)-8s %(name)-20s %(ips)20s %(active)8s %(roles)25s'
+        form = '%(nid)-8s %(name)-11s %(ips)-60s %(active)-8s %(roles)-25s'
         print form % {'nid': 'NODE ID', 'name': 'NAME', 'ips': 'IP ADDRESS', 'active': 'ACTIVE', \
             'roles':'ROLES'}
         print '=' * 100
         print ''
+        ns={}
         for node in ncl.simpleSearch({}, size=0):
-            print form % {'nid': node['id'], 'name': node['name'], 'ips': ', '.join(node['ipaddr']), 'active': node['active'], 'roles': ', '.join(node['roles'])}
+
+            name=node['name'].strip()
+            if len(name)>10:
+                name=name[:11]
+            ips=', '.join(node['ipaddr'])
+            if len(ips)>60:
+                ips=ips[:51]            
+            ns[name]={'nid': node['id'], 'name': name, 'ips': ips, 'active': node['active'], 'roles': ', '.join(node['roles'])}
+
+        nsnames=ns.keys()
+        nsnames.sort()
+        for nsn in nsnames:
+            print form % ns[nsn]
     else:
         if not opts.nid:
             choicearray = [node['name'] for node in ncl.simpleSearch({}, size=0)]
@@ -204,11 +217,17 @@ if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listno
                     node['active'] = False
                     ncl.set(node)
                 elif opts.action == 'setrole':
+                    r=[]
+                    for role in opts.roles.split(","):
+                        if role.lower().strip() not in r:
+                            r.append(role)
                     if not opts.roles:
-                        roles = str(j.console.askString("Enter node roles (Seperated by ',')", node['roles']))
-                    noderoles = opts.roles or roles
-                    noderoles = noderoles.split(',')
-                    node['roles'] = noderoles
+                        roles = str(j.console.askString("Enter node roles (Seperated by ',')", default=node['roles']))
+                        for role in roles.split(","):
+                            if role.lower().strip() not in r:
+                                r.append(role)
+                    r.sort()
+                    node['roles'] = r
                     ncl.set(node)
         else:
             node = ncl.simpleSearch({'id':opts.nid}, withguid=True)
