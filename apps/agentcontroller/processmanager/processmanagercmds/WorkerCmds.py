@@ -57,13 +57,13 @@ class WorkerCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         for workername in self.getWorkersWatchdogTime().keys():
-            redis.set("workers:action:%s"%workername,"STOP")
+            self.redis.set("workers:action:%s"%workername,"STOP")
 
     def reloadWorkers(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         for workername in self.getWorkersWatchdogTime().keys():
-            redis.set("workers:action:%s"%workername,"RELOAD")
+            self.redis.set("workers:action:%s"%workername,"RELOAD")
 
     def removeJobs(self, hoursago=48, failed=False, session=None):
         """

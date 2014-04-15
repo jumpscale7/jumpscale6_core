@@ -7,6 +7,7 @@ import importlib
 import time
 import imp
 import inspect
+import linecache
 
 class Dummy():
     pass
@@ -41,7 +42,9 @@ from JumpScale import j
 
     def load(self):
         md5sum = j.tools.hash.md5_string(self.path)
-        self.module = imp.load_source('JumpScale.jumpscript_%s' % md5sum, self.path)
+        modulename = 'JumpScale.jumpscript_%s' % md5sum
+        linecache.checkcache(self.path)
+        self.module = imp.load_source(modulename, self.path)
 
     def getDict(self):
         result = dict()

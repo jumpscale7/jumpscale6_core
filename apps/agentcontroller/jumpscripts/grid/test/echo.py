@@ -16,6 +16,3 @@ roles = ["*"]
 def action(msg):
     print msg
     return msg
-
-
-
