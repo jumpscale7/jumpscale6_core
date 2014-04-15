@@ -148,7 +148,7 @@ if opts.action == 'purgelogs':
         result = esclient.delete_by_query(index='system_log', query=query, doc_type='json')
         if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
             print 'purge logs executed successfully'
-        result = esclient.delete_by_query(index='system_eco', query=query, doc_type='json')        
+        result = esclient.delete_by_query(index='system_eco', query=query, doc_type='json')
 
 #################PURGEJOBS AND PURGEECOs
 if opts.action in ['purgejobs', 'purgeecos']:
@@ -225,9 +225,12 @@ if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listno
             print form % ns[nsn]
     else:
         if not opts.nid:
-            choicearray = [node['name'] for node in ncl.simpleSearch({}, size=0)]
+            nodes = dict()
+            for node in ncl.simpleSearch({}, size=0):
+                nodes[node['name']] = node
+            choicearray = nodes.keys()
             for item in j.console.askChoiceMultiple(choicearray,"Select node"):
-                node = ncl.simpleSearch({'name': item}, size=0)[0]
+                node = nodes[item]
                 if opts.action == 'deletenode':
                     _deleteNode(item)
                 elif opts.action == 'enablenode':
