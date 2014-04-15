@@ -37,9 +37,13 @@ class BlobStor:
         self.config = configitem
 
     def _getDestination(self, destproto=None):
-        # if not destproto:
-        #     destproto = ('http', 'ftp')
-        destproto=['ftp']
+        if not destproto:
+            if self.config['type'] == 'httpftp':
+                destproto = ('http', 'ftp')
+            elif self.config['type'] == 'ftp':
+                destproto = ('ftp',)
+            elif self.config['type'] == 'http':
+                destproto = ('http',)
         if self.config["type"] == "local":
             return 'file://' + self.config["localpath"] + "/%s/" % self.namespace
         else:
