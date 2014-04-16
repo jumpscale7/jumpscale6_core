@@ -153,7 +153,7 @@ def action():
 
     #walk over startupmanager processes (make sure we don't double count)
     for sprocess in j.tools.startupmanager.getProcessDefs():
-        pid = sprocess.getJSPid(ifNoPidFail=False)
+        pid = sprocess.getJSPid()
 
         if j.core.processmanager.monObjects.processobject.pid2name.has_key(pid):
             sprocess.domain,sprocess.name=j.core.processmanager.monObjects.processobject.pid2name[pid]
