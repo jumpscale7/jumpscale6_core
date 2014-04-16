@@ -259,9 +259,9 @@ class SystemFS:
         self.log("WARNING: renameFIle should not be used")
         return self.move(filePath,new_name)
 
-    def removeIrrelevantFiles(self,path):
+    def removeIrrelevantFiles(self,path,followSymlinks=True):
         ext=["pyc","bak"]
-        for path in self.listFilesInDir(path,recursive=True):
+        for path in self.listFilesInDir(path,recursive=True,followSymlinks=followSymlinks):
             if self.getFileExtension(path) in ext:
                 self.remove(path)
 
