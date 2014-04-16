@@ -2,6 +2,11 @@
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
+try:
+    import ujson as json
+except:
+    import json
+
 import sys,time
 
 j.application.start("jsgrid")
@@ -118,7 +123,7 @@ if opts.action == 'restartWorkers':
 
 
 #################PURGELOGS
-if opts.action == 'purgelogs':
+if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
     import JumpScale.baselib.elasticsearch
     def _getEpoch(time):
         if not time:
@@ -131,41 +136,41 @@ if opts.action == 'purgelogs':
 
     esclient = j.clients.elasticsearch.get()
     query = dict()
+
+    if opts.action in ['purgelogs', 'purgeecos']:
+        timeElement='epoch'
+    elif opts.action in ['purgejobs']:
+        timeElement='timeStart'
+    
     if opts.ffrom:
         query['range'] = dict()
-        query['range']['epoch'] = dict()
-        query['range']['epoch']['from'] = _getEpoch(opts.ffrom)
+        query['range'][timeElement] = dict()
+        query['range'][timeElement]['gt'] = int(_getEpoch(opts.ffrom))
     
     if opts.to==None:
-        opts.to="-1h"
+        opts.to="-4h"
 
     if opts.to:
         if 'range' not in query:
             query['range'] = dict()
-            query['range']['epoch'] = dict()
-        query['range']['epoch']['to'] = _getEpoch(opts.to)
+            query['range'][timeElement] = dict()
+        query['range'][timeElement]['lt'] = int(_getEpoch(opts.to))
+
+    queryfull={"query":query}
+
     if query:
-        result = esclient.delete_by_query(index='system_log', query=query, doc_type='json')
-        if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
-            print 'purge logs executed successfully'
-        result = esclient.delete_by_query(index='system_eco', query=query, doc_type='json')
+        if opts.action in ['purgelogs']:
+            index='system_log'
+        elif opts.action in ['purgejobs']:
+            index='system_job'
+        elif opts.action in ['purgeecos']:
+            index='system_eco'
 
-#################PURGEJOBS AND PURGEECOs
-if opts.action in ['purgejobs', 'purgeecos']:
-    import JumpScale.grid.osis
-    print "This may take a while"
-    oscl = j.core.osis.getClient(user='root')
-    if opts.action == 'purgejobs':
-        catclient = j.core.osis.getClientForCategory(oscl, 'system', 'job')
-    if opts.action == 'purgeecos':
-        catclient = j.core.osis.getClientForCategory(oscl, 'system', 'eco')
+        result = esclient.delete_by_query(index=index, query=query, doc_type='json')
+        
+        if result['_indices'][index]['_shards']['successful'] == result['_indices'][index]['_shards']['total'] and result['ok']:
+            print 'purge %s executed successfully'%index
 
-    total, results = catclient.simpleSearch({}, size=0, withguid=True, withtotal=True)
-    results = catclient.simpleSearch({}, size=total, withguid=True)
-    for result in results:
-        guid = result['guid']
-        catclient.delete(guid)
-    print 'purge executed successfully'
 
 #################NODE ACTIONS####################################
 def _deleteNode(node):
