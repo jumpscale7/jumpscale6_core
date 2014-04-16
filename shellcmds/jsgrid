@@ -166,10 +166,12 @@ if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
         elif opts.action in ['purgeecos']:
             index='system_eco'
 
+        beforecount = esclient.count(index=index, query=query, doc_type='json')['count']
         result = esclient.delete_by_query(index=index, query=query, doc_type='json')
-        
+        aftercount = esclient.count(index=index, query=query, doc_type='json')['count']
+
         if result['_indices'][index]['_shards']['successful'] == result['_indices'][index]['_shards']['total'] and result['ok']:
-            print 'purge %s executed successfully'%index
+            print 'purge %s executed successfully. %s records deleted.' % (index, beforecount-aftercount)
 
 
 #################NODE ACTIONS####################################
