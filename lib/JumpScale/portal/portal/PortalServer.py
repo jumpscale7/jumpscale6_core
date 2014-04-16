@@ -595,7 +595,7 @@ class PortalServer:
             # error in format
             eco = j.errorconditionhandler.getErrorConditionObject()
             eco.errormessage = "only format supported = human or json, format is put with param &format=..."
-            eco.type = "WRONGINPUT"
+            eco.type = j.enumerators.ErrorConditionType.INPUT
             print "WRONG FORMAT"
         else:
             if errorObject != None:
@@ -618,10 +618,6 @@ class PortalServer:
             eco.errormessage += "\nquerystr was:%s" % queryString
         if scriptName != "":
             eco.errormessage += "\nscriptname was:%s" % scriptName
-
-        if eco.type == "":
-            eco.type = "WSERROR"
-
 
         j.errorconditionhandler.processErrorConditionObject(eco)
 
