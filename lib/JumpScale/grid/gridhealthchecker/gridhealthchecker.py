@@ -137,7 +137,7 @@ class GridHealthChecker(object):
         self.getNodes()
         self.checkProcessManagerAllNodes(clean=False)
         if self._runningnids:
-            self.pingAllNodes()
+            self.pingAllNodes(clean=False)
             self.checkElasticSearch(clean=False)
             self.checkRedisAllNodes(clean=False)
             self.checkWorkersAllNodes(clean=False)
