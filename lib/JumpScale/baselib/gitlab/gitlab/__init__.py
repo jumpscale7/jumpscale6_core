@@ -6,7 +6,11 @@ now changes also by jumpscale team
 """
 
 import requests
-import json
+try:
+    import ujson as json
+except:
+    import json
+    
 import markdown
 from . import exceptions
 from JumpScale import j

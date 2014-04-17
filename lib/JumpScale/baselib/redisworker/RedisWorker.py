@@ -1,5 +1,9 @@
 from JumpScale import j
-import ujson
+try:
+    import ujson as json
+except:
+    import json
+
 import JumpScale.grid.osis
 import JumpScale.baselib.redis
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
@@ -134,7 +138,7 @@ class RedisWorkerFactory:
         session["nid"]=j.application.whoAmI.nid
         session["pid"]=j.application.whoAmI.pid
         session["appname"]=j.application.appname
-        self.redis.hset("workers:sessions",self.sessionid,ujson.dumps(session))
+        self.redis.hset("workers:sessions",self.sessionid,json.dumps(session))
 
         #local jumpscripts start at 10000
         if not self.redis.exists("workers:jumpscriptlastid") or int(self.redis.get("workers:jumpscriptlastid"))<10000:
@@ -156,7 +160,7 @@ class RedisWorkerFactory:
     def getJob(self,jobid):
         jobdict=self.redis.hget("workers:jobs",jobid)
         if jobdict:
-            jobdict=ujson.loads(jobdict)
+            jobdict=json.loads(jobdict)
         else:
             raise RuntimeError("cannot find job with id:%s"%jobid)
         return jobdict
@@ -166,11 +170,11 @@ class RedisWorkerFactory:
         key=js.getContentKey()
         if self.redis.hexists("workers:jumpscripthashes",key):
             jumpscript_data=self.redis.hget("workers:jumpscripthashes",key)
-            js=Jumpscript(ddict=ujson.loads(jumpscript_data))
+            js=Jumpscript(ddict=json.loads(jumpscript_data))
         else:
             #jumpscript does not exist yet
             js.id=self.redis.incr("workers:jumpscriptlastid")
-            jumpscript_data=ujson.dumps(js.__dict__)
+            jumpscript_data=json.dumps(js.__dict__)
             self.redis.hset("workers:jumpscripts:id",js.id, js)
             if js.organization<>"" and js.name<>"":
                 self.redis.hset("workers:jumpscripts:name","%s__%s"%(js.organization,js.name), jumpscript_data)            
@@ -180,7 +184,7 @@ class RedisWorkerFactory:
     def getJumpscriptFromId(self,jscriptid):
         jsdict=self.redis.hget("workers:jumpscripts:id",jscriptid)
         if jsdict:
-            jsdict=ujson.loads(jsdict)
+            jsdict=json.loads(jsdict)
         else:
             return None
         return Jumpscript(ddict=jsdict)
@@ -189,7 +193,7 @@ class RedisWorkerFactory:
         key="%s__%s"%(organization,name)
         jsdict=self.redis.hget("workers:jumpscripts:name",key)
         if jsdict:
-            jsdict=ujson.loads(jsdict)
+            jsdict=json.loads(jsdict)
         else:
             return None
         return Jumpscript(ddict=jsdict)        
@@ -240,7 +244,7 @@ class RedisWorkerFactory:
         else:
             jobdict=queue.get()
         if jobdict<>None:   
-            jobdict=ujson.loads(jobdict)         
+            jobdict=json.loads(jobdict)         
             return Job(ddict=jobdict)
         return None
 
@@ -249,7 +253,7 @@ class RedisWorkerFactory:
         if result==None:            
             job.state="TIMEOUT"
             job.timeStop=int(time.time())
-            self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
+            self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
             j.events.opserror("timeout on job:%s"%job, category='workers.job.wait.timeout', e=None)
         else:
             job=self.getJob(job.id)
@@ -273,7 +277,7 @@ class RedisWorkerFactory:
 
         queue=self.queue[qname]
 
-        # self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
+        # self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
         queue.put(job)
 
     def scheduleJob(self, job):
@@ -299,7 +303,7 @@ class RedisWorkerFactory:
         for item in queues:
             jobs = self.redis.lrange('queues:workers:work:%s' % item, 0, -1)
             for jobstring in jobs:
-                result.append(ujson.loads(jobstring))
+                result.append(json.loads(jobstring))
         if asWikiTable:
             out=""
             for job in result:
@@ -313,7 +317,7 @@ class RedisWorkerFactory:
         for q in queues:
             jobsjson = self.redis.lrange('queues:workers:work:%s' % q, 0, -1)
             for jobstring in jobsjson:
-                jobs.append(ujson.loads(jobstring))
+                jobs.append(json.loads(jobstring))
 
         #get failed jobs
         for job in jobs:
@@ -333,7 +337,7 @@ class RedisWorkerFactory:
             jobs = dict()
             jobsjson = self.redis.hgetall('queues:workers:work:%s' % q)
             if jobsjson:
-                jobs.update(ujson.loads(jobsjson))
+                jobs.update(json.loads(jobsjson))
                 for k, job in jobs.iteritems():
                     if job['timeStart'] >= epochago:
                         jobs.pop(k)

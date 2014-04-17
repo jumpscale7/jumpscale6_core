@@ -6,8 +6,10 @@ from ClassBase import ClassBase, JSModelBase, JSRootModelBase
 from Appserver6GreenletBase import Appserver6GreenletBase
 from Appserver6GreenletTaskletsBase import Appserver6GreenletTaskletsBase
 
-import ujson
-import json
+try:
+    import ujson as json
+except:
+    import json
 
 def isPrimAttribute(obj, key):
     if key[-1]=="s":
@@ -269,7 +271,7 @@ class Code():
         if pretty:            
             return json.dumps(obj, skipkeys=skiperrors, ensure_ascii=False, check_circular=True, indent=2, separators=(", ",": "),encoding='utf-8', default=None, sort_keys=True)
         else:
-            return ujson.dumps(obj)
+            return json.dumps(obj)
 
     def pprint(self,obj):
         result=self.object2yaml(obj)

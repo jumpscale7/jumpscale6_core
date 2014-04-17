@@ -3,7 +3,7 @@ import os
 import JumpScale.baselib.screen
 import time
 try:
-    import usjon as json
+    import ujson as json
 except ImportError:
     import json
 

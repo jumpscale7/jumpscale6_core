@@ -11,7 +11,10 @@ import gevent
 import gevent.monkey
 import zmq.green as zmq
 import time
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 
 GeventLoop = j.core.gevent.getGeventLoopClass()
 
@@ -50,11 +53,11 @@ class ZRedisGW(GeventLoop):
         if data=="":
             self.blobstor.redis.redis.execute_pipeline(\
                 ("RPUSH","blobserver:cmdqueue:0",jobguid),\
-                ("HSET","blobserver:cmds",jobguid,ujson.dumps(job)))
+                ("HSET","blobserver:cmds",jobguid,json.dumps(job)))
         elif data<>"":
             self.blobstor.redis.redis.execute_pipeline(\
                 ("RPUSH",rkeyQ,jobguid),\
-                ("HSET","blobserver:cmds",jobguid,ujson.dumps(job)),\
+                ("HSET","blobserver:cmds",jobguid,json.dumps(job)),\
                 ("HSET","blobserver:blob",key,data))
         if sync:
             self.blobstor.redis.redis.execute(cmd="BLPOP", key="blobserver:return:%s"%jobguid)

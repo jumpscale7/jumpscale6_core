@@ -654,10 +654,24 @@ class SystemFS:
         uid=getpwnam(user).pw_uid
         gid=getpwnam(user).pw_gid
         os.chown(path, uid, gid)
+        for root, dirs, files in os.walk(path):  
+            for ddir in dirs:  
+                path = os.path.join(root, ddir)
+                os.chown(path, uid, gid)
+            for file in files:
+                path = os.path.join(root, file)
+                os.chown(path, uid, gid)
+        
 
     def chmod(self,path,permissions):
         os.chmod(path,permissions)
-                        
+        for root, dirs, files in os.walk(path):  
+            for ddir in dirs:  
+                path = os.path.join(root, ddir)
+                os.chmod(path,permissions)
+            for file in files:
+                path = os.path.join(root, file)
+                os.chmod(path,permissions)
 
     def parsePath(self,path, baseDir="",existCheck=True, checkIsFile=False):
         """

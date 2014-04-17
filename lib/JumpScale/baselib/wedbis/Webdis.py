@@ -2,7 +2,10 @@
 import time
 from JumpScale import j
 import requests
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 
 class WebdisFactory:
 
@@ -50,7 +53,7 @@ class Webdis():
                     continue
                 raise RuntimeError(e)
             if r.status_code==200:
-                res=ujson.loads(r.text)
+                res=json.loads(r.text)
                 return res[cmd]
             elif r.status_code==403:
                 raise RuntimeError("Could not webdis execute %s,forbidden."%data2)

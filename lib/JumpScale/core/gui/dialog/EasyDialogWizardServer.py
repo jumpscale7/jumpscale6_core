@@ -37,7 +37,10 @@ import sys
 import os
 import functools
 
-import json
+try:
+    import ujson as json
+except:
+    import json
 
 from JumpScale import j
 

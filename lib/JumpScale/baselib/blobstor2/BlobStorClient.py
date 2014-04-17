@@ -2,7 +2,11 @@ from JumpScale import j
 import lzma
 import msgpack
 import os
-import ujson
+try:
+    import ujson as json
+except:
+    import json
+    
 # import 
 
 class BlobStorClient:

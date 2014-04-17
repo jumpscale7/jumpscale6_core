@@ -216,11 +216,13 @@ class ErrorConditionHandler():
         
 
         errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
+
         try:
+            import ujson as json
+        except:
             import json
-            errorobject.exceptioninfo = json.dumps(pythonExceptionObject.__dict__)
-        except ImportError:
-            errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
+
+        errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
 
         errorobject.exceptionclassname = pythonExceptionObject.__class__.__name__
         module = inspect.getmodule(pythonExceptionObject)
@@ -487,7 +489,10 @@ class ErrorConditionHandler():
 
         if j.application.config.exists("sentry.server"):
             import requests
-            import json
+            try:
+                import ujson as json
+            except:
+                import json            
             import uuid
             import datetime
             server=j.application.config.get("sentry.server")
