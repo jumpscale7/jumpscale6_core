@@ -6,10 +6,7 @@ from ClassBase import ClassBase, JSModelBase, JSRootModelBase
 from Appserver6GreenletBase import Appserver6GreenletBase
 from Appserver6GreenletTaskletsBase import Appserver6GreenletTaskletsBase
 
-try:
-    import ujson as json
-except:
-    import json
+import json #ujson.dumps does not support some arguments like separators, indent ...etc
 
 def isPrimAttribute(obj, key):
     if key[-1]=="s":
