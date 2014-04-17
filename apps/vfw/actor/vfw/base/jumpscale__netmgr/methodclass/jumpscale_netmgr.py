@@ -71,7 +71,6 @@ class jumpscale_netmgr(j.code.classGetBase()):
         return result
 
     def _applyconfig(self, nid, args):
-        return True
         if args['fwobject']['type'] == 'routeros':
             result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig_routeros', nid=nid, args=args)['result']
         else:
