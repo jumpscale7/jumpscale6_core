@@ -7,13 +7,12 @@ import sys,time
 j.application.start("jssync")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['jsboxupload','jsboxuploadall','jpackagesupload','libsupload','cfgupload','baseupload','installerupload',\
-    'jsboxdownload','jsboxdownloadall','jpackagesdownload','libsdownload','basedownload','cfgdownload',\
-    'system2sandbox','libs2sandbox','jpackages2sandbox','cfg2sandbox','base2sandbox'], help='Command to perform')
+parser.add_argument("action", choices=['upload','download','sync2sb','sync2sbUpload'], help='Command to perform, sb means sandbox')
 
-parser.add_argument("-b", '--branch', help='branch of jumpscale', default="unstable")
-parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable', default="")
-parser.add_argument("-k", '--key', help='secret key (can have ql inside or anything)', default="")
+parser.add_argument("-c", '--category', help='what to sync2sb,upload,download options: all,allnocfg,jpackages,libs,cfg,base,installer (comma separated)', default="jpackages,libs")
+parser.add_argument("-b", '--branch', help='branch of jumpscale, only required for sync2sb', default="unstable")
+parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable, only required for sync2sb', default="")
+parser.add_argument("-k", '--key', help='secret key (can have ql inside or anything), only required for upload/download', default="")
 parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
 parser.add_argument("-j", '--jpdomains', help='specify add domains to look for when syncing/uploading jpackages.', default="")
 
@@ -120,8 +119,22 @@ def finddomain(name):
                     return "/opt/code/%s/%s"%(cat,dname)
     raise RuntimeError("could not find domain for name:'%s'"%name)
 
+opts.category=opts.category.split(",")
+opts.category=[item.lower().strip() for item in opts.category]
+opts.action=opts.action.lower()
+
+def checkcat(cat,cfg=False):
+    if cat in opts.category:
+        return True
+    if "all" in opts.category:
+        return True
+    if cfg==False and ("allnocfg" in opts.category):
+        return True
+    return False
+
+
 #COPY FROM SYSTEM TO SANDBOX JPACKAGES
-if opts.action =='system2sandbox' or opts.action =='jpackages2sandbox':
+if opts.action.find('sync2sb')==0 and checkcat("jpackages"):
     if opts.qualitylevel=="":
         raise RuntimeError("quality level needs to be specified")
 
@@ -146,7 +159,7 @@ if opts.action =='system2sandbox' or opts.action =='jpackages2sandbox':
                 hrd.set("jp.debug",0)
                 
 #COPY FROM SYSTEM TO SANDBOX for LIBS
-if opts.action =='system2sandbox' or opts.action =='libs2sandbox':
+if opts.action.find('sync2sb')==0 and checkcat("libs"):
     if opts.branch=="":
         raise RuntimeError("branch name needs to be specified")
 
@@ -175,18 +188,18 @@ if opts.action =='system2sandbox' or opts.action =='libs2sandbox':
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/libjs/"%opts.branch,"%s/libjs/"%opts.sbpath,delete=False)
 
 
-#COPY FROM SYSTEM TO SANDBOX for LIBS
-if opts.action =='system2sandbox' or opts.action =='cfg2sandbox':
+#COPY FROM SYSTEM TO SANDBOX for CFG
+if opts.action.find('sync2sb')==0 and checkcat("cfg",True):
     if opts.branch=="":
         raise RuntimeError("branch name needs to be specified")
-
+    print "cfg to sandbox"
     cfgdir="%s_data/cfg/"%opts.sbpath
     j.system.fs.removeDirTree(cfgdir)
     j.system.fs.createDir(cfgdir)
 
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch,cfgdir,delete=False)
 
-if opts.action =='base2sandbox':
+if opts.action.find('sync2sb')==0 and checkcat("base"):
     cmd='jpackage download -n base'
     j.system.process.executeWithoutPipe(cmd)
     src="$vardir/jpackages/files/jumpscale/base/2.7/linux64/base/"
@@ -194,20 +207,21 @@ if opts.action =='base2sandbox':
     dest="%s/"%opts.sbpath
     sync(src,dest,delete=False)
 
+
 #UPLOAD JPACKAGES
-if opts.action.find('jsboxupload')==0 or opts.action =='jpackagesupload':        
+if opts.action.find("upload")<>-1 and checkcat("jpackages"):
     upload("jsbox","jpackages")
 
-if opts.action =='jsboxuploadall'or opts.action =='cfgupload':
+if opts.action.find("upload")<>-1 and checkcat("cfg",True):
     upload("jsbox","cfg",data=True)
 
-if opts.action=='installerupload':
+if opts.action=="upload" and checkcat("installer"):
     path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.branch    
     cmd="rsync -azvPh %s %s::www/cmds/ --modify-window=60 --compress --progress  "%(path,ipaddr)
     print cmd
     j.system.process.executeWithoutPipe(cmd)   
 
-if opts.action.find('jsboxupload')==0 or opts.action =='libsupload':
+if opts.action.find("upload")<>-1 and checkcat("libs"):
     upload("jsbox","libjs")
     upload("jsbox","libext")
     upload("jsbox","apps/agent")
@@ -215,7 +229,7 @@ if opts.action.find('jsboxupload')==0 or opts.action =='libsupload':
     upload("jsbox","apps/processmanager")
     upload("jsbox","tools")
 
-if opts.action.find('jsboxupload')==0 or opts.action =='baseupload':    
+if opts.action.find("upload")<>-1 and checkcat("base"):  
     upload("jsbox","lib")
     upload("jsbox","bin")
 
@@ -223,21 +237,22 @@ if opts.action.find('jsboxupload')==0 or opts.action =='baseupload':
 #################################
 #DOWNLOAD
 
-if opts.action.find('jsboxdownload')==0 or opts.action =='basedownload':
+if opts.action=="download" and checkcat("base"):
     download("jsbox","lib")
     download("jsbox","bin")
 
-if opts.action.find('jsboxdownload')==0 or opts.action =='jpackagesdownload':
+if opts.action=="download" and checkcat("jpackages"):
     download("jsbox","jpackages")    
 
-if opts.action.find('jsboxdownload')==0 or opts.action =='libsdownload':
+if opts.action=="download" and checkcat("libs"):
     download("jsbox","libjs")
     download("jsbox","libext")
     download("jsbox","apps/agent")
     download("jsbox","apps/blobserver")
     download("jsbox","apps/processmanager")
+    download("jsbox","tools")
 
-if opts.action =='jsboxdownloadall' or opts.action =='cfgdownload': 
+if opts.action=="download" and checkcat("cfg",True):
     download("jsbox","cfg",data=True) 
 
 

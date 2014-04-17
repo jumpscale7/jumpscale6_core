@@ -19,14 +19,14 @@
 import core
 RedisError = core.RedisError
 
-def connect(host='localhost', port=6379, timeout=None):
+def connect(host='localhost', port=7768, timeout=None):
     """Create gevent Redis client.
 
     Example usage::
 
         import geventredis
 
-        redis_client = geventredis.connect('127.0.0.1', 6379)
+        redis_client = geventredis.connect('127.0.0.1', 7768)
         result = redis_client.set('foo', 'bar')
         print result
 
@@ -63,8 +63,8 @@ class RedisClient(core.RedisSocket):
 
         import geventredis
 
-        redis_client = geventredis.RedisClient('127.0.0.1', 6379)
-        redis_client.connect('127.0.0.1', 6379)
+        redis_client = geventredis.RedisClient('127.0.0.1', 7768)
+        redis_client.connect('127.0.0.1', 7768)
         result = redis_client.get('foo')
         print result
 
@@ -908,7 +908,7 @@ class RedisClient(core.RedisSocket):
         
 
 def test():
-    redis_client = connect('127.0.0.1', 6379)
+    redis_client = connect('127.0.0.1', 7768)
     print redis_client.set('foo', 'bar')
     print redis_client.get('foo')
 

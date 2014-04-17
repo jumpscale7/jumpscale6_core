@@ -5,7 +5,7 @@ from JumpScale import j
 
 class RedisKeyValueStore(KeyValueStoreBase):
 
-    def __init__(self,namespace="",host='localhost',port=6379,db=0,key='', serializers=[]):
+    def __init__(self,namespace="",host='localhost',port=7768,db=0,key='', serializers=[]):
 
         self.redisclient=j.clients.redis.get(host, port, db=db, key=key)
         self.db = self.redisclient.redis
