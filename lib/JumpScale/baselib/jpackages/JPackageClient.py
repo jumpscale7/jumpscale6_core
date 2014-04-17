@@ -21,6 +21,7 @@ class JPackageClient():
         if self.__init:
             return
         from Domain import Domain
+        self.__init=True
 
         # try:
         #     import JumpScale.baselib.expect
@@ -68,7 +69,6 @@ class JPackageClient():
         self.errors=[]
         self.inInstall=[] #jpackages which are being installed
 
-        self.__init=True
 
     def reportError(self,msg):
         self.errors.append(msg)
@@ -131,12 +131,14 @@ class JPackageClient():
         """
         Reload all jpackages config data from disk
         """
+        if not self.__init:
+            self._init()
+
         from Domain import Domain
         cfgpath=j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')
 
         if not j.system.fs.exists(cfgpath):
             j.system.fs.createDir(j.system.fs.getDirName(cfgpath))
-            return
             raise RuntimeError("did not find jpackage sources file on %s"%cfgpath)            
         else:
             cfg = j.tools.inifile.open(cfgpath)
