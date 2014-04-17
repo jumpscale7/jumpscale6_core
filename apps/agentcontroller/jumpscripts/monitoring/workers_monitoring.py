@@ -15,7 +15,7 @@ period = 10 #always in sec
 enable = True
 async = False
 roles = ["*"]
-
+log=False
 
 def action():
 

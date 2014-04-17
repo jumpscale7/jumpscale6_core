@@ -16,7 +16,7 @@ period = 300 #always in sec
 enable = True
 async = False
 roles = ["*"]
-
+log=False
 
 def action():
     import JumpScale.grid.gridhealthchecker

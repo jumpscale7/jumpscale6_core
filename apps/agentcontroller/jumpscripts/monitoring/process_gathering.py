@@ -14,7 +14,7 @@ period = 120 #always in sec
 enable=True
 async=True
 queue='process'
-
+log=False
 roles = ["grid.node.process"]
 
 def action():

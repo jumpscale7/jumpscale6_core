@@ -16,6 +16,8 @@ roles = ["*"]
 enable = True
 period=0
 
+log=False
+
 def action():
     result = dict()
     disks = j.system.platform.diskmanager.partitionsFind(mounted=True, prefix='', minsize=0, maxsize=None)

@@ -15,7 +15,7 @@ period = 120 #always in sec
 enable = True
 async = True
 roles = ["*"]
-
+log=False
 queue = "process"
 
 def action():

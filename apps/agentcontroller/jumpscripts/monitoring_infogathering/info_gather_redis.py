@@ -16,6 +16,8 @@ roles = ["*"]
 
 period=0
 
+log=False
+
 def action():
     import JumpScale.baselib.redis
     ports = [7768, 7766, 6379]

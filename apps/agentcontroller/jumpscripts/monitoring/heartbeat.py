@@ -14,7 +14,7 @@ period = 60 #always in sec
 order = 1
 enable = True
 async = False
-
+log=False
 
 def action():
     osiscl = j.core.osis.getClient(user='root')

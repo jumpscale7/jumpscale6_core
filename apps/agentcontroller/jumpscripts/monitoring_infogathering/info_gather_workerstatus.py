@@ -15,6 +15,7 @@ category = "system.workerstatus"
 async = False
 roles = ["*"]
 
+log=False
 
 def action():
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
