@@ -146,7 +146,8 @@ class Dirs(object):
         txt=txt.replace("$bindir",self.binDir)
         txt=txt.replace("$logdir",self.logDir)
         txt=txt.replace("$tmpdir",self.tmpDir)
-        txt=txt.replace("$jslibdir",self.libDir)
+        txt=txt.replace("$libdir",self.libDir)
+        txt=txt.replace("$jslibdir",self.JSlibDir)
         txt=txt.replace("$jslibextdir",self.libExtDir)
         txt=txt.replace("$jsbindir",self.binDir)
         return txt
@@ -265,9 +266,9 @@ class Dirs(object):
         cfgdest=self.cfgDir
 
         if not os.path.exists(bindest) or not os.path.exists(utilsdest) or not os.path.exists(cfgdest):
-            cfgsource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","cfg")
-            binsource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","bin")
-            utilssource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","utils")
+            cfgsource=j.system.fs.joinPaths(self.JSlibDir,"core","_defaultcontent","cfg")
+            binsource=j.system.fs.joinPaths(self.JSlibDir,"core","_defaultcontent","linux","bin")
+            utilssource=j.system.fs.joinPaths(self.JSlibDir,"core","_defaultcontent","linux","utils")
             j.system.fs.copyDirTree(binsource,bindest)
             j.system.fs.copyDirTree(utilssource,utilsdest)
             j.system.fs.copyDirTree(cfgsource,cfgdest,overwriteFiles=False)
