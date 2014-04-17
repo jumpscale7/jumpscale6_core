@@ -22,28 +22,7 @@ class RecipeItem(object):
 
         self.type=type.lower().strip()
 
-        if self.type=="sitepackages":
-            if j.application.sandbox:
-                base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
-            else:
-                base=j.application.config.get("python.paths.local.sitepackages")
-            self.systemdest = j.system.fs.joinPaths(base, self.destination)
-        elif self.type=="root":
-            self.systemdest = destination
-        elif self.type=="base":
-            self.systemdest = j.system.fs.joinPaths(j.dirs.baseDir, self.destination)
-        elif self.type=="etc":
-            base="/etc"
-            self.systemdest = j.system.fs.joinPaths(base, self.destination)
-        elif self.type=="tmp":
-            self.systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, self.destination)
-        elif self.type=="bin":
-            base=j.application.config.get("bin.local")
-            self.systemdest = j.system.fs.joinPaths(base, self.destination)
-        else:
-            base=j.application.config.applyOnContent(self.type)
-            self.systemdest = j.system.fs.joinPaths(base, self.destination)
-        
+        self.systemdest = j.packages.getTypePath(self.type, self.destination)
         self.tags=tags
         
         # determine supported platforms 

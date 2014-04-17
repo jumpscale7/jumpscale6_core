@@ -203,6 +203,52 @@ class JPackageClient():
 ##################  GET FUNCTIONS  #########################
 ############################################################
 
+    def getTypePath(self, ttype, relativepath):
+        if ttype in ('sitepackages', 'site-packages'):
+            if j.application.sandbox:
+                base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
+            else:
+                base=j.application.config.get("python.paths.local.sitepackages")
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        elif ttype=="root":
+            systemdest = "/%s"%relativepath.lstrip("/")
+        elif ttype=="base":
+            systemdest = j.system.fs.joinPaths(j.dirs.baseDir, relativepath)
+        elif ttype=="cfg":
+            systemdest = j.system.fs.joinPaths(j.dirs.cfgDir, relativepath)
+        elif ttype=="code":
+            systemdest = j.system.fs.joinPaths(j.dirs.codeDir, relativepath)
+        elif ttype=="var":
+            systemdest = j.system.fs.joinPaths(j.dirs.varDir, relativepath)
+        elif ttype=="jslib":
+            systemdest = j.system.fs.joinPaths(j.dirs.JSlibDir, relativepath)
+        elif ttype=="lib":
+            systemdest = j.system.fs.joinPaths(j.dirs.libDir, relativepath)
+        elif ttype=="libext":
+            systemdest = j.system.fs.joinPaths(j.dirs.libExtDir, relativepath)
+        elif ttype=="jsbin":
+            systemdest = j.system.fs.joinPaths(j.dirs.binDir, relativepath)
+        elif ttype=="opt":
+            base="/opt"
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        elif ttype=="deb":
+            systemdest = "/tmp"
+        elif ttype=="etc":
+            base="/etc"
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        elif ttype=="tmp":
+            systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, relativepath)
+        elif ttype=="bin":
+            base=j.application.config.get("bin.local")
+            systemdest = j.dirs.binDir
+        else:
+            base=j.application.config.applyOnContent(ttype)
+            if base==ttype:
+                raise RuntimeError("Could not find ttype:%s for %s, needs to be root,base,etc,bin,deb"%(ttype,self))
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        return systemdest
+
+
     def get(self, domain, name, version):
         """
         Returns a jpackages 

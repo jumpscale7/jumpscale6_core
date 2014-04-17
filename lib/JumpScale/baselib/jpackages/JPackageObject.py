@@ -710,49 +710,8 @@ class JPackageObject():
         if ttype.find("cr_")==0:
             ttype=ttype[3:]
 
-        if ttype in ('sitepackages', 'site-packages'):
-            if j.application.sandbox:
-                base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
-            else:
-                base=j.application.config.get("python.paths.local.sitepackages")
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
-        elif ttype=="root":
-            systemdest = "/%s"%blobitempath.lstrip("/")
-        elif ttype=="base":
-            systemdest = j.system.fs.joinPaths(j.dirs.baseDir, blobitempath)
-        elif ttype=="cfg":
-            systemdest = j.system.fs.joinPaths(j.dirs.cfgDir, blobitempath)
-        elif ttype=="code":
-            systemdest = j.system.fs.joinPaths(j.dirs.codeDir, blobitempath)
-        elif ttype=="var":
-            systemdest = j.system.fs.joinPaths(j.dirs.varDir, blobitempath)
-        elif ttype=="jslib":
-            systemdest = j.system.fs.joinPaths(j.dirs.JSlibDir, blobitempath)
-        elif ttype=="lib":
-            systemdest = j.system.fs.joinPaths(j.dirs.libDir, blobitempath)
-        elif ttype=="libext":
-            systemdest = j.system.fs.joinPaths(j.dirs.libExtDir, blobitempath)
-        elif ttype=="jsbin":
-            systemdest = j.system.fs.joinPaths(j.dirs.binDir, blobitempath)
-        elif ttype=="opt":
-            base="/opt"
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
-        elif ttype=="deb":
-            systemdest = "/tmp"
-        elif ttype=="etc":
-            base="/etc"
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
-        elif ttype=="tmp":
-            systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, blobitempath)
-        elif ttype=="bin":
-            base=j.application.config.get("bin.local")
-            systemdest = j.dirs.binDir
-        else:
-            base=j.application.config.applyOnContent(ttype)
-            if base==ttype:
-                raise RuntimeError("Could not find ttype:%s for %s, needs to be root,base,etc,bin,deb"%(ttype,self))
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
         filespath=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype,blobitempath)
+        systemdest = j.packages.getTypePath(ttype, blobitempath)
         return (filespath,systemdest)
 
     def getBlobPlatformTypes(self):
