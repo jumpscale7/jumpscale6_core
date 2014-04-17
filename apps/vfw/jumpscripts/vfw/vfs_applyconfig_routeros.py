@@ -15,10 +15,11 @@ roles = ["vfw.host"]
 async = True 
 
 def action(name, fwobject):
+    from JumpScale.lib import routeros
 
     host = fwobject['host']
     username = fwobject['username']
-    password = fwobject['login']
+    password = fwobject['password']
 
     ro = routeros.RouterOS.RouterOS(host, username, password)
     ro.deletePortForwardRules(tags='cloudbroker')
