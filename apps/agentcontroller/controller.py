@@ -7,7 +7,10 @@ import JumpScale.grid.osis
 import imp
 import importlib
 import inspect
-import ujson as json
+try:
+    import ujson as json
+except:
+    import json
 import time
 from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
 

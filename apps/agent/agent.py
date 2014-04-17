@@ -14,7 +14,10 @@ j.application.initGrid()
 j.logger.consoleloglevel = 2
 j.logger.maxlevel=7
 
-import ujson as json
+try:
+    import ujson as json
+except:
+    import json
 
 LOGS = {'current':'agent',
         'agent': 'agent',

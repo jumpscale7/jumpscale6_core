@@ -1,6 +1,9 @@
 
 import datetime
-import json
+try:
+    import ujson as json
+except:
+    import json
 
 def main(j, args, params, tags, tasklet):
 

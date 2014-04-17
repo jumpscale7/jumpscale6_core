@@ -2,7 +2,10 @@
 
 import sys
 import time
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 import psutil
 import imp
 import random
@@ -217,7 +220,7 @@ class Worker(object):
 
         if job.jscriptid>10000:
             # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
-            self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
+            self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
             w.redis.rpush("workers:return:%s"%job.id,time.time())
         else:
             #jumpscripts coming from AC

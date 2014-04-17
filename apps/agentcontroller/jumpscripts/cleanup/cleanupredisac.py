@@ -22,7 +22,10 @@ def action():
     import time
     EXTRATIME = 120
     now = time.time()
-    import ujson
+    try:
+        import ujson as json
+    except:
+        import json
     ocl = j.core.osis.getClient(user='root')
     jcl = j.core.osis.getClientForCategory(ocl, 'system', 'job')
     masterip = j.application.config.get('grid.master.ip')
@@ -31,7 +34,7 @@ def action():
         jobkey = 'jobs:%s' % j.application.whoAmI.gid
         jobs = rcl.hgetall(jobkey)
         for jobguid, jobstring in jobs.iteritems():
-            job = ujson.loads(jobstring)
+            job = json.loads(jobstring)
             if job['state'] in ['OK', 'ERROR', 'TIMEOUT']:
                 rcl.hdel(jobkey, jobguid)
             elif job['timeStart'] + job['timeout'] + EXTRATIME < now:
@@ -41,6 +44,6 @@ def action():
                 j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
                 eco.tb = None
                 eco.type = str(eco.type)
-                job['result'] = ujson.dumps(eco.__dict__)
+                job['result'] = json.dumps(eco.__dict__)
                 jcl.set(job)
 

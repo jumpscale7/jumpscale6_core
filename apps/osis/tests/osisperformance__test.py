@@ -2,7 +2,10 @@ import unittest
 import re
 import time
 from JumpScale import j
-import json
+try:
+    import ujson as json
+except:
+    import json
 import random
 
 descr = """

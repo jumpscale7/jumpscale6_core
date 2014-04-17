@@ -1,5 +1,10 @@
 import requests
-import json, time
+import time
+
+try:
+    import ujson as json
+except:
+    import json
 
 def main():
     response = requests.get('http://95.85.60.252:81/restmachine/jumpscale/netmgr/fw.list?&gid=1')

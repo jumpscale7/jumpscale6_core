@@ -22,14 +22,17 @@ def action():
     import JumpScale.grid.gridhealthchecker
     import JumpScale.baselib.redis
     import time
-    import ujson
+    try:
+        import ujson as json
+    except:
+        import json
 
     nodeid = j.application.whoAmI.nid
     if nodeid == j.core.grid.healthchecker.masternid:
         rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
         results, errors = j.core.grid.healthchecker.runAll()
-        rediscl.hset('healthcheck:monitoring', 'results', ujson.dumps(results))
-        rediscl.hset('healthcheck:monitoring', 'errors', ujson.dumps(errors))
+        rediscl.hset('healthcheck:monitoring', 'results', json.dumps(results))
+        rediscl.hset('healthcheck:monitoring', 'errors', json.dumps(errors))
         rediscl.hset('healthcheck:monitoring', 'lastcheck', time.time())
 
         if errors:

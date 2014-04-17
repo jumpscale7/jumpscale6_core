@@ -1,7 +1,10 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
-    import ujson
+    try:
+        import ujson as json
+    except:
+        import json
 
     page = args.page
     nid = args.getTag("nid")
@@ -32,7 +35,7 @@ def main(j, args, params, tags, tasklet):
     def makeResult(row, field):
         result = row[field]
         try:
-            result = ujson.loads(result)
+            result = json.loads(result)
         except:
             pass
         return j.html.escape(str(result))

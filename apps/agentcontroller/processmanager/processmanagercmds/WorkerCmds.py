@@ -1,7 +1,10 @@
 from JumpScale import j
 import time
 import JumpScale.baselib.redisworker
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 
 class WorkerCmds():
 
@@ -40,7 +43,7 @@ class WorkerCmds():
             self._adminAuth(session.user,session.passwd)
 
         if format == 'json':
-            return ujson.dumps(self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago))
+            return json.dumps(self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago))
         else:
             return self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
         

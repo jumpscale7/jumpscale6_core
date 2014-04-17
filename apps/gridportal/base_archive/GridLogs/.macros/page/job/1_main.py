@@ -3,7 +3,10 @@ import datetime
 import JumpScale.baselib.serializers
 
 def main(j, args, params, tags, tasklet):
-    import json
+    try:
+        import ujson as json
+    except:
+        import json
     import JumpScale.grid.osis
     osiscl = j.core.osis.getClient(user='root')
     client = j.core.osis.getClientForCategory(osiscl, 'system', 'job')
