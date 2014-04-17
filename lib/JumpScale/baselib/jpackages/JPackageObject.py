@@ -726,6 +726,8 @@ class JPackageObject():
             systemdest = j.system.fs.joinPaths(j.dirs.codeDir, blobitempath)
         elif ttype=="var":
             systemdest = j.system.fs.joinPaths(j.dirs.varDir, blobitempath)
+        elif ttype=="jslib":
+            systemdest = j.system.fs.joinPaths(j.dirs.JSlibDir, blobitempath)
         elif ttype=="lib":
             systemdest = j.system.fs.joinPaths(j.dirs.libDir, blobitempath)
         elif ttype=="libext":
@@ -744,7 +746,7 @@ class JPackageObject():
             systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, blobitempath)
         elif ttype=="bin":
             base=j.application.config.get("bin.local")
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
+            systemdest = j.dirs.binDir
         else:
             base=j.application.config.applyOnContent(ttype)
             if base==ttype:

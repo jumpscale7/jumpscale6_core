@@ -179,8 +179,7 @@ class Dirs(object):
         if j.system.platformtype.isWindows() :
             self.codeDir=os.path.join(self.baseDir, 'code')
 
-        self.getLibPath()
-
+        self.JSlibDir = self._getLibPath()
         self.loadProtectedDirs()
 
         self.deployDefaultFilesInSandbox()
@@ -188,11 +187,11 @@ class Dirs(object):
         return True
 
 
-    def getLibPath(self):
+    def _getLibPath(self):
         parent = j.system.fs.getParent
-        self.libDir=parent(parent(__file__))
-        self.libDir=os.path.abspath(self.libDir).rstrip("/")
-        return self.libDir
+        libDir=parent(parent(__file__))
+        libDir=os.path.abspath(libDir).rstrip("/")
+        return libDir
 
     def getPathOfRunningFunction(self,function):
         return inspect.getfile(function)
