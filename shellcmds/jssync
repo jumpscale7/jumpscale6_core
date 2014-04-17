@@ -77,6 +77,19 @@ def createdir(path):
             item+="/"
         cmd="rsync /tmp/empty/ %s"%item
         j.system.process.execute(cmd)
+
+def uploadfile(category,path="",data=False):
+    print "UPLOAD: %s %s"%(category,path)
+    key=getkey()
+
+    path=path.strip("/")
+    category=category.strip("/")
+    base=opts.sbpath
+    pathfs="%s/%s"%(base,path)
+
+    cmd="rsync -azvPh %s %s::upload/%s/%s%s --delete-after --modify-window=60 --compress --progress  "%(pathfs,\
+        ipaddr,key,category,path)
+    j.system.process.execute(cmd)    
     
 def upload(category,path="",data=False):
     print "UPLOAD: %s %s"%(category,path)
@@ -94,7 +107,7 @@ def upload(category,path="",data=False):
 
     pathfs="%s%s"%(base,path)
 
-    if not data:
+    if not data and j.system.fs.isDir(pathfs):
         j.system.fs.removeIrrelevantFiles(pathfs)
 
     cmd="rsync -azvPh %s %s::upload/%s/%s%s --delete-after --modify-window=60 --compress --progress  "%(pathfs,\
@@ -186,6 +199,7 @@ if opts.action.find('sync2sb')==0 and checkcat("libs"):
     #sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch,"/opt/jsbox/cfg/")
     sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.branch,"%s/tools/"%opts.sbpath,delete=False)
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/libjs/"%opts.branch,"%s/libjs/"%opts.sbpath,delete=False)
+    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/activate"%opts.branch,"%s/activate"%opts.sbpath,delete=False)
 
 
 #COPY FROM SYSTEM TO SANDBOX for CFG
@@ -222,12 +236,14 @@ if opts.action=="upload" and checkcat("installer"):
     j.system.process.executeWithoutPipe(cmd)   
 
 if opts.action.find("upload")<>-1 and checkcat("libs"):
+    uploadfile("jsbox","activate")
     upload("jsbox","libjs")
     upload("jsbox","libext")
     upload("jsbox","apps/agent")
     upload("jsbox","apps/blobserver")
     upload("jsbox","apps/processmanager")
     upload("jsbox","tools")
+
 
 if opts.action.find("upload")<>-1 and checkcat("base"):  
     upload("jsbox","lib")
