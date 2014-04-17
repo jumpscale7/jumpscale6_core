@@ -36,10 +36,10 @@ class JPackageClient():
         import JumpScale.baselib.blobstor
         import JumpScale.baselib.cloudsystemfs            
 
-        if j.application.config.exists("jumpscale.paths.jpackages.files"):
-            self.packageDirFiles=j.application.config.get("jumpscale.paths.jpackages.files")
-        else:
-            self.packageDirFiles=j.system.fs.joinPaths(j.dirs.packageDir, "files")
+        # if j.application.config.exists("jumpscale.paths.jpackages.files"):
+        #     self.packageDirFiles=j.application.config.get("jumpscale.paths.jpackages.files")
+        # else:
+        self.packageDirFiles=j.system.fs.joinPaths(j.dirs.packageDir, "files")
 
         # if hasattr("j","basepath"):
         #     self.packageDirFiles=self.packageDirFiles.replace("$base",j.basepath)

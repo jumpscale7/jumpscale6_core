@@ -213,6 +213,7 @@ if opts.action.find('jsboxupload')==0 or opts.action =='libsupload':
     upload("jsbox","apps/agent")
     upload("jsbox","apps/blobserver")
     upload("jsbox","apps/processmanager")
+    upload("jsbox","tools")
 
 if opts.action.find('jsboxupload')==0 or opts.action =='baseupload':    
     upload("jsbox","lib")

@@ -104,19 +104,23 @@ class Ubuntu:
                 raise RuntimeError("Could not install package %s and check for command %s." % (packagename, cmdname))
 
     def install(self, packagename):
-        self.check()
-        if self._cache==None:
-            self.initApt()
+        
+        cmd='unset JSBASE;unset PYTHONPATH;apt-get install %s -y'%packagename
+        j.system.process.executeWithoutPipe(cmd)
 
-        if isinstance(packagename, basestring):
-            packagename = [packagename]
-        for package in packagename:
-            pkg = self._cache[package]
-            if not pkg.is_installed:
-                print "install %s" % packagename
-                pkg.mark_install()
-        self._cache.commit()
-        self._cache.clear()
+        # self.check()
+        # if self._cache==None:
+        #     self.initApt()
+
+        # if isinstance(packagename, basestring):
+        #     packagename = [packagename]
+        # for package in packagename:
+        #     pkg = self._cache[package]
+        #     if not pkg.is_installed:
+        #         print "install %s" % packagename
+        #         pkg.mark_install()
+        # self._cache.commit()
+        # self._cache.clear()
 
     def installVersion(self, packageName, version):
         '''

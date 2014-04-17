@@ -56,7 +56,7 @@ class TextFileEditor:
         if len(result)==0:
             raise RuntimeError("Could not find a line matching %s and not matching %s in file %s" % (includes,excludes,self.filepath))
         if len(result)>1:
-            raise RuntimeError("Found more than 1 line matching %s" % (patterns,self.filepath))
+            raise RuntimeError("Found more than 1 line matching %s" % (includes,self.filepath))
         return [linenrfound,linefound]
     
     def replaceLinesFromFunction(self,replaceFunction,argument,includes="",excludes=""):
