@@ -71,7 +71,7 @@ if opts.action =='add' or opts.action =='set':
     else:
         name = opts.userlogin or j.console.askString("name")
         passwd = opts.userpasswd or j.console.askPassword("passwd")
-        gid=j.console.askInteger("gid",default=j.application.whoAmI.gid)
+        gid=j.console.askInteger("gid",defaultValue=j.application.whoAmI.gid)
         domain=opts.domain or j.console.askString("domain e.g. incubaid.com")
         
         if j.console.askYesNo("do you want to define new groups."):
