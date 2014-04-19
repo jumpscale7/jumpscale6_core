@@ -238,9 +238,11 @@ class JPackageClient():
             systemdest = j.system.fs.joinPaths(base, relativepath)
         elif ttype=="tmp":
             systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, relativepath)
-        elif ttype=="bin":
+        elif ttype=="bin":            
             base=j.application.config.get("bin.local")
-            systemdest = j.dirs.binDir
+            if base.strip()=="":
+                base="/usr/local/bin/"
+            systemdest = j.system.fs.joinPaths(base, relativepath)
         else:
             base=j.application.config.applyOnContent(ttype)
             if base==ttype:

@@ -118,7 +118,10 @@ class Dirs(object):
 
         self.pidDir = os.path.join(self.varDir,"log")           
 
-        self.binDir = os.path.join(self.baseDir, 'bin')
+        if 'JSBASE' in os.environ:
+            self.binDir = os.path.join(self.baseDir, 'bin')
+        else:
+            self.binDir = "/usr/local/bin"
 
         if self.frozen:
             self.codeDir=os.path.join(self.varDir,"code")
@@ -134,6 +137,9 @@ class Dirs(object):
         self._createDir(self.configsDir)
 
         self.jsLibDir = self._getLibPath()
+        if self.jsLibDir not in sys.path:
+            sys.path.append(self.jsLibDir)
+
         
 
     def replaceTxtDirVars(self,txt):

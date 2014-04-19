@@ -80,7 +80,7 @@ class Application:
             if not self.sandbox:
                 if self.config.exists("python.paths.local.sitepackages"):
                     sitepath=self.config.get("python.paths.local.sitepackages")            
-                    if sitepath not in sys.path:
+                    if sitepath.strip()<>"" and sitepath not in sys.path:
                         sys.path.append(sitepath)
 
 

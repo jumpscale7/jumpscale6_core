@@ -254,7 +254,7 @@ class CodeManagementRecipe:
                     source3="%s/%s"%(source,item)
                     source3=source3.replace("//","/")
                     # print "*%s*"%source3
-                    idest = j.system.fs.joinPaths(dest, item)
+                    idest = j.system.fs.joinPaths(dest, item)                    
                     item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags)
                     self.items.append(item)                                                
                 if tags.labelExists("nodirs"):
@@ -271,6 +271,7 @@ class CodeManagementRecipe:
             else:
                 item=RecipeItem(self.hrd,source=source, destination=dest,platform=platform,type=ttype,tags=tags)
                 self.items.append(item)
+
 
     def export(self):
         '''Export all items from VCS to the system sandbox or other location specifed'''
