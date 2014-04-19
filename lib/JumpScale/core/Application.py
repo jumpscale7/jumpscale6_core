@@ -44,6 +44,7 @@ class Application:
 
         self.connectRedis()
 
+
     def connectRedis(self):
 
         if j.system.net.tcpPortConnectionTest("127.0.0.1",7766):

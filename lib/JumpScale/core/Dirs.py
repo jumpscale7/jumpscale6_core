@@ -37,10 +37,10 @@ def pathToUnicode(path):
 class Dirs(object):
     """Utility class to configure and store all relevant directory paths"""
 
-    # __initialized = False ##bool
 
     def __init__(self):
         '''jumpscale sandbox base folder'''
+        self.__initialized = False ##bool
 
         import sys
         
@@ -132,6 +132,8 @@ class Dirs(object):
 
         self.configsDir = os.path.join(self.cfgDir,"jsconfig")
         self._createDir(self.configsDir)
+
+        self.jsLibDir = self._getLibPath()
         
 
     def replaceTxtDirVars(self,txt):
@@ -147,7 +149,7 @@ class Dirs(object):
         txt=txt.replace("$logdir",self.logDir)
         txt=txt.replace("$tmpdir",self.tmpDir)
         txt=txt.replace("$libdir",self.libDir)
-        txt=txt.replace("$jslibdir",self.JSlibDir)
+        txt=txt.replace("$jslibdir",self.jsLibDir)
         txt=txt.replace("$jslibextdir",self.libExtDir)
         txt=txt.replace("$jsbindir",self.binDir)
         return txt
@@ -180,16 +182,29 @@ class Dirs(object):
         if j.system.platformtype.isWindows() :
             self.codeDir=os.path.join(self.baseDir, 'code')
 
-        self.JSlibDir = self._getLibPath()
         self.loadProtectedDirs()
 
         self.deployDefaultFilesInSandbox()
         self.__initialized = True
         return True
 
+    def _getParent(self, path):
+        """
+        Returns the parent of the path:
+        /dir1/dir2/file_or_dir -> /dir1/dir2/
+        /dir1/dir2/            -> /dir1/
+        @todo why do we have 2 implementations which are almost the same see getParentDirName()
+        """
+        parts = path.split(os.sep)
+        if parts[-1] == '':
+            parts=parts[:-1]
+        parts=parts[:-1]
+        if parts==['']:
+            return os.sep
+        return os.sep.join(parts)
 
     def _getLibPath(self):
-        parent = j.system.fs.getParent
+        parent = self._getParent        
         libDir=parent(parent(__file__))
         libDir=os.path.abspath(libDir).rstrip("/")
         return libDir
@@ -266,9 +281,9 @@ class Dirs(object):
         cfgdest=self.cfgDir
 
         if not os.path.exists(bindest) or not os.path.exists(utilsdest) or not os.path.exists(cfgdest):
-            cfgsource=j.system.fs.joinPaths(self.JSlibDir,"core","_defaultcontent","cfg")
-            binsource=j.system.fs.joinPaths(self.JSlibDir,"core","_defaultcontent","linux","bin")
-            utilssource=j.system.fs.joinPaths(self.JSlibDir,"core","_defaultcontent","linux","utils")
+            cfgsource=j.system.fs.joinPaths(self.jsLibDir,"core","_defaultcontent","cfg")
+            binsource=j.system.fs.joinPaths(self.jsLibDir,"core","_defaultcontent","linux","bin")
+            utilssource=j.system.fs.joinPaths(self.jsLibDir,"core","_defaultcontent","linux","utils")
             j.system.fs.copyDirTree(binsource,bindest)
             j.system.fs.copyDirTree(utilssource,utilsdest)
             j.system.fs.copyDirTree(cfgsource,cfgdest,overwriteFiles=False)

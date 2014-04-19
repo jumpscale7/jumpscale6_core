@@ -221,7 +221,7 @@ class JPackageClient():
         elif ttype=="var":
             systemdest = j.system.fs.joinPaths(j.dirs.varDir, relativepath)
         elif ttype=="jslib":
-            systemdest = j.system.fs.joinPaths(j.dirs.JSlibDir, relativepath)
+            systemdest = j.system.fs.joinPaths(j.dirs.jsLibDir, relativepath)
         elif ttype=="lib":
             systemdest = j.system.fs.joinPaths(j.dirs.libDir, relativepath)
         elif ttype=="libext":
