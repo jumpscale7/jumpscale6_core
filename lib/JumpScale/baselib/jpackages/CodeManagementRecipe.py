@@ -75,6 +75,7 @@ class RecipeItem(object):
                 self._removeDest(destination)  
             if j.system.fs.isFile(source):
                 j.system.fs.copyFile(source, destination,skipProtectedDirs=True)
+                # self._setSecurityFromSource(source,destination)
             else:
                 j.system.fs.copyDirTree(source, destination,skipProtectedDirs=True)
                              
@@ -105,30 +106,6 @@ class RecipeItem(object):
         self._removeDest(dest)
         self._copy(src, dest)
         
-    # def importFromSystem(self, jpackages):
-    #     """
-    #     this packages from existing system and will only work for specified platform
-    #     import from system to files
-    #     """
-    #     self._log("import from system.","import")
-    #     if self._isPlatformSupported:
-    #         if self.coderepoConnection:
-    #             raise RuntimeError("Cannot import from system because, jp code recipe is used for a coderepo, coderepo should be None")            
-
-    #         if self.destination.startswith('/'):
-    #             src = self.destination                        
-    #             destSuffix = self.destination[1:]                
-    #         else:
-    #             src = j.system.fs.pathNormalize(self.destination,j.dirs.baseDir) 
-    #             destSuffix = self.destination
-            
-    #         platformFilesPath = jpackages.getPathFilesPlatform(self.platform)
-    #         dest = j.system.fs.joinPaths(platformFilesPath, destSuffix)
-            
-    #         self._removeDest(dest)
-    #         self._copy(src, dest)
-    #     else:
-    #         raise RuntimeError("Platform is not supported.")
         
     def linkToSystem(self,force=False):
         '''
@@ -162,7 +139,14 @@ class RecipeItem(object):
                 if not j.system.fs.exists(path=source):
                     raise RuntimeError("Cannot find source to put link to, link was from %s to %s"%(source,destination))
                 j.system.fs.symlink(source, destination)
+                # self._setSecurityFromSource(source,destination)
                 j.dirs.addProtectedDir(destination)
+
+    # def _setSecurityFromSource(self,src,dest):
+    #     stat=j.system.fs.statPath(src)
+    #     j.system.fs.chmod(dest,stat.st_mode)
+    #     print "%s %s" % (stat.st_mode,j.system.fs.statPath(src).st_mode)
+
 
     def addToProtectedDirs(self):
         if not self.tags.labelExists("config"):
@@ -228,6 +212,8 @@ class CodeManagementRecipe:
         repo=self.hrd.get("jp.code.repo")
         ttype=self.hrd.get("jp.code.type")
         branch=self.hrd.get("jp.code.branch")
+        if repo=="" or account=="":
+            raise RuntimeError("cannot define codemgmt recipe with empty account or repo, please adjust: hrd/code.hrd in jpackage dir %s"%self.configpath)
         if branch=="":
             branch="default"
         if ttype<>"bitbucket":

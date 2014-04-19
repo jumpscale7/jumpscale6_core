@@ -71,7 +71,7 @@ def doRemote(q,args,host,cmd):
         except BaseException,e:
             sys.stdout=r.oldstdout
             # out=r.redis.hget("admin:output",key)
-            q.put((host,cmd,res,r.out))
+            q.put((host,cmd,res,r.out))            
             return
         sys.stdout=r.oldstdout
         q.put((host,cmd,res,""))
@@ -87,7 +87,7 @@ def doRemote(q,args,host,cmd):
             node=None
             try:
                 node=j.admin.execute(name,once=True,reset=args.force)
-            except Exception,e:
+            except Exception,e:                
                 sys.stdout=r.oldstdout
                 j.errorconditionhandler.processPythonExceptionObject(e)
                 # out="%s\n%s"%(str(e),r.redis.hget("admin:output",key))
@@ -100,8 +100,7 @@ def doRemote(q,args,host,cmd):
             if node<>None:
                 if node.error<>"":
                     if node.result=="":
-                        node.result=r.out
-
+                        node.result=r.out                
                 q.put((host,name,node.result,node.error))
             else:
                 q.put((host,name,"",r.out))
@@ -122,14 +121,16 @@ if __name__ == '__main__':
             p.start()
         else:
             doRemote(queue,args,host,args.command)
-    
+
     for host in j.admin.hosts:
         obj = queue.get()
         # print obj
-        print "##%-10s %-20s##\n%s\n%s"%obj
+        if obj[3].strip()<>"":
+            print "##ERROR##%-10s %-20s##\n%s\n%s\n###############################################"%obj
+        else:
+            print "##%-10s %-20s##\n%s\n%s"%obj
     # p.join()                    # this deadlocks
-
-
+    
     j.application.stop()
 
 

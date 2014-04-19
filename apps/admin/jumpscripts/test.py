@@ -23,7 +23,6 @@ def action(node):
 
     cuapi=node.cuapi
     out=""
-    out+=cuapi.run("ls /l")
     out+=cuapi.run("ls /")
     out+=cuapi.run("ping www.google.com -c 1 -W 1 -w 2")
     return out

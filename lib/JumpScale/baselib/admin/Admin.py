@@ -155,7 +155,7 @@ class JNode():
         return self.cuapi
 
     def uploadFromCfgDir(self,ttype,dest):
-        cfgdir=j.system.fs.joinPaths('/opt/jumpscale/apps/vscalersadmin', "cfgs/%s/%s"%(j.admin.args.cfgname,ttype))
+        cfgdir=j.system.fs.joinPaths(self.basepath, "cfgs/%s/%s"%(j.admin.args.cfgname,ttype))
         cuapi=self.cuapi
         if j.system.fs.exists(path=cfgdir):
             self.log("upload from %s to %s"%(ttype,dest))
@@ -215,14 +215,18 @@ class JNode():
             j.admin.setNode(self)
         else:
             self.log("No need to execute %s on %s"%(jsname,self.name))
+            return False
+
+        
 
 class AdminFactory:
-    def get(self,args,failWhenNotExist):
+    def get(self,args,failWhenNotExist=False):
         return Admin(args,failWhenNotExist)
 
 class Admin():
     def __init__(self,args,failWhenNotExist=False):
         self.args=args
+        self.basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
         if args.action==None or (not args.action in ["createidentity","applyconfiglocal"]):
             if args.local:
                 args.remote="127.0.0.1"
@@ -287,8 +291,8 @@ class Admin():
     def raiseError(self,name,action,msg):
         self.errors.append([name,action,msg])
 
-    def _getPath(self,sub,file=""):
-        path= "/opt/jumpscale/apps/vscalersadmin/%s"%sub
+    def _getPath(self,sub,file=""):        
+        path= "%s/%s"%(self.basepath,sub)
         path=path.replace("\\","/")
         path=path.replace("//","/")
         if path[-1]<>"/":
@@ -321,7 +325,7 @@ class Admin():
         return node
 
     def upload(self,name,ttype,dest):
-        cfgdir="cfgs/%s/%s"%(self.args.cfgname,ttype)
+        cfgdir="%s/cfgs/%s/%s"%(self.basepath,self.args.cfgname,ttype)
         if j.system.fs.exists(path=cfgdir):
             print "upload %s to %s"%(cfgdir,dest)
             items=j.system.fs.listFilesInDir(cfgdir,True)
@@ -344,10 +348,16 @@ class Admin():
         res=[]
         for host in self.hosts:
             node=self.getNode(host,reset)
-            node.execute(jsname,once,**kwargs)
-            res.append(node)
+            r=node.execute(jsname,once,**kwargs)
+            if r<>False:
+                res.append(node)
+            else:
+                # print "NO need to execute"
+                pass
         if len(res)==1:
             res=res[0]
+        elif len(res)==0:
+            res=None
         return res
 
     def loadJumpscripts(self):
@@ -382,7 +392,10 @@ class Admin():
         c+="id.key.dsa.pub=%s\n"%key
 
         idloc=self._getPath("identities/")
+        if login=="":
+            raise RuntimeError("login cannot be empty")
         userloc=j.system.fs.joinPaths(idloc,login)
+        
         j.system.fs.createDir(userloc)
         hrdloc=j.system.fs.joinPaths(idloc,login,"id.hrd")
         j.system.fs.writeFile(filename=hrdloc,contents=c)
