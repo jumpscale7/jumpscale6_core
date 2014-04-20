@@ -1,5 +1,8 @@
 
-import json
+try:
+    import ujson as json
+except:
+    import json
 def main(j, args, params, tags, tasklet):
 
     #macro puts obj info as params on doc, when show used as label, shows the content of the obj in nicely structured code block

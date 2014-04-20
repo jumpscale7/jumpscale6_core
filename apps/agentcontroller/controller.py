@@ -7,7 +7,21 @@ import JumpScale.grid.osis
 import imp
 import importlib
 import inspect
-import ujson as json
+try:
+    import ujson as json
+except:
+    import json
+import time
+from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
+
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
+
+ipaddr=j.application.config.get("grid_master_ip")
+while j.system.net.tcpPortConnectionTest(ipaddr,5544)==False:
+    time.sleep(0.1)
+    print "cannot connect to osis (port 5544)"
 
 j.application.start("jumpscale:agentcontroller")
 j.application.initGrid()
@@ -15,9 +29,13 @@ j.application.initGrid()
 j.logger.consoleloglevel = 2
 import JumpScale.baselib.redis
 
-#check redis is there if not try to start
-if not j.system.net.tcpPortConnectionTest("127.0.0.1",7769):
-    raise RuntimeError("did not find redis on port %s"%7769)
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
+
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
 
 class ControllerCMDS():
 
@@ -63,7 +81,7 @@ class ControllerCMDS():
     def authenticate(self, session):
         return False  # to make sure we dont use it
 
-    def scheduleCmd(self,gid,nid,cmdcategory,cmdname,args={},jscriptid=None,queue="",log=True,timeout=0,roles=[],session=None): 
+    def scheduleCmd(self,gid,nid,cmdcategory,cmdname,args={},jscriptid=None,queue="",log=True,timeout=0,roles=[],wait=False, session=None): 
         """ 
         new preferred method for scheduling work
         @name is name of cmdserver method or name of jumpscript 
@@ -75,7 +93,7 @@ class ControllerCMDS():
         else:
             sessionid=None
         self._log("getjob osis client")
-        job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles) 
+        job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=cmdcategory,cmd=cmdname,queue=queue,args=args,log=log,timeout=timeout,roles=roles,wait=wait) 
         self._log("redis incr for job")
         if session<>None:
             jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
@@ -135,10 +153,15 @@ class ControllerCMDS():
                 job['result'] = json.dumps(job['result'])
             self.jobclient.set(job)
 
+    def _deleteJobFromCache(self, job):
+        self.redis.hdel("jobs:%s"%job["gid"],job["guid"])
+
     def _getJobFromRedis(self, gid, jobguid):
-        jobdict = json.loads(self.redis.hget("jobs:%s"%gid, jobguid))
-        return jobdict
-        # return self.jobclient.new(ddict=jobdict)
+        jobstring = self.redis.hget("jobs:%s"%gid, jobguid)
+        if jobstring:
+            return json.loads(jobstring)
+        else:
+            return None
 
     def _getCmdQueue(self, session=None, gid=None, nid=None):
         """
@@ -179,6 +202,7 @@ class ControllerCMDS():
         j.errorconditionhandler.processErrorConditionObject(eco)
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
+        print "LOADJUMPSCRIPTS"
 
         if session<>None:
             self._adminAuth(session.user,session.passwd)
@@ -188,8 +212,7 @@ class ControllerCMDS():
                 continue
 
             try:
-                fname="%s_%s"%(j.system.fs.getParentDirName(j.system.fs.getDirName(path2)),j.system.fs.getBaseName(path2).replace(".py",""))                
-                script = imp.load_source('jumpscript_pm_%s' % fname, path2)
+                script = JumpScript(path=path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
@@ -203,27 +226,8 @@ class ControllerCMDS():
                 name=j.system.fs.getBaseName(path2)
                 name=name.replace(".py","").lower()
 
-            source = inspect.getsource(script)
-            t=self.jumpscriptclient.new(name=name,action=script.action)
-            t.name=name
-            t.author=getattr(script, 'author', "unknown")
-            t.organization=getattr(script, 'organization', "unknown")
-            t.category=getattr(script, 'category', "unknown")
-            t.license=getattr(script, 'license', "unknown")
-            t.version=getattr(script, 'version', "1.0")
-            t.roles=getattr(script, 'roles', ["*"])
-            t.source=source
-            t.path=path2
-            t.descr=script.descr
-            t.queue=getattr(script, 'queue',"default")
-            t.async = getattr(script, 'async',False)
-            t.period=getattr(script, 'period',0)
-            t.order=getattr(script, 'order', 1)
-            t.log=getattr(script, 'log', True)
-            t.enable=getattr(script, 'enable', True)
-            t.startatboot=getattr(script, 'startatboot', False)
-            t.gid=getattr(script, 'gid', j.application.whoAmI.gid)
-
+            t=self.jumpscriptclient.new(name=script.name, action=script.module.action)
+            t.__dict__.update(script.getDict())
 
             guid,r,r=self.jumpscriptclient.set(t)
             t=self.jumpscriptclient.get(guid)
@@ -303,7 +307,7 @@ class ControllerCMDS():
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
         def noWork():
-            job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout)
+            job=self.jobclient.new(sessionid=session.id,gid=0, category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,wait=wait)
             self._log("nothingtodo")
             job.state="NOWORK"
             job.timeStop=job.timeStart
@@ -321,7 +325,7 @@ class ControllerCMDS():
             if role in self.roles2agents:
                 for agentid in self.roles2agents[role]:
                     gid,nid=agentid.split("_")
-                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id)
+                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait)
                 if wait:
                     return self.waitJumpscript(job=job,session=session)
                 return job
@@ -329,7 +333,7 @@ class ControllerCMDS():
                 return noWork()
         elif nid<>None:
             self._log("NID KNOWN")
-            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id)
+            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id,wait=wait)
 
             if wait:
                 return self.waitJumpscript(job=job,session=session)
@@ -345,6 +349,8 @@ class ControllerCMDS():
             if jobguid==None:
                 raise RuntimeError("job or jobid need to be given as argument")
             job = self._getJobFromRedis(session.gid, jobguid)
+            if not job:
+                job = self.jobclient.get(jobguid).__dict__
         if job['state'] != 'SCHEDULED':
             return job
         q = self._getJobQueue(job["guid"])
@@ -352,6 +358,7 @@ class ControllerCMDS():
             res = q.fetch(timeout=job["timeout"])
         else:
             res = q.fetch()
+        self._deleteJobFromCache(job)
         q.set_expire(5)
         if res<>None:
             return json.loads(res)
@@ -387,8 +394,12 @@ class ControllerCMDS():
             raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         self._setJob(job, osis=True)
-        q=self._getJobQueue(job["guid"])
-        q.put(json.dumps(job))
+        if job['wait']:
+            q=self._getJobQueue(job["guid"])
+            q.put(json.dumps(job))
+            q.set_expire(60) # if result is not fetched in 60 seconds we can delete this
+        else:
+            self._deleteJobFromCache(job)
 
         #NO PARENT SUPPORT YET
         # #now need to return it to the client who asked for the work 

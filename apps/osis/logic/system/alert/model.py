@@ -27,13 +27,7 @@ class Alert(OsisBaseObject):
             self.lasttime=0 #last time there was an error condition linked to this alert
             self.closetime=0  #alert is closed, no longer active
             self.nrerrorconditions=1 #nr of times this error condition happened
-            self.errorconditions=[]  #ids of errorconditions     
-
-    def getUniqueKey(self):
-        """
-        return unique key for object, is used to define unique id
-        """
-        return self.guid
+            self.errorconditions=[]  #ids of errorconditions
 
     def getSetGuid(self):
         """

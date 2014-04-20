@@ -21,8 +21,14 @@ graphite:8081
 
 shellinabox:5577
 
+webdis:7779
+
+redisac:7769
 redisproduction:7768
+reidismain: 7766 (for process manager)
 rediscache:7767
+
+redis for apps & processes & watchdog:7766
 
 
 sentry: 9000
@@ -32,6 +38,6 @@ blobmaster  2344
 
 tracker 3444
 
-
+memcache:9997
 
 

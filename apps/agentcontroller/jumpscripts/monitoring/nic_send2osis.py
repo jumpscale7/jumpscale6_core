@@ -14,6 +14,8 @@ enable = True
 async=True
 queue='process'
 roles = ["grid.node.network"]
+log=False
+
 from JumpScale import j
 
 def action():

@@ -385,6 +385,8 @@ class OSISStore(object):
         for id in ids:
             obj = self.get(id)
             filename = j.system.fs.joinPaths(outputpath, id)
+            if isinstance(obj, dict):
+                obj = json.dumps(obj)
             j.system.fs.writeFile(filename, obj)
 
     def importFromPath(self, path):

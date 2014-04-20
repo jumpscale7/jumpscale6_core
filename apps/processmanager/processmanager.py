@@ -11,13 +11,19 @@ import JumpScale.grid.processmanager
 # import importlib
 # import sys
 
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis main, will keep on trying forever, please start redis main (port 7766)"
 
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
 
 import JumpScale.lib.diskmanager
 
 import JumpScale.baselib.stataggregator
 
-j.application.start("jumpscale:jsprocessmanager")
+j.application.start("jumpscale:processmanager")
 
 j.logger.consoleloglevel = 5
 print 'start init grid'

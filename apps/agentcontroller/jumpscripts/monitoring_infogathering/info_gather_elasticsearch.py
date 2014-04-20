@@ -16,6 +16,8 @@ roles = ["*"]
 enable = True
 period=0
 
+log=False
+
 def action():
     import JumpScale.baselib.elasticsearch
     escl = j.clients.elasticsearch.get()

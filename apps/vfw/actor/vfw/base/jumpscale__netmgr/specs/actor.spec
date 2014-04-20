@@ -10,6 +10,10 @@
         var:gid int,,grid id
         var:nid int,,node id
         var:masquerade int,,do you want to allow masquerading?
+        var:login str,,Admin login to the firewall
+        var:password str,, Admin password to the firewall
+        var:host str,, Host to the firewall
+        var:type str,, Type of the firewall, e.g routeros, ...
         #result:int #unique id of firewall
 
     method:fw_list @noauth
@@ -59,8 +63,8 @@
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
-        var:sourceip str,,adr where we forward to e.g. a ssh server in DMZ
-        var:sourceport int,,port on fw which will be visble to external world
+        var:fwip str,,addr on fw which will be visible to extenal world
+        var:fwport int,,port on fw which will be visble to external world
         var:destip str,,adr where we forward to e.g. a ssh server in DMZ
         var:destport int,,port where we forward to e.g. a ssh server in DMZ
 
@@ -69,8 +73,8 @@
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
-        var:sourceip str,,adr where we forward to e.g. a ssh server in DMZ
-        var:sourceport int,,port on fw which will be visble to external world
+        var:fwip str,,adr where we forward to e.g. a ssh server in DMZ
+        var:fwport int,,port on fw which will be visble to external world
         var:destip str,,adr where we forward to e.g. a ssh server in DMZ
         var:destport int,,port where we forward to e.g. a ssh server in DMZ
 

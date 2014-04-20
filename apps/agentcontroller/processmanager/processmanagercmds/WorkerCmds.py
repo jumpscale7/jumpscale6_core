@@ -1,9 +1,14 @@
 from JumpScale import j
 import time
 import JumpScale.baselib.redisworker
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 
 class WorkerCmds():
+
+    ORDER = 10
 
     def __init__(self,daemon=None):
         self._name="worker"
@@ -38,11 +43,11 @@ class WorkerCmds():
             self._adminAuth(session.user,session.passwd)
 
         if format == 'json':
-            return ujson.dumps(self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago))
+            return json.dumps(self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago))
         else:
             return self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
         
-    def getWorkersWatchdogTime(self, session):
+    def getWorkersWatchdogTime(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
         workers2 = self.redis.hgetall("workers:watchdog")
@@ -51,17 +56,17 @@ class WorkerCmds():
             foundworkers[workername]=timeout
         return foundworkers
 
-    def stopWorkers(self, session):
+    def stopWorkers(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)        
-        for workername in self.getWorkersWatchdogTime.keys():
-            redis.set("workers:action:%s"%workername,"STOP")
+        for workername in self.getWorkersWatchdogTime().keys():
+            self.redis.set("workers:action:%s"%workername,"STOP")
 
-    def reloadWorkers(self, session):
+    def reloadWorkers(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-        for workername in self.getWorkersWatchdogTime.keys():
-            redis.set("workers:action:%s"%workername,"RELOAD")
+        for workername in self.getWorkersWatchdogTime().keys():
+            self.redis.set("workers:action:%s"%workername,"RELOAD")
 
     def removeJobs(self, hoursago=48, failed=False, session=None):
         """

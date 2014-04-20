@@ -18,6 +18,7 @@ enable = True
 async = False
 roles = ["*"]
 
+log=False
 
 def action():
     result = dict()

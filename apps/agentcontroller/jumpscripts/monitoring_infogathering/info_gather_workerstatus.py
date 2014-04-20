@@ -15,6 +15,7 @@ category = "system.workerstatus"
 async = False
 roles = ["*"]
 
+log=False
 
 def action():
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
@@ -24,7 +25,7 @@ def action():
     workers = [ x[len(prefix):] for x in j.tools.startupmanager.listProcesses() if x.startswith(prefix) ]
     for worker in workers:
         timeout = timemap.get(worker.split('_')[0])
-        lastactive = int(rediscl.hget('workers:watchdog', 'worker_%s' % worker))
+        lastactive = int(rediscl.hget('workers:watchdog', 'worker_%s' % worker) or 0)
         pids = j.system.process.getProcessPid(worker)
         stats = {'cpu': 0, 'mem': 0, 'lastactive': lastactive, 'state': 'HALTED'}
         for pid in pids:

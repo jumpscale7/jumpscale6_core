@@ -18,7 +18,11 @@ async = True
 log = False
 
 
-import ujson
+try:
+    import ujson as json
+except:
+    import json
+
 import time
 import JumpScale.baselib.redis
 
@@ -58,7 +62,7 @@ def action():
 
     out=[]
     while log<>None:
-        log2=ujson.decode(log)
+        log2=json.decode(log)
         log3 = j.logger.getLogObjectFromDict(log2)
         log4= loghandlingTE.executeV2(logobj=log3)      
         if log4<>None:
@@ -71,7 +75,7 @@ def action():
         OSISclientLogger.set(out)
 
     while eco<>None:
-        eco2=ujson.decode(eco)
+        eco2=json.decode(eco)
         eco2["epoch"] = int(time.time())
         eco3 = j.errorconditionhandler.getErrorConditionObject(ddict=eco2)        
         eco4= eventhandlingTE.executeV2(eco=eco3)

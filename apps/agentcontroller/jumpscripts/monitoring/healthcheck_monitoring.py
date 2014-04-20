@@ -15,23 +15,29 @@ period = 120 #always in sec
 enable = True
 async = True
 roles = ["*"]
-
+log=False
+queue = "process"
 
 def action():
     import JumpScale.grid.gridhealthchecker
     import JumpScale.baselib.redis
     import time
-    import ujson
+    try:
+        import ujson as json
+    except:
+        import json
 
     nodeid = j.application.whoAmI.nid
     if nodeid == j.core.grid.healthchecker.masternid:
         rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
         results, errors = j.core.grid.healthchecker.runAll()
-        rediscl.hset('healthcheck:monitoring', 'results', ujson.dumps(results))
-        rediscl.hset('healthcheck:monitoring', 'errors', ujson.dumps(errors))
+        rediscl.hset('healthcheck:monitoring', 'results', json.dumps(results))
+        rediscl.hset('healthcheck:monitoring', 'errors', json.dumps(errors))
         rediscl.hset('healthcheck:monitoring', 'lastcheck', time.time())
 
         if errors:
             for nid, categories in errors.iteritems():
                 for cat, data in categories.iteritems():
-                    j.events.opserror('%s on node %s seems to be having issues' % (cat, nid), 'monitoring')
+                    msg='%s on node %s seems to be having issues' % (cat, nid)
+                    print msg
+                    # j.events.opserror(msg, 'monitoring')

@@ -2,13 +2,30 @@
 
 import sys
 import time
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 import psutil
 import imp
 import random
-
+import JumpScale.baselib.taskletengine
 from JumpScale.baselib import cmdutils
 from JumpScale import j
+
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
+
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+    time.sleep(0.1)
+    print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
+
+ipaddr=j.application.config.get("grid_master_ip")
+while j.system.net.tcpPortConnectionTest(ipaddr,4444)==False:
+    time.sleep(0.1)
+    print "cannot connect to agent controller (port 4444)"
+
 
 j.application.start("jumpscale:worker")
 try:
@@ -26,10 +43,6 @@ import JumpScale.grid.agentcontroller
 import JumpScale.baselib.redis
 import JumpScale.baselib.redisworker
 
-#check redis is there if not try to start
-if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
-    j.packages.findNewest(name="redis").install()
-    j.packages.findNewest(name="redis").start()
 
 class Worker(object):
 
@@ -207,7 +220,7 @@ class Worker(object):
 
         if job.jscriptid>10000:
             # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
-            self.redis.hset("workers:jobs",job.id, ujson.dumps(job.__dict__))
+            self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
             w.redis.rpush("workers:return:%s"%job.id,time.time())
         else:
             #jumpscripts coming from AC

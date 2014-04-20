@@ -14,7 +14,7 @@ period = 120 #always in sec
 enable=True
 async=True
 queue='process'
-
+log=False
 roles = ["grid.node.process"]
 
 def action():
@@ -59,6 +59,7 @@ def action():
             cacheobj.p = j.system.process.getProcessObject(pid)
         except:
             cacheobj.p = None
+            return
         try:
             if cacheobj.p:
                 args = ['get_cpu_times', 'get_memory_info', 'create_time',
@@ -153,7 +154,7 @@ def action():
 
     #walk over startupmanager processes (make sure we don't double count)
     for sprocess in j.tools.startupmanager.getProcessDefs():
-        pid = sprocess.getPid(ifNoPidFail=False)
+        pid = sprocess.getJSPid()
 
         if j.core.processmanager.monObjects.processobject.pid2name.has_key(pid):
             sprocess.domain,sprocess.name=j.core.processmanager.monObjects.processobject.pid2name[pid]
@@ -192,85 +193,85 @@ def action():
         result[process_key]=cacheobj
 
 
-    # plist=psutil.get_process_list()
-    initprocess=j.system.process.getProcessObject(1)  #find init process
+    # # plist=psutil.get_process_list()
+    # initprocess=j.system.process.getProcessObject(1)  #find init process
 
-    for process in initprocess.get_children():
+    # for process in initprocess.get_children():
 
 
-        pname=process.name
-        if pname.find(" ")<>-1:
-            pname=pname.split(" ")[0]
-        if pname.find(":")<>-1:
-            pname=pname.split(":")[0]
-        pname=pname.lower().strip()
+    #     pname=process.name
+    #     if pname.find(" ")<>-1:
+    #         pname=pname.split(" ")[0]
+    #     if pname.find(":")<>-1:
+    #         pname=pname.split(":")[0]
+    #     pname=pname.lower().strip()
 
-        if pname in ["getty"]:
-            continue
-        pid = process.pid
-        if pid == 0:
-            continue
+    #     if pname in ["getty"]:
+    #         continue
+    #     pid = process.pid
+    #     if pid == 0:
+    #         continue
 
-        print "systemprocess:%s %s"%(pname, pid)
+    #     print "systemprocess:%s %s"%(pname, pid)
 
-        if j.core.processmanager.monObjects.processobject.pid2name.has_key(pid):
-            domain0,name0=j.core.processmanager.monObjects.processobject.pid2name[pid]
-            if domain0==None:
-                process_key="%s"%(name0)
-            else:
-                process_key="%s_%s"%(domain0,name0)
-        else:
-            process_key=pname
+    #     if j.core.processmanager.monObjects.processobject.pid2name.has_key(pid):
+    #         domain0,name0=j.core.processmanager.monObjects.processobject.pid2name[pid]
+    #         if domain0==None:
+    #             process_key="%s"%(name0)
+    #         else:
+    #             process_key="%s_%s"%(domain0,name0)
+    #     else:
+    #         process_key=pname
 
-        if result.has_key(process_key):
-            #process with same name does already exist, lets first create temp getProcessObject, which will be done by pid
-            cacheobj=j.core.processmanager.monObjects.processobject.get(id=pid)
-        else:
-            cacheobj=j.core.processmanager.monObjects.processobject.get(id=process_key)
+    #     if result.has_key(process_key):
+    #         #process with same name does already exist, lets first create temp getProcessObject, which will be done by pid
+    #         cacheobj=j.core.processmanager.monObjects.processobject.get(id=pid)
+    #     else:
+    #         cacheobj=j.core.processmanager.monObjects.processobject.get(id=process_key)
 
-        rootCacheObj=j.core.processmanager.monObjects.processobject.get(id=process_key)
-        if rootCacheObj.ckeyOld=="":
-            rootCacheObj.ckeyOld=rootCacheObj.db.getContentKey() #get from prev version the content key
+    #     rootCacheObj=j.core.processmanager.monObjects.processobject.get(id=process_key)
+    #     if rootCacheObj.ckeyOld=="":
+    #         rootCacheObj.ckeyOld=rootCacheObj.db.getContentKey() #get from prev version the content key
 
-        processOsisObject=cacheobj.db
+    #     processOsisObject=cacheobj.db
 
-        processOsisObject.active=True #process.is_running()
+    #     processOsisObject.active=True #process.is_running()
 
-        processOsisObject.pname=pname
-        processOsisObject.sname=pname
+    #     processOsisObject.pname=pname
+    #     processOsisObject.sname=pname
 
-        processOsisObject.getSetGuid()
+    #     processOsisObject.getSetGuid()
 
-        processOsisObject.workingdir = process.getcwd()
-        processOsisObject.cmd = process.exe
+    #     processOsisObject.workingdir = process.getcwd()
+    #     processOsisObject.cmd = process.exe
 
-        loadFromSystemProcessInfo(process_key,cacheobj,pid)
+    #     loadFromSystemProcessInfo(process_key,cacheobj,pid)
 
-        processOsisObject.pname=pname #need to reset because loadfromsystem does not clean
-        processOsisObject.sname=pname
+    #     processOsisObject.pname=pname #need to reset because loadfromsystem does not clean
+    #     processOsisObject.sname=pname
  
-        processOsisObject.type="childreninit" #init children
+    #     processOsisObject.type="childreninit" #init children
 
-        cacheobj.getTotalsChildren()
+    #     cacheobj.getTotalsChildren()
 
-        if result.has_key(process_key):
-            #was double process, need to aggregate
-            cacheobjNow=cacheobj
-            cacheobjPrev=result[process_key]
-            #cacheobj+=...  aggregate with prev obj
-            for item in j.core.processmanager.monObjects.processobject.getProcessStatProps():
-                cacheobjPrev.db.__dict__[item]+=float(cacheobjNow.db.__dict__[item])    
-            #copy ports
-            for systempid in cacheobjNow.db.systempids:
-                if systempid not in cacheobjPrev.db.systempids:
-                    cacheobjPrev.db.systempids.append(systempid)
+    #     if result.has_key(process_key):
+    #         #was double process, need to aggregate
+    #         cacheobjNow=cacheobj
+    #         cacheobjPrev=result[process_key]
+    #         #cacheobj+=...  aggregate with prev obj
+    #         for item in j.core.processmanager.monObjects.processobject.getProcessStatProps():
+    #             cacheobjPrev.db.__dict__[item]+=float(cacheobjNow.db.__dict__[item])    
+    #         #copy ports
+    #         for systempid in cacheobjNow.db.systempids:
+    #             if systempid not in cacheobjPrev.db.systempids:
+    #                 cacheobjPrev.db.systempids.append(systempid)
 
-            cacheobj=cacheobjPrev
+    #         cacheobj=cacheobjPrev
 
-            #@todo NEED TO SEE FOR OTHER RELEVANT ITEMS TOO TO AGGREGATE
+    #         #@todo NEED TO SEE FOR OTHER RELEVANT ITEMS TOO TO AGGREGATE
 
-        cacheobj.db.statkey=process_key
-        result[process_key]=cacheobj    
+    #     cacheobj.db.statkey=process_key
+    #     result[process_key]=cacheobj    
 
         # exists=j.core.processmanager.monObjects.processobject.exists(process_key)
     for process_key,cacheobj in result.iteritems():

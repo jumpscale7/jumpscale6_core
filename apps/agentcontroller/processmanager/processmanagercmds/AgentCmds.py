@@ -3,12 +3,14 @@ import JumpScale.grid.agentcontroller
 import JumpScale.baselib.redisworker
 import gevent
 from JumpScale.grid.serverbase import returnCodes
+import time
 
 REDISIP = '127.0.0.1'
 REDISPORT = 7768
 
 
 class AgentCmds():
+    ORDER = 20
 
     def __init__(self,daemon=None):
         self._name="agent"
@@ -64,54 +66,58 @@ class AgentCmds():
         print "start loop to fetch work"
         while True:
             try:
-                print "check if work"
-                job=self.client.getWork()
-                print "check work returns"
-                if job<>None:
-                    print "WORK FOUND: jobid:%s"%job["id"]
-                else:
-                    print "no work"
-                    continue
-            except Exception,e:
-                j.errorconditionhandler.processPythonExceptionObject(e)
-                self.reconnect()
-                continue
-
-            if job["queue"]=="internal":
-                #cmd needs to be executed internally (is for proxy functionality)
-               
-                if self.daemon.cmdsInterfaces.has_key(job["category"]):
-                    job["resultcode"],returnformat,job["result"]=self.daemon.processRPC(job["cmd"], data=job["args"], returnformat="m", session=None, category=job["category"])
-                    if job["resultcode"]==returnCodes.OK:
-                        job["state"]="OK"
+                try:
+                    print "check if work"
+                    job=self.client.getWork()
+                    print "check work returns"
+                    if job<>None:
+                        print "WORK FOUND: jobid:%s"%job["id"]
                     else:
+                        print "no work"
+                        continue
+                except Exception,e:
+                    j.errorconditionhandler.processPythonExceptionObject(e)
+                    self.reconnect()
+                    continue
+
+                if job["queue"]=="internal":
+                    #cmd needs to be executed internally (is for proxy functionality)
+                   
+                    if self.daemon.cmdsInterfaces.has_key(job["category"]):
+                        job["resultcode"],returnformat,job["result"]=self.daemon.processRPC(job["cmd"], data=job["args"], returnformat="m", session=None, category=job["category"])
+                        if job["resultcode"]==returnCodes.OK:
+                            job["state"]="OK"
+                        else:
+                            job["state"]="ERROR"
+                    else:
+                        job["resultcode"]=returnCodes.METHOD_NOT_FOUND
                         job["state"]="ERROR"
+                        job["result"]="Could not find cmd category:%s"%job["category"]
+                    self.client.notifyWorkCompleted(job)
+                    continue
+
+                if job["jscriptid"]==None:
+                    raise RuntimeError("jscript id needs to be filled in")
+
+                jscriptkey = "%(category)s_%(cmd)s" % job
+                jscript = j.core.processmanager.cmds.jumpscripts.jumpscripts[jscriptkey]
+                if jscript.async or job['queue']:
+                    j.clients.redisworker.execJobAsync(job)
                 else:
-                    job["resultcode"]=returnCodes.METHOD_NOT_FOUND
-                    job["state"]="ERROR"
-                    job["result"]="Could not find cmd category:%s"%job["category"]
-                self.client.notifyWorkCompleted(job)
-                continue
+                    def run():
+                        timeout = gevent.Timeout(job['timeout'])
+                        timeout.start()
+                        try:
+                            status, result = jscript.execute(**job['args'])
+                            job['state'] = 'OK' if status else 'ERROR'
+                            job['result'] = result
+                            self.client.notifyWorkCompleted(job)
+                        finally:
+                            timeout.cancel()
+                    gevent.spawn(run)
+            except Exception, e:
+                j.errorconditionhandler.processPythonExceptionObject(e)
 
-            if job["jscriptid"]==None:
-                raise RuntimeError("jscript id needs to be filled in")
-
-            jscriptkey = "%(category)s_%(cmd)s" % job
-            jscript = j.core.processmanager.cmds.jumpscripts.jumpscripts[jscriptkey]
-            if jscript.async or job['queue']:
-                j.clients.redisworker.execJobAsync(job)
-            else:
-                def run():
-                    timeout = gevent.Timeout(job['timeout'])
-                    timeout.start()
-                    try:
-                        status, result = jscript.execute(**job['args'])
-                        job['state'] = 'OK' if status else 'ERROR'
-                        job['result'] = result
-                        self.client.notifyWorkCompleted(job)
-                    finally:
-                        timeout.cancel()
-                gevent.spawn(run)
 
     def _killGreenLets(self,session=None):
         """

@@ -29,13 +29,17 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args)['result']
 
-    def fw_create(self, domain, name, gid, nid, masquerade, **kwargs):
+    def fw_create(self, domain, name, gid, nid, masquerade,login, password, host, type, **kwargs):
         """
         param:domain needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
         param:name needs to be unique name of vfirewall
         param:gid grid id
         param:nid node id
         param:masquerade do you want to allow masquerading?
+        param:login admin login to the firewall
+        param:password admin password to the firewall
+        param:host management address to manage the firewall
+        param:type type of firewall e.g routeros, ...
         """
         fwobj = self.osisvfw.new()
         fwobj.domain = domain
@@ -43,9 +47,16 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj.gid = gid
         fwobj.nid = nid
         fwobj.masquerade = masquerade
+        fwobj.host = host
+        fwobj.username = login
+        fwobj.password = password
+        fwobj.type =  type
         self.osisvfw.set(fwobj)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
-        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid, args=args)['result']
+        if type == 'routeros':
+            return True
+        else:
+            return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid, args=args)['result']
 
     def fw_delete(self, fwid, gid, **kwargs):
         """
@@ -57,43 +68,54 @@ class jumpscale_netmgr(j.code.classGetBase()):
         result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args)['result']
         if result:
             self.osisvfw.delete(fwid)
-
         return result
 
-    def fw_forward_create(self, fwid, gid, fwport, destip, destport, **kwargs):
+    def _applyconfig(self, nid, args):
+        if args['fwobject']['type'] == 'routeros':
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig_routeros', nid=nid, args=args)['result']
+        else:
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=nid, args=args)['result']
+        return result
+
+
+    def fw_forward_create(self, fwid, gid, fwip, fwport, destip, destport, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
-        param:fwport port on fw which will be visble to external world
+        param:fwip str,,adr on fw which will be visible to extenal world
+        param:fwport str,,port on fw which will be visble to external world
         param:destip adr where we forward to e.g. a ssh server in DMZ
         param:destport port where we forward to e.g. a ssh server in DMZ
         """
         fwobj = self.osisvfw.get(fwid)
         rule = fwobj.new_tcpForwardRule()
+        rule.fromAddr = fwip
         rule.fromPort = fwport
         rule.toAddr = destip
         rule.toPort = destport
-        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
-        result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args)['result']
+        args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': fwobj.obj2dict()}
+        result = self._applyconfig(fwobj.nid, args)
         if result:
             self.osisvfw.set(fwobj)
         return result
 
-    def fw_forward_delete(self, fwid, gid, fwport, destip, destport, **kwargs):
+    def fw_forward_delete(self, fwid, gid, fwip, fwport, destip, destport, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
+        param:fwip str,,adr on fw which will be visible to extenal world
         param:fwport port on fw which will be visble to external world
         param:destip adr where we forward to e.g. a ssh server in DMZ
         param:destport port where we forward to e.g. a ssh server in DMZ
         """
         fwobj = self.osisvfw.get(fwid)
         for rule in fwobj.tcpForwardRules:
-            if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport:
+            if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport and rule.fromAddr == fwip:
                 fwobj.tcpForwardRules.remove(rule)
-                args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': self.json.dumps(fwobj)}
-                result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=fwobj.nid, args=args)['result']
-
+                args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': fwobj.obj2dict()}
+                result = self._applyconfig(fwobj.nid, args)
+                if result:
+                    self.osisvfw.set(fwobj)
         return result
     
 
@@ -108,8 +130,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj = self.osisvfw.get(fwid)
         result = list()
         for rule in fwobj.tcpForwardRules:
-            result.append([rule.fromPort, rule.toAddr, rule.toPort])
-
+            result.append({'publicIp':rule.fromAddr, 'publicPort':rule.fromPort, 'localIp':rule.toAddr, 'localPort':rule.toPort})
         return result
 
     def fw_list(self, gid, domain=None, **kwargs):
@@ -164,7 +185,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.url = sourceurl
         rule.toUrls = desturls
         self.osisvfw.set(wsfobj)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=wsfobj.nid, args={'name': wsfobj.name, 'fwobject': self.json.dumps(wsfobj)}, wait=False)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=wsfobj.nid, args={'name': wsfobj.name, 'fwobject': wsfobj.obj2dict()}, wait=False)
         return True
     
 
@@ -188,7 +209,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 if len(urls) == 0:
                     wsfr.remove(rule)
         args = {'name': '%s_%s' % (vfws.domain, vfws.name), 'action': 'start'}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=vfws.nid, args={'name': vfws.name, 'fwobject': self.json.dumps(vfws)}, wait=False)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=vfws.nid, args={'name': vfws.name, 'fwobject': vfws.obj2dict()}, wait=False)
         return True
     
 

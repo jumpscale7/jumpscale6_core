@@ -16,7 +16,7 @@ period = 300 #always in sec
 enable = True
 async = False
 roles = ["*"]
-
+log=False
 
 def action():
     import JumpScale.grid.gridhealthchecker
@@ -26,7 +26,7 @@ def action():
     for data in [rstatus, errors]:
         if len(data) > 0 and nodeid in rstatus:
             rstatus = rstatus[nodeid]['redis']
-            for port, stat in rstatus.iteritems():
-                if not stat['alive']:
-                    msg='Redis on node with id %s with port %s is not running.' % (nodeid, port)
+            for stat in rstatus:
+                if stat['state'] != 'RUNNING':
+                    msg='Redis on node with id %s with port %s is not running.' % (nodeid, stat['port'])
                     j.events.opserror( msg, category='monitoring')

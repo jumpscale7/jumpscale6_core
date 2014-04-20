@@ -12,7 +12,15 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
     
         self._P_descr=""
     
+        self._P_type=""
+    
         self._P_domain=""
+    
+        self._P_host=""
+    
+        self._P_username=""
+    
+        self._P_password=""
     
         self._P_tcpForwardRules=list()
     
@@ -130,6 +138,26 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
 
 
     @property
+    def type(self):
+        return self._P_type
+    @type.setter
+    def type(self, value):
+        
+        if not isinstance(value, str) and value is not None:
+            if isinstance(value, basestring) and j.basetype.string.checkString(value):
+                value = j.basetype.string.fromString(value)
+            else:
+                msg="property type input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                raise RuntimeError(msg)
+    
+
+        self._P_type=value
+    @type.deleter
+    def type(self):
+        del self._P_type
+
+
+    @property
     def domain(self):
         return self._P_domain
     @domain.setter
@@ -147,6 +175,66 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
     @domain.deleter
     def domain(self):
         del self._P_domain
+
+
+    @property
+    def host(self):
+        return self._P_host
+    @host.setter
+    def host(self, value):
+        
+        if not isinstance(value, str) and value is not None:
+            if isinstance(value, basestring) and j.basetype.string.checkString(value):
+                value = j.basetype.string.fromString(value)
+            else:
+                msg="property host input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                raise RuntimeError(msg)
+    
+
+        self._P_host=value
+    @host.deleter
+    def host(self):
+        del self._P_host
+
+
+    @property
+    def username(self):
+        return self._P_username
+    @username.setter
+    def username(self, value):
+        
+        if not isinstance(value, str) and value is not None:
+            if isinstance(value, basestring) and j.basetype.string.checkString(value):
+                value = j.basetype.string.fromString(value)
+            else:
+                msg="property username input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                raise RuntimeError(msg)
+    
+
+        self._P_username=value
+    @username.deleter
+    def username(self):
+        del self._P_username
+
+
+    @property
+    def password(self):
+        return self._P_password
+    @password.setter
+    def password(self, value):
+        
+        if not isinstance(value, str) and value is not None:
+            if isinstance(value, basestring) and j.basetype.string.checkString(value):
+                value = j.basetype.string.fromString(value)
+            else:
+                msg="property password input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                raise RuntimeError(msg)
+    
+
+        self._P_password=value
+    @password.deleter
+    def password(self):
+        del self._P_password
 
 
     @property

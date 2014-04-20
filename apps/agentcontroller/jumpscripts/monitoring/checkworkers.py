@@ -24,12 +24,17 @@ def action():
 
     redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
 
-    workers2 = redis.hgetall("workers:watchdog")
     foundworkers={}
-    for workername, timeout in zip(workers2[0::2], workers2[1::2]):    
-        foundworkers[workername]=timeout
 
-    nrworkersrequired=len(foundworkers.keys())
+    if redis.exists("workers:watchdog"):
+
+        workers2 = redis.hgetall("workers:watchdog")
+
+        
+        for workername, timeout in zip(workers2[0::2], workers2[1::2]):    
+            foundworkers[workername]=timeout
+
+        # nrworkersrequired=len(foundworkers.keys())
 
     nrworkersrequired=5 #for now fix it, our way of knowing how many is not reliable
 

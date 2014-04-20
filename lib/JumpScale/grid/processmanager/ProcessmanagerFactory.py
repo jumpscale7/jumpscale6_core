@@ -6,18 +6,27 @@ import psutil
 import importlib
 import time
 import imp
+import inspect
+import linecache
 
 class Dummy():
     pass
 
 class JumpScript(object):
-    def __init__(self, ddict):
+    def __init__(self, ddict=None, path=None):
         self.period = 0
         self.lastrun = 0
+        self.id = None
         self.startatboot = False
-        self.__dict__.update(ddict)
-        self.write()
-        self.load()
+        if ddict:
+            self.__dict__.update(ddict)
+        if not path:
+            self.write()
+            self.load()
+        else:
+            self.path = path
+            self.load()
+            self.loadAttributes()
 
     def write(self):
         jscriptdir = j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts", self.organization)
@@ -33,7 +42,40 @@ from JumpScale import j
 
     def load(self):
         md5sum = j.tools.hash.md5_string(self.path)
-        self.module = imp.load_source('JumpScale.jumpscript_%s' % md5sum, self.path)
+        modulename = 'JumpScale.jumpscript_%s' % md5sum
+        linecache.checkcache(self.path)
+        self.module = imp.load_source(modulename, self.path)
+
+    def getDict(self):
+        result = dict()
+        for attrib in ('name', 'author', 'organization', 'category', 'license', 'version', 'roles', 'source', 'path', 'descr', 'queue', 'async', 'period', 'order', 'log', 'enable', 'startatboot', 'gid', 'id'):
+            result[attrib] = getattr(self, attrib)
+        return result
+
+    def loadAttributes(self):
+        name = getattr(self.module, 'name', "")
+        if name=="":
+            name=j.system.fs.getBaseName(self.path)
+            name=name.replace(".py","").lower()
+
+        source = inspect.getsource(self.module)
+        self.name=name
+        self.author=getattr(self.module, 'author', "unknown")
+        self.organization=getattr(self.module, 'organization', "unknown")
+        self.category=getattr(self.module, 'category', "unknown")
+        self.license=getattr(self.module, 'license', "unknown")
+        self.version=getattr(self.module, 'version', "1.0")
+        self.roles=getattr(self.module, 'roles', ["*"])
+        self.source=source
+        self.descr=self.module.descr
+        self.queue=getattr(self.module, 'queue',"default")
+        self.async = getattr(self.module, 'async',False)
+        self.period=getattr(self.module, 'period',0)
+        self.order=getattr(self.module, 'order', 1)
+        self.log=getattr(self.module, 'log', True)
+        self.enable=getattr(self.module, 'enable', True)
+        self.startatboot=getattr(self.module, 'startatboot', False)
+        self.gid=getattr(self.module, 'gid', j.application.whoAmI.gid)
 
     def run(self, *args, **kwargs):
         return self.module.action(*args, **kwargs)
@@ -97,14 +139,14 @@ class ProcessmanagerFactory:
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
-        j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1)
+        # j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1) #@todo
         
 
     def start(self):
-        #check redis is there if not try to start
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
-            j.packages.findNewest(name="redis").install()
-            j.packages.findNewest(name="redis").start()
+        # #check redis is there if not try to start
+        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+        #     j.packages.findNewest(name="redis").install()
+        #     j.packages.findNewest(name="redis").start()
 
         def checkosis():
             self.daemon.osis
@@ -214,8 +256,12 @@ class ProcessmanagerFactory:
         self.cmds=Dummy()
         self.loadMonitorObjectTypes()
 
-        for key in self.daemon.daemon.cmdsInterfaces.keys():
-            self.cmds.__dict__[key]=self.daemon.daemon.cmdsInterfaces[key]
+        def sort(item):
+            key, cmd = item
+            return getattr(cmd, 'ORDER', 10000)
+
+        for key, cmd in sorted(self.daemon.daemon.cmdsInterfaces.iteritems(), key=sort):
+            self.cmds.__dict__[key]=cmd
             if hasattr(self.cmds.__dict__[key],"_init"):
                 self.cmds.__dict__[key]._init()
 
