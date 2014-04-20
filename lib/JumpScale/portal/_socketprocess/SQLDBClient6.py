@@ -1,5 +1,8 @@
 import functools
-import json
+try:
+    import ujson as json
+except:
+    import json
 import sqlalchemy
 
 from JumpScale import j

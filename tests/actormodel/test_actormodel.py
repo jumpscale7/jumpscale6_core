@@ -1,5 +1,8 @@
 import requests
-import json
+try:
+    import ujson as json
+except:
+    import json
 import unittest
 import os
 import uuid
