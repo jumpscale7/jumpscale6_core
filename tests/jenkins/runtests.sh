@@ -67,6 +67,14 @@ grid.master.superadminpasswd=6bde6ce08268a6d58ba96f27402bd7d4
 ' > /opt/jumpscale/cfg/hrd/grid.hrd
 
 echo '
+redis.port.redisc=7767
+redis.port.redisp=7768
+redis.port.redisac=7769
+redis.port.redism=7766
+redis.ac.enable=1
+' > /opt/jumpscale/cfg/hrd/redis.hrd
+
+echo '
 gridmaster.useavahi=1
 gridmaster.grid.id=1' > /opt/jumpscale/cfg/hrd/grid_master.hrd
 
