@@ -231,7 +231,7 @@ elif args.action == 'mdswitch':
 elif args.action == 'mddisabledebug':
     if args.domains==None:
         domain=""
-    j.packages.disableDebugMetaData(qualitylevel=args.qualitylevel,domain)
+    j.packages.disableDebugMetaData(qualitylevel=args.qualitylevel,domain=domain)
 
 elif args.action == 'upload':
     packages = cmdutils.getJPackage(args,installed=False)    
