@@ -20,6 +20,7 @@ class JNode():
         self.passwd=None
         self.error=""
         self.result=""
+        self.basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
 
     def executeCmds(self,cmds,die=True):
         out=""
@@ -363,7 +364,7 @@ class Admin():
     def loadJumpscripts(self):
         # print "load jumpscripts ",
         sys.path.append(self._getPath("jumpscripts"))        
-        cmds=j.system.fs.listFilesInDir(self._getPath("jumpscripts"),filter="*.py")
+        cmds=j.system.fs.listFilesInDir(self._getPath("jumpscripts"), recursive=True, filter="*.py")
         cmds.sort()
         for item in cmds:
             name=j.system.fs.getBaseName(item).replace(".py","")
