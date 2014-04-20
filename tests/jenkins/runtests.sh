@@ -82,15 +82,7 @@ login = qp5' > /opt/jumpscale/cfg/jsconfig/bitbucket.cfg
 
 jpackage mdupdate
 jpackage install -n base
-jpackage install -n core
-
-jpackage install -n elasticsearch
-jpackage install -n grid_master
-jpackage install -n grid_node
-jpackage install -n grid_portal
-jpackage install -n graphite
-jpackage install -n agentcontroller
-jpackage install -n workers
+jpackage install -n grid_master_singlenode
 
 echo '[main]
 appdir = /opt/jumpscale/apps/portalbase
