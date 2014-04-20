@@ -29,7 +29,7 @@ def action(node):
     except:
         pass
     print c.run("cd /usr/bin;ln -s python jspython")
-    print c.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/unstable.zip")
+    print c.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
     print c.run("pip install ujson")
     
     node.uploadFromCfgDir("jscfg","/opt/jumpscale/cfg/")
