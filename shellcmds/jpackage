@@ -9,7 +9,7 @@ parser = cmdutils.ArgumentParser()
 
 commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
             'publish', 'repackage', 'restart', 'start', 'stop', 'mdupdate', 'update', 'upload', 'mirror',
-            'switchbranch', 'list']
+            'switchbranch', 'list','mddisabledebug']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
@@ -61,13 +61,24 @@ group.add_argument('--branch', help='Branch of the coderecipe')
 
 args = parser.parse_args()
 
+def askDomains(args):
+    if args.domain==None:
+        from IPython import embed
+        print "DEBUG NOW ask domains"
+        embed()
+        
+    else:
+        domains=args.domain.split(",")
+        domains=[domain.lower().strip() for domain in domains]
+    return domains
+
 if args.quiet:
     class NullDevice():
         def write(self, s):
             pass
     sys.stdout = NullDevice();
 
-if (args.deps) and args.action in ["create","debug","mdupdate","mirror","list"]:
+if (args.deps) and args.action in ["create","debug","mdupdate","mdswitch","mddisabledebug","mirror","list"]:
     raise RuntimeError("deps or nodeps option is not used for %s."%args.action)
 
 if args.action == 'create':
@@ -211,6 +222,16 @@ elif args.action == 'stop':
 
 elif args.action == 'mdupdate':
     j.packages.updateMetaData(force=args.force)
+
+elif args.action == 'mdswitch':
+    domains=askDomains(args)
+
+    j.packages.switchMetaData(force=args.force)
+
+elif args.action == 'mddisabledebug':
+    if args.domains==None:
+        domain=""
+    j.packages.disableDebugMetaData(qualitylevel=args.qualitylevel,domain)
 
 elif args.action == 'upload':
     packages = cmdutils.getJPackage(args,installed=False)    

@@ -667,6 +667,46 @@ class JPackageClient():
             for domainName in domainnames:
                 self.linkMetaData(domainName)
 
+    def switchMetaData(self,toQualitylevel,domain="",disableDebug=False):
+        self._init()
+        # self.resetState()
+        if domain<>"":
+            j.logger.log("Switch metadata quality level for jpackages domain %s" % domain, 1)
+            d=self.getDomainObject(domain)
+            if disableDebug:
+                d.disableDebug()
+            d.switchMetaData(toQualitylevel)
+        else:
+            domainnames=self.getDomainNames()            
+            for domainName in domainnames:
+                self.switchMetaData(toQualitylevel, domainName,setDebugOff)
+
+    def _finddomain(self,name):
+        for cat in j.system.fs.listDirsInDir("/opt/code/", recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+            for dname in j.system.fs.listDirsInDir("/opt/code/%s"%cat, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+                if dname.find("__jp_")<>-1:
+                    dname2=dname.split("__jp_",1)[1]
+                    if dname2.lower().strip()==name.lower().strip():
+                        return "/opt/code/%s/%s"%(cat,dname)
+        raise RuntimeError("could not find domain for name:'%s'"%name)
+
+    def disableDebugMetaData(self,qualitylevel,domain=""):
+        self._init()
+        # self.resetState()
+        if domain<>"":
+            j.logger.log("Disable debug mode for jpackages domain %s" % domain, 1)
+
+            path=self._finddomain(domain)
+            # print "JPACKAGEDOM:%s"%path
+            dpath="%s/%s/"%(path,qualitylevel)
+            for path in j.system.fs.listFilesInDir(dpath,True,"main.hrd"):
+                hrd=j.core.hrd.getHRD(path)
+                hrd.set("jp.debug",0)
+        else:
+            domainnames=self.getDomainNames()            
+            for domainName in domainnames:
+                self.disableDebugMetaData(domainName)
+
     def updateMetaData(self,domain="",force=False):
         """
         Does an update of the meta information repo for each domain
