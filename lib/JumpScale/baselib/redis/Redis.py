@@ -1,5 +1,4 @@
 from JumpScale import j
-import time
 import geventredis
 import redis
 from .geventredis.RedisQueue import RedisQueue
