@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from JumpScale import j
 import sys
 import time
 try:
@@ -11,7 +11,6 @@ import imp
 import random
 import JumpScale.baselib.taskletengine
 from JumpScale.baselib import cmdutils
-from JumpScale import j
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
     time.sleep(0.1)
