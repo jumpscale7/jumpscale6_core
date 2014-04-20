@@ -22,9 +22,9 @@ def action(node):
     c=node.cuapi
     print c.run('''debconf-set-selections <<< "postfix postfix/mailname string your.hostname.com"''')
     print c.run('''debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"''')
-    print c.run("jpackage install -n postgresql -r")
-    print c.run("jpackage install -n sentry -r")
-    print c.run("jsprocess start -n sentry")
+    #print c.run("jpackage install -n postgresql -r")
+    #print c.run("jpackage install -n sentry -r")
+    #print c.run("jsprocess start -n sentry")
     print c.run("jpackage install -n graphite -r")
     print c.run("jsprocess start -n graphite")
     print c.run("jpackage install -n elasticsearch -r")
