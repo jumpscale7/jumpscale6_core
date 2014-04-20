@@ -12,7 +12,7 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'purgejobs', 'purgeecos', 'deletenode',\
+parser.add_argument("action", choices=['reinit','reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'purgejobs', 'purgeecos', 'deletenode',\
         'restartprocessmgrs','reloadjumpscripts','restartWorkers', 'listnodes', 'enablenode', 'disablenode', 'setrole', 'deleterole'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
@@ -44,12 +44,12 @@ if opts.action =='reinit' or opts.action =='reinitsentry':
 
 ############RECONFIGURE
 if opts.action =='reconfigure':
-    packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
+    packages=["grid_master","grid_node","osis","logger","agentcontroller","workers"]
     for package in packages:
         jp=j.packages.findNewest(name=package)
         jp.configure()
 
-    packages=["osis","logger","agentcontroller","agent"]
+    packages=["osis","logger","agentcontroller","workers"]
     for package in packages:
         jp=j.packages.findNewest(name=package)        
         jp.restart()

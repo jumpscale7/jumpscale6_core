@@ -82,41 +82,15 @@ class RedisFactory:
             return pids
         return []
 
-    # def stopInstance(self, name):
-    #     j.system.platform.ubuntu.stopService(name)
-    #     _, cpath = self._getPaths(name)
-    #     if not j.system.fs.exists(name):
-    #         return
-    #     pids = self.getProcessPids(name)
-    #     counter = 0
-    #     while counter < 100:
-    #         for pid in pids:
-    #             j.system.process.kill(pid)
-    #         time.sleep(0.1)
-    #         pids = self.getProcessPids(name)
-    #         if len(pids) == 0:
-    #             return
-    #         counter += 1
-    #     raise RuntimeError("could not stop redis with name %s" % name)
+    def stopInstance(self, name):
+        j.logger.log("start redis:%s" % name, level=5, category="")
+        from IPython import embed
+        print "DEBUG NOW id"
+        embed()
+        
 
-    # def startInstance(self, name):
-    #     j.logger.log("start redis:%s" % name, level=5, category="")
-    #     pids = self.getProcessPids(name)
-    #     if len(pids) > 1:
-    #         self.stopInstance(name)
-    #     if len(pids) == 1:
-    #         j.logger.log("Not need to start redis:%s, is already started." % name, level=5, category="redis.start")
-    #         return
-    #     # cmd="redis-server %s"%cpath
-    #     # j.system.process.execute(cmd)
-    #     j.system.platform.ubuntu.startService(name)
-    #     timeout = time.time() + 10
-    #     port = self.getPort(name)
-    #     check = False
-    #     while check == False and time.time() < timeout:
-    #         check = j.system.net.tcpPortConnectionTest("localhost", port)
-    #     if check == False:
-    #         raise RuntimeError("Could not start redis %s on port %s" % (name, port))
+    def startInstance(self, name):
+        j.logger.log("start redis:%s" % name, level=5, category="")
 
     def deleteInstance(self, name):
         # self.stopInstance(name)
