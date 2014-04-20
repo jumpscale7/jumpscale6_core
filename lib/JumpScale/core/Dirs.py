@@ -104,6 +104,9 @@ class Dirs(object):
 
         if self.libDir not in sys.path:
             sys.path.insert(1,self.libDir)
+        pythonzip = os.path.join(self.libDir, 'python.zip')
+        if os.path.exists(pythonzip) and pythonzip not in sys.path:
+            sys.path.append(pythonzip)
 
         if self.libExtDir not in sys.path:
             sys.path.insert(1,self.libExtDir)
@@ -140,7 +143,6 @@ class Dirs(object):
         if self.jsLibDir not in sys.path:
             sys.path.append(self.jsLibDir)
 
-        
 
     def replaceTxtDirVars(self,txt):
         """
