@@ -56,7 +56,7 @@ def main():
     # root="/mnt/wd"
 
     root= j.application.config.get("blobserver.paths.root")
-
+    j.system.fs.createDir(root)
 
     authorizer.add_user('jpackages', 'rooter', root, perm='elradfmwM')
     # authorizer.add_anonymous(os.getcwd())

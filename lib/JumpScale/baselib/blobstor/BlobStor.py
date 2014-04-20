@@ -38,7 +38,12 @@ class BlobStor:
 
     def _getDestination(self, destproto=None):
         if not destproto:
-            destproto = ('http', 'ftp')
+            if self.config['type'] == 'httpftp':
+                destproto = ('http', 'ftp')
+            elif self.config['type'] == 'ftp':
+                destproto = ('ftp',)
+            elif self.config['type'] == 'http':
+                destproto = ('http',)
         if self.config["type"] == "local":
             return 'file://' + self.config["localpath"] + "/%s/" % self.namespace
         else:
@@ -48,7 +53,7 @@ class BlobStor:
                     uri = self.config[proto]
                     break
             if uri == "":
-                raise ValueError("No ftp or http url properly configured as remote blobstor")
+                raise ValueError("No ftp url properly configured as remote blobstor")
             if uri[-1] == "/":
                 uri = uri[:-1]
             return uri + "/%s/" % self.namespace
@@ -60,13 +65,14 @@ class BlobStor:
         @param key: key to
         @type key: string
         """
-
         targetDirPath = j.system.fs.joinPaths(self._getDestination(), key[0:2], key[2:4])
+
+        resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key})) #@todo gives error when source not found, need other method
 
         try:
             if self.config["type"] <> "local":
                 print "exists %s: "%key,
-            resultMeta = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.meta' % {'key': key})) #@todo gives error when source not found, need other method
+            
             resultGz = j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.tgz' % {'key': key})) or \
                        j.cloud.system.fs.sourcePathExists(j.system.fs.joinPaths(targetDirPath, '%(key)s.gz' % {'key': key}))
         except Exception, e:
@@ -94,8 +100,8 @@ class BlobStor:
 
     def _download(self, key, destination, uncompress=True, keepTempFile=False):
         metadata = self.getMetadata(key)
-        filetype = metadata.filetype
         hashh = metadata.hash
+        filetype = metadata.filetype
         targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
             targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
@@ -151,18 +157,35 @@ class BlobStor:
         return metadata.hash == hashh
 
     def copyToOtherBlobStor(self, key, blobstor):
-        if True or not blobstor.exists(key):
-            tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
-            self._put(blobstor, metadata, tmpfile)
-            if not self.config['type'] == 'local':
-                j.system.fs.remove(tmpfile)
+        if self.exists(key):
+            if not blobstor.exists(key):
+                if self.config['type'] == 'local':
+                    metadata = self.getMetadata(key)                    
+                    hashh = metadata.hash
+                    targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
+                    if metadata.filetype == "file":
+                        targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
+                    else:
+                        targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".tgz")
+                    targetFileNameTgz=targetFileNameTgz.replace("file://","")
+                    md5=j.tools.hash.md5(targetFileNameTgz)
+                    if md5<> metadata.md5:
+                        raise RuntimeError("source file not ok, hash error: %s"%targetFileNameTgz)
+                    self._put(blobstor, metadata, targetFileNameTgz)
+                else:                
+                    tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
+                    self._put(blobstor, metadata, tmpfile)
+                    j.system.fs.remove(tmpfile)
+            else:
+                j.clients.blobstor.log("No need to download '%s' to blobstor, because is already there" % key, "download")
         else:
-            j.clients.blobstor.log("No need to download '%s' to blobstor, because is already there" % key, "download")
+            print "COULD NOT FIND %s on %s"%(key,blobstor)
 
     def _put(self, blobstor, metadata, tmpfile):
-        print "put"
+        # print "put:%s"%tmpfile
         hashh = metadata.hash
-        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(('ftp',)), hashh[0:2], hashh[2:4])
+
+        targetDirName = j.system.fs.joinPaths(blobstor._getDestination(['ftp']), hashh[0:2], hashh[2:4])
         if metadata.filetype == "file":
             targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
         else:
@@ -171,19 +194,19 @@ class BlobStor:
 
         ok=False
 
-        if self.config["type"] == "local" or targetFileNameTgz.find("file://")==0:
-            print "local"
+        if blobstor.config["type"] == "local":
+            print "local:",
             targetFileNameTgz = targetFileNameTgz.replace("file://", "")
+            targetFileNameMeta=targetFileNameMeta.replace("file://", "")
             j.system.fs.createDir(j.system.fs.getDirName(targetFileNameTgz))
             j.system.fs.copyFile(tmpfile, targetFileNameTgz)
+            j.system.fs.writeFile(targetFileNameMeta, metadata.content)
             ok=True
-            print "ok"
+            print "OK."
         else:
-            #@todo P1 need to create the required dir (do directly with FTP)
-            print "start upload ",
+            print "upload remote:"
             try:                
                 j.cloud.system.fs.copyFile('file://' + tmpfile, targetFileNameTgz)
-                print "OK."
                 ok=True
             except Exception,e:
                 if str(e).find("Failed to login on ftp server")<>-1:
@@ -205,8 +228,10 @@ class BlobStor:
                 j.errorconditionhandler.processPythonExceptionObject(e)
                 j.errorconditionhandler.raiseOperationalCritical("cannot upload file to %s (ftp), error %s"%(targetFileNameTgz,e), category='ftp.upload')
                     
-        if ok:
-            j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)            
+            if ok:
+                print "OK."
+                j.cloud.system.fs.writeFile(targetFileNameMeta, metadata.content)
+
 
     def put(self, path, type="", expiration=0, tags=""):
         """
@@ -247,7 +272,9 @@ class BlobStor:
             #    j.system.fs.gzip(path, tmpfile)
             pass
         else:
+            print "compress:%s"%path,
             j.system.fs.targzCompress(path, tmpfile, followlinks=False)
+            print "ok."
 
         hashFromCompressed = j.tools.hash.md5(tmpfile)
         descr = ""
@@ -269,10 +296,10 @@ class BlobStor:
         if self.exists(hashh):
             if not self.config["type"]=="local":
                 j.clients.blobstor.log("No need to upload '%s' to blobstor:'%s/%s', have already done so." % (path,self.name,self.namespace),category="upload",level=5)
-
-            #return hashh,descr,anyPutDone
         else:
             self._put(self, metadata, tmpfile)
+            if self.exists(hashh)==False:
+                raise RuntimeError("could not upload %s"%path)
             anyPutDone = True
             if not self.config["type"]=="local":
                 j.clients.blobstor.log('Successfully uploaded blob: ' + path,category="upload",level=5)

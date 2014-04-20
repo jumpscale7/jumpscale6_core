@@ -240,35 +240,6 @@ class Cluster(BaseType):
         result = self.execute("apt-get update", recoveryaction='dpkg --configure -a --force-all')
         result = self.execute("apt-get upgrade -y -f --force-yes")
 
-    # def qbaseInstallReset(self,devel=False):
-    #     """
-    #     will install & reset qbase
-    #     """
-    #     self.ubuntuPackageUpdateUpgrade()
-    #     result=self.execute("rm -rf /opt/qbase6")
-    #     result=self.execute("apt-get install nginx curl mc ssh mercurial byobu python-gevent python-simplejson python-numpy redis-server python-pycryptopp -y")
-    #     result=self.execute("apt-get install msgpack-python python-pip python-dev python-zmq -y")
-    # result=self.execute("pip install ujson") #will do compile, should make precompiled version
-    #     result=self.execute("pip install blosc")
-    #     self.execute("cd /tmp;curl https://bitbucket.org/incubaid/jumpscale-core-6.0/raw/default/installers/installerbase.py > installerbase.py")
-    # result=self.execute("ls /tmp/installerbase.py")
-    #     if devel:
-    #         result=self.execute("cd /tmp;curl https://bitbucket.org/incubaid/jumpscale-core-6.0/raw/default/installers/installDevelSilent.py | python")
-    #     else:
-    #         result=self.execute("cd /tmp;curl https://bitbucket.org/incubaid/jumpscale-core-6.0/raw/default/installers/installSilent.py | python")
-
-    # def ccopy(ffrom,tto):
-    # self.execute("rm -rf %s;cp -rf %s %s"%(ffrom,ffrom,tto))
-
-    # ccopy ("/opt/code/incubaid/jumpscale-core-6.0/apps/worker/","/opt/qbase6/apps/worker/")
-
-    # def syncQbase(self, hostnames=[]):
-    #     j.transaction.start("Sync Qbase")
-    #     nodes = self.selectNodes("Select which nodes you want to sync qbase to", hostnames)
-    #     for node in nodes:
-    #         node.syncQbase()
-    #     j.transaction.stop()
-
     def executeJS(self, command, hostnames=[], dieOnError=True):
         """
         execute a command on every node of the cluster, only output the result

@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+from JumpScale import j
+
+j.application.appname = "jumpscale:jsexec"
+j.application.start()
+
+from JumpScale.baselib import cmdutils
+
+parser = cmdutils.ArgumentParser()
+
+parser.add_argument('-r', '--remote', help='Ip address of node',default="")
+parser.add_argument('-p', '--passwd', help='Root password to use, if any.',default="")
+
+parser.add_argument('-n','--name',required=False, help='Names of jumpscript to execute (comma separated)',default="")
+parser.add_argument('-c', '--cfgname', help='Name of cfg directory.',default="")
+parser.add_argument('-e', '--extra', help='Extra config data in tag format e.g. cpasswd:123,myname:kds ',default="")
+parser.add_argument('-f','--force',required=False, action='store_true',help='auto answer yes on every question and redo even if already done')
+parser.add_argument('-x','--command',required=False, help='if this one is used then just this command will be execute',default="")
+parser.add_argument('-s','--sync',required=False, action='store_true',help='then will be done one after the other')
+parser.add_argument('-g',  action='store_true', required=False, help='Apply on all active nodes on grid')
+parser.add_argument('--roles', required=False, help='Used with -g. Apply on active nodes that have these roles. ex: --roles=node, computenode.kvm(note the = sign). List is comma seperated')
+
+args = parser.parse_args()
+args.action=None
+args.local=False
+
+if args.command=="" and args.name=="":
+    raise RuntimeError("command or name needs to be given.")
+
+import JumpScale.baselib.redis
+
+from multiprocessing import Process, Queue
+
+class RedirectSTDOUT:
+    def __init__(self,name):
+        self.oldstdout=sys.stdout
+        self.redis=j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+        self.name=name
+        # self.redis.hset("admin:output",self.name,"")
+        self.out=""
+
+    def isatty(self):
+        return True
+
+    def flush(self):
+        pass
+
+    def write(self, text):
+        # self.oldstdout.write(text)
+        # out=str(self.redis.hget("admin:output",self.name))
+        self.out+=str(text)
+        # self.redis.hset("admin:output",self.name,out)
+
+import sys
+
+
+def doRemote(q,args,host,cmd):
+    j.admin.hosts=[host]
+
+    if cmd<>"":
+        node=j.admin.getNode(host)
+        key=host
+        r=RedirectSTDOUT(key)
+        if args.sync==False:
+            print "execute:%s"%key
+            sys.stdout=r
+        res=""
+        out=""
+        try:
+            res=node.executeCmds(cmd)
+        except BaseException,e:
+            sys.stdout=r.oldstdout
+            # out=r.redis.hget("admin:output",key)
+            q.put((host,cmd,res,r.out))            
+            return
+        sys.stdout=r.oldstdout
+        q.put((host,cmd,res,""))
+    else:
+        for name in args.name.split(","):
+            name=name.lower()
+            name=name.strip()
+            key="%s_%s"%(host,name)
+            r=RedirectSTDOUT(key)            
+            if args.sync==False:
+                print "execute:%s"%key
+                sys.stdout=r
+            node=None
+            try:
+                node=j.admin.execute(name,once=True,reset=args.force)
+            except Exception,e:                
+                sys.stdout=r.oldstdout
+                j.errorconditionhandler.processPythonExceptionObject(e)
+                # out="%s\n%s"%(str(e),r.redis.hget("admin:output",key))
+                q.put((host,name,"",r.out))
+                return
+
+            sys.stdout=r.oldstdout
+            # out=r.redis.hget("admin:output",key)
+
+            if node<>None:
+                if node.error<>"":
+                    if node.result=="":
+                        node.result=r.out                
+                q.put((host,name,node.result,node.error))
+            else:
+                q.put((host,name,"",r.out))
+
+import JumpScale.baselib.admin
+
+
+if __name__ == '__main__':
+    queue = Queue()
+    # hosts=["cpu10","cpu12"]
+
+    admin=j.tools.admin.get(args)
+    j.admin=admin
+
+    for host in j.admin.hosts:
+        if not args.sync:
+            p = Process(target=doRemote, args=(queue,args,host,args.command,))
+            p.start()
+        else:
+            doRemote(queue,args,host,args.command)
+
+    for host in j.admin.hosts:
+        obj = queue.get()
+        # print obj
+        if obj[3].strip()<>"":
+            print "##ERROR##%-10s %-20s##\n%s\n%s\n###############################################"%obj
+        else:
+            print "##%-10s %-20s##\n%s\n%s"%obj
+    # p.join()                    # this deadlocks
+    
+    j.application.stop()
+
+

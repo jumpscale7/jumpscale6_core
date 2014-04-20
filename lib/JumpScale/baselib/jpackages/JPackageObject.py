@@ -274,7 +274,7 @@ class JPackageObject():
                     j.application.loadConfig() #will load that underneath
 
     def loadActions(self, force=False,hrd=True):
-        print "loadactions:%s"%self
+        # print "loadactions:%s"%self
 
         force=True #@todo need more checks, now for first release do always
 
@@ -291,8 +291,15 @@ class JPackageObject():
         self.hrd.applyOnDir(self.getPathActions()) #make sure params are filled in in actions dir
         #apply hrd configu from system on actions active
         j.application.config.applyOnDir(self.getPathActions())
+        j.dirs.replaceFilesDirVars(self.getPathActions())
 
         self.actions = ActionManager(self)
+
+        self.loadBlobStores()
+
+        # print "loadactionsdone:%s"%self
+
+    def loadBlobStores(self):
 
         do = j.packages.getDomainObject(self.domain)
         if do.blobstorremote.strip() <> "":
@@ -304,7 +311,7 @@ class JPackageObject():
         if self.blobstorRemote ==None or   self.blobstorLocal==None:
             raise RuntimeError("DEBUG NOW blobstorremote or blobstorlocal needs to be available")
 
-        # print "loadactionsdone:%s"%self
+        
             
     def getDebugMode(self):
         return self.state.debugMode
@@ -703,32 +710,8 @@ class JPackageObject():
         if ttype.find("cr_")==0:
             ttype=ttype[3:]
 
-        if ttype in ('sitepackages', 'site-packages'):
-            base=j.application.config.get("python.paths.local.sitepackages")
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
-        elif ttype=="root":
-            systemdest = "/%s"%blobitempath.lstrip("/")
-        elif ttype=="base":
-            systemdest = j.system.fs.joinPaths(j.dirs.baseDir, blobitempath)
-        elif ttype=="opt":
-            base="/opt"
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
-        elif ttype=="deb":
-            systemdest = "/tmp"
-        elif ttype=="etc":
-            base="/etc"
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
-        elif ttype=="tmp":
-            systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, blobitempath)
-        elif ttype=="bin":
-            base=j.application.config.get("bin.local")
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
-        else:
-            base=j.application.config.applyOnContent(ttype)
-            if base==ttype:
-                raise RuntimeError("Could not find ttype:%s for %s, needs to be root,base,etc,bin,deb"%(ttype,self))
-            systemdest = j.system.fs.joinPaths(base, blobitempath)
         filespath=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype,blobitempath)
+        systemdest = j.packages.getTypePath(ttype, blobitempath)
         return (filespath,systemdest)
 
     def getBlobPlatformTypes(self):
@@ -1040,7 +1023,7 @@ class JPackageObject():
                     pathttype=j.system.fs.joinPaths(pathplatform,ttype)
                     j.system.fs.removeIrrelevantFiles(pathttype)
 
-                    if ttype in ["etc"]:
+                    if ttype in ["etc","cfg"]:
                         applyhrd=True
                     else:
                         applyhrd=False
@@ -1053,7 +1036,7 @@ class JPackageObject():
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """
-        Copy the files from package dirs (/opt/js/var/jpackages/...) to their proper location in the sandbox.
+        Copy the files from package dirs to their proper location in the sandbox.
 
         @param destination: destination of the files
         """
@@ -1067,6 +1050,7 @@ class JPackageObject():
             tmpdir=j.system.fs.getTmpDirPath()
             j.system.fs.copyDirTree(path,tmpdir)
             j.application.config.applyOnDir(tmpdir)
+            j.dirs.replaceFilesDirVars(tmpdir)
             j.system.fs.copyDirTree(tmpdir, destination,skipProtectedDirs=True)
             j.system.fs.removeDirTree(tmpdir)
         else:
@@ -1463,8 +1447,9 @@ class JPackageObject():
             self.log("key found:%s for platform:%s type:%s"%(checksum,platform,ttype),category="download",level=6)
             
             key="%s_%s"%(platform,ttype)
-
+            
             if not self.blobstorLocal.exists(checksum):
+                print "try to find remote"
                 self.blobstorRemote.copyToOtherBlobStor(checksum, self.blobstorLocal)
 
             force=True
@@ -1538,13 +1523,49 @@ class JPackageObject():
 
         self.actions.upload(onlycode=onlycode)
 
+    def getBlobKeysActive(self):
+        keys=[]
+        for platform,ttype in self.getBlobPlatformTypes():
+            key0,blobitems=self.getBlobInfo(platform,ttype)
+            keys.append(key0)
+        return keys
+
+    def uploadExistingBlobs(self,blobserver,dependencies=False):
+        """
+        @return the non found keys
+        """
+        self.loadBlobStores()
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.uploadExistingBlobs(blobserver=blobserver)
+
+        keys=self.getBlobKeysActive()
+        bservernew=j.clients.blobstor.get(blobserver)
+        notfound=[]
+        for key in keys:
+            print self,
+            if not bservernew.exists(key):
+                #does not exist on remote bserver yet
+                print "blob %s not on dest."%(key),
+                if self.blobstorLocal.exists(key):
+                    print "upload from local."
+                    self.blobstorLocal.copyToOtherBlobStor(key, bservernew)
+                elif self.blobstorRemote.exists(key):
+                    print "upload from remote."
+                    
+                    self.blobstorRemote.copyToOtherBlobStor(key, bservernew)
+                else:
+                    print "blob %s not on sources."%key
+                    notfound.append(key)
+        return notfound
+
+
     def _upload(self, remote=True, local=True,onlycode=False):
         """
         Upload jpackages to Blobstor, default remote and local
         Does always a jp.package() first
         """
-
-
 
         self.loadActions(force=True)
         self._calculateBlobInfo()
@@ -1552,7 +1573,6 @@ class JPackageObject():
         for platform,ttype in self.getBlobPlatformTypes():
 
             key0,blobitems=self.getBlobInfo(platform,ttype)
-
 
             pathttype=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype)
 
@@ -1567,15 +1587,15 @@ class JPackageObject():
             self.log("Upload platform:'%s', type:'%s' files:'%s'"%(platform,ttype,pathttype),category="upload")
         
             if local and remote and self.blobstorRemote <> None and self.blobstorLocal <> None:
-                key, descr, uploadedAnything = self.blobstorLocal.put(pathttype)
-                key, descr,uploadedAnything  = self.blobstorRemote.put(pathttype)
+                key, descr,uploadedAnything = self.blobstorLocal.put(pathttype)
+                self.blobstorLocal.copyToOtherBlobStor(key,self.blobstorRemote)
+                # key, descr,uploadedAnything  = self.blobstorRemote.put(pathttype)
             elif local and self.blobstorLocal <> None:
                 key, descr, uploadedAnything = self.blobstorLocal.put(pathttype, blobstors=[])
             elif remote and self.blobstorRemote <> None:
                 key, descr, uploadedAnything = self.blobstorRemote.put(pathttype, blobstors=[])
             else:
                 raise RuntimeError("need to upload to local or remote")
-
 
 
             # if uploadedAnything:

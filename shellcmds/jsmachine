@@ -14,6 +14,7 @@ parser.add_argument("-m", '--bname', help='name of backup (used for import/expor
 parser.add_argument("-b", '--base', help='base to clone from')
 parser.add_argument("-p",'--passwd', help='password for machine')
 parser.add_argument("-r",'--prefix', help='prefix')
+parser.add_argument("-k",'--key', help='key for syncing')
 parser.add_argument("-c",'--cmd', help='cmd to execute')
 parser.add_argument("-a",'--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
 parser.add_argument("-g",'--gw', help='set ip gateway of machine (192.168.1.1)',default='')
@@ -39,10 +40,10 @@ if opts.action =='list':
     running,stopped=l.list()
     print "## running:"
     for item in running:
-        print "  machine: %s"%item
+        print "  machine: %-25s %s"%(item,l.getIp(item))
     print "## stopped:"
     for item in stopped:
-        print "  machine: %s"%item
+        print "  machine: %-25s %s"%(item,l.getIp(item))
 
 if opts.action =='new':
     if opts.base==None:
@@ -84,7 +85,7 @@ if opts.action =='exportR':
     if opts.bname==None:
         raise RuntimeError("specify backup name")    
     print "export %s to %s"%(opts.name,opts.bname)
-    l.exportRsync(opts.name,opts.bname)
+    l.exportRsync(opts.name,opts.bname,key=opts.key)
 
 if opts.action =='importR':
     if opts.name==None:
@@ -95,7 +96,7 @@ if opts.action =='importR':
     if opts.base<>None:
         l.importRsync(opts.bname,opts.name,basename=opts.base)
     else:
-        l.importRsync(opts.bname,opts.name)
+        l.importRsync(opts.bname,opts.name,key=opts.key)
 
 if opts.action =='cmd':
     if opts.name==None:

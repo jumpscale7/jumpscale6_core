@@ -3,7 +3,10 @@ import base64
 import mimetypes
 import mimetools
 from urllib import urlencode
-import json
+try:
+    import ujson as json
+except:
+    import json
 
 HTTP_CREATED = 201 #from practical examples, authorization created returns 201
 HTTP_OK = 200

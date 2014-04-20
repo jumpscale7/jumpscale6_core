@@ -2,13 +2,18 @@
 from JumpScale import j
 from JumpScale.baselib import cmdutils
 
+try:
+    import ujson as json
+except:
+    import json
+
 import sys,time
 
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit', 'reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'deletenode',\
-        'restartprocessmgrs','reloadjumpscripts','restartWorkers'], help='Command to perform')
+parser.add_argument("action", choices=['reinit','reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'purgejobs', 'purgeecos', 'deletenode',\
+        'restartprocessmgrs','reloadjumpscripts','restartWorkers', 'listnodes', 'enablenode', 'disablenode', 'setrole', 'deleterole'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
 # parser.add_argument('--passwd', help='password for desktop')
@@ -18,6 +23,7 @@ parser.add_argument('--debug',required=False, action='store_true',help='will sto
 parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
 parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
 parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='used with deletenode, ex: -nid=1(note the = sign)')
+parser.add_argument('-roles', dest='roles', required=False, type=str, help='Used with setroles or deleterole. ex: -roles=node, computenode.kvm(note the = sign). List is comma seperated')
 
 
 #check redis is there if not try to start
@@ -38,12 +44,12 @@ if opts.action =='reinit' or opts.action =='reinitsentry':
 
 ############RECONFIGURE
 if opts.action =='reconfigure':
-    packages=["grid_master","grid_node","osis","logger","agentcontroller","agent"]
+    packages=["grid_master","grid_node","osis","logger","agentcontroller","workers"]
     for package in packages:
         jp=j.packages.findNewest(name=package)
         jp.configure()
 
-    packages=["osis","logger","agentcontroller","agent"]
+    packages=["osis","logger","agentcontroller","workers"]
     for package in packages:
         jp=j.packages.findNewest(name=package)        
         jp.restart()
@@ -117,7 +123,7 @@ if opts.action == 'restartWorkers':
 
 
 #################PURGELOGS
-if opts.action == 'purgelogs':
+if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
     import JumpScale.baselib.elasticsearch
     def _getEpoch(time):
         if not time:
@@ -130,57 +136,149 @@ if opts.action == 'purgelogs':
 
     esclient = j.clients.elasticsearch.get()
     query = dict()
+
+    if opts.action in ['purgelogs', 'purgeecos']:
+        timeElement='epoch'
+    elif opts.action in ['purgejobs']:
+        timeElement='timeStart'
+    
     if opts.ffrom:
         query['range'] = dict()
-        query['range']['epoch'] = dict()
-        query['range']['epoch']['from'] = _getEpoch(opts.ffrom)
+        query['range'][timeElement] = dict()
+        query['range'][timeElement]['gt'] = int(_getEpoch(opts.ffrom))
+    
+    if opts.to==None:
+        opts.to="-4h"
 
     if opts.to:
         if 'range' not in query:
             query['range'] = dict()
-            query['range']['epoch'] = dict()
-        query['range']['epoch']['to'] = _getEpoch(opts.to)
+            query['range'][timeElement] = dict()
+        query['range'][timeElement]['lt'] = int(_getEpoch(opts.to))
+
+    queryfull={"query":query}
+
     if query:
-        result = esclient.delete_by_query(index='system_log', query=query, doc_type='json')
-        if result['_indices']['system_log']['_shards']['successful'] == result['_indices']['system_log']['_shards']['total'] and result['ok']:
-            print 'purgelogs executed successfully'
+        if opts.action in ['purgelogs']:
+            index='system_log'
+        elif opts.action in ['purgejobs']:
+            index='system_job'
+        elif opts.action in ['purgeecos']:
+            index='system_eco'
+
+        beforecount = esclient.count(index=index, query=query, doc_type='json')['count']
+        result = esclient.delete_by_query(index=index, query=query, doc_type='json')
+        aftercount = esclient.count(index=index, query=query, doc_type='json')['count']
+
+        if result['_indices'][index]['_shards']['successful'] == result['_indices'][index]['_shards']['total'] and result['ok']:
+            print 'purge %s executed successfully. %s records deleted.' % (index, beforecount-aftercount)
 
 
-#################DELETE NODE####################################
-if opts.action == 'deletenode':
+#################NODE ACTIONS####################################
+def _deleteNode(node):
+    nid = node['id']
+    if not node:
+        print "Node %s does not exist." % nid
+    else:
+        nodeguid = node[0]['guid']
+        ncl.delete(nodeguid)
+        print 'Node %s with guid %s deleted successfully' % (nid, nodeguid)
+
+        print "Deleting relevant data... this may take a while"
+        categories = oscl.listNamespaceCategories('system')
+
+        for category in categories:
+            print "Deleting %s..." % category
+            catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
+            if category == 'stats':
+                catclient.delete(nid)
+                break
+            if category == 'log':
+                catclient.delete_by_query(query={"term":{"id":nid}})
+                break
+            total, results = catclient.simpleSearch({'nid':nid}, size=0, withguid=True, withtotal=True)
+            results = catclient.simpleSearch({'nid':nid}, size=total, withguid=True)
+            for result in results:
+                guid = result['guid']
+                catclient.delete(guid)
+
+if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listnodes', 'deleterole']:
     import JumpScale.grid.osis
 
     oscl = j.core.osis.getClient(user='root')
     ncl = j.core.osis.getClientForCategory(oscl, 'system', 'node')
-    node = ncl.simpleSearch({'id':opts.nid}, withguid=True)
 
-    if not opts.nid:
-        print "'nid' needs to be supplied"
+
+    if opts.action == 'listnodes':
+        form = '%(nid)-8s %(name)-11s %(ips)-60s %(active)-8s %(roles)-25s'
+        print form % {'nid': 'NODE ID', 'name': 'NAME', 'ips': 'IP ADDRESS', 'active': 'ACTIVE', \
+            'roles':'ROLES'}
+        print '=' * 100
+        print ''
+        ns={}
+        for node in ncl.simpleSearch({}, size=0):
+
+            name=node['name'].strip()
+            if len(name)>10:
+                name=name[:11]
+            ips=', '.join(node['ipaddr'])
+            if len(ips)>60:
+                ips=ips[:51]            
+            ns[name]={'nid': node['id'], 'name': name, 'ips': ips, 'active': node['active'], 'roles': ', '.join(node['roles'])}
+
+        nsnames=ns.keys()
+        nsnames.sort()
+        for nsn in nsnames:
+            print form % ns[nsn]
     else:
-        if not node:
-            print "Node %s does not exist." % opts.nid
+        if not opts.nid:
+            nodes = dict()
+            for node in ncl.simpleSearch({}, size=0):
+                nodes[node['name']] = node
+            choicearray = nodes.keys()
+            for item in j.console.askChoiceMultiple(choicearray,"Select node"):
+                node = nodes[item]
+                if opts.action == 'deletenode':
+                    _deleteNode(item)
+                elif opts.action == 'enablenode':
+                    node['active'] = True
+                    ncl.set(node)
+                elif opts.action == 'disablenode':
+                    node['active'] = False
+                    ncl.set(node)
+                elif opts.action == 'setrole':
+                    r = node['roles']
+                    if opts.roles:
+                        for role in opts.roles.split(","):
+                            if role.lower().strip() not in r:
+                                r.append(role)
+                    else:
+                        roles = str(j.console.askString("Enter node roles (Seperated by ',')", defaultparam=','.join(node['roles'])))
+                        for role in roles.split(","):
+                            if role.lower().strip() not in r:
+                                r.append(role)
+                    r.sort()
+                    node['roles'] = r
+                    ncl.set(node)
+                elif opts.action == 'deleterole':
+                    r = node['roles']
+                    if opts.roles:
+                        for role in opts.roles.split(","):
+                            if role.lower().strip() in r:
+                                r.remove(role)
+                    else:
+                        roles = j.console.askChoiceMultiple(r, "Choose which roles to remove")
+                        for role in roles:
+                            if role.lower().strip() in r:
+                                r.remove(role)
+                    r.sort()
+                    node['roles'] = r
+                    ncl.set(node)
         else:
-            nodeguid = node[0]['guid']
-            ncl.delete(nodeguid)
-            print 'Node %s with guid %s deleted successfully' % (opts.nid, nodeguid)
+            node = ncl.simpleSearch({'id':opts.nid}, withguid=True)
+            _deleteNode(node)
 
-            print "Deleting relevant data... this may take a while"
-            categories = oscl.listNamespaceCategories('system')
 
-            for category in categories:
-                print "Deleting %s..." % category
-                catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
-                if category == 'stats':
-                    catclient.delete(opts.nid)
-                    break
-                if category == 'log':
-                    catclient.delete_by_query(query={"term":{"id":opts.nid}})
-                    break
-                total, results = catclient.simpleSearch({'nid':opts.nid}, size=0, withguid=True, withtotal=True)
-                results = catclient.simpleSearch({'nid':opts.nid}, size=total, withguid=True)
-                for result in results:
-                    guid = result['guid']
-                    catclient.delete(guid)
 
 
 j.application.stop()

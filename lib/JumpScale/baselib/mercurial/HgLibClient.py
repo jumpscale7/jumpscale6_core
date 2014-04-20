@@ -1,7 +1,7 @@
 '''Utility methods to work with hg repositories'''
 from JumpScale import j
 import sys
-sys.path.append(j.system.fs.joinPaths(j.dirs.getLibPath(),"baselib","mercurial"))
+sys.path.append(j.system.fs.joinPaths(j.dirs.jsLibDir,"baselib","mercurial"))
 import hglib
 import JumpScale.baselib.codetools
 import os

@@ -72,7 +72,7 @@ class KeyValueStoreFactory(object):
         '''
         return MemoryKeyValueStore(namespace)
 
-    def getRedisStore(self, namespace='',host='localhost',port=6379,db=0,key='',serializers=None):
+    def getRedisStore(self, namespace='',host='localhost',port=7768,db=0,key='',serializers=None):
         '''
         Gets a memory key value store.
 

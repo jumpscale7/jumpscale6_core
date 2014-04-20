@@ -1,2 +1,2 @@
-jumpscale.paths.base=/opt/jsbox
-jumpscale.paths.jpackages.files=/tmp/jpackages/files
+jumpscale.paths.base=
+jumpscale.paths.jpackages.files=

@@ -16,6 +16,11 @@ import StringIO
 import msgpack
 import plyvel
 
+try:
+    import ujson as json
+except:
+    import json
+
 GeventLoop = j.core.gevent.getGeventLoopClass()
 
 class BlobStorServer(GeventLoop):
@@ -495,7 +500,7 @@ blobstor.disk.size=100
 
         if not j.system.fs.exists(path=mdpath):
             raise RuntimeError("did not find metadata")
-        md=ujson.loads(j.system.fs.fileGetContents(mdpath))
+        md=json.loads(j.system.fs.fileGetContents(mdpath))
         if not md.has_key("repos"):
             raise RuntimeError("error in metadata on path:%s, needs to have repos as key."%mdpath)
         if md["repos"].has_key(str(repoid)):
@@ -504,7 +509,7 @@ blobstor.disk.size=100
             j.system.fs.remove(storpath)
             j.system.fs.remove(mdpath)
         else:
-            mddata=ujson.dumps(md)
+            mddata=json.dumps(md)
             j.system.fs.writeFile(storpath+".md",mddata)
 
 

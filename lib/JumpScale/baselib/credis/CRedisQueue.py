@@ -3,7 +3,7 @@
 class CRedisQueue(object):
     """Simple Queue with Redis Backend"""
     def __init__(self, name, namespace, redis):
-        """The default connection parameters are: host='localhost', port=6379, db=0"""
+        """The default connection parameters are: host='localhost', port=7768, db=0"""
         self.__db= redis
         self.key = '%s:%s' %(namespace, name)
 

@@ -1,17 +1,7 @@
 import math
 from JumpScale import j
 from JPackageObject import JPackageObject
-from Domain import Domain
-try:
-    import JumpScale.baselib.circus
-except:
-    pass
-try:
-    import JumpScale.baselib.expect
-except:
-    pass
-    
-from JumpScale.baselib import platforms
+
 
 class JPackageClient():
     sourcesFile = None
@@ -25,10 +15,32 @@ class JPackageClient():
         """
         
         """
-        if j.application.config.exists("jumpscale.paths.jpackages.files"):
-            self.packageDirFiles=j.application.config.get("jumpscale.paths.jpackages.files")
-        else:
-            self.packageDirFiles=j.system.fs.joinPaths(j.dirs.packageDir, "files")
+        self.__init=False
+
+    def _init(self):
+        if self.__init:
+            return
+        from Domain import Domain
+        self.__init=True
+
+        # try:
+        #     import JumpScale.baselib.expect
+        # except:
+        #     pass
+            
+        from JumpScale.baselib import platforms
+
+        import JumpScale.baselib.actions
+        import JumpScale.baselib.bitbucket
+        import JumpScale.baselib.mercurial
+        import JumpScale.baselib.taskletengine
+        import JumpScale.baselib.blobstor
+        import JumpScale.baselib.cloudsystemfs            
+
+        # if j.application.config.exists("jumpscale.paths.jpackages.files"):
+        #     self.packageDirFiles=j.application.config.get("jumpscale.paths.jpackages.files")
+        # else:
+        self.packageDirFiles=j.system.fs.joinPaths(j.dirs.packageDir, "files")
 
         # if hasattr("j","basepath"):
         #     self.packageDirFiles=self.packageDirFiles.replace("$base",j.basepath)
@@ -57,6 +69,7 @@ class JPackageClient():
         self.errors=[]
         self.inInstall=[] #jpackages which are being installed
 
+
     def reportError(self,msg):
         self.errors.append(msg)
 
@@ -74,6 +87,7 @@ class JPackageClient():
         """
         returns tool which can be  used to scan the jpackages repo's and manipulate them
         """
+        self._init()
         
         from core.jpackages.JPackageMetadataScanner import JPackageMetadataScanner
         return JPackageMetadataScanner()
@@ -117,16 +131,15 @@ class JPackageClient():
         """
         Reload all jpackages config data from disk
         """
+        if not self.__init:
+            self._init()
+
+        from Domain import Domain
         cfgpath=j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')
 
         if not j.system.fs.exists(cfgpath):
-            #check if there is old jpackages dir
-            cfgpathOld=j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages', 'sources.cfg')            
-            if j.system.fs.exists(cfgpathOld):
-                j.system.fs.renameDir(j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages'),j.system.fs.joinPaths(j.dirs.cfgDir, 'jpackages'))
-
-        if not j.system.fs.exists(cfgpath):
             j.system.fs.createDir(j.system.fs.getDirName(cfgpath))
+            raise RuntimeError("did not find jpackage sources file on %s"%cfgpath)            
         else:
             cfg = j.tools.inifile.open(cfgpath)
             self.sourcesConfig=cfg
@@ -148,7 +161,7 @@ class JPackageClient():
         @param description: string - The description of the new jpackages (is stored in the description.wiki file)
         @param supportedPlatforms  ["linux",...] other examples win,win32,linux64 see j.system.platformtype
         """
-
+        self._init()    
         if j.application.shellconfig.interactive:
             if not domain:
                 domain  = j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
@@ -190,6 +203,54 @@ class JPackageClient():
 ##################  GET FUNCTIONS  #########################
 ############################################################
 
+    def getTypePath(self, ttype, relativepath):
+        if ttype in ('sitepackages', 'site-packages'):
+            if j.application.sandbox:
+                base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
+            else:
+                base=j.application.config.get("python.paths.local.sitepackages")
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        elif ttype=="root":
+            systemdest = "/%s"%relativepath.lstrip("/")
+        elif ttype=="base":
+            systemdest = j.system.fs.joinPaths(j.dirs.baseDir, relativepath)
+        elif ttype=="cfg":
+            systemdest = j.system.fs.joinPaths(j.dirs.cfgDir, relativepath)
+        elif ttype=="code":
+            systemdest = j.system.fs.joinPaths(j.dirs.codeDir, relativepath)
+        elif ttype=="var":
+            systemdest = j.system.fs.joinPaths(j.dirs.varDir, relativepath)
+        elif ttype=="jslib":
+            systemdest = j.system.fs.joinPaths(j.dirs.jsLibDir, relativepath)
+        elif ttype=="lib":
+            systemdest = j.system.fs.joinPaths(j.dirs.libDir, relativepath)
+        elif ttype=="libext":
+            systemdest = j.system.fs.joinPaths(j.dirs.libExtDir, relativepath)
+        elif ttype=="jsbin":
+            systemdest = j.system.fs.joinPaths(j.dirs.binDir, relativepath)
+        elif ttype=="opt":
+            base="/opt"
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        elif ttype=="deb":
+            systemdest = "/tmp"
+        elif ttype=="etc":
+            base="/etc"
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        elif ttype=="tmp":
+            systemdest = j.system.fs.joinPaths(j.dirs.tmpDir, relativepath)
+        elif ttype=="bin":            
+            base=j.application.config.get("bin.local")
+            if base.strip()=="":
+                base="/usr/local/bin/"
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        else:
+            base=j.application.config.applyOnContent(ttype)
+            if base==ttype:
+                raise RuntimeError("Could not find ttype:%s for %s, needs to be root,base,etc,bin,deb"%(ttype,self))
+            systemdest = j.system.fs.joinPaths(base, relativepath)
+        return systemdest
+
+
     def get(self, domain, name, version):
         """
         Returns a jpackages 
@@ -197,6 +258,9 @@ class JPackageClient():
         @param name:    string - The name of the jpackages
         @param version: string - The version of the jpackages
         """
+        if domain.find("jp_")==0:
+            raise RuntimeError("domain should not start with jp_")
+        self._init()
         # return a package from the default repo
         key = '%s%s%s' % (domain,name,version)
         if self._getcache.has_key(key):
@@ -211,30 +275,35 @@ class JPackageClient():
         """
         Checks whether the jpackages's metadata path is currently present on your system
         """
+        self._init()
         return j.system.fs.exists(self.getMetadataPath(domain,name,version))
 
     def getInstalledPackages(self):
         """
         Returns a list of all currently installed packages on your system
         """
+        self._init()
         return [p for p in self.getJPackageObjects(j.system.platformtype.myplatform) if p.isInstalled()]
 
     def getDebugPackages(self):
         """
         Returns a list of all currently installed packages on your system
         """
+        self._init()
         return [p for p in self.getJPackageObjects(j.system.platformtype.myplatform) if int(p.state.debugMode)==1]
 
     def getPackagesWithBrokenDependencies(self):
         """
         Returns a list of all jpackages which have dependencies that cannot be resolved
         """
+        self._init()
         return [package for package in self.getJPackageObjects() if len(package.getBrokenDependencies()) > 0]
     
     def getPendingReconfigurationPackages(self):
         """
         Returns a List of all jpackages that are pending for configuration
         """
+        self._init()
         return filter(lambda jpackages: jpackages.isPendingReconfiguration(), self.getJPackageObjects())
 
 #############################################################
@@ -245,6 +314,7 @@ class JPackageClient():
         """
         Get provided domain as an object
         """
+        self._init()
         if qualityLevel==None:
             for item in self.domains:
                 if item.domainname.lower()==domain.lower().strip():
@@ -258,6 +328,7 @@ class JPackageClient():
         """
         Returns a list of all domains present in the sources.cfg file
         """
+        self._init()
         result=[]
         for item in self.domains:
             result.append(item.domainname)
@@ -410,6 +481,7 @@ class JPackageClient():
         @domain, if none will ask for domain
 
         """
+        self._init()
         if domain==None:
             domains=j.console.askChoiceMultiple(j.packages.getDomainNames())
             result=[]
@@ -498,6 +570,7 @@ class JPackageClient():
 
     # Used in getJPackageObjects and that is use in find
     def _getJPackageTuples(self):
+        self._init()
         res = list()
         domains=self.getDomainNames()
         for domainName in domains:
@@ -512,12 +585,14 @@ class JPackageClient():
                         hrdfile = j.system.fs.joinPaths(packagepath, version, 'hrd', 'main.hrd')
                         if j.system.fs.exists(hrdfile):
                             res.append([domainName,packagename,version])
+
         return res
 
     def getJPackageObjects(self, platform=None, domain=None):
         """
         Returns a list of jpackages objects for specified platform & domain
         """
+        self._init()
         packageObjects = [self.get(*p) for p in self._getJPackageTuples()]
         if platform==None:
             return [p for p in packageObjects if (domain == None or p.domain == domain)]
@@ -535,15 +610,13 @@ class JPackageClient():
 #################  UPDATE / PUBLISH  #######################
 ############################################################
 
-    def init(self):
-        pass
-
     def updateAll(self):
         '''
         Updates all installed jpackages to the latest builds.
         The latest meta information is retrieved from the repository and based on this information,
         The install packages that have a buildnr that has been outdated our reinstall, thust updating them to the latest build.
         '''
+        self._init()
         # update all meta information:
         self.updateMetaData()
         # iterate over all install packages and install them
@@ -557,6 +630,7 @@ class JPackageClient():
         This used to be called updateJPackage list
         @param is force True then local changes will be lost if any
         """
+        self._init()
         self.updateMetaData("",force)
 
     def mergeMetaDataAll(self,):
@@ -564,6 +638,7 @@ class JPackageClient():
         Tries to merge the metadata information of all jpackages with info on remote repo.
         This used to be called updateJPackage list
         """        
+        self._init()
         j.packages.mergeMetaData("")        
         
     def updateMetaDataForDomain(self,domainName=""):
@@ -571,6 +646,7 @@ class JPackageClient():
         Updates the meta information of specific domain
         This used to be called updateJPackage list
         """
+        self._init()
         if domainName=="":
             domainName = j.console.askChoice(j.packages.getDomainNames(), "Please choose a domain")
         j.packages.getDomainObject(domainName).updateMetadata("")        
@@ -580,6 +656,7 @@ class JPackageClient():
         """
         Does an link of the meta information repo for each domain
         """
+        self._init()
         self.resetState()
         if domain<>"":
             j.logger.log("link metadata information for jpackages domain %s" % domain, 1)
@@ -594,6 +671,7 @@ class JPackageClient():
         """
         Does an update of the meta information repo for each domain
         """
+        self._init()
         # self.resetState()
         if domain<>"":
             j.logger.log("Update metadata information for jpackages domain %s" % domain, 1)
@@ -608,7 +686,7 @@ class JPackageClient():
         """
         Does an update of the meta information repo for each domain
         """
-
+        self._init()
         if not j.application.shellconfig.interactive:
             if commitMessage == '':
                 raise RuntimeError('Need commit message')
@@ -643,6 +721,7 @@ class JPackageClient():
         """
         Delete a quality level 
         """
+        self._init()
         if domain<>"":
             j.logger.log("Delete quality level %s for %s." % (qualityLevel,domain), 1)
             metadataPath=self._getMetadataDir(domain,qualityLevel)            
@@ -662,6 +741,7 @@ class JPackageClient():
         @param link if True will link the jpackages otherwise copy
         @param force, will delete the destination
         """
+        self._init()
         if domain<>"":
             j.logger.log("Create quality level for %s from %s to %s" % (domain,qualityLevelFrom,qualityLevelTo), 1)
             metadataFrom=self._getMetadataDir(domain,qualityLevelFrom,"please select your qualitylevel where you want to copy from for domain %s." % domain)
@@ -699,6 +779,7 @@ class JPackageClient():
         Compresses the meta data of a domain into a tar and upload that tar to the bundleUpload server.
         After this the that uptain there metadata as a tar can download the latest metadata.
         """
+        self._init()
         if domains==[]:
             domains=j.console.askChoiceMultiple(j.packages.getDomainNames(), "Please select a domain")
 
@@ -720,6 +801,7 @@ class JPackageClient():
         Publishes all domains' bundles & metadata (if no domain specified)
         @param commitMessage: string - The commit message you want to assign to the publish
         """
+        self._init()
         if domain=="":
             for domain in j.packages.getDomainNames():
                 self.publish( commitMessage=commitMessage,domain=domain)
@@ -731,6 +813,7 @@ class JPackageClient():
         """
         Publish metadata & bundles for all domains, for more informartion see publishDomain
         """
+        self._init()
         if not commitMessage:
             commitMessage = j.console.askString('please enter a commit message')
         for domain in j.packages.getDomainNames():
@@ -745,6 +828,7 @@ class JPackageClient():
         have been modified,
         new bundles are created and uploaded to the blobstor server
         """
+        self._init()
         if domain=="":
             domain=j.console.askChoice(j.packages.getDomainNames(), "Please select a domain")
         self.getDomainObject(domain)._ensureDomainCanBeUpdated()
@@ -781,6 +865,11 @@ class JPackageClient():
         return False
 
     def runConfigurationPending(self):
+        #@todo prob need to redo this and use redis or so, this is completely reloading all
+        from IPython import embed
+        print "DEBUG NOW runConfigurationPending"
+        embed()
+        
         if not self._hasPackagesPendingConfiguration():
             return
 

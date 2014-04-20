@@ -3,7 +3,10 @@ from JumpScale import j
 import JumpScale.grid.zdaemon
 
 # import inspect
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 
 # import JumpScale.baselib.redisworker
 # import marisa_trie

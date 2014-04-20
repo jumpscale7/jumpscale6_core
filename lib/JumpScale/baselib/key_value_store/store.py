@@ -1,4 +1,7 @@
-import json
+try:
+    import ujson as json
+except:
+    import json
 #import JSModel
 import time
 from abc import ABCMeta, abstractmethod

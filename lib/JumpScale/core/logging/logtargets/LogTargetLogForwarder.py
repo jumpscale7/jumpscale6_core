@@ -1,7 +1,10 @@
 # import socket
 from JumpScale import j
 import time
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 import JumpScale.baselib.redis
 
 TIMEOUT = 5
@@ -67,7 +70,7 @@ class LogTargetLogForwarder():
                     self.connected = False
 
                 try:
-                    self.redisqueueEco.put(ujson.dumps(eco.__dict__))
+                    self.redisqueueEco.put(json.dumps(eco.__dict__))
                 except Exception, e:
                     print 'Failed to log error in %s error: %s' % (self, e)
                     self.connected = False
@@ -86,7 +89,7 @@ class LogTargetLogForwarder():
                 try:
                     if not isinstance(log, dict):
                         log = log.__dict__
-                    self.redisqueue.put(ujson.dumps(log))
+                    self.redisqueue.put(json.dumps(log))
                 except Exception,e:
                     print 'Failed to log in %s,error:%s' % (self,e)
                     self.connected = False

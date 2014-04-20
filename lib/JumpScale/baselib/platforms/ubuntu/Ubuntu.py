@@ -104,19 +104,23 @@ class Ubuntu:
                 raise RuntimeError("Could not install package %s and check for command %s." % (packagename, cmdname))
 
     def install(self, packagename):
-        self.check()
-        if self._cache==None:
-            self.initApt()
+        
+        cmd='unset JSBASE;unset PYTHONPATH;apt-get install %s -y'%packagename
+        j.system.process.executeWithoutPipe(cmd)
 
-        if isinstance(packagename, basestring):
-            packagename = [packagename]
-        for package in packagename:
-            pkg = self._cache[package]
-            if not pkg.is_installed:
-                print "install %s" % packagename
-                pkg.mark_install()
-        self._cache.commit()
-        self._cache.clear()
+        # self.check()
+        # if self._cache==None:
+        #     self.initApt()
+
+        # if isinstance(packagename, basestring):
+        #     packagename = [packagename]
+        # for package in packagename:
+        #     pkg = self._cache[package]
+        #     if not pkg.is_installed:
+        #         print "install %s" % packagename
+        #         pkg.mark_install()
+        # self._cache.commit()
+        # self._cache.clear()
 
     def installVersion(self, packageName, version):
         '''
@@ -163,7 +167,7 @@ class Ubuntu:
         self._cache.commit()
         self._cache.clear()
 
-    def serviceInstall(self,servicename, daemonpath, args='', respawn=True, pwd=None):
+    def serviceInstall(self,servicename, daemonpath, args='', respawn=True, pwd=None,reload=True):
         C="""
 start on runlevel [2345]
 stop on runlevel [016]
@@ -175,7 +179,8 @@ stop on runlevel [016]
         C+="exec %s %s\n"%(daemonpath,args)
 
         j.system.fs.writeFile("/etc/init/%s.conf"%servicename,C)
-        j.system.process.execute("initctl reload-configuration")
+        if reload:
+            j.system.process.execute("initctl reload-configuration")
 
     def serviceUninstall(self,servicename):
         self.stopService(servicename)
@@ -184,13 +189,17 @@ stop on runlevel [016]
     def startService(self, servicename):
         j.logger.log("start service on ubuntu for:%s"%servicename,category="ubuntu.start")  #@todo P1 add log statements for all other methods of this class
         if not self.statusService(servicename):
-            return j.system.process.execute("sudo start %s" % servicename)
+            cmd="sudo start %s" % servicename
+            # print cmd
+            return j.system.process.execute(cmd)
 
     def stopService(self, servicename):
-        return j.system.process.execute("stop %s" % servicename,False)
+        cmd="sudo stop %s" % servicename
+        # print cmd
+        return j.system.process.execute(cmd,False)
 
     def restartService(self, servicename):
-        return j.system.process.execute("restart %s" % servicename,False)
+        return j.system.process.execute("sudo restart %s" % servicename,False)
 
     def statusService(self, servicename):
         exitcode, output = j.system.process.execute("sudo status %s" % servicename,False)

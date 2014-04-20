@@ -83,7 +83,7 @@ class ErrorConditionHandler():
         self.processErrorConditionObject(eco,tostdout=False)
      
         msg = eco.errormessage 
-        if j.application.config.get('system.debug', checkExists=True, defaultval='0') == '1':
+        if j.application.config.get('system.debug', checkExists=True, default='0') == '1':
             msg=str(eco)
 
         print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg
@@ -216,11 +216,13 @@ class ErrorConditionHandler():
         
 
         errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
+
         try:
+            import ujson as json
+        except:
             import json
-            errorobject.exceptioninfo = json.dumps(pythonExceptionObject.__dict__)
-        except ImportError:
-            errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
+
+        errorobject.exceptioninfo = json.dumps({'message': pythonExceptionObject.message})
 
         errorobject.exceptionclassname = pythonExceptionObject.__class__.__name__
         module = inspect.getmodule(pythonExceptionObject)
@@ -487,7 +489,10 @@ class ErrorConditionHandler():
 
         if j.application.config.exists("sentry.server"):
             import requests
-            import json
+            try:
+                import ujson as json
+            except:
+                import json            
             import uuid
             import datetime
             server=j.application.config.get("sentry.server")

@@ -1,6 +1,9 @@
 from JumpScale import j
 
-import ujson
+try:
+    import ujson as json
+except:
+    import json
 
 class BlobStorClient:
     """

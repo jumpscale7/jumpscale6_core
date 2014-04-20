@@ -259,9 +259,9 @@ class SystemFS:
         self.log("WARNING: renameFIle should not be used")
         return self.move(filePath,new_name)
 
-    def removeIrrelevantFiles(self,path):
+    def removeIrrelevantFiles(self,path,followSymlinks=True):
         ext=["pyc","bak"]
-        for path in self.listFilesInDir(path,recursive=True):
+        for path in self.listFilesInDir(path,recursive=True,followSymlinks=followSymlinks):
             if self.getFileExtension(path) in ext:
                 self.remove(path)
 
@@ -647,6 +647,31 @@ class SystemFS:
         else:
             ext=""
         return ext
+
+    def chown(self,path,user):
+        from pwd import getpwnam  
+        getpwnam(user)[2]
+        uid=getpwnam(user).pw_uid
+        gid=getpwnam(user).pw_gid
+        os.chown(path, uid, gid)
+        for root, dirs, files in os.walk(path):  
+            for ddir in dirs:  
+                path = os.path.join(root, ddir)
+                os.chown(path, uid, gid)
+            for file in files:
+                path = os.path.join(root, file)
+                os.chown(path, uid, gid)
+        
+
+    def chmod(self,path,permissions):
+        os.chmod(path,permissions)
+        for root, dirs, files in os.walk(path):  
+            for ddir in dirs:  
+                path = os.path.join(root, ddir)
+                os.chmod(path,permissions)
+            for file in files:
+                path = os.path.join(root, file)
+                os.chmod(path,permissions)
 
     def parsePath(self,path, baseDir="",existCheck=True, checkIsFile=False):
         """

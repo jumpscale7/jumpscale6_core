@@ -7,6 +7,11 @@ from BlobStorWorker import *
 
 import JumpScale.baselib.credis
 
+try:
+    import ujson as json
+except:
+    import json
+    
 import msgpack
 
 # _pack_pipeline_command
@@ -169,7 +174,7 @@ class BlobStorFactory:
             except Exception,e:
                 #means in just this time it expired
                 pass
-            result=ujson.loads(result)
+            result=json.loads(result)
             self.nodes=result[0]
             self.disks=result[1]
         return result
@@ -184,7 +189,7 @@ class BlobStorFactory:
                 todelete.append(key)
         for key in todelete:                
             self.nodes.pop(key)
-        self.redis.set(rkey,ujson.dumps([self.nodes,self.disks]))
+        self.redis.set(rkey,json.dumps([self.nodes,self.disks]))
         self.redis.expire(rkey,60)
 
     def _getNS(self,domain,name):
@@ -195,13 +200,13 @@ class BlobStorFactory:
             except Exception,e:
                 #means in just this time it expired
                 return None
-            ns=ujson.loads(result)
+            ns=json.loads(result)
             return ns
         return None
 
     def _setNS(self,ns):
         rkey="blobstormaster:ns:%s_%s"%(ns["domain"],ns["name"])
-        self.redis.set(rkey,ujson.dumps(ns))
+        self.redis.set(rkey,json.dumps(ns))
         self.redis.expire(rkey,3600)
 
     def getNodesDisks(self):

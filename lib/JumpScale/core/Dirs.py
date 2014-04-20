@@ -6,8 +6,6 @@ from JumpScale import j
 home = os.curdir                        # Default
 if 'JSBASE' in os.environ:
     home = os.environ['JSBASE']
-    sys.path=['', '%s/bin'%home,'%s/bin/core.zip'%home,'%s/lib'%home,'%s/libjs'%home,\
-        '%s/lib/python.zip'%home,'%s/lib/JumpScale.zip'%home]
 elif os.name == 'posix':
     # home = os.path.expanduser("~/")
     home="/opt/jumpscale"
@@ -18,8 +16,8 @@ elif os.name == 'nt':                   # Contributed by Jeff Bauer
         else:
             home = os.environ['HOMEPATH']
 
-if not 'JSBASE' in os.environ:
-    print "WARNING: did not find JSBASE env environment, please set and point to your sandbox"
+# if not 'JSBASE' in os.environ:
+#     print "WARNING: did not find JSBASE env environment, please set and point to your sandbox"
 
 def pathToUnicode(path):
     """
@@ -39,10 +37,10 @@ def pathToUnicode(path):
 class Dirs(object):
     """Utility class to configure and store all relevant directory paths"""
 
-    # __initialized = False ##bool
 
     def __init__(self):
         '''jumpscale sandbox base folder'''
+        self.__initialized = False ##bool
 
         import sys
         
@@ -60,21 +58,30 @@ class Dirs(object):
         self.appDir = os.path.abspath(".")
         
         '''Configuration file folder (appdir/etc)'''
-        self.cfgDir = os.path.join(self.baseDir,"cfg")
+        if 'JSBASE' in os.environ:
+            self.cfgDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s_data"%os.path.basename(self.baseDir.rstrip("/")),"cfg")
+        else:
+            self.cfgDir = os.path.join(self.baseDir,"cfg")
+
         self._createDir(self.cfgDir)
 
         tpath = os.path.join(self.cfgDir,"debug")
         self._createDir(tpath)
+
         tpath = os.path.join(self.cfgDir,"debug","protecteddirs")
         self._createDir(tpath)
+
         tpath = os.path.join(self.cfgDir,"grid")
         self._createDir(tpath)
+
         tpath = os.path.join(self.cfgDir,"hrd")
         self._createDir(tpath)
 
         '''Var folder (basedir/var)'''
         if self.frozen:
             self.varDir = "/var/jumpscale"
+        elif 'JSBASE' in os.environ:
+            self.varDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s_data"%os.path.basename(self.baseDir),"var")
         else:
             self.varDir = os.path.join(self.baseDir,"var")
         self._createDir(self.varDir)
@@ -86,30 +93,38 @@ class Dirs(object):
             self.tmpDir = "/tmp/jumpscale"
         self._createDir(self.tmpDir)
 
-        
         if iswindows or self.frozen:
             self.libDir = os.path.join(self.baseDir,"library.zip")
         else:
             self.libDir = os.path.join(self.baseDir,"lib")
         self._createDir(self.libDir)
 
+        self.libExtDir = os.path.join(self.baseDir,"libext")
+        self._createDir(os.path.join(self.baseDir,"libext"))
+
         if self.libDir not in sys.path:
             sys.path.insert(1,self.libDir)
+        pythonzip = os.path.join(self.libDir, 'python.zip')
+        if os.path.exists(pythonzip) and pythonzip not in sys.path:
+            sys.path.append(pythonzip)
+
+        if self.libExtDir not in sys.path:
+            sys.path.insert(1,self.libExtDir)
 
         self.logDir = os.path.join(self.varDir,"log")
         self._createDir(self.logDir)
 
         self.packageDir = os.path.join(self.varDir,"jpackages")
-
-        
-        
         self._createDir(self.packageDir)
 
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
 
         self.pidDir = os.path.join(self.varDir,"log")           
 
-        self.binDir = os.path.join(self.baseDir, 'bin')
+        if 'JSBASE' in os.environ:
+            self.binDir = os.path.join(self.baseDir, 'bin')
+        else:
+            self.binDir = "/usr/local/bin"
 
         if self.frozen:
             self.codeDir=os.path.join(self.varDir,"code")
@@ -118,19 +133,41 @@ class Dirs(object):
 
         self._createDir(self.codeDir)
 
-        self.hrdDir = os.path.join(self.baseDir,"cfg","hrd")
+        self.hrdDir = os.path.join(self.cfgDir,"hrd")
         self._createDir(self.hrdDir)
 
-        self.configsDir = os.path.join(self.baseDir,"cfg","jsconfig")
+        self.configsDir = os.path.join(self.cfgDir,"jsconfig")
         self._createDir(self.configsDir)
 
-    def replaceBaseDirVar(self,txt):
+        self.jsLibDir = self._getLibPath()
+        if self.jsLibDir not in sys.path:
+            sys.path.append(self.jsLibDir)
+
+
+    def replaceTxtDirVars(self,txt):
         """
-        replace $base with j.application.basedir if it exists
+        replace $base,$vardir,$cfgdir,$bindir,$codedir,$tmpdir,$logdir,$appdir with props of this class
         """
-        if hasattr("j","basepath"):
-            txt=txt.replace("$base",j.basepath)
+        txt=txt.replace("$base",self.baseDir)
+        txt=txt.replace("$appdir",self.appDir)
+        txt=txt.replace("$codedir",self.codeDir)
+        txt=txt.replace("$vardir",self.varDir)
+        txt=txt.replace("$cfgdir",self.cfgDir)
+        txt=txt.replace("$bindir",self.binDir)
+        txt=txt.replace("$logdir",self.logDir)
+        txt=txt.replace("$tmpdir",self.tmpDir)
+        txt=txt.replace("$libdir",self.libDir)
+        txt=txt.replace("$jslibdir",self.jsLibDir)
+        txt=txt.replace("$jslibextdir",self.libExtDir)
+        txt=txt.replace("$jsbindir",self.binDir)
         return txt
+
+    def replaceFilesDirVars(self,path,recursive=True, filter=None):
+        for path in j.system.fs.listFilesInDir(path,recursive,filter):
+            content=j.system.fs.fileGetContents(path)
+            content2=self.replaceTxtDirVars(content)
+            if content2<>content:
+                j.system.fs.writeFile(filename=path,contents=content2)
 
     def _createDir(self,path):
         if not os.path.exists(path):
@@ -153,20 +190,32 @@ class Dirs(object):
         if j.system.platformtype.isWindows() :
             self.codeDir=os.path.join(self.baseDir, 'code')
 
-        self.getLibPath()
-
         self.loadProtectedDirs()
 
         self.deployDefaultFilesInSandbox()
         self.__initialized = True
         return True
 
+    def _getParent(self, path):
+        """
+        Returns the parent of the path:
+        /dir1/dir2/file_or_dir -> /dir1/dir2/
+        /dir1/dir2/            -> /dir1/
+        @todo why do we have 2 implementations which are almost the same see getParentDirName()
+        """
+        parts = path.split(os.sep)
+        if parts[-1] == '':
+            parts=parts[:-1]
+        parts=parts[:-1]
+        if parts==['']:
+            return os.sep
+        return os.sep.join(parts)
 
-    def getLibPath(self):
-        parent = j.system.fs.getParent
-        self.libDir=parent(parent(__file__))
-        self.libDir=os.path.abspath(self.libDir).rstrip("/")
-        return self.libDir
+    def _getLibPath(self):
+        parent = self._getParent        
+        libDir=parent(parent(__file__))
+        libDir=os.path.abspath(libDir).rstrip("/")
+        return libDir
 
     def getPathOfRunningFunction(self,function):
         return inspect.getfile(function)
@@ -237,12 +286,12 @@ class Dirs(object):
         #@todo P3 let it work for windows as well
         bindest=j.system.fs.joinPaths(self.baseDir,"bin")
         utilsdest=j.system.fs.joinPaths(self.baseDir,"utils")
-        cfgdest=j.system.fs.joinPaths(self.baseDir,"cfg")
+        cfgdest=self.cfgDir
 
         if not os.path.exists(bindest) or not os.path.exists(utilsdest) or not os.path.exists(cfgdest):
-            cfgsource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","cfg")
-            binsource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","bin")
-            utilssource=j.system.fs.joinPaths(self.libDir,"core","_defaultcontent","linux","utils")
+            cfgsource=j.system.fs.joinPaths(self.jsLibDir,"core","_defaultcontent","cfg")
+            binsource=j.system.fs.joinPaths(self.jsLibDir,"core","_defaultcontent","linux","bin")
+            utilssource=j.system.fs.joinPaths(self.jsLibDir,"core","_defaultcontent","linux","utils")
             j.system.fs.copyDirTree(binsource,bindest)
             j.system.fs.copyDirTree(utilssource,utilsdest)
             j.system.fs.copyDirTree(cfgsource,cfgdest,overwriteFiles=False)

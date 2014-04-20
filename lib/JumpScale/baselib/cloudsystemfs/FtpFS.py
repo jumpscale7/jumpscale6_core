@@ -181,7 +181,11 @@ class FtpFS(object):
         j.logger.log("FtpFS: storing [%s] from [%s]" % (file,uploadPath))
         # print "%s:%s:%s %s %s"%(self.server,self.username,self.password,file,uploadPath)
         self.ftp.storbinary('STOR %s' % file, open(uploadPath, 'rb'), 8192)
-        print "done"
+        size=self.ftp.size(file)
+        stat=j.system.fs.statPath(uploadPath)
+        if size<>stat.st_size:
+            self.ftp.delete(file)
+            raise RuntimeError("Could not upload:%s %s, size different, have now deleted"%(file,uploadPath))
 
     def handleUploadDir(self,dir,upload_path):
         """

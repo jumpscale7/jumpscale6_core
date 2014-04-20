@@ -1,21 +1,16 @@
 from JumpScale import j
-import JumpScale.baselib.actions
-import JumpScale.baselib.bitbucket
-import JumpScale.baselib.mercurial
-import JumpScale.baselib.taskletengine
-import JumpScale.baselib.blobstor
-import JumpScale.baselib.cloudsystemfs
-
-
-from .JPackageClient import JPackageClient
-from .ReleaseMgmt import ReleaseMgmt
-from .PythonPackage import PythonPackage
-from .JPackagesGenDocs import JPackagesGenDocs
 
 j.base.loader.makeAvailable(j, 'packages')
 
+from .JPackageClient import JPackageClient
 j.packages=JPackageClient()
+
+from .ReleaseMgmt import ReleaseMgmt
 j.packages.releaseMgmt=ReleaseMgmt()
+
+from .JPackagesGenDocs import JPackagesGenDocs
 j.packages.docGenerator=JPackagesGenDocs()
 
+from .PythonPackage import PythonPackage
+j.base.loader.makeAvailable(j, 'system.platform')
 j.system.platform.python = PythonPackage()

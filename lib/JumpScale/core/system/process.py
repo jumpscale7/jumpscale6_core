@@ -2,13 +2,16 @@
 import sys
 import os
 import os.path
-import shutil
 import re
 import select
 import time
 import subprocess
-import inspect
 import signal
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 from JumpScale import j
 
@@ -20,7 +23,6 @@ def kill(pid, sig=None):
     """
     j.logger.log('Killing process %d' % pid, 7)
     if j.system.platformtype.isUnix():
-        import signal
         try:
             if sig is None:
                 sig = signal.SIGKILL
@@ -1511,14 +1513,12 @@ class SystemProcess:
             import signal
             try:
                 os.kill(pid, 0)
-
             except OSError:
                 return False
 
             return True
 
         elif j.system.platformtype.isWindows():
-
             return j.system.windows.isPidAlive(pid)
 
     kill = staticmethod(kill)
@@ -1765,6 +1765,73 @@ class SystemProcess:
             return None
         else:
             raise RuntimeError("This platform is not supported in j.system.process.getProcessByPort()")
+
     run = staticmethod(run)
     runScript = staticmethod(runScript)
     runDaemon = staticmethod(runDaemon)
+
+    def appCheckActive(self,appname):
+        return self.appNrInstances(appname)>0
+
+    def appNrInstances(self,appname):
+        return len(self.appGetPids(appname))
+
+    def appNrInstancesActive(self,appname):
+        return len(self.appGetPidsActive(appname))
+
+    def appGetPids(self,appname):
+        if j.application.redis==None:
+            raise RuntimeError("Redis was not running when applications started, cannot get pid's")
+        if not j.application.redis.hexists("application",appname):
+            return list()
+        else:
+            pids=json.loads(j.application.redis.hget("application",appname))
+            return pids
+
+    def appsGetNames(self):
+        if j.application.redis==None:
+            raise RuntimeError("Make sure redis is running for port 7766")
+        return j.application.redis.hkeys("application")
+
+    def getDefunctProcesses(self):
+        rc,out=j.system.process.execute("ps ax")
+        llist=[]
+        for line in out.split("\n"):
+            if line.strip()=="":
+                continue
+            if line.find("<defunct>")<>-1:
+                # print "defunct:%s"%line
+                line=line.strip()
+                pid=line.split(" ",1)[0]
+                pid=int(pid.strip())
+                llist.append(pid)
+
+        return llist
+
+    def appsGet(self):
+
+        defunctlist=self.getDefunctProcesses()
+        result={}
+        for item in self.appsGetNames():
+            pids=self.appGetPidsActive(item)
+            pids=[pid for pid in pids if pid not in defunctlist]
+                
+            if pids==[]:
+                j.application.redis.hdelete("application",item)
+            else:
+                result[item]=pids
+        return result
+
+    def appGetPidsActive(self,appname):
+        pids=self.appGetPids(appname)
+        todelete=[]
+        for pid in pids:
+            if not self.isPidAlive(pid):
+                todelete.append(pid)        
+        for item in todelete:
+            pids.remove(item)
+        j.application.redis.hset("application",appname,json.dumps(pids))
+
+        return pids
+
+

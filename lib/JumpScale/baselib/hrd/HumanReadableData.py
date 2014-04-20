@@ -42,7 +42,7 @@ class HumanReadableDataFactory:
 
                 # print "nc:%s"%newcontent
                 if newcontent<>False:
-                    content=content.replace(item,newcontent)
+                    content=content.replace(item,newcontent)                        
                 # else:
                 #     print "notfound:%s"%item
         return content
@@ -86,7 +86,7 @@ class HRDPos():
     def getHRD(self,key):
         if len(self._hrds.keys())==1:
             return self._hrds[self._hrds.keys()[0]]
-        key=key.replace(".","_")
+        key=j.core.hrd._normalizeKey(key)
         if key not in self._key2hrd:
             self._reloadCache()
             if key not in self._key2hrd:
@@ -105,14 +105,20 @@ class HRDPos():
             self.__dict__[key]=hrd.__dict__[key]
             self._key2hrd[key]=hrdpos
 
-    def get(self,key,checkExists=False):
+    def get(self,key,checkExists=False,default=None):
         key=j.core.hrd._normalizeKey(key)        
         if key not in self.__dict__:
             self._reloadCache()
             if key not in self.__dict__:
                 if checkExists:
                     return False
-                raise KeyError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
+                if default==None:
+                    raise KeyError("Cannot find value with key %s in tree %s."%(key,self._tree.path))
+
+        if default<>None:
+            if not self.exists(key):
+                self.set(key,default)
+                self._reloadCache()
 
         val=self.__dict__[key]
 
@@ -127,10 +133,20 @@ class HRDPos():
 
         j.core.hrd.log("get in hrd:%s '%s':'%s'"%(self._tree.path,key,val),category="get",level=6)
 
+        try:
+            val=str(val).strip()
+        except Exception,e:
+            raise ValueError("return from get in hrd needs to be str, key:%s"%key)
+
         return val
 
-    def getBool(self,key):
-        res=self.getInt(key)
+    def getBool(self,key,default=None):
+        if default<>None:
+            if default:
+                default=1
+            else:
+                default=0
+        res=self.getInt(key,default=default)
         if res==1:
             return True
         else:
@@ -165,9 +181,10 @@ class HRDPos():
         out=out.rstrip(",")
         self.set(key,out)
 
-
-    def getInt(self,key):
-        res=self.get(key)
+    def getInt(self,key,default=None):
+        if default<>None:
+            default=int(default)        
+        res=self.get(key,default=default)
         if j.basetype.string.check(res):
             if res.lower()=="none":
                 res=0
@@ -184,7 +201,7 @@ class HRDPos():
         return float(res)
 
     def exists(self,key):
-        key=key.replace(".","_")        
+        key=j.core.hrd._normalizeKey(key)  
         key=key.lower()
         return self.__dict__.has_key(key)
 
@@ -197,7 +214,7 @@ class HRDPos():
             if key[0]<>"_":
                 value=self.__dict__[key]
                 if key not in ["tree","treeposition","path"]:
-                    key=key.replace("_",".")
+                    key=j.core.hrd._normalizeKey(key)
                     if key[-1]==".":
                         key=key[:-1]                    
                     parts.append(" %s:%s" % (key, value))
@@ -223,7 +240,6 @@ class HRD():
             self._tree.changed=True
         # if self._treeposition<>None:
         #     self._treeposition.changed=True
-
 
     def _serialize(self,value):
         if j.basetype.string.check(value):
@@ -256,7 +272,7 @@ class HRD():
 
     def set(self,key,value,persistent=True):
         key=key.lower()
-        key2=key.replace(".","_")
+        key2=j.core.hrd._normalizeKey(key)
         self.__dict__[key2]=value
         if persistent==True:
             value=self._serialize(value)
@@ -296,19 +312,51 @@ class HRD():
 
         j.system.fs.writeFile(self._path,out)
 
-    def write(self, path=None):
-        C=""
-        for key0 in self.__dict__:
-            if key0[0]=="_":
+    def delete(self,key):
+        if self.__dict__.has_key(key):
+            self.__dict__.pop(key)
+
+        out=""
+
+        for line in j.system.fs.fileGetContents(self._path).split("\n"):
+            delete=False
+            line=line.strip()
+            if line=="" or line[0]=="#":
+                out+=line+"\n"
                 continue
-            key=key0.replace("_",".")
-            C+="%s=%s\n"%(key,self.__dict__[key0])
-        if path:
-            j.system.fs.writeFile(path,C)
-        else:
-            self._fixPath()
-            j.system.fs.createDir(j.system.fs.getDirName(self._path))
-            j.system.fs.writeFile(self._path,C)        
+            if line.find("=")<>-1:
+                #found line
+                if line.find("#")<>-1:
+                    comment=line.split("#",1)[1]
+                    line2=line.split("#")[0]                    
+                else:
+                    line2=line
+                key2,value2=line2.split("=",1)
+                if key2.lower().strip()==key:
+                    delete = True
+
+            comment=""
+            if delete<>True:
+                out+=line+"\n"
+
+        out = out.strip('\n') + '\n'
+
+        j.system.fs.writeFile(self._path,out)
+
+
+    # def write(self, path=None): #DO NO LONGER USE, DOES NOT WORK
+    #     C=""
+    #     for key0 in self.__dict__:
+    #         if key0[0]=="_":
+    #             continue
+    #         key=??? #cannot replace properly
+    #         C+="%s=%s\n"%(key,self.__dict__[key0])
+    #     if path:
+    #         j.system.fs.writeFile(path,C)
+    #     else:
+    #         self._fixPath()
+    #         j.system.fs.createDir(j.system.fs.getDirName(self._path))
+    #         j.system.fs.writeFile(self._path,C)        
                 
     def _fixPath(self):
         self._path=self._path.replace(":","")
@@ -321,13 +369,19 @@ class HRD():
             if knownkey.startswith(key):
                 yield knownkey.replace('_', '.')
 
-    def get(self,key,checkExists=False):
+    def get(self,key,checkExists=False,default=None):
         key=key.lower()
-        key2=key.replace(".","_")        
+        key2=j.core.hrd._normalizeKey(key) 
+
         if not self.__dict__.has_key(key2):
             if checkExists:
                 return False
-            raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self.path))
+            if default==None:
+                raise RuntimeError("Cannot find value with key %s in tree %s."%(key,self.path))
+
+        if default<>None:
+            if not self.exists(key):
+                self.set(key,default)
 
         val= self.__dict__[key2]
 
@@ -336,12 +390,18 @@ class HRD():
         j.core.hrd.log("hrd:%s get '%s':'%s'"%(self._path,key,val))
         return val
 
-    def getBool(self,key):
-        res=self.get(key)
+
+    def getBool(self,key,default=None):
+        if default<>None:
+            if default:
+                default=1
+            else:
+                default=0
+        res=self.getInt(key,default=default)
         if res==1:
             return True
         else:
-            return False
+            return False            
 
     def getList(self,key):
         res=self.get(key)
@@ -354,7 +414,8 @@ class HRD():
         res2={}
         for item in res.split(","):
             if item.strip()<>"":
-                key,val=item.split(":")
+                key,val=item.split(":",1)
+                val=val.replace("\k",",")
                 res2[key]=val
         return res2
 
@@ -365,18 +426,27 @@ class HRD():
         out=out.rstrip(",")
         self.set(key,out)        
 
-    def getInt(self,key):
-        res=self.get(key)
-        if res.strip()=="":
-            res=0
-        return int(res)
+    def getInt(self,key,default=None):
+        if default<>None:
+            default=int(default)        
+        res=self.get(key,default=default)
+        if j.basetype.string.check(res):
+            if res.lower()=="none":
+                res=0
+            elif res=="":
+                res=0
+            else:
+                res=int(res)
+        else:
+            res=int(res)
+        return res
 
     def getFloat(self,key):
         res=self.get(key)
         return float(res)
 
     def exists(self,key):
-        key=key.replace(".","_")
+        key=j.core.hrd._normalizeKey(key)
         key=key.lower()
         return self.__dict__.has_key(key)
 
@@ -565,7 +635,7 @@ class HRD():
         for key in keys:
             value=self.__dict__[key]
             if key[0]<>"_":
-                key=key.replace("_",".")
+                key=j.core.hrd._normalizeKey(key)
                 if key[-1]==".":
                     key=key[:-1]
                 parts.append(" %s:%s" % (key, value))
@@ -703,15 +773,16 @@ class HumanReadableDataTree():
                 result.append(newkey)
         return result        
 
-    def get(self,key,position="",checkExists=False,defaultval=False):
+    def get(self,key,position="",checkExists=False,default=None):
         hrd=self.getHrd(position,checkExists=checkExists)
         if checkExists:
             if hrd==False:
-                return defaultval
-        val=hrd.get(key,checkExists=checkExists)
+                return False
+
+        val=hrd.get(key,checkExists=checkExists,default=default)
         if checkExists:
             if val==False:
-                return defaultval
+                return False
         return val
 
     def getInt(self,key,position=""):
@@ -790,7 +861,6 @@ class HumanReadableDataTree():
     def applyOnFile(self,path,position=""):
         j.core.hrd.log("hrd:%s apply on file:%s in position:%s"%(self.path,path,position),category="apply")
         content=j.system.fs.fileGetContents(path)
-
         content=j.core.hrd.replaceVarsInText(content,self,position)
         j.system.fs.writeFile(path,content)
 

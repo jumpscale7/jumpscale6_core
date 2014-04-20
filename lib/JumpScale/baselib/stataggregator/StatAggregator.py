@@ -60,7 +60,8 @@ class StatDiffPerSec(Stat):
         else:
             period=now-self.lastPoll
             if period>7200:
-                raise RuntimeError("period for stat since last poll should never be more than 2h")
+                # raise RuntimeError("period for stat since last poll should never be more than 2h")
+                return
             if self.percent:
                 result=round((val-self.lastVal)/float(period),2)
             else:

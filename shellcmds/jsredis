@@ -7,15 +7,15 @@ import sys,time
 j.application.start("jsredis")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['workerwatchdog','heartbeat','keys', 'clearjobqueue'], help='Command to perform')
+
+parser.add_argument("action", choices=['workerwatchdog','heartbeat','keys',\
+        'clearjobqueue','apps','appsreset'], help='Command to perform')
+
 parser.add_argument('-a', '--agentcontroller', required=False, action='store_true', help='Run commands on Agentcontroller redis')
 
 opts = parser.parse_args()
 
 import JumpScale.baselib.redis
-
-port = 7769 if opts.agentcontroller or opts.action == 'clearjobqueue' else 7769
-redis = j.clients.redis.getGeventRedisClient("127.0.0.1", port)
 
 def timeago(t):
     t=float(t)
@@ -26,27 +26,42 @@ def timeago(t):
         return "%sm"%round(ago/60,1)
     return "%ss"%ago
 
+redism=j.application.redis
 
 if opts.action =='workerwatchdog':
     print "hget:workers:watchdog"
-    workers = redis.hgetall("workers:watchdog")
+    workers = redism.hgetall("workers:watchdog")
     workers2=zip(workers[0::2], workers[1::2])
     for workername, last in workers2:
         print "%-20s %s"%(workername,timeago(last))
 
+elif opts.action =='apps':
+    j.system.process.appsGet()
+    items = redism.hgetall("application")
+    items2=zip(items[0::2], items[1::2])
+    for name, val in items2:
+        # val=",".join(val)
+        print "%-40s %s"%(name,val) 
+
+elif opts.action =='appsreset':
+    redism.delete("application")
+
 elif opts.action =='keys':
+    redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
     print "\n".join(redis.keys())
     
 elif opts.action =='heartbeat':
     print "hget:healthcheck:lastcheck"
-    items=redis.hgetall("healthcheck:lastcheck")
+    items=redism.hgetall("healthcheck:lastcheck")
     items2=zip(items[0::2], items[1::2])
     for name, last in items2:
         print "%-40s %s"%(name,timeago(last))
 
 elif opts.action =='clearjobqueue':
+    redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7769)
     keys = redis.keys('queues:jobqueue*')
     keys.extend(redis.keys('queues:commmands*'))
+    keys.append('jobs:%s' % j.application.whoAmI.gid)
     total = len(keys)
     for idx, key in enumerate(keys):
         print '\rRemoving keys %s/%s %s' % (idx+1, total, key),
