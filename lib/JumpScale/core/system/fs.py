@@ -999,7 +999,9 @@ class SystemFS:
         if os.path.exists(path) or os.path.islink(path):
             if self.isLink(path) and followlinks:
                 #self.log('path %s exists' % str(path.encode("utf-8")),8)
-                return self.exists(self.readlink(path))
+                relativelink = self.readlink(path)
+                newpath = self.joinPaths(self.getParent(path), relativelink)
+                return self.exists(newpath)
             else:
                 return True
         #self.log('path %s does not exist' % str(path.encode("utf-8")),8)
