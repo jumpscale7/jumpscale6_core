@@ -40,8 +40,9 @@ if opts.mtu is not None:
 
 
 ############RECONFIGURE
-if opts.initNetworkInterfaces is True:
-    nc.initNetworkInterfaces()
+if opts.action == 'init':
+    if opts.initNetworkInterfaces is 'True':
+        nc.initNetworkInterfaces()
 
 if opts.action == 'removebridges':
     nc.removeOldConfig()
