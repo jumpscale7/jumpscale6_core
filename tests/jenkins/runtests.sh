@@ -79,6 +79,7 @@ gridmaster.useavahi=1
 gridmaster.grid.id=1' > /opt/jumpscale/cfg/hrd/grid_master.hrd
 
 echo 'osis.key=mykey' > /opt/jumpscale/cfg/hrd/osis.hrd
+echo 'system.superadmin.passwd=rooter' > /opt/jumpscale/cfg/hrd/system_root_credentials.hrd
 
 echo '[jumpscale]
 passwd = qp55pq
