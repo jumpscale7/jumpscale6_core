@@ -12,7 +12,7 @@ gettime () {
 
 #remove old machines
 machines=$(sudo lxc-ls jenkins)
-for machine in machines; do
+for machine in $machines; do
     time=$(gettime $machine)
     if [ $time -lt $(($(date +'%s') - 3600*24)) ]; then
         sudo lxc-destroy -fn $machine &
