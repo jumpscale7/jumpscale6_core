@@ -11,8 +11,8 @@ gettime () {
 }
 
 #remove old machines
-machines=$(sudo lxc-ls jenkins)
-for machine in machines; do
+machines=$(sudo lxc-ls jenkins-JumpScale)
+for machine in $machines; do
     time=$(gettime $machine)
     if [ $time -lt $(($(date +'%s') - 3600*24)) ]; then
         sudo lxc-destroy -fn $machine &
@@ -58,7 +58,7 @@ broker.domain=mydomain' > /opt/jumpscale/cfg/hrd/broker.hrd
 echo '
 grid.id=1
 grid.node.id=1
-grid.useavahi=1
+grid.useavahi=0
 grid.ismaster=True
 grid.master=
 grid.master.ip=localhost
@@ -75,10 +75,11 @@ redis.ac.enable=1
 ' > /opt/jumpscale/cfg/hrd/redis.hrd
 
 echo '
-gridmaster.useavahi=1
+gridmaster.useavahi=0
 gridmaster.grid.id=1' > /opt/jumpscale/cfg/hrd/grid_master.hrd
 
 echo 'osis.key=mykey' > /opt/jumpscale/cfg/hrd/osis.hrd
+echo 'system.superadmin.passwd=rooter' > /opt/jumpscale/cfg/hrd/system_root_credentials.hrd
 
 echo '[jumpscale]
 passwd = qp55pq
