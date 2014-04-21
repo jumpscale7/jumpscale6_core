@@ -11,7 +11,7 @@ gettime () {
 }
 
 #remove old machines
-machines=$(sudo lxc-ls jenkins)
+machines=$(sudo lxc-ls jenkins-JumpScale)
 for machine in $machines; do
     time=$(gettime $machine)
     if [ $time -lt $(($(date +'%s') - 3600*24)) ]; then
