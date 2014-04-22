@@ -87,8 +87,9 @@ def uploadfile(category,path="",data=False):
     base=opts.sbpath
     pathfs="%s/%s"%(base,path)
 
-    cmd="rsync -azvPh %s %s::upload/%s/%s%s --delete-after --modify-window=60 --compress --progress  "%(pathfs,\
+    cmd="rsync -azvPh %s %s::upload/%s/%s/%s --delete-after --modify-window=60 --compress --progress  "%(pathfs,\
         ipaddr,key,category,path)
+    print cmd
     j.system.process.execute(cmd)    
     
 def upload(category,path="",data=False):
