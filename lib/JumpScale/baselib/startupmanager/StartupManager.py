@@ -83,6 +83,8 @@ class ProcessDef:
         self.env=hrd.getDict("process.env")
         self.procname="%s:%s"%(self.domain,self.name)
         self.env["JSPROCNAME"]=self.procname #set env variable so app can start using right name
+        if j.application.sandbox:
+            self.env["LD_LIBRARY_PATH"]="%s/bin"%j.dirs.baseDir
 
         self.priority=hrd.getInt("process.priority")
 
