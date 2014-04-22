@@ -80,14 +80,22 @@ class ProcessDef:
             self.user="root"
         self.cmd=self._replaceSysVars(hrd.get("process.cmd"))
         self.args=self._replaceSysVars(hrd.get("process.args"))
+
+
         self.env=hrd.getDict("process.env")
         self.procname="%s:%s"%(self.domain,self.name)
         self.env["JSPROCNAME"]=self.procname #set env variable so app can start using right name
+
         if j.application.sandbox:
-            self.env["LD_LIBRARY_PATH"]="%s/bin"%j.dirs.baseDir
-            self.env["JSBASE"]="%s"%j.dirs.baseDir
-            self.env["PYTHONPATH"]="%s/lib:%s/python.zip:%s/libjs"%(j.dirs.baseDir,j.dirs.baseDir,j.dirs.baseDir)
-            self.env["PATH"]="%s/tools:%s/bin:$PATH"%(j.dirs.baseDir,j.dirs.baseDir)
+            if not self.env.has_key("LD_LIBRARY_PATH"):
+                self.env["LD_LIBRARY_PATH"]="%s/bin"%j.dirs.baseDir
+            if not self.env.has_key("JSBASE"):
+                self.env["JSBASE"]="%s"%j.dirs.baseDir
+            if not self.env.has_key("PYTHONPATH"):
+                self.env["PYTHONPATH"]="%s/lib:%s/python.zip:%s/libjs"%(j.dirs.baseDir,j.dirs.baseDir,j.dirs.baseDir)
+            if not self.env.has_key("PATH"):
+                self.env["PATH"]="%s/tools:%s/bin:$PATH"%(j.dirs.baseDir,j.dirs.baseDir)
+
 
         self.priority=hrd.getInt("process.priority")
 
