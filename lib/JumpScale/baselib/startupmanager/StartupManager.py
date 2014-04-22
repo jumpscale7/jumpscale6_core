@@ -94,7 +94,7 @@ class ProcessDef:
             if not self.env.has_key("PYTHONPATH"):
                 self.env["PYTHONPATH"]="%s/lib:%s/python.zip:%s/libjs"%(j.dirs.baseDir,j.dirs.baseDir,j.dirs.baseDir)
             if not self.env.has_key("PATH"):
-                self.env["PATH"]="%s/tools:%s/bin:$PATH"%(j.dirs.baseDir,j.dirs.baseDir)
+                self.env["PATH"]="%s/tools:%s/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"%(j.dirs.baseDir,j.dirs.baseDir)
 
 
         self.priority=hrd.getInt("process.priority")
