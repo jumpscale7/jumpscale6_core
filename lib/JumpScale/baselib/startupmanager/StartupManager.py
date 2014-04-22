@@ -85,6 +85,9 @@ class ProcessDef:
         self.env["JSPROCNAME"]=self.procname #set env variable so app can start using right name
         if j.application.sandbox:
             self.env["LD_LIBRARY_PATH"]="%s/bin"%j.dirs.baseDir
+            self.env["JSBASE"]="%s"%j.dirs.baseDir
+            self.env["PYTHONPATH"]="%s/lib:%s/python.zip:%s/libjs"%(j.dirs.baseDir,j.dirs.baseDir,j.dirs.baseDir)
+            self.env["PATH"]="%s/tools:%s/bin:$PATH"%(j.dirs.baseDir,j.dirs.baseDir)
 
         self.priority=hrd.getInt("process.priority")
 
@@ -598,7 +601,7 @@ class StartupManager:
         self._upstartDel(domain,name)
 
         if pd.upstart:
-            j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir,reload=True)
+            j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir,env=pd.env,reload=True)
 
         return pd
 

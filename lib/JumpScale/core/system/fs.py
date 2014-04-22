@@ -1027,7 +1027,7 @@ class SystemFS:
             elif self.isDir(target):
                 self.removeDirTree(target)
             else:
-                self.removeFile(target)
+                self.remove(target)
 
         dir = j.system.fs.getDirName(target)
         if not j.system.fs.exists(dir):
