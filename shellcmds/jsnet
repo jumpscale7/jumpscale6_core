@@ -19,6 +19,8 @@ parser.add_argument("-B", '--bondname', help='bondname e.g. Bond-vlbr')
 parser.add_argument("-e", '--ifaceexcl', help='ifacename to not use in applyconfig (to not lock you out)')
 parser.add_argument("-n", '--networkids', help='range of networkids e.g 20-100')
 parser.add_argument("-M", '--mtu', help='set MTU to something else: Note default 2000, if breaks, set to 1500')
+parser.add_argument("-R", '--initNetworkInterfaces', help='Start with a frrresh /etc/network/interfaces')
+
 
 
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
@@ -38,6 +40,10 @@ if opts.mtu is not None:
 
 
 ############RECONFIGURE
+if opts.action == 'init':
+    if opts.initNetworkInterfaces is 'True':
+        nc.initNetworkInterfaces()
+
 if opts.action == 'removebridges':
     nc.removeOldConfig()
 
