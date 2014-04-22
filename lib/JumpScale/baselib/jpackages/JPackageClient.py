@@ -673,9 +673,10 @@ class JPackageClient():
         if domain<>"":
             j.logger.log("Switch metadata quality level for jpackages domain %s" % domain, 1)
             d=self.getDomainObject(domain)
-            if disableDebug:
-                d.disableDebug()
-            d.switchMetaData(toQualitylevel)
+            from IPython import embed
+            print "DEBUG NOW switchMetaData"
+            embed()
+            
         else:
             domainnames=self.getDomainNames()            
             for domainName in domainnames:
@@ -691,7 +692,7 @@ class JPackageClient():
         raise RuntimeError("could not find domain for name:'%s'"%name)
 
     def disableDebugMetaData(self,qualitylevel,domain=""):
-        self._init()
+        self._init()        
         # self.resetState()
         if domain<>"":
             j.logger.log("Disable debug mode for jpackages domain %s" % domain, 1)

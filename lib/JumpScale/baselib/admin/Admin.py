@@ -144,14 +144,15 @@ class JNode():
 
     def _connectCuapi(self):
         self.cuapi.connect(self.name)
+
         if self.args.passwd<>"":
             # setpasswd()
             j.remote.cuisine.fabric.env["password"]=self.args.passwd
         elif self.passwd<>None and self.passwd<>"unknown":
             # setpasswd()
             j.remote.cuisine.fabric.env["password"]=self.passwd
-        else:
-            self.findpasswd()
+        # else:
+        #     self.findpasswd()
 
         return self.cuapi
 
@@ -401,34 +402,94 @@ class Admin():
         hrdloc=j.system.fs.joinPaths(idloc,login,"id.hrd")
         j.system.fs.writeFile(filename=hrdloc,contents=c)
 
+    def _getHostNames(self,hostfilePath,exclude={}):
+        result={}
+        for line in j.system.fs.fileGetContents(hostfilePath).split("\n"):
+            # print line
+            if line.strip()<>"" and line[0]<>"#":
+                line2=line.replace("\t"," ")
+                splits=line2.split(" ")
+                name=splits[-1]
+                ip=splits[0]
+                if result.has_key(name):
+                    continue
+                if line.find("ip6-localhost")<>-1 or line.find("ip6-loopback")<>-1:
+                    continue
+                if line.find("ip6-localnet")<>-1 or line.find("ip6-mcastprefix")<>-1:
+                    continue
+                if line.find("ip6-allnodes")<>-1 or line.find("ip6-allrouters")<>-1:
+                    continue                    
+                if line.find("following lines are desirable")<>-1 or line.find("localhost")<>-1:
+                    continue
+                result[name]=ip
+        return result
+
     def applyconfiglocal(self):
         #print "will do local changes e.g. for hostnames ",
-        path=self._getPath("cfg/","hosts")
-        j.system.fs.copyFile(path,"/etc/hosts")
-        #print "OK"
+        hostfilePath="/etc/hosts"
+        out="""
+# The following lines are desirable for IPv6 capable hosts
+::1          ip6-localhost ip6-loopback
+fe00::0      ip6-localnet
+ff00::0      ip6-mcastprefix
+ff02::1      ip6-allnodes
+ff02::2      ip6-allrouters
 
-    def getHostNames(self):
+127.0.0.1    localhost
+
+"""        
+        
+        result=self.getHostNames(all=True)
+        result2=self._getHostNames("/etc/hosts",exclude=result)       
+
+        keys=result2.keys()
+        keys.sort()
+        for name in keys:
+            ip=result2[name]
+            out+="%-18s  %s\n"%(ip,name)
+        
+        out+="\n"
+
+        keys=result.keys()
+        keys.sort()
+        for name in keys:
+            ip=result[name]
+            if not result2.has_key(name):
+                out+="%-18s  %s\n"%(ip,name)
+        
+        j.system.fs.writeFile(filename=hostfilePath,contents=out)
+
+    def getHostNames(self,all=False):
         state="start"
         result={}
+        if all:
+            state="found"
         for line in j.system.fs.fileGetContents(self._getPath("cfg/","hosts")).split("\n"):
             line=line.strip()
             if line=="":
                 continue
+            if line.find("ip6-localhost")<>-1 or line.find("ip6-loopback")<>-1:
+                continue
+            if line.find("ip6-localnet")<>-1 or line.find("ip6-mcastprefix")<>-1:
+                continue
+            if line.find("ip6-allnodes")<>-1 or line.find("ip6-allrouters")<>-1:
+                continue                    
+            if line.find("following lines are desirable")<>-1 or line.find("localhost")<>-1:
+                continue                
             if state=="FOUND":
                 if line[0]<>"#":
                     line=line.replace("\t"," ")
-                    # line=line.replace("  "," ")
-                    # line=line.replace("  "," ")
                     splits=line.split(" ")
                     name=splits[-1]
                     ip=splits[0]
                     result[name]=ip
             if line.find("#ACTIVE")<>-1:
                 state="FOUND"
-            if line.find("#ENDACTIVE")<>-1:
+            if line.find("#ENDACTIVE")<>-1 and all==False:
                 state="end"
                 break
         return result
+
 
     # def getCluster(self,sysadminPasswd=""):
     #     if sysadminPasswd=="":

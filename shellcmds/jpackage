@@ -9,7 +9,7 @@ parser = cmdutils.ArgumentParser()
 
 commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
             'publish', 'repackage', 'restart', 'start', 'stop', 'mdupdate', 'update', 'upload', 'mirror',
-            'switchbranch', 'list','mddisabledebug']
+            'switchbranch', 'list','mdswitch','mddisabledebug']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
@@ -59,14 +59,15 @@ group.add_argument('--blobserver', required=False,  help='only upload to specifi
 group = parser.add_argument_group(title="Switch Branch")
 group.add_argument('--branch', help='Branch of the coderecipe')
 
+#mddisabledebug,mdswitch
+group = parser.add_argument_group(title="mdswitch (switch qualitylevel for domain) and mddisabledebug (disable debug for domain)")
+group.add_argument('--qualitylevel', help='Qualitylevel to switch to or to put disable debug.',default=None)
+
 args = parser.parse_args()
 
 def askDomains(args):
     if args.domain==None:
-        from IPython import embed
-        print "DEBUG NOW ask domains"
-        embed()
-        
+        return j.console.askChoiceMultiple(j.packages.getDomainNames())
     else:
         domains=args.domain.split(",")
         domains=[domain.lower().strip() for domain in domains]
@@ -224,13 +225,16 @@ elif args.action == 'mdupdate':
     j.packages.updateMetaData(force=args.force)
 
 elif args.action == 'mdswitch':
-    domains=askDomains(args)
-
-    j.packages.switchMetaData(force=args.force)
+    if args.qualitylevel==None:
+        raise RuntimeError("please specify qualitylevel")
+    for domain in askDomains(args):
+        j.packages.switchMetaData(args.qualitylevel,domain=domain)
 
 elif args.action == 'mddisabledebug':
-    if args.domains==None:
-        domain=""
+    if args.qualitylevel==None:
+        raise RuntimeError("please specify qualitylevel")
+    for domain in askDomains(args):
+        j.packages.disableDebugMetaData(qualitylevel=args.qualitylevel,domain=domain)
     j.packages.disableDebugMetaData(qualitylevel=args.qualitylevel,domain=domain)
 
 elif args.action == 'upload':
@@ -274,7 +278,7 @@ elif args.action == 'list':
     else:
         domains=j.console.askChoiceMultiple(j.packages.getDomainNames(),"chose jpackages to list for")
     for domain in domains:
-        packages=j.packages.find(domain=domain,name="*", installed=True)
+        packages=j.packages.find(domain=domain,name="*", installed=False)
         form = '%(domain)-15s %(name)-20s %(version)8s %(buildnr)8s %(debug)5s %(debugInJpackage)5s'
         print form % {'domain': 'DOMAIN', 'name': 'NAME', 'version': 'VERSION', 'debug': 'DEBUG', \
             'buildnr':'BUILDNR','debugInJpackage':'DEBUG_JP'}
