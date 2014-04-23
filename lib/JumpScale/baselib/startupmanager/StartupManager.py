@@ -122,8 +122,9 @@ class ProcessDef:
         self.numprocesses = hrd.getInt('process.numprocesses',default=1)
 
         self.workingdir=self._replaceSysVars(hrd.get("process.workingdir"))
-        self.ports=hrd.getList("process.ports")
-        self.ports=[port for port in self.ports if str(port).strip()<>""]
+        ports=hrd.getList("process.ports")
+        ports = [port for port in ports if str(port).strip()<>""]
+        self.ports=list(set(ports))
 
         self.jpackage_domain=hrd.get("process.jpackage.domain")
         self.jpackage_name=hrd.get("process.jpackage.name")

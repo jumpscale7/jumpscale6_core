@@ -19,7 +19,7 @@ log = False
 
 
 def action(node):
-    node.uploadFromCfgDir("jscfg","/opt/jumpscale/cfg/")
+    node.uploadFromCfgDir("jscfg","$basedir/cfg/")
     node.uploadFromCfgDir("etc","/etc/")
     node.uploadFromCfgDir("root","/root/")
 

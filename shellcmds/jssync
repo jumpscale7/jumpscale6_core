@@ -218,8 +218,8 @@ if opts.action.find('sync2sb')==0 and checkcat("base"):
     j.system.process.executeWithoutPipe(cmd)
     src="$vardir/jpackages/files/jumpscale/base/2.7/linux64/base/"
     src=j.dirs.replaceTxtDirVars(src)
-    dest="%s/"%opts.sbpath
-    sync(src,dest,delete=False)
+    sync("%s/lib/"%src,"%s/lib/"%opts.sbpath,delete=True)
+    sync("%s/bin/"%src,"%s/bin/"%opts.sbpath,delete=True)
 
 
 #UPLOAD JPACKAGES
