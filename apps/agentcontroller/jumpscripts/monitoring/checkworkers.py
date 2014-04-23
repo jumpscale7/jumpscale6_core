@@ -22,17 +22,17 @@ def action():
     import JumpScale.baselib.redis
     import time
 
-    redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+    # redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
 
-    foundworkers={}
+    # foundworkers={}
 
-    if redis.exists("workers:watchdog"):
+    # if redis.exists("workers:watchdog"):
 
-        workers2 = redis.hgetall("workers:watchdog")
+    #     workers2 = redis.hgetall("workers:watchdog")
 
         
-        for workername, timeout in zip(workers2[0::2], workers2[1::2]):    
-            foundworkers[workername]=timeout
+    #     for workername, timeout in zip(workers2[0::2], workers2[1::2]):    
+    #         foundworkers[workername]=timeout
 
         # nrworkersrequired=len(foundworkers.keys())
 

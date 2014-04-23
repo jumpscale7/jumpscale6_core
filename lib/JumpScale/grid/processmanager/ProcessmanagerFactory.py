@@ -186,9 +186,9 @@ class ProcessmanagerFactory:
                 time.sleep(60)
 
         #check we are mounted over nfs, if not raise error (only when not master)
-        if j.system.net.tcpPortConnectionTest("127.0.0.1",int(j.application.config.get("grid.master.port")))==False:
-            if self._checkIsNFSMounted()==False:
-                raise RuntimeError("code is not mounted to gridmaster")
+        # if j.system.net.tcpPortConnectionTest("127.0.0.1",int(j.application.config.get("grid.master.port")))==False:
+        #     if self._checkIsNFSMounted()==False:
+        #         raise RuntimeError("code is not mounted to gridmaster")
 
         self.loadFromAgentController()
         osis = self.daemon.osis
