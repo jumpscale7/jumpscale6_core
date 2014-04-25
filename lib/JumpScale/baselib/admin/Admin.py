@@ -219,8 +219,6 @@ class JNode():
             self.log("No need to execute %s on %s"%(jsname,self.name))
             return False
 
-        
-
 class AdminFactory:
     def get(self,args,failWhenNotExist=False):
         return Admin(args,failWhenNotExist)
@@ -391,6 +389,8 @@ class Admin():
         c+="id.email=%s\n"%j.console.askString("email")
         c+="id.mobile=%s\n"%j.console.askString("mobile")
         c+="id.skype=%s\n"%j.console.askString("skype")
+
+        basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
         c+="id.key.dsa.pub=%s\n"%key
 
         idloc=self._getPath("identities/")
@@ -401,6 +401,9 @@ class Admin():
         j.system.fs.createDir(userloc)
         hrdloc=j.system.fs.joinPaths(idloc,login,"id.hrd")
         j.system.fs.writeFile(filename=hrdloc,contents=c)
+        for name in ["id_dsa","id_dsa.pub"]:
+            u = j.system.fs.joinPaths(basepath, 'identities','system',name)
+            j.system.fs.copyFile("/root/.ssh/%s"%name,u)
 
     def _getHostNames(self,hostfilePath,exclude={}):
         result={}

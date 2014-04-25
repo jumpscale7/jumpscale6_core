@@ -238,12 +238,11 @@ if opts.action=="upload" and checkcat("installer"):
 if opts.action.find("upload")<>-1 and checkcat("libs"):
     uploadfile("jsbox","activate")
     upload("jsbox","libjs")
-    upload("jsbox","libext")
+    # upload("jsbox","libext")
     upload("jsbox","apps/agent")
     upload("jsbox","apps/blobserver")
     upload("jsbox","apps/processmanager")
     upload("jsbox","tools")
-
 
 if opts.action.find("upload")<>-1 and checkcat("base"):  
     upload("jsbox","lib")
@@ -262,7 +261,8 @@ if opts.action=="download" and checkcat("jpackages"):
 
 if opts.action=="download" and checkcat("libs"):
     download("jsbox","libjs")
-    download("jsbox","libext")
+    # download("jsbox","libext")
+    j.system.fs.createDir("%s/libext/"%opts.sbpath)
     download("jsbox","apps/agent")
     download("jsbox","apps/blobserver")
     download("jsbox","apps/processmanager")
