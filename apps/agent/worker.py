@@ -256,6 +256,7 @@ if __name__ == '__main__':
     parser.add_argument("-pw", '--auth', help='Authentication of redis')
     parser.add_argument("-a", '--addr', help='Address of redis',default="127.0.0.1")
     parser.add_argument("-p", '--port', type=int, help='Port of redis',default=7768)
+    parser.add_argument('--nodeid', type=int, help='nodeid, is just to recognise the command in ps ax',default=0)
 
     opts = parser.parse_args()
 
