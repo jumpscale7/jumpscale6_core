@@ -4,19 +4,23 @@ from JumpScale.baselib import cmdutils
 
 import sys,time
 
+#rsync -azv install.jumpscale.org::download/test/jsbox/tools/jssync jsbox/tools/jssync
+
 j.application.start("jssync")
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['upload','download','sync2sb','sync2sbUpload'], help='Command to perform, sb means sandbox')
 
-parser.add_argument("-c", '--category', help='what to sync2sb,upload,download options: all,allnocfg,jpackages,libs,cfg,base,installer (comma separated)', default="jpackages,libs")
+parser.add_argument("-c", '--category', help='what to sync2sb,upload,download options: all,allnocfg,jpackages,libs,libjs,cfg,base,installer (comma separated)', default="jpackages,libs")
 parser.add_argument("-b", '--branch', help='branch of jumpscale, only required for sync2sb', default="unstable")
 parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable, only required for sync2sb', default="")
 parser.add_argument("-k", '--key', help='secret key (can have ql inside or anything), only required for upload/download', default="")
 parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
 parser.add_argument("-j", '--jpdomains', help='specify add domains to look for when syncing/uploading jpackages.', default="")
+parser.add_argument("-nd", '--nodelete', help='will not delete files after upload or download.', default=False,action='store_true')
 
 opts = parser.parse_args()
+opts.delete=not opts.nodelete
 
 ipaddr=j.application.config.get("jssync.addr")
 
@@ -54,8 +58,11 @@ def download(category,path="",data=False):
 
     pathfs="%s%s"%(base,path)
 
-    cmd="rsync -azv %s::download/%s/%s%s %s  --delete-after --modify-window=60 --compress"%(ipaddr,\
+
+    cmd="rsync -azv %s::download/%s/%s%s %s  --modify-window=60 --compress"%(ipaddr,\
         key,category,path,pathfs)
+    if opts.delete:
+        cmd+=" --delete-after"
     print cmd
     j.system.process.executeWithoutPipe(cmd)    
 
@@ -237,8 +244,12 @@ if opts.action=="upload" and checkcat("installer"):
 
 if opts.action.find("upload")<>-1 and checkcat("libs"):
     uploadfile("jsbox","activate")
-    upload("jsbox","libjs")
-    # upload("jsbox","libext")
+    upload("jsbox","libjs/JumpScale/base")
+    upload("jsbox","libjs/JumpScale/baselib")
+    upload("jsbox","libjs/JumpScale/core")
+    upload("jsbox","libjs/JumpScale/grid")
+    upload("jsbox","libjs/JumpScale/lib")
+    upload("jsbox","libext")
     upload("jsbox","apps/agent")
     upload("jsbox","apps/blobserver")
     upload("jsbox","apps/processmanager")
@@ -259,8 +270,20 @@ if opts.action=="download" and checkcat("base"):
 if opts.action=="download" and checkcat("jpackages"):
     download("jsbox","jpackages")    
 
+if opts.action=="download" and checkcat("libjs"):
+    download("jsbox","libjs/JumpScale/base")
+    download("jsbox","libjs/JumpScale/baselib")
+    download("jsbox","libjs/JumpScale/core")
+    download("jsbox","libjs/JumpScale/grid")
+    download("jsbox","libjs/JumpScale/lib")
+    download("jsbox","tools")
+
 if opts.action=="download" and checkcat("libs"):
-    download("jsbox","libjs")
+    download("jsbox","libjs/JumpScale/base")
+    download("jsbox","libjs/JumpScale/baselib")
+    download("jsbox","libjs/JumpScale/core")
+    download("jsbox","libjs/JumpScale/grid")
+    download("jsbox","libjs/JumpScale/lib")
     # download("jsbox","libext")
     j.system.fs.createDir("%s/libext/"%opts.sbpath)
     download("jsbox","apps/agent")

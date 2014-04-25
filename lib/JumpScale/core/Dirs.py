@@ -160,6 +160,7 @@ class Dirs(object):
         txt=txt.replace("$jslibdir",self.jsLibDir)
         txt=txt.replace("$jslibextdir",self.libExtDir)
         txt=txt.replace("$jsbindir",self.binDir)
+        txt=txt.replace("$nodeid",str(j.application.whoAmI.nid))
         return txt
 
     def replaceFilesDirVars(self,path,recursive=True, filter=None):
