@@ -4,7 +4,7 @@ import sys
 # import importlib
 import imp
 import ujson
-import JumpScale.baselib.redis
+import JumpScale.baselib.credis
 import copy
 import time
 
@@ -270,7 +270,8 @@ class Admin():
         self.applyconfiglocal() #set hosts
         self.js={}
         self.loadJumpscripts()
-        self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+        
+        self.redis = j.clients.redis.getRedisClient("127.0.0.1", 7768)
         self.nodes={}
         self.errors=[]
         self._log=""

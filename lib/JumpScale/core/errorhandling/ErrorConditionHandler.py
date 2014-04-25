@@ -499,7 +499,7 @@ class ErrorConditionHandler():
             pub=j.application.config.get("sentry.public.key")
             secret=j.application.config.get("sentry.secret.key")
             port=int(j.application.config.get("sentry.port"))
-            default=j.application.config.get("sentry.project.default")
+            default=j.application.config.get("sentry.project")
             url='http://%s:%s/'%(server,port)
             exc={}
             exc["type"]=ttype
