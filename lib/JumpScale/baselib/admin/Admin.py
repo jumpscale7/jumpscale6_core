@@ -34,6 +34,7 @@ class JNode():
                         out+="%s\n"%self.cuapi.run(line)
                     except:
                         pass
+        self.result+=out
         return out
 
     def killProcess(self,filterstr):
@@ -54,7 +55,7 @@ class JNode():
         return found
 
     def jpackageStop(self,name,filterstr):
-        self.cuapi.run("jpackage stop -n %s"%name)
+        self.cuapi.run("source /opt/jsbox/activate;jpackage stop -n %s"%name)
         found=self.getPids(filterstr)
         if len(found)>0:
             for item in found:
@@ -65,7 +66,7 @@ class JNode():
         for i in range(retry):
             if len(found)==nrtimes:
                 return
-            self.cuapi.run("jpackage start -n %s"%name)                
+            self.cuapi.run("source /opt/jsbox/activate;jpackage start -n %s"%name)                
             time.sleep(1)
             found=self.getPids(filterstr)
         if len(found)<nrtimes:
@@ -321,6 +322,8 @@ class Admin():
             node.name=name
         node.cuapi=self.cuapi
         node.args=self.args
+        node.result=""
+        node.error=""
         node._connectCuapi()
         
         return node
