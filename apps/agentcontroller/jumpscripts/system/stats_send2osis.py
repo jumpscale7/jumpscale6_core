@@ -11,7 +11,8 @@ version = "1.0"
 category = "monitoring.send2osis.carbon"
 period = 10#120 #always in sec
 enable=True
-async=False
+async=True
+queue='process'
 log = False
 roles = ["osis.db.graphite"]
 
@@ -23,7 +24,7 @@ def action():
         avg, mag = stat.getAvgMax()
         stats.append([key,avg])
     masterip=j.application.config.get("grid.master.ip")
-    OSISclient = j.core.osis.getClient(masterip, user='root')        
+    OSISclient = j.core.osis.getClient(masterip, user='root')
     if stats:
         try:
             OSISclientStat=j.core.osis.getClientForCategory(OSISclient,"system","stats")
