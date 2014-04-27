@@ -109,7 +109,7 @@ class ControllerCMDS():
         jobs=json.dumps(job)
 
         self._log("save 2 osis")
-        self._setJob(job.__dict__, True,jobs)
+        self._setJob(job.__dict__, osis=log, jobs=jobs)
         self._log("getqueue")
         q = self._getCmdQueue(gid=gid, nid=nid)
         self._log("put on queue")
@@ -393,7 +393,8 @@ class ControllerCMDS():
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
-        self._setJob(job, osis=True)
+        saveinosis = job['log'] or job['state'] != 'OK'
+        self._setJob(job, osis=saveinosis)
         if job['wait']:
             q=self._getJobQueue(job["guid"])
             q.put(json.dumps(job))

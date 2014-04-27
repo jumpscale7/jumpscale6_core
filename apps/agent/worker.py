@@ -232,7 +232,7 @@ class Worker(object):
                 #lets keep the errors
                 # self.redis.hdel("workers:jobs",job.id)
             else:
-                if job.log:
+                if job.log or job.wait:
                     try:
                         self.acclient.notifyWorkCompleted(job.__dict__)
                     except Exception,e:
