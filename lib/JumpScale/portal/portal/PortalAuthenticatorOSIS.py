@@ -12,8 +12,6 @@ class PortalAuthenticatorOSIS():
         osis=j.core.osis.getClient(addr,5544,"root",passwd)
         self.osis=j.core.osis.getClientForCategory(osis,"system","user")
         self.osisgroups=j.core.osis.getClientForCategory(osis,"system","group")
-        self.users={}
-        self.usersLastCheck={}
         self.key2user={}
         
     def existsKey(self,key):
@@ -54,16 +52,11 @@ class PortalAuthenticatorOSIS():
         return self.osisgroups.simpleSearch({})
 
     def getGroups(self,user):
-        if not self.users.has_key(user):
-            try:
-                userinfo = self.getUserInfo(user).__dict__
-                self.users[user] = userinfo
-                self.usersLastCheck[user] = time.time()
-                return userinfo['groups']
-            except:
-                pass
+        try:
+            userinfo = self.getUserInfo(user).__dict__
+            return userinfo['groups']
+        except:
             return ["guest","guests"]
-        return  self.users[user]["groups"]
 
     def loadFromLocalConfig(self):
         #@tddo load from users.cfg & populate in osis
@@ -73,20 +66,5 @@ class PortalAuthenticatorOSIS():
     def authenticate(self,login,passwd):
         """
         """
-        if not self.users.has_key(login):
-            #does not exist in redis, go fetch from osis
-            result=self.osis.authenticate(name=login,passwd=passwd)
-            if result["authenticated"]==False:
-                return False
-            self.users[login]=result
-            self.usersLastCheck[login]=time.time()
-            self.key2user[result["authkey"]]=login
-        else:
-            if self.usersLastCheck.get(login, 0) < time.time()-300:
-                #5 min since last check   
-                self.users.pop(login)
-                return self.authenticate(login,passwd)
-        return True
-
-
-
+        result=self.osis.authenticate(name=login,passwd=passwd)
+        return result['authenticated']
