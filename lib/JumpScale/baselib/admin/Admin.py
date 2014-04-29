@@ -272,7 +272,7 @@ class Admin():
         self.js={}
         self.loadJumpscripts()
         
-        self.redis = j.clients.redis.getRedisClient("127.0.0.1", 7768)
+        self.redis = j.clients.credis.getRedisClient("127.0.0.1", 7768)
         self.nodes={}
         self.errors=[]
         self._log=""
