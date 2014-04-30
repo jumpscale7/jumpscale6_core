@@ -22,6 +22,7 @@ class GridFactory():
         self.id = None
         self.nid=None
         self.config = None
+        self.roles = list()
 
     def _loadConfig(self,test=True):
         if not j.application.__dict__.has_key("config"):
@@ -55,6 +56,15 @@ class GridFactory():
         j.logger.consoleloglevel = 6
 
         self.masterip=j.application.config.get("grid.master.ip")
+        roles = list()
+        if self.config.exists("grid.node.roles"):
+            roles = j.application.config.getList('grid.node.roles')
+        roles = [ role.lower() for role in roles ]
+        if self.isGridMasterLocal():
+            if 'master' not in roles:
+                roles.append('master')
+        self.roles = roles
+
 
         if not j.system.net.waitConnectionTest(self.masterip,5544,10):
             raise RuntimeError("Could not connect to master osis (%s:%s)"%(self.masterip,5544))
@@ -118,10 +128,7 @@ class GridFactory():
 
     def isGridMasterLocal(self):
         broker = self.config.get("grid.master.ip")
-        if broker.find("localhost") != -1 or broker.find("127.0.0.1") != -1:
-            return True
-        else:
-            return False
+        return j.system.net.isIpLocal(broker)
 
     def getZBrokerClient(self, addr="127.0.0.1", port=5554, org="myorg", user="root", passwd="1234", ssl=False, category="broker"):
         from ..zdaemon.ZDaemonTransport import ZDaemonTransport

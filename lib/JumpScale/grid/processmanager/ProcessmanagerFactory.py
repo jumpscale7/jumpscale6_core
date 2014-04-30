@@ -65,7 +65,7 @@ from JumpScale import j
         self.category=getattr(self.module, 'category', "unknown")
         self.license=getattr(self.module, 'license', "unknown")
         self.version=getattr(self.module, 'version', "1.0")
-        self.roles=getattr(self.module, 'roles', ["*"])
+        self.roles=getattr(self.module, 'roles', [])
         self.source=source
         self.descr=self.module.descr
         self.queue=getattr(self.module, 'queue',"default")
