@@ -14,7 +14,7 @@ enable=True
 startatboot=False
 async=False
 log=False
-roles = ["*"]
+roles = []
 
 
 

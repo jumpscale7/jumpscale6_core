@@ -14,7 +14,7 @@ category = "monitor.workers"
 period = 10 #always in sec
 enable = True
 async = False
-roles = ["*"]
+roles = []
 log=False
 
 def action():

@@ -12,7 +12,7 @@ version = "1.0"
 category = "system.disks"
 
 async = True
-roles = ["*"]
+roles = []
 enable = True
 period=0
 

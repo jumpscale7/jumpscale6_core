@@ -13,7 +13,7 @@ version = "1.0"
 category = "system.workerstatus"
 
 async = False
-roles = ["*"]
+roles = []
 
 log=False
 

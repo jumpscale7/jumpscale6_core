@@ -11,7 +11,7 @@ license = "bsd"
 version = "1.0"
 category = "tools.echo.sync"
 async=False
-roles = ["*"]
+roles = []
 
 def action(msg=""):
     return msg

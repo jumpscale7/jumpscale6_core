@@ -12,7 +12,7 @@ organization = "jumpscale"
 author = "khamisr@cloudscalers.com"
 license = "bsd"
 version = "1.0"
-roles = ["*"]
+roles = []
 
 
 def action(name, fromIP, toIP, interface):

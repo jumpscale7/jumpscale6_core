@@ -11,7 +11,7 @@ organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-roles = ["*"]
+roles = []
 
 
 def action(msg, waittime):

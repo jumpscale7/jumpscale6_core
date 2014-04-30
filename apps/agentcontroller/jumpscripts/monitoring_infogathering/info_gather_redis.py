@@ -12,7 +12,7 @@ version = "1.0"
 category = "system.redisstatus"
 
 async = False
-roles = ["*"]
+roles = []
 
 period=0
 

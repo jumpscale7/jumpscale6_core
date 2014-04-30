@@ -13,7 +13,7 @@ period = 5
 enable=True
 async=False
 
-roles = ["*"]
+roles = []
 
 def action():
     j.core.processmanager.cmds.worker.checkTimeouts()

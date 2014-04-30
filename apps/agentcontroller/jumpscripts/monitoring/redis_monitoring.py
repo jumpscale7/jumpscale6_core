@@ -15,7 +15,7 @@ category = "monitor.redis"
 period = 300 #always in sec
 enable = True
 async = False
-roles = ["*"]
+roles = []
 log=False
 
 def action():
