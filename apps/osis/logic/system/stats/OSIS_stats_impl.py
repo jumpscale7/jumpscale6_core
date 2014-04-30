@@ -29,7 +29,7 @@ class mainclass(OSISStore):
         return False
 
     def find(self,query, start=0, size =100):
-        raise RuntimeError("osis 'find' for stat not implemented")
+        return j.clients.graphite.query(query)
 
     def destroyindex(self):
         raise RuntimeError("osis 'destroyindex' for stat not implemented")
