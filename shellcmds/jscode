@@ -84,8 +84,8 @@ def getRepos():
 repos=getRepos()
 
 if opts.action == "status":
-    print "\n\nSTATUS: account reponame branch added:modified:deleted insyncwithremote? localrev remoterev"
-    print "==============================================================================================="
+    print "\n\nSTATUS: account reponame                  branch added:modified:deleted   insyncwithremote?   localrev       remoterev"
+    print "========================================================================================================================="
 
 
 for bitbucket,account,reponame,branch,client,path in repos:
@@ -133,7 +133,7 @@ for bitbucket,account,reponame,branch,client,path in repos:
         if nrmods>0:
             reposync="N"            
 
-        print "%-15s %-25s %-10s a%-3s:m%-3s:d%-3s reposync:%-1s  lrev:%-5s rrev:%-5s" %(account,reponame,client.branchname,\
+        print "%-15s %-25s %-10s a%-3s:m%-3s:d%-9s reposync:%-9s  lrev:%-9s rrev:%-5s" %(account,reponame,client.branchname,\
             len(mods["added"])+len(mods["nottracked"]),len(mods["modified"]),len(mods["missing"])+len(mods["removed"]),\
             reposync,\
             lrev,remotelastrevision)
