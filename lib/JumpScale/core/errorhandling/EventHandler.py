@@ -1,6 +1,44 @@
 from JumpScale import j
 
-class EventHandler():
+try:
+    import ujson as json
+except ImportError:
+    import json
+
+
+class AlertClient(object):
+    def __init__(self, ip, port):
+        self._ip = ip
+        self._port = port
+        self._queue = 'queues:alerts'
+        self._url = "http://%s:%s" % (self._ip, self._port)
+
+    def sendAlert(self, gid, nid, category, state, value, ecoguid=None):
+        import requests
+        msg = {'nid': nid,
+               'gid': gid,
+               'category': category,
+               'state': state,
+               'ecoguid': ecoguid,
+               }
+        url = "%s/RPUSH/%s" % (self._url, self._queue)
+        requests.put(url, json.dumps(msg))
+
+class EventHandler(object):
+
+    def __init__(self):
+        self.__aclient = None
+
+    @property
+    def _aclient(self):
+        if self.__aclient:
+            return self.__aclient
+        else:
+            ip = j.application.config.get('alert.client.ip')
+            port = j.application.config.getInt('alert.client.port')
+            self.__aclient = AlertClient(ip, port)
+            return self.__aclient
+
     
     def bug_critical(self,msg,category="",e=None):
         """
@@ -40,3 +78,9 @@ class EventHandler():
         if e<>None:
             msg+="\nERROR:%s\n"%e
         j.errorconditionhandler.raiseOperationalCritical(msg,category=category,die=False)
+
+    def raiseAlert(self, category, state, value=None, ecoguid=None, gid=None, nid=None):
+        gid = gid or j.application.whoAmI.gid
+        nid = nid or j.application.whoAmI.nid
+        self._aclient.sendAlert(gid, nid, category, state, value, ecoguid)
+
