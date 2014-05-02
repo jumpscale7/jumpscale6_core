@@ -55,6 +55,7 @@ elif args.action == "exec":
 
         admin.execute(name,once=True,reset=args.force)
 
-j.application.stop()
+exitcode = 1 if admin.errors else 0
+j.application.stop(exitcode)
 
 

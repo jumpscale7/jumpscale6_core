@@ -130,7 +130,7 @@ if __name__ == '__main__':
         else:
             print "##%-10s %-20s##\n%s\n%s"%obj
     # p.join()                    # this deadlocks
-    
-    j.application.stop()
+    exitcode = 1 if admin.errors else 0
+    j.application.stop(exitcode)
 
 
