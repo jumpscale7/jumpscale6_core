@@ -31,7 +31,7 @@ def action(node):
     c.run("cd /usr/bin;ln -s python jspython")
     c.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
     c.run("pip install ujson")
-    
+
     node.uploadFromCfgDir("jscfg","/opt/jumpscale/cfg/")
 
     c.run("jpackage mdupdate")

@@ -29,7 +29,7 @@ class SystemNet:
         port=int(port)
         start=j.base.time.getTimeEpoch()
         now=start
-        while now<start+timeout:
+        while now<=start+timeout:
             if j.system.net.tcpPortConnectionTest(ipaddr,port):
                 return True
             time.sleep(0.1)

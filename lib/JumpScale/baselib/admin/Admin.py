@@ -191,15 +191,11 @@ class JNode():
         if self.args.force:
             do=True
         if do:
-            self.log("ping test")
-            if j.system.net.pingMachine(self.name,1)==False:
-               self.raiseError(jsname,"COULD NOT connect (ping)")
-               return
             print "* tcp check ssh"
             if not j.admin.js.has_key(jsname):
                 raise RuntimeError("cannot find js:%s"%jsname)
-            if not j.system.net.tcpPortConnectionTest(self.name,22):
-                self.raiseError(jsname,"COULD NOT port check (ssh)")
+            if not j.system.net.waitConnectionTest(self.name,22, self.args.timeout):
+                self.raiseError(jsname,"COULD NOT check port (ssh)")
                 return
             self.log("sshapi start cmd:%s"%jsname)
             cuapi=self.cuapi
@@ -394,7 +390,6 @@ class Admin():
         c+="id.mobile=%s\n"%j.console.askString("mobile")
         c+="id.skype=%s\n"%j.console.askString("skype")
 
-        basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
         c+="id.key.dsa.pub=%s\n"%key
 
         idloc=self._getPath("identities/")
@@ -406,7 +401,7 @@ class Admin():
         hrdloc=j.system.fs.joinPaths(idloc,login,"id.hrd")
         j.system.fs.writeFile(filename=hrdloc,contents=c)
         for name in ["id_dsa","id_dsa.pub"]:
-            u = j.system.fs.joinPaths(basepath, 'identities','system',name)
+            u = j.system.fs.joinPaths(self.basepath, 'identities','system',name)
             j.system.fs.copyFile("/root/.ssh/%s"%name,u)
 
     def _getHostNames(self,hostfilePath,exclude={}):
