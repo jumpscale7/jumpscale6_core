@@ -13,7 +13,7 @@ period = 600 #always in sec
 enable=False
 async=False
 
-roles = ["grid.node"]
+roles = []
 
 def action():
     j.system.stataggregator.clean()

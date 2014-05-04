@@ -24,15 +24,15 @@ def action():
     import JumpScale.grid.osis
     ocl = j.core.osis.getClient(user='root')
     scl = j.core.osis.getClientForCategory(ocl, 'system', 'stats')
-    results = scl.search({'target':'smartSummarize(n*.system.cpu.percent, "1hour", "avg")', 'from': '-1h'})
+    results = scl.search({'target':'smartSummarize(n*.system.cpu.num_ctx_switches, "1hour", "avg")', 'from': '-1h'})
     for noderesult in results:
-        avgcpu, timestamp = noderesult['datapoints'][-1]
+        avgctx, timestamp = noderesult['datapoints'][-1]
         target = noderesult['target']
         nid = int(target[len('smartSummarize(n'):].split('.')[0])
-        if avgcpu > 95:
+        if avgctx > 30000:
             state = 'CRITICAL'
-        elif avgcpu > 80:
+        elif avgctx > 10000:
             state = 'WARNING'
         else:
             state = 'OK'
-        j.tools.watchdogclient.send("cpu.core", state, avgcpu)
+        j.tools.watchdogclient.send("cpu.contextswitch", state, avgctx)

@@ -14,7 +14,7 @@ enable=True
 async=True
 queue='process'
 log = False
-roles = ["osis.db.graphite"]
+roles = []
 
 def action():
     stats = list()
