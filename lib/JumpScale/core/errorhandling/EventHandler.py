@@ -8,21 +8,20 @@ except ImportError:
 
 class AlertClient(object):
     def __init__(self, ip, port):
+        import JumpScale.baselib.webdis
         self._ip = ip
         self._port = port
         self._queue = 'queues:alerts'
-        self._url = "http://%s:%s" % (self._ip, self._port)
+        self._client = j.clients.webdis.get(ip, port)
 
     def sendAlert(self, gid, nid, category, state, value, ecoguid=None):
-        import requests
         msg = {'nid': nid,
                'gid': gid,
                'category': category,
                'state': state,
                'ecoguid': ecoguid,
                }
-        url = "%s/RPUSH/%s" % (self._url, self._queue)
-        requests.put(url, json.dumps(msg))
+        self._client.rpush(self._queue, json.dumps(msg))
 
 class EventHandler(object):
 
