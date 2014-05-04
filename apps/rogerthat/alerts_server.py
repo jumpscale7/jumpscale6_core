@@ -33,8 +33,8 @@ def escalate_L1(message):
     contacts = [contact1,]
     message_id = send_message(message, contacts)
     epoch = time.time()
-    message_data = {'epoch': epoch, 'state': 'L1', 'log': '%s: %s %s' % (epoch, ', '.join(contacts), 'L1'), 'message': message}
-    redis_client.hset('messages', message_id, message_data)
+    message_data = {"epoch": epoch, "state": 'L1', "log": '%s: %s %s' % (epoch, ', '.join(contacts), 'L1'), "message": message}
+    redis_client.hset('messages', message_id, ujson.dumps(message_data))
     return message_id
 
 def escalate_L2(message, message_id):
@@ -47,7 +47,7 @@ def escalate_L2(message, message_id):
         send_message(message, contacts)
         epoch = time.time()
         message_data = {'epoch': epoch, 'state': 'L2', 'log': '%s: %s %s' % (epoch, ', '.join(contacts), 'L2'), 'message': message}
-        redis_client.hset('messages', message_id, message_data)
+        redis_client.hset('messages', message_id, ujson.dumps(message_data))
 
 def escalate_L3(message, message_id):
     message_data = ujson.loads(redis_client.hget('messages', message_id))
@@ -57,7 +57,7 @@ def escalate_L3(message, message_id):
         send_message(message, contacts)
         epoch = time.time()
         message_data = {'epoch': epoch, 'state': 'L3', 'log': '%s: %s %s' % (epoch, ', '.join(contacts), 'L3'), 'message': message}
-        redis_client.hset('messages', message_id, message_data)
+        redis_client.hset('messages', message_id, ujson.dumps(message_data))
 
 while True:
     alert_json = alerts_queue.get()
