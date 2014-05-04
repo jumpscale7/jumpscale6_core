@@ -22,7 +22,7 @@ class WebdisFactory:
         return self._webdis[key]
 
 
-class Webdis():
+class Webdis(object):
     """
     """
 
