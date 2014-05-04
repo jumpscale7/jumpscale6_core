@@ -88,7 +88,6 @@ def action():
                            'username': '',
                            'children': []}
 
-
         cacheobj.db.systempids=[pid]
 
         cacheobj.db.epochstart = processinfo['create_time']

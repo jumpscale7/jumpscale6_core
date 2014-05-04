@@ -54,13 +54,17 @@ def action():
     results["swap.used"]=round(used/1024/1024,2)
     results["swap.percent"]=percent
 
+    num_ctx_switches=0 #@todo read
+
+    results["process.num_ctx_switches"]=num_ctx_switches
+
     result2={}
     for key in results.keys():
         if key.find("percent")<>-1 or key.find("time")<>-1:
             percent=True
         else:
             percent=False
-        if key.find("network.")<>-1 or key.find("time")<>-1:
+        if key.find("network.")<>-1 or key.find("time")<>-1 or key.find("process")<>-1:
             ttype="D"
         else:
             ttype="N"
