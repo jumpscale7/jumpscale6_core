@@ -42,11 +42,12 @@ class WatchdogClient:
         secret=j.application.config.get("grid.watchdog.secret", checkExists=True)
         if secret==False or secret=="":
             raise RuntimeError("please configure grid.watchdog.secret in hrdconfig")
+        self.secret=secret
         
         self.webdis=j.clients.webdis.get(addr=addr, port=7779, timeout=1)
 
     def _getWatchDogEventObj(self,gid=0,nid=0,category="",state="",value=0,gguid="",ecoguid="",ddict={}):
-        return WatchdogEvent(gid,nid,category,state,value,ecoguid,gguid=gguid,ddict=ddict)
+        return WatchdogEvent(gid,nid,category,state,value,ecoguid,gguid=self.secret,ddict=ddict)
 
     def _getWatchDogHSetKey(self,gguid):
         return "%s:watchdogevents"%gguid
