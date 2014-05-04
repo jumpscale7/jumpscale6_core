@@ -1,6 +1,11 @@
 from JumpScale import j
-
 import JumpScale.baselib.webdis
+
+try:
+    import ujson as json
+except:
+    import json
+
 
 class WatchdogEvent:
     def __init__(self,gid=0,nid=0,category="",state="",value=0,ecoguid="",gguid="",ddict={}):
@@ -25,11 +30,6 @@ class WatchdogEvent:
 
     __repr__=__str__
 
-
-try:
-    import ujson as json
-except:
-    import json
 
 
 class WatchdogClient:
@@ -59,8 +59,10 @@ class WatchdogClient:
             print wde        
         return res
 
-    def send(self,category,state,value,ecoguid=""):
-        wde=self._getWatchDogEventObj(j.application.whoAmI.gid,j.application.whoAmI.nid,category,state,value,ecoguid)
+    def send(self,category,state,value,ecoguid="", gid=None, nid=None):
+        gid = gid or j.application.whoAmI.gid
+        nid = nid or j.application.whoAmI.nid
+        wde=self._getWatchDogEventObj(gid,nid,category,state,value,ecoguid)
         return self._setWatchdogEvent(wde)
 
 
