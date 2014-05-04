@@ -22,7 +22,7 @@ class WebdisFactory:
         return self._webdis[key]
 
 
-class Webdis():
+class Webdis(object):
     """
     """
 
@@ -51,7 +51,7 @@ class Webdis():
                     print "Webdis not available"
                     time.sleep(0.1)
                     continue
-                raise RuntimeError(e)            
+                raise RuntimeError(e)
             if r.status_code==200:
                 res=json.loads(r.text)
                 return res[cmd]
