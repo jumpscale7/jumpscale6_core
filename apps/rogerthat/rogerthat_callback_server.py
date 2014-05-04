@@ -80,45 +80,36 @@ class GeventWSServer(object):
                 message_id = result['result']
                 return message_id
 
+    def _updateStatus(self, message_key, message_data, state, member):
+        epoch = time.time()
+        message_data['epoch'] = epoch
+        message_data['state'] = state
+        message_data['log'] = '%s: %s %s' % (epoch, member, state)
+        self.redis_client.hset('messages', message_key, json.dumps(message_data))
+
     def process_update(self, status=None, answer_id=None, received_timestamp=None, member=None, user_details=None, message_key=None, parent_message_key=None, tag=None, acked_timestamp=None, service_identity=None, result_key=None):
+        message_key = parent_message_key if parent_message_key else message_key
         message_data_json = self.redis_client.hget('messages', message_key)
         if message_data_json:
             message_data = json.loads(message_data_json)
             if message_data['state'] == 'L1' and answer_id == 'yes':
-                epoch = time.time()
-                message_data['epoch'] = epoch
-                message_data['state'] = 'C'
-                message_data['log'] = '%s: %s %s' % (epoch, member, 'C')
-                self.redis_client.hset('messages', message_key, json.dumps(message_data))
+                self._updateStatus(message_key, message_data, 'C', member)
                 answers = [{'id': 'yes', 'caption': 'Accept', 'action': '', 'type': 'button'},]
                 self.send_message(message_data['message'], [member,], answers, message_key)
                 return None
             elif message_data['state'] == 'C' and answer_id == 'yes':
-                epoch = time.time()
-                message_data['epoch'] = epoch
-                message_data['state'] = 'A'
-                message_data['log'] = '%s: %s %s' % (epoch, member, 'C')
-                self.redis_client.hset('messages', message_key, json.dumps(message_data))
+                self._updateStatus(message_key, message_data, 'A', member)
                 answers = [{'id': 'yes', 'caption': 'Resolve', 'action': '', 'type': 'button'},]
                 self.send_message(message_data['message'], [member,], answers, message_key)
                 return None
             elif message_data['state'] == 'A' and answer_id == 'yes':
-                epoch = time.time()
-                message_data['epoch'] = epoch
-                message_data['state'] = 'R'
-                message_data['log'] = '%s: %s %s' % (epoch, member, 'C')
-                self.redis_client.hset('messages', message_key, json.dumps(message_data))
+                self._updateStatus(message_key, message_data, 'R', member)
                 answers = [{'id': 'yes', 'caption': 'Close', 'action': '', 'type': 'button'},]
                 self.send_message(message_data['message'], [member,], answers, message_key)
                 return None
             elif message_data['state'] == 'R' and answer_id == 'yes':
-                epoch = time.time()
-                message_data['epoch'] = epoch
-                message_data['state'] = 'Z'
-                message_data['log'] = '%s: %s %s' % (epoch, member, 'C')
-                self.redis_client.hset('messages', message_key, json.dumps(message_data))
+                self._updateStatus(message_key, message_data, 'Z', member)
                 return None
-            return None
 
     def start(self):
         print 'started on %s' % self.port
