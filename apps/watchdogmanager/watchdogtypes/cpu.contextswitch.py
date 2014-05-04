@@ -8,7 +8,7 @@ Check on average cpu for last 15 min
 organization = "jumpscale"
 maxperiod = 17*60  # always in sec
 enable = True
-roles = ['*']
+roles = []
 
 def check(watchdogevent):
     pass

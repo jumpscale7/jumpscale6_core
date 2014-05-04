@@ -28,7 +28,6 @@ class WatchdogEvent:
 
     __repr__=__str__
 
-
 class WatchdogType():
     def __init__(self,path):
         self.path=path
