@@ -1,0 +1,2 @@
+INFO:root:Logging mode enabled, will not send email to anyone, just log.
+INFO:root:SMTPReceiver started on 127.0.0.1:8825.
