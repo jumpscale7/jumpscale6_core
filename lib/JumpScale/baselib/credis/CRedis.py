@@ -91,7 +91,7 @@ class CRedis():
     def lpop(self,key):
         return self.execute('LPOP',key)
 
-    def keys(self,key):
+    def keys(self,key="*"):
         return self.execute('KEYS',key)
 
     def hkeys(self,key):
