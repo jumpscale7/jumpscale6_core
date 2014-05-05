@@ -118,6 +118,9 @@ class CRedis():
     def hdelete(self,hkey,key):
         return self.execute('HDEL',hkey,key)
 
+    def hdel(self, name, *keys):
+        return self.execute('HDEL', name, *keys)
+
     def hexists(self,hkey,key):
         return self.execute('HEXISTS',hkey,key)==1
 
@@ -132,6 +135,12 @@ class CRedis():
 
     def expire(self,key,timeout):
         return self.execute('EXPIRE',key,timeout)
+
+    def hincrby(self, name, key, amount=1):
+        return self.execute('HINCRBY', name, key, amount)
+
+    def brpoplpush(self, src, dst, timeout=0):
+        return self.execute('BRPOPLPUSH', src, dst, timeout)
 
     def scriptload(self,script):
         self.getFallBackRedis()

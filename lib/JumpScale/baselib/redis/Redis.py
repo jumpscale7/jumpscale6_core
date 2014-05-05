@@ -1,7 +1,7 @@
 from JumpScale import j
-import geventredis
 import redis
-from .geventredis.RedisQueue import RedisQueue
+from JumpScale.baselib.credis.CRedis import CRedis
+from JumpScale.baselib.credis.CRedisQueue import CRedisQueue
 
 
 class RedisFactory:
@@ -16,11 +16,13 @@ class RedisFactory:
         self.redisq = {}
 
     def getGeventRedisClient(self, ipaddr, port, fromcache=True):
+        from gevent.monkey import patch_socket
+        patch_socket()
         if not fromcache:
-            return geventredis.connect(ipaddr, port)
+            return CRedis(ipaddr, port) 
         key = "%s_%s" % (ipaddr, port)
         if key not in self.gredis:
-            self.gredis[key] = geventredis.connect(ipaddr, port)
+            self.gredis[key] = CRedis(ipaddr, port)
         return self.gredis[key]
 
     def getRedisClient(self, ipaddr, port):
@@ -32,17 +34,19 @@ class RedisFactory:
     def getRedisQueue(self, ipaddr, port, name, namespace="queues"):
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.redisq.has_key(key):
-            self.redisq[key] = RedisQueue(self.getRedisClient(ipaddr, port), name, namespace=namespace)
+            self.redisq[key] = CRedisQueue(self.getRedisClient(ipaddr, port), name, namespace=namespace)
         return self.redisq[key]
 
     def getGeventRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=False):
+        from gevent.monkey import patch_socket
+        patch_socket()
         fromcache = False  # @todo remove
         print "GET REDIS QUEUE GEVENT:%s %s" % (ipaddr, port)
         if not fromcache:
-            return RedisQueue(self.getGeventRedisClient(ipaddr, port, False), name, namespace=namespace)
+            return CRedisQueue(self.getGeventRedisClient(ipaddr, port, False), name, namespace=namespace)
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.gredisq.has_key(key):
-            self.gredisq[key] = RedisQueue(self.getGeventRedisClient(ipaddr, port), name, namespace=namespace)
+            self.gredisq[key] = CRedisQueue(self.getGeventRedisClient(ipaddr, port), name, namespace=namespace)
         return self.gredisq[key]
 
     def emptyAllInstances(self):
