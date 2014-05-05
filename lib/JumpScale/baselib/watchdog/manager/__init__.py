@@ -2,6 +2,6 @@ from JumpScale import j
 
 from .WatchdogFactory import *
 
-j.base.loader.makeAvailable(j, 'tools')
+j.base.loader.makeAvailable(j, 'tools.watchdog')
 
-j.tools.watchdogmanager=WatchdogFactory()
+j.tools.watchdog.manager=WatchdogFactory()

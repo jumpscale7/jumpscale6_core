@@ -13,7 +13,7 @@ gridguids=['6c336b0b900d482c8fad8b160d19414d','087df0f164884ca38b1e38bf470d9ca4'
 categories=["cpu.core","cpu.contextswitch","disk.full","machine.status","disk.mirror","grid.healthcheck"]
 states=["CRITICAL", "WARNING"]
 
-cl=j.tools.watchdogmanager.redis
+cl=j.tools.watchdog.manager.redis
 
 def getGridGuid():
     grid=j.base.idgenerator.generateRandomInt(0,len(gridguids)-1)+4
@@ -71,30 +71,30 @@ def initalLoad():
                 if category=="grid.healthcheck":
                     nid=0
                     value,category=getCategoryValue(category)
-                    wde=j.tools.watchdogmanager.getWatchDogEventObj(gid,nid,category,state,value,gguid)
+                    wde=j.tools.watchdog.manager.getWatchDogEventObj(gid,nid,category,state,value,gguid)
                     wde.epoch=curs
-                    j.tools.watchdogmanager.setWatchdogEvent(wde,pprint=True)
+                    j.tools.watchdog.manager.setWatchdogEvent(wde,pprint=True)
                 else:
                     for nid in range(1,30):
                         value,category=getCategoryValue(category)
-                        wde=j.tools.watchdogmanager.getWatchDogEventObj(gid,nid,category,state,value,gguid)
+                        wde=j.tools.watchdog.manager.getWatchDogEventObj(gid,nid,category,state,value,gguid)
                         wde.epoch=curs
-                        j.tools.watchdogmanager.setWatchdogEvent(wde,pprint=True)
+                        j.tools.watchdog.manager.setWatchdogEvent(wde,pprint=True)
 
 def errorsLoad():
     print "ERRORSLOAD"
-    guids=j.tools.watchdogmanager.getGGUIDS()
+    guids=j.tools.watchdog.manager.getGGUIDS()
     #errors
     for i in range(10):
         i2=j.base.idgenerator.generateRandomInt(0,len(guids)-1)
         gguid=guids[i2]
-        keys=cl.hkeys("%s:watchdogevents"%gguid)
+        keys=cl.hkeys("watchdogevents:%s"%gguid)
         i3=j.base.idgenerator.generateRandomInt(0,len(keys)-1)
         wdekey=keys[i3]
         nid,category=wdekey.split("_")
-        wde=j.tools.watchdogmanager.getWatchdogEvent(gguid,nid,category)
+        wde=j.tools.watchdog.manager.getWatchdogEvent(gguid,nid,category)
         wde.state=getState()
-        j.tools.watchdogmanager.setWatchdogEvent(wde,pprint=True)
+        j.tools.watchdog.manager.setWatchdogEvent(wde,pprint=True)
     #watchdogfailures
     for i in range(2):
         i2=j.base.idgenerator.generateRandomInt(0,len(guids)-1)
@@ -102,13 +102,13 @@ def errorsLoad():
         keys=cl.hkeys("%s:watchdogevents"%gguid)
         i3=j.base.idgenerator.generateRandomInt(0,len(keys)-1)
         nid,category=wdekey.split("_")
-        wde=j.tools.watchdogmanager.getWatchdogEvent(gguid,nid,category)
+        wde=j.tools.watchdog.manager.getWatchdogEvent(gguid,nid,category)
         wde.state="OK"
         wde.epoch=wde.epoch-15*7*60 #put 7 periods back
-        j.tools.watchdogmanager.setWatchdogEvent(wde,pprint=True)
+        j.tools.watchdog.manager.setWatchdogEvent(wde,pprint=True)
 
 
-j.tools.watchdogmanager.reset()
+j.tools.watchdog.manager.reset()
 
 initalLoad()
 errorsLoad()

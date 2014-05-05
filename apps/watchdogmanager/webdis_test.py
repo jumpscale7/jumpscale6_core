@@ -9,7 +9,7 @@ import JumpScale.baselib.watchdog.client
 
 j.application.start("jumpscale:watchdogclient")
 
-j.tools.watchdogclient.send("cpu.core","OK",90)
+j.tools.watchdog.client.send("cpu.core","OK",90)
 
 j.application.stop()
 

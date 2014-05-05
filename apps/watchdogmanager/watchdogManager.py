@@ -9,7 +9,7 @@ import JumpScale.baselib.watchdog.manager
 
 while True:
     print "check"
-    j.tools.watchdogmanager.checkWatchdogEvents()
+    j.tools.watchdog.manager.checkWatchdogEvents()
     time.sleep(5)
 
 j.application.stop()
