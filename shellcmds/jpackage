@@ -222,7 +222,11 @@ elif args.action == 'stop':
         package.stop(dependencies=args.deps)
 
 elif args.action == 'mdupdate':
-    j.packages.updateMetaData(force=args.force)
+    if j.application.sandbox:
+        cmd="jssync download -c jpackages -nd"
+        j.system.process.executeWithoutPipe(cmd)
+    else:
+        j.packages.updateMetaData(force=args.force)
 
 elif args.action == 'mdswitch':
     if args.qualitylevel==None:

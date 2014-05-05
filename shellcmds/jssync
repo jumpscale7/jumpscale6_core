@@ -24,6 +24,12 @@ opts.delete=not opts.nodelete
 
 ipaddr=j.application.config.get("jssync.addr")
 
+if opts.key=="":
+    if not j.application.config.exists("jssync_key_default"):
+        cmd="jpackage install -n jssync"
+        j.system.process.executeWithoutPipe(cmd)
+    opts.key=j.application.config.get("jssync_key_default")    
+
 def getkey():
     if opts.key=="" :
         raise RuntimeError("specify key")

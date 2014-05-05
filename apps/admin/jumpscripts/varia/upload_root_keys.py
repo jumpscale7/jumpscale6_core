@@ -31,6 +31,11 @@ def action(node):
     if not j.system.fs.exists(path=d):
         raise RuntimeError("cannot find basepath:%s"%d)
 
+    from IPython import embed
+    print "DEBUG NOW kkk"
+    embed()
+    
+
     if tags.labelExists("system"):
         #only use system key
         u = j.system.fs.joinPaths(basepath, 'identities','system')
