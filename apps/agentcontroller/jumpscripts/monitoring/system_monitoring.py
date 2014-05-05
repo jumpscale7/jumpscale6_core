@@ -62,7 +62,7 @@ def action():
         _, key, value = re.split("^(\w+)\s", line)
         stats[key] = value
 
-    num_ctx_switches = int(stats['ctx'])
+    num_ctx_switches = int(stats['ctxt'])
 
     results["cpu.num_ctx_switches"]=num_ctx_switches
 
