@@ -28,6 +28,9 @@ if opts.key=="":
     if not j.application.config.exists("jssync_key_default"):
         cmd="jpackage install -n jssync"
         j.system.process.executeWithoutPipe(cmd)
+        print "PLEASE DO JSSYNC AGAIN."
+        j.application.stop()
+        
     opts.key=j.application.config.get("jssync_key_default")    
 
 def getkey():
