@@ -31,23 +31,20 @@ def action(node):
     if not j.system.fs.exists(path=d):
         raise RuntimeError("cannot find basepath:%s"%d)
 
-    from IPython import embed
-    print "DEBUG NOW kkk"
-    embed()
-    
-
-    if tags.labelExists("system"):
+    if str(tags)<>"":
         #only use system key
-        u = j.system.fs.joinPaths(basepath, 'identities','system')
+        username=str(tags)
+        u = j.system.fs.joinPaths(basepath, 'identities',username)
         filename = j.system.fs.joinPaths(u, 'id.hrd')
         hrd=j.core.hrd.getHRD(filename)
         pkey=hrd.get("id.key.dsa.pub")
         keys.append(pkey)
         print "Found", len(keys), "public system ssh keys"
-        for name in ["id_dsa","id_dsa.pub"]:
-            u = j.system.fs.joinPaths(basepath, 'identities','system',name)
-            j.system.fs.copyFile(u,"/root/.ssh/%s"%name)
-            j.system.fs.chmod("/root/.ssh/%s"%name,384)
+        if str(tags)=="system":
+            for name in ["id_dsa","id_dsa.pub"]:
+                u = j.system.fs.joinPaths(basepath, 'identities',username,name)
+                j.system.fs.copyFile(u,"/root/.ssh/%s"%name)
+                j.system.fs.chmod("/root/.ssh/%s"%name,384)
     else:
         # Fetch keys from repo
         for u in j.system.fs.listDirsInDir(d):
