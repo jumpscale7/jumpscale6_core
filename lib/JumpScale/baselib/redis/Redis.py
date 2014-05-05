@@ -32,14 +32,14 @@ class RedisFactory:
         return self.redis[key]
 
     def getRedisQueue(self, ipaddr, port, name, namespace="queues"):
-        from gevent.monkey import patch_socket
-        patch_socket()
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.redisq.has_key(key):
             self.redisq[key] = CRedisQueue(self.getRedisClient(ipaddr, port), name, namespace=namespace)
         return self.redisq[key]
 
     def getGeventRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=False):
+        from gevent.monkey import patch_socket
+        patch_socket()
         fromcache = False  # @todo remove
         print "GET REDIS QUEUE GEVENT:%s %s" % (ipaddr, port)
         if not fromcache:
