@@ -2,7 +2,11 @@
 from JumpScale import j
 import JumpScale.baselib.redis
 import JumpScale.lib.rogerthat
-import ujson
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 import time
 import gevent
 
@@ -38,7 +42,7 @@ def escalate_L1(message):
     return message_id
 
 def escalate_L2(message, message_id):
-    message_data = ujson.loads(redis_client.hget('messages', message_id))
+    message_data = json.loads(redis_client.hget('messages', message_id))
     if message_data['state'] == 'L1':
         # hash 'contacts' contains keys 1, 2, 3 and all with rogerthat ids
         contact2 = redis_client.hget('contacts', '2')
@@ -50,10 +54,10 @@ def escalate_L2(message, message_id):
         redis_client.hset('messages', message_id, ujson.dumps(message_data))
 
 def escalate_L3(message, message_id):
-    message_data = ujson.loads(redis_client.hget('messages', message_id))
+    message_data = json.loads(redis_client.hget('messages', message_id))
     if message_data['state'] == 'L2':
         # hash 'contacts' contains keys 1, 2, 3 and all with rogerthat ids
-        contacts = ujson.loads(redis_client.hget('contacts', 'all'))
+        contacts = json.loads(redis_client.hget('contacts', 'all'))
         send_message(message, contacts)
         epoch = time.time()
         message_data = {'epoch': epoch, 'state': 'L3', 'log': '%s: %s %s' % (epoch, ', '.join(contacts), 'L3'), 'message': message}
@@ -61,7 +65,7 @@ def escalate_L3(message, message_id):
 
 while True:
     alert_json = alerts_queue.get()
-    alert = ujson.loads(alert_json)
+    alert = json.loads(alert_json)
     if alert['state'] == 'CRITICAL':
         message = ''
         for k, v in alert.iteritems():
