@@ -421,7 +421,6 @@ class ErrorConditionHandler():
         eco.toAscii()
 
         if self.checkErrorIgnore(eco):
-            print "IGNORE ERROR"
             return
 
         if j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
