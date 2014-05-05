@@ -35,4 +35,4 @@ def action():
             state = 'WARNING'
         else:
             state = 'OK'
-        j.tools.watchdog.client.send("cpu.core", state, avgcpu)
+        j.tools.watchdog.client.send("cpu.core", state, avgcpu, nid=nid)
