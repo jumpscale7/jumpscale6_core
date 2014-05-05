@@ -22,20 +22,20 @@ def action(node):
 
     c=node.cuapi
     try:
-        c.run("pip uninstall JumpScale-core -y")
-        c.run("rm -rf /opt/jumpscale")
-        c.run("rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale*")
-        c.run("rm /usr/bin/jspython")
+        print c.run("pip uninstall JumpScale-core -y")
+        print c.run("rm -rf /opt/jumpscale")
+        print c.run("rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale*")
+        print c.run("rm /usr/bin/jspython")
     except:
         pass
-    c.run("cd /usr/bin;ln -s python jspython")
-    c.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
-    c.run("pip install ujson")
-
+    print c.run("cd /usr/bin;ln -s python jspython")
+    print c.run("pip install https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip")
+    print c.run("pip install ujson")
+    
     node.uploadFromCfgDir("jscfg","/opt/jumpscale/cfg/")
 
-    c.run("jpackage mdupdate")
-    c.run("jpackage install -n base -r --debug")
+    print c.run("jpackage mdupdate")
+    print c.run("jpackage install -n base -r --debug")
 
-    c.run("jpackage install -n core -r --debug")
-    c.run("jpackage install -n redis -r")
+    print c.run("jpackage install -n core -r --debug")
+    print c.run("jpackage install -n redis -r")

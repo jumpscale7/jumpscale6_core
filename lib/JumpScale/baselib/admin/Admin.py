@@ -194,6 +194,7 @@ class JNode():
             print "* tcp check ssh"
             if not j.admin.js.has_key(jsname):
                 raise RuntimeError("cannot find js:%s"%jsname)
+
             if not j.system.net.waitConnectionTest(self.name,22, self.args.timeout):
                 self.raiseError(jsname,"COULD NOT check port (ssh)")
                 return

@@ -55,8 +55,8 @@ def action(node):
             keys.append(pkey)
         print "Found", len(keys), "public ssh keys"
 
-    #Remove current keys
-    cuapi.run("rm -f /root/.ssh/authorized_keys")
+    #Remove current keys ##DEFAULT SHOULD NOT DO THIS
+    # cuapi.run("rm -f /root/.ssh/authorized_keys")
 
     #Put new keys
     for key in keys:

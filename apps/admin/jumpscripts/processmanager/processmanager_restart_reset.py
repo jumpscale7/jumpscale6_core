@@ -18,6 +18,7 @@ async = False
 log = True
 
 def action(node):
+    raise RuntimeError("no longer ok")
     c=node.cuapi
 
     c.run("rm -rf /usr/bin/jsredis")
