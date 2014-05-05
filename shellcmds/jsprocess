@@ -10,26 +10,57 @@ parser.add_argument("-n", '--name', help='Process name')
 parser.add_argument("-d", '--domain', help='Process domain')
 parser.add_argument("-c", '--carefull', action='store_true', default=False, help='Check each startup status, die if one could not start.')
 
-FORMAT = "%-20s %-20s %-10s %-12s %-10s %-1s %-2s %s"
+FORMAT = "%-20s %-20s %-10s %-12s %-10s %-1s %-2s %-15s %s"
 
 opts = parser.parse_args()
 if opts.action in ('list', 'status'):
-    print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART','S','#','PIDS')
+    print FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART','S','#','PIDS','PORTS')
     print '-'* 100
     print
-
-#@todo is not correct, does not work no all pds
-if opts.action == 'disable':
-    #make sure is stopped first
-    j.tools.startupmanager.stopProcess(opts.domain, opts.name)
-    j.tools.startupmanager.disableProcess(opts.domain, opts.name)
-    j.application.stop(0)
 
 if opts.domain==None and  opts.name==None and  opts.action=="start" and not opts.carefull:
     j.tools.startupmanager.startAll()
     j.application.stop(0)
 
-pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=True)
+
+
+if opts.action in ['disable','enable','stop','start']:
+    pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=False)
+    choicearray=[]
+    pdsDict={}
+    for pd in pds:
+        key="%s_%s"%(pd.domain,pd.name)
+        choicearray.append(key)
+        pdsDict[key]=pd
+
+    pds=[]
+    res=j.console.askChoiceMultiple( choicearray, descr="choose processes to %s"%opts.action, sort=True)
+    for key in res:
+        pd=pdsDict[key]
+        pds.append(pd)
+
+else:
+    pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=True)    
+
+
+pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
+pds = sorted(pds, key=lambda x: x.priority, reverse=False)
+
+if opts.action == 'disable':
+    #make sure is stopped first
+    for pd in pds_rev:
+        print "disable: %s"%pd
+        j.tools.startupmanager.stopProcess(pd.domain, pd.name)
+        j.tools.startupmanager.disableProcess(pd.domain, pd.name)            
+    j.application.stop(0)
+
+
+if opts.action == 'enable':
+    for pd in pds:
+        print "enable: %s"%pd
+        j.tools.startupmanager.enableProcess(pd.domain, pd.name)
+        # j.tools.startupmanager.startProcess(pd.domain, pd.name)
+    j.application.stop(0)
 
 # single process commands
 if opts.action in ('attach', 'logs'):
@@ -97,7 +128,9 @@ for pd in pds:
             syst="S"
         else:
             syst=" "
-        print FORMAT % (pd.domain, pd.name, pd.priority, status, active,syst,pd.numprocesses,pids)
+
+        ports =",".join(pd.ports)
+        print FORMAT % (pd.domain, pd.name, pd.priority, status, active,syst,pd.numprocesses,pids,ports)
     else:
         getattr(pd, opts.action)()
 
