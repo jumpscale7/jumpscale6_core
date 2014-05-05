@@ -35,7 +35,7 @@ from multiprocessing import Process, Queue
 class RedirectSTDOUT:
     def __init__(self,name):
         self.oldstdout=sys.stdout
-        self.redis=j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+        self.redis=j.clients.redis.getRedisClient("127.0.0.1", 7768)
         self.name=name
         # self.redis.hset("admin:output",self.name,"")
         self.out=""
