@@ -8,6 +8,7 @@ parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['logs', 'attach', 'list', 'status', 'start', 'stop', 'restart', 'disable', 'enable'], help='Command to perform')
 parser.add_argument("-n", '--name', help='Process name')
 parser.add_argument("-d", '--domain', help='Process domain')
+parser.add_argument("-i", '--interactive', action='store_true', help='Ask for processes interactively')
 parser.add_argument("-c", '--carefull', action='store_true', default=False, help='Check each startup status, die if one could not start.')
 
 FORMAT = "%-20s %-20s %-10s %-12s %-10s %-1s %-2s %-15s %s"
@@ -26,21 +27,22 @@ if opts.domain==None and  opts.name==None and  opts.action=="start" and not opts
 
 if opts.action in ['disable','enable','stop','start']:
     pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=False)
-    choicearray=[]
-    pdsDict={}
-    for pd in pds:
-        key="%s_%s"%(pd.domain,pd.name)
-        choicearray.append(key)
-        pdsDict[key]=pd
+    if opts.interactive and j.application.shellconfig.interactive:
+        choicearray=[]
+        pdsDict={}
+        for pd in pds:
+            key="%s_%s"%(pd.domain,pd.name)
+            choicearray.append(key)
+            pdsDict[key]=pd
 
-    pds=[]
-    res=j.console.askChoiceMultiple( choicearray, descr="choose processes to %s"%opts.action, sort=True)
-    for key in res:
-        pd=pdsDict[key]
-        pds.append(pd)
+        pds=[]
+        res=j.console.askChoiceMultiple( choicearray, descr="choose processes to %s"%opts.action, sort=True)
+        for key in res:
+            pd=pdsDict[key]
+            pds.append(pd)
 
 else:
-    pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=True)    
+    pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=True)
 
 
 pds_rev = sorted(pds, key=lambda x: x.priority, reverse=True)
