@@ -1,32 +1,16 @@
 from JumpScale import j
-
-
-from .WatchdogManager import *
 import imp
+import time
 import JumpScale.baselib.hash
 
-class WatchdogEvent:
-    def __init__(self,gid=0,nid=0,category="",state="",value=0,ecoguid="",gguid="",ddict={}):
-        if ddict<>{}:
-            self.__dict__=ddict
-        else:
-            self.gguid=gguid
-            self.nid=nid
-            self.gid=gid
-            self.category=category
-            self.state=state
-            self.value=value
-            self.ecoguid=""
-            self.epoch=j.base.time.getTimeEpoch()
-            self.escalationstate=""
-            self.escalationepoch=0
-            self.log=[]
+try:
+    import ujson as json
+except:
+    import json
 
-    def __str__(self):
-        dat=j.base.time.epoch2HRDateTime(self.epoch)
-        return "%s %s %s %-30s %-10s %s"%(dat,self.gid,self.nid,self.category,self.state,self.value)
-
-    __repr__=__str__
+import JumpScale.baselib.credis
+from JumpScale.baselib.watchdog import WatchdogEvent
+import JumpScale.baselib.watchdog as watchdog
 
 class WatchdogType():
     def __init__(self,path):
@@ -73,12 +57,6 @@ class AlertType():
 
     __repr__=__str__
 
-try:
-    import ujson as json
-except:
-    import json
-
-import JumpScale.baselib.credis
 
 class WatchdogFactory:
     def __init__(self):
@@ -101,15 +79,12 @@ class WatchdogFactory:
 
     def setWatchdogEvent(self,wde,pprint=True):
         obj=json.dumps(wde.__dict__)
-        self.redis.hset(self._getWatchDogHSetKey(wde.gguid),"%s_%s"%(wde.nid,wde.category),obj)
+        self.redis.hset(watchdog.getHSetKey(wde.gguid),"%s_%s"%(wde.nid,wde.category),obj)
         if pprint:
             print wde
 
-    def _getWatchDogHSetKey(self,gguid):
-        return "%s:watchdogevents"%gguid
-
     def _getAlertHSetKey(self,gguid):
-        return "%s:alerts"%gguid
+        return "alerts:%s"%gguid
 
     def _getWatchDogTypes(self):
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'watchdogmanager', 'watchdogtypes')
@@ -179,22 +154,21 @@ class WatchdogFactory:
         return self.redis.hset(self._getAlertHSetKey(wde.gguid),key,"")
 
     def getAlert(self,gguid,nid,category):
-        key="%s_%s"%(nid,category)
         wde=self.getWatchdogEvent(gguid,nid,category)
         if not self.inAlert(wde):
             self.alert("bug in watchdogmanager: could not find alert:%s"%wde,"critical")
             return None
         return wde
-        
+
     def iterateWatchdogEvents(self,gguid):
-        for key in self.redis.hkeys(self._getWatchDogHSetKey(gguid)):
+        for key in self.redis.hkeys(watchdog.getHSetKey(gguid)):
             nid,category=key.split("_")
             yield self.getWatchdogEvent(gguid,nid,category)
 
     def getWatchdogEvent(self,gguid,nid,category):
         key="%s_%s"%(nid,category)
-        obj=json.loads(self.redis.hget(self._getWatchDogHSetKey(gguid),key))
-        wde=WatchdogEvent(ddict=obj)            
+        obj=json.loads(self.redis.hget(watchdog.getHSetKey(gguid),key))
+        wde=WatchdogEvent(ddict=obj)
         return wde
 
     def getGGUIDS(self):
@@ -202,7 +176,7 @@ class WatchdogFactory:
         each grid has unique guid called gguid
         return from local ssdb or redis the grid guids
         """
-        return [item.split(":")[0] for item in self.redis.keys() if item.find("watchdogevents")<>-1]
+        return [item.split(":")[1] for item in self.redis.keys("watchdogevents:*") ]
 
     def reset(self):
         """
@@ -210,7 +184,7 @@ class WatchdogFactory:
         """
         print "reset"
         for gguid in self.getGGUIDS():
-            self.redis.delete(self._getWatchDogHSetKey(gguid))
+            self.redis.delete(watchdog.getHSetKey(gguid))
 
     def _log(self,msg,category="",level=5):
         if level<self.loglevel+1 and self.logenable:

@@ -5,7 +5,7 @@ except:
 
 from JumpScale import j
 
-import JumpScale.baselib.watchdogmanager
+import JumpScale.baselib.watchdog.manager
 
 j.application.start("jumpscale:alermanager:populate")
 

@@ -5,7 +5,7 @@ import time
 
 j.application.start("jumpscale:watchdogmanager")
 
-import JumpScale.baselib.watchdogmanager
+import JumpScale.baselib.watchdog.manager
 
 while True:
     print "check"

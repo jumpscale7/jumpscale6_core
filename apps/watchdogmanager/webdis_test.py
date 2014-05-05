@@ -5,7 +5,7 @@ except:
 
 from JumpScale import j
 
-import JumpScale.baselib.watchdogclient
+import JumpScale.baselib.watchdog.client
 
 j.application.start("jumpscale:watchdogclient")
 
