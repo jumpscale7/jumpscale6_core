@@ -149,7 +149,7 @@ class WatchdogFactory:
         key="%s_%s"%(wde.nid,wde.category)
         wde.escalationepoch=j.base.time.getTimeEpoch()
         self.setWatchdogEvent(wde)
-        return self.redis.hset(self._getAlertHSetKey(wde.gguid),key,"")
+        return self.redis.hset(self._getAlertHSetKey(wde.gguid),key, json.dumps(wde.__dict__))
 
     def getAlert(self,gguid,nid,category):
         wde=self.getWatchdogEvent(gguid,nid,category)

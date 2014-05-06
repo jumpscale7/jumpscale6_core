@@ -15,6 +15,7 @@ class WatchdogEvent:
             self.epoch=j.base.time.getTimeEpoch()
             self.escalationstate=""
             self.escalationepoch=0
+            self.message_id=""
             self.log=[]
 
     def __str__(self):
