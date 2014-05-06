@@ -2,7 +2,14 @@ from JumpScale import j
 import redis
 from JumpScale.baselib.credis.CRedis import CRedis
 from JumpScale.baselib.credis.CRedisQueue import CRedisQueue
+import itertools
 
+
+class GeventRedis(redis.Redis):
+    def hgetall(self, name):
+        "Return a Python dict of the hash's name/value pairs"
+        d = self.execute_command('HGETALL', name)
+        return list(itertools.chain(*zip(d.keys(), d.values())))
 
 class RedisFactory:
 
@@ -19,10 +26,10 @@ class RedisFactory:
         from gevent.monkey import patch_socket
         patch_socket()
         if not fromcache:
-            return CRedis(ipaddr, port) 
+            return GeventRedis(ipaddr, port) 
         key = "%s_%s" % (ipaddr, port)
         if key not in self.gredis:
-            self.gredis[key] = CRedis(ipaddr, port)
+            self.gredis[key] = GeventRedis(ipaddr, port)
         return self.gredis[key]
 
     def getRedisClient(self, ipaddr, port):
@@ -38,8 +45,6 @@ class RedisFactory:
         return self.redisq[key]
 
     def getGeventRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=False):
-        from gevent.monkey import patch_socket
-        patch_socket()
         fromcache = False  # @todo remove
         print "GET REDIS QUEUE GEVENT:%s %s" % (ipaddr, port)
         if not fromcache:

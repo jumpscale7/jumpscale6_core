@@ -152,6 +152,8 @@ class CRedis():
 
     def eval(self,script,nrkeys,*args):        
         return self.execute('EVAL',script,nrkeys,*args)
-        
+
+    def lrange(self, name, start, end):
+        return self.execute('LRANGE', name, start, end)
         
 
