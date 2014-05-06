@@ -74,8 +74,14 @@ class OSISStoreES(OSISStore):
         """
         return self.existsIndex(key,timeout=0)
 
-    def delete(self, key):
-        self.removeFromIndex(key)
+    def delete(self, key=None):
+        if isinstance(key, dict):
+            try:
+                return self.elasticsearch.delete_by_query(index='system_log', query=key, doc_type='json')
+            except:
+                return {'hits': {'hits': list(), 'total': 0}}
+        else:
+            return self.removeFromIndex(key)
 
     def list(self, prefix="", withcontent=False):
         """

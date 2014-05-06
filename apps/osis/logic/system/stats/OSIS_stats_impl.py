@@ -21,8 +21,8 @@ class mainclass(OSISStore):
         j.clients.graphite.send(out)
         return [key, False, False]
 
-    def delete(self, nodeid):
-        path = '/opt/graphite/storage/whisper/n%s' % nodeid
+    def delete(self, key):
+        path = '/opt/graphite/storage/whisper/n%s' % key
         if j.system.fs.exists(path):
             j.system.fs.removeDirTree(path)
             return True
