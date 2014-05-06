@@ -133,9 +133,9 @@ class ProcessmanagerFactory:
     """
     """
     def __init__(self):
-        self.daemon=DummyDaemon()
-        self.basedir="%s/apps/processmanager"%j.dirs.baseDir
-        j.system.platform.psutil=psutil
+        self.daemon = DummyDaemon()
+        self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
+        j.system.platform.psutil = psutil
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
@@ -190,7 +190,19 @@ class ProcessmanagerFactory:
         #     if self._checkIsNFSMounted()==False:
         #         raise RuntimeError("code is not mounted to gridmaster")
 
-        self.loadFromAgentController()
+        loadjs = True
+        disks = j.system.platform.psutil.disk_partitions()
+        for disk in disks:
+            if disk.mountpoint == j.dirs.baseDir and disk.fstype.upper() in ['SMB', 'SAMBA', 'CIFS', 'NFS', 'SSHFS']:
+                loadjs = False
+                for path in [j.system.fs.joinPaths(self.basedir,"processmanagercmds"),
+                             j.system.fs.joinPaths(self.basedir, 'jumpscripts')]:
+                    if not j.system.fs.exists(path):
+                        raise RuntimeError("Path %s is missing" % path)
+                break
+
+        if loadjs:
+            self.loadFromAgentController()
         osis = self.daemon.osis
         self.daemon = j.servers.geventws.getServer(port=4445)
         self.daemon.osis = osis
