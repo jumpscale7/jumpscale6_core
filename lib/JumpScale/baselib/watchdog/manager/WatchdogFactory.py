@@ -68,6 +68,7 @@ class WatchdogFactory:
         self.alertTypes={}
         self._getWatchDogTypes()
         self._getAlertTypes()
+        self._now=time.time()
         self.localgguid="dfsdfadsfasdffg"  #temp
 
     def getWatchDogEventObj(self,gid=0,nid=0,category="",state="",value=0,gguid="",ecoguid="",ddict={}):
@@ -124,7 +125,7 @@ class WatchdogFactory:
             self.alert("bug in watchdogmanager: could not process watchdogcheck:%s, error %s"%(wdt,e),"critical")
         if wde.state<>"OK":
             self.alert("STATE","critical",wde)
-        if wde.epoch<(j.base.time.getTimeEpoch()-wdt.maxperiod):
+        if wde.epoch<(self._now-wdt.maxperiod):
             self.alert("TIMEOUT","critical",wde)
 
     def alert(self,msg,alerttype,wde=None):
@@ -137,6 +138,7 @@ class WatchdogFactory:
         at.escalateL1(wde)
 
     def checkWatchdogEvents(self):
+        self._now=time.time()
         for gguid in self.getGGUIDS():
             for wde in self.iterateWatchdogEvents(gguid):
                 self.checkWatchdogEvent(wde)
@@ -147,7 +149,7 @@ class WatchdogFactory:
 
     def setAlert(self,wde):
         key="%s_%s"%(wde.nid,wde.category)
-        wde.escalationepoch=j.base.time.getTimeEpoch()
+        wde.escalationepoch=self._now
         self.setWatchdogEvent(wde)
         return self.redis.hset(self._getAlertHSetKey(wde.gguid),key, json.dumps(wde.__dict__))
 
