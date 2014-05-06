@@ -33,6 +33,7 @@ def escalateL1(watchdogevent):
     if not j.tools.watchdog.manager.inAlert(watchdogevent):
         watchdogevent.escalationstate = 'L1'
         contact1 = redis_client.hget('contacts', '1')
+        message = str(watchdogevent)
         message_id = _send_message(message, [contact1,])
         watchdogevent.message_id = message_id
         j.tools.watchdog.manager.setAlert(watchdogevent)
@@ -41,6 +42,7 @@ def escalateL2(watchdogevent):
     if watchdogevent.escalationstate == 'L1':
         watchdogevent.escalationstate = 'L2'
         contacts = redis_client.hgetall('contacts')
+        message = str(watchdogevent)
         message_id = _send_message(message, [contacts['2'], contacts['3']])
         watchdogevent.message_id = message_id
         j.tools.watchdog.manager.setAlert(watchdogevent)
@@ -49,6 +51,7 @@ def escalateL3(watchdogevent):
     if watchdogevent.escalationstate == 'L2':
         watchdogevent.escalationstate = 'L3'
         contacts = redis_client.hgetall('contacts')['all'].split(',')
+        message = str(watchdogevent)
         message_id = _send_message(message, contacts)
         watchdogevent.message_id = message_id
         j.tools.watchdog.manager.setAlert(watchdogevent)

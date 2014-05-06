@@ -160,6 +160,10 @@ class WatchdogFactory:
             return None
         return wde
 
+    def deleteAlert(self, wde):
+        key = "%s_%s" % (wde.nid, wde.category)
+        return self.redis.hdel(self._getAlertHSetKey(wde.gguid), key)
+
     def iterateWatchdogEvents(self,gguid):
         for key in self.redis.hkeys(watchdog.getHSetKey(gguid)):
             nid,category=key.split("_")
@@ -189,5 +193,12 @@ class WatchdogFactory:
     def _log(self,msg,category="",level=5):
         if level<self.loglevel+1 and self.logenable:
             j.logger.log(msg,category="watchdog.%s"%category,level=level)
+
+    def fetchAllAlerts(self):
+        gguids = self.getGGUIDS()
+        result = dict()
+        for gguid in gguids:
+            result.update(self.redis.hgetall(self._getAlertHSetKey(gguid)))
+        return [json.loads(wde) for wde in result.values()]
 
 
