@@ -23,7 +23,7 @@ parser.add_argument('--debug',required=False, action='store_true',help='will sto
 parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
 parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
 parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='used with deletenode, ex: -nid=1(note the = sign)')
-parser.add_argument('-roles', dest='roles', required=False, type=str, help='Used with setroles or deleterole. ex: -roles=node, computenode.kvm(note the = sign). List is comma seperated')
+parser.add_argument('--roles', dest='roles', required=False, type=str, help='Used with setroles or deleterole. ex: -roles=node, computenode.kvm(note the = sign). List is comma seperated')
 
 
 #check redis is there if not try to start
@@ -180,27 +180,28 @@ def _deleteNode(node):
     if not node:
         print "Node %s does not exist." % nid
     else:
-        nodeguid = node[0]['guid']
-        ncl.delete(nodeguid)
-        print 'Node %s with guid %s deleted successfully' % (nid, nodeguid)
+        nodeguid = node['guid']
 
-        print "Deleting relevant data... this may take a while"
+        print "Starting delete of node %s" % nid
         categories = oscl.listNamespaceCategories('system')
 
         for category in categories:
-            print "Deleting %s..." % category
+            print "  * Deleting %s..." % category
             catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
             if category == 'stats':
                 catclient.delete(nid)
-                break
-            if category == 'log':
-                catclient.delete_by_query(query={"term":{"id":nid}})
-                break
+                continue
+            if category in ['job', 'eco', 'log']:
+                catclient.delete({"term":{"nid":nid}})
+                continue
             total, results = catclient.simpleSearch({'nid':nid}, size=0, withguid=True, withtotal=True)
             results = catclient.simpleSearch({'nid':nid}, size=total, withguid=True)
             for result in results:
                 guid = result['guid']
                 catclient.delete(guid)
+
+        ncl.delete(nodeguid)
+        print 'Node %s deleted successfully' % (nid)
 
 if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listnodes', 'deleterole']:
     import JumpScale.grid.osis
@@ -215,70 +216,72 @@ if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listno
             'roles':'ROLES'}
         print '=' * 100
         print ''
-        ns={}
-        for node in ncl.simpleSearch({}, size=0):
+        for node in sorted(ncl.simpleSearch({}, size=0), key=lambda n: n['id']):
 
             name=node['name'].strip()
             if len(name)>10:
                 name=name[:11]
             ips=', '.join(node['ipaddr'])
             if len(ips)>60:
-                ips=ips[:51]            
-            ns[name]={'nid': node['id'], 'name': name, 'ips': ips, 'active': node['active'], 'roles': ', '.join(node['roles'])}
+                ips=ips[:51]
+            noded={'nid': node['id'], 'name': name, 'ips': ips, 'active': node['active'], 'roles': ', '.join(node['roles'])}
+            print form % noded
 
-        nsnames=ns.keys()
-        nsnames.sort()
-        for nsn in nsnames:
-            print form % ns[nsn]
     else:
+        nodes = dict()
         if not opts.nid:
-            nodes = dict()
             for node in ncl.simpleSearch({}, size=0):
                 nodes[node['name']] = node
             choicearray = nodes.keys()
-            for item in j.console.askChoiceMultiple(choicearray,"Select node"):
-                node = nodes[item]
-                if opts.action == 'deletenode':
-                    _deleteNode(item)
-                elif opts.action == 'enablenode':
-                    node['active'] = True
-                    ncl.set(node)
-                elif opts.action == 'disablenode':
-                    node['active'] = False
-                    ncl.set(node)
-                elif opts.action == 'setrole':
-                    r = node['roles']
-                    if opts.roles:
-                        for role in opts.roles.split(","):
-                            if role.lower().strip() not in r:
-                                r.append(role)
-                    else:
-                        roles = str(j.console.askString("Enter node roles (Seperated by ',')", defaultparam=','.join(node['roles'])))
-                        for role in roles.split(","):
-                            if role.lower().strip() not in r:
-                                r.append(role)
-                    r.sort()
-                    node['roles'] = r
-                    ncl.set(node)
-                elif opts.action == 'deleterole':
-                    r = node['roles']
-                    if opts.roles:
-                        for role in opts.roles.split(","):
-                            if role.lower().strip() in r:
-                                r.remove(role)
-                    else:
-                        roles = j.console.askChoiceMultiple(r, "Choose which roles to remove")
-                        for role in roles:
-                            if role.lower().strip() in r:
-                                r.remove(role)
-                    r.sort()
-                    node['roles'] = r
-                    ncl.set(node)
+            items = j.console.askChoiceMultiple(choicearray,"Select node")
         else:
-            node = ncl.simpleSearch({'id':opts.nid}, withguid=True)
-            _deleteNode(node)
+            nodesl = ncl.simpleSearch({'id':opts.nid}, withguid=True)
+            if not nodesl:
+                print "Could not find node with nid %s" % opts.nid
+                j.application.stop(1)
 
+            node = nodesl[0]
+            nodes[node['name']] = node
+            items = [node['name']]
 
+        for item in items:
+            node = nodes[item]
+            if opts.action == 'deletenode':
+                _deleteNode(node)
+            elif opts.action == 'enablenode':
+                node['active'] = True
+                ncl.set(node)
+            elif opts.action == 'disablenode':
+                node['active'] = False
+                ncl.set(node)
+            elif opts.action == 'setrole':
+                r = node['roles']
+                if opts.roles:
+                    for role in opts.roles.split(","):
+                        if role.lower().strip() not in r:
+                            r.append(role)
+                else:
+                    roles = str(j.console.askString("Enter node roles (Seperated by ',')", defaultparam=','.join(node['roles'])))
+                    for role in roles.split(","):
+                        if role.lower().strip() not in r:
+                            r.append(role)
+                r.sort()
+                node['roles'] = r
+                ncl.set(node)
+            elif opts.action == 'deleterole':
+                r = node['roles']
+                if opts.roles:
+                    for role in opts.roles.split(","):
+                        if role.lower().strip() in r:
+                            r.remove(role)
+                else:
+                    roles = j.console.askChoiceMultiple(r, "Choose which roles to remove")
+                    for role in roles:
+                        if role.lower().strip() in r:
+                            r.remove(role)
+                r.sort()
+                node['roles'] = r
+                ncl.set(node)
 
 
 j.application.stop()
