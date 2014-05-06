@@ -103,11 +103,21 @@ class JPackageObject():
         self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
         if self.hrd.get("jp.domain",checkExists=True)<>self.domain:
-            self.hrd.set("jp.domain",self.domain)
+            try:
+                self.hrd.set("jp.domain",self.domain)
+            except:
+                print "WARNING: domain in jpackage is not same as name of directory."
         if self.hrd.get("jp.name",checkExists=True)<>self.name:
-            self.hrd.set("jp.name",self.name)
+            try:
+                self.hrd.set("jp.name",self.name)
+            except:
+                print "WARNING: name in jpackage is not same as name of directory."
+            
         if self.hrd.get("jp.version",checkExists=True)<>self.version:                
-            self.hrd.set("jp.version",self.version)
+            try:
+                self.hrd.set("jp.version",self.version)
+            except:
+                print "WARNING: version in jpackage is not same as name of directory."
 
         descr=self.hrd.get("jp.description",checkExists=True)
         if descr<>False and descr<>"":
