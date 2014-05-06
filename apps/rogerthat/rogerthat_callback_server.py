@@ -4,6 +4,7 @@ from gevent.pywsgi import WSGIServer
 import JumpScale.baselib.redis
 import time
 import JumpScale.lib.rogerthat
+import JumpScale.baselib.watchdog.manager
 
 try:
     import ujson as json
@@ -80,35 +81,42 @@ class GeventWSServer(object):
                 message_id = result['result']
                 return message_id
 
-    def _updateStatus(self, message_key, message_data, state, member):
-        epoch = time.time()
-        message_data['epoch'] = epoch
-        message_data['state'] = state
-        message_data['log'] = '%s: %s %s' % (epoch, member, state)
-        self.redis_client.hset('messages', message_key, json.dumps(message_data))
-
     def process_update(self, status=None, answer_id=None, received_timestamp=None, member=None, user_details=None, message_key=None, parent_message_key=None, tag=None, acked_timestamp=None, service_identity=None, result_key=None):
         message_key = parent_message_key if parent_message_key else message_key
-        message_data_json = self.redis_client.hget('messages', message_key)
-        if message_data_json:
-            message_data = json.loads(message_data_json)
-            if message_data['state'] == 'L1' and answer_id == 'yes':
-                self._updateStatus(message_key, message_data, 'C', member)
+
+        alert = None
+        for al in j.tools.watchdog.manager.fetchAllAlerts():
+            if al['message_id'] == message_key:
+                alert = al
+
+        if alert:
+            if alert['escalationstate'] == 'L1' and answer_id == 'yes':
+                wde = j.tools.watchdog.manager.getWatchdogEvent(alert['gguid'], alert['nid'], alert['category'])
+                wde.escalationstate = 'C'
+                wde.escalationepoch = time.time()
+                j.tools.watchdog.manager.setWatchdogEvent(wde)
                 answers = [{'id': 'yes', 'caption': 'Accept', 'action': '', 'type': 'button'},]
-                self.send_message(message_data['message'], [member,], answers, message_key)
+                self.send_message(str(wde), [member,], answers, message_key)
                 return None
-            elif message_data['state'] == 'C' and answer_id == 'yes':
-                self._updateStatus(message_key, message_data, 'A', member)
+            elif alert['escalationstate'] == 'C' and answer_id == 'yes':
+                wde = j.tools.watchdog.manager.getWatchdogEvent(alert['gguid'], alert['nid'], alert['category'])
+                wde.escalationstate = 'A'
+                wde.escalationepoch = time.time()
+                j.tools.watchdog.manager.setWatchdogEvent(wde)
                 answers = [{'id': 'yes', 'caption': 'Resolve', 'action': '', 'type': 'button'},]
-                self.send_message(message_data['message'], [member,], answers, message_key)
+                self.send_message(str(wde), [member,], answers, message_key)
                 return None
-            elif message_data['state'] == 'A' and answer_id == 'yes':
-                self._updateStatus(message_key, message_data, 'R', member)
+            elif alert['escalationstate'] == 'A' and answer_id == 'yes':
+                wde = j.tools.watchdog.manager.getWatchdogEvent(alert['gguid'], alert['nid'], alert['category'])
+                wde.escalationstate = 'R'
+                wde.escalationepoch = time.time()
+                j.tools.watchdog.manager.setWatchdogEvent(wde)
                 answers = [{'id': 'yes', 'caption': 'Close', 'action': '', 'type': 'button'},]
-                self.send_message(message_data['message'], [member,], answers, message_key)
+                self.send_message(str(wde), [member,], answers, message_key)
                 return None
-            elif message_data['state'] == 'R' and answer_id == 'yes':
-                self._updateStatus(message_key, message_data, 'Z', member)
+            elif alert['escalationstate'] == 'R' and answer_id == 'yes':
+                wde = j.tools.watchdog.manager.getWatchdogEvent(alert['gguid'], alert['nid'], alert['category'])
+                j.tools.watchdog.manager.deleteAlert(wde)
                 return None
 
     def start(self):
