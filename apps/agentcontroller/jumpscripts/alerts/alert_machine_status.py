@@ -21,25 +21,28 @@ roles = []
 
 def action():
     import JumpScale.grid.osis
-    import JumpScale.baselib.watchdogclient
+    import JumpScale.baselib.watchdog.client
     ocl = j.core.osis.getClient(user='root')
     mcl = j.core.osis.getClientForCategory(ocl, 'cloudbroker', 'vmachine')
 
-    import libvirt
-    con = libvirt.open('qemu:///system')
-    stateMap = {libvirt.VIR_DOMAIN_RUNNING: 'RUNNING',
-                libvirt.VIR_DOMAIN_NOSTATE: 'NOSTATE',
-                libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
+    try:
+        import libvirt
+        con = libvirt.open('qemu:///system')
+        stateMap = {libvirt.VIR_DOMAIN_RUNNING: 'RUNNING',
+                    libvirt.VIR_DOMAIN_NOSTATE: 'NOSTATE',
+                    libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
 
-    domains = con.listAllDomains()
-    for domain in domains:
-        machine = mcl.simpleSearch({'id':domain.ID()})[0]
-        state = machine['state']
-        livestate = stateMap.get(domain.state()[0], 'STOPPED')
-        if state == 'RUNNING' and livestate != 'RUNNING':
-            message = 'Machine %s is down, but reported running in OSIS' % machine['id']
-            j.tools.watchdog.client.send("machine.status","CRITICAL", message)
-        if livestate == 'RUNNING' and state != 'RUNNING':
-            message = 'Machine %s is running, but reported down in OSIS' % machine['id']
-            j.tools.watchdog.client.send("machine.status","WARNING", message)
-    
+        domains = con.listAllDomains()
+        for domain in domains:
+            domainname = domain.name().split('-')[1]
+            machine = mcl.get(domainname)
+            state = machine['state']
+            livestate = stateMap.get(domain.state()[0], 'STOPPED')
+            if state == 'RUNNING' and livestate != 'RUNNING':
+                message = 'Machine %s is down, but reported running in OSIS' % machine['id']
+                j.tools.watchdog.client.send("machine.status","CRITICAL", message)
+            if livestate == 'RUNNING' and state != 'RUNNING':
+                message = 'Machine %s is running, but reported down in OSIS' % machine['id']
+                j.tools.watchdog.client.send("machine.status","WARNING", message)
+    finally:
+        con.close()
