@@ -262,8 +262,13 @@ class Application:
         """
         will look for network interface and return a hash calculated from lowest mac address from all physical nics
         """
-        nics = j.system.net.getNics()
+        # if unique machine id is set in grid.hrd, then return it
+        if j.application.config.exists('grid.node.machineguid'):
+            machineguid = j.application.config.get('grid.node.machineguid')
+            if machineguid:
+                return machineguid
 
+        nics = j.system.net.getNics()
         if j.system.platformtype.isWindows():
             order = ["local area", "wifi"]
             for item in order:
