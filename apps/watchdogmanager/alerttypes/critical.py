@@ -36,7 +36,7 @@ def escalateL1(watchdogevent):
         message = str(watchdogevent)
         # message_id = _send_message(message, [contact1,])
         # watchdogevent.message_id = message_id
-        # j.tools.watchdog.manager.setAlert(watchdogevent)
+        j.tools.watchdog.manager.setAlert(watchdogevent)
         print "Escalate:%s"%message
 
 def escalateL2(watchdogevent):
