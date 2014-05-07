@@ -228,20 +228,24 @@ class ProcessDef:
 
             if self.numprocesses>1:
 
-                for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
-                    if tmuxname==self.name:
-                        j.system.platform.screen.killWindow(self.domain,self.name)
-
                 for i in range(self.numprocesses):
                     name="%s_%s"%(self.name,i)
-
-                    j.system.platform.screen.executeInScreen(self.domain,name,cmd+" "+args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
+                    for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
+                        if tmuxname==name:
+                            j.system.platform.screen.killWindow(self.domain,name)
+                    tcmd = cmd.replace("$numprocess", str(i))
+                    targs = args.replace("$numprocess", str(i))
+                    j.system.platform.screen.executeInScreen(self.domain,name,tcmd+" "+targs,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
 
                     if self.plog:
                         logfile="%s.%s"%(self.logfile,i)
                         j.system.platform.screen.logWindow(self.domain,name,logfile)
 
             else:
+                for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
+                    if tmuxname==self.name:
+                        j.system.platform.screen.killWindow(self.domain,self.name)
+
                 j.system.platform.screen.executeInScreen(self.domain,self.name,cmd+" "+args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
 
                 if self.plog:
@@ -445,7 +449,13 @@ class ProcessDef:
             if isrunning:
                 self.raiseError("Cannot stop processes on ports:%s, tried portkill"%self.ports)
 
-        j.system.platform.screen.killWindow(self.domain, self.name)
+        if self.numprocesses>1:
+            for i in xrange(self.numprocesses):
+                name = "%s_%s" % (self.name, i)
+                j.system.platform.screen.killWindow(self.domain, name)
+        else:
+            j.system.platform.screen.killWindow(self.domain, self.name)
+
 
         start=time.time()
         now=0
