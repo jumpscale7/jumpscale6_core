@@ -20,10 +20,14 @@ roles = []
 
 
 def action():
+    try:
+        import JumpScale.baselib.watchdog.client
+    except Exception:
+        return
     import re
     keys = j.application.config.getKeysFromPrefix('storage')
     if not keys:
-        raise RuntimeError("please configure storage keys in hrdconfig")
+        return
 
     devices = dict()
     for key in keys:
