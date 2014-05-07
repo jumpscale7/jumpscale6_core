@@ -20,13 +20,17 @@ roles = []
 
 
 def action():
+    try:
+        import JumpScale.baselib.watchdog.client
+        import libvirt
+    except Exception:
+        return
+
     import JumpScale.grid.osis
-    import JumpScale.baselib.watchdog.client
     ocl = j.core.osis.getClient(user='root')
     mcl = j.core.osis.getClientForCategory(ocl, 'cloudbroker', 'vmachine')
 
     try:
-        import libvirt
         con = libvirt.open('qemu:///system')
         stateMap = {libvirt.VIR_DOMAIN_RUNNING: 'RUNNING',
                     libvirt.VIR_DOMAIN_NOSTATE: 'NOSTATE',

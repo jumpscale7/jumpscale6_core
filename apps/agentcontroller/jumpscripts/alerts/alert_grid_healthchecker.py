@@ -20,8 +20,11 @@ roles = ['master']
 
 
 def action():
+    try:
+        import JumpScale.baselib.watchdog.client
+    except Exception:
+        return
     import JumpScale.grid.gridhealthchecker
-    import JumpScale.baselib.watchdog.client
     results, errors = j.core.grid.healthchecker.runAll()
     for nid, error in errors:
         j.tools.watchdog.client.send("grid.healthcheck","CRITICAL", -1, nid=nid)
