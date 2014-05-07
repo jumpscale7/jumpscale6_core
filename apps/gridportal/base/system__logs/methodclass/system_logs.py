@@ -121,7 +121,6 @@ class system_logs(j.code.classGetBase()):
         if args.get('nid'):
             nid = args.get('nid')
             query = {"query":{"bool":{"must":[{"term":{"nid":nid}}]}}}
-        import ipdb; ipdb.set_trace()
 
         logs = esc.search(query, index='system_log')
 
