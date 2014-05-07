@@ -1,5 +1,4 @@
 import JumpScale.baselib.watchdog.manager
-import json
 
 def main(j, args, params, tags, tasklet):
     def _formatdata():
@@ -10,7 +9,10 @@ def main(j, args, params, tags, tasklet):
                 itemdata = list()
                 epochHR = j.base.time.epoch2HRDateTime(alert.epoch)
                 epochEsc = j.base.time.epoch2HRDateTime(alert.escalationepoch)
-                for field in [alert.gid, alert.nid, alert.category, epochHR, epochEsc, alert.state, alert.value]:
+                link = '<a href=alert?gguid=%s&key=%s_%s>Details</a>' % (alert.gguid, alert.nid, alert.category)
+                node = '<a href=node?id=%s>%s</a>' % (alert.nid, alert.nid)
+                grid = '<a href=grid?id=%s>%s</a>' % (alert.gid, alert.gid)
+                for field in [link, grid, node, alert.category, epochHR, epochEsc, alert.state, alert.value]:
                     itemdata.append(str(field))
                 aaData.append(itemdata)
         aaData = str(aaData)
@@ -19,7 +21,7 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
 
-    fieldnames = ('Grid ID', 'Node ID', 'Category', 'Raise Time','Escalation Time', 'State', 'Value')
+    fieldnames = ('Link to Alert', 'Grid ID', 'Node ID', 'Category', 'Raise Time','Escalation Time', 'State', 'Value')
     tableid = modifier.addTableFromData(_formatdata(), fieldnames)
 
     modifier.addSearchOptions('#%s' % tableid)

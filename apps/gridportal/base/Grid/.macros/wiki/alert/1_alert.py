@@ -1,26 +1,49 @@
-import datetime
+import JumpScale.baselib.webdis
+import json
 
 def main(j, args, params, tags, tasklet):
 
-    id = args.getTag('id')
-    if not id:
-        out = 'Missing alert id param "id"'
-        params.result = (out, args.doc)
-        return params
+    key = args.getTag('key')
+    gguid = args.getTag('gguid')
 
-    alert = j.apps.system.gridmanager.getAlerts(id=id)
+    for name, param in {'key':key, 'gguid':gguid}.iteritems():
+        if not param:
+            out = 'Missing alert param "%s"' % name
+            params.result = (out, args.doc)
+            return params
+
+    webdisaddr = j.application.config.get('grid.watchdog.addr')
+    webdiscl = j.clients.webdis.get(webdisaddr, 7779)
+    alert = webdiscl.hget('alerts:%s' % gguid, key)
+
     if not alert:
-        params.result = ('Alert with id %s not found' % id, args.doc)
+        params.result = ('Alert with gguid %s and key %s not found' % (gguid, key), args.doc)
         return params
 
-    def objFetchManipulate(id):
-        obj = alert[0]
-        for attr in ['lasttime', 'inittime', 'closetime']:
-            obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
-        obj['errorconditions'] = ', '.join([str(x) for x in obj['errorconditions']])
-        return obj
+    out = list()
 
-    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
+    links = {'gid': 'grid', 'nid': 'node', 'ecoguid': 'eco'}
+    properties = [('state', 'State'), ('category', 'Category'), ('value', 'Value'),
+                  ('epoch', 'Initilization Time'), ('escalationepoch', 'Escalation Time'), 
+                  ('escalationstate', 'Escalation State'), ('ecoguid', 'ECO ID'), ('log', 'Log'), 
+                  ('gid', 'Grid ID'), ('nid', 'Node ID'), ('message_id', 'Message ID')]
 
-    return push2doc(args,params,objFetchManipulate)
+    alert = json.loads(alert)
+    for field in properties:
+        v = alert[field[0]]
+        if isinstance(v, list):
+            v = ' ,'.join(v)
+        elif field[0] in ['epoch', 'escalationepoch']:
+            v = j.base.time.epoch2HRDateTime(v)
+        elif field[0] in ['gid', 'nid', 'ecoguid']:
+            v = '[%s|%s?id=%s]' % (v, links[field[0]], v)
+        elif field[0] in ['state']:
+            color = 'green' if v == 'OK' else ('red' if v == 'ERROR' else 'orange')
+            v = '{color:%s}%s{color}' % (color, v)
+        out.append("|*%s*|%s|" % (field[1], v))
 
+    out = '\n'.join(out)
+
+    params.result = (out, args.doc)
+    return params
+    

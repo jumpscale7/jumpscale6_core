@@ -1,17 +1,5 @@
 @usedefaults
 
-{{alert: id:$$id}}
 
 h3. Details
-|*Category*|$$category|
-|*State*|$$state|
-|*Description*|$$description|
-|*Description pub*|$$descriptionpub|
-|*Level*|$$level|
-|*Init Time*|$$inittime|
-|*Close Time*|$$closetime|
-|*Last Time*|$$lasttime|
-|*tags*|$$tags|
-|*gid*|[$$gid|grid?id=$$gid|]|
-|*nrerrorconditions*|$$nrerrorconditions|
-|*errorconditions*|$$errorconditions|
+{{alert: gguid:$$gguid key:$$key}}
