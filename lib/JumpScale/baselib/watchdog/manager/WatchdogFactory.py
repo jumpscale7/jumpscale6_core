@@ -100,6 +100,8 @@ class WatchdogFactory:
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'watchdogmanager', 'alerttypes')
         if j.system.fs.exists(jspath):
             for jscriptpath in j.system.fs.listFilesInDir(path=jspath, recursive=True, filter="*.py", followSymlinks=True):
+                if j.system.fs.getBaseName(jscriptpath)[0]=="_":
+                    continue
                 at = AlertType(path=jscriptpath)
                 self.alertTypes[at.name]=at
         else:
@@ -117,8 +119,8 @@ class WatchdogFactory:
 
     def checkWatchdogEvent(self,wde):
         wdt=self.getWatchdogType(wde.category)
-        print wde
-        print wdt
+        # print wde
+        # print wdt
         try:
             wdt.checkfunction(wde)
         except Exception,e:
@@ -126,6 +128,8 @@ class WatchdogFactory:
         if wde.state<>"OK":
             self.alert("STATE","critical",wde)
         if wde.epoch<(self._now-wdt.maxperiod):
+            wde.state="TIMEOUT"
+            self.setAlert(wde)
             self.alert("TIMEOUT","critical",wde)
 
     def alert(self,msg,alerttype,wde=None):
@@ -159,6 +163,11 @@ class WatchdogFactory:
             self.alert("bug in watchdogmanager: could not find alert:%s"%wde,"critical")
             return None
         return wde
+
+    def iterateAlerts(self,gguid):
+        for key in self.redis.hkeys(self._getAlertHSetKey(gguid)):
+            nid,category=key.split("_",1)
+            yield self.getAlert(gguid,nid,category)            
 
     def deleteAlert(self, wde):
         key = "%s_%s" % (wde.nid, wde.category)
@@ -194,11 +203,12 @@ class WatchdogFactory:
         if level<self.loglevel+1 and self.logenable:
             j.logger.log(msg,category="watchdog.%s"%category,level=level)
 
-    def fetchAllAlerts(self):
-        gguids = self.getGGUIDS()
-        result = dict()
-        for gguid in gguids:
-            result.update(self.redis.hgetall(self._getAlertHSetKey(gguid)))
-        return [json.loads(wde) for wde in result.values()]
+    #DONT DO THIS, TOOOOO MEM HUNGRY
+    # def fetchAllAlerts(self):
+    #     gguids = self.getGGUIDS()
+    #     result = dict()
+    #     for gguid in gguids:
+    #         result.update(self.redis.hgetall(self._getAlertHSetKey(gguid)))
+    #     return [json.loads(wde) for wde in result.values()]
 
 

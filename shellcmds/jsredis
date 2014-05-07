@@ -27,10 +27,11 @@ def timeago(t):
     return "%ss"%ago
 
 redism=j.application.redis
+redisp=j.clients.redis.getRedisClient("127.0.0.1",7768) #redis production
 
 if opts.action =='workerwatchdog':
     print "hget:workers:watchdog"
-    workers = redism.hgetall("workers:watchdog")
+    workers = redisp.hgetall("workers:watchdog")
     workers2=zip(workers[0::2], workers[1::2])
     for workername, last in workers2:
         print "%-20s %s"%(workername,timeago(last))
