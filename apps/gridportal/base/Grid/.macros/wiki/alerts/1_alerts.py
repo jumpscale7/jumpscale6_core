@@ -1,46 +1,30 @@
+import JumpScale.baselib.watchdog.manager
 
 def main(j, args, params, tags, tasklet):
 
     params.merge(args)
     doc = params.doc
     tags = params.tags
-
-    actor = j.apps.actorsloader.getActor("system", "gridmanager")
     
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use}}}}\n")
+    out.append("{{datatables_use}}\n")
 
     #['category', 'description', 'level', 'inittime', 'tags', 'closetime', 'id', 'state', 'gid', 'nrerrorconditions', 'lasttime', 'descriptionpub', 'errorconditions']
 
-    fields = ["id", "category", "errorconditions", "description", "state", "level"]
 
-    out.append('||id||category||errorconditions||description||state||level||')
+    out='||link||gid||nid||category||date||esc_date||state||value||\n'
 
-    alerts = actor.getAlerts()
-    if not alerts:
-        out = 'No alerts available'
-        params.result = (out, doc)
-        return params
+    for gguid in j.tools.watchdog.manager.getGGUIDS():
+        for alert in j.tools.watchdog.manager.iterateAlerts(gguid=gguid):
+            epochHR=j.base.time.epoch2HRDateTime(alert.epoch)
+            epochEsc=j.base.time.epoch2HRDateTime(alert.escalationepoch)
+            id='[link|/grid/alert?gguid=%s&nid=%s&category=%s]'%(gguid,alert.nid,alert.category)
+            out+="|%s|%s|%s|%s|%s|%s|%s|%s|\n"%(id,alert.gid,alert.nid,alert.category,epochHR,epochEsc,alert.state,alert.value)
 
-    for alert in alerts:
-        line = [""]
-
-        for field in fields:
-            # add links
-            if field == 'id':
-                line.append('[%s|/grid/alert?id=%s]' % (str(alert[field]), str(alert[field])))
-            elif field == 'errorconditions':
-                line.append(' ,'.join(alert[field]))
-            else:
-                line.append(str(alert[field]))
-
-        line.append("")
-
-        #out.append("|[%s|/grid/node?id=%s]|%s|%s|%s|" % (node["id"], node["id"], node["name"], ipaddr, roles))
-        out.append("|".join(line))
-    params.result = ('\n'.join(out), doc)
+ 
+    params.result = (out, doc)
 
     return params
 

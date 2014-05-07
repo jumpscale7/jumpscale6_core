@@ -9,7 +9,7 @@ def main(j, args, params, tags, tasklet):
     out = []
 
     #this makes sure bootstrap datatables functionality is used
-    out.append("{{datatables_use}}}}\n")
+    out.append("{{datatables_use}}\n")
 
     #[u'otherid', u'description', u'roles', u'mem', u'netaddr', u'ipaddr', u'nid', u'lastcheck', u'state', u'gid', u'active', u'cpucore', u'type', u'id', u'name']
     fields = ['name', 'organization', 'category', 'descr']
