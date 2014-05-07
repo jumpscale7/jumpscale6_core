@@ -8,6 +8,7 @@ from JPackageStateObject import JPackageStateObject
 from ActionManager import ActionManager
 
 from CodeManagementRecipe import CodeManagementRecipe
+from JumpScale.core.system.fs import FileLock
 
 
 class JPackageObject():
@@ -75,6 +76,7 @@ class JPackageObject():
             self.load()
         self.__init=True
 
+    @FileLock('jpackage', reentry=True)
     def init(self):
 
         #create defaults for new jpackages
@@ -200,6 +202,7 @@ class JPackageObject():
             # else:
             #     process(files[0],"")
 
+    @FileLock('jpackage', reentry=True)
     def load(self,hrdDir=None,position=""):                
 
         #create defaults for new jpackages
@@ -252,6 +255,7 @@ class JPackageObject():
             #DO NOT SET 0, 0 means we don't count the stat from the hrd
 
 
+    @FileLock('jpackage', reentry=True)
     def getCodeMgmtRecipe(self):
         hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
         if not j.system.fs.exists(path=hrdpath):
@@ -283,6 +287,7 @@ class JPackageObject():
                     #also needs to reload the config object on the application object
                     j.application.loadConfig() #will load that underneath
 
+    @FileLock('jpackage', reentry=True)
     def loadActions(self, force=False,hrd=True):
         # print "loadactions:%s"%self
 
@@ -384,6 +389,7 @@ class JPackageObject():
 ############  MAIN OBJECT METHODS (DELETE, ...)  ##############
 ###############################################################
 
+    @FileLock('jpackage', reentry=True)
     def delete(self):
         """
         Delete all metadata, files of the jpackages
@@ -403,6 +409,7 @@ class JPackageObject():
             
             #@todo over ftp try to delete the targz file (less urgent), check with other quality levels to make sure we don't delete files we should not delete
 
+    @FileLock('jpackage', reentry=True)
     def save(self, new=False):
         """
         Creates a new config file and saves the most important jpackages params in it
@@ -426,6 +433,7 @@ class JPackageObject():
         # for idx, dependency in enumerate(self.dependencies):
         #     self._addDependencyToHRD(idx, dependency.domain, dependency.name,minversion=dependency.minversion,maxversion=dependency.maxversion)
 
+    @FileLock('jpackage', reentry=True)
     def _addDependencyToHRD(self, idx, domain, name, minversion, maxversion):
         hrd = self.hrd
         basekey = 'jp.dependency.%s.%%s' % idx
@@ -724,6 +732,7 @@ class JPackageObject():
         systemdest = j.packages.getTypePath(ttype, blobitempath)
         return (filespath,systemdest)
 
+    @FileLock('jpackage', reentry=True)
     def getBlobPlatformTypes(self):
         """
         @return [[platform,ttype],...]
@@ -883,6 +892,7 @@ class JPackageObject():
 #################################  ACTIONS  ################################
 #############################################################################
 
+    @FileLock('jpackage', reentry=True)
     def start(self,dependencies=False):
         """
         Start the JPackage, run the start tasklet(s)
@@ -895,6 +905,7 @@ class JPackageObject():
         self.actions.process_start()
         self.log('start')
 
+    @FileLock('jpackage', reentry=True)
     def stop(self,dependencies=False):
         """
         Stop the JPackage, run the stop tasklet(s)
@@ -907,6 +918,7 @@ class JPackageObject():
         self.actions.process_stop()
         self.log('stop')
 
+    @FileLock('jpackage', reentry=True)
     def kill(self,dependencies=False):
         """
         Stop the JPackage, run the stop tasklet(s)
@@ -919,6 +931,7 @@ class JPackageObject():
         self.actions.process_kill()
         self.log('stop')
 
+    @FileLock('jpackage', reentry=True)
     def monitor(self,dependencies=False,result=True):
         """
         Stop the JPackage, run the stop tasklet(s)
@@ -932,6 +945,7 @@ class JPackageObject():
         result=result&self.actions.monitor_up_local()
         return result
 
+    @FileLock('jpackage', reentry=True)
     def monitor_net(self,ipaddr="localhost",dependencies=False,result=True):
         """
         Stop the JPackage, run the stop tasklet(s)
@@ -944,6 +958,7 @@ class JPackageObject():
         result=result&self.actions.monitor_up_net(ipaddr=ipaddr)
         return result
 
+    @FileLock('jpackage', reentry=True)
     def restart(self,dependencies=False):
         """
         Restart the JPackage
@@ -980,6 +995,7 @@ class JPackageObject():
         """                
         self.install(dependencies=dependencies, download=download, reinstall=True)
 
+    @FileLock('jpackage', reentry=True)
     def prepare(self, dependencies=True, download=True):
         if dependencies:
             deps = self.getDependencies()
@@ -989,6 +1005,7 @@ class JPackageObject():
 
         self.actions.install_prepare()
 
+    @FileLock('jpackage', reentry=True)
     def copyfiles(self, dependencies=True, download=True):
         if dependencies:
             deps = self.getDependencies()
@@ -1065,7 +1082,7 @@ class JPackageObject():
             j.system.fs.removeDirTree(tmpdir)
         else:
             j.system.fs.copyDirTree(path, destination,keepsymlinks=True,skipProtectedDirs=True)
-
+    @FileLock('jpackage', reentry=True)
     def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False):
         """
         Install the JPackage
@@ -1140,7 +1157,7 @@ class JPackageObject():
             return True
         return False
 
-
+    @FileLock('jpackage', reentry=True)
     def uninstall(self, unInstallDependingFirst=False):
         """
         Remove the JPackage from the sandbox. In case dependent JPackages are installed, the JPackage is not removed.
@@ -1178,6 +1195,7 @@ class JPackageObject():
                 self._expand(suppressErrors=suppressErrors)
             self.state.setPrepared(1)
 
+    @FileLock('jpackage', reentry=True)
     def configure(self, dependencies=False):
         """
         Configure the JPackage after installation, via the configure tasklet(s)
@@ -1195,6 +1213,7 @@ class JPackageObject():
         # self.state.setIsPendingReconfiguration(False)
         j.application.loadConfig() #makes sure hrd gets reloaded to application.config object
 
+    @FileLock('jpackage', reentry=True)
     def codeExport(self, dependencies=False, update=None):
         """
         Export code to right locations in sandbox or on system
@@ -1216,6 +1235,7 @@ class JPackageObject():
                 dep.codeExport(dependencies=False,update=update)
         self.actions.code_export()
 
+    @FileLock('jpackage', reentry=True)
     def codeUpdate(self, dependencies=False, force=False):
         """
         Update code from code repo (get newest code)
@@ -1229,6 +1249,7 @@ class JPackageObject():
                 dep.codeUpdate(dependencies=False,force=force)
         self.actions.code_update()
 
+    @FileLock('jpackage', reentry=True)
     def codeCommit(self, dependencies=False, push=False):
         """
         update code from code repo (get newest code)
@@ -1245,6 +1266,7 @@ class JPackageObject():
         if push:
             self.codePush(dependencies)
 
+    @FileLock('jpackage', reentry=True)
     def codePush(self, dependencies=False, merge=True):
         """
         Push code to repo (be careful this can brake code of other people)
@@ -1259,6 +1281,7 @@ class JPackageObject():
                 dep.codePush(merge=merge)
         self.actions.code_push(merge=merge)
 
+    @FileLock('jpackage', reentry=True)
     def codeLink(self, dependencies=False, update=False, force=True):
         """
         Link code from local repo to right locations in sandbox
@@ -1298,6 +1321,7 @@ class JPackageObject():
 
         self.actions.code_link(force=force)
       
+    @FileLock('jpackage', reentry=True)
     def package(self, dependencies=False,update=False):
         """
         copy files from code recipe's and also manually copied files in the files sections
@@ -1406,6 +1430,7 @@ class JPackageObject():
                     self.log("No file change for platform:%s type:%s"%(platform,ttype),level=5,category="upload" )
         return result
 
+    @FileLock('jpackage', reentry=True)
     def compile(self,dependencies=False):
         
         self.loadActions()
@@ -1418,6 +1443,7 @@ class JPackageObject():
                 dep.compile()
         self.actions.compile()
 
+    @FileLock('jpackage', reentry=True)
     def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False,expand=True,nocode=False):
         """
         Download the jpackages & expand
@@ -1483,6 +1509,7 @@ class JPackageObject():
 
         return True
 
+    @FileLock('jpackage', reentry=True)
     def backup(self,url=None,dependencies=False):
         """
         Make a backup for this package by running its backup tasklet.
@@ -1504,6 +1531,7 @@ class JPackageObject():
                 dep.backup(url=url)
         self.actions.backup()
 
+    @FileLock('jpackage', reentry=True)
     def restore(self,url=None,dependencies=False):
         """
         Make a restore for this package by running its restore tasklet.
@@ -1577,6 +1605,7 @@ class JPackageObject():
         return notfound
 
 
+    @FileLock('jpackage', reentry=True)
     def _upload(self, remote=True, local=True,onlycode=False):
         """
         Upload jpackages to Blobstor, default remote and local
@@ -1624,6 +1653,7 @@ class JPackageObject():
 
 
 
+    @FileLock('jpackage', reentry=True)
     def waitUp(self, timeout=60,dependencies=False):        
         self.loadActions()
         if dependencies:
@@ -1647,6 +1677,7 @@ class JPackageObject():
             now=j.base.time.getTimeEpoch()
         raise RuntimeError("Timeout on waitup for jp:%s"%self)
 
+    @FileLock('jpackage', reentry=True)
     def waitDown(self, timeout=60,dependencies=False):  
         self.log("waitdown: not implemented")
         return True
@@ -1675,6 +1706,7 @@ class JPackageObject():
         raise RuntimeError("Timeout on waitdown for jp:%s"%self)
 
 
+    @FileLock('jpackage', reentry=True)
     def processDepCheck(self, timeout=60,dependencies=False):
         #check for dependencies for process to start
         self.loadActions()
@@ -1851,13 +1883,6 @@ class JPackageObject():
 
     def __repr__(self):
         return self.__str__()
-
-    def getInteractiveObject(self):
-        """
-        Return the interactive version of the jpackages object
-        """
-        ##self.assertAccessable()
-        return JPackageIObject(self)
 
     def _resetPreparedForUpdatingFiles(self):
         self.state.setPrepared(0)
