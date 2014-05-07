@@ -8,7 +8,7 @@ j.application.start("jsredis")
 
 parser = cmdutils.ArgumentParser()
 
-parser.add_argument("action", choices=['workerwatchdog','heartbeat','keys',\
+parser.add_argument("action", choices=['workerwatchdog','keys',\
         'clearjobqueue','apps','appsreset'], help='Command to perform')
 
 parser.add_argument('-a', '--agentcontroller', required=False, action='store_true', help='Run commands on Agentcontroller redis')
@@ -32,8 +32,7 @@ redisp=j.clients.redis.getRedisClient("127.0.0.1",7768) #redis production
 if opts.action =='workerwatchdog':
     print "hget:workers:watchdog"
     workers = redisp.hgetall("workers:watchdog")
-    workers2=zip(workers[0::2], workers[1::2])
-    for workername, last in workers2:
+    for  workername, last in workers.iteritems():
         print "%-20s %s"%(workername,timeago(last))
 
 elif opts.action =='apps':
@@ -51,13 +50,6 @@ elif opts.action =='keys':
     redis = j.clients.credis.getRedisClient("127.0.0.1", 7768)
     print "\n".join(redis.keys())
     
-elif opts.action =='heartbeat':
-    print "hget:healthcheck:lastcheck"
-    items=redism.hgetall("healthcheck:lastcheck")
-    items2=zip(items[0::2], items[1::2])
-    for name, last in items2:
-        print "%-40s %s"%(name,timeago(last))
-
 elif opts.action =='clearjobqueue':
     redis = j.clients.credis.getRedisClient("127.0.0.1", 7769)
     keys = redis.keys('queues:jobqueue*')

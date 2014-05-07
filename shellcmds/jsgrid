@@ -12,7 +12,7 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reinit','reconfigure', 'testall', 'reinitsentry', 'healthcheck', 'purgelogs', 'purgejobs', 'purgeecos', 'deletenode',\
+parser.add_argument("action", choices=['reconfigure', 'healthcheck', 'purgelogs', 'purgejobs', 'purgeecos', 'deletenode',\
         'restartprocessmgrs','reloadjumpscripts','restartWorkers', 'listnodes', 'enablenode', 'disablenode', 'setrole', 'deleterole'], help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
@@ -34,12 +34,12 @@ if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
 
 opts = parser.parse_args()
 
-if opts.action =='reinit' or opts.action =='reinitsentry':
-    j.packages.findNewest(name="sentry").stop()
-    sentrytemplate = "/opt/sentry/data/sentry_template.db"
-    if j.system.fs.exists(sentrytemplate):
-        j.system.fs.copyFile(sentrytemplate,"/opt/sentry/data/sentry.db")
-        j.packages.findNewest(name="sentry").start()
+# if opts.action =='reinit' or opts.action =='reinitsentry':
+#     j.packages.findNewest(name="sentry").stop()
+#     sentrytemplate = "/opt/sentry/data/sentry_template.db"
+#     if j.system.fs.exists(sentrytemplate):
+#         j.system.fs.copyFile(sentrytemplate,"/opt/sentry/data/sentry.db")
+#         j.packages.findNewest(name="sentry").start()
 
 
 ############RECONFIGURE
