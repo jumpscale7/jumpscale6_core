@@ -200,7 +200,12 @@ def _deleteNode(node):
                 guid = result['guid']
                 catclient.delete(guid)
 
-        ncl.delete(nodeguid)
+        try:
+            ncl.delete(nodeguid)
+        except Exception:
+            if ncl.exists(nodeguid):
+                raise
+
         print 'Node %s deleted successfully' % (nid)
 
 if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listnodes', 'deleterole']:
