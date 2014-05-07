@@ -87,6 +87,8 @@ class JumpscriptsCmds():
 
     def _processJumpScript(self, jumpscript, startatboot):
         roles = set(j.core.grid.roles)
+        if '*' in jumpscript.roles:
+            jumpscript.roles.remove('*')
         if jumpscript.enable and roles.issuperset(set(jumpscript.roles)):
             organization = jumpscript.organization
             name = jumpscript.name
