@@ -135,7 +135,10 @@ elif args.action == 'configure':
         package.configure(dependencies=args.deps)
 
 elif args.action == 'install' or args.action == 'update':
-    packages = cmdutils.getJPackage(args)
+    if args.action == 'update':
+        packages = cmdutils.getJPackage(args,installed=True)
+    else:
+        packages = cmdutils.getJPackage(args)
     for package in packages:
         if args.action == 'update' and not package.isInstalled():
             continue
