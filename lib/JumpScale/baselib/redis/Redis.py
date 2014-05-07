@@ -46,7 +46,6 @@ class RedisFactory:
 
     def getGeventRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=False):
         fromcache = False  # @todo remove
-        print "GET REDIS QUEUE GEVENT:%s %s" % (ipaddr, port)
         if not fromcache:
             return CRedisQueue(self.getGeventRedisClient(ipaddr, port, False), name, namespace=namespace)
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
