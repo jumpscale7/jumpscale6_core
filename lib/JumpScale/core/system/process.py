@@ -1524,7 +1524,7 @@ class SystemProcess:
     kill = staticmethod(kill)
 
     def getPidsByFilter(self,filterstr):
-        cmd="ps ax | grep %s"%filterstr
+        cmd="ps ax | grep '%s'"%filterstr
         rcode,out=j.system.process.execute(cmd)
         # print out
         found=[]
