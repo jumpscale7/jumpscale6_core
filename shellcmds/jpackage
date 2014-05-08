@@ -28,6 +28,10 @@ group.add_argument('-s', '--single', required=False, action='store_true', help='
 group.add_argument('--debug', required=False, action='store_true',default=False, help='Sets debug_mode for package')
 group.add_argument('--nodownload', required=False, action='store_true', help='skips download')
 
+#list
+group = parser.add_argument_group(title="List")
+group.add_argument('-i', '--installed', required=False, action='store_true',default=False, help='List installed jpackages')
+
 #debug
 group = parser.add_argument_group(title="Debug")
 engroup = group.add_mutually_exclusive_group()
@@ -135,7 +139,17 @@ elif args.action == 'configure':
         package.configure(dependencies=args.deps)
 
 elif args.action == 'install' or args.action == 'update':
-    packages = cmdutils.getJPackage(args)
+    if args.action == 'update':
+        packages = cmdutils.getJPackage(args,installed=True,update=True)
+        
+        if j.application.sandbox:
+            if args.quiet or j.console.askYesNo("do you want to update your sandbox?"):
+                print "update sandbox"
+                cmd="jssync download -c base,libs -nd"
+                j.system.process.executeWithoutPipe(cmd)
+        
+    else:
+        packages = cmdutils.getJPackage(args)
     for package in packages:
         if args.action == 'update' and not package.isInstalled():
             continue
@@ -147,7 +161,10 @@ elif args.action == 'install' or args.action == 'update':
         download=True
         if args.nodownload:
             download=False
-        package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
+        if args.action == 'update':
+            package.install(dependencies=False, reinstall=False,update=True)
+        else:
+            package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
     # j.tools.startupmanager.startAll()
     
 
@@ -276,22 +293,28 @@ elif args.action == 'switchbranch':
         recipe.hrd.set('jp.code.branch', args.branch)
 
 elif args.action == 'list':
-    # packages = cmdutils.getJPackage(args,installed=True)
-    if args.domain<>False:
-        domains=[args.domain]
-    else:
-        domains=j.console.askChoiceMultiple(j.packages.getDomainNames(),"chose jpackages to list for")
-    for domain in domains:
-        packages=j.packages.find(domain=domain,name="*", installed=False)
+    def printJPackages(jpackages):
         form = '%(domain)-15s %(name)-20s %(version)8s %(buildnr)8s %(debug)5s %(debugInJpackage)5s'
         print form % {'domain': 'DOMAIN', 'name': 'NAME', 'version': 'VERSION', 'debug': 'DEBUG', \
             'buildnr':'BUILDNR','debugInJpackage':'DEBUG_JP'}
         print '=' * 70
         print ''
-        for package in packages:
+        for package in sorted(packages, key=lambda p: "%s_%s" % (p.domain, p.name)):
             debugINJP = 'yes' if package.getDebugModeInJpackage() else 'no'
             debug = 'yes' if package.debug else 'no'
             print form % {'name': package.name, 'domain': package.domain, 'version': package.version, \
             'debug': debug, 'buildnr': package.buildNr,'debugInJpackage':debugINJP}
+    if not args.installed:
+        if args.domain<>False:
+            domains=[args.domain]
+        else:
+            domains=j.console.askChoiceMultiple(j.packages.getDomainNames(),"choose jpackages to list for")
+        packages = list()
+        for domain in domains:
+            packages += j.packages.find(domain=domain,name="*", installed=False)
+        printJPackages(packages)
+    else:
+        packages = cmdutils.getJPackage(args,installed=True)
+        printJPackages(packages)
 
 j.application.stop()

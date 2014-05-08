@@ -58,11 +58,11 @@ def cleanupString(string, replacewith="_", regex="([^A-Za-z0-9])"):
     # functions that use the logging system.
     return re.sub(regex, replacewith, string)
 
-def lock(lockname, locktimeout=60):
+def lock(lockname, locktimeout=60, reentry=False):
     '''Take a system-wide interprocess exclusive lock. Default timeout is 60 seconds'''
-    self.log('Lock with name: %s'% lockname,6)
+    j.logger.log('Lock with name: %s'% lockname,6)
     try:
-        result = lock_(lockname, locktimeout)
+        result = lock_(lockname, locktimeout, reentry)
     except Exception, e:
         raise LockException(innerException=e)
     else:
@@ -71,7 +71,7 @@ def lock(lockname, locktimeout=60):
         else:
             return result
 
-def lock_(lockname, locktimeout=60):
+def lock_(lockname, locktimeout=60, reentry=False):
     '''Take a system-wide interprocess exclusive lock.
 
     Works similar to j.system.fs.lock but uses return values to denote lock
@@ -83,8 +83,10 @@ def lock_(lockname, locktimeout=60):
     #TODO This no longer uses fnctl on Unix, why?
     LOCKPATH = os.path.join(j.dirs.tmpDir, 'run')
     lockfile = os.path.join(LOCKPATH, cleanupString(lockname))
+    if reentry:
+        _LOCKDICTIONARY[lockname] = _LOCKDICTIONARY.setdefault(lockname, 0) + 1
 
-    if not islocked(lockname):
+    if not islocked(lockname, reentry=reentry):
         if not j.system.fs.exists(LOCKPATH):
             j.system.fs.createDir(LOCKPATH)
 
@@ -93,7 +95,7 @@ def lock_(lockname, locktimeout=60):
     else:
         locked = False
         for i in xrange(locktimeout + 1):
-            locked = islocked(lockname)
+            locked = islocked(lockname, reentry)
             if not locked:
                 break
             else:
@@ -101,11 +103,11 @@ def lock_(lockname, locktimeout=60):
                 time.sleep(1)
 
         if not locked:
-            return lock_(lockname)
+            return lock_(lockname, locktimeout, reentry)
         else:
             return False
 
-def islocked(lockname):
+def islocked(lockname, reentry=False):
     '''Check if a system-wide interprocess exclusive lock is set'''
     isLocked = True
     LOCKPATH = os.path.join(j.dirs.tmpDir, 'run')
@@ -125,16 +127,19 @@ def islocked(lockname):
     else:
         # open succeeded without exceptions, continue
         # check if a process with pid is still running
-        if j.system.fs.exists(lockfile) and (not pid or not (pid.isdigit() and j.system.process.isPidAlive(int(pid)))):
+        if pid and pid.isdigit():
+            pid = int(pid)
+            if reentry and pid == os.getpid():
+                return False
+        if j.system.fs.exists(lockfile) and (not pid or not j.system.process.isPidAlive(pid)):
             #cleanup system, pid not active, remove the lockfile
             j.system.fs.remove(lockfile)
             isLocked = False
-
     return isLocked
 
 def unlock(lockname):
     """Unlock system-wide interprocess lock"""
-    self.log('UNLock with name: %s'% lockname,6)
+    j.logger.log('UNLock with name: %s'% lockname,6)
     try:
         unlock_(lockname)
     except Exception, msg:
@@ -151,6 +156,10 @@ def unlock_(lockname):
     '''
     LOCKPATH = os.path.join(j.dirs.tmpDir, 'run')
     lockfile = os.path.join(LOCKPATH, cleanupString(lockname))
+    if lockname in _LOCKDICTIONARY:
+        _LOCKDICTIONARY[lockname] -= 1
+        if _LOCKDICTIONARY[lockname] > 0:
+            return
 
     # read the pid from the lockfile
     if j.system.fs.exists(lockfile):
@@ -179,14 +188,25 @@ class FileLock(object):
     @see: L{lock}
     @see: L{unlock}
     '''
-    def __init__(self, lock_name):
+    def __init__(self, lock_name, reentry=False):
         self.lock_name = lock_name
+        self.reentry = reentry
 
     def __enter__(self):
-        lock(self.lock_name)
+        lock(self.lock_name, reentry=self.reentry)
 
     def __exit__(self, *exc_info):
         unlock(self.lock_name)
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            lock(self.lock_name, reentry=self.reentry)
+            try:
+                return func(*args, **kwargs)
+            finally:
+                unlock(self.lock_name)
+
+        return wrapper
 
 
 class SystemFS:
