@@ -16,32 +16,25 @@ async=True
 queue='process'
 log=False
 
-roles = ["grid.node.vmachine"]
+roles = []
 
 from xml.etree import ElementTree
 try:
     import JumpScale.lib.qemu_img
+    import libvirt
 except:
     enable=False
 
-try:
-    import libvirt
+def action():
+    if not hasattr(j.core, 'processmanager'):
+        import JumpScale.grid.processmanager
+        j.core.processmanager.loadMonitorObjectTypes()
+
     con = libvirt.open('qemu:///system')
     #con = libvirt.open('qemu+ssh://10.101.190.24/system')
     stateMap = {libvirt.VIR_DOMAIN_RUNNING: 'RUNNING',
                 libvirt.VIR_DOMAIN_NOSTATE: 'NOSTATE',
                 libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
-
-except Exception, e:
-    enable = False
-    con = None
-
-def action():
-    if not con:
-        return
-    if not hasattr(j.core, 'processmanager'):
-        import JumpScale.grid.processmanager
-        j.core.processmanager.loadMonitorObjectTypes()
 
     try:
         domains = con.listAllDomains()
