@@ -1,6 +1,13 @@
-import JumpScale.baselib.watchdog.manager
 
 def main(j, args, params, tags, tasklet):
+    try:
+        import JumpScale.baselib.watchdog.manager
+    except:
+        page = args.page
+        page.addMessage('* Alerts are not configured')
+        params.result = page
+        return params
+
     def _formatdata():
         aaData = list()
 
