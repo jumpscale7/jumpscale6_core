@@ -137,6 +137,10 @@ elif args.action == 'configure':
 elif args.action == 'install' or args.action == 'update':
     if args.action == 'update':
         packages = cmdutils.getJPackage(args,installed=True)
+        if j.application.sandbox:
+            print "update sandbox"
+            cmd="jssync download -c base,libs -nd"
+            j.system.process.executeWithoutPipe(cmd)
     else:
         packages = cmdutils.getJPackage(args)
     for package in packages:
