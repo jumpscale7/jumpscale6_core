@@ -7,7 +7,7 @@ category = "jpackages"
 organization = "jumpscale"
 author = "deboeckj@incubaid.com"
 version = "1.0"
-roles = ["grid.node"]
+roles = []
 
 def action(domain):
     if not domain:

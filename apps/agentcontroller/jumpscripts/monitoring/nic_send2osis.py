@@ -13,7 +13,7 @@ period = 600 #always in sec
 enable = True
 async=True
 queue='process'
-roles = ["grid.node.network"]
+roles = []
 log=False
 
 from JumpScale import j

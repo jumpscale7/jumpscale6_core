@@ -8,7 +8,7 @@ organization = "jumpscale"
 author = "rkhamis@incubaid.com"
 version = "1.0"
 gid, nid, _ = j.application.whoAmI
-roles = ["grid.node"]
+roles = []
 
 def action(domain, pname, version, action):
     

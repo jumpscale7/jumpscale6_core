@@ -10,11 +10,8 @@ organization = "opencode"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-roles = ["grid.node"]
+roles = []
 
 
 def action():
     return j.system.net.getNetworkInfo()
-
-
-

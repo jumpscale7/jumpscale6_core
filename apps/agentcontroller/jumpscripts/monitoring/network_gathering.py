@@ -14,7 +14,7 @@ period = 300 #always in sec
 enable=True
 async=True
 queue='process'
-roles = ["grid.node.network"]
+roles = []
 log=False
 
 def action():

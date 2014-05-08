@@ -14,7 +14,7 @@ enable=True
 async=True
 queue='process'
 log=False
-roles = ["grid.node.process"]
+roles = []
 
 def action():
     if not hasattr(j.core, 'processmanager'):

@@ -10,7 +10,7 @@ organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-roles = ["osis.db.graphite"]
+roles = []
 
 def action():
     

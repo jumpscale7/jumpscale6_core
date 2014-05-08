@@ -10,7 +10,7 @@ organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-roles = ["osis.db.elasticsearch"]
+roles = []
 
 
 def action():
@@ -19,6 +19,3 @@ def action():
     cl = j.clients.elasticsearch.get()
     cl.delete_all_indexes()
     return "done"
-
-
-
