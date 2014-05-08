@@ -4,6 +4,8 @@
 
 h2. Node $$id $$name
 
+{{toc: start=3}}
+
 {{nodestat: nid:$$id cpustats}}
 
 h3. Info
