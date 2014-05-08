@@ -175,38 +175,34 @@ if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
 
 
 #################NODE ACTIONS####################################
-def _deleteNode(node):
-    nid = node['id']
-    if not node:
-        print "Node %s does not exist." % nid
-    else:
-        nodeguid = node['guid']
+def _deleteNode(nid):
+    nodeguid = "%s_%s" % (j.application.whoAmI.gid, nid)
 
-        print "Starting delete of node %s" % nid
-        categories = oscl.listNamespaceCategories('system')
+    print "Starting delete of node %s" % nid
+    categories = oscl.listNamespaceCategories('system')
 
-        for category in categories:
-            print "  * Deleting %s..." % category
-            catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
-            if category == 'stats':
-                catclient.delete(nid)
-                continue
-            if category in ['job', 'eco', 'log']:
-                catclient.delete({"term":{"nid":nid}})
-                continue
-            total, results = catclient.simpleSearch({'nid':nid}, size=0, withguid=True, withtotal=True)
-            results = catclient.simpleSearch({'nid':nid}, size=total, withguid=True)
-            for result in results:
-                guid = result['guid']
-                catclient.delete(guid)
+    for category in categories:
+        print "  * Deleting %s..." % category
+        catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
+        if category == 'stats':
+            catclient.delete(nid)
+            continue
+        if category in ['job', 'eco', 'log']:
+            catclient.delete({"term":{"nid":nid}})
+            continue
+        total, results = catclient.simpleSearch({'nid':nid}, size=0, withguid=True, withtotal=True)
+        results = catclient.simpleSearch({'nid':nid}, size=total, withguid=True)
+        for result in results:
+            guid = result['guid']
+            catclient.delete(guid)
 
-        try:
-            ncl.delete(nodeguid)
-        except Exception:
-            if ncl.exists(nodeguid):
-                raise
+    try:
+        ncl.delete(nodeguid)
+    except Exception:
+        if ncl.exists(nodeguid):
+            raise
 
-        print 'Node %s deleted successfully' % (nid)
+    print 'Node %s deleted successfully' % (nid)
 
 if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listnodes', 'deleterole']:
     import JumpScale.grid.osis
@@ -240,6 +236,9 @@ if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listno
             choicearray = nodes.keys()
             items = j.console.askChoiceMultiple(choicearray,"Select node")
         else:
+            if opts.action == 'deletenode':
+                _deleteNode(opts.nid)
+                j.application.stop()
             nodesl = ncl.simpleSearch({'id':opts.nid}, withguid=True)
             if not nodesl:
                 print "Could not find node with nid %s" % opts.nid
@@ -252,7 +251,7 @@ if opts.action in ['deletenode', 'enablenode', 'disablenode', 'setrole', 'listno
         for item in items:
             node = nodes[item]
             if opts.action == 'deletenode':
-                _deleteNode(node)
+                _deleteNode(node['nid'])
             elif opts.action == 'enablenode':
                 node['active'] = True
                 ncl.set(node)
