@@ -1066,7 +1066,7 @@ class JPackageObject():
         else:
             j.system.fs.copyDirTree(path, destination,keepsymlinks=True,skipProtectedDirs=True)
 
-    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False):
+    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False):
         """
         Install the JPackage
 
@@ -1127,12 +1127,18 @@ class JPackageObject():
             self.codeLink(dependencies=False, update=False, force=True)
 
 
-        if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr >= self.state.lastinstalledbuildnr:
-            self.configure(dependencies=False)
+        if not update:
+            if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr > self.state.lastinstalledbuildnr:
+                self.configure(dependencies=False)
 
         self.state.setLastInstalledBuildNr(self.buildNr)
 
         j.packages.inInstall.pop(j.packages.inInstall.index(key))
+
+    def isNew(self):
+        if self.buildNr==-1 or self.buildNr > self.state.lastinstalledbuildnr:
+            return True
+        return False
 
 
     def uninstall(self, unInstallDependingFirst=False):

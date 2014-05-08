@@ -136,11 +136,14 @@ elif args.action == 'configure':
 
 elif args.action == 'install' or args.action == 'update':
     if args.action == 'update':
-        packages = cmdutils.getJPackage(args,installed=True)
+        packages = cmdutils.getJPackage(args,installed=True,update=True)
+        
         if j.application.sandbox:
-            print "update sandbox"
-            cmd="jssync download -c base,libs -nd"
-            j.system.process.executeWithoutPipe(cmd)
+            if args.quiet or j.console.askYesNo("do you want to update your sandbox?"):
+                print "update sandbox"
+                cmd="jssync download -c base,libs -nd"
+                j.system.process.executeWithoutPipe(cmd)
+        
     else:
         packages = cmdutils.getJPackage(args)
     for package in packages:
@@ -154,7 +157,10 @@ elif args.action == 'install' or args.action == 'update':
         download=True
         if args.nodownload:
             download=False
-        package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
+        if args.action == 'update':
+            package.install(dependencies=False, reinstall=False,update=True)
+        else:
+            package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
     # j.tools.startupmanager.startAll()
     
 

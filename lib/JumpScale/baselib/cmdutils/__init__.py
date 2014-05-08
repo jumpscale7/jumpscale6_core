@@ -38,7 +38,7 @@ def processLogin(parser):
     return opts
 
 
-def getJPackage(args, installed=None,domain=None,debug=None):
+def getJPackage(args, installed=None,domain=None,debug=None,update=False):
     if installed:
         domain=""
 
@@ -59,7 +59,24 @@ def getJPackage(args, installed=None,domain=None,debug=None):
 
         if debug==False and pname=="":
             debugpackages=j.packages.getDebugPackages()
-            packages=[item for item in packages if item not in debugpackages]        
+            packages=[item for item in packages if item not in debugpackages]
+
+        if j.application.sandbox:
+            packages=[item for item in packages if not item.name=="base"]
+
+        if update:
+            packages=[item for item in packages if item.isNew()]
+
+            if not j.application.sandbox:
+                basepackageTest=[item for item in packages if item.name=="base"]
+
+                if len(basepackageTest)>0:
+                    print "update base package first and then restart your update (you can see a segmentation fault when you update base)."
+                    print "IMPORTANT do: 'jpackage install -n base'"
+                    print "do this untill it says that it does need to install anymore (installed)"                
+                    j.application.stop()
+
+
 
         if len(packages) == 0:
             if installed:
