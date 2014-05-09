@@ -21,6 +21,24 @@ class FileLikeStreamObject(object):
 class ClassEmpty():
     pass
 
+class NameSpaceClient(object):
+    def __init__(self, client, namespace):
+        self._client = client
+        self._namespace = namespace
+        for category in client.listNamespaceCategories(namespace):
+            cclient = j.core.osis.getClientForCategory(self._client, self._namespace, category)
+            setattr(self, category, cclient)
+
+    def __getattr__(self, category):
+        categories = self._client.listNamespaceCategories(self._namespace)
+        if category not in categories:
+            raise AttributeError("Category %s does not exists in namespace %s" % (category, self._namespace))
+
+        cclient = j.core.osis.getClientForCategory(self._client, self._namespace, category)
+        setattr(self, category, cclient)
+        return cclient
+
+
 class OSISFactory:
 
     """
@@ -127,6 +145,12 @@ class OSISFactory:
                 print stdout.getvalue()
                 raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,stdout.getvalue(),e))
         return self.osisConnections[key]
+
+    def getClientForNamespace(self, namespace, client=None):
+        if not client:
+            client = self.getClient(user='root')
+        return NameSpaceClient(client, namespace)
+
 
     def getClientForCategory(self, client,namespace, category):
         """
