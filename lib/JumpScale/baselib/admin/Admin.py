@@ -3,10 +3,15 @@ import JumpScale.baselib.remote
 import sys
 # import importlib
 import imp
-import ujson
+try:
+    import ujson as json
+except:
+    import json
+
 import JumpScale.baselib.redis
 import copy
 import time
+import JumpScale.baselib.webdis
 
 from fabric.api import hide
 
@@ -14,7 +19,13 @@ class JNode():
     def __init__(self):
         self.actionsDone={}
         self.lastcheck=0
+        self.gridname=""
         self.name=""
+        self.ip=""
+        self.host=""
+        self.enable=True
+        self.remark=""
+        self.roles=[]
         self.cuapi=None
         self.args=None
         self.passwd=None
@@ -144,7 +155,7 @@ class JNode():
         j.base.time.getTimeEpoch()
 
     def _connectCuapi(self):
-        self.cuapi.connect(self.name)
+        self.cuapi.connect(self.ip)
 
         if self.args.passwd<>"":
             # setpasswd()
@@ -174,7 +185,6 @@ class JNode():
                     cuapi.file_upload("%s/%s"%(dest,partpath),item)#,True,True)  
                 except Exception,e:
                     self.raiseError("uploadFromCfgDir","could not upload file %s to %s"%(ttype,dest))
-
 
     def execute(self,jsname,once=True,**kwargs):
         self.log("execute:%s on %s "%(jsname,self.name))
@@ -217,6 +227,12 @@ class JNode():
             self.log("No need to execute %s on %s"%(jsname,self.name))
             return False
 
+    def __repr__(self):
+        roles=",".join(self.roles)
+        return ("%-10s %-10s %-50s %-15s %-10s %s"%(self.gridname,self.name,roles,self.ip,self.host,self.enabled))
+
+    __str__=__repr__
+
 class AdminFactory:
     def get(self,args,failWhenNotExist=False):
         return Admin(args,failWhenNotExist)
@@ -225,6 +241,7 @@ class Admin():
     def __init__(self,args,failWhenNotExist=False):
         self.args=args
         self.basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
+        self.hostKeys=[]
         if args.action==None or (not args.action in ["createidentity","applyconfiglocal"]):
             if args.local:
                 args.remote="127.0.0.1"
@@ -238,6 +255,8 @@ class Admin():
                 roles = list()
                 if args.roles:
                     roles = args.roles.split(",")
+                #@todo change to use hostkeys (reem)
+                raise RuntimeError("not implemented")
                 nodes = self._getActiveNodes()
                 hosts = [node['name'] for node in nodes]
                 for node in nodes:
@@ -245,36 +264,47 @@ class Admin():
                         if role not in node['roles']:
                             hosts.remove(node['name'])
                             break
-                self.hosts = hosts
-                self.hosts.sort()
+                self.hostKeys = hosts
+                self.hostKeys.sort()
             elif args.remote=="":
-                self.hosts=self.getHostNames().keys()
-                self.hosts.sort()
+                # if args.gridname=="":
+                #     raise RuntimeError("Please specify gridname")
+                for gridname in args.gridname.split(","):
+                    for hostKey in self.getHostNamesKeys(args.gridname):
+                        self.hostKeys.append(hostKey)
             else:
-                self.hosts=args.remote.split(",")
+                if args.gridname=="":
+                    raise RuntimeError("Please specify gridname")  
+                for gridname in args.gridname.split(","):
+                    self.hostKeys+=["%s__%s"%(gridname,item) for item in args.remote.split(",")]
+
+            self.hostKeys.sort()
             # if hosts<>[]:
             #     if failWhenNotExist==False:
             #         for host in hosts:
             #             #check 
             #             if j.system.net.tcpPortConnectionTest("m3pub",22):
             #                 self.cuapi.fabric.api.env["hosts"].append(host)
-            #                 self.hosts.append(host)
+            #                 self.hostKeys.append(host)
             #     else:
-            #         self.hosts=hosts
+            #         self.hostKeys=hosts
             #         self.cuapi.fabric.api.env["hosts"]=hosts
             # else:            
             #     self.cuapi.connect(args.remote)
         self.sysadminPasswd=""
-        self.applyconfiglocal() #set hosts
         self.js={}
-        self.loadJumpscripts()
+        
         # DO NOT USE CREDIS IN THIS CONTEXT, NOT THREAD SAFE
         self.redis = j.clients.redis.getRedisClient("127.0.0.1", 7768)
-        self.nodes={}
+        # self.nodes={}
         self.errors=[]
         self._log=""
         self.hrd= j.core.hrd.getHRD(self._getPath("cfg/","superadmin.hrd"))
         self.rootpasswds=self.hrd.getList("superadmin.passwds")
+        self.webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
+        self.loadJumpscripts()
+        # self.loadNodes()
+        # self.config2gridmaster() #this should not be done every time
 
     def _getActiveNodes(self):
         import JumpScale.grid.osis
@@ -302,27 +332,33 @@ class Admin():
 
     # def pushDir(self)
 
-    def getNode(self,name,reset=False):
+    def _getNodeKey(self,gridname,name):
+        key="admin:nodes:%s:%s"%(gridname,name)
+        return key
+
+    def getNode(self,gridname,name):
+        key=self._getNodeKey(gridname,name)
         name=name.lower()
-        if reset or self.redis.exists("admin:nodes:%s"%name)==0:
-            node=JNode()
-            self.setNode(node)
-            node.name=name
+        gridname=gridname.lower()
+        
+        if self.redis.exists(key)==0:
+            raise RuntimeError("could not find node: '%s/%s'"%(gridname,name))
         else:
-            data=self.redis.get("admin:nodes:%s"%name)
+            data=self.redis.get(key)
             node=JNode()
             try:
-                node.__dict__=ujson.loads(data)
+                node.__dict__=json.loads(data)
             except Exception,e:
-                node=JNode()
-                self.setNode(node)
+                raise RuntimeError("could not decode node: '%s/%s'"%(gridname,name))
+                # node=JNode()
+                # self.setNode(node)
             node.name=name
+
         node.cuapi=self.cuapi
         node.args=self.args
         node.result=""
         node.error=""
         node._connectCuapi()
-        
         return node
 
     def upload(self,name,ttype,dest):
@@ -343,11 +379,12 @@ class Admin():
         node2=copy.copy(node.__dict__)
         node2.pop("cuapi")
         node2.pop("args")
-        self.redis.set("admin:nodes:%s"%node.name,ujson.dumps(node2))
+        key=self._getNodeKey(node.gridname,node.name)
+        self.redis.set(key,json.dumps(node2))
 
     def execute(self,jsname,once=True,reset=False,**kwargs):
         res=[]
-        for host in self.hosts:
+        for host in self.hostKeys:
             node=self.getNode(host,reset)
             r=node.execute(jsname,once,**kwargs)
             if r<>False:
@@ -374,7 +411,163 @@ class Admin():
                 # module = importlib.import_module('jscripts.%s' % name)
                 module=imp.load_source('jscript_%s' % name, item)
                 self.js[name]= getattr(module, "action")
+
+    def loadNodes(self,webdis=False,pprint =False):
+
+        for configpath in j.system.fs.listFilesInDir("%s/apps/admin/cfg"%j.dirs.baseDir,filter="*.cfg"):
+            C=j.system.fs.fileGetContents(configpath)
+            C+="\n\n" #to make sure we save the last node
+
+            gridname=j.system.fs.getBaseName(configpath).lower().strip()
+            if gridname =="active.cfg":
+                continue
+            gridname=gridname[:-4]
+            
+            key="%s:admin:nodes:%s"%(j.application.config.get("grid_watchdog_secret"),gridname)
+            if webdis:  
+                self.webdis.delete(key)     
+
+            enabled=True
+
+            node=JNode()
+            for line in C.split("\n"):
+                # print line
+                line=line.strip()
+                if len(line)>0 and line[0]=="#":
+                    continue
+
+                #when name found everything found so far will be used to store
+                for item in ["name","remark","ip","roles","host","enabled"]:
+                    if line.find(item)==0:
+                        val=line.split("=",1)[1].strip()                        
+                        if val.find(",")<>-1:
+                            val=[item2.strip() for item2 in val.split(",")]
+                        if item=="enabled":
+                            if str(val)=="0":
+                                val=False
+                            else:
+                                val=True
+                        node.__dict__[item]=val
+
+                    if line=="" and node.name<>"":
+                        node.gridname=gridname
+                        #we know about a machine
+                        self.setNode(node)    
+                        if pprint:
+                            print node   
+                        if webdis:                 
+                            self.webdis.hset(key,node.name,json.dumps(node.__dict__))
+                        node.name=""
+                        node.ip=""
+                        node.remark=""
+
+    def config2gridmaster(self):
+        self.loadNodes(True)
+        sys.path.append(self._getPath("jumpscripts"))        
+        cmds=j.system.fs.listFilesInDir(self._getPath("jumpscripts"), recursive=True, filter="*.py")
+        cmds.sort()
+
+        def getcode(path):
+            state="start"
+            code=""
+            for line in j.system.fs.fileGetContents(path).split("\n"):
+                if line.find("def action(")<>-1:
+                    state="found"
+                if state=="found":
+                    code+="%s\n"%line
+            return code
+
+        key="%s:admin:jscripts"%(j.application.config.get("grid_watchdog_secret"))
+        self.webdis.delete(key)
+
+        for item in cmds:
+            name=j.system.fs.getBaseName(item).replace(".py","")
+            if name[0]<>"_":
+                obj={}
+                name=name.lower()
+                # print "load:%s"%name
+                module=imp.load_source('jscript_%s' % name, item)
+                obj["descr"]= getattr(module, "descr","")
+                obj["version"]= getattr(module, "version","")
+                obj["organization"]= getattr(module, "organization","unknown")
+                obj["version"]= getattr(module, "version","1.0")
+                obj["code"]=getcode(item)
+                
+                # self.webdis.hset(key,name,obj)
+                self.webdis.hset(key,name,json.dumps(obj))
+                # ret=json.loads(self.webdis.hget(key,name))
+        
         # print "OK"
+
+    def sshfs(self,gridname,name):
+        node=self.getNode(gridname,name)
+        path="/mnt/%s_%s_jsbox"%(node.gridname,node.name)
+        j.system.fs.createDir(path)
+        cmd="sshfs %s:/opt/jsbox /mnt/%s_%s_jsbox"%(node.ip,node.gridname,node.name)
+        print cmd
+        j.system.process.executeWithoutPipe(cmd)
+        path="/mnt/%s_%s_jsboxdata"%(node.gridname,node.name)
+        j.system.fs.createDir(path)
+        print cmd
+        cmd="sshfs %s:/opt/jsbox_data /mnt/%s_%s_jsboxdata"%(node.ip,node.gridname,node.name)
+        j.system.process.executeWithoutPipe(cmd)
+
+    def sshfsumount(self,gridname="",name=""):
+        rc,mount=j.system.process.execute("mount")
+        
+
+        def getMntPath(mntpath):
+            for line in mount.split("\n"):
+                if line.find("sshfs")<>-1 and line.find(mntpath+" ")<>-1:
+                    return line.split(" ")[0]
+            return None
+
+        def getMntPaths():
+            res=[]
+            for line in mount.split("\n"):
+                if line.find("sshfs")<>-1:
+                    line=line.replace("  "," ")
+                    line=line.replace("  "," ")                    
+                    res.append(line.split(" ")[2])
+            return res
+
+
+        def do(mntpath):
+            mntpath2=getMntPath(mntpath)
+            if mntpath2==None:
+                return None
+                
+            cmd="umount %s"%(mntpath2)
+            rc,out=j.system.process.execute(cmd,False)
+            if rc>0:
+                if out.find("device is busy")<>-1:
+                    res=[]
+                    print "MOUNTPOINT %s IS BUSY WILL TRY TO FIND WHAT IS KEEPING IT BUSY"%mntpath
+                    cmd ="lsof -bn -u 0|grep '%s'"%mntpath  #only search for root processes
+                    print cmd
+                    rc,out=j.system.process.execute(cmd,False)
+                    for line in out.split("\n"):
+                        if line.find(mntpath)<>-1 and line.lower().find("avoiding")==-1 and line.lower().find("warning")==-1:
+                            line=line.replace("  "," ")
+                            line=line.replace("  "," ")
+                            cmd=line.split(" ")[0]
+                            pid=line.split(" ")[1]
+                            key="%s (%s)"%(cmd,pid)
+                            if key not in res:
+                                res.append(key)
+                    print "PROCESSES WHICH KEEP MOUNT BUSY:"
+                    print "\n".join(res)                    
+                    return
+                raise RuntimeError("could not umount:%s\n%s"%(mntpath,out))
+
+        if gridname=="" and name=="":
+            for mntpath in getMntPaths():
+                print "UMOUNT:%s"%mntpath
+                do(mntpath)
+            
+        else:
+            do("/mnt/%s_%s_jsboxdata"%(gridname,name))
+            do("/mnt/%s_%s_jsbox"%(gridname,name))
 
     def createidentity(self):
         print "MAKE SURE YOU SELECT A GOOD PASSWD, select default destination!"
@@ -493,10 +686,31 @@ ff02::2      ip6-allrouters
                 break
         return result
 
+    def getHostNamesKeys(self,gridNameSearch=""):
+        C=j.system.fs.fileGetContents("%s/admin/active.cfg"%j.dirs.cfgDir)
 
-    # def getCluster(self,sysadminPasswd=""):
-    #     if sysadminPasswd=="":
-    #         sysadminPasswd=self.sysadminPasswd
-    #     hosts=self.getHostNames().keys()
-    #     cl=j.remote.cluster.create("mycluster","mycluster",hosts,sysadminPasswd)
+        keys=[]
+        gridname=""
+        for line in C.split("\n"):
+            # print line
+            line=line.strip()
+            if line.find("####")==0:
+                break
+            if line=="" or line[0]=="#":
+                continue
+            if line.find("*")==0:
+                gridname=line[1:].strip()
+                continue
+            if gridNameSearch=="" or gridname==gridNameSearch:
+                name=line
+                keys.append("%s__%s"%(gridname,name))
+        return keys
+
+
+
+
+
+
+
+
 

@@ -8,10 +8,12 @@ from JumpScale.baselib import cmdutils
 
 parser = cmdutils.ArgumentParser()
 
-parser.add_argument('-r', '--remote', help='Ip address of node',default="")
+parser.add_argument('-r', '--remote', help='hostname of node.',default="")
 parser.add_argument('-p', '--passwd', help='Root password to use, if any.',default="")
 
 parser.add_argument('-n','--name',required=False, help='Names of jumpscript to execute (comma separated)',default="")
+parser.add_argument('-o','--gridname',required=False, help='Name of grid.',default="")
+
 parser.add_argument('-c', '--cfgname', help='Name of cfg directory.',default="")
 parser.add_argument('-e', '--extra', help='Extra config data in tag format e.g. cpasswd:123,myname:kds ',default="")
 parser.add_argument('-f','--force',required=False, action='store_true',help='auto answer yes on every question and redo even if already done')
@@ -55,15 +57,15 @@ class RedirectSTDOUT:
 import sys
 
 
-def doRemote(q,args,host,cmd):
-    j.admin.hosts=[host]
+def doRemote(q,args,hostkey,cmd):
+    # j.admin.hosts=[host]
 
+    gridname,name=hostkey.split("__")
     if cmd<>"":
-        node=j.admin.getNode(host)
-        key=host
-        r=RedirectSTDOUT(key)
+        node=j.admin.getNode(gridname,name)
+        r=RedirectSTDOUT(hostkey)
         if args.sync==False:
-            print "execute:%s"%key
+            print "execute:%s"%hostkey
             sys.stdout=r
         res=""
         out=""
@@ -72,27 +74,27 @@ def doRemote(q,args,host,cmd):
         except BaseException,e:
             sys.stdout=r.oldstdout
             # out=r.redis.hget("admin:output",key)
-            q.put((host,cmd,res,r.out))            
+            q.put((hostkey,cmd,res,r.out))            
             return
         sys.stdout=r.oldstdout
-        q.put((host,cmd,res,""))
+        q.put((hostkey,cmd,res,""))
     else:
-        for name in args.name.split(","):
+        for name in args.name.split(","):  #name is name of jumpscript
             name=name.lower()
             name=name.strip()
-            key="%s_%s"%(host,name)
+            key="%s_%s"%(hostkey,name)
             r=RedirectSTDOUT(key)            
             if args.sync==False:
-                print "execute:%s"%key
+                print "execute:%s"%hostkey
                 sys.stdout=r
             node=None
             try:
                 node=j.admin.execute(name,once=True,reset=args.force)
             except Exception,e:                
                 sys.stdout=r.oldstdout
-                j.errorconditionhandler.processPythonExceptionObject(e)
                 # out="%s\n%s"%(str(e),r.redis.hget("admin:output",key))
-                q.put((host,name,"",r.out))
+                q.put((hostkey,name,"",r.out))
+                j.errorconditionhandler.processPythonExceptionObject(e)
                 return
 
             sys.stdout=r.oldstdout
@@ -102,9 +104,9 @@ def doRemote(q,args,host,cmd):
                 if node.error<>"":
                     if node.result=="":
                         node.result=r.out                
-                q.put((host,name,node.result,node.error))
+                q.put((hostkey,name,node.result,node.error))
             else:
-                q.put((host,name,"",r.out))
+                q.put((hostkey,name,"",r.out))
 
 import JumpScale.baselib.admin
 
@@ -116,22 +118,24 @@ if __name__ == '__main__':
     admin=j.tools.admin.get(args)
     j.admin=admin
 
-    for host in j.admin.hosts:
+    for hostkey in j.admin.hostKeys:
+
         if not args.sync:
-            p = Process(target=doRemote, args=(queue,args,host,args.command,))
+            p = Process(target=doRemote, args=(queue,args,hostkey,args.command,))
             p.start()
         else:
-            doRemote(queue,args,host,args.command)
+            doRemote(queue,args,hostkey,args.command)
 
-    for host in j.admin.hosts:
+    for hostkey in j.admin.hostKeys:
         obj = queue.get()
         # print obj
         if obj[3].strip()<>"":
             print "##ERROR##%-10s %-20s##\n%s\n%s\n###############################################"%obj
         else:
             print "##%-10s %-20s##\n%s\n%s"%obj
-    # p.join()                    # this deadlocks
+
     exitcode = 1 if admin.errors else 0
+
     j.application.stop(exitcode)
 
 

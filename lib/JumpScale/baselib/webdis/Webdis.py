@@ -37,21 +37,25 @@ class Webdis(object):
         for i in range(self.timeout*10):
             try:
                 # headers = {'content-type': 'application/json'}
-                if url<>"":
-                    data2="%s/%s"%(cmd,url)
-                else:
-                    data2="%s"%cmd
-                if data<>None:
-                    data2="%s/%s"%(data2,data)
+                # if url<>"":
+                #     data2="%s/%s"%(cmd,url)
+                # else:
+                #     data2="%s"%cmd
+                # if data<>None:
+                #     data2="%s/%s"%(data2,data)
                 # print "data:'%s'"%data2
-                r=requests.post('http://%s:%s/'%(self.addr,self.port), data=data2)#, headers=headers)
-                # r=requests.get('http://%s:%s/%s'%(self.addr,self.port,data2))#, headers=headers)
+                headers={}
+                headers = {'content-type': 'binary/octet-stream'}
+                url2='http://%s:%s/%s/%s/'%(self.addr,self.port,cmd,url)
+                r=requests.put(url2, data=data, headers=headers)
+                # r=requests.get('http://%s:%s/%s'%(self.addr,self.port,data2),headers=headers)
             except Exception,e:
                 if str(e).find("Max retries exceeded with url")<>-1:
                     print "Webdis not available"
                     time.sleep(0.1)
                     continue
                 raise RuntimeError(e)
+            
             if r.status_code==200:
                 res=json.loads(r.text)
                 return res[cmd]
