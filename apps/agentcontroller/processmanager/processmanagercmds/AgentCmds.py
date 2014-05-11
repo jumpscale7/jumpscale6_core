@@ -100,6 +100,9 @@ class AgentCmds():
                     raise RuntimeError("jscript id needs to be filled in")
 
                 jscriptkey = "%(category)s_%(cmd)s" % job
+                if not j.core.processmanager.cmds.jumpscripts.jumpscripts.has_key(jscriptkey):
+                    j.events.bug_critical("could not find jumpscript %s on processmanager"%jscriptkey, "jumpscript.notfound")
+
                 jscript = j.core.processmanager.cmds.jumpscripts.jumpscripts[jscriptkey]
                 if jscript.async or job['queue']:
                     j.clients.redisworker.execJobAsync(job)

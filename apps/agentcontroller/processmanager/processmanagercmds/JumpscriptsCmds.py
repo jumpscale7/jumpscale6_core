@@ -64,6 +64,9 @@ class JumpscriptsCmds():
         self._killGreenLets()
         self._configureScheduling()
         self._startAtBoot(startatboot)
+
+        j.core.processmanager.restartWorkers
+
         return "ok"
 
     def _loadFromPath(self, path):

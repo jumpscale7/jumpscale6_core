@@ -138,6 +138,9 @@ class ProcessmanagerFactory:
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
         j.system.platform.psutil = psutil
 
+        import JumpScale.baselib.redis
+        self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)        
+
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
         # j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1) #@todo
@@ -192,15 +195,9 @@ class ProcessmanagerFactory:
         self.daemon.daemon.osis = osis
         self.loadCmds()
 
-        #ask all running workers to restart
-        import JumpScale.baselib.credis
-        redis = j.clients.credis.getRedisClient("127.0.0.1", 7768)
-        #find workers in mem
-        import psutil
-        nrworkers=0
+        self.redis.set("processmanager:startuptime",str(int(time.time())))
 
         self.starttime=j.base.time.getTimeEpoch()
-
 
 
         def donothing(): #not used yet
@@ -210,13 +207,7 @@ class ProcessmanagerFactory:
             print  "DIE"
 
         j.tools.startupmanager.startAll()
-
-        for proc in psutil.process_iter():
-            name2=" ".join(proc.cmdline)
-            if name2.find("python worker.py")<>-1:
-                workername=name2.split("-wn")[1].strip()
-                redis.set("workers:action:%s"%workername,"STOP")
-
+        
         self.daemon.start()
 
     def _checkIsNFSMounted(self,check="/opt/code"):
@@ -227,6 +218,17 @@ class ProcessmanagerFactory:
                 found=True
         return found
 
+    def restartWorkers(self):
+        for worker in [item for item in j.tools.startupmanager.listProcesses() if item.find("workers")==0]:
+            domain,name=worker.split("__")
+            pdef=j.tools.startupmanager.getProcessDef(domain,name)
+            if pdef.numprocesses>1:
+                for nr in range(pdef.numprocesses):
+                    workername="%s_%s"%(pdef.name,nr)
+                    self.redis.set("workers:action:%s"%workername,"STOP")
+            else:
+                workername=pdef.name
+                self.redis.set("workers:action:%s"%workername,"STOP")
 
     def getCmdsObject(self,category):
         if self.cmds.has_key(category):
@@ -272,4 +274,11 @@ class ProcessmanagerFactory:
                 print "load monitoring object:%s"%name
                 factory = getattr(monmodule, '%sFactory' % name)(self, classs)
                 self.monObjects.__dict__[name.lower()]=factory   
+
+    def getStartupTime(self):
+        val=self.redis.get("processmanager:startuptime")
+        return int(val)
+
+    def checkStartupOlderThan(self,secago):
+        return self.getStartupTime()<int(time.time())-secago
 

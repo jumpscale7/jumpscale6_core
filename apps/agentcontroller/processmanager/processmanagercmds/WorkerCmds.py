@@ -56,17 +56,17 @@ class WorkerCmds():
             foundworkers[workername]=timeout
         return foundworkers
 
-    def stopWorkers(self, session=None):
-        if session<>None:
-            self._adminAuth(session.user,session.passwd)        
-        for workername in self.getWorkersWatchdogTime().keys():
-            self.redis.set("workers:action:%s"%workername,"STOP")
+    # def stopWorkers(self, session=None):
+    #     if session<>None:
+    #         self._adminAuth(session.user,session.passwd)        
+    #     for workername in self.getWorkersWatchdogTime().keys():
+    #         self.redis.set("workers:action:%s"%workername,"STOP")
 
-    def reloadWorkers(self, session=None):
-        if session<>None:
-            self._adminAuth(session.user,session.passwd)
-        for workername in self.getWorkersWatchdogTime().keys():
-            self.redis.set("workers:action:%s"%workername,"RELOAD")
+    # def reloadWorkers(self, session=None):
+    #     if session<>None:
+    #         self._adminAuth(session.user,session.passwd)
+    #     for workername in self.getWorkersWatchdogTime().keys():
+    #         self.redis.set("workers:action:%s"%workername,"RELOAD")
 
     def removeJobs(self, hoursago=48, failed=False, session=None):
         """
