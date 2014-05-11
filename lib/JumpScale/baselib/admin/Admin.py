@@ -205,11 +205,10 @@ class JNode():
             if not j.admin.js.has_key(jsname):
                 raise RuntimeError("cannot find js:%s"%jsname)
 
-            if not j.system.net.waitConnectionTest(self.name,22, self.args.timeout):
+            if not j.system.net.waitConnectionTest(self.ip,22, self.args.timeout):
                 self.raiseError(jsname,"COULD NOT check port (ssh)")
                 return
             self.log("sshapi start cmd:%s"%jsname)
-            cuapi=self.cuapi
             try:                
                 self.result=j.admin.js[jsname](node=self,**kwargs)
                 self.actionsDone[jsname]=now
@@ -388,7 +387,8 @@ class Admin():
     def execute(self,jsname,once=True,reset=False,**kwargs):
         res=[]
         for host in self.hostKeys:
-            node=self.getNode(host,reset)
+            gridname, _, name = host.partition('__')
+            node=self.getNode(gridname,name)
             r=node.execute(jsname,once,**kwargs)
             if r<>False:
                 res.append(node)
