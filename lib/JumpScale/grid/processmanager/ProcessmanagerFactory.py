@@ -158,8 +158,6 @@ class ProcessmanagerFactory:
             return client
             
         import JumpScale.grid.agentcontroller
-        if 'jumpscale__osis' in j.tools.startupmanager.listProcesses():
-            j.tools.startupmanager.startProcess("jumpscale","osis")
 
         masterip=j.application.config.get("grid.master.ip")
         if masterip in j.system.net.getIpAddresses():
@@ -175,6 +173,8 @@ class ProcessmanagerFactory:
             if not j.system.net.tcpPortConnectionTest("127.0.0.1",4444):        
                 j.tools.startupmanager.startProcess("jumpscale","agentcontroller")
 
+        j.tools.jumpscriptsManager.loadFromGridMaster()
+
         success=False
         while success==False:
             try:
@@ -185,8 +185,6 @@ class ProcessmanagerFactory:
                 msg="Cannot connect to osis or agentcontroller on %s, will retry in 60 sec."%(masterip)
                 j.events.opserror(msg, category='processmanager.startup', e=e)
                 time.sleep(60)
-
-        j.tools.jumpscriptsManager.loadFromGridMaster()
 
         osis = self.daemon.osis
         self.daemon = j.servers.geventws.getServer(port=4445)

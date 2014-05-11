@@ -57,6 +57,8 @@ class JumpscriptsCmds():
         j.tools.jumpscriptsManager.loadFromGridMaster()
 
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager', 'jumpscripts')
+        if not j.system.fs.exists(path=jspath):
+            raise RuntimeError("could not find jumpscript directory:%s"%jspath)
         startatboot = self._loadFromPath(jspath)
 
         self._killGreenLets()

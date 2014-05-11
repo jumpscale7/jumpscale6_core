@@ -17,6 +17,8 @@ class JumpScript(object):
         self.organization=""
         self.period = 0
         self.lastrun = 0
+        self.source=""
+        self.path=path
         self.id = None
         self.startatboot = False
         if ddict:
@@ -30,9 +32,11 @@ class JumpScript(object):
             self.loadAttributes()
 
     def write(self):
-        jscriptdir = j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts", self.organization)
-        j.system.fs.createDir(jscriptdir)
-        self.path=j.system.fs.joinPaths(jscriptdir, "%s.py" % self.name)
+        # jscriptdir = j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts", self.organization)
+        # j.system.fs.createDir(jscriptdir)
+        # self.path=j.system.fs.joinPaths(jscriptdir, "%s.py" % self.name)
+        if self.path==None:
+            raise RuntimeError("path cannot be empty")
 
         content="""
 from JumpScale import j
@@ -141,6 +145,10 @@ class JumpscriptFactory:
             for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/jumpscripts"%j.dirs.baseDir,True):
                 if j.system.fs.getFileExtension(path)<>"pyc":
                     arcpath="jumpscripts/%s"%path[len(j.system.fs.getParent(j.system.fs.getDirName(path)))+1:]
+                    from IPython import embed
+                    print "DEBUG NOW yuyuy"
+                    embed()
+                    
                     tar.add(path,arcpath)
         data=j.system.fs.fileGetContents(ppath)       
         webdis.set("%s:scripts"%(self.secret),data)  
@@ -154,10 +162,11 @@ class JumpscriptFactory:
         #delete previous scripts
         item=["eventhandling","loghandling","monitoringobjects","processmanagercmds","jumpscripts"]
         for delitem in item:
-            j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))
+            j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))        
 
         #import new code
         #download all monitoring & cmd scripts
+
 
         import tarfile
         scripttgz=webdis.get("%s:scripts"%(self.secret))
