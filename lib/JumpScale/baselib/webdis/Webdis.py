@@ -53,14 +53,14 @@ class Webdis(object):
                     url2='http://%s:%s/%s/%s.png'%(self.addr,self.port,cmd,url)
                 else:
                     url2='http://%s:%s/%s'%(self.addr,self.port,cmd)
-                print url2
+                # print url2
                 if data==None:
                     r=requests.get(url2)
                 else:
                     # data=msgpack.dumps(data)                    
                     r=requests.put(url2, data=data, headers=headers)
-                if data<>None:
-                    print len(data)
+                # if data<>None:
+                #     print len(data)
                 # r=requests.get('http://%s:%s/%s'%(self.addr,self.port,data2),headers=headers)
             except Exception,e:
                 if str(e).find("Max retries exceeded with url")<>-1:
