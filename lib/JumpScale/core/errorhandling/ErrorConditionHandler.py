@@ -323,7 +323,10 @@ class ErrorConditionHandler():
             return self.escalateBugToDeveloper(errorobject,tb)
 
     def checkErrorIgnore(self,eco):
-        ignorelist=["KeyboardInterrupt"]
+        if j.application.config.get('system.debug', checkExists=True, default='0') == '1':
+            ignorelist = []
+        else:
+            ignorelist=["KeyboardInterrupt"]
         for item in ignorelist:
             if eco.errormessage.find(item)<>-1:
                 return True
