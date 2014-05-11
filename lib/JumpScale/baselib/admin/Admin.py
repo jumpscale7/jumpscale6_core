@@ -301,7 +301,10 @@ class Admin():
         self._log=""
         self.hrd= j.core.hrd.getHRD(self._getPath("cfg/","superadmin.hrd"))
         self.rootpasswds=self.hrd.getList("superadmin.passwds")
-        self.webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
+        if j.application.config.exists("grid_master_ip") and j.system.net.ttcpPortConnectionTest(j.application.config.get("grid_master_ip"),7779):
+            self.webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
+        else:
+            self.webdis=None
         self.loadJumpscripts()
         # self.loadNodes()
         # self.config2gridmaster() #this should not be done every time
@@ -424,7 +427,7 @@ class Admin():
             gridname=gridname[:-4]
             
             key="%s:admin:nodes:%s"%(j.application.config.get("grid_watchdog_secret"),gridname)
-            if webdis:  
+            if webdis and self.webdis<>None:  
                 self.webdis.delete(key)     
 
             enabled=True
@@ -455,13 +458,15 @@ class Admin():
                         self.setNode(node)    
                         if pprint:
                             print node   
-                        if webdis:                 
+                        if webdis and self.webdis<>None:                 
                             self.webdis.hset(key,node.name,json.dumps(node.__dict__))
                         node.name=""
                         node.ip=""
                         node.remark=""
 
     def config2gridmaster(self):
+        if self.webdis==None:
+            raise RuntimeError("cannot connect to webdis, is gridmaster running webdis?")
         self.loadNodes(True)
         sys.path.append(self._getPath("jumpscripts"))        
         cmds=j.system.fs.listFilesInDir(self._getPath("jumpscripts"), recursive=True, filter="*.py")
