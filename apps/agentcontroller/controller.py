@@ -37,6 +37,11 @@ while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
     time.sleep(0.1)
     print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
 
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
+    time.sleep(0.1)
+    print "cannot connect to webdis, make sure is installed locally, will keep on trying forever"
+
+
 class ControllerCMDS():
 
     def __init__(self, daemon):
@@ -71,6 +76,9 @@ class ControllerCMDS():
 
         self.redisport=7769
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
+
+
+        self.webdis=j.clients.webdis.get("127.0.0.1",7779)
 
         j.logger.setLogTargetLogForwarder()
 
