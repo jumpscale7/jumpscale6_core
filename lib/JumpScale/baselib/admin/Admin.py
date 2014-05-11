@@ -301,8 +301,8 @@ class Admin():
         self._log=""
         self.hrd= j.core.hrd.getHRD(self._getPath("cfg/","superadmin.hrd"))
         self.rootpasswds=self.hrd.getList("superadmin.passwds")
-        if j.application.config.exists("grid_master_ip") and j.system.net.ttcpPortConnectionTest(j.application.config.get("grid_master_ip"),7779):
-            self.webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
+        if j.application.config.exists("grid.master.ip") and j.system.net.tcpPortConnectionTest(j.application.config.get("grid_master_ip"),7779):
+            self.webdis=j.clients.webdis.get(j.application.config.get("grid.master.ip"),7779)
         else:
             self.webdis=None
         self.loadJumpscripts()
