@@ -2,6 +2,7 @@ from JumpScale import j
 import sys
 import time
 import imp
+import linecache
 import inspect
 import JumpScale.baselib.webdis
 import JumpScale.baselib.redis
@@ -9,8 +10,11 @@ import JumpScale.baselib.redis
 class Dummy():
     pass
 
+
 class JumpScript(object):
     def __init__(self, ddict=None, path=None):
+        self.name=""
+        self.organization=""
         self.period = 0
         self.lastrun = 0
         self.id = None
@@ -42,6 +46,7 @@ from JumpScale import j
         modulename = 'JumpScale.jumpscript_%s' % md5sum
         linecache.checkcache(self.path)
         self.module = imp.load_source(modulename, self.path)
+
 
     def getDict(self):
         result = dict()
@@ -118,6 +123,10 @@ class JumpscriptFactory:
             raise RuntimeError("please configure grid.watchdog.secret")
         self.secret=j.application.config.get("grid_watchdog_secret")
 
+    def getJSClass(self):
+        return JumpScript
+
+
     def pushToGridMaster(self): 
         webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
         #create tar.gz of cmds & monitoring objects & return as binary info
@@ -125,14 +134,21 @@ class JumpscriptFactory:
         import tarfile
         ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_upload.tar")
         with tarfile.open(ppath, "w:bz2") as tar:
-            for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/processmanager"%j.dirs.basedir,True):
+            for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/processmanager"%j.dirs.baseDir,True):
                 if j.system.fs.getFileExtension(path)<>"pyc":
-                    tar.add(path)
-        data=j.system.fs.fileGetContents(ppath)
-        webdis.set("%s:scripts"%(self.secret))
+                    arcpath="processmanager/%s"%path.split("/processmanager/")[1]
+                    tar.add(path,arcpath)
+            for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/jumpscripts"%j.dirs.baseDir,True):
+                if j.system.fs.getFileExtension(path)<>"pyc":
+                    arcpath="jumpscripts/%s"%path[len(j.system.fs.getParent(j.system.fs.getDirName(path)))+1:]
+                    tar.add(path,arcpath)
+        data=j.system.fs.fileGetContents(ppath)       
+        webdis.set("%s:scripts"%(self.secret),data)  
+        # scripttgz=webdis.get("%s:scripts"%(self.secret))      
+        # assert data==scripttgz
 
     def loadFromGridMaster(self):
-
+        print "load processmanager code from master"
         webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
 
         #delete previous scripts
@@ -140,26 +156,24 @@ class JumpscriptFactory:
         for delitem in item:
             j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))
 
-            #import new code
-            #download all monitoring & cmd scripts
+        #import new code
+        #download all monitoring & cmd scripts
 
         import tarfile
         scripttgz=webdis.get("%s:scripts"%(self.secret))
         ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_download.tar")
+        
         j.system.fs.writeFile(ppath,scripttgz)
         tar = tarfile.open(ppath, "r:bz2")
 
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
-        
-
         for tarinfo in tar:
             if tarinfo.isfile():
+                print tarinfo.name
                 if tarinfo.name.find("processmanager/")==0:
                     # dest=tarinfo.name.replace("processmanager/","")           
                     tar.extract(tarinfo.name, j.system.fs.getParent(self.basedir))
-                    # j.system.fs.createDir(j.system.fs.getDirName(dest))
-                    # j.system.fs.moveFile("%s/%s"%(tmppath,tarinfo.name),dest)
-        # j.system.fs.removeDirTree(tmppath)
+                if tarinfo.name.find("jumpscripts/")==0:
+                    # dest=tarinfo.name.replace("processmanager/","")           
+                    tar.extract(tarinfo.name, self.basedir)
+
         j.system.fs.remove(ppath)

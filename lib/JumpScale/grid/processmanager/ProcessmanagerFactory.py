@@ -1,6 +1,7 @@
 from JumpScale import j
 import JumpScale.grid.osis
 import JumpScale.baselib.stataggregator
+import JumpScale.grid.jumpscripts
 import sys
 import psutil
 import importlib
@@ -185,24 +186,8 @@ class ProcessmanagerFactory:
                 j.events.opserror(msg, category='processmanager.startup', e=e)
                 time.sleep(60)
 
-        #check we are mounted over nfs, if not raise error (only when not master)
-        # if j.system.net.tcpPortConnectionTest("127.0.0.1",int(j.application.config.get("grid.master.port")))==False:
-        #     if self._checkIsNFSMounted()==False:
-        #         raise RuntimeError("code is not mounted to gridmaster")
+        j.tools.jumpscriptsManager.loadFromGridMaster()
 
-        loadjs = True
-        disks = j.system.platform.psutil.disk_partitions()
-        for disk in disks:
-            if disk.mountpoint == j.dirs.baseDir and disk.fstype.upper() in ['SMB', 'SAMBA', 'CIFS', 'NFS', 'SSHFS']:
-                loadjs = False
-                for path in [j.system.fs.joinPaths(self.basedir,"processmanagercmds"),
-                             j.system.fs.joinPaths(self.basedir, 'jumpscripts')]:
-                    if not j.system.fs.exists(path):
-                        raise RuntimeError("Path %s is missing" % path)
-                break
-
-        if loadjs:
-            self.loadFromAgentController()
         osis = self.daemon.osis
         self.daemon = j.servers.geventws.getServer(port=4445)
         self.daemon.osis = osis
@@ -290,35 +275,3 @@ class ProcessmanagerFactory:
                 factory = getattr(monmodule, '%sFactory' % name)(self, classs)
                 self.monObjects.__dict__[name.lower()]=factory   
 
-    def loadFromAgentController(self):
-
-        if self._checkIsNFSMounted(check="/opt/code/master"):
-            from IPython import embed
-            print "DEBUG NOW loadFromAgentController"
-            embed()
-            
-        else:
-            #delete previous scripts
-            todel=["eventhandling","loghandling","monitoringobjects","processmanagercmds"]
-            for delitem in todel:
-                j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))
-
-            #import new code
-            #download all monitoring & cmd scripts
-
-            import tarfile
-            scripttgz=self.acclient.getProcessmanagerScripts()
-            ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000))
-            j.system.fs.writeFile(ppath,scripttgz)
-            tar = tarfile.open(ppath, "r:bz2")
-
-            # tmppath="/tmp/%s"%j.base.idgenerator.generateRandomInt(1,100000)
-            for tarinfo in tar:
-                if tarinfo.isfile():
-                    if tarinfo.name.find("processmanager/")==0:
-                        # dest=tarinfo.name.replace("processmanager/","")           
-                        tar.extract(tarinfo.name, j.system.fs.getParent(self.basedir))
-                        # j.system.fs.createDir(j.system.fs.getDirName(dest))
-                        # j.system.fs.moveFile("%s/%s"%(tmppath,tarinfo.name),dest)
-            # j.system.fs.removeDirTree(tmppath)
-            j.system.fs.remove(ppath)

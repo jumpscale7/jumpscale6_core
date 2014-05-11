@@ -41,6 +41,16 @@ import JumpScale.baselib.stataggregator
 import JumpScale.grid.agentcontroller
 import JumpScale.baselib.redis
 import JumpScale.baselib.redisworker
+import JumpScale.grid.jumpscripts
+
+import sys
+import os
+def restart_program():
+    """Restarts the current program.
+    Note: this function does not return. Any cleanup action (like
+    saving data) must be done before calling this function."""
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
 
 
 class Worker(object):
@@ -111,6 +121,7 @@ class Worker(object):
                 if self.redis.get("workers:action:%s"%self.name)=="STOP":
                     print "RESTART ASKED"
                     self.redis.delete("workers:action:%s"%self.name)
+                    restart_program()
                     j.application.stop()
 
                 if self.redis.get("workers:action:%s"%self.name)=="RELOAD":

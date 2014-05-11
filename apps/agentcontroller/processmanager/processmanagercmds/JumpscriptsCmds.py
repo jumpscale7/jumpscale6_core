@@ -53,12 +53,11 @@ class JumpscriptsCmds():
         self.jumpscriptsByPeriod={}
         self.jumpscripts={}
 
+        import JumpScale.grid.jumpscripts
+        j.tools.jumpscriptsManager.loadFromGridMaster()
+
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager', 'jumpscripts')
-        j.system.fs.removeDirTree(jspath)#for now disable from local path 
-        if j.system.fs.exists(jspath):
-            startatboot = self._loadFromPath(jspath)
-        else:
-            startatboot = self._loadFromAC()
+        startatboot = self._loadFromPath(jspath)
 
         self._killGreenLets()
         self._configureScheduling()
@@ -72,21 +71,21 @@ class JumpscriptsCmds():
         for jscriptpath in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
             js = JumpScript(path=jscriptpath)
             js.id = iddict[(js.organization, js.name)]
-            print "from local:",
+            # print "from local:",
             self._processJumpScript(js, startatboot)
         return startatboot
 
-    def _loadFromAC(self):
-        startatboot = list()
-        jumpscripts = self.agentcontroller_client.listJumpScripts()
-        for jsid,organization, name, category, descr in jumpscripts:
-            jumpscript_data=self.agentcontroller_client.getJumpScript(organization, name)
-            if jumpscript_data=="":
-                raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
-            jumpscript = JumpScript(jumpscript_data)
-            print "from ac:",
-            self._processJumpScript(jumpscript, startatboot)
-        return startatboot
+    # def _loadFromAC(self):
+    #     startatboot = list()
+    #     jumpscripts = self.agentcontroller_client.listJumpScripts()
+    #     for jsid,organization, name, category, descr in jumpscripts:
+    #         jumpscript_data=self.agentcontroller_client.getJumpScript(organization, name)
+    #         if jumpscript_data=="":
+    #             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
+    #         jumpscript = JumpScript(jumpscript_data)
+    #         print "from ac:",
+    #         self._processJumpScript(jumpscript, startatboot)
+    #     return startatboot
 
     def _processJumpScript(self, jumpscript, startatboot):
         roles = set(j.core.grid.roles)

@@ -246,6 +246,7 @@ class ControllerCMDS():
             key = "%s_%s_%s" % (t.gid,t.organization, t.name)
             self.jumpscripts[key] = t
             self.jumpscriptsId[key0] = t
+
        
     def getJumpScript(self, organization, name,gid=None, session=None):
         if session<>None:
@@ -473,21 +474,6 @@ class ControllerCMDS():
     def _log(self, msg):
         if self.debug:
             print msg
-
-    def getProcessmanagerScripts(self, session=None):
-        """
-        create tar.gz of cmds & monitoring objects & return as binary info
-        """
-        #@todo make async with local workers
-        import tarfile
-        ppath="/tmp/processMgrScripts_%s.tar"%j.base.idgenerator.generateRandomInt(1,1000000)
-        with tarfile.open(ppath, "w:bz2") as tar:
-            for path in j.system.fs.listFilesInDir("processmanager",True):
-                if j.system.fs.getFileExtension(path)<>"pyc":
-                    tar.add(path)
-        data=j.system.fs.fileGetContents(ppath)
-        j.system.fs.remove(ppath)
-        return data
 
     def listSessions(self,session=None):
         #result=[]
