@@ -47,7 +47,11 @@ class Webdis(object):
                 headers={}
                 headers = {'content-type': 'binary/octet-stream'}
                 url2='http://%s:%s/%s/%s/'%(self.addr,self.port,cmd,url)
-                r=requests.put(url2, data=data, headers=headers)
+                print url2
+                if data==None:
+                    r=requests.get(url2)
+                else:
+                    r=requests.put(url2, data=data, headers=headers)
                 # r=requests.get('http://%s:%s/%s'%(self.addr,self.port,data2),headers=headers)
             except Exception,e:
                 if str(e).find("Max retries exceeded with url")<>-1:
@@ -64,9 +68,6 @@ class Webdis(object):
             elif r.status_code==405:
                 raise RuntimeError("Could not webdis execute %s,not supported"%data2)
             elif r.status_code<>200:
-                from IPython import embed
-                print "DEBUG NOW webdis execute"
-                embed()                
                 print "Webdis not available"
                 time.sleep(0.1)
                 continue
