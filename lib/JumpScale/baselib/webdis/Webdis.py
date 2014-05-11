@@ -82,12 +82,12 @@ class Webdis(object):
                 return res
                 
             elif r.status_code==403:
-                raise RuntimeError("Could not webdis execute %s,forbidden."%data2)
+                raise RuntimeError("Webdis could not execute %s,forbidden."%url2)
             elif r.status_code==404:
                 return None
                 # raise RuntimeError("Key not found")
             elif r.status_code==405:
-                raise RuntimeError("Could not webdis execute %s,not supported"%data2)
+                raise RuntimeError("Webdis could not execute %s,not supported"%url2)
             elif r.status_code<>200:
                 print "Unknown status code webdis:%s"%r.status_code
                 time.sleep(0.1)
