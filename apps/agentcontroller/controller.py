@@ -1,5 +1,6 @@
 
 from JumpScale import j
+import JumpScale.grid.jumpscripts
 import JumpScale.grid.geventws
 import gevent
 import gevent.coros
@@ -214,6 +215,9 @@ class ControllerCMDS():
 
         if session<>None:
             self._adminAuth(session.user,session.passwd)
+
+        j.tools.jumpscriptsManager.pushToGridMaster()
+
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
 
             if j.system.fs.getDirName(path2,True)[0]=="_": #skip dirs starting with _
@@ -498,7 +502,6 @@ class ControllerCMDS():
         job = self.jobs.get(jobid)
         if job:
             return job.db.__dict__
-
 
     def listJobs(self, session=None):
         """

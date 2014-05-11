@@ -10,13 +10,25 @@ def main(j, args, params, tags, tasklet):
         if not param:
             out = 'Missing alert param "%s"' % name
             params.result = (out, args.doc)
-            return params
+            return params            
 
     webdisaddr = j.application.config.get('grid.watchdog.addr')
-    webdiscl = j.clients.webdis.get(webdisaddr, 7779)
+    
+    webdiscl = j.clients.webdis.get(webdisaddr, 7779,timeout=1)
+
+    if not webdiscl.ping()[1]=="PONG":
+        out = "could not contact webdis on: %s"%webdisaddr
+        params.result = (out, args.doc)
+        return params        
+
+
+    # if not webdiscl.hexists('alerts:%s' % gguid, key):
+    #     params.result = ('Alert with gguid %s and key %s not found' % (gguid, key), args.doc)
+    #     return params        
+
     alert = webdiscl.hget('alerts:%s' % gguid, key)
 
-    if not alert:
+    if alert==None:
         params.result = ('Alert with gguid %s and key %s not found' % (gguid, key), args.doc)
         return params
 
