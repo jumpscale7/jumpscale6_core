@@ -34,9 +34,9 @@ def action():
         import json
 
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
-    results, errors = j.core.grid.healthchecker.runAll()
+    # results, errors = j.core.grid.healthchecker.runAll()
 
-    for item in ['results','errors','lastcheck']::
+    for item in ['results','errors','lastcheck']:
         if not rediscl.hexists('healthcheck:monitoring',item):
             if not j.core.processmanager.checkStartupOlderThan(60*4):
                 #can be the healthchecker did not finish yet, lets skip this round
@@ -46,7 +46,7 @@ def action():
     if not rediscl.hexists('healthcheck:monitoring','lastcheck'):
         check=False
     else:
-        last=int(rediscl.hget('healthcheck:monitoring', 'lastcheck'))
+        last=int(float(rediscl.hget('healthcheck:monitoring', 'lastcheck')))
         if last<int(time.time())-4*60:
             if not j.core.processmanager.checkStartupOlderThan(60*4):
                 return
@@ -58,6 +58,16 @@ def action():
     results=json.loads(rediscl.hget('healthcheck:monitoring', 'results'))
     errors=json.loads(rediscl.hget('healthcheck:monitoring', 'errors'))
     lastcheck=json.loads(rediscl.hget('healthcheck:monitoring', 'lastcheck'))
+    
+    import JumpScale.baselib.watchdog.client
 
-    for nid, error in errors:
-        j.tools.watchdog.client.send("grid.healthcheck","CRITICAL", gid=j.application.whoAmI.gid, nid=nid,value=str(error))
+    print
+
+    out=""
+    for nid, error in errors.iteritems():
+        out+="h2. node %s\n"%nid
+        for key,msg in error.iteritems():
+            out+="|%s|%s|\n"%(key,msg)
+
+    # for nid, error in errors.iteritems():
+    j.tools.watchdog.client.send("grid.healthcheck","CRITICAL", gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid,value=out,pprint=True)

@@ -60,7 +60,8 @@ class Worker(object):
         self.redisport=redisport
         self.redisaddr=redisaddr
         self.queuename=queuename
-        self.name=name
+        self.name=name        
+
         self.init()
 
     def init(self):
@@ -93,6 +94,8 @@ class Worker(object):
 
         checkredis()
         checkagentcontroller()
+        
+        self.redis.delete("workers:action:%s"%self.name)
 
         #@todo check if queue exists if not raise error
         self.queue=j.clients.redis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)

@@ -195,26 +195,18 @@ class ProcessmanagerFactory:
         self.daemon.daemon.osis = osis
 
         self.redis.set("processmanager:startuptime",str(int(time.time())))
-
         self.redis.delete("workers:watchdog")
+
+        # rediscl.hdel("workers:watchdog",workername)
 
         self.starttime=j.base.time.getTimeEpoch()
 
         self.loadCmds()
 
-        def donothing(): #not used yet
-            #just to make sure we dont keep waiting for 60 sec
-            import time
-            time.sleep(0.5)
-            print  "DIE"
+        # j.tools.startupmanager.startAll()#better not to do this, gives weird results
 
-        j.tools.startupmanager.startAll()
-
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
-        
-        
+        self.cmds.jumpscripts.schedule()
+                
         self.daemon.start()
 
     def _checkIsNFSMounted(self,check="/opt/code"):
@@ -230,18 +222,11 @@ class ProcessmanagerFactory:
         for worker in [item for item in j.tools.startupmanager.listProcesses() if item.find("workers")==0]:
             domain,name=worker.split("__")
             pdef=j.tools.startupmanager.getProcessDef(domain,name)
-            if pdef.numprocesses>1:
-                for nr in range(pdef.numprocesses):
-                    workername="%s_%s"%(pdef.name,nr)
-                    self.redis.set("workers:action:%s"%workername,"STOP")
-            else:
-                workername=pdef.name
+            for nr in range(1,pdef.numprocesses+1):
+                workername="%s_%s"%(pdef.name,nr)
                 self.redis.set("workers:action:%s"%workername,"STOP")
-
-        from IPython import embed
-        print "DEBUG NOW yyy33"
-        embed()
-        
+                if not self.redis.hexists("workers:watchdog",workername):
+                    self.redis.hset("workers:watchdog",workername,0)
 
     def getCmdsObject(self,category):
         if self.cmds.has_key(category):
@@ -266,24 +251,9 @@ class ProcessmanagerFactory:
         self.cmds=Dummy()
         self.loadMonitorObjectTypes()
 
-        # def sort(item):
-        #     return getattr(item, 'ORDER', 10000)
-
-        # temp={}
-        # for key, cmd in self.daemon.daemon.cmdsInterfaces.iteritems():
-        #     if not temp.has_key(sort(key)):
-        #         temp[sort(key)]=[]
-        #     temp[sort(key)].append((key,cmd))
-
         def sort(item):
             key,cmd=item
-            return getattr(cmd, 'ORDER', 10000)
-
-
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
-        
+            return getattr(cmd, 'ORDER', 10000)        
 
         for key, cmd in sorted(self.daemon.daemon.cmdsInterfaces.iteritems(), key=sort):
 

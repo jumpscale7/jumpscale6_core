@@ -38,9 +38,9 @@ class JumpscriptsCmds():
         self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.daemon.osis, 'system', 'jumpscript') 
 
     def _init(self):
-        self.loadJumpscripts()
+        self.loadJumpscripts(init=True)
 
-    def loadJumpscripts(self, path="jumpscripts", session=None):
+    def loadJumpscripts(self, path="jumpscripts", session=None,init=False):
         print "LOAD JUMPSCRIPTS"
         if session<>None:
             self._adminAuth(session.user,session.passwd)
@@ -63,23 +63,29 @@ class JumpscriptsCmds():
         startatboot = self._loadFromPath(jspath)
 
         self._killGreenLets()
-        self._configureScheduling()
-        self._startAtBoot(startatboot)
+
+        if init==False:            
+            self._configureScheduling()
+            self._startAtBoot()
 
         j.core.processmanager.restartWorkers()
 
         return "ok"
 
+    def schedule(self):
+        self._configureScheduling()
+        self._startAtBoot()
+
     def _loadFromPath(self, path):
-        startatboot = list()
+        self.startatboot = list()
         jumpscripts = self.agentcontroller_client.listJumpScripts()
         iddict = { (org, name): jsid for jsid, org, name, _,_ in jumpscripts }
         for jscriptpath in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
             js = JumpScript(path=jscriptpath)
             js.id = iddict[(js.organization, js.name)]
             # print "from local:",
-            self._processJumpScript(js, startatboot)
-        return startatboot
+            self._processJumpScript(js, self.startatboot)
+        self.startatboot
 
     # def _loadFromAC(self):
     #     startatboot = list()
@@ -138,8 +144,8 @@ class JumpscriptsCmds():
         for key in todelete:
             j.core.processmanager.daemon.greenlets.pop(key)            
 
-    def _startAtBoot(self, jumpscripts):
-        for jumpscript in jumpscripts:
+    def _startAtBoot(self):
+        for jumpscript in self.startatboot:
             jumpscript.execute()
 
     def _run(self,period=None):
