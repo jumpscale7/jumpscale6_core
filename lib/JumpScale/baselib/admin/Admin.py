@@ -424,51 +424,41 @@ class Admin():
     def loadNodes(self,webdis=False,pprint =False):
 
         for configpath in j.system.fs.listFilesInDir("%s/apps/admin/cfg"%j.dirs.baseDir,filter="*.cfg"):
-            C=j.system.fs.fileGetContents(configpath)
-            C+="\n\n" #to make sure we save the last node
 
             gridname=j.system.fs.getBaseName(configpath).lower().strip()
             if gridname =="active.cfg":
                 continue
             gridname=gridname[:-4]
             
-            key="%s:admin:nodes"%(j.application.config.get("grid_watchdog_secret"))
             if webdis and self.webdis<>None:  
+                key="%s:admin:nodes:%s"%(j.application.config.get("grid_watchdog_secret"),gridname)
                 self.webdis.delete(key)     
 
-            enabled=True
 
-            node=JNode()
-            for line in C.split("\n"):
-                # print line
-                line=line.strip()
-                if len(line)>0 and line[0]=="#":
-                    continue
+            nodes = list()
+            config = j.config.getConfig(configpath[:-4])
+            for name, host in config.iteritems():
+                node=JNode()
+                node.gridname=gridname
+                node.name = name
+                node.remark = host.get('remark')
+                node.ip = host.get('ip')
+                node.host = host.get('host')
+                node.roles = host.get('roles', '').split(',')
+                node.enabled = False if host.get('enabled', '1')  == '1' else True
+                self.setNode(node)
+                nodes.append(node)
+                if webdis and self.webdis<>None:
+                    self.webdis.hset(key,node.name,json.dumps(node.__dict__))
 
-                #when name found everything found so far will be used to store
-                for item in ["name","remark","ip","roles","host","enabled"]:
-                    if line.find(item)==0:
-                        val=line.split("=",1)[1].strip()                        
-                        if val.find(",")<>-1:
-                            val=[item2.strip() for item2 in val.split(",")]
-                        if item=="enabled":
-                            if str(val)=="0":
-                                val=False
-                            else:
-                                val=True
-                        node.__dict__[item]=val
-
-                    if line=="" and node.name<>"":
-                        node.gridname=gridname
-                        #we know about a machine
-                        self.setNode(node)    
-                        if pprint:
-                            print node   
-                        if webdis and self.webdis<>None:                 
-                            self.webdis.hset(key,"%s__%s"%(gridname,node.name),json.dumps(node.__dict__))
-                        node.name=""
-                        node.ip=""
-                        node.remark=""
+            if pprint:
+                line = "Grid %s" % gridname
+                print line
+                print "=" * len(line)
+                print ""
+                for node in sorted(nodes, key=lambda x: x.name):
+                    print node
+                print ''
 
     def config2gridmaster(self):
         if self.webdis==None:
