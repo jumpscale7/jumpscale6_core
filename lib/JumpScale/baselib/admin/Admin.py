@@ -432,7 +432,7 @@ class Admin():
                 continue
             gridname=gridname[:-4]
             
-            key="%s:admin:nodes:%s"%(j.application.config.get("grid_watchdog_secret"),gridname)
+            key="%s:admin:nodes"%(j.application.config.get("grid_watchdog_secret"))
             if webdis and self.webdis<>None:  
                 self.webdis.delete(key)     
 
@@ -465,7 +465,7 @@ class Admin():
                         if pprint:
                             print node   
                         if webdis and self.webdis<>None:                 
-                            self.webdis.hset(key,node.name,json.dumps(node.__dict__))
+                            self.webdis.hset(key,"%s__%s"%(gridname,node.name),json.dumps(node.__dict__))
                         node.name=""
                         node.ip=""
                         node.remark=""
