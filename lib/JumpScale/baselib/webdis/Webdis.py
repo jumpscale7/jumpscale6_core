@@ -63,6 +63,7 @@ class Webdis(object):
                 #     print len(data)
                 # r=requests.get('http://%s:%s/%s'%(self.addr,self.port,data2),headers=headers)
             except Exception,e:
+                # print e
                 if str(e).find("Max retries exceeded with url")<>-1:
                     print "Webdis not available"
                     time.sleep(0.1)
@@ -82,10 +83,13 @@ class Webdis(object):
                 
             elif r.status_code==403:
                 raise RuntimeError("Could not webdis execute %s,forbidden."%data2)
+            elif r.status_code==404:
+                return None
+                # raise RuntimeError("Key not found")
             elif r.status_code==405:
                 raise RuntimeError("Could not webdis execute %s,not supported"%data2)
             elif r.status_code<>200:
-                print "Webdis not available"
+                print "Unknown status code webdis:%s"%r.status_code
                 time.sleep(0.1)
                 continue
             else:

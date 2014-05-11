@@ -113,11 +113,9 @@ if opts.action == 'restartprocessmgrs':
 
 if opts.action == 'reloadjumpscripts':
     import JumpScale.grid.jumpscripts
-    j.tools.jumpscriptsManager.pushToGridMaster()
-    j.tools.jumpscriptsManager.loadFromGridMaster()
-    # import JumpScale.grid.agentcontroller
-    # ac=j.clients.agentcontroller.get()
-    # ac.reloadjumpscripts()
+    import JumpScale.grid.agentcontroller
+    ac=j.clients.agentcontroller.get()
+    ac.reloadjumpscripts()
 
 if opts.action == 'restartWorkers':
     import JumpScale.grid.agentcontroller
