@@ -2,7 +2,8 @@ from JumpScale import j
 
 
 class ProcessCmds():
-
+    ORDER=100
+    
     def __init__(self,daemon=None):
         self._name="process"
 

@@ -2,6 +2,7 @@ from JumpScale import j
 
 
 class StatsCmds():
+    ORDER=100
 
     def __init__(self,daemon=None):
         self._name="stats"

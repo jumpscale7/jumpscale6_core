@@ -7,9 +7,10 @@ import JumpScale.baselib.redisworker
 from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
 
 class JumpscriptsCmds():
-    ORDER = 20
+    
 
     def __init__(self,daemon=None):
+        self.ORDER = 1
         self._name="jumpscripts"
 
         if daemon==None:
@@ -65,7 +66,7 @@ class JumpscriptsCmds():
         self._configureScheduling()
         self._startAtBoot(startatboot)
 
-        j.core.processmanager.restartWorkers
+        j.core.processmanager.restartWorkers()
 
         return "ok"
 

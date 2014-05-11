@@ -27,9 +27,11 @@ redisac:7769
 redisproduction:7768
 reidismain: 7766 (for process manager)
 rediscache:7767
+redisw: 7770  (is the redis used for webdis)
 
 redis for apps & processes & watchdog:7766
 
+ssdb: 8888
 
 sentry: 9000
 

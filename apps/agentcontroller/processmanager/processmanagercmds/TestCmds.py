@@ -2,6 +2,7 @@ from JumpScale import j
 import time
 
 class TestCmds():
+    ORDER=100
 
     def __init__(self,daemon=None):
         self._name="tests"

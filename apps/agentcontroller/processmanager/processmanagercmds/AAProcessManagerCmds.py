@@ -10,6 +10,7 @@ class Empty():
 
 
 class AAProcessManagerCmds():
+    ORDER=100
 
     def __init__(self, daemon=None):
 

@@ -25,8 +25,15 @@ def action():
     timemap = {'default': '-2m', 'io': '-2h', 'hypervisor': '-10m'}
     prefix = 'workers__worker_'
     workers = [ x[len(prefix):] for x in j.tools.startupmanager.listProcesses() if x.startswith(prefix) ]
+    
     workers2 = rediscl.hgetall("workers:watchdog")
     foundworkers={}
+
+    from IPython import embed
+    print "DEBUG NOW yyyy"
+    embed()
+    
+
     for workername, timeout in zip(workers2[0::2], workers2[1::2]):
         foundworkers[workername]=timeout
 
