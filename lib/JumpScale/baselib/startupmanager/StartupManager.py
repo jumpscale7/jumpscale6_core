@@ -226,30 +226,30 @@ class ProcessDef:
 
         if not self.upstart:
 
-            if self.numprocesses>1:
+            # if self.numprocesses>1:
 
-                for i in range(self.numprocesses):
-                    name="%s_%s"%(self.name,i)
-                    for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
-                        if tmuxname==name:
-                            j.system.platform.screen.killWindow(self.domain,name)
-                    tcmd = cmd.replace("$numprocess", str(i))
-                    targs = args.replace("$numprocess", str(i))
-                    j.system.platform.screen.executeInScreen(self.domain,name,tcmd+" "+targs,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
-
-                    if self.plog:
-                        logfile="%s.%s"%(self.logfile,i)
-                        j.system.platform.screen.logWindow(self.domain,name,logfile)
-
-            else:
+            for i in range(self.numprocesses):
+                name="%s_%s"%(self.name,i+1)
                 for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
-                    if tmuxname==self.name:
-                        j.system.platform.screen.killWindow(self.domain,self.name)
-
-                j.system.platform.screen.executeInScreen(self.domain,self.name,cmd+" "+args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
+                    if tmuxname==name:
+                        j.system.platform.screen.killWindow(self.domain,name)
+                tcmd = cmd.replace("$numprocess", str(i+1))
+                targs = args.replace("$numprocess", str(i+1))
+                j.system.platform.screen.executeInScreen(self.domain,name,tcmd+" "+targs,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
 
                 if self.plog:
-                    j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
+                    logfile="%s.%s"%(self.logfile,i)
+                    j.system.platform.screen.logWindow(self.domain,name,logfile)
+
+            # else:
+            #     for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
+            #         if tmuxname==self.name:
+            #             j.system.platform.screen.killWindow(self.domain,self.name)
+
+            #     j.system.platform.screen.executeInScreen(self.domain,self.name,cmd+" "+args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
+
+            #     if self.plog:
+            #         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
 
         else:            
             j.system.platform.ubuntu.startService(self.name)

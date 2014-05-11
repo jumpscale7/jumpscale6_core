@@ -33,10 +33,10 @@ class WatchdogClient:
             print wde
         return res
 
-    def send(self,category,state,value,ecoguid="", gid=None, nid=None):
+    def send(self,category,state,value,ecoguid="", gid=None, nid=None,pprint=False):
         gid = gid or j.application.whoAmI.gid
         nid = nid or j.application.whoAmI.nid
         wde=self._getWatchDogEventObj(gid,nid,category,state,value,ecoguid)
-        return self._setWatchdogEvent(wde)
+        return self._setWatchdogEvent(wde,pprint=pprint)
 
 
