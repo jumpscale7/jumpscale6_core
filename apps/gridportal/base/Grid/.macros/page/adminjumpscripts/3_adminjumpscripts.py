@@ -14,18 +14,12 @@ def main(j, args, params, tags, tasklet):
         params.result = page
         return params
 
-    key="%s:admin:nodes"%(j.application.config.get("grid_watchdog_secret"))
-    nodes=cl.hkeys(key)
+    key="%s:admin:jscripts"%(j.application.config.get("grid_watchdog_secret"))
+    jumpscripts=cl.hkeys(key)
 
-    for nkey in nodes:
-        gridname,nodename=nkey.split("__")
-        data=cl.hget(key,nkey)
-        node=json.loads(data)
-
-    from IPython import embed
-    print "DEBUG NOW ooo"
-    embed()
-    
+    for jskey in jumpscripts:
+        data=cl.hget(key,jskey)
+        jumpscript=json.loads(data)
     
 
     #@todo implement grid view
