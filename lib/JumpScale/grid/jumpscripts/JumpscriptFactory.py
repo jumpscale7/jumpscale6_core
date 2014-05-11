@@ -144,11 +144,7 @@ class JumpscriptFactory:
                     tar.add(path,arcpath)
             for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/jumpscripts"%j.dirs.baseDir,True):
                 if j.system.fs.getFileExtension(path)<>"pyc":
-                    arcpath="jumpscripts/%s"%path[len(j.system.fs.getParent(j.system.fs.getDirName(path)))+1:]
-                    from IPython import embed
-                    print "DEBUG NOW yuyuy"
-                    embed()
-                    
+                    arcpath="jumpscripts/%s"%path.split("/jumpscripts/")[1]
                     tar.add(path,arcpath)
         data=j.system.fs.fileGetContents(ppath)       
         webdis.set("%s:scripts"%(self.secret),data)  
