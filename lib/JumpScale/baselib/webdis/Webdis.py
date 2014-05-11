@@ -7,6 +7,8 @@ try:
 except:
     import json
 
+import msgpack
+
 class WebdisFactory:
 
     """
@@ -45,13 +47,20 @@ class Webdis(object):
                 #     data2="%s/%s"%(data2,data)
                 # print "data:'%s'"%data2
                 headers={}
-                headers = {'content-type': 'binary/octet-stream'}
-                url2='http://%s:%s/%s/%s/'%(self.addr,self.port,cmd,url)
+                # if data<>None:
+                #     headers = {'content-type': 'binary/octet-stream'}
+                if url<>"":
+                    url2='http://%s:%s/%s/%s.png'%(self.addr,self.port,cmd,url)
+                else:
+                    url2='http://%s:%s/%s'%(self.addr,self.port,cmd)
                 print url2
                 if data==None:
                     r=requests.get(url2)
                 else:
+                    # data=msgpack.dumps(data)                    
                     r=requests.put(url2, data=data, headers=headers)
+                if data<>None:
+                    print len(data)
                 # r=requests.get('http://%s:%s/%s'%(self.addr,self.port,data2),headers=headers)
             except Exception,e:
                 if str(e).find("Max retries exceeded with url")<>-1:
@@ -61,8 +70,16 @@ class Webdis(object):
                 raise RuntimeError(e)
             
             if r.status_code==200:
-                res=json.loads(r.text)
-                return res[cmd]
+                res=r.content
+                if r.headers['content-type'] == 'application/x-msgpack':
+                    res=msgpack.loads(res)
+                    return res[cmd]
+                elif r.headers['content-type'] == 'application/json':
+                    res=json.loads(res)
+                    return res[cmd]
+
+                return res
+                
             elif r.status_code==403:
                 raise RuntimeError("Could not webdis execute %s,forbidden."%data2)
             elif r.status_code==405:
@@ -71,8 +88,13 @@ class Webdis(object):
                 print "Webdis not available"
                 time.sleep(0.1)
                 continue
-        eco=j.errorconditionhandler.parsePythonErrorObject(e)
-        j.errorconditionhandler.raiseOperationalCritical(message='Webdis is down on port %s'%self.port, category='webdis.down', msgpub='', die=True, tags='', eco=eco, extra=None)                
+            else:
+                from IPython import embed
+                print "DEBUG NOW wedis.execute, check errorcondition"
+                embed()
+                
+        # eco=j.errorconditionhandler.parsePythonErrorObject(e)
+        j.errorconditionhandler.raiseOperationalCritical(message='Webdis is down on port %s'%self.port, category='webdis.down', msgpub='', die=True, tags='', eco=None, extra=None)                
 
     def ping(self):
         return self.execute('PING')
@@ -100,7 +122,8 @@ class Webdis(object):
 
     def set(self,key,value):
         res=self.execute('SET',key,data=value)
-        if res[0]<>True or res[1]<>"OK":
+        res=res.strip()
+        if res<>"+OK":
             raise RuntimeError("could not set %s"%key)
 
     def hset(self,hkey,key,value):

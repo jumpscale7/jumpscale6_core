@@ -155,6 +155,10 @@ class JNode():
         j.base.time.getTimeEpoch()
 
     def _connectCuapi(self):
+
+        if self.ip=="":
+            raise RuntimeError("ip cannot be empty")
+        
         self.cuapi.connect(self.ip)
 
         if self.args.passwd<>"":
@@ -272,8 +276,6 @@ class Admin():
                     for hostKey in self.getHostNamesKeys(args.gridname):
                         self.hostKeys.append(hostKey)
             else:
-                if args.gridname=="":
-                    raise RuntimeError("Please specify gridname")  
                 for gridname in args.gridname.split(","):
                     self.hostKeys+=["%s__%s"%(gridname,item) for item in args.remote.split(",")]
 
@@ -344,7 +346,11 @@ class Admin():
         gridname=gridname.lower()
         
         if self.redis.exists(key)==0:
-            raise RuntimeError("could not find node: '%s/%s'"%(gridname,name))
+            # raise RuntimeError("could not find node: '%s/%s'"%(gridname,name))
+            node=JNode()
+            node.name=name
+            node.ip=name
+            node.host=name
         else:
             data=self.redis.get(key)
             node=JNode()

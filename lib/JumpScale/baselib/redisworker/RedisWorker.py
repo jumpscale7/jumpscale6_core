@@ -9,6 +9,9 @@ import JumpScale.baselib.redis
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 import time
 
+import JumpScale.grid.jumpscripts
+Jumpscript=j.tools.jumpscriptsManager.getJSClass()
+
 class Job(OsisBaseObject):
 
     """
@@ -42,47 +45,6 @@ class Job(OsisBaseObject):
     def getSetGuid(self):
         self.guid = "%s_%s_%s" % (self.gid, self.nid,self.id)
         return self.guid
-
-class Jumpscript(OsisBaseObject):
-
-    """
-    identifies a Jumpscript in the grid
-    """
-
-    def __init__(self, ddict={},name="", category="", organization="", action=None, source="", path="", descr=""):
-        
-        if ddict <> {}:
-            self.load(ddict)
-        else:
-            self.id=0
-            self.gid =j.application.whoAmI.gid
-            self.name = name
-            self.descr = descr
-            self.category = category
-            self.organization = organization
-            self.author = ""
-            self.license = ""
-            self.version = ""
-            self.roles = []
-   
-            self.source = source
-            self.path = path
-            self.enabled=True
-            self.async=True
-            self.period=0
-            self.order=0
-            self.queue=""
-            self.log=True
-
-            if action<>None:
-                self.setArgs(action)
-            else:
-                pass
-                # self.args=[]
-                # self.argsDefaults = args.defaults
-                # self.argsVarArgs = args.varargs
-                # self.argsKeywords = args.keywords
-
        
     def setArgs(self,action):
         import inspect
@@ -97,12 +59,6 @@ class Jumpscript(OsisBaseObject):
         splitted=source.split("\n")
         splitted[0]=splitted[0].replace(action.func_name,"action")
         self.source="\n".join(splitted)
-        if self.name=="":
-            self.name=action.func_name
-        if self.organization=="":
-            from IPython import embed
-            print "DEBUG NOW uuuorg setArgs redisworker"
-            embed()
             
     def getSetGuid(self):
         """
@@ -118,10 +74,10 @@ class Jumpscript(OsisBaseObject):
         """
         is like returning the hash, is used to see if object changed
         """
-        out=""
-        for item in ["name","category","args","source"]:
-            out+=str(self.__dict__[item])
-        return j.tools.hash.md5_string(out)
+        # out=""
+        # for item in ["cmd","category","args","source"]:
+        #     out+=str(self.__dict__[item])
+        return j.tools.hash.md5_string(str(self.__dict__))
 
 class RedisWorkerFactory:
     """
@@ -173,9 +129,9 @@ class RedisWorkerFactory:
             js=Jumpscript(ddict=json.loads(jumpscript_data))
         else:
             #jumpscript does not exist yet
-            js.id=self.redis.incr("workers:jumpscriptlastid")
-            jumpscript_data=json.dumps(js.__dict__)
-            self.redis.hset("workers:jumpscripts:id",js.id, js)
+            # js.id=self.redis.incr("workers:jumpscriptlastid")
+            # jumpscript_data=json.dumps(js.__dict__)
+            # self.redis.hset("workers:jumpscripts:id",js.id, js)
             if js.organization<>"" and js.name<>"":
                 self.redis.hset("workers:jumpscripts:name","%s__%s"%(js.organization,js.name), jumpscript_data)            
             self.redis.hset("workers:jumpscripthashes",key,jumpscript_data)
@@ -187,6 +143,7 @@ class RedisWorkerFactory:
             jsdict=json.loads(jsdict)
         else:
             return None
+        
         return Jumpscript(ddict=jsdict)
 
     def getJumpscriptFromName(self,organization,name):
