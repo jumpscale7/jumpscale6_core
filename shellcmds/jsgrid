@@ -117,10 +117,10 @@ if opts.action == 'reloadjumpscripts':
     ac=j.clients.agentcontroller.get()
     ac.reloadjumpscripts()
 
-if opts.action == 'restartWorkers':
-    import JumpScale.grid.agentcontroller
-    ac=j.clients.agentcontroller.get()
-    ac.restartWorkers()
+# if opts.action == 'restartWorkers':
+#     import JumpScale.grid.agentcontroller
+#     ac=j.clients.agentcontroller.get()
+#     ac.restartWorkers()
 
 
 #################PURGELOGS
