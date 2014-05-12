@@ -61,8 +61,8 @@ def doRemote(q,args,hostkey,cmd):
     # j.admin.hosts=[host]
 
     gridname,name=hostkey.split("__")
-    if cmd<>"":
-        node=j.admin.getNode(gridname,name)
+    node=j.admin.getNode(gridname,name)
+    if cmd<>"":        
         r=RedirectSTDOUT(hostkey)
         if args.sync==False:
             print "execute:%s"%hostkey
@@ -87,10 +87,8 @@ def doRemote(q,args,hostkey,cmd):
             if args.sync==False:
                 print "execute:%s"%hostkey
                 sys.stdout=r
-            node=None
-            nodes=[]
             try:
-                nodes=j.admin.execute(name,once=True,reset=args.force)
+                res=node.execute(name)
             except Exception,e:                
                 sys.stdout=r.oldstdout
                 # out="%s\n%s"%(str(e),r.redis.hget("admin:output",key))
@@ -101,14 +99,13 @@ def doRemote(q,args,hostkey,cmd):
             sys.stdout=r.oldstdout
             # out=r.redis.hget("admin:output",key)
 
-            for node in nodes:
-                if node<>None:
-                    if node.error<>"":
-                        if node.result=="":
-                            node.result=r.out                
-                    q.put((hostkey,name,node.result,node.error))
-                else:
-                    q.put((hostkey,name,"",r.out))
+            if node<>None:
+                if node.error<>"":
+                    if node.result=="":
+                        node.result=r.out                
+                q.put((hostkey,name,node.result,node.error))
+            else:
+                q.put((hostkey,name,"",r.out))
 
 import JumpScale.baselib.admin
 
