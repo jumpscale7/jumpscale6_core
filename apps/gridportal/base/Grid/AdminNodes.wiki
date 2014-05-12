@@ -1,6 +1,6 @@
 @usedefault
 
-h2. AdminNodes
+h2. Admin Nodes
 
 {{adminnodes}}
 

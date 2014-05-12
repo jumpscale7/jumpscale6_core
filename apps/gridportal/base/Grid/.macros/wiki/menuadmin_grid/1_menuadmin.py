@@ -28,6 +28,9 @@ Grid:/grid
 JPackages:/jpackages
 Tests:/tests
 --------------
+Admin JumpScripts:/grid/AdminJumpScripts
+Admin Nodes:/grid/AdminNodes
+Alerts:/grid/Alerts
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs
 Job Queues:/grid/jobqueues
