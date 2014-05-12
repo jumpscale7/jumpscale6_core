@@ -11,8 +11,10 @@ class SystemNet:
     def __init__(self):
         self._windowsNetworkInfo = None
 
-    def tcpPortConnectionTest(self,ipaddr,port):
+    def tcpPortConnectionTest(self,ipaddr,port, timeout=None):
         conn=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if timeout:
+            conn.settimeout(timeout)
         try:
             conn.connect((ipaddr,port))
         except:
@@ -29,11 +31,13 @@ class SystemNet:
         port=int(port)
         start=j.base.time.getTimeEpoch()
         now=start
-        while now<=start+timeout:
-            if j.system.net.tcpPortConnectionTest(ipaddr,port):
+        remainingtime = (timeout - (now - start)) or 1
+        while remainingtime > 0:
+            if j.system.net.tcpPortConnectionTest(ipaddr,port, remainingtime):
                 return True
             time.sleep(0.1)
             now=j.base.time.getTimeEpoch()
+            remainingtime = (timeout - (now - start)) or 1
         return False
 
     def waitConnectionTestStopped(self,ipaddr,port,timeout):
@@ -48,7 +52,7 @@ class SystemNet:
         start=j.base.time.getTimeEpoch()
         now=start
         while now<start+timeout:
-            if j.system.net.tcpPortConnectionTest(ipaddr,port)==False:
+            if j.system.net.tcpPortConnectionTest(ipaddr,port, 1)==False:
                 return True
             now=j.base.time.getTimeEpoch()
         return False

@@ -61,7 +61,10 @@ def doRemote(q,args,hostkey,cmd):
     # j.admin.hosts=[host]
 
     gridname,name=hostkey.split("__")
-    node=j.admin.getNode(gridname,name)
+    try:
+        node=j.admin.getNode(gridname,name)
+    except:
+        q.put((hostkey,name,"",""))
     if cmd<>"":        
         r=RedirectSTDOUT(hostkey)
         if args.sync==False:

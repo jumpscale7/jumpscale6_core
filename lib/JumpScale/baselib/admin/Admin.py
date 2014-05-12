@@ -115,6 +115,7 @@ class JNode():
             out+="%-5s:%s: **ERROR** %s\n" % (self.name,action,line)        
         j.admin.raiseError(self.name,action,msg)
         j.admin.log(out)
+        self.error = out
         self.lastcheck=0
         j.admin.setNode(self)
 
