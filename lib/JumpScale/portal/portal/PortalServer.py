@@ -649,8 +649,10 @@ class PortalServer:
 
         j.console.echo("***ERROR***:%s : method %s from ip %s with params %s" % (
             msg, scriptName, remoteAddress, queryString), 2)
-
-        return msg
+        if j.application.debug:
+            return msg
+        else:
+            return "An unexpected error has acquired, please try again later."
 
     def _text2html(self, text):
         text = text.replace("\n", "<br>")
