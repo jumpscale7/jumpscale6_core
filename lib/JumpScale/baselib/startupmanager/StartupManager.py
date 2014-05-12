@@ -2,6 +2,7 @@ from JumpScale import j
 import os
 import JumpScale.baselib.screen
 import time
+import signal
 try:
     import ujson as json
 except ImportError:
@@ -226,32 +227,20 @@ class ProcessDef:
 
         if not self.upstart:
 
-            # if self.numprocesses>1:
-
-            for i in range(self.numprocesses):
-                name="%s_%s"%(self.name,i+1)
+            for i in range(1, self.numprocesses+1):
+                name="%s_%s"%(self.name,i)
                 for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
                     if tmuxname==name:
                         j.system.platform.screen.killWindow(self.domain,name)
-                tcmd = cmd.replace("$numprocess", str(i+1))
-                targs = args.replace("$numprocess", str(i+1))
+                tcmd = cmd.replace("$numprocess", str(i))
+                targs = args.replace("$numprocess", str(i))
                 j.system.platform.screen.executeInScreen(self.domain,name,tcmd+" "+targs,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
 
                 if self.plog:
                     logfile="%s.%s"%(self.logfile,i)
                     j.system.platform.screen.logWindow(self.domain,name,logfile)
 
-            # else:
-            #     for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
-            #         if tmuxname==self.name:
-            #             j.system.platform.screen.killWindow(self.domain,self.name)
-
-            #     j.system.platform.screen.executeInScreen(self.domain,self.name,cmd+" "+args,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
-
-            #     if self.plog:
-            #         j.system.platform.screen.logWindow(self.domain,self.name,self.logfile)
-
-        else:            
+        else:
             j.system.platform.ubuntu.startService(self.name)
 
         isrunning=self.isRunning(wait=True)
@@ -265,7 +254,7 @@ class ProcessDef:
                 ports=",".join(self.ports)
                 if self.portCheck(wait=False)==False:
                     msg="Could not start, could not connect to ports %s."%(ports)
-                    
+
             if msg=="":
                 pids=self.getPids(ifNoPidFail=False,wait=False)
                 if len(pids) != self.numprocesses:
@@ -416,12 +405,12 @@ class ProcessDef:
             j.system.platform.ubuntu.stopService(self.name)
 
         pids=self.getPids(ifNoPidFail=False,wait=False)
-        
+
         for pid in pids:
             if pid<>0 and j.system.process.isPidAlive(pid):
                 if self.stopcmd=="":
                     print "kill:%s"%pid
-                    j.system.process.kill(pid)
+                    j.system.process.kill(pid, signal.SIGTERM)
                 else:
                     j.system.process.execute(self.stopcmd)
                 start=time.time()
@@ -432,6 +421,8 @@ class ProcessDef:
                         break
                     time.sleep(0.05)
                     now=j.base.time.getTimeEpoch()
+                if j.system.process.isPidAlive(pid):
+                    j.system.process.kill(pid, signal.SIGKILL)
 
         for port in self.ports:
             if port=="" or port==None or not port.isdigit():
@@ -449,26 +440,22 @@ class ProcessDef:
             if isrunning:
                 self.raiseError("Cannot stop processes on ports:%s, tried portkill"%self.ports)
 
-        if self.numprocesses>1:
-            for i in xrange(self.numprocesses):
-                name = "%s_%s" % (self.name, i)
-                j.system.platform.screen.killWindow(self.domain, name)
-        else:
-            j.system.platform.screen.killWindow(self.domain, self.name)
+        for i in xrange(1, self.numprocesses+1):
+            name = "%s_%s" % (self.name, i)
+            j.system.platform.screen.killWindow(self.domain, name)
 
+            start=time.time()
+            now=0
+            windowdown=False
+            while windowdown==False and now<start+2:
+                if j.system.platform.screen.windowExists(self.domain, name)==False:
+                    windowdown=True
+                    break
+                time.sleep(0.1)
+                now=j.base.time.getTimeEpoch()
 
-        start=time.time()
-        now=0
-        windowdown=False
-        while windowdown==False and now<start+2:
-            if j.system.platform.screen.windowExists(self.domain, self.name)==False:
-                windowdown=True
-                break
-            time.sleep(0.1)
-            now=j.base.time.getTimeEpoch()
-
-        if windowdown==False:
-            self.raiseError("Window was not down yet within 2 sec.")
+            if windowdown==False:
+                self.raiseError("Window was not down yet within 2 sec.")
 
     def disable(self):
         self.stop()
