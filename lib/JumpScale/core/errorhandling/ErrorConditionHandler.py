@@ -83,7 +83,7 @@ class ErrorConditionHandler():
         self.processErrorConditionObject(eco,tostdout=False)
      
         msg = eco.errormessage 
-        if j.application.config.get('system.debug', checkExists=True, default='0') == '1':
+        if j.application.debug:
             msg=str(eco)
 
         print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg
@@ -323,7 +323,7 @@ class ErrorConditionHandler():
             return self.escalateBugToDeveloper(errorobject,tb)
 
     def checkErrorIgnore(self,eco):
-        if j.application.config.get('system.debug', checkExists=True, default='0') == '1':
+        if j.application.debug:
             ignorelist = []
         else:
             ignorelist=["KeyboardInterrupt"]

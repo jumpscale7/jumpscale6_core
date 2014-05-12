@@ -27,6 +27,7 @@ class Application:
         self.agentid = "starting"
         self._calledexit = False
         self.skipTraceback = False
+        self._debug = None
 
         self.whoAmIBytestr = None
         self.whoAmI = WhoAmI(0,0,0)
@@ -44,6 +45,17 @@ class Application:
 
         self.connectRedis()
 
+    @property
+    def debug(self):
+        if self._debug != None:
+            return self._debug
+        else:
+            if hasattr(self, 'config'):
+                debug = j.application.config.get('system.debug', checkExists=True, default='0') == '1'
+                self._debug = debug
+                return debug
+            else:
+                return False
 
     def connectRedis(self):
 
