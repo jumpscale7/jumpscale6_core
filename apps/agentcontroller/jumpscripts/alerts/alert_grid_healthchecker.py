@@ -61,13 +61,25 @@ def action():
     
     import JumpScale.baselib.watchdog.client
 
-    print
+
+    colormap = {'RUNNING': 'green', 'HALTED': 'red', 'UNKOWN': 'orange',
+                'BROKEN': 'red', 'OK': 'green', 'NOT OK': 'red'}
 
     out=""
     for nid, error in errors.iteritems():
-        out+="h2. node %s\n"%nid
-        for key,msg in error.iteritems():
-            out+="|%s|%s|\n"%(key,msg)
+        out+="\nh3. Node %s\n" % nid
+        for category, msg in error.iteritems():
+            if isinstance(msg, list):
+                for err in msg:
+                    if isinstance(err, dict):
+                        out += "|*%s*| | |\n" % (category)
+                        for k, v in err.iteritems():
+                            v = v.replace('\n', '')
+                            for status, color in colormap.iteritems():
+                                v = v.replace(status, '{color:%s}*%s*{color}' % (color, status))
+                            out += "||%s|%s|\n" % (k,v)
+                    else:
+                        out += "|*%s*|%s||\n" % (category, err)
 
-    # for nid, error in errors.iteritems():
-    j.tools.watchdog.client.send("grid.healthcheck","CRITICAL", gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid,value=out,pprint=True)
+    state = "CRITICAL" if errors else "OK"
+    j.tools.watchdog.client.send("grid.healthcheck", state, gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, value=out, pprint=True)

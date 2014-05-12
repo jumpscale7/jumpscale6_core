@@ -30,6 +30,7 @@ Tests:/tests
 --------------
 Admin JumpScripts:/grid/AdminJumpScripts
 Admin Nodes:/grid/AdminNodes
+Admin Watchdogs:/grid/AdminWatchdogs
 Alerts:/grid/Alerts
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs
