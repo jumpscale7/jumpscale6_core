@@ -94,7 +94,7 @@ class GridHealthChecker(object):
                     else:                        
                         hago= round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
                         name=self._nodenames[nid]
-                        self._addError(nid,"On node:'%s' (%s). Processmanager is not responding, last heartbeat in hours ago:%s"%(name,nid,hago),"heartbeat")    
+                        self._addError(nid,"On node:'%s' (%s). Processmanager is not responding, last heartbeat %s hours ago"%(name,nid,hago),"heartbeat")    
                 else:
                     self._addError(nid,"found grid node which is not in heartbeat nodes\nGrid node:%s"%(nid),"heartbeat")
         print "heartbeat check done."
