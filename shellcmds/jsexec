@@ -102,7 +102,7 @@ def doRemote(q,args,hostkey,cmd):
             if node<>None:
                 if node.error<>"":
                     if node.result=="":
-                        node.result=r.out                
+                        node.result=r.out
                 q.put((hostkey,name,node.result,node.error))
             else:
                 q.put((hostkey,name,"",r.out))
@@ -125,15 +125,15 @@ if __name__ == '__main__':
         else:
             doRemote(queue,args,hostkey,args.command)
 
+    exitcode = 0
     for hostkey in j.admin.hostKeys:
         obj = queue.get()
         # print obj
         if obj[3].strip()<>"":
+            exitcode = 1
             print "##ERROR##%-10s %-20s##\n%s\n%s\n###############################################"%obj
         else:
             print "##%-10s %-20s##\n%s\n%s"%obj
-
-    exitcode = 1 if admin.errors else 0
 
     j.application.stop(exitcode)
 
