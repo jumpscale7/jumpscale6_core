@@ -16,9 +16,8 @@ class WorkerCmds():
             return
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
-        self.redisworker = j.clients.redisworker
         self.acclient = j.clients.agentcontroller.get()
-        self.redis=self.redisworker.redis
+        self.redis=j.clients.redisworker.redis
 
     def getQueuedJobs(self, queue="default", format="json", session=None):
         """
@@ -29,9 +28,9 @@ class WorkerCmds():
             self._adminAuth(session.user,session.passwd)
 
         if format == 'json':
-            return self.redisworker.getQueuedJobs(queue=queue, asWikiTable=False)
+            return j.clients.redisworker.getQueuedJobs(queue=queue, asWikiTable=False)
         else:
-            return self.redisworker.getQueuedJobs(queue=queue)
+            return j.clients.redisworker.getQueuedJobs(queue=queue)
         
         
     def getFailedJobs(self, queue=None, hoursago=0, format='json', session=None):
@@ -43,9 +42,9 @@ class WorkerCmds():
             self._adminAuth(session.user,session.passwd)
 
         if format == 'json':
-            return json.dumps(self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago))
+            return json.dumps(j.clients.redisworker.getFailedJobs(queue=queue, hoursago=hoursago))
         else:
-            return self.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
+            return j.clients.redisworker.getFailedJobs(queue=queue, hoursago=hoursago)
         
     def getWorkersWatchdogTime(self, session=None):
         if session<>None:
@@ -76,7 +75,7 @@ class WorkerCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
-        self.redisworker.removeJobs(hoursago=hoursago, failed=failed)
+        j.clients.redisworker.removeJobs(hoursago=hoursago, failed=failed)
 
     def resetQueue(self,queue="default",hoursago=0):
         """
@@ -91,38 +90,13 @@ class WorkerCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
-        job = self.redisworker.getJob(jobid)
-        self.redisworker.scheduleJob(job)
+        job = j.clients.redisworker.getJob(jobid)
+        j.clients.redisworker.scheduleJob(job)
 
-    def checkTimeouts(self, session=None):
-        """
-        walk over all jobs in queue & not in queue, check that timeout is not expired, if expired, put job in failed mode 
-        if job failed and on queue, remove put to jobs
-        """
-        if session<>None:
-            self._adminAuth(session.user,session.passwd)
-
-        print "CHECKTIMEOUT"
-
-
-        jobs = self.redisworker.getQueuedJobs(asWikiTable=False)
-        result = list()
-        for job in jobs:
-            if (job['timeStart'] + job['timeout']) > j.base.time.getTimeEpoch() and job['state'] not in ('OK', 'SCHEDULED'):
-                #job has timed out
-                job.state = 'TIMEOUT'
-                self.acclient.notifyWorkCompleted(job)
-
-        # self.redisworker.removeJobs(hoursago=2)#@todo does not work
-
-        #@todo more logic required here for old jobs
-        
-
-        return result
 
     def notifyWorkCompleted(self,job):
 
-        w=self.redisworker
+        w=j.clients.redisworker
         job["timeStop"]=int(time.time())
 
         if job["jscriptid"]<10000:
@@ -144,7 +118,7 @@ class WorkerCmds():
                         return
                     # job.state=="OKR" #means ok reported
                     #we don't have to keep status of local job result, has been forwarded to AC
-            self.redisworker.redis.hdel("workers:jobs",job["id"])
+            j.clients.redisworker.redis.hdel("workers:jobs",job["id"])
 
     def getJob(self, jobid, session=None):
         """
@@ -152,7 +126,7 @@ class WorkerCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)  
 
-        return self.redisworker.getJob(jobid)
+        return j.clients.redisworker.getJob(jobid)
 
     def getWorkerStatus(self, session=None):
         """

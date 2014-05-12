@@ -14,7 +14,7 @@ category = "monitor.workers"
 period = 10 #always in sec
 enable = True
 async = False
-roles = []
+roles = ["*"]
 log=False
 
 def action():
@@ -23,7 +23,7 @@ def action():
     import time
 
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
-    timemap = {'default': '-2m', 'io': '-2h', 'hypervisor': '-10m','process':'-1m'}
+    timemap = {'default': '-1m', 'io': '-2h', 'hypervisor': '-10m','process':'-1m'}
 
     # prefix = 'workers__worker_'
     # workers = [ x[len(prefix):] for x in j.tools.startupmanager.listProcesses() if x.startswith(prefix) and  ]
@@ -43,6 +43,8 @@ def action():
     for workername, lastactive in zip(workers2[0::2], workers2[1::2]):
         print "worker:%s "%workername,
         timeout = timemap.get(workername.split('_')[1])        
+
+        lastactive=int(lastactive)
         
         #within 9 sec after startup we will not complain that worker is not there yet
         if lastactive==0 and  not j.core.processmanager.checkStartupOlderThan(9):
@@ -61,8 +63,9 @@ def action():
             print "waiting for work"
             continue
         
-        if j.base.time.getEpochAgo(timeout) > lastactive:
-            j.events.opserror('Worker %s seems to have timed out' % worker, 'monitoring') #is not critical
+        # print "\ntimeout:%s %s %s"%(timeout,j.base.time.getEpochAgo(timeout),lastactive)
+        if int(j.base.time.getEpochAgo(timeout)) > int(lastactive):
+            j.events.opserror('Worker %s seems to have timed out' % workername, 'monitoring') #is not critical
             timedout.append(workername)
             print "timeout",
             #lets kill
@@ -96,3 +99,4 @@ def action():
     if len(tocheck)>0:
         for item in tocheck:
             start(item)
+            
