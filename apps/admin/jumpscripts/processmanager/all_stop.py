@@ -19,14 +19,6 @@ log = True
 
 def action(node):
     c=node.cuapi
-    
-    node.serviceStop("processmanager","processmanager.py")
-
-    node.jpackageStop("workers","worker.py")
-
-    node.serviceStop("redisp","redis/redisp")
-    node.serviceStop("redisc","redis/redisc")
-
-    c.run("jsprocess stop")
+    c.run("source /opt/jsbox/activate;jsprocess stop")
 
     
