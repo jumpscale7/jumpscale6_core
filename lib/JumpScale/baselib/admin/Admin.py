@@ -422,6 +422,10 @@ class Admin():
                 self.js[name]= getattr(module, "action")
 
     def loadNodes(self,webdis=False,pprint =False):
+        gridnames = list()
+        if webdis and self.webdis is not None:
+            key = "%s:admin:nodes" % j.application.config.get("grid_watchdog_secret")
+            self.webdis.delete(key)
 
         for configpath in j.system.fs.listFilesInDir("%s/apps/admin/cfg"%j.dirs.baseDir,filter="*.cfg"):
 
@@ -429,11 +433,11 @@ class Admin():
             if gridname =="active.cfg":
                 continue
             gridname=gridname[:-4]
-            
-            if webdis and self.webdis<>None:  
-                key="%s:admin:nodes:%s"%(j.application.config.get("grid_watchdog_secret"),gridname)
-                self.webdis.delete(key)     
+            gridnames.append(gridname)
 
+            if webdis and self.webdis is not None:
+                key="%s:admin:nodes:%s"%(j.application.config.get("grid_watchdog_secret"),gridname)
+                self.webdis.delete(key)
 
             nodes = list()
             config = j.config.getConfig(configpath[:-4])
@@ -448,7 +452,7 @@ class Admin():
                 node.enabled = False if host.get('enabled', '1')  == '1' else True
                 self.setNode(node)
                 nodes.append(node)
-                if webdis and self.webdis<>None:
+                if webdis and self.webdis is not None:
                     self.webdis.hset(key,node.name,json.dumps(node.__dict__))
 
             if pprint:
@@ -459,6 +463,10 @@ class Admin():
                 for node in sorted(nodes, key=lambda x: x.name):
                     print node
                 print ''
+
+        if webdis and self.webdis is not None:
+            key = "%s:admin:nodes" % j.application.config.get("grid.watchdog.secret")
+            self.webdis.set(key, json.dumps(gridnames))
 
     def config2gridmaster(self):
         if self.webdis==None:
