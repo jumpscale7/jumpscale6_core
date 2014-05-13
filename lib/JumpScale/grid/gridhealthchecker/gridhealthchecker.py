@@ -387,7 +387,7 @@ class GridHealthChecker(object):
     def ping(self,nid,clean=True):
         results = list()
         errors = list()
-        result = self._client.executeJumpScript('jumpscale', 'echo_sync', args={"msg":"ping"},nid=nid, timeout=2)
+        result = self._client.executeJumpScript('jumpscale', 'echo_sync', args={"msg":"ping"},nid=nid, timeout=5)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'processmanagerping'))
         return results, errors
@@ -395,7 +395,7 @@ class GridHealthChecker(object):
     def pingasync(self,nid,clean=True):
         results = list()
         errors = list()
-        result = self._client.executeJumpScript('jumpscale', 'echo_async', args={"msg":"ping"}, nid=nid, timeout=2)
+        result = self._client.executeJumpScript('jumpscale', 'echo_async', args={"msg":"ping"}, nid=nid, timeout=5)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'workerping'))
         return results, errors
