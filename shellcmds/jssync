@@ -39,13 +39,13 @@ def getkey():
     return opts.key
 
 def sync(src,dest,delete=True):
-    # print "SYNC: %s %s"%(src,dest)
+    print "SYNC: %s %s"%(src,dest)
     if delete:
         d="--delete-after "
     else:
         d="--max-delete=0 "
     cmd="rsync -Lrpo %s%s %s"%(d,src,dest)
-    print cmd
+
     if not j.system.fs.exists(path="%s"%(src)):
         print "ERROR:could not find dir:%s"%(src)
         j.application.stop(1)
