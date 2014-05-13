@@ -287,6 +287,7 @@ class Admin():
         self.args=args
         self._basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
         self.hostKeys=[]
+        self.gridNameAliases={}
         if args.action==None or (not args.action in ["createidentity","applyconfiglocal"]):
             if args.local:
                 args.remote="127.0.0.1"
@@ -486,6 +487,9 @@ class Admin():
         return webdis
 
     def loadNodes(self,webdis=False,pprint =False):
+        """
+        load nodes from config files
+        """
 
         webdis=self.getWebDis(webdis)
 
@@ -502,6 +506,13 @@ class Admin():
 
             nodes = list()
             config = j.config.getConfig(configpath[:-4])
+
+            self.gridNameAliases[gridname.lower()]=[]
+            if config.has_key("main"):
+                for alias in config["main"].get("alias","").split(","):
+                    if alias.lower() not in self.gridNameAliases[gridname.lower()]:
+                        self.gridNameAliases[gridname.lower()].append(alias.lower())
+
             for name, host in config.iteritems():
                 node=JNode()
                 node.gridname=gridname
@@ -583,6 +594,11 @@ class Admin():
             path="/mnt/%s_%s_code"%(node.gridname,node.name)
             j.system.fs.createDir(path)
             cmd="sshfs %s:/opt/code /mnt/%s_%s_code"%(node.ip,node.gridname,node.name)
+            print cmd
+            j.system.process.executeWithoutPipe(cmd)
+            path="/mnt/%s_%s_jumpscale"%(node.gridname,node.name)
+            j.system.fs.createDir(path)
+            cmd="sshfs %s:/opt/jumpscale /mnt/%s_%s_jumpscale"%(node.ip,node.gridname,node.name)
             print cmd
             j.system.process.executeWithoutPipe(cmd)
 
@@ -673,9 +689,15 @@ class Admin():
             j.system.fs.copyFile("/root/.ssh/%s"%name,u)
 
     def _getHostNames(self,hostfilePath,exclude={}):
+        """
+        gets hostnames from /etc/hosts
+        """
         result={}
         for line in j.system.fs.fileGetContents(hostfilePath).split("\n"):
             # print line
+            line=line.strip()
+            if line.find("########")==0:
+                return result
             if line.strip()<>"" and line[0]<>"#":
                 line2=line.replace("\t"," ")
                 splits=line2.split(" ")
@@ -709,56 +731,53 @@ ff02::2      ip6-allrouters
 
 """        
         
-        result=self.getHostNames(all=True)
-        result2=self._getHostNames("/etc/hosts",exclude=result)       
+        existingHostnames=self._getHostNames("/etc/hosts")
 
-        keys=result2.keys()
-        keys.sort()
-        for name in keys:
-            ip=result2[name]
-            out+="%-18s  %s\n"%(ip,name)
-        
+        def alias(name):
+            name=name.lower()
+            if self.gridNameAliases.has_key(name):
+                return [item.lower() for item in self.gridNameAliases[name]]
+            else:
+                return []
+
+        newHostnames={}
+        for hkey in self.redis.hkeys("admin:nodes"):
+            gridname,name=hkey.split(":")
+            data=self.redis.hget("admin:nodes","%s:%s"%(gridname,name))
+            node=JNode()
+            try:
+                node.__dict__=json.loads(data)
+            except Exception,e:
+                raise RuntimeError("could not decode node: '%s/%s'"%(gridname,name))
+            n=node.name
+            n=n.lower()
+            g=node.gridname
+            g=g.lower()
+            newHostnames["%s.%s"%(n,g)]=node.ip
+            for g2 in alias(node.gridname):
+                if g2<>g:
+                    newHostnames["%s.%s"%(n,g2)]=node.ip
+
+        for hostname,ipaddr in existingHostnames.iteritems():
+            if hostname.lower() not in newHostnames.keys():
+                out+="%-18s %s\n"%(ipaddr,hostname)
+
+        out+="\n#############################\n\n"
+
+        hkeysNew=newHostnames.keys()
+        hkeysNew.sort()
+
+        for hostname in hkeysNew:
+            ipaddr=newHostnames[hostname]
+            if hostname.lower() in existingHostnames.keys():
+                raise RuntimeError("error: found new hostname '%s' which already exists in existing hostsfile."%hostname)
+            out+="%-18s %s\n"%(ipaddr,hostname)
+
+
         out+="\n"
 
-        keys=result.keys()
-        keys.sort()
-        for name in keys:
-            ip=result[name]
-            if not result2.has_key(name):
-                out+="%-18s  %s\n"%(ip,name)
-        
         j.system.fs.writeFile(filename=hostfilePath,contents=out)
 
-    def getHostNames(self,all=False):
-        state="start"
-        result={}
-        if all:
-            state="found"
-        for line in j.system.fs.fileGetContents(self._getPath("cfg/","hosts")).split("\n"):
-            line=line.strip()
-            if line=="":
-                continue
-            if line.find("ip6-localhost")<>-1 or line.find("ip6-loopback")<>-1:
-                continue
-            if line.find("ip6-localnet")<>-1 or line.find("ip6-mcastprefix")<>-1:
-                continue
-            if line.find("ip6-allnodes")<>-1 or line.find("ip6-allrouters")<>-1:
-                continue                    
-            if line.find("following lines are desirable")<>-1 or line.find("localhost")<>-1:
-                continue                
-            if state=="FOUND":
-                if line[0]<>"#":
-                    line=line.replace("\t"," ")
-                    splits=line.split(" ")
-                    name=splits[-1]
-                    ip=splits[0]
-                    result[name]=ip
-            if line.find("#ACTIVE")<>-1:
-                state="FOUND"
-            if line.find("#ENDACTIVE")<>-1 and all==False:
-                state="end"
-                break
-        return result
 
     def getHostNamesKeys(self,gridNameSearch=""):
         C=j.system.fs.fileGetContents("%s/admin/active.cfg"%j.dirs.cfgDir)

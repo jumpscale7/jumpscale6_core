@@ -11,7 +11,7 @@ import sys
 
 parser = cmdutils.ArgumentParser()
 
-commands = ['createidentity','config2gridmaster','sshfs','sshfsoff','nodeslist','kill','print']
+commands = ['applyconfig','createidentity','config2gridmaster','sshfs','sshfsoff','listnodes','kill','print']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
@@ -63,7 +63,7 @@ elif args.action == "kill":
     j.system.process.killProcessByName("jsexec")
     j.system.process.killProcessByName("jsadmin")
 
-elif args.action == "nodeslist":
+elif args.action == "listnodes":
     admin.loadNodes(pprint=True)    
 
 elif args.action == "sshfs":
@@ -77,15 +77,9 @@ elif args.action == "sshfsoff":
             raise RuntimeError("need to specify gridname")
     admin.sshfsumount(args.gridname,args.remote)
 
+elif args.action == "applyconfig":
+    admin.applyconfiglocal()
 
-
-
-# elif args.action == "exec":
-#     for name in args.name.split(","):
-#         name=name.lower()
-#         name=name.strip()
-
-#         admin.execute(name,once=True,reset=args.force)
 
 j.application.stop()
 
