@@ -19,12 +19,12 @@ while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
     time.sleep(0.1)
     print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
 
-
-while j.system.net.tcpPortConnectionTest("127.0.0.1",5544)==False:
+gridmasterip = j.application.config.get('grid.master.ip')
+while j.system.net.tcpPortConnectionTest(gridmasterip, 5544)==False:
     time.sleep(0.1)
     print "cannot connect to agentcontroller osis, will keep on trying forever, please make sure is started"
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",4444)==False:
+while j.system.net.tcpPortConnectionTest(gridmasterip, 4444)==False:
     time.sleep(0.1)
     print "cannot connect to agentcontroller, will keep on trying forever, please make sure is started"
 
