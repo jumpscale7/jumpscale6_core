@@ -61,13 +61,16 @@ def doRemote(args,hostkey,cmd):
     # j.admin.hosts=[host]
 
     def report(node,args):
+        sr=node.getScriptRun()
+        sr.state="ERROR"
         if args.sync==False:
-            node.out+="\nSTDOUT:\n%s"%r.out            
-        print "ERROR: COULD NOT EXECUTE: STDOUT:"
-        print node.out
-        if node.error<>"":
+            sr.out+="\nSTDOUT:\n%s"%r.out            
+        if sr.out<>"":
+            print "ERROR: COULD NOT EXECUTE: STDOUT:"
+            print sr.out
+        if sr.error<>"":
             print "ERROR: COULD NOT EXECUTE: ERROR:"
-            print node.error
+            print sr.error
         print "ERROR: could not execute:%s on \n%s"%(cmd,node)
         j.admin.setNode(node)
         if args.sync:
@@ -79,50 +82,44 @@ def doRemote(args,hostkey,cmd):
     if cmd<>"":        
         error=False
         r=RedirectSTDOUT(hostkey)
-        print "execute:%s:%s:"%(hostkey,cmd),
+        print "EXECCMD:%s:%s:"%(hostkey,cmd)
         if args.sync==False:            
             sys.stdout=r
         try:
             node.executeCmds(cmd)
         except BaseException,e:
             sys.stdout=r.oldstdout            
-            print "ERROR"
+            print "ERROR  :%s:%s:"%(hostkey,cmd)            
             error=True
             report(node,args)
         sys.stdout=r.oldstdout
         if sr.state<>"OK":
-            print "ERROR"
+            print "ERROR  :%s:%s:"%(hostkey,cmd)
             report(node,args)
         elif not error:
-            print "OK"   
+            print "OK     :%s:%s:"%(hostkey,cmd)
     else:
         for cmd in args.name.split(","):  #name is name of jumpscript
             cmd=cmd.lower().strip()
             key="%s_%s"%(hostkey,cmd.strip())
+            
             r=RedirectSTDOUT(key)            
-            print "execute:%s:%s:"%(hostkey,cmd),
-            if args.sync==False:                
+            print "EXEC   :%s:%s:"%(hostkey,cmd)
+            if args.sync==False:                                
                 sys.stdout=r
 
             once=True
             if j.admin.args.force:
                 once=False
-
-            j.admin. executeForNode(node,jsname=cmd,once=once)
+            j.admin.executeForNode(node,jsname=cmd,once=once)
             sys.stdout=r.oldstdout
             if sr.state<>"OK":
-                print "ERROR"
+                print "ERROR  :%s:%s:"%(hostkey,cmd)
                 report(node,args)
             else:
-                print "OK"
-    j.admin.setNode(node)
-    from IPython import embed
-    print "DEBUG NOW uuu"
-    embed()
-    
+                print "OK     :%s:%s:"%(hostkey,cmd)  
 
 import JumpScale.baselib.admin
-
 
 if __name__ == '__main__':
     # hosts=["cpu10","cpu12"]
@@ -138,20 +135,48 @@ if __name__ == '__main__':
         else:
             doRemote(args,hostkey,args.command)
 
-    from IPython import embed
-    print "DEBUG NOW execute done"
-    embed()
-    
+    if not args.sync:
+        #need to wait till all done
+        done=j.admin.getScriptRunInfo()
+        nr=len(j.admin.hostKeys)
+        while len(done)<nr:
+            print "Still Running: %s/%s"%(nr-len(done),nr)
+            time.sleep(2)
+            done=j.admin.getScriptRunInfo()
 
-    for hostkey in j.admin.hostKeys:
-        obj = queue.get()
-        # print obj
-        if obj[3].strip()<>"":
-            print "##ERROR##%-10s %-20s##\n%s\n%s\n###############################################"%obj
+    ok=[]
+    error=""
+    result=""
+    for sr in j.admin.getScriptRunInfo():
+        if sr.state=="OK":
+            ok.append("%-10s %-15s"%(sr.gridname,sr.nodename))
+            if sr.result<>"":
+                result+="#%-15s %-10s############################################################\n"%(sr.gridname,sr.nodename)
+                result+="%s\n\n"%sr.result
         else:
-            print "##%-10s %-20s##\n%s\n%s"%obj
+            for key,value in sr.__dict__.iteritems():
+                error+="%-15s: %s"%(key,value)
+            error+="#######################################################################\n\n"
 
-    exitcode = 1 if admin.errors else 0
+    print "######################## OK #####################################"
+    ok.sort()
+    print "\n".join(ok)
+
+    j.system.fs.createDir("%s/admin"%j.dirs.varDir)
+
+    if result<>"":
+        print result
+        j.system.fs.writeFile(filename="%s/admin/%s.result"%(j.dirs.varDir,sr.runid),contents=result)
+
+    if error<>"":
+        print "######################## ERROR ##################################"
+        print error
+        j.system.fs.writeFile(filename="%s/admin/%s.error"%(j.dirs.varDir,sr.runid),contents=error)
+
+    if error<>"":
+        exitcode = 1
+    else:
+        exitcode=0
 
     j.application.stop(exitcode)
 
