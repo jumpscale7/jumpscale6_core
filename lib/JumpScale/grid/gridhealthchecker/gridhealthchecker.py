@@ -139,17 +139,19 @@ class GridHealthChecker(object):
                 self.masternid = node['id'] 
         if gridmasterip == '127.0.0.1':
             self.masternid = j.application.whoAmI.nid
-        self.pingAllNodes(clean=True, pprint=pprint)
+        self.pingAllNodesSync(clean=True, pprint=pprint)
         self._checkRunningNIDsFromPing()
 
     def runAll(self):
         self._clean()
         self.getNodes(pprint=True)
+        self._clean()
         print
         self.checkHeartbeatsAllNodes(clean=False)
         self.checkProcessManagerAllNodes(clean=False)
-        print '\n**Running tests on %s node(s). %s node(s) have no heartbeat**\n' % (len(self._runningnids), len(self._nids)-len(self._runningnids))
+        print '\n**Running tests on %s node(s). %s node(s) have not responded to ping**\n' % (len(self._runningnids), len(self._nids)-len(self._runningnids))
         if self._runningnids:
+            self.pingAllNodesAsync(clean=False)
             self.checkElasticSearch(clean=False)
             self.checkRedisAllNodes(clean=False)
             self.checkWorkersAllNodes(clean=False)
@@ -364,7 +366,7 @@ class GridHealthChecker(object):
         if clean:
             return self._status, self._errors
 
-    def pingAllNodes(self, clean=True, pprint=False):
+    def pingAllNodesSync(self, clean=True, pprint=False):
         if clean:
             self._clean()
         if self._nids==[]:
@@ -372,15 +374,16 @@ class GridHealthChecker(object):
         if pprint:
             print "PROCESS MANAGER PING TO ALL (%s) NODES" % len(self._nids)
         self._parallelize(self.ping, False, 'processmanagerping')
-        self._checkRunningNIDsFromPing()
         if self._tostdout:
             self.printStatus('processmanagerping')
-        if pprint:
-            print "WORKER PING TO %s NODE(S)" % len(self._runningnids)
+        if clean:
+            return self._status, self._errors
+
+    def pingAllNodesAsync(self, clean=True):
+        print "WORKER PING TO %s NODE(S)" % len(self._runningnids)
         self._parallelize(self.pingasync, False, 'workerping')
         if self._tostdout:
             self.printStatus('workerping')
-
         if clean:
             return self._status, self._errors        
 
