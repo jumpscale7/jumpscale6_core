@@ -347,7 +347,7 @@ class Admin():
             self.runid=self.args.runid
         else:
             self.runid=self.redis.incr("admin:scriptrunid")
-        if self.args.reset:
+        if self.args.__dict__.has_key("reset") and self.args.reset:
             self.deleteScriptRunInfo()
         # 
         # self.config2gridmaster() #this should not be done every time
@@ -784,6 +784,53 @@ ff02::2      ip6-allrouters
             gridname,nodename,runid=hkey.split(":")
             if runid==str(self.runid):
                 self.redis.hdel("admin:scriptruns",hkey)
+
+    def printResult(self):
+        ok=[]
+        nok=[]
+        error=""
+        result=""
+        for sr in self.getScriptRunInfo():
+            if sr.state=="OK":
+                ok.append("%-10s %-15s"%(sr.gridname,sr.nodename))
+                if sr.result<>"":
+                    result+="#%-15s %-10s############################################################\n"%(sr.gridname,sr.nodename)
+                    result+="%s\n\n"%sr.result
+            else:
+                nok.append("%-10s %-15s"%(sr.gridname,sr.nodename))
+                for key,value in sr.__dict__.iteritems():
+                    error+="%-15s: %s"%(key,value)
+                error+="#######################################################################\n\n"
+
+
+        j.system.fs.createDir("%s/admin"%j.dirs.varDir)
+
+        if result<>"":
+            print "######################## RESULT ##################################"
+            print result
+            j.system.fs.writeFile(filename="%s/admin/%s.result"%(j.dirs.varDir,sr.runid),contents=result)
+
+        if error<>"":
+            print "######################## ERROR ##################################"
+            print error
+            j.system.fs.writeFile(filename="%s/admin/%s.error"%(j.dirs.varDir,sr.runid),contents=error)
+
+        if error<>"":
+            exitcode = 1
+        else:
+            exitcode=0
+
+        print "\n######################## OK #####################################"
+        ok.sort()
+        print "\n".join(ok)
+        if len(nok)>0:
+            print "######################## ERROR ###################################"
+            nok.sort()
+            print "\n".join(nok)
+
+        return exitcode
+
+
 
 
 

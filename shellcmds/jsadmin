@@ -11,11 +11,12 @@ import sys
 
 parser = cmdutils.ArgumentParser()
 
-commands = ['createidentity','config2gridmaster','sshfs','sshfsoff','nodeslist','kill']
+commands = ['createidentity','config2gridmaster','sshfs','sshfsoff','nodeslist','kill','print']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
 group = parser.add_argument_group(title="all")
+group.add_argument('--runid', required=False, type=str, default="", help='Give run a specific id.')
 # group.add_argument('-r', '--remote', help='Ip address of node',default="")
 # group.add_argument('-l', '--local', action='store_true', help='To execute locally.')
 # group.add_argument('-p', '--passwd', help='Root password to use, if any.',default="")
@@ -55,6 +56,8 @@ if args.action == "createidentity":
 
 elif args.action == "config2gridmaster":
     admin.config2gridmaster()
+elif args.action == "print":
+    admin.printResult()
 
 elif args.action == "kill":
     j.system.process.killProcessByName("jsexec")
@@ -84,7 +87,6 @@ elif args.action == "sshfsoff":
 
 #         admin.execute(name,once=True,reset=args.force)
 
-exitcode = 1 if admin.errors else 0
-j.application.stop(exitcode)
+j.application.stop()
 
 

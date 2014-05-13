@@ -240,7 +240,7 @@ elif args.action == 'stop':
 
 elif args.action == 'mdupdate':
     if j.application.sandbox:
-        cmd="jssync download -c jpackages -nd"
+        cmd="jssync download -c jpackages -d"
         j.system.process.executeWithoutPipe(cmd)
     else:
         j.packages.updateMetaData(force=args.force)
