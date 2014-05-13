@@ -1,8 +1,4 @@
 from JumpScale import j
-import JumpScale.lib.lxc
-import JumpScale.lib.nginx
-import JumpScale.lib.shorewall
-import JumpScale.baselib.remote
 
 descr = """
 Checks shorewall status
@@ -18,6 +14,11 @@ roles = []
 
 
 def action(name):
+    import JumpScale.lib.lxc
+    import JumpScale.lib.nginx
+    import JumpScale.lib.shorewall
+    import JumpScale.baselib.remote
+
     host = j.system.platform.lxc.getIp(name)
     password = j.application.config.get('system.superadmin.passwd')
 

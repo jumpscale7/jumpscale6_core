@@ -1,6 +1,4 @@
 from JumpScale import j
-import JumpScale.lib.lxc
-import JumpScale.baselib.remote
 
 descr = """
 Creates an LXC machine from template
@@ -16,6 +14,9 @@ roles = []
 
 
 def action(name, base='base'):
+    import JumpScale.lib.lxc
+    import JumpScale.baselib.remote
+
     templatespath = j.system.fs.joinPaths('/opt', 'lxc', 'templates')
     j.system.platform.lxc.create(name=name, base=j.system.fs.joinPaths(templatespath, base))
     j.system.platform.lxc.start(name)

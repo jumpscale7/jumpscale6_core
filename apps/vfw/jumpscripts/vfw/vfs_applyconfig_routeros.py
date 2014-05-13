@@ -1,5 +1,4 @@
 from JumpScale import j
-import JumpScale.baselib.remote
 
 descr = """
 Applies the rules in the passed fwobject to the given LXC machine name
@@ -15,6 +14,7 @@ roles = []
 async = True 
 
 def action(name, fwobject):
+    import JumpScale.baselib.remote
     from JumpScale.lib import routeros
 
     host = fwobject['host']

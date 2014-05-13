@@ -1,6 +1,4 @@
 from JumpScale import j
-import JumpScale.lib.dhcp
-import JumpScale.lib.lxc
 
 descr = """
 configure DHCP
@@ -9,13 +7,16 @@ configure DHCP
 name = "vfs_setapply_dhcpconfig"
 category = "vfw"
 organization = "jumpscale"
-author = "khamisr@cloudscalers.com"
+author = "khamisr@codescalers.com"
 license = "bsd"
 version = "1.0"
 roles = []
 
 
 def action(name, fromIP, toIP, interface):
+    import JumpScale.lib.dhcp
+    import JumpScale.lib.lxc
+    
     host = j.system.platform.lxc.getIp(name)
     password = j.application.config.get('system.superadmin.passwd')
 

@@ -1,6 +1,4 @@
 from JumpScale import j
-import JumpScale.lib.lxc
-import JumpScale.baselib.remote
 
 descr = """
 Sets network for LXC machine
@@ -16,6 +14,9 @@ roles = []
 
 
 def action(name, vxlanid, pubips, dmzips):
+    import JumpScale.lib.lxc
+    import JumpScale.baselib.remote
+
     bridge = j.application.config.get('lxc.bridge.public')
     gateway = j.application.config.get('lxc.bridge.public.gw')
     j.system.platform.lxc.networkSetPublic(name, netname="pub0", bridge=bridge, pubips=pubips, gateway=gateway)

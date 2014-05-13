@@ -1,5 +1,4 @@
 from JumpScale import j
-import JumpScale.lib.lxc
 
 descr = """Deletes an LXC machine"""
 
@@ -12,5 +11,7 @@ version = "1.0"
 roles = []
 
 def action(name):
+    import JumpScale.lib.lxc
+    
     j.system.platform.lxc.destroy(name)
     return True
