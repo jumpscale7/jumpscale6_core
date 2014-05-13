@@ -373,6 +373,10 @@ class Admin():
             path+=file
         return path
 
+    def raiseError(self,action,msg,e=None):
+        #@todo make better
+        raise RuntimeError("%s;%s"%(action,msg))
+
     def getNode(self,gridname,name):
         name=name.lower()
         gridname=gridname.lower()

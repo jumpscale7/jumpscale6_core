@@ -18,7 +18,7 @@ parser.add_argument("-k", '--key', help='secret key (can have ql inside or anyth
 parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
 parser.add_argument("-j", '--jpdomains', help='specify add domains to look for when syncing/uploading jpackages.', default="")
 parser.add_argument("-nd", help='no longer used.', default=True,action='store_true')
-parser.add_argument("-d", '--delete', help='will delete files after upload or download.', default=False,action='store_false')
+parser.add_argument("-d", '--delete', help='will delete files after upload or download.', default=False,action='store_true')
 
 opts = parser.parse_args()
 
@@ -52,7 +52,7 @@ def sync(src,dest,delete=True):
 
     j.system.process.executeWithoutPipe(cmd)
 
-def download(category,path="",data=False):
+def download(category,path="",data=False,deleteFirst=False):
     print "DOWNLOAD: %s %s"%(category,path)
     key=getkey()
     category=category.strip("/")
@@ -66,6 +66,8 @@ def download(category,path="",data=False):
         base=opts.sbpath
 
     pathfs="%s%s"%(base,path)
+    if deleteFirst:
+        j.system.fs.removeDirTree(pathfs)
 
 
     cmd="rsync -azv %s::download/%s/%s%s %s  --modify-window=60 --compress"%(ipaddr,\
@@ -277,7 +279,7 @@ if opts.action=="download" and checkcat("base"):
     download("jsbox","bin")
 
 if opts.action=="download" and checkcat("jpackages"):
-    download("jsbox","jpackages")    
+    download("jsbox","jpackages")#,deleteFirst=True)    #@todo is bad hack because syncing does not work as expected 
 
 if opts.action=="download" and checkcat("libjs"):
     download("jsbox","libjs/JumpScale/base")
