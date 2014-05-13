@@ -11,7 +11,7 @@ import sys
 
 parser = cmdutils.ArgumentParser()
 
-commands = ['createidentity','config2gridmaster','sshfs','sshfsoff','nodeslist','killadmin']
+commands = ['createidentity','config2gridmaster','sshfs','sshfsoff','nodeslist','kill']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
@@ -56,7 +56,7 @@ if args.action == "createidentity":
 elif args.action == "config2gridmaster":
     admin.config2gridmaster()
 
-elif args.action == "killadmin":
+elif args.action == "kill":
     j.system.process.killProcessByName("jsexec")
     j.system.process.killProcessByName("jsadmin")
 

@@ -22,6 +22,8 @@ parser.add_argument('-s','--sync',required=False, action='store_true',help='then
 parser.add_argument('-g',  action='store_true', required=False, help='Apply on all active nodes on grid')
 parser.add_argument('--roles', required=False, help='Used with -g. Apply on active nodes that have these roles. ex: --roles=node, computenode.kvm(note the = sign). List is comma seperated')
 parser.add_argument('-t','--timeout', required=False, type=int, default=0, help='Time to wait to if connection is not available')
+parser.add_argument('--runid', required=False, type=str, default="", help='Give run a specific id.')
+parser.add_argument('--reset', action='store_true',required=False, default=False, help='If reset info for that run will be removed from redis.')
 
 args = parser.parse_args()
 args.action=None
@@ -145,6 +147,7 @@ if __name__ == '__main__':
             done=j.admin.getScriptRunInfo()
 
     ok=[]
+    nok=[]
     error=""
     result=""
     for sr in j.admin.getScriptRunInfo():
@@ -154,17 +157,16 @@ if __name__ == '__main__':
                 result+="#%-15s %-10s############################################################\n"%(sr.gridname,sr.nodename)
                 result+="%s\n\n"%sr.result
         else:
+            nok.append("%-10s %-15s"%(sr.gridname,sr.nodename))
             for key,value in sr.__dict__.iteritems():
                 error+="%-15s: %s"%(key,value)
             error+="#######################################################################\n\n"
 
-    print "######################## OK #####################################"
-    ok.sort()
-    print "\n".join(ok)
 
     j.system.fs.createDir("%s/admin"%j.dirs.varDir)
 
     if result<>"":
+        print "######################## RESULT ##################################"
         print result
         j.system.fs.writeFile(filename="%s/admin/%s.result"%(j.dirs.varDir,sr.runid),contents=result)
 
@@ -177,6 +179,15 @@ if __name__ == '__main__':
         exitcode = 1
     else:
         exitcode=0
+
+    print "\n######################## OK #####################################"
+    ok.sort()
+    print "\n".join(ok)
+    if len(nok)>0:
+        print "######################## ERROR ###################################"
+        nok.sort()
+        print "\n".join(nok)
+
 
     j.application.stop(exitcode)
 

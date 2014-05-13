@@ -182,6 +182,7 @@ class JNode():
             print "**ERROR** %-10s:%s"%(self.name,toadd)
         self.lastcheck=0
         j.admin.setNode(self)
+        j.admin.setNode(self)
         raise RuntimeError("**ERROR**")
 
     def log(self,action,msg):
@@ -342,7 +343,12 @@ class Admin():
         self.rootpasswds=self.hrd.getList("superadmin.passwds")
         self.loadJumpscripts()
         self.loadNodes()
-        self.runid=self.redis.incr("admin:scriptrunid")
+        if self.args.runid<>"":
+            self.runid=self.args.runid
+        else:
+            self.runid=self.redis.incr("admin:scriptrunid")
+        if self.args.reset:
+            self.deleteScriptRunInfo()
         # 
         # self.config2gridmaster() #this should not be done every time
 
@@ -416,14 +422,12 @@ class Admin():
         now= j.base.time.getTimeEpoch()
         do=True
         if once:
-            if node.actionsDone.has_key(jsname):
-                timeexec=node.actionsDone[jsname]
-                if timeexec<(now-(3600*1)): #1h ago
-                    do=True
-                else:
+            for item in self.getScriptRunInfo():
+                if item.state=="OK" and item.nodename==node.name and item.gridname==node.gridname:
                     do=False
-        if self.args.force:
-            do=True
+            
+        # if self.args.force:
+        #     do=True
         if do:
             print "* tcp check ssh"
             if not j.admin.js.has_key(jsname):
@@ -446,7 +450,7 @@ class Admin():
                     node.actionsDone.pop(jsname)
             self.setNode(node)
         else:
-            print("No need to execute %s on %s"%(jsname,self.name))
+            print("No need to execute %s on %s/%s"%(jsname,node.gridname,node.name))
         return node
 
     def execute(self,jsname,once=True,reset=False,**kwargs):
@@ -764,7 +768,6 @@ ff02::2      ip6-allrouters
                 keys.append("%s__%s"%(gridname,name))
         return keys
 
-
     def getScriptRunInfo(self):
         res=[]
         for hkey in self.redis.hkeys("admin:scriptruns"):
@@ -774,6 +777,14 @@ ff02::2      ip6-allrouters
                 sr.__dict__=json.loads(self.redis.hget("admin:scriptruns",hkey))
                 res.append(sr)
         return res
+
+    def deleteScriptRunInfo(self):
+        res=[]
+        for hkey in self.redis.hkeys("admin:scriptruns"):
+            gridname,nodename,runid=hkey.split(":")
+            if runid==str(self.runid):
+                self.redis.hdel("admin:scriptruns",hkey)
+
 
 
 
