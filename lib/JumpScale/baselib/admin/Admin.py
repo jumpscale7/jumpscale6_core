@@ -567,16 +567,24 @@ class Admin():
 
     def sshfs(self,gridname,name):
         node=self.getNode(gridname,name)
-        path="/mnt/%s_%s_jsbox"%(node.gridname,node.name)
-        j.system.fs.createDir(path)
-        cmd="sshfs %s:/opt/jsbox /mnt/%s_%s_jsbox"%(node.ip,node.gridname,node.name)
-        print cmd
-        j.system.process.executeWithoutPipe(cmd)
-        path="/mnt/%s_%s_jsboxdata"%(node.gridname,node.name)
-        j.system.fs.createDir(path)
-        print cmd
-        cmd="sshfs %s:/opt/jsbox_data /mnt/%s_%s_jsboxdata"%(node.ip,node.gridname,node.name)
-        j.system.process.executeWithoutPipe(cmd)
+        if name<>"admin":
+            path="/mnt/%s_%s_jsbox"%(node.gridname,node.name)
+            j.system.fs.createDir(path)
+            cmd="sshfs %s:/opt/jsbox /mnt/%s_%s_jsbox"%(node.ip,node.gridname,node.name)
+            print cmd
+            j.system.process.executeWithoutPipe(cmd)
+
+            path="/mnt/%s_%s_jsboxdata"%(node.gridname,node.name)
+            j.system.fs.createDir(path)
+            print cmd
+            cmd="sshfs %s:/opt/jsbox_data /mnt/%s_%s_jsboxdata"%(node.ip,node.gridname,node.name)
+            j.system.process.executeWithoutPipe(cmd)
+        else:
+            path="/mnt/%s_%s_code"%(node.gridname,node.name)
+            j.system.fs.createDir(path)
+            cmd="sshfs %s:/opt/code /mnt/%s_%s_code"%(node.ip,node.gridname,node.name)
+            print cmd
+            j.system.process.executeWithoutPipe(cmd)
 
     def sshfsumount(self,gridname="",name=""):
         rc,mount=j.system.process.execute("mount")
