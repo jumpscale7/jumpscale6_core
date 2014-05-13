@@ -48,8 +48,12 @@ class GridHealthChecker(object):
         self._status[nid][category].append(result)
 
     def _parallelize(self, functionname, clean=False, category=""):
+        if functionname.func_name in ['ping']:
+            nodes = self._nids
+        else:
+            nodes = self._runningnids
         greens = list()
-        for nid in self._runningnids:
+        for nid in nodes:
             greenlet = gevent.Greenlet(functionname, nid, clean)
             greenlet.nid = nid
             greenlet.start()
@@ -73,14 +77,14 @@ class GridHealthChecker(object):
         return self._status, self._errors
 
     def _checkRunningNIDs(self):
-        print 'CHECK HEARTBEATS'
+        print '\nCHECK HEARTBEATS'
         self._runningnids = list()
         print "get all heartbeats (just query from ES):",
         heartbeats = self._heartbeatcl.simpleSearch({})
         print "OK"
         for heartbeat in heartbeats:
             if heartbeat['nid'] not in self._nids and  heartbeat['nid']  not in self._nidsNonActive:
-                self._addError(heartbeat['nid'],"found heartbeat node which is not in grid nodes. Heartbeat node:%s"%(heartbeat['nid']),"heartbeat")
+                self._addError(heartbeat['nid'],"found heartbeat node '%s' which is not in grid nodes."%(heartbeat['nid']),"heartbeat")
 
         nid2hb = dict([(x['nid'], x['lastcheck']) for x in heartbeats])
         print "check heartbeats for all nodes"
@@ -96,14 +100,19 @@ class GridHealthChecker(object):
                         name=self._nodenames[nid]
                         self._addError(nid,"On node:'%s' (%s). Processmanager is not responding, last heartbeat %s hours ago"%(name,nid,hago),"heartbeat")    
                 else:
-                    self._addError(nid,"found grid node which is not in heartbeat nodes\nGrid node:%s"%(nid),"heartbeat")
-        print "heartbeat check done."
+                    self._addError(nid,"found heartbeat node '%s' which is not in grid nodes." % (nid),"heartbeat")
 
+    def _checkRunningNIDsFromPing(self):
+        self._runningnids = self._nids[:]
+        for nid, error in self._errors.iteritems():
+            for category in error:
+                if category == 'processmanagerping':
+                    self._runningnids.remove(nid)
 
     def toStdout(self):
         self._tostdout = True
 
-    def getNodes(self):        
+    def getNodes(self, pprint=False):        
         """
         cache in mem
         list nodes from grid
@@ -130,14 +139,17 @@ class GridHealthChecker(object):
                 self.masternid = node['id'] 
         if gridmasterip == '127.0.0.1':
             self.masternid = j.application.whoAmI.nid
-        self._checkRunningNIDs()
+        self.pingAllNodes(clean=True, pprint=pprint)
+        self._checkRunningNIDsFromPing()
 
     def runAll(self):
         self._clean()
-        self.getNodes()
+        self.getNodes(pprint=True)
+        print
+        self.checkHeartbeatsAllNodes(clean=False)
         self.checkProcessManagerAllNodes(clean=False)
+        print '\n**Running tests on %s node(s). %s node(s) have no heartbeat**\n' % (len(self._runningnids), len(self._nids)-len(self._runningnids))
         if self._runningnids:
-            self.pingAllNodes(clean=False)
             self.checkElasticSearch(clean=False)
             self.checkRedisAllNodes(clean=False)
             self.checkWorkersAllNodes(clean=False)
@@ -147,11 +159,10 @@ class GridHealthChecker(object):
     def printStatus(self, category):
         if self._errors:
             errors = False
-            if self._errors:
-                for nid, categories in self._errors.iteritems():
-                    if category in categories:
-                        errors = True
-                        print "\t**ERROR**: %s test failed on node '%s' id:'%s'" % (category.title(), self._nodenames.get(nid, 'N/A'), nid)
+            for nid, categories in self._errors.iteritems():
+                if category in categories:
+                    errors = True
+                    print "\t**ERROR**: %s test failed on node '%s' id:'%s'" % (category.title(), self._nodenames.get(nid, 'N/A'), nid)
             if not errors:
                 print '\t**OK**'
 
@@ -194,7 +205,7 @@ class GridHealthChecker(object):
         if self._nids==[]:
             self.getNodes()
 
-        print "CHECK REDIS"
+        print "CHECK REDIS ON %s NODE(S)" % len(self._runningnids)
         if clean:
             self._clean()
         self._parallelize(self.checkRedis, False, 'redis')
@@ -241,7 +252,7 @@ class GridHealthChecker(object):
 
         if clean:
             self._clean()
-        print "CHECK WORKERS"
+        print "CHECK WORKERS ON %s NODE(S)" % len(self._runningnids)
         self._parallelize(self.checkWorkers, False, 'workers')
         if self._tostdout:
             self.printStatus('workers')
@@ -290,6 +301,35 @@ class GridHealthChecker(object):
         if clean:
             return self._status, self._errors
 
+
+    def checkHeartbeatsAllNodes(self, clean=True):
+        if clean:
+            self._clean()
+        if self._nids==[]:
+            self.getNodes()
+        print 'CHECK HEARTBEATS'
+        print "get all heartbeats (just query from ES):",
+        print "OK"
+        heartbeats = self._heartbeatcl.simpleSearch({})
+        for heartbeat in heartbeats:
+            if heartbeat['nid'] not in self._nids and  heartbeat['nid']  not in self._nidsNonActive:
+                self._addError(heartbeat['nid'],"found heartbeat node '%s' which is not in grid nodes."%(heartbeat['nid']),"heartbeat")
+
+        nid2hb = dict([(x['nid'], x['lastcheck']) for x in heartbeats])
+        print "check heartbeats for all nodes"
+        for nid in self._nids:
+            if nid not in self._nidsNonActive:
+                if nid in nid2hb:
+                    lastchecked = nid2hb[nid]
+                    if not j.base.time.getEpochAgo('-2m') < lastchecked:
+                        hago= round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
+                        name=self._nodenames[nid]
+                        self._addError(nid,"On node:'%s' (%s). Processmanager is not responding, last heartbeat %s hours ago"%(name,nid,hago),"heartbeat")    
+                else:
+                    self._addError(nid,"found heartbeat node '%s' which is not in grid nodes." % (nid),"heartbeat")
+        if clean:
+            return self._status, self._errors
+
     def checkProcessManager(self, nid, clean=True):
         """
         Check heartbeat on specified node, see if result came in osis
@@ -317,26 +357,29 @@ class GridHealthChecker(object):
             self._clean()
         if self._nids==[]:
             self.getNodes()
-        print "CHECK DISKS"
+        print "CHECK DISKS ON %s NODE(S)" % len(self._runningnids)
         self._parallelize(self.checkDisks, False, 'disks')
         if self._tostdout:
             self.printStatus('disks')
         if clean:
             return self._status, self._errors
 
-    def pingAllNodes(self, clean=True):
+    def pingAllNodes(self, clean=True, pprint=False):
         if clean:
             self._clean()
         if self._nids==[]:
             self.getNodes()
-        print "PROCESS MANAGER PING TO ALL NODES"
-        self._parallelize(self.ping, False, 'pingsync')
+        if pprint:
+            print "PROCESS MANAGER PING TO ALL (%s) NODES" % len(self._nids)
+        self._parallelize(self.ping, False, 'processmanagerping')
+        self._checkRunningNIDsFromPing()
         if self._tostdout:
-            self.printStatus('pingsync')
-        print "WORKER PING TO ALL NODES"
-        self._parallelize(self.pingasync, False, 'pingasync')
+            self.printStatus('processmanagerping')
+        if pprint:
+            print "WORKER PING TO %s NODE(S)" % len(self._runningnids)
+        self._parallelize(self.pingasync, False, 'workerping')
         if self._tostdout:
-            self.printStatus('pingasync')
+            self.printStatus('workerping')
 
         if clean:
             return self._status, self._errors        
@@ -344,7 +387,7 @@ class GridHealthChecker(object):
     def ping(self,nid,clean=True):
         results = list()
         errors = list()
-        result = self._client.executeJumpScript('jumpscale', 'echo_sync', args={"msg":"ping"},nid=nid, timeout=5)
+        result = self._client.executeJumpScript('jumpscale', 'echo_sync', args={"msg":"ping"},nid=nid, timeout=2)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'processmanagerping'))
         return results, errors
@@ -352,7 +395,7 @@ class GridHealthChecker(object):
     def pingasync(self,nid,clean=True):
         results = list()
         errors = list()
-        result = self._client.executeJumpScript('jumpscale', 'echo_async', args={"msg":"ping"}, nid=nid, timeout=5)
+        result = self._client.executeJumpScript('jumpscale', 'echo_async', args={"msg":"ping"}, nid=nid, timeout=2)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'workerping'))
         return results, errors
