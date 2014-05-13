@@ -36,8 +36,7 @@ from multiprocessing import Process, Queue
 
 class RedirectSTDOUT:
     def __init__(self,name):
-        self.oldstdout=sys.stdout
-        self.redis=j.clients.redis.getRedisClient("127.0.0.1", 7768)
+        self.oldstdout=sys.stdout        
         self.name=name
         # self.redis.hset("admin:output",self.name,"")
         self.out=""
@@ -56,65 +55,76 @@ class RedirectSTDOUT:
 
 import sys
 
+import time
 
-def doRemote(q,args,hostkey,cmd):
+def doRemote(args,hostkey,cmd):
     # j.admin.hosts=[host]
 
-    gridname,name=hostkey.split("__")
-    try:
-        node=j.admin.getNode(gridname,name)
-    except:
-        q.put((hostkey,name,"",""))
-    if cmd<>"":        
-        r=RedirectSTDOUT(hostkey)
+    def report(node,args):
         if args.sync==False:
-            print "execute:%s"%hostkey
+            node.out+="\nSTDOUT:\n%s"%r.out            
+        print "ERROR: COULD NOT EXECUTE: STDOUT:"
+        print node.out
+        if node.error<>"":
+            print "ERROR: COULD NOT EXECUTE: ERROR:"
+            print node.error
+        print "ERROR: could not execute:%s on \n%s"%(cmd,node)
+        j.admin.setNode(node)
+        if args.sync:
+            j.application.stop(1)
+    
+    gridname,name=hostkey.split("__")
+    node=j.admin.getNode(gridname,name)
+    sr=node.getScriptRun()
+    if cmd<>"":        
+        error=False
+        r=RedirectSTDOUT(hostkey)
+        print "execute:%s:%s:"%(hostkey,cmd),
+        if args.sync==False:            
             sys.stdout=r
-        res=""
-        out=""
         try:
-            res=node.executeCmds(cmd)
+            node.executeCmds(cmd)
         except BaseException,e:
-            sys.stdout=r.oldstdout
-            # out=r.redis.hget("admin:output",key)
-            q.put((hostkey,cmd,res,r.out))            
-            return
+            sys.stdout=r.oldstdout            
+            print "ERROR"
+            error=True
+            report(node,args)
         sys.stdout=r.oldstdout
-        q.put((hostkey,cmd,res,""))
+        if sr.state<>"OK":
+            print "ERROR"
+            report(node,args)
+        elif not error:
+            print "OK"   
     else:
-        for name in args.name.split(","):  #name is name of jumpscript
-            name=name.lower()
-            name=name.strip()
-            key="%s_%s"%(hostkey,name)
+        for cmd in args.name.split(","):  #name is name of jumpscript
+            cmd=cmd.lower().strip()
+            key="%s_%s"%(hostkey,cmd.strip())
             r=RedirectSTDOUT(key)            
-            if args.sync==False:
-                print "execute:%s"%hostkey
+            print "execute:%s:%s:"%(hostkey,cmd),
+            if args.sync==False:                
                 sys.stdout=r
-            try:
-                res=node.execute(name)
-            except Exception,e:                
-                sys.stdout=r.oldstdout
-                # out="%s\n%s"%(str(e),r.redis.hget("admin:output",key))
-                q.put((hostkey,name,"",r.out))
-                j.errorconditionhandler.processPythonExceptionObject(e)
-                return
 
+            once=True
+            if j.admin.args.force:
+                once=False
+
+            j.admin. executeForNode(node,jsname=cmd,once=once)
             sys.stdout=r.oldstdout
-            # out=r.redis.hget("admin:output",key)
-
-            if node<>None:
-                if node.error<>"":
-                    if node.result=="":
-                        node.result=r.out
-                q.put((hostkey,name,node.result,node.error))
+            if sr.state<>"OK":
+                print "ERROR"
+                report(node,args)
             else:
-                q.put((hostkey,name,"",r.out))
+                print "OK"
+    j.admin.setNode(node)
+    from IPython import embed
+    print "DEBUG NOW uuu"
+    embed()
+    
 
 import JumpScale.baselib.admin
 
 
 if __name__ == '__main__':
-    queue = Queue()
     # hosts=["cpu10","cpu12"]
 
     admin=j.tools.admin.get(args)
@@ -123,20 +133,25 @@ if __name__ == '__main__':
     for hostkey in j.admin.hostKeys:
 
         if not args.sync:
-            p = Process(target=doRemote, args=(queue,args,hostkey,args.command,))
+            p = Process(target=doRemote, args=(args,hostkey,args.command,))
             p.start()
         else:
-            doRemote(queue,args,hostkey,args.command)
+            doRemote(args,hostkey,args.command)
 
-    exitcode = 0
+    from IPython import embed
+    print "DEBUG NOW execute done"
+    embed()
+    
+
     for hostkey in j.admin.hostKeys:
         obj = queue.get()
         # print obj
         if obj[3].strip()<>"":
-            exitcode = 1
             print "##ERROR##%-10s %-20s##\n%s\n%s\n###############################################"%obj
         else:
             print "##%-10s %-20s##\n%s\n%s"%obj
+
+    exitcode = 1 if admin.errors else 0
 
     j.application.stop(exitcode)
 

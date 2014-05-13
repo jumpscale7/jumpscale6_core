@@ -54,14 +54,22 @@ class RedisFactory:
         return self.gredisq[key]
 
     def emptyAllInstances(self):
-        path = "/opt/redis/"
-        for name in j.system.fs.listDirsInDir(path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
-            self.emptyInstance(name)
+        for pd in [item for item in j.tools.startupmanager.getProcessDefs("jumpscale") if item.name.find("redis")==0]:
+            if pd.name=="redism":
+                continue #nothing to do
+            pd.stop()
+            path=j.system.fs.joinPaths(j.dirs.varDir,"redis",pd.name,"db")
+            print "remove:%s"%path
+            j.system.fs.removeDirTree(path)
+            j.system.fs.createDir(path)
+            path=j.system.fs.joinPaths(j.dirs.varDir,"redis",pd.name,"redis.log")
+            j.system.fs.remove(path)
+            pd.start()
 
-    def deleteAllInstances(self):
-        path = "/opt/redis/"
-        for name in j.system.fs.listDirsInDir(path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
-            self.deleteInstance(name)
+    # def deleteAllInstances(self):
+    #     path = "/opt/redis/"
+    #     for name in j.system.fs.listDirsInDir(path, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+    #         self.deleteInstance(name)
 
     def getPort(self, name):
         self.getProcessPids(name)

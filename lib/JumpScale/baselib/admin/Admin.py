@@ -14,6 +14,26 @@ import time
 import JumpScale.baselib.webdis
 
 from fabric.api import hide
+import time
+
+redis=j.clients.redis.getRedisClient("127.0.0.1", 7768)
+
+class ScriptRun():
+    def __init__(self):
+        self.runid=j.admin.runid
+        self.epoch=time.time()
+        self.error=""
+        self.result=""
+        self.state="OK"
+        self.out=""
+        self.extraArgs=""
+        self.gridname=""
+        self.nodename=""
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    __repr__=__str__
 
 class JNode():
     def __init__(self):
@@ -26,127 +46,167 @@ class JNode():
         self.enable=True
         self.remark=""
         self.roles=[]
-        self.cuapi=None
-        self.args=None
         self.passwd=None
-        self.error=""
-        self.result=""
-        self.basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
+        self._basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
+        self._cuapi=None
+        self._args=None
+        self._currentScriptRun=None
 
-    def executeCmds(self,cmds,die=True):
-        out=""
+    def getScriptRun(self):
+        if self._currentScriptRun==None:
+            self._currentScriptRun=ScriptRun()
+            self._currentScriptRun.gridname=self.gridname
+            self._currentScriptRun.nodename=self.name
+        return self._currentScriptRun
+
+    def executeCmds(self,cmds,die=True,insandbox=False):
+        out=scriptRun.out
         for line in cmds.split("\n"):
             if line.strip()<>"" and line[0]<>"#":
-                if die:
-                    out+="%s\n"%self.cuapi.run(line)
-                else:
-                    try:
-                        print line
-                        out+="%s\n"%self.cuapi.run(line)
-                    except:
-                        pass
-        self.result+=out
-        return out
+                self.log("execcmd",line)
+                if insandbox:
+                    line2="source /opt/jsbox/activate;%s"%line                
+                try:                    
+                    out+="%s\n"%self._cuapi.run(line2)
+                except Exception,e:
+                    if die:
+                        self.raiseError("execcmd","error execute:%s"%line,e)
 
-    def killProcess(self,filterstr):
+    def killProcess(self,filterstr,die=True):
         found=self.getPids(filterstr)
         for item in found:
-            self.cuapi.run("kill -9 %s"%item)
+            self.log("killprocess","kill:%s"%item)
+            try:
+                self._cuapi.run("kill -9 %s"%item)
+            except Exception,e:
+                if die:
+                    self.raiseError("killprocess","kill:%s"%item,e)
 
-    def getPids(self,filterstr):
+    def getPids(self,filterstr,die=True):
+        self.log("getpids","")
         with hide('output'):
-            out=self.cuapi.run("ps ax")
+            try:
+                out=self._cuapi.run("ps ax")
+            except Exception,e:
+                if die:
+                    self.raiseError("getpids","ps ax",e)
         found=[]
         for line in out.split("\n"):
             if line.strip()<>"":
                 if line.find(filterstr)<>-1:
                     line=line.strip()
                     found.append(int(line.split(" ")[0]))   
-
         return found
 
-    def jpackageStop(self,name,filterstr):
-        self.cuapi.run("source /opt/jsbox/activate;jpackage stop -n %s"%name)
+    def jpackageStop(self,name,filterstr,die=True):
+        self.log("jpackagestop","%s (%s)"%(name,filterstr))
+        try:
+            self._cuapi.run("source /opt/jsbox/activate;jpackage stop -n %s"%name)
+        except Exception,e:
+            if die:
+                self.raiseError("jpackagestop","%s"%name,e)
+        
         found=self.getPids(filterstr)
         if len(found)>0:
             for item in found:
-                self.cuapi.run("kill -9 %s"%item)            
+                try:
+                    self._cuapi.run("kill -9 %s"%item)            
+                except:
+                    pass
 
     def jpackageStart(self,name,filterstr,nrtimes=1,retry=1):
         found=self.getPids(filterstr)
+        self.log("jpackagestart","%s (%s)"%(name,filterstr))
         for i in range(retry):
             if len(found)==nrtimes:
                 return
-            self.cuapi.run("source /opt/jsbox/activate;jpackage start -n %s"%name)                
+            scriptRun=self.getScriptRun()
+            try:
+                self._cuapi.run("source /opt/jsbox/activate;jpackage start -n %s"%name)  
+            except Exception,e:
+                if die:
+                    self.raiseError("jpackagestart","%s"%name,e)                          
             time.sleep(1)
             found=self.getPids(filterstr)
         if len(found)<nrtimes:
-            self.raiseError("jpackageStart","could not jpackageStart %s"%name)
+            self.raiseError("jpackagestart","could not jpackageStart %s"%name)
 
     def serviceStop(self,name,filterstr):
+        self.log("servicestop","%s (%s)"%(name,filterstr))
         try:
-            self.cuapi.run("sudo stop %s"%name)
+            self._cuapi.run("sudo stop %s"%name)
         except:
             pass
         found=self.getPids(filterstr)
+        scriptRun=self.getScriptRun()
         if len(found)>0:
             for item in found:
-                self.cuapi.run("kill -9 %s"%item)            
+                try:
+                    self._cuapi.run("kill -9 %s"%item)            
+                except:
+                    pass
         found=self.getPids(filterstr)
         if len(found)>0:
-            self.raiseError("service stop","could not serviceStop %s"%name)
+            self.raiseError("servicestop","could not serviceStop %s"%name)
 
-    def serviceStart(self,name,filterstr):
+    def serviceStart(self,name,filterstr,die=True):
+        self.log("servicestart","%s (%s)"%(name,filterstr))
         found=self.getPids(filterstr)
         if len(found)==0:
-            self.cuapi.run("sudo start %s"%name)
+            try:
+                self._cuapi.run("sudo start %s"%name)          
+            except:
+                pass            
         found=self.getPids(filterstr)
-        if len(found)==0:
-            self.raiseError("service start","could not serviceStart %s"%name)            
+        if len(found)==0 and die:
+            self.raiseError("servicestart","could not serviceStart %s"%name)            
 
     def serviceReStart(self,name,filterstr):
         self.serviceStop(name,filterstr)
         self.serviceStart(name,filterstr)
 
+    def raiseError(self,action,msg,e=None):
+        scriptRun=self.getScriptRun()
+        scriptRun.state="ERROR"
+        if e<>None:
+            scriptRun.error="Python Error:\n%s\n-------------------------\n"%e
 
-    def raiseError(self,action,msg):
-        out=""
+        error=scriptRun.error
         for line in msg.split("\n"):
-            out+="%-5s:%s: **ERROR** %s\n" % (self.name,action,line)        
-        j.admin.raiseError(self.name,action,msg)
-        j.admin.log(out)
-        self.error = out
+            toadd="%-10s: %s\n" % (action,line)
+            error+=toadd
+            print "**ERROR** %-10s:%s"%(self.name,toadd)
         self.lastcheck=0
         j.admin.setNode(self)
+        raise RuntimeError("**ERROR**")
 
-    def log(self,msg):
-        # print msg
+    def log(self,action,msg):
         out=""
         for line in msg.split("\n"):
-            out+="%-5s: %s\n" % (self.name,line)
-        j.admin.log(out)
+            toadd="%-10s: %s\n" % (action,line)
+            print "%-10s:%s"%(self.name,toadd)
+            out+=toadd
 
-    def setpasswd(self,passwd):
+    def setpasswd(self,passwd,args=None):
         #this will make sure new password is set
-        self.log("set passwd")
+        self.log("setpasswd","")
         cl=j.tools.expect.new("sh")
-        if self.args.seedpasswd=="":
-            self.args.seedpasswd=self.findpasswd()
+        if args==None or args.seedpasswd=="":
+           args.seedpasswd=self.findpasswd()
         try:
             cl.login(remote=self.name,passwd=passwd,seedpasswd=None)
         except Exception,e:
             self.raiseError("setpasswd","Could not set root passwd.")
 
     def findpasswd(self):
-        self.log("find passwd for superadmin")
+        self.log("findpasswd","find passwd for superadmin")
         cl=j.tools.expect.new("sh")
         for passwd in j.admin.rootpasswds:
-            # cl.login(remote=self.args.remote,passwd=passwd,seedpasswd=None)
             try:            
                 pass
                 cl.login(remote=self.name,passwd=passwd,seedpasswd=None)
             except Exception,e:
-                self.raiseError("findpasswd","could not login using:%s"%passwd)
+                self.raiseError("findpasswd","could not login using:%s"%passwd,e)
                 continue
             self.passwd=passwd
             j.admin.setNode(self)
@@ -156,28 +216,28 @@ class JNode():
         j.base.time.getTimeEpoch()
 
     def _connectCuapi(self):
-
+        args=j.admin.args
         if self.ip=="":
             raise RuntimeError("ip cannot be empty")
         
-        self.cuapi.connect(self.ip)
+        self._cuapi.connect(self.ip)
 
-        if self.args.passwd<>"":
+        if args.passwd<>"":
             # setpasswd()
-            j.remote.cuisine.fabric.env["password"]=self.args.passwd
+            j.remote.cuisine.fabric.env["password"]=args.passwd
         elif self.passwd<>None and self.passwd<>"unknown":
             # setpasswd()
             j.remote.cuisine.fabric.env["password"]=self.passwd
         # else:
         #     self.findpasswd()
 
-        return self.cuapi
+        return self._cuapi
 
     def uploadFromCfgDir(self,ttype,dest):
-        cfgdir=j.system.fs.joinPaths(self.basepath, "cfgs/%s/%s"%(j.admin.args.cfgname,ttype))
-        cuapi=self.cuapi
+        cfgdir=j.system.fs.joinPaths(self._basepath, "cfgs/%s/%s"%(j.admin.args.cfgname,ttype))
+        cuapi=self._cuapi
         if j.system.fs.exists(path=cfgdir):
-            self.log("upload from %s to %s"%(ttype,dest))
+            self.log("uploadcfg","upload from %s to %s"%(ttype,dest))
             items=j.system.fs.listFilesInDir(cfgdir,True)
             done=[]
             for item in items:
@@ -189,47 +249,24 @@ class JNode():
                 try:            
                     cuapi.file_upload("%s/%s"%(dest,partpath),item)#,True,True)  
                 except Exception,e:
-                    self.raiseError("uploadFromCfgDir","could not upload file %s to %s"%(ttype,dest))
+                    self.raiseError("uploadcfg","could not upload file %s to %s"%(ttype,dest))
 
-    def execute(self,jsname,once=True,**kwargs):
-        self.log("execute:%s on %s "%(jsname,self.name))
-        jsname=jsname.lower()
-        now= j.base.time.getTimeEpoch()
-        do=True
-        if once:
-            if self.actionsDone.has_key(jsname):
-                timeexec=self.actionsDone[jsname]
-                if timeexec<(now-(3600*10)): #10h ago
-                    do=True
-                else:
-                    do=False
-        if self.args.force:
-            do=True
-        if do:
-            print "* tcp check ssh"
-            if not j.admin.js.has_key(jsname):
-                raise RuntimeError("cannot find js:%s"%jsname)
-
-            if not j.system.net.waitConnectionTest(self.ip,22, self.args.timeout):
-                self.raiseError(jsname,"COULD NOT check port (ssh)")
-                return
-            self.log("sshapi start cmd:%s"%jsname)
-            try:                
-                self.result=j.admin.js[jsname](node=self,**kwargs)
-                self.actionsDone[jsname]=now
-                self.lastcheck=now
-            except BaseException,e:
-                if self.actionsDone.has_key(jsname):
-                    self.actionsDone.pop(jsname)                
-                msg="COULD NOT EXECUTE %s .\nError %s"%(self.name,e)
-                # j.errorconditionhandler.processPythonExceptionObject(e)
-                self.raiseError(jsname,msg)
-                self.error=str(e)
-
-            j.admin.setNode(self)
-        else:
-            self.log("No need to execute %s on %s"%(jsname,self.name))
-            return False
+    def upload(self,source,dest):
+        args=j.admin.args
+        if not j.system.fs.exists(path=source):
+            self.raiseError("upload","could not find path:%s"%source)
+        self.log("upload","upload %s to %s"%(source,dest))
+        from IPython import embed
+        print "DEBUG NOW implement upload in Admin"  #@todo
+        embed()
+    
+        for item in items:
+            partpath=j.system.fs.pathRemoveDirPart(item,cfgdir)
+            partpathdir=j.system.fs.getDirName(partpath).rstrip("/")
+            if partpathdir not in done:
+                print cuapi.dir_ensure("%s/%s"%(dest,partpathdir), True)
+                done.append(partpathdir)            
+            cuapi.file_upload("%s/%s"%(dest,partpath),item)#,True,True)                       
 
     def __repr__(self):
         roles=",".join(self.roles)
@@ -244,7 +281,7 @@ class AdminFactory:
 class Admin():
     def __init__(self,args,failWhenNotExist=False):
         self.args=args
-        self.basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
+        self._basepath=j.dirs.replaceTxtDirVars(j.application.config.get("admin.basepath"))
         self.hostKeys=[]
         if args.action==None or (not args.action in ["createidentity","applyconfiglocal"]):
             if args.local:
@@ -254,7 +291,7 @@ class Admin():
             #     if args.remote =="":
             #         args.remote=j.console.askString("Ip address of remote")    
                 #create ssh connection
-            self.cuapi = j.remote.cuisine.api      
+            self._cuapi = j.remote.cuisine.api      
             if args.g:
                 roles = list()
                 if args.roles:
@@ -286,30 +323,30 @@ class Admin():
             #         for host in hosts:
             #             #check 
             #             if j.system.net.tcpPortConnectionTest("m3pub",22):
-            #                 self.cuapi.fabric.api.env["hosts"].append(host)
+            #                 self._cuapi.fabric.api.env["hosts"].append(host)
             #                 self.hostKeys.append(host)
             #     else:
             #         self.hostKeys=hosts
-            #         self.cuapi.fabric.api.env["hosts"]=hosts
+            #         self._cuapi.fabric.api.env["hosts"]=hosts
             # else:            
-            #     self.cuapi.connect(args.remote)
+            #     self._cuapi.connect(args.remote)
         self.sysadminPasswd=""
-        self.js={}
-        
+        self.js={}        
         # DO NOT USE CREDIS IN THIS CONTEXT, NOT THREAD SAFE
         self.redis = j.clients.redis.getRedisClient("127.0.0.1", 7768)
         # self.nodes={}
-        self.errors=[]
-        self._log=""
         self.hrd= j.core.hrd.getHRD(self._getPath("cfg/","superadmin.hrd"))
         self.rootpasswds=self.hrd.getList("superadmin.passwds")
-        if j.application.config.exists("grid_master_ip") and j.system.net.tcpPortConnectionTest(j.application.config.get("grid_master_ip"),7779):
-            self.webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
-        else:
-            self.webdis=None
         self.loadJumpscripts()
-        # self.loadNodes()
+        self.loadNodes()
+        self.runid=self.redis.incr("admin:scriptrunid")
+        # 
         # self.config2gridmaster() #this should not be done every time
+
+    def reset(self):
+        #clear redis
+        self.redis.delete("admin:nodes")
+        self.redis.delete("admin:scriptruns")
 
     def _getActiveNodes(self):
         import JumpScale.grid.osis
@@ -317,16 +354,8 @@ class Admin():
         ncl = j.core.osis.getClientForCategory(oscl, 'system', 'node')
         return ncl.simpleSearch({'active': True})
 
-    def log(self,msg):
-        msg=msg.strip("\n")+"\n"
-        print msg
-        self._log+="%s"%msg
-
-    def raiseError(self,name,action,msg):
-        self.errors.append([name,action,msg])
-
     def _getPath(self,sub,file=""):        
-        path= "%s/%s"%(self.basepath,sub)
+        path= "%s/%s"%(self._basepath,sub)
         path=path.replace("\\","/")
         path=path.replace("//","/")
         if path[-1]<>"/":
@@ -335,25 +364,17 @@ class Admin():
             path+=file
         return path
 
-    # def pushDir(self)
-
-    def _getNodeKey(self,gridname,name):
-        key="admin:nodes:%s:%s"%(gridname,name)
-        return key
-
     def getNode(self,gridname,name):
-        key=self._getNodeKey(gridname,name)
         name=name.lower()
         gridname=gridname.lower()
         
-        if self.redis.exists(key)==0:
-            # raise RuntimeError("could not find node: '%s/%s'"%(gridname,name))
-            node=JNode()
-            node.name=name
-            node.ip=name
-            node.host=name
+        if self.redis.hexists("admin:nodes","%s:%s"%(gridname,name))==False:
+            raise RuntimeError("could not find node: '%s/%s'"%(gridname,name))
+            # node=JNode()
+            # node.ip=name
+            # node.host=name
         else:
-            data=self.redis.get(key)
+            data=self.redis.hget("admin:nodes","%s:%s"%(gridname,name))
             node=JNode()
             try:
                 node.__dict__=json.loads(data)
@@ -361,52 +382,67 @@ class Admin():
                 raise RuntimeError("could not decode node: '%s/%s'"%(gridname,name))
                 # node=JNode()
                 # self.setNode(node)
-            node.name=name
-
-        node.cuapi=self.cuapi
-        node.args=self.args
-        node.result=""
-        node.error=""
+        node.gridname=gridname
+        node.name=name
+        node._cuapi=self._cuapi
+        node._currentScriptRun=None
         node._connectCuapi()
-        return node
-
-    def upload(self,name,ttype,dest):
-        cfgdir="%s/cfgs/%s/%s"%(self.basepath,self.args.cfgname,ttype)
-        if j.system.fs.exists(path=cfgdir):
-            print "upload %s to %s"%(cfgdir,dest)
-            items=j.system.fs.listFilesInDir(cfgdir,True)
-            done=[]
-            for item in items:
-                partpath=j.system.fs.pathRemoveDirPart(item,cfgdir)
-                partpathdir=j.system.fs.getDirName(partpath).rstrip("/")
-                if partpathdir not in done:
-                    print cuapi.dir_ensure("%s/%s"%(dest,partpathdir), True)
-                    done.append(partpathdir)            
-                cuapi.file_upload("%s/%s"%(dest,partpath),item)#,True,True)    
+        return node 
 
     def setNode(self,node):
         node2=copy.copy(node.__dict__)
-        node2.pop("cuapi")
-        node2.pop("args")
-        key=self._getNodeKey(node.gridname,node.name)
-        self.redis.set(key,json.dumps(node2))
+        for key in node2.keys():
+            if key[0]=="_":
+                node2.pop(key)
+        self.redis.hset("admin:nodes","%s:%s"%(node.gridname,node.name),json.dumps(node2))
+        sr=node._currentScriptRun
+        if sr<>None:
+            self.redis.hset("admin:scriptruns","%s:%s:%s"%(node.gridname,node.name,sr.runid),json.dumps(sr.__dict__))
+
+    def executeForNode(self,node,jsname,once=True,**kwargs):
+        """
+        return node
+        """
+        node._currentScriptRun=None
+        jsname=jsname.lower()
+        now= j.base.time.getTimeEpoch()
+        do=True
+        if once:
+            if node.actionsDone.has_key(jsname):
+                timeexec=node.actionsDone[jsname]
+                if timeexec<(now-(3600*1)): #1h ago
+                    do=True
+                else:
+                    do=False
+        if self.args.force:
+            do=True
+        if do:
+            print "* tcp check ssh"
+            if not j.admin.js.has_key(jsname):
+                self.raiseError("executejs","cannot find js:%s"%jsname)
+
+            if not j.system.net.waitConnectionTest(node.ip,22, self.args.timeout):
+                self.raiseError("executejs","jscript:%s,COULD NOT check port (ssh)"%jsname)
+                return
+            # self.log("sshapi start cmd:%s"%jsname)
+            try:                
+                node.result=j.admin.js[jsname](node=node,**kwargs)
+                node.actionsDone[jsname]=now
+                node.lastcheck=now
+            except BaseException,e:
+                if node.actionsDone.has_key(jsname):
+                    node.actionsDone.pop(jsname)
+            self.setNode(node)
+        else:
+            self.log("No need to execute %s on %s"%(jsname,self.name))
+        return node
 
     def execute(self,jsname,once=True,reset=False,**kwargs):
         res=[]
         for host in self.hostKeys:
             gridname, _, name = host.partition('__')
             node=self.getNode(gridname,name)
-            r=node.execute(jsname,once,**kwargs)
-            if r<>False:
-                res.append(node)
-            else:
-                # print "NO need to execute"
-                pass
-        if len(res)==1:
-            res=res[0]
-        elif len(res)==0:
-            res=None
-        return res
+            self.executeForNode(node,jsname,once,**kwargs)
 
     def loadJumpscripts(self):
         # print "load jumpscripts ",
@@ -422,11 +458,16 @@ class Admin():
                 module=imp.load_source('jscript_%s' % name, item)
                 self.js[name]= getattr(module, "action")
 
+    def getWebDis(self,enable=True):
+        webdis=None
+        if enable and j.application.config.exists("grid.watchdog.secret"):
+            if j.application.config.exists("grid_master_ip") and j.system.net.tcpPortConnectionTest(j.application.config.get("grid_master_ip"),7779):
+                webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
+        return webdis
+
     def loadNodes(self,webdis=False,pprint =False):
-        gridnames = list()
-        if webdis and self.webdis is not None:
-            key = "%s:admin:nodes" % j.application.config.get("grid_watchdog_secret")
-            self.webdis.delete(key)
+
+        webdis=self.getWebDis(webdis)
 
         for configpath in j.system.fs.listFilesInDir("%s/apps/admin/cfg"%j.dirs.baseDir,filter="*.cfg"):
 
@@ -434,11 +475,10 @@ class Admin():
             if gridname =="active.cfg":
                 continue
             gridname=gridname[:-4]
-            gridnames.append(gridname)
-
-            if webdis and self.webdis is not None:
+            
+            if webdis<>None:  
                 key="%s:admin:nodes:%s"%(j.application.config.get("grid_watchdog_secret"),gridname)
-                self.webdis.delete(key)
+                webdis.delete(key)
 
             nodes = list()
             config = j.config.getConfig(configpath[:-4])
@@ -453,8 +493,8 @@ class Admin():
                 node.enabled = False if host.get('enabled', '1')  == '1' else True
                 self.setNode(node)
                 nodes.append(node)
-                if webdis and self.webdis is not None:
-                    self.webdis.hset(key,node.name,json.dumps(node.__dict__))
+                if webdis<>None:
+                    webdis.hset(key,node.name,json.dumps(node.__dict__))
 
             if pprint:
                 line = "Grid %s" % gridname
@@ -465,14 +505,11 @@ class Admin():
                     print node
                 print ''
 
-        if webdis and self.webdis is not None:
-            key = "%s:admin:nodes" % j.application.config.get("grid.watchdog.secret")
-            self.webdis.set(key, json.dumps(gridnames))
-
     def config2gridmaster(self):
-        if self.webdis==None:
+        webdis=self.getWebDis()
+        if webdis==None:
             raise RuntimeError("cannot connect to webdis, is gridmaster running webdis?")
-        self.loadNodes(True)
+        self.loadNodes(webdis=True,pprint=False)
         sys.path.append(self._getPath("jumpscripts"))        
         cmds=j.system.fs.listFilesInDir(self._getPath("jumpscripts"), recursive=True, filter="*.py")
         cmds.sort()
@@ -488,7 +525,7 @@ class Admin():
             return code
 
         key="%s:admin:jscripts"%(j.application.config.get("grid_watchdog_secret"))
-        self.webdis.delete(key)
+        webdis.delete(key)
 
         for item in cmds:
             name=j.system.fs.getBaseName(item).replace(".py","")
@@ -503,8 +540,7 @@ class Admin():
                 obj["version"]= getattr(module, "version","1.0")
                 obj["code"]=getcode(item)
                 
-                # self.webdis.hset(key,name,obj)
-                self.webdis.hset(key,name,json.dumps(obj))
+                webdis.hset(key,name,json.dumps(obj))
                 # ret=json.loads(self.webdis.hget(key,name))
         
         # print "OK"
@@ -605,7 +641,7 @@ class Admin():
         hrdloc=j.system.fs.joinPaths(idloc,login,"id.hrd")
         j.system.fs.writeFile(filename=hrdloc,contents=c)
         for name in ["id_dsa","id_dsa.pub"]:
-            u = j.system.fs.joinPaths(self.basepath, 'identities','system',name)
+            u = j.system.fs.joinPaths(self._basepath, 'identities','system',name)
             j.system.fs.copyFile("/root/.ssh/%s"%name,u)
 
     def _getHostNames(self,hostfilePath,exclude={}):
