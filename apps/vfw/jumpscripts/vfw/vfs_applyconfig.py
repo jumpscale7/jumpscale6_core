@@ -14,7 +14,7 @@ organization = "jumpscale"
 author = "zains@incubaid.com"
 license = "bsd"
 version = "1.0"
-roles = ["vfw.host"]
+roles = []
 
 
 def action(name, fwobject):
