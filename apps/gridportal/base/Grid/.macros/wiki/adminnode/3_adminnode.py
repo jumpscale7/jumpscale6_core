@@ -39,10 +39,9 @@ def main(j, args, params, tags, tasklet):
     out = list()
     properties = [('Grid Name', 'gridname'), ('Name', 'name'), ('Enabled', 'enabled'),
                   ('IP', 'ip'), ('Roles', 'roles'), ('Last Checked', 'lastcheck'), 
-                  ('Remark', 'remark'), ('Cusinine API', 'cuapi'), ('Actions Done', 'actionsDone'),
-                  ('Password', 'passwd'), ('Args', 'args'), ('Enable', 'enable'), 
-                  ('Error', 'error'), ('Result', 'result'), ('Host', 'host'), 
-                  ('Base Path', 'basepath')]
+                  ('Remark', 'remark'), 
+                  ('Password', 'passwd'),  ('Enable', 'enable'), 
+                  ('Host', 'host')]
 
     node = json.loads(node)
     for printable, field in properties:

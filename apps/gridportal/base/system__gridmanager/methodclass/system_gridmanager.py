@@ -408,7 +408,19 @@ class system_gridmanager(j.code.classGetBase()):
         return: lists the jumpscripts with main fields (organization, name, category, descr)
         param:jsorganization find jumpscripts
         """
-        return self.osis_jumpscript.simpleSearch({'organization': organization})
+        res={}
+        for js in self.osis_jumpscript.simpleSearch({'organization': organization}):
+            key="%s:%s"%(js["organization"],js["name"])
+            if not res.has_key(key):
+                res[key]=js
+            if int(js["id"])>int(res[key]["id"]):
+                res[key]=js
+
+        res2=[]
+        for key,val in res.iteritems():
+            res2.append(val)
+
+        return res2
 
     def getAgentControllerActiveJobs(self, **kwargs):
         """

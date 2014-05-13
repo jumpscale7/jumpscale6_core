@@ -43,7 +43,7 @@ def main(j, args, params, tags, tasklet):
 
 
     key = "%s:admin:nodes" % j.application.config.get("grid.watchdog.secret")
-    hosts = json.loads(cl.get(key))
+    hosts=[item.split(":")[-1] for item in cl.keys(key+"*")]
 
     allnodes = list()
     for host in hosts:

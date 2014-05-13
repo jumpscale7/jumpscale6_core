@@ -38,8 +38,12 @@ while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
     time.sleep(0.1)
     print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
+nr=5
+while j.system.net.tcpPortConnectionTest("127.0.0.1",7779)==False:
     time.sleep(0.1)
+    if nr==5:
+        cmd="jsprocess restart -n webdis"
+        j.system.process.execute(cmd)
     print "cannot connect to webdis, make sure is installed locally, will keep on trying forever"
 
 
