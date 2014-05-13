@@ -10,6 +10,7 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "system.heartbeat"
+startatboot = True
 period = 60 #always in sec
 order = 1
 enable = True
