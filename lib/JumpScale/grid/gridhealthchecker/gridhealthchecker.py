@@ -30,7 +30,6 @@ class GridHealthChecker(object):
         self._errors.setdefault(nid, {})
         self._errors[nid].update({category:list()})
         if isinstance(result, basestring):
-            print '\t           %s' % result
             self._errors[nid][category].append({'errormessage': result})
         else:
             self._errors[nid][category].append(result)
@@ -75,9 +74,9 @@ class GridHealthChecker(object):
         return self._status, self._errors
 
     def _checkRunningNIDs(self):
-        print '\nCHECK HEARTBEATS'
+        print 'CHECKING HEARTBEATS...'
         self._runningnids = list()
-        print "get all heartbeats (just query from ES):",
+        print "\tget all heartbeats (just query from ES):",
         heartbeats = self._heartbeatcl.simpleSearch({})
         print "OK"
         for heartbeat in heartbeats:
@@ -85,7 +84,6 @@ class GridHealthChecker(object):
                 self._addError(heartbeat['nid'],"found heartbeat node '%s' which is not in grid nodes."%(heartbeat['nid']),"heartbeat")
 
         nid2hb = dict([(x['nid'], x['lastcheck']) for x in heartbeats])
-        print "check heartbeats for all nodes"
         for nid in self._nids:
             if nid not in self._nidsNonActive:
                 if nid in nid2hb:
@@ -110,7 +108,7 @@ class GridHealthChecker(object):
     def toStdout(self):
         self._tostdout = True
 
-    def getNodes(self, pprint=False, activecheck=True):
+    def getNodes(self, activecheck=True):
         """
         cache in mem
         list nodes from grid
@@ -134,14 +132,13 @@ class GridHealthChecker(object):
         if gridmasterip == '127.0.0.1':
             self.masternid = j.application.whoAmI.nid
         if activecheck:
-            self.pingAllNodesSync(clean=True, pprint=pprint)
+            self.pingAllNodesSync(clean=True)
             self._checkRunningNIDsFromPing()
 
     def runAll(self):
         self._clean()
-        self.getNodes(pprint=True)
+        self.getNodes()
         self._clean()
-        print
         self.checkHeartbeatsAllNodes(clean=False)
         self.checkProcessManagerAllNodes(clean=False)
         print '\n**Running tests on %s node(s). %s node(s) have not responded to ping**\n' % (len(self._runningnids), len(self._nids)-len(self._runningnids))
@@ -151,61 +148,61 @@ class GridHealthChecker(object):
             self.checkRedisAllNodes(clean=False)
             self.checkWorkersAllNodes(clean=False)
             self.checkDisksAllNodes(clean=False)
+        if self._tostdout:
+            self._printResults()
         return self._status, self._errors
 
     def runAllOnNode(self, nid):
         self._clean()
-
         self.ping(nid=nid, clean=False)
-        if self._tostdout:
-            print "Ping processmanager"
-            self.printStatus('processmanagerping')
-
         self.checkRedis(nid, clean=False)
-        if self._tostdout:
-            print "Check redis"
-            self.printStatus('redi')
-
         self.pingasync(nid=nid, clean=False)
-        if self._tostdout:
-            print "Ping worker proceess"
-            self.printStatus('processmanagerpingasync')
-
         self.checkWorkers(nid, clean=False)
-        if self._tostdout:
-            print "Check workers"
-            self.printStatus('workers')
-
         self.checkDisks(nid, clean=False)
         if self._tostdout:
-            print "Check disks"
-            self.printStatus('disks')
+            self._printResults()
 
-    def printStatus(self, category):
-        errors = False
-        if self._errors:
-            for nid, categories in self._errors.iteritems():
-                if category in categories:
-                    errors = True
-                    print "\t**ERROR**: %s test failed on node '%s' id:'%s'" % (category.title(), self._nodenames.get(nid, 'N/A'), nid)
-        if not errors:
-            print '\t**OK**'
+    def _printResults(self):
+        form = '%(nid)-8s %(name)-10s %(status)-8s %(issues)s'
+        print form % {'nid': 'NODE ID', 'name': 'NAME', 'status': 'STATUS', 'issues':'ISSUES'}
+        print '=' * 80
+        print ''
+        for nid, checks in self._status.iteritems():
+            if not self._errors.has_key(nid):
+                nodedata={'nid': nid, 'name': self.getName(nid), 'status': 'OK', 'issues': ''}
+                print form % nodedata
+
+        for nid, checks in self._errors.iteritems():
+            nodeerrors = self._errors.get(nid, {})
+            nodedata={'nid': nid, 'name': self.getName(nid), 'status': 'ERROR', 'issues': ''}
+            print form % nodedata
+            for category, errors in nodeerrors.iteritems():
+                for error in errors:
+                    defaultvalue = 'processmanager is unreachable by ping' if category == 'processmanager' else category
+                    errormessage = error.get('errormessage', defaultvalue)
+                    for message in errormessage.split(','):
+                        nodedata={'nid': '', 'name': '', 'status': '', 'issues': '** %s' % message}
+                        print form % nodedata
+
 
     def checkElasticSearch(self, clean=True):
         if self._nids==[]:
             self.getNodes()
-        print "CHECK ELASTICSEARCH"
         if clean:
             self._clean()
 
+        errormessage = ''
         if self.masternid not in self._runningnids:
             self._addError(self.masternid, {'state': 'UNKOWN'}, 'elasticsearch')
+            errormessage = 'ElasticSearch status UNKNOWN'
         else:
             eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=5)
             if eshealth['state'] == 'TIMEOUT':
                 self._addError(self.masternid, {'state': 'TIMEOUT'}, 'elasticsearch')
+                errormessage = 'ElasticSearch status TIMEOUT'
             elif eshealth['state'] != 'OK':
                 self._addError(self.masternid, {'state': 'UNKOWN'}, 'elasticsearch')
+                errormessage = 'ElasticSearch status UNKNOWN'
             else:
                 eshealth = eshealth['result']
                 if eshealth==None:
@@ -218,11 +215,11 @@ class GridHealthChecker(object):
 
                 if eshealth['health']['status'] in ['red']:
                     self._addError(self.masternid, eshealth, 'elasticsearch')
+                    errormessage = 'ElasticSearch status is RED'
                 else:
                     self._addResult(self.masternid, eshealth, 'elasticsearch')
-
-        if self._tostdout:
-            self.printStatus('elasticsearch')
+        if errormessage:
+            self._addError(self.masternid, errormessage, 'elasticsearch')
         if clean:
             return self._status, self._errors
 
@@ -231,12 +228,10 @@ class GridHealthChecker(object):
             self._clean()
         if self._nids==[]:
             self.getNodes()
-        print "CHECK REDIS ON %s NODE(S)" % len(self._runningnids)
+        print "CHECKING REDIS ON %s NODE(S)..." % len(self._runningnids)
         if clean:
             self._clean()
         self._parallelize(self.checkRedis, False, 'redis')
-        if self._tostdout:
-            self.printStatus('redis')
         if clean:
             return self._status, self._errors
 
@@ -250,10 +245,12 @@ class GridHealthChecker(object):
             self._clean()
         results = list()
         errors = list()
+        errormessage = list()
         result = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=5)
         redis = result['result']
         if result['state'] != 'OK' or not redis:
             errors.append((nid, {'state': 'UNKOWN'}, 'redis'))
+            errormessage.append('Redis state UNKNOWN')
             redis = dict()
 
         for port, result in redis.iteritems():
@@ -263,7 +260,10 @@ class GridHealthChecker(object):
             if result['state'] == 'RUNNING':
                 results.append((nid, result, 'redis'))
             else:
+                errormessage.append('Redis port "%(port)s" is %(state)s. Memory usage = %(memory_usage)s' % result)
                 errors.append((nid, result, 'redis'))
+        if errormessage:
+            errors.append((nid, ','.join(errormessage), 'redis'))
         self._returnResults(results, errors)
         return results, errors
 
@@ -272,10 +272,8 @@ class GridHealthChecker(object):
             self.getNodes()
         if clean:
             self._clean()
-        print "CHECK WORKERS ON %s NODE(S)" % len(self._runningnids)
+        print "CHECKING WORKERS ON %s NODE(S)..." % len(self._runningnids)
         self._parallelize(self.checkWorkers, False, 'workers')
-        if self._tostdout:
-            self.printStatus('workers')
         if clean:
             return self._status, self._errors
 
@@ -284,11 +282,14 @@ class GridHealthChecker(object):
             self._clean()
         results = list()
         errors = list()
+        errormessage = list()
         result = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid, timeout=30)
         workers = result['result']
         if result['state'] != 'OK' or not workers:
             errors.append((nid, {'state':'UNKOWN', 'mem': '0 B'}, 'workers'))
+            errormessage.append('Workers status UNKNOWN')
             workers = dict()
+
         for worker, stats in workers.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
             stats['mem'] = '%.2f %sB' % (size, unit)
@@ -296,7 +297,12 @@ class GridHealthChecker(object):
             if stats['state'] == 'RUNNING':
                 results.append((nid, stats, 'workers'))
             else:
+                statsmod = stats.copy()
+                statsmod['lastactive'] = j.base.time.epoch2HRDateTime(stats['lastactive']) if stats['lastactive'] else 'never'
+                errormessage.append('"%(name)s" is %(state)s. Last active: %(lastactive)s.' % statsmod)
                 errors.append((nid, stats, 'workers'))
+        if errormessage:
+            errors.append((nid, ','.join(errormessage), 'workers'))
         self._returnResults(results, errors)
         return results, errors
 
@@ -306,14 +312,12 @@ class GridHealthChecker(object):
             self._clean()
         if self._nids==[]:
             self.getNodes()
-        print "CHECK PROCESSMANAGERS"
+        print "CHECKING PROCESSMANAGERS..."
         haltednodes = set(self._nids)-set(self._runningnids)
         for nid in haltednodes:
             self._addError(nid, {'state': 'HALTED'}, 'processmanager')
         for nid in self._runningnids:
             self._addResult(nid, {'state': 'RUNNING'}, 'processmanager')
-        if self._tostdout:
-            self.printStatus('processmanager')
         if clean:
             return self._status, self._errors
 
@@ -323,26 +327,24 @@ class GridHealthChecker(object):
             self._clean()
         if self._nids==[]:
             self.getNodes()
-        print 'CHECK HEARTBEATS'
-        print "get all heartbeats (just query from ES):",
+        print 'CHECKING HEARTBEATS...'
+        print "\tget all heartbeats (just query from ES):",
         print "OK"
         heartbeats = self._heartbeatcl.simpleSearch({})
         for heartbeat in heartbeats:
             if heartbeat['nid'] not in self._nids and  heartbeat['nid']  not in self._nidsNonActive:
-                self._addError(heartbeat['nid'],"found heartbeat node '%s' which is not in grid nodes."%(heartbeat['nid']),"heartbeat")
+                self._addError(heartbeat['nid'], "found heartbeat node '%s' when not in grid nodes." % heartbeat['nid'],"heartbeat")
 
         nid2hb = dict([(x['nid'], x['lastcheck']) for x in heartbeats])
-        print "check heartbeats for all nodes"
         for nid in self._nids:
             if nid not in self._nidsNonActive:
                 if nid in nid2hb:
                     lastchecked = nid2hb[nid]
                     if not j.base.time.getEpochAgo('-2m') < lastchecked:
                         hago= round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
-                        name=self._nodenames[nid]
-                        self._addError(nid,"On node:'%s' (%s). Processmanager is not responding, last heartbeat %s hours ago"%(name,nid,hago),"heartbeat")    
+                        self._addError(nid, "Last heartbeat %s hours ago" % hago,"heartbeat")    
                 else:
-                    self._addError(nid,"found heartbeat node '%s' which is not in grid nodes." % (nid),"heartbeat")
+                    self._addError(nid, "found heartbeat node when not in grid nodes.","heartbeat")
         if clean:
             return self._status, self._errors
 
@@ -369,23 +371,18 @@ class GridHealthChecker(object):
             self._clean()
         if self._nids==[]:
             self.getNodes()
-        print "CHECK DISKS ON %s NODE(S)" % len(self._runningnids)
+        print "CHECKING DISKS ON %s NODE(S)..." % len(self._runningnids)
         self._parallelize(self.checkDisks, False, 'disks')
-        if self._tostdout:
-            self.printStatus('disks')
         if clean:
             return self._status, self._errors
 
-    def pingAllNodesSync(self, clean=True, pprint=False):
+    def pingAllNodesSync(self, clean=True):
         if clean:
             self._clean()
         if self._nids==[]:
             self.getNodes()
-        if pprint:
-            print "PROCESS MANAGER PING TO ALL (%s) NODES" % len(self._nids)
+        print "PROCESS MANAGER PING TO ALL (%s) NODES..." % len(self._nids)
         self._parallelize(self.ping, False, 'processmanagerping')
-        if self._tostdout:
-            self.printStatus('processmanagerping')
         return self._status, self._errors
 
     def pingAllNodesAsync(self, clean=True):
@@ -393,10 +390,8 @@ class GridHealthChecker(object):
             self.getNodes()
         if clean:
             self._clean()
-        print "WORKER PING TO %s NODE(S)" % len(self._runningnids)
+        print "WORKER PING TO %s NODE(S)..." % len(self._runningnids)
         self._parallelize(self.pingasync, False, 'workerping')
-        if self._tostdout:
-            self.printStatus('workerping')
         return self._status, self._errors        
 
     def ping(self,nid,clean=True):
@@ -407,6 +402,7 @@ class GridHealthChecker(object):
         result = self._client.executeJumpScript('jumpscale', 'echo_sync', args={"msg":"ping"},nid=nid, timeout=5)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'processmanagerping'))
+            errors.append((nid, 'cannot ping processmanager', 'processmanagerping'))
         self._returnResults(results, errors)
         return results, errors
 
@@ -418,6 +414,7 @@ class GridHealthChecker(object):
         result = self._client.executeJumpScript('jumpscale', 'echo_async', args={"msg":"ping"}, nid=nid, timeout=5)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'workerping'))
+            errors.append((nid, 'cannot ping workers', 'workerping'))
         self._returnResults(results, errors)
         return results, errors
 
@@ -426,10 +423,12 @@ class GridHealthChecker(object):
             self._clean()
         results = list()
         errors = list()
+        errormessage = list()
         result = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=30)
         disks = result['result']
         if result['state'] != 'OK':
             errors.append((nid, {'state': 'UNKOWN'}, 'disks'))
+            errormessage.append('Disks status UNKNOWN.')
             disks = dict()
         for path, disk in disks.iteritems():
             disk['path'] = path
@@ -437,6 +436,7 @@ class GridHealthChecker(object):
                 disk['message'] = 'FREE SPACE LESS THAN 10%% on disk %s' % path
                 disk['state'] = 'NOT OK'
                 errors.append((nid, {path: disk}, 'disks'))
+                errormessage.append('Disk %(path)s is %(state)s. %(message)s.' % disk)
             else:
                 if disk['free']:
                     size, unit = j.tools.units.bytes.converToBestUnit(disk['free'], 'M')
@@ -446,5 +446,7 @@ class GridHealthChecker(object):
                     disk['message'] = 'Disk is not mounted, Info is not available'
                 disk['state'] = 'OK'
                 results.append((nid, disk, 'disks'))
+        if errormessage:
+            errors.append((nid, ','.join(errormessage), 'disks'))
         self._returnResults(results, errors)
         return results, errors
