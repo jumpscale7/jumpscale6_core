@@ -7,18 +7,11 @@ import gevent
 class GridHealthChecker(object):
 
     def __init__(self):
-        print "get agentcontroller client: ",
-        self._client = j.clients.agentcontroller.get()
-        print "OK"
-        print "get osis client: ",
-        self._osiscl = j.core.osis.getClient(user='root')
-        print "OK"
-        print "get osis client for heartbeat: ",
+        with j.logger.nostdout():
+            self._client = j.clients.agentcontroller.get()
+            self._osiscl = j.core.osis.getClient(user='root')
         self._heartbeatcl = j.core.osis.getClientForCategory(self._osiscl, 'system', 'heartbeat')
-        print "OK"
-        print "get osis client for system:node: ",
         self._nodecl = j.core.osis.getClientForCategory(self._osiscl, 'system', 'node')
-        print "OK"
         self._runningnids = list()
         self._nids = list()
         self._nodenames = dict()
@@ -27,7 +20,7 @@ class GridHealthChecker(object):
         self._tostdout = True
         self.masternid = 0
         with j.logger.nostdout():
-            self.getNodes()
+            self.getNodes(activecheck=False)
 
     def _clean(self):
         self._errors = dict()
@@ -61,13 +54,10 @@ class GridHealthChecker(object):
         gevent.joinall(greens)
         for green in greens:
             result = green.value
-            if result:
-                results, errors = green.value
-            else:
+            if not result:
                 results = list()
                 errors = [(green.nid, {'message': str(green.exception), 'state': 'UNKOWN'}, category)]
-
-            self._returnResults(results, errors)
+                self._returnResults(results, errors)
 
     def _returnResults(self, results, errors):
         for nid, result, category in results:
@@ -112,7 +102,7 @@ class GridHealthChecker(object):
     def toStdout(self):
         self._tostdout = True
 
-    def getNodes(self, pprint=False):        
+    def getNodes(self, pprint=False, activecheck=True):
         """
         cache in mem
         list nodes from grid
@@ -126,21 +116,18 @@ class GridHealthChecker(object):
         self._nidsNonActive=[]
         gridmasterip = j.application.config.get('grid.master.ip')
         for node in nodes:
+            self._nodenames[node['id']] = node['name']
             if node["active"]==True:
                 self._nids.append(node['id'])
+                if gridmasterip in node['ipaddr']:
+                    self.masternid = node['id'] 
             else:
                 self._nidsNonActive.append(node['id'])
-        
-        nodes=[node for node in nodes if node["active"]==True]
-
-        for node in nodes:
-            self._nodenames[node['id']] = node['name']
-            if gridmasterip in node['ipaddr']:
-                self.masternid = node['id'] 
         if gridmasterip == '127.0.0.1':
             self.masternid = j.application.whoAmI.nid
-        self.pingAllNodesSync(clean=True, pprint=pprint)
-        self._checkRunningNIDsFromPing()
+        if activecheck:
+            self.pingAllNodesSync(clean=True, pprint=pprint)
+            self._checkRunningNIDsFromPing()
 
     def runAll(self):
         self._clean()
@@ -158,15 +145,43 @@ class GridHealthChecker(object):
             self.checkDisksAllNodes(clean=False)
         return self._status, self._errors
 
+    def runAllOnNode(self, nid):
+        self._clean()
+
+        self.ping(nid=nid, clean=False)
+        if self._tostdout:
+            print "Ping processmanager"
+            self.printStatus('processmanagerping')
+
+        self.checkRedis(nid, clean=False)
+        if self._tostdout:
+            print "Check redis"
+            self.printStatus('redi')
+
+        self.pingasync(nid=nid, clean=False)
+        if self._tostdout:
+            print "Ping worker proceess"
+            self.printStatus('processmanagerpingasync')
+
+        self.checkWorkers(nid, clean=False)
+        if self._tostdout:
+            print "Check workers"
+            self.printStatus('workers')
+
+        self.checkDisks(nid, clean=False)
+        if self._tostdout:
+            print "Check disks"
+            self.printStatus('disks')
+
     def printStatus(self, category):
+        errors = False
         if self._errors:
-            errors = False
             for nid, categories in self._errors.iteritems():
                 if category in categories:
                     errors = True
                     print "\t**ERROR**: %s test failed on node '%s' id:'%s'" % (category.title(), self._nodenames.get(nid, 'N/A'), nid)
-            if not errors:
-                print '\t**OK**'
+        if not errors:
+            print '\t**OK**'
 
     def checkElasticSearch(self, clean=True):
         if self._nids==[]:
@@ -204,9 +219,10 @@ class GridHealthChecker(object):
             return self._status, self._errors
 
     def checkRedisAllNodes(self, clean=True):
+        if clean:
+            self._clean()
         if self._nids==[]:
             self.getNodes()
-
         print "CHECK REDIS ON %s NODE(S)" % len(self._runningnids)
         if clean:
             self._clean()
@@ -222,12 +238,8 @@ class GridHealthChecker(object):
         return '{color:%s}*%s*{color}' % (colormap.get(status, 'orange'), status)
 
     def checkRedis(self, nid, clean=True):
-        if self._nids==[]:
-            self.getNodes()
-
         if clean:
             self._clean()
-
         results = list()
         errors = list()
         result = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=5)
@@ -244,14 +256,12 @@ class GridHealthChecker(object):
                 results.append((nid, result, 'redis'))
             else:
                 errors.append((nid, result, 'redis'))
-        if clean:
-            return self._returnResults(results, errors)
+        self._returnResults(results, errors)
         return results, errors
 
     def checkWorkersAllNodes(self,clean=True):
         if self._nids==[]:
             self.getNodes()
-
         if clean:
             self._clean()
         print "CHECK WORKERS ON %s NODE(S)" % len(self._runningnids)
@@ -262,9 +272,6 @@ class GridHealthChecker(object):
             return self._status, self._errors
 
     def checkWorkers(self, nid, clean=True):
-        if self._nids==[]:
-            self.getNodes()
-
         if clean:
             self._clean()
         results = list()
@@ -282,8 +289,7 @@ class GridHealthChecker(object):
                 results.append((nid, stats, 'workers'))
             else:
                 errors.append((nid, stats, 'workers'))
-        if clean:
-            return self._returnResults(results, errors)
+        self._returnResults(results, errors)
         return results, errors
 
 
@@ -338,9 +344,6 @@ class GridHealthChecker(object):
         """
         if clean:
             self._clean()
-        if self._nids==[]:
-            self.getNodes()
-
         gid = j.application.whoAmI.gid
         if self._heartbeatcl.exists('%s_%s' % (gid, nid)):
             heartbeat = self._heartbeatcl.get('%s_%s' % (gid, nid))
@@ -351,8 +354,7 @@ class GridHealthChecker(object):
                 self._addError(nid, {'state': 'HALTED'}, 'processmanager')
         else:
             self._addError(nid, {'state': 'UNKOWN'}, 'processmanager')
-        if clean:
-            return self._status, self._errors
+        return self._status, self._errors
 
     def checkDisksAllNodes(self, clean=True):
         if clean:
@@ -376,37 +378,42 @@ class GridHealthChecker(object):
         self._parallelize(self.ping, False, 'processmanagerping')
         if self._tostdout:
             self.printStatus('processmanagerping')
-        if clean:
-            return self._status, self._errors
+        return self._status, self._errors
 
     def pingAllNodesAsync(self, clean=True):
+        if self._nids==[]:
+            self.getNodes()
+        if clean:
+            self._clean()
         print "WORKER PING TO %s NODE(S)" % len(self._runningnids)
         self._parallelize(self.pingasync, False, 'workerping')
         if self._tostdout:
             self.printStatus('workerping')
-        if clean:
-            return self._status, self._errors        
+        return self._status, self._errors        
 
     def ping(self,nid,clean=True):
+        if clean:
+            self._clean()
         results = list()
         errors = list()
         result = self._client.executeJumpScript('jumpscale', 'echo_sync', args={"msg":"ping"},nid=nid, timeout=5)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'processmanagerping'))
+        self._returnResults(results, errors)
         return results, errors
 
     def pingasync(self,nid,clean=True):
+        if clean:
+            self._clean()
         results = list()
         errors = list()
         result = self._client.executeJumpScript('jumpscale', 'echo_async', args={"msg":"ping"}, nid=nid, timeout=5)
         if not result["result"]=="ping":
             errors.append((nid, {'ping': 'down'}, 'workerping'))
+        self._returnResults(results, errors)
         return results, errors
 
     def checkDisks(self, nid, clean=True):
-        if self._nids==[]:
-            self.getNodes()
-
         if clean:
             self._clean()
         results = list()
@@ -431,6 +438,5 @@ class GridHealthChecker(object):
                     disk['message'] = 'Disk is not mounted, Info is not available'
                 disk['state'] = 'OK'
                 results.append((nid, disk, 'disks'))
-        if clean:
-            return self._returnResults(results, errors)
+        self._returnResults(results, errors)
         return results, errors
