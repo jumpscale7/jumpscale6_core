@@ -278,9 +278,7 @@ class OSISStore(object):
     def existsIndex(self,key,timeout=0):
         if key==None:
             raise RuntimeError("key cannot be None")
-        q='{"query":{"bool":{"must":[{"text":{"json.guid":"$guid"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
-        q=q.replace("$guid",key)
-        q=json.loads(q)            
+        q = {'query': {'bool': {'must': [{'term': {'guid': key}}]}}}
         ok=False
         if timeout>0:
             now=time.time()
@@ -304,15 +302,11 @@ class OSISStore(object):
 
     def deleteIndex(self, key,waitIndex=False,timeout=1):
         self.removeFromIndex(key)
-        q='{"query":{"bool":{"must":[{"text":{"json.guid":"$guid"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}'
-        q=q.replace("$guid",key)
-        q=json.loads(q)        
         if waitIndex and timeout>0:
             now=time.time()
             end=now+timeout            
             while now<end:
-                res=self.find(q)
-                if res["total"]==0:
+                if not self.existsIndex(key):
                     return
                 time.sleep(0.1)
                 # print "index not ready yet for delete"

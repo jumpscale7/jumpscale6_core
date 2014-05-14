@@ -61,12 +61,7 @@ class OSISStoreES(OSISStore):
         """
         get dict value
         """
-        q={"query":{"bool":{"must":[{"text":{"json.guid":key}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}
-        res=self.find(q)
-        if res["total"]==0:
-            raise RuntimeError("cannot find %s on %s:%s"%(key,self.namespace,self.categoryname))
-        else:
-            return  res["result"][0]["_source"]
+        return self.elasticsearch.get(index=self.getIndexName(), doc_type='json', id=key)['_source']
 
     def exists(self, key):
         """
@@ -77,7 +72,7 @@ class OSISStoreES(OSISStore):
     def delete(self, key=None):
         if isinstance(key, dict):
             try:
-                return self.elasticsearch.delete_by_query(index='system_log', query=key, doc_type='json')
+                return self.elasticsearch.delete_by_query(index=self.getIndexName(), query=key, doc_type='json')
             except:
                 return {'hits': {'hits': list(), 'total': 0}}
         else:
