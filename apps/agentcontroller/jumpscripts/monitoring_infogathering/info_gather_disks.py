@@ -12,6 +12,7 @@ version = "1.0"
 category = "system.disks"
 
 async = True
+queue = 'process'
 roles = []
 enable = True
 period=0
