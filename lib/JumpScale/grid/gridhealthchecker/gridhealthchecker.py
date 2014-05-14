@@ -35,6 +35,14 @@ class GridHealthChecker(object):
         else:
             self._errors[nid][category].append(result)
 
+    def getName(self, id):
+        id = int(id)
+        if id in self._nodenames:
+            return self._nodenames[id]
+        else:
+            self.getNodes(activecheck=False)
+            return self._nodenames.get(id, 'UNKOWN')
+
     def _addResult(self, nid, result, category):
         self._status.setdefault(nid, {})
         self._status[nid].setdefault(category, list())

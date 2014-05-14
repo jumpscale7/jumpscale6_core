@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
 
     if errors:
         nodeids = errors.keys()
-        nodenames = [j.core.grid.healthchecker._nodenames.get(j.basetype.integer.fromString(nodeid), 'N/A') for nodeid in nodeids]
+        nodenames = [j.core.grid.healthchecker.getName(nodeid) for nodeid in nodeids]
         out.append('h5. {color:red}Something on node(s) %s is not running.{color}' % ', '.join(nodenames))
         out.append('For more details, check [here|/grid/checkstatus]')
     else:
