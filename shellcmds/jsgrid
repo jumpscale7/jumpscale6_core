@@ -22,7 +22,7 @@ parser.add_argument('--force',required=False, action='store_true',help='dont ask
 parser.add_argument('--debug',required=False, action='store_true',help='will stop on errors and show all relevant info')
 parser.add_argument('--from', dest='ffrom', required=False, type=str, help='used with purgelogs, ex: --from=-2h, --from=-2d (note the = sign)')
 parser.add_argument('--to', required=False, type=str, help='used with purgelogs, ex: --to=-1h, --to=-1d (note the = sign)')
-parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='used with deletenode, ex: -nid=1(note the = sign)')
+parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=int, help='Used with healtcheck')
 parser.add_argument('--roles', dest='roles', required=False, type=str, help='Used with setroles or deleterole. ex: -roles=node, computenode.kvm(note the = sign). List is comma seperated')
 
 
@@ -104,7 +104,11 @@ if opts.action =='reinit':
 #################HEALTHCHECK
 if opts.action == 'healthcheck':
     import JumpScale.grid.gridhealthchecker
-    j.core.grid.healthchecker.runAll()
+    if not opts.nid:
+        j.core.grid.healthchecker.runAll()
+    else:
+        j.core.grid.healthchecker.runAllOnNode(opts.nid)
+
 
 if opts.action == 'restartprocessmgrs':
     import JumpScale.grid.agentcontroller
