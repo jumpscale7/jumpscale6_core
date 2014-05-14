@@ -16,20 +16,29 @@ def main(j, args, params, tags, tasklet):
     out = list()
     out = ['||Node Name||Default||HyperVisor||IO||']
     addnote = False
+    greens = list()
     for node in j.apps.system.gridmanager.getNodes():
         data = {'default': 0, 'io': 0, 'hypervisor': 0, 'nid': node['id'], 'nodename': node['name']}
+        green = gevent.spawn(wclient.getQueuedJobs, queue=None, _agentid=data['nid'])
+        green.data = data
+        greens.append(green)
+    gevent.joinall(greens, timeout=5)
+    for green in greens:
         jobs = None
-        with gevent.Timeout(3, False):
-            jobs = wclient.getQueuedJobs(queue=None, _agentid=data['nid'])
+        if green.successful():
+            jobs = green.value
+            data = green.data
+            if jobs:
+                for job in jobs:
+                    if job['queue'] in data:
+                        data[job['queue']] += 1
+            out.append('|[%(nodename)s|workersjobs?nid=%(nid)s]|%(default)s|%(hypervisor)s|%(io)s|' % (data))
+
         if jobs is None:
             addnote = True
             out.append('|[%(nodename)s|workersjobs?nid=%(nid)s]|N/A*|N/A*|N/A*|' % (data))
             continue
 
-        for job in jobs:
-            if job['queue'] in data:
-                data[job['queue']] += 1
-        out.append('|[%(nodename)s|workersjobs?nid=%(nid)s]|%(default)s|%(hypervisor)s|%(io)s|' % (data))
 
     if addnote:
         out.append("&#42; Means data could not be retreived from ProcessManager of that node, likely it is not running.")

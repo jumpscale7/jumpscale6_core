@@ -173,7 +173,7 @@ class Daemon(object):
                         data.pop("_agentid")
                         category2=category.replace("processmanager_","")
                         scriptid="%s_%s" % (category2, cmd)
-                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,jscriptid=scriptid,cmdname=cmd,args=data,queue="internal",log=False,timeout=60,roles=[],session=session)
+                        job=cmds.scheduleCmd(gid,nid,cmdcategory=category2,jscriptid=scriptid,cmdname=cmd,args=data,queue="internal",log=False,timeout=60,roles=[],session=session,wait=True)
                         jobqueue = cmds._getJobQueue(job["guid"])
                         jobr=jobqueue.get(True,60)
                         if not jobr:
