@@ -12,27 +12,6 @@ import random
 import JumpScale.baselib.taskletengine
 from JumpScale.baselib import cmdutils
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-    time.sleep(0.1)
-    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
-
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
-    time.sleep(0.1)
-    print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
-
-ipaddr=j.application.config.get("grid_master_ip")
-while j.system.net.tcpPortConnectionTest(ipaddr,4444)==False:
-    time.sleep(0.1)
-    print "cannot connect to agent controller (port 4444)"
-
-
-j.application.start("jumpscale:worker")
-try:
-    print "try to init grid, will not fail if it does not work."
-    j.application.initGrid()
-except Exception,e:
-    print "could not init grid, maybe no osis or work gridless"
-
 # Preload libraries
 j.system.platform.psutil=psutil
 import JumpScale.baselib.graphite
@@ -45,6 +24,7 @@ import JumpScale.grid.jumpscripts
 
 import sys
 import os
+
 def restart_program():
     """Restarts the current program.
     Note: this function does not return. Any cleanup action (like
@@ -68,9 +48,12 @@ class Worker(object):
 
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
 
+        self.redisprocessmanager=j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+
         def checkagentcontroller():
             masterip=j.application.config.get("grid.master.ip")
             success=False
+            wait=1
             while success == False:
                 try:
                     self.acclient=j.clients.agentcontroller.get(masterip)
@@ -78,11 +61,13 @@ class Worker(object):
                 except Exception,e:
                     msg="Cannot connect to agentcontroller on %s."%(masterip)
                     j.events.opserror(msg, category='worker.startup', e=e)
-                    time.sleep(5)
-
+                    if wait<60:
+                        wait+=1                    
+                    time.sleep(wait)
 
         def checkredis():
             success=False
+            wait=1
             while success==False:
                 try:
                     self.redis = j.clients.redis.getGeventRedisClient(self.redisaddr, self.redisport)
@@ -90,12 +75,14 @@ class Worker(object):
                 except Exception,e:
                     msg="Cannot connect to redis on %s:%s, will retry in 5 sec."%(self.redisaddr,self.redisport)
                     j.events.opserror(msg, category='worker.startup', e=e)
-                    time.sleep(5)
+                    if wait<60:
+                        wait+=1                    
+                    time.sleep(wait)
 
         checkredis()
         checkagentcontroller()
         
-        self.redis.delete("workers:action:%s"%self.name)
+        self.redisprocessmanager.delete("workers:action:%s"%self.name)
 
         #@todo check if queue exists if not raise error
         self.queue=j.clients.redis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
@@ -119,20 +106,24 @@ class Worker(object):
         print "STARTED"
         w=j.clients.redisworker
         while True:
+
+            ############# PROCESSMANAGER RELATED 
             #check if we need to restart
-            if self.redis.exists("workers:action:%s"%self.name):
-                if self.redis.get("workers:action:%s"%self.name)=="STOP":
+            if self.redisprocessmanager.exists("workers:action:%s"%self.name):
+                if self.redisprocessmanager.get("workers:action:%s"%self.name)=="STOP":
                     print "RESTART ASKED"
-                    self.redis.delete("workers:action:%s"%self.name)
+                    self.redisprocessmanager.delete("workers:action:%s"%self.name)
                     restart_program()
                     j.application.stop()
 
                 if self.redis.get("workers:action:%s"%self.name)=="RELOAD":
                     print "RELOAD ASKED"
-                    self.redis.delete("workers:action:%s"%self.name)
+                    self.redisprocessmanager.delete("workers:action:%s"%self.name)
                     self.actions={}
 
-            self.redis.hset("workers:watchdog",self.name,int(time.time()))
+            self.redisprocessmanager.hset("workers:watchdog",self.name,int(time.time()))
+            ################ END PROCESS MANAGER
+
 
             try:
                 # print "check if work", comes from redis
@@ -273,6 +264,31 @@ if __name__ == '__main__':
     parser.add_argument('--nodeid', type=int, help='nodeid, is just to recognise the command in ps ax',default=0)
 
     opts = parser.parse_args()
+
+    wait=1
+    while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+        msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 7766)"    
+        print msg
+        j.events.opserror(msg, category='worker.startup')    
+        if wait<60:
+            wait+=1
+        time.sleep(wait)
+
+    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+    rediscl.hset("workers:watchdog",opts.workername,0) #now the process manager knows we got started but maybe waiting on other requirements
+
+    wait=1
+    while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+        time.sleep(wait)
+        msg= "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
+        print msg
+        j.events.opserror(msg, category='worker.startup')        
+        if wait<60:
+            wait+=1
+
+    j.application.start("jumpscale:worker")
+
+    j.application.initGrid()
 
     j.logger.consoleloglevel = 2
     j.logger.maxlevel=7

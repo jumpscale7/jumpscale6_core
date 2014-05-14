@@ -9,6 +9,7 @@ import time
 import imp
 import inspect
 import linecache
+import JumpScale.baselib.redis
 
 class Dummy():
     pass
@@ -136,10 +137,7 @@ class ProcessmanagerFactory:
     def __init__(self):
         self.daemon = DummyDaemon()
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
-        j.system.platform.psutil = psutil
-
-        import JumpScale.baselib.redis
-        self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)        
+        j.system.platform.psutil = psutil        
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
@@ -152,18 +150,51 @@ class ProcessmanagerFactory:
         #     j.packages.findNewest(name="redis").install()
         #     j.packages.findNewest(name="redis").start()
 
-        def checkosis():
-            self.daemon.osis
+        wait=1
+        while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+            msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 7766)"    
+            print msg
+            j.events.opserror(msg, category='processmanager.startup')    
+            if wait<60:
+                wait+=1
+            time.sleep(wait)
 
-        def checkagentcontroller():
-            masterip=j.application.config.get("grid.master.ip")
-            client=j.clients.agentcontroller.get(masterip)
-            return client
+        self.redisprocessmanager=j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+
+        wait=1
+        while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+            msg= "cannot connect to redis main, will keep on trying forever, please start redis production (port 7768)"    
+            print msg
+            j.events.opserror(msg, category='processmanager.startup')    
+            if wait<60:
+                wait+=1
+            time.sleep(wait)
+
+        self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+
+        wait=1
+        gridmasterip = j.application.config.get('grid.master.ip')
+        while j.system.net.tcpPortConnectionTest(gridmasterip, 5544)==False:
+            msg="cannot connect to agentcontroller osis, will keep on trying forever, please make sure is started"
+            print msg
+            j.events.opserror(msg, category='processmanager.startup')    
+            if wait<60:
+                wait+=1
+            time.sleep(wait)
+
+        wait=1
+        while j.system.net.tcpPortConnectionTest(gridmasterip, 4444)==False:
+            msg= "cannot connect to agentcontroller, will keep on trying forever, please make sure is started"
+            print msg
+            j.events.opserror(msg, category='processmanager.startup')    
+            if wait<60:
+                wait+=1
+            time.sleep(wait)        
+
             
         import JumpScale.grid.agentcontroller
 
-        masterip=j.application.config.get("grid.master.ip")
-        if masterip in j.system.net.getIpAddresses():
+        if gridmasterip in j.system.net.getIpAddresses():
 
             if not j.tools.startupmanager.exists("jumpscale","osis"):
                 raise RuntimeError("Could not find osis installed on local system, please install.")
@@ -176,28 +207,33 @@ class ProcessmanagerFactory:
             if not j.system.net.tcpPortConnectionTest("127.0.0.1",4444):        
                 j.tools.startupmanager.startProcess("jumpscale","agentcontroller")
 
-        j.tools.jumpscriptsManager.loadFromGridMaster()
 
-        success=False
-        while success==False:
-            try:
-                checkosis()
-                self.acclient=checkagentcontroller()
-                success=True
-            except Exception,e:
-                msg="Cannot connect to osis or agentcontroller on %s, will retry in 60 sec."%(masterip)
-                j.events.opserror(msg, category='processmanager.startup', e=e)
-                time.sleep(60)
+        def checkagentcontroller():
+            masterip=j.application.config.get("grid.master.ip")
+            success=False
+            wait=1
+            while success == False:
+                try:
+                    client=j.clients.agentcontroller.get(masterip)
+                    success=True
+                except Exception,e:
+                    msg="Cannot connect to agentcontroller on %s."%(masterip)
+                    j.events.opserror(msg, category='worker.startup', e=e)
+                    if wait<60:
+                        wait+=1                    
+                    time.sleep(wait)
+            return client
+
+        self.acclient=checkagentcontroller()
+
+        j.tools.jumpscriptsManager.loadFromGridMaster()        
 
         osis = self.daemon.osis
-        self.daemon = j.servers.geventws.getServer(port=4445)
+        self.daemon = j.servers.geventws.getServer(port=4445)  #@todo no longer needed I think, it should not longer be a socket server, lets check first
         self.daemon.osis = osis
         self.daemon.daemon.osis = osis
 
-        self.redis.set("processmanager:startuptime",str(int(time.time())))
-        self.redis.delete("workers:watchdog")
-
-        # rediscl.hdel("workers:watchdog",workername)
+        self.redisprocessmanager.set("processmanager:startuptime",str(int(time.time())))
 
         self.starttime=j.base.time.getTimeEpoch()
 
@@ -224,9 +260,9 @@ class ProcessmanagerFactory:
             pdef=j.tools.startupmanager.getProcessDef(domain,name)
             for nr in range(1,pdef.numprocesses+1):
                 workername="%s_%s"%(pdef.name,nr)
-                self.redis.set("workers:action:%s"%workername,"STOP")
-                if not self.redis.hexists("workers:watchdog",workername):
-                    self.redis.hset("workers:watchdog",workername,0)
+                self.redisprocessmanager.set("workers:action:%s"%workername,"STOP")
+                if not self.redisprocessmanager.hexists("workers:watchdog",workername):
+                    self.redisprocessmanager.hset("workers:watchdog",workername,0)
 
     def getCmdsObject(self,category):
         if self.cmds.has_key(category):
@@ -275,8 +311,8 @@ class ProcessmanagerFactory:
                 factory = getattr(monmodule, '%sFactory' % name)(self, classs)
                 self.monObjects.__dict__[name.lower()]=factory   
 
-    def getStartupTime(self):
-        val=self.redis.get("processmanager:startuptime")
+    def getStartupTime(self):        
+        val=self.redisprocessmanager.get("processmanager:startuptime")
         return int(val)
 
     def checkStartupOlderThan(self,secago):
