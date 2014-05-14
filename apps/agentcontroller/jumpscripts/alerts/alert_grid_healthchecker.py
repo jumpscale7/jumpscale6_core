@@ -27,7 +27,7 @@ def action():
         return
 
     import JumpScale.baselib.redis
-    import time
+    import JumpScale.grid.gridhealthchecker
     try:
         import ujson as json
     except:
@@ -54,32 +54,29 @@ def action():
 
     if check==False:
         j.tools.watchdog.client.send("grid.healthcheck","CRITICAL", gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid,value="watchdog check did not run in time.")
-
-    results=json.loads(rediscl.hget('healthcheck:monitoring', 'results'))
     errors=json.loads(rediscl.hget('healthcheck:monitoring', 'errors'))
-    lastcheck=json.loads(rediscl.hget('healthcheck:monitoring', 'lastcheck'))
     
     import JumpScale.baselib.watchdog.client
 
 
-    colormap = {'RUNNING': 'green', 'HALTED': 'red', 'UNKOWN': 'orange',
+    colormap = {'RUNNING': 'green', 'HALTED': 'red', 'UNKNOWN': 'orange',
                 'BROKEN': 'red', 'OK': 'green', 'NOT OK': 'red'}
 
-    out=""
-    for nid, error in errors.iteritems():
-        out+="\nh3. Node %s\n" % nid
-        for category, msg in error.iteritems():
-            if isinstance(msg, list):
-                for err in msg:
-                    if isinstance(err, dict):
-                        out += "|*%s*| | |\n" % (category)
-                        for k, v in err.iteritems():
-                            v = v.replace('\n', '')
-                            for status, color in colormap.iteritems():
-                                v = v.replace(status, '{color:%s}*%s*{color}' % (color, status))
-                            out += "||%s|%s|\n" % (k,v)
+    out = '||NODE ID||NODE NAME||CATEGORY|| ||\n'
+    for nid, checks in errors.iteritems():
+        out += '|[*%s*|node?id=%s]|%s| | |\n' % (nid, nid, j.core.grid.healthchecker.getName(nid))
+        for category, errs in checks.iteritems():
+            out += '| | |%s|' % category
+            for error in errs:
+                defaultvalue = 'processmanager is unreachable by ping' if category == 'processmanager' else ''
+                errormessage = error.get('errormessage', defaultvalue)
+                for message in errormessage.split(','):
+                    for status, color in colormap.iteritems():
+                        message = message.replace(status, '{color:%s}*%s*{color}' % (color, status))
+                    if not out.endswith('\n'):
+                        out += '%s|\n' % message
                     else:
-                        out += "|*%s*|%s||\n" % (category, err)
+                        out += '| | | |%s|\n' % message
 
     state = "CRITICAL" if errors else "OK"
     j.tools.watchdog.client.send("grid.healthcheck", state, gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, value=out, pprint=True)

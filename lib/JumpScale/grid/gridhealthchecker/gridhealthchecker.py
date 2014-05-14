@@ -40,7 +40,7 @@ class GridHealthChecker(object):
             return self._nodenames[id]
         else:
             self.getNodes(activecheck=False)
-            return self._nodenames.get(id, 'UNKOWN')
+            return self._nodenames.get(id, 'UNKNOWN')
 
     def _addResult(self, nid, result, category):
         self._status.setdefault(nid, {})
@@ -63,7 +63,7 @@ class GridHealthChecker(object):
             result = green.value
             if not result:
                 results = list()
-                errors = [(green.nid, {'message': str(green.exception), 'state': 'UNKOWN'}, category)]
+                errors = [(green.nid, {'message': str(green.exception), 'state': 'UNKNOWN'}, category)]
                 self._returnResults(results, errors)
 
     def _returnResults(self, results, errors):
@@ -173,15 +173,14 @@ class GridHealthChecker(object):
                 print form % nodedata
 
         for nid, checks in self._errors.iteritems():
-            nodeerrors = self._errors.get(nid, {})
             nodedata={'nid': nid, 'name': self.getName(nid), 'status': 'ERROR', 'issues': ''}
             print form % nodedata
-            for category, errors in nodeerrors.iteritems():
+            for category, errors in checks.iteritems():
                 for error in errors:
-                    defaultvalue = 'processmanager is unreachable by ping' if category == 'processmanager' else category
+                    defaultvalue = 'processmanager is unreachable by ping' if category == 'processmanager' else ''
                     errormessage = error.get('errormessage', defaultvalue)
                     for message in errormessage.split(','):
-                        nodedata={'nid': '', 'name': '', 'status': '', 'issues': '** %s' % message}
+                        nodedata={'nid': '', 'name': '', 'status': '', 'issues': '- %s' % message}
                         print form % nodedata
 
 
@@ -193,7 +192,7 @@ class GridHealthChecker(object):
 
         errormessage = ''
         if self.masternid not in self._runningnids:
-            self._addError(self.masternid, {'state': 'UNKOWN'}, 'elasticsearch')
+            self._addError(self.masternid, {'state': 'UNKNOWN'}, 'elasticsearch')
             errormessage = 'ElasticSearch status UNKNOWN'
         else:
             eshealth = self._client.executeJumpScript('jumpscale', 'info_gather_elasticsearch', nid=self.masternid, timeout=5)
@@ -201,7 +200,7 @@ class GridHealthChecker(object):
                 self._addError(self.masternid, {'state': 'TIMEOUT'}, 'elasticsearch')
                 errormessage = 'ElasticSearch status TIMEOUT'
             elif eshealth['state'] != 'OK':
-                self._addError(self.masternid, {'state': 'UNKOWN'}, 'elasticsearch')
+                self._addError(self.masternid, {'state': 'UNKNOWN'}, 'elasticsearch')
                 errormessage = 'ElasticSearch status UNKNOWN'
             else:
                 eshealth = eshealth['result']
@@ -236,7 +235,7 @@ class GridHealthChecker(object):
             return self._status, self._errors
 
     def getWikiStatus(self, status):
-        colormap = {'RUNNING': 'green', 'HALTED': 'red', 'UNKOWN': 'orange',
+        colormap = {'RUNNING': 'green', 'HALTED': 'red', 'UNKNOWN': 'orange',
                     'BROKEN': 'red', 'OK': 'green', 'NOT OK': 'red'}
         return '{color:%s}*%s*{color}' % (colormap.get(status, 'orange'), status)
 
@@ -249,7 +248,7 @@ class GridHealthChecker(object):
         result = self._client.executeJumpScript('jumpscale', 'info_gather_redis', nid=nid, timeout=5)
         redis = result['result']
         if result['state'] != 'OK' or not redis:
-            errors.append((nid, {'state': 'UNKOWN'}, 'redis'))
+            errors.append((nid, {'state': 'UNKNOWN'}, 'redis'))
             errormessage.append('Redis state UNKNOWN')
             redis = dict()
 
@@ -286,7 +285,7 @@ class GridHealthChecker(object):
         result = self._client.executeJumpScript('jumpscale', 'workerstatus', nid=nid, timeout=30)
         workers = result['result']
         if result['state'] != 'OK' or not workers:
-            errors.append((nid, {'state':'UNKOWN', 'mem': '0 B'}, 'workers'))
+            errors.append((nid, {'state':'UNKNOWN', 'mem': '0 B'}, 'workers'))
             errormessage.append('Workers status UNKNOWN')
             workers = dict()
 
@@ -299,7 +298,7 @@ class GridHealthChecker(object):
             else:
                 statsmod = stats.copy()
                 statsmod['lastactive'] = j.base.time.epoch2HRDateTime(stats['lastactive']) if stats['lastactive'] else 'never'
-                errormessage.append('"%(name)s" is %(state)s. Last active: %(lastactive)s.' % statsmod)
+                errormessage.append('%(name)s is %(state)s. Last active: %(lastactive)s.' % statsmod)
                 errors.append((nid, stats, 'workers'))
         if errormessage:
             errors.append((nid, ','.join(errormessage), 'workers'))
@@ -363,7 +362,7 @@ class GridHealthChecker(object):
             else:
                 self._addError(nid, {'state': 'HALTED'}, 'processmanager')
         else:
-            self._addError(nid, {'state': 'UNKOWN'}, 'processmanager')
+            self._addError(nid, {'state': 'UNKNOWN'}, 'processmanager')
         return self._status, self._errors
 
     def checkDisksAllNodes(self, clean=True):
@@ -427,7 +426,7 @@ class GridHealthChecker(object):
         result = self._client.executeJumpScript('jumpscale', 'check_disks', nid=nid, timeout=30)
         disks = result['result']
         if result['state'] != 'OK':
-            errors.append((nid, {'state': 'UNKOWN'}, 'disks'))
+            errors.append((nid, {'state': 'UNKNOWN'}, 'disks'))
             errormessage.append('Disks status UNKNOWN.')
             disks = dict()
         for path, disk in disks.iteritems():
