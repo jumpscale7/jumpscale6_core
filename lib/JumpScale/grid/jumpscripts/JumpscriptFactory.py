@@ -13,6 +13,7 @@ class Dummy():
 
 class JumpScript(object):
     def __init__(self, ddict=None, path=None):
+        self._loaded = False
         self.name=""
         self.organization=""
         self.period = 0
@@ -21,23 +22,19 @@ class JumpScript(object):
         self.path=path
         self.id = None
         self.startatboot = False
+        self.path = path
         if ddict:
+            ddict.pop('path', None)
             self.__dict__.update(ddict)
-        if not path:
-            self.write()
-            self.load()
-        else:
-            self.path = path
+        if path:
             self.load()
             self.loadAttributes()
 
     def write(self):
-        # jscriptdir = j.system.fs.joinPaths(j.dirs.varDir,"jumpscripts", self.organization)
-        # j.system.fs.createDir(jscriptdir)
-        # self.path=j.system.fs.joinPaths(jscriptdir, "%s.py" % self.name)
-        if self.path==None:
-            raise RuntimeError("path cannot be empty")
-
+        if not self.path:
+            jscriptdir = j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts")
+            j.system.fs.createDir(jscriptdir)
+            self.path=j.system.fs.joinPaths(jscriptdir, "%s_%s.py" % (self.organization, self.name))
         content="""
 from JumpScale import j
 
@@ -46,11 +43,11 @@ from JumpScale import j
         j.system.fs.writeFile(filename=self.path, contents=content)
 
     def load(self):
+        self._loaded = True
         md5sum = j.tools.hash.md5_string(self.path)
         modulename = 'JumpScale.jumpscript_%s' % md5sum
         linecache.checkcache(self.path)
         self.module = imp.load_source(modulename, self.path)
-
 
     def getDict(self):
         result = dict()
@@ -84,6 +81,10 @@ from JumpScale import j
         self.gid=getattr(self.module, 'gid', j.application.whoAmI.gid)
 
     def run(self, *args, **kwargs):
+        if not self.path:
+            self.write()
+        if not self._loaded:
+            self.load()
         return self.module.action(*args, **kwargs)
 
     def execute(self, *args, **kwargs):
@@ -158,7 +159,7 @@ class JumpscriptFactory:
         #delete previous scripts
         item=["eventhandling","loghandling","monitoringobjects","processmanagercmds","jumpscripts"]
         for delitem in item:
-            j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))        
+            j.system.fs.removeDirTree( j.system.fs.joinPaths(self.basedir, delitem))
 
         #import new code
         #download all monitoring & cmd scripts
@@ -167,7 +168,7 @@ class JumpscriptFactory:
         import tarfile
         scripttgz=webdis.get("%s:scripts"%(self.secret))
         ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_download.tar")
-        
+
         j.system.fs.writeFile(ppath,scripttgz)
         tar = tarfile.open(ppath, "r:bz2")
 

@@ -87,21 +87,6 @@ class Worker(object):
         #@todo check if queue exists if not raise error
         self.queue=j.clients.credis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
 
-    def _loadModule(self, path):
-        '''Load the Python module from disk using a random name'''
-        j.logger.log('Loading tasklet module %s' % path, 7)
-        # Random name -> name in sys.modules
-
-        def generate_module_name():
-            '''Generate a random unused module name'''
-            return '_tasklet_module_%d' % random.randint(0, sys.maxint)
-        modname = generate_module_name()
-        while modname in sys.modules:
-            modname = generate_module_name()
-
-        module = imp.load_source(modname, path)
-        return module
-
     def run(self):
         print "STARTED"
         w=j.clients.redisworker
@@ -142,32 +127,27 @@ class Worker(object):
                 j.application.jid=job.id
                 #eval action code, if not ok send error back, cache the evalled action
                 if self.actions.has_key(job.jscriptid):
-                    action,jscript=self.actions[job.jscriptid]
+                    jscript=self.actions[job.jscriptid]
                 else:
                     print "JSCRIPT CACHEMISS"
-                    jscript=w.getJumpscriptFromId(job.jscriptid)
-
-                    if jscript==None:
-                        msg="cannot find jumpscript with id:%s"%job.jscriptid
-                        print "ERROR:%s"%msg
-                        j.events.bug_warning(msg,category="worker.jscript.notfound")
-                        job.result=msg
-                        job.state="ERROR"
-                        self.notifyWorkCompleted(job)
-                        continue
-
-                    if jscript.organization<>"" and jscript.name<>"":
-                        #this is to make sure when there is a new version of script since we launched this original script we take the newest one
-                        jscript=w.getJumpscriptFromName(jscript.organization,jscript.name)
-                        job.jscriptid=jscript.id
-
-                    jscriptpath=j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts","%s_%s.py"%(jscript.organization,jscript.name))
-                    j.system.fs.writeFile(jscriptpath,jscript.source)
-                    self.log("Load script:%s %s %s"%(jscript.id,jscript.organization,jscript.name))
                     try:
-                        module=self._loadModule(jscriptpath)
-                        action=module.action                        
-                        #result is method action
+                        jscript=w.getJumpscriptFromId(job.jscriptid)
+
+                        if jscript==None:
+                            msg="cannot find jumpscript with id:%s"%job.jscriptid
+                            print "ERROR:%s"%msg
+                            j.events.bug_warning(msg,category="worker.jscript.notfound")
+                            job.result=msg
+                            job.state="ERROR"
+                            self.notifyWorkCompleted(job)
+                            continue
+
+                        if jscript.organization<>"" and jscript.name<>"":
+                            #this is to make sure when there is a new version of script since we launched this original script we take the newest one
+                            jscript=w.getJumpscriptFromName(jscript.organization,jscript.name)
+                            job.jscriptid=jscript.id
+
+                            #result is method action
                     except Exception,e:
                         agentid=j.application.getAgentId()
                         msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
@@ -185,12 +165,12 @@ class Worker(object):
                         self.notifyWorkCompleted(job)
                         continue
 
-                    self.actions[job.jscriptid]=(action,jscript)
+                    self.actions[job.jscriptid]=jscript
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
                 try:
                     j.logger.enabled = job.log
-                    result=action(**job.args)
+                    result=jscript.run(**job.args)
                     job.result=result
                     job.state="OK"
                     job.resultcode=0
