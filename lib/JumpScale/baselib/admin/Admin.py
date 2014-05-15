@@ -391,7 +391,7 @@ class Admin():
             data=self.redis.hget("admin:nodes","%s:%s"%(gridname,name))
             node=JNode()
             try:
-                node.__dict__=json.loads(data)
+                node.__dict__.update(json.loads(data))
             except Exception,e:
                 raise RuntimeError("could not decode node: '%s/%s'"%(gridname,name))
                 # node=JNode()
