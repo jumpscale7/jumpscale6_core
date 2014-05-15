@@ -89,6 +89,7 @@ class SystemNet:
         if j.system.platformtype.isLinux() or j.system.platformtype.isESX():
             # netstat: n == numeric, -t == tcp, -u = udp, l= only listening, p = program
             command = "netstat -ntulp | grep ':%s '" % port
+            # raise RuntimeError("stop")
             (exitcode, output) = j.system.process.execute(command, dieOnNonZeroExitCode=False,outputToStdout=False)
             return exitcode == 0
         elif j.system.platformtype.isSolaris() or j.system.platformtype.isDarwin():

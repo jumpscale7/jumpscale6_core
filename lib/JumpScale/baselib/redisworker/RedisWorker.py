@@ -107,6 +107,9 @@ class RedisWorkerFactory:
         self.queue["process"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:process")
         # self.returnqueue=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%self.sessionid)
 
+    def useCRedis(self):
+        self.redis=j.clients.credis.getRedisClient("127.0.0.1", 7768)
+
     def _getJob(self, jscriptid=None,args={}, timeout=60,log=True, queue="default",ddict={}):
         job=Job(ddict=ddict, args=args, timeout=timeout, sessionid=self.sessionid, jscriptid=jscriptid,log=log, queue=queue)
         job.id=self.redis.incr("workers:joblastid")      

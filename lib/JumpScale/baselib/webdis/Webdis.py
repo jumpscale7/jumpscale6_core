@@ -35,8 +35,7 @@ class Webdis(object):
         self.ping()
 
     def execute(self,cmd,url="",data=None):
-        #return 100 times, max 10 sec
-        for i in range(self.timeout*10):
+        for i in range(self.timeout*2):
             try:
                 # headers = {'content-type': 'application/json'}
                 # if url<>"":
@@ -66,7 +65,7 @@ class Webdis(object):
                 # print e
                 if str(e).find("Max retries exceeded with url")<>-1:
                     print "Webdis not available"
-                    time.sleep(0.1)
+                    time.sleep(0.5)
                     continue
                 raise RuntimeError(e)
             
@@ -78,7 +77,6 @@ class Webdis(object):
                 elif r.headers['content-type'] == 'application/json':
                     res=json.loads(res)
                     return res[cmd]
-
                 return res
                 
             elif r.status_code==403:
@@ -88,10 +86,11 @@ class Webdis(object):
                 # raise RuntimeError("Key not found")
             elif r.status_code==405:
                 raise RuntimeError("Webdis could not execute %s,not supported"%url2)
+            elif r.status_code==503:
+                raise RuntimeError("Webdis not available for url:'%s',please restart webdis on server."%url2)                
             elif r.status_code<>200:
                 print "Unknown status code webdis:%s"%r.status_code
-                time.sleep(0.1)
-                continue
+                raise RuntimeError("Webdis not available for url:'%s',unknown status code:'%s'."%(url2,r.status_code))
             else:
                 from IPython import embed
                 print "DEBUG NOW wedis.execute, check errorcondition"

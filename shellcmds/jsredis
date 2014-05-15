@@ -31,8 +31,9 @@ redisp=j.clients.redis.getRedisClient("127.0.0.1",7768) #redis production
 
 if opts.action =='workerwatchdog':
     print "hget:workers:watchdog"
-    workers = redisp.hgetall("workers:watchdog")
-    for  workername, last in workers.iteritems():
+    items = redism.hgetall("workers:watchdog")
+    items2=zip(items[0::2], items[1::2])
+    for  workername, last in items2:
         print "%-20s %s"%(workername,timeago(last))
 
 elif opts.action =='apps':
