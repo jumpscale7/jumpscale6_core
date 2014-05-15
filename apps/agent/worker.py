@@ -48,7 +48,7 @@ class Worker(object):
 
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
 
-        self.redisprocessmanager=j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+        self.redisprocessmanager=j.clients.credis.getRedisClient('127.0.0.1', 7766)
 
         def checkagentcontroller():
             masterip=j.application.config.get("grid.master.ip")
@@ -70,7 +70,7 @@ class Worker(object):
             wait=1
             while success==False:
                 try:
-                    self.redis = j.clients.redis.getGeventRedisClient(self.redisaddr, self.redisport)
+                    self.redis = j.clients.credis.getRedisClient(self.redisaddr, self.redisport)
                     success=True
                 except Exception,e:
                     msg="Cannot connect to redis on %s:%s, will retry in 5 sec."%(self.redisaddr,self.redisport)
@@ -85,7 +85,7 @@ class Worker(object):
         self.redisprocessmanager.delete("workers:action:%s"%self.name)
 
         #@todo check if queue exists if not raise error
-        self.queue=j.clients.redis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
+        self.queue=j.clients.credis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
 
     def _loadModule(self, path):
         '''Load the Python module from disk using a random name'''
@@ -105,6 +105,7 @@ class Worker(object):
     def run(self):
         print "STARTED"
         w=j.clients.redisworker
+        w.useCRedis()
         while True:
 
             ############# PROCESSMANAGER RELATED 
@@ -274,7 +275,7 @@ if __name__ == '__main__':
             wait+=1
         time.sleep(wait)
 
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+    rediscl = j.clients.credis.getRedisClient('127.0.0.1', 7766)
     rediscl.hset("workers:watchdog",opts.workername,0) #now the process manager knows we got started but maybe waiting on other requirements
 
     wait=1

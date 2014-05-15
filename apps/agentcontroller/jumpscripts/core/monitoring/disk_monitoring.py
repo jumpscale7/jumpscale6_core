@@ -77,4 +77,5 @@ def action():
 
         if cacheobj.ckeyOld<>cacheobj.db.getContentKey():
             #obj changed
+            print "SEND DISK INFO TO OSIS"
             cacheobj.send2osis()

@@ -15,7 +15,7 @@ order = 1
 enable = True
 async = True
 log = False
-queue ='process'
+queue ='default'
 roles = ['master']
 
 

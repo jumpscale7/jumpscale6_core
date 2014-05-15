@@ -27,6 +27,10 @@ def action():
     import JumpScale.grid.osis
     ocl = j.core.osis.getClient(user='root')
     scl = j.core.osis.getClientForCategory(ocl, 'system', 'stats')
+
+    #@todo needs to be redone with stataggregator
+    j.system.stataggregator
+
     results = scl.search({'target':'smartSummarize(n*.system.cpu.num_ctx_switches, "1hour", "avg")', 'from': '-1h'})
     for noderesult in results:
         avgctx, timestamp = noderesult['datapoints'][-1]

@@ -11,12 +11,12 @@ license = "bsd"
 version = "1.0"
 category = "monitor.healthcheck"
 
-period = 120 #always in sec
-enable = True
+period = 600 #always in sec
+enable = False
 async = True
 roles = ["master"]
 log=False
-queue = "process"
+queue = "hypervisor"
 
 def action():
     import JumpScale.grid.gridhealthchecker
@@ -27,7 +27,7 @@ def action():
     except:
         import json
 
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+    rediscl = j.clients.credis.getRedisClient('127.0.0.1', 7768)
     results, errors = j.core.grid.healthchecker.runAll()
     rediscl.hset('healthcheck:monitoring', 'results', json.dumps(results))
     rediscl.hset('healthcheck:monitoring', 'errors', json.dumps(errors))

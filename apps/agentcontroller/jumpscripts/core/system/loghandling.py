@@ -33,8 +33,8 @@ REDISPORT = 7768
 
 def action():
 
-    redisqueue = j.clients.redis.getGeventRedisQueue("127.0.0.1", 7768, "logs")
-    redisqueueEco = j.clients.redis.getGeventRedisQueue("127.0.0.1", 7768, "eco")
+    redisqueue = j.clients.credis.getRedisQueue("127.0.0.1", 7768, "logs")
+    redisqueueEco = j.clients.credis.getRedisQueue("127.0.0.1", 7768, "eco")
 
     masterip = j.application.config.get('grid.master.ip')
     masterport = j.application.config.get('grid.master.port')

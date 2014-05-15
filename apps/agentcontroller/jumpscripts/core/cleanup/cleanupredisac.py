@@ -12,7 +12,7 @@ version = "1.0"
 category = "redis.cleanup"
 period = 300  # always in sec
 order = 1
-enable = True
+enable = False
 async = True
 log = False
 roles = ['master']
@@ -28,7 +28,7 @@ def action():
         import json
     ocl = j.core.osis.getClient(user='root')
     jcl = j.core.osis.getClientForCategory(ocl, 'system', 'job')
-    rcl = j.clients.redis.getRedisClient('127.0.0.1', 7769)
+    rcl = j.clients.credis.getRedisClient('127.0.0.1', 7769)
     jobkey = 'jobs:%s' % j.application.whoAmI.gid
     jobs = rcl.hgetall(jobkey)
     for jobguid, jobstring in jobs.iteritems():

@@ -94,6 +94,7 @@ def action():
 
                 if vdisk.ckeyOld != vdisk.db.getContentKey():
                     #obj changed
+                    print "SEND VDISK INFO TO OSIS"
                     vdisk.send2osis()
     finally:
         con.close()

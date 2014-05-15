@@ -13,10 +13,11 @@ version = "1.0"
 category = "monitor.redis"
 
 period = 300 #always in sec
-enable = True
-async = False
+enable = False #@todo need other implementation
+async = True
 roles = []
 log=False
+queue="process"
 
 def action():
     import JumpScale.grid.gridhealthchecker

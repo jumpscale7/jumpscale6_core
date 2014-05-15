@@ -88,6 +88,7 @@ def action():
                 print "NO LONGER ACTIVE:%s"%cacheobj.db.name
                 cacheobj=j.core.processmanager.monObjects.nicobject.get(nic_key) #is cached so low overhead
                 cacheobj.active=False
+                print "SEND NIC INFO TO OSIS"
                 cacheobj.send2osis()
 
             #otherwise there is a memory leak

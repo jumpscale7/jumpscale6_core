@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from JumpScale import j
 
-import JumpScale.grid.geventws
 import time
 import JumpScale.grid.processmanager
 

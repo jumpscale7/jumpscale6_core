@@ -23,7 +23,7 @@ def action():
     import time
 
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
-    timemap = {'default': '-1m', 'io': '-2h', 'hypervisor': '-10m','process':'-1m'}
+    timemap = {'default': '-1m', 'io': '-2h', 'hypervisor': '-10m','process':'-15m'}
 
     # prefix = 'workers__worker_'
     # workers = [ x[len(prefix):] for x in j.tools.startupmanager.listProcesses() if x.startswith(prefix) and  ]
@@ -33,7 +33,8 @@ def action():
     timedout=[]
     tocheck=[]
    
-    okperiod=int(time.time())-9
+    now=time.time()
+    okperiod=int(now)-9
 
     def start(workername,pid=0):
         workerNameShort="_".join(workername.split("_")[:-1])
@@ -64,9 +65,14 @@ def action():
             continue
         
         # print "\ntimeout:%s %s %s"%(timeout,j.base.time.getEpochAgo(timeout),lastactive)
-        if int(j.base.time.getEpochAgo(timeout)) > int(lastactive):
+        agoOK=now-int(j.base.time.getEpochAgo(timeout))
+        if  int(lastactive)<agoOK :
             if lastactive==0:
                 raise RuntimeError("BUG: lastactive cannot be 0.")
+            from IPython import embed
+            print "DEBUG NOW yyyyyyy"
+            embed()
+            
             j.events.opserror('Worker %s seems to have timed out' % workername, 'monitoring') #is not critical
             timedout.append(workername)
             print "timeout",
@@ -91,6 +97,10 @@ def action():
             pid=int(line.split(" ")[0])
             if workerNameFound in timedout:                
                 print "kill ",
+                from IPython import embed
+                print "DEBUG NOW kill"
+                embed()
+                
                 j.system.process.kill(pid)
                 j.events.opserror_critical("had to kill worker, there was timeout on:%s"%workerNameFound)
                 #@todo look for which job was running there and escalate this as well
