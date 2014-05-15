@@ -1,10 +1,11 @@
+#this must be in the beginning so things are patched before ever imported by other libraries
+from gevent import monkey
+monkey.patch_all()
+
 from JumpScale import j
 import JumpScale.grid.osis
 import time
 
-# from gevent import monkey
-# monkey.patch_socket()
-# monkey.patch_thread()
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
     time.sleep(0.1)

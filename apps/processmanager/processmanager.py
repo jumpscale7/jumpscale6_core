@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+#this must be in the beginning so things are patched before ever imported by other libraries
+import gevent.monkey
+gevent.monkey.patch_all()
+
 from JumpScale import j
 
 import time
