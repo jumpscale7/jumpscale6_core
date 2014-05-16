@@ -58,7 +58,18 @@ class MonObjectBase(object):
 
     def send2osis(self):
         guid, new, update = self.cache.osis.set(self.db)
-        self.db = self.cache.osis.get(guid)
+        try:
+            self.db = self.cache.osis.get(guid)
+        except Exception,e:
+            # msg="obj:%s\nguid:%s\n"%(self.db,guid)
+            # msg+="\nERROR: could not read object from OSIS which we have just stored, serious bug."
+            if str(e).find("Could not find key")<>-1:
+                self.cache.osis.delete(db,obj=self.db)
+                guid, new, update = self.cache.osis.set(self.db)
+                self.db = self.cache.osis.get(guid)
+            else:
+                j.errorconditionhandler.processPythonExceptionObject(e)
+
         return guid, new, update
 
     def getGuid(self):

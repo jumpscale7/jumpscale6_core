@@ -29,6 +29,8 @@ class mainclass(OSISStore):
         return False
 
     def find(self,query, start=0, size =100):
+        #@todo disabled for now untill we have better solution
+        return ""
         return j.clients.graphite.query(query)
 
     def destroyindex(self):
