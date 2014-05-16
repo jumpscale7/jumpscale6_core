@@ -129,27 +129,32 @@ if __name__ == '__main__':
     admin=j.tools.admin.get(args)
     j.admin=admin
 
-    for hostkey in j.admin.hostKeys:
+    if args.gridname=="" and args.remote=="":
+        node=j.admin.getNode()
+        node.args=args
+        j.admin.executeForNode(node,args.name,once=True,sshtest=False)
+        exitcode=0
+
+    else:
+        for hostkey in j.admin.hostKeys:
+
+            if not args.sync:
+                p = Process(target=doRemote, args=(args,hostkey,args.command))
+                p.start()
+            else:
+                doRemote(args,hostkey,args.command)
 
         if not args.sync:
-            p = Process(target=doRemote, args=(args,hostkey,args.command,))
-            p.start()
-        else:
-            doRemote(args,hostkey,args.command)
-
-    if not args.sync:
-        #need to wait till all done
-        done=j.admin.getScriptRunInfo()
-        nr=len(j.admin.hostKeys)
-        while len(done)<nr:
-            print "Still Running: %s/%s"%(nr-len(done),nr)
-            time.sleep(2)
+            #need to wait till all done
             done=j.admin.getScriptRunInfo()
+            nr=len(j.admin.hostKeys)
+            while len(done)<nr:
+                print "Still Running: %s/%s"%(nr-len(done),nr)
+                time.sleep(2)
+                done=j.admin.getScriptRunInfo()
 
 
-    exitcode=j.admin.printResult()
-
-
+        exitcode=j.admin.printResult()
 
     j.application.stop(exitcode)
 

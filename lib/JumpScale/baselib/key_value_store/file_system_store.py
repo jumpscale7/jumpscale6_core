@@ -39,7 +39,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         # self._assertExists(category, key)
         storePath = self._getStorePath(category, key)
         if not os.path.exists(storePath):
-            raise KeyError("Could not find key:'%s'"%key)
+            raise KeyError("Could not find key:'%s' in category:'%s'"%(key,category))
 
         value = self.fileGetContents(storePath)
         return self.unserialize(value)

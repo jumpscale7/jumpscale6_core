@@ -312,9 +312,7 @@ class Admin():
                             break
                 self.hostKeys = hosts
                 self.hostKeys.sort()
-            elif args.remote=="":
-                # if args.gridname=="":
-                #     raise RuntimeError("Please specify gridname")
+            elif args.remote=="" and  args.gridname<>"":
                 for gridname in args.gridname.split(","):
                     for hostKey in self.getHostNamesKeys(args.gridname):
                         self.hostKeys.append(hostKey)
@@ -378,9 +376,16 @@ class Admin():
         #@todo make better
         raise RuntimeError("%s;%s"%(action,msg))
 
-    def getNode(self,gridname,name):
+    def getNode(self,gridname="",name=""):
         name=name.lower()
         gridname=gridname.lower()
+
+        if gridname=="" and name=="":
+            node=JNode()
+            node.cuapi=self.cuapi
+            node.currentScriptRun=None
+            node.getScriptRun()
+            return node
         
         if self.redis.hexists("admin:nodes","%s:%s"%(gridname,name))==False:
             raise RuntimeError("could not find node: '%s/%s'"%(gridname,name))
@@ -418,7 +423,7 @@ class Admin():
         if sr<>None:
             self.redis.hset("admin:scriptruns","%s:%s:%s"%(node.gridname,node.name,sr.runid),json.dumps(sr.__dict__))
 
-    def executeForNode(self,node,jsname,once=True,**kwargs):
+    def executeForNode(self,node,jsname,once=True,sshtest=True,**kwargs):
         """
         return node
         """
@@ -438,7 +443,7 @@ class Admin():
             if not j.admin.js.has_key(jsname):
                 self.raiseError("executejs","cannot find js:%s"%jsname)
 
-            if not j.system.net.waitConnectionTest(node.ip,22, self.args.timeout):
+            if sshtest and not j.system.net.waitConnectionTest(node.ip,22, self.args.timeout):
                 self.raiseError("executejs","jscript:%s,COULD NOT check port (ssh)"%jsname)
                 return
             try:                
