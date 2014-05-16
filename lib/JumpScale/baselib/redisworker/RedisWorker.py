@@ -4,6 +4,7 @@ try:
 except:
     import json
 
+import JumpScale.baselib.hash
 import JumpScale.grid.osis
 import JumpScale.baselib.redis
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
@@ -195,10 +196,43 @@ class RedisWorkerFactory:
         self._scheduleJob(job)
         return job
 
+    def jobExistsInQueue(self,qname,job):
+
+        if not self.queue.has_key(qname):
+            raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
+
+        queue=self.queue[qname]
+        C1="%s%s%s%s%s%s%s%s"%(job.category, job.cmd, job.log, job.gid, job.nid, job.roles, job.jscriptid,job.args)
+        keynew=j.tools.hash.md5_string(C1)
+
+
+        db=queue._CRedisQueue__db
+        for i in range (db.llen(queue.key)):
+            jobbin=db.lindex(queue.key,i)
+            print jobbin
+            jobdict=json.loads(jobbin)
+            jobOld=Job(ddict=jobdict)
+            C="%s%s%s%s%s%s%s%s"%(jobOld.category, jobOld.cmd, jobOld.log, jobOld.gid, jobOld.nid, jobOld.roles, jobOld.jscriptid,jobOld.args)
+            print C
+            print "%s %s"%(C1,C,keynew,j.tools.hash.md5_string(C))
+            if keynew==j.tools.hash.md5_string(C):
+                print "INQUEUE"
+                return True
+                from IPython import embed
+                print "DEBUG NOW ooo"
+                embed()
+                
+
+            jobbin=queue.fetch(block=False)
+            
+        return False
+
+
     def _getWork(self,qname,timeout=0):
         if not self.queue.has_key(qname):
             raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
         queue=self.queue[qname]
+
         if timeout<>0:
             jobdict=queue.get(timeout=timeout)
         else:
@@ -227,7 +261,6 @@ class RedisWorkerFactory:
         """
         """
 
-        
         qname=job.queue
         if not qname or qname.strip()=="":
             qname="default"
@@ -237,8 +270,9 @@ class RedisWorkerFactory:
 
         queue=self.queue[qname]
 
-        # self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
-        queue.put(job)
+        if not self.jobExistsInQueue(qname,job):
+            # self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
+            queue.put(job)
 
     def scheduleJob(self, job):
         jobobj = Job(ddict=job)
