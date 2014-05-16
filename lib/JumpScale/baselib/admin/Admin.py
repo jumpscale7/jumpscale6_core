@@ -71,7 +71,7 @@ class JNode():
                     line2=line               
                 try:                    
                     out+="%s\n"%self.cuapi.run(line2)
-                except Exception,e:
+                except BaseException,e:
                     if die:
                         self.raiseError("execcmd","error execute:%s"%line,e)
 
