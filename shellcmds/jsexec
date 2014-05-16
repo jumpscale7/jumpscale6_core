@@ -129,7 +129,7 @@ if __name__ == '__main__':
     admin=j.tools.admin.get(args)
     j.admin=admin
 
-    if args.gridname=="" and args.remote=="":
+    if args.gridname=="":
         node=j.admin.getNode()
         node.args=args
         j.admin.executeForNode(node,args.name,once=True,sshtest=False)

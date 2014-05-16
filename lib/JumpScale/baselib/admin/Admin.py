@@ -43,7 +43,7 @@ class JNode():
         self.name=""
         self.ip=""
         self.host=""
-        self.enable=True
+        self.enabled=True
         self.remark=""
         self.roles=[]
         self.passwd=None
@@ -385,19 +385,23 @@ class Admin():
             node.cuapi=self.cuapi
             node.currentScriptRun=None
             node.getScriptRun()
+            node.args=self.args
             return node
 
         if gridname=="":
-            if j.system.net.pingMachine(name.strip("/").strip(),1):
-                node=JNode()
-                node.ip=name
-                node.hostname=name
-                node.cuapi=self.cuapi
-                node.currentScriptRun=None
-                node.getScriptRun()
-                return node
-            else:
-                raise RuntimeError("Could not find node:'%s'"%name)
+            # print "PING:'%s'"%name
+            # if j.system.net.pingMachine(name):
+            # print "OK"
+            node=JNode()
+            node.ip=name
+            node.hostname=name
+            node.cuapi=self.cuapi
+            node.currentScriptRun=None
+            node.getScriptRun()
+            node.args=self.args
+            return node
+            # else:
+            #     raise RuntimeError("Could not ping node:'%s'"%name)
 
         
         if self.redis.hexists("admin:nodes","%s:%s"%(gridname,name))==False:
