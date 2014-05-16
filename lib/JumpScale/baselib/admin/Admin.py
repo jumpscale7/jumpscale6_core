@@ -386,6 +386,19 @@ class Admin():
             node.currentScriptRun=None
             node.getScriptRun()
             return node
+
+        if gridname=="":
+            if j.system.net.pingMachine(name.strip("/").strip(),1):
+                node=JNode()
+                node.ip=name
+                node.hostname=name
+                node.cuapi=self.cuapi
+                node.currentScriptRun=None
+                node.getScriptRun()
+                return node
+            else:
+                raise RuntimeError("Could not find node:'%s'"%name)
+
         
         if self.redis.hexists("admin:nodes","%s:%s"%(gridname,name))==False:
             raise RuntimeError("could not find node: '%s/%s'"%(gridname,name))
