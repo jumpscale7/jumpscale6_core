@@ -29,7 +29,7 @@ def action():
             return status, lastcheck
 
 
-    redisclient = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+    redisclient = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
     result['disks'] = get('disks')
     for port in [7767, 7768, 7769]:
         check = 'redis:%s' % port

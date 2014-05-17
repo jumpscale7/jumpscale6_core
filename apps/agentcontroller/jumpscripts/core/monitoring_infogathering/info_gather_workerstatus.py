@@ -18,7 +18,7 @@ roles = []
 log=False
 
 def action():
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
     timemap = {'default': '-2m', 'io': '-2h', 'hypervisor': '-10m','process':'-1m'}
     result = dict()
     workers_processdefs = j.tools.startupmanager.getProcessDefs('workers')
