@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 #this must be in the beginning so things are patched before ever imported by other libraries
-import gevent.monkey
+from gevent import monkey
 # gevent.monkey.patch_all()
 
 monkey.patch_socket()
 monkey.patch_thread()
 monkey.patch_time()
-#gevent.monkey.patch_sys(stdin=True, stdout=True, stderr=True)
-
 
 from JumpScale import j
 
