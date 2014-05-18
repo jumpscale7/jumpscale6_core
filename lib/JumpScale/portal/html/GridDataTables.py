@@ -20,7 +20,7 @@ class GridDataTables:
             return ''
         return datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or ''
 
-    def addTableForModel(self, namespace, category, fieldids, fieldnames=None, fieldvalues=None, filters=None):
+    def addTableForModel(self, namespace, category, fieldids, fieldnames=None, fieldvalues=None, filters=None, nativequery=None):
         """
         @param namespace: namespace of the model
         @param cateogry: cateogry of the model
@@ -28,7 +28,7 @@ class GridDataTables:
         @param fieldnames: list of str showed in the table header if ommited fieldids will be used
         @param fieldvalues: list of items resprenting the value of the data can be a callback
         """
-        key = j.apps.system.contentmanager.extensions.datatables.storInCache(fieldids, fieldnames, fieldvalues, filters)
+        key = j.apps.system.contentmanager.extensions.datatables.storInCache(fieldids=fieldids, fieldname=fieldnames, fieldvalues=fieldvalues, filters=filters, nativequery=nativequery)
         url = "/restmachine/system/contentmanager/modelobjectlist?namespace=%s&category=%s&key=%s" % (namespace, category, key)
         if not fieldnames:
             fieldnames = fieldids
