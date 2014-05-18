@@ -64,6 +64,8 @@ grid.master=
 grid.master.ip=localhost
 grid.node.roles=node,computenode,kvm
 grid.master.superadminpasswd=6bde6ce08268a6d58ba96f27402bd7d4
+grid.watchdog.secret=myscret
+grid.watchdog.addr=127.0.0.1
 ' > /opt/jumpscale/cfg/hrd/grid.hrd
 
 echo '
