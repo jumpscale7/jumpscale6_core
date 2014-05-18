@@ -52,7 +52,7 @@ pip install .
 mkdir -p /opt/jumpscale/cfg/hrd/
 mkdir -p /opt/jumpscale/cfg/jsconfig
 
-echo 'elasticsearch.cluster.name=mycluster' > /opt/jumpscale/cfg/hrd/elasticsearch.hrd
+echo 'elasticsearch.cluster.name=$BUILD_TAG' > /opt/jumpscale/cfg/hrd/elasticsearch.hrd
 echo 'broker.id=1
 broker.domain=mydomain' > /opt/jumpscale/cfg/hrd/broker.hrd
 echo '
