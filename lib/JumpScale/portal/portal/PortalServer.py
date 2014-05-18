@@ -652,7 +652,7 @@ class PortalServer:
         if j.application.debug:
             return msg
         else:
-            return "An unexpected error has acquired, please try again later."
+            return "An unexpected error has occurred, please try again later."
 
     def _text2html(self, text):
         text = text.replace("\n", "<br>")
