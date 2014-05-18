@@ -164,15 +164,13 @@ class DaemonClient(object):
             data = ser.dumps(data)
 
         # self.cmdchannel.send_multipart([cmd,sendformat,returnformat,data])
-        parts = self.transport.sendMsg(category, cmd, data, sendformat, returnformat,timeout=transporttimeout)
-        returncode = parts[0]
+        returncode, rreturnformat, returndata = self.transport.sendMsg(category, cmd, data, sendformat, returnformat,timeout=transporttimeout)
         # print "return:%s"%returncode
         if returncode == returnCodes.AUTHERROR:
             if retry < maxretry:
                 print "session lost"
                 self.initSession()
                 retry += 1
-                agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
                 return self.sendMsgOverCMDChannel(cmd, rawdata, sendformat=sendformat, returnformat=returnformat, retry=retry, maxretry=maxretry, category=category,transporttimeout=transporttimeout)
             else:
                 msg = "Authentication error on server.\n"
@@ -181,30 +179,29 @@ class DaemonClient(object):
             msg = "Execution error on %s.\n Could not find method:%s\n" % (self.transport, cmd)
             raise MethodNotFoundException(msg)
         if str(returncode) != returnCodes.OK:
-            if cmd == "logeco":
-                raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % eco)
             # print "*** error in client to zdaemon ***"
-            s = j.db.serializers.get(returnformat)
-            ecodict = s.loads(parts[2])
+            s = j.db.serializers.get(rreturnformat)
+            ecodict = s.loads(returndata)
+            if cmd == "logeco":
+                raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % ecodict)
 
             if ecodict["errormessage"].find("Authentication error")<>-1:
                 raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
             raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
             # frames= j.errorconditionhandler.getFrames()            
             # s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            # ddict = s.loads(parts[2])
+            # ddict = s.loads(returndata)
             # eco = j.errorconditionhandler.getErrorConditionObject(ddict)
             # eco.category="rpc.exec"
             # eco.frames=frames
             # msg = "execution error on server  %s:%s" % (gid,nid,ecoid,cmd,category)
 
-        returnformat = parts[1]
         if returnformat <> "":
-            ser = j.db.serializers.get(returnformat, key=self.key)
-            res = self.decrypt(parts[2])
+            ser = j.db.serializers.get(rreturnformat, key=self.key)
+            res = self.decrypt(returndata)
             result = ser.loads(res)
         else:
-            result = parts[2]
+            result = returndata
 
         return result
 
