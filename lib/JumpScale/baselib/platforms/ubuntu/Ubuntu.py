@@ -105,7 +105,7 @@ class Ubuntu:
 
     def install(self, packagename):
         
-        cmd='unset JSBASE;unset PYTHONPATH;apt-get install %s -y'%packagename
+        cmd='unset JSBASE;unset PYTHONPATH;apt-get install %s --force-yes -y'%packagename
         j.system.process.executeWithoutPipe(cmd)
 
         # self.check()
