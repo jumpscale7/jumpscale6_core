@@ -3,6 +3,8 @@ from JumpScale import j
 # import zmq
 import gevent
 import gevent.monkey
+# monkey.patch_thread()
+monkey.patch_time()
 import zmq.green as zmq
 import time
 from gevent import queue as queue

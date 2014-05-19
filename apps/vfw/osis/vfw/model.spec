@@ -14,6 +14,12 @@
     prop:tcpForwardRules list(tcpForwardRule),,set of rules for tcp forwarding; when more than 1 and same source port then tcp loadbalancing
     prop:masquerade bool,True,if True then masquerading done from internal network to external
     prop:wsForwardRules list(wsForwardRule),,set of rules for reverse proxy
+    prop:networkid str,,
+    prop:internalip str,,
+    prop:pubips list(str),,
+    prop:version int,2,
+    prop:state str,, OK;ERROR;INIT;DELETED
+
 
 [model:tcpForwardRule] #@index
     """

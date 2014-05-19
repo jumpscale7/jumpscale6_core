@@ -1,4 +1,9 @@
-from gevent import monkey; monkey.patch_all(aggressive=False)
+from gevent import monkey
+# monkey.patch_all(aggressive=False)
+monkey.patch_socket()
+monkey.patch_thread()
+monkey.patch_time()
+
 from JumpScale import j
 from gevent.pywsgi import WSGIServer
 import JumpScale.grid.serverbase
