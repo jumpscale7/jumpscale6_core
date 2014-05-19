@@ -1779,6 +1779,15 @@ class SystemProcess:
     def appNrInstancesActive(self,appname):
         return len(self.appGetPidsActive(appname))
 
+    def getEnviron(self, pid):
+        environ = j.system.fs.fileGetContents('/proc/%s/environ' % pid)
+        env = dict()
+        for line in environ.split('\0'):
+            if '=' in line:
+                key, value = line.split('=', 1)
+                env[key] = value
+        return env
+
     def appGetPids(self,appname):
         if j.application.redis==None:
             raise RuntimeError("Redis was not running when applications started, cannot get pid's")
@@ -1828,6 +1837,10 @@ class SystemProcess:
         for pid in pids:
             if not self.isPidAlive(pid):
                 todelete.append(pid)        
+            else:
+                environ = self.getEnviron(pid)
+                if environ.get('JSPROCNAME') != appname:
+                    todelete.append(pid)
         for item in todelete:
             pids.remove(item)
         j.application.redis.hset("application",appname,json.dumps(pids))
