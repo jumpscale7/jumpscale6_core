@@ -147,6 +147,7 @@ class DataTables():
                 else:
                     # is function
                     field = field(row, fieldid)
+                    field = field or ' '
                     field = Confluence2HTML.findLinks(field)
                     r.append(field)
 
