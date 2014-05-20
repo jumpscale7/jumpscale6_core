@@ -1,6 +1,6 @@
 from JumpScale import j
 from JumpScale.portal.docgenerator.Confluence2HTML import Confluence2HTML
-
+import copy
 
 class DataTables():
 
@@ -60,13 +60,9 @@ class DataTables():
 
         return actor, model, fields, fieldids, fieldnames
 
-    def storInCache(self, fieldids, fieldnames, fieldvalues, filters=None):
+    def storInCache(self, **kwargs):
         cache = j.db.keyvaluestore.getMemoryStore('datatables')
-        cacheinfo = {}
-        cacheinfo["fieldnames"] = fieldnames
-        cacheinfo["fieldids"] = fieldids
-        cacheinfo["fieldvalues"] = fieldvalues
-        cacheinfo["filters"] = filters
+        cacheinfo = kwargs.copy()
         key = j.base.idgenerator.generateGUID()
         cache.cacheSet(key, cacheinfo)
         return key
@@ -96,6 +92,8 @@ class DataTables():
         fieldids = datainfo['fieldids']
         fieldvalues = datainfo['fieldvalues'] or fieldids
         filters = datainfo["filters"] or dict()
+        nativequery = datainfo.get('nativequery') or dict()
+        nativequery = copy.deepcopy(nativequery)
         filters = filters.copy()
 
         client = self.getClient(namespace, category)
@@ -123,10 +121,9 @@ class DataTables():
                 partials[fieldids[x]] = '*%s*' % svalue.lower()
 
         #top search field
-        nativequery = None
         if 'sSearch' in kwargs and kwargs['sSearch']:
             dummyobj = client.new()
-            nativequery = {'query': {'bool': {'should': list()}}}
+            nativequery.setdefault('query', {}).setdefault('bool', {}).setdefault('should', [])
             for idname in fieldids:
                 if isinstance(getattr(dummyobj, idname, None), basestring):
                     nativequery['query']['bool']['should'].append({'wildcard': {idname: '*%s*' % kwargs['sSearch'].lower()}})
@@ -150,6 +147,7 @@ class DataTables():
                 else:
                     # is function
                     field = field(row, fieldid)
+                    field = field or ' '
                     field = Confluence2HTML.findLinks(field)
                     r.append(field)
 

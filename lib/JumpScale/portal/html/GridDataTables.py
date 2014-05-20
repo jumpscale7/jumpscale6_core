@@ -20,7 +20,7 @@ class GridDataTables:
             return ''
         return datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or ''
 
-    def addTableForModel(self, namespace, category, fieldids, fieldnames=None, fieldvalues=None, filters=None):
+    def addTableForModel(self, namespace, category, fieldids, fieldnames=None, fieldvalues=None, filters=None, nativequery=None):
         """
         @param namespace: namespace of the model
         @param cateogry: cateogry of the model
@@ -28,11 +28,63 @@ class GridDataTables:
         @param fieldnames: list of str showed in the table header if ommited fieldids will be used
         @param fieldvalues: list of items resprenting the value of the data can be a callback
         """
-        key = j.apps.system.contentmanager.extensions.datatables.storInCache(fieldids, fieldnames, fieldvalues, filters)
+        key = j.apps.system.contentmanager.extensions.datatables.storInCache(fieldids=fieldids, fieldname=fieldnames, fieldvalues=fieldvalues, filters=filters, nativequery=nativequery)
         url = "/restmachine/system/contentmanager/modelobjectlist?namespace=%s&category=%s&key=%s" % (namespace, category, key)
         if not fieldnames:
             fieldnames = fieldids
         return self.addTableFromURL(url, fieldnames)
+
+    def addTableFromData(self, data, fieldnames):
+        import random
+        tableid = 'table%s' % random.randint(0, 1000)
+
+        self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
+        # self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
+        self.page.addJS("%s/datatables/dataTables.bootstrap.js" % self.liblocation)
+        # self.page.addCSS("%s/datatables/demo_page.css"% self.liblocation)
+        # self.page.addCSS("%s/datatables/demo_table.css"% self.liblocation)
+        
+        C = """
+$(document).ready(function() {
+    $('#$tableid').dataTable( {
+        "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
+        "bServerSide": false,
+        "bDestroy": true,
+        "sPaginationType": "bootstrap",
+        "aaData": %s
+    } );
+    $.extend( $.fn.dataTableExt.oStdClasses, {
+        "sWrapper": "dataTables_wrapper form-inline"
+    } );
+} );""" % data
+        C = C.replace("$tableid", tableid)
+        self.page.addJS(jsContent=C, header=False)
+
+#<table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
+# <table class="table table-striped table-bordered" id="example" border="0" cellpadding="0" cellspacing="0" width="100%">
+
+        C = """
+<div id="dynamic">
+<table class="table table-striped table-bordered" id="$tableid" border="0" cellpadding="0" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+$fields
+        </tr>
+    </thead>
+    <tbody>
+    <tbody>
+    </tbody>
+</table>
+</div>"""
+
+        fieldstext = ""
+        for name in fieldnames:
+            fieldstext += "<th>%s</th>\n" % (name)
+        C = C.replace("$fields", fieldstext)
+        C = C.replace("$tableid", tableid)
+
+        self.page.addMessage(C, isElement=True, newline=True)
+        return tableid
 
     def addTableFromURL(self, url, fieldnames):
         import random

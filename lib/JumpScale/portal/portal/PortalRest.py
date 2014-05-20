@@ -14,15 +14,15 @@ class PortalRest():
     def validate(self, auth, ctx):
         if ctx.params == "":
             msg = 'No parameters given to actormethod.'
+            ctx.start_response('400 Bad Request', [])
             return False, msg
         if auth and ctx.env['beaker.session']['user'] == 'guest':
             msg = 'NO VALID AUTHORIZATION KEY GIVEN, use get param called key (check key probably auth error).'
-            ctx.start_response('401 %s' % msg, [])
+            ctx.start_response('401 Unauthorized', [])
             return False, msg
 
         paramCriteria = self.ws.routes[ctx.path][1]
         paramOptional = self.ws.routes[ctx.path][3]
-        
 
         for key in paramCriteria.keys():
             criteria = paramCriteria[key]
@@ -31,10 +31,12 @@ class PortalRest():
                     # means is optional
                     ctx.params[key] = None
                 else:
+                    ctx.start_response('400 Bad Request', [])
                     message = 'get param with name:%s is missing.' % key
                     return False, message
             elif (criteria != "" and ctx.params[key] == "")\
                     or (criteria != "" and not j.codetools.regex.matchAllText(criteria, ctx.params[key])):
+                ctx.start_response('400 Bad Request', [])
                 msg = 'value of param %s not correct needs to comform to regex %s' % (key, criteria)
                 return False, msg
         return True, ""
@@ -112,7 +114,7 @@ class PortalRest():
                                           "restvalidationerror", extraParams=params)
                     return (False, ctx, [str(page)])
                 else:
-                    return (False, ctx, self.ws.raiseError(ctx, msg))
+                    return (False, ctx, msg)
             else:
                 return (True, ctx, routekey)
         else:
