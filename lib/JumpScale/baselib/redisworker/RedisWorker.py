@@ -209,13 +209,23 @@ class RedisWorkerFactory:
         db=queue._CRedisQueue__db
         for i in range (db.llen(queue.key)):
             jobbin=db.lindex(queue.key,i)
+            print jobbin
             jobdict=json.loads(jobbin)
             jobOld=Job(ddict=jobdict)
             C="%s%s%s%s%s%s%s%s"%(jobOld.category, jobOld.cmd, jobOld.log, jobOld.gid, jobOld.nid, jobOld.roles, jobOld.jscriptid,jobOld.args)
+            print C
+            print "%s %s"%(C1,C,keynew,j.tools.hash.md5_string(C))
             if keynew==j.tools.hash.md5_string(C):
+                print "INQUEUE"
                 return True
+                from IPython import embed
+                print "DEBUG NOW ooo"
+                embed()
+
+                            
 
             jobbin=queue.fetch(block=False)
+            
         return False
 
 
@@ -261,9 +271,9 @@ class RedisWorkerFactory:
 
         queue=self.queue[qname]
 
-        if not self.jobExistsInQueue(qname,job):
+        # if not self.jobExistsInQueue(qname,job):
             # self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
-            queue.put(job)
+        queue.put(job)
 
     def scheduleJob(self, job):
         jobobj = Job(ddict=job)
