@@ -14,7 +14,7 @@ enable = True
 async = True
 queue = 'hypervisor'
 
-def action(networkid, internalip, publicip):
+def action(networkid, publicip):
     DEFAULTGWIP = j.application.config.get("vfw.default.ip")
     BACKPLANE = 'vxbackend'
     import JumpScale.lib.routeros
@@ -28,27 +28,17 @@ def action(networkid, internalip, publicip):
             'gid': j.application.whoAmI.gid
             }
 
-    j.package.findNewest('', 'routeros_config').install()
+    j.packages.findNewest('', 'routeros_config').install()
 
     networkidHex = '%04x' % int(networkid)
+    networkname = "space_%s"  % networkidHex
     name = 'routeros_%s' % networkidHex
     destinationdir = '/mnt/vmstor/routeros/%s' % networkidHex
 
 
-    #setup network vxlan
-    vxnet = nc.ensureVXNet(int(networkid), BACKPLANE)
-    xml = '''  <network>
-    <name>space_%(networkid)s</name>
-    <forward mode="bridge"/>
-    <bridge name='space_%(networkid)s'/>
-     <virtualport type='openvswitch'/>
- </network>''' % {'networkid': vxnet.netid.tostring()}
-    private = con.networkDefineXML(xml)
-    private.create()
-    private.setAutostart(True)
 
     def cleanup():
-        print "CLEANUP: %s/%s/%s"%(networkid,networkidHex)
+        print "CLEANUP: %s/%s"%(networkid,networkidHex)
         try:
             dom = con.lookupByName(name)
             dom.destroy()
@@ -56,8 +46,36 @@ def action(networkid, internalip, publicip):
         except libvirt.libvirtError:
             pass
         j.system.fs.removeDirTree(destinationdir)
+        def deleteNet(net):
+            try:
+                net.destroy()
+            except:
+                pass
+            try:
+                net.undefine()
+            except:
+                pass
+        try:
+            for net in con.listAllNetworks():
+                if net.name() == networkname:
+                    deleteNet(net)
+                    break
+        except:
+            pass
 
     cleanup()
+
+    #setup network vxlan
+    nc.ensureVXNet(int(networkid), BACKPLANE)
+    xml = '''  <network>
+    <name>%(networkname)s</name>
+    <forward mode="bridge"/>
+    <bridge name='%(networkname)s'/>
+     <virtualport type='openvswitch'/>
+ </network>''' % {'networkname': networkname}
+    private = con.networkDefineXML(xml)
+    private.create()
+    private.setAutostart(True)
 
     if j.system.net.tcpPortConnectionTest(DEFAULTGWIP,22,timeout=5):
         raise RuntimeError("Cannot continue, foudn VFW which is using the admin address & remove")
@@ -68,7 +86,7 @@ def action(networkid, internalip, publicip):
     imagefile = j.system.fs.joinPaths(imagedir, 'routeros-small-NETWORK-ID.qcow2')
     xmlsource = j.system.fs.fileGetContents(j.system.fs.joinPaths(imagedir, 'routeros-template.xml'))
     xmlsource = xmlsource.replace('NETWORK-ID', networkidHex)
-    j.system.fs.copy(imagefile, destinationfile)
+    j.system.fs.copyFile(imagefile, destinationfile)
 
     try:
         dom = con.defineXML(xmlsource)

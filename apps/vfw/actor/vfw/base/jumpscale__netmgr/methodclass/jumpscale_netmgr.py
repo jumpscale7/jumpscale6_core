@@ -58,8 +58,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
                     'publicip': publicip
                     }
             result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args)
-            if result['STATE'] != 'OK':
-                raise RuntimeError("Failed to create create fw for domain %s" % domain)
+            if result['state'] != 'OK':
+                raise RuntimeError("Failed to create create fw for domain %s job was %s" % (domain, result['id']))
             data = result['result']
             fwobj.internalip = data['internalip']
             fwobj.nid = data['nid']
