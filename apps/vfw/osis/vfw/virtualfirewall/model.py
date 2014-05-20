@@ -17,32 +17,10 @@ class vfw_virtualfirewall(OsisBaseObject,vfw_virtualfirewall_osismodelbase):
         if ddict <> {}:
             self.load(ddict)
 
-
-    # def getContentKey(self):
-    #     """
-    #     this is used to define which fields make to update object in osis, e.g. not all fields are relevant for this and only when relevant ones change it will be stored in db
-    #     """
-    #     C="%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.id,self.name,self.mac,self.ipaddr,self.active)
-    #     return j.tools.hash.md5_string(C)
-
-    # def getUniqueKey(self):
-    #     """
-    #     return unique key for object, is used to define unique id (std the guid)
-    #     """
-    #     return self.getSetGuid()
-
-    # def getSetGuid(self):
-    #     """
-    #     use osis to define & set unique guid (sometimes also id)
-    #     """
-    #     self.gid = int(self.gid)
-    #     self.id = int(self.id)
-
-    #     # self.sguid=struct.pack("<HH",self.gid,self.id)
-    #     self.guid = "%s_%s" % (self.gid, self.id)
-    #     self.lastcheck=j.base.time.getTimeEpoch() 
-
-    #     return self.guid
+    def getSetGuid(self):
+        self.guid = "%s_%s"%(j.application.whoAmI.gid,self.id)
+        self.moddate=j.base.time.getTimeEpoch() 
+        return self.guid
 
     # def getDictForIndex(self):
     #     """

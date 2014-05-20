@@ -19,6 +19,7 @@
     prop:pubips list(str),,
     prop:version int,2,
     prop:state str,, OK;ERROR;INIT;DELETED
+    prop:moddate int,,
 
 
 [model:tcpForwardRule] #@index
