@@ -170,6 +170,7 @@ class OSISStore(object):
         value can be a dict or a raw value (seen as string)
         if raw value then will not try to index
         """
+        
         if j.basetype.dictionary.check(value):
             #is probably an osis object
             obj=self.getObject(value)
