@@ -120,7 +120,8 @@ class ControllerCMDS():
             jobid=self.redis.hincrby("jobs:last",str(gid),1) 
         self._log("jobid found (incr done)")
         job.id=jobid
-        job.getSetGuid()
+        if nid: #fail if nid is not set
+            job.getSetGuid()
         if jscriptid is None and session<>None:
             action = self.getJumpScript(cmdcategory, cmdname, session=session)
             jscriptid = action.id
@@ -128,9 +129,11 @@ class ControllerCMDS():
         jobs=json.dumps(job)
 
         self._log("save 2 osis")
-        self._setJob(job.__dict__, osis=log, jobs=jobs)
+        saveinosis = True if nid and log else False
+        self._setJob(job.__dict__, osis=saveinosis, jobs=jobs)
         self._log("getqueue")
-        q = self._getCmdQueue(gid=gid, nid=nid)
+        role = roles[0] if roles else None
+        q = self._getCmdQueue(gid=gid, nid=nid, role=role)
         self._log("put on queue")
         q.put(jobs)
         self._log("schedule done")
@@ -182,18 +185,40 @@ class ControllerCMDS():
         else:
             return None
 
-    def _getCmdQueue(self, session=None, gid=None, nid=None):
+    def _getCmdQueue(self, session=None, gid=None, nid=None, role=None):
         """
         is qeueue where commands are scheduled for processmanager to be picked up
         """
         if not gid and not nid:
             gid = session.gid
             nid = session.nid
+
+        if role != None:
+            nid = role
         if session==None:
             self._log("get cmd queue NOSESSION")
         self._log("get cmd queue for %s %s"%(gid,nid))
         queuename = "commands:queue:%s:%s" % (gid, nid)
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=True)
+
+    def _getWorkQueue(self, session):
+        cl = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
+        class MultiKeyQueue(object):
+            def __init__(self, keys):
+                self.keys = keys
+
+            def get(self, timeout=None):
+                data = cl.blpop(self.keys, timeout=timeout)
+                if data:
+                    return data[1]
+                return None
+
+        queues = list()
+        queues.append("queues:commands:queue:%s:%s" % (session.gid, session.nid))
+        for role in session.roles:
+            queues.append("queues:commands:queue:%s:%s" % (session.gid, role))
+
+        return MultiKeyQueue(queues)
 
     def _getJobQueue(self, jobguid):
         queuename = "jobqueue:%s" % jobguid
@@ -324,7 +349,7 @@ class ControllerCMDS():
             return True
         return [[t.id,t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
-    def executeJumpScript(self, organization, name, nid=None, role=None, args={},all=False, timeout=600,wait=True,queue="", session=None):
+    def executeJumpScript(self, organization, name, nid=None, role=None, args={},all=False, timeout=600,wait=True,queue="", singlenode=True, session=None):
         """
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
@@ -346,11 +371,21 @@ class ControllerCMDS():
             self._log("ROLE NOT NONE")
             role = role.lower()
             if role in self.roles2agents:
-                for agentid in self.roles2agents[role]:
-                    gid,nid=agentid.split("_")
-                    job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait)
-                if wait:
-                    return self.waitJumpscript(job=job,session=session)
+                if singlenode:
+                    job=self.scheduleCmd(j.application.whoAmI.gid,None,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait)
+                    if wait:
+                        return self.waitJumpscript(job=job,session=session)
+                else:
+                    job = list()
+                    for agentid in self.roles2agents[role]:
+                        gid,nid=agentid.split("_")
+                        job.append(self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait))
+                    if wait:
+                        results = list()
+                        for jobitem in job:
+                             results.append(self.waitJumpscript(job=jobitem,session=session))
+                        return results
+
                 return job
             else:
                 return noWork()
@@ -398,13 +433,17 @@ class ControllerCMDS():
         returns job as dict
         """
         self._log("getwork %s" % session)
-        q = self._getCmdQueue(session)
+        q = self._getWorkQueue(session)
         jobstr=q.get(timeout=30)
         if jobstr==None:
             self._log("NO WORK")
             return None
         job=json.loads(jobstr)
         if job<>None:
+            job['nid'] = session.nid
+            saveinosis = job['log']
+            job['state'] = 'STARTED'
+            self._setJob(job, saveinosis)
             self._log("getwork found for node:%s for jsid:%s"%(session.nid,job["jscriptid"]))
             return job
 
