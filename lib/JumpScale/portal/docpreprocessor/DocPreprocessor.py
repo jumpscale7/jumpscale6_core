@@ -184,7 +184,7 @@ class Doc(object):
             self.preprocess()
         content, doc = self.executeMacrosDynamicWiki(paramsExtra, ctx)
         ws = j.core.portal.active
-        content, page = ws.confluence2htmlconvertor.convert(content, doc=self, page=ws.getpage())
+        page = ws.confluence2htmlconvertor.convert(content, doc=self, page=ws.getpage())
         return page.body
 
     def findParams(self):
