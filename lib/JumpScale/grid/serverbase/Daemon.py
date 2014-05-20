@@ -177,7 +177,7 @@ class Daemon(object):
                         jobqueue = cmds._getJobQueue(job["guid"])
                         jobr=jobqueue.get(True,60)
                         if not jobr:
-                            eco = j.errorconditionhandler.getErrorConditionObject(msg="Command %.%s with args: %s timeout" % (category2, cmd, data))
+                            eco = j.errorconditionhandler.getErrorConditionObject(msg="Command %s.%s with args: %s timeout" % (category2, cmd, data))
                             return returnCodes.ERROR,returnformat,eco.__dict__
                         jobr=ujson.loads(jobr)
                         if jobr["state"]<>"OK":
