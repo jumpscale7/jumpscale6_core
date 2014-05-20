@@ -29,10 +29,9 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args)['result']
 
-    def fw_create(self, domain, name, gid, nid, masquerade,login, password, host, type, **kwargs):
+    def fw_create(self, domain, login, password, publicip, type, networkid, **kwargs):
         """
         param:domain needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
-        param:name needs to be unique name of vfirewall
         param:gid grid id
         param:nid node id
         param:masquerade do you want to allow masquerading?
@@ -41,22 +40,32 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:host management address to manage the firewall
         param:type type of firewall e.g routeros, ...
         """
-        fwobj = self.osisvfw.new()
+        results = self.osisvfw.simpleSearch({'networkid': networkid}, withguid=True)
+        if results:
+            fwobj = self.osisvfw.get(results[0]['guid'])
+        else:
+            fwobj = self.osisvfw.new()
         fwobj.domain = domain
-        fwobj.name = name
-        fwobj.gid = gid
-        fwobj.nid = nid
-        fwobj.masquerade = masquerade
-        fwobj.host = host
+        fwobj.networkid = networkid
+        fwobj.publicip = publicip
         fwobj.username = login
         fwobj.password = password
         fwobj.type =  type
         self.osisvfw.set(fwobj)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         if type == 'routeros':
-            return True
+            args = {'networkid': networkid,
+                    'publicip': publicip
+                    }
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args)
+            if result['STATE'] != 'OK':
+                raise RuntimeError("Failed to create create fw for domain %s" % domain)
+            data = result['result']
+            fwobj.internalip = data['internalip']
+            fwobj.nid = data['nid']
+            self.osisvfw.set(fwobj)
         else:
-            return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', nid=nid, args=args)['result']
+            return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', role='fw', args=args)['result']
 
     def fw_delete(self, fwid, gid, **kwargs):
         """
