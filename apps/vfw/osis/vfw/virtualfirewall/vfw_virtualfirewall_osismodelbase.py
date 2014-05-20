@@ -59,7 +59,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.integer.checkString(value):
                 value = j.basetype.integer.fromString(value)
             else:
-                msg="property id input error, needs to be int, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property id input error, needs to be int, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -79,7 +79,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.integer.checkString(value):
                 value = j.basetype.integer.fromString(value)
             else:
-                msg="property gid input error, needs to be int, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property gid input error, needs to be int, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -99,7 +99,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.integer.checkString(value):
                 value = j.basetype.integer.fromString(value)
             else:
-                msg="property nid input error, needs to be int, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property nid input error, needs to be int, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -119,7 +119,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property name input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property name input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -139,7 +139,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property descr input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property descr input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -159,7 +159,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property type input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property type input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -179,7 +179,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property domain input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property domain input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -199,7 +199,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property host input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property host input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -219,7 +219,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property username input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property username input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -239,7 +239,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property password input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property password input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -259,7 +259,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.list.checkString(value):
                 value = j.basetype.list.fromString(value)
             else:
-                msg="property tcpForwardRules input error, needs to be list, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property tcpForwardRules input error, needs to be list, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -279,7 +279,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.boolean.checkString(value):
                 value = j.basetype.boolean.fromString(value)
             else:
-                msg="property masquerade input error, needs to be bool, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property masquerade input error, needs to be bool, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -299,7 +299,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.list.checkString(value):
                 value = j.basetype.list.fromString(value)
             else:
-                msg="property wsForwardRules input error, needs to be list, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property wsForwardRules input error, needs to be list, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -319,7 +319,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property networkid input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property networkid input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -339,7 +339,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property internalip input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property internalip input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -359,7 +359,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.list.checkString(value):
                 value = j.basetype.list.fromString(value)
             else:
-                msg="property pubips input error, needs to be list, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property pubips input error, needs to be list, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -379,7 +379,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.integer.checkString(value):
                 value = j.basetype.integer.fromString(value)
             else:
-                msg="property version input error, needs to be int, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property version input error, needs to be int, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -399,7 +399,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property state input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property state input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -419,7 +419,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.integer.checkString(value):
                 value = j.basetype.integer.fromString(value)
             else:
-                msg="property moddate input error, needs to be int, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property moddate input error, needs to be int, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -439,7 +439,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property guid input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property guid input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -459,7 +459,7 @@ class vfw_virtualfirewall_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.list.checkString(value):
                 value = j.basetype.list.fromString(value)
             else:
-                msg="property _meta input error, needs to be list, specfile: /opt/jsbox/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
+                msg="property _meta input error, needs to be list, specfile: /opt/jumpscale/apps/osis/logic/vfw/model.spec, name model: virtualfirewall, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
