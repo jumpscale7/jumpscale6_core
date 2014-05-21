@@ -40,18 +40,15 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:host management address to manage the firewall
         param:type type of firewall e.g routeros, ...
         """
-        results = self.osisvfw.simpleSearch({'networkid': networkid}, withguid=True)
-        if results:
-            fwobj = self.osisvfw.get(results[0]['guid'])
-        else:
-            fwobj = self.osisvfw.new()
+        fwobj = self.osisvfw.new()
         fwobj.domain = domain
-        fwobj.networkid = networkid
+        fwobj.id = networkid
+        fwobj.gid = j.application.whoAmI.gid
         fwobj.publicip = publicip
         fwobj.username = login
         fwobj.password = password
         fwobj.type =  type
-        self.osisvfw.set(fwobj)
+        key = self.osisvfw.set(fwobj)[0]
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         if type == 'routeros':
             args = {'networkid': networkid,
@@ -60,6 +57,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                     }
             result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args)
             if result['state'] != 'OK':
+                self.osisvfw.delete(key)
                 raise RuntimeError("Failed to create create fw for domain %s job was %s" % (domain, result['id']))
             data = result['result']
             fwobj.internalip = data['internalip']
@@ -75,10 +73,18 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
-        result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args)['result']
-        if result:
-            self.osisvfw.delete(fwid)
-        return result
+        if fwobj.type == 'routeros':
+            args = {'networkid': fwobj.id}
+            job = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_destroy_routeros', nid=fwobj.nid, args=args)
+            if job['state'] != 'OK':
+                raise RuntimeError("Failed to remove vfw with id %s" % fwid)
+            else:
+                self.osisvfw.delete(fwid)
+        else:
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args)['result']
+            if result:
+                self.osisvfw.delete(fwid)
+            return result
 
     def _applyconfig(self, nid, args):
         if args['fwobject']['type'] == 'routeros':
@@ -149,19 +155,19 @@ class jumpscale_netmgr(j.code.classGetBase()):
         param:domain if not specified then all domains
         """
         result = list()
-        vfws = self.osisvfw.list()
+        filter = dict()
+        if domain:
+            filter['domain'] = domain
+        if gid:
+            filter['gid'] = gid
         fields = ('domain', 'name', 'gid', 'nid', 'guid')
-        for vfwid in vfws:
+        vfws = self.osisvfw.simpleSearch(filter)
+        for vfw in vfws:
             vfwdict = {}
-            vfw = self.osisvfw.get(vfwid)
             for field in fields:
-                vfwdict[field] = getattr(vfw, field, None)
-            if not domain and str(vfw.gid) == str(gid):
-                result.append(vfwdict)
-            if domain and vfw.domain == domain and str(vfw.gid) == str(gid):
-                result.append(vfwdict)
+                vfwdict[field] = vfw.get(field)
+            result.append(vfwdict)
         return result
-    
 
     def fw_start(self, fwid, gid, **kwargs):
         """
