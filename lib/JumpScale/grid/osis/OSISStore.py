@@ -170,7 +170,6 @@ class OSISStore(object):
         value can be a dict or a raw value (seen as string)
         if raw value then will not try to index
         """
-        
         if j.basetype.dictionary.check(value):
             #is probably an osis object
             obj=self.getObject(value)
@@ -315,7 +314,11 @@ class OSISStore(object):
 
     def removeFromIndex(self, key,replication="sync",consistency="all",refresh=True):
         index = self.getIndexName()
-        result = self.elasticsearch.delete(index, 'json', key, replication=replication,consistency=consistency,refresh=refresh)
+        try:
+            result = self.elasticsearch.delete(index, 'json', key, replication=replication,consistency=consistency,refresh=refresh)
+        except Exception,e:
+            j.errorconditionhandler.processPythonExceptionObject(e)
+            result=None
         return result
 
     def find(self, query, start=0, size=None):

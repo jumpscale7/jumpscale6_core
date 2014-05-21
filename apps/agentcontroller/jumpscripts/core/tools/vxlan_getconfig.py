@@ -1,18 +1,17 @@
 from JumpScale import j
 
 descr = """
-echo (return mesg)
+get vxlan configuration
 """
 
+name = "vxlan_getconfig"
+category = "vfw"
 organization = "jumpscale"
-name = "echo_sync"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
-category = "tools.echo.sync"
-async=False
 roles = []
-log=False
 
-def action(msg=""):
-    return msg
+def action():
+
+    return "YES"

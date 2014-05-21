@@ -287,7 +287,7 @@ class ControllerCMDS():
             self.jumpscriptsId[key0] = t
 
        
-    def getJumpScript(self, organization, name,gid=None, session=None):
+    def getJumpScript(self, organization, name,gid=None,reload=False, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
             
@@ -299,7 +299,12 @@ class ControllerCMDS():
         key = "%s_%s_%s" % (gid,organization, name)
         
         if key in self.jumpscripts:
-            return self.jumpscripts[key]
+            if reload:
+                from IPython import embed
+                print "DEBUG NOW getJumpScript reload"
+                embed()
+            else:                
+                return self.jumpscripts[key]
         else:
             j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s:%s" % (organization, name), category="action.notfound", die=False)
             return ""
