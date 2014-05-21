@@ -123,6 +123,7 @@ class DataTables():
         #top search field
         if 'sSearch' in kwargs and kwargs['sSearch']:
             dummyobj = client.new()
+            nativequery.setdefault('query', {}).setdefault('bool', {}).setdefault('must', [])
             nativequery.setdefault('query', {}).setdefault('bool', {}).setdefault('should', [])
             for idname in fieldids:
                 if isinstance(getattr(dummyobj, idname, None), basestring):
