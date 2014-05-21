@@ -55,6 +55,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         if type == 'routeros':
             args = {'networkid': networkid,
+                    'password': password,
                     'publicip': publicip
                     }
             result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args)

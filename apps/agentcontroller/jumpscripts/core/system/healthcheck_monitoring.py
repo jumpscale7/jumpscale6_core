@@ -12,7 +12,7 @@ version = "1.0"
 category = "monitor.healthcheck"
 
 period = 600 #always in sec
-enable = False
+enable = True
 async = True
 roles = ["master"]
 log=False
@@ -39,5 +39,3 @@ def action():
                 msg='%s on node %s seems to be having issues' % (cat, nid)
                 print msg
                 # j.events.opserror(msg, 'monitoring')
-
-                
