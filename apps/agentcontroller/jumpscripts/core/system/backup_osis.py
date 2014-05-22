@@ -27,17 +27,16 @@ def action():
     try:
         oscl = j.core.osis.getClient(user='root')
         namespaces = oscl.listNamespaces()
+        if j.system.fs.exists(backuppath):
+            j.system.fs.removeDirTree(backuppath)
         for namespace in namespaces:
             categories = oscl.listNamespaceCategories(namespace)
             for category in categories:
-                if namespace == 'system' and category == 'stats':
+                if namespace == 'system' and category in ['stats', 'log']:
                     continue
                 outputpath = j.system.fs.joinPaths(backuppath, namespace, category)
                 j.system.fs.createDir(outputpath)
-                try:
-                    oscl.export(namespace, category, outputpath)
-                except Exception:
-                    'Could not '
+                oscl.export(namespace, category, outputpath)
 
         #targz
         outputpath = j.system.fs.joinPaths(j.dirs.varDir, 'osisbackup_%s.tar.gz' % timestamp)
@@ -46,13 +45,17 @@ def action():
     except Exception:
         import JumpScale.baselib.mailclient
         import traceback
+        error = traceback.format_exc()
         message = '''
-        OSIS back up at %s failed.
-        Data should have been backed up to %s on the admin node.
+OSIS backup at %s failed.
+Data should have been backed up to %s on the admin node.
 
-        Exception:
-        %s
-        ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, traceback.format_exc())
+Exception:
+-----------------------------
+%s
+-----------------------------
+    ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, error)
+        message = message.replace('\n', '<br/>')
         j.clients.email.send('support@mothership1.com', 'smtp@incubaid.com', 'OSIS backup failed', message)
         
 
