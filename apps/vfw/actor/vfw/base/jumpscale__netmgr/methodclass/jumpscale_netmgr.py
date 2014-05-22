@@ -45,8 +45,6 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj.id = networkid
         fwobj.gid = j.application.whoAmI.gid
         fwobj.publicip = publicip
-        fwobj.username = login
-        fwobj.password = password
         fwobj.type =  type
         key = self.osisvfw.set(fwobj)[0]
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
@@ -60,7 +58,9 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 self.osisvfw.delete(key)
                 raise RuntimeError("Failed to create create fw for domain %s job was %s" % (domain, result['id']))
             data = result['result']
-            fwobj.internalip = data['internalip']
+            fwobj.host = data['internalip']
+            fwobj.username = data['username']
+            fwobj.password = data['password']
             fwobj.nid = data['nid']
             self.osisvfw.set(fwobj)
         else:

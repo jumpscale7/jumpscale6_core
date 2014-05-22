@@ -107,6 +107,8 @@ def action(networkid, publicip, password):
 
     try:
         defaultpasswd=j.application.config.get("vfw.admin.passwd")
+        data['username'] = 'vscalers'
+        data['password'] = defaultpasswd
         ro=j.clients.routeros.get(DEFAULTGWIP,"vscalers",defaultpasswd)
         
         ro.do("/system/identity/set",{"name":"%s/%s"%(networkid,networkidHex)})
