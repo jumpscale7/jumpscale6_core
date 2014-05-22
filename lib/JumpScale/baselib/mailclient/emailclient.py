@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 class EmailClient(object):
     def __init__(self):
         self._server = j.application.config.get('mail.relay.addr')
-        self._port = j.application.config.get('mail.relay.port')
+        self._port = j.application.config.getInt('mail.relay.port')
         self._username = None
         self._password = None
         self._ssl = False
