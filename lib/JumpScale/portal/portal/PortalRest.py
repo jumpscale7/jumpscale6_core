@@ -307,7 +307,10 @@ class PortalRest():
             # need to activate
             try:
                 result = self.ws.actorsloader.getActor(appname, actor)
-            except:
+            except Exception, e:
+                eco = j.errorconditionhandler.parsePythonErrorObject(e)
+                j.errorconditionhandler.processErrorConditionObject(eco)
+                print e
                 return False
             if result == None:
                 # there was no actor
