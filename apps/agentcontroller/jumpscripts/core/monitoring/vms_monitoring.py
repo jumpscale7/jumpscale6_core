@@ -45,7 +45,7 @@ def action():
 
     if failed_machines:
         # raise to ops
-        message = 'Hello,\nThe following vmachines are not pingable:\n\n'
+        message = 'Hello,<br/><br/>The following vmachines are not pingable:<br/><br/>'
         for vm in failed_machines:
-            message += '* %s: %s\n' % (vm['id'], vm['name'])
+            message += '* %s: %s<br/>' % (vm['id'], vm['name'])
         j.clients.email.send('support@mothership1.com', 'monitoring@mothership1.com', 'VMachines Status', message)
