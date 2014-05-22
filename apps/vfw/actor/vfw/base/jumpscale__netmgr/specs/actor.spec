@@ -6,14 +6,11 @@
         """     
         """
         var:domain str,,needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
-        var:name str,,needs to be unique name of vfirewall
-        var:gid int,,grid id
-        var:nid int,,node id
-        var:masquerade int,,do you want to allow masquerading?
         var:login str,,Admin login to the firewall
         var:password str,, Admin password to the firewall
-        var:host str,, Host to the firewall
+        var:publicip str,, Public IP of the firewall 
         var:type str,, Type of the firewall, e.g routeros, ...
+        var:networkid str,, Network ID
         #result:int #unique id of firewall
 
     method:fw_list @noauth
