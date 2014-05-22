@@ -44,7 +44,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj.domain = domain
         fwobj.id = networkid
         fwobj.gid = j.application.whoAmI.gid
-        fwobj.publicip = publicip
+        fwobj.publips.append(publicip)
         fwobj.type =  type
         key = self.osisvfw.set(fwobj)[0]
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
