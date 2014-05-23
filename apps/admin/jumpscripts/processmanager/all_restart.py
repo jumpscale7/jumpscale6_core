@@ -20,18 +20,18 @@ log = True
 def action(node):
     c=node.cuapi
 
-    node.serviceStop("redisp","redis/redisp")
-    node.serviceStop("redisc","redis/redisc")
-    node.serviceStart("redisp","redis/redisp")
-    node.serviceStart("redisc","redis/redisc")    
+#     node.serviceStop("redisp","redis/redisp")
+#     node.serviceStop("redisc","redis/redisc")
+#     node.serviceStart("redisp","redis/redisp")
+#     node.serviceStart("redisc","redis/redisc")    
 
-    c.run("jsprocess stop")
+    c.run(". /opt/jsbox/activate ; jsprocess stop")
 
-    node.jpackageStop("workers","worker.py")
-    node.serviceReStart("processmanager","processmanager.py")    
-    node.jpackageStart("workers","worker.py")
+#     node.jpackageStop("workers","worker.py")
+#     node.serviceReStart("processmanager","processmanager.py")    
+#     node.jpackageStart("workers","worker.py")
 
-    c.run("jsprocess start")
+    c.run(". /opt/jsbox/activate ; jsprocess start")
 
     
     # if not c.file_exists("/usr/bin/jsredis"):
