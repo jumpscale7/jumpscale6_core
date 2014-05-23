@@ -6,10 +6,10 @@ import JumpScale.baselib.serializers
 class jumpscale_netmgr(j.code.classGetBase()):
     """
     net manager
-    
+
     """
     def __init__(self):
-        
+
         self._te = {}
         self.actorname = "netmgr"
         self.appname = "jumpscale"
@@ -24,7 +24,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         will do some checks on firewall to see is running, is reachable over ssh, is connected to right interfaces
         param:fwid firewall id
         param:gid grid id
-        """        
+        """
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args)['result']
@@ -44,7 +44,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj.domain = domain
         fwobj.id = networkid
         fwobj.gid = j.application.whoAmI.gid
-        fwobj.publips.append(publicip)
+        fwobj.pubips.append(publicip)
         fwobj.type =  type
         key = self.osisvfw.set(fwobj)[0]
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
@@ -133,7 +133,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 if result:
                     self.osisvfw.set(fwobj)
         return result
-    
+
 
     def fw_forward_list(self, fwid, gid, **kwargs):
         """
@@ -187,7 +187,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'stop'}
         self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args, wait=False)
         return True
-    
+
 
     def ws_forward_create(self, wsid, gid, sourceurl, desturls, **kwargs):
         """
@@ -203,7 +203,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         self.osisvfw.set(wsfobj)
         self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=wsfobj.nid, args={'name': wsfobj.name, 'fwobject': wsfobj.obj2dict()}, wait=False)
         return True
-    
+
 
     def ws_forward_delete(self, wsid, gid, sourceurl, desturls, **kwargs):
         """
@@ -227,7 +227,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (vfws.domain, vfws.name), 'action': 'start'}
         self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=vfws.nid, args={'name': vfws.name, 'fwobject': vfws.obj2dict()}, wait=False)
         return True
-    
+
 
     def ws_forward_list(self, wsid, gid, **kwargs):
         """
@@ -244,4 +244,3 @@ class jumpscale_netmgr(j.code.classGetBase()):
         for rule in wsfr:
             result.append([rule.url, rule.toUrls])
         return result
-    
