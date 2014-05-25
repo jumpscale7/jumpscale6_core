@@ -72,7 +72,6 @@ def doRemote(args,hostkey,cmd):
             print sr.out
         if sr.error<>"":
             print "ERROR: COULD NOT EXECUTE: ERROR:"
-            print sr.error
         print "ERROR: could not execute:%s on \n%s"%(cmd,node)
         j.admin.setNode(node)
         if args.sync:
