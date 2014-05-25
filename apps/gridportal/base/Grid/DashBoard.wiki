@@ -1,7 +1,7 @@
 #http://$$addr:8081/dashboard
 
 
-{{title:GRIDDashboard}}
+{{title:GRID Dashboard}}
 
 {{projectname:GRID}}
 
@@ -42,7 +42,7 @@ h5. No. of vMachines Running
 h4. Links
 
 
-|[Performance Dashboard|http://localhost:8081/dashboard|||target='_blank']|[Events Dashboard|http://localhost:9000/incubaidcom/test/|||target='_blank']|
+|Performance Dashboard|Events Dashboard|
 |[Grid Nodes|/grid/nodes]|[Failed Jobs|/grid/jobs?state=error]|
 @divend 
 @col 6
