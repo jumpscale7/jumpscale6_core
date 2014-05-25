@@ -140,6 +140,8 @@ elif args.action == 'configure':
 
 elif args.action == 'install' or args.action == 'update':
     if args.action == 'update':
+        if not args.name:
+            args.name = '*'
         packages = cmdutils.getJPackage(args,installed=True,update=True)
         
         if j.application.sandbox:
@@ -314,6 +316,7 @@ elif args.action == 'list':
             packages += j.packages.find(domain=domain,name="*", installed=False)
         printJPackages(packages)
     else:
+        import ipdb; ipdb.set_trace()
         packages = cmdutils.getJPackage(args,installed=True)
         printJPackages(packages)
 
