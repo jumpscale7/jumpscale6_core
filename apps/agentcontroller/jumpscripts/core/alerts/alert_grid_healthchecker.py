@@ -28,6 +28,7 @@ def action():
 
     import JumpScale.baselib.redis
     import JumpScale.grid.gridhealthchecker
+    import JumpScale.grid.processmanager
     try:
         import ujson as json
     except:
