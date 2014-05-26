@@ -1,9 +1,8 @@
 from store import KeyValueStoreBase
-
 from JumpScale import j
+import JumpScale.baselib.redis
 
 import ujson as json
-import lz4
 import time
 
 class RedisKeyValueStore(KeyValueStoreBase):
@@ -12,7 +11,7 @@ class RedisKeyValueStore(KeyValueStoreBase):
 
         # import JumpScale.baselib.serializers
 
-        self.redisclient=j.clients.redis.getGeventRedisClient(host, port,password=password)
+        self.redisclient=j.clients.redis.getRedisClient(host, port,password=password)
         self.redisclient.port=port
         self.redisclient.host=host
         self.namespace=""

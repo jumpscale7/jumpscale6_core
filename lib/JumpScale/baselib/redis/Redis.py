@@ -32,10 +32,10 @@ class RedisFactory:
             self.gredis[key] = GeventRedis(ipaddr, port,password=password)
         return self.gredis[key]
 
-    def getRedisClient(self, ipaddr, port):
+    def getRedisClient(self, ipaddr, port, password=""):
         key = "%s_%s" % (ipaddr, port)
         if not self.redis.has_key(key):
-            self.redis[key] = redis.Redis(ipaddr, port)
+            self.redis[key] = redis.Redis(ipaddr, port, password=password)
         return self.redis[key]
 
     def getRedisQueue(self, ipaddr, port, name, namespace="queues"):
