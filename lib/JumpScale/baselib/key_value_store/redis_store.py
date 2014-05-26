@@ -84,8 +84,8 @@ class RedisKeyValueStore(KeyValueStoreBase):
                 obj=osis.get(key)
                 osis.index(obj.getDictForIndex())
 
-        self.masterdb.redisclient.set(self.lastchangeIdKey,lastid)
-        self.lastchangeId=lastid
+            self.masterdb.redisclient.set(self.lastchangeIdKey,lastid)
+            self.lastchangeId=lastid
         return result
 
     def addToChangeLog(self,category,key,action="M"):        
