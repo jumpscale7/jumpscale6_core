@@ -67,6 +67,9 @@ class KeyValueStoreBase(object):
         '''
         pass
 
+    def checkChangeLog(self):
+        pass
+
     def serialize(self,value):
         for serializer in self.serializers:
             value = serializer.dumps(value)

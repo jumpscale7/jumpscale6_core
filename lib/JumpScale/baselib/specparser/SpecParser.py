@@ -642,6 +642,8 @@ class SpecParserFactory():
         do not specify query with one of the other filter criteria
         @param query is in dot notation e.g. $appname.$actorname.$modelname ... the items in front are optional
         """
+        # print "findspec: '%s/%s/%s'"%(appname,actorname,specname)
+        # print "query:'%s'"%query
         spec=findFromSpec
         if query<>"":
             type=""
@@ -709,12 +711,14 @@ class SpecParserFactory():
                 if found:
                     result.append(spec)
 
+        # print 'actorname:%s'%actorname
+
         if len(result)==0:
             if spec<>None:
-                emsg="Could not find spec with query:%s appname:%s actorname:%s name:%s (spec info: %s_%s_%s)" % \
+                emsg="Could not find spec with query:%s appname:%s actorname:%s name:%s (spec info: '%s'_'%s'_'%s')" % \
                     (query,appname,actorname,specname,spec.name,spec.specpath,spec.linenr)
             else:
-                emsg="Could not find spec with query:%s appname:%s actorname:%s name:%s " % \
+                emsg="Could not find spec with query:'%s' appname:'%s' actorname:'%s' name:'%s' " % \
                     (query,appname,actorname,specname)
             raise RuntimeError(emsg+" {category:specs.finderror}")
 

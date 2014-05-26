@@ -11,6 +11,10 @@ class MemoryKeyValueStore(KeyValueStoreBase):
             self.db = dict()
         KeyValueStoreBase.__init__(self)
 
+    def checkChangeLog(self):
+        pass
+
+
     def get(self, category, key):
         key=str(key)
         if not self.exists(category, key):

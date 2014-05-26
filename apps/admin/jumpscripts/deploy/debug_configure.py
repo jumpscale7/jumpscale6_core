@@ -3,6 +3,12 @@ from JumpScale import j
 
 descr = """
 update platform with some local config files
+example
+jsexec -n debug_configure -c kds -s -o world -r sm1,sm2,sm3
+e.g. /opt/jumpscale/apps/admin/cfgs/kds/jscfg/ needs to exist (jscfg will be copied to jumpscale cfg dir)
+the hrd will be applied in it (put as template  $(varname)  )
+also $(hostname) is available to be replaced
+
 """
 
 organization = "jumpscale"
@@ -19,7 +25,9 @@ log = False
 
 
 def action(node):
-    node.uploadFromCfgDir("jscfg","$basedir/cfg/")
+    #can add additional template vars in
+    node.cuapi.run("rm -rf /opt/jumpscaledir")
+    node.uploadFromCfgDir("jscfg","$base/cfg/",additionalArgs={})
     node.uploadFromCfgDir("etc","/etc/")
     node.uploadFromCfgDir("root","/root/")
 

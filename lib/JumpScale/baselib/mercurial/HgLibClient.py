@@ -313,11 +313,6 @@ syntax: regexp
                 addremove=True                
             else:
                 raise RuntimeError("Cannot addremove, did not force operation.")
-
-        # if addremove:
-        #     from IPython import embed
-        #     print "DEBUG NOW ooo"
-        #     embed()
             
         self.addremove() #does not commit yet
 

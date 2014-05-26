@@ -13,6 +13,9 @@ class ArakoonKeyValueStore(KeyValueStoreBase):
             self.set("dbsystem", "categories", {})
         self.categories=self.get("dbsystem", "categories")
 
+    def checkChangeLog(self):
+        pass
+
     def get(self, category, key):
         #self._assertExists(category, key)
 

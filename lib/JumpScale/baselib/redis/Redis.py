@@ -22,14 +22,14 @@ class RedisFactory:
         self.gredisq = {}
         self.redisq = {}
 
-    def getGeventRedisClient(self, ipaddr, port, fromcache=True):
+    def getGeventRedisClient(self, ipaddr, port, fromcache=True,password=""):
         from gevent.monkey import patch_socket
-        patch_socket()
+        patch_socket()        
         if not fromcache:
-            return GeventRedis(ipaddr, port) 
+            return GeventRedis(ipaddr, port,password=password) 
         key = "%s_%s" % (ipaddr, port)
         if key not in self.gredis:
-            self.gredis[key] = GeventRedis(ipaddr, port)
+            self.gredis[key] = GeventRedis(ipaddr, port,password=password)
         return self.gredis[key]
 
     def getRedisClient(self, ipaddr, port):
@@ -55,7 +55,7 @@ class RedisFactory:
 
     def emptyAllInstances(self):
         for pd in [item for item in j.tools.startupmanager.getProcessDefs("jumpscale") if item.name.find("redis")==0]:
-            if pd.name=="redism":
+            if pd.name=="redism" or pd.name=="rediskvs":
                 continue #nothing to do
             pd.stop()
             path=j.system.fs.joinPaths(j.dirs.varDir,"redis",pd.name,"db")
@@ -120,10 +120,13 @@ class RedisFactory:
         j.system.fs.createDir(dpath)
         self.startInstance(name)
 
-    def configureInstance(self, name, port, maxram=200, appendonly=True):
+    def configureInstance(self, name, port, maxram=200, appendonly=True,snapshot=False,slave=(),ismaster=False,passwd=None):
         """
         @param maxram = MB of ram
+        slave example: (192.168.10.10,8888,asecret)   (ip,port,secret)
         """
+        cmd='sysctl vm.overcommit_memory=1'
+        j.system.process.execute(cmd)        
 
         C = """
 daemonize no
@@ -186,7 +189,7 @@ databases 1
 #   save ""
 # save 900 1
 # save 300 10
-# save 60 10000
+$snapshot
 
 # By default Redis will stop accepting writes if RDB snapshots are enabled
 # (at least one save point) and the latest background save failed.
@@ -219,7 +222,7 @@ rdbcompression yes
 rdbchecksum yes
 
 # The filename where to dump the DB
-#dbfilename dump.rdb
+dbfilename dump.rdb
 
 # The working directory.
 #
@@ -239,6 +242,7 @@ dir $vardir/redis/$name/db/
 # different interval, or to listen to another port, and so on.
 #
 # slaveof <masterip> <masterport>
+$slave
 
 # If the master is password protected (using the "requirepass" configuration
 # directive below) it is possible to tell the slave to authenticate before
@@ -280,7 +284,7 @@ slave-read-only yes
 # this interval with the repl_ping_slave_period option. The default value is 10
 # seconds.
 #
-# repl-ping-slave-period 10
+repl-ping-slave-period 10
 
 # The following option sets a timeout for both Bulk transfer I/O timeout and
 # master data or ping response timeout. The default value is 60 seconds.
@@ -335,6 +339,7 @@ slave-priority 100
 # use a very strong password otherwise it will be very easy to break.
 #
 # requirepass foobared
+$passwd
 
 # Command renaming.
 #
@@ -473,8 +478,8 @@ appendfilename appendonly.aof
 #
 # If unsure, use "everysec".
 
-# appendfsync always
-appendfsync everysec
+#appendfsync always
+#appendfsync everysec
 # appendfsync no
 
 # When the AOF fsync policy is set to always or everysec, and a background
@@ -514,7 +519,7 @@ no-appendfsync-on-rewrite no
 # Specify a percentage of zero in order to disable the automatic AOF
 # rewrite feature.
 
-auto-aof-rewrite-percentage 105
+auto-aof-rewrite-percentage 150
 auto-aof-rewrite-min-size 64mb
 
 ################################ LUA SCRIPTING  ###############################
@@ -681,10 +686,32 @@ aof-rewrite-incremental-fsync yes
         C = C.replace("$maxram", str(maxram))
         C = C.replace("$port", str(port))
         C = C.replace("$vardir", j.dirs.varDir)
-        if appendonly:
+
+        if appendonly or ismaster:
             C = C.replace("$appendonly", "yes")
         else:
             C = C.replace("$appendonly", "no")
+
+        if slave:
+            CONTENT="slaveof %s %s\n"%(slave[0],slave[1])
+            if slave[2]<>"":
+                CONTENT+="masterauth %s\n"%slave[2]
+            C = C.replace("$slave",CONTENT)
+        else:
+            C = C.replace("$slave","")
+        
+        if snapshot:
+            C = C.replace("$snapshot", "save 30 1")
+        else:
+            C = C.replace("$snapshot","")
+        
+        if passwd<>None:
+            C = C.replace("$passwd", "requirepass %s"%passwd)
+        else:
+            C = C.replace("$passwd","")
+        
+        if ismaster:
+            C=C.replace("#appendfsync always","appendfsync always")
 
         dpath = "%s/redis/%s" % (j.dirs.varDir,name)
         dbpath = j.system.fs.joinPaths(dpath, "db")

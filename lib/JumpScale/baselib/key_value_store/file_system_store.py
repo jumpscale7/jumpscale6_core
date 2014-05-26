@@ -25,6 +25,10 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         fp.close()
         return data
 
+    def checkChangeLog(self):
+        pass
+
+
     def writeFile(self,filename, contents):
         """
         Open a file and write file contents, close file afterwards

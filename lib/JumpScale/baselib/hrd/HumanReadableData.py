@@ -24,7 +24,7 @@ class HumanReadableDataFactory:
     def _normalizeKey(self,key):
         return str(key).lower().replace(".","_")
 
-    def replaceVarsInText(self,content,hrdtree,position=""):
+    def replaceVarsInText(self,content,hrdtree,position="",additionalArgs={}):
         if content=="":
             return content
             
@@ -39,6 +39,9 @@ class HumanReadableDataFactory:
                     newcontent=hrdtree.get(item2,position=position,checkExists=True)
                 else:
                     newcontent=hrdtree.get(item2,checkExists=True)
+
+                if additionalArgs.has_key(item2.lower()):
+                    newcontent=additionalArgs[item2.lower()]
 
                 # print "nc:%s"%newcontent
                 if newcontent<>False:
@@ -602,28 +605,28 @@ class HRD():
     # def setDict(self,dictObject):
     #     self.__dict__.update(dictObject)
 
-    def applyOnDir(self,path,filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
+    def applyOnDir(self,path,filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True,additionalArgs={}):
         j.core.hrd.log("hrd:%s apply on dir:%s "%(self._path,path),category="apply")
         
         items=j.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
         for item in items:
             if changeFileName:
-                item2=j.core.hrd.replaceVarsInText(item,self)
+                item2=j.core.hrd.replaceVarsInText(item,self,additionalArgs=additionalArgs)
                 if item2<>item:
                      j.system.fs.renameFile(item,item2)
                     
             if changeContent:
-                self.applyOnFile(item2)
+                self.applyOnFile(item2,additionalArgs=additionalArgs)
 
-    def applyOnFile(self,path):
+    def applyOnFile(self,path,additionalArgs={}):
         j.core.hrd.log("hrd:%s apply on file:%s"%(self.path,path),category="apply")
         content=j.system.fs.fileGetContents(path)
 
-        content=j.core.hrd.replaceVarsInText(content,self)
+        content=j.core.hrd.replaceVarsInText(content,self,additionalArgs=additionalArgs)
         j.system.fs.writeFile(path,content)
 
-    def applyOnContent(self,content):
-        content=j.core.hrd.replaceVarsInText(content,self)
+    def applyOnContent(self,content,additionalArgs={}):
+        content=j.core.hrd.replaceVarsInText(content,self,additionalArgs=additionalArgs)
         return content
 
     def __repr__(self):
@@ -845,27 +848,27 @@ class HumanReadableDataTree():
         hrd=self.getHrd(position)
         hrd.set(key,val,persistent=True)
 
-    def applyOnDir(self,path,position="",filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True):
+    def applyOnDir(self,path,position="",filter=None, minmtime=None, maxmtime=None, depth=None,changeFileName=True,changeContent=True,additionalArgs={}):
         j.core.hrd.log("hrd:%s apply on dir:%s in position:%s"%(self.path,path,position),category="apply")
         
         items=j.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
         for item in items:
             if changeFileName:
-                item2=j.core.hrd.replaceVarsInText(item,self,position)
+                item2=j.core.hrd.replaceVarsInText(item,self,position,additionalArgs=additionalArgs)
                 if item2<>item:
                      j.system.fs.renameFile(item,item2)
                     
             if changeContent:
-                self.applyOnFile(item2,position=position)
+                self.applyOnFile(item2,position=position,additionalArgs=additionalArgs)
 
-    def applyOnFile(self,path,position=""):
+    def applyOnFile(self,path,position="",additionalArgs={}):
         j.core.hrd.log("hrd:%s apply on file:%s in position:%s"%(self.path,path,position),category="apply")
         content=j.system.fs.fileGetContents(path)
-        content=j.core.hrd.replaceVarsInText(content,self,position)
+        content=j.core.hrd.replaceVarsInText(content,self,position,additionalArgs=additionalArgs)
         j.system.fs.writeFile(path,content)
 
-    def applyOnContent(self,content,position=""):
-        content=j.core.hrd.replaceVarsInText(content,self,position)
+    def applyOnContent(self,content,position="",additionalArgs={}):
+        content=j.core.hrd.replaceVarsInText(content,self,position,additionalArgs=additionalArgs)
         return content
 
     def __repr__(self):

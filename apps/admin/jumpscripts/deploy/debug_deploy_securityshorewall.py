@@ -18,6 +18,7 @@ async = True
 log = True
 
 def action(node):
+    raise RuntimeError("needs to be verified")
     c=node.cuapi
     node.uploadFromCfgDir("jscfgsecurity","/opt/jumpscale/cfg/")
     # c.run("jpackage install -n shorewall")

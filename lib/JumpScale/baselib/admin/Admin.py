@@ -237,15 +237,25 @@ class JNode():
 
         return self.cuapi
 
-    def uploadFromCfgDir(self,ttype,dest):
+    def uploadFromCfgDir(self,ttype,dest,additionalArgs={}):
+        dest=j.dirs.replaceTxtDirVars(dest)
         cfgdir=j.system.fs.joinPaths(self._basepath, "cfgs/%s/%s"%(j.admin.args.cfgname,ttype))
+
+        additionalArgs["hostname"]=self.name
+
         cuapi=self.cuapi
         if j.system.fs.exists(path=cfgdir):
             self.log("uploadcfg","upload from %s to %s"%(ttype,dest))
-            items=j.system.fs.listFilesInDir(cfgdir,True)
+
+            tmpcfgdir=j.system.fs.getTmpDirPath()
+            j.system.fs.copyDirTree(cfgdir,tmpcfgdir)
+            j.dirs.replaceFilesDirVars(tmpcfgdir)
+            j.application.config.applyOnDir(tmpcfgdir,additionalArgs=additionalArgs)
+
+            items=j.system.fs.listFilesInDir(tmpcfgdir,True)
             done=[]
             for item in items:
-                partpath=j.system.fs.pathRemoveDirPart(item,cfgdir)
+                partpath=j.system.fs.pathRemoveDirPart(item,tmpcfgdir)
                 partpathdir=j.system.fs.getDirName(partpath).rstrip("/")
                 if partpathdir not in done:
                     cuapi.dir_ensure("%s/%s"%(dest,partpathdir), True)
@@ -253,7 +263,9 @@ class JNode():
                 try:            
                     cuapi.file_upload("%s/%s"%(dest,partpath),item)#,True,True)  
                 except Exception,e:
+                    j.system.fs.removeDirTree(tmpcfgdir)
                     self.raiseError("uploadcfg","could not upload file %s to %s"%(ttype,dest))
+            j.system.fs.removeDirTree(tmpcfgdir)
 
     def upload(self,source,dest):
         args=j.admin.args
