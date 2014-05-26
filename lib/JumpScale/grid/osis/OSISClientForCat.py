@@ -96,8 +96,7 @@ class OSISClientForCat():
         return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
 
     def destroy(self):
-        
-        return self.client.destroy(namespace=self.namespace, categoryname=self.cat)
+        return self.client.deleteNamespaceCategory(namespacename=self.namespace, name=self.cat)
 
     def list(self, prefix=""):
         
