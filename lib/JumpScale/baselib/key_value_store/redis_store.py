@@ -53,6 +53,12 @@ class RedisKeyValueStore(KeyValueStoreBase):
         for chunk in chunks(keys, 100):
             rediscl.delete(*chunk)
 
+    def increment(self, key):
+        if self.masterdb:
+            return self.masterdb.redisclient.incr(key)
+        else:
+            return self.redisclient.incr(key)
+
     def checkChangeLog(self):
         """
         @param reset, will just ignore the changelog
