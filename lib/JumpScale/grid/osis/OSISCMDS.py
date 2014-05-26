@@ -24,7 +24,7 @@ class OSISCMDS(object):
         if not oi.exists(key):
             return {"authenticated":False,"exists":False}
 
-        user=ujson.loads(oi.get(key))
+        user=oi.get(key)
 
         if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:
             return {"authenticated":True,"exists":True,"groups":user["groups"],\
@@ -88,9 +88,9 @@ class OSISCMDS(object):
         return oi.list(prefix)
 
     def checkChangeLog(self):
+        rediscl = j.db.keyvaluestore.getRedisStore(namespace='', host='127.0.0.1', port=7771)
         while True:
-            for key,osis in self.osisInstances.iteritems():
-                osis.checkChangeLog()
+            rediscl.checkChangeLog()
             gevent.sleep(2)        
 
     def _rebuildindex(self, namespace, categoryname, session=None):

@@ -61,4 +61,4 @@ class mainclass(parentclass):
         """
         val=self.db.get(self.dbprefix, key)
         val=j.core.osis.decrypt(val,json=True)
-        return self.getObject(val)
+        return val
