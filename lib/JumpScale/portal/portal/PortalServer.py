@@ -10,6 +10,7 @@ from MacroExecutor import MacroExecutorPage, MacroExecutorWiki, MacroExecutorPre
 from PortalAuthenticatorOSIS import PortalAuthenticatorOSIS
 from RequestContext import RequestContext
 from PortalRest import PortalRest
+from .OsisBeaker import OsisBeaker
 
 from JumpScale import j
 from gevent.pywsgi import WSGIServer
@@ -58,10 +59,13 @@ class PortalServer:
         self.macroexecutorWiki = MacroExecutorWiki(macroPathsWiki)
 
         self.bootstrap()
+        osiscl = j.core.osis.getClient(user='root')
 
         session_opts = {
             'session.cookie_expires': False,
-            'session.type': 'file',
+            'session.type': 'OsisBeaker',
+            'session.namespace_class': OsisBeaker,
+            'session.namespace_args': {'client': osiscl},
             'session.data_dir': '%s' % j.system.fs.joinPaths(j.dirs.varDir, "beakercache")
         }
         self._router = SessionMiddleware(self.router, session_opts)
@@ -751,7 +755,7 @@ class PortalServer:
 
         if "user_logoff_" in ctx.params:
             session.delete()
-            session.save()
+            return False, [str(self.returnDoc(ctx, ctx.start_response, "system", "login", extraParams={"path": path}))]
 
         if "user_login_" in ctx.params:
             # user has filled in his login details, this is response on posted info
