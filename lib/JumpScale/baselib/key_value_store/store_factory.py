@@ -72,7 +72,7 @@ class KeyValueStoreFactory(object):
         '''
         return MemoryKeyValueStore(namespace)
 
-    def getRedisStore(self, namespace='',host='localhost',port=7768,db=0,password='',serializers=None,masterdb=None):
+    def getRedisStore(self, namespace='',host='localhost',port=7768,db=0,password='',serializers=None,masterdb=None,changelog=True):
         '''
         Gets a memory key value store.
 
@@ -87,7 +87,7 @@ class KeyValueStoreFactory(object):
         '''
         key = '%s_%s_%s' % ("redis", port, namespace)
         if key not in self._cache:
-            self._cache[key] = RedisKeyValueStore(namespace=namespace,host=host,port=port,db=db,password=password,serializers=serializers,masterdb=masterdb)
+            self._cache[key] = RedisKeyValueStore(namespace=namespace,host=host,port=port,db=db,password=password,serializers=serializers,masterdb=masterdb, changelog=changelog)
         return self._cache[key]
 
     def getLevelDBStore(self, namespace='',basedir=None,serializers=[]):
