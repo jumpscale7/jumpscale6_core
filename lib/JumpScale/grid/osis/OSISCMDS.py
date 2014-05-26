@@ -90,8 +90,11 @@ class OSISCMDS(object):
     def checkChangeLog(self):
         rediscl = j.db.keyvaluestore.getRedisStore(namespace='', host='127.0.0.1', port=7771)
         while True:
-            rediscl.checkChangeLog()
-            gevent.sleep(2)        
+            try:
+                rediscl.checkChangeLog()
+            except Exception, e:
+                j.errorconditionhandler.processpythonExceptionObject(e)
+            gevent.sleep(2)
 
     def _rebuildindex(self, namespace, categoryname, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
