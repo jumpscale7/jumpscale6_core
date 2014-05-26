@@ -1,6 +1,7 @@
 from JumpScale import j
 import JumpScale.baselib.elasticsearch
 import ujson
+import gevent
 
 class OSISCMDS(object):
 
@@ -85,6 +86,12 @@ class OSISCMDS(object):
         if prefix==None:
             return oi.list()
         return oi.list(prefix)
+
+    def checkChangeLog(self):
+        while True:
+            for key,osis in self.osisInstances.iteritems():
+                osis.checkChangeLog()
+            gevent.sleep(2)        
 
     def _rebuildindex(self, namespace, categoryname, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
@@ -268,14 +275,18 @@ class OSISCMDS(object):
                     j.system.fs.copyDirTree(templatespath_category, catpath, overwriteFiles=False)
                     # j.system.fs.copyDirTree(templatespath_osistasklets,catpath,overwriteFiles=overwriteTasklets)
 
-    def init(self, path="",overwriteImplementation=False, namespacename=None, template=None,initES=True,session=None):
+    def init(self, path="",overwriteImplementation=False, namespacename=None, template=None,initES=True,esip=None,esport=None,db=None,session=None):
         
         if session<>None:
             self._authenticateAdmin(session)
 
         if initES:
-            eip=j.application.config.get("osis.elasticsearch.ip")
-            eport=j.application.config.get("osis.elasticsearch.port")
+            if esip<>None and esport<>None:
+                eip=esip
+                eport=esport
+            else:
+                eip=j.application.config.get("osis.elasticsearch.ip")
+                eport=j.application.config.get("osis.elasticsearch.port")
             self.elasticsearch = j.clients.elasticsearch.get(ip=eip, port=int(eport))
             if path <> "":
                 self.path = path
@@ -283,8 +294,10 @@ class OSISCMDS(object):
                 path=self.path
             j.logger.consoleloglevel = 7
             # enable db's
-            if j.application.config.get("osis.db.type") == "filesystem":
+            if db==None and j.application.config.get("osis.db.type") == "filesystem":
                 self.db = j.db.keyvaluestore.getFileSystemStore("osis")
+            elif db<>None:
+                self.db=db
             else:
                 raise RuntimeError("Only filesystem db implemented in osis")
             # wait for elastic search & get

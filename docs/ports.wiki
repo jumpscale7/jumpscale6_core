@@ -29,6 +29,9 @@ reidismain: 7766 (for process manager)
 rediscache:7767
 redisw: 7770  (is the redis used for webdis)
 
+rediskvs:7771
+rediskvs_master:7772
+
 redis for apps & processes & watchdog:7766
 
 ssdb: 8888

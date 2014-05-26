@@ -10,7 +10,7 @@ class OSISStore(object):
     """
 
     def __init__(self):
-        pass
+        self.db=None
 
     def init(self, path, namespace,categoryname):
         """
@@ -37,7 +37,6 @@ class OSISStore(object):
         self.dbprefix_incr = "%s_incr" % (self.dbprefix)
 
         if db:
-
             self.db = None
             self.db = self._getDB()
 
@@ -98,6 +97,10 @@ class OSISStore(object):
         get dict value
         """
         return self.db.exists(self.dbprefix, key)
+
+    def checkChangeLog(self):
+        if self.db<>None:
+            self.db.checkChangeLog()
 
     def getObject(self, ddict={}):
         klass=j.core.osis.getOsisModelClass(self.namespace,self.categoryname)

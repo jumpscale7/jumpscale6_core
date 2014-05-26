@@ -8,6 +8,8 @@ import inspect
 import imp
 import sys
 import ujson
+import lz4
+
 
 class FileLikeStreamObject(object):
     def __init__(self):
@@ -82,14 +84,18 @@ class OSISFactory:
             else:
                 val=obj.__dict__
             val=ujson.dumps(val)
+        val=lz4.dumps(val)
         val=j.db.serializers.blowfish.dumps(val,self.key)
         return val
 
-    def decrypt(self,text):
-        if not j.basetype.string.check(text):
+    def decrypt(self,val,json=False):
+        if not j.basetype.string.check(val):
             raise RuntimeError("needs to be string")
-        text=j.db.serializers.blowfish.loads(text,self.key)
-        return text
+        val=j.db.serializers.blowfish.loads(val,self.key)
+        val=lz4.loads(val)
+        if json:
+            val=ujson.loads(val)
+        return val
 
     def getLocal(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None):
         """
@@ -99,22 +105,27 @@ class OSISFactory:
         osis.init()
         return osis
 
-    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None, port=5544):
+    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None, port=5544,graphite=True,elasticsearchip=None,elasticsearchport=9200,db=None):
         """
         start deamon
         """
 
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
             j.packages.findNewest(name="elasticsearch").install()
             j.packages.findNewest(name="elasticsearch").start()
 
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003) or not j.system.net.tcpPortConnectionTest("127.0.0.1",9200):
-            raise RuntimeError("cannot start osis, could not find running elastic search and/or carbon/graphite")
+        if graphite:
+            if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003):
+                raise RuntimeError("cannot start osis, could not find running carbon/graphite")
+
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
+            raise RuntimeError("cannot start osis, could not find running elastic search")
 
         zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
         zd.addCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
-        zd.daemon.cmdsInterfaces["osis"].init()
+        zd.daemon.cmdsInterfaces["osis"].init(path=path,esip=elasticsearchip,esport=elasticsearchport,db=db)
         self.cmds=zd.daemon.cmdsInterfaces["osis"]
+        zd.schedule("checkchangelog", self.cmds.checkChangeLog)
         zd.start()
 
     def getClient(self, ipaddr=None, port=5544,user=None,passwd=None,ssl=False,gevent=False):

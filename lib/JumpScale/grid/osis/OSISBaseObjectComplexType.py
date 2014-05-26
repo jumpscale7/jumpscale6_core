@@ -23,11 +23,21 @@ class OSISBaseObjectComplexType(j.code.classGetJSRootModelBase()):
         """
         return None
 
+    # def getSetGuid(self):
+    #     """
+    #     use osis to define & set unique guid (sometimes combination of other keys, std the guid and does nothing)
+    #     """
+    #     return self.guid
+
     def getSetGuid(self):
         """
-        use osis to define & set unique guid (sometimes combination of other keys, std the guid and does nothing)
         """
-        return self.guid
+        if not self.__dict__.has_key("gid") or self.gid==0 or self.gid=="":
+            self.gid=j.application.whoAmI.gid
+        # self.sguid=struct.pack("<HH",self.gid,self.id)
+        # self.guid = "%s_%s" % (self.gid, self.id)
+        self.lastmod=j.base.time.getTimeEpoch() 
+        return self.guid        
 
     def getContentKey(self):
         """
