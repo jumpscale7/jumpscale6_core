@@ -47,9 +47,9 @@ class mainclass(parentclass):
                     userguid,a,b=u.set(usernew.guid,usernew.__dict__)
                 else:
                     user=u.get(userkey)
-                    if obj.id not in  user.groups:
-                         user.groups.append(obj.id)
-                         u.set(user.guid,user)
+                    if obj.id not in  user['groups']:
+                         user['groups'].append(obj.id)
+                         u.set(user['guid'],user)
 
 
         return [obj.guid,changed,changed]
