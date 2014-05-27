@@ -6,6 +6,11 @@ def main(j, args, params, tags, tasklet):
     domain = args.tags.tagGet('domain', '')
     nid = args.tags.tagGet('nid', j.application.whoAmI.nid)
     jpackagelist = j.apps.system.packagemanager.getJPackages(domain=domain, nid=nid)
+    if not jpackagelist:
+        page.addMessage('No JPackages to display. Make sure your processmanager and workers are running')
+        params.result = page
+        return params
+
     jpackages = dict()
     for jp in jpackagelist:
         if jp['domain'] not in jpackages:

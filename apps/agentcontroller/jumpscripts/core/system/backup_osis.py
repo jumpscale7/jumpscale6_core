@@ -1,7 +1,7 @@
 from JumpScale import j
 
 descr = """
-check timeout jobs
+backup osis
 """
 
 organization = "jumpscale"
