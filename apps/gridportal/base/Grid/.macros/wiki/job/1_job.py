@@ -44,6 +44,7 @@ def main(j, args, params, tags, tasklet):
 
         if not obj.get('includemacro', None):
             obj['includemacro'] = 'successfulresult result:%s' % urllib.quote(obj['result'])
+        obj['organization'], obj['cmd'] = obj['cmd'].split('/')
         return obj
 
     push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc

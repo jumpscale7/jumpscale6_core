@@ -7,7 +7,7 @@ h2. Job $$id
 * *Grid ID*: $$gid
 * *Node ID*: $$nid
 * *Roles*: $$roles
-* *Jumpscript*: [$$category:$$cmd|jumpscript?organization=$$category&name=$$cmd]
+* *Jumpscript*: [$$organization:$$cmd|jumpscript?organization=$$organization&name=$$cmd]
 * *Start*: $$timestart (*Timeout*: $$timeout)
 * *Queue*: $$queue
 * *State*: $$state
