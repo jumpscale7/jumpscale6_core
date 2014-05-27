@@ -12,9 +12,8 @@ class mainclass(OSISStore):
     def init(self, path, namespace,categoryname):
         self.initall(path, namespace,categoryname,db=True)
         self.olddb=self.db
-        
-        masterdb=j.db.keyvaluestore.getRedisStore(namespace='', host=j.application.config.get("rediskvs_master_addr"), port=7772, password=j.application.config.get("rediskvs_secret"))
-        self.db=j.db.keyvaluestore.getRedisStore(namespace='', host='localhost', port=7771, password='', masterdb=masterdb, changelog=False)
+        masterdb=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host=j.application.config.get("rediskvs_master_addr"), port=7772, password=j.application.config.get("rediskvs_secret"))
+        self.db=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host='localhost', port=7771, password='', masterdb=masterdb, changelog=False)
         self.db.osis[self.dbprefix]=self
 
     def set(self,key,value,waitIndex=True):

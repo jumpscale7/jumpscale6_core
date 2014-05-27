@@ -93,7 +93,7 @@ class OSISCMDS(object):
             try:
                 rediscl.checkChangeLog()
             except Exception, e:
-                j.errorconditionhandler.processpythonExceptionObject(e)
+                j.errorconditionhandler.processPythonExceptionObject(e)
             gevent.sleep(2)
 
     def _rebuildindex(self, namespace, categoryname, session=None):
