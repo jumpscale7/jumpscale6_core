@@ -57,36 +57,46 @@ class RedisKeyValueStore(KeyValueStoreBase):
         lastid=int(self.redisclient.get("changelog:lastid"))
         result=[]
         if lastid>self.lastchangeId:
-            for t in xrange(self.lastchangeId+1,lastid+1):
-                key="changelog:data:%s"%t
-                counter=1
-                while not self.redisclient.exists(key):
-                    time.sleep(0.05)
-                    if counter>10:
-                        raise RuntimeError("replication error, did not find key %s"%key)
-                    counter+=1
-
-                epoch,category,key,gid,action=self.redisclient.get(key).split(":",4)
-                if int(gid) == j.application.whoAmI.gid:
-                    continue
-                osis=self.osis[category]
-                if action == 'M':
+            try:
+                for t in xrange(self.lastchangeId+1,lastid+1):
+                    key="changelog:data:%s"%t
                     counter=1
-                    key2 = self._getCategoryKey(category, key)
-                    while not self.redisclient.exists(key2):
+                    haskey = self.redisclient.exists(key)
+                    while not haskey:
                         time.sleep(0.05)
-                        if counter>100:
-                            raise RuntimeError("replication error, did not find key %s"%key2)
+                        if counter>10:
+                            j.events.bug_warning("replication error, did not find key %s"%key, 'osis')
+                            break
                         counter+=1
-                    obj=osis.get(key)
-                    if hasattr(obj, 'getDictForIndex'):
-                        obj = obj.getDictForIndex()
-                    osis.index(obj)
-                elif action == 'D':
-                    osis.deleteIndex(key)
+                        haskey = self.redisclient.exists(key)
+                    if not haskey:
+                        continue
 
-            self.lastchangeId=lastid
-            self.masterdb.redisclient.set(self.nodelastchangeIdkey, lastid)
+                    epoch,category,key,gid,action=self.redisclient.get(key).split(":",4)
+                    if int(gid) == j.application.whoAmI.gid:
+                        continue
+                    osis=self.osis[category]
+                    if action == 'M':
+                        counter=1
+                        key2 = self._getCategoryKey(category, key)
+                        haskey = self.redisclient.exists(key2)
+                        while not haskey:
+                            time.sleep(0.05)
+                            if counter>100:
+                                j.events.bug_warning("replication error, did not find key %s"%key2, 'osis')
+                                break
+                            counter+=1
+                            haskey = self.redisclient.exists(key2)
+                        else:
+                            obj=osis.get(key)
+                            if hasattr(obj, 'getDictForIndex'):
+                                obj = obj.getDictForIndex()
+                            osis.index(obj)
+                    elif action == 'D':
+                        osis.deleteIndex(key)
+            finally:
+                self.lastchangeId=lastid
+                self.masterdb.redisclient.set(self.nodelastchangeIdkey, lastid)
         return result
 
     def addToChangeLog(self,category,key,action="M"):
