@@ -30,7 +30,7 @@ class KeyValueStoreBase(object):
 
     def __init__(self, serializers=[]):
         #self.id = j.application.getUniqueMachineId()
-        self.serializers = serializers
+        self.serializers = serializers or list()
         self.unserializers = list(reversed(self.serializers))
 
     def __new__(cls, *args, **kwargs):
@@ -77,7 +77,8 @@ class KeyValueStoreBase(object):
 
     def unserialize(self,value):
         for serializer in self.unserializers:
-            value = serializer.loads(value)
+            if value is not None:
+                value = serializer.loads(value)
         return value
 
 

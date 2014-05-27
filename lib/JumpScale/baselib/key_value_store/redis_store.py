@@ -10,6 +10,7 @@ def chunks(l, n):
         yield l[i:i+n]
 
 class RedisKeyValueStore(KeyValueStoreBase):
+    osis = dict()
 
     def __init__(self,namespace="",host='localhost',port=7771,db=0,password='', serializers=[],masterdb=None, changelog=True):
 
@@ -20,7 +21,7 @@ class RedisKeyValueStore(KeyValueStoreBase):
         self.redisclient.host=host
         self._changelog = changelog
         self.namespace = namespace
-        KeyValueStoreBase.__init__(self)
+        KeyValueStoreBase.__init__(self, serializers)
 
         self.masterdb=masterdb
 
@@ -29,19 +30,6 @@ class RedisKeyValueStore(KeyValueStoreBase):
         if self.redisclient.get(self.nodelastchangeIdkey)==None:
             self.redisclient.set(self.nodelastchangeIdkey,0)
         self.lastchangeId=int(self.redisclient.get(self.nodelastchangeIdkey))
-        self.osis={}
-
-    # def serialize(self,data):
-    #     from IPython import embed
-    #     print "DEBUG NOW ooo"
-    #     embed()
-
-    #     data=json.dumps(data)
-    #     return lz4.dumps(data)
-
-    # def unserialize(self,data):
-    #     data=lz4.loads(data)
-    #     return json.loads(data)
 
     def deleteChangeLog(self):
         rediscl = self.redisclient
@@ -108,13 +96,14 @@ class RedisKeyValueStore(KeyValueStoreBase):
 
     def get(self, category, key):
         categoryKey = self._getCategoryKey(category, key)
-        return self.redisclient.get(categoryKey)
-        # return self.unserialize(value)
+        value = self.redisclient.get(categoryKey)
+        return self.unserialize(value)
 
     def set(self, category, key, value,expire=0):
         """
         @param expire is in seconds when value will expire
         """
+        value = self.serialize(value)
         if self.masterdb<>None:
             self.masterdb.set(category,key,value)
             self.addToChangeLog(category, key) #notify system for change
