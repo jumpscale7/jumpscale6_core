@@ -74,6 +74,10 @@ class JPackageClient():
         self.errors.append(msg)
 
     def log(self,msg,category="",level=5):
+        if not hasattr(self, 'loglevel'):
+            self.loglevel = 5
+        if not hasattr(self, 'logenable'):
+            self.logenable = True
         if level<self.loglevel+1 and self.logenable:
             j.logger.log(msg,category="jpackage.%s"%category,level=level)        
 
