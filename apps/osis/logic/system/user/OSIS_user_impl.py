@@ -25,7 +25,7 @@ class mainclass(parentclass):
 
         changed=True
         if self.exists(obj.guid):
-            objexist=self.get(obj.guid)
+            objexist=self.getObject(self.get(obj.guid))
             if obj.getContentKey()==objexist.getContentKey():
                 changed=False
                 
