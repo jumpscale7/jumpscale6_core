@@ -24,7 +24,8 @@ class OSISCMDS(object):
         if not results['total']:
             return {"authenticated":False,"exists":False}
 
-        user = results['result'][0]['_source']
+        userguid = results['result'][0]['_source']['guid']
+        user = oi.get(userguid)
 
         if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:
             return {"authenticated":True,"exists":True,"groups":user["groups"],\
