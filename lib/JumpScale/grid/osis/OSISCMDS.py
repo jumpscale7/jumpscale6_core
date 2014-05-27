@@ -20,11 +20,11 @@ class OSISCMDS(object):
             raise RuntimeError("Cannot process, only supported for system/user namespace")
         oi = self._getOsisInstanceForCat("system", "user")
 
-        key="%s_%s"%(j.application.whoAmI.gid,name)
-        if not oi.exists(key):
+        results = oi.find({'query': {'bool': {'must': [{'term': {'id': name}}]}}})
+        if not results['total']:
             return {"authenticated":False,"exists":False}
 
-        user=oi.get(key)
+        user = results['result'][0]['_source']
 
         if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:
             return {"authenticated":True,"exists":True,"groups":user["groups"],\
