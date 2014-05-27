@@ -103,11 +103,11 @@ class RedisKeyValueStore(KeyValueStoreBase):
         """
         @param expire is in seconds when value will expire
         """
-        value = self.serialize(value)
         if self.masterdb<>None:
             self.masterdb.set(category,key,value)
             self.addToChangeLog(category, key) #notify system for change
         else:
+            value = self.serialize(value)
             categoryKey = self._getCategoryKey(category, key)
             self.redisclient.set(categoryKey, value)
 
