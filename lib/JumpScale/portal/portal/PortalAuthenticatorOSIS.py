@@ -22,17 +22,21 @@ class PortalAuthenticatorOSIS():
             return "guest"
         return self.key2user[key]
 
-    def _getkey(self, username):
-        return "%s_%s" % (j.application.whoAmI.gid, username)
+    def _getkey(self, username, osis):
+        results = osis.simpleSearch({'id': username}, withguid=True)
+        if results:
+            return results[0]['guid']
+        else:
+            return "%s_%s" % (j.application.whoAmI.gid, username)
 
     def getUserInfo(self, user):
-        return self.osis.get(self._getkey(user))
+        return self.osis.get(self._getkey(user, self.osis))
 
     def getGroupInfo(self, groupname):
-        return self.osisgroups.get(self._getkey(groupname))
+        return self.osisgroups.get(self._getkey(groupname, self.osisgroups))
 
     def userExists(self, user):
-        return self.osis.exists(self._getkey(user))
+        return self.osis.exists(self._getkey(user, self.osis))
 
     def createUser(self, username, password, email, groups, domain):
         user = self.osis.new()
