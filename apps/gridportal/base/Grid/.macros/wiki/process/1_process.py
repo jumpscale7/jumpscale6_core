@@ -16,7 +16,10 @@ def main(j, args, params, tags, tasklet):
     def objFetchManipulate(id):
         obj = process[0]
         for attr in ['lastcheck', 'epochstop', 'epochstart']:
-            obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
+            if not obj[attr]:
+                obj[attr] = 'N/A'
+            else:
+                obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
         obj['jpname'] = obj['jpname'] or 'None'
         obj['ports'] = ', '.join([str(x) for x in obj['ports']])
         obj['systempids'] = ', '.join([str(x) for x in obj['systempids']])

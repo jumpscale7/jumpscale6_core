@@ -5,16 +5,16 @@
 h2. Process $$pname
 
 h3. Details
-|*System PIDs*|$$systempids|
-|*Ports*|$$ports|
-|*User*|$$user|
-|*Active*|$$active|
-|*Last check*|$$lastcheck|
-|*Started*|$$epochstart|
-|*Stopped*|$$epochstop|
-|*JPackage*|$$jpname|
-|*Node*|[$$nid|node?id=$$nid|]|
-|*Statistics*|[Go to statistics page|ProcessStats?id=$$id]|
+|*System PIDs*| $$systempids|
+|*Ports*| $$ports|
+|*User*| $$user|
+|*Active*| $$active|
+|*Last check*| $$lastcheck|
+|*Started*| $$epochstart|
+|*Stopped*| $$epochstop|
+|*JPackage*| $$jpname|
+|*Node*| [$$nid|node?id=$$nid|]|
+|*Statistics*| [Go to statistics page|ProcessStats?id=$$id]|
 
 h3. logs from last 1h
 {{logs: pid:$$id from:-1h}}

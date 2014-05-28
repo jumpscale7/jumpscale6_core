@@ -181,6 +181,7 @@ def action():
         processOsisObject.getSetGuid()
         processOsisObject.type="jsprocess"
         processOsisObject.statkey=process_key
+        processOsisObject.systempids = sprocess.getPids()
 
 
         if pid:            
