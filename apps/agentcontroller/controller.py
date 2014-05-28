@@ -522,7 +522,9 @@ class ControllerCMDS():
         for qname in queues:
             jobstrings = self.redis.lrange(qname, 0, -1)
             for jobstring in jobstrings:
-                jobs.append(json.loads(jobstring))
+                job = json.loads(jobstring)
+                job['acqueue'] = qname[22:]
+                jobs.append(job)
         return jobs
 
     def log(self, logs, session=None):
