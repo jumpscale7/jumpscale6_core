@@ -23,18 +23,17 @@ class RedisKeyValueStore(KeyValueStoreBase):
         self.namespace = namespace
         KeyValueStoreBase.__init__(self, serializers)
 
-        self.masterdb=masterdb
+        self.hasmaster = bool(masterdb)
+        self.writedb=masterdb or self
 
         self.lastchangeIdKey="changelog:lastid"
         self.nodelastchangeIdkey = "changelog:%s:lastid" % j.application.whoAmI.gid
         if self.redisclient.get(self.nodelastchangeIdkey)==None:
-            self.redisclient.set(self.nodelastchangeIdkey,0)
+            self.writedb.redisclient.set(self.nodelastchangeIdkey,0)
         self.lastchangeId=int(self.redisclient.get(self.nodelastchangeIdkey))
 
     def deleteChangeLog(self):
-        rediscl = self.redisclient
-        if self.masterdb:
-            rediscl = self.masterdb.redisclient
+        rediscl = self.writedb.redisclient
         rediscl.delete(self.lastchangeIdKey)
 
         keys = rediscl.keys("changelog:*")
@@ -42,10 +41,7 @@ class RedisKeyValueStore(KeyValueStoreBase):
             rediscl.delete(*chunk)
 
     def increment(self, key):
-        if self.masterdb:
-            return self.masterdb.redisclient.incr(key)
-        else:
-            return self.redisclient.incr(key)
+        self.writedb.redisclient.incr(key)
 
     def checkChangeLog(self):
         """
@@ -96,13 +92,13 @@ class RedisKeyValueStore(KeyValueStoreBase):
                         osis.deleteIndex(key)
             finally:
                 self.lastchangeId=lastid
-                self.masterdb.redisclient.set(self.nodelastchangeIdkey, lastid)
+                self.writedb.redisclient.set(self.nodelastchangeIdkey, lastid)
         return result
 
     def addToChangeLog(self,category,key,action="M"):
-        if self._changelog and self.masterdb:
-            t=self.masterdb.redisclient.incr(self.lastchangeIdKey)
-            self.masterdb.redisclient.set("changelog:data:%s"%t,"%s:%s:%s:%s:%s"%(int(time.time()),category,key,j.application.whoAmI.gid, action))
+        if self._changelog and self.hasmaster:
+            t=self.writedb.redisclient.incr(self.lastchangeIdKey)
+            self.writedb.redisclient.set("changelog:data:%s"%t,"%s:%s:%s:%s:%s"%(int(time.time()),category,key,j.application.whoAmI.gid, action))
 
     def get(self, category, key):
         categoryKey = self._getCategoryKey(category, key)
@@ -113,8 +109,8 @@ class RedisKeyValueStore(KeyValueStoreBase):
         """
         @param expire is in seconds when value will expire
         """
-        if self.masterdb<>None:
-            self.masterdb.set(category,key,value)
+        if self.hasmaster:
+            self.writedb.set(category,key,value)
             self.addToChangeLog(category, key) #notify system for change
         else:
             value = self.serialize(value)
@@ -122,8 +118,8 @@ class RedisKeyValueStore(KeyValueStoreBase):
             self.redisclient.set(categoryKey, value)
 
     def delete(self, category, key):
-        if self.masterdb<>None:
-            self.masterdb.delete(category,key)
+        if self.hasmaster:
+            self.writedb.delete(category,key)
             self.addToChangeLog(category, key,action='D')
         else:
             categoryKey = self._getCategoryKey(category, key)
