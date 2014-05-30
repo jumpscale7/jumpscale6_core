@@ -620,14 +620,14 @@ class StartupManager:
         for name in [pd.name,pd.procname]:
             for item in j.system.fs.listFilesInDir("/etc/init.d"):
                 itembase=j.system.fs.getBaseName(item)
-                if itembase.lower().find(name)<>-1:
+                if itembase.lower() == name:
                     #found process in init.d
                     j.system.process.execute("/etc/init.d/%s stop"%itembase,dieOnNonZeroExitCode=False, outputToStdout=False)
                     j.system.fs.remove(item)
 
             for item in j.system.fs.listFilesInDir("/etc/init"):
                 itembase=j.system.fs.getBaseName(item)
-                if itembase.lower().find(name)<>-1:
+                if itembase.lower() == name:
                     #found process in init
                     itembase=itembase.replace(".conf","")
                     j.system.process.execute("sudo stop %s"%itembase,dieOnNonZeroExitCode=False, outputToStdout=False)
