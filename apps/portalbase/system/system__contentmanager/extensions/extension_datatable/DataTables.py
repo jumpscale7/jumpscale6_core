@@ -118,7 +118,11 @@ class DataTables():
         for x in xrange(len(fieldids)):
             svalue = kwargs.get('sSearch_%s' % x)
             if kwargs['bSearchable_%s' % x] == 'true' and svalue:
-                partials[fieldids[x]] = '*%s*' % svalue.lower()
+                if svalue.isdigit():
+                    partials[fieldids[x]] = int(svalue)
+                else:
+                    partials[fieldids[x]] = '*%s*' % svalue.lower()
+
 
         #top search field
         if 'sSearch' in kwargs and kwargs['sSearch']:
