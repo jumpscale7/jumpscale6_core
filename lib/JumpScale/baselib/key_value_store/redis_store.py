@@ -41,7 +41,7 @@ class RedisKeyValueStore(KeyValueStoreBase):
             rediscl.delete(*chunk)
 
     def increment(self, key):
-        self.writedb.redisclient.incr(key)
+        return self.writedb.redisclient.incr(key)
 
     def checkChangeLog(self):
         """
