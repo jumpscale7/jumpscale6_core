@@ -22,6 +22,7 @@ def action(networkid, publicip, password):
 
     DEFAULTGWIP = j.application.config.get("vfw.default.ip")
     PUBLICCDR = j.application.config.get("vfw.public.cidr")
+    PUBLICGW = j.application.config.get("vfw.public.gw")
     BACKPLANE = 'vxbackend'
     nc = j.system.ovsnetconfig
     con = libvirt.open()
@@ -85,7 +86,7 @@ def action(networkid, publicip, password):
         j.system.fs.createDir(destinationdir)
         destinationfile = 'routeros-small-%s.qcow2' % networkidHex
         destinationfile = j.system.fs.joinPaths(destinationdir, destinationfile)
-        imagedir = '/opt/jsbox/apps/routeros_template/routeros_template_backup'
+        imagedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps/routeros_template/routeros_template_backup')
         imagefile = j.system.fs.joinPaths(imagedir, 'routeros-small-NETWORK-ID.qcow2')
         xmlsource = j.system.fs.fileGetContents(j.system.fs.joinPaths(imagedir, 'routeros-template.xml'))
         xmlsource = xmlsource.replace('NETWORK-ID', networkidHex)
@@ -175,7 +176,7 @@ def action(networkid, publicip, password):
 
         ro.ipaddr_set('cloudspace-bridge', '192.168.103.1/24',single=True)
 
-        ro.uploadExecuteScript("route")
+        ro.uploadExecuteScript("route", vars={'$gw': PUBLICGW})
         ro.uploadExecuteScript("ppp")
         ro.uploadExecuteScript("customer")
         ro.uploadExecuteScript("systemscripts")
@@ -204,7 +205,6 @@ def action(networkid, publicip, password):
         ro.executeScript("/ip service set port=9022 numbers=[/ip service find name=ssh]")
 
         print "reboot of router"
-        ro.ping('8.8.8.8')
         cmd="/system reboot"
         try:
             ro.executeScript(cmd)
@@ -218,13 +218,13 @@ def action(networkid, publicip, password):
         while time.time() - start < timeout:
             try:
                 ro=j.clients.routeros.get(internalip,"vscalers",defaultpasswd)
-                if ro.ping("8.8.8.8"):
+                if ro.ping(PUBLICGW):
                     break
             except:
                 print 'Failed to connect will try agian in 3sec'
             time.sleep(3)
         else:
-            raise RuntimeError("Could not ping to:8.8.8.8 for VFW %s"%(networkid))
+            raise RuntimeError("Could not ping to:%s for VFW %s"%(PUBLICGW, networkid))
 
         print "wait max 30 sec on tcp port 9022 connection to '%s'"%internalip
         if j.system.net.tcpPortConnectionTest(internalip,9022,timeout=2):
