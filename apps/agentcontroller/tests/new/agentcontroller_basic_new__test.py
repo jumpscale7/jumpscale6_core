@@ -28,7 +28,7 @@ class TEST(unittest.TestCase):
 
         job = self.client.scheduleCmd(j.application.whoAmI.gid,j.application.whoAmI.nid, cmdcategory, cmdname, args=self.args, queue="default", log=True, timeout=60)
         self.assertEqual(job['state'], 'SCHEDULED')
-        job = self.client.waitJumpscript(job['id'])
+        job = self.client.waitJumpscript(job['guid'])
         self.assertIsInstance(job, dict)
         self.assertEqual(job['result'], self.args['msg'])
 

@@ -215,24 +215,13 @@ class Worker(object):
             w.redis.rpush("workers:return:%s"%job.id,time.time())
         else:
             #jumpscripts coming from AC
-            if job.state<>"OK":
-                try:
-                    self.acclient.notifyWorkCompleted(job.__dict__)
-                except Exception,e:
-                    j.events.opserror("could not report job in error to agentcontroller", category='workers.errorreporting', e=e)
-                    return
-                #lets keep the errors
-                # self.redis.hdel("workers:jobs",job.id)
-            else:
-                if job.log or job.wait:
-                    try:
-                        self.acclient.notifyWorkCompleted(job.__dict__)
-                    except Exception,e:
-                        j.events.opserror("could not report job result to agentcontroller", category='workers.jobreporting', e=e)
-                        return
-                    # job.state=="OKR" #means ok reported
-                    #we don't have to keep status of local job result, has been forwarded to AC
+            if job.state == "OK":
                 self.redis.hdel("workers:jobs",job.id)
+
+            try:
+                self.acclient.notifyWorkCompleted(job.__dict__)
+            except Exception,e:
+                j.events.opserror("could not report job in error to agentcontroller", category='workers.errorreporting', e=e)
 
 
     def log(self, message, category='',level=5):
