@@ -43,10 +43,6 @@ class Job(OsisBaseObject):
             self.timeStop=0
             self.log=log
 
-    def getSetGuid(self):
-        self.guid = "%s_%s_%s" % (self.gid, self.nid,self.id)
-        return self.guid
-       
     def setArgs(self,action):
         import inspect
         args = inspect.getargspec(action)
@@ -188,10 +184,10 @@ class RedisWorkerFactory:
     def checkJumpscriptQueue(self,jumpscript,queue):
         if jumpscript.period>0:
             #check of already in queue
-            if self.redis.hexists("workers:inqueuetest",jumpscript.name):
-                inserttime=int(self.redis.hget("workers:inqueuetest",jumpscript.name))
+            if self.redis.hexists("workers:inqueuetest",jumpscript.getKey()):
+                inserttime=int(self.redis.hget("workers:inqueuetest",jumpscript.getKey()))
                 if inserttime<(int(time.time())-3600): #when older than 1h remove no matter what
-                    self.redis.hdel("workers:inqueuetest",jumpscript.name)
+                    self.redis.hdel("workers:inqueuetest",jumpscript.getKey())
                     self.checkQueue()                
                     return False
                 print "%s is already scheduled"%jumpscript.name
@@ -214,7 +210,7 @@ class RedisWorkerFactory:
         job.category="jumpscript"
         job.log=js.log
         self._scheduleJob(job)
-        self.redis.hset("workers:inqueuetest",js.name,int(time.time()))
+        self.redis.hset("workers:inqueuetest",js.getKey(),int(time.time()))
         if _sync:
             job=self.waitJob(job,timeout=_timeout)
         return job   
