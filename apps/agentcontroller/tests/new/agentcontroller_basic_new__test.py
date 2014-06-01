@@ -26,7 +26,7 @@ class TEST(unittest.TestCase):
         cmdcategory="jumpscale"
         cmdname="echo"
 
-        job = self.client.scheduleCmd(j.application.whoAmI.gid,j.application.whoAmI.nid, cmdcategory, cmdname, args=self.args, queue="default", log=True, timeout=60)
+        job = self.client.scheduleCmd(j.application.whoAmI.gid,j.application.whoAmI.nid, cmdcategory, cmdname, args=self.args, queue="default", log=True, timeout=60, wait=True)
         self.assertEqual(job['state'], 'SCHEDULED')
         job = self.client.waitJumpscript(job['guid'])
         self.assertIsInstance(job, dict)

@@ -414,6 +414,7 @@ class ControllerCMDS():
             job = self._getJobFromRedis(session.gid, jobguid)
             if not job:
                 job = self.jobclient.get(jobguid).__dict__
+                job['result'] = json.loads(job['result'])
         if job['state'] != 'SCHEDULED':
             return job
         q = self._getJobQueue(job["guid"])
