@@ -82,7 +82,8 @@ class RedisWorkerFactory:
 
     def __init__(self):
         self.redis=j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
-        self.sessionid=j.base.idgenerator.generateRandomInt(1,1000000)
+        random = j.base.idgenerator.generateGUID()
+        self.sessionid="%s_%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid, random)
 
         self.returnQueues={}
 
