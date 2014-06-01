@@ -55,67 +55,70 @@ class GridFactory():
 
         j.logger.consoleloglevel = 6
 
-        self.masterip=j.application.config.get("grid.master.ip")
-        roles = list()
-        if self.config.exists("grid.node.roles"):
-            roles = j.application.config.getList('grid.node.roles')
-        roles = [ role.lower() for role in roles ]
-        if self.isGridMasterLocal():
-            if 'master' not in roles:
-                roles.append('master')
-        self.roles = roles
+        ##SEEMS TO BE OUTDATED CODE !!!!!
+        ##we have pid information in redis now, & processmaanager should react with that
+
+        # self.masterip=j.application.config.get("grid.master.ip")
+        # roles = list()
+        # if self.config.exists("grid.node.roles"):
+        #     roles = j.application.config.getList('grid.node.roles')
+        # roles = [ role.lower() for role in roles ]
+        # if self.isGridMasterLocal():
+        #     if 'master' not in roles:
+        #         roles.append('master')
+        # self.roles = roles
 
 
-        if not j.system.net.waitConnectionTest(self.masterip,5544,10):
-            raise RuntimeError("Could not connect to master osis (%s:%s)"%(self.masterip,5544))
+        # if not j.system.net.waitConnectionTest(self.masterip,5544,10):
+        #     raise RuntimeError("Could not connect to master osis (%s:%s)"%(self.masterip,5544))
 
-        self.gridOsisClient=j.core.osis.getClient(self.masterip, user='root')
+        # self.gridOsisClient=j.core.osis.getClient(self.masterip, user='root')
 
-        if self.nid == 0:
-            jp=j.packages.findNewest("jumpscale","grid_node")
-            jp.configure()
-            self.nid = j.core.grid.config.getInt("grid.node.id")
+        # if self.nid == 0:
+        #     jp=j.packages.findNewest("jumpscale","grid_node")
+        #     jp.configure()
+        #     self.nid = j.core.grid.config.getInt("grid.node.id")
 
-            # self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
+        #     # self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
-            self._loadConfig()
+        #     self._loadConfig()
 
-        # self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
+        # # self.gridOsisClient.createNamespace(name="system",template="coreobjects",incrementName=False)
 
-        clientprocess=j.core.osis.getClientForCategory(self.gridOsisClient,"system","process")
+        # clientprocess=j.core.osis.getClientForCategory(self.gridOsisClient,"system","process")
 
-        ps=j.system.process.getProcessObject(j.application.systempid)
-        workingdir=ps.getcwd()
+        # ps=j.system.process.getProcessObject(j.application.systempid)
+        # workingdir=ps.getcwd()
 
-        if False:#j.system.net.tcpPortConnectionTest("127.0.0.1",4445):  #@todo to fix later
-            #means there is a process manager, we can ask the pid
-            clientpm=j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user="root", \
-                passwd="",category="process")
-            if j.application.appname.find(":")<>-1:
-                #domain & sname known
-                domain,name=j.application.appname.split(":")
-            else:
-                domain=None
-                name=j.application.appname
+        # if False:#j.system.net.tcpPortConnectionTest("127.0.0.1",4445):  #@todo to fix later
+        #     #means there is a process manager, we can ask the pid
+        #     clientpm=j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user="root", \
+        #         passwd="",category="process")
+        #     if j.application.appname.find(":")<>-1:
+        #         #domain & sname known
+        #         domain,name=j.application.appname.split(":")
+        #     else:
+        #         domain=None
+        #         name=j.application.appname
             
-            grid_guid=clientpm.registerProcess(j.application.systempid,domain,name,workingdir=workingdir)
-            grid_pid=int(grid_guid.split("_")[1])
+        #     grid_guid=clientpm.registerProcess(j.application.systempid,domain,name,workingdir=workingdir)
+        #     grid_pid=int(grid_guid.split("_")[1])
 
-        else:
-            obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,\
-                nid=j.application.whoAmI.nid,\
-                systempid=j.application.systempid,\
-                instance=instance)
-            obj2.workingdir=workingdir
+        # else:
+        #     obj2=clientprocess.new(name=j.application.appname,gid=j.application.whoAmI.gid,\
+        #         nid=j.application.whoAmI.nid,\
+        #         systempid=j.application.systempid,\
+        #         instance=instance)
+        #     obj2.workingdir=workingdir
 
 
-            grid_guid,new2,changed2=clientprocess.set(obj2)
-            grid_pid=int(grid_guid.split("_")[1])
+        #     grid_guid,new2,changed2=clientprocess.set(obj2)
+        #     grid_pid=int(grid_guid.split("_")[1])
 
-        self.pid = grid_pid
+        # self.pid = grid_pid
 
-        WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
-        j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=grid_pid)
+        # WhoAmI = namedtuple('WhoAmI', 'gid nid pid')
+        # j.application.whoAmI = WhoAmI(gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid, pid=grid_pid)
 
         j.logger.consoleloglevel = 5
 

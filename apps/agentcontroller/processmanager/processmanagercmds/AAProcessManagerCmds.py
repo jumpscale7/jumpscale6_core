@@ -60,9 +60,9 @@ class AAProcessManagerCmds():
     #     s.stopWorkers()            
 
     def _init(self):
-
         self.childrenPidsFound={} #children already found, to not double count
 
+        #make sure the empty queues no longer needed
 
     def getMonitorObject(self,name,id,monobject=None,lastcheck=0,session=None):
         if session<>None:

@@ -14,9 +14,10 @@ class mainclass(parentclass):
         self.initall(path, namespace,categoryname,db=True)
         self.olddb=self.db
         
-        masterdb=j.db.keyvaluestore.getRedisStore(namespace='', host=j.application.config.get("rediskvs_master_addr"), port=7772, password=j.application.config.get("rediskvs_secret"))
-        self.db=j.db.keyvaluestore.getRedisStore(namespace='', host='localhost', port=7771, db=0, password='', masterdb=masterdb)
-        self.db.osis[self.dbprefix]=self
+        if j.application.config.exists("rediskvs_master_addr"):
+            masterdb=j.db.keyvaluestore.getRedisStore(namespace='', host=j.application.config.get("rediskvs_master_addr"), port=7772, password=j.application.config.get("rediskvs_secret"))
+            self.db=j.db.keyvaluestore.getRedisStore(namespace='', host='localhost', port=7771, db=0, password='', masterdb=masterdb)
+            self.db.osis[self.dbprefix]=self
         
         
     def set(self,key,value,waitIndex=False):

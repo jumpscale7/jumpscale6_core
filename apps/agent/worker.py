@@ -73,7 +73,8 @@ class Worker(object):
                     self.redis = j.clients.credis.getRedisClient(self.redisaddr, self.redisport)
                     success=True
                 except Exception,e:
-                    msg="Cannot connect to redis on %s:%s, will retry in 5 sec."%(self.redisaddr,self.redisport)
+                    msg="Cannot connect to redis on %s:%s, will retry."%(self.redisaddr,self.redisport)
+                    print msg
                     j.events.opserror(msg, category='worker.startup', e=e)
                     if wait<60:
                         wait+=1                    
@@ -168,6 +169,7 @@ class Worker(object):
                     self.actions[job.jscriptid]=jscript
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
+
                 try:
                     j.logger.enabled = job.log
                     result=jscript.run(**job.args)
@@ -182,7 +184,7 @@ class Worker(object):
                     eco.errormessage = msg
                     eco.jid = job.id
                     eco.code=jscript.source
-                    eco.category = "workers.executejob"
+                    eco.category = "workers.executejob"                    
                     j.errorconditionhandler.processErrorConditionObject(eco)
                     # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                     # self.loghandler.logECO(eco)
@@ -191,6 +193,10 @@ class Worker(object):
                     job.result=eco.__dict__
                 finally:
                     j.logger.enabled = True
+
+                #ok or not ok, need to remove from queue test
+                self.redis.hdel("workers:inqueuetest",jscript.name)                
+
                 self.notifyWorkCompleted(job)
 
 

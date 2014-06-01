@@ -61,8 +61,8 @@ class DaemonClient(object):
             roles=j.application.config.get("grid.node.roles").split(",")
             roles=[item.strip().lower() for item in roles]            
 
-        # if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:
-        #     raise RuntimeError("gid or nid cannot be 0, see grid.hrd file in main config of jumpscale hrd dir")
+        if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:
+            raise RuntimeError("gid or nid cannot be 0, see grid.hrd file in main config of jumpscale hrd dir")
 
         #WILL NOT LONGER ADD GID & NID
         # roles2=[]
@@ -134,7 +134,7 @@ class DaemonClient(object):
         print "registered session"
 
     def sendMsgOverCMDChannel(self, cmd, data,sendformat=None, returnformat=None, retry=0, maxretry=1, \
-        category=None,die=True,transporttimeout=5):
+        category=None,transporttimeout=5):
         """
         cmd is command on server (is asci text)
         data is any to be serialized data

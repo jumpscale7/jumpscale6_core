@@ -82,6 +82,7 @@ class WorkerCmds():
         @param queue, if "" then all queues
         if hoursago==0 then all items in queue
         """
+        pass
 
     def resubmitJob(self, jobid, session=None):
         """

@@ -103,11 +103,12 @@ from JumpScale import j
         else:
             # self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
             #NO LONGER USE redisq, now use our own queuing mechanism
-            queue = getattr(self, 'queue', 'default')
-            j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue=queue,_log=self.log,_sync=False)
+            queue = getattr(self, 'queue', 'default')            
+            result=j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue=queue,_log=self.log,_sync=False)
 
         self.lastrun = time.time()
-        print "ok:%s"%self.name
+        if result<>None:
+            print "ok:%s"%self.name
         return result
 
 class DummyDaemon():
@@ -158,6 +159,9 @@ class ProcessmanagerFactory:
             if wait<60:
                 wait+=1
             time.sleep(wait)
+
+        if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+            raise RuntimeError("Could not start processmanager, redis not found on 7766")
 
         self.redisprocessmanager=j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
 
@@ -232,6 +236,12 @@ class ProcessmanagerFactory:
         self.daemon = j.servers.geventws.getServer(port=4445)  #@todo no longer needed I think, it should not longer be a socket server, lets check first
         self.daemon.osis = osis
         self.daemon.daemon.osis = osis
+
+        #clean old stuff from redis
+        import JumpScale.baselib.redisworker
+        j.clients.redisworker.deleteProcessQueue()
+        # j.clients.redisworker.deleteJumpscripts() #CANNOT DO NOW BECAUSE ARE STILL RELYING ON ID's so could be someone still wants to execute
+        
 
         self.redisprocessmanager.set("processmanager:startuptime",str(int(time.time())))
 

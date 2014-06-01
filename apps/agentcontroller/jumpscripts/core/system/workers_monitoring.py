@@ -12,7 +12,7 @@ version = "1.0"
 category = "monitor.workers"
 
 period = 10 #always in sec
-enable = True
+enable = False
 async = False
 roles = ["*"]
 log=False

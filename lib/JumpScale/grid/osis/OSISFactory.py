@@ -155,13 +155,15 @@ class OSISFactory:
             except Exception,e:
                 print stdout.getvalue()
                 raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,stdout.getvalue(),e))
-        return self.osisConnections[key]
+        osisclient=self.osisConnections[key]
+        if osisclient==None:
+            raise RuntimeError("Osis client cannot be None, tried to connect to %s/%s"%(ipaddr,port))
+        return osisclient
 
     def getClientForNamespace(self, namespace, client=None):
-        if not client:
+        if client==None:
             client = self.getClient(user='root')
         return NameSpaceClient(client, namespace)
-
 
     def getClientForCategory(self, client,namespace, category):
         """
@@ -169,7 +171,9 @@ class OSISFactory:
 
         client=j.core.osis.getClient("localhost",port=5544,user="root",passwd="rooter",ssl=False)
         client4node=j.core.osis.getClientForCategory(client,"system","node")
-        """        
+        """
+        if client==None:
+            raise RuntimeError("Client cannot be None: getClientForCategory %s/%s"%(namespace, category))
         key = "%s_%s_%s_%s" % (client._client.transport._addr, client._client.transport._port,namespace,category)
         if self.osisConnectionsCat.has_key(key):
             return self.osisConnectionsCat[key]

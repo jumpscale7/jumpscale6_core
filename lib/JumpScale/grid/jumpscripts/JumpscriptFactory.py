@@ -109,10 +109,12 @@ from JumpScale import j
             # self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
             #NO LONGER USE redisq, now use our own queuing mechanism
             queue = getattr(self, 'queue', 'default')
-            j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue=queue,_log=self.log,_sync=False)
+            result=j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue=queue,_log=self.log,_sync=False)
 
         self.lastrun = time.time()
-        print "ok:%s"%self.name
+        
+        if result<>None:
+            print "ok:%s"%self.name
         return result
 
 
