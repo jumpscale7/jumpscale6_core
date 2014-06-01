@@ -27,7 +27,7 @@ class TEST(unittest.TestCase):
         j.system.platform.ubuntu.startService('processmanager')
         time.sleep(2)
 
-        job = self.client.scheduleCmd(j.application.whoAmI.gid,j.application.whoAmI.nid, 'jumpscsle', 'echo', args=self.args, queue="io", log=True, timeout=60, wait=True)
+        job = self.client.scheduleCmd(j.application.whoAmI.gid,j.application.whoAmI.nid, 'jumpscale', 'echo', args=self.args, queue="io", log=True, timeout=60, wait=True)
         result = self.client.waitJumpscript(job=job)
         self.assertEqual(result['result'], self.args['msg'])
 
