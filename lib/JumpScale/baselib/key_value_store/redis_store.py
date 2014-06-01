@@ -14,9 +14,6 @@ class RedisKeyValueStore(KeyValueStoreBase):
 
     def __init__(self,namespace="",host='localhost',port=7771,db=0,password='', serializers=[],masterdb=None, changelog=True):
 
-        if serializers<>[]:
-            raise RuntimeError("Do only support empty serializers.")
-
         self.redisclient=j.clients.redis.getRedisClient(host, port,password=password)
         self.redisclient.port=port
         self.redisclient.host=host
