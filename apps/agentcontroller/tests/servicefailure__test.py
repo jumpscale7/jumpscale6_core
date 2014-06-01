@@ -27,8 +27,8 @@ class TEST(unittest.TestCase):
         j.system.platform.ubuntu.startService('processmanager')
         time.sleep(2)
 
-        result = self.client.execute('jumpscale', 'echo', nid=j.application.whoAmI.nid, queue='io',wait=False, **self.args)
-        result = self.client.waitJumpscript(result['id'])
+        job = self.client.execute('jumpscale', 'echo', nid=j.application.whoAmI.nid, queue='io',wait=False, **self.args)
+        result = self.client.waitJumpscript(job=job)
         self.assertEqual(result['result'], self.args['msg'])
 
     def test_agentcontroller_restart(self):
