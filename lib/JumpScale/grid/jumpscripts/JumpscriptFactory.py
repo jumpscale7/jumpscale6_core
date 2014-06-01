@@ -80,6 +80,9 @@ from JumpScale import j
         self.startatboot=getattr(self.module, 'startatboot', False)
         self.gid=getattr(self.module, 'gid', j.application.whoAmI.gid)
 
+    def getKey(self):
+        return "%s_%s" % (self.organization, self.name)
+
     def run(self, *args, **kwargs):
         if not self.path:
             self.write()

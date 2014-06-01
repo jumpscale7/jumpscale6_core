@@ -195,7 +195,7 @@ class Worker(object):
                     j.logger.enabled = True
 
                 #ok or not ok, need to remove from queue test
-                self.redis.hdel("workers:inqueuetest",jscript.name)                
+                self.redis.hdel("workers:inqueuetest",jscript.getKey())
 
                 self.notifyWorkCompleted(job)
 
