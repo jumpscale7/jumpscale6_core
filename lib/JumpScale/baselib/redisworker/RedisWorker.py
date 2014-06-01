@@ -90,12 +90,13 @@ class RedisWorkerFactory:
 
         self.returnQueues={}
 
-        session={"start":j.base.time.getTimeEpoch()}
-        session["gid"]=j.application.whoAmI.gid
-        session["nid"]=j.application.whoAmI.nid
-        session["pid"]=j.application.whoAmI.pid
-        session["appname"]=j.application.appname
-        self.redis.hset("workers:sessions",self.sessionid,json.dumps(session))
+        # session={"start":j.base.time.getTimeEpoch()}
+        # session["gid"]=j.application.whoAmI.gid
+        # session["nid"]=j.application.whoAmI.nid
+        # session["pid"]=j.application.whoAmI.pid
+        # session["appname"]=j.application.appname
+        # self.redis.hset("workers:sessions",self.sessionid,json.dumps(session))
+        self.redis.delete("workers:sessions")
 
         #local jumpscripts start at 10000
         if not self.redis.exists("workers:jumpscriptlastid") or int(self.redis.get("workers:jumpscriptlastid"))<10000:
@@ -150,6 +151,18 @@ class RedisWorkerFactory:
         
         return Jumpscript(ddict=jsdict)
 
+    def deleteJumpscripts(self):
+        for item in ["workers:jumpscripts:id","workers:jumpscripts:name"]:
+            self.redis.delete(item)
+
+    def deleteQueues(self):
+        for item in ["queues:workers:work:process","queues:workers:work:io","queues:workers:work:hypervisor","queues:workers:work:default"]:
+            self.redis.delete(item)
+
+    def deleteProcessQueue(self):
+        for item in ["queues:workers:work:process","workers:inqueuetest"]:
+            self.redis.delete(item)
+
     def getJumpscriptFromName(self,organization,name):
         key="%s__%s"%(organization,name)
         jsdict=self.redis.hget("workers:jumpscripts:name",key)
@@ -172,6 +185,19 @@ class RedisWorkerFactory:
             job=self.waitJob(job,timeout=_timeout)
         return job
 
+    def checkJumpscriptQueue(self,jumpscript,queue):
+        if jumpscript.period>0:
+            #check of already in queue
+            if self.redis.hexists("workers:inqueuetest",jumpscript.name):
+                inserttime=int(self.redis.hget("workers:inqueuetest",jumpscript.name))
+                if inserttime<(int(time.time())-3600): #when older than 1h remove no matter what
+                    self.redis.hdel("workers:inqueuetest",jumpscript.name)
+                    self.checkQueue()                
+                    return False
+                print "%s is already scheduled"%jumpscript.name
+                return True                
+        return False
+
     def execJumpscript(self,jumpscriptid=None,jumpscript=None,_timeout=60,_queue="default",_log=True,_sync=True,**args):
         """
         @return job
@@ -181,11 +207,14 @@ class RedisWorkerFactory:
             js=self.getJumpscriptFromId(jumpscriptid)
         else:
             js = jumpscript
+        if self.checkJumpscriptQueue(js,_queue):
+            return None
         job=self._getJob(js.id,args=args,timeout=_timeout,log=_log,queue=_queue)
         job.cmd="%s/%s"%(js.organization,js.name)
         job.category="jumpscript"
         job.log=js.log
         self._scheduleJob(job)
+        self.redis.hset("workers:inqueuetest",js.name,int(time.time()))
         if _sync:
             job=self.waitJob(job,timeout=_timeout)
         return job   
@@ -196,37 +225,44 @@ class RedisWorkerFactory:
         self._scheduleJob(job)
         return job
 
-    def jobExistsInQueue(self,qname,job):
+    def checkQueue(self):
+        return
+        db=self.redis
+        for name in ["process","hypervisor","default","io"]:
+            qname="queues:workers:work:%s"%name
+            for i in range (db.llen(qname)):
+                jobbin=db.lindex(qname,i)
+                print jobbin
+        #@todo needs to be implement, need to check there are no double recurring jobs, need to check jumpscripts exist, need to check jobs are also in redis, ...
 
-        if not self.queue.has_key(qname):
-            raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
+    # def jobExistsInQueue(self,qname,job):
 
-        queue=self.queue[qname]
-        C1="%s%s%s%s%s%s%s%s"%(job.category, job.cmd, job.log, job.gid, job.nid, job.roles, job.jscriptid,job.args)
-        keynew=j.tools.hash.md5_string(C1)
+    #     if not self.queue.has_key(qname):
+    #         raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
 
+    #     queue=self.queue[qname]
+    #     C1="%s%s%s%s%s%s%s%s"%(job.category, job.cmd, job.log, job.gid, job.nid, job.roles, job.jscriptid,job.args)
+    #     keynew=j.tools.hash.md5_string(C1)
 
-        db=queue._CRedisQueue__db
-        for i in range (db.llen(queue.key)):
-            jobbin=db.lindex(queue.key,i)
-            print jobbin
-            jobdict=json.loads(jobbin)
-            jobOld=Job(ddict=jobdict)
-            C="%s%s%s%s%s%s%s%s"%(jobOld.category, jobOld.cmd, jobOld.log, jobOld.gid, jobOld.nid, jobOld.roles, jobOld.jscriptid,jobOld.args)
-            print C
-            print "%s %s"%(C1,C,keynew,j.tools.hash.md5_string(C))
-            if keynew==j.tools.hash.md5_string(C):
-                print "INQUEUE"
-                return True
-                from IPython import embed
-                print "DEBUG NOW ooo"
-                embed()
+    #     db=queue._CRedisQueue__db
+    #     for i in range (db.llen(queue.key)):
+    #         jobbin=db.lindex(queue.key,i)
+    #         print jobbin
+    #         jobdict=json.loads(jobbin)
+    #         jobOld=Job(ddict=jobdict)
+    #         C="%s%s%s%s%s%s%s%s"%(jobOld.category, jobOld.cmd, jobOld.log, jobOld.gid, jobOld.nid, jobOld.roles, jobOld.jscriptid,jobOld.args)
+    #         print C
+    #         print "%s %s"%(C1,C,keynew,j.tools.hash.md5_string(C))
+    #         if keynew==j.tools.hash.md5_string(C):
+    #             print "INQUEUE"
+    #             return True
+    #             from IPython import embed
+    #             print "DEBUG NOW ooo"
+    #             embed()
 
-                            
-
-            jobbin=queue.fetch(block=False)
+    #         jobbin=queue.fetch(block=False)
             
-        return False
+    #     return False
 
 
     def _getWork(self,qname,timeout=0):
