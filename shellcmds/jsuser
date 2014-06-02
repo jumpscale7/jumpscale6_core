@@ -34,6 +34,18 @@ osis=j.core.osis.getClient(opts.addr,5544,opts.login,opts.passwd)
 userclient=j.core.osis.getClientForCategory(osis,"system","user")
 groupclient=j.core.osis.getClientForCategory(osis,"system","group")
 
+def getPasswd(password):
+    if len(password) != 32:
+        password = j.tools.hash.md5_string(password)
+    return password
+
+def getUserGUID(username):
+    results = userclient.simpleSearch({'id': username}, withguid=True)
+    if results:
+        return results[0]['guid']
+    print "Could not find user with name %s" % username
+    j.application.stop(1)
+
 ############ADD
 if opts.action =='auth':
     if opts.userlogin==None:
@@ -50,14 +62,17 @@ if opts.action =='passwd':
         opts.userlogin=j.console.askString("user to set passwd for")
     if opts.userpasswd==None:
         opts.userpasswd=j.console.askPassword("passwd")
-    user=userclient.get("%s_%s"%(j.application.whoAmI.gid,opts.userlogin))
-    user.passwd=opts.userpasswd
+
+    userguid = getUserGUID(opts.userlogin)
+    user=userclient.get(userguid)
+    user.passwd=getPasswd(opts.userpasswd)
     userclient.set(user)
 
 if opts.action =='delete':
     if opts.userlogin==None:
         opts.userlogin=j.console.askString("user to delete")
-    user=userclient.get("%s_%s"%(j.application.whoAmI.gid,opts.userlogin))
+    userguid = getUserGUID(opts.userlogin)
+    user=userclient.get(userguid)
     userclient.delete(user.guid)
 
 if opts.action =='add' or opts.action =='set':
@@ -91,7 +106,7 @@ if opts.action =='add' or opts.action =='set':
     user.groups=groups
     user.emails=emails
     user.domain=domain
-    user.passwd=j.tools.hash.md5_string(passwd)
+    user.passwd=getPasswd(passwd)
 
     guid,a,b=userclient.set(user)
 
@@ -100,10 +115,10 @@ if opts.action =='add' or opts.action =='set':
     print user
 
 if opts.action =='addgroup' or opts.action =='delgroup':
-    key="%s_%s"%(j.application.whoAmI.gid,opts.groupuser)
-    if not userclient.exists(key):
+    userguid = getUserGUID(opts.userlogin)
+    if not userguid:
         j.errorconditionhandler.raiseOperationalCritical(message='cannot find user:%s'%opts.user, category="jsuser.add.exists")
-    user=userclient.get(key)   
+    user=userclient.get(userguid)   
 
     if opts.action =='delgroup':
         print "del group:%s from %s"%(opts.groupgroup,opts.groupuser)
