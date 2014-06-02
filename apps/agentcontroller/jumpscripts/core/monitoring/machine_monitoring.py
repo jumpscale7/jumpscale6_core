@@ -9,7 +9,7 @@ author = "deboeckj@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "monitoring.machine"
-period = 20 #always in sec
+period = 60*2 #always in sec
 order = 1
 enable=True
 async=True
@@ -36,10 +36,17 @@ def action():
                 libvirt.VIR_DOMAIN_NOSTATE: 'NOSTATE',
                 libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
 
+
+
+    systemcl = j.core.osis.getClientForNamespace('system')
+    allmachines = systemcl.machine.simpleSearch({'nid': machine.db.nid, 'gid': machine.db.gid})
+    allmachines = { machine['id']: machine for machine in allmachines }
+    domainmachines = list()
     try:
         domains = con.listAllDomains()
         for domain in domains:
             machine = j.core.processmanager.monObjects.machineobject.get(id=domain.ID())
+            domainmachines.append(domain.ID())
             machine.ckeyOld = machine.db.getContentKey()
             machine.db.name = domain.name()
             machine.db.nid = j.application.whoAmI.nid
@@ -58,19 +65,17 @@ def action():
             machine.db.mem = int(xml.find('memory').text)
 
             machine.db.netaddr = netaddr
-            machine.db.lastcheck = machine.lastcheck
+            machine.db.lastcheck = j.base.time.getTimeEpoch()
             machine.db.state = stateMap.get(domain.state()[0], 'STOPPED')
             machine.db.cpucore = int(xml.find('vcpu').text)
 
-            if machine.ckeyOld != machine.db.getContentKey():
-                #obj changed
-                try:
-                    machine.send2osis()
-                except Exception,e:
-                    pass
-                    # from IPython import embed
-                    # print "DEBUG NOW machine monitoring bug"
-                    # embed()
+
+            # if machine.ckeyOld != machine.db.getContentKey():
+            #     #obj changed
+            try:
+                machine.send2osis()
+            except Exception:
+                pass
 
             for disk in xml.findall('devices/disk'):
                 if disk.attrib['device'] != 'disk':
@@ -97,5 +102,16 @@ def action():
                     print "SEND VDISK INFO TO OSIS"
                     vdisk.send2osis()
     finally:
+
+
+        deletedmachines = set(allmachines.keys) - set(domainmachines)
+        for deletedmachine in deletedmachines:
+            machine = allmachines[deletedmachine]
+            machine.state = 'DELETED'
+            try:
+                machine.send2osis()
+            except Exception:
+                pass
+                
         con.close()
 
