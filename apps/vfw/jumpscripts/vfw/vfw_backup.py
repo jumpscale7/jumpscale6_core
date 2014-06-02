@@ -48,7 +48,8 @@ def action():
                 path = j.system.fs.joinPaths(backuppath, name)
                 routeros.backup(name, path)
             except Exception:
-                vfwerrors.append('NAME: %(name)s      DOMAIN: %(domain)s      HOST: %(host)s      INTERNAL IP: %(internalip)s      PUBLIC IP: %(publicips)s' % vfw) 
+                vfw['pubips'] = ', '.join(vfw['pubips'])
+                vfwerrors.append('NAME: %(name)s      DOMAIN: %(domain)s      HOST: %(host)s      INTERNAL IP: %(internalip)s      PUBLIC IP: %(pubips)s' % vfw) 
 
 
         #targz
