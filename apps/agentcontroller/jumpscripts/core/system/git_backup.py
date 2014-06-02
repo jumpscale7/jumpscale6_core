@@ -12,7 +12,7 @@ category = "system.git.backup"
 period = 60*60*2
 enable = True
 async = True
-roles = ["*"]
+roles = ["admin"]
 queue ='io'
 
 def action():
