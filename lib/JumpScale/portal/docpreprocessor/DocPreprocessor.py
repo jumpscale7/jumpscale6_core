@@ -1,6 +1,7 @@
 from JumpScale import j
 import re
 import os
+import jinja2
 
 
 class HeaderTools():
@@ -25,10 +26,10 @@ class HeaderTools():
                     lowest = hnr
         return lowest
 
-
 class Doc(object):
 
     def __init__(self, docpreprocessor):
+        self.jenv = jinja2.Environment(variable_start_string="${", variable_end_string="}")
         self.name = ""
         self.appliedparams = dict()
         self.alias = []
@@ -226,6 +227,10 @@ class Doc(object):
         if isdoccontent:
             self.content = content
         return content
+
+    def applyTemplate(self, params):
+        template = self.jenv.from_string(self.content)
+        self.content = template.render(**params)
 
     def executeMacrosPreprocess(self):
         if self.source == "":
