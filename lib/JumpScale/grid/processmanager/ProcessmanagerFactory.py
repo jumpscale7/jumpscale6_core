@@ -138,12 +138,19 @@ class ProcessmanagerFactory:
     def __init__(self):
         self.daemon = DummyDaemon()
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
-        j.system.platform.psutil = psutil        
+        j.system.platform.psutil = psutil
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
         # j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1) #@todo
-        
+    
+    @property
+    def redisprocessmanager(self):
+        if not hasattr(self, 'redisprocessmanager'):
+            if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+                raise RuntimeError("Could not start processmanager, redis not found on 7766")
+            self.redisprocessmanager = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+        return self.redisprocessmanager
 
     def start(self):
         # #check redis is there if not try to start
@@ -159,11 +166,6 @@ class ProcessmanagerFactory:
             if wait<60:
                 wait+=1
             time.sleep(wait)
-
-        if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-            raise RuntimeError("Could not start processmanager, redis not found on 7766")
-
-        self.redisprocessmanager=j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
 
         wait=1
         while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
@@ -321,7 +323,7 @@ class ProcessmanagerFactory:
                 factory = getattr(monmodule, '%sFactory' % name)(self, classs)
                 self.monObjects.__dict__[name.lower()]=factory   
 
-    def getStartupTime(self):        
+    def getStartupTime(self):
         val=self.redisprocessmanager.get("processmanager:startuptime")
         return int(val)
 

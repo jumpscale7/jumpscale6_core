@@ -34,7 +34,7 @@ def action():
     except:
         import json
 
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
+    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', j.application.config.get('redis.port.redisp'))
     # results, errors = j.core.grid.healthchecker.runAll()
 
     for item in ['results','errors','lastcheck']:

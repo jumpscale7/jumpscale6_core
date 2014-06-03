@@ -39,7 +39,7 @@ def action():
 
 
     systemcl = j.core.osis.getClientForNamespace('system')
-    allmachines = systemcl.machine.simpleSearch({'nid': machine.db.nid, 'gid': machine.db.gid})
+    allmachines = systemcl.machine.simpleSearch({})
     allmachines = { machine['id']: machine for machine in allmachines }
     domainmachines = list()
     try:
@@ -102,12 +102,10 @@ def action():
                     print "SEND VDISK INFO TO OSIS"
                     vdisk.send2osis()
     finally:
-
-
-        deletedmachines = set(allmachines.keys) - set(domainmachines)
+        deletedmachines = set(allmachines.keys()) - set(domainmachines)
         for deletedmachine in deletedmachines:
             machine = allmachines[deletedmachine]
-            machine.state = 'DELETED'
+            machine['state'] = 'DELETED'
             try:
                 machine.send2osis()
             except Exception:
