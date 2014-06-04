@@ -27,6 +27,7 @@ def verify_memberships():
 
 if __name__ == "__main__":
     print('Getting Config')
+    verify_memberships()
     a = netcl.NetLayout()
     a.load()
     layout = a.nicdetail
