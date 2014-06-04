@@ -139,6 +139,7 @@ class ProcessmanagerFactory:
         self.daemon = DummyDaemon()
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
         j.system.platform.psutil = psutil
+        self._redisprocessmanager = None
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
@@ -146,11 +147,12 @@ class ProcessmanagerFactory:
     
     @property
     def redisprocessmanager(self):
-        if not hasattr(self, 'redisprocessmanager'):
+        print 'thing'
+        if not self._redisprocessmanager:
             if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
                 raise RuntimeError("Could not start processmanager, redis not found on 7766")
-            self.redisprocessmanager = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
-        return self.redisprocessmanager
+            self._redisprocessmanager = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+        return self._redisprocessmanager
 
     def start(self):
         # #check redis is there if not try to start
@@ -243,7 +245,6 @@ class ProcessmanagerFactory:
         import JumpScale.baselib.redisworker
         j.clients.redisworker.deleteProcessQueue()
         # j.clients.redisworker.deleteJumpscripts() #CANNOT DO NOW BECAUSE ARE STILL RELYING ON ID's so could be someone still wants to execute
-        
 
         self.redisprocessmanager.set("processmanager:startuptime",str(int(time.time())))
 
