@@ -43,13 +43,13 @@ def action():
 
         for vfw in vfws:
             try:
-                routeros = j.clients.routeros.get(vfw['internalip'], 'vscalers', routeros_password)
+                routeros = j.clients.routeros.get(vfw['host'], 'vscalers', routeros_password)
                 name = vfw['name'] or vfw['domain']
                 path = j.system.fs.joinPaths(backuppath, name)
                 routeros.backup(name, path)
             except Exception:
                 vfw['pubips'] = ', '.join(vfw['pubips'])
-                vfwerrors.append('NAME: %(name)s      DOMAIN: %(domain)s      HOST: %(host)s      INTERNAL IP: %(internalip)s      PUBLIC IP: %(pubips)s' % vfw) 
+                vfwerrors.append('NAME: %(name)s      DOMAIN: %(domain)s      HOST: %(host)s      PUBLIC IP: %(pubips)s' % vfw) 
 
 
         #targz
@@ -69,7 +69,7 @@ Exception:
 -----------------------------
     ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, error)
         message = message.replace('\n', '<br/>')
-        j.clients.email.send('support@mothership1.com', 'smtp@incubaid.com', 'VFW backup failed', message)
+        j.clients.email.send('support@mothership1.com', 'monitor@mothership1.com', 'VFW backup failed', message)
     finally:
         if vfwerrors:
             message = '''
