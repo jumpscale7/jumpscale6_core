@@ -147,7 +147,6 @@ class ProcessmanagerFactory:
     
     @property
     def redisprocessmanager(self):
-        print 'thing'
         if not self._redisprocessmanager:
             if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
                 raise RuntimeError("Could not start processmanager, redis not found on 7766")
