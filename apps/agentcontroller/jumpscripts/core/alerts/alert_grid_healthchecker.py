@@ -29,6 +29,7 @@ def action():
     import JumpScale.baselib.redis
     import JumpScale.grid.gridhealthchecker
     import JumpScale.grid.processmanager
+    import JumpScale.baselib.watchdog.client
     try:
         import ujson as json
     except:
@@ -54,7 +55,6 @@ def action():
             check=False
 
     if check==False:
-        import JumpScale.baselib.watchdog.client
         j.tools.watchdog.client.send("grid.healthcheck","CRITICAL", gid=j.application.whoAmI.gid, nid=j.application.whoAmI.nid,value="watchdog check did not run in time.")
     errors=json.loads(rediscl.hget('healthcheck:monitoring', 'errors'))
 
