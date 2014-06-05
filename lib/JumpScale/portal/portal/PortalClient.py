@@ -126,6 +126,6 @@ class PortalClient():
             apphook = AppClass(self, appname)
             setattr(j.apps, appname, apphook)
         if not hasattr(apphook, actorname):
-            setattr(apphook, actorobject)
+            setattr(apphook, actorname, actorobject)
 
         return actorobject
