@@ -53,6 +53,7 @@ class RedisKeyValueStore(KeyValueStoreBase):
         if lastid>self.lastchangeId:
             try:
                 for t in xrange(self.lastchangeId+1,lastid+1):
+                    self.lastchangeId = t
                     key="changelog:data:%s"%t
                     counter=1
                     haskey = self.redisclient.exists(key)
