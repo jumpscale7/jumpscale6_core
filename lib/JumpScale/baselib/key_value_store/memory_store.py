@@ -21,14 +21,14 @@ class MemoryKeyValueStore(KeyValueStoreBase):
             raise RuntimeError("Could not find object with category %s key %s"%(category,key))
         return self.db[category][key]
 
-    def set(self, category, key, value, index=True):
+    def set(self, category, key, value):
         key=str(key)
         if category not in self.db:
             self.db[category] = dict()
 
         self.db[category][key] = value
 
-    def delete(self, category, key, index=True):
+    def delete(self, category, key):
         key=str(key)
         #self._assertExists(category, key)
         if self.exists(category, key):

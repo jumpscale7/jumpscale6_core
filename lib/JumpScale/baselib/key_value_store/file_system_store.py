@@ -48,7 +48,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         value = self.fileGetContents(storePath)
         return self.unserialize(value)
 
-    def set(self, category, key, value, index=True):
+    def set(self, category, key, value):
 
         storePath = self._getStorePath(category, key,True)
         self.writeFile(storePath,self.serialize(value))
@@ -60,7 +60,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         else:
             j.system.fs.removeDirTree(self.dbpath)
 
-    def delete(self, category, key, index=True):
+    def delete(self, category, key):
         #self._assertExists(category, key)
 
         if self.exists(category, key):
