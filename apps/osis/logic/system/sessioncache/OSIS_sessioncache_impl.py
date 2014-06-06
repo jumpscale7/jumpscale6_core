@@ -12,7 +12,7 @@ class mainclass(OSISStore):
         self.olddb=self.db
         if j.application.config.exists("rediskvs_master_addr"):
             masterdb=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host=j.application.config.get("rediskvs_master_addr"), port=7772, password=j.application.config.get("rediskvs_secret"), serializers=[self.json])
-            self.db=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host='localhost', port=7771, password='', masterdb=masterdb, serializers=[self.json])
+            self.db=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host='localhost', port=7771, password='', masterdb=masterdb, serializers=[self.json],changelog=False)
             self.db.osis[self.dbprefix]=self
 
     def set(self,key,value,waitIndex=True):
