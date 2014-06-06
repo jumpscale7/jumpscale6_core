@@ -103,22 +103,24 @@ class RedisKeyValueStore(KeyValueStoreBase):
         value = self.redisclient.get(categoryKey)
         return self.unserialize(value)
 
-    def set(self, category, key, value,expire=0):
+    def set(self, category, key, value,expire=0, index=True):
         """
         @param expire is in seconds when value will expire
         """
         if self.hasmaster:
             self.writedb.set(category,key,value)
-            self.addToChangeLog(category, key) #notify system for change
+            if index:
+                self.addToChangeLog(category, key) #notify system for change
         else:
             value = self.serialize(value)
             categoryKey = self._getCategoryKey(category, key)
             self.redisclient.set(categoryKey, value)
 
-    def delete(self, category, key):
+    def delete(self, category, key, index=True):
         if self.hasmaster:
             self.writedb.delete(category,key)
-            self.addToChangeLog(category, key,action='D')
+            if index:
+                self.addToChangeLog(category, key,action='D')
         else:
             categoryKey = self._getCategoryKey(category, key)
             # self._assertExists(categoryKey)

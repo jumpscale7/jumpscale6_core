@@ -23,14 +23,14 @@ class ArakoonKeyValueStore(KeyValueStoreBase):
         value = self._client.get(categoryKey)
         return self.unserialize(value)
 
-    def set(self, category, key, value, JSModelSerializer=None):
+    def set(self, category, key, value, JSModelSerializer=None, index=True):
         if category not in self.categories:
             self.categories[category]=True
             self.set("dbsystem", "categories", self.categories)
         categoryKey = self._getCategoryKey(category, key)
         self._client.set(categoryKey, self.serialize(value))
 
-    def delete(self, category, key):
+    def delete(self, category, key, index=True):
         self._assertExists(category, key)
 
         categoryKey = self._getCategoryKey(category, key)

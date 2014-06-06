@@ -20,7 +20,7 @@ class LevelDBInterface():
         # print "setb:%s"%key
         self.db.put(key,value,sync=False)
 
-    def set(self,key,value):
+    def set(self,key,value,index=True):
         # print "set:%s"%key
         val=j.db.serializers.getSerializerType('j').dumps(value)
         self.setb(key,val)
@@ -42,7 +42,7 @@ class LevelDBInterface():
         val=self.db.get(key,default="NOTFOUND")
         return val!="NOTFOUND"
 
-    def delete(self,key):
+    def delete(self,key, index=True):
         self.db.delete(key)#,sync=False)
 
     def prefix(self,prefix):
