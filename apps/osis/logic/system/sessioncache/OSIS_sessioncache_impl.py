@@ -16,7 +16,7 @@ class mainclass(OSISStore):
             self.db.osis[self.dbprefix]=self
 
     def set(self,key,value,waitIndex=True):
-        self.db.set(self.dbprefix,key=key,value=value, index=False)
+        self.db.set(self.dbprefix,key=key,value=value)
         return [key,True,True]
 
     def destroyindex(self):
@@ -29,7 +29,7 @@ class mainclass(OSISStore):
         return "system_sessioncache"
 
     def delete(self, key):
-        self.db.delete(self.dbprefix, key, index=False)
+        self.db.delete(self.dbprefix, key)
 
     def exists(self,key):
         return self.db.exists(self.dbprefix,key=key)
