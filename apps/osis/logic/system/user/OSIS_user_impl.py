@@ -50,9 +50,9 @@ class mainclass(parentclass):
                     grguid,a,b=g.set(grnew.guid,grnew.__dict__)
                 else:
                     gr=g.get(grkey)
-                    if obj.id not in  gr.users:
-                         gr.users.append(obj.id)
-                         g.set(gr.guid,gr.__dict__)
+                    if obj.id not in gr['users']:
+                         gr['users'].append(obj.id)
+                         g.set(gr['guid'],gr)
         
         return [obj.guid,changed,changed]
 
