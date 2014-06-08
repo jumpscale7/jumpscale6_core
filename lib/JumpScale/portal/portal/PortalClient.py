@@ -58,14 +58,15 @@ class PortalClient():
         self.wsclient = PortalClientWS(ip, port, secret=secret)
         self.ip = ip
         self.port = port
+        self._actormap = dict()
 
-        apsp = PortalProcess()
-        j.core.portal.active = apsp
-        apsp.actors = {}
 
         if not hasattr(j, 'apps'):
             j.apps = GroupAppsClass(self)
-        self.actors = j.apps
+        if isinstance(j.apps, GroupAppsClass):
+            self.actors = j.apps
+        else:
+            self.actors = GroupAppsClass(self)
 
     # def _loadSpaces(self):
     #     spaces = dict()
@@ -82,8 +83,8 @@ class PortalClient():
             raise RuntimeError("Cannot open actor connection to system actor, use directly the wsclient with callwebservice method.")
 
         key = "%s_%s" % (appname.lower(), actorname.lower())
-        if refresh == False and key in j.core.portal.active.actors:
-            return j.core.portal.active.actors[key]
+        if refresh == False and key in self._actormap:
+            return self._actormap[key]
 
         result = self.wsclient.callWebService("system", "contentmanager", "prepareActorSpecs", app=appname, actor=actorname)
         if result[1] != None and "error" in result[1]:
@@ -119,12 +120,12 @@ class PortalClient():
                 classs = j.core.codegenerator.getClassJSModel(appname, actorname, modelName)
                 actorobject.models.__dict__[modelName] = j.core.osismodel.getNoDB(appname, actorname, modelName, classs)
 
-        j.core.portal.active.actors[key] = actorobject
+        self._actormap[key] = actorobject
 
-        apphook = getattr(j.apps, appname, None)
+        apphook = getattr(self.actors, appname, None)
         if not apphook:
             apphook = AppClass(self, appname)
-            setattr(j.apps, appname, apphook)
+            setattr(self.actors, appname, apphook)
         if not hasattr(apphook, actorname):
             setattr(apphook, actorname, actorobject)
 

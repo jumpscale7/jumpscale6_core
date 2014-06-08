@@ -44,9 +44,9 @@ class auth(object):
                 userobj = j.core.portal.active.auth.getUserInfo(user)
                 groups = set(userobj.groups)
                 if not groups.intersection(self.groups):
-                    self.doAudit(user, 403, pathinfo, args, kwargs)
+                    self.doAudit(user, 403, pathinfo, args, kwargs, {})
                     ctx.start_response('403 Forbidden', [])
-                    return 'User %s has no access. If you would like to gain access please contact your adminstrator'
+                    return 'User %s has no access. If you would like to gain access please contact your adminstrator' % user
             if self.audit:
                 start_response = ctx.start_response
                 def patched_start_response(status, *pargs, **pkwargs):
