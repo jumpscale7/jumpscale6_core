@@ -12,11 +12,22 @@ from ErrorConditionObject import ErrorConditionObject
 class ErrorConditionHandler():
     
     def __init__(self,haltOnError=True,storeErrorConditionsLocal=True):
+        self._blacklist = None
         self.lastAction=""
         self.haltOnError=haltOnError     
         self.setExceptHook()
         self.lastEco=None
         self.sentryOwnClientInit=False
+
+    @property
+    def blacklist(self):
+        if self._blacklist is None:
+            key = 'application.eco.blacklist'
+            if j.application.config.exists(key):
+                self._blacklist = j.application.config.getList(key)
+            else:
+                self._blacklist = list()
+        return self._blacklist
         
     def toolStripNonAsciFromText(text):
         return string.join([char for char in str(text) if ((ord(char)>31 and ord(char)<127) or ord(char)==10)],"")        
@@ -330,6 +341,8 @@ class ErrorConditionHandler():
         for item in ignorelist:
             if eco.errormessage.find(item)<>-1:
                 return True
+        if j.application.appname in self.blacklist:
+            return True
         return False
 
     def getFrames(self,tb=None):
