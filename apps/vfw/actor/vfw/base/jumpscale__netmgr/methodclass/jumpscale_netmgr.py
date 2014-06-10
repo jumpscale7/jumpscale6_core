@@ -94,7 +94,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         return result
 
 
-    def fw_forward_create(self, fwid, gid, fwip, fwport, destip, destport, **kwargs):
+    def fw_forward_create(self, fwid, gid, fwip, fwport, destip, destport, protocol='tcp', **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
@@ -109,13 +109,14 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.fromPort = fwport
         rule.toAddr = destip
         rule.toPort = destport
+        rule.protocol = protocol
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': fwobj.obj2dict()}
         result = self._applyconfig(fwobj.nid, args)
         if result:
             self.osisvfw.set(fwobj)
         return result
 
-    def fw_forward_delete(self, fwid, gid, fwip, fwport, destip, destport, **kwargs):
+    def fw_forward_delete(self, fwid, gid, fwip, fwport, destip, destport, protocol=None, **kwargs):
         """
         param:fwid firewall id
         param:gid grid id
@@ -127,6 +128,8 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj = self.osisvfw.get(fwid)
         for rule in fwobj.tcpForwardRules:
             if rule.fromPort == fwport and rule.toAddr == destip and rule.toPort == destport and rule.fromAddr == fwip:
+                if protocol and rule.protocol and rule.protocol != protocol:
+                    continue
                 fwobj.tcpForwardRules.remove(rule)
                 args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': fwobj.obj2dict()}
                 result = self._applyconfig(fwobj.nid, args)
@@ -146,7 +149,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj = self.osisvfw.get(fwid)
         result = list()
         for rule in fwobj.tcpForwardRules:
-            result.append({'publicIp':rule.fromAddr, 'publicPort':rule.fromPort, 'localIp':rule.toAddr, 'localPort':rule.toPort})
+            result.append({'publicIp':rule.fromAddr, 'publicPort':rule.fromPort, 'localIp':rule.toAddr, 'localPort':rule.toPort, 'protocol': rule.protocol})
         return result
 
     def fw_list(self, gid, domain=None, **kwargs):

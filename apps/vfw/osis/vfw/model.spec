@@ -29,6 +29,7 @@
     prop:fromPort str,,tcp port incoming
     prop:toAddr str,,ip addr where to direct to
     prop:toPort str,,tcp port where it is redirected to
+    prop:protocol str,,tcp or upd
 
 [model:wsForwardRule] #@index
     prop:url str,,url domain name e.g. www.incubaid.com

@@ -24,5 +24,6 @@ def action(name, fwobject):
     ro = routeros.RouterOS.RouterOS(host, username, password)
     ro.deletePortForwardRules(tags='cloudbroker')
     for rule in fwobject['tcpForwardRules']:  
-        ro.addPortForwardRule(rule['fromAddr'], rule['fromPort'], rule['toAddr'], rule['toPort'], tags='cloudbroker')
+        protocol = rule.get('protocol', 'tcp')
+        ro.addPortForwardRule(rule['fromAddr'], rule['fromPort'], rule['toAddr'], rule['toPort'], tags='cloudbroker', protocol=protocol)
     return True
