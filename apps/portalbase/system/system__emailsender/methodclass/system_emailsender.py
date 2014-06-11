@@ -52,7 +52,7 @@ class system_emailsender(j.code.classGetBase()):
         try:
             smtp_server, smtp_login, smtp_password = j.apps.system.contentmanager.dbmem.cacheGet(smtp_key)
         except:
-            smtp_server, smtp_login, smtp_password = 'smtp.gmail.com:587', 'smtp@incubaid.com', 'smtp987smtp'
+            smtp_server, smtp_login, smtp_password = 'smtp.mandrillapp.com:587', 'support@mothership1.com', 'I0QS8QnO1Eop0LGXQ8BlrA'
 
         if sender_name:
             sender = '{0} <{1}>'.format(sender_name, sender_email)
