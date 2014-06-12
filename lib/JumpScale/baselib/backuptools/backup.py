@@ -34,4 +34,11 @@ def backup(store, bucketname, f):
         hashes.append(_dump2stor(store, bucketname, data))
     return {'path':f, 'fileparts':hashes}
 
+def restore(store, bucketname, restorepath, parts):
+    for part in parts:
+        part_content = store.get_object(bucketname, part)
+        j.system.fs.writeFile(restorepath, part_content, append=True)
+
+
+
 
