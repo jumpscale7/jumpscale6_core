@@ -264,7 +264,6 @@ class OSISFactory:
 
 
         if j.system.fs.exists(path=specpath):
-            print "SPECPATH:%s" %specpath
             self._generateOsisModelClassFromSpec(namespace,specpath=basepathspec,classpath=basepathspec)
 
     def getModelTemplate(self):
@@ -279,7 +278,6 @@ class OSISFactory:
         key="%s_%s"%(namespace,category)
 
         if not self.osisModels.has_key(key):
-            print "getOsisModelClass: %s_%s"%(namespace, category)
             # #need to check if there is a specfile or we go from model.py  
             if specpath=="":
                 specpath=j.system.fs.joinPaths("logic", namespace, "model.spec")            
@@ -311,8 +309,6 @@ class OSISFactory:
         
         # while modname in sys.modules:
         #     modname = generate_module_name()
-
-        print path
 
         module = imp.load_source(modname, path)
         # find main classname of module

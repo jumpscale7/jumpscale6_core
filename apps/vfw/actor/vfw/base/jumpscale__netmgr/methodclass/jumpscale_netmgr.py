@@ -29,6 +29,11 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args)['result']
 
+    def fw_getapi(self, fwid, **kwargs):
+        fwobj = self.osisvfw.get(fwid)
+        import JumpScale.lib.routeros
+        return j.clients.routeros.get(fwobj.host, fwobj.username, fwobj.password)
+
     def fw_create(self, domain, login, password, publicip, type, networkid, **kwargs):
         """
         param:domain needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
