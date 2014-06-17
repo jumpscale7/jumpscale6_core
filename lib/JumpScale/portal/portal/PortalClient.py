@@ -93,7 +93,8 @@ class PortalClient():
 
         # there is now a tgz specfile ready
         # now we should download
-        url = "http://%s:%s/files/specs/%s_%s.tgz" % (self.ip, self.port, appname, actorname)  # @todo use gridmap
+        scheme = "http" if self.port != 443 else "https"
+        url = "%s://%s:%s/files/specs/%s_%s.tgz" % (scheme, self.ip, self.port, appname, actorname)  # @todo use gridmap
         downloadpathdir = j.system.fs.joinPaths(j.dirs.varDir, "downloadedactorspecs")
         j.system.fs.createDir(downloadpathdir)
         downloadpath = j.system.fs.joinPaths(downloadpathdir, "%s_%s.tgz" % (appname, actorname))

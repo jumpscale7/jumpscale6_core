@@ -57,8 +57,8 @@ class PortalClientWS():
         @return 1, result #if error
         @return 3, result #if asyncresult
         """
-
-        url = "http://%s:%s/restmachine/%s/%s/%s?authkey=%s" % (self.ip, self.port, appname, actorname, method, self.secret)
+        scheme = "http" if self.port != 443 else "https"
+        url = "%s://%s:%s/restmachine/%s/%s/%s?authkey=%s" % (scheme, self.ip, self.port, appname, actorname, method, self.secret)
         j.logger.log("Calling URL %s" % url, 8)
         if "params" in params:
             for key in params["params"]:
