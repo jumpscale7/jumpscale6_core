@@ -1,6 +1,6 @@
 import smtplib, os
 from JumpScale import j
-from email.mime.text import MIMEText
+import JumpScale.baselib.mailclient
 
 ujson = j.db.serializers.getSerializerType('j')
 
@@ -49,10 +49,8 @@ class system_emailsender(j.code.classGetBase()):
 
         kwargs.pop('ctx', None)
 
-        try:
-            smtp_server, smtp_login, smtp_password = j.apps.system.contentmanager.dbmem.cacheGet(smtp_key)
-        except:
-            smtp_server, smtp_login, smtp_password = 'smtp.mandrillapp.com:587', 'support@mothership1.com', 'I0QS8QnO1Eop0LGXQ8BlrA'
+        # TODO: configure mail client to use ut
+        # smtp_server, smtp_login, smtp_password = j.apps.system.contentmanager.dbmem.cacheGet(smtp_key)
 
         if sender_name:
             sender = '{0} <{1}>'.format(sender_name, sender_email)
@@ -80,21 +78,7 @@ class system_emailsender(j.code.classGetBase()):
             body = body + '<br /><table border=1>{0}</table>'.format(''.join(other_params))
 
         self.save_emails(sender_name, sender_email, receiver_email, subject, body, *args, **kwargs)
-
-        msg = MIMEText(body, 'html')
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = ','.join(receivers)
-
-        smtp = None
-        try:
-            smtp = smtplib.SMTP(smtp_server, timeout=5)
-            smtp.starttls()
-            smtp.login(smtp_login, smtp_password)
-            smtp.sendmail(sender, receivers, msg.as_string())
-        finally:
-            if smtp:
-                smtp.quit()
+        j.clients.email.send(receivers, sender, subject, body)
 
         return 'Success'
 
