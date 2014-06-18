@@ -29,6 +29,10 @@ def store_metadata(store, mdbucketname, backupname, backupmetadata):
         store.create_pool(mdbucketname)
     store.set_object(mdbucketname, backupname, ujson.dumps(backupmetadata))
 
+def read_metadata(store, mdbucketname, backupname):
+    data = store.get_object(mdbucketname, backupname)
+    return ujson.loads(data)
+
 def backup(store, bucketname, f, compress=True):
     hashes = []
     pools = store.list_pools()
