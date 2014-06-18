@@ -23,8 +23,8 @@ class RedisFactory:
         self.redisq = {}
 
     def getGeventRedisClient(self, ipaddr, port, fromcache=True,password=""):
-        from gevent.monkey import patch_socket
-        patch_socket()        
+        #from gevent.monkey import patch_socket
+        #patch_socket()        
         if not fromcache:
             return GeventRedis(ipaddr, port,password=password) 
         key = "%s_%s" % (ipaddr, port)

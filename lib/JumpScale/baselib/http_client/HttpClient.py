@@ -108,7 +108,7 @@ class Connection(object):
             resp = urllib2.urlopen(request)
         except Exception,e:
             print e
-            raise Exception('Could not open http connection to url %s\nError:%s'% (url,e))
+            raise Exception('Could not open http connection to url %s\nError:%s, %s'% (url,e, e.read()))
         
         #if resp.code in STATUS_AUTH_REQ: raise AuthorizationError('Not logged in or token expired')
         if resp.code not in (STATUS_OK):
