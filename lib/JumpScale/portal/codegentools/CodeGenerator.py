@@ -274,11 +274,9 @@ class CodeGenerator:
             # self.classes[name]=classs
             return classs
         except Exception as e:
-            from JumpScale.core.Shell import ipshellDebug, ipshell
-            print "DEBUG NOW exception in importing in codegenerator step 2 (see CodeGenerator.py)"
             print "codepath: %s" % codepath
             print e
-            ipshell()
+            raise
 
         # j.system.fs.changeDir(curpath)
 
