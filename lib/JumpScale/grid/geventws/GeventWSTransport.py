@@ -2,8 +2,7 @@ from JumpScale import j
 import time
 import JumpScale.grid.serverbase
 from JumpScale.grid.serverbase.DaemonClient import Transport
-
-import grequests as requests
+import requests
 
 class GeventWSTransport(Transport):
     def __init__(self, addr="localhost", port=9999):
@@ -46,35 +45,26 @@ class GeventWSTransport(Transport):
         if self.timeout:
             timeout = self.timeout
         if retry:
-            r=None
-            while r==None:
+            rcv=None
+            while rcv==None:
                 now=j.base.time.getTimeEpoch()
                 if now>start+timeout:
                     break
                 try:
-                    r = requests.post(self.url, data=data2, headers=headers,timeout=timeout)
-                    responses=requests.map([r])
-                    rcv=responses[0]
-                    # rcv = r.send()
-                except Exception,e:                    
+                    rcv = requests.post(self.url, data=data2, headers=headers) #, timeout=timeout)
+                except Exception,e:
                     if str(e).find("Connection refused")<>-1:
                         print "retry connection to %s"%self.url
                         time.sleep(0.1)
                     else:
-                        from IPython import embed
-                        print "DEBUG NOW error in GeventWSTransport"
-                        embed()
-                        
                         raise RuntimeError("error to send msg to %s,error was %s"%(self.url,e))
 
         else:
             print "NO RETRY ON REQUEST WS TRANSPORT"
-            r = requests.post(self.url, data=data2, headers=headers,timeout=timeout)
+            rcv = requests.post(self.url, data=data2, headers=headers,timeout=timeout)
 
-        # rcv = r.send()
 
         if rcv==None:
-            
             eco=j.errorconditionhandler.getErrorConditionObject(msg='timeout on request to %s'%self.url, msgpub='', \
                 category='gevent.transport')
             return "4","m",j.db.serializers.msgpack.dumps(eco.__dict__)
