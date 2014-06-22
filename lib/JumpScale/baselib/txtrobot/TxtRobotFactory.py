@@ -207,7 +207,7 @@ class YouTrackRobot():
                 name,data=line.split("=",1)
                 name=name.lower()
                 print "args:%s:%s '%s'"%(name,data,line)
-                args[name]=data.strip()
+                args[name]=data.strip().replace("\\n","\n")
 
         if cmd<>"":
             out+=self.processCmd(entity,cmd,args,gargs)
@@ -246,7 +246,6 @@ class YouTrackRobot():
         # print "DEBUG NOW yuyuyuy"
         # embed()
         
-
     def addCmdClassObj(self,cmdo):
         cmdo.txtrobot=self
         self.cmdobj=cmdo
