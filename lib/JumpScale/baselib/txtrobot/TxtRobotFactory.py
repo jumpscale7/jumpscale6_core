@@ -43,6 +43,9 @@ class YouTrackRobot():
             if line[0]=="#":
                 continue
 
+            if line.find("###")<>-1:
+                break
+
             if line[0]<>"-":
                 if line.find(" ")<>-1:
                     ent,remainder=line.split(" ",1)
@@ -114,7 +117,37 @@ class YouTrackRobot():
             out+="%s\n"%line
         return out,res
 
+    def _longTextTo1Line(self,txt):
+        state="start"
+        out=""
+        lt=""
+        ltstart=""
+        for line in txt.split("\n"):
+            line=line.strip()
+            if state=="LT":
+                if len(line)>0 and line.find("#")==0 or line.find("!")==0:
+                    #means we reached end of block
+                    state="start"
+                    out+="%s%s\n"%(ltstart,lt)
+                    ltstart=""
+                    lt=""
+                else:
+                    lt+="%s\\n"%line
+                    continue      
+            if len(line)>0 and line[0]=="#":
+                continue      
+            if state=="start" and line.find("=")<>-1:
+                before,after=line.split("=",1)
+                if after.strip()=="":
+                    state="LT"
+                    ltstart=line
+                    continue
+
+            out+="%s\n"%line
+        return out        
+
     def process(self,txt):
+        txt=self._longTextTo1Line(txt)
         txt,gargs=self.findGlobalArgs(txt)
         entity=""
         args={}
@@ -158,10 +191,12 @@ class YouTrackRobot():
             if line.find("=")<>-1:
                 name,data=line.split("=",1)
                 name=name.lower()
+                print "args:%s:%s '%s'"%(name,data,line)
                 args[name]=data.strip()
 
 
         out+=self.processCmd(entity,cmd,args,gargs)
+        
         return out
 
     def processCmd(self,entity,cmd,args,gargs):
