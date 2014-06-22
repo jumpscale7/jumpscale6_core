@@ -7,7 +7,7 @@ class TxtRobotHelp(object):
 get detailed help by using one of following commands
 
 #explain how to use the robot
-!help
+help
 
 #show help how commands are defined 
 !help.definition
@@ -25,6 +25,7 @@ The format of each message is:
 '
 login=mylogin
 passwd=mypasswd
+
 !entity.cmd
 anotherparam=val
 '
@@ -38,13 +39,25 @@ entity is something line project, user, invoice, machine...
 !project.list
 
 !issue.create
-name=name of issue
+name=aname
 descr=descr of issue
 deadline=6d
 
 #everything before the first ! are considered to be global params e.g. login, passwd, url, ...
 
 available commands can be asked for by sending command:  !help.cmds
+
+variables can be multiline by using special instruction ...
+description=...
+this is multiline
+text
+.
+name=aname
+
+the multiline stops when . or # or ! found
+
+
+
 
 """
         return help
@@ -76,3 +89,4 @@ can also call as
 !p.del n=myname
 
 """
+        return help

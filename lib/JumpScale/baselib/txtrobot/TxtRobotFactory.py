@@ -67,7 +67,11 @@ class YouTrackRobot():
                     raise RuntimeError("entity cannot be '', line:%s"%line)
                 line=line.strip("-")
                 line=line.strip()
-                cmd,remainder=line.split(" ",1)
+                if line.find(" ")==-1:
+                    cmd=line
+                    remainder=""
+                else:
+                    cmd,remainder=line.split(" ",1)
                 cmd=cmd.lower().strip()
                 if not self.cmds.has_key(ent):
                     self.cmds[ent]=[]
@@ -92,6 +96,7 @@ class YouTrackRobot():
         j.application.stop()
 
     def findGlobalArgs(self,txt):
+        
         alias={}
         alias["l"]="login"
         alias["p"]="passwd"
@@ -115,6 +120,7 @@ class YouTrackRobot():
                 res[name]=data.strip()
                 continue
             out+="%s\n"%line
+        
         return out,res
 
     def _longTextTo1Line(self,txt):
@@ -125,7 +131,7 @@ class YouTrackRobot():
         for line in txt.split("\n"):
             line=line.strip()
             if state=="LT":
-                if len(line)>0 and line.find("#")==0 or line.find("!")==0:
+                if len(line)>0 and line.find("#")==0 or line.find("!")==0 or line.find(".")==0:
                     #means we reached end of block
                     state="start"
                     out+="%s%s\n"%(ltstart,lt)
@@ -137,13 +143,14 @@ class YouTrackRobot():
             if len(line)>0 and line[0]=="#":
                 continue      
             if state=="start" and line.find("=")<>-1:
-                before,after=line.split("=",1)
-                if after.strip()=="":
+                before,after=line.split("=",1)                
+                if after.strip()[0:3]=="...":
                     state="LT"
-                    ltstart=line
+                    ltstart="%s="%before
                     continue
 
             out+="%s\n"%line
+            
         return out        
 
     def process(self,txt):
@@ -153,7 +160,9 @@ class YouTrackRobot():
         args={}
         cmd=""
         out=""
+        
         for line in txt.split("\n"):
+            # print "process:%s"%line
             line=line.strip()
             if line=="":
                 continue
@@ -162,7 +171,11 @@ class YouTrackRobot():
             if line=="?" or line=="h" or line=="help":
                 return self.help.help()
             if line.find("help.definition")<>-1:
-                return self.help.help_definition()
+                out+= self.help.help_definition()
+                continue
+            if line.find("help.cmds")<>-1:
+                out+= self.definition
+                continue
 
             print "process:%s"%line
             if line[0]=="!":
@@ -180,13 +193,15 @@ class YouTrackRobot():
                 if self.entityAlias.has_key(entity):
                     entity=self.entityAlias[entity]
                 if not entity in self.entities:
-                    return self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
+                    out+= self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
+                    continue
 
                 if self.cmdAlias[entity].has_key(cmd):
                     cmd=self.cmdAlias[entity][cmd]
                 
                 if not cmd in self.cmds[entity]:
-                    return self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
+                    out+= self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
+                    continue
 
             if line.find("=")<>-1:
                 name,data=line.split("=",1)
@@ -194,8 +209,8 @@ class YouTrackRobot():
                 print "args:%s:%s '%s'"%(name,data,line)
                 args[name]=data.strip()
 
-
-        out+=self.processCmd(entity,cmd,args,gargs)
+        if cmd<>"":
+            out+=self.processCmd(entity,cmd,args,gargs)
         
         return out
 
@@ -210,7 +225,7 @@ class YouTrackRobot():
                 method=eval("self.cmdobj.%s"%key)
                 result=method(**args)
         if result==None:
-            return self.error("Cannot execute:%s:%s, method not found."%(entity,cmd))
+            return self.error("Cannot execute: '%s':'%s' , entity:method not found."%(entity,cmd))
         
         if not j.basetype.string.check(result):
             result=yaml.dump(result, default_flow_style=False).replace("!!python/unicode ","")
