@@ -23,7 +23,7 @@ class TxtRobotFactory(object):
 
 class YouTrackRobot():
     def __init__(self,definition):
-        self.definition=definition
+        self.definition=definition.replace('\n', '<br/>')
         self.cmdAlias={}
         self.entityAlias={}
         self.entities=[]
@@ -171,17 +171,17 @@ class YouTrackRobot():
             if line=="?" or line=="h" or line=="help" or line=="!help":
                 return self.help.help()
             if line.find("help.definition")<>-1:
-                out+= self.help.help_definition()
+                out+= '%s <br/>' % self.help.help_definition()
                 continue
             if line.find("help.cmds")<>-1:
-                out+= self.definition
+                out+= '%s <br/>' % self.definition
                 continue
 
             print "process:%s"%line
             if line[0]=="!":
                 #CMD
                 if cmd<>"":
-                    out+=self.processCmd(entity,cmd,args,gargs)
+                    out+= self.processCmd(entity,cmd,args,gargs)
                 entity=""
                 cmd=""
                 args={}
@@ -193,14 +193,14 @@ class YouTrackRobot():
                 if self.entityAlias.has_key(entity):
                     entity=self.entityAlias[entity]
                 if not entity in self.entities:
-                    out+= self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
+                    out+= '%s <br/>' % self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
                     continue
 
                 if self.cmdAlias[entity].has_key(cmd):
                     cmd=self.cmdAlias[entity][cmd]
                 
                 if not cmd in self.cmds[entity]:
-                    out+= self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
+                    out+= '%s <br/>' % self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
                     continue
 
             if line.find("=")<>-1:
@@ -212,7 +212,7 @@ class YouTrackRobot():
         if cmd<>"":
             out+=self.processCmd(entity,cmd,args,gargs)
         
-        return '%s <br/><br/>' % out
+        return out
 
     def processCmd(self,entity,cmd,args,gargs):
         for key,val in gargs.iteritems():
@@ -230,7 +230,7 @@ class YouTrackRobot():
         if not j.basetype.string.check(result):
             result=yaml.dump(result, default_flow_style=False).replace("!!python/unicode ","")
 
-        out="!%s.%s\n%s\n\n"%(entity,cmd,result)
+        out="!%s.%s<br/>%s<br/>"%(entity,cmd,result)
         return out
 
 
