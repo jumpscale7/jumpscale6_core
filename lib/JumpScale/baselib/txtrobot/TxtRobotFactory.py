@@ -168,7 +168,7 @@ class YouTrackRobot():
                 continue
             if line[0]=="#":
                 continue            
-            if line=="?" or line=="h" or line=="help":
+            if line=="?" or line=="h" or line=="help" or line=="!help":
                 return self.help.help()
             if line.find("help.definition")<>-1:
                 out+= self.help.help_definition()

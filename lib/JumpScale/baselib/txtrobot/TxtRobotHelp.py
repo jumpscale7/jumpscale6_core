@@ -16,7 +16,7 @@ help
 !help.cmds
 
 """
-        return help
+        return '%s <br/><br/>' % help
 
 
     def help(self):
@@ -60,7 +60,7 @@ the multiline stops when . or # or ! found
 
 
 """
-        return help
+        return '%s <br/><br/>' % help
 
     def help_definition(self):
         help="""
@@ -89,4 +89,4 @@ can also call as
 !p.del n=myname
 
 """
-        return help
+        return '%s <br/><br/>' % help
