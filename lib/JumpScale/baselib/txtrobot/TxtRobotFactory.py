@@ -212,7 +212,7 @@ class YouTrackRobot():
         if cmd<>"":
             out+=self.processCmd(entity,cmd,args,gargs)
         
-        return out
+        return '%s <br/><br/>' % out
 
     def processCmd(self,entity,cmd,args,gargs):
         for key,val in gargs.iteritems():
