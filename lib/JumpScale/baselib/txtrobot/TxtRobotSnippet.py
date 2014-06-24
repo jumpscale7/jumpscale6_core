@@ -1,6 +1,6 @@
 from JumpScale import j
 import hashlib
-import json
+import ujson as json
 
 class TxtRobotSnippet(object):  
     def __init__(self):
@@ -29,6 +29,3 @@ class TxtRobotSnippet(object):
             output = robot.process(snippet)
 
         return output
-
-    def login(self):
-       pass

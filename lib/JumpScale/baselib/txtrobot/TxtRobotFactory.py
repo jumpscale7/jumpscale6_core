@@ -5,6 +5,8 @@ from TxtRobotHelp import TxtRobotHelp
 from TxtRobotSnippet import TxtRobotSnippet
 import JumpScale.baselib.redis
 
+class TxtRobotFactory(object):
+
     def __init__(self):
         pass
         
@@ -19,7 +21,7 @@ import JumpScale.baselib.redis
         user (u)
         - list (l)
         """
-        return YouTrackRobot(definition)
+        return TxtRobot(definition)
 
 class TxtRobot():
     def __init__(self,definition):
@@ -193,16 +195,17 @@ class TxtRobot():
                 cmd=cmd.lower().strip()
                 if self.entityAlias.has_key(entity):
                     entity=self.entityAlias[entity]
-                if not entity in self.entities:
-                    out+= '%s <br/>' % self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
-                    continue
+                if entity != 'snippet':
+                    if not entity in self.entities:
+                        out+= '%s <br/>' % self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
+                        continue
 
-                if self.cmdAlias[entity].has_key(cmd):
-                    cmd=self.cmdAlias[entity][cmd]
-                
-                if not cmd in self.cmds[entity]:
-                    out+= '%s <br/>' % self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
-                    continue
+                    if self.cmdAlias[entity].has_key(cmd):
+                        cmd=self.cmdAlias[entity][cmd]
+
+                    if not cmd in self.cmds[entity]:
+                        out+= '%s <br/>' % self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
+                        continue
 
             if line.find("=")<>-1:
                 name,data=line.split("=",1)
@@ -220,7 +223,7 @@ class TxtRobot():
             if not args.has_key(key):
                 args[key]=val
         if entity == "snippet":
-            if cmd == 'new':
+            if cmd in ('new', 'create', 'c'):
                 result = self.snippet.create(**args)
             elif cmd == 'get':
                 result = self.snippet.get(**args)
