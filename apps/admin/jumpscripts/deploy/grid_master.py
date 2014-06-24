@@ -30,4 +30,5 @@ def action(node):
     c.run("jpackage install -n graphite -r")
     c.run("jsprocess start -n graphite")
     c.run("jpackage install -n portal -r --debug")
+    c.run("jpackage install -n osis -r --debug -s")
     c.run("jpackage install -n grid_master -r --debug")
