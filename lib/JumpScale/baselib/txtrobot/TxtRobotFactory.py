@@ -1,14 +1,28 @@
 from JumpScale import j
 import yaml
+import hashlib
 from TxtRobotHelp import TxtRobotHelp
+from TxtRobotSnippet import TxtRobotSnippet
 import JumpScale.baselib.redis
 
-class TxtRobotFactory(object):
+txtrobotdefinition = """
+snippet
 
+- new (create,c,n)
+-- snippet
+
+- get
+-- md5checksum
+####
+global required variables
+spacesecret=
+"""
+
+class TxtRobotFactory(object):
     def __init__(self):
         pass
         
-    def get(self,definition):
+    def get(self, definition):
         """
         example definition:
         
@@ -19,11 +33,12 @@ class TxtRobotFactory(object):
         user (u)
         - list (l)
         """
-        return TxtRobot(definition)
+        robotdefinition = "%s\n%s" % (definition, txtrobotdefinition)
+        return TxtRobot(robotdefinition)
 
 class TxtRobot():
     def __init__(self,definition):
-        self.definition=definition
+        self.definition=definition.replace('\n', '<br/>')
         self.cmdAlias={}
         self.entityAlias={}
         self.entities=[]
@@ -31,6 +46,7 @@ class TxtRobot():
         self._initCmds(definition)
         self.cmdsToImpl={}
         self.help=TxtRobotHelp()
+        self.snippet = TxtRobotSnippet()
         self.cmdobj=None
         self.redis=j.clients.redis.getRedisClient("localhost",7768)
 
@@ -171,10 +187,10 @@ class TxtRobot():
             if line=="?" or line=="h" or line=="help":
                 return self.help.help()
             if line.find("help.definition")<>-1:
-                out+= self.help.help_definition()
+                out+= '%s <br/>' % self.help.help_definition()
                 continue
             if line.find("help.cmds")<>-1:
-                out+= self.definition
+                out+= '%s <br/>' % self.definition
                 continue
 
             print "process:%s"%line
@@ -193,14 +209,14 @@ class TxtRobot():
                 if self.entityAlias.has_key(entity):
                     entity=self.entityAlias[entity]
                 if not entity in self.entities:
-                    out+= self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
+                    out+= '%s <br/>' % self.error("Could not find entity:'%s', on line %s."%(entity,line),help=True)
                     continue
 
                 if self.cmdAlias[entity].has_key(cmd):
                     cmd=self.cmdAlias[entity][cmd]
                 
                 if not cmd in self.cmds[entity]:
-                    out+= self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
+                    out+= '%s <br/>' % self.error("Could not understand command %s, on line %s."%(cmd,line),help=True)
                     continue
 
             if line.find("=")<>-1:
@@ -218,6 +234,14 @@ class TxtRobot():
         for key,val in gargs.iteritems():
             if not args.has_key(key):
                 args[key]=val
+        if entity == "snippet":
+            if cmd == 'new':
+                result = self.snippet.create(**args)
+            elif cmd == 'get':
+                result = self.snippet.get(**args)
+            else:
+                result = ''
+            return "!%s.%s<br/>%s<br/>" % (entity, cmd, result)
         key="%s__%s"%(entity,cmd)
         result=None
         if self.cmdobj<>None:
@@ -230,7 +254,7 @@ class TxtRobot():
         if not j.basetype.string.check(result):
             result=yaml.dump(result, default_flow_style=False).replace("!!python/unicode ","")
 
-        out="!%s.%s\n%s\n\n"%(entity,cmd,result)
+        out="!%s.%s<br/>%s<br/>"%(entity,cmd,result)
         return out
 
 
