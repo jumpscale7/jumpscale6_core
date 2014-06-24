@@ -16,7 +16,7 @@ class JPackageObject():
     Data representation of a JPackage, should contain all information contained in the jpackages.cfg
     """
 
-    def __init__(self, domain, name, version):
+    def __init__(self, domain, name, version,instance=0):
         """
         Initialization of the JPackage
 
@@ -29,6 +29,7 @@ class JPackageObject():
         self.domain=domain
         self.name=name
         self.version=version
+        self.instance=0
         self.supportedPlatforms=[]
         self.tags=[]
         self.description=""
@@ -53,6 +54,7 @@ class JPackageObject():
         self.dependenciesNames={}
 
         self.hrd=None
+        self.hrd_instance=None
 
         self.actions=None
                 
@@ -85,7 +87,6 @@ class JPackageObject():
         extpath=inspect.getfile(self.__init__)
         extpath=j.system.fs.getDirName(extpath)
         src=j.system.fs.joinPaths(extpath,"templates")
-
 
         if not j.system.fs.exists(hrddir):
 
@@ -137,7 +138,7 @@ class JPackageObject():
 
         for platform in self.supportedPlatforms:
             j.system.fs.createDir(self.getPathFilesPlatform(platform))
-
+  
     def clean(self):
         for item in [".quarantine",".tmb"]:
         # for item in [".quarantine",".tmb",'actions/code.getRecipe']:
@@ -209,7 +210,10 @@ class JPackageObject():
         hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","main.hrd")
         if not j.system.fs.exists(hrdpath):
             self.init()
+        
         self.hrd=j.core.hrd.getHRD(hrdpath)
+
+        self.hrd_instance=j.core.hrd.getHRD(j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive"))
 
         self._clear()
         self.buildNr = self.hrd.getInt("jp.buildNr")
@@ -257,10 +261,10 @@ class JPackageObject():
 
     @FileLock('jpackage', reentry=True)
     def getCodeMgmtRecipe(self):
-        hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
+        hrdpath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrd","code.hrd")
         if not j.system.fs.exists(path=hrdpath):
             self.init()
-        recipepath=j.system.fs.joinPaths(self.getPathMetadata(),"coderecipe.cfg")
+        recipepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"coderecipe.cfg")
         if not j.system.fs.exists(path=recipepath):
             self.init()
         return CodeManagementRecipe(hrdpath,recipepath)
@@ -287,6 +291,46 @@ class JPackageObject():
                     #also needs to reload the config object on the application object
                     j.application.loadConfig() #will load that underneath
 
+        #now load the ones which are specific per instance
+        hrdtemplatesPath=j.system.fs.joinPaths(self.getPathMetadata(),"hrdinstance")
+        if j.system.fs.exists(path=hrdtemplatesPath):
+            for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
+                base=j.system.fs.getBaseName(item)
+                if base[0]<>"_":
+                    templ=j.system.fs.fileGetContents(item)                
+                    actbasepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive",base)
+                    if not j.system.fs.exists(actbasepath):
+                        #means there is no hrd, put empty file
+                        self.log("did not find instance hrd for %s, will now put there"%actbasepath,category="init")
+                        j.system.fs.writeFile(actbasepath,"")
+                    hrd=j.core.hrd.getHRD(actbasepath)
+                    hrd.checkValidity(templ)
+                    if hrd.changed:
+                        self.load()
+
+    @FileLock('jpackage', reentry=True)
+    def copyMetadataToActive(self):
+        self.check()
+
+        if j.system.fs.isDir(self.getPathActions()):
+            j.system.fs.removeDirTree(self.getPathActions())
+
+        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"actions"),self.getPathActions())        
+
+        #copy hrd to active instance        
+        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"hrd"),j.system.fs.joinPaths(self.getPathActiveInstance(),"hrd"))
+        j.system.fs.copyFile(j.system.fs.joinPaths(self.getPathMetadata(),"coderecipe.cfg"),j.system.fs.joinPaths(self.getPathActiveInstance(),"coderecipe.cfg"))
+
+        self.installActiveHrd()
+
+        #apply apackage hrd data on actions active
+        self.hrd_instance.applyOnDir(self.getPathActions()) 
+        #make sure params are filled in in actions dir
+        self.hrd.applyOnDir(self.getPathActions()) 
+        #apply hrd config from system on actions active
+        j.application.config.applyOnDir(self.getPathActions())
+        j.dirs.replaceFilesDirVars(self.getPathActions())
+
     @FileLock('jpackage', reentry=True)
     def loadActions(self, force=False,hrd=True):
         # print "loadactions:%s"%self
@@ -297,16 +341,6 @@ class JPackageObject():
             return
 
         self.check()
-
-        if j.system.fs.isDir(self.getPathActions()):
-            j.system.fs.removeDirTree(self.getPathActions())
-        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"actions"),self.getPathActions())        
-
-        #apply apackage hrd data on actions active
-        self.hrd.applyOnDir(self.getPathActions()) #make sure params are filled in in actions dir
-        #apply hrd configu from system on actions active
-        j.application.config.applyOnDir(self.getPathActions())
-        j.dirs.replaceFilesDirVars(self.getPathActions())
 
         self.actions = ActionManager(self)
 
@@ -325,9 +359,7 @@ class JPackageObject():
 
         if self.blobstorRemote ==None or   self.blobstorLocal==None:
             raise RuntimeError("DEBUG NOW blobstorremote or blobstorlocal needs to be available")
-
         
-            
     def getDebugMode(self):
         return self.state.debugMode
 
@@ -336,7 +368,6 @@ class JPackageObject():
             if int(self.hrd.get("jp.debug"))==1:
                 return True
         return False
-
 
     def setDebugMode(self,dependencies=False):
         if dependencies:
@@ -351,8 +382,7 @@ class JPackageObject():
         self.load()
         self.log("set debug mode",category="init")
 
-    def setDebugModeInJpackage(self,dependencies=False):
-        
+    def setDebugModeInJpackage(self,dependencies=False): 
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -404,9 +434,8 @@ class JPackageObject():
             j.system.fs.removeDirTree(path)
             path = j.packages.getMetadataPath(self.domain, self.name,self.version)
             j.system.fs.removeDirTree(path)
-            path = j.packages.getJPActionsPath(self.domain, self.name,self.version)
+            path = self.getPathActions(self.domain, self.name,self.instance)
             j.system.fs.removeDirTree(path)
-            
             #@todo over ftp try to delete the targz file (less urgent), check with other quality levels to make sure we don't delete files we should not delete
 
     @FileLock('jpackage', reentry=True)
@@ -572,7 +601,13 @@ class JPackageObject():
         """
         Return absolute pathname of the package's metadatapath
         """
-        return j.packages.getJPActionsPath(self.domain, self.name, self.version)
+        return j.packages.getJPActionsPath(self.domain, self.name, self.instance)
+
+    def getPathActiveInstance(self):
+        """
+        Return absolute pathname of the package's metadatapath
+        """
+        return j.packages.getJPActiveInstancePath(self.domain, self.name, self.instance)
 
     def getPathMetadata(self):
         """
@@ -1112,7 +1147,8 @@ class JPackageObject():
             for dep in deps:
                 dep.install(False, download, reinstall=reinstalldeps)
 
-        self.installActiveHrd()
+
+        self.copyMetadataToActive()
 
         self.loadActions() #reload actions to make sure new hrdactive are applied
 
@@ -1129,8 +1165,7 @@ class JPackageObject():
 
             self.prepare(dependencies=False)
             
-
-            self.loadActions()            
+            # self.loadActions()   #already done above         
 
             self.copyfiles(dependencies=False)
 
@@ -1201,8 +1236,8 @@ class JPackageObject():
         Configure the JPackage after installation, via the configure tasklet(s)
         """
         self.log('configure')
+        self.copyMetadataToActive()
         self.loadActions()
-        self.installActiveHrd()
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:

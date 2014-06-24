@@ -19,9 +19,9 @@ class TxtRobotFactory(object):
         user (u)
         - list (l)
         """
-        return YouTrackRobot(definition)
+        return TxtRobot(definition)
 
-class YouTrackRobot():
+class TxtRobot():
     def __init__(self,definition):
         self.definition=definition
         self.cmdAlias={}
@@ -131,7 +131,7 @@ class YouTrackRobot():
         for line in txt.split("\n"):
             line=line.strip()
             if state=="LT":
-                if len(line)>0 and line.find("#")==0 or line.find("!")==0 or line.find(".")==0:
+                if len(line)>0 and line.find("...")==0:
                     #means we reached end of block
                     state="start"
                     out+="%s%s\n"%(ltstart,lt)
