@@ -1,14 +1,14 @@
 from JumpScale import j
 import yaml
+import hashlib
 from TxtRobotHelp import TxtRobotHelp
+from TxtRobotSnippet import TxtRobotSnippet
 import JumpScale.baselib.redis
-
-class TxtRobotFactory(object):
 
     def __init__(self):
         pass
         
-    def get(self,definition):
+    def get(self, definition):
         """
         example definition:
         
@@ -21,7 +21,7 @@ class TxtRobotFactory(object):
         """
         return YouTrackRobot(definition)
 
-class YouTrackRobot():
+class TxtRobot():
     def __init__(self,definition):
         self.definition=definition.replace('\n', '<br/>')
         self.cmdAlias={}
@@ -31,6 +31,7 @@ class YouTrackRobot():
         self._initCmds(definition)
         self.cmdsToImpl={}
         self.help=TxtRobotHelp()
+        self.snippet = TxtRobotSnippet()
         self.cmdobj=None
         self.redis=j.clients.redis.getRedisClient("localhost",7768)
 
@@ -131,7 +132,7 @@ class YouTrackRobot():
         for line in txt.split("\n"):
             line=line.strip()
             if state=="LT":
-                if len(line)>0 and line.find("#")==0 or line.find("!")==0 or line.find(".")==0:
+                if len(line)>0 and line.find("...")==0:
                     #means we reached end of block
                     state="start"
                     out+="%s%s\n"%(ltstart,lt)
@@ -168,7 +169,7 @@ class YouTrackRobot():
                 continue
             if line[0]=="#":
                 continue            
-            if line=="?" or line=="h" or line=="help" or line=="!help":
+            if line=="?" or line=="h" or line=="help":
                 return self.help.help()
             if line.find("help.definition")<>-1:
                 out+= '%s <br/>' % self.help.help_definition()
@@ -218,6 +219,14 @@ class YouTrackRobot():
         for key,val in gargs.iteritems():
             if not args.has_key(key):
                 args[key]=val
+        if entity == "snippet":
+            if cmd == 'new':
+                result = self.snippet.create(**args)
+            elif cmd == 'get':
+                result = self.snippet.get(**args)
+            else:
+                result = ''
+            return "!%s.%s<br/>%s<br/>" % (entity, cmd, result)
         key="%s__%s"%(entity,cmd)
         result=None
         if self.cmdobj<>None:
