@@ -5,9 +5,11 @@ import ujson as json
 class auth(object):
     clients = dict()
 
-    def __init__(self, groups, audit=True):
+    def __init__(self, groups=None, audit=True):
         if isinstance(groups, basestring):
             groups = [groups]
+        if groups is None:
+            groups = list()
         self.groups = set(groups)
         self.audit = audit
 
