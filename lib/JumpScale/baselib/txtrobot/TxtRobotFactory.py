@@ -30,6 +30,7 @@ class TxtRobot():
         self.entityAlias={}
         self.entities=[]
         self.cmds={}
+        self.gargs = dict()
         self._initCmds(definition)
         self.cmdsToImpl={}
         self.help=TxtRobotHelp()
@@ -154,23 +155,24 @@ class TxtRobot():
 
             out+="%s\n"%line
             
-        return out        
+        return out
 
-    def process(self,txt):
+    def _processTxt(self, txt, out):
         txt=self._longTextTo1Line(txt)
         txt,gargs=self.findGlobalArgs(txt)
+        self.gargs.update(gargs)
         entity=""
         args={}
+        cmds=list()
         cmd=""
-        out=""
-        
+
         for line in txt.split("\n"):
             # print "process:%s"%line
             line=line.strip()
             if line=="":
                 continue
             if line[0]=="#":
-                continue            
+                continue
             if line=="?" or line=="h" or line=="help":
                 return self.help.help()
             if line.find("help.definition")<>-1:
@@ -184,7 +186,7 @@ class TxtRobot():
             if line[0]=="!":
                 #CMD
                 if cmd<>"":
-                    out+= self.processCmd(entity,cmd,args,gargs)
+                    cmds.append((entity,cmd,args))
                 entity=""
                 cmd=""
                 args={}
@@ -214,28 +216,54 @@ class TxtRobot():
                 args[name]=data.strip().replace("\\n","\n")
 
         if cmd<>"":
-            out+=self.processCmd(entity,cmd,args,gargs)
+            cmds.append((entity,cmd,args))
+        return cmds, out
+
+    def _processSnippets(self, cmds, out):
+        newcmds = cmds[:]
+        gotsnippet = False
+        for cmdtuple in cmds:
+            entity, cmd, args = cmdtuple
+            if entity == 'snippet':
+                if cmd in ('new', 'create', 'c'):
+                    out += self.snippet.create(**args)
+                    newcmds.remove(cmdtuple)
+                elif cmd == 'get':
+                    gotsnippet = True
+                    snippet = self.snippet.get(**args)
+                    snippetcmds, out = self._processTxt(snippet, out)
+                    idx = newcmds.index(cmdtuple)
+                    newcmds.remove(cmdtuple)
+                    for command in snippetcmds[::-1]:
+                        if command:
+                            newcmds.insert(idx, command)
+        return gotsnippet, newcmds, out
+
+    def process(self,txt):
+        out=""
+        
+        cmds, out = self._processTxt(txt, out)
+        gotsnippet = True
+        while gotsnippet:
+            gotsnippet, cmds, out = self._processSnippets(cmds, out)
+
+        for (entity, cmd, args) in cmds:
+            out += self.processCmd(entity, cmd, args)
         
         return out
 
-    def processCmd(self,entity,cmd,args,gargs):
-        for key,val in gargs.iteritems():
+    def processCmd(self, entity, cmd, args):
+        for key,val in self.gargs.iteritems():
             if not args.has_key(key):
                 args[key]=val
-        if entity == "snippet":
-            if cmd in ('new', 'create', 'c'):
-                result = self.snippet.create(**args)
-            elif cmd == 'get':
-                result = self.snippet.get(**args)
-            else:
-                result = ''
-            return "!%s.%s<br/>%s<br/>" % (entity, cmd, result)
         key="%s__%s"%(entity,cmd)
         result=None
         if self.cmdobj<>None:
             if hasattr(self.cmdobj,key):
                 method=eval("self.cmdobj.%s"%key)
                 result=method(**args)
+                if key == 'mothership1__login':
+                    self.gargs['spacesecret'] = result
         if result==None:
             return self.error("Cannot execute: '%s':'%s' , entity:method not found."%(entity,cmd))
         
