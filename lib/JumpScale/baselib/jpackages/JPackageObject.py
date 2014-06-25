@@ -59,6 +59,9 @@ class JPackageObject():
         self.__init=False
 
         self._init()
+        key="%s_%s_%s" % (self.domain,self.name,self.version)
+        self._activeblobfolder = j.system.fs.joinPaths(j.dirs.cfgDir, "jpackages", "state", key)
+        self._blobfolder = j.system.fs.joinPaths(self.getPathMetadata(),"files")
 
     def log(self,msg,category="",level=5):
         if level<j.packages.loglevel+1 and j.packages.logenable:
@@ -699,11 +702,15 @@ class JPackageObject():
             platform=None
         return platform
 
-    def getBlobInfo(self,platform,ttype):
+    def _copyBlobInfo(self):
+        j.system.fs.copyDirTree(self._blobfolder, self._activeblobfolder)
+
+    def getBlobInfo(self,platform,ttype,active=False):
         """
         @return blobkey,[[md5,path],...]
         """
-        path=j.system.fs.joinPaths(self.getPathMetadata(),"files","%s___%s.info"%(platform,ttype))
+        blobfolder = self._blobfolder if not active else self._activeblobfolder
+        path=j.system.fs.joinPaths(blobfolder,"%s___%s.info"%(platform,ttype))
         if j.system.fs.exists(path):
             content=j.system.fs.fileGetContents(path)
             splitted=content.split("\n")
@@ -725,22 +732,26 @@ class JPackageObject():
         """
         platform=platform.lower().strip()
         ttype=ttype.lower().strip()
-        if ttype.find("cr_")==0:
-            ttype=ttype[3:]
+        ptype = ttype
+        if ptype.find("cr_")==0:
+            ptype=ttype[3:]
 
         filespath=j.system.fs.joinPaths(self.getPathFiles(),platform,ttype,blobitempath)
-        systemdest = j.packages.getTypePath(ttype, blobitempath)
+        systemdest = j.packages.getTypePath(ptype, blobitempath)
         return (filespath,systemdest)
 
     @FileLock('jpackage', reentry=True)
-    def getBlobPlatformTypes(self):
+    def getBlobPlatformTypes(self, active=False):
         """
         @return [[platform,ttype],...]
         """
         result=[]
-        path=j.system.fs.joinPaths(self.getPathMetadata(),"files")
+        path = self._blobfolder if not active else self._activeblobfolder
         if not j.system.fs.exists(path=path):
-            self.init()
+            if not active:
+                self.init()
+            else:
+                return result
         infofiles=[j.system.fs.getBaseName(item) for item in j.system.fs.listFilesInDir(path,False) if item.find("___")<>-1]
         for item in infofiles:
             platform,ttype=item.split("___")
@@ -1032,6 +1043,7 @@ class JPackageObject():
                         j.system.platform.ubuntu.installDebFile(file_)
 
     def _copyfiles(self,doCodeRecipe=True):
+        self._cleanupfiles(doCodeRecipe)
         for platform in j.system.fs.listDirsInDir(self.getPathFiles(),dirNameOnly=True):
             if platform not in j.system.platformtype.getMyRelevantPlatforms():
                 continue
@@ -1059,7 +1071,18 @@ class JPackageObject():
                     tmp,destination=self.getBlobItemPaths(platform,ttype,"")
                     self.log("copy files from:%s to:%s"%(pathttype,destination))
                     self.__copyFiles(pathttype,destination,applyhrd=applyhrd)
-            
+        self._copyBlobInfo()
+
+    def _cleanupfiles(self, doCodeRecipe):
+        for platform, ttype in self.getBlobPlatformTypes(True):
+            if not doCodeRecipe and ttype.startswith('cr_'):
+                continue
+            else:
+                blobkey, keys = self.getBlobInfo(platform, ttype, active=True)
+                for md5, relativefile in keys:
+                    blobpath, localpath = self.getBlobItemPaths(platform, ttype, relativefile)
+                    j.system.fs.remove(localpath)
+
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """
@@ -1082,6 +1105,7 @@ class JPackageObject():
             j.system.fs.removeDirTree(tmpdir)
         else:
             j.system.fs.copyDirTree(path, destination,keepsymlinks=True,skipProtectedDirs=True)
+
     @FileLock('jpackage', reentry=True)
     def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False):
         """
@@ -1150,7 +1174,7 @@ class JPackageObject():
 
         self.state.setLastInstalledBuildNr(self.buildNr)
 
-        j.packages.inInstall.pop(j.packages.inInstall.index(key))
+        j.packages.inInstall.remove(key)
 
     def isNew(self):
         if self.buildNr==-1 or self.buildNr > self.state.lastinstalledbuildnr:
@@ -1182,6 +1206,7 @@ class JPackageObject():
         self.log('uninstalling' + str(self))
         self.actions.uninstall()
         state.setLastInstalledBuildNr(-1)
+
 
     def prepareForUpdatingFiles(self, suppressErrors=False):
         """
