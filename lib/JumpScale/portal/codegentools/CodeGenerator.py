@@ -7,6 +7,7 @@ from CodeGeneratorActorRemote import CodeGeneratorActorRemote
 # from CodeGeneratorWhoosh import CodeGeneratorWhoosh
 from CodeGeneratorActorTasklets import CodeGeneratorActorTasklets
 from CodeGeneratorActorClass import CodeGeneratorActorClass
+from CodeGeneratorEveModel import CodeGeneratorEveModel
 # from CodeGeneratorOSISTasklets import CodeGeneratorOSISTasklets
 import imp
 import sys
@@ -135,6 +136,17 @@ class CodeGenerator:
         code=cg.generate()        
         return code
 
+    def getCodeEveModel(self, appname, actor, modelname, typecheck=True, dieInGenCode=True, codepath=""):
+        """
+        """        
+        spectype = "model"
+        type = "EveModel"
+        spec = j.core.specparser.getModelSpec(appname, actor, modelname)
+        cg = CodeGeneratorEveModel(spec, typecheck=typecheck, dieInGenCode=dieInGenCode, codepath=codepath)
+        code = cg.generate()
+        return code
+
+
     # def getClassWhoosh(self,appname,actor,modelname,typecheck=True,dieInGenCode=True):
     #     """
     #     """
@@ -177,6 +189,8 @@ class CodeGenerator:
         if spec.type == "model" and type == "JSModel":
             # writeForm = self._target == 'server' #we dont generate forms any more
             cg = CodeGeneratorModel(spec, typecheck, dieInGenCode)
+        elif spec.type == "model" and type == "EveModel":
+            cg = CodeGeneratorEveModel(spec, typecheck, dieInGenCode, codepath=codepath)
         # elif spec.type=="model" and type=="whoosh":
         #     cg=CodeGeneratorWhoosh(spec,typecheck,dieInGenCode)
         elif spec.type == "enumeration":
