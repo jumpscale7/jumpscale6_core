@@ -261,16 +261,18 @@ class TxtRobot():
         if self.cmdobj<>None:
             if hasattr(self.cmdobj,key):
                 method=eval("self.cmdobj.%s"%key)
-                result=method(**args)
                 if key == 'mothership1__login':
-                    self.gargs['spacesecret'] = result
+                    spacesecret, result = method(**args)
+                    self.gargs['spacesecret'] = spacesecret
+                else:
+                    result=method(**args)
         if result==None:
             return self.error("Cannot execute: '%s':'%s' , entity:method not found."%(entity,cmd))
         
         if not j.basetype.string.check(result):
             result=yaml.dump(result, default_flow_style=False).replace("!!python/unicode ","")
 
-        out="!%s.%s<br/>%s<br/>"%(entity,cmd,result)
+        out="%s<br/>"%(result)
         return out
 
 
