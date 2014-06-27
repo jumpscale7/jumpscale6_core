@@ -155,7 +155,6 @@ class JPackageClient():
                     self.domains.remove(domainDict[domain])
                 self.domains.append(Domain(domainname=domain))
 
-
     def create(self, domain="", name="", version="1.0", description="", supportedPlatforms=None):
         """
         Creates a new jpackages4, this includes all standard tasklets, a config file and a description.wiki file
@@ -1080,3 +1079,11 @@ class JPackageClient():
         s.draw(graphPath)
 
         j.console.echo("Dependency graph successfully created. Open file at /opt/qbase5/var/jpackages/metadata/dependencyGraph.png")
+
+############################################################
+################  RECOVERY FUNCTIONS  ####################
+############################################################
+    def uploadLocalJpackagesToBlobStor(self):
+        bs=j.clients.blobstor.get("jpackages_remote")
+        for jp in self.getJPackageObjects():
+            jp.uploadExistingBlobs("jpackages_remote")
