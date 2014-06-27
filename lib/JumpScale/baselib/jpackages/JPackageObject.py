@@ -1629,6 +1629,35 @@ class JPackageObject():
                     notfound.append(key)
         return notfound
 
+    def uploadExistingBlobsFromHistory(self,blobserver="jpackages_remote"):
+        """
+        @return the non found keys
+        """
+        self.loadBlobStores()
+        bservernew=j.clients.blobstor.get(blobserver)
+        hist=self.getBlobHistory()
+        for ttype in hist.keys():
+            epochs=hist[ttype].keys()#[int(item) for item in hist[ttype].keys()]
+            epochs.sort()
+            epochs.reverse()
+            for epoch in epochs:
+                key=hist[ttype][epoch][1]
+                print "%s %s %s %s"%(self.domain,self.name,ttype,hist[ttype][epoch][0])
+                if bservernew.exists(key):
+                    print "found"
+                    break
+                else:
+                    #does not exist on remote bserver yet
+                    print "blob %s not on dest."%(key),
+                    if self.blobstorLocal.exists(key):
+                        print "upload from local."
+                        self.blobstorLocal.copyToOtherBlobStor(key, bservernew)
+                        break
+                    elif self.blobstorRemote.exists(key):
+                        print "upload from remote."
+                        self.blobstorRemote.copyToOtherBlobStor(key, bservernew)
+                        break
+
     def checkExistingBlobs(self,blobserver,dependencies=False):
         """
         @return the non found keys
@@ -1647,6 +1676,27 @@ class JPackageObject():
             if not bservernew.exists(key):
                 notfound.append(key)
         return notfound
+
+    def getBlobHistory(self):
+        blobtypes=self.getBlobPlatformTypes()
+        result={}
+        for btype in blobtypes:            
+            btype2="___".join(btype)
+            result[btype2]={}
+            path="%s/uploadhistory/%s.info"%(self.getPathMetadata(),btype2)
+            if not j.system.fs.exists(path):
+                print "ERROR: COULD NOT FIND %s"%path
+            else:
+                C=j.system.fs.fileGetContents(path)
+                for line in C.split("\n"):
+                    if line.strip()<>"":
+
+                        hrtime,ttime,nr,md5= line.split("|")
+                        md5=md5.strip()
+                        result[btype2][ttime]=(hrtime,md5)
+        return result        
+
+
 
     @FileLock('jpackage', reentry=True)
     def _upload(self, remote=True, local=True,onlycode=False):
