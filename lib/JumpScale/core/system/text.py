@@ -18,3 +18,11 @@ class Text:
             return value
         else:
             return unicode(value)
+
+    @staticmethod
+    def prefix(prefix,txt):
+        out=""
+        txt=txt.rstrip("\n")
+        for line in txt.split("\n"):
+            out+="%s%s\n"%(prefix,line)
+        return out

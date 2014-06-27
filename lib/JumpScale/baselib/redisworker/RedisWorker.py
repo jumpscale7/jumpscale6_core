@@ -9,7 +9,7 @@ import JumpScale.grid.osis
 import JumpScale.baselib.redis
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 import time
-
+import inspect
 import JumpScale.grid.jumpscripts
 Jumpscript=j.tools.jumpscriptsManager.getJSClass()
 
@@ -96,8 +96,11 @@ class RedisWorkerFactory:
         self.redis.delete("workers:sessions")
 
         #local jumpscripts start at 10000
-        if not self.redis.exists("workers:jumpscriptlastid") or int(self.redis.get("workers:jumpscriptlastid"))<10000:
-            self.redis.set("workers:jumpscriptlastid",10000)
+        if not self.redis.exists("workers:jumpscriptlastid") or int(self.redis.get("workers:jumpscriptlastid"))<1000000:
+            self.redis.set("workers:jumpscriptlastid",1000000)
+
+        if int(self.redis.get("workers:joblastid"))>500000:
+            self.redis.set("workers:joblastid",1)
 
         self.queue={}
         self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
@@ -123,21 +126,6 @@ class RedisWorkerFactory:
             raise RuntimeError("cannot find job with id:%s"%jobid)
         return jobdict
 
-    def _getJumpscript(self,name="", category="unknown", organization="unknown", action=None, source="", path="", descr=""):
-        js=Jumpscript(name=name, category=category, organization=organization, action=action, source=source, path=path, descr=descr)
-        key=js.getContentKey()
-        if self.redis.hexists("workers:jumpscripthashes",key):
-            jumpscript_data=self.redis.hget("workers:jumpscripthashes",key)
-            js=Jumpscript(ddict=json.loads(jumpscript_data))
-        else:
-            #jumpscript does not exist yet
-            # js.id=self.redis.incr("workers:jumpscriptlastid")
-            # jumpscript_data=json.dumps(js.__dict__)
-            # self.redis.hset("workers:jumpscripts:id",js.id, js)
-            if js.organization<>"" and js.name<>"":
-                self.redis.hset("workers:jumpscripts:name","%s__%s"%(js.organization,js.name), jumpscript_data)            
-            self.redis.hset("workers:jumpscripthashes",key,jumpscript_data)
-        return js
 
     def getJumpscriptFromId(self,jscriptid):
         jsdict=self.redis.hget("workers:jumpscripts:id",jscriptid)
@@ -173,16 +161,46 @@ class RedisWorkerFactory:
         """
         @return job
         """
-        js=self._getJumpscript(action=method,category=_category,organization=_organization)
-        jsid=js.id
-        job=self._getJob(jsid,args=args,timeout=_timeout,log=_log,queue=_queue)
+        source=inspect.getsource(method)
+        methodstr=source.split("\n")[0].split(" ")[1]
+        name,remainder=methodstr.split("(",1)
+        name=name.strip()
+        lines=["def action(%s"%(remainder)]
+        lines=lines+source.split("\n")[1:]
+        source="\n".join(lines)
+
+        js=Jumpscript()
+        js.source=source
+        js.organization=_organization
+        js.name=name
+        key=j.tools.hash.md5_string(source)
+
+        if self.redis.hexists("workers:jumpscripthashes",key):
+            jumpscript_data=self.redis.hget("workers:jumpscripthashes",key)
+            js=Jumpscript(ddict=json.loads(jumpscript_data))
+        else:
+            #jumpscript does not exist yet
+            js.id=self.redis.incr("workers:jumpscriptlastid")
+            jumpscript_data=json.dumps(js.__dict__)
+            self.redis.hset("workers:jumpscripts:id",js.id, jumpscript_data)
+            if js.organization<>"" and js.name<>"":
+                self.redis.hset("workers:jumpscripts:name","%s__%s"%(js.organization,js.name), jumpscript_data)            
+            self.redis.hset("workers:jumpscripthashes",key,jumpscript_data)
+
+        job=self._getJob(js.id,args=args,timeout=_timeout,log=_log,queue=_queue)
         job.cmd=js.name
         self._scheduleJob(job)
         if _sync:
             job=self.waitJob(job,timeout=_timeout)
-        return job
+            return job.result            
+        else:
+            return job
 
     def checkJumpscriptQueue(self,jumpscript,queue):
+        """
+        this checks that jumpscripts are not executed twice when being scheduled recurring
+        one off jobs will always execute !!!
+        """
         if jumpscript.period>0:
             #check of already in queue
             if self.redis.hexists("workers:inqueuetest",jumpscript.getKey()):
@@ -232,35 +250,6 @@ class RedisWorkerFactory:
                 print jobbin
         #@todo needs to be implement, need to check there are no double recurring jobs, need to check jumpscripts exist, need to check jobs are also in redis, ...
 
-    # def jobExistsInQueue(self,qname,job):
-
-    #     if not self.queue.has_key(qname):
-    #         raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
-
-    #     queue=self.queue[qname]
-    #     C1="%s%s%s%s%s%s%s%s"%(job.category, job.cmd, job.log, job.gid, job.nid, job.roles, job.jscriptid,job.args)
-    #     keynew=j.tools.hash.md5_string(C1)
-
-    #     db=queue._CRedisQueue__db
-    #     for i in range (db.llen(queue.key)):
-    #         jobbin=db.lindex(queue.key,i)
-    #         print jobbin
-    #         jobdict=json.loads(jobbin)
-    #         jobOld=Job(ddict=jobdict)
-    #         C="%s%s%s%s%s%s%s%s"%(jobOld.category, jobOld.cmd, jobOld.log, jobOld.gid, jobOld.nid, jobOld.roles, jobOld.jscriptid,jobOld.args)
-    #         print C
-    #         print "%s %s"%(C1,C,keynew,j.tools.hash.md5_string(C))
-    #         if keynew==j.tools.hash.md5_string(C):
-    #             print "INQUEUE"
-    #             return True
-    #             from IPython import embed
-    #             print "DEBUG NOW ooo"
-    #             embed()
-
-    #         jobbin=queue.fetch(block=False)
-            
-    #     return False
-
 
     def _getWork(self,qname,timeout=0):
         if not self.queue.has_key(qname):
@@ -286,9 +275,11 @@ class RedisWorkerFactory:
         else:
             job=self.getJob(job.id)
 
+        job=Job(ddict=job)
         if job.state<>"OK":
-            raise RuntimeError("could not execute job:%s error was:%s"%(job.id,job.result))
-
+            eco=j.errorconditionhandler.getErrorConditionObject(ddict=job.result)
+            # j.errorconditionhandler.processErrorConditionObject(eco)
+            raise RuntimeError("Could not execute job, error:\n%s"%str(eco))  #@todo is printing too much
         return job
 
     def _scheduleJob(self, job):

@@ -103,9 +103,10 @@ class ErrorConditionHandler():
             self.halt(str(eco))
 
     def raiseRuntimeErrorWithEco(self,eco,tostdout=False):
+        message=""
         if eco.tags<>"":
             message+="((tags:%s))\n"%eco.tags
-        if category<>"":
+        if eco.category<>"":
             message+="((category:%s))\n"%eco.category
         message+="((type:%s))\n"%str(eco.type)
         message+="((level:%s))\n"%eco.level
