@@ -1086,3 +1086,15 @@ class JPackageClient():
     def uploadLocalJpackagesToBlobStor(self):
         for jp in self.getJPackageObjects():
             jp.uploadExistingBlobs("jpackages_remote")
+
+    def checkJpackagesExistsOnRemoteBlobStor(self):
+        notfound=[]
+        print "JPACKAGES WITH INCOMPLETE BLOBSTOR"
+        for jp in self.getJPackageObjects():
+            notfound=jp.checkExistingBlobs("jpackages_remote")
+            if len(notfound)>0:
+                notf=[jp.domain,jp.name,",".join(notfound)]
+                print notf
+                notfound.append(notf)
+        return notfound
+

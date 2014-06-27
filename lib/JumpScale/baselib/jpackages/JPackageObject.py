@@ -1629,6 +1629,24 @@ class JPackageObject():
                     notfound.append(key)
         return notfound
 
+    def checkExistingBlobs(self,blobserver,dependencies=False):
+        """
+        @return the non found keys
+        """
+        self.loadBlobStores()
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.uploadExistingBlobs(blobserver=blobserver)
+
+        keys=self.getBlobKeysActive()
+        bservernew=j.clients.blobstor.get(blobserver)
+        notfound=[]
+        for key in keys:
+            print self,
+            if not bservernew.exists(key):
+                notfound.append(key)
+        return notfound
 
     @FileLock('jpackage', reentry=True)
     def _upload(self, remote=True, local=True,onlycode=False):
