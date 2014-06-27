@@ -1084,6 +1084,5 @@ class JPackageClient():
 ################  RECOVERY FUNCTIONS  ####################
 ############################################################
     def uploadLocalJpackagesToBlobStor(self):
-        bs=j.clients.blobstor.get("jpackages_remote")
         for jp in self.getJPackageObjects():
             jp.uploadExistingBlobs("jpackages_remote")
