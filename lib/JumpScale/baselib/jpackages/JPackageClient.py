@@ -1092,13 +1092,13 @@ class JPackageClient():
 
 
     def checkJpackagesExistsOnRemoteBlobStor(self):
-        notfound=[]
+        notfound2=[]
         print "JPACKAGES WITH INCOMPLETE BLOBSTOR"
         for jp in self.getJPackageObjects():
             notfound=jp.checkExistingBlobs("jpackages_remote")
             if len(notfound)>0:
                 notf=[jp.domain,jp.name,",".join(notfound)]
                 print notf
-                notfound.append(notf)
-        return notfound
+                notfound2.append(notf)
+        return notfound2
 
