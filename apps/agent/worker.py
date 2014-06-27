@@ -125,8 +125,10 @@ class Worker(object):
                 continue
 
             if job:
-                j.application.jid=job.id
+                j.application.jid=job.id                
+
                 #eval action code, if not ok send error back, cache the evalled action
+                
                 if self.actions.has_key(job.jscriptid):
                     jscript=self.actions[job.jscriptid]
                 else:
@@ -143,12 +145,17 @@ class Worker(object):
                             self.notifyWorkCompleted(job)
                             continue
 
-                        if jscript.organization<>"" and jscript.name<>"":
+                        if jscript.organization<>"" and jscript.name<>"" and jscript.id<1000000:
                             #this is to make sure when there is a new version of script since we launched this original script we take the newest one
                             jscript=w.getJumpscriptFromName(jscript.organization,jscript.name)
                             job.jscriptid=jscript.id
-
                             #result is method action
+
+                        jscript.write()
+                        jscript.load()
+
+                        self.actions[job.jscriptid]=jscript
+
                     except Exception,e:
                         agentid=j.application.getAgentId()
                         msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
@@ -172,7 +179,7 @@ class Worker(object):
 
                 try:
                     j.logger.enabled = job.log
-                    result=jscript.run(**job.args)
+                    result=jscript.executeInWorker(**job.args)
                     job.result=result
                     job.state="OK"
                     job.resultcode=0
@@ -184,17 +191,20 @@ class Worker(object):
                     eco.errormessage = msg
                     eco.jid = job.id
                     eco.code=jscript.source
-                    eco.category = "workers.executejob"                    
-                    j.errorconditionhandler.processErrorConditionObject(eco)
+                    eco.category = "workers.executejob"     
+                    if job.id<1000000:
+                        j.errorconditionhandler.processErrorConditionObject(eco)
                     # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                     # self.loghandler.logECO(eco)
                     job.state="ERROR"
                     eco.tb = None
                     job.result=eco.__dict__
+                    job.resultcode=1
                 finally:
                     j.logger.enabled = True
 
                 #ok or not ok, need to remove from queue test
+                #thisin queue test is done to now execute script multiple time
                 self.redis.hdel("workers:inqueuetest",jscript.getKey())
 
                 self.notifyWorkCompleted(job)
@@ -205,14 +215,15 @@ class Worker(object):
         w=j.clients.redisworker
         job.timeStop=int(time.time())
 
-        if job.state[0:2]<>"OK":
-            self.log("result:%s"%job.result)
+        # if job.state[0:2]<>"OK":
+        #     self.log("result:%s"%job.result)
 
 
-        if job.jscriptid>10000:
+        if job.jscriptid>1000000:
+            #means is internal job
             # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
             self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
-            w.redis.rpush("workers:return:%s"%job.id,time.time())
+            w.redis.rpush("workers:return:%s"%job.id,time.time())            
         else:
             #jumpscripts coming from AC
             if job.state<>"OK":

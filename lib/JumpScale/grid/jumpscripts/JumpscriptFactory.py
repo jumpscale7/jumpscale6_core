@@ -23,6 +23,7 @@ class JumpScript(object):
         self.id = None
         self.startatboot = False
         self.path = path
+        self.timeout=60
         if ddict:
             ddict.pop('path', None)
             self.__dict__.update(ddict)
@@ -51,7 +52,7 @@ from JumpScale import j
 
     def getDict(self):
         result = dict()
-        for attrib in ('name', 'author', 'organization', 'category', 'license', 'version', 'roles', 'source', 'path', 'descr', 'queue', 'async', 'period', 'order', 'log', 'enable', 'startatboot', 'gid', 'id'):
+        for attrib in ('name', 'author', 'organization', 'category', 'license', 'version', 'roles', 'source', 'path', 'descr', 'queue', 'async', 'period', 'order', 'log', 'enable', 'startatboot', 'gid', 'id','timeout'):
             result[attrib] = getattr(self, attrib)
         return result
 
@@ -83,7 +84,7 @@ from JumpScale import j
     def getKey(self):
         return "%s_%s" % (self.organization, self.name)
 
-    def run(self, *args, **kwargs):
+    def executeInWorker(self, *args, **kwargs):
         if not self.path:
             self.write()
         if not self._loaded:
@@ -91,12 +92,14 @@ from JumpScale import j
         return self.module.action(*args, **kwargs)
 
     def execute(self, *args, **kwargs):
+        """
+        """
         result = None, None
         if not self.enable:
             return
         if not self.async:
             try:
-                result = True, self.run(*args, **kwargs)
+                result = True, self.executeInWorker(*args, **kwargs)
             except Exception,e:
                 eco=j.errorconditionhandler.parsePythonErrorObject(e)
                 eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
@@ -109,10 +112,9 @@ from JumpScale import j
                 eco.type = str(eco.type)
                 result = False, eco.__dict__
         else:
-            # self.q_d.enqueue('%s_%s.action'%(action.organization,action.name))
-            #NO LONGER USE redisq, now use our own queuing mechanism
-            queue = getattr(self, 'queue', 'default')
-            result=j.clients.redisworker.execJumpscript(self.id,_timeout=60,_queue=queue,_log=self.log,_sync=False)
+            #make sure this gets executed by worker
+            queue = getattr(self, 'queue', 'default') #fall back to default queue if none specified
+            result=j.clients.redisworker.execJumpscript(self.id,_timeout=self.timeout,_queue=queue,_log=self.log,_sync=False)
 
         self.lastrun = time.time()
         
