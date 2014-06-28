@@ -217,6 +217,8 @@ class JPackageClient():
             systemdest = "/%s"%relativepath.lstrip("/")
         elif ttype=="base":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir, relativepath)
+        elif ttype=="apps":
+            systemdest = j.system.fs.joinPaths(j.dirs.baseDir,"apps",relativepath)
         elif ttype=="cfg":
             systemdest = j.system.fs.joinPaths(j.dirs.cfgDir, relativepath)
         elif ttype=="code":
