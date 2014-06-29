@@ -1099,7 +1099,7 @@ class JPackageClient():
         for jp in self.getJPackageObjects():
             notfound=jp.checkExistingBlobs("jpackages_remote")
             if len(notfound)>0:
-                notf=[jp.domain,jp.name,",".join(notfound)]
+                notf=[jp.domain,jp.name,jp.buildNr,",".join(notfound)]
                 print notf
                 notfound2.append(notf)
         return notfound2
