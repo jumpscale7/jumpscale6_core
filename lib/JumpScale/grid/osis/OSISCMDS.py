@@ -124,12 +124,15 @@ class OSISCMDS(object):
         return oi.list(prefix)
 
     def checkChangeLog(self):
-        rediscl = j.db.keyvaluestore.getRedisStore(namespace='', host='127.0.0.1', port=7771)
+        rediscl=None
         while True:
-            try:
-                rediscl.checkChangeLog()
-            except Exception, e:
-                j.errorconditionhandler.processPythonExceptionObject(e)
+            if j.system.net.tcpPortConnectionTest('127.0.0.1',port=7771):
+                try:
+                    if rediscl==None:
+                        rediscl = j.db.keyvaluestore.getRedisStore(namespace='', host='127.0.0.1', port=7771)
+                    rediscl.checkChangeLog()
+                except Exception, e:
+                    j.errorconditionhandler.processPythonExceptionObject(e)
             gevent.sleep(2)
 
     def _rebuildindex(self, namespace, categoryname, session=None):
