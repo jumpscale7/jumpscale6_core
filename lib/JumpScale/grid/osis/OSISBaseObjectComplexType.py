@@ -13,6 +13,7 @@ class OSISBaseObjectComplexType(j.code.classGetJSRootModelBase()):
             self.guid=""
         if self.guid=="":
             self.guid=j.base.idgenerator.generateGUID()
+            self.guid=self.guid.replace("-","")
         self._ckey=""
         self._meta=[namespace,category,int(version)] #$namespace,$category,$version
 
