@@ -1,6 +1,9 @@
 from store import KeyValueStoreBase
 from JumpScale import j
 import os
+import urllib
+
+SAFECHARS = " "
 
 class FileSystemKeyValueStore(KeyValueStoreBase):
     EXTENSION = ""
@@ -91,6 +94,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
         categoryDir = self._getCategoryDir(category)
         filePaths = j.system.fs.listFilesInDir(categoryDir, recursive=True)
         fileNames = [j.system.fs.getBaseName(path) for path in filePaths]
+        fileNames = [ urllib.unquote(name, SAFECHARS) for name in fileNames ]
 
         if prefix:
             fileNames = [name for name in fileNames if name.startswith(prefix)]
@@ -109,6 +113,7 @@ class FileSystemKeyValueStore(KeyValueStoreBase):
 
     def _getStorePath(self, category, key,createIfNeeded=True):
         key = j.tools.text.toStr(key)
+        key = urllib.quote(key, SAFECHARS)
         origkey = key
         if len(key)<4:
             key = key + (4 - len(key)) * '_'
