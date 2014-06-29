@@ -99,7 +99,7 @@ class RedisWorkerFactory:
         if not self.redis.exists("workers:jumpscriptlastid") or int(self.redis.get("workers:jumpscriptlastid"))<1000000:
             self.redis.set("workers:jumpscriptlastid",1000000)
 
-        if int(self.redis.get("workers:joblastid"))>500000:
+        if self.redis.get("workers:joblastid")==None or int(self.redis.get("workers:joblastid"))>500000:
             self.redis.set("workers:joblastid",1)
 
         self.queue={}
