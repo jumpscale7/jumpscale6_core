@@ -172,20 +172,29 @@ class OSISClientForCat():
         response = self.search(query, start, size)
 
         results = list()
-        if 'result' in response:
-            rawresults = response['result']
-        elif 'hits' in response:
-            rawresults = response['hits']['hits']
-        for item in rawresults:
-            if withguid:
-                item['_source']['guid'] = item['_id']
-            results.append(item['_source'])
-        if not withtotal:
-            return results
-        else:
-            total = -1
-            if 'total' in response:
-                total = response['total']
-            elif 'hits' in response and 'total' in response['hits']:
-                total = response['hits']['total']
-            return total, results
+        if isinstance(response, list): # mongo client
+            for r in response:
+                r.pop('_meta')
+                results.append(r)
+            if withtotal:
+                return len(results), results
+            else:
+                return results
+        elif isinstance(response, dict): # ES client:
+            if 'result' in response:
+                rawresults = response['result']
+            elif 'hits' in response:
+                rawresults = response['hits']['hits']
+            for item in rawresults:
+                if withguid:
+                    item['_source']['guid'] = item['_id']
+                results.append(item['_source'])
+            if not withtotal:
+                return results
+            else:
+                total = -1
+                if 'total' in response:
+                    total = response['total']
+                elif 'hits' in response and 'total' in response['hits']:
+                    total = response['hits']['total']
+                return total, results
