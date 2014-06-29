@@ -146,13 +146,14 @@ class SpecModel(Specbase):
         return False
 
     def addDefaults(self):
-        if self.type=="rootmodel":
-            if not self.exists("id"):
-                s=SpecModelProperty(0)
-                s.type = 'int'
-                s.name = 'id'
-                s.description = 'Auto generated id @optional'
-                self._addItem(s)
+        # if self.type=="rootmodel":
+        #     if not self.exists("id"):
+        #         s=SpecModelProperty(0)
+        #         s.type = 'int'
+        #         s.name = 'id'
+        #         s.description = 'Auto generated id @optional'
+        #         self._addItem(s)
+        pass
 
 class SpecModelProperty(Specbase):
     def __init__(self,linenr):
