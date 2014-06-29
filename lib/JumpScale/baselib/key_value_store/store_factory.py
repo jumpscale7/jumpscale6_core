@@ -3,6 +3,7 @@ from file_system_store import FileSystemKeyValueStore
 from memory_store import MemoryKeyValueStore
 from redis_store import RedisKeyValueStore
 from leveldb_store import LevelDBKeyValueStore
+from mongodb_store import MongoDBKeyValueStore
 from JumpScale import j
 
 
@@ -14,6 +15,23 @@ class KeyValueStoreFactory(object):
 
     def __init__(self):
         self._cache = dict()
+
+    # def getMongoDBStore(self, namespace='',serializers=[]):
+    #     '''
+    #     Gets an MongoDB key value store.
+
+    #     @param namespace: namespace of the store, defaults to None
+    #     @type namespace: String
+
+    #     @return: key value store
+    #     @rtype: ArakoonKeyValueStore
+    #     '''
+    #     key = '%s_%s' % ("arakoon", namespace)
+    #     if key not in self._cache:
+    #         if namespace=="":
+    #             namespace="main"
+    #         self._cache[key] = MongoDBKeyValueStore(namespace)
+    #     return self._cache[key]
 
     def getArakoonStore(self, namespace='',serializers=[]):
         '''
