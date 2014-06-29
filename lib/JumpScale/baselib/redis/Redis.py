@@ -687,6 +687,9 @@ aof-rewrite-incremental-fsync yes
         C = C.replace("$port", str(port))
         C = C.replace("$vardir", j.dirs.varDir)
 
+        if ismaster:
+            slave=False
+
         if appendonly or ismaster:
             C = C.replace("$appendonly", "yes")
         else:
@@ -699,6 +702,8 @@ aof-rewrite-incremental-fsync yes
             C = C.replace("$slave",CONTENT)
         else:
             C = C.replace("$slave","")
+
+        
         
         if snapshot:
             C = C.replace("$snapshot", "save 30 1")

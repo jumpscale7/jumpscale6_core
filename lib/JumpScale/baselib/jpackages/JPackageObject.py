@@ -1232,7 +1232,7 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.configure(dependencies=False)
-
+        
         self.actions.install_configure()
         self.actions.process_configure()
         # self.state.setIsPendingReconfiguration(False)
