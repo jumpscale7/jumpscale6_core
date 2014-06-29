@@ -21,7 +21,7 @@ Help:/Help
 @divend
 
 @col 10
-
+{{breadcrumbs}}
 {content}
 
 @divend

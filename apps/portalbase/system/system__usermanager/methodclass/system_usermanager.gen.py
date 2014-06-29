@@ -17,23 +17,14 @@ class system_usermanager(j.code.classGetBase()):
 
     def authenticate(self, name, secret, **kwargs):
         """
-        this needs to be used before rest api can be used
+        authenticate and return False if not successfull
+        otherwise return secret for api
         param:name name
         param:secret md5 or passwd
         result str
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method authenticate")
-    
-
-    def getusergroups(self, user, **kwargs):
-        """
-        return list of groups in which user is member of
-        param:user name of user
-        result list(str)
-        """
-        #put your code here to implement this method
-        raise NotImplementedError ("not implemented method getusergroups")
     
 
     def groupadduser(self, group, user, **kwargs):
@@ -96,13 +87,23 @@ class system_usermanager(j.code.classGetBase()):
         raise NotImplementedError ("not implemented method userexists")
     
 
-    def userexistsFromId(self, userid, **kwargs):
+    def userget(self, name, **kwargs):
         """
-        param:userid id
-        result bool
+        get a user
+        param:name name of user
         """
         #put your code here to implement this method
-        raise NotImplementedError ("not implemented method userexistsFromId")
+        raise NotImplementedError ("not implemented method userget")
+    
+
+    def usergroupsget(self, user, **kwargs):
+        """
+        return list of groups in which user is member of
+        param:user name of user
+        result list(str)
+        """
+        #put your code here to implement this method
+        raise NotImplementedError ("not implemented method usergroupsget")
     
 
     def userregister(self, name, passwd, emails, config, reference="''", remarks="''", **kwargs):
