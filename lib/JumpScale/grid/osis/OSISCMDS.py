@@ -56,6 +56,7 @@ class OSISCMDS(object):
 
 
     def set(self, namespace, categoryname, key=None, value=None, waitIndex=False,session=None):
+        
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         # print "WAITINDEXCMDS:%s"%waitIndex
         if oi.auth<>None:
@@ -67,8 +68,22 @@ class OSISCMDS(object):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"delete",session.user,session.passwd)==False:
-                raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))        
+                raise RuntimeError("Authentication error on delete %s_%s for user %s"%(namespace,categoryname,session.user))        
         return oi.delete(key=key)
+
+    def destroy(self, namespace, categoryname,session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"destroy",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on destroy %s_%s for user %s"%(namespace,categoryname,session.user))        
+        return oi.destroy()
+
+    def demodata(self, namespace, categoryname,session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"demodata",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on demodata %s_%s for user %s"%(namespace,categoryname,session.user))        
+        return oi.demodata()
 
     def search(self, namespace, categoryname, query, start=0, size=None, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
@@ -78,6 +93,26 @@ class OSISCMDS(object):
               
         result = oi.find(query, start, size)
         return result
+
+    def deleteSearch(self,namespace, categoryname,query, session=None):
+        oi = self._getOsisInstanceForCat(namespace, categoryname)
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"deleteSearch",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on deleteSearch %s_%s for user %s"%(namespace,categoryname,session.user))        
+        return oi.deleteSearch(query=query)  
+        
+    def updateSearch(self,namespace, categoryname,query,update, session=None):
+        """
+        update is dict or text
+        dict e.g. {"name":aname,nr:1}  these fields will be updated then
+        text e.g. name:aname nr:1
+        """
+        oi = self._getOsisInstanceForCat(namespace, categoryname) 
+        if oi.auth<>None:
+            if oi.auth.authenticate(oi,"updateSearch",session.user,session.passwd)==False:
+                raise RuntimeError("Authentication error on updateSearch %s_%s for user %s"%(namespace,categoryname,session.user))        
+        return oi.updateSearch(query=query,update=update)  
+
 
     def list(self, namespace, categoryname, prefix=None, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
@@ -224,36 +259,36 @@ class OSISCMDS(object):
                                                                 namespacename), dirNameOnly=True)
         return ddirs
 
-    def deleteNamespaceCategory(self, namespacename, name,removecode=False,session=None):
-        """
-        """
-        if session<>None:
-            self._authenticateAdmin(session)
-        namespacepath = j.system.fs.joinPaths(self.path, namespacename)
-        if not j.system.fs.exists(path=namespacepath):
-            raise RuntimeError("Could not find namespace with name:%s"%namespacename)
-        if removecode:
-            j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
-        key="%s_%s"%(namespacename,name)
-        try:
-            self.elasticsearch.delete_index(key)
-        except:
-            pass
-        self.db.destroy(key)
-        self.db.destroy(key+"_incr")
+    # def deleteNamespaceCategory(self, namespacename, name,removecode=False,session=None):
+    #     """
+    #     """
+    #     if session<>None:
+    #         self._authenticateAdmin(session)
+    #     namespacepath = j.system.fs.joinPaths(self.path, namespacename)
+    #     if not j.system.fs.exists(path=namespacepath):
+    #         raise RuntimeError("Could not find namespace with name:%s"%namespacename)
+    #     if removecode:
+    #         j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
+    #     key="%s_%s"%(namespacename,name)
+    #     try:
+    #         self.elasticsearch.delete_index(key)
+    #     except:
+    #         pass
+    #     self.db.destroy(key)
+    #     self.db.destroy(key+"_incr")
 
-    def createNamespaceCategory(self, namespacename, name,session=None):
-        """
-        """
-        if session<>None:
-            self._authenticateAdmin(session)
-        namespacepath = j.system.fs.joinPaths(self.path, namespacename)
-        if not j.system.fs.exists(path=namespacepath):
-            raise RuntimeError("Could not find namespace with name:%s"%namespacename)
+    # def createNamespaceCategory(self, namespacename, name,session=None):
+    #     """
+    #     """
+    #     if session<>None:
+    #         self._authenticateAdmin(session)
+    #     namespacepath = j.system.fs.joinPaths(self.path, namespacename)
+    #     if not j.system.fs.exists(path=namespacepath):
+    #         raise RuntimeError("Could not find namespace with name:%s"%namespacename)
 
-        j.system.fs.createDir(j.system.fs.joinPaths(namespacepath, name))
+    #     j.system.fs.createDir(j.system.fs.joinPaths(namespacepath, name))
 
-        self.init(path=self.path, overwriteImplementation=False, namespacename=namespacename)
+    #     self.init(path=self.path, overwriteImplementation=False, namespacename=namespacename)
 
     def _initDefaultContent(self,  namespacename=None):
         path = self.path

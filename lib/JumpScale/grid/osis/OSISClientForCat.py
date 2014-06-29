@@ -55,6 +55,19 @@ class OSISClientForCat():
         obj.init(self.namespace,self.cat,1)
         return obj
 
+
+    def demodata(self):
+        """
+        populate db with demodata
+        """
+        return self.client.demodata(namespace=self.namespace, categoryname=self.cat)
+
+    def rebuildindex(self):
+        """
+        rebuildindex
+        """
+        return self.client.rebuildindex(namespace=self.namespace, categoryname=self.cat)
+
     def set(self, obj, key=None,waitIndex=False):
         """
         if key none then key will be given by server
@@ -91,12 +104,23 @@ class OSISClientForCat():
     def existsIndex(self,key,timeout=1):            
         return self.client.existsIndex(namespace=self.namespace, categoryname=self.cat, key=key,timeout=timeout)
 
-    def delete(self, key):
-        
+    def delete(self, key):        
         return self.client.delete(namespace=self.namespace, categoryname=self.cat, key=key)
 
+    def deleteSearch(self,query):
+        return self.client.deleteSearch(namespace=self.namespace, categoryname=self.cat, query=query)  
+        
+    def updateSearch(self,query,update):
+        """
+        update is dict or text
+        dict e.g. {"name":aname,nr:1}  these fields will be updated then
+        text e.g. name:aname nr:1
+        """
+        return self.client.updateSearch(namespace=self.namespace, categoryname=self.cat, query=query,update=update)  
+
     def destroy(self):
-        return self.client.deleteNamespaceCategory(namespacename=self.namespace, name=self.cat)
+        # self.client.deleteNamespaceCategory(namespacename=self.namespace, name=self.cat)
+        return self.client.destroy(namespace=self.namespace, categoryname=self.cat)
 
     def list(self, prefix=""):
         
