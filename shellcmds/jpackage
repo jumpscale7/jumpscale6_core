@@ -289,8 +289,9 @@ blobstorlocal = jpackages_local
     path=j.system.fs.joinPaths(j.dirs.baseDir,"cfg","jsconfig","bitbucket.cfg")
     ini=j.tools.inifile.open(path)
 
-    for domain in ["jumpscale","incubaid"]:
+    for domain in ["jumpscale","incubaid"]:        
         if ini.checkSection(domain)==False:
+            ini.addSection(domain)
             ini.setParam(domain,"login",login)
             ini.setParam(domain,"passwd",passwd)
         else:
