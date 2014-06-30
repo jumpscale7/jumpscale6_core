@@ -8,7 +8,7 @@ j.application.start('jpackage')
 parser = cmdutils.ArgumentParser()
 
 commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
-            'publish', 'repackage', 'restart', 'start', 'stop', 'mdupdate', 'update', 'upload', 'mirror',
+            'publish', 'repackage', 'restart', 'start', 'stop', 'mdupdate','addrepo', 'update', 'upload', 'mirror',
             'switchbranch', 'list','mdswitch','mddisabledebug']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
@@ -66,6 +66,12 @@ group.add_argument('--branch', help='Branch of the coderecipe')
 #mddisabledebug,mdswitch
 group = parser.add_argument_group(title="mdswitch (switch qualitylevel for domain) and mddisabledebug (disable debug for domain)")
 group.add_argument('--qualitylevel', help='Qualitylevel to switch to or to put disable debug.',default=None)
+
+group = parser.add_argument_group(title="addrepo")
+group.add_argument('-ql', help='Qualitylevel to use for metadata.',default="unstable")
+group.add_argument('-bba', help='Bitbucket account e.g. jumpscale,incubaid.',default="jumpscale")
+group.add_argument('-bbr', help='Bitbucket reponame e.g. serverapps (there will be jp_ prepended)',default="serverapps")
+
 
 args = parser.parse_args()
 
@@ -252,6 +258,47 @@ elif args.action == 'mdswitch':
         raise RuntimeError("please specify qualitylevel")
     for domain in askDomains(args):
         j.packages.switchMetaData(args.qualitylevel,domain=domain)
+
+elif args.action == 'addrepo':
+    login="qp5"
+    passwd="qp55pq"
+    C="""
+
+[serverapps]
+metadatafromtgz = 0
+qualitylevel = $ql
+metadatadownload =
+metadataupload =
+bitbucketaccount = $bba
+bitbucketreponame = jp_$bbr
+blobstorremote = jpackages_remote
+blobstorlocal = jpackages_local
+"""    
+    C=C.replace("$ql",args.ql)
+    C=C.replace("$bbr",args.bbr)
+    C=C.replace("$bba",args.bba)
+
+    path=j.system.fs.joinPaths(j.dirs.baseDir,"cfg","jpackages","sources.cfg")
+
+    ini=j.tools.inifile.open(path)
+    ini.removeSection(args.bbr)
+    ini.write()
+
+    j.system.fs.writeFile(path, C, append=True)
+
+    path=j.system.fs.joinPaths(j.dirs.baseDir,"cfg","jsconfig","bitbucket.cfg")
+    ini=j.tools.inifile.open(path)
+
+    for domain in ["jumpscale","incubaid"]:
+        if ini.checkSection(domain)==False:
+            ini.setParam(domain,"login",login)
+            ini.setParam(domain,"passwd",passwd)
+        else:
+            if ini.checkParam(domain,"login")==False or ini.getValue(domain,"login").strip()=="":
+                ini.setParam(domain,"login",login)
+            if ini.checkParam(domain,"passwd")==False or ini.getValue(domain,"passwd").strip()=="":
+                ini.setParam(domain,"passwd",passwd)    
+
 
 elif args.action == 'mddisabledebug':
     if args.qualitylevel==None:
