@@ -25,6 +25,7 @@ parser.add_argument('-r','--repos',help='comma separated list of repos, will loo
 parser.add_argument('-u','--update',required=False, action='store_true',help='update merge before doing push or commit')
 
 parser.add_argument('-f','--force',required=False, action='store_true',help='auto answer yes on every question')
+parser.add_argument('-d','--deletechanges',required=False, action='store_true',help='will delete all changes when doing update')
 
 
 # parser.add_argument('-m','--message',required=False, action='store_true',help='commit message')
@@ -92,6 +93,12 @@ if opts.action == "status":
 
 
 for bitbucket,account,reponame,branch,client,path in repos:
+
+    if opts.action == "update" and opts.deletechanges:
+        print "force update %s/%s"%(account,reponame)
+        client.pull()
+        client.update(force=True)
+        continue
 
     if opts.action in ['status','commit','push','update']:
 
