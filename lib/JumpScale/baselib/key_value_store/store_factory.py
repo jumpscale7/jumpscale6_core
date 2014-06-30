@@ -3,7 +3,7 @@ from file_system_store import FileSystemKeyValueStore
 from memory_store import MemoryKeyValueStore
 from redis_store import RedisKeyValueStore
 from leveldb_store import LevelDBKeyValueStore
-from mongodb_store import MongoDBKeyValueStore
+
 from JumpScale import j
 
 
@@ -26,6 +26,7 @@ class KeyValueStoreFactory(object):
     #     @return: key value store
     #     @rtype: ArakoonKeyValueStore
     #     '''
+    #     from mongodb_store import MongoDBKeyValueStore
     #     key = '%s_%s' % ("arakoon", namespace)
     #     if key not in self._cache:
     #         if namespace=="":
