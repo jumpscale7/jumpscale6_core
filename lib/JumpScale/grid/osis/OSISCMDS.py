@@ -262,36 +262,36 @@ class OSISCMDS(object):
                                                                 namespacename), dirNameOnly=True)
         return ddirs
 
-    # def deleteNamespaceCategory(self, namespacename, name,removecode=False,session=None):
-    #     """
-    #     """
-    #     if session<>None:
-    #         self._authenticateAdmin(session)
-    #     namespacepath = j.system.fs.joinPaths(self.path, namespacename)
-    #     if not j.system.fs.exists(path=namespacepath):
-    #         raise RuntimeError("Could not find namespace with name:%s"%namespacename)
-    #     if removecode:
-    #         j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
-    #     key="%s_%s"%(namespacename,name)
-    #     try:
-    #         self.elasticsearch.delete_index(key)
-    #     except:
-    #         pass
-    #     self.db.destroy(key)
-    #     self.db.destroy(key+"_incr")
+    def deleteNamespaceCategory(self, namespacename, name,removecode=False,session=None):
+        """
+        """
+        if session<>None:
+            self._authenticateAdmin(session)
+        namespacepath = j.system.fs.joinPaths(self.path, namespacename)
+        if not j.system.fs.exists(path=namespacepath):
+            raise RuntimeError("Could not find namespace with name:%s"%namespacename)
+        if removecode:
+            j.system.fs.removeDirTree(j.system.fs.joinPaths(namespacepath, name))
+        key="%s_%s"%(namespacename,name)
+        try:
+            self.elasticsearch.delete_index(key)
+        except:
+            pass
+        self.db.destroy(key)
+        self.db.destroy(key+"_incr")
 
-    # def createNamespaceCategory(self, namespacename, name,session=None):
-    #     """
-    #     """
-    #     if session<>None:
-    #         self._authenticateAdmin(session)
-    #     namespacepath = j.system.fs.joinPaths(self.path, namespacename)
-    #     if not j.system.fs.exists(path=namespacepath):
-    #         raise RuntimeError("Could not find namespace with name:%s"%namespacename)
+    def createNamespaceCategory(self, namespacename, name,session=None):
+        """
+        """
+        if session<>None:
+            self._authenticateAdmin(session)
+        namespacepath = j.system.fs.joinPaths(self.path, namespacename)
+        if not j.system.fs.exists(path=namespacepath):
+            raise RuntimeError("Could not find namespace with name:%s"%namespacename)
 
-    #     j.system.fs.createDir(j.system.fs.joinPaths(namespacepath, name))
+        j.system.fs.createDir(j.system.fs.joinPaths(namespacepath, name))
 
-    #     self.init(path=self.path, overwriteImplementation=False, namespacename=namespacename)
+        self.init(path=self.path, overwriteImplementation=False, namespacename=namespacename)
 
     def _initDefaultContent(self,  namespacename=None):
         path = self.path
