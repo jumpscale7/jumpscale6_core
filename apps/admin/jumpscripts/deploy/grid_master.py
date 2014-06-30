@@ -26,6 +26,7 @@ def action(node):
     #print c.run("jpackage install -n sentry -r")
     #print c.run("jsprocess start -n sentry")
     c.run("jpackage install -n rediskvs_master -r")
+    c.run("jpackage install -n rediskvs -r")
     c.run("cp -a /opt/jumpscale/var/jpackages/metadata/jumpscale//elasticsearch/0.90.5/* /opt/jumpscale/var/jpackages/metadata/jumpscale//elasticsearch1/1.1/")
     c.run("jpackage install -n graphite -r")
     c.run("jsprocess start -n graphite")
