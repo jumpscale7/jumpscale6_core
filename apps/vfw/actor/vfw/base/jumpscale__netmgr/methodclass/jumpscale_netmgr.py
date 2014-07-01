@@ -58,7 +58,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                     'password': password,
                     'publicip': publicip
                     }
-            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args)
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args, queue='hypervisor')
             if result['state'] != 'OK':
                 self.osisvfw.delete(key)
                 raise RuntimeError("Failed to create create fw for domain %s job was %s" % (domain, result['id']))
