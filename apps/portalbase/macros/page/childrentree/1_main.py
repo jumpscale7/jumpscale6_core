@@ -50,7 +50,7 @@ def parse_children_tree(expr):
     return simplify([Scope._str_to_scope(s) for s in eval(expr, Scope())])
 
 
-def dir_children(dir_name):
+def dir_children(dir_name, endingin=''):
     """Return a _sorted_ list of the _full path_ of the children of a directory"""
     # If a directory contains a .order file, then it's used for base of sorting. If it doesn't, then files are ordered alphabetically
     #
@@ -66,7 +66,7 @@ def dir_children(dir_name):
 
     order_file = os.path.join(dir_name, '.order')
     if not os.path.exists(order_file):
-        return sorted(os.path.join(dir_name, f) for f in os.listdir(dir_name))
+        return sorted(os.path.join(dir_name, f) for f in os.listdir(dir_name) if (f.endswith(endingin) and j.system.fs.isFile(os.path.join(dir_name, f))) or j.system.fs.isDir(os.path.join(dir_name, f)))
     else:
         docs = sorted([line.split(':') for line in j.system.fs.fileGetContents(order_file).splitlines()], key=lambda line: int(line[0]))
         return [os.path.join(dir_name, f + '.wiki') for f in zip(*docs)[1]]
@@ -83,7 +83,7 @@ def is_wiki_page(child):
     return os.path.isdir(child) or child.endswith('.wiki')
 
 
-def get_dir_tree(dir_name, max_depth=1, items=None):
+def get_dir_tree(dir_name, max_depth=1, items=None, endingin=''):
     if max_depth == 0:
         return []
 
@@ -96,9 +96,9 @@ def get_dir_tree(dir_name, max_depth=1, items=None):
     else:
         items_filter = lambda x: True
 
-    return [(child, get_dir_tree(child, max_depth=max_depth - 1))
-                  for child in dir_children(dir_name)
-                  if is_wiki_page(child) and items_filter(child)]
+    return [(child, get_dir_tree(child, max_depth=max_depth - 1, endingin=endingin))
+            for child in dir_children(dir_name, endingin) 
+            if is_wiki_page(child) and items_filter(child)]
 
 
 def format_dir_tree(dir_tree, space_name, bullets=False, tree=False, depth=1):
@@ -149,6 +149,11 @@ def main(j, args, params, tags, tasklet):
         page.addMessage('MACRO CHILDRENTREE ERROR: You cannot use both `page` argument & `items` argument.')
         return params
 
+    if args.tags.tagExists('endswith'):
+        endingin = args.tags.tagGet('endswith')
+    else:
+        endingin = ''
+
     items = None
     if args.tags.tagExists('items'):
         # The tag "items" can contain spaces. Unfortunately the macros parser implementation 
@@ -175,8 +180,8 @@ def main(j, args, params, tags, tasklet):
     if j.basetype.list.check(items):
         dir_tree = items
     else:
-        dir_tree = get_dir_tree(dir_name, depth)
-    
+        dir_tree = get_dir_tree(dir_name, depth, endingin=endingin)
+
     page.addMessage(format_dir_tree(dir_tree, doc.getSpaceName(), bullets, tree))
 
     return params
