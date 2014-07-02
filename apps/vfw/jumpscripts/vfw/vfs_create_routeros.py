@@ -14,15 +14,13 @@ enable = True
 async = True
 queue = 'hypervisor'
 
-def action(networkid, publicip, password):
+def action(networkid, publicip, publicgwip, publiccidr, password):
     import JumpScale.lib.routeros
     import libvirt
     import JumpScale.lib.ovsnetconfig
     import time
 
     DEFAULTGWIP = j.application.config.get("vfw.default.ip")
-    PUBLICCDR = j.application.config.get("vfw.public.cidr")
-    PUBLICGW = j.application.config.get("vfw.public.gw")
     BACKPLANE = 'vxbackend'
     nc = j.system.ovsnetconfig
     con = libvirt.open()
@@ -165,7 +163,7 @@ def action(networkid, publicip, password):
         ro.executeScript("/ip address remove numbers=[/ip address find network=192.168.1.0]")
         ro.executeScript("/ip address remove numbers=[/ip address find network=192.168.103.0]")
         ro.uploadExecuteScript("basicnetwork")
-        ro.ipaddr_set('public', "%s/%s" % (publicip, PUBLICCDR), single=True)
+        ro.ipaddr_set('public', "%s/%s" % (publicip, publiccidr), single=True)
 
         ipaddr=[]
         for item in ro.ipaddr_getall():
@@ -176,7 +174,7 @@ def action(networkid, publicip, password):
 
         ro.ipaddr_set('cloudspace-bridge', '192.168.103.1/24',single=True)
 
-        ro.uploadExecuteScript("route", vars={'$gw': PUBLICGW})
+        ro.uploadExecuteScript("route", vars={'$gw': publicgwip})
         ro.uploadExecuteScript("ppp")
         ro.uploadExecuteScript("customer")
         ro.uploadExecuteScript("systemscripts")
@@ -218,13 +216,13 @@ def action(networkid, publicip, password):
         while time.time() - start < timeout:
             try:
                 ro=j.clients.routeros.get(internalip,"vscalers",defaultpasswd)
-                if ro.ping(PUBLICGW):
+                if ro.ping(publicgwip):
                     break
             except:
                 print 'Failed to connect will try agian in 3sec'
             time.sleep(3)
         else:
-            raise RuntimeError("Could not ping to:%s for VFW %s"%(PUBLICGW, networkid))
+            raise RuntimeError("Could not ping to:%s for VFW %s"%(publicgwip, networkid))
 
         print "wait max 30 sec on tcp port 9022 connection to '%s'"%internalip
         if j.system.net.tcpPortConnectionTest(internalip,9022,timeout=2):
