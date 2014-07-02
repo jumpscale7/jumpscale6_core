@@ -173,11 +173,12 @@ class OSISClientForCat():
 
         results = list()
         if isinstance(response, list): # mongo client
+            total = response.pop(0)
             for r in response:
                 r.pop('_meta')
                 results.append(r)
             if withtotal:
-                return len(results), results
+                return total, results
             else:
                 return results
         elif isinstance(response, dict): # ES client:
