@@ -90,10 +90,10 @@ login = qp5
 passwd = qp55pq
 login = qp5' > /opt/jumpscale/cfg/jsconfig/bitbucket.cfg
 
-echo '
-rediskvs.secret=somesecret
-rediskvs.master.addr=127.0.0.1
-rediskvs.master.port=7772' > /opt/jumpscale/cfg/hrd/rediskvs.hrd
+#echo '
+#rediskvs.secret=somesecret
+#rediskvs.master.addr=127.0.0.1
+#rediskvs.master.port=7772' > /opt/jumpscale/cfg/hrd/rediskvs.hrd
 
 jpackage mdupdate
 jpackage install -n base
