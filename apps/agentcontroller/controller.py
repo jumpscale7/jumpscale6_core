@@ -372,6 +372,8 @@ class ControllerCMDS():
         action = self.getJumpScript(organization, name, session=session)
         if action==None or str(action).strip()=="":
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
+        if not queue:
+            queue = action.queue
         if role<>None:
             self._log("ROLE NOT NONE")
             role = role.lower()
