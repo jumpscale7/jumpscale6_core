@@ -6,6 +6,29 @@ import re
 
 from JumpScale import j
 
+IPBLOCKS = re.compile("(^|\n)(?P<block>\d+:.*?)(?=(\n\d+)|$)", re.S)
+IPMAC = re.compile("^\s+link/\w+\s+(?P<mac>(\w+:){5}\w{2})", re.M)
+IPIP = re.compile("^\s+inet\s(?P<ip>(\d+\.){3}\d+)/(?P<cidr>\d+)", re.M)
+IPNAME = re.compile("^\d+: (?P<name>\w+):", re.M)
+
+def parseBlock(block):
+    result = {'ip': [], 'cidr': [], 'mac': '', 'name': ''}
+    for rec in (IPMAC, IPNAME):
+        match = rec.search(block)
+        if match:
+            result.update(match.groupdict())
+    for mrec in (IPIP, ):
+        for m in mrec.finditer(block):
+            for key, value in m.groupdict().iteritems():
+                result[key].append(value)
+    return result
+
+def getNetworkInfo():
+    exitcode,output = j.system.process.execute("ip a", outputToStdout=False)
+    for m in IPBLOCKS.finditer(output):
+        block = m.group('block')
+        yield parseBlock(block)
+
 class SystemNet:
 
     def __init__(self):
@@ -189,13 +212,19 @@ class SystemNet:
             raise NotImplementedError('This function is only supported on Unix/Windows systems')
 
     def getIpAddresses(self,up=False):
-        nics=self.getNics(up)
-        result=[]
-        for nic in nics:
-            ipTuple = self.getIpAddress(nic)
-            if ipTuple: # if empty array skip
-                result.extend([ ip[0] for ip in ipTuple])
-        return result
+        if j.system.platformtype.isLinux():
+            result = list()
+            for ipinfo in getNetworkInfo():
+                result.extend(ipinfo['ip'])
+            return result
+        else:
+            nics=self.getNics(up)
+            result=[]
+            for nic in nics:
+                ipTuple = self.getIpAddress(nic)
+                if ipTuple: # if empty array skip
+                    result.extend([ ip[0] for ip in ipTuple])
+            return result
     
     def checkIpAddressIsLocal(self,ipaddr):
         if ipaddr.strip() in self.getIpAdresses():
@@ -402,12 +431,17 @@ class SystemNet:
         returns {macaddr_name:[ipaddr,ipaddr],...}
         """ 
         netaddr={}
-        nics=self.getNics()
-        for nic in nics:
-            mac=self.getMacAddress(nic)
-            ips=[item[0] for item in self.getIpAddress(nic)]
-            if nic.lower()<>"lo":
-                netaddr[mac]=[nic.lower(),",".join(ips)]
+        if j.system.platformtype.isLinux():
+            for ipinfo in getNetworkInfo():
+                ip = ipinfo['ip'][0] if ipinfo.get('ip') else None
+                netaddr[ipinfo['mac']] = [ ipinfo['name'], ip ]
+        else:
+            nics=self.getNics()
+            for nic in nics:
+                mac=self.getMacAddress(nic)
+                ips=[item[0] for item in self.getIpAddress(nic)]
+                if nic.lower()<>"lo":
+                    netaddr[mac]=[nic.lower(),",".join(ips)]
         return  netaddr
 
     def getIpAddress(self, interface):
