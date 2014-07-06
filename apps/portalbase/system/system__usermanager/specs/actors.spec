@@ -13,6 +13,12 @@
         var:config str,,free to be used field to store config information e.g. in json or xml format 
         result:bool    #True if successful, False otherwise
 
+    method:userget
+        """
+        get a user
+        """
+        var:name str,,name of user
+
     method:usercreate
 		"""
 		create a user
@@ -30,7 +36,8 @@
 
     method:authenticate
 		"""
-        this needs to be used before rest api can be used
+        authenticate and return False if not successfull
+        otherwise return secret for api
 		"""
         var:name str,,name 
 		var:secret str,,md5 or passwd
@@ -43,11 +50,6 @@
         var:name str,,name 
         result:bool
 
-    method:userexistsFromId
-		"""
-		"""
-        var:userid str,,id
-        result:bool
 
     method:groupcreate
 		"""
@@ -73,7 +75,7 @@
 		var:user str,,name of user
         result:bool    #True if successful, False otherwise
 		
-	method:getusergroups
+	method:usergroupsget
 		"""
 		return list of groups in which user is member of
 		"""

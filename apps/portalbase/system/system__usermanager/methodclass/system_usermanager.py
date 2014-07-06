@@ -12,30 +12,45 @@ class system_usermanager(j.code.classGetBase()):
         self._te = {}
         self.actorname = "usermanager"
         self.appname = "system"
-        self.cache = {} #cache for users
-        self.cacheg = {} #cache for 
+        self.osiscl = j.core.osis.getClient(user='root')
+        self.modelUser = j.core.osis.getClientForCategory(self.osiscl, 'system', 'user')
+
+    def _authSelf(self,user,kwargs):
+        ctx=kwargs["ctx"]
+        if not user==ctx.env['beaker.session']["user"]:
+            raise RuntimeError("Authentication Error")
 
     def authenticate(self, name, secret, **args):
         """
-        this needs to be used before rest api can be used
         param:name name
         param:secret md5 or passwd
         result str 
         
         """
-        raise NotImplementedError("not implemented method authenticate")
-        user = self._userGet(name, usecache=False)
-
-        if user == None:
+        self._authSelf(name,args)
+        if not self.userexists(name):
             return False
+        user=self.modelUser.get("%s_%s"%(j.application.whoAmI.gid,name))
+
+        if user.authkey=="":
+            user.authkey=j.tools.hash.md5_string(j.base.idgenerator.generateGUID())
+            self.modelUser.set(user)
+
         if user.passwd.strip() == str(secret).strip():
-            return True
-        if j.base.byteprocessor.hashMd5(user.passwd.strip()) == str(secret).strip():
-            return True
+            return user.authkey
+        if j.tools.hash.md5_string(secret) == user.passwd:
+            return user.authkey
         result = False
         return result
 
-    def getusergroups(self, user, **args):
+    def userget(self, name, **kwargs):
+        """
+        get a user
+        param:name name of user
+        """
+        return self.modelUser.get("%s_%s"%(j.application.whoAmI.gid,name))
+
+    def usergroupsget(self, user, **args):
         """
         return list of groups in which user is member of
         param:user name of user
@@ -118,21 +133,7 @@ class system_usermanager(j.code.classGetBase()):
         result bool 
         
         """
-        usermanager = j.apps.system.usermanager
-        user = self._userGet(name)
-        if user == None:
-            return False
-        else:
-            return True
-
-    def userexistsFromId(self, userid, **args):
-        """
-        param:userid id
-        result bool 
-        
-        """
-        result = not (j.apps.system.usermanager_model_user.get(userid, "") == False)
-        return result
+        return self.modelUser.exists("%s_%s"%(j.application.whoAmI.gid,name))
 
     def userregister(self, name, passwd, emails, reference, remarks, config, **args):
         """
