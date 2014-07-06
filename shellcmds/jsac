@@ -1,0 +1,41 @@
+#!/usr/bin/env jspython
+from JumpScale import j
+from JumpScale.baselib import cmdutils
+
+import sys,time
+
+j.application.start("jsac")
+
+parser = cmdutils.ArgumentParser()
+parser.add_argument("action", choices=['reload', 'exec', 'listsessions'], help='Command to perform')
+parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=int, help='Use for exec')
+parser.add_argument('-r', '--role', required=False, help='Use for exec')
+parser.add_argument('-n', '--name', required=False, help='Use for exec')
+parser.add_argument('-o', '--organization', required=False, help='Use for exec')
+parser.add_argument('-a', '--arguments', required=False, default="", help='Use for exec, eg. msg:test')
+
+opts = parser.parse_args()
+
+import JumpScale.grid.agentcontroller
+with j.logger.nostdout():
+    ac = j.clients.agentcontroller.get()
+
+
+if opts.action == 'reload':
+    print 'Reloading JumpScripts'
+    ac.reloadjumpscripts()
+elif opts.action == 'listsessions':
+    import yaml
+    sessions = ac.listSessions()
+    print 'Sessions:\n\n', yaml.dump(sessions)
+elif opts.action == 'exec':
+    import yaml
+    args = dict()
+    argss = opts.arguments.split(',')
+    for arg in argss:
+        key, value = arg.split(':')
+        args[key] = value
+    job = ac.executeJumpScript(opts.organization, opts.name, nid=opts.nid, role=opts.role, args=args)
+    print "Job:\n\n:", yaml.dump(job)
+
+j.application.stop()
