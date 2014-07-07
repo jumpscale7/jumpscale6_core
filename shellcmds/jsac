@@ -33,8 +33,9 @@ elif opts.action == 'exec':
     args = dict()
     argss = opts.arguments.split(',')
     for arg in argss:
-        key, value = arg.split(':')
-        args[key] = value
+        if ':' in arg:
+            key, value = arg.split(':')
+            args[key] = value
     job = ac.executeJumpScript(opts.organization, opts.name, nid=opts.nid, role=opts.role, args=args)
     print "Job:\n\n:", yaml.dump(job)
 
