@@ -9,7 +9,7 @@ from JumpScale import j
 IPBLOCKS = re.compile("(^|\n)(?P<block>\d+:.*?)(?=(\n\d+)|$)", re.S)
 IPMAC = re.compile("^\s+link/\w+\s+(?P<mac>(\w+:){5}\w{2})", re.M)
 IPIP = re.compile("^\s+inet\s(?P<ip>(\d+\.){3}\d+)/(?P<cidr>\d+)", re.M)
-IPNAME = re.compile("^\d+: (?P<name>\w+):", re.M)
+IPNAME = re.compile("^\d+: (?P<name>.*?)(?=:)", re.M)
 
 def parseBlock(block):
     result = {'ip': [], 'cidr': [], 'mac': '', 'name': ''}
@@ -433,7 +433,7 @@ class SystemNet:
         netaddr={}
         if j.system.platformtype.isLinux():
             for ipinfo in getNetworkInfo():
-                ip = ipinfo['ip'][0] if ipinfo.get('ip') else None
+                ip = ','.join(ipinfo['ip'])
                 netaddr[ipinfo['mac']] = [ ipinfo['name'], ip ]
         else:
             nics=self.getNics()
