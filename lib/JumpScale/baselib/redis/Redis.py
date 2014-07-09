@@ -53,6 +53,17 @@ class RedisFactory:
             self.gredisq[key] = CRedisQueue(self.getGeventRedisClient(ipaddr, port), name, namespace=namespace)
         return self.gredisq[key]
 
+    def checkAllInstances(self):
+        for pd in [item for item in j.tools.startupmanager.getProcessDefs("jumpscale") if item.name.find("redis")==0]:
+            pd.stop()
+            path=j.system.fs.joinPaths(j.dirs.varDir,"redis",pd.name,"db","appendonly.aof")
+            if j.system.fs.exists(path):
+                stats=j.system.fs.statPath(path)
+                if stats.st_size<>0:                    
+                    cmd="%s/apps/redis/redis-check-aof --fix %s"%(j.dirs.baseDir,path)
+                    j.system.process.executeWithoutPipe(cmd)
+            pd.start()
+
     def emptyAllInstances(self):
         for pd in [item for item in j.tools.startupmanager.getProcessDefs("jumpscale") if item.name.find("redis")==0]:
             if pd.name=="redism" or pd.name=="rediskvs":
@@ -64,7 +75,7 @@ class RedisFactory:
             j.system.fs.createDir(path)
             path=j.system.fs.joinPaths(j.dirs.varDir,"redis",pd.name,"redis.log")
             j.system.fs.remove(path)
-            pd.start()
+            pd.start()            
 
     # def deleteAllInstances(self):
     #     path = "/opt/redis/"

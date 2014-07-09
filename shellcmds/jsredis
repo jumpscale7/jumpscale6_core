@@ -9,7 +9,7 @@ j.application.start("jsredis")
 parser = cmdutils.ArgumentParser()
 
 parser.add_argument("action", choices=['workerwatchdog','keys',\
-        'clearjobqueue','apps','appsreset'], help='Command to perform')
+        'clearjobqueue','apps','appsreset','emptyall','checkall'], help='Command to perform')
 
 parser.add_argument('-a', '--agentcontroller', required=False, action='store_true', help='Run commands on Agentcontroller redis')
 
@@ -35,6 +35,12 @@ if opts.action =='workerwatchdog':
     items2=zip(items[0::2], items[1::2])
     for  workername, last in items2:
         print "%-20s %s"%(workername,timeago(last))
+
+elif opts.action =='emptyall':
+    j.clients.redis.emptyAllInstances()
+    
+elif opts.action =='checkall':
+    j.clients.redis.checkAllInstances()
 
 elif opts.action =='apps':
     j.system.process.appsGet()
