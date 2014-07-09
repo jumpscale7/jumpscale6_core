@@ -200,7 +200,7 @@ class Application:
 
         #tell gridmaster the process stopped
         if self.gridInitialized:
-            client=j.core.grid.gridOsisClient            
+            client=j.core.osis.getClient(user='root')            
             clientprocess=j.core.osis.getClientForCategory(client,"system","process")
             obj=clientprocess.get("%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.pid))
             obj.epochstop=j.base.time.getTimeEpoch()
