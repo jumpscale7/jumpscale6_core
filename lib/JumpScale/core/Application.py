@@ -199,6 +199,9 @@ class Application:
                               # to remember that this is correct behaviour we set this flag
 
         #tell gridmaster the process stopped
+
+        #@todo this SHOULD BE WORKING AGAIN, now processes are never removed
+
         if self.gridInitialized:
             client=j.core.osis.getClient(user='root')            
             clientprocess=j.core.osis.getClientForCategory(client,"system","process")

@@ -23,6 +23,14 @@ class EmailClient(object):
         if j.application.config.exists('mail.relay.ssl'):
             self._ssl = j.application.config.getBool('mail.relay.ssl')
 
+    def __str__(self):
+        out="server=%s\n"%(self._server)
+        out+="port=%s\n"%(self._port)
+        out+="username=%s\n"%(self._username)
+        return out
+
+    __repr__=__str__
+
     def send(self, recipients, sender, subject, message, files=None):
         """
         """
@@ -35,7 +43,9 @@ class EmailClient(object):
         if self._username:
             server.login(self._username, self._password)
 
-        msg = MIMEText(message, 'html')
+        # msg = MIMEText(message, 'html')
+        msg = MIMEText(message, 'plain')
+        
         msg['Subject'] = subject
         msg['From'] = sender
         msg['To'] = ','.join(recipients)
