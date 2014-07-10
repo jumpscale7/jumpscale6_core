@@ -14,8 +14,10 @@ enable = True
 async = True
 queue = 'hypervisor'
 
-def action(networkid, publicip, password):
+def action(networkid, publicip, publicgwip, publiccidr, password):
     import JumpScale.lib.routeros
+    import pexpect
+    import netaddr
     import libvirt
     import JumpScale.lib.ovsnetconfig
     import time
@@ -40,16 +42,21 @@ def action(networkid, publicip, password):
 
     DEFAULTGWIP = j.application.config.get("vfw.default.ip")
     BACKPLANE = 'vxbackend'
+    netrange = j.application.config.get("vfw.netrange.internal")
+    defaultpasswd=j.application.config.get("vfw.admin.passwd")
     nc = j.system.ovsnetconfig
     con = libvirt.open()
 
     data = {'nid': j.application.whoAmI.nid,
-            'gid': j.application.whoAmI.gid
+            'gid': j.application.whoAmI.gid,
+            'username': 'vscalers',
+            'password': defaultpasswd
             }
 
     j.packages.findNewest('', 'routeros_config').install()
 
     networkidHex = '%04x' % int(networkid)
+    internalip = str(netaddr.IPAddress(netaddr.IPNetwork(netrange).first + int(networkid)))
     networkname = "space_%s"  % networkidHex
     name = 'routeros_%s' % networkidHex
     destinationdir = '/mnt/vmstor/routeros/%s' % networkidHex
@@ -97,8 +104,6 @@ def action(networkid, publicip, password):
         private.create()
         private.setAutostart(True)
 
-        if j.system.net.tcpPortConnectionTest(DEFAULTGWIP,22,timeout=5):
-            raise RuntimeError("Cannot continue, foudn VFW which is using the admin address & remove")
         j.system.fs.createDir(destinationdir)
         destinationfile = 'routeros-small-%s.qcow2' % networkidHex
         destinationfile = j.system.fs.joinPaths(destinationdir, destinationfile)
@@ -115,59 +120,49 @@ def action(networkid, publicip, password):
             cleanup()
             raise RuntimeError("Could not create VFW vm from template, network id:%s:%s\n%s"%(networkid,networkidHex,e))
 
-        time.sleep(20)
-
-        if j.system.net.tcpPortConnectionTest(DEFAULTGWIP,22,timeout=120):
-            time.sleep(1)
-        else:
-            cleanup()
-            raise RuntimeError("router did not become accessible over default internal net.")
-
-        try:
-            defaultpasswd=j.application.config.get("vfw.admin.passwd")
-            data['username'] = 'vscalers'
-            data['password'] = defaultpasswd
-            ro=j.clients.routeros.get(DEFAULTGWIP,"vscalers",defaultpasswd)
-            
-            ro.do("/system/identity/set",{"name":"%s/%s"%(networkid,networkidHex)})
-        except Exception,e:
-            cleanup()
-            raise RuntimeError("Could not connected to created VFW vm from template, network id:%s:%s\n%s"%(networkid,networkidHex,e)) 
-
-
-        internalip = ro.networkId2NetworkAddr(networkid)
         data['internalip'] = internalip
 
-        if not j.system.net.tcpPortConnectionTest(internalip,22,timeout=2):
-            print "OK not other router found."
+        if not j.system.net.tcpPortConnectionTest(internalip,22):
+            print "OK no other router found."
         else:
             raise RuntimeError("IP conflict there is router with %s"%internalip)
 
+
         try:
-            ro.ipaddr_set('internal', internalip+"/22", single=False)
+            run = pexpect.spawn("virsh console %s" % name)
+            print "Waiting to attach to console"
+            run.expect("Connected to domain", timeout=10)
+            run.sendline() #first enter to clear welcome message of kvm console
+            print 'Waiting for Login'
+            run.expect("Login:", timeout=60)
+            run.sendline("vscalers")
+            run.expect("Password:", timeout=2)
+            run.sendline(defaultpasswd)
+            print 'waiting for prompt'
+            run.expect("\] >", timeout=60) # wait for primpt
+            run.send("/ip addr add address=%s/22 interface=internal\r\n" % internalip)
+            print 'waiting for end of command'
+            run.expect("\] >", timeout=2) # wait for primpt
+            run.send("\r\n")
+            run.close()
         except Exception,e:
+            cleanup()
             raise RuntimeError("Could not set internal ip on VFW, network id:%s:%s\n%s"%(networkid,networkidHex,e)) 
 
-        time.sleep(2)
         print "wait max 30 sec on tcp port 22 connection to '%s'"%internalip
-        if j.system.net.tcpPortConnectionTest(internalip,22,timeout=30):
+        if j.system.net.waitConnectionTest(internalip,22,timeout=30):
             print "Router is accessible, initial configuration probably ok."
         else:
             raise RuntimeError("Could not connect to router on %s"%internalip)
 
         ro=j.clients.routeros.get(internalip,"vscalers",defaultpasswd)
-
         try:
             ro.ipaddr_remove(DEFAULTGWIP)
             ro.resetMac("internal")
         except Exception,e:
             raise RuntimeError("Could not cleanup VFW temp ip addr, network id:%s:%s\n%s"%(networkid,networkidHex,e)) 
 
-        print "tcp port:22 test to %s, needs to be gone." % DEFAULTGWIP
-        if j.system.net.tcpPortConnectionTest(DEFAULTGWIP,22,timeout=1):
-            cleanup()
-            raise RuntimeError("Temp ip address still there, was not removed during install. network id:%s:%s\n%s"%(networkid,networkidHex,e)) 
-
+        ro.do("/system/identity/set",{"name":"%s/%s"%(networkid,networkidHex)})
         toremove=[ item for item in ro.list("/") if item.find('.backup')<>-1]
         for item in toremove:
             ro.delfile(item)
@@ -181,7 +176,7 @@ def action(networkid, publicip, password):
         ro.executeScript("/ip address remove numbers=[/ip address find network=192.168.1.0]")
         ro.executeScript("/ip address remove numbers=[/ip address find network=192.168.103.0]")
         ro.uploadExecuteScript("basicnetwork")
-        ro.ipaddr_set('public', "%s/%s" % (publicip, PUBLICCDR), single=True)
+        ro.ipaddr_set('public', "%s/%s" % (publicip, publiccidr), single=True)
 
         ipaddr=[]
         for item in ro.ipaddr_getall():
@@ -192,7 +187,7 @@ def action(networkid, publicip, password):
 
         ro.ipaddr_set('cloudspace-bridge', '192.168.103.1/24',single=True)
 
-        ro.uploadExecuteScript("route", vars={'$gw': PUBLICGW})
+        ro.uploadExecuteScript("route", vars={'$gw': publicgwip})
         ro.uploadExecuteScript("ppp")
         ro.uploadExecuteScript("customer")
         ro.uploadExecuteScript("systemscripts")
@@ -200,7 +195,7 @@ def action(networkid, publicip, password):
         #ro.executeScript(cmd)
         #import file-name=RB450.crt passphrase="123456"
         #import file-name=RB450.pem passphrase="123456"
-        
+
         cmd="/user set numbers=[/user find name=admin] password=\"%s\""% password
         ro.executeScript(cmd)
 
@@ -228,22 +223,22 @@ def action(networkid, publicip, password):
             pass
         print "reboot busy"
 
-        print "wait 5 sec"
         start = time.time()
         timeout = 60
         while time.time() - start < timeout:
             try:
                 ro=j.clients.routeros.get(internalip,"vscalers",defaultpasswd)
-                if ro.ping(PUBLICGW):
+                if ro.ping(publicgwip):
+                    print "Failed to ping %s waiting..." % publicgwip
                     break
             except:
-                print 'Failed to connect will try agian in 3sec'
+                print 'Failed to connect will try again in 3sec'
             time.sleep(3)
         else:
-            raise RuntimeError("Could not ping to:%s for VFW %s"%(PUBLICGW, networkid))
+            raise RuntimeError("Could not ping to:%s for VFW %s"%(publicgwip, networkid))
 
-        print "wait max 30 sec on tcp port 9022 connection to '%s'"%internalip
-        if j.system.net.tcpPortConnectionTest(internalip,9022,timeout=2):
+        print "wait max 2 sec on tcp port 9022 connection to '%s'"%internalip
+        if j.system.net.waitConnectionTest(internalip,9022,timeout=2):
             print "Router is accessible, configuration probably ok."
         else:
             raise RuntimeError("Internal ssh is not accsessible.")

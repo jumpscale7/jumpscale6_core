@@ -11,6 +11,8 @@
         var:publicip str,, Public IP of the firewall 
         var:type str,, Type of the firewall, e.g routeros, ...
         var:networkid str,, Network ID
+        var:publicgwip str,, Gateway of the public network 
+        var:publiccidr str,, CIDR of public network 
         #result:int #unique id of firewall
 
     method:fw_list @noauth

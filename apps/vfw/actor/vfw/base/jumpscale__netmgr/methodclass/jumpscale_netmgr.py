@@ -34,7 +34,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         import JumpScale.lib.routeros
         return j.clients.routeros.get(fwobj.host, fwobj.username, fwobj.password)
 
-    def fw_create(self, domain, login, password, publicip, type, networkid, **kwargs):
+    def fw_create(self, domain, login, password, publicip, type, networkid, publicgwip, publiccidr, **kwargs):
         """
         param:domain needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
         param:gid grid id
@@ -56,7 +56,9 @@ class jumpscale_netmgr(j.code.classGetBase()):
         if type == 'routeros':
             args = {'networkid': networkid,
                     'password': password,
-                    'publicip': publicip
+                    'publicip': publicip,
+                    'publicgwip': publicgwip,
+                    'publiccidr': publiccidr,
                     }
             result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args, queue='hypervisor')
             if result['state'] != 'OK':
