@@ -34,7 +34,7 @@
         var:config str,,free to be used field to store config information e.g. in json or xml format 
         result:bool    #True if successful, False otherwise
 
-    method:authenticate
+    method:authenticate @noauth
 		"""
         authenticate and return False if not successfull
         otherwise return secret for api
