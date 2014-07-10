@@ -11,6 +11,18 @@ class Text:
             return str(value)
 
     @staticmethod
+    def toAscii(value,maxlen):
+
+        out=""
+        for item in value:
+            if ord(item)>255:
+                continue
+            out+=item
+        if len(out)>maxlen:
+            out=out[0:maxlen]            
+        return out
+
+    @staticmethod
     def toUnicode(value, codec=CODEC):
         if isinstance(value, str):
             return value.decode(codec)
