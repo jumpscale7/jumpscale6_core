@@ -11,14 +11,14 @@ class Text:
             return str(value)
 
     @staticmethod
-    def toAscii(value,maxlen):
+    def toAscii(value,maxlen=0):
 
         out=""
         for item in value:
             if ord(item)>255:
                 continue
             out+=item
-        if len(out)>maxlen:
+        if maxlen>0 and len(out)>maxlen:
             out=out[0:maxlen]            
         return out
 
@@ -37,6 +37,37 @@ class Text:
         txt=txt.rstrip("\n")
         for line in txt.split("\n"):
             out+="%s%s\n"%(prefix,line)
+        return out
+
+    @staticmethod
+    def prefix_remove(prefix,txt,onlyPrefix=False):
+        """
+        @param onlyPrefix if True means only when prefix found will be returned, rest discarded
+        """
+        out=""
+        txt=txt.rstrip("\n")
+        l=len(prefix)
+        for line in txt.split("\n"):
+            if line.find(prefix)==0:
+                out+="%s\n"%(line[l:])
+            elif onlyPrefix==False:
+                out+="%s\n"%(line)
+        return out
+
+    @staticmethod
+    def prefix_remove_withtrailing(prefix,txt,onlyPrefix=False):
+        """
+        there can be chars for prefix (e.g. '< :*: aline'  and this function looking for :*: would still work and ignore '< ')
+        @param onlyPrefix if True means only when prefix found will be returned, rest discarded
+        """
+        out=""
+        txt=txt.rstrip("\n")
+        l=len(prefix)
+        for line in txt.split("\n"):
+            if line.find(prefix)>0:
+                out+="%s\n"%(line.split(prefix,1)[1])
+            elif onlyPrefix==False:
+                out+="%s\n"%(line)
         return out
 
     @staticmethod
