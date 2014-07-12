@@ -1,20 +1,16 @@
 
 def main(j, args, params, tags, tasklet):
-    params.merge(args)
 
-    doc = params.doc
-    tags = params.tags
+    doc = args.doc
 
     params.result = ""
 
-    C = """
-{{menudropdown: name:Spaces
-System:/system
-}}
-"""
-    C="" #@todo fix
+    C = "{{menudropdown: %s\n" % args.tags
+    for space in sorted(j.core.portal.active.getSpaces()):
+        C += "%s:/%s\n" % (space.capitalize(), space)
+    C += "}}\n"
 
-    if j.core.portal.active.isAdminFromCTX(params.requestContext):
+    if j.core.portal.active.isAdminFromCTX(args.requestContext):
         params.result = C
 
     params.result = (params.result, doc)
