@@ -22,16 +22,12 @@ New:/system/create?space=$$space
 --------------
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
-System:/system
---------------
-Grid:/grid
-JPackages:/jpackages
-Tests:/tests
 --------------
 Admin JumpScripts:/grid/AdminJumpScripts
 Admin Nodes:/grid/AdminNodes
 Admin Watchdogs:/grid/AdminWatchdogs
 Alerts:/grid/Alerts
+Audits:/grid/Audits
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs
 Job Queues:/grid/jobqueues

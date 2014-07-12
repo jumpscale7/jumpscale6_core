@@ -1,20 +1,3 @@
-#http://$$addr:8081/dashboard
-
-
-{{title:GRID Dashboard}}
-
-{{projectname:GRID}}
-
-{{find}}
-
-{{menu:
-System:/System
-Dashboard:/grid/dashboard
-}}
-
-{{menuadmin_grid}}
-
-
 @block
 @row
 

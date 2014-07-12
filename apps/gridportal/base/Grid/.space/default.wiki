@@ -1,15 +1,18 @@
 
 {{title:GRID}}
 
-{{projectname:GRID}}
 
 {{find}}
 
-{{menu:
-System:/System
-Dashboard:/grid/dashboard
 
+
+{{menu:
+$$$pages
+System:/System
+Dashboard:/grid/
 }}
+
+{{menuspaces: name:GRID class:brand marker:$$$pages}}
 
 {{menuadmin_grid}}
 

@@ -1,14 +1,14 @@
 
 {{title:JSPortal}}
 
-{{projectname:JPackages}}
-
 {{find}}
 
 {{menu:
+$$$spaces
 Help:/Help
 }}
 
+{{menuspaces: class:brand name:JPackages marker:$$$spaces}}
 {{grid.menuadmin_grid}}
 
 @block
