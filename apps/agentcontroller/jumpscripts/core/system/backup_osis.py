@@ -56,7 +56,7 @@ Exception:
 -----------------------------
 %s
 -----------------------------
-    ''' % (j.base.time.epoch2HRDateTime(timestamp), j.application.whoAmI.gid, j.application.whoAmI.nid, backuppath, error)
+    ''' % (timestamp, j.application.whoAmI.gid, j.application.whoAmI.nid, backuppath, error)
         message = message.replace('\n', '<br/>')
         j.clients.email.send('support@mothership1.com', 'monitor@mothership1.com', 'OSIS backup failed', message)
 
