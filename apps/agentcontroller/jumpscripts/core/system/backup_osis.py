@@ -1,7 +1,7 @@
 from JumpScale import j
 
 descr = """
-backup osis
+Creates a targz of the backup under {var directory}/backup/osis/{timestamp}.tgz
 """
 
 organization = "jumpscale"
@@ -19,11 +19,10 @@ def action():
     import JumpScale.grid.osis
     import tarfile
     """
-    Backs up each category under {var directory}/osisbackup/namespace/category/
-    Creates a targz of the backup under {var directory}/osisbackup_{timestamp}
     """
-    backuppath = j.system.fs.joinPaths(j.dirs.varDir, 'osisbackup')
-    timestamp = j.base.time.getTimeEpoch() 
+    backuppath = j.system.fs.joinPaths(j.dirs.tmpDir, 'backup', 'osis')
+    timestamp = j.base.time.getTimeEpoch()
+    timestamp = j.base.time.formatTime(timestamp, "%Y%m%d_%H%M%S")
     try:
         oscl = j.core.osis.getClient(user='root')
         namespaces = oscl.listNamespaces()
@@ -32,30 +31,35 @@ def action():
         for namespace in namespaces:
             categories = oscl.listNamespaceCategories(namespace)
             for category in categories:
-                if namespace == 'system' and category in ['stats', 'log']:
+                if namespace == 'system' and category in ['stats', 'log', 'sessioncache']:
                     continue
                 outputpath = j.system.fs.joinPaths(backuppath, namespace, category)
                 j.system.fs.createDir(outputpath)
                 oscl.export(namespace, category, outputpath)
 
         #targz
-        outputpath = j.system.fs.joinPaths(j.dirs.varDir, 'osisbackup_%s.tar.gz' % timestamp)
+        backupdir = j.system.fs.joinPaths(j.dirs.varDir, 'backup', 'osis')
+        j.system.fs.createDir(backupdir)
+        outputpath = j.system.fs.joinPaths(backupdir, '%s.tar.gz' % timestamp)
         with tarfile.open(outputpath, "w:gz") as tar:
             tar.add(backuppath)
+        j.system.fs.removeDirTree(backuppath)
     except Exception:
         import JumpScale.baselib.mailclient
         import traceback
         error = traceback.format_exc()
         message = '''
-OSIS backup at %s failed.
+OSIS backup at %s failed on %s.%s
 Data should have been backed up to %s on the admin node.
 
 Exception:
 -----------------------------
 %s
 -----------------------------
-    ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, error)
+    ''' % (j.base.time.epoch2HRDateTime(timestamp), j.application.whoAmI.gid, j.application.whoAmI.nid, backuppath, error)
         message = message.replace('\n', '<br/>')
-        j.clients.email.send('support@mothership1.com', 'smtp@incubaid.com', 'OSIS backup failed', message)
-        
+        j.clients.email.send('support@mothership1.com', 'monitor@mothership1.com', 'OSIS backup failed', message)
 
+
+if __name__ == '__main__':
+    action()

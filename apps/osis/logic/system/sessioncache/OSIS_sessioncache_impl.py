@@ -35,12 +35,12 @@ class mainclass(OSISStore):
         return self.db.exists(self.dbprefix,key=key)
 
     def setObjIds(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method setObjIds is not relevant for logger namespace",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis method setObjIds is not relevant for sessioncache namespace",category="osis.notimplemented")
 
     def rebuildindex(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method rebuildindex is not relevant for logger namespace",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis method rebuildindex is not relevant for sessioncache namespace",category="osis.notimplemented")
 
     def list(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method list is not relevant for logger namespace",category="osis.notimplemented")
+        j.errorconditionhandler.raiseBug(message="osis method list is not relevant for sessioncache namespace",category="osis.notimplemented")
 
 

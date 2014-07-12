@@ -20,8 +20,9 @@ def action():
     import tarfile
     import JumpScale.baselib.mailclient
 
-    backuppath = j.system.fs.joinPaths(j.dirs.varDir, 'vfwbackup')
-    timestamp = j.base.time.getTimeEpoch() 
+    backuppath = j.system.fs.joinPaths(j.dirs.tmpDir, 'backup', 'vfw')
+    timestamp = j.base.time.getTimeEpoch()
+    timestamp = j.base.time.formatTime(timestamp, "%Y%m%d_%H%M%S")
     vfwerrors = list()
     try:
         import JumpScale.lib.routeros
@@ -53,9 +54,12 @@ def action():
 
 
         #targz
-        outputpath = j.system.fs.joinPaths(j.dirs.varDir, 'vfwbackup_%s.tar.gz' % timestamp)
+        backupdir = j.system.fs.joinPaths(j.dirs.varDir, 'backup', 'vfw')
+        j.system.fs.createDir(backupdir)
+        outputpath = j.system.fs.joinPaths(backupdir, '%s.tar.gz' % timestamp)
         with tarfile.open(outputpath, "w:gz") as tar:
             tar.add(backuppath)
+        j.system.fs.removeDirTree(backuppath)
     except Exception:
         import traceback
         error = traceback.format_exc()
@@ -83,5 +87,4 @@ Exception:
         ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, '<br/>'.join(vfwerrors))
             message = message.replace('\n', '<br/>')
             j.clients.email.send('support@mothership1.com', 'smtp@incubaid.com', 'VFW backup incomplete', message)
-        
 
