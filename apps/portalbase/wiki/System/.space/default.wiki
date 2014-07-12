@@ -1,16 +1,15 @@
 
 {{title:JSPortal}}
 
-{{projectname:System}}
-
 {{find}}
 
 {{menu:
+$$$spaces
 Help:/Help
 }}
 
 {{menuadmin}}
-{{menuspaces}}
+{{menuspaces marker:$$$spaces name:System class:brand}}
 
 
 @block
