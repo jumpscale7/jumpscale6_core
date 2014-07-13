@@ -5,6 +5,7 @@ import imp
 import pymongo
 from pymongo import MongoClient
 import JumpScale.baselib.redisworker
+import JumpScale.grid.mongodbclient
 import time
 
 class OSISStoreMongo(OSISStore):
@@ -20,41 +21,30 @@ class OSISStoreMongo(OSISStore):
     def _getDB(self):
         raise RuntimeError("Not Implemented")
 
-    def init(self, path, namespace,categoryname):
+    def init(self, path, namespace, categoryname):
         """
         gets executed when catgory in osis gets loaded by osiscmds.py (.init method)
         """
-        self.initall( path, namespace,categoryname,db=False)
+        self.initall(path, namespace, categoryname, db=False)
+        config = j.application.config
+        host = config.get('mongodb.host') if config.exists('mongodb.host') else 'localhost'
+        port = config.get('mongodb.port') if config.exists('mongodb.port') else 27017
+        mongodb_client = j.clients.mongodb.get(host, port)
 
-        #FOR NOW OK TO WORK WITH LOCAL MONGODB, WILL IMPROVE LATER
+        self.db = mongodb_client[namespace]
+        self.client = self.db[categoryname]
+        self.counter = self.db["counter"]
 
-        counter=1
-        client=None
-        while client==None and counter<60:
-            try:
-                client = MongoClient()
-            except Exception,e:                
-                print "could not connect to mongodbserver on localhost, will retry"
-                print "error was:%s"%e
-                time.sleep(1)
-
-        if client==None:
-            raise RuntimeError("Could not connect to mongodb")
-
-        self.db=client[namespace]
-        self.client=self.db[categoryname]
-        self.counter=self.db["counter"]
-
-        seq= {"_id": categoryname,"seq": 0}
-        if self.counter.find_one({'_id': categoryname})==None:
+        seq= {"_id": categoryname, "seq": 0}
+        if self.counter.find_one({'_id': categoryname}) == None:
             self.counter.save(seq)
-        
-    def _getObjectId(self,id):
+
+    def _getObjectId(self, id):
         return pymongo.mongo_client.helpers.bson.objectid.ObjectId(id)
 
     def incrId(self):
-        self.counter.update({'_id': self.categoryname},{"$inc": { "seq": 1 }})
-        seq=self.counter.find_one({'_id': self.categoryname})
+        self.counter.update({'_id': self.categoryname},{"$inc": {"seq": 1}})
+        seq = self.counter.find_one({'_id': self.categoryname})
         return seq["seq"]
 
     def setPreSave(self, value):
@@ -64,7 +54,6 @@ class OSISStoreMongo(OSISStore):
         """
         value can be a dict or a raw value (seen as string)
         """
-
         if j.basetype.dictionary.check(value):
             obj=None
 
@@ -274,8 +263,7 @@ class OSISStoreMongo(OSISStore):
             return result
 
     def destroyindex(self):
-        #@todo implement
-        pass
+        self.client.drop()
 
     def deleteSearch(self,query):
         if not j.basetype.string.check(update):
@@ -325,11 +313,17 @@ class OSISStoreMongo(OSISStore):
         """
         return all object id's stored in DB
         """
-        #@todo implement
-        from IPython import embed
-        print "DEBUG NOW list"
-        embed()
-        
+        result = list()
+        if withcontent:
+            cursor = self.client.find()
+            for item in cursor:
+                item.pop('_id')
+                result.append(item)
+        else:
+            cursor = self.client.find(fields=['id',])
+            for item in cursor:
+                result.append(item['id'])
+        return result
 
     def rebuildindex(self):
         path=j.system.fs.joinPaths(self.path,"index.py")
