@@ -4,8 +4,44 @@ from JumpScale.baselib.credis.CRedis import CRedis
 from JumpScale.baselib.credis.CRedisQueue import CRedisQueue
 import itertools
 
+try:
+    import ujson as json
+except ImportError:
+    import json
 
-class GeventRedis(redis.Redis):
+
+class RedisDict(dict):
+    def __init__(self, client, key):
+        self._key = key
+        self._client = client
+
+    def __getitem__(self, key):
+        value = self._client.hget(self._key, key)
+        return json.loads(value)
+
+    def __setitem__(self, key, value):
+        value = json.dumps(value)
+        self._client.hset(self._key, key, value)
+
+    def __contains__(self, key):
+        return self._client.hexists(self._key, key)
+
+    def __repr__(self):
+        return repr(self._client.hgetall(self._key))
+
+    def copy(self):
+        result = dict()
+        allkeys = self._client.hgetalldict(self._key)
+        for key, value in allkeys.iteritems():
+            result[key] = json.loads(value)
+        return result
+
+class Redis(redis.Redis):
+    def getDict(self, key):
+        return RedisDict(self, key)
+
+class GeventRedis(Redis):
+    hgetalldict = Redis.hgetall
     def hgetall(self, name):
         "Return a Python dict of the hash's name/value pairs"
         d = self.execute_command('HGETALL', name)
@@ -35,7 +71,7 @@ class RedisFactory:
     def getRedisClient(self, ipaddr, port, password=""):
         key = "%s_%s" % (ipaddr, port)
         if not self.redis.has_key(key):
-            self.redis[key] = redis.Redis(ipaddr, port, password=password)
+            self.redis[key] = Redis(ipaddr, port, password=password)
         return self.redis[key]
 
     def getRedisQueue(self, ipaddr, port, name, namespace="queues"):
