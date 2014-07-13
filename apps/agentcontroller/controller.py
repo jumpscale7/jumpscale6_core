@@ -8,12 +8,9 @@ monkey.patch_time()
 from JumpScale import j
 import JumpScale.grid.jumpscripts
 import JumpScale.grid.geventws
-import gevent
-import gevent.coros
 import JumpScale.grid.osis
-import imp
 import importlib
-import inspect
+import sys
 try:
     import ujson as json
 except:
@@ -65,18 +62,6 @@ class ControllerCMDS():
         self.jumpscriptsFromKeys = {}
         self.jumpscriptsId={}
 
-        self.roles2agents = {}  # key=role in all depths
-        self.agentqueues = dict()
-        self.sessionsUpdateTime={}
-
-        # self.session2agent={} #key= sessionid, val = agentid
-        # self.agent2sessions={} #key=agent, val=list of sessions
-        # self.sessions={} #key=sessionid
-        # self.sessionsUpdateTime={} #key=sessionid, val is last epoch of contact
-        # self.activeJobSessions={}  # key=sessionid , is job running per session or does not exist if no job running on that session
-
-        # self.agent2freeSessions={} #key is agent, val is dict of sessions free to be used
-
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
 
@@ -87,6 +72,8 @@ class ControllerCMDS():
 
         self.redisport=7769
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
+        self.roles2agents = self.redis.getDict("roles2agents")
+        self.sessionsUpdateTime = self.redis.getDict("sessionupdate")
 
 
         self.webdis=j.clients.webdis.get("127.0.0.1",7779)
@@ -226,10 +213,9 @@ class ControllerCMDS():
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=False)
         
     def _setRole2Agent(self,role,agent):
-        if not self.roles2agents.has_key(role):
-            self.roles2agents[role]=[]
-        if agent not in self.roles2agents[role]:
-            self.roles2agents[role].append(agent)   
+        roles = self.roles2agents.get(role, list())
+        roles.append(agent)
+        self.roles2agents[role] = roles #force redis to update this key
 
     def register(self,session):
         self._log("new agent:")
@@ -539,22 +525,7 @@ class ControllerCMDS():
             print msg
 
     def listSessions(self,session=None):
-        #result=[]
-        #for sessionid, session in self.sessions.iteritems():
-        #    sessionresult={}
-        #    sessionresult["id"]=sessionid
-        #    sessionresult["roles"]=session.roles
-        #    sessionresult["netinfo"]=session.netinfo
-        #    sessionresult["organization"]=session.organization
-        #    sessionresult["agentid"]=session.agentid
-        #    sessionresult["id"]=session.id
-        #    sessionresult["user"]=session.user
-        #    sessionresult["start"]=session.start
-        #    sessionresult["lastpoll"]=self.sessionsUpdateTime[session.id]
-        #    activejob = self.activeJobSessions.get(session.id)
-        #    sessionresult["activejob"] = activejob.id if activejob else None
-        #    result.append(sessionresult)
-        return self.roles2agents
+        return self.roles2agents.copy()
 
     def getJobInfo(self, jobid, session=None):
         raise RuntimeError("need to be implemented")
@@ -596,7 +567,12 @@ class ControllerCMDS():
 # will reinit for testing everytime, not really needed
 # j.servers.geventws.initSSL4Server("myorg", "controller1")
 
-daemon = j.servers.geventws.getServer(port=4444)
+port = 4444
+
+if len(sys.argv) > 1:
+    port = int(sys.argv[1])
+
+daemon = j.servers.geventws.getServer(port=port)
 
 daemon.addCMDsInterface(ControllerCMDS, category="agent")  # pass as class not as object !!! chose category if only 1 then can leave ""
 

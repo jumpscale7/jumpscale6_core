@@ -25,7 +25,11 @@ class AgentControllerProxyClient():
         self.category=category
         import JumpScale.grid.geventws
         if agentControllerIP==None:
-            self.ipaddr=j.application.config.get("grid.master.ip")
+            acipkey = "grid.agentcontroller.ip"
+            if j.application.config.exists(acipkey):
+                self.ipaddr=j.application.config.get(acipkey)
+            else:
+                self.ipaddr=j.application.config.get("grid.master.ip")
         else:
             self.ipaddr=agentControllerIP
         passwd=j.application.config.get("grid.master.superadminpasswd")

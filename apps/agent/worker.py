@@ -51,15 +51,14 @@ class Worker(object):
         self.redisprocessmanager=j.clients.credis.getRedisClient('127.0.0.1', 7766)
 
         def checkagentcontroller():
-            masterip=j.application.config.get("grid.master.ip")
             success=False
             wait=1
             while success == False:
                 try:
-                    self.acclient=j.clients.agentcontroller.get(masterip)
+                    self.acclient=j.clients.agentcontroller.get()
                     success=True
                 except Exception,e:
-                    msg="Cannot connect to agentcontroller on %s."%(masterip)
+                    msg="Cannot connect to agentcontroller."
                     j.events.opserror(msg, category='worker.startup', e=e)
                     if wait<60:
                         wait+=1                    

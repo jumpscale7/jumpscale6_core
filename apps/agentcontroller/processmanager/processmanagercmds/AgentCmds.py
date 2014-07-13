@@ -37,7 +37,7 @@ class AgentCmds():
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
 
-        self.client = j.clients.agentcontroller.get(agentControllerIP=self.serverip)
+        self.client = j.clients.agentcontroller.get()
 
     def _init(self):
         self.init()

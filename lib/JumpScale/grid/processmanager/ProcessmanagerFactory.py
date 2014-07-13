@@ -216,15 +216,14 @@ class ProcessmanagerFactory:
 
 
         def checkagentcontroller():
-            masterip=j.application.config.get("grid.master.ip")
             success=False
             wait=1
             while success == False:
                 try:
-                    client=j.clients.agentcontroller.get(masterip)
+                    client=j.clients.agentcontroller.get()
                     success=True
                 except Exception,e:
-                    msg="Cannot connect to agentcontroller on %s."%(masterip)
+                    msg="Cannot connect to agentcontroller."
                     j.events.opserror(msg, category='worker.startup', e=e)
                     if wait<60:
                         wait+=1                    
