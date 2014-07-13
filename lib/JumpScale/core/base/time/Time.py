@@ -105,10 +105,10 @@ class Time:
         only supported now is -3m, -3d and -3h  (ofcourse 3 can be any int)
         and an int which would be just be returned
         means 3 days ago 3 hours ago
-        if txt==None or 0 then will be 1 day ago
+        if 0 or '' then is now
         """
         if txt==None or str(txt).strip()=="0":
-            return self.getEpochAgo("-1d")
+            return self.getTimeEpoch()
         if j.basetype.string.check(txt):
             txt=txt.lower()
             if txt.find("-")==-1:
