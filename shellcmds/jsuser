@@ -115,10 +115,13 @@ if opts.action =='add' or opts.action =='set':
     print user
 
 if opts.action =='addgroup' or opts.action =='delgroup':
-    userguid = getUserGUID(opts.userlogin)
+    if not opts.groupuser or not opts.groupgroup:
+        print "To manipulate a usergroup you need to provide -gu and -gg options"
+        j.application.stop(1)
+    userguid = getUserGUID(opts.groupuser)
     if not userguid:
         j.errorconditionhandler.raiseOperationalCritical(message='cannot find user:%s'%opts.user, category="jsuser.add.exists")
-    user=userclient.get(userguid)   
+    user=userclient.get(userguid)
 
     if opts.action =='delgroup':
         print "del group:%s from %s"%(opts.groupgroup,opts.groupuser)
@@ -129,14 +132,13 @@ if opts.action =='addgroup' or opts.action =='delgroup':
     if opts.action =='addgroup':
         print "add group:%s from %s"%(opts.groupgroup,opts.groupuser)
         if not opts.groupgroup in user.groups:
-            user.groups.append(opts.groupgroup)            
-           
+            user.groups.append(opts.groupgroup)
 
     guid,a,b=userclient.set(user)
 
     user=userclient.get(guid)
 
-    print user    
+    print user
 
 
 if opts.action =='list':
