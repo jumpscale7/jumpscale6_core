@@ -1,7 +1,9 @@
 from JumpScale import j
 
 
-from .QSocketServer import QSocketServer, QSocketServerFactory
+from .MongoDBClient import MongoDBClient
 
-j.base.loader.makeAvailable(j, 'system')
-j.system.socketserver = QSocketServerFactory()
+j.base.loader.makeAvailable(j, 'clients')
+j.clients.mongodb = MongoDBClient()
+
+

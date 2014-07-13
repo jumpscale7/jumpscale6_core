@@ -1,1 +1,0 @@
-please use grid daemon approach which is using zeromq (is much faster)
