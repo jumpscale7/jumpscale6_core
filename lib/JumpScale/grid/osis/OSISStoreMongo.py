@@ -336,11 +336,6 @@ class OSISStoreMongo(OSISStore):
         export all objects of a category to json format, optional query
         Placed in outputpath
         """
-        #@todo implement
-        from IPython import embed
-        print "DEBUG NOW export"
-        embed()
-        
         if not j.system.fs.isDir(outputpath):
             j.system.fs.createDir(outputpath)
         ids = self.list()
@@ -352,10 +347,6 @@ class OSISStoreMongo(OSISStore):
             j.system.fs.writeFile(filename, obj)
 
     def importFromPath(self, path):
-        from IPython import embed
-        print "DEBUG NOW import"
-        embed()
-        #@todo implement
         '''Imports OSIS category from file system'''
         if not j.system.fs.exists(path):
             raise RuntimeError("Can't find the specified path: %s" % path)
@@ -364,4 +355,4 @@ class OSISStoreMongo(OSISStore):
         for data_file in data_files:
             with open(data_file) as f:
                 obj = json.load(f)
-            self.set(obj['guid'], obj)
+            self.set(obj['id'], obj)
