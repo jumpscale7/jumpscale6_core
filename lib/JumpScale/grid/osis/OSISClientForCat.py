@@ -173,6 +173,8 @@ class OSISClientForCat():
 
         results = list()
         if isinstance(response, list): # mongo client
+            if not response:
+                return 0, response
             total = response.pop(0)
             for r in response:
                 r.pop('_meta')
