@@ -64,10 +64,10 @@ class Text:
         txt=txt.rstrip("\n")
         l=len(prefix)
         for line in txt.split("\n"):
-            if line.find(prefix)>0:
+            if line.find(prefix)>-1:
                 out+="%s\n"%(line.split(prefix,1)[1])
             elif onlyPrefix==False:
-                out+="%s\n"%(line)
+                out+="%s\n"%(line)        
         return out
 
     @staticmethod
