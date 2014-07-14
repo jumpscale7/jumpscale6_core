@@ -50,7 +50,7 @@ def action():
                 routeros.backup(name, path)
             except Exception:
                 vfw['pubips'] = ', '.join(vfw['pubips'])
-                vfwerrors.append('NAME: %(name)s      DOMAIN: %(domain)s      HOST: %(host)s      PUBLIC IP: %(pubips)s' % vfw) 
+                vfwerrors.append('ID: %(id)s      CloudSpaceId: %(domain)s      PUBLIC IP: %(pubips)s' % vfw) 
 
 
         #targz
@@ -72,19 +72,18 @@ Exception:
 %s
 -----------------------------
     ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, error)
-        message = message.replace('\n', '<br/>')
         j.clients.email.send('support@mothership1.com', 'monitor@mothership1.com', 'VFW backup failed', message)
     finally:
         if vfwerrors:
             message = '''
-    VFW backup at %s failed.
-    Data should have been backed up to %s on the admin node.
+VFW backup at %s failed.
+Data should have been backed up to %s on the admin node.
 
-    These vfws have failed to backup:
-    -----------------------------
-    %s
-    -----------------------------
-        ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, '<br/>'.join(vfwerrors))
+These vfws have failed to backup:
+-----------------------------
+%s
+-----------------------------
+        ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, '\n'.join(vfwerrors))
             message = message.replace('\n', '<br/>')
             j.clients.email.send('support@mothership1.com', 'smtp@incubaid.com', 'VFW backup incomplete', message)
 
