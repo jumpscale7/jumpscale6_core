@@ -2,6 +2,7 @@ from JumpScale import j
 from JumpScale.grid.osis.OSISStore import OSISStore
 # ujson = j.db.serializers.getSerializerType('j')
 import imp
+import ujson as json
 import pymongo
 from pymongo import MongoClient
 import JumpScale.baselib.redisworker
