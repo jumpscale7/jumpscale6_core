@@ -210,7 +210,22 @@ class OSISStoreMongo(OSISStore):
                 fields=[item.strip() for item in fields.split(",") if item.strip()<>""]
 
             params=tags.getDict()
-            
+            for key, value in params.copy().iteritems():
+                if value.startswith('>'):
+                    if 'm' in value or 'd' in value or 'h' in value:
+                        new_value = j.base.time.getEpochAgo(value[1:])
+                    else:
+                        new_value = j.basetype.float.fromString(value[1:])
+                    params[key] = {'$gte': new_value}
+                elif value.startswith('<'):
+                    if 'm' in value or 'd' in value or 'h' in value:
+                        new_value = j.base.time.getEpochFuture(value[1:])
+                    else:
+                        new_value = j.basetype.float.fromString(value[1:])
+                    params[key] = {'$lte': new_value}
+                elif '*' in value:
+                    params[key] = {'$regex': '.*%s.*' % value.replace('*', '')}
+
             result=[]
             for item in self.client.find(params,limit=size,skip=start,fields=fields,sort=sortlist):
                 item.pop("_id")
