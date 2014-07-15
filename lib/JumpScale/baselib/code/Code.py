@@ -220,7 +220,7 @@ class Code():
                 for key in obj.keys():
                     if key in ignoreKeys:
                         continue
-                    if ignoreUnderscoreKeys and key[0]=="_":
+                    if ignoreUnderscoreKeys and key and key[0]=="_":
                         continue
                     value[key]=todict(obj[key],{},ignoreKeys)
                 return value
