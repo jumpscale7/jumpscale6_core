@@ -68,8 +68,8 @@ class GeventWSServer():
             print "timer2"
             gevent.sleep(200)            
 
-    def schedule(self, name, ffunction, **args):
-        self.greenlets[name] = gevent.greenlet.Greenlet(ffunction, **args)
+    def schedule(self, name, ffunction, *args, **kwargs):
+        self.greenlets[name] = gevent.greenlet.Greenlet(ffunction, *args, **kwargs)
         self.greenlets[name].start()
         return self.greenlets[name]
 

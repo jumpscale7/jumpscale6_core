@@ -16,7 +16,7 @@ try:
 except:
     import json
 import time
-from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
+from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
     time.sleep(0.1)
@@ -340,7 +340,7 @@ class ControllerCMDS():
             return True
         return [[t.id,t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
-    def executeJumpScript(self, organization, name, nid=None, role=None, args={},all=False, timeout=600,wait=True,queue="", singlenode=True, session=None):
+    def executeJumpScript(self, organization, name, nid=None, role=None, args={},all=False, timeout=600,wait=True,queue="", singlenode=True, gid=None, session=None):
         """
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
@@ -353,6 +353,7 @@ class ControllerCMDS():
             self._setJob(job.__dict__, osis=True)
             return job.__dict__
 
+        gid = gid or j.application.whoAmI.gid
         self._adminAuth(session.user,session.passwd)
         self._log("AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid))
         action = self.getJumpScript(organization, name, session=session)
@@ -365,7 +366,7 @@ class ControllerCMDS():
             role = role.lower()
             if role in self.roles2agents:
                 if singlenode:
-                    job=self.scheduleCmd(j.application.whoAmI.gid,None,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait)
+                    job=self.scheduleCmd(gid,None,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait)
                     if wait:
                         return self.waitJumpscript(job=job,session=session)
                 else:
@@ -384,7 +385,7 @@ class ControllerCMDS():
                 return noWork()
         elif nid<>None:
             self._log("NID KNOWN")
-            job=self.scheduleCmd(session.gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id,wait=wait)
+            job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id,wait=wait)
 
             if wait:
                 return self.waitJumpscript(job=job,session=session)

@@ -37,8 +37,6 @@ class AgentCmds():
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
 
-        self.client = j.clients.agentcontroller.get()
-
     def _init(self):
         self.init()
 
@@ -47,28 +45,34 @@ class AgentCmds():
             self._adminAuth(session.user,session.passwd)
 
         self._killGreenLets()
-        j.core.processmanager.daemon.schedule("agent", self.loop)
+        if j.application.config.exists('grid.agentcontroller.ip'):
+            acips = j.application.config.getList('grid.agentcontroller.ip')
+        else:
+            acips = [ self.serverip ]
+        for acip in acips:
+            client = j.clients.agentcontroller.get(acip)
+            j.core.processmanager.daemon.schedule("agent", self.loop, client)
 
-    def reconnect(self):
+    def reconnect(self, client):
         while True:
             try:
-                self.client.register()
+                client.register()
                 return
             except:
                 gevent.sleep(5)
 
-    def loop(self):
+    def loop(self, client):
         """
         fetch work from agentcontroller & put on redis queue
         """
-        self.client.register()
+        self.reconnect(client)
         gevent.sleep(2)
         print "start loop to fetch work"
         while True:
             try:
                 try:
                     print "check if work"
-                    job=self.client.getWork()
+                    job=client.getWork()
                     print "check work returns"
                     if job<>None:
                         print "WORK FOUND: jobid:%s"%job["id"]
@@ -77,9 +81,10 @@ class AgentCmds():
                         continue
                 except Exception,e:
                     j.errorconditionhandler.processPythonExceptionObject(e)
-                    self.reconnect()
+                    self.reconnect(client)
                     continue
 
+                job['ipaddr'] = client.ipaddr
                 if job["queue"]=="internal":
                     #cmd needs to be executed internally (is for proxy functionality)
                    
@@ -93,7 +98,7 @@ class AgentCmds():
                         job["resultcode"]=returnCodes.METHOD_NOT_FOUND
                         job["state"]="ERROR"
                         job["result"]="Could not find cmd category:%s"%job["category"]
-                    self.client.notifyWorkCompleted(job)
+                    client.notifyWorkCompleted(job)
                     continue
 
                 if job["jscriptid"]==None:
@@ -104,7 +109,7 @@ class AgentCmds():
                     msg = "could not find jumpscript %s on processmanager"%jscriptkey
                     job['state'] = 'ERROR'
                     job['result'] = msg
-                    self.client.notifyWorkCompleted(job)
+                    client.notifyWorkCompleted(job)
                     j.events.bug_critical(msg, "jumpscript.notfound")
 
                 jscript = j.core.processmanager.cmds.jumpscripts.jumpscripts[jscriptkey]
@@ -118,7 +123,7 @@ class AgentCmds():
                             status, result = jscript.execute(**job['args'])
                             job['state'] = 'OK' if status else 'ERROR'
                             job['result'] = result
-                            self.client.notifyWorkCompleted(job)
+                            client.notifyWorkCompleted(job)
                         finally:
                             timeout.cancel()
                     gevent.spawn(run)

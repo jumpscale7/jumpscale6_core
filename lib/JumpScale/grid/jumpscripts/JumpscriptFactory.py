@@ -72,7 +72,7 @@ from JumpScale import j
         self.roles=getattr(self.module, 'roles', [])
         self.source=source
         self.descr=self.module.descr
-        self.queue=getattr(self.module, 'queue',"default")
+        self.queue=getattr(self.module, 'queue', "")
         self.async = getattr(self.module, 'async',False)
         self.period=getattr(self.module, 'period',0)
         self.order=getattr(self.module, 'order', 1)

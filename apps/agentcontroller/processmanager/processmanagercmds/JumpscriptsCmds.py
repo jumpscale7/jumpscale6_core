@@ -4,7 +4,7 @@ import ujson
 from redis import Redis
 # from rq import Queue
 import JumpScale.baselib.redisworker
-from JumpScale.grid.processmanager.ProcessmanagerFactory import JumpScript
+from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
 class JumpscriptsCmds():
     

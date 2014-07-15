@@ -41,8 +41,17 @@ class Worker(object):
         self.redisaddr=redisaddr
         self.queuename=queuename
         self.name=name        
+        self.clients = dict()
 
         self.init()
+
+    def getClient(self, job):
+        ipaddr = getattr(job, 'ipaddr', None)
+        client = self.clients.get(ipaddr)
+        if not client:
+            client = j.clients.agentcontroller.get(ipaddr)
+            self.clients[ipaddr] = client
+        return client
 
     def init(self):
 
@@ -210,7 +219,7 @@ class Worker(object):
 
 
     def notifyWorkCompleted(self,job):
-
+        acclient = self.getClient(job) 
         w=j.clients.redisworker
         job.timeStop=int(time.time())
 
@@ -227,7 +236,7 @@ class Worker(object):
             #jumpscripts coming from AC
             if job.state<>"OK":
                 try:
-                    self.acclient.notifyWorkCompleted(job.__dict__)
+                    acclient.notifyWorkCompleted(job.__dict__)
                 except Exception,e:
                     j.events.opserror("could not report job in error to agentcontroller", category='workers.errorreporting', e=e)
                     return
@@ -236,7 +245,7 @@ class Worker(object):
             else:
                 if job.log or job.wait:
                     try:
-                        self.acclient.notifyWorkCompleted(job.__dict__)
+                        acclient.notifyWorkCompleted(job.__dict__)
                     except Exception,e:
                         j.events.opserror("could not report job result to agentcontroller", category='workers.jobreporting', e=e)
                         return
