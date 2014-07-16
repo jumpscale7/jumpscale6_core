@@ -38,7 +38,6 @@ class DaemonClient(object):
         """
         @param encrkey (use for simple blowfish shared key encryption, better to use SSL though, will do the same but dynamically exchange the keys)
         """
-        print "init daemon client:%s %s %s"%(transport._addr,transport._port,",".join(roles))
         if id<>None:
             self._id=id
         else:
@@ -134,7 +133,7 @@ class DaemonClient(object):
         self.sendcmd(category="core", cmd="registersession", sessiondata=session.__dict__, ssl=ssl, returnformat="")
         print "registered session"
 
-    def sendMsgOverCMDChannel(self, cmd, data,sendformat=None, returnformat=None, retry=0, maxretry=1, \
+    def sendMsgOverCMDChannel(self, cmd, data,sendformat=None, returnformat=None, retry=0, maxretry=2, \
         category=None,transporttimeout=5):
         """
         cmd is command on server (is asci text)

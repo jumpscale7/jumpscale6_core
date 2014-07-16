@@ -129,43 +129,37 @@ class OSISFactory:
         zd.start()
 
     def getClient(self, ipaddr=None, port=5544,user=None,passwd=None,ssl=False,gevent=False):
-        if ipaddr is None:
-            if j.application.config.exists('grid.master.ip'):
-                ipaddr = j.application.config.get('grid.master.ip')
-            else:
-                ipaddr = 'localhost'
-        with j.logger.nostdout() as stdout:
-            try:
-                key = "%s_%s_%s_%s" % (ipaddr, port,user,passwd)
-                if self.osisConnections.has_key(key):
-                    return self.osisConnections[key]
-                # self.osisConnections[key] = OSISClient(ipaddr, port)
-                j.logger.log("get client to osis")
+        if ipaddr:
+            ips = [ipaddr]
+        elif j.application.config.exists('osis.ip'):
+            ips = j.application.config.getList('osis.ip')
+        else:
+            ips = [ j.application.config.get('grid.master.ip') ]
+        connections = [ (ip, port) for ip in ips ]
+        key = "%s_%s_%s" % (connections, user, passwd)
+        if key in self.osisConnections:
+            return self.osisConnections[key]
 
-                if user==None:
-                    user="node"
-                    passwd=j.application.config.get("grid.node.machineguid")
-                elif user=="root" and not passwd:
-                    if j.application.config.exists("grid.master.superadminpasswd"):
-                        passwd=j.application.config.get("grid.master.superadminpasswd")
-                    else:
-                        raise RuntimeError("Superadmin passwd has not been defined on this node, please put in hrd (grid.master.superadminpasswd) or use argument 'passwd'.")
-                self.osisConnections[key] = j.core.zdaemon.getZDaemonClient(addr=ipaddr, port=port, category="osis",\
-                    user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)
-            except Exception,e:
-                print stdout.getvalue()
-                raise RuntimeError("Could not connect to osis: %s %s.\nOut:%s\nError:%s\n"%(key,user,stdout.getvalue(),e))
-        osisclient=self.osisConnections[key]
-        if osisclient==None:
-            raise RuntimeError("Osis client cannot be None, tried to connect to %s/%s"%(ipaddr,port))
-        return osisclient
+        if user==None:
+            user="node"
+            passwd=j.application.config.get("grid.node.machineguid")
+        elif user=="root" and not passwd:
+            if j.application.config.exists("grid.master.superadminpasswd"):
+                passwd=j.application.config.get("grid.master.superadminpasswd")
+            else:
+                raise RuntimeError("Superadmin passwd has not been defined on this node, please put in #hrd (grid.master.superadminpasswd) or use argument 'passwd'.")
+
+        with j.logger.nostdout():
+            client = j.core.zdaemon.getZDaemonHAClient(connections, category="osis", user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)
+        self.osisConnections[key] = client
+        return client
 
     def getClientForNamespace(self, namespace, client=None):
         if client==None:
             client = self.getClient(user='root')
         return NameSpaceClient(client, namespace)
 
-    def getClientForCategory(self, client,namespace, category):
+    def getClientForCategory(self, client, namespace, category):
         """
         how to use
 
@@ -174,11 +168,7 @@ class OSISFactory:
         """
         if client==None:
             raise RuntimeError("Client cannot be None: getClientForCategory %s/%s"%(namespace, category))
-        key = "%s_%s_%s_%s" % (client._client.transport._addr, client._client.transport._port,namespace,category)
-        if self.osisConnectionsCat.has_key(key):
-            return self.osisConnectionsCat[key]
-        self.osisConnectionsCat[key]= OSISClientForCat(client, namespace, category)
-        return self.osisConnectionsCat[key]
+        return OSISClientForCat(client, namespace, category)
 
     def getOsisBaseObjectClass(self):
         return OSISBaseObject

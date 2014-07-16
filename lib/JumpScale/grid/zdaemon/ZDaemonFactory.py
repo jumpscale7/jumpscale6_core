@@ -53,6 +53,21 @@ class ZDaemonFactory():
         cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
         return cl.getCmdClient(category,sendformat=sendformat, returnformat=returnformat)
 
+    def getZDaemonHAClient(self, connections=None, org="myorg", user="root", passwd="1234", ssl=False, category="core",\
+            sendformat="m", returnformat="m" ,gevent=False):
+        """
+        example usage, see example for server at self.getZDaemon
+
+        client=j.core.zdaemon.getZDaemonHAClient([('127.0.0.1', 5544)],login="root",passwd="1234",ssl=False)
+
+                print client.echo("Hello World.")
+        """
+        from .ZDaemonHATransport import ZDaemonHATransport
+        from JumpScale.grid.serverbase.DaemonClient import DaemonClient
+        trans = ZDaemonHATransport(connections,gevent=gevent)
+        cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)
+        return cl.getCmdClient(category,sendformat=sendformat, returnformat=returnformat)
+
     def getZDaemonTransportClass(self):
         """
         #example usage:
