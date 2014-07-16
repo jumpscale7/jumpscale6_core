@@ -3,13 +3,15 @@ import time
 import sys
 import JumpScale.grid.serverbase
 from JumpScale.grid.serverbase.DaemonClient import Transport
+from JumpScale.grid.serverbase.TCPHATransport import TCPHATransport
 import requests
 
 class GeventWSTransport(Transport):
-    def __init__(self, addr="localhost", port=9999):
+    def __init__(self, addr="localhost", port=9999, timeout=None):
 
         self.url = "http://%s:%s/rpc/" % (addr, port)
         self._id = None
+        self.timeout = timeout
         self._addr = addr
         self._port = port
 
@@ -76,3 +78,11 @@ class GeventWSTransport(Transport):
             return "6","m",j.db.serializers.msgpack.dumps(eco.__dict__)
 
         return j.servers.base._unserializeBinReturn(rcv.content)
+
+class GeventWSHATransport(TCPHATransport):
+    def __init__(self, connections, timeout=None):
+        TCPHATransport.__init__(self, connections, GeventWSTransport, timeout)
+
+    @property
+    def ipaddr(self):
+        return self._connection[0]

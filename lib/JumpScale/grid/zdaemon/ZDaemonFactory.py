@@ -62,7 +62,7 @@ class ZDaemonFactory():
 
                 print client.echo("Hello World.")
         """
-        from .ZDaemonHATransport import ZDaemonHATransport
+        from .ZDaemonTransport import ZDaemonHATransport
         from JumpScale.grid.serverbase.DaemonClient import DaemonClient
         trans = ZDaemonHATransport(connections,gevent=gevent)
         cl = DaemonClient(org=org, user=user, passwd=passwd, ssl=ssl, transport=trans)

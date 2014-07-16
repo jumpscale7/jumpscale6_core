@@ -3,6 +3,7 @@ import JumpScale.baselib.serializers
 import zmq
 import JumpScale.grid.serverbase
 from JumpScale.grid.serverbase.DaemonClient import Transport
+from JumpScale.grid.serverbase.TCPHATransport import TCPHATransport
 
 
 class ZDaemonTransport(Transport):
@@ -92,3 +93,6 @@ class ZDaemonTransport(Transport):
 
         self._context.term()
 
+class ZDaemonHATransport(TCPHATransport):
+    def __init__(self, connections, gevent=False):
+        TCPHATransport.__init__(self, connections, ZDaemonTransport, gevent)

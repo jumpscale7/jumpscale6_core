@@ -1,6 +1,8 @@
 from JumpScale import j
 import ujson
 
+PORT = 4444
+
 class AgentControllerFactory(object):
     def __init__(self):
         self._agentControllerClients={}
@@ -34,19 +36,23 @@ class AgentControllerProxyClient():
             self.ipaddr=agentControllerIP
         passwd=j.application.config.get("grid.master.superadminpasswd")
         login=j.application.config.get("system.superadmin.login")
-        client= j.servers.geventws.getClient(self.ipaddr, 4444, user=login, passwd=passwd,category="processmanager_%s"%category)
+        client= j.servers.geventws.getClient(self.ipaddr, PORT, user=login, passwd=passwd,category="processmanager_%s"%category)
         self.__dict__.update(client.__dict__)
 
 class AgentControllerClient():
     def __init__(self,agentControllerIP):
         import JumpScale.grid.geventws
-        if agentControllerIP==None:
-            self.ipaddr=j.application.config.get("grid.master.ip")
+
+        if agentControllerIP:
+            self.ipaddr = agentControllerIP
+            connections = [ (agentControllerIP, PORT) ]
+        elif j.application.config.exists('grid.agentcontroller.ip'):
+            connections = [ (ip, PORT) for ip in j.application.config.getList('grid.agentcontroller.ip') ]
         else:
-            self.ipaddr=agentControllerIP
+            connections = [ (j.application.config.get("grid.master.ip"), PORT) ]
         passwd=j.application.config.get("grid.master.superadminpasswd")
         login=j.application.config.get("system.superadmin.login")
-        client= j.servers.geventws.getClient(self.ipaddr, 4444, user=login, passwd=passwd,category="agent")
+        client= j.servers.geventws.getHAClient(connections, user=login, passwd=passwd,category="agent")
         self.__dict__.update(client.__dict__)
 
 
