@@ -13,6 +13,7 @@ def main(j, args, params, tags, tasklet):
     page = args.page
 
     page.addBootstrap()
+    page_name = ''
 
     import re
     page_match = re.search(r"page\s*:\s*([^:}]*)", args.macrostr)
@@ -23,6 +24,7 @@ def main(j, args, params, tags, tasklet):
 
     if page_name == "" and args["path"] == "":
         page.addMessage("ERROR: path needs to be defined in: %s" % params.cmdstr)
+        params.result = page
         return params
 
     if args["app"] != "" and args["actor"] != "":
@@ -45,8 +47,12 @@ def main(j, args, params, tags, tasklet):
         path = j.system.fs.joinPaths(bucket.model.path, args["path"])
     else:
         page.addMessage("ERROR: could not find file as defined in: %s" % params.cmdstr)
+        params.result = page
         return params
-
+    if not j.system.fs.exists(path):
+        page.addMessage('Supplied path "%s" does not exist.' % args['path'])
+        params.result = page
+        return params
     content = j.system.fs.fileGetContents(path)
 
     page.addCodeBlock(content, path=path, exitpage=False, edit=args["edit"], spacename=args["space"], pagename=page_name, querystr=querystr)

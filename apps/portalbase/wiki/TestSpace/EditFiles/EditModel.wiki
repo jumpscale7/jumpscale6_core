@@ -1,10 +1,10 @@
 @usedefault
 
-{{edit: app:system actor:usermanager path:'specs/model.spec' edit:true}}
+{{edit: app:system actor:usermanager path:'specs/actors.spec' edit:true}}
 
 not to be edited
 
-{{edit: app:system actor:usermanager path:'specs/model.spec'}}
+{{edit: app:system actor:usermanager path:'specs/actors.spec'}}
 
 
 
