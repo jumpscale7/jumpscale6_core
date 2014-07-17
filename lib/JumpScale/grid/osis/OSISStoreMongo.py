@@ -233,34 +233,36 @@ class OSISStoreMongo(OSISStore):
             return result
         else:
             mongoquery = dict()
-            query.setdefault('query', {'bool':{'must':{}}})
-            query['query']['bool'].setdefault('should', {})
-            query['query']['bool'].setdefault('must', {})
-            for queryitem in query['query']['bool']['must']:
-                if 'term' in queryitem:
-                    for k, v in queryitem['term'].iteritems():
-                        mongoquery[k] = v
-                if 'range' in queryitem:
-                    for k, v in queryitem['range'].iteritems():
-                        operatormap = {'from':'$gte', 'to':'$lte'}
-                        for operator, val in v.iteritems():
-                            mongoquery[k] = {operatormap[operator]: val}
-                if 'wildcard' in queryitem:
-                    for k, v in queryitem['wildcard'].iteritems():
-                        mongoquery[k] = {'$regex': '.*%s.*' % str(v).replace('*', '')}
+            if 'query' in query:
+                query.setdefault('query', {'bool':{'must':{}}})
+                query['query']['bool'].setdefault('should', {})
+                query['query']['bool'].setdefault('must', {})
+                for queryitem in query['query']['bool']['must']:
+                    if 'term' in queryitem:
+                        for k, v in queryitem['term'].iteritems():
+                            mongoquery[k] = v
+                    if 'range' in queryitem:
+                        for k, v in queryitem['range'].iteritems():
+                            operatormap = {'from':'$gte', 'to':'$lte'}
+                            for operator, val in v.iteritems():
+                                mongoquery[k] = {operatormap[operator]: val}
+                    if 'wildcard' in queryitem:
+                        for k, v in queryitem['wildcard'].iteritems():
+                            mongoquery[k] = {'$regex': '.*%s.*' % str(v).replace('*', '')}
 
 
-            wilds = dict()
-            mongoquery['$or'] = list()
-            for queryitem in query['query']['bool']['should']:
-                if 'wildcard' in queryitem:
-                    for k, v in queryitem['wildcard'].iteritems():
-                        wilds[k] = {'$regex': '.*%s.*' % str(v).replace('*', '')}
-                        mongoquery['$or'].append(wilds)
+                wilds = dict()
+                mongoquery['$or'] = list()
+                for queryitem in query['query']['bool']['should']:
+                    if 'wildcard' in queryitem:
+                        for k, v in queryitem['wildcard'].iteritems():
+                            wilds[k] = {'$regex': '.*%s.*' % str(v).replace('*', '')}
+                            mongoquery['$or'].append(wilds)
 
-            if not mongoquery['$or']:
-                mongoquery.pop('$or')
-
+                if not mongoquery['$or']:
+                    mongoquery.pop('$or')
+            else:
+                mongoquery = query
             start = int(start)
             size = int(size)
             if 'sort' in query:
