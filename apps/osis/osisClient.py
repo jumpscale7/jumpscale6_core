@@ -6,11 +6,6 @@ import JumpScale.grid.osis
 
 cl=j.core.osis.getOsisModelClass("test_complextype","project")
 
-from IPython import embed
-print "DEBUG NOW uiuiui"
-embed()
-
-
 client = j.core.osis.getClient(user='root')
 # getNameIDsInfo
 
