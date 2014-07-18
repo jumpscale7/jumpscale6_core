@@ -188,9 +188,11 @@ class FileLock(object):
     @see: L{lock}
     @see: L{unlock}
     '''
-    def __init__(self, lock_name, reentry=False):
+    def __init__(self, lock_name, reentry=False,jp=None):
         self.lock_name = lock_name
         self.reentry = reentry
+        self.jp=jp
+
 
     def __enter__(self):
         lock(self.lock_name, reentry=self.reentry)
@@ -200,6 +202,10 @@ class FileLock(object):
 
     def __call__(self, func):
         def wrapper(*args, **kwargs):
+            if self.jp:
+                jp=args[0]
+                self.lock_name="jp_%s_%s"%(jp.name,jp.domain)
+            
             lock(self.lock_name, reentry=self.reentry)
             try:
                 return func(*args, **kwargs)
