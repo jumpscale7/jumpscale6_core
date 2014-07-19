@@ -81,7 +81,7 @@ def lock_(lockname, locktimeout=60, reentry=False):
     to unit-test.
     '''
     #TODO This no longer uses fnctl on Unix, why?
-    LOCKPATH = os.path.join(j.dirs.tmpDir, 'run')
+    LOCKPATH = os.path.join(j.dirs.tmpDir, 'locks')
     lockfile = os.path.join(LOCKPATH, cleanupString(lockname))
     if reentry:
         _LOCKDICTIONARY[lockname] = _LOCKDICTIONARY.setdefault(lockname, 0) + 1
@@ -110,7 +110,7 @@ def lock_(lockname, locktimeout=60, reentry=False):
 def islocked(lockname, reentry=False):
     '''Check if a system-wide interprocess exclusive lock is set'''
     isLocked = True
-    LOCKPATH = os.path.join(j.dirs.tmpDir, 'run')
+    LOCKPATH = os.path.join(j.dirs.tmpDir, 'locks')
     lockfile = os.path.join(LOCKPATH, cleanupString(lockname))
 
     try:
@@ -139,7 +139,7 @@ def islocked(lockname, reentry=False):
 
 def unlock(lockname):
     """Unlock system-wide interprocess lock"""
-    j.logger.log('UNLock with name: %s'% lockname,6)
+    j.logger.log('UnLock with name: %s'% lockname,6)
     try:
         unlock_(lockname)
     except Exception, msg:
@@ -154,7 +154,7 @@ def unlock_(lockname):
     This refactoring was mainly done to make the lock implementation easier
     to unit-test.
     '''
-    LOCKPATH = os.path.join(j.dirs.tmpDir, 'run')
+    LOCKPATH = os.path.join(j.dirs.tmpDir, 'locks')
     lockfile = os.path.join(LOCKPATH, cleanupString(lockname))
     if lockname in _LOCKDICTIONARY:
         _LOCKDICTIONARY[lockname] -= 1
@@ -172,8 +172,8 @@ def unlock_(lockname):
             return
 
         j.system.fs.remove(lockfile)
-    else:
-        j.console.echo("Lock %r not found"%lockname)
+    # else:
+    #     j.console.echo("Lock %r not found"%lockname)
 
 
 class FileLock(object):
@@ -192,7 +192,6 @@ class FileLock(object):
         self.lock_name = lock_name
         self.reentry = reentry
         self.jp=jp
-
 
     def __enter__(self):
         lock(self.lock_name, reentry=self.reentry)

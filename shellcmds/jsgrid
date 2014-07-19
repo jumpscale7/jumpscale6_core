@@ -1,6 +1,7 @@
 #!/usr/bin/env jspython
 from JumpScale import j
 from JumpScale.baselib import cmdutils
+import os
 
 try:
     import ujson as json
@@ -12,7 +13,9 @@ import sys,time
 j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("action", choices=['reconfigure', 'healthcheck', 'purgelogs', 'purgejobs', 'purgeecos', 'restartprocessmgrs','reloadjumpscripts'],
+parser.add_argument("action", choices=['reconfigure', 'healthcheck', 'purgeall', 'purgelogs', 'purgejobs', \
+        'purgeecos', 'restartprocessmgrs',\
+        'reloadjumpscripts','resetlocks'],
     help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
@@ -56,7 +59,14 @@ if opts.action =='reconfigure':
 
     j.tools.startupmanager.startAll()
 
+
+
 ############PS
+
+if opts.action =='resetlocks':
+    LOCKPATH = os.path.join(j.dirs.tmpDir, 'locks')
+    j.system.fs.removeDirTree(LOCKPATH)
+
 if opts.action =='reinit':
 
     jp=j.packages.findNewest(name="osis")
@@ -128,8 +138,10 @@ if opts.action == 'reloadjumpscripts':
 
 
 #################PURGELOGS
-if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
-    import JumpScale.baselib.elasticsearch
+
+
+def purge(opts,action):
+
     def _getEpoch(time):
         if not time:
             return time
@@ -142,10 +154,11 @@ if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
     esclient = j.clients.elasticsearch.get()
     query = dict()
 
-    if opts.action in ['purgelogs', 'purgeecos']:
-        timeElement='epoch'
-    elif opts.action in ['purgejobs']:
+        
+    if action in ['purgejobs']:
         timeElement='timeStart'
+    else:
+        timeElement='epoch'
     
     if opts.ffrom:
         query['range'] = dict()
@@ -163,12 +176,14 @@ if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
 
     queryfull={"query":query}
 
+    # print queryfull
+
     if query:
-        if opts.action in ['purgelogs']:
+        if action in ['purgelogs']:
             index='system_log'
-        elif opts.action in ['purgejobs']:
+        elif action in ['purgejobs']:
             index='system_job'
-        elif opts.action in ['purgeecos']:
+        elif action in ['purgeecos']:
             index='system_eco'
 
         beforecount = esclient.count(index=index, query=query, doc_type='json')['count']
@@ -177,5 +192,17 @@ if opts.action in ['purgelogs','purgejobs', 'purgeecos']:
 
         if result['_indices'][index]['_shards']['successful'] == result['_indices'][index]['_shards']['total'] and result['ok']:
             print 'purge %s executed successfully. %s records deleted.' % (index, beforecount-aftercount)
+
+
+if opts.action in ['purgeall','purgelogs','purgejobs', 'purgeecos']:
+    import JumpScale.baselib.elasticsearch
+    if opts.action=="purgeall":
+        opts.to="+1h"
+        purge(opts,'purgelogs')
+        purge(opts,'purgejobs')
+        purge(opts,'purgeecos')
+    else:
+        purge(opts,opts.action)
+
 
 j.application.stop()

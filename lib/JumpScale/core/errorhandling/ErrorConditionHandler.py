@@ -103,9 +103,11 @@ class ErrorConditionHandler():
             eco.type=int(j.enumerators.ErrorConditionType.OPERATIONS)
             eco.level=1
 
-        eco.errormessage=eco.errormessage.strip("\"")
-        eco.extra=extra
-
+        if eco<>None:
+            eco.errormessage=eco.errormessage.strip("\"")
+        if extra<>None:
+            eco.extra=extra
+        
         self.processErrorConditionObject(eco,tostdout=False, centralsentry=True)
      
         msg = eco.errormessage 
@@ -478,9 +480,17 @@ class ErrorConditionHandler():
             extra["details"]=eco.extra
 
         extra["category"]=eco.category
-        level = str(j.enumerators.ErrorConditionLevel.getByLevel(eco.level))
-        ttype = str(j.enumerators.ErrorConditionType.getByLevel(eco.type))
-        self.sendMessageToSentry(modulename=modulename,message=eco.errormessage,ttype=ttype,frames=frames,tags=None,extra=extra,level=level,tb=tb, hrdprefix=hrdprefix)
+        try:
+            ttype = str(j.enumerators.ErrorConditionType.getByLevel(int(eco.type)))
+        except Exception,e:
+            ttype=j.enumerators.ErrorConditionType.UNKNOWN
+        try:
+            level = str(j.enumerators.ErrorConditionLevel.getByLevel(int(eco.level)))
+        except Exception,e:
+            level=j.enumerators.ErrorConditionLevel.UNKNOWN
+        
+        self.sendMessageToSentry(modulename=modulename,message=eco.errormessage,ttype=ttype,frames=frames,tags=None,\
+            extra=extra,level=level,tb=tb, hrdprefix=hrdprefix)
 
     def sendMessageToSentry(self,modulename,message,ttype="bug",tags=None,extra={},level="error",tb=None,frames=[],backtrace="", hrdprefix="sentry"):
         """

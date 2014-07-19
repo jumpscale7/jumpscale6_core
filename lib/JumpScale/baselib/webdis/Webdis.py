@@ -17,12 +17,19 @@ class WebdisFactory:
     def __init__(self):
         self._webdis = {}
 
-    def get(self, addr="127.0.0.1",port=8889,timeout=10):
+    def get(self, addr="127.0.0.1",port=7779,timeout=10):
         key = "%s_%s" % (addr, port)
         if not self._webdis.has_key(key):
             self._webdis[key] = Webdis(addr, port,timeout=timeout)
+        res=self._webdis[key].ping()
+        if res==False:
+            j.events.opserror_critical("could not connect to webdis: '%s:%s'"%(addr,port), "webdis.connect")
         return self._webdis[key]
 
+    def check(self, addr="127.0.0.1",port=7779,timeout=1):
+        key = "%s_%s" % (addr, port)
+        rs = Webdis(addr, port,timeout=timeout)
+        return rs.ping()
 
 class Webdis(object):
     """
@@ -32,9 +39,8 @@ class Webdis(object):
         self.addr=addr
         self.port=port
         self.timeout=timeout
-        self.ping()
 
-    def execute(self,cmd,url="",data=None):
+    def execute(self,cmd,url="",data=None,die=True):
         for i in range(self.timeout*2):
             try:
                 # headers = {'content-type': 'application/json'}
@@ -63,6 +69,8 @@ class Webdis(object):
                 # r=requests.get('http://%s:%s/%s'%(self.addr,self.port,data2),headers=headers)
             except Exception,e:
                 # print e
+                if die==False:
+                    return False
                 if str(e).find("Max retries exceeded with url")<>-1:
                     print "Webdis not available"
                     time.sleep(0.5)
@@ -97,10 +105,13 @@ class Webdis(object):
                 embed()
                 
         # eco=j.errorconditionhandler.parsePythonErrorObject(e)
-        j.errorconditionhandler.raiseOperationalCritical(message='Webdis is down on port %s'%self.port, category='webdis.down', msgpub='', die=True, tags='', eco=None, extra=None)                
+        j.errorconditionhandler.raiseOperationalCritical(message='Webdis is down on port %s'%self.port, category='webdis.down', \
+            msgpub='', die=True, tags='', eco=None, extra=None)                
 
     def ping(self):
-        return self.execute('PING')
+        res=self.execute('PING',die=False)
+        if res==False or len(res)<>2 or res[1]<>u"PONG":
+            return False
 
     def llen(self,key):
         return self.execute('LLEN',key)
