@@ -60,8 +60,6 @@ class Domain():
             #if not j.system.fs.exists(self.metadatadir):
                 #raise RuntimeError("Cannot open jpackages domain %s for quality level %s because path %s does not exist" % (self.domainname,self.qualitylevel,self.metadatadir))
         
-        #
-
         self._metadatadirTmp = j.system.fs.joinPaths(j.dirs.varDir,"tmp","jpackages","md", self.domainname)
 
         self.initialized = True

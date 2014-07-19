@@ -16,6 +16,7 @@ class JPackageClient():
         
         """
         self.__init=False
+        self.redis=j.application.redis
 
     def _init(self):
         if self.__init:
@@ -256,7 +257,7 @@ class JPackageClient():
         return systemdest
 
 
-    def get(self, domain, name, version):
+    def get(self, domain, name, version,instance=0):
         """
         Returns a jpackages 
         @param domain:  string - The domain the jpackages is part from
@@ -272,7 +273,7 @@ class JPackageClient():
             return self._getcache[key]
         if self.exists(domain,name,version)==False:
             raise RuntimeError("Could not find package %s." % self.getMetadataPath(domain,name,version))
-        self._getcache[key]=JPackageObject(domain, name, version)
+        self._getcache[key]=JPackageObject(domain, name, version,instance=instance)
         return self._getcache[key]
 
                     
@@ -344,7 +345,40 @@ class JPackageClient():
 ###################  GET PATH FUNCTIONS  ###################
 ############################################################
 
-    def getJPActionsPath(self,domain,name,version,fromtmp=False):
+    def getJPActionsPath(self,domain,name,instance,fromtmp=False):
+        """
+        Returns the metadatapath for the provided jpackages
+        if fromtmp is True, then tmp directorypath will be returned
+
+        @param domain:  string - The domain of the jpackages
+        @param name:    string - The name of the jpackages
+        @param fromtmp: boolean
+        """
+        if fromtmp:
+            self._metadatadirTmp
+            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance),"actions")
+        else:
+            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance),"actions")
+
+
+    def getJPActiveInstancePath(self,domain,name,instance,fromtmp=False):
+        """
+        Returns the metadatapath for the provided jpackages in active mode
+
+        @param domain:  string - The domain of the jpackages
+        @param name:    string - The name of the jpackages
+        @param fromtmp: boolean
+        """
+        if fromtmp:
+            self._metadatadirTmp
+            p=j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance))
+        else:
+            p=j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance))
+        j.system.fs.createDir(j.system.fs.joinPaths(p,"hrdactive"))
+        return p
+
+
+    def getJPActiveHRDPath(self,domain,name,instance,fromtmp=False):
         """
         Returns the metadatapath for the provided jpackages
         if fromtmp is True, then tmp directorypath will be returned
@@ -356,26 +390,9 @@ class JPackageClient():
         """
         if fromtmp:
             self._metadatadirTmp
-            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,version,"actions")
+            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance),"hrdactive")
         else:
-            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,version,"actions")
-
-
-    def getJPActiveHRDPath(self,domain,name,version,fromtmp=False):
-        """
-        Returns the metadatapath for the provided jpackages
-        if fromtmp is True, then tmp directorypath will be returned
-
-        @param domain:  string - The domain of the jpackages
-        @param name:    string - The name of the jpackages
-        @param version: string - The version of the jpackages
-        @param fromtmp: boolean
-        """
-        if fromtmp:
-            self._metadatadirTmp
-            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,version,"hrd")
-        else:
-            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,version,"hrd")
+            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance),"hrdactive")
 
     def getMetadataPath(self,domain,name,version):
         """
@@ -505,7 +522,7 @@ class JPackageClient():
             res=[item for item in res if item.isInstalled()]
         
         #sort jpackages
-        tosortmeta={}        
+        tosortmeta={}
         for item in res:
             tosortmeta["%s_%s_%s"%(item.name,item.domain,item.version)]=item
         tosort=tosortmeta.keys()
@@ -563,6 +580,7 @@ class JPackageClient():
                 versionFindMethod=findFull
 
         result=[]
+        
         for p_domain, p_name, p_version in self._getJPackageTuples():
             # print (p_domain, p_name, p_version)
             if domainFindMethod(domain,p_domain) and nameFindMethod(name,p_name) and versionFindMethod(version,p_version):
