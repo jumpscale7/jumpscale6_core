@@ -318,7 +318,7 @@ class JPackageObject():
         j.dirs.replaceFilesDirVars(self.getPathActions())
 
     @JPLock
-    def loadActions(self, force=False,hrd=True):
+    def loadActions(self, force=False,hrd=True,instance=None):
         # print "loadactions:%s"%self
         # self._init()
 
