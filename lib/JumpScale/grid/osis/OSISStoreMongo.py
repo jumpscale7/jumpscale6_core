@@ -56,8 +56,6 @@ class OSISStoreMongo(OSISStore):
         value can be a dict or a raw value (seen as string)
         """
         if j.basetype.dictionary.check(value):
-            obj=None
-
             objInDB=None
 
             if value.has_key("id") and int(value["id"])<>0:                
@@ -75,7 +73,7 @@ class OSISStoreMongo(OSISStore):
                 # objInDB.pop("guid")
                 objInDB["guid"]=objInDB["guid"].replace("-","")
                 objInDB = self.setPreSave(objInDB)
-                res=self.client.save(objInDB)
+                self.client.save(objInDB)
                 new=False
                 return (new,True,objInDB["guid"])
             
@@ -86,13 +84,12 @@ class OSISStoreMongo(OSISStore):
 
             value = self.setPreSave(value)
 
-            res=self.client.save(value)
-            
+            self.client.save(value)
             return (new,True,value["guid"])
         else:
             raise RuntimeError("value can only be dict")
 
-    def get(self, key):
+    def get(self, key, full=False):
         if j.basetype.string.check(key):
             key=key.replace("-","")
             res=self.client.find_one({"guid":key})
@@ -101,7 +98,8 @@ class OSISStoreMongo(OSISStore):
 
         # res["guid"]=str(res["_id"])
         if res<>None:
-            res.pop("_id")
+            if not full:
+                res.pop("_id")
         return res
         
     def exists(self, key):
