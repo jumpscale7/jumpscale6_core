@@ -14,7 +14,10 @@ class ActionManager:
         self._actions={}
         self._done={}
 
-        for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions(), filter='*.py'):
+        files = j.system.fs.listFilesInDir(self._jpackage.getPathActions(), filter='*.py')
+        if not files:
+            files = j.system.fs.listFilesInDir(j.system.fs.joinPaths(j.dirs.packageDir, 'active', jp.domain, jp.name, jp.version, 'actions'))
+        for path in files:
             name=j.system.fs.getBaseName(path)
             if name[0]=="_":
                 continue
