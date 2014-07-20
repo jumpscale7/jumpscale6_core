@@ -199,9 +199,25 @@ class Worker(object):
                     eco.errormessage = msg
                     eco.jid = job.id
                     eco.code=jscript.source
-                    eco.category = "workers.executejob"     
-                    if job.id<1000000:
+                    eco.category = "workers.executejob"
+
+                    out=""
+                    tocheck=["\"worker.py\"","jscript.executeInWorker","return self.module.action","JumpscriptFactory.py"]
+                    for line in eco.backtrace.split("\n"):
+                        found=False
+                        for check in tocheck:
+                            if line.find(check)<>-1:
+                                found=True
+                                break
+                        if found==False:
+                            out+="%s\n"%line
+
+                    eco.backtrace=out
+                    
+                    if job.id<1000000 and job.errorreport==True:
                         j.errorconditionhandler.processErrorConditionObject(eco)
+                    else:
+                        print eco.errormessage
                     # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                     # self.loghandler.logECO(eco)
                     job.state="ERROR"

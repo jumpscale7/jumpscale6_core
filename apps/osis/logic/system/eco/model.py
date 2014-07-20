@@ -33,10 +33,16 @@ class ECO(OsisBaseObject):
 
             self.gid = gid
             self.nid = nid
-
             self.aid = aid
             self.pid = pid
             self.jid = jid
+
+            if self.gid==None or self.nid==None:
+                raise RuntimeError("cannot create osis object for eco if no gid or nid specified")            
+
+            if not int(self.gid)>0 or not int(self.nid)>0:
+                raise RuntimeError("cannot create osis object for eco if no gid or nid specified, needs to be bigger than 0.")            
+
             self.masterjid = masterjid
 
             if epoch==0:

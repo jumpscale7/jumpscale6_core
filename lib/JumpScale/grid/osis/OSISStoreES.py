@@ -25,32 +25,33 @@ class OSISStoreES(OSISStore):
         """
         if j.basetype.dictionary.check(value):
             #is probably an osis object
-            obj=self.getObject(value)
-            if not j.basetype.dictionary.check(obj):
-                obj.getSetGuid()
-                key=obj.guid
-                if waitIndex:#need to make sure is out first
-                    if self.existsIndex(key=key):
-                        self.deleteIndex(key=key,waitIndex=True)
-                self.index(obj, ttl=self.TTL)
-                if waitIndex:
-                    time.sleep(0.2)
-                    if not self.existsIndex(key=obj.guid,timeout=1):
-                        raise RuntimeError("index not stored for key:%s in %s:%s"(key,self.namespace, self.categoryname))
-            else:
-                if key==None:
-                    if value.has_key("guid"):
-                        key=value["guid"]
-                    else:
-                        raise RuntimeError("could not find guid attr on obj for %s:%s"(self.namespace, self.categoryname))                
-                else:
-                    if not value.has_key("guid"):
-                        value["guid"]=key
-                self.index(value, ttl=self.TTL)
-                if waitIndex:
-                    time.sleep(0.2)
-                    if not self.existsIndex(key=obj.guid,timeout=1):
-                        raise RuntimeError("index not stored for key:%s in %s:%s"(key,self.namespace, self.categoryname))               
+            # obj=self.getObject(value)
+            # if not j.basetype.dictionary.check(obj):
+            # obj.getSetGuid()
+            # key=obj.guid
+            key=value["guid"]
+            if waitIndex:#need to make sure is out first
+                if self.existsIndex(key=key):
+                    self.deleteIndex(key=key,waitIndex=True)
+            self.index(value, ttl=self.TTL)
+            if waitIndex:
+                time.sleep(0.2)
+                if not self.existsIndex(key=obj["guid"],timeout=1):
+                    raise RuntimeError("index not stored for key:%s in %s:%s"(key,self.namespace, self.categoryname))
+            # else:
+            #     if key==None:
+            #         if value.has_key("guid"):
+            #             key=value["guid"]
+            #         else:
+            #             raise RuntimeError("could not find guid attr on obj for %s:%s"(self.namespace, self.categoryname))                
+            #     else:
+            #         if not value.has_key("guid"):
+            #             value["guid"]=key
+            #     self.index(value, ttl=self.TTL)
+            #     if waitIndex:
+            #         time.sleep(0.2)
+            #         if not self.existsIndex(key=obj.guid,timeout=1):
+            #             raise RuntimeError("index not stored for key:%s in %s:%s"(key,self.namespace, self.categoryname))               
         else:
             raise RuntimeError("val should be dict or osisobj")
         new=True

@@ -3,16 +3,27 @@ from JumpScale import j
 j.application.start("jumpscale:agentcontrollertest")
 
 j.logger.consoleloglevel = 5
-# import JumpScale.grid.zdaemon
-# cl=j.core.zdaemon.getZDaemonClient(addr="localhost", port=5544, category="osis",\
-#                 user="root", passwd="rooter",gevent=True)
+
 import JumpScale.grid.agentcontroller
-j.clients.agentcontroller.configure("127.0.0.1")
+ac=j.clients.agentcontroller.get("127.0.0.1")
+res=ac.execute("jumpscale","echo",msg="test",role="node",queue="io")
+print "result of echo test:"
+print res
 
-from IPython import embed
-print "DEBUG NOW test"
-embed()
+job=ac.execute("jumpscale","echo",msg="test",role="node",queue="io",wait=False)
 
+job=ac.waitJumpscript(jobguid=job["guid"]) #goes very fast so really no wait
+print "JOB"
+print job
+
+
+#lets now do error (we forget the msg argument)
+res=ac.execute("jumpscale","echo",role="node",queue="io")
+#we will nog get here script will fail and raise error
+print res
+
+
+ac.listJumpScripts()
 
 j.application.stop()
 

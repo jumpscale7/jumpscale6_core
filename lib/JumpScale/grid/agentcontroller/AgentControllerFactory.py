@@ -1,5 +1,5 @@
 from JumpScale import j
-import ujson
+import ujson as json
 
 PORT = 4444
 
@@ -56,18 +56,37 @@ class AgentControllerClient():
         self.__dict__.update(client.__dict__)
 
 
-    def execute(self,organization,name,role=None,nid=None,timeout=60,wait=True,queue="",dieOnFailure=True,**kwargs):
+    def execute(self,organization,name,role=None,nid=None,timeout=60,wait=True,queue="",dieOnFailure=True,errorreport=True,**kwargs):
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
         """
-        result = self.executeJumpScript(organization,name,nid=nid,role=role,args=kwargs,timeout=timeout,wait=wait,queue=queue,transporttimeout=timeout)
+        errorReportOnServer=errorreport
+        if wait==True:
+            errorReportOnServer=False
+        result = self.executeJumpScript(organization,name,nid=nid,role=role,args=kwargs,timeout=timeout,\
+            wait=wait,queue=queue,transporttimeout=timeout,errorreport=errorReportOnServer)
         if wait and result['state'] != 'OK':
             if result['state'] == 'NOWORK' and dieOnFailure:
                 raise RuntimeError('Could not find agent with role:%s' %  role)
-            if result['result']:
-                if dieOnFailure:
-                    raise RuntimeError("Could not execute %s %s for role:%s, jobid was:%s error: %s"%(organization,name,role,result["id"], result['result']))
-                #j.errorconditionhandler.processErrorConditionObject(eco)
+            if result['result']<>"":
+                ecodict=json.loads(result['result'])
+                eco=j.errorconditionhandler.getErrorConditionObject(ddict=ecodict)
+                # eco.gid=result["gid"]
+                # eco.nid=result["nid"]
+                # eco.jid=result["id"]
+
+                if errorreport:
+                    j.errorconditionhandler.processErrorConditionObject(eco,tostdout=False,sentry=True,\
+                        modulename="agent", centralsentry=True)
+                
+                msg="%s\n\nCould not execute %s %s for role:%s, jobid was:%s\n"%(eco,organization,name,role,result["id"])
+
+                if errorreport:
+                    print msg                     
+
+                if dieOnFailure:  
+                    j.errorconditionhandler.halt(msg)
+                
         if wait:
             return result["result"]
         else:

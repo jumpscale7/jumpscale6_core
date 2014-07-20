@@ -40,9 +40,13 @@ def action():
     for mac,val in netinfo.iteritems():
 
         name,ipaddr=val
-        ipaddr=ipaddr.split(",")
-        if ipaddr==['']:
+        if ipaddr.find(",")<>-1:
+            ipaddr=ipaddr.split(",")
+            if ipaddr==['']:
+                ipaddr=[]
+        else:
             ipaddr=[]
+
 
         nic_key=name
 
