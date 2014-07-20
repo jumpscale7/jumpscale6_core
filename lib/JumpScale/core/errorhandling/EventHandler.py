@@ -46,5 +46,19 @@ class EventHandler(object):
             msg+="\nERROR:%s\n"%e
         j.errorconditionhandler.raiseOperationalWarning(msg,category=category)
 
+
+    def inputerror_critical(self,msg,category="",msgpub=""):
+        """
+        will die
+        """    
+        j.errorconditionhandler.raiseInputError(message=msg, category=category,msgpub=msgpub,die=True ,backtrace="",tags="")
+
+    def inputerror_warning(self,msg,category="",msgpub=""):
+        """
+        will die
+        """    
+        j.errorconditionhandler.raiseInputError(message=msg, category=category,msgpub=msgpub,die=False ,backtrace="",tags="")
+
+
     opserror_warning = opserror
 

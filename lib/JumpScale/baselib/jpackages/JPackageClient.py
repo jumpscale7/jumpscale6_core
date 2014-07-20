@@ -1,7 +1,7 @@
 import math
 from JumpScale import j
 from JPackageObject import JPackageObject
-
+import copy
 
 class JPackageClient():
     sourcesFile = None
@@ -69,7 +69,6 @@ class JPackageClient():
         self.loglevel=5
         self.errors=[]
         self.inInstall=[] #jpackages which are being installed
-
 
     def reportError(self,msg):
         self.errors.append(msg)
@@ -374,7 +373,7 @@ class JPackageClient():
             p=j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance))
         else:
             p=j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance))
-        j.system.fs.createDir(j.system.fs.joinPaths(p,"hrdactive"))
+        # j.system.fs.createDir(j.system.fs.joinPaths(p,"hrdactive"))
         return p
 
 
@@ -496,35 +495,79 @@ class JPackageClient():
         '''
         if name.find("*")==-1:
             name+="*"
-        return self.find(name=name,domain="")
+        return self.find(name=name,domain=None,interactive=False)
     
-    def find(self, domain=None,name=None , version="", platform=None,onlyone=False,installed=None):
+    def find(self, domain=None,name=None , version="", platform=None,onlyone=False,installed=None,instance=None,expandInstances=True,interactive=True):
         """ 
         @domain, if none will ask for domain
 
         """
+
+        def raiseError(msg,domain,name,version,platform,installed,instance):
+            msg2="Jpackage find failed for following arguments\n"
+            msg2+="- domain:%s\n"%domain
+            msg2+="- name:%s\n"%name
+            msg2+="- version:%s\n"%version
+            msg2+="- platform:%s\n"%platform
+            msg2+="- installed:%s\n"%installed
+            msg2+="- instance:%s\n"%instance
+            msg2+="ERROR:\n%s\n"%msg
+            j.events.inputerror_critical(msg2,"jpackage.find")
+
         self._init()
-        if domain==None:
+        if interactive and domain==None:
             domains=j.console.askChoiceMultiple(j.packages.getDomainNames())
             result=[]
             for domain in domains:
                 result+=self.find(domain=domain,name=name , version=version, platform=platform,onlyone=onlyone,installed=installed)
             return result
 
-        if name==None:
+        if interactive and name==None:
             name = j.console.askString("Please provide the name or part of the name of the package to search for (e.g *extension* -> lots of extensions)")
 
         res = self._find(domain=domain, name=name, version=version)
-        if not res:
-            j.console.echo('No packages found, did you forget to run "jpackage mdupdate"?')
+
+        if res==[]:
+            raiseError('No packages found, did you forget to run "jpackage mdupdate"?',domain,name,version,platform,installed,instance)
+
+        if installed==False and instance<>None:
+            msg="Cannot find a jpackage which is not installed and a instance specified (method find got installed==False & instance specified)."
+            raiseError(msg,domain,name,version,platform,installed,instance)
 
         if installed==True:
             res=[item for item in res if item.isInstalled()]
-        
+
+        if installed==False:
+            res=[item for item in res if item.isInstalled()==False]
+
+        if instance<>None and len(res)>1:
+            msg="Cannot find a jpackage for specified instance when more than 1 candidate found, specify domain & name & version more specific"
+            raiseError(msg,domain,name,version,platform,installed,instance)
+
+        if expandInstances:
+            #now check if there are instances
+            res2=[]
+            for jp in res:
+                root=j.system.fs.joinPaths(j.dirs.packageDir, "active", jp.domain,jp.name)
+                if j.system.fs.exists(path=root):
+                    dirs=j.system.fs.listDirsInDir(root,False,True)
+                    if len(dirs)>0:
+                        #found multiple instances
+                        for instancename in dirs:
+                            jp2=copy.copy(jp)
+                            jp2.instance=instancename
+                            res2.append(jp2)
+                    else:
+                        res2.append(jp)
+            res=res2
+
+            if instance<>None:
+                res=[item for item in res if str(item.instance)==instance]
+
         #sort jpackages
         tosortmeta={}
         for item in res:
-            tosortmeta["%s_%s_%s"%(item.name,item.domain,item.version)]=item
+            tosortmeta["%s_%s_%s_%s"%(item.name,item.domain,item.version,item.instance)]=item
         tosort=tosortmeta.keys()
         tosort.sort()
         res=[]
@@ -542,9 +585,10 @@ class JPackageClient():
         Tries to find a package based on the provided criteria
         You may also use a wildcard to provide the name or domain (*partofname*)
         @param domain:  string - The name of jpackages domain, when using * means partial name
-        @param name:    string - The name of the jpackages you are looking for
+        @param name:    string - The name of the jpackages you are looking for, when using * means partial name
         @param version: string - The version of the jpackages you are looking for
         """
+        
         j.logger.log("Find jpackages domain:%s name:%s version:%s" %(domain,name,version))
         #work with some functional methods works faster than doing the check everytime
         def findPartial(pattern,text):

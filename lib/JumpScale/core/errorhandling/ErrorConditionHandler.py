@@ -150,7 +150,7 @@ class ErrorConditionHandler():
             eco.backtrace=backtrace
         self.processErrorConditionObject(eco)
         if die:
-            self.halt(eco.description)
+            self.halt(eco.errormessage)
         
     def raiseMonitoringError(self, message, category="",msgpub="",die=False,tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\

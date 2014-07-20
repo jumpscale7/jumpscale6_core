@@ -744,6 +744,10 @@ class StartupManager:
             j.system.fs.remove(servercfg)
         self.load()
 
+    def remove4JPackage(self,jpackage):
+        for pd in self.getProcessDefs4JPackage(jpackage):
+            self.removeProcess(pd.domain,pd.name)
+
     def getStatus4JPackage(self,jpackage):
         result=True
         for pd in self.getProcessDefs4JPackage(jpackage):

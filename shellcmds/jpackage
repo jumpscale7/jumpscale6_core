@@ -3,6 +3,7 @@ from JumpScale.baselib import cmdutils
 import JumpScale.baselib.jpackages
 from JumpScale import j
 import sys
+import copy
 j.application.start('jpackage')
 
 parser = cmdutils.ArgumentParser()
@@ -17,6 +18,7 @@ group = parser.add_argument_group(title="Package Selection")
 group.add_argument('-q','--quiet', required=False, action='store_true', help='Put in quiet mode')
 group.add_argument('-n','--name',required=False, help='Name of jpackage to be installed')
 group.add_argument('-d','--domain',required=False, help='Name of jpackage domain to be installed')
+group.add_argument('-i','--instance',required=False, help='Instance of jpackage (default 0)')
 group.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
 group.add_argument('--deps', required=False, action='store_true', help='do on dependencies e.g. install, update, ...')
 group.add_argument('-f','--force',required=False, action='store_true',help='auto answer yes on every question')
@@ -30,7 +32,7 @@ group.add_argument('--nodownload', required=False, action='store_true', help='sk
 
 #list
 group = parser.add_argument_group(title="List")
-group.add_argument('-i', '--installed', required=False, action='store_true',default=False, help='List installed jpackages')
+group.add_argument('--installed', required=False, action='store_true',default=None, help='List installed jpackages')
 
 #debug
 group = parser.add_argument_group(title="Debug")
@@ -74,6 +76,7 @@ group.add_argument('-bbr', help='Bitbucket reponame e.g. serverapps (there will 
 
 
 args = parser.parse_args()
+
 
 def askDomains(args):
     if args.domain==None:
@@ -141,23 +144,58 @@ elif args.action == 'export':
 
 elif args.action == 'configure':
     packages = cmdutils.getJPackage(args,installed=True)
+
+    if args.instance<>None and len(packages)>1:
+        j.events.inputerror_critical("Cannot find more jpackages if instance is given (for configure).")
+
+    if args.instance<>None:
+        packages[0].instance=args.instance
+
     for package in packages:
         package.configure(dependencies=args.deps)
 
-elif args.action == 'install' or args.action == 'update':
-    if args.action == 'update':
-        if not args.name:
-            args.name = '*'
-        packages = cmdutils.getJPackage(args,installed=True,update=True)
+elif args.action == 'install':
+
+    packages = cmdutils.getJPackage(args,expandInstances=False)
+
+    if args.instance==None:
+        args.instance=0
         
-        if j.application.sandbox:
-            if args.quiet or j.console.askYesNo("do you want to update your sandbox?"):
-                print "update sandbox"
-                cmd="jssync download -c base,libs -nd"
-                j.system.process.executeWithoutPipe(cmd)
-        
-    else:
-        packages = cmdutils.getJPackage(args)
+    if args.instance<>None and len(packages)>1:
+        j.events.inputerror_critical("Cannot find more jpackages if instance is given.")
+
+    if args.instance<>None:
+        packages[0].instance=args.instance    
+
+    for package in packages:
+        dependencies = True
+        if args.single or args.deps:#args.deps because the cmdutils.getJPackage(...) will already have found the dependencies
+            dependencies=False
+        if args.debug:
+            package.setDebugMode()
+        download=True
+        if args.nodownload:
+            download=False
+        package.install(dependencies=dependencies, reinstall=args.reinstall,download=download,instance=packages[0].instance)
+        package.start()
+    
+elif args.action == 'update':
+    if not args.name:
+        args.name = '*'
+    packages = cmdutils.getJPackage(args,installed=True,update=True)
+    
+    if j.application.sandbox:
+        if args.quiet or j.console.askYesNo("do you want to update your sandbox?"):
+            print "update sandbox"
+            cmd="jssync download -c base,libs -nd"
+            j.system.process.executeWithoutPipe(cmd)
+
+    if args.instance<>0 and len(packages)>1:
+        j.events.inputerror_critical("Cannot find more jpackages if instance is given.")
+
+    if args.instance<>None:
+        packages[0].instance=args.instance
+
     for package in packages:
         if args.action == 'update' and not package.isInstalled():
             continue
@@ -169,12 +207,8 @@ elif args.action == 'install' or args.action == 'update':
         download=True
         if args.nodownload:
             download=False
-        if args.action == 'update':
-            package.install(dependencies=False, reinstall=False,update=True)
-        else:
-            package.install(dependencies=dependencies, reinstall=args.reinstall,download=download)
-    # j.tools.startupmanager.startAll()
-    
+        package.install(dependencies=False, reinstall=False,update=True)
+        package.start()    
 
 elif args.action == 'link':
     packages = cmdutils.getJPackage(args,installed=True)
