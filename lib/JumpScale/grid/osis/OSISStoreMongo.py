@@ -247,7 +247,9 @@ class OSISStoreMongo(OSISStore):
                     if 'wildcard' in queryitem:
                         for k, v in queryitem['wildcard'].iteritems():
                             mongoquery[k] = {'$regex': '.*%s.*' % str(v).replace('*', '')}
-
+                    if 'terms' in queryitem:
+                        for k, v in queryitem['terms'].iteritems():
+                            mongoquery[k] = {'$in': v}
 
                 wilds = dict()
                 mongoquery['$or'] = list()
