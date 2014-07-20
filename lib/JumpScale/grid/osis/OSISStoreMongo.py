@@ -269,6 +269,7 @@ class OSISStoreMongo(OSISStore):
                 sorting = list()
                 for field in query['sort']:
                     sorting.append((field.keys()[0], 1 if field.values()[0] == 'asc' else -1))
+                mongoquery.pop('sort')
                 resultdata = self.client.find(mongoquery).sort(sorting).skip(start).limit(size)
             else:
                 resultdata = self.client.find(mongoquery).skip(start).limit(size)
