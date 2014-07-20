@@ -35,13 +35,18 @@ class SystemNet:
         self._windowsNetworkInfo = None
 
     def tcpPortConnectionTest(self,ipaddr,port, timeout=None):
-        conn=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if timeout:
-            conn.settimeout(timeout)
+        conn = None
         try:
-            conn.connect((ipaddr,port))
-        except:
-            return False
+            conn=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if timeout:
+                conn.settimeout(timeout)
+            try:
+                conn.connect((ipaddr,port))
+            except:
+                return False
+        finally:
+            if conn:
+                conn.close()
         return True
         
     def waitConnectionTest(self,ipaddr,port,timeout):
