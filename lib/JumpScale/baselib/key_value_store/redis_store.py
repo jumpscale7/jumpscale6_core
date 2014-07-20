@@ -28,7 +28,7 @@ class RedisKeyValueStore(KeyValueStoreBase):
         self.nodelastchangeIdkey = "changelog:%s:lastid" % j.application.whoAmI.gid
         if self.redisclient.get(self.nodelastchangeIdkey)==None:
             self.writedb.redisclient.set(self.nodelastchangeIdkey,0)
-        self.lastchangeId=int(self.redisclient.get(self.nodelastchangeIdkey))
+        self.lastchangeId=int(self.redisclient.get(self.nodelastchangeIdkey) or 0)
 
     def deleteChangeLog(self):
         rediscl = self.writedb.redisclient
