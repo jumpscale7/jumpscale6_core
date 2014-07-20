@@ -185,6 +185,12 @@ class LogHandler(object):
                 self._original_stdout = sys.stdout
                 self._buffer = StringIO()
 
+            def __call__(self, func):
+                def wrapper(*args, **kwargs):
+                    with self:
+                        return func(*args, **kwargs)
+                return wrapper
+
             def __enter__(self):
                 sys.stdout = self._buffer
                 sys.stderr = self._buffer
