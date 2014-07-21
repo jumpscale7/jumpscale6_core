@@ -355,9 +355,9 @@ class JPackageClient():
         """
         if fromtmp:
             self._metadatadirTmp
-            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name)
+            return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance),"actions")
         else:
-            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name)
+            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance),"actions")
 
 
     def getJPActiveInstancePath(self,domain,name,instance,fromtmp=False):

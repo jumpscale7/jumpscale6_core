@@ -299,7 +299,7 @@ class JPackageObject():
         if j.system.fs.isDir(self.getPathActions()):
             j.system.fs.removeDirTree(self.getPathActions())
 
-        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"actions"),self.getPathActions())
+        j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"actions"),self.getPathActions())        
 
         #copy hrd to active instance        
         j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"hrd"),j.system.fs.joinPaths(self.getPathActiveInstance(),"hrd"))
