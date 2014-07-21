@@ -357,7 +357,7 @@ class JPackageClient():
             self._metadatadirTmp
             return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance),"actions")
         else:
-            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance),"actions")
+            return j.system.fs.joinPaths(j.dirs.packageDir, "instance", domain,name,str(instance),"actions")
 
 
     def getJPActiveInstancePath(self,domain,name,instance,fromtmp=False):
@@ -372,7 +372,7 @@ class JPackageClient():
             self._metadatadirTmp
             p=j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance))
         else:
-            p=j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance))
+            p=j.system.fs.joinPaths(j.dirs.packageDir, "instance", domain,name,str(instance))
         # j.system.fs.createDir(j.system.fs.joinPaths(p,"hrdactive"))
         return p
 
@@ -391,7 +391,7 @@ class JPackageClient():
             self._metadatadirTmp
             return j.system.fs.joinPaths(self._metadatadirTmp,domain,name,str(instance),"hrdactive")
         else:
-            return j.system.fs.joinPaths(j.dirs.packageDir, "active", domain,name,str(instance),"hrdactive")
+            return j.system.fs.joinPaths(j.dirs.packageDir, "instance", domain,name,str(instance),"hrdactive")
 
     def getMetadataPath(self,domain,name,version):
         """
@@ -548,17 +548,15 @@ class JPackageClient():
             #now check if there are instances
             res2=[]
             for jp in res:
-                root=j.system.fs.joinPaths(j.dirs.packageDir, "active", jp.domain,jp.name)
+                root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", jp.domain,jp.name)
                 if j.system.fs.exists(path=root):
                     dirs=j.system.fs.listDirsInDir(root,False,True)
-                    if len(dirs)>0:
-                        #found multiple instances
-                        for instancename in dirs:
-                            jp2=copy.copy(jp)
-                            jp2.instance=instancename
-                            res2.append(jp2)
-                    else:
-                        res2.append(jp)
+                    for instancename in dirs:
+                        jp2=copy.copy(jp)
+                        jp2.instance=instancename
+                        res2.append(jp2)
+                else:
+                    res2.append(jp)
             res=res2
 
             if instance<>None:

@@ -217,16 +217,16 @@ class JPackageObject():
             #DO NOT SET 0, 0 means we don't count the stat from the hrd
 
         ######CHECK IF JP ALREADY INSTALLED 
-        if self.state.lastinstalledbuildnr>0:
+        if self.state.lastinstalledbuildnr>=0:
             #means jp is installed on system
             #because was already installed make sure we create active instance if we can't find the active path yet
 
             #get rid of past
-            oldpath=j.system.fs.joinPaths(j.dirs.packageDir, "active", self.domain,self.name,self.version)            
+            oldpath=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name,self.version)            
             if j.system.fs.exists(path=oldpath):
                 j.system.fs.removeDirTree(oldpath)
 
-            root=j.system.fs.joinPaths(j.dirs.packageDir, "active", self.domain,self.name)
+            root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
             if not j.system.fs.exists(path=root) or len(j.system.fs.listDirsInDir(root,False,True))==0:
                 
                 #this is to allow system to keep on running when upgrading from old situation
@@ -322,10 +322,10 @@ class JPackageObject():
         # print "loadactions:%s"%self
         # self._init()
 
-        root=j.system.fs.joinPaths(j.dirs.packageDir, "active", self.domain,self.name)
+        root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
         instanceNames=j.system.fs.listDirsInDir(root,False,True)
         if not j.system.fs.exists(path=root) or len(instanceNames)==0:
-            self._raiseError("can only load actions of jpackage when active jpackage dir exists and at least 1 instance installed, path is %s"%root,"jpackage.init.loadactions")
+            self._raiseError("can only load actions of jpackage when active instance jpackage dir exists and at least 1 instance installed, path is %s"%root,"jpackage.init.loadactions")
 
         if self.instance==None and instance<>None:
             self.instance=instance
@@ -337,7 +337,7 @@ class JPackageObject():
             self._raiseError("found more than 1 instance in '%s' and did not specify 1."%root,"jpackage.init.loadactions")             
 
         if str(self.instance) not in instanceNames:
-            self._raiseError("can only load actions of jpackage when specified instance:'%s' exists in jpackage active dir: '%s'"%(self.instance,root),"jpackage.init.loadactions") 
+            self._raiseError("can only load actions of jpackage when specified instance:'%s' exists in jpackage active instacne dir: '%s'"%(self.instance,root),"jpackage.init.loadactions") 
 
         force=True #@todo need more checks, now for first release do always
 
@@ -619,7 +619,7 @@ class JPackageObject():
 
     def getPathMetadata(self):
         """
-        Return absolute pathname of the package's metadatapath active
+        Return absolute pathname of the package's metadatapath active instance
         """
         return j.packages.getMetadataPath(self.domain, self.name, self.version)
 
@@ -731,7 +731,7 @@ class JPackageObject():
         return self.dependencies
 
     def getInstanceNames(self):
-        root=j.system.fs.joinPaths(j.dirs.packageDir, "active", self.domain,self.name)
+        root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
         return j.system.fs.listDirsInDir(root,False,True)
 
     def getInstances(self):
