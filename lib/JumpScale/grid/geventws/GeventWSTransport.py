@@ -7,9 +7,9 @@ from JumpScale.grid.serverbase.TCPHATransport import TCPHATransport
 import requests
 
 class GeventWSTransport(Transport):
-    def __init__(self, addr="localhost", port=9999, timeout=None):
-
-        self.url = "http://%s:%s/rpc/" % (addr, port)
+    def __init__(self, addr="localhost", port=9999, timeout=None, endpoint='rpc/'):
+        scheme = 'http' if port != 443 else 'https'
+        self.url = "%s://%s:%s/%s" % (scheme, addr, port, endpoint)
         self._id = None
         self.timeout = timeout
         self._addr = addr
