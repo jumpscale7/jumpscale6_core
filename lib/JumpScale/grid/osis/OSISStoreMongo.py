@@ -10,6 +10,7 @@ import JumpScale.grid.mongodbclient
 import time
 
 class OSISStoreMongo(OSISStore):
+    MULTIGRID = True
 
     """
     Default object implementation for mongodbserver
@@ -29,10 +30,14 @@ class OSISStoreMongo(OSISStore):
         self.initall(path, namespace, categoryname, db=False)
         config = j.application.config
         host = config.get('mongodb.host') if config.exists('mongodb.host') else 'localhost'
-        port = config.get('mongodb.port') if config.exists('mongodb.port') else 27017
+        port = config.getInt('mongodb.port') if config.exists('mongodb.port') else 27017
         mongodb_client = j.clients.mongodb.get(host, port)
 
-        self.db = mongodb_client[namespace]
+        if self.MULTIGRID:
+            self.db = mongodb_client[namespace]
+        else:
+            dbnamespace = '%s_%s' % (j.application.whoAmI.gid, namespace)
+            self.db = mongodb_client[dbnamespace]
         self.client = self.db[categoryname]
         self.counter = self.db["counter"]
 
