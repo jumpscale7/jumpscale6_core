@@ -18,7 +18,24 @@ class OSISStore(object):
         """
         self.initall( path, namespace,categoryname,db=True)
 
-    def initall(self, path, namespace,categoryname,db):
+    def initall(self, path, namespace,categoryname,db=False):
+        self._init_auth(path, namespace, categoryname, db)
+        self.elasticsearch = self._getElasticSearch()
+        status = self.elasticsearch.status()
+        indexname = self.getIndexName()
+        if indexname not in status['indices'].keys():
+            import pyelasticsearch
+            try:
+                self.elasticsearch.create_index(self.getIndexName())
+            except pyelasticsearch.IndexAlreadyExistsError:
+                pass 
+
+        # if self.tasklets.has_key("init"):
+        #     self.tasklets["init"].executeV2(osis=self)
+
+        self.objectclass=None
+
+    def _init_auth(self, path, namespace, categoryname, db=False):
         self.json=j.db.serializers.getSerializerType("j")
 
         self.path = path
@@ -42,22 +59,7 @@ class OSISStore(object):
 
         self.buildlist = False
 
-        self.elasticsearch = self._getElasticSearch()
-        status = self.elasticsearch.status()
-        indexname = self.getIndexName()
-        if indexname not in status['indices'].keys():
-            import pyelasticsearch
-            try:
-                self.elasticsearch.create_index(self.getIndexName())
-            except pyelasticsearch.IndexAlreadyExistsError:
-                pass 
-
-        # if self.tasklets.has_key("init"):
-        #     self.tasklets["init"].executeV2(osis=self)
-
-        self.objectclass=None
-
-        authpath=j.system.fs.joinPaths(self.path,"OSIS_auth.py")
+        authpath=j.system.fs.joinPaths(path,"OSIS_auth.py")
         auth=None
         authparent=None
 
@@ -66,7 +68,7 @@ class OSISStore(object):
             auth=testmod.AUTH()
             auth.load(self)
 
-        authpath=j.system.fs.joinPaths(j.system.fs.getParent(self.path),"OSIS_auth.py")
+        authpath=j.system.fs.joinPaths(j.system.fs.getParent(path),"OSIS_auth.py")
         if j.system.fs.exists(authpath):
             testmod = imp.load_source("auth_%s"%self.dbprefix, authpath)
             authparent=testmod.AUTH()

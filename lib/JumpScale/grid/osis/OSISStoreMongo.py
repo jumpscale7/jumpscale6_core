@@ -27,23 +27,29 @@ class OSISStoreMongo(OSISStore):
         """
         gets executed when catgory in osis gets loaded by osiscmds.py (.init method)
         """
-        self.initall(path, namespace, categoryname, db=False)
         config = j.application.config
         host = config.get('mongodb.host') if config.exists('mongodb.host') else 'localhost'
         port = config.getInt('mongodb.port') if config.exists('mongodb.port') else 27017
         mongodb_client = j.clients.mongodb.get(host, port)
 
+        if namespace == 'system':
+            namespace = 'js_system'
+
         if self.MULTIGRID:
-            self.db = mongodb_client[namespace]
+            client = mongodb_client[namespace]
         else:
             dbnamespace = '%s_%s' % (j.application.whoAmI.gid, namespace)
-            self.db = mongodb_client[dbnamespace]
-        self.client = self.db[categoryname]
-        self.counter = self.db["counter"]
+            client = mongodb_client[dbnamespace]
+        self.db = client[categoryname]
+        self.counter = client["counter"]
 
         seq= {"_id": categoryname, "seq": 0}
         if self.counter.find_one({'_id': categoryname}) == None:
             self.counter.save(seq)
+        self.initall(path, namespace, categoryname)
+
+    def initall(self, path, namespace, categoryname):
+        self._init_auth(path, namespace, categoryname)
 
     def _getObjectId(self, id):
         return pymongo.mongo_client.helpers.bson.objectid.ObjectId(id)
@@ -64,11 +70,11 @@ class OSISStoreMongo(OSISStore):
             objInDB=None
 
             if value.has_key("id") and int(value["id"])<>0:                
-                objInDB=self.client.find_one({"id":value["id"]}) 
+                objInDB=self.db.find_one({"id":value["id"]}) 
 
             elif value.has_key("guid") and value["guid"]<>"":                
                 value["guid"]=value["guid"].replace("-","")
-                objInDB=self.client.find_one({"guid":value["guid"]}) 
+                objInDB=self.db.find_one({"guid":value["guid"]}) 
 
             if objInDB<>None:
                 # value["_id"]=
@@ -78,7 +84,7 @@ class OSISStoreMongo(OSISStore):
                 # objInDB.pop("guid")
                 objInDB["guid"]=objInDB["guid"].replace("-","")
                 objInDB = self.setPreSave(objInDB)
-                self.client.save(objInDB)
+                self.db.save(objInDB)
                 new=False
                 return (new,True,objInDB["guid"])
             
@@ -89,7 +95,7 @@ class OSISStoreMongo(OSISStore):
 
             value = self.setPreSave(value)
 
-            self.client.save(value)
+            self.db.save(value)
             return (new,True,value["guid"])
         else:
             raise RuntimeError("value can only be dict")
@@ -97,9 +103,9 @@ class OSISStoreMongo(OSISStore):
     def get(self, key, full=False):
         if j.basetype.string.check(key):
             key=key.replace("-","")
-            res=self.client.find_one({"guid":key})
+            res=self.db.find_one({"guid":key})
         else:
-            res=self.client.find_one({"id":key})
+            res=self.db.find_one({"id":key})
 
         # res["guid"]=str(res["_id"])
         if res<>None:
@@ -113,9 +119,9 @@ class OSISStoreMongo(OSISStore):
         """
         # oid=pymongo.mongo_client.helpers.bson.objectid.ObjectId(key)
         if j.basetype.string.check(key):
-            return not self.client.find_one({"guid":key})==None
+            return not self.db.find_one({"guid":key})==None
         else:
-            return not self.client.find_one({"id":key})==None
+            return not self.db.find_one({"id":key})==None
 
     def index(self, obj,ttl=0,replication="sync",consistency="all",refresh=True):
         #NOT RELEVANT FOR THIS TYPE OF DB
@@ -124,11 +130,11 @@ class OSISStoreMongo(OSISStore):
     def delete(self, key):
         if j.basetype.string.check(key):
             key=key.replace("-","")
-            res=self.client.find_one({"guid":key})
+            res=self.db.find_one({"guid":key})
         else:
-            res=self.client.find_one({"id":key})
+            res=self.db.find_one({"id":key})
         if res<>None:
-            self.client.remove(res["_id"])
+            self.db.remove(res["_id"])
         
     def deleteIndex(self, key,waitIndex=False,timeout=1):           
         #NOT RELEVANT FOR THIS TYPE OF DB
@@ -230,7 +236,7 @@ class OSISStoreMongo(OSISStore):
                     params[key] = {'$regex': '.*%s.*' % value.replace('*', '')}
 
             result=[]
-            for item in self.client.find(params,limit=size,skip=start,fields=fields,sort=sortlist):
+            for item in self.db.find(params,limit=size,skip=start,fields=fields,sort=sortlist):
                 item.pop("_id")
                 result.append(item)
             return result
@@ -275,11 +281,11 @@ class OSISStoreMongo(OSISStore):
                 for field in query['sort']:
                     sorting.append((field.keys()[0], 1 if field.values()[0] == 'asc' else -1))
                 mongoquery.pop('sort')
-                resultdata = self.client.find(mongoquery).sort(sorting).skip(start).limit(size)
+                resultdata = self.db.find(mongoquery).sort(sorting).skip(start).limit(size)
             else:
-                resultdata = self.client.find(mongoquery).skip(start).limit(size)
+                resultdata = self.db.find(mongoquery).skip(start).limit(size)
 
-            count = self.client.find(mongoquery).count()
+            count = self.db.find(mongoquery).count()
             result = [count, ]
             for item in resultdata:
                 item.pop("_id")
@@ -287,7 +293,7 @@ class OSISStoreMongo(OSISStore):
             return result
 
     def destroyindex(self):
-        self.client.drop()
+        self.db.drop()
 
     def deleteSearch(self,query):
         if not j.basetype.string.check(update):
@@ -310,7 +316,7 @@ class OSISStoreMongo(OSISStore):
         if j.basetype.string.check(update):
             tags=j.core.tags.getObject(update)
             update=tags.getDict()            
-        # self.client.find_and_modify(query,update=update)
+        # self.db.find_and_modify(query,update=update)
         query+=' @fields:guid'
         counter=0
         for item in self.find(query=query):
@@ -324,7 +330,7 @@ class OSISStoreMongo(OSISStore):
         """
         delete objects as well as index (all)
         """
-        self.client.drop()
+        self.db.drop()
         self.rebuildindex()
 
     def demodata(self):
@@ -339,12 +345,12 @@ class OSISStoreMongo(OSISStore):
         """
         result = list()
         if withcontent:
-            cursor = self.client.find()
+            cursor = self.db.find()
             for item in cursor:
                 item.pop('_id')
                 result.append(item)
         else:
-            cursor = self.client.find(fields=['id',])
+            cursor = self.db.find(fields=['id',])
             for item in cursor:
                 result.append(item['id'])
         return result
@@ -353,7 +359,7 @@ class OSISStoreMongo(OSISStore):
         path=j.system.fs.joinPaths(self.path,"index.py")
         if j.system.fs.exists(path):
             module = imp.load_source("%s_%sindex"%(self.namespace,self.categoryname), path)
-            module.index(self.client)
+            module.index(self.db)
 
     def export(self, outputpath,query=""):
         """

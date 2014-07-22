@@ -8,7 +8,7 @@ class mainclass(OSISStore):
     """
 
     def init(self, path, namespace,categoryname):
-        self.initall(path, namespace,categoryname,db=True)
+        self.initall(path, namespace,categoryname)
         self.olddb=self.db
         if j.application.config.exists("rediskvs_master_addr"):
             masterdb=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host=j.application.config.get("rediskvs_master_addr"), port=7772, password=j.application.config.get("rediskvs_secret"), serializers=[self.json])

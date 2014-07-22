@@ -11,7 +11,7 @@ class mainclass(parentclass):
         """
         gets executed when category in osis gets loaded by osiscmds.py (.init method)
         """
-        self.initall(path, namespace,categoryname,db=True)
+        self.initall(path, namespace,categoryname)
         self.olddb=self.db
         
         if j.application.config.exists("rediskvs_master_addr"):
