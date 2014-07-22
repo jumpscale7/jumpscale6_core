@@ -47,11 +47,7 @@ class Job(OsisBaseObject):
         self.gid = int(self.gid)
         # self.nid = int(self.nid)
         self.id = int(self.id)
-        if self.gid<>"":
-            gid=self.gid
-        else:
-            gid=j.application.whoAmI.gid
-        self.guid = "%s_%s" % (gid, self.id)
+        self.guid = "%s_%s_%s_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, self.gid, self.nid,self.id)
         return self.guid
 
 
