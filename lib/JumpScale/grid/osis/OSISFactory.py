@@ -121,12 +121,12 @@ class OSISFactory:
         if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
             raise RuntimeError("cannot start osis, could not find running elastic search")
 
-        zd = j.core.zdaemon.getZDaemon(port=port,name="osis")
-        zd.addCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
-        zd.daemon.cmdsInterfaces["osis"].init(path=path,esip=elasticsearchip,esport=elasticsearchport,db=db)
-        self.cmds=zd.daemon.cmdsInterfaces["osis"]
-        zd.schedule("checkchangelog", self.cmds.checkChangeLog)
-        zd.start()
+        daemon = j.servers.geventws.getServer(port=port)
+        daemon.addCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
+        daemon.daemon.cmdsInterfaces["osis"].init(path=path,esip=elasticsearchip,esport=elasticsearchport,db=db)
+        self.cmds=daemon.daemon.cmdsInterfaces["osis"]
+        daemon.schedule("checkchangelog", self.cmds.checkChangeLog)
+        daemon.start()
 
     def getClient(self, ipaddr=None, port=5544,user=None,passwd=None,ssl=False,gevent=False):
         if ipaddr:
@@ -150,7 +150,8 @@ class OSISFactory:
                 raise RuntimeError("Superadmin passwd has not been defined on this node, please put in #hrd (grid.master.superadminpasswd) or use argument 'passwd'.")
 
         with j.logger.nostdout():
-            client = j.core.zdaemon.getZDaemonHAClient(connections, category="osis", user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)
+            #client = j.core.zdaemon.getZDaemonHAClient(connections, category="osis", user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)
+            client= j.servers.geventws.getHAClient(connections, user=user, passwd=passwd,category="osis")
         self.osisConnections[key] = client
         return client
 
