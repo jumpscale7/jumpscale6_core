@@ -59,3 +59,6 @@ class TCPHATransport(Transport):
     def close(self):
         if self._client:
             self._client.close()
+
+    def __str__(self):
+        return "%s %s" % (self.__class__.__name__, self._connections)

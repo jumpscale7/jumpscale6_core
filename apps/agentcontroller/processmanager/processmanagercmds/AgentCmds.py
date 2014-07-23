@@ -50,22 +50,21 @@ class AgentCmds():
         else:
             acips = [ self.serverip ]
         for acip in acips:
-            client = j.clients.agentcontroller.get(acip)
-            j.core.processmanager.daemon.schedule("agent", self.loop, client)
+            j.core.processmanager.daemon.schedule("agent", self.loop, acip)
 
-    def reconnect(self, client):
+    def reconnect(self, acip):
         while True:
             try:
-                client.register()
-                return
+                return j.clients.agentcontroller.get(acip)
             except:
+                print "Failed to connect to agentcontroller %s" % acip
                 gevent.sleep(5)
 
-    def loop(self, client):
+    def loop(self, acip):
         """
         fetch work from agentcontroller & put on redis queue
         """
-        self.reconnect(client)
+        client = self.reconnect(acip)
         gevent.sleep(2)
         print "start loop to fetch work"
         while True:
@@ -81,7 +80,7 @@ class AgentCmds():
                         continue
                 except Exception,e:
                     j.errorconditionhandler.processPythonExceptionObject(e)
-                    self.reconnect(client)
+                    client = self.reconnect(acip)
                     continue
 
                 job['ipaddr'] = client.ipaddr

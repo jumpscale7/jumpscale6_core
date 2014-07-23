@@ -186,7 +186,7 @@ class DaemonClient(object):
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % ecodict)
 
             if ecodict["errormessage"].find("Authentication error")<>-1:
-                raise RuntimeError("Could not authenticate to %s:%s for user:%s"%(self.transport._addr,self.transport._port,self.user))
+                raise RuntimeError("Could not authenticate to %s for user:%s"%(self.transport,self.user))
             raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
             # frames= j.errorconditionhandler.getFrames()            
             # s = j.db.serializers.getMessagePack()  # get messagepack serializer
@@ -291,9 +291,6 @@ class Klass(object):
         nritems = nr / (stop - start)
         print "nr items per sec: %s" % nritems
 
-
-
-
 class Transport(object):
 
     def connect(self, sessionid=None):
@@ -323,4 +320,5 @@ class Transport(object):
         raise RuntimeError("not implemented")
         # send message, retry if needed, retrieve message
 
-
+    def __str__(self):
+        return "%s %s:%s" % (self.__class__.__name__, self._addr, self._port)
