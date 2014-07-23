@@ -97,6 +97,9 @@ class OSISStoreMongo(OSISStore):
             value["guid"]=value["guid"].replace("-","")
             if idIsZero():
                 value["id"]=self.incrId()
+                obj = self.getObject(value)
+                obj.getSetGuid()
+                value = obj.dump()
 
             value = self.setPreSave(value)
 

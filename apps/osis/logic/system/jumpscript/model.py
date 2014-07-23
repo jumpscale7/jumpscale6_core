@@ -13,6 +13,8 @@ class Jumpscript(OsisBaseObject):
         
         if ddict <> {}:
             self.load(ddict)
+            if self.id is None:
+                self.id = 0
         else:
             self.id=0
             self.gid =j.application.whoAmI.gid
