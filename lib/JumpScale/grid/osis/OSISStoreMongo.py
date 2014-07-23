@@ -79,12 +79,11 @@ class OSISStoreMongo(OSISStore):
             obj.getSetGuid()
             value = obj.dump()
 
-            elif value.has_key("guid") and value["guid"]<>"":                
+            if value.has_key("guid") and value["guid"]<>"":                
                 value["guid"]=value["guid"].replace("-","")
                 objInDB=self.db.find_one({"guid":value["guid"]}) 
 
             if objInDB<>None:
-                new = False
                 objInDB.update(value)
                 objInDB["guid"]=objInDB["guid"].replace("-","")
                 objInDB = self.setPreSave(objInDB)
