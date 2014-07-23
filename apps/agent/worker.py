@@ -46,7 +46,7 @@ class Worker(object):
         self.init()
 
     def getClient(self, job):
-        ipaddr = getattr(job, 'ipaddr', None)
+        ipaddr = getattr(job, 'achost', None)
         client = self.clients.get(ipaddr)
         if not client:
             client = j.clients.agentcontroller.get(ipaddr)

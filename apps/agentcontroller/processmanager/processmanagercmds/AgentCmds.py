@@ -83,7 +83,7 @@ class AgentCmds():
                     client = self.reconnect(acip)
                     continue
 
-                job['ipaddr'] = client.ipaddr
+                job['achost'] = client.ipaddr
                 if job["queue"]=="internal":
                     #cmd needs to be executed internally (is for proxy functionality)
                    
