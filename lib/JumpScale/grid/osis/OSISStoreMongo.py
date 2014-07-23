@@ -67,8 +67,9 @@ class OSISStoreMongo(OSISStore):
         value can be a dict or a raw value (seen as string)
         """
         def idIsZero():
-            if 'id' in value:
-                if isinstance(value, int) and value == 0:
+            id = value.get('id')
+            if id != None:
+                if isinstance(id, int) and id == 0:
                     return True
             return False
 
