@@ -33,13 +33,13 @@ class OSISStoreMongo(OSISStore):
         mongodb_client = j.clients.mongodb.get(host, port)
 
         if namespace == 'system':
-            namespace = 'js_system'
-
-        if self.MULTIGRID:
-            client = mongodb_client[namespace]
+            dbnamespace = 'js_system'
         else:
-            dbnamespace = '%s_%s' % (j.application.whoAmI.gid, namespace)
-            client = mongodb_client[dbnamespace]
+            dbnamespace = namespace
+
+        if not self.MULTIGRID:
+            dbnamespace = '%s_%s' % (j.application.whoAmI.gid, dbnamespace)
+        client = mongodb_client[dbnamespace]
         self.db = client[categoryname]
         self.counter = client["counter"]
 
@@ -62,41 +62,46 @@ class OSISStoreMongo(OSISStore):
     def setPreSave(self, value):
         return value
 
-    def set(self, key, value,**args):
+    def set(self, key, value,*args,**kwargs):
         """
         value can be a dict or a raw value (seen as string)
         """
+        def idIsZero():
+            if 'id' in value:
+                if isinstance(value, int) and value == 0:
+                    return True
+            return False
+
         if j.basetype.dictionary.check(value):
             objInDB=None
 
-            if value.has_key("id") and int(value["id"])<>0:                
-                objInDB=self.db.find_one({"id":value["id"]}) 
+            obj = self.getObject(value)
+            obj.getSetGuid()
+            value = obj.dump()
 
             elif value.has_key("guid") and value["guid"]<>"":                
                 value["guid"]=value["guid"].replace("-","")
                 objInDB=self.db.find_one({"guid":value["guid"]}) 
 
             if objInDB<>None:
-                # value["_id"]=
-                # value.pop("guid")
-
+                new = False
                 objInDB.update(value)
-                # objInDB.pop("guid")
                 objInDB["guid"]=objInDB["guid"].replace("-","")
                 objInDB = self.setPreSave(objInDB)
-                self.db.save(objInDB)
-                new=False
-                return (new,True,objInDB["guid"])
+                newckey = self.getObject(objInDB).getContentKey()
+                changed = newckey != obj.getContentKey()
+                if changed:
+                    self.db.save(objInDB)
+                return (objInDB["guid"], False, changed)
             
-            new=True
             value["guid"]=value["guid"].replace("-","")
-            if value.has_key("id") and int(value["id"])==0:
+            if idIsZero():
                 value["id"]=self.incrId()
 
             value = self.setPreSave(value)
 
             self.db.save(value)
-            return (new,True,value["guid"])
+            return (value["guid"], True, True)
         else:
             raise RuntimeError("value can only be dict")
 

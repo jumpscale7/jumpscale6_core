@@ -84,6 +84,8 @@ class OSISFactory:
             else:
                 val=obj.__dict__
             val=ujson.dumps(val)
+        else:
+            val = obj
         val=lz4.dumps(val)
         val=j.db.serializers.blowfish.dumps(val,self.key)
         return val

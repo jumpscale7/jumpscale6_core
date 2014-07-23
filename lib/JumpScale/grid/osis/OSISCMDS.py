@@ -21,10 +21,10 @@ class OSISCMDS(object):
         oi = self._getOsisInstanceForCat("system", "user")
 
         results = oi.find({'query': {'bool': {'must': [{'term': {'id': name}}]}}})
-        if not results['total']:
+        if not results[0]:
             return {"authenticated":False,"exists":False}
 
-        userguid = results['result'][0]['_source']['guid']
+        userguid = results[1]['guid']
         user = oi.get(userguid)
 
         if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:

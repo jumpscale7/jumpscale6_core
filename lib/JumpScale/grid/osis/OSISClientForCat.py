@@ -177,7 +177,7 @@ class OSISClientForCat():
                 return 0, response
             total = response.pop(0)
             for r in response:
-                r.pop('_meta')
+                r.pop('_meta', None)
                 results.append(r)
             if withtotal:
                 return total, results

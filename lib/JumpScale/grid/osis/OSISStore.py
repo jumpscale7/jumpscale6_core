@@ -213,7 +213,6 @@ class OSISStore(object):
 
         if changed:
             self.db.set(self.dbprefix, key=key, value=value2)
-            
         return (key,new,changed)
 
     def getIndexName(self):
