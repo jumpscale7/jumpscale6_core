@@ -83,7 +83,7 @@ if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole
             if opts.action == 'delete':
                 _deleteNode(opts.nid)
                 j.application.stop()
-            nodesl = ncl.simpleSearch({'id':opts.nid}, withguid=True)
+            nodesl = ncl.simpleSearch({'id':int(opts.nid)}, withguid=True)
             if not nodesl:
                 print "Could not find node with nid %s" % opts.nid
                 j.application.stop(1)
