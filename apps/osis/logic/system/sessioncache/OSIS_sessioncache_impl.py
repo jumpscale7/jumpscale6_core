@@ -1,46 +1,14 @@
 from JumpScale import j
-from JumpScale.grid.osis.OSISStore import OSISStore
+from JumpScale.grid.osis.OSISStoreMongo import OSISStoreMongo
 import JumpScale.grid.grid
 
-class mainclass(OSISStore):
-    TTL = '5d'
-    """
-    """
-
-    def init(self, path, namespace,categoryname):
-        self.initall(path, namespace,categoryname)
-        self.olddb=self.db
-        if j.application.config.exists("rediskvs_master_addr"):
-            masterdb=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host=j.application.config.get("rediskvs_master_addr"), port=7772, password=j.application.config.get("rediskvs_secret"), serializers=[self.json])
-            self.db=j.db.keyvaluestore.getRedisStore(namespace=self.dbprefix, host='localhost', port=7771, password='', masterdb=masterdb, serializers=[self.json],changelog=False)
-            self.db.osis[self.dbprefix]=self
-
+class mainclass(OSISStoreMongo):
     def set(self,key,value,waitIndex=True):
-        self.db.set(self.dbprefix,key=key,value=value)
+        dbvalue = self.db.find_one({'guid': key})
+        if dbvalue is not None:
+             dbvalue.update(value)
+             value = dbvalue
+        value['guid'] = key
+	value['id'] = key
+        self.db.save(value)
         return [key,True,True]
-
-    def destroyindex(self):
-        raise NotImplementedError()
-
-    destroy=destroyindex
-
-
-    def getIndexName(self):
-        return "system_sessioncache"
-
-    def delete(self, key):
-        self.db.delete(self.dbprefix, key)
-
-    def exists(self,key):
-        return self.db.exists(self.dbprefix,key=key)
-
-    def setObjIds(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method setObjIds is not relevant for sessioncache namespace",category="osis.notimplemented")
-
-    def rebuildindex(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method rebuildindex is not relevant for sessioncache namespace",category="osis.notimplemented")
-
-    def list(self,**args):
-        j.errorconditionhandler.raiseBug(message="osis method list is not relevant for sessioncache namespace",category="osis.notimplemented")
-
-
