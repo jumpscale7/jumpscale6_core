@@ -39,6 +39,6 @@ class mainclass(parentclass):
         @return as json encoded
         """
         val = parentclass.get(self, key)
-        if 'passwd' in val:
+        if val is not None and 'passwd' in val:
             val['passwd'] = j.core.osis.decrypt(val['passwd'])
         return val

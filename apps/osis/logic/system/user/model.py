@@ -40,3 +40,5 @@ class User(OsisBaseObject):
 
         return self.guid
 
+    def getContentKey(self):
+        return str(self.__dict__)
