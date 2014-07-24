@@ -65,7 +65,7 @@ class Node(OsisBaseObject):
 
         self.gid=j.application.config.getInt("grid.id")
         if j.application.config.exists('grid.node.id'):
-            self.nid=j.application.config.getInt("grid.node.id")
+            self.id=j.application.config.getInt("grid.node.id")
         if self.gid==0:
             raise RuntimeError("grid id cannot be 0")
 
