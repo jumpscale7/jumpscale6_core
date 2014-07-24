@@ -69,6 +69,11 @@ grid.watchdog.addr=127.0.0.1
 ' > /opt/jumpscale/cfg/hrd/grid.hrd
 
 echo '
+mongodb.host=127.0.0.1
+mongodb.port=27017
+' > /opt/jumpscale/cfg/hrd/mongodb.hrd
+
+echo '
 redis.port.redisc=7767
 redis.port.redisp=7768
 redis.port.redisac=7769
