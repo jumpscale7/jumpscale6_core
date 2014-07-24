@@ -88,11 +88,11 @@ class OSISStoreMongo(OSISStore):
                 objInDB=self.db.find_one({"guid":value["guid"]})
 
             if objInDB<>None:
+                oldckey = self.getObject(objInDB).getContentKey()
                 objInDB.update(value)
-                objInDB["guid"]=objInDB["guid"].replace("-","")
+                replaceGuid(objInDB)
                 objInDB = self.setPreSave(objInDB)
-                newckey = self.getObject(objInDB).getContentKey()
-                changed = newckey != obj.getContentKey()
+                changed = oldckey != obj.getContentKey()
                 if changed:
                     self.db.save(objInDB)
                 return (objInDB["guid"], False, changed)
@@ -116,7 +116,9 @@ class OSISStoreMongo(OSISStore):
             key=key.replace("-","")
             res=self.db.find_one({"guid":key})
         else:
-            res=self.db.find_one({"id":key})
+            res=self.db.find_one({"guid":key})
+            if res is None:
+                res=self.db.find_one({"id":key})
 
         # res["guid"]=str(res["_id"])
         if not res:
@@ -141,15 +143,13 @@ class OSISStoreMongo(OSISStore):
         return
 
     def delete(self, key):
-        if j.basetype.string.check(key):
-            key=key.replace("-","")
-            res=self.db.find_one({"guid":key})
-        else:
-            res=self.db.find_one({"id":key})
-        if res<>None:
+        try:
+            res = self.get(key, True)
             self.db.remove(res["_id"])
-        
-    def deleteIndex(self, key,waitIndex=False,timeout=1):           
+        except KeyError:
+            pass
+
+    def deleteIndex(self, key,waitIndex=False,timeout=1):
         #NOT RELEVANT FOR THIS TYPE OF DB
         pass
 
