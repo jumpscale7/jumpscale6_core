@@ -116,9 +116,11 @@ class OSISStoreMongo(OSISStore):
             res=self.db.find_one({"id":key})
 
         # res["guid"]=str(res["_id"])
-        if res<>None:
-            if not full:
-                res.pop("_id")
+        if not res:
+            raise KeyError("Key %s doesn't exist" % key)
+
+        if not full:
+            res.pop("_id")
         return res
         
     def exists(self, key):
