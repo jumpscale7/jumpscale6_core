@@ -132,8 +132,7 @@ class ControllerCMDS():
 
         self._log("save 2 osis")
 
-        if log:
-            saveinosis = True 
+        saveinosis = True if nid and log else False
         job=self._setJob(job.__dict__, osis=saveinosis)
         jobs=json.dumps(job)
         
@@ -173,7 +172,7 @@ class ControllerCMDS():
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")  
         # job guid needs to be unique accoress grid, structure $ac_gid _ $ac_nid _ $executor_gid _ $jobenum
-        job["guid"]="%s_%s_%s_%s_%s"%(j.application.whoAmI.gid, j.application.whoAmI.nid, job["gid"],job["id"])
+        job["guid"]="%s_%s_%s_%s"%(j.application.whoAmI.gid, j.application.whoAmI.nid, job["gid"],job["id"])
         if 'result' in job and not isinstance(job["result"],str):
             job['result'] = json.dumps(job['result'])
         jobs=json.dumps(job)            
