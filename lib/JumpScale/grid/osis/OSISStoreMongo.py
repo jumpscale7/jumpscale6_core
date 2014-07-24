@@ -72,6 +72,9 @@ class OSISStoreMongo(OSISStore):
                 if isinstance(id, int) and id == 0:
                     return True
             return False
+        def replaceGuid(value):
+            if isinstance(value['guid'], basestring):
+                value['guid'] = value['guid'].replace('-', '')
 
         if j.basetype.dictionary.check(value):
             objInDB=None
@@ -80,9 +83,9 @@ class OSISStoreMongo(OSISStore):
             obj.getSetGuid()
             value = obj.dump()
 
-            if value.has_key("guid") and value["guid"]<>"":                
-                value["guid"]=value["guid"].replace("-","")
-                objInDB=self.db.find_one({"guid":value["guid"]}) 
+            if value.has_key("guid") and value["guid"]<>"":
+                replaceGuid(value)
+                objInDB=self.db.find_one({"guid":value["guid"]})
 
             if objInDB<>None:
                 objInDB.update(value)
@@ -93,8 +96,8 @@ class OSISStoreMongo(OSISStore):
                 if changed:
                     self.db.save(objInDB)
                 return (objInDB["guid"], False, changed)
-            
-            value["guid"]=value["guid"].replace("-","")
+
+            replaceGuid(value)
             if idIsZero():
                 value["id"]=self.incrId()
                 obj = self.getObject(value)

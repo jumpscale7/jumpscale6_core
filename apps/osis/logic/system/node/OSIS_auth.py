@@ -1,12 +1,10 @@
 from JumpScale import j
-import ujson
 
 class AUTH():
 
     def load(self,osis):
         for key in osis.list():
-            item=osis.get(key)
-            obj=ujson.loads(item)
+            obj=osis.get(key)
             j.core.osis.nodeguids[str(obj["machineguid"])]=obj["id"]
 
     def authenticate(self,osis,method,user,passwd):
