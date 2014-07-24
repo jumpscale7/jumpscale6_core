@@ -360,9 +360,9 @@ class OSISStoreMongo(OSISStore):
                 item.pop('_id')
                 result.append(item)
         else:
-            cursor = self.db.find(fields=['id',])
+            cursor = self.db.find(fields=['guid',])
             for item in cursor:
-                result.append(item['id'])
+                result.append(item['guid'])
         return result
 
     def rebuildindex(self):
