@@ -235,6 +235,12 @@ class TxtRobot():
         txt=self._longTextTo1Line(txt)
         txt=self._processSnippets(txt) #replace snippets 
 
+        if txt.strip()=="":
+            from IPython import embed
+            print "DEBUG NOW ooo"
+            embed()
+            
+
         entity=""
         args={}
         cmds=list()
@@ -351,7 +357,7 @@ class TxtRobot():
         while out.find("\n\n\n")<>-1:
             out=out.replace("\n\n\n","\n\n")
 
-        if cmdfound==False:    
+        if cmdfound==False: 
             out+= self.responseError("\n","Did not find a command to execute.")
 
         if gargs.has_key("mail_from"):

@@ -208,17 +208,21 @@ class MS1(object):
         machines_actor = api.getActor('cloudapi', 'machines')
         machine_id = [machine['id'] for machine in machines_actor.list(cloudspace_id) if machine['name'] == name]
         if len(machine_id)==0:
-            raise RuntimeError("E:Could not find machine with name:%s, could not start."%name)
+            raise RuntimeError("E:Could not find machine with name:%s, cannot continue action."%name)
         machine_id = machine_id[0]
         actor=api.getActor('cloudapi', 'machines')
         return (api,actor,machine_id,cloudspace_id)
 
     def deleteMachine(self, spacesecret, name,**args):
-        api,machines_actor,machine_id,cloudspace_id=self._getMachineApiActorId(spacesecret,name)
+        try:        
+            api,machines_actor,machine_id,cloudspace_id=self._getMachineApiActorId(spacesecret,name)
+        except Exception,e:
+            if str(e).find("Could not find machine")<>-1:
+                return "NOTEXIST"
         try:
             machines_actor.delete(machine_id)
         except Exception,e:
-            raise RuntimeError("E:could not start machine.")
+            raise RuntimeError("E:could not delete machine %s"%name)
         return "OK"
 
     def startMachine(self, spacesecret, name,**args):

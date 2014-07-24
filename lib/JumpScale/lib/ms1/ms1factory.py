@@ -69,6 +69,9 @@ machine (m)
 - initjsdebug (initjumpscaledebug)
 -- name (n)
 
+- getFreePubTcpPort
+-- name (n) #returns $freePubTcpPort
+
 template (templates,image,images)
 - list
 
@@ -121,8 +124,11 @@ class MS1RobotCmds():
         return j.tools.ms1.listMachinesInSpace(**args)
 
     def machine__delete(self, **args):
-        j.tools.ms1.deleteMachine(**args)
-        return 'Machine %s was deleted successfully ' % args['name']
+        res=j.tools.ms1.deleteMachine(**args)
+        if res=="NOTEXIST":
+            return "Machine did not exist, no need to delete"
+        else:
+            return 'Machine %s was deleted successfully ' % args['name']
 
     def machine__start(self, **args):
         status = j.tools.ms1.startMachine(**args)
@@ -151,7 +157,7 @@ class MS1RobotCmds():
         result = j.tools.ms1.setClouspaceSecret(**args)
         return "spacesecret=%s" % (result)
 
-    def image__list(self, **args):
+    def template__list(self, **args):
         out=""
         res=j.tools.ms1.listImages(**args)
 
