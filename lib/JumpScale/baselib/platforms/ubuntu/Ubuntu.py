@@ -214,6 +214,12 @@ stop on runlevel [016]
 
         return False
 
+    def serviceDisableStartAtBoot(self, servicename):
+         j.system.process.execute("update-rc.d -f %s remove" % servicename)
+
+    def serviceEnableStartAtBoot(self, servicename):
+         j.system.process.execute("update-rc.d -f %s defaults" % servicename)
+
     def updatePackageMetadata(self, force=True):
         self.check()
         if self._cache==None:
