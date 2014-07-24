@@ -206,10 +206,10 @@ class Application:
             client=j.core.osis.getClient(user='root')            
             clientprocess=j.core.osis.getClientForCategory(client,"system","process")
             obj=clientprocess.get("%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.pid))
-            obj.epochstop=j.base.time.getTimeEpoch()
-            obj.active=False
-            clientprocess.set(obj)
-            
+            if obj:
+                obj.epochstop=j.base.time.getTimeEpoch()
+                obj.active=False
+                clientprocess.set(obj)
         sys.exit(exitcode)
 
     def _exithandler(self):
