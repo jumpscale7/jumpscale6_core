@@ -19,7 +19,8 @@ class Text:
                 continue
             out+=item
         if maxlen>0 and len(out)>maxlen:
-            out=out[0:maxlen]            
+            out=out[0:maxlen]
+        out=out.replace("\r","")        
         return out
 
     @staticmethod
