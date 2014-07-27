@@ -117,6 +117,7 @@ pubipaddr=127.0.0.1
 jsprocess start
 jsprocess restart -n webdis
 jpackage install -n processmanager
+jsprocess start
 
 pip install nose
 
