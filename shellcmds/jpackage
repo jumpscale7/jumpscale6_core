@@ -153,6 +153,7 @@ elif args.action == 'configure':
 
     for package in packages:
         package.configure(dependencies=args.deps)
+        package.start()
 
 elif args.action == 'install':
 

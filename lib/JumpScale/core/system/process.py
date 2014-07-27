@@ -1614,6 +1614,18 @@ class SystemProcess:
                 return process
         raise RuntimeError("Could not find process with pid:%s"%pid)
 
+    def getProcessPidsFromUser(self,user):
+        import psutil
+        result=[]
+        for process in psutil.get_process_list():
+            if process.username==user:
+                result.append(process.pid)            
+        return result
+
+
+    def killUserProcesses(self,user):
+        for pid in self.getProcessPidsFromUser(user):
+            j.system.process.kill(pid)
 
     def getSimularProcesses(self):
         import psutil

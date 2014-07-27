@@ -677,21 +677,41 @@ class SystemFS:
         for root, dirs, files in os.walk(path):  
             for ddir in dirs:  
                 path = os.path.join(root, ddir)
-                os.chown(path, uid, gid)
+                try:
+                    os.chown(path, uid, gid)
+                except Exception,e:
+                    if str(e).find("No such file or directory")==-1:
+                        raise RuntimeError("%s"%e)                
             for file in files:
                 path = os.path.join(root, file)
-                os.chown(path, uid, gid)
-        
+                try:
+                    os.chown(path, uid, gid)
+                except Exception,e:
+                    if str(e).find("No such file or directory")==-1:
+                        raise RuntimeError("%s"%e)
 
     def chmod(self,path,permissions):
+        """
+        @param permissions e.g. 0o660 (USE OCTAL !!!)
+        """
         os.chmod(path,permissions)
         for root, dirs, files in os.walk(path):  
             for ddir in dirs:  
                 path = os.path.join(root, ddir)
-                os.chmod(path,permissions)
+                try:
+                    os.chmod(path,permissions)
+                except Exception,e:
+                    if str(e).find("No such file or directory")==-1:
+                        raise RuntimeError("%s"%e)
+                    
             for file in files:
                 path = os.path.join(root, file)
-                os.chmod(path,permissions)
+                try:
+                    os.chmod(path,permissions)
+                except Exception,e:
+                    if str(e).find("No such file or directory")==-1:
+                        raise RuntimeError("%s"%e)
+
 
     def parsePath(self,path, baseDir="",existCheck=True, checkIsFile=False):
         """

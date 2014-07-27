@@ -222,7 +222,7 @@ class JPackageObject():
             #because was already installed make sure we create active instance if we can't find the active path yet
 
             #get rid of past
-            oldpath=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name,self.version)            
+            oldpath=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name,self.version)
             if j.system.fs.exists(path=oldpath):
                 j.system.fs.removeDirTree(oldpath)
 
@@ -231,10 +231,9 @@ class JPackageObject():
                 
                 #this is to allow system to keep on running when upgrading from old situation
                 self.instance=0
-                hrdactivepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive")  
-                j.system.fs.createDir(hrdactivepath)
+                hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance")  
+                j.system.fs.createDir(hrdinstancepath)
                 self.copyMetadataToActive()
-            
 
     @JPLock
     def getCodeMgmtRecipe(self):
@@ -251,9 +250,8 @@ class JPackageObject():
         """
         match hrd templates with active ones, add entries where needed
         """
-        hrdactivepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive")  
-        j.system.fs.createDir(hrdactivepath)        
 
+        #THE ACTIVATE ONES
         hrdtemplatesPath=j.system.fs.joinPaths(self.getPathMetadata(),"hrdactive")
         for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
             base=j.system.fs.getBaseName(item)
@@ -272,7 +270,10 @@ class JPackageObject():
                     #also needs to reload the config object on the application object
                     j.application.loadConfig() #will load that underneath
 
+        #########
         #now load the ones which are specific per instance
+        hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance")  
+        j.system.fs.createDir(hrdinstancepath)        
         hrdtemplatesPath=j.system.fs.joinPaths(self.getPathMetadata(),"hrdinstance")
         if j.system.fs.exists(path=hrdtemplatesPath):
             for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
@@ -282,7 +283,7 @@ class JPackageObject():
                    
                 if base[0]<>"_":
                     templ=j.system.fs.fileGetContents(item)                
-                    actbasepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive",base)
+                    actbasepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance",base)
                     if not j.system.fs.exists(actbasepath):
                         #means there is no hrd, put empty file
                         self.log("did not find instance hrd for %s, will now put there"%actbasepath,category="init")
@@ -304,10 +305,17 @@ class JPackageObject():
         #copy hrd to active instance        
         j.system.fs.copyDirTree(j.system.fs.joinPaths(self.getPathMetadata(),"hrd"),j.system.fs.joinPaths(self.getPathActiveInstance(),"hrd"))
         j.system.fs.copyFile(j.system.fs.joinPaths(self.getPathMetadata(),"coderecipe.cfg"),j.system.fs.joinPaths(self.getPathActiveInstance(),"coderecipe.cfg"))
+        
 
         self.installActiveHrd()
-        hrdactivepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive") 
-        self.hrd_instance=j.core.hrd.getHRD(hrdactivepath)
+        hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance") 
+
+        #cleanup past
+        old_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive") 
+        if j.system.fs.exists(path=old_hrdinstancepath):
+            j.system.fs.removeDirTree(old_hrdinstancepath)
+
+        self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
 
         #apply apackage hrd data on actions active
         self.hrd_instance.applyOnDir(self.getPathActions()) 
@@ -346,7 +354,7 @@ class JPackageObject():
 
         self.check()
 
-        hrdactivepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive")
+        hrdactivepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance")
         self.hrd_instance=j.core.hrd.getHRD(hrdactivepath)            
 
         self.actions = ActionManager(self)
@@ -1229,6 +1237,8 @@ class JPackageObject():
             # if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr > self.state.lastinstalledbuildnr:
             self.configure(dependencies=False)
 
+        if self.buildNr<0:
+            self.buildNr=0
         self.state.setLastInstalledBuildNr(self.buildNr)
 
         j.packages.inInstall.remove(key)

@@ -526,6 +526,7 @@ class JPackageClient():
             name = j.console.askString("Please provide the name or part of the name of the package to search for (e.g *extension* -> lots of extensions)")
 
         res = self._find(domain=domain, name=name, version=version)
+        
 
         if res==[]:
             raiseError('No packages found, did you forget to run "jpackage mdupdate"?',domain,name,version,platform,installed,instance)

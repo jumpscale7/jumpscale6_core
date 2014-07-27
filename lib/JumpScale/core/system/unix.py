@@ -217,7 +217,10 @@ class UnixSystem:
             group = 'root'
         j.logger.log('Chown %s:%s %s'%(user,group,path),8)
         uid=pwd.getpwnam(user).pw_uid
-        gid=grp.getgrnam(group).gr_gid
+        if group==None:
+            gid=grp.getgrnam(group).gr_gid
+        else:
+            gid=grp.getgrnam(group).gr_gid
         os.chown(path, uid, gid)
         if recursive:
             files=j.system.fs.walk(path,return_folders=1,return_files=1,recurse=-1)
@@ -329,7 +332,7 @@ class UnixSystem:
         j.logger.log('Change root to %s' % path, 5)
         os.chroot(path)
 
-    def addSystemUser(self, username, groupname=None, shell=None, homedir=None):
+    def addSystemUser(self, username, groupname=None, shell="/bin/bash", homedir=None):
         '''Add a user to the system
 
         Note: you should be root to run this python command.
@@ -355,12 +358,17 @@ class UnixSystem:
             if homedir:
                 options.append("-d '%s'" % homedir)
             command = "%s %s %s" % (command, " ".join(options), username)
+            # print command
             exitCode, stdout, stderr = j.system.process.run(command, stopOnError=False)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
                 raise RuntimeError('Failed to add user %s, error: %s' % \
                                     (username,output))
+            if homedir<>None:
+                j.system.fs.createDir(homedir)
+                j.system.fs.chown(homedir,username)
+                j.system.fs.chmod(homedir,0o700)
 
         else:
             j.logger.log("User %s already exists" % username, 4)
@@ -449,7 +457,7 @@ class UnixSystem:
                 raise RuntimeError('Failed to enable user %s, error: %s' %(username,output))
             return True
         
-    def removeUnixUser(self, username, removehome=False):
+    def removeUnixUser(self, username, removehome=False,die=True):
         """Remove a given unix user
 
         @param username: Name of the user to remove
@@ -457,7 +465,10 @@ class UnixSystem:
 
         """
         if not j.system.unix.unixUserExists(username):
-            raise ValueError("User [%s] does not exist, cannot remove user" % username)
+            if die:
+                raise ValueError("User [%s] does not exist, cannot remove user" % username)
+            else:
+                return True
         else:
             removehome = "-r" if removehome else ""
             command = 'userdel %s %s' % (removehome, username)

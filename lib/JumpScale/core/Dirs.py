@@ -6,6 +6,8 @@ from JumpScale import j
 home = os.curdir                        # Default
 if 'JSBASE' in os.environ:
     home = os.environ['JSBASE']
+elif 'JSJAIL' in os.environ:
+    home = os.environ['JSJAIL']
 elif os.name == 'posix':
     # home = os.path.expanduser("~/")
     home="/opt/jumpscale"
@@ -57,9 +59,11 @@ class Dirs(object):
         '''Application installation base folder (basedir/apps)'''
         self.appDir = os.path.abspath(".")
         
-        '''Configuration file folder (appdir/etc)'''
+        '''Configuration file folder (appdir/cfg)'''
         if 'JSBASE' in os.environ:
             self.cfgDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s_data"%os.path.basename(self.baseDir.rstrip("/")),"cfg")
+        elif 'JSJAIL' in os.environ:
+            self.cfgDir=os.path.join(os.path.realpath("%s/../"%self.baseDir),"%s"%os.path.basename(self.baseDir.rstrip("/")),"cfg")            
         else:
             self.cfgDir = os.path.join(self.baseDir,"cfg")
 
@@ -120,6 +124,8 @@ class Dirs(object):
         # self.homeDir = pathToUnicode(os.path.join(home, ".jsbase"))
 
         self.pidDir = os.path.join(self.varDir,"log")           
+
+
 
         if 'JSBASE' in os.environ:
             self.binDir = os.path.join(self.baseDir, 'bin')
@@ -282,6 +288,9 @@ class Dirs(object):
     def deployDefaultFilesInSandbox(self):
         iswindows=os.name=="nt"
         if self.frozen or iswindows:
+            return
+
+        if 'JSJAIL' in os.environ:
             return
 
         #@todo P3 let it work for windows as well
