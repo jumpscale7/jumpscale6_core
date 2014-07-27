@@ -364,7 +364,9 @@ class ControllerCMDS():
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
-        def noWork(job):
+        def noWork():
+            sessionid = session.id
+            job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
             self._log("nothingtodo")
             job.state="NOWORK"
             job.timeStop=job.timeStart
@@ -391,7 +393,7 @@ class ControllerCMDS():
                     if wait:
                         return self.waitJumpscript(job=job,session=session)
                     return job
-            return noWork(job)
+            return noWork()
         elif nid<>None:
             self._log("NID KNOWN")
             job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id,wait=wait)
@@ -399,7 +401,7 @@ class ControllerCMDS():
                 return self.waitJumpscript(job=job,session=session)
             return job
         else:
-            return noWork(job)
+            return noWork()
 
     def waitJumpscript(self,jobguid=None,job=None,session=None):
         """
