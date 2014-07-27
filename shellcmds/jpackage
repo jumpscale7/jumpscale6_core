@@ -211,7 +211,7 @@ elif args.action == 'update':
         package.start()    
 
 elif args.action == 'link':
-    packages = cmdutils.getJPackage(args,installed=True)
+    packages = cmdutils.getJPackage(args,installed=True,expandInstances=False)
     for package in packages:
         package.codeLink(dependencies=args.deps)
 
@@ -233,7 +233,7 @@ elif args.action == 'package':
         package.package(dependencies=args.deps)
 
 elif args.action == 'publish':
-    packages = cmdutils.getJPackage(args,installed=False)
+    packages = cmdutils.getJPackage(args,installed=False,expandInstances=False)
 
     domains=[]
     for p in packages:
@@ -243,7 +243,7 @@ elif args.action == 'publish':
         j.packages.publish(args.message,domain)
 
 elif args.action == 'repackage':
-    packages = cmdutils.getJPackage(args)
+    packages = cmdutils.getJPackage(args,expandInstances=False)
 
     # domains = { jp.domain for jp in packages }
     # for domain in domains:
@@ -343,7 +343,7 @@ elif args.action == 'mddisabledebug':
     j.packages.disableDebugMetaData(qualitylevel=args.qualitylevel,domain=domain)
 
 elif args.action == 'upload':
-    packages = cmdutils.getJPackage(args,installed=False)    
+    packages = cmdutils.getJPackage(args,expandInstances=False)    
 
     if args.onlyexistingblobs:
         if args.blobserver=="":
@@ -363,7 +363,7 @@ elif args.action == 'upload':
             package.upload(dependencies=args.deps,onlycode=args.onlycode)
 
 elif args.action == 'mirror':
-    packages=j.packages.find(domain="*",name="*")
+    packages=j.packages.find(domain="*",name="*",expandInstances=False)
     for package in packages:
         package.download(allplatforms=True)
 
@@ -395,11 +395,11 @@ elif args.action == 'list':
             domains=j.console.askChoiceMultiple(j.packages.getDomainNames(),"choose jpackages to list for")
         packages = list()
         for domain in domains:
-            packages += j.packages.find(domain=domain,name="*", installed=False)
+            packages += j.packages.find(domain=domain,name="*", installed=False,expandInstances=False)
         printJPackages(packages)
     else:
         import ipdb; ipdb.set_trace()
-        packages = cmdutils.getJPackage(args,installed=True)
+        packages = cmdutils.getJPackage(args,installed=True,expandInstances=False)
         printJPackages(packages)
 
 j.application.stop()

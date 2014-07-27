@@ -53,7 +53,7 @@ def getJPackage(args, installed=None,debug=None,update=False,expandInstances=Tru
             if pname.strip()<>"":
                 packages += j.packages.find(name=pname, domain=args.domain, version=args.version,installed=args.installed,instance=args.instance,expandInstances=expandInstances,interactive=False)
     else:
-        packages += j.packages.find(name=None, domain=args.domain, version=args.version,installed=args.installed,instance=args.instance,expandInstances=expandInstances,interactive=False)
+        packages += j.packages.find(name=None, domain=args.domain, version=args.version,installed=args.installed,instance=args.instance,expandInstances=expandInstances,interactive=True)
 
     if debug==False:
         debugpackages=j.packages.getDebugPackages()
