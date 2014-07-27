@@ -81,9 +81,13 @@ class OSISStoreMongo(OSISStore):
 
             obj = self.getObject(value)
             obj.getSetGuid()
+            ukey = obj.getUniqueKey()
             value = obj.dump()
 
-            if value.has_key("guid") and value["guid"]<>"":
+            if ukey is not None:
+                replaceGuid(value)
+                objInDB=self.db.find_one({"_id":ukey})
+            elif 'guid' in value and value["guid"] != "":
                 replaceGuid(value)
                 objInDB=self.db.find_one({"guid":value["guid"]})
 
@@ -104,6 +108,7 @@ class OSISStoreMongo(OSISStore):
                 obj.getSetGuid()
                 value = obj.dump()
 
+            value['_id'] = value['guid'] if ukey is None else ukey
             value = self.setPreSave(value)
 
             self.db.save(value)
