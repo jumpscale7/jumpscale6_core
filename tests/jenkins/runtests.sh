@@ -115,8 +115,8 @@ pubipaddr=127.0.0.1
 ' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
 
 jsprocess start
-jsprocess restart -n webdis
 jpackage install -n processmanager
+jsprocess restart -n webdis
 jsprocess start
 
 pip install nose
