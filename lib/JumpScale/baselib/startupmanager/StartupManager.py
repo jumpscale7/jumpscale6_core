@@ -234,6 +234,7 @@ class ProcessDef:
                         j.system.platform.screen.killWindow(self.domain,name)
                 tcmd = cmd.replace("$numprocess", str(i))
                 targs = args.replace("$numprocess", str(i))
+                
                 j.system.platform.screen.executeInScreen(self.domain,name,tcmd+" "+targs,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
 
                 if self.plog:

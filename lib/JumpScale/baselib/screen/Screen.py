@@ -3,6 +3,7 @@ import re
 import os
 import time
 import pexpect
+
 class Screen:
     
     def __init__(self):
@@ -29,6 +30,8 @@ class Screen:
                 self._do(sessionname, ["screen", "-t", screen])
 
     def executeInScreen(self,sessionname,screenname,cmd,wait=0):
+
+        
         ppath=j.system.fs.getTmpFilePath()
         ppathscript=j.system.fs.getTmpFilePath()
         script="""

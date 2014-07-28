@@ -150,7 +150,7 @@ class Dirs(object):
             sys.path.append(self.jsLibDir)
 
 
-    def replaceTxtDirVars(self,txt):
+    def replaceTxtDirVars(self,txt,additionalArgs):
         """
         replace $base,$vardir,$cfgdir,$bindir,$codedir,$tmpdir,$logdir,$appdir with props of this class
         """
@@ -167,12 +167,14 @@ class Dirs(object):
         txt=txt.replace("$jslibextdir",self.libExtDir)
         txt=txt.replace("$jsbindir",self.binDir)
         txt=txt.replace("$nodeid",str(j.application.whoAmI.nid))
+        for key,value in additionalArgs.iteritems():
+            txt=txt.replace("$%s"%key,str(value))
         return txt
 
-    def replaceFilesDirVars(self,path,recursive=True, filter=None):
+    def replaceFilesDirVars(self,path,recursive=True, filter=None,additionalArgs={}):
         for path in j.system.fs.listFilesInDir(path,recursive,filter):
             content=j.system.fs.fileGetContents(path)
-            content2=self.replaceTxtDirVars(content)
+            content2=self.replaceTxtDirVars(content,additionalArgs)
             if content2<>content:
                 j.system.fs.writeFile(filename=path,contents=content2)
 

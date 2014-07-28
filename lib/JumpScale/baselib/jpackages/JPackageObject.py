@@ -310,10 +310,7 @@ class JPackageObject():
         self.installActiveHrd()
         hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance") 
 
-        #cleanup past
-        old_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive") 
-        if j.system.fs.exists(path=old_hrdinstancepath):
-            j.system.fs.removeDirTree(old_hrdinstancepath)
+
 
         self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
 
@@ -323,12 +320,26 @@ class JPackageObject():
         self.hrd.applyOnDir(self.getPathActions()) 
         #apply hrd config from system on actions active
         j.application.config.applyOnDir(self.getPathActions())
-        j.dirs.replaceFilesDirVars(self.getPathActions())
+
+        additionalArgs={}
+        additionalArgs["jp_instance"]=self.instance
+        additionalArgs["jp_name"]=self.name
+        additionalArgs["jp_domain"]=self.domain
+        additionalArgs["jp_version"]=self.version
+
+        j.dirs.replaceFilesDirVars(self.getPathActions(),additionalArgs=additionalArgs)
 
     @JPLock
     def loadActions(self, force=False,hrd=True,instance=None):
         # print "loadactions:%s"%self
         # self._init()
+
+        #cleanup past
+        old_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive") 
+        if j.system.fs.exists(path=old_hrdinstancepath):
+            new_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance") 
+            j.system.fs.removeDirTree(new_hrdinstancepath)
+            j.system.fs.renameDir(old_hrdinstancepath,new_hrdinstancepath)            
 
         root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
         instanceNames=j.system.fs.listDirsInDir(root,False,True)

@@ -43,34 +43,9 @@ class Tmux:
         envstr = ""
         for name, value in env.iteritems():
             envstr += "export %s=%s\n" % (name, value)
-        # ppath=j.system.fs.getTmpFilePath()
-        # scriptfile = j.system.fs.getTmpFilePath()
-        # workdir = ""
-        # if cwd:
-        #     workdir = "cd %s" % cwd
-#         script="""
-# #!/bin/sh
-# #set -x
 
-# %(env)s
-# %(cwd)s
-# %(cmd)s
-# echo "$?" > %(out)s
-# rm $0
-#     """ % {'env': envstr, 'cwd': workdir, 'cmd': cmd, 'out': ppath}
-#         j.system.fs.writeFile(scriptfile, script)
-#         os.chmod(scriptfile, 0755)
-#         if newscr:
-#             self.killWindow(sessionname, screenname)
-#             if sessionname not in self.getSessionNames():
-#                 cmd2 = "tmux new-session -d -s '%s'" % sessionname
-#             else:
-#                 cmd2 = "tmux new-window -t '%s'" % sessionname
-#             # cmd2 += " -n '%s' '%s'" % (screenname, scriptfile)
-#         else:
         self.createWindow(sessionname, screenname)
         pane = self._getPane(sessionname, screenname)
-        # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,"echo ***STARTED***")
         env = os.environ.copy()
         env.pop('TMUX', None)
 
@@ -78,14 +53,16 @@ class Tmux:
             cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,envstr)
         #go to right directory
         j.system.process.run(cmd2, env=env)
-        # cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,")
+
         if user<>"root":
             cmd="cd %s;%s"%(cwd,cmd)
             sudocmd="su -c \"%s\" %s"%(cmd,user)
-            cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,sudocmd)
+            cmd2="tmux send-keys -t '%s' '%s' ENTER" % (pane,sudocmd)
         else:
-            cmd2="tmux send-keys -t '%s' '%s;%s\n'" % (pane,"cd %s"%cwd,cmd)
-
+            if cmd.find("'")<>-1:
+                cmd=cmd.replace("'","\'")
+            cmd2="tmux send-keys -t '%s' '%s;%s' ENTER" % (pane,"cd %s"%cwd,cmd)
+        
         j.system.process.run(cmd2, env=env)
         time.sleep(wait)
         if wait and j.system.fs.exists(ppath):
@@ -95,8 +72,6 @@ class Tmux:
                 raise RuntimeError("Could not execute %s in screen %s:%s, errorcode was %s" % (cmd,sessionname,screenname,resultcode))
         elif wait:
             j.console.echo("Execution of %s  did not return, maybe interactive, in screen %s:%s." % (cmd,sessionname,screenname))
-        # if j.system.fs.exists(ppath):
-        #     j.system.fs.remove(ppath)
 
     def getSessions(self):
         cmd = 'tmux list-sessions -F "#{session_name}"'
