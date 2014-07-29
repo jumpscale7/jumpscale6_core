@@ -150,7 +150,7 @@ class Dirs(object):
             sys.path.append(self.jsLibDir)
 
 
-    def replaceTxtDirVars(self,txt,additionalArgs):
+    def replaceTxtDirVars(self,txt,additionalArgs={}):
         """
         replace $base,$vardir,$cfgdir,$bindir,$codedir,$tmpdir,$logdir,$appdir with props of this class
         """
