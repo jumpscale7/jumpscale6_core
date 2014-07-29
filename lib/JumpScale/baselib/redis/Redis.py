@@ -173,7 +173,11 @@ class RedisFactory:
         slave example: (192.168.10.10,8888,asecret)   (ip,port,secret)
         """
         cmd='sysctl vm.overcommit_memory=1'
-        j.system.process.execute(cmd)        
+        try:
+            j.system.process.execute(cmd)        
+        except Exception,e:
+            print "WARNING:",            
+            print str(e)
 
         C = """
 daemonize no
