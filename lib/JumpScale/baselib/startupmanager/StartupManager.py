@@ -230,8 +230,10 @@ class ProcessDef:
             spath="/etc/init/%s.conf"%self.name
             if j.system.fs.exists(path=spath):
                 j.system.platform.ubuntu.stopService(self.name)
-                if  j.application.config.getInt("processmanager.upstart")==0:
-                    j.system.fs.remove(spath)        
+                if j.tools.startupmanager.upstart==False:
+                    j.system.fs.remove(spath)  
+            if j.tools.startupmanager.upstart==False:
+                self.hrd.set("process_upstart",0)
 
         if not self.upstart or j.tools.startupmanager.upstart==False:
 
