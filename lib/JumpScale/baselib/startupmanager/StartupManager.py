@@ -184,7 +184,7 @@ class ProcessDef:
         print "%s: %s"%(self._nameLong,msg)
 
     def registerToRedis(self):
-        if j.application.redis==None and self.procname=="jumpscale:redism":
+        if j.application.redis==None and self.procname=="redis:redism":
             #this is to bootstrap
             self.start()
             j.application.connectRedis()
