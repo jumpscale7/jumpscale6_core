@@ -225,7 +225,15 @@ class ProcessDef:
         cmd=self._replaceSysVars(self.cmd)
         args=self._replaceSysVars(self.args)
 
-        if not self.upstart:
+        #make sure we cleanup past if any
+        if self.upstart:
+            spath="/etc/init/%s.conf"%self.name
+            if j.system.fs.exists(path=spath):
+                j.system.platform.ubuntu.stopService(self.name)
+                if  j.application.config.getInt("processmanager.upstart")==0:
+                    j.system.fs.remove(spath)        
+
+        if not self.upstart or j.tools.startupmanager.upstart==False:
 
             for i in range(1, self.numprocesses+1):
                 name="%s_%s"%(self.name,i)
@@ -407,7 +415,11 @@ class ProcessDef:
             return
 
         if self.upstart:
-            j.system.platform.ubuntu.stopService(self.name)
+            spath="/etc/init/%s.conf"%self.name
+            if j.system.fs.exists(path=spath):
+                j.system.platform.ubuntu.stopService(self.name)
+                if j.tools.startupmanager.upstart==False:
+                    j.system.fs.remove(spath)
 
         pids=self.getPids(ifNoPidFail=False,wait=False)
 
@@ -513,6 +525,7 @@ class StartupManager:
         self.processdefs={}
         self.__init=False
         j.system.fs.createDir(StartupManager.LOGDIR)
+        
 
     def reset(self):
         self.load()
@@ -523,6 +536,7 @@ class StartupManager:
 
     def _init(self):
         if self.__init==False:
+            self.upstart=j.application.config.getInt("processmanager.upstart")==1
             self.load()
             self.__init=True
 
