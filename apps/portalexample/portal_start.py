@@ -2,8 +2,8 @@ import time
 from JumpScale import j
 import JumpScale.portal
 
-j.application.start("jumpscale:gridportal")
-j.application.initGrid()
+j.application.start("jumpscale:portal")
+# j.application.initGrid()
 
 j.logger.disable()
 
