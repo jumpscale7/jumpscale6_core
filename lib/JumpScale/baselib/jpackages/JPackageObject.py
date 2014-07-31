@@ -1669,14 +1669,20 @@ class JPackageObject():
                 dep.restore(url=url)
         self.actions.restore()        
 
-    def upload(self, remote=True, local=True,dependencies=False,onlycode=False):
+    def upload(self, remote=True, local=True,dependencies=False,onlycode=False,instance=None):
 
         if dependencies==None and j.application.shellconfig.interactive:
             dependencies = j.console.askYesNo("Do you want all depending packages to be downloaded too?")
         else:
             dependencies=dependencies
+
+        if instance<>None:
+            self.instance=instance
         
-        self.loadActions(hrd=False)
+        self.copyMetadataToActive()
+
+        self.loadActions(instance=instance)         
+        # self.loadActions(hrd=False)
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:

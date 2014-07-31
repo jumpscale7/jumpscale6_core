@@ -232,8 +232,8 @@ if opts.action.find('sync2sb')==0 and checkcat("cfg",True):
     sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch,cfgdir,delete=False)
 
 if opts.action.find('sync2sb')==0 and checkcat("base"):
-    cmd='jpackage download -n base'
-    j.system.process.executeWithoutPipe(cmd)
+    # cmd='jpackage download -n base'
+    # j.system.process.executeWithoutPipe(cmd)
     src="$vardir/jpackages/files/jumpscale/base/2.7/linux64/base/"
     src=j.dirs.replaceTxtDirVars(src)
     sync("%s/lib/"%src,"%s/lib/"%opts.sbpath,delete=True)
