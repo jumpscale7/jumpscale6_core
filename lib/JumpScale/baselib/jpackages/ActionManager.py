@@ -8,13 +8,13 @@ class ActionManager:
     the action manager is responsible for executing the actions linked to a jpackages
     """
 
-    def __init__(self,jp):
+    def __init__(self,jp,hrd=True):
         # print "init actions for %s"%jp
         self._jpackage=jp
         self._actions={}
         self._done={}
 
-        for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions(), filter='*.py'):
+        for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions(hrd=hrd), filter='*.py'):
             name=j.system.fs.getBaseName(path)
             if name[0]=="_":
                 continue

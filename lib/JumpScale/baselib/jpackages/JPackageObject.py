@@ -238,10 +238,11 @@ class JPackageObject():
     @JPLock
     def getCodeMgmtRecipe(self):
         self._init()
-        hrdpath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrd","code.hrd")
+
+        hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
         if not j.system.fs.exists(path=hrdpath):
             self.init()
-        recipepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"coderecipe.cfg")
+        recipepath=j.system.fs.joinPaths(self.getPathMetadata(),"coderecipe.cfg")
         if not j.system.fs.exists(path=recipepath):
             self.init()
         return CodeManagementRecipe(hrdpath,recipepath)
@@ -250,7 +251,6 @@ class JPackageObject():
         """
         match hrd templates with active ones, add entries where needed
         """
-        
         #THE ACTIVATE ONES
         hrdtemplatesPath=j.system.fs.joinPaths(self.getPathMetadata(),"hrdactive")
         for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
@@ -331,30 +331,30 @@ class JPackageObject():
     def loadActions(self, force=False,hrd=True,instance=None):
         # print "loadactions:%s"%self
         # self._init()
+        if hrd:
+            #cleanup past
+            old_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive") 
+            if j.system.fs.exists(path=old_hrdinstancepath):
+                new_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance") 
+                j.system.fs.removeDirTree(new_hrdinstancepath)
+                j.system.fs.renameDir(old_hrdinstancepath,new_hrdinstancepath)            
 
-        #cleanup past
-        old_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdactive") 
-        if j.system.fs.exists(path=old_hrdinstancepath):
-            new_hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance") 
-            j.system.fs.removeDirTree(new_hrdinstancepath)
-            j.system.fs.renameDir(old_hrdinstancepath,new_hrdinstancepath)            
+            root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
+            instanceNames=j.system.fs.listDirsInDir(root,False,True)
+            if not j.system.fs.exists(path=root) or len(instanceNames)==0:
+                self._raiseError("can only load actions of jpackage when active instance jpackage dir exists and at least 1 instance installed, path is %s"%root,"jpackage.init.loadactions")
 
-        root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
-        instanceNames=j.system.fs.listDirsInDir(root,False,True)
-        if not j.system.fs.exists(path=root) or len(instanceNames)==0:
-            self._raiseError("can only load actions of jpackage when active instance jpackage dir exists and at least 1 instance installed, path is %s"%root,"jpackage.init.loadactions")
+            if self.instance==None and instance<>None:
+                self.instance=instance
 
-        if self.instance==None and instance<>None:
-            self.instance=instance
+            elif self.instance==None and len(instanceNames)==1:
+                self.instance=instanceNames[0]
 
-        elif self.instance==None and len(instanceNames)==1:
-            self.instance=instanceNames[0]
+            elif self.instance==None and len(instanceNames)>1:
+                self._raiseError("found more than 1 instance in '%s' and did not specify 1."%root,"jpackage.init.loadactions")             
 
-        elif self.instance==None and len(instanceNames)>1:
-            self._raiseError("found more than 1 instance in '%s' and did not specify 1."%root,"jpackage.init.loadactions")             
-
-        if str(self.instance) not in instanceNames:
-            self._raiseError("can only load actions of jpackage when specified instance:'%s' exists in jpackage active instacne dir: '%s'"%(self.instance,root),"jpackage.init.loadactions") 
+            if str(self.instance) not in instanceNames:
+                self._raiseError("can only load actions of jpackage when specified instance:'%s' exists in jpackage active instacne dir: '%s'"%(self.instance,root),"jpackage.init.loadactions") 
 
         force=True #@todo need more checks, now for first release do always
 
@@ -363,10 +363,12 @@ class JPackageObject():
 
         self.check()
 
-        hrdactivepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance")
-        self.hrd_instance=j.core.hrd.getHRD(hrdactivepath)            
+        if hrd:
+            hrdactivepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance")
+            if hrd:
+                self.hrd_instance=j.core.hrd.getHRD(hrdactivepath)            
 
-        self.actions = ActionManager(self)
+        self.actions = ActionManager(self,hrd=hrd)
 
         self.loadBlobStores()
 
@@ -622,11 +624,15 @@ class JPackageObject():
         version = self.version
         return float(version)
 
-    def getPathActions(self):
+    def getPathActions(self,hrd=True):
         """
         Return absolute pathname of the package's metadatapath
         """
-        return j.packages.getJPActionsPath(self.domain, self.name, self.instance)
+        if hrd:
+            return j.packages.getJPActionsPath(self.domain, self.name, self.instance)
+        else:
+            return "%s/actions"%(j.packages.getMetadataPath(self.domain, self.name, self.version))
+
 
     def getPathActiveInstance(self):
         """
@@ -1441,7 +1447,8 @@ class JPackageObject():
         @param dependencies: whether or not to package the dependencies
         @type dependencies: boolean
         """
-                
+            
+        # self.copyMetadataToActive()
         self.loadActions(hrd=False)
 
         self.log('Package')
@@ -1459,12 +1466,12 @@ class JPackageObject():
                 dep.package()
         if update:
             self.actions.code_update()
+
         self.actions.code_package()
 
         newbuildNr = False
 
         newblobinfo = self._calculateBlobInfo()
-
 
         actionsdir=j.system.fs.joinPaths(self.getPathMetadata(), "actions")
         j.system.fs.removeIrrelevantFiles(actionsdir)
@@ -1496,7 +1503,7 @@ class JPackageObject():
             newbuildNr = True
             self.hrdChecksum = hrdChecksum
         else:
-            self.log("Active HRD did not change.",level=7,category="buildNr")
+            self.log("Active HRD did not change.",level=7,category="buildNr")        
 
         if newbuildNr or newblobinfo:
             if newbuildNr:
@@ -1682,9 +1689,9 @@ class JPackageObject():
         if instance<>None:
             self.instance=instance
         
-        self.copyMetadataToActive()
+        # self.copyMetadataToActive()
 
-        self.loadActions(instance=instance)         
+        self.loadActions(instance=instance,hrd=False)
         # self.loadActions(hrd=False)
         if dependencies:
             deps = self.getDependencies()
@@ -1806,7 +1813,7 @@ class JPackageObject():
         Does always a jp.package() first
         """
 
-        self.loadActions(force=True)
+        self.loadActions(force=True,hrd=False)
         self._calculateBlobInfo()
 
         for platform,ttype in self.getBlobPlatformTypes():
