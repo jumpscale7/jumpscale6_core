@@ -175,13 +175,13 @@ elif args.action == 'install':
     packages = cmdutils.getJPackage(args,expandInstances=False)
 
     if args.instance==None:
-        args.instance=0
+        args.instance=0      
         
     if args.instance<>None and len(packages)>1:
         j.events.inputerror_critical("Cannot find more jpackages if instance is given.")
 
     if args.instance<>None:
-        packages[0].instance=args.instance    
+        packages[0].instance=args.instance
 
     for package in packages:
         dependencies = True

@@ -1,3 +1,4 @@
+import copy
 import time
 import inspect
 
@@ -295,6 +296,7 @@ class JPackageObject():
 
     @JPLock
     def copyMetadataToActive(self,hrddata={}):
+        
         self.check()
 
         if j.system.fs.isDir(self.getPathActions()):
@@ -759,7 +761,7 @@ class JPackageObject():
 
     def getInstances(self):
         res=[]
-        for name in getInstanceNames():
+        for name in self.getInstanceNames():
             jp=copy.copy(self)
             jp.instance=name
             jp.loadActions(instance=name)
@@ -994,7 +996,7 @@ class JPackageObject():
         self.log('start')
 
     @JPLock
-    def stop(self,dependencies=False):
+    def stop(self,dependencies=False,walkinstances=False):
         """
         Stop the JPackage, run the stop tasklet(s)
         """
@@ -1002,9 +1004,14 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.stop(False)
-        self.loadActions()        
-        self.actions.process_stop()
-        self.log('stop')
+
+        if walkinstances:
+            for jp in self.getInstances():
+                jp.stop(walkinstances=False)
+        else:
+            self.loadActions()        
+            self.actions.process_stop()
+            self.log('stop')
 
     @JPLock
     def kill(self,dependencies=False):
@@ -1184,7 +1191,7 @@ class JPackageObject():
 
 
     @JPLock
-    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False,instance=0,hrddata={}):
+    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False,instance=None,hrddata={}):
         """
         Install the JPackage
 
@@ -1201,6 +1208,11 @@ class JPackageObject():
             print "are already in install of jpackage"
             return
 
+        if dependencies:
+            deps = self.getDependencies()
+            for dep in deps:
+                dep.install(False, download, reinstall=reinstalldeps,hrddata=hrddata)
+
         # If I am already installed assume my dependencies are also installed
         if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
             self.log('already installed')            
@@ -1210,12 +1222,10 @@ class JPackageObject():
 
         j.packages.inInstall.append(key)
 
-        if dependencies:
-            deps = self.getDependencies()
-            for dep in deps:
-                dep.install(False, download, reinstall=reinstalldeps,hrddata=hrddata)
-
-        self.instance=instance
+        if instance<>None:
+            self.instance=instance
+        else:
+            instance=self.instance
        
         self.copyMetadataToActive(hrddata=hrddata)
 
@@ -1326,7 +1336,7 @@ class JPackageObject():
         self.loadActions(instance=instance)
 
         self.actions.install_configure()
-        j.tools.startupmanager.remove4JPackage(self)
+        
         self.actions.process_configure()
         # self.state.setIsPendingReconfiguration(False)
         j.application.loadConfig() #makes sure hrd gets reloaded to application.config object

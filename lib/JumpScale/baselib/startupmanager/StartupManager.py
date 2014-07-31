@@ -184,7 +184,7 @@ class ProcessDef:
         print "%s: %s"%(self._nameLong,msg)
 
     def registerToRedis(self):
-        if j.application.redis==None and self.procname=="redis:redism":
+        if j.application.redis==None and self.name=="redis_system":
             #this is to bootstrap
             self.start()
             j.application.connectRedis()
@@ -226,7 +226,7 @@ class ProcessDef:
         args=self._replaceSysVars(self.args)
 
         #make sure we cleanup past if any
-        if self.upstart:
+        if self.upstart and j.tools.startupmanager.upstart==False:
             spath="/etc/init/%s.conf"%self.name
             if j.system.fs.exists(path=spath):
                 j.system.platform.ubuntu.stopService(self.name)
@@ -236,7 +236,7 @@ class ProcessDef:
                 self.hrd.set("process_upstart",0)
 
         if not self.upstart or j.tools.startupmanager.upstart==False:
-
+            
             for i in range(1, self.numprocesses+1):
                 name="%s_%s"%(self.name,i)
                 for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
