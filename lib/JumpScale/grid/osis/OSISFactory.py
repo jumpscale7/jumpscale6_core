@@ -107,14 +107,14 @@ class OSISFactory:
         osis.init()
         return osis
 
-    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None, port=5544,graphite=True,elasticsearchip=None,elasticsearchport=9200,db=None):
+    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None, port=5544,db=None):
         """
         start deamon
         """
 
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
-            j.packages.findNewest(name="elasticsearch").install()
-            j.packages.findNewest(name="elasticsearch").start()
+        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
+        #     j.packages.findNewest(name="elasticsearch").install()
+        #     j.packages.findNewest(name="elasticsearch").start()
 
         if graphite:
             if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003):
