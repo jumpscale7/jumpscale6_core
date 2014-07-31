@@ -246,11 +246,11 @@ class JPackageObject():
             self.init()
         return CodeManagementRecipe(hrdpath,recipepath)
 
-    def installActiveHrd(self):
+    def installActiveHrd(self,hrddata={}):
         """
         match hrd templates with active ones, add entries where needed
         """
-
+        
         #THE ACTIVATE ONES
         hrdtemplatesPath=j.system.fs.joinPaths(self.getPathMetadata(),"hrdactive")
         for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
@@ -263,7 +263,7 @@ class JPackageObject():
                     self.log("did not find active hrd for %s, will now put there"%actbasepath,category="init")
                     j.system.fs.writeFile(actbasepath,"")
                 hrd=j.core.hrd.getHRD(actbasepath)
-                hrd.checkValidity(templ)
+                hrd.checkValidity(templ,hrddata=hrddata)
                 if hrd.changed:
                     #a configure change has happened
                     self.configchanged=True
@@ -289,12 +289,12 @@ class JPackageObject():
                         self.log("did not find instance hrd for %s, will now put there"%actbasepath,category="init")
                         j.system.fs.writeFile(actbasepath,"")
                     hrd=j.core.hrd.getHRD(actbasepath)
-                    hrd.checkValidity(templ)
+                    hrd.checkValidity(templ,hrddata=hrddata)
                     if hrd.changed:
                         self.load()
 
     @JPLock
-    def copyMetadataToActive(self):
+    def copyMetadataToActive(self,hrddata={}):
         self.check()
 
         if j.system.fs.isDir(self.getPathActions()):
@@ -307,10 +307,8 @@ class JPackageObject():
         j.system.fs.copyFile(j.system.fs.joinPaths(self.getPathMetadata(),"coderecipe.cfg"),j.system.fs.joinPaths(self.getPathActiveInstance(),"coderecipe.cfg"))
         
 
-        self.installActiveHrd()
+        self.installActiveHrd(hrddata=hrddata)
         hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance") 
-
-
 
         self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
 
@@ -1180,7 +1178,7 @@ class JPackageObject():
 
 
     @JPLock
-    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False,instance=0):
+    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False,instance=0,hrddata={}):
         """
         Install the JPackage
 
@@ -1201,7 +1199,7 @@ class JPackageObject():
         if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall:
             self.log('already installed')            
             if str(instance) in self.getInstanceNames():
-                self.configure(dependencies=dependencies,instance=instance)
+                self.configure(dependencies=dependencies,instance=instance,hrddata=hrddata)
                 return # Nothing to do
 
         j.packages.inInstall.append(key)
@@ -1209,11 +1207,11 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
-                dep.install(False, download, reinstall=reinstalldeps)
+                dep.install(False, download, reinstall=reinstalldeps,hrddata=hrddata)
 
         self.instance=instance
         
-        self.copyMetadataToActive()
+        self.copyMetadataToActive(hrddata=hrddata)
 
         self.loadActions(instance=instance) #reload actions to make sure new hrdactive are applied
 
@@ -1300,12 +1298,12 @@ class JPackageObject():
 
 
     @JPLock
-    def configure(self, dependencies=False,instance=None):
+    def configure(self, dependencies=False,instance=None,hrddata={}):
         """
         Configure the JPackage after installation, via the configure tasklet(s)
         """
         self.log('configure')
-        self.loadActions(instance=instance)
+        
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -1316,6 +1314,11 @@ class JPackageObject():
                 self.configure(dependencies=False,instance=instanceName)
             return
         
+
+        self.copyMetadataToActive(hrddata=hrddata)
+
+        self.loadActions(instance=instance)
+
         self.actions.install_configure()
         j.tools.startupmanager.remove4JPackage(self)
         self.actions.process_configure()

@@ -411,8 +411,7 @@ class ProcessDef:
         return True
 
     def stop(self):
-
-        if self.name=="redism":
+        if self.name=="redis_system":
             print "will not shut down application redis (port 7766)"
             return
 

@@ -545,10 +545,10 @@ class HRD():
 
         return result
         
-    def checkValidity(self,template):
+    def checkValidity(self,template,hrddata={}):
         """
         @param template is example hrd which will be used to check against, if params not found will be added to existing hrd and error will be thrown to allow user to configure settings
-        """
+        """            
         error=False
         for line in template.split("\n"):
             line=line.strip()
@@ -558,7 +558,12 @@ class HRD():
                 items=line.split("=", 1)
                 key=items[0].strip()
                 defvalue=items[1].strip()
-                if not self.exists(key):
+                print "key:%s "%key
+                if hrddata.has_key(key):
+                    print "set:%s"%hrddata[key]
+                    self.set(key,hrddata[key])
+                    self.changed = True
+                elif not self.exists(key):
                     error=True
                     self.set(key,defvalue)
                     self.changed = True
