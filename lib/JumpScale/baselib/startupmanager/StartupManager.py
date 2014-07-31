@@ -538,7 +538,10 @@ class StartupManager:
 
     def _init(self):
         if self.__init==False:
-            self.upstart=j.application.config.getInt("processmanager.upstart")==1
+            upstartkey = "processmanager.upstart"
+            self.upstart = True
+            if j.application.config.exists(upstartkey):
+                self.upstart = j.application.config.getInt(upstartkey)==1
             self.load()
             self.__init=True
 
