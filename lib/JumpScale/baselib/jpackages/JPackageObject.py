@@ -1195,6 +1195,10 @@ class JPackageObject():
         when dependencies the reinstall will not be asked for there
 
         """
+        from IPython import embed
+        print "DEBUG NOW uuu"
+        embed()
+        
 
         key="%s_%s"%(self.domain,self.name)
         if key in j.packages.inInstall:
@@ -1216,7 +1220,7 @@ class JPackageObject():
                 dep.install(False, download, reinstall=reinstalldeps,hrddata=hrddata)
 
         self.instance=instance
-        
+       
         self.copyMetadataToActive(hrddata=hrddata)
 
         self.loadActions(instance=instance) #reload actions to make sure new hrdactive are applied

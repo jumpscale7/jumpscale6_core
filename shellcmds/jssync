@@ -248,6 +248,7 @@ if opts.action.find("upload")<>-1 and checkcat("cfg",True):
     upload("jsbox","cfg",data=True)
 
 if opts.action=="upload" and checkcat("installer"):
+    
     path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.branch    
     cmd="rsync -azvPh %s %s::www/cmds/ --modify-window=60 --compress --progress  "%(path,ipaddr)
     print cmd

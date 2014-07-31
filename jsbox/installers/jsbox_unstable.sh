@@ -7,6 +7,5 @@ fi
 rsync -av -v $RSYNCSERVER::download/unstable/jsbox/ /opt/jsbox/  --delete-after --modify-window=60 --compress --stats  --progress
 rsync -av -v $RSYNCSERVER::download/unstable/jsbox_data/ /opt/jsbox_data/  --delete-after --modify-window=60 --compress --stats  --progress
 source /opt/jsbox/activate
-jpackage install -n redis
 
 echo "JSBOX has been installed to activate it run 'source /opt/jsbox/active'"
