@@ -1195,10 +1195,6 @@ class JPackageObject():
         when dependencies the reinstall will not be asked for there
 
         """
-        from IPython import embed
-        print "DEBUG NOW uuu"
-        embed()
-        
 
         key="%s_%s"%(self.domain,self.name)
         if key in j.packages.inInstall:
