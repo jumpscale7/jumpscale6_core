@@ -314,12 +314,12 @@ class ProcessDef:
         return j.system.process.appGetPidsActive(self.procname)
 
     def _getPidFromPS(self):
-        if 'redis' in self.cmd:
-            port = [port for port in self.ports if port]
-            cmd = "ps ax | grep ':%s'" % port[0]
-        else:
+        # if 'redis' in self.cmd:
+        #     port = [port for port in self.ports if port]
+        #     cmd = "ps ax | grep ':%s'" % port[0]
+        # else:
         # cmd="pgrep -f '%s'"%self.processfilterstr
-            cmd="ps ax | grep '%s'"%self.processfilterstr
+        cmd="ps ax | grep '%s'"%self.processfilterstr
         rc,out=j.system.process.execute(cmd)
         # print cmd
         # print out
@@ -540,7 +540,7 @@ class StartupManager:
             upstartkey = "processmanager.upstart"
             self.upstart = True
             if j.application.config.exists(upstartkey):
-                self.upstart = j.application.config.getInt(upstartkey)==1
+                self.upstart = j.application.config.getInt(upstartkey)==1            
             self.load()
             self.__init=True
 

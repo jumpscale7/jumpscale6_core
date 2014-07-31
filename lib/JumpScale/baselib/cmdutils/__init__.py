@@ -59,21 +59,21 @@ def getJPackage(args, installed=None,debug=None,update=False,expandInstances=Tru
         debugpackages=j.packages.getDebugPackages()
         packages=[item for item in packages if item not in debugpackages]
 
-    if update:
-        # raise RuntimeError("not supported for now, this update feature, need to check what it does (kds)")
-        # packages=[item for item in packages if item.isNew()]
+    # if update:
+    #     # raise RuntimeError("not supported for now, this update feature, need to check what it does (kds)")
+    #     # packages=[item for item in packages if item.isNew()]
 
-        if not j.application.sandbox:
-            basepackageTest=[item for item in packages if item.name=="base"]
+    #     if not j.application.sandbox:
+    #         basepackageTest=[item for item in packages if item.name=="base"]
 
-            if len(basepackageTest)>0:
-                print "update base package first and then restart your update (you can see a segmentation fault when you update base)."
-                print "IMPORTANT do: 'jpackage install -n base'"
-                print "do this untill it says that it does need to install anymore (installed)"                
-                j.application.stop(1)
+    #         if len(basepackageTest)>0:
+    #             print "update base package first and then restart your update (you can see a segmentation fault when you update base)."
+    #             print "IMPORTANT do: 'jpackage install -n base'"
+    #             print "do this untill it says that it does need to install anymore (installed)"                
+    #             j.application.stop(1)
 
-    if j.application.sandbox:
-        packages=[item for item in packages if not item.name=="base"]
+    # if j.application.sandbox:
+    #     packages=[item for item in packages if not item.name=="base"]
 
 
     if len(packages) == 0:
