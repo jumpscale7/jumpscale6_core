@@ -132,8 +132,15 @@ elif args.action == 'debug':
 
 elif args.action == 'download':
     packages = cmdutils.getJPackage(args)
+
+    if args.instance<>None and len(packages)>1:
+        j.events.inputerror_critical("Cannot find more jpackages if instance is given (for configure).")
+
+    if args.instance<>None:
+        packages[0].instance=args.instance
+
     for package in packages:
-        package.download(dependencies=args.deps,nocode=args.nocode,expand=not(args.noexpand))
+        package.download(dependencies=args.deps,nocode=args.nocode,expand=not(args.noexpand),instance=packages[0].instance)
         if args.copy:
             package.copyfiles()
 

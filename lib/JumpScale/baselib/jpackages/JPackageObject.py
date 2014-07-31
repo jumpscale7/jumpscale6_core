@@ -1553,7 +1553,7 @@ class JPackageObject():
         self.actions.compile()
 
     @JPLock
-    def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False,expand=True,nocode=False):
+    def download(self, dependencies=False, destination=None, suppressErrors=False, allplatforms=False,force=False,expand=True,nocode=False,instance=None):
         """
         Download the jpackages & expand
         """        
@@ -1566,11 +1566,19 @@ class JPackageObject():
         else:
             dependencies=dependencies
         
-        self.loadActions(hrd=False)
+        if instance<>None:
+            self.instance=instance
+        
+
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
                 dep.download(dependencies=False, destination=destination,allplatforms=allplatforms,expand=expand,nocode=nocode)
+
+        self.copyMetadataToActive()
+
+        self.loadActions(instance=instance) #reload actions to make sure new hrdactive are applied
+        # self.loadActions(hrd=False)
 
         self.actions.install_download(expand=expand,nocode=nocode)
 

@@ -495,7 +495,10 @@ class JPackageClient():
         '''
         if name.find("*")==-1:
             name+="*"
-        return self.find(name=name,domain=None,interactive=False)
+        res=self.find(name=name,domain=None,interactive=False)
+        if len(res)>1:
+            j.events.opserror_critical("Found more than 1 jpackage with name '%s' cannot continue, only 1 allowed."%name)
+        return res[0]
     
     def find(self, domain=None,name=None , version="", platform=None,onlyone=False,installed=None,instance=None,expandInstances=True,interactive=True):
         """ 
