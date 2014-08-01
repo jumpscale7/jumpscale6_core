@@ -15,6 +15,11 @@ parser.add_argument("-b", '--base', help='base to clone from')
 parser.add_argument("-p",'--passwd', help='password for machine')
 parser.add_argument("-r",'--prefix', help='prefix')
 parser.add_argument("-k",'--key', help='key for syncing')
+parser.add_argument('--ports', help='format "22:8022 80:8080"  the first arg e.g. 22 is the port in the container')
+parser.add_argument('--vols', help='format: "/var/insidemachine:/var/inhost # /var/1:/var/1 # ..."')
+parser.add_argument('--volsro', help='same as vols but now mounted read only')
+parser.add_argument('--cpu', help='cpu shares (min 0, max 1000')
+parser.add_argument('--mem', help='max mem in MB')
 parser.add_argument("-c",'--cmd', help='cmd to execute')
 parser.add_argument("-a",'--pubip', help='set pub ip addr of machine (192.168.1.207/24)',default='')
 parser.add_argument("-g",'--gw', help='set ip gateway of machine (192.168.1.1)',default='')
@@ -47,15 +52,8 @@ if opts.action =='list':
 
 if opts.action =='new':
     if opts.base==None:
-        opts.base="saucy-amd64-base"
-    if opts.name==None:
-        raise RuntimeError("need to specify name")
-    l.create(name=opts.name,stdout=True,base=opts.base,start=False)
-    if opts.pubip<>"":
-        bridgename = j.application.config.get('docker.pub.interface')        
-        j.system.platform.docker.networkSet(opts.name, netname="pub0",bridge=bridgename,pubips=["%s"%opts.pubip],gateway=opts.gw) 
-    if opts.start:
-        j.system.platform.docker.start(opts.name)
+        opts.base="despiegk/js"
+    l.create(name=opts.name,stdout=True,base=opts.base,ports=opts.ports,vols=opts.vols,volsro=opts.volsro,cpu=opts.cpu,mem=opts.mem)
 
 if opts.action =='getip':
     if opts.name==None:
@@ -101,25 +99,14 @@ if opts.action =='importR':
 if opts.action =='cmd':
     if opts.name==None:
         raise RuntimeError("specify machine name")    
-    ip=l.getIp(opts.name)
-    print "ipaddr:%s"%ip
 
-    import JumpScale.baselib.remote
+    # if j.system.net.waitConnectionTest(ip,22,4)==False:
+    #     print "could not connect over ssh to ip:%s"%(22)
+    #     j.application.stop(1)        
 
-    import JumpScale.baselib.remote
+    c=l.getSSH(opts.name)
 
-    if opts.passwd==None:
-        opts.passwd="rooter"
-
-    if j.system.net.waitConnectionTest(ip,22,4)==False:
-        print "could not connect over ssh to ip:%s"%(22)
-        j.application.stop(1)        
-    
-    j.remote.cuisine.fabric.env["password"]= opts.passwd
-    cuapi = j.remote.cuisine.api
-    cuapi.connect(ip)    
-
-    print cuapi.run(opts.cmd)
+    print c.run(opts.cmd)
 
     # #this will make sure new password is set
     # seedpasswd="rooter"
