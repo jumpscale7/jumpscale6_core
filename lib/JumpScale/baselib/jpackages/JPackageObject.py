@@ -217,24 +217,24 @@ class JPackageObject():
                 self.debug=1
             #DO NOT SET 0, 0 means we don't count the stat from the hrd
 
-        ######CHECK IF JP ALREADY INSTALLED 
-        if self.state.lastinstalledbuildnr>=0:
-            #means jp is installed on system
-            #because was already installed make sure we create active instance if we can't find the active path yet
+        # ######CHECK IF JP ALREADY INSTALLED 
+        # if self.state.lastinstalledbuildnr>=0:
+        #     #means jp is installed on system
+        #     #because was already installed make sure we create active instance if we can't find the active path yet
 
-            #get rid of past
-            oldpath=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name,self.version)
-            if j.system.fs.exists(path=oldpath):
-                j.system.fs.removeDirTree(oldpath)
+        #     #get rid of past
+        #     oldpath=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name,self.version)
+        #     if j.system.fs.exists(path=oldpath):
+        #         j.system.fs.removeDirTree(oldpath)
 
-            root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
-            if not j.system.fs.exists(path=root) or len(j.system.fs.listDirsInDir(root,False,True))==0:
+        #     root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
+        #     if not j.system.fs.exists(path=root) or len(j.system.fs.listDirsInDir(root,False,True))==0:
                 
-                #this is to allow system to keep on running when upgrading from old situation
-                self.instance=0
-                hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance")  
-                j.system.fs.createDir(hrdinstancepath)
-                self.copyMetadataToActive()
+        #         #this is to allow system to keep on running when upgrading from old situation
+        #         self.instance=0
+        #         hrdinstancepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrdinstance")  
+        #         j.system.fs.createDir(hrdinstancepath)
+        #         self.copyMetadataToActive()
 
     @JPLock
     def getCodeMgmtRecipe(self):
@@ -1457,7 +1457,7 @@ class JPackageObject():
         @param dependencies: whether or not to package the dependencies
         @type dependencies: boolean
         """
-            
+        
         # self.copyMetadataToActive()
         self.loadActions(hrd=False)
 

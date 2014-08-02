@@ -12,7 +12,7 @@ class ActionManager:
         # print "init actions for %s"%jp
         self._jpackage=jp
         self._actions={}
-        self._done={}
+        self._done={}        
 
         for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions(hrd=hrd), filter='*.py'):
             name=j.system.fs.getBaseName(path)
@@ -22,12 +22,15 @@ class ActionManager:
            
             md5 = j.tools.hash.md5_string(path)
             modname = "JumpScale.baselib.jpackages.%s" % md5
-            module = imp.load_source(modname, path)
-            self._actions[name]= module.main
+            try:
+                module = imp.load_source(modname, path)
+                self._actions[name]= module.main
                 
-            name2=name.replace(".","_")
-            self.__dict__[name2]=self._getActionMethod(name)
-
+                name2=name.replace(".","_")
+                self.__dict__[name2]=self._getActionMethod(name)
+            except Exception,e:
+                pass
+                
     def clear(self):
         self._done={}
         
