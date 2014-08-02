@@ -79,9 +79,20 @@ group.add_argument('-bbr', help='Bitbucket reponame e.g. serverapps (there will 
 args = parser.parse_args()
 
 hrddata={}
-if args.data<>None:
-    tags=j.core.tags.getObject(args.data)
-    hrddata=tags.getDict()    
+if args.data<>None:    
+    if args.data.find("#")<>-1:        
+        for line in args.data.split("#"):
+            if line.find("=")<>-1:
+                var,data=line.split("=",1)
+                hrddata[var.strip()]=data.strip()
+    else:
+        tags=j.core.tags.getObject(args.data)
+        hrddata=tags.getDict()    
+
+from IPython import embed
+print "DEBUG NOW ooo"
+embed()
+
 
 def askDomains(args):
     if args.domain==None:

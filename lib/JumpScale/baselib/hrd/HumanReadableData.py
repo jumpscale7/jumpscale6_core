@@ -558,7 +558,7 @@ class HRD():
                 items=line.split("=", 1)
                 key=items[0].strip()
                 defvalue=items[1].strip()
-                print "key:%s "%key
+                # print "key:%s "%key
                 if hrddata.has_key(key):
                     print "set:%s"%hrddata[key]
                     self.set(key,hrddata[key])

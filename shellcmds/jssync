@@ -256,11 +256,12 @@ if opts.action=="upload" and checkcat("installer"):
 
 if opts.action.find("upload")<>-1 and checkcat("libs"):
     uploadfile("jsbox","activate")
-    upload("jsbox","libjs/JumpScale/base")
-    upload("jsbox","libjs/JumpScale/baselib")
-    upload("jsbox","libjs/JumpScale/core")
-    upload("jsbox","libjs/JumpScale/grid")
-    upload("jsbox","libjs/JumpScale/lib")
+    upload("jsbox","libjs")
+    # upload("jsbox","libjs/JumpScale/base")
+    # upload("jsbox","libjs/JumpScale/baselib")
+    # upload("jsbox","libjs/JumpScale/core")
+    # upload("jsbox","libjs/JumpScale/grid")
+    # upload("jsbox","libjs/JumpScale/lib")
     upload("jsbox","libext")
     upload("jsbox","apps/agent")
     upload("jsbox","apps/blobserver")
