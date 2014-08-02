@@ -10,6 +10,6 @@ rsync -av -v install.jumpscale.org::download/stable/jsbox/ /opt/jsbox/  --delete
 rsync -av -v install.jumpscale.org::download/stable/jsbox_data/ /opt/jsbox_data/  --delete-after --modify-window=60 --compress --stats  --progress
 rm -rf /opt/jsbox/cfg #resolve a bug
 
-source /opt/jsbox/activate
+#source /opt/jsbox/activate
 
 echo "JSBOX has been installed to activate it run 'source /opt/jsbox/activate'"
