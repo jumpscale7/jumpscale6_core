@@ -220,7 +220,16 @@ class JNode():
     def check(self):
         j.base.time.getTimeEpoch()
 
+    def connectSSH(self):
+        return self._connectCuapi()
+
     def _connectCuapi(self):
+        if self.args.remote<>"":
+            if j.system.net.pingMachine(self.args.remote,1):
+                self.ip=self.args.remote
+            else:
+                j.events.opserror_critical("Could not find node:'%s'"%name)
+
         if self.ip=="":
             raise RuntimeError("ip cannot be empty")
         
@@ -397,6 +406,7 @@ class Admin():
             node.cuapi=self.cuapi
             node.currentScriptRun=None
             node.getScriptRun()
+            node.args=self.args
             return node
 
         if gridname=="":
@@ -404,6 +414,7 @@ class Admin():
                 node=JNode()
                 node.ip=name
                 node.hostname=name
+                node.args=self.args
                 node.cuapi=self.cuapi
                 node.currentScriptRun=None
                 node.getScriptRun()
@@ -717,6 +728,19 @@ class Admin():
         for name in ["id_dsa","id_dsa.pub"]:
             u = j.system.fs.joinPaths(self._basepath, 'identities','system',name)
             j.system.fs.copyFile("/root/.ssh/%s"%name,u)
+
+    def deployssh(self):
+        node=self.getNode()
+        node.connectSSH()
+        keyloc="/root/.ssh/id_dsa.pub"
+        if not j.system.fs.exists(path=keyloc):
+            if j.console.askYesNo("do you want to generate new local ssh key, if you have one please put it there manually!"):
+                do=j.system.process.executeWithoutPipe
+                do("ssh-keygen -t dsa")
+            else:
+                j.application.stop()
+        key=j.system.fs.fileGetContents(keyloc)
+        node.cuapi.ssh_authorize("root",key)
 
     def _getHostNames(self,hostfilePath,exclude={}):
         """

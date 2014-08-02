@@ -89,11 +89,6 @@ if args.data<>None:
         tags=j.core.tags.getObject(args.data)
         hrddata=tags.getDict()    
 
-from IPython import embed
-print "DEBUG NOW ooo"
-embed()
-
-
 def askDomains(args):
     if args.domain==None:
         return j.console.askChoiceMultiple(j.packages.getDomainNames())
