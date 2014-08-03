@@ -232,10 +232,11 @@ class ProcessDef:
                 j.system.platform.ubuntu.stopService(self.name)
                 if j.tools.startupmanager.upstart==False:
                     j.system.fs.remove(spath)  
-            if j.tools.startupmanager.upstart==False:
-                self.hrd.set("process_upstart",0)
+            cmd2="cd %s;%s %s"%(self.workingdir,cmd,args)
+            j.system.fs.writeFile(self.logfile,"start cmd:\n%s\n"%cmd2,True)#append
+            j.system.process.executeIndependant(cmd2)
 
-        if not self.upstart or j.tools.startupmanager.upstart==False:
+        elif not self.upstart or j.tools.startupmanager.upstart==False:
             
             for i in range(1, self.numprocesses+1):
                 name="%s_%s"%(self.name,i)
@@ -525,8 +526,7 @@ class StartupManager:
         j.system.fs.createDir(self._configpath)
         self.processdefs={}
         self.__init=False
-        j.system.fs.createDir(StartupManager.LOGDIR)
-        
+        j.system.fs.createDir(StartupManager.LOGDIR)        
 
     def reset(self):
         self.load()
@@ -541,6 +541,23 @@ class StartupManager:
             self.upstart = True
             if j.application.config.exists(upstartkey):
                 self.upstart = j.application.config.getInt(upstartkey)==1            
+
+            if not j.system.net.tcpPortConnectionTest("localhost",7766):
+                j.system.process.killProcessByName("redis-server 127.0.0.1:7766")
+                #try to launch in backend
+                cmd2="nohup $base/apps/redis/redis-server $vardir/redis/system/redis.conf 2>&1 > $vardir/log/startupmanager/redis_system.log &"
+                cmd2=j.dirs.replaceTxtDirVars(cmd2)
+                print cmd2
+
+                j.system.process.executeWithoutPipe(cmd2)
+
+                time.sleep(0.3)
+                                
+                if not j.system.net.tcpPortConnectionTest("localhost",7766):
+                    j.events.opserror_critical("could not start redis server, cmd was :%s"%cmd2)
+
+                j.application.connectRedis()
+                
             self.load()
             self.__init=True
 

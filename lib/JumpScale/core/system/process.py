@@ -7,6 +7,7 @@ import select
 import time
 import subprocess
 import signal
+from subprocess import Popen
 
 try:
     import ujson as json
@@ -1421,6 +1422,11 @@ class SystemProcess:
             raise RuntimeError("Error during execution! (system.process.execute())\n\nCommand: [%s]\n\nExitcode: %s\n\nProgram output:\n%s\n\nErrormessage:\n%s\n" % (command, exitcode, output, error))
 
         return exitcode, output
+
+    def executeIndependant(self,cmd):
+        raise RuntimeError("not implemented")
+        devnull = open(os.devnull, 'wb') # use this in python < 3.3
+        Popen(['nohup', cmd+" &"], stdout=devnull, stderr=devnull)
 
     def executeScript(self, scriptName):
         """execute python script from shell/Interactive Window"""
