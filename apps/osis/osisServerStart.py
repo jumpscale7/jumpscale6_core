@@ -24,7 +24,11 @@ connections2={}
 #cd /opt/jsbox/apps/osis;python osisServerStart.py elasticsearch:main mongodb:main
 
 for jpackagename,instancename in connections.iteritems():
-    jp=j.packages.findNewest(name="%s_client"%jpackagename,domain="jumpscale")
+    if jpackagename in ["influxdb"]:
+        domain="serverapps"
+    else:
+        domain="jumpscale"
+    jp=j.packages.findNewest(name="%s_client"%jpackagename,domain=domain)
     jp=jp.getInstance(instancename)
     if not jp.isInstalled():
         j.events.opserror_critical("cannot start osis, db connection %s was not available, please install."%jpackagename)
@@ -37,7 +41,7 @@ for jpackagename,instancename in connections.iteritems():
     if jpackagename=="elasticsearch":
         import JumpScale.baselib.elasticsearch
         ipaddr=hrd.get("es.client.addr")
-        port=hrd.get("es.client.port")
+        port=hrd.getInt("es.client.port")
         while j.system.net.tcpPortConnectionTest(ipaddr,port)==False:
             time.sleep(0.1)        
             print "cannot connect to elasticsearch, will keep on trying forever, please start (%s:%s)"%(ipaddr,port)
@@ -46,7 +50,7 @@ for jpackagename,instancename in connections.iteritems():
     elif jpackagename=="mongodb":
         import JumpScale.grid.mongodbclient
         ipaddr=hrd.get("mongodb.client.addr")
-        port=hrd.get("mongodb.client.port")    
+        port=hrd.getInt("mongodb.client.port")    
         while j.system.net.tcpPortConnectionTest(ipaddr,port)==False:
             time.sleep(0.1)
             print "cannot connect to mongodb, will keep on trying forever, please start (%s:%s)"%(ipaddr,port)
@@ -55,7 +59,7 @@ for jpackagename,instancename in connections.iteritems():
     elif jpackagename=="redis":
         import JumpScale.baselib.redis
         ipaddr=hrd.get("redis.client.addr")
-        port=hrd.get("redis.client.port")        
+        port=hrd.getInt("redis.client.port")        
         passwd=hrd.get("redis.client.passwd")
         while j.system.net.tcpPortConnectionTest(ipaddr,port)==False:
             time.sleep(0.1)
@@ -63,14 +67,20 @@ for jpackagename,instancename in connections.iteritems():
         client=j.clients.redis.getGeventRedisClient(ipaddr, port, fromcache=True, password=passwd)
 
     elif jpackagename=="influxdb":
-        import JumpScale.baselib.redis
-        ipaddr=hrd.get("redis.client.addr")
-        port=hrd.get("redis.client.port")        
-        passwd=hrd.get("redis.client.passwd")
+        import JumpScale.baselib.influxdb
+        ipaddr=hrd.get("influxdb.client.addr")
+        port=hrd.getInt("influxdb.client.port")        
+        login=hrd.get("influxdb.client.login")
+        passwd=hrd.get("influxdb.client.passwd")
         while j.system.net.tcpPortConnectionTest(ipaddr,port)==False:
             time.sleep(0.1)
-            print "cannot connect to redis, will keep on trying forever, please start (%s:%s)"%(ipaddr,port)
-        client=j.clients.redis.getGeventRedisClient(ipaddr, port, fromcache=True, password=passwd)        
+            print "cannot connect to influxdb, will keep on trying forever, please start (%s:%s)"%(ipaddr,port)
+        
+        client=j.clients.influxdb.get(host=ipaddr, port=port,username=login, password=passwd, database="main")
+
+        # data = [{"points":[[1.1,4.3,2.1],[1.2,2.0,2.0]],"name":"web_devweb01_load","columns":["min1", "min5", "min15"]}]
+        # client.write_points(data)
+        
 
     client.hrd=hrd #remember hrd as well
     
