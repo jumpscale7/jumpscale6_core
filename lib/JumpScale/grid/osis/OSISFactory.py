@@ -68,11 +68,6 @@ class OSISFactory:
         self.osisConnections = {}
         self.osisConnectionsCat={}
         self.nodeguids={}
-        if j.application.config.exists("grid.master.superadminpasswd"):
-            self.superadminpasswd=j.application.config.get("grid.master.superadminpasswd")
-        else:
-            self.superadminpasswd=None
-        self.key=j.application.config.get("osis.key")
         self.osisModels={}
         self.namespacesInited={}
         
@@ -107,7 +102,7 @@ class OSISFactory:
         osis.init()
         return osis
 
-    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, namespacename=None, port=5544,db=None):
+    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, key="",port=5544,superadminpasswd=None,dbconnections={}):
         """
         start deamon
         """
@@ -116,16 +111,23 @@ class OSISFactory:
         #     j.packages.findNewest(name="elasticsearch").install()
         #     j.packages.findNewest(name="elasticsearch").start()
 
-        if graphite:
-            if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003):
-                raise RuntimeError("cannot start osis, could not find running carbon/graphite")
+        # if graphite:
+        #     if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003):
+        #         raise RuntimeError("cannot start osis, could not find running carbon/graphite")
 
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
-            raise RuntimeError("cannot start osis, could not find running elastic search")
+        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
+        #     raise RuntimeError("cannot start osis, could not find running elastic search")
+
+        self.key=key
+        self.superadminpasswd=superadminpasswd
+        self.dbconnections=dbconnections
+
+        if self.superadminpasswd=="":
+             j.events.inputerror_critical("cannot start osis, superadminpasswd needs to be specified")
 
         daemon = j.servers.geventws.getServer(port=port)
         daemon.addCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
-        daemon.daemon.cmdsInterfaces["osis"].init(path=path,esip=elasticsearchip,esport=elasticsearchport,db=db)
+        daemon.daemon.cmdsInterfaces["osis"].init(path=path)#,esip=elasticsearchip,esport=elasticsearchport,db=db)
         self.cmds=daemon.daemon.cmdsInterfaces["osis"]
         daemon.schedule("checkchangelog", self.cmds.checkChangeLog)
         daemon.start()

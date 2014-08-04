@@ -6,9 +6,9 @@ class MongoDBClient:
 
     def get(self, host='localhost', port=27017):
         try:
-            client = MongoClient(host, port)
-        except:
-            raise RuntimeError('Could not connect to mongodb server on %s:%s' % (host, port))
+            client = MongoClient(host, int(port))
+        except Exception,e:
+            raise RuntimeError('Could not connect to mongodb server on %s:%s\nerror:%s' % (host, port,e))
         else:
             return client
 
