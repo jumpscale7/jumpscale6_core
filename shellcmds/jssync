@@ -238,6 +238,7 @@ if opts.action.find('sync2sb')==0 and checkcat("base"):
     src=j.dirs.replaceTxtDirVars(src)
     sync("%s/lib/"%src,"%s/lib/"%opts.sbpath,delete=True)
     sync("%s/bin/"%src,"%s/bin/"%opts.sbpath,delete=True)
+    # sync("%s/apps/redis/"%src,"%s/apps/redis/"%opts.sbpath,delete=True)
 
 
 #UPLOAD JPACKAGES
@@ -269,6 +270,7 @@ if opts.action.find("upload")<>-1 and checkcat("libs"):
     upload("jsbox","tools")
 
 if opts.action.find("upload")<>-1 and checkcat("base"):  
+    # upload("jsbox","apps/redis")
     upload("jsbox","lib")
     upload("jsbox","bin")
 
@@ -277,6 +279,7 @@ if opts.action.find("upload")<>-1 and checkcat("base"):
 #DOWNLOAD
 
 if opts.action=="download" and checkcat("base"):
+    # download("jsbox","apps/redis")
     download("jsbox","lib")
     download("jsbox","bin")
 

@@ -1424,9 +1424,12 @@ class SystemProcess:
         return exitcode, output
 
     def executeIndependant(self,cmd):
-        raise RuntimeError("not implemented")
-        devnull = open(os.devnull, 'wb') # use this in python < 3.3
-        Popen(['nohup', cmd+" &"], stdout=devnull, stderr=devnull)
+        # devnull = open(os.devnull, 'wb') # use this in python < 3.3
+        # Popen(['nohup', cmd+" &"], stdout=devnull, stderr=devnull)
+        cmd2="nohup %s > /dev/null 2>&1 &"%cmd
+        cmd2=j.dirs.replaceTxtDirVars(cmd2)
+        print cmd2
+        j.system.process.executeWithoutPipe(cmd2)
 
     def executeScript(self, scriptName):
         """execute python script from shell/Interactive Window"""

@@ -23,8 +23,6 @@ if opts.domain==None and  opts.name==None and  opts.action=="start" and not opts
     j.tools.startupmanager.startAll()
     j.application.stop(0)
 
-
-
 if opts.action in ['disable','enable','stop','start','restart']:
     pds = j.tools.startupmanager.getProcessDefs(opts.domain, opts.name,system=False)
     if opts.interactive and j.application.shellconfig.interactive:

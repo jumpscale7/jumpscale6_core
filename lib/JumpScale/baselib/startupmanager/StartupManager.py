@@ -232,9 +232,9 @@ class ProcessDef:
                 j.system.platform.ubuntu.stopService(self.name)
                 if j.tools.startupmanager.upstart==False:
                     j.system.fs.remove(spath)  
-            cmd2="cd %s;%s %s"%(self.workingdir,cmd,args)
+            cmd2="%s %s"%(cmd,args)  #@todo no support for working dir yet
             j.system.fs.writeFile(self.logfile,"start cmd:\n%s\n"%cmd2,True)#append
-            j.system.process.executeIndependant(cmd2)
+            j.system.process.executeIndependant(cmd2)            
 
         elif not self.upstart or j.tools.startupmanager.upstart==False:
             
@@ -543,20 +543,26 @@ class StartupManager:
                 self.upstart = j.application.config.getInt(upstartkey)==1            
 
             if not j.system.net.tcpPortConnectionTest("localhost",7766):
+
                 j.system.process.killProcessByName("redis-server 127.0.0.1:7766")
-                #try to launch in backend
-                cmd2="nohup $base/apps/redis/redis-server $vardir/redis/system/redis.conf 2>&1 > $vardir/log/startupmanager/redis_system.log &"
-                cmd2=j.dirs.replaceTxtDirVars(cmd2)
-                print cmd2
 
-                j.system.process.executeWithoutPipe(cmd2)
+                path="$base/apps/redis/redis-server"
+                path=j.dirs.replaceTxtDirVars(path)
+                path2="$vardir/redis/system/redis.conf"
+                path2=j.dirs.replaceTxtDirVars(path2)
+                if j.system.fs.exists(path=path) and j.system.fs.exists(path=path2):
+                    #try to launch in backend
+                    cmd2="nohup $base/apps/redis/redis-server $vardir/redis/system/redis.conf 2>&1 > $vardir/log/startupmanager/redis_system.log &"
+                    cmd2=j.dirs.replaceTxtDirVars(cmd2)
 
-                time.sleep(0.3)
-                                
-                if not j.system.net.tcpPortConnectionTest("localhost",7766):
-                    j.events.opserror_critical("could not start redis server, cmd was :%s"%cmd2)
+                    j.system.process.executeWithoutPipe(cmd2)
 
-                j.application.connectRedis()
+                    time.sleep(0.3)
+                                    
+                    if not j.system.net.tcpPortConnectionTest("localhost",7766):
+                        j.events.opserror_critical("could not start redis server, cmd:\n%s\n"%cmd2)
+
+                    j.application.connectRedis()
                 
             self.load()
             self.__init=True
