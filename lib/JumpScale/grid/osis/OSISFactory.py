@@ -106,18 +106,6 @@ class OSISFactory:
         """
         start deamon
         """
-
-        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
-        #     j.packages.findNewest(name="elasticsearch").install()
-        #     j.packages.findNewest(name="elasticsearch").start()
-
-        # if graphite:
-        #     if not j.system.net.tcpPortConnectionTest("127.0.0.1",8081) or not j.system.net.tcpPortConnectionTest("127.0.0.1",2003):
-        #         raise RuntimeError("cannot start osis, could not find running carbon/graphite")
-
-        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",elasticsearchport):
-        #     raise RuntimeError("cannot start osis, could not find running elastic search")
-
         self.key=key
         self.superadminpasswd=superadminpasswd
         self.dbconnections=dbconnections
@@ -126,6 +114,7 @@ class OSISFactory:
              j.events.inputerror_critical("cannot start osis, superadminpasswd needs to be specified")
 
         daemon = j.servers.geventws.getServer(port=port)
+        OSISCMDS.dbconnections = dbconnections
         daemon.addCMDsInterface(OSISCMDS, category="osis")  # pass as class not as object !!!
         daemon.daemon.cmdsInterfaces["osis"].init(path=path)#,esip=elasticsearchip,esport=elasticsearchport,db=db)
         self.cmds=daemon.daemon.cmdsInterfaces["osis"]

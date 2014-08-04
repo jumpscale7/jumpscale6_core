@@ -1,13 +1,10 @@
 from JumpScale import j
 from JumpScale.grid.osis.OSISStore import OSISStore
-# ujson = j.db.serializers.getSerializerType('j')
 import imp
 import ujson as json
 import pymongo
 from pymongo import MongoClient
-import JumpScale.baselib.redisworker
 import JumpScale.grid.mongodbclient
-import time
 
 class OSISStoreMongo(OSISStore):
     MULTIGRID = True
@@ -352,6 +349,7 @@ class OSISStoreMongo(OSISStore):
         self.rebuildindex()
 
     def demodata(self):
+        import JumpScale.baselib.redisworker
         path=j.system.fs.joinPaths(self.path,"demodata.py")
         if j.system.fs.exists(path):
             module = imp.load_source("%s_%s_demodata"%(self.namespace,self.categoryname), path)    

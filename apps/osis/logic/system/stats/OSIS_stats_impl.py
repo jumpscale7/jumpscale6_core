@@ -8,10 +8,6 @@ class mainclass(OSISStore):
     """
     """
 
-    def __init__(self):
-        OSISStore.__init__(self)
-        # self.elasticsearch=j.core.grid.getstatTargetElasticSearch(esclient=j.core.osis.elasticsearch)        
-
     def set(self,key,value,waitIndex=False):
         out = ""
         if isinstance(value, list):

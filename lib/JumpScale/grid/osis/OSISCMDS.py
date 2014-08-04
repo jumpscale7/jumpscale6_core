@@ -1,15 +1,13 @@
 from JumpScale import j
-import JumpScale.baselib.elasticsearch
-import ujson
 import gevent
 
 class OSISCMDS(object):
+    dbconnections = None
 
     def __init__(self, daemon):
         self.daemon = daemon
         self.osisInstances = {}  # key is namespace_categoryname
         self.db = None  # default db
-        self.elasticsearch = None  # default elastic search connection
         self.path="%s/apps/osis/logic"%j.dirs.baseDir
 
     def authenticate(self, namespace, categoryname, name,passwd, session=None):
@@ -187,7 +185,7 @@ class OSISCMDS(object):
             passwd=session.passwd
         
         if user=="root":
-            if j.core.osis.superadminpasswd=="":
+            if j.core.osis.superadminpasswd is None:
                 j.application.loadConfig()
                 j.core.osis.superadminpasswd=j.application.config.get("grid.master.superadminpasswd")
                 if j.core.osis.superadminpasswd=="":
@@ -317,38 +315,17 @@ class OSISCMDS(object):
                     j.system.fs.copyDirTree(templatespath_category, catpath, overwriteFiles=False)
                     # j.system.fs.copyDirTree(templatespath_osistasklets,catpath,overwriteFiles=overwriteTasklets)
 
-    def init(self, path="",overwriteImplementation=False, namespacename=None, template=None,initES=True,esip=None,esport=None,db=None,session=None):
+    def init(self, path="",overwriteImplementation=False, namespacename=None, template=None):
         
-        if session<>None:
-            self._authenticateAdmin(session)
-
-        if initES:
-            if esip<>None and esport<>None:
-                eip=esip
-                eport=esport
-            else:
-                eip=j.application.config.get("osis.elasticsearch.ip")
-                eport=j.application.config.get("osis.elasticsearch.port")
-            self.elasticsearch = j.clients.elasticsearch.get(ip=eip, port=int(eport))
-            if path <> "":
-                self.path = path
-            else:
-                path=self.path
-            j.logger.consoleloglevel = 7
-            # enable db's
-            if db==None and j.application.config.get("osis.db.type") == "filesystem":
-                self.db = j.db.keyvaluestore.getFileSystemStore("osis")
-            elif db<>None:
-                self.db=db
-            else:
-                raise RuntimeError("Only filesystem db implemented in osis")
-            # wait for elastic search & get
-            j.core.osis.db = self.db
-            j.core.osis.elasticsearch = self.elasticsearch
+        if path <> "":
+            self.path = path
+        else:
+            path=self.path
+        j.logger.consoleloglevel = 7
 
         if namespacename == None:
             for namespacename in j.system.fs.listDirsInDir(path, dirNameOnly=True):
-                self.init(path, overwriteImplementation=overwriteImplementation, namespacename=namespacename,initES=False)
+                self.init(path, overwriteImplementation=overwriteImplementation, namespacename=namespacename)
         else:
             # te=j.core.taskletengine.get(j.system.fs.joinPaths("systemtasklets","init"))
             # te.executeV2(osis=self) #will add db & elasticsearch w
@@ -394,16 +371,8 @@ class OSISCMDS(object):
 
 
                 classs = j.core.osis._loadModuleClass(implpath)
-                                          
                 if namespacename[0] <> "_":
-                    osis = classs()
+                    osis = classs(self.dbconnections)
                     osis.init(catpath,namespace=namespacename, categoryname=catname)
                     key = "%s_%s" % (namespacename, catname)
                     self.osisInstances[key] = osis
-
-
-
-            # j.core.osis.db = None
-            # j.core.osis.elasticsearch = None
-
-            

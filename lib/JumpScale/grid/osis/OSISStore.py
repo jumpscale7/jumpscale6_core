@@ -9,8 +9,10 @@ class OSISStore(object):
     Default object implementation (is for one specific namespace_category)
     """
 
-    def __init__(self):
-        self.db=None
+    def __init__(self, dbconnections):
+        self.dbconnections = dbconnections
+        self.elasticsearch = dbconnections["elasticsearch_main"]
+        self.db = j.db.keyvaluestore.getFileSystemStore("osis")
 
     def init(self, path, namespace,categoryname):
         """
@@ -20,19 +22,9 @@ class OSISStore(object):
 
     def initall(self, path, namespace,categoryname,db=False):
         self._init_auth(path, namespace, categoryname, db)
-        self.elasticsearch = self._getElasticSearch()
-        status = self.elasticsearch.status()
         indexname = self.getIndexName()
-        if indexname not in status['indices'].keys():
-            import pyelasticsearch
-            try:
-                self.elasticsearch.create_index(self.getIndexName())
-            except pyelasticsearch.IndexAlreadyExistsError:
-                pass 
-
-        # if self.tasklets.has_key("init"):
-        #     self.tasklets["init"].executeV2(osis=self)
-
+        if not self.elasticsearch.indices.exists(indexname):
+            self.elasticsearch.indices.create(self.getIndexName())
         self.objectclass=None
 
     def _init_auth(self, path, namespace, categoryname, db=False):
@@ -52,10 +44,6 @@ class OSISStore(object):
 
         self.dbprefix = "%s_%s" % (self.namespace, self.categoryname)
         self.dbprefix_incr = "%s_incr" % (self.dbprefix)
-
-        if db:
-            self.db = None
-            self.db = self._getDB()
 
         self.buildlist = False
 
@@ -77,16 +65,6 @@ class OSISStore(object):
         self.auth=auth
         if self.auth==None and authparent<>None:
             self.auth=authparent
-
-    def _getDB(self):
-        if j.core.osis.db == None:
-            j.errorconditionhandler.raiseBug(message="osis needs to have a temp db connection", category="osis.init")
-        return j.core.osis.db
-
-    def _getElasticSearch(self):
-        if j.core.osis.elasticsearch == None:
-            j.errorconditionhandler.raiseBug(message="osis needs to have a temp db connection", category="osis.init")
-        return j.core.osis.elasticsearch
 
     def get(self, key):
         """
