@@ -16,6 +16,8 @@ class OSISStoreMongo(OSISStore):
     - more consistent way of working with id's & guid's
 
     """
+    def __init__(self, dbconnections):
+        self.dbclient = dbconnections['mongodb_main']
 
     def _getDB(self):
         raise RuntimeError("Not Implemented")
@@ -24,10 +26,6 @@ class OSISStoreMongo(OSISStore):
         """
         gets executed when catgory in osis gets loaded by osiscmds.py (.init method)
         """
-        config = j.application.config
-        host = config.get('mongodb.host') if config.exists('mongodb.host') else 'localhost'
-        port = config.getInt('mongodb.port') if config.exists('mongodb.port') else 27017
-        mongodb_client = j.clients.mongodb.get(host, port)
 
         if namespace == 'system':
             dbnamespace = 'js_system'
@@ -36,7 +34,7 @@ class OSISStoreMongo(OSISStore):
 
         if not self.MULTIGRID:
             dbnamespace = '%s_%s' % (j.application.whoAmI.gid, dbnamespace)
-        client = mongodb_client[dbnamespace]
+        client = self.dbclient[dbnamespace]
         self.db = client[categoryname]
         self.counter = client["counter"]
 

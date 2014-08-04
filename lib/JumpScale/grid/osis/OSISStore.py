@@ -11,7 +11,7 @@ class OSISStore(object):
 
     def __init__(self, dbconnections):
         self.dbconnections = dbconnections
-        self.elasticsearch = dbconnections["elasticsearch_main"]
+        self.elasticsearch = dbconnections.get("elasticsearch_main")
         self.db = j.db.keyvaluestore.getFileSystemStore("osis")
 
     def init(self, path, namespace,categoryname):
@@ -23,7 +23,7 @@ class OSISStore(object):
     def initall(self, path, namespace,categoryname,db=False):
         self._init_auth(path, namespace, categoryname, db)
         indexname = self.getIndexName()
-        if not self.elasticsearch.indices.exists(indexname):
+        if self.elasticsearch and not self.elasticsearch.indices.exists(indexname):
             self.elasticsearch.indices.create(self.getIndexName())
         self.objectclass=None
 
@@ -204,7 +204,7 @@ class OSISStore(object):
         @param ttl = time to live in seconds of the index
         """
         if self.elasticsearch == None:
-            raise RuntimeError("Cannot find index")
+            return
 
         index = self.getIndexName()
 
