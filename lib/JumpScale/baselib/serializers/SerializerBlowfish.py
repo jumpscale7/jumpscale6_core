@@ -3,6 +3,7 @@
 class SerializerBlowfish(object):
     def __init__(self,):
         self.encrkey=""
+        self.c = None
 
     def _init(self,encrkey):
         if self.encrkey<>encrkey:
@@ -14,11 +15,17 @@ class SerializerBlowfish(object):
 
     def dumps(self,obj,encrkey):
         self._init(encrkey)
-        return self.c.encrypt(self.__pad_file(obj))
+        if self.c:
+            return self.c.encrypt(self.__pad_file(obj))
+        else:
+            return obj
 
     def loads(self,s,encrkey):
         self._init(encrkey)
-        return self.__depad_file(self.c.decrypt(s))
+        if self.c:
+            return self.__depad_file(self.c.decrypt(s))
+        else:
+            return s
 
 
     # Blowfish cipher needs 8 byte blocks to work with
