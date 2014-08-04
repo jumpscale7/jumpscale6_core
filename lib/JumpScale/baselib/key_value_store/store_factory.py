@@ -1,9 +1,3 @@
-from arakoon_store import ArakoonKeyValueStore
-from file_system_store import FileSystemKeyValueStore
-from memory_store import MemoryKeyValueStore
-from redis_store import RedisKeyValueStore
-from leveldb_store import LevelDBKeyValueStore
-
 from JumpScale import j
 
 
@@ -47,6 +41,7 @@ class KeyValueStoreFactory(object):
         @return: key value store
         @rtype: ArakoonKeyValueStore
         '''
+        from arakoon_store import ArakoonKeyValueStore
         if serializers==[]:
             serializers=[j.db.serializers.getSerializerType('j')]
         key = '%s_%s' % ("arakoon", namespace)
@@ -72,6 +67,7 @@ class KeyValueStoreFactory(object):
         @return: key value store
         @rtype: FileSystemKeyValueStore
         '''
+        from file_system_store import FileSystemKeyValueStore
         if serializers==[]:
             serializers=[j.db.serializers.getMessagePack()]
 
@@ -89,6 +85,7 @@ class KeyValueStoreFactory(object):
         @return: key value store
         @rtype: MemoryKeyValueStore
         '''
+        from memory_store import MemoryKeyValueStore
         return MemoryKeyValueStore(namespace)
 
     def getRedisStore(self, namespace='',host='localhost',port=7768,db=0,password='',serializers=None,masterdb=None,changelog=True):
@@ -104,6 +101,7 @@ class KeyValueStoreFactory(object):
         @return: key value store
         @rtype: MemoryKeyValueStore
         '''
+        from redis_store import RedisKeyValueStore
         key = '%s_%s_%s' % ("redis", port, namespace)
         if key not in self._cache:
             self._cache[key] = RedisKeyValueStore(namespace=namespace,host=host,port=port,db=db,password=password,serializers=serializers,masterdb=masterdb, changelog=changelog)
@@ -121,6 +119,7 @@ class KeyValueStoreFactory(object):
 
         @return: key value store
         '''
+        from leveldb_store import LevelDBKeyValueStore
         key = '%s_%s' % ("leveldb", namespace)
         if key not in self._cache:
             self._cache[key] = LevelDBKeyValueStore(namespace=namespace,basedir=basedir,serializers=serializers)
