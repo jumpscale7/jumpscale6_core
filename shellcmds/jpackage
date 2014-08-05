@@ -421,7 +421,6 @@ elif args.action == 'list':
             packages += j.packages.find(domain=domain,name="*", installed=False,expandInstances=False)
         printJPackages(packages)
     else:
-        import ipdb; ipdb.set_trace()
         packages = cmdutils.getJPackage(args,installed=True,expandInstances=False)
         printJPackages(packages)
 
