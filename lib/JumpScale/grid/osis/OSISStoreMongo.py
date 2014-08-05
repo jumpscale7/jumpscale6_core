@@ -4,10 +4,12 @@ import imp
 import ujson as json
 import pymongo
 from pymongo import MongoClient
+import datetime
 import JumpScale.grid.mongodbclient
 
 class OSISStoreMongo(OSISStore):
     MULTIGRID = True
+    TTL = 0
 
     """
     Default object implementation for mongodbserver
@@ -42,6 +44,8 @@ class OSISStoreMongo(OSISStore):
         if self.counter.find_one({'_id': categoryname}) == None:
             self.counter.save(seq)
         self.initall(path, namespace, categoryname)
+        if self.TTL != 0:
+            self.db.ensure_index('_ttl', expireAfterSeconds=self.TTL)
 
     def initall(self, path, namespace, categoryname):
         self._init_auth(path, namespace, categoryname)
@@ -67,9 +71,11 @@ class OSISStoreMongo(OSISStore):
                 if isinstance(id, int) and id == 0:
                     return True
             return False
-        def replaceGuid(value):
+        def update(value):
             if isinstance(value['guid'], basestring):
                 value['guid'] = value['guid'].replace('-', '')
+            if self.TTL != 0:
+                value['_ttl'] = datetime.datetime.utcnow()
 
         if j.basetype.dictionary.check(value):
             objInDB=None
@@ -80,23 +86,23 @@ class OSISStoreMongo(OSISStore):
             value = obj.dump()
 
             if ukey is not None:
-                replaceGuid(value)
+                update(value)
                 objInDB=self.db.find_one({"_id":ukey})
             elif 'guid' in value and value["guid"] != "":
-                replaceGuid(value)
+                update(value)
                 objInDB=self.db.find_one({"guid":value["guid"]})
 
             if objInDB<>None:
                 oldckey = self.getObject(objInDB).getContentKey()
                 objInDB.update(value)
-                replaceGuid(objInDB)
+                update(objInDB)
                 objInDB = self.setPreSave(objInDB)
                 changed = oldckey != obj.getContentKey()
                 if changed:
                     self.db.save(objInDB)
                 return (objInDB["guid"], False, changed)
 
-            replaceGuid(value)
+            update(value)
             if idIsZero():
                 value["id"]=self.incrId()
                 obj = self.getObject(value)
