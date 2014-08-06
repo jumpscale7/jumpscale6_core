@@ -8,7 +8,7 @@ class DataTables():
         self.inited = False
         self.cache = {}
         self.cacheg = {}
-        self._osiscl = j.core.osis.getClient(user='root')
+        self._osiscl =j.core.portal.active.osis
         self._catclient = dict()
 
     def getClient(self, namespace, category):

@@ -12,7 +12,7 @@ class system_usermanager(j.code.classGetBase()):
         self._te = {}
         self.actorname = "usermanager"
         self.appname = "system"
-        self.osiscl = j.core.osis.getClient(user='root')
+        self.osiscl = j.core.portal.active.osis
         self.modelUser = j.core.osis.getClientForCategory(self.osiscl, 'system', 'user')
 
     def _authSelf(self,user,kwargs):

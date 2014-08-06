@@ -4,12 +4,7 @@ class PortalAuthenticatorOSIS():
 
     def __init__(self):
 
-        addr=j.application.config.get("grid.master.ip")
-        passwd=j.application.config.get("grid.master.superadminpasswd")
-        if passwd=="":
-            passwd = None # let osis figure it out
-
-        osis=j.core.osis.getClient(addr,5544,"root",passwd)
+        osis =j.core.portal.active.osis
         self.osis=j.core.osis.getClientForCategory(osis,"system","user")
         self.osisgroups=j.core.osis.getClientForCategory(osis,"system","group")
         self.key2user={}

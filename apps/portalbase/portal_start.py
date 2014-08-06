@@ -9,11 +9,20 @@ import time
 from JumpScale import j
 import JumpScale.portal
 
-j.application.start("appserver6_test")
+import sys
+
+args=sys.argv
+instance=args[1]
+
+jp=j.packages.findNewest(name="portal",domain="jumpscale")
+jp=jp.getInstance(instance)
+
+j.application.start("portal")
 
 j.logger.disable()
 
-j.core.portal.getServer().start()
+server=j.core.portal.getServer(hrd=jp.hrd_instance)
+server.start()
 
 
 j.application.stop()

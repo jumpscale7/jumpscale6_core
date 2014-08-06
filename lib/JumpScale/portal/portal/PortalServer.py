@@ -34,7 +34,9 @@ CONTENT_TYPE_PNG = 'image/png'
 class PortalServer:
 
 ##################### INIT
-    def __init__(self):
+    def __init__(self,hrd=None):
+
+        self.hrd=hrd
 
         self.contentdirs = list()
         self.libpath = j.html.getHtmllibDir()
@@ -44,6 +46,17 @@ class PortalServer:
         self.cfgdir="cfg"
 
         j.core.portal.active=self
+
+        osisinstance=hrd.get("portal.osis.connection")
+
+        osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
+        osisjp=osisjp.getInstance(osisinstance)
+        hrd=osisjp.hrd_instance
+        ipaddr=hrd.get("osis.client.addr")
+        port=int(hrd.get("osis.client.port"))
+        user=hrd.get("osis.client.login")
+        passwd=hrd.get("osis.client.passwd")
+        self.osis =j.core.osis.getClient(ipaddr=ipaddr, port=port, user=user, passwd=passwd, ssl=False, gevent=True)
 
         self.pageKey2doc = {}
         self.routes = {}
@@ -59,13 +72,12 @@ class PortalServer:
         self.macroexecutorWiki = MacroExecutorWiki(macroPathsWiki)
 
         self.bootstrap()
-        osiscl = j.core.osis.getClient(user='root')
 
         session_opts = {
             'session.cookie_expires': False,
             'session.type': 'OsisBeaker',
             'session.namespace_class': OsisBeaker,
-            'session.namespace_args': {'client': osiscl},
+            'session.namespace_args': {'client': self.osis},
             'session.data_dir': '%s' % j.system.fs.joinPaths(j.dirs.varDir, "beakercache")
         }
         self._router = SessionMiddleware(self.router, session_opts)
@@ -87,10 +99,7 @@ class PortalServer:
         self.rediscache=redis.StrictRedis(host='localhost', port=7767, db=0)
         self.redisprod=redis.StrictRedis(host='localhost', port=7768, db=0)
 
-        if j.application.config.get("portal.auth.source.type").lower()=="osis":
-            self.auth=PortalAuthenticatorOSIS()
-        else:
-            self.auth=PortalServerAuthenticatorFake()
+        self.auth=PortalAuthenticatorOSIS()
 
         self.loadSpaces()
 
@@ -145,8 +154,9 @@ class PortalServer:
         j.system.fs.createDir(self.logdir)
 
 
-        self.secret = ini.getValue("main", "secret")
-        self.admingroups = ini.getValue("main", "admingroups").split(",")
+
+        # self.secret = ini.getValue("main", "secret")
+        # self.admingroups = ini.getValue("main", "admingroups").split(",")
 
         self.filesroot = replaceVar(ini.getValue("main", "filesroot"))
 

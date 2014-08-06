@@ -17,7 +17,7 @@ class auth(object):
     def getClient(self, namespace):
         client = self.clients.get(namespace)
         if not client:
-            client = j.core.osis.getClientForNamespace(namespace)
+            client = j.core.osis.getClientForNamespace(namespace,j.core.portal.active.osis)
             self.clients[namespace] = client
         return client
 
