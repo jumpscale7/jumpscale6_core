@@ -89,7 +89,7 @@ class JPackageObject():
             self.load()
         self.__init=True
 
-    @JPLock
+    # @JPLock
     def init(self):
         #create defaults for new jpackages
         hrddir=j.system.fs.joinPaths(self.getPathMetadata(),"hrd")
@@ -163,7 +163,7 @@ class JPackageObject():
 
         # j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
 
-    @JPLock
+    # @JPLock
     def load(self,hrdDir=None,position=""):                
 
         ########
@@ -236,7 +236,7 @@ class JPackageObject():
         #         j.system.fs.createDir(hrdinstancepath)
         #         self.copyMetadataToActive()
 
-    @JPLock
+    # @JPLock
     def getCodeMgmtRecipe(self):
         self._init()
 
@@ -294,7 +294,7 @@ class JPackageObject():
                     if hrd.changed:
                         self.load()
 
-    @JPLock
+    # @JPLock
     def copyMetadataToActive(self,hrddata={}):
         
         self.check()
@@ -329,7 +329,7 @@ class JPackageObject():
 
         j.dirs.replaceFilesDirVars(self.getPathActions(),additionalArgs=additionalArgs)
 
-    @JPLock
+    # @JPLock
     def loadActions(self, force=False,hrd=True,instance=None):
         # print "loadactions:%s"%self
         # self._init()
