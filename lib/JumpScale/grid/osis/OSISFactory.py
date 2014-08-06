@@ -125,7 +125,22 @@ class OSISFactory:
         daemon.start()
 
     def getClient(self, ipaddr=None, port=5544,user=None,passwd=None,ssl=False,gevent=False):
-        if ipaddr:
+
+        if ipaddr==None or user==None or passwd==None:
+            osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
+            inames=osisjp.getInstanceNames()
+            if len(inames)==1:
+                osisjp=osisjp.getInstance(inames[0])                        
+                hrd=osisjp.hrd_instance
+                if ipaddr==None:
+                    ipaddr=hrd.get("osis.client.addr")
+                if user==None:
+                    user=hrd.get("osis.client.login")
+                if passwd==None:
+                    passwd=hrd.get("osis.client.passwd")
+                port=int(hrd.get("osis.client.port"))
+
+        if ipaddr<>None:
             ips = [ipaddr]
         elif j.application.config.exists('osis.ip'):
             ips = j.application.config.getList('osis.ip')
@@ -136,7 +151,7 @@ class OSISFactory:
         if key in self.osisConnections:
             return self.osisConnections[key]
 
-        if user==None:
+        if user==None or user=="node":
             user="node"
             passwd=j.application.config.get("grid.node.machineguid")
         elif user=="root" and not passwd:
@@ -151,9 +166,9 @@ class OSISFactory:
         self.osisConnections[key] = client
         return client
 
-    def getClientForNamespace(self, namespace, client=None):
-        if client==None:
-            client = self.getClient(user='root')
+    def getClientForNamespace(self, namespace, client):
+        # if client==None:
+        #     client = self.getClient(user='root')
         return NameSpaceClient(client, namespace)
 
     def getClientForCategory(self, client, namespace, category):
