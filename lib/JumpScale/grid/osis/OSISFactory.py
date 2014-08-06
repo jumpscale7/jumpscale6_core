@@ -3,6 +3,7 @@ from OSISCMDS import OSISCMDS
 from OSISClientForCat import OSISClientForCat
 from OSISBaseObject import OSISBaseObject
 from OSISBaseObjectComplexType import OSISBaseObjectComplexType
+import JumpScale.portal.codegentools
 
 import inspect
 import imp
@@ -102,10 +103,12 @@ class OSISFactory:
         osis.init()
         return osis
 
-    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, key="",port=5544,superadminpasswd=None,dbconnections={}):
+    def startDaemon(self, path="", overwriteHRD=False, overwriteImplementation=False, key="",port=5544,superadminpasswd=None,dbconnections={},hrd=None):
         """
         start deamon
         """
+        if hrd<>None:
+            self.hrd=hrd
         self.key=key
         self.superadminpasswd=superadminpasswd
         self.dbconnections=dbconnections
@@ -137,10 +140,10 @@ class OSISFactory:
             user="node"
             passwd=j.application.config.get("grid.node.machineguid")
         elif user=="root" and not passwd:
-            if j.application.config.exists("grid.master.superadminpasswd"):
-                passwd=j.application.config.get("grid.master.superadminpasswd")
+            if j.application.config.exists("osis.superadmin.passwd"):
+                passwd=j.application.config.get("osis.superadmin.passwd")
             else:
-                raise RuntimeError("Superadmin passwd has not been defined on this node, please put in #hrd (grid.master.superadminpasswd) or use argument 'passwd'.")
+                raise RuntimeError("Osis superadmin passwd has not been defined on this node, please put in #hrd (osis.superadmin.passwd) or use argument 'passwd'.")
 
         with j.logger.nostdout():
             #client = j.core.zdaemon.getZDaemonHAClient(connections, category="osis", user=user, passwd=passwd,ssl=ssl,sendformat="j", returnformat="j",gevent=gevent)

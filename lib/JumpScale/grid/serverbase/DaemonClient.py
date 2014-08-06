@@ -56,7 +56,7 @@ class DaemonClient(object):
         self.passwd = passwd
         self.ssl = ssl
 
-        if roles==[]:
+        if roles==[] and j.application.config.exists("grid.node.roles"):
             roles=j.application.config.get("grid.node.roles").split(",")
             roles=[item.strip().lower() for item in roles]            
 

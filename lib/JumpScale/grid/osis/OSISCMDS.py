@@ -187,7 +187,7 @@ class OSISCMDS(object):
         if user=="root":
             if j.core.osis.superadminpasswd is None:
                 j.application.loadConfig()
-                j.core.osis.superadminpasswd=j.application.config.get("grid.master.superadminpasswd")
+                j.core.osis.superadminpasswd=j.application.config.get("osis.superadmin.passwd")
                 if j.core.osis.superadminpasswd=="":
 
                     raise RuntimeError("grid.master.superadminpasswd cannot be empty in hrd")

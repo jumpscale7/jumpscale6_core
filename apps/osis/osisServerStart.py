@@ -16,7 +16,12 @@ j.application.start("osisserver")
 import sys
 
 args=sys.argv
-argstag=" ".join(args[1:])
+osis_instance=args[1]
+
+osisjp=j.packages.findNewest(name="osis",domain="jumpscale")
+osisjp=osisjp.getInstance(osis_instance)
+
+argstag=" ".join(args[2:])
 connectionsconfig = j.core.tags.getObject(argstag).getDict()
 connections = {}
 
@@ -82,6 +87,8 @@ for dbname, instancename in connectionsconfig.iteritems():
     
     connections["%s_%s"%(dbname,instancename)]=client
 
-j.core.osis.startDaemon(path="", overwriteHRD=False, overwriteImplementation=False, key="",port=5544,superadminpasswd=None,dbconnections=connections)
+superadminpasswd=osisjp.hrd_instance.get("osis.superadmin.passwd")
+
+j.core.osis.startDaemon(path="", overwriteHRD=False, overwriteImplementation=False, key="",port=5544,superadminpasswd=superadminpasswd,dbconnections=connections,hrd=osisjp.hrd_instance)
 
 j.application.stop()
