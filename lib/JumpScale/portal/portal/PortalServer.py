@@ -49,14 +49,7 @@ class PortalServer:
 
         osisinstance=hrd.get("portal.osis.connection")
 
-        osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
-        osisjp=osisjp.getInstance(osisinstance)
-        hrd=osisjp.hrd_instance
-        ipaddr=hrd.get("osis.client.addr")
-        port=int(hrd.get("osis.client.port"))
-        user=hrd.get("osis.client.login")
-        passwd=hrd.get("osis.client.passwd")
-        self.osis =j.core.osis.getClient(ipaddr=ipaddr, port=port, user=user, passwd=passwd, ssl=False, gevent=True)
+        self.osis =j.core.osis.getClientByInstance(osisinstance)
 
         self.pageKey2doc = {}
         self.routes = {}
