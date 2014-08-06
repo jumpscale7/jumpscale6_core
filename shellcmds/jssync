@@ -197,7 +197,7 @@ if opts.action.find('sync2sb')==0 and checkcat("libs"):
 
     j.system.fs.createDir("%s/apps/"%opts.sbpath)    
 
-    j.system.fs.removeDirTree("%s/libjs/JumpScale/"%opts.sbpath)
+    # j.system.fs.removeDirTree("%s/libjs/JumpScale/"%opts.sbpath)
     j.system.fs.createDir("%s/libjs/JumpScale/"%opts.sbpath)    
 
     for item in ["base","baselib","core"]:
