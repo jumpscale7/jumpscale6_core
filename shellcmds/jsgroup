@@ -9,8 +9,6 @@ j.application.start("jsgroup")
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['add','delete','list'], help='Command to perform')
 parser.add_argument("-d",'--data', help='add group as groupname:domain')
-parser.add_argument("-p",'--passwd', help='superadmin passwd for grid')
-parser.add_argument("-a",'--addr', help='ip addr of master, if not specified will be the one as specified in local config')
 parser.add_argument("-gl",'--group', help='groupname')
 parser.add_argument("-gd",'--domain', help='domain for group to list')
 
@@ -19,20 +17,24 @@ parser.add_argument("-gd",'--domain', help='domain for group to list')
 
 import JumpScale.grid.osis
 
+opts=cmdutils.processLogin(parser)
+
+
 opts = parser.parse_args()
 
-if opts.passwd==None:
-    if j.application.config.exists("grid.master.superadminpasswd"):
-        opts.passwd=j.application.config.get("grid.master.superadminpasswd")
-    else:
-        opts.passwd=j.console.askString("please provide superadmin passwd for the grid.")
+# if opts.passwd==None:
 
-if opts.addr==None:    
-    addr=j.application.config.get("grid.master.ip")
-else:
-    addr=opts.addr
+#     if j.application.config.exists("grid.master.superadminpasswd"):
+#         opts.passwd=j.application.config.get("grid.master.superadminpasswd")
+#     else:
+#         opts.passwd=j.console.askString("please provide superadmin passwd for the grid.")
 
-osis=j.core.osis.getClient(addr,5544,"root",opts.passwd)
+# if opts.addr==None:    
+#     addr=j.application.config.get("grid.master.ip")
+# else:
+#     addr=opts.addr
+
+osis=j.core.osis.getClient(opts.addr,5544,"root",opts.passwd)
 userclient=j.core.osis.getClientForCategory(osis,"system","user")
 groupclient=j.core.osis.getClientForCategory(osis,"system","group")
 

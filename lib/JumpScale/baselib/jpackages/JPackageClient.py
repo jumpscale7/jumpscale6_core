@@ -493,8 +493,8 @@ class JPackageClient():
         '''
         name is part of jpackage, if none found return None, if more than 1 found raise error, name is part of name
         '''
-        if name.find("*")==-1:
-            name+="*"
+        # if name.find("*")==-1:
+        #     name+="*"
         res=self.find(name=name,domain=None,interactive=False)
         if len(res)>1:
             j.events.opserror_critical("Found more than 1 jpackage with name '%s' cannot continue, only 1 allowed."%name)
