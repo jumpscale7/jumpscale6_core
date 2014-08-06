@@ -6,7 +6,7 @@ monkey.patch_thread()
 monkey.patch_time()
 
 from JumpScale import j
-import JumpScale.grid.jumpscripts
+from JumpScale.baselib.cmdutils import argparse
 import JumpScale.grid.geventws
 import JumpScale.grid.osis
 import importlib
@@ -16,22 +16,22 @@ try:
 except:
     import json
 import time
-from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--instance', help="Agentcontroller instance", required=True)
+opts = parser.parse_args()
+jp = j.packages.findNewest('jumpscale', 'agentcontroller')
+jp = jp.getInstance(opts.instance)
+osisinstance = jp.hrd_instance.get('agentcontroller.osis.connection')
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
     time.sleep(0.1)
     print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
 
-ipaddr=j.application.config.get("grid_master_ip")
-while j.system.net.tcpPortConnectionTest(ipaddr,5544)==False:
-    time.sleep(0.1)
-    print "cannot connect to osis (port 5544)"
-
 j.application.start("jumpscale:agentcontroller")
 j.application.initGrid()
 
 j.logger.consoleloglevel = 2
-import JumpScale.baselib.redis
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
     time.sleep(0.1)
@@ -40,9 +40,6 @@ while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
     time.sleep(0.1)
     print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
-
-import JumpScale.baselib.webdis
-
 
 nr=0
 def check():
@@ -62,6 +59,10 @@ while check()==False:
         nr=0
     nr+=1
 
+import JumpScale.baselib.webdis
+import JumpScale.baselib.redis
+from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
+
 
 class ControllerCMDS():
 
@@ -78,7 +79,7 @@ class ControllerCMDS():
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
 
-        self.osisclient = j.core.osis.getClient(user=self.adminuser,gevent=True)
+        self.osisclient = j.core.osis.getClientByInstance(osisinstance,gevent=True)
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')

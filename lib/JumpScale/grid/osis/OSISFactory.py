@@ -166,6 +166,16 @@ class OSISFactory:
         self.osisConnections[key] = client
         return client
 
+    def getClientByInstance(self, instance, ssl=False, gevent=False):
+        osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
+        osisjp=osisjp.getInstance(instance)
+        hrd=osisjp.hrd_instance
+        ipaddr=hrd.get("osis.client.addr")
+        port=int(hrd.get("osis.client.port"))
+        user=hrd.get("osis.client.login")
+        passwd=hrd.get("osis.client.passwd")
+        return self.getClient(ipaddr=ipaddr, port=port, user=user, passwd=passwd, ssl=ssl, gevent=gevent)
+
     def getClientForNamespace(self, namespace, client):
         # if client==None:
         #     client = self.getClient(user='root')
