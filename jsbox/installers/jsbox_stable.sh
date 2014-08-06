@@ -6,8 +6,8 @@ if [ -n $1 ]; then
 fi
 
 mkdir -p /opt/jsbox
-rsync -av -v install.jumpscale.org::download/stable/jsbox/ /opt/jsbox/  --delete-after --modify-window=60 --compress --stats  --progress
-rsync -av -v install.jumpscale.org::download/stable/jsbox_data/ /opt/jsbox_data/  --delete-after --modify-window=60 --compress --stats  --progress
+rsync -av -v $RSYNCSERVER::download/stable/jsbox/ /opt/jsbox/  --delete-after --modify-window=60 --compress --stats  --progress
+rsync -av -v $RSYNCSERVER::download/stable/jsbox_data/ /opt/jsbox_data/  --delete-after --modify-window=60 --compress --stats  --progress
 rm -rf /opt/jsbox/cfg #resolve a bug
 
 #source /opt/jsbox/activate
