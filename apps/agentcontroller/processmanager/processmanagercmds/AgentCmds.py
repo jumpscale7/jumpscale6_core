@@ -36,6 +36,7 @@ class AgentCmds():
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
+        self.acport = 4444
 
     def _init(self):
         self.init()
@@ -45,17 +46,15 @@ class AgentCmds():
             self._adminAuth(session.user,session.passwd)
 
         self._killGreenLets()
-        if j.application.config.exists('grid.agentcontroller.ip'):
-            acips = j.application.config.getList('grid.agentcontroller.ip')
-        else:
-            acips = [ self.serverip ]
-        for acip in acips:
+        acinstance = j.application.instanceconfig.get('agentcontroller.connection')
+        ipaddr, port = j.clients.agentcontroller.getInstanceConfig(acinstance)
+        for acip in ipaddr.split(','):
             j.core.processmanager.daemon.schedule("agent", self.loop, acip)
 
     def reconnect(self, acip):
         while True:
             try:
-                return j.clients.agentcontroller.get(acip)
+                return j.clients.agentcontroller.get(acip, self.acport)
             except:
                 print "Failed to connect to agentcontroller %s" % acip
                 gevent.sleep(5)

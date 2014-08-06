@@ -8,14 +8,27 @@ class AgentControllerFactory(object):
         self._agentControllerClients={}
         self._agentControllerProxyClients={}
 
-    def get(self,agentControllerIP=None):
+    def get(self,agentControllerIP=None, port=PORT):
         """
         @if None will be same as master
         """
-        if not self._agentControllerClients.has_key(agentControllerIP):
-            self._agentControllerClients[agentControllerIP]=AgentControllerClient(agentControllerIP)
-        return self._agentControllerClients[agentControllerIP]
-        
+        connection = (agentControllerIP, port)
+        if connection not in self._agentControllerClients:
+            self._agentControllerClients[connection]=AgentControllerClient(agentControllerIP, port)
+        return self._agentControllerClients[connection]
+
+    def getInstanceConfig(self, instance):
+        accljp = j.packages.findNewest(name="agentcontroller_client",domain="jumpscale")
+        accljp = accljp.getInstance(instance)
+        hrd = accljp.hrd_instance
+        ipaddr = hrd.get("agentcontroller.client.addr")
+        port = int(hrd.get("agentcontroller.client.port"))
+        return ipaddr, port
+    
+    def getByInstnace(self, instance):
+        ipaddr, port = self.getInstanceConfig(instance)
+        return self.get(ipaddr, port)
+
     def getClientProxy(self,category="jpackages",agentControllerIP=None):
         key="%s_%s"%(category,agentControllerIP)
         if not self._agentControllerProxyClients.has_key(key):
@@ -40,16 +53,16 @@ class AgentControllerProxyClient():
         self.__dict__.update(client.__dict__)
 
 class AgentControllerClient():
-    def __init__(self,agentControllerIP):
+    def __init__(self,agentControllerIP, port=PORT):
         import JumpScale.grid.geventws
 
         if agentControllerIP:
             self.ipaddr = agentControllerIP
-            connections = [ (agentControllerIP, PORT) ]
+            connections = [ (agentControllerIP, port) ]
         elif j.application.config.exists('grid.agentcontroller.ip'):
-            connections = [ (ip, PORT) for ip in j.application.config.getList('grid.agentcontroller.ip') ]
+            connections = [ (ip, port) for ip in j.application.config.getList('grid.agentcontroller.ip') ]
         else:
-            connections = [ (j.application.config.get("grid.master.ip"), PORT) ]
+            connections = [ (j.application.config.get("grid.master.ip"), port) ]
         passwd=j.application.config.get("grid.master.superadminpasswd")
         login=j.application.config.get("system.superadmin.login")
         client= j.servers.geventws.getHAClient(connections, user=login, passwd=passwd,category="agent")

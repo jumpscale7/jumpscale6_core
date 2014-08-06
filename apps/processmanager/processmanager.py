@@ -9,15 +9,16 @@ monkey.patch_time()
 
 from JumpScale import j
 
-import time
 import JumpScale.grid.processmanager
+from JumpScale.baselib.cmdutils import argparse
 
-# import JumpScale.baselib.statmanager
-# import JumpScale.baselib.graphite
-# import psutil
-# import importlib
-# import sys
-
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--instance', help="Processmanager instance", required=True)
+parser.add_argument('--nodeid')
+opts = parser.parse_args()
+jp = j.packages.findNewest('jumpscale', 'processmanager')
+jp = jp.getInstance(opts.instance)
+j.application.instanceconfig = jp.hrd_instance
 
 import JumpScale.lib.diskmanager
 
