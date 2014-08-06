@@ -156,7 +156,7 @@ class PortalServer:
 
 
         # self.secret = ini.getValue("main", "secret")
-        # self.admingroups = ini.getValue("main", "admingroups").split(",")
+        self.admingroups = ini.getValue("main", "admingroups").split(",")
 
         self.filesroot = replaceVar(ini.getValue("main", "filesroot"))
 
