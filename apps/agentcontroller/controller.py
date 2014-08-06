@@ -42,6 +42,9 @@ while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
     print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
 
 nr=0
+
+import JumpScale.baselib.webdis
+
 def check():
     c1=j.system.net.tcpPortConnectionTest("127.0.0.1",7779)
     if c1==False:
@@ -59,7 +62,6 @@ while check()==False:
         nr=0
     nr+=1
 
-import JumpScale.baselib.webdis
 import JumpScale.baselib.redis
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
@@ -591,12 +593,7 @@ class ControllerCMDS():
 # j.servers.geventws.initSSL4Server("myorg", "controller1")
 
 port = 4444
-
-if len(sys.argv) > 1:
-    port = int(sys.argv[1])
-
 daemon = j.servers.geventws.getServer(port=port)
-
 daemon.addCMDsInterface(ControllerCMDS, category="agent")  # pass as class not as object !!! chose category if only 1 then can leave ""
 
 print "load processmanager cmds"
@@ -609,7 +606,7 @@ for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filte
         module = importlib.import_module('processmanagercmds.%s' % name)
         classs = getattr(module, name)
         print "load cmds:%s"%name
-        tmp=classs()        
+        tmp=classs()
         daemon.addCMDsInterface(classs, category="processmanager_%s"%tmp._name,proxy=True)
 
 # j.system.fs.changeDir("..")
