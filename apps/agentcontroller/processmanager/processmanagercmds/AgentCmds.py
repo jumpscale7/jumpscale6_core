@@ -54,8 +54,10 @@ class AgentCmds():
     def reconnect(self, acip):
         while True:
             try:
-                return j.clients.agentcontroller.get(acip, self.acport)
-            except:
+                client = j.clients.agentcontroller.get(acip, self.acport)
+                client.register()
+                return client
+            except Exception:
                 print "Failed to connect to agentcontroller %s" % acip
                 gevent.sleep(5)
 
