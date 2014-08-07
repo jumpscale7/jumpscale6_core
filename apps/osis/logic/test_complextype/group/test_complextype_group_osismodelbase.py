@@ -29,7 +29,7 @@ class test_complextype_group_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.integer.checkString(value):
                 value = j.basetype.integer.fromString(value)
             else:
-                msg="property id input error, needs to be int, specfile: /opt/jsbox/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
+                msg="property id input error, needs to be int, specfile: /opt/jumpscale/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -49,7 +49,7 @@ class test_complextype_group_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property name input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
+                msg="property name input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -69,7 +69,7 @@ class test_complextype_group_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.string.checkString(value):
                 value = j.basetype.string.fromString(value)
             else:
-                msg="property guid input error, needs to be str, specfile: /opt/jsbox/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
+                msg="property guid input error, needs to be str, specfile: /opt/jumpscale/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
@@ -89,7 +89,7 @@ class test_complextype_group_osismodelbase(j.code.classGetJSRootModelBase()):
             if isinstance(value, basestring) and j.basetype.list.checkString(value):
                 value = j.basetype.list.fromString(value)
             else:
-                msg="property _meta input error, needs to be list, specfile: /opt/jsbox/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
+                msg="property _meta input error, needs to be list, specfile: /opt/jumpscale/apps/osis/logic/test_complextype/model.spec, name model: group, value was:" + str(value)
                 raise RuntimeError(msg)
     
 
