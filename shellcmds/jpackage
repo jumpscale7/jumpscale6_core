@@ -87,7 +87,8 @@ if args.data<>None:
                 hrddata[var.strip()]=data.strip()
     else:
         tags=j.core.tags.getObject(args.data)
-        hrddata=tags.getDict()    
+        hrddata=tags.getDict()
+  
 
 def askDomains(args):
     if args.domain==None:

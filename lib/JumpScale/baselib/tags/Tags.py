@@ -36,14 +36,14 @@ class Tags():
         if tagstring.find("'")<>-1:
             #special more complex processing required
             # r=j.codetools.regex.replace("'[\w\-_=? !]*'","","-_-",tagstring,nonRegexSubsetToReplace=" ")
-            tagstring=j.codetools.regex.replace("'[\w\-_=? !]*'"," ","-|-",tagstring)
+            tagstring=j.codetools.regex.replace("'[\w\-_=? .!]*'"," ","-|-",tagstring)
             tagstring=tagstring.replace("'","")
 
         tags = tagstring.split()
         for tag in tags:                
             if tag.find(':') > 0:
-                key = tag.split(':')[0]
-                value = tag.split(':')[1]
+                key = tag.split(':',1)[0]
+                value = tag.split(':',1)[1]
                 key=unquote(key)
                 value=unquote(value).replace("-|-"," ")
                 self.tags[key] = value
@@ -53,6 +53,7 @@ class Tags():
                 self.labels.add(unquote(tag))
 
         self.tagstring=tagstring
+        
         
     def _toString(self):
         """
