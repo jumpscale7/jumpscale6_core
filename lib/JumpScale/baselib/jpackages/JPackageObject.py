@@ -931,13 +931,16 @@ class JPackageObject():
         ##self.assertAccessable()
         return self in j.packages.getDomainObject(self.domain).getJPackageTuplesWithModifiedMetadata()
 
-    def isInstalled(self):
+    def isInstalled(self, instance=None):
         """
         Check if the JPackage is installed
         """
         ##self.assertAccessable()
-        
-        return self.state.lastinstalledbuildnr != -1
+        instance  = instance or self.instance 
+        oneinstalled = self.state.lastinstalledbuildnr != -1
+        if instance and oneinstalled:
+            return instance in self.getInstanceNames()
+        return oneinstalled
 
     def supportsPlatform(self,platform=None):
         """
