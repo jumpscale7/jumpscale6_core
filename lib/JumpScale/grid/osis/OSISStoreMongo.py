@@ -94,6 +94,8 @@ class OSISStoreMongo(OSISStore):
 
             if objInDB<>None:
                 oldckey = self.getObject(objInDB).getContentKey()
+                value.pop('id', None)
+                value.pop('guid', None)
                 objInDB.update(value)
                 update(objInDB)
                 objInDB = self.setPreSave(objInDB)
