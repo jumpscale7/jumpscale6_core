@@ -7,6 +7,16 @@ monkey.patch_time()
 import time
 from JumpScale import j
 import JumpScale.portal
+from JumpScale.baselib.cmdutils import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--instance', help="Gridportal instance", required=True)
+
+opts = parser.parse_args()
+
+jp = j.packages.findNewest('jumpscale', 'portal')
+jp = jp.getInstance(opts.instance)
+j.application.instanceconfig = jp.hrd_instance
 
 j.application.start("jumpscale:gridportal")
 j.application.initGrid()
