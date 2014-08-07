@@ -138,9 +138,12 @@ class JumpscriptFactory:
     def getJSClass(self):
         return JumpScript
 
+    def _getWebdisConnection(self):
+        webdisinstance = j.application.instanceconfig.get("webdis.connection")
+        return j.clients.webdis.getByInstance(webdisinstance)
 
     def pushToGridMaster(self): 
-        webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
+        webdis = self._getWebdisConnection()
         #create tar.gz of cmds & monitoring objects & return as binary info
         #@todo make async with local workers
         import tarfile
@@ -161,7 +164,7 @@ class JumpscriptFactory:
 
     def loadFromGridMaster(self):
         print "load processmanager code from master"
-        webdis=j.clients.webdis.get(j.application.config.get("grid_master_ip"),7779)
+        webdis = self._getWebdisConnection()
 
         #delete previous scripts
         item=["eventhandling","loghandling","monitoringobjects","processmanagercmds","jumpscripts"]

@@ -22,7 +22,8 @@ parser.add_argument('-i', '--instance', help="Agentcontroller instance", require
 opts = parser.parse_args()
 jp = j.packages.findNewest('jumpscale', 'agentcontroller')
 jp = jp.getInstance(opts.instance)
-osisinstance = jp.hrd_instance.get('agentcontroller.osis.connection')
+j.application.instanceconfig = jp.hrd_instance
+osisinstance = jp.hrd_instance.get('osis.connection')
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
     time.sleep(0.1)
@@ -40,27 +41,6 @@ while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
     time.sleep(0.1)
     print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
-
-nr=0
-
-import JumpScale.baselib.webdis
-
-def check():
-    c1=j.system.net.tcpPortConnectionTest("127.0.0.1",7779)
-    if c1==False:
-        return False
-    check=j.clients.webdis.check("localhost")
-    return check
-
-while check()==False:
-    time.sleep(0.2)
-    if nr==20:
-        print "cannot connect to webdis, make sure is installed locally & redis behind running properly, will keep on trying forever"
-        cmd="jsprocess restart -n webdis"
-        print cmd
-        j.system.process.execute(cmd)
-        nr=0
-    nr+=1
 
 import JumpScale.baselib.redis
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
@@ -90,9 +70,6 @@ class ControllerCMDS():
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
         self.roles2agents = self.redis.getDict("roles2agents")
         self.sessionsUpdateTime = self.redis.getDict("sessionupdate")
-
-
-        self.webdis=j.clients.webdis.get("127.0.0.1",7779)
 
         j.logger.setLogTargetLogForwarder()
 

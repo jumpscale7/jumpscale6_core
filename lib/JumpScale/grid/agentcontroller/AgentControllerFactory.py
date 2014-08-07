@@ -24,8 +24,8 @@ class AgentControllerFactory(object):
         ipaddr = hrd.get("agentcontroller.client.addr")
         port = int(hrd.get("agentcontroller.client.port"))
         return ipaddr, port
-    
-    def getByInstnace(self, instance):
+
+    def getByInstance(self, instance):
         ipaddr, port = self.getInstanceConfig(instance)
         return self.get(ipaddr, port)
 
