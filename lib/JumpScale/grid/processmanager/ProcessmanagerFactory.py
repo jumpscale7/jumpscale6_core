@@ -90,29 +90,7 @@ class ProcessmanagerFactory:
             time.sleep(wait)
 
         wait=1
-        while j.system.net.tcpPortConnectionTest(gridmasterip, 4444)==False:
-            msg= "cannot connect to agentcontroller, will keep on trying forever, please make sure is started"
-            print msg
-            j.events.opserror(msg, category='processmanager.startup')    
-            if wait<60:
-                wait+=1
-            time.sleep(wait)        
-
-            
         import JumpScale.grid.agentcontroller
-
-        if gridmasterip in j.system.net.getIpAddresses():
-
-            if not j.tools.startupmanager.exists("jumpscale","osis"):
-                raise RuntimeError("Could not find osis installed on local system, please install.")
-
-            if not j.tools.startupmanager.exists("jumpscale","agentcontroller"):
-                raise RuntimeError("Could not find osis installed on local system, please install.")
-            
-            if not j.system.net.tcpPortConnectionTest("127.0.0.1",5544):
-                j.tools.startupmanager.startProcess("jumpscale","osis")
-            if not j.system.net.tcpPortConnectionTest("127.0.0.1",4444):        
-                j.tools.startupmanager.startProcess("jumpscale","agentcontroller")
 
 
         def checkagentcontroller():

@@ -68,8 +68,9 @@ class ControllerCMDS():
 
         self.redisport=7769
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
-        self.roles2agents = self.redis.getDict("roles2agents")
-        self.sessionsUpdateTime = self.redis.getDict("sessionupdate")
+        self.roles2agents = dict()
+        self.sessionsUpdateTime = dict()
+        self.agents2roles = dict()
 
         j.logger.setLogTargetLogForwarder()
 
@@ -198,8 +199,9 @@ class ControllerCMDS():
                 return None
 
         queues = list()
+        nodeid="%s_%s"%(session.gid,session.nid)
         queues.append("queues:commands:queue:%s:%s" % (session.gid, session.nid))
-        for role in session.roles:
+        for role in self.agents2roles[nodeid]:
             queues.append("queues:commands:queue:%s:%s" % (session.gid, role))
 
         return MultiKeyQueue(queues)
@@ -209,19 +211,45 @@ class ControllerCMDS():
         self._log("get job queue for job:%s"%(jobguid))
         return j.clients.redis.getGeventRedisQueue("127.0.0.1", self.redisport, queuename, fromcache=False)
         
-    def _setRole2Agent(self,role,agent):
-        roles = self.roles2agents.get(role, list())
-        roles.append(agent)
-        self.roles2agents[role] = roles #force redis to update this key
+    def _setRoles(self,roles, agent):
+        for role, agents in self.roles2agents.iteritems():
+            if agent in agents:
+                agents.remove(agent)
+        for role in roles:
+            self.roles2agents.setdefault(role, list()).append(agent)
+
+        self.agents2roles[agent] = roles
+
+    def _updateNetInfo(self, netinfo, node):
+        node.netaddr = netinfo
+        node.ipaddr = list()
+        for mac, netinfo in netinfo.iteritems():
+            if mac != "00:00:00:00:00:00" and len(netinfo) == 2 and netinfo[1]:
+                node.ipaddr.append(netinfo[1])
+
+    def registerNode(self, hostname, machineguid, session):
+        node = self.nodeclient.new()
+        node.roles = session.roles
+        node.gid = session.gid
+        node.name = hostname
+        node.machineguid = machineguid
+        self._updateNetInfo(session.netinfo, node)
+        guid, new, changed = self.nodeclient.set(node)
+        node = self.nodeclient.get(guid)
+        return node.dump()
 
     def register(self,session):
         self._log("new agent:")
-        roles=session.roles
-        agentid="%s_%s"%(session.gid,session.nid)
-        for role in roles:
-            self._setRole2Agent(role, agentid)
-        self.sessionsUpdateTime[agentid]=j.base.time.getTimeEpoch()
-        self._log("register done:%s"%agentid)
+        nodeid="%s_%s"%(session.gid,session.nid)
+        if session.nid:
+            node = self.nodeclient.get(nodeid)
+            self._setRoles(node.roles, nodeid)
+            self.sessionsUpdateTime[nodeid]=j.base.time.getTimeEpoch()
+            self._log("register done:%s"%nodeid)
+            self._updateNetInfo(session.netinfo, node)
+            self.nodeclient.set(node)
+            return node.dump()
+        raise RuntimeError("Node is not registered properly please call registerNode")
 
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
