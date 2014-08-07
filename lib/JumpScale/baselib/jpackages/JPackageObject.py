@@ -1233,7 +1233,7 @@ class JPackageObject():
             self.instance=instance
         else:
             instance=self.instance
-       
+
         self.copyMetadataToActive(hrddata=hrddata)
         
         self.loadActions(instance=instance) #reload actions to make sure new hrdactive are applied
@@ -1453,6 +1453,7 @@ class JPackageObject():
             return
 
         self.actions.code_link(force=force)
+        self.loadActions() # restore loaded actions to point to active folder
       
     @JPLock
     def package(self, dependencies=False,update=False):
