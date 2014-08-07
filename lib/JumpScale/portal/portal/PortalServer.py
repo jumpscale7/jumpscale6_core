@@ -34,9 +34,9 @@ CONTENT_TYPE_PNG = 'image/png'
 class PortalServer:
 
 ##################### INIT
-    def __init__(self,hrd=None):
+    def __init__(self):
 
-        self.hrd=hrd
+        self.hrd=j.application.instanceconfig
 
         self.contentdirs = list()
         self.libpath = j.html.getHtmllibDir()
@@ -47,7 +47,7 @@ class PortalServer:
 
         j.core.portal.active=self
 
-        osisinstance=hrd.get("portal.osis.connection")
+        osisinstance=self.hrd.get("portal.osis.connection")
 
         self.osis =j.core.osis.getClientByInstance(osisinstance)
 
