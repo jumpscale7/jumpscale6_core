@@ -1229,7 +1229,7 @@ class JPackageObject():
             self.instance=instance
         else:
             instance=self.instance
-       
+
         self.copyMetadataToActive(hrddata=hrddata)
 
         self.loadActions(instance=instance) #reload actions to make sure new hrdactive are applied
@@ -1259,7 +1259,6 @@ class JPackageObject():
         if self.debug:
             self.log('install for debug (link)')
             self.codeLink(dependencies=False, update=False, force=True)
-
 
         if not update:
             # if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr > self.state.lastinstalledbuildnr:
@@ -1451,6 +1450,7 @@ class JPackageObject():
             return
 
         self.actions.code_link(force=force)
+        self.loadActions() # restore loaded actions to point to active folder
       
     @JPLock
     def package(self, dependencies=False,update=False):
