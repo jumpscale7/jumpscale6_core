@@ -42,11 +42,7 @@ class ActionManager:
         if found==True:
             C="""
 def method(self{args}):
-    try:
-        result=self._actions['{name}'](j,self._jpackage{args})
-    except Exception,e:
-        j.errorconditionhandler.processPythonExceptionObject(e)
-        j.application.stop(1)
+    result=self._actions['{name}'](j,self._jpackage{args})
     return result"""
 
         else:
@@ -56,11 +52,7 @@ def method(self{args}):
     if self._done.has_key(key):
         print "already executed %s"%key
         return True
-    try:
-        result=self._actions['{name}'](j,self._jpackage{args2})
-    except Exception,e:
-        j.errorconditionhandler.processPythonExceptionObject(e)
-        j.application.stop(1)
+    result=self._actions['{name}'](j,self._jpackage{args2})
     self._done[key]=True
     return result"""
 

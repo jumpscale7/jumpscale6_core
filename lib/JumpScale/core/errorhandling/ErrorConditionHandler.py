@@ -143,12 +143,21 @@ class ErrorConditionHandler():
         self.processErrorConditionObject(eco, centralsentry=True)
         
     def raiseInputError(self, message="", category="input",msgpub="",die=True ,backtrace="",tags=""):
+        sys.excepthook = self.excepthook
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
                                          level=1,type=j.enumerators.ErrorConditionType.INPUT)
         eco.tags=tags
         if backtrace:
             eco.backtrace=backtrace
-        self.processErrorConditionObject(eco)
+        self.processErrorConditionObject(eco,tostdout=False)
+   
+        if j.application.debug:
+            print eco
+        else:
+            print "***INPUT ERROR***"
+            if category<>None:
+                print "category:%s"%category     
+            print message
         if die:
             self.halt(eco.errormessage)
         
@@ -302,7 +311,7 @@ class ErrorConditionHandler():
         This routine will create an errorobject & escalate to the infoserver
         @ttype : is the description of the error
         @tb : can be a python data object or a Event
-        """
+        """        
         if str(pythonExceptionObject).find("**halt**")<>-1:
             j.application.stop()
 

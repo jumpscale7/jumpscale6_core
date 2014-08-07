@@ -22,6 +22,7 @@ group.add_argument('-i','--instance',required=False, help='Instance of jpackage 
 group.add_argument('-v','--version',required=False, help='Version of jpackage to be installed')
 group.add_argument('--deps', required=False, action='store_true', help='do on dependencies e.g. install, update, ...')
 group.add_argument('-f','--force',required=False, action='store_true',help='auto answer yes on every question')
+group.add_argument('--verbose', required=False, action='store_true',default=False, help='Verbose output.')
 
 #install
 group = parser.add_argument_group(title="Install/Update/Expand/Configure")
@@ -97,6 +98,9 @@ def askDomains(args):
         domains=args.domain.split(",")
         domains=[domain.lower().strip() for domain in domains]
     return domains
+
+if args.verbose:
+    j.application.debug=True
 
 if args.quiet:
     class NullDevice():

@@ -240,10 +240,10 @@ class JPackageObject():
     def getCodeMgmtRecipe(self):
         self._init()
 
-        hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
+        hrdpath=j.system.fs.joinPaths(self.getPathActiveInstance(),"hrd","code.hrd")
         if not j.system.fs.exists(path=hrdpath):
             self.init()
-        recipepath=j.system.fs.joinPaths(self.getPathMetadata(),"coderecipe.cfg")
+        recipepath=j.system.fs.joinPaths(self.getPathActiveInstance(),"coderecipe.cfg")
         if not j.system.fs.exists(path=recipepath):
             self.init()
         return CodeManagementRecipe(hrdpath,recipepath)
@@ -314,12 +314,14 @@ class JPackageObject():
 
         self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
 
+        dir2apply=self.getPathActiveInstance()
+
         #apply apackage hrd data on actions active
-        self.hrd_instance.applyOnDir(self.getPathActions()) 
+        self.hrd_instance.applyOnDir(dir2apply) 
         #make sure params are filled in in actions dir
-        self.hrd.applyOnDir(self.getPathActions()) 
+        self.hrd.applyOnDir(dir2apply) 
         #apply hrd config from system on actions active
-        j.application.config.applyOnDir(self.getPathActions())
+        j.application.config.applyOnDir(dir2apply)
 
         additionalArgs={}
         additionalArgs["jp_instance"]=self.instance
@@ -327,11 +329,13 @@ class JPackageObject():
         additionalArgs["jp_domain"]=self.domain
         additionalArgs["jp_version"]=self.version
 
-        j.dirs.replaceFilesDirVars(self.getPathActions(),additionalArgs=additionalArgs)
+        j.dirs.replaceFilesDirVars(dir2apply,additionalArgs=additionalArgs)
 
     # @JPLock
     def loadActions(self, force=False,hrd=True,instance=None):
         # print "loadactions:%s"%self
+        # print hrd
+        # print "SSSSSSSSSSs"
         # self._init()
         if hrd:
             #cleanup past
@@ -1231,7 +1235,7 @@ class JPackageObject():
             instance=self.instance
        
         self.copyMetadataToActive(hrddata=hrddata)
-
+        
         self.loadActions(instance=instance) #reload actions to make sure new hrdactive are applied
 
         self.stop()
@@ -1244,10 +1248,8 @@ class JPackageObject():
             self.log('installing')
             if self.state.checkNoCurrentAction == False:
                 self._raiseError("jpackages is in inconsistent state, ...")
-
-            self.prepare(dependencies=False)
             
-            # self.loadActions()   #already done above         
+            self.prepare(dependencies=False)            
 
             self.copyfiles(dependencies=False)
 
@@ -1259,7 +1261,6 @@ class JPackageObject():
         if self.debug:
             self.log('install for debug (link)')
             self.codeLink(dependencies=False, update=False, force=True)
-
 
         if not update:
             # if self.buildNr==-1 or self.configchanged or reinstall or self.buildNr > self.state.lastinstalledbuildnr:
@@ -1419,7 +1420,8 @@ class JPackageObject():
 
         @param force: if True, do an update which removes the changes (when using as install method should be True)
         """
-        self.loadActions(hrd=False)
+        self.loadActions(hrd=True)
+
         # j.clients.mercurial.statusClearAll()
         self.log("CodeLink")
         if dependencies is None:
