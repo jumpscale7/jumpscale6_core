@@ -239,7 +239,8 @@ elif args.action == 'update':
         package.start()    
 
 elif args.action == 'link':
-    packages = cmdutils.getJPackage(args,installed=True,expandInstances=False)
+    #works with instance jpackage
+    packages = cmdutils.getJPackage(args,installed=True,expandInstances=True)
     for package in packages:
         package.codeLink(dependencies=args.deps)
 

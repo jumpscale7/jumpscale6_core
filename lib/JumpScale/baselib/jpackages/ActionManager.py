@@ -8,29 +8,34 @@ class ActionManager:
     the action manager is responsible for executing the actions linked to a jpackages
     """
 
-    def __init__(self,jp,hrd=True):
+    def __init__(self,jp):
         # print "init actions for %s"%jp
         self._jpackage=jp
         self._actions={}
         self._done={}        
 
-        for path in j.system.fs.listFilesInDir(self._jpackage.getPathActions(hrd=hrd), filter='*.py'):
+        def load(path):
             name=j.system.fs.getBaseName(path)
-            if name[0]=="_":
-                continue
             name=name[:-3]
            
             md5 = j.tools.hash.md5_string(path)
             modname = "JumpScale.baselib.jpackages.%s" % md5
-            try:
-                module = imp.load_source(modname, path)
-                self._actions[name]= module.main
-                
-                name2=name.replace(".","_")
-                self.__dict__[name2]=self._getActionMethod(name)
-            except Exception,e:
-                pass
-                
+            module = imp.load_source(modname, path)
+            self._actions[name]= module.main
+            
+            name2=name.replace(".","_")
+            self.__dict__[name2]=self._getActionMethod(name)
+
+        classpath=jp.getPathMetadata()
+        for actionname in j.packages.getActionNamesClass():
+            path=j.system.fs.joinPaths(classpath,"actions","%s.py"%actionname)
+            load(path)
+
+        instancepath=jp.getPathInstance()
+        for actionname in j.packages.getActionNamesInstance():
+            path=j.system.fs.joinPaths(instancepath,"actions","%s.py"%actionname)
+            load(path)        
+
     def clear(self):
         self._done={}
         
@@ -39,6 +44,7 @@ class ActionManager:
         for item in ["kill","start","stop","monitor"]:
             if name.find(item)<>-1:
                 found=True
+
         if found==True:
             C="""
 def method(self{args}):

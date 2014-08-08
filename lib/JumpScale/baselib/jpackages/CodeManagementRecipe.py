@@ -3,13 +3,14 @@ from JumpScale import j
 
 class RecipeItem(object):
     '''Ingredient of a CodeRecipe'''
-    def __init__(self, repoinfo,source, destination,platform="generic",type="base",tags=""):
+    def __init__(self, repoinfo,source, destination,platform="generic",type="base",tags="",recipe=None):
         """
         @param types sitepackages, root, base, etc, tmp,bin
         @param tagslabels: e.g. config as str
         """
         self.repoinfo=repoinfo
         self.source = source.strip().strip("/")
+        self.recipe=recipe
 
         self.destination=destination.strip().strip("/")
         if self.destination=="":
@@ -22,7 +23,7 @@ class RecipeItem(object):
 
         self.type=type.lower().strip()
 
-        self.systemdest = j.packages.getTypePath(self.type, self.destination)
+        self.systemdest = j.packages.getTypePath(self.type, self.destination,jp=self.recipe.jp)
         self.tags=tags
         
         # determine supported platforms 
@@ -199,11 +200,12 @@ class CodeManagementRecipe:
     '''
     Recipe providing guidelines how to cook a JPackage from source code in a repo, is populated from a config file
     '''
-    def __init__(self,hrdpath,configpath):
+    def __init__(self,hrdpath,configpath,jp=None):
         self._repoconnection = None
         self.configpath=configpath
         self.hrd=j.core.hrd.getHRD(hrdpath)
         self.items = []
+        self.jp=jp
         self._getRepoConnection()
         self._process()
 
@@ -241,7 +243,7 @@ class CodeManagementRecipe:
                     source3=source3.replace("//","/")
                     # print "*%s*"%source3
                     idest = j.system.fs.joinPaths(dest, item)                    
-                    item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags)
+                    item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags,recipe=self)
                     self.items.append(item)                                                
                 if tags.labelExists("nodirs"):
                     continue
@@ -252,10 +254,10 @@ class CodeManagementRecipe:
                     source3=source3.replace("//","/")
                     source3=source3.replace("//","/")
                     # print "*%s*"%source3
-                    item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags)
+                    item=RecipeItem(self.hrd,source=source3, destination=idest,platform=platform,type=ttype,tags=tags,recipe=self)
                     self.items.append(item) 
             else:
-                item=RecipeItem(self.hrd,source=source, destination=dest,platform=platform,type=ttype,tags=tags)
+                item=RecipeItem(self.hrd,source=source, destination=dest,platform=platform,type=ttype,tags=tags,recipe=self)
                 self.items.append(item)
 
 

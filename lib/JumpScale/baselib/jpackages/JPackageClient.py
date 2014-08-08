@@ -206,7 +206,7 @@ class JPackageClient():
 ##################  GET FUNCTIONS  #########################
 ############################################################
 
-    def getTypePath(self, ttype, relativepath):
+    def getTypePath(self, ttype, relativepath,jp=None):
         if ttype in ('sitepackages', 'site-packages'):
             if j.application.sandbox:
                 base=j.system.fs.joinPaths(j.dirs.baseDir,"libext")
@@ -217,6 +217,15 @@ class JPackageClient():
             systemdest = "/%s"%relativepath.lstrip("/")
         elif ttype=="base":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir, relativepath)
+        elif ttype=="app":
+            if jp==None:
+                raise RuntimeError("getTypePath doesnt have access to jp object, jp==None")
+            if jp.hrd_instance==None:                
+                raise RuntimeError("Cannot link jpackage, did not find instance version.") 
+            path=jp.hrd.get("jp.app.path")
+            path=j.dirs.replaceTxtDirVars(path)
+            path=jp.hrd_instance.applyOnContent(path)
+            systemdest = j.system.fs.joinPaths(path, relativepath)
         elif ttype=="apps":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir,"apps",relativepath)
         elif ttype=="cfg":
@@ -255,6 +264,18 @@ class JPackageClient():
             systemdest = j.system.fs.joinPaths(base, relativepath)
         return systemdest
 
+    def getActionNamesClass(self):
+        """
+        these actions can be applied on jpackage without knowing the jpackage instance
+        """
+        res=["code.commit","code.package","code.push","code.update","process.depcheck","upload"]
+        return res
+
+    def getActionNamesInstance(self):
+        res=["code.export","code.link","data.export","data.import","data.logrotate","install.configure","install.copy","install.download",\
+            "install.post","install.prepare","monitor.getstats","monitor.up.local","monitor.up.net",\
+            "process.configure","process.kill","process.start","process.stop","process.unconfigure","uninstall"]
+        return res
 
     def get(self, domain, name, version,instance=0):
         """
@@ -530,7 +551,6 @@ class JPackageClient():
 
         res = self._find(domain=domain, name=name, version=version)
         
-
         if res==[]:
             raiseError('No packages found, did you forget to run "jpackage mdupdate"?',domain,name,version,platform,installed,instance)
 
@@ -539,10 +559,10 @@ class JPackageClient():
             raiseError(msg,domain,name,version,platform,installed,instance)
 
         if installed==True:
-            res=[item for item in res if item.isInstalled()]
+            res=[item for item in res if item.isInstalled(hrdcheck=False)]
 
         if installed==False:
-            res=[item for item in res if item.isInstalled()==False]
+            res=[item for item in res if item.isInstalled(hrdcheck=False)==False]
 
         if instance<>None and len(res)>1:
             msg="Cannot find a jpackage for specified instance when more than 1 candidate found, specify domain & name & version more specific"
