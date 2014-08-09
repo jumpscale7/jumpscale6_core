@@ -20,6 +20,7 @@ class ActionManager:
            
             md5 = j.tools.hash.md5_string(path)
             modname = "JumpScale.baselib.jpackages.%s" % md5
+            # print path
             module = imp.load_source(modname, path)
             self._actions[name]= module.main
             
@@ -31,10 +32,11 @@ class ActionManager:
             path=j.system.fs.joinPaths(classpath,"actions","%s.py"%actionname)
             load(path)
 
-        instancepath=jp.getPathInstance()
-        for actionname in j.packages.getActionNamesInstance():
-            path=j.system.fs.joinPaths(instancepath,"actions","%s.py"%actionname)
-            load(path)        
+        if jp.instance<>None:
+            instancepath=jp.getPathInstance()
+            for actionname in j.packages.getActionNamesInstance():
+                path=j.system.fs.joinPaths(instancepath,"actions","%s.py"%actionname)
+                load(path)        
 
     def clear(self):
         self._done={}

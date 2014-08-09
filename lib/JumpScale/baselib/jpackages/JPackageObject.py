@@ -206,31 +206,32 @@ class JPackageObject():
         # j.system.fs.remove("%s/actions/install.download.py"%self.getPathMetadata())
 
     # @JPLock
-    def load(self,instance=None,force=False,hrddata={}):
+    def load(self,instance=None,force=False,hrddata={},findDefaultInstance=True):
 
         if self._loaded and force==False:
             return
 
         #TRY AND FIND INSTANCE
-        if instance==None:
+        if instance==None and findDefaultInstance:
             root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
             instanceNames=j.system.fs.listDirsInDir(root,False,True)
             if j.system.fs.exists(path=root):
                 if len(instanceNames)==1:
                     self.instance=instanceNames[0]
         else:
-            root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name,instance)
-            if not j.system.fs.exists(path=root):
-                j.events.inputerror_critical("Could not find instance '%s' for jpackage %s"%(instance,self),"jpackage.init")
+            if instance<>None:
+                root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name,instance)
+                if not j.system.fs.exists(path=root):
+                    j.events.inputerror_critical("Could not find instance '%s' for jpackage %s"%(instance,self),"jpackage.init")
+                self.instance=instance
 
         if hrddata<>{}:
             self._installActiveHrd(hrddata=hrddata)
 
-        if self.instance==None:
-            j.events.inputerror_critical("Cannot load jpackage:%s could not find an instance"%self)
-
-        hrdinstancepath=j.system.fs.joinPaths(self.getPathInstance(),"hrdinstance") 
-        self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
+        if self.instance<>None:
+            # j.events.inputerror_critical("Cannot load jpackage:%s could not find an instance"%self)
+            hrdinstancepath=j.system.fs.joinPaths(self.getPathInstance(),"hrdinstance") 
+            self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
 
         #WHY WOULD THIS BE NEEDED?
         #j.application.loadConfig()
@@ -264,6 +265,7 @@ class JPackageObject():
         #         self.copyMetadataToActive()
 
         self._loaded=True
+        return self
 
     # @JPLock
     def getCodeMgmtRecipe(self):
@@ -384,7 +386,7 @@ class JPackageObject():
         recipe=self.getCodeMgmtRecipe()
         recipe.addToProtectedDirs()
         
-        self.load()
+        self.load(findDefaultInstance=False)
         self.log("set debug mode",category="init")
 
     def setDebugModeInJpackage(self,dependencies=False): 
@@ -393,7 +395,7 @@ class JPackageObject():
             for dep in deps:
                 dep.setDebugModeInJpackage(dependencies=False)
         self.hrd.set("jp.debug",1)
-        self.load()
+        self.load(findDefaultInstance=False)
         self.log("set debug mode in jpackage",category="init")
 
     def removeDebugModeInJpackage(self,dependencies=False):
@@ -403,7 +405,7 @@ class JPackageObject():
                 dep.removeDebugModeInJpackage(dependencies=False)
         if self.hrd.exists("jp.debug"):
             self.hrd.set("jp.debug",0)
-        self.load()
+        self.load(findDefaultInstance=False)
         self.log("remove debug mode in jpackage",category="init")        
 
     def removeDebugMode(self,dependencies=False):
@@ -970,7 +972,8 @@ class JPackageObject():
                 dep.stop(False)
 
         if walkinstances:
-            for jp in self.getInstances():
+            for iname in self.getInstanceNames():
+                jp.load(iname)
                 jp.stop(walkinstances=False)
         else:
             if self.isInstalled():
@@ -1191,7 +1194,7 @@ class JPackageObject():
 
         self._copyMetadataToActive(hrddata=hrddata)
         
-        self.load(force=True) #reload actions to make sure new hrdactive are applied
+        self.load(force=True,instance=instance) #reload actions to make sure new hrdactive are applied
 
         self.stop()
 
@@ -1324,7 +1327,7 @@ class JPackageObject():
         Update code from code repo (get newest code)
         """
         self.log('CodeUpdate')
-        self.load()
+        self.load(findDefaultInstance=False)
         # j.clients.mercurial.statusClearAll()
         if dependencies:
             deps = self.getDependencies()
@@ -1338,7 +1341,7 @@ class JPackageObject():
         update code from code repo (get newest code)
         """
         
-        self.load()
+        self.load(findDefaultInstance=False)
         self.log('CodeCommit')
         j.clients.mercurial.statusClearAll()
         if dependencies:
@@ -1413,7 +1416,7 @@ class JPackageObject():
         @type dependencies: boolean
         """
         
-        self.load()
+        self.load(instance=None,findDefaultInstance=False)
 
         self.log('Package')
         # Disable action caching:
@@ -1531,7 +1534,7 @@ class JPackageObject():
         """
         Download the jpackages & expand
         """        
-        self.load()
+        self.load(instance=None,findDefaultInstance=False)
         if self.debug:
             nocode=True
 
@@ -1645,8 +1648,7 @@ class JPackageObject():
         else:
             dependencies=dependencies
 
-        self.load()
-        # self.loadActions(hrd=False)
+        self.load(instance=None,findDefaultInstance=False)
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
@@ -1767,7 +1769,8 @@ class JPackageObject():
         Does always a jp.package() first
         """
 
-        self.load()
+        self.load(instance=None,findDefaultInstance=False)
+
         self._calculateBlobInfo()
         
         for platform,ttype in self.getBlobPlatformTypes():

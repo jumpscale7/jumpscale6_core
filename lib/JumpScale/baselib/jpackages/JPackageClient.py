@@ -220,12 +220,19 @@ class JPackageClient():
         elif ttype=="app":
             if jp==None:
                 raise RuntimeError("getTypePath doesnt have access to jp object, jp==None")
-            if jp.hrd_instance==None:                
-                raise RuntimeError("Cannot link jpackage, did not find instance version.") 
-            path=jp.hrd.get("jp.app.path")
-            path=j.dirs.replaceTxtDirVars(path)
-            path=jp.hrd_instance.applyOnContent(path)
-            systemdest = j.system.fs.joinPaths(path, relativepath)
+            # if jp.hrd_instance==None:                
+            #     raise RuntimeError("Cannot link jpackage, did not find instance version.") 
+            if jp.hrd_instance<>None:
+                path=jp.hrd.get("jp.app.path")
+                if path==None:
+                    j.events.inputerror_critical("Could not find 'jp.app.path' in main hrd of jpackage:%s"%jp)
+                path=j.dirs.replaceTxtDirVars(path)
+                if path==None:
+                    j.events.inputerror_critical("Could not find data for 'jp.app.path' in main hrd of jpackage:%s"%jp)
+                path=jp.hrd_instance.applyOnContent(path)
+                systemdest = j.system.fs.joinPaths(path, relativepath)
+            else:
+                systemdest=None
         elif ttype=="apps":
             systemdest = j.system.fs.joinPaths(j.dirs.baseDir,"apps",relativepath)
         elif ttype=="cfg":

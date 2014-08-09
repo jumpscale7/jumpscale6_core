@@ -62,6 +62,8 @@ class RecipeItem(object):
 
         if self._isPlatformSupported:
             source = self.getSource()
+            if self.systemdest==None:
+                j.events.inputerror_critical("System destination was not defined, cannot export:%s"%self)
             destination = self.systemdest
             print "export:%s to %s"%(source,destination)
             if j.system.fs.isLink(destination):
@@ -120,6 +122,8 @@ class RecipeItem(object):
         if self._isPlatformSupported:
             source = self.getSource()        
             destination = self.systemdest
+            if self.systemdest==None:
+                j.events.inputerror_critical("System destination was not defined, cannot export:%s"%self)
 
 
             if self.tags.labelExists("config"):
@@ -151,10 +155,14 @@ class RecipeItem(object):
 
     def addToProtectedDirs(self):
         if not self.tags.labelExists("config"):
+            if self.systemdest==None:
+                j.events.inputerror_critical("System destination was not defined, cannot export:%s"%self)
             j.dirs.addProtectedDir(self.systemdest)
 
     def removeFromProtectedDirs(self):
         if not self.tags.labelExists("config"):
+            if self.systemdest==None:
+                j.events.inputerror_critical("System destination was not defined, cannot export:%s"%self)
             j.dirs.removeProtectedDir(self.systemdest)
 
     def unlinkSystem(self,force=False):
@@ -165,7 +173,8 @@ class RecipeItem(object):
         
         if self.type=="config":
             return 
-
+        if self.systemdest==None:
+            j.events.inputerror_critical("System destination was not defined, cannot export:%s"%self)
         if j.system.fs.isLink(self.systemdest):
             j.system.fs.remove(self.systemdest)
             j.dirs.removeProtectedDir(self.systemdest)

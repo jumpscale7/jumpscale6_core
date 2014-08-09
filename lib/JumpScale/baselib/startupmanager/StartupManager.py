@@ -73,6 +73,7 @@ class ProcessDef:
         self.hrd=hrd
         self.system=False
         self.autostart=hrd.getInt("process.autostart")==1
+        
         self.path=path
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
@@ -380,6 +381,7 @@ class ProcessDef:
                     continue
                 port = int(port)
                 if not j.system.net.checkListenPort(port):
+                    print "TCP CHECK FAILED:%s"%port
                     return False
         return True
 
@@ -391,11 +393,10 @@ class ProcessDef:
             if self._portCheck():
                 return True
             time.sleep(0.05)
+        # print "timeout"
         return False
 
     def isRunning(self,wait=False):
-        if self.autostart==False:
-            return False
 
         if self.ports<>[]:
             res= self.portCheck(wait=wait)
@@ -404,10 +405,12 @@ class ProcessDef:
         pids=self.getPids(ifNoPidFail=False,wait=wait)
 
         if len(pids) != self.numprocesses:
+            # print "numprocesses <> pids"
             return False
         for pid in pids:
             test=j.system.process.isPidAlive(pid)
             if test==False:
+                # print "pid not alive"
                 return False
         return True
 
@@ -801,9 +804,8 @@ class StartupManager:
         get status of process, True if status ok
         """
         result=True
-        for processdef in self.getProcessDefs(domain, name):
-            result=result & processdef.isRunning()
-        
+        for processdef in self.getProcessDefs(domain, name):            
+            result=result & processdef.isRunning()            
         return result
 
     def listProcesses(self):

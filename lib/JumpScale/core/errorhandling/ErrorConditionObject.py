@@ -58,7 +58,7 @@ class ErrorConditionObject():
             self.backtraceDetailed=""
             btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS(tb=tb)
             if len(btkis)>1:
-                self.getBacktrace(btkis,filename0,linenr0,func0)
+                self.backtrace=self.getBacktrace(btkis,filename0,linenr0,func0)
                 
             self.guid=j.base.idgenerator.generateGUID()
             self.category=category #is category in dot notation
@@ -151,36 +151,42 @@ class ErrorConditionObject():
     def getBacktrace(self,btkis=None,filename0=None,linenr0=None,func0=None):
         if btkis==None:
             btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS()
-        out="File:'%s':function:'%s'\n"%(filename0,func0)
-        out+="Linenr:%s\n*************************************************************\n\n"%linenr0
-        btkis.reverse()
-        for filename,func,linenr,code in btkis:
-            # print "AAAAAA:%s"%filename
-            out+="%-25s : %s\n"%(func,filename)
-            c=0
-
+        out=""
+        # out="File:'%s'\nFunction:'%s'\n"%(filename0,func0)
+        # out+="Linenr:%s\n*************************************************************\n\n"%linenr0
+        # btkis.reverse()
+        for filename,func,linenr,code,linenrOverall in btkis:
+            # print "AAAAAA:%s %s"%(func,filename)
+            # print "BBBBBB:%s"%linenr
+            # out+="%-15s : %s\n"%(func,filename)
+            out+="  File \"%s\" Line %s, in %s\n"%(filename,linenrOverall,func)
+            c=0            
             code2=""
             for line in code.split("\n"):
                 if c==linenr:
-                    pre="  *** "
-                else:
-                    pre="      "
-                code2+="%s%s\n"%(pre,line)
+                    if len(line)>120:
+                        line=line[0:120]
+                    # out+="  %-13s :     %s\n"%(linenrOverall,line.strip())
+                    out+="    %s\n"%line.strip()
+                #     pre="  *** "
+                # else:
+                #     pre="      "
+                # code2+="%s%s\n"%(pre,line)
                 c+=1
 
-            for line in code2.split("\n"):
-                if len(line)>90:
-                    out+="%s\n"%line[0:90]
-                    line=line[90:]
-                    while len(line)>90:
-                        line0=line[0:75]
-                        out+="                 ...%s\n"%line0
-                        line=line[75:]
-                    out+="                 ...%s\n"%line
-                else:
-                    out+="%s\n"%line
+            # for line in code2.split("\n"):
+            #     if len(line)>90:
+            #         out+="%s\n"%line[0:90]
+            #         line=line[90:]
+            #         while len(line)>90:
+            #             line0=line[0:75]
+            #             out+="                 ...%s\n"%line0
+            #             line=line[75:]
+            #         out+="                 ...%s\n"%line
+            #     else:
+            #         out+="%s\n"%line
 
-            out+="-------------------------------------------------------------------\n"
+            # out+="-------------------------------------------------------------------\n"
         self.backtraceDetailed=out
 
         return out

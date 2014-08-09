@@ -338,7 +338,7 @@ class BlobMetadata():
 
 class BlobStorFactory:
     def __init__(self):
-        self.logenable=True
+        self.logenable=False
         self.loglevel=5
         self.blobstorCache={} 
 

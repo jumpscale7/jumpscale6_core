@@ -143,7 +143,6 @@ class ErrorConditionHandler():
         self.processErrorConditionObject(eco, centralsentry=True)
         
     def raiseInputError(self, message="", category="input",msgpub="",die=True ,backtrace="",tags=""):
-        sys.excepthook = self.excepthook
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
                                          level=1,type=j.enumerators.ErrorConditionType.INPUT)
         eco.tags=tags
@@ -158,6 +157,7 @@ class ErrorConditionHandler():
             if category<>None:
                 print "category:%s"%category     
             print message
+
         if die:
             self.halt(eco.errormessage)
         
@@ -409,7 +409,7 @@ class ErrorConditionHandler():
             code2="".join(code[start:stop])
             finfo=inspect.getframeinfo(f)
             linenr3=linenr-start-1
-            out.append((finfo.filename,finfo.function,linenr3,code2))
+            out.append((finfo.filename,finfo.function,linenr3,code2,linenr))
             if nr==1:
                 filename0=finfo.filename
                 linenr0=linenr
