@@ -19,7 +19,7 @@ args=sys.argv
 osis_instance=args[1]
 
 osisjp=j.packages.findNewest(name="osis",domain="jumpscale")
-osisjp=osisjp.getInstance(osis_instance)
+osisjp=osisjp.load(osis_instance)
 
 argstag=" ".join(args[2:])
 connectionsconfig = j.core.tags.getObject(argstag).getDict()
@@ -34,7 +34,7 @@ for dbname, instancename in connectionsconfig.iteritems():
     else:
         domain="jumpscale"
     jp=j.packages.findNewest(name="%s_client"%dbname,domain=domain)
-    jp=jp.getInstance(instancename)
+    jp=jp.load(instancename)
     if not jp.isInstalled():
         j.events.opserror_critical("cannot start osis, db connection %s was not available, please install."%dbname)
     hrd=jp.hrd_instance

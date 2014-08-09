@@ -130,7 +130,7 @@ class OSISFactory:
             osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
             inames=osisjp.getInstanceNames()
             if len(inames)==1:
-                osisjp=osisjp.getInstance(inames[0])                        
+                osisjp=osisjp.load(instance=inames[0])                        
                 hrd=osisjp.hrd_instance
                 if ipaddr==None:
                     ipaddr=hrd.get("osis.client.addr")
@@ -168,7 +168,7 @@ class OSISFactory:
 
     def getClientByInstance(self, instance, ssl=False, gevent=False):
         osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
-        osisjp=osisjp.getInstance(instance)
+        osisjp=osisjp.load(instance=instance)
         hrd=osisjp.hrd_instance
         ipaddr=hrd.get("osis.client.addr")
         port=int(hrd.get("osis.client.port"))

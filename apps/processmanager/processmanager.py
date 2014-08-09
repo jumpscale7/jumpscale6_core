@@ -17,7 +17,7 @@ parser.add_argument('-i', '--instance', help="Processmanager instance", required
 parser.add_argument('--nodeid')
 opts = parser.parse_args()
 jp = j.packages.findNewest('jumpscale', 'processmanager')
-jp = jp.getInstance(opts.instance)
+jp = jp.load(instance=opts.instance)
 j.application.instanceconfig = jp.hrd_instance
 
 import JumpScale.lib.diskmanager

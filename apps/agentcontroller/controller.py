@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--instance', help="Agentcontroller instance", required=True)
 opts = parser.parse_args()
 jp = j.packages.findNewest('jumpscale', 'agentcontroller')
-jp = jp.getInstance(opts.instance)
+jp = jp.load(instance=opts.instance)
 j.application.instanceconfig = jp.hrd_instance
 osisinstance = jp.hrd_instance.get('osis.connection')
 
