@@ -1,14 +1,9 @@
 import time
 from JumpScale import j
 
-j.application.start("jumpscale:portalclienttest")
-# j.application.initGrid()
+j.application.start("appserver6_client")
 
-import JumpScale.portal
-
-#could be is no longer ok
-
-client = j.core.a.portal.getPortalClient("127.0.0.1", port=$(portal.port), "$(portal.admin.passwd)")
+client = j.core.appserver6.getAppserverClient("127.0.0.1", 9999, "1234")
 system = client.getActor("system", "master", instance=0)
 
 j.application.stop()

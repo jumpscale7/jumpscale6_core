@@ -20,8 +20,8 @@ class PortalFactory():
         self.inprocess = False
         self._portalClients = {}
 
-    def getServer(self,hrd=None):
-        return PortalServer(hrd=hrd)
+    def getServer(self):
+        return PortalServer()
 
     def getPortalConfig(self, appname):
         cfg = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', appname, 'cfg', 'portal')

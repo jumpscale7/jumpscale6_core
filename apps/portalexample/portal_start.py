@@ -14,14 +14,15 @@ import sys
 args=sys.argv
 instance=args[1]
 
-jp=j.packages.findNewest(name="portal",domain="jumpscale")
-jp=jp.getInstance(instance)
+jp = j.packages.findNewest('jumpscale', 'portal')
+jp = jp.load(instance=instance)
+j.application.instanceconfig = jp.hrd_instance
 
 j.application.start("portal")
 
 j.logger.disable()
 
-server=j.core.portal.getServer(hrd=jp.hrd_instance)
+server=j.core.portal.getServer()
 server.start()
 
 

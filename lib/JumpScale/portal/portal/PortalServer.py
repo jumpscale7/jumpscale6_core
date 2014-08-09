@@ -92,6 +92,8 @@ class PortalServer:
         self.rediscache=redis.StrictRedis(host='localhost', port=7767, db=0)
         self.redisprod=redis.StrictRedis(host='localhost', port=7768, db=0)
 
+        self.jslibroot=j.system.fs.joinPaths(j.dirs.baseDir,"apps","portals","jslib")
+
         self.auth=PortalAuthenticatorOSIS()
 
         self.loadSpaces()
@@ -845,6 +847,12 @@ class PortalServer:
         ctx = RequestContext(application="", actor="", method="", env=environ,
                              start_response=start_response, path=path, params=None)
         ctx.params = self._getParamsFromEnv(environ, ctx)
+
+        if path.find("jslib/") == 0:
+            path = path[6:]
+            user = "None"
+            # self.log(ctx, user, path)
+            return self.processor_page(environ, start_response, self.jslibroot, path, prefix="jslib/")
 
         if path.find("images/") == 0:
             space, image = pathparts[1:3]
