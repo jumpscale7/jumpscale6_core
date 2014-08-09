@@ -525,7 +525,7 @@ class JPackageClient():
         #     name+="*"
         res=self.find(name=name,domain=None,interactive=False)
         if len(res)>1:
-            j.events.opserror_critical("Found more than 1 jpackage with name '%s' cannot continue, only 1 allowed."%name)
+            j.events.opserror_critical("Found more than 1 jpackage with name '%s' cannot continue, only 1 allowed.\n%s"%(name,res))
         return res[0]
     
     def find(self, domain=None,name=None , version="", platform=None,onlyone=False,installed=None,instance=None,expandInstances=True,interactive=True):
@@ -556,7 +556,7 @@ class JPackageClient():
         if interactive and name==None:
             name = j.console.askString("Please provide the name or part of the name of the package to search for (e.g *extension* -> lots of extensions)")
 
-        res = self._find(domain=domain, name=name, version=version)
+        res = self._find(domain=domain, name=name, version=version)        
         
         if res==[]:
             raiseError('No packages found, did you forget to run "jpackage mdupdate"?',domain,name,version,platform,installed,instance)

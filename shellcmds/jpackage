@@ -10,7 +10,7 @@ parser = cmdutils.ArgumentParser()
 
 commands = ['create', 'configure', 'debug', 'download', 'export', 'install', 'link', 'monitor', 'package',
             'publish', 'repackage', 'restart', 'start', 'stop', 'mdupdate','addrepo', 'update', 'upload', 'mirror',
-            'switchbranch', 'list','mdswitch','mddisabledebug']
+            'switchbranch', 'list','mdswitch','mddisabledebug','showdeps']
 
 parser.add_argument("action", choices=commands, help='Command to perform')
 
@@ -159,6 +159,17 @@ elif args.action == 'download':
         package.download(dependencies=args.deps,nocode=args.nocode,expand=not(args.noexpand),instance=packages[0].instance)
         if args.copy:
             package.copyfiles()
+
+elif args.action == 'showdeps':
+    packages = cmdutils.getJPackage(args)
+
+    if args.instance<>None and len(packages)>1:
+        j.events.inputerror_critical("Cannot find more jpackages if instance is given (for configure).")
+
+    for package in packages:
+        print package
+        for item in package.getDependencies():
+            print "- %s"%item            
 
 elif args.action == 'export':
     packages = cmdutils.getJPackage(args, installed=True)

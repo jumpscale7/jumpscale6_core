@@ -106,14 +106,19 @@ class Dirs(object):
         self.libExtDir = os.path.join(self.baseDir,"libext")
         self._createDir(os.path.join(self.baseDir,"libext"))
 
-        if self.libDir not in sys.path:
-            sys.path.insert(1,self.libDir)
-        pythonzip = os.path.join(self.libDir, 'python.zip')
-        if os.path.exists(pythonzip) and pythonzip not in sys.path:
-            sys.path.append(pythonzip)
+        if self.libDir in sys.path:
+            sys.path.pop(sys.path.index(self.libDir))
+        sys.path.insert(0,self.libDir)
 
-        if self.libExtDir not in sys.path:
-            sys.path.insert(1,self.libExtDir)
+        pythonzip = os.path.join(self.libDir, 'python.zip')
+        if os.path.exists(pythonzip):
+            if pythonzip in sys.path:
+                sys.path.pop(sys.path.index(pythonzip))
+            sys.path.insert(0,pythonzip)
+
+        if self.libExtDir in sys.path:
+            sys.path.pop(sys.path.index(self.libExtDir))
+        sys.path.insert(2,self.libExtDir)
 
         self.logDir = os.path.join(self.varDir,"log")
         self._createDir(self.logDir)

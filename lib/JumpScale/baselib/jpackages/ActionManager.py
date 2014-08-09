@@ -50,6 +50,7 @@ class ActionManager:
         if found==True:
             C="""
 def method(self{args}):
+    print "%s : action:'{name}'"%self._jpackage
     result=self._actions['{name}'](j,self._jpackage{args})
     return result"""
 
@@ -58,8 +59,9 @@ def method(self{args}):
 def method(self{args}):
     key="%s_%s_{name}"%(self._jpackage.domain,self._jpackage.name)
     if self._done.has_key(key):
-        print "already executed %s"%key
+        #print "already executed %s"%key
         return True
+    print "%s : action:'{name}'"%self._jpackage
     result=self._actions['{name}'](j,self._jpackage{args2})
     self._done[key]=True
     return result"""

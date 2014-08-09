@@ -124,7 +124,7 @@ class JPackageObject():
         self._blobfolder = j.system.fs.joinPaths(self.getPathMetadata(),"files")
 
 
-
+        # print "**JP:%s"%self
         self._loaded=False
 
     def log(self,msg,category="",level=5):
@@ -882,7 +882,7 @@ class JPackageObject():
         ##self.assertAccessable()
         return self in j.packages.getDomainObject(self.domain).getJPackageTuplesWithModifiedMetadata()
 
-    def isInstalled(self, instance=None,checkAndDie=False,hrdcheck=False):
+    def isInstalled(self, instance=None,checkAndDie=False,hrdcheck=True):
         """
         Check if the JPackage is installed
         """
@@ -1179,13 +1179,14 @@ class JPackageObject():
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:
+                print "**%s asks for dependency:%s"%(self,dep)
                 dep.install(False, download, reinstall=reinstalldeps,hrddata=hrddata)
 
         # If I am already installed assume my dependencies are also installed
         if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall and self.isInstalled():
             self.log('already installed')            
-            if str(instance) in self.getInstanceNames():
-                self.configure(dependencies=dependencies,instance=instance,hrddata=hrddata)
+            # if str(instance) in self.getInstanceNames():
+            #     self.configure(dependencies=dependencies,instance=instance,hrddata=hrddata)
             return # Nothing to do
 
         j.packages.inInstall.append(key)
