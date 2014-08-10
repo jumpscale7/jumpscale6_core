@@ -381,7 +381,6 @@ class ProcessDef:
                     continue
                 port = int(port)
                 if not j.system.net.checkListenPort(port):
-                    print "TCP CHECK FAILED:%s"%port
                     return False
         return True
 
