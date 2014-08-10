@@ -34,10 +34,6 @@ j.application.initGrid()
 
 j.logger.consoleloglevel = 2
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
-    time.sleep(0.1)
-    print "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
-
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
     time.sleep(0.1)
     print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
