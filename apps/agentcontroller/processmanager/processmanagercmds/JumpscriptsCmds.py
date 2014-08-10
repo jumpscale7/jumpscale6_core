@@ -159,8 +159,8 @@ class JumpscriptsCmds():
 
     def _loop(self, period):
         while True:
-            self._run(period)
             gevent.sleep(period)
+            self._run(period)
 
     def _configureScheduling(self):
         for period in self.jumpscriptsByPeriod.keys():
