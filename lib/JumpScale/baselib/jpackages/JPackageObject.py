@@ -228,7 +228,7 @@ class JPackageObject():
         if hrddata<>{}:
             self._installActiveHrd(hrddata=hrddata)
 
-        hrdinstancepath = j.packages.getJPActiveHRDPath(self.domain, self.name, self.instance)
+        hrdinstancepath = j.system.fs.joinPaths(self.getPathInstance(),"hrdinstance")
         if j.system.fs.exists(hrdinstancepath):
             # j.events.inputerror_critical("Cannot load jpackage:%s could not find an instance"%self)
             self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
