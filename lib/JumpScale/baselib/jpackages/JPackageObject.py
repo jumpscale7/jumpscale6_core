@@ -214,8 +214,8 @@ class JPackageObject():
         #TRY AND FIND INSTANCE
         if instance==None and findDefaultInstance:
             root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
-            instanceNames=j.system.fs.listDirsInDir(root,False,True)
             if j.system.fs.exists(path=root):
+                instanceNames=j.system.fs.listDirsInDir(root,False,True)
                 if len(instanceNames)==1:
                     self.instance=instanceNames[0]
         else:
@@ -228,18 +228,17 @@ class JPackageObject():
         if hrddata<>{}:
             self._installActiveHrd(hrddata=hrddata)
 
-        if self.instance<>None:
+        hrdinstancepath = j.packages.getJPActiveHRDPath(self.domain, self.name, self.instance)
+        if j.system.fs.exists(hrdinstancepath):
             # j.events.inputerror_critical("Cannot load jpackage:%s could not find an instance"%self)
-            hrdinstancepath=j.system.fs.joinPaths(self.getPathInstance(),"hrdinstance") 
             self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
+        actionpath = j.packages.getJPActionsPath(self.domain, self.name, self.instance)
+        if j.system.fs.exists(actionpath):
+            self.actions = ActionManager(self)
 
         #WHY WOULD THIS BE NEEDED?
         #j.application.loadConfig()
 
-        if not self.supportsPlatform():
-            self._raiseError("Only those platforms are supported by this package %s your system supports the following platforms: %s" % (str(self.supportedPlatforms), str(j.system.platformtype.getMyRelevantPlatforms())))
-    
-        self.actions = ActionManager(self)
 
         self.loadBlobStores()
 
@@ -1170,6 +1169,8 @@ class JPackageObject():
         when dependencies the reinstall will not be asked for there
 
         """
+        if not self.supportsPlatform():
+            self._raiseError("Only those platforms are supported by this package %s your system supports the following platforms: %s" % (str(self.supportedPlatforms), str(j.system.platformtype.getMyRelevantPlatforms())))
 
         key="%s_%s"%(self.domain,self.name)
         if key in j.packages.inInstall:
