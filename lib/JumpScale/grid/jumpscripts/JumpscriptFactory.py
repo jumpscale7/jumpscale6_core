@@ -139,8 +139,7 @@ class JumpscriptFactory:
         return JumpScript
 
     def _getWebdisConnection(self):
-        webdisinstance = j.application.instanceconfig.get("webdis.connection")
-        return j.clients.webdis.getByInstance(webdisinstance)
+        return j.clients.webdis.getByInstance()
 
     def pushToGridMaster(self): 
         webdis = self._getWebdisConnection()

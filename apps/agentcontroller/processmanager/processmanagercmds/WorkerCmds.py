@@ -16,7 +16,7 @@ class WorkerCmds():
             return
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
-        self.acclient = j.clients.agentcontroller.get()
+        self.acclient = j.clients.agentcontroller.getByInstance()
         self.redis=j.clients.redisworker.redis
 
     def getQueuedJobs(self, queue="default", format="json", session=None):

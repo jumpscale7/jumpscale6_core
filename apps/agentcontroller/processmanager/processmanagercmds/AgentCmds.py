@@ -26,7 +26,6 @@ class AgentCmds():
         self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
         self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
         self.queue["monitoring"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:monitoring")
-        self.serverip = j.application.config.get('grid.master.ip')
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
         self.acport = 4444

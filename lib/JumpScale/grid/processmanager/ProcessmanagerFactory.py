@@ -22,8 +22,7 @@ class DummyDaemon():
     @property
     def osis(self):
         if not self._osis:
-            masterip=j.application.config.get("grid.master.ip")
-            self._osis = j.core.osis.getClient(masterip, user='root')
+            self._osis = j.core.osis.getClientByInstance()
         return self._osis
 
     def addCMDsInterface(self, cmdInterfaceClass, category):
@@ -80,37 +79,8 @@ class ProcessmanagerFactory:
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
 
         wait=1
-        gridmasterip = j.application.config.get('grid.master.ip')
-        while j.system.net.tcpPortConnectionTest(gridmasterip, 5544)==False:
-            msg="cannot connect to agentcontroller osis, will keep on trying forever, please make sure is started"
-            print msg
-            j.events.opserror(msg, category='processmanager.startup')    
-            if wait<60:
-                wait+=1
-            time.sleep(wait)
 
-        wait=1
-        import JumpScale.grid.agentcontroller
-
-
-        def checkagentcontroller():
-            success=False
-            wait=1
-            while success == False:
-                try:
-                    client=j.clients.agentcontroller.get()
-                    success=True
-                except Exception,e:
-                    msg="Cannot connect to agentcontroller."
-                    j.events.opserror(msg, category='worker.startup', e=e)
-                    if wait<60:
-                        wait+=1                    
-                    time.sleep(wait)
-            return client
-
-        self.acclient=checkagentcontroller()
-
-        j.tools.jumpscriptsManager.loadFromGridMaster()        
+        j.tools.jumpscriptsManager.loadFromGridMaster()
 
         osis = self.daemon.osis
         self.daemon = j.servers.geventws.getServer(port=4445)  #@todo no longer needed I think, it should not longer be a socket server, lets check first

@@ -56,14 +56,10 @@ class GridFactory():
         j.logger.consoleloglevel = 6
 
 
-        self.masterip=j.application.config.get("grid.master.ip")
         roles = list()
         if self.config.exists("grid.node.roles"):
             roles = j.application.config.getList('grid.node.roles')
         roles = [ role.lower() for role in roles ]
-        if self.isGridMasterLocal():
-            if 'master' not in roles:
-                roles.append('master')
         self.roles = roles
 
         j.logger.consoleloglevel = 5

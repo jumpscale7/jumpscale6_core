@@ -23,7 +23,6 @@ opts = parser.parse_args()
 jp = j.packages.findNewest('jumpscale', 'agentcontroller')
 jp = jp.load(instance=opts.instance)
 j.application.instanceconfig = jp.hrd_instance
-osisinstance = jp.hrd_instance.get('osis.connection')
 
 while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
     time.sleep(0.1)
@@ -57,7 +56,7 @@ class ControllerCMDS():
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
 
-        self.osisclient = j.core.osis.getClientByInstance(osisinstance,gevent=True)
+        self.osisclient = j.core.osis.getClientByInstance(gevent=True)
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')

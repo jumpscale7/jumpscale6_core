@@ -166,7 +166,9 @@ class OSISFactory:
         self.osisConnections[key] = client
         return client
 
-    def getClientByInstance(self, instance, ssl=False, gevent=False):
+    def getClientByInstance(self, instance=None, ssl=False, gevent=False):
+        if instance is None:
+            instance = j.application.instanceconfig.get('osis.connection')
         osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
         osisjp=osisjp.load(instance=instance)
         hrd=osisjp.hrd_instance

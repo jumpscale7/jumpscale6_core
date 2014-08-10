@@ -17,7 +17,9 @@ class AgentControllerFactory(object):
             self._agentControllerClients[connection]=AgentControllerClient(agentControllerIP, port)
         return self._agentControllerClients[connection]
 
-    def getInstanceConfig(self, instance):
+    def getInstanceConfig(self, instance=None):
+        if instance is None:
+            instance = j.application.instanceconfig.get('agentcontroller.connection')
         accljp = j.packages.findNewest(name="agentcontroller_client",domain="jumpscale")
         accljp = accljp.load(instance=instance)
         hrd = accljp.hrd_instance
@@ -25,7 +27,7 @@ class AgentControllerFactory(object):
         port = int(hrd.get("agentcontroller.client.port"))
         return ipaddr, port
 
-    def getByInstance(self, instance):
+    def getByInstance(self, instance=None):
         ipaddr, port = self.getInstanceConfig(instance)
         return self.get(ipaddr, port)
 
