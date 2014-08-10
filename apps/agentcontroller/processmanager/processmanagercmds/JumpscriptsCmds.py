@@ -33,8 +33,6 @@ class JumpscriptsCmds():
 
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
-                
-        self.masterport = j.application.config.get('grid.master.port')
         self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.daemon.osis, 'system', 'jumpscript') 
 
     def _init(self):

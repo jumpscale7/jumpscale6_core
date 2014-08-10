@@ -17,23 +17,16 @@ class AgentCmds():
 
         if daemon==None:
             return
-            
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
 
         self.redis = j.clients.redis.getGeventRedisClient(REDISIP, REDISPORT)
-
         self.queue={}
-
         self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
         self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
         self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
         self.queue["monitoring"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:monitoring")
-        
         self.serverip = j.application.config.get('grid.master.ip')
-        self.masterport = j.application.config.get('grid.master.port')
-        
-
         self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
         self.adminuser = "root"
         self.acport = 4444
