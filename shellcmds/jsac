@@ -19,7 +19,7 @@ opts = parser.parse_args()
 
 import JumpScale.grid.agentcontroller
 with j.logger.nostdout():
-    ac = j.clients.agentcontroller.get()
+    ac = j.clients.agentcontroller.getByInstance('main')
 
 if opts.action == 'reload':
     print 'Reloading JumpScripts'
