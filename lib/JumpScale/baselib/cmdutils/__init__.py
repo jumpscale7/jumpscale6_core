@@ -8,7 +8,7 @@ import sys
 class ArgumentParser(argparse.ArgumentParser):
     def exit(self, status=0, message=None):
         if message:
-           self._print_message(message, sys.stderr) 
+            self._print_message(message, sys.stderr) 
         if j.application.state == j.enumerators.AppStatusType.RUNNING:
             j.application.stop(status)
         else:

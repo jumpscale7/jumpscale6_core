@@ -26,7 +26,9 @@ class WebdisFactory:
             j.events.opserror_critical("could not connect to webdis: '%s:%s'"%(addr,port), "webdis.connect")
         return self._webdis[key]
 
-    def getByInstance(self, instance, timeout=10):
+    def getByInstance(self, instance=None, timeout=10):
+        if instance is None:
+            instance = j.application.instanceconfig.get('webdis.connection')
         webdiscljp = j.packages.findNewest(name="webdis_client",domain="jumpscale")
         webdiscljp = webdiscljp.load(instance)
         hrd = webdiscljp.hrd_instance

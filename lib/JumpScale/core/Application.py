@@ -205,8 +205,9 @@ class Application:
         if self.gridInitialized:
             client=j.core.osis.getClient(user='root')            
             clientprocess=j.core.osis.getClientForCategory(client,"system","process")
-            obj=clientprocess.get("%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.pid))
-            if obj:
+            key = "%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.pid)
+            if clientprocess.exists(key):
+                obj=clientprocess.get(key)
                 obj.epochstop=j.base.time.getTimeEpoch()
                 obj.active=False
                 clientprocess.set(obj)
