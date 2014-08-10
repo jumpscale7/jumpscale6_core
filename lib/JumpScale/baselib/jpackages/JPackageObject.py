@@ -1184,7 +1184,7 @@ class JPackageObject():
                 dep.install(False, download, reinstall=reinstalldeps,hrddata=hrddata)
 
         # If I am already installed assume my dependencies are also installed
-        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall and self.isInstalled():
+        if self.buildNr != -1 and self.buildNr <= self.state.lastinstalledbuildnr and not reinstall and self.isInstalled(instance):
             self.log('already installed')            
             # if str(instance) in self.getInstanceNames():
             #     self.configure(dependencies=dependencies,instance=instance,hrddata=hrddata)
