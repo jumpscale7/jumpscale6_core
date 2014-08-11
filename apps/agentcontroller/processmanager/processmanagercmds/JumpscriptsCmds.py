@@ -43,8 +43,6 @@ class JumpscriptsCmds():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
-        agentid="%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)
-
         self.agentcontroller_client = j.clients.agentcontroller.getByInstance()
 
         self.jumpscriptsByPeriod={}
@@ -56,7 +54,7 @@ class JumpscriptsCmds():
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager', 'jumpscripts')
         if not j.system.fs.exists(path=jspath):
             raise RuntimeError("could not find jumpscript directory:%s"%jspath)
-        startatboot = self._loadFromPath(jspath)
+        self._loadFromPath(jspath)
 
         self._killGreenLets()
 
@@ -81,19 +79,6 @@ class JumpscriptsCmds():
             js.id = iddict[(js.organization, js.name)]
             # print "from local:",
             self._processJumpScript(js, self.startatboot)
-        self.startatboot
-
-    # def _loadFromAC(self):
-    #     startatboot = list()
-    #     jumpscripts = self.agentcontroller_client.listJumpScripts()
-    #     for jsid,organization, name, category, descr in jumpscripts:
-    #         jumpscript_data=self.agentcontroller_client.getJumpScript(organization, name)
-    #         if jumpscript_data=="":
-    #             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
-    #         jumpscript = JumpScript(jumpscript_data)
-    #         print "from ac:",
-    #         self._processJumpScript(jumpscript, startatboot)
-    #     return startatboot
 
     def _processJumpScript(self, jumpscript, startatboot):
         roles = set(j.core.grid.roles)
@@ -145,7 +130,6 @@ class JumpscriptsCmds():
             jumpscript.execute()
 
     def _run(self,period=None):
-        
         if period==None:
             for period in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod.keys():
                 self._run(period)

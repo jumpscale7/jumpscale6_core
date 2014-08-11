@@ -1,15 +1,10 @@
 from JumpScale import j
-import sys
 import time
 import imp
 import linecache
 import inspect
 import JumpScale.baselib.webdis
 import JumpScale.baselib.redis
-
-class Dummy():
-    pass
-
 
 class JumpScript(object):
     def __init__(self, ddict=None, path=None):
@@ -117,7 +112,6 @@ from JumpScale import j
             result=j.clients.redisworker.execJumpscript(self.id,_timeout=self.timeout,_queue=queue,_log=self.log,_sync=False)
 
         self.lastrun = time.time()
-        
         if result<>None:
             print "ok:%s"%self.name
         return result
@@ -129,8 +123,6 @@ class JumpscriptFactory:
     """
     def __init__(self):
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
-        redis = j.clients.credis.getRedisClient("127.0.0.1", 7768)
-        
         if j.application.config.exists("grid_watchdog_secret")==False or j.application.config.get("grid_watchdog_secret")=="":
             raise RuntimeError("please configure grid.watchdog.secret")
         self.secret=j.application.config.get("grid_watchdog_secret")

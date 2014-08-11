@@ -40,8 +40,9 @@ class Worker(object):
         self.redisport=redisport
         self.redisaddr=redisaddr
         self.queuename=queuename
-        self.name=name        
+        self.name=name
         self.clients = dict()
+        self.acclient = j.clients.agentcontroller.getByInstance('main')
 
         self.init()
 
@@ -49,8 +50,11 @@ class Worker(object):
         ipaddr = getattr(job, 'achost', None)
         client = self.clients.get(ipaddr)
         if not client:
-            client = j.clients.agentcontroller.get(ipaddr)
-            self.clients[ipaddr] = client
+            if ipaddr:
+                client = j.clients.agentcontroller.get(ipaddr)
+                self.clients[ipaddr] = client
+            else:
+                return self.acclient
         return client
 
     def init(self):
@@ -58,20 +62,6 @@ class Worker(object):
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
 
         self.redisprocessmanager=j.clients.credis.getRedisClient('127.0.0.1', 7766)
-
-        def checkagentcontroller():
-            success=False
-            wait=1
-            while success == False:
-                try:
-                    self.acclient=j.clients.agentcontroller.get()
-                    success=True
-                except Exception,e:
-                    msg="Cannot connect to agentcontroller."
-                    j.events.opserror(msg, category='worker.startup', e=e)
-                    if wait<60:
-                        wait+=1                    
-                    time.sleep(wait)
 
         def checkredis():
             success=False
@@ -85,12 +75,10 @@ class Worker(object):
                     print msg
                     j.events.opserror(msg, category='worker.startup', e=e)
                     if wait<60:
-                        wait+=1                    
+                        wait+=1
                     time.sleep(wait)
 
         checkredis()
-        checkagentcontroller()
-        
         self.redisprocessmanager.delete("workers:action:%s"%self.name)
 
         #@todo check if queue exists if not raise error
@@ -127,16 +115,14 @@ class Worker(object):
                 if str(e).find("Could not find queue to execute job")<>-1:
                     #create queue
                     print "could not find queue:%s"%self.queuename
-                else:            
+                else:
                     j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
                 time.sleep(10)
                 continue
 
             if job:
-                j.application.jid=job.id                
+                j.application.jid=job.id
 
-                #eval action code, if not ok send error back, cache the evalled action
-                
                 if self.actions.has_key(job.jscriptid):
                     jscript=self.actions[job.jscriptid]
                 else:
@@ -213,7 +199,7 @@ class Worker(object):
                             out+="%s\n"%line
 
                     eco.backtrace=out
-                    
+
                     if job.id<1000000 and job.errorreport==True:
                         j.errorconditionhandler.processErrorConditionObject(eco)
                     else:
