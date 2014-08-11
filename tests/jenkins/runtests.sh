@@ -149,10 +149,13 @@ jpackage install -n workers
 pip install nose
 
 nosetests -v --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/osis/tests/*  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/processmanager/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/test/*
+
 EOF
 
 #/opt/code/jumpscale/jumpscale_grid/apps/gridportal/tests/*
 exitcode=$?
+
+echo "Installed ended with status $exitcode"
 
 sudo cp "/var/lib/lxc/${BUILD_TAG}/delta0/opt/tests.xml" $WORKSPACE/tests.xml
 
