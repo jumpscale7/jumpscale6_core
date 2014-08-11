@@ -45,7 +45,7 @@ chown -R root:root /opt/code/jumpscale/${BRANCH}__jumpscale_core
 set -e
 set -x
 apt-get update
-apt-get install mercurial ssh libmhash2 ython2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
+apt-get install mercurial ssh libmhash2 python2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
 cd /opt/code/jumpscale/${BRANCH}__jumpscale_core/
 pip install .
 
