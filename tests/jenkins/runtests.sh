@@ -128,6 +128,7 @@ jpackage install -n webdis_client -i main --data="\
 addr=127.0.0.1 #\
 port=7779"
 
+sleep 5
 jsprocess restart -n webdis
 
 #agentcontroller
