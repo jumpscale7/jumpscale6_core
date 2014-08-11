@@ -125,7 +125,7 @@ jpackage install -n webdis -i main
 
 #install webdis_client
 jpackage install -n webdis_client -i main --data="\
-addr=127.0.0.1\
+addr=127.0.0.1 #\
 port=7779"
 
 #agentcontroller
