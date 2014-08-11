@@ -171,17 +171,17 @@ class Worker(object):
 
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
 
-                try:
-                    j.logger.enabled = job.log
-                    result=jscript.executeInWorker(**job.args)
+                j.logger.enabled = job.log
+                status, result=jscript.executeInWorker(**job.args)
+                j.logger.enabled = True
+                if status:
                     job.result=result
                     job.state="OK"
                     job.resultcode=0
-                except Exception,e:
-                    j.logger.enabled = True
+                else:
+                    eco = result
                     agentid=j.application.getAgentId()
-                    msg="could not execute jscript:%s %s_%s on agent:%s\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
-                    eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                    msg="Could not execute jscript:%s %s_%s on agent:%s\nError: %s"%(jscript.id,jscript.organization,jscript.name,agentid, eco.errormessage)
                     eco.errormessage = msg
                     eco.jid = job.id
                     eco.code=jscript.source
@@ -210,8 +210,6 @@ class Worker(object):
                     eco.tb = None
                     job.result=eco.__dict__
                     job.resultcode=1
-                finally:
-                    j.logger.enabled = True
 
                 #ok or not ok, need to remove from queue test
                 #thisin queue test is done to now execute script multiple time

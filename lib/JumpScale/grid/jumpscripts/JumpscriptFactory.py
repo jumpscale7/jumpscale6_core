@@ -5,6 +5,7 @@ import linecache
 import inspect
 import JumpScale.baselib.webdis
 import JumpScale.baselib.redis
+import multiprocessing
 
 class JumpScript(object):
     def __init__(self, ddict=None, path=None):
@@ -84,7 +85,25 @@ from JumpScale import j
             self.write()
         if not self._loaded:
             self.load()
-        return self.module.action(*args, **kwargs)
+
+        def helper(pipe):
+            result = self.executeInProcess(*args, **kwargs)
+            pipe.send(result)
+
+        ppipe, cpipe = multiprocessing.Pipe()
+        proc = multiprocessing.Process(target=helper, args=(cpipe,))
+        proc.start()
+        proc.join()
+        return ppipe.recv()
+
+    def executeInProcess(self, *args, **kwargs):
+        try:
+            return True, self.module.action(*args, **kwargs)
+        except Exception, e:
+            eco = j.errorconditionhandler.parsePythonErrorObject(e)
+            eco.tb = None
+            return False, eco
+
 
     def execute(self, *args, **kwargs):
         """
@@ -93,19 +112,17 @@ from JumpScale import j
         if not self.enable:
             return
         if not self.async:
-            try:
-                result = True, self.executeInWorker(*args, **kwargs)
-            except Exception,e:
-                eco=j.errorconditionhandler.parsePythonErrorObject(e)
+            result = list(self.executeInProcess(*args, **kwargs))
+            if not result[0]:
+                eco = result[1]
                 eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
                         j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
                 eco.tags="jscategory:%s"%self.category
                 eco.tags+=" jsorganization:%s"%self.organization
                 eco.tags+=" jsname:%s"%self.name
                 j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
-                eco.tb = None
                 eco.type = str(eco.type)
-                result = False, eco.__dict__
+                result[1] = eco.__dict__
         else:
             #make sure this gets executed by worker
             queue = getattr(self, 'queue', 'default') #fall back to default queue if none specified
