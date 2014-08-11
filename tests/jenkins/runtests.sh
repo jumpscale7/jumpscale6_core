@@ -40,7 +40,7 @@ for repo in grid portal core lib; do
     rsync -a "$WORKSPACE/jumpscale/jumpscale_$repo/" root@$vmip:/opt/code/jumpscale/${BRANCH}__jumpscale_${repo}
 done
 set +e
-ssh root@$vmip "
+ssh root@$vmip << EOF
 chown -R root:root /opt/code/jumpscale/${BRANCH}__jumpscale_core
 set -e
 set -x
@@ -73,48 +73,48 @@ login = qp5' > /opt/jumpscale/cfg/jsconfig/bitbucket.cfg
 jpackage mdupdate
 jpackage install -n base
 
-jpackage install -n mailclient -r --data='\
+jpackage install -n mailclient -r --data="\
 mail.relay.addr=smtp.mandrillapp.com #\
 mail.relay.port=587 #\
 mail.relay.ssl=1 #\
 mail.relay.username=support@mothersip1.com #\
-mail.relay.passwd=RVPrWxhyFF7I1s0GGtxt9Q'
+mail.relay.passwd=RVPrWxhyFF7I1s0GGtxt9Q"
 
 #install mongodb (if local install)
-jpackage install -n mongodb -i main -r --data='\
+jpackage install -n mongodb -i main -r --data="\
 mongodb.host=127.0.0.1 #\
 mongodb.port=27017 #\
-mongodb.name=main'
+mongodb.name=main"
 
 #install mongodb client
-jpackage install -n mongodb_client -i main -r --data='\
+jpackage install -n mongodb_client -i main -r --data="\
 mongodb.client.addr=localhost #\
 mongodb.client.port=27017 #\
 mongodb.client.login= #\
-mongodb.client.passwd='
+mongodb.client.passwd="
 
 #install influxdb (if local install)
-jpackage install -n influxdb -i main -r --data='influxdb.seedservers:'
+jpackage install -n influxdb -i main -r --data="influxdb.seedservers:"
 
 #install influxdb client
-jpackage install -n influxdb_client -i main -r --data='\
+jpackage install -n influxdb_client -i main -r --data="\
 influxdb.client.addr=localhost #\
 influxdb.client.port=8086 #\
 influxdb.client.login=root #\
-influxdb.client.passwd=root'
+influxdb.client.passwd=root"
 
 #install osis (if local install)
-jpackage install -n osis -i main -r --data='\
+jpackage install -n osis -i main -r --data="\
 osis.key= #\
 osis.connection=mongodb:main influxdb:main #\
-osis.superadmin.passwd=rooter'
+osis.superadmin.passwd=rooter"
 
 #install osis client (if remote install, then no mongodb client nor server required)
-jpackage install -n osis_client -i main -r --data='\
+jpackage install -n osis_client -i main -r --data="\
 osis.client.addr=localhost #\
 osis.client.port=5544 #\
 osis.client.login=root #\
-osis.client.passwd=rooter'
+osis.client.passwd=rooter"
 
 #create admin user for e.g. portal
 jsuser set -d admin:admin:admin:fakeemail.com:incubaid
@@ -124,29 +124,24 @@ nstall webdis
 jpackage install -n webdis -i main
 
 #install webdis_client
-jpackage install -n webdis_client -i main --data='\
+jpackage install -n webdis_client -i main --data="\
 addr=127.0.0.1\
-port=7779\
-'
+port=7779"
 
 #agentcontroller
-jpackage install -n agentcontroller -i main --data='\
+jpackage install -n agentcontroller -i main --data="\
 osis.connection=main #\
-webdis.connection=main #\
-'
+webdis.connection=main"
 
 #agentcontrolller client
-jpackage install -n agentcontroller_client -i main --data='\
+jpackage install -n agentcontroller_client -i main --data="\
 agentcontroller.client.addr=127.0.0.1 #\
-agentcontroller.client.port=4444 #\
-'
-
+agentcontroller.client.port=4444"
 
 #processmanager
-jpackage install -n processmanager -i main --data='\
+jpackage install -n processmanager -i main --data="\
 agentcontroller.connection=main #\
-webdis.connection=main #\
-'
+webdis.connection=main"
 
 #workers
 jpackage install -n workers
@@ -154,8 +149,8 @@ jpackage install -n workers
 pip install nose
 
 nosetests -v --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/osis/tests/*  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/processmanager/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/test/*
+EOF
 
-"
 #/opt/code/jumpscale/jumpscale_grid/apps/gridportal/tests/*
 exitcode=$?
 
