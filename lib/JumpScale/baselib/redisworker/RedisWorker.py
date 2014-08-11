@@ -20,6 +20,7 @@ class Job(OsisBaseObject):
     """
 
     def __init__(self, ddict={},args={}, timeout=60, sessionid=None, jscriptid=None,cmd="",category="",log=True, queue=None, wait=False):
+        self.errorreport = False
         if ddict <> {}:
             self.load(ddict)
         else:
@@ -34,6 +35,7 @@ class Job(OsisBaseObject):
             self.roles=[]
             self.args=args
             self.queue=queue
+            self.errorreport = False
             self.timeout=timeout
             self.result=None
             self.parent=None
