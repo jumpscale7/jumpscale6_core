@@ -120,7 +120,7 @@ osis.client.passwd=rooter"
 jsuser set -d admin:admin:admin:fakeemail.com:incubaid
 
 
-nstall webdis
+#install webdis
 jpackage install -n webdis -i main
 
 #install webdis_client
