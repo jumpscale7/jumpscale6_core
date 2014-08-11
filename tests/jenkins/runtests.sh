@@ -56,37 +56,12 @@ echo 'elasticsearch.cluster.name=$BUILD_TAG' > /opt/jumpscale/cfg/hrd/elasticsea
 echo 'broker.id=1
 broker.domain=mydomain' > /opt/jumpscale/cfg/hrd/broker.hrd
 echo '
-grid.id=1
+grid.id=13
 grid.node.id=1
-grid.useavahi=0
-grid.ismaster=True
-grid.master=
-grid.master.ip=localhost
-grid.node.roles=node,computenode,kvm
-grid.master.superadminpasswd=6bde6ce08268a6d58ba96f27402bd7d4
-grid.watchdog.secret=myscret
-grid.watchdog.addr=127.0.0.1
+grid.watchdog.secret=rooter
+grid.master.superadminpasswd=rooter
+system_superadmin_login=root
 ' > /opt/jumpscale/cfg/hrd/grid.hrd
-
-echo '
-mongodb.host=127.0.0.1
-mongodb.port=27017
-' > /opt/jumpscale/cfg/hrd/mongodb.hrd
-
-echo '
-redis.port.redisc=7767
-redis.port.redisp=7768
-redis.port.redisac=7769
-redis.port.redism=7766
-redis.ac.enable=1
-' > /opt/jumpscale/cfg/hrd/redis.hrd
-
-echo '
-gridmaster.useavahi=0
-gridmaster.grid.id=1' > /opt/jumpscale/cfg/hrd/grid_master.hrd
-
-echo 'osis.key=mykey' > /opt/jumpscale/cfg/hrd/osis.hrd
-echo 'system.superadmin.passwd=rooter' > /opt/jumpscale/cfg/hrd/system_root_credentials.hrd
 
 echo '[jumpscale]
 passwd = qp55pq
@@ -95,29 +70,86 @@ login = qp5
 passwd = qp55pq
 login = qp5' > /opt/jumpscale/cfg/jsconfig/bitbucket.cfg
 
-#echo '
-#rediskvs.secret=somesecret
-#rediskvs.master.addr=127.0.0.1
-#rediskvs.master.port=7772' > /opt/jumpscale/cfg/hrd/rediskvs.hrd
-
 jpackage mdupdate
 jpackage install -n base
-jpackage install -n grid_master_singlenode
 
-echo '[main]
-appdir = /opt/jumpscale/apps/portalbase
-filesroot = $vardir/portal/files
-actors = *
-webserverport = 81
-secret=1234
-admingroups=admin,gridadmin,superadmin
-pubipaddr=127.0.0.1
-' > /opt/jumpscale/apps/gridportal/cfg/portal.cfg
+jpackage install -n mailclient -r --data='\
+mail.relay.addr=smtp.mandrillapp.com #\
+mail.relay.port=587 #\
+mail.relay.ssl=1 #\
+mail.relay.username=support@mothersip1.com #\
+mail.relay.passwd=RVPrWxhyFF7I1s0GGtxt9Q'
 
-jsprocess start
-jpackage install -n processmanager
-jsprocess restart -n webdis
-jsprocess start
+#install mongodb (if local install)
+jpackage install -n mongodb -i main -r --data='\
+mongodb.host=127.0.0.1 #\
+mongodb.port=27017 #\
+mongodb.name=main'
+
+#install mongodb client
+jpackage install -n mongodb_client -i main -r --data='\
+mongodb.client.addr=localhost #\
+mongodb.client.port=27017 #\
+mongodb.client.login= #\
+mongodb.client.passwd='
+
+#install influxdb (if local install)
+jpackage install -n influxdb -i main -r --data='influxdb.seedservers:'
+
+#install influxdb client
+jpackage install -n influxdb_client -i main -r --data='\
+influxdb.client.addr=localhost #\
+influxdb.client.port=8086 #\
+influxdb.client.login=root #\
+influxdb.client.passwd=root'
+
+#install osis (if local install)
+jpackage install -n osis -i main -r --data='\
+osis.key= #\
+osis.connection=mongodb:main influxdb:main #\
+osis.superadmin.passwd=rooter'
+
+#install osis client (if remote install, then no mongodb client nor server required)
+jpackage install -n osis_client -i main -r --data='\
+osis.client.addr=localhost #\
+osis.client.port=5544 #\
+osis.client.login=root #\
+osis.client.passwd=rooter'
+
+#create admin user for e.g. portal
+jsuser set -d admin:admin:admin:fakeemail.com:incubaid
+
+
+nstall webdis
+jpackage install -n webdis -i main
+
+#install webdis_client
+jpackage install -n webdis_client -i main --data='\
+addr=127.0.0.1\
+port=7779\
+'
+
+#agentcontroller
+jpackage install -n agentcontroller -i main --data='\
+osis.connection=main #\
+webdis.connection=main #\
+'
+
+#agentcontrolller client
+jpackage install -n agentcontroller_client -i main --data='\
+agentcontroller.client.addr=127.0.0.1 #\
+agentcontroller.client.port=4444 #\
+'
+
+
+#processmanager
+jpackage install -n processmanager -i main --data='\
+agentcontroller.connection=main #\
+webdis.connection=main #\
+'
+
+#workers
+jpackage install -n workers
 
 pip install nose
 
