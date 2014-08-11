@@ -317,6 +317,8 @@ class JPackageObject():
                     hrd=j.core.hrd.getHRD(actbasepath)
                     hrd.checkValidity(templ,hrddata=hrddata)
 
+        j.application.loadConfig() #makes sure hrd gets reloaded to application.config object
+
     # @JPLock
     def _copyMetadataToActive(self,hrddata={}):
         
