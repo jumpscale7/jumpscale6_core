@@ -45,7 +45,7 @@ chown -R root:root /opt/code/jumpscale/${BRANCH}__jumpscale_core
 set -e
 set -x
 apt-get update
-apt-get install mercurial ssh python2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
+apt-get install mercurial ssh libmhash2 ython2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
 cd /opt/code/jumpscale/${BRANCH}__jumpscale_core/
 pip install .
 
@@ -127,6 +127,8 @@ jpackage install -n webdis -i main
 jpackage install -n webdis_client -i main --data="\
 addr=127.0.0.1 #\
 port=7779"
+
+jprocess restart -n webdis
 
 #agentcontroller
 jpackage install -n agentcontroller -i main --data="\
