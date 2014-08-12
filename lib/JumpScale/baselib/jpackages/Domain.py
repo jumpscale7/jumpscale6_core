@@ -1,6 +1,6 @@
 from JumpScale import j
 import os
-import JumpScale.baselib.mercurial
+import JumpScale.baselib.vcs
 
 class Domain(): 
 
@@ -12,6 +12,7 @@ class Domain():
     def __init__(self, domainname,qualityLevel=None): ## Init must come after definition of lazy getters and setters!
         self.domainname  = domainname
         self.initialized = False
+        self._vcsclient = None
         self._ensureInitialized(qualityLevel)
 
     def _ensureInitialized(self,qualityLevel=None):
@@ -25,8 +26,11 @@ class Domain():
         self.metadataFromTgz = cfg.getValue(self.domainname, 'metadatafromtgz') in ('1', 'True')        
 
         if not 'JSBASE' in os.environ:
-            self.bitbucketreponame=cfg.getValue( self.domainname, 'bitbucketreponame')
-            self.bitbucketaccount=cfg.getValue( self.domainname, 'bitbucketaccount')
+            self.reponame=cfg.getValue( self.domainname, 'reponame')
+            self.account=cfg.getValue( self.domainname, 'account')
+            self.repotype = 'github'
+            if cfg.checkParam(self.domainname, 'type'):
+                self.repotype = cfg.getValue(self.domainname, 'type')
 
             if qualityLevel==None:
                 self.qualitylevel = cfg.getValue( self.domainname, 'qualitylevel')
@@ -50,19 +54,15 @@ class Domain():
         self.metadataUpload=cfg.getValue(self.domainname, 'metadataupload')
         self.metadataDownload=cfg.getValue(self.domainname, 'metadatadownload')
 
-
-        self._bitbucketclient = None
-        self._mercurialclient = None
-
-        #if not j.system.fs.exists(self.metadatadir):
-            #j.console.echo("Could not find jpackages domain %s for quality level %s, will try to get the repo info from tgz or mercurial" % (self.domainname,self.qualitylevel))
-            #self.updateMetadata()
-            #if not j.system.fs.exists(self.metadatadir):
-                #raise RuntimeError("Cannot open jpackages domain %s for quality level %s because path %s does not exist" % (self.domainname,self.qualitylevel,self.metadatadir))
-        
         self._metadatadirTmp = j.system.fs.joinPaths(j.dirs.varDir,"tmp","jpackages","md", self.domainname)
 
         self.initialized = True
+
+    @property
+    def vcsclient(self):
+        if not self._vcsclient:
+            self._vcsclient = j.clients.vcs.getClient(self.repotype, self.account, self.reponame)
+        return self._vcsclient
 
 
     def getJPackageMetadataDir(self, qualitylevel, name, version):
@@ -125,10 +125,7 @@ class Domain():
         else:
             if 'JSBASE' in os.environ:
                 raise RuntimeError("No sourcepath in sandboxed mode")
-            else:
-                sourcePath = j.system.fs.joinPaths(j.dirs.codeDir,
-                    self.bitbucketaccount, "default__%s"%self.bitbucketreponame)
-            return sourcePath
+            return self.vcsclient.baseDir
 
     def saveConfig(self):
         """
@@ -410,9 +407,7 @@ class Domain():
                            "go to directory %s and update the metadata yourself using mercurial" % self.metadatadir)
                   
             #self.bitbucketclient.checkoutMerge    
-            mercurialclient=self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
-            
-            mercurialclient.pullupdate(force=force)
+            self.vcsclient.update()
        
             #link code to right metadata location
             sourcepath = self.getMetadataDir()

@@ -5,35 +5,35 @@ import git
 
 class GitClient(object):
 
-    def __init__(self, gitBaseDir, remoteUrl, branchName='master', cleanDir=False,login="",passwd=""):
-        self.gitBaseDir = gitBaseDir
+    def __init__(self, baseDir, remoteUrl, branchName='master', cleanDir=False,login="",passwd=""):
+        self.baseDir = baseDir
         self.remoteUrl = remoteUrl
         self.branchName = branchName
         self.cleanDir = cleanDir
         self.login=login
         self.passwd=passwd
 
-        if cleanDir or not j.system.fs.exists(self.gitBaseDir):
+        if cleanDir or not j.system.fs.exists(self.baseDir):
             if cleanDir:
-                j.system.fs.removeDirTree(gitBaseDir)
-                j.system.fs.createDir(gitBaseDir)
+                j.system.fs.removeDirTree(baseDir)
+                j.system.fs.createDir(baseDir)
             self._clone()
         else:
-            self.repo = git.Repo(self.gitBaseDir)
-            # self.repo=Gittle.init(self.gitBaseDir)  
-            # self.repo=Gittle(self.gitBaseDir, origin_uri=self.remoteUrl)          
+            self.repo = git.Repo(self.baseDir)
+            # self.repo=Gittle.init(self.baseDir)  
+            # self.repo=Gittle(self.baseDir, origin_uri=self.remoteUrl)          
 
         if branchName != 'master':
             self.switchBranch(branchName)
 
     def _clone(self):        
-        self.repo=git.Repo.clone_from(self.remoteUrl, self.gitBaseDir)
+        self.repo=git.Repo.clone_from(self.remoteUrl, self.baseDir)
 
         # auth = GittleAuth(username=self.login, password=self.passwd)  
-        # self.repo = Gittle.init(self.gitBaseDir)
+        # self.repo = Gittle.init(self.baseDir)
         
-        # Gittle.clone(self.remoteUrl, self.gitBaseDir,auth=auth)  
-        # self.repo = Gittle(self.gitBaseDir, origin_uri=self.remoteUrl)
+        # Gittle.clone(self.remoteUrl, self.baseDir,auth=auth)  
+        # self.repo = Gittle(self.baseDir, origin_uri=self.remoteUrl)
         # repo.auth(username=self.login, password=self.passwd)
         # repo.pull()
 
@@ -58,7 +58,7 @@ class GitClient(object):
         return result
 
     def addRemoveFiles(self):
-        cmd='cd %s;git add -A :/'%self.gitBaseDir
+        cmd='cd %s;git add -A :/'%self.baseDir
         j.system.process.execute(cmd)
         # result=self.getModifiedFiles()
         # self.removeFiles(result["D"])
@@ -144,7 +144,7 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/'''
-        ignorefilepath = j.system.fs.joinPaths(self.gitBaseDir, '.gitignore')
+        ignorefilepath = j.system.fs.joinPaths(self.baseDir, '.gitignore')
         if not j.system.fs.exists(ignorefilepath):
             j.system.fs.writeFile(ignorefilepath, gitignore)
         else:
