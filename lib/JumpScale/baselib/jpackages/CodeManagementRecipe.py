@@ -1,5 +1,6 @@
 
 from JumpScale import j
+import JumpScale.baselib.vcs
 
 class RecipeItem(object):
     '''Ingredient of a CodeRecipe'''
@@ -47,11 +48,10 @@ class RecipeItem(object):
         repo=self.repoinfo.get("jp.code.repo")
         ttype=self.repoinfo.get("jp.code.type")
         branch=self.repoinfo.get("jp.code.branch")
+        provider=self.repoinfo.get("jp.code.provider")
         if branch=="":
             branch="default"
-        if ttype<>"bitbucket":
-            raise RuntimeError("only bitbucket repo's supported.")        
-        return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),self.source)
+        return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo)
 
     def exportToSystem(self,force=True):
         '''
@@ -223,13 +223,13 @@ class CodeManagementRecipe:
         repo=self.hrd.get("jp.code.repo")
         ttype=self.hrd.get("jp.code.type")
         branch=self.hrd.get("jp.code.branch")
+        provider=self.hrd.get("jp.code.provider")
         if repo=="" or account=="":
             raise RuntimeError("cannot define codemgmt recipe with empty account or repo, please adjust: hrd/code.hrd in jpackage dir %s"%self.configpath)
         if branch=="":
             branch="default"
-        if ttype<>"bitbucket":
-            raise RuntimeError("only bitbucket repo's supported.")        
-        return j.system.fs.joinPaths(j.dirs.codeDir,account,"%s__%s"%(branch,repo),source)
+
+        return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo)
 
     def _process(self):
         content=j.system.fs.fileGetContents(self.configpath)
@@ -272,7 +272,6 @@ class CodeManagementRecipe:
 
     def export(self):
         '''Export all items from VCS to the system sandbox or other location specifed'''
-        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.exportToSystem()
             
@@ -285,7 +284,6 @@ class CodeManagementRecipe:
             item.removeFromProtectedDirs()
 
     def link(self,force=False):
-        repoconnection = self._getRepoConnection()
         for item in self.items:
             item.linkToSystem(force=force)    
 
@@ -313,17 +311,17 @@ class CodeManagementRecipe:
     def update(self,force=False):        
         repoconnection = self._getRepoConnection()
         if repoconnection:
-            return repoconnection.pullupdate(force=force)
+            return repoconnection.update(force=force)
     
     def pullupdate(self,force=False):
         repoconnection = self._getRepoConnection()
         if repoconnection:
-            repoconnection.pullupdate()
+            repoconnection.update()
 
     def pullmerge(self):
         repoconnection = self._getRepoConnection()
         if repoconnection:
-            repoconnection.pullmerge()        
+            repoconnection.update()        
             
     def commit(self):
         repoconnection = self._getRepoConnection()
@@ -339,17 +337,13 @@ class CodeManagementRecipe:
             print "repo not filled in, so coderecipe probably not used for %s"%self
             return 
 
-        branch=self.hrd.get("jp.code.branch")
+        branch=self.hrd.get("jp.code.branch") or None
         ttype=self.hrd.get("jp.code.type")
-        if ttype == "bitbucket":
-            branch = branch or 'default'
-            print "getrepo connection: %s %s %s"%(account, repo, branch)
-            self._repoconnection = j.clients.bitbucket.getMecurialRepoClient(account, repo, branch)
-            return self._repoconnection
-        # elif ttype == "github":
-        #     pass
-        else:
-            raise RuntimeError("Connection of type %s not supported" % ttype)
+        provider=self.hrd.get("jp.code.provider")
+
+        print "getrepo connection: %s %s %s %s"%(provider, account, repo, branch)
+        self._repoconnection = j.clients.vcs.getClient(ttype, provider, account, repo)
+        return self._repoconnection
 
     def isDestinationClean(self):
         '''Check whether the final destination is clean (means do the folders exist)
