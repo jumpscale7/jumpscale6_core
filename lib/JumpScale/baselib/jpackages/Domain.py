@@ -28,9 +28,12 @@ class Domain():
         if not 'JSBASE' in os.environ:
             self.reponame=cfg.getValue( self.domainname, 'reponame')
             self.account=cfg.getValue( self.domainname, 'account')
-            self.repotype = 'github'
+            self.provider = 'github'
+            self.repotype = 'git'
             if cfg.checkParam(self.domainname, 'type'):
                 self.repotype = cfg.getValue(self.domainname, 'type')
+            if cfg.checkParam(self.domainname, 'provider'):
+                self.provider = cfg.getValue(self.domainname, 'provider')
 
             if qualityLevel==None:
                 self.qualitylevel = cfg.getValue( self.domainname, 'qualitylevel')
@@ -61,7 +64,7 @@ class Domain():
     @property
     def vcsclient(self):
         if not self._vcsclient:
-            self._vcsclient = j.clients.vcs.getClient(self.repotype, self.account, self.reponame)
+            self._vcsclient = j.clients.vcs.getClient(self.repotype, self.provider, self.account, self.reponame)
         return self._vcsclient
 
 
