@@ -10,9 +10,8 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-    
-   help
-   license
+   
+   JumpScale 
 
 
 Indices and tables

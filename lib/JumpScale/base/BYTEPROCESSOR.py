@@ -8,6 +8,7 @@ class DispersedBlock:
         pass
         
 class ByteProcessor:
+    'ByteProcessor'
     @staticmethod
     def hashMd5(s):
         import hashlib
