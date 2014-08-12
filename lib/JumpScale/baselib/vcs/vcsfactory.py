@@ -3,14 +3,43 @@ from JumpScale import j
 BASEURLS = {'github': 'github.com',
             'bitbucket': 'bitbucket.org'}
 
+class VCSConfig(object):
+    def __init__(self, provider, account):
+        self._account = account
+        self._provider = provider
+        self._ini = j.config.getInifile(provider)
+
+    def _getConfig(self, key, password=False):
+        if not self._ini.checkParam(self._account, key):
+            value = "@%s" % key
+        else:
+            value =  self._ini.getValue(self._account, key)
+        if value == "@%s" % key:
+            question = "Please provide %s for %s on %s" % (key, self._account, self._provider)
+            if password:
+                value = j.console.askPassword(question)
+            else:
+                value = j.console.askString(question)
+            self._ini.addSection(self._account)
+            self._ini.addParam(self._account, key, value)
+        return value
+
+    @property
+    def login(self):
+        return self._getConfig('login')
+
+    @property
+    def passwd(self):
+        return self._getConfig('passwd', True)
+
 class VCSFactory(object):
     def getClient(self, type, provider, account, reponame):
-        # TODO searhc how @login and @password get replaced
-        userinfo = j.config.getConfig(provider)
+        userconfig = VCSConfig(provider, account)
         url = ""
         basepath = j.system.fs.joinPaths(j.dirs.codeDir, provider, account, reponame)
-        user = userinfo[account]['login']
-        passwd = userinfo[account]['passwd']
+
+        user = userconfig.login
+        passwd = userconfig.passwd
         if type in ["git"]:
             from JumpScale.baselib import git
             if user == 'git': # This is ssh
