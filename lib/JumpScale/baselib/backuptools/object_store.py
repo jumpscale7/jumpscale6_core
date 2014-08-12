@@ -97,6 +97,7 @@ class S3ObjectStore:
 class RadosObjectStore:
 
     def connect(self, conffile=''):
+        import rados
         self.cluster = rados.Rados(conffile = conffile)
         self.cluster.connect() 
 
