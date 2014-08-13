@@ -35,9 +35,9 @@ if [ "$vmip" = "-" ]; then
     cleanup
 	exit 1
 fi
-ssh root@$vmip mkdir -p /opt/code/jumpscale
+ssh root@$vmip mkdir -p /opt/code/github/jumpscale
 for repo in grid portal core lib; do
-    rsync -a "$WORKSPACE/jumpscale/jumpscale_$repo/" root@$vmip:/opt/code/jumpscale/${BRANCH}__jumpscale_${repo}
+    rsync -a "$WORKSPACE/" root@$vmip:/opt/code/github/jumpscale/
 done
 set +e
 ssh root@$vmip << EOF
