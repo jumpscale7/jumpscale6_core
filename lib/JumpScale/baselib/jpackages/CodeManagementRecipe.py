@@ -46,12 +46,11 @@ class RecipeItem(object):
     def getSource(self):
         account=self.repoinfo.get("jp.code.account")
         repo=self.repoinfo.get("jp.code.repo")
-        ttype=self.repoinfo.get("jp.code.type")
         branch=self.repoinfo.get("jp.code.branch")
         provider=self.repoinfo.get("jp.code.provider")
         if branch=="":
             branch="default"
-        return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo)
+        return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo, self.source)
 
     def exportToSystem(self,force=True):
         '''
@@ -221,7 +220,6 @@ class CodeManagementRecipe:
     def _getSource(self,source):
         account=self.hrd.get("jp.code.account")
         repo=self.hrd.get("jp.code.repo")
-        ttype=self.hrd.get("jp.code.type")
         branch=self.hrd.get("jp.code.branch")
         provider=self.hrd.get("jp.code.provider")
         if repo=="" or account=="":
@@ -229,7 +227,7 @@ class CodeManagementRecipe:
         if branch=="":
             branch="default"
 
-        return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo)
+        return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo, source)
 
     def _process(self):
         content=j.system.fs.fileGetContents(self.configpath)
