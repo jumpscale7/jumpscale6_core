@@ -1,7 +1,4 @@
 from JumpScale import j
-import git
-
-# from gittle import *
 
 class GitClient(object):
 
@@ -24,6 +21,8 @@ class GitClient(object):
 
     @property
     def repo(self):
+        # Load get when we absolutly need it cause it does not work in gevent mode
+        import git
         if not self._repo:
             if not j.system.fs.exists(self.baseDir):
                 self._clone()
@@ -33,6 +32,8 @@ class GitClient(object):
 
 
     def _clone(self):
+        # Load get when we absolutly need it cause it does not work in gevent mode
+        import git
         self._repo = git.Repo.clone_from(self.remoteUrl, self.baseDir)
 
     def switchBranch(self, branchName):
