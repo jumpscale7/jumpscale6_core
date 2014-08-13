@@ -275,7 +275,7 @@ class JPackageClient():
         """
         these actions can be applied on jpackage without knowing the jpackage instance
         """
-        res=["code.commit","code.package","code.push","code.update","process.depcheck","upload"]
+        res=["code.commit","code.package","code.push","code.update","process.depcheck","upload", "install.download"]
         return res
 
     def getActionNamesInstance(self):

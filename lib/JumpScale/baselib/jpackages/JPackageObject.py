@@ -232,9 +232,7 @@ class JPackageObject():
         if j.system.fs.exists(hrdinstancepath):
             # j.events.inputerror_critical("Cannot load jpackage:%s could not find an instance"%self)
             self.hrd_instance=j.core.hrd.getHRD(hrdinstancepath)
-        actionpath = j.packages.getJPActionsPath(self.domain, self.name, self.instance)
-        if j.system.fs.exists(actionpath):
-            self.actions = ActionManager(self)
+        self.actions = ActionManager(self)
 
         #WHY WOULD THIS BE NEEDED?
         #j.application.loadConfig()
@@ -1538,7 +1536,7 @@ class JPackageObject():
         """
         Download the jpackages & expand
         """        
-        self.load(instance=None,findDefaultInstance=False)
+        self.load(instance=instance,findDefaultInstance=False)
         if self.debug:
             nocode=True
 
