@@ -150,40 +150,13 @@ class Domain():
 
         cfg.write()
 
-    @property
-    def bitbucketclient(self):
-        if not self._bitbucketclient:
-            self._initBitbucketClient()
-        return self._bitbucketclient
-
-    @property
-    def mercurialclient(self):
-        if not self._mercurialclient:
-            self._initBitbucketClient()
-        return self._mercurialclient
-
-    def _initBitbucketClient(self):
-        """
-        Ensures we are connected to hg
-        Don't do this in the constructor because the mercurial extension may noy yet have been loaded
-
-        """
-        if 'JSBASE' in os.environ:
-            raise RuntimeError("No changes allowed in sandboxed mode, so no bitbucket connection.")        
-        self._ensureInitialized()
-        if self.metadataFromTgz:
-            raise RuntimeError('Meta data is comming from tar, cannot make connection to mercurial server ')
-
-        self._bitbucketclient = j.clients.bitbucket.getBitbucketRepoClient(self.bitbucketaccount, self.bitbucketreponame)
-        self._mercurialclient = self.bitbucketclient.getMercurialClient(self.bitbucketreponame,branch="default")
-
     def hasModifiedMetadata(self):
         """
         Checks for the entire domain if it has any modified metadata
         """
         #check mercurial
         if not self.metadataFromTgz:
-            return self.mercurialclient.hasModifiedFiles()
+            return self.vcsclient.hasModifiedFiles()
         else:
             return False
 
@@ -405,7 +378,7 @@ class Domain():
         
         if self.metadataFromTgz == False:
 
-            j.action.start("updatejpackages metadata for domain %s" % self.domainname,\
+            j.action.start("Update JPackages metadata for domain %s" % self.domainname,\
                            "Could not update the metadata for the domain",\
                            "go to directory %s and update the metadata yourself using mercurial" % self.metadatadir)
                   
