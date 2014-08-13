@@ -41,20 +41,18 @@ for repo in grid portal core lib; do
 done
 set +e
 ssh root@$vmip << EOF
-chown -R root:root /opt/code/jumpscale/${BRANCH}__jumpscale_core
+chown -R root:root /opt/code/github/jumpscale/
 set -e
 set -x
 apt-get update
-apt-get install mercurial ssh libmhash2 python2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
-cd /opt/code/jumpscale/${BRANCH}__jumpscale_core/
+apt-get install python-git ssh libmhash2 python2.7 python-apt openssl ca-certificates python-pip ipython python-requests -y
+cd /opt/code/github/jumpscale/jumpscale_core/
 pip install .
 
 mkdir -p /opt/jumpscale/cfg/hrd/
 mkdir -p /opt/jumpscale/cfg/jsconfig
 
 echo 'elasticsearch.cluster.name=$BUILD_TAG' > /opt/jumpscale/cfg/hrd/elasticsearch.hrd
-echo 'broker.id=1
-broker.domain=mydomain' > /opt/jumpscale/cfg/hrd/broker.hrd
 echo '
 grid.id=13
 grid.node.id=1
@@ -64,11 +62,11 @@ system_superadmin_login=root
 ' > /opt/jumpscale/cfg/hrd/grid.hrd
 
 echo '[jumpscale]
-passwd = qp55pq
-login = qp5
+passwd = 
+login = 
 [incubaid]
-passwd = qp55pq
-login = qp5' > /opt/jumpscale/cfg/jsconfig/bitbucket.cfg
+passwd = 
+login = ' > /opt/jumpscale/cfg/jsconfig/github.cfg
 
 jpackage mdupdate
 jpackage install -n base
