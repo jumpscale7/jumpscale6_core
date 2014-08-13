@@ -12,30 +12,28 @@ class GitClient(object):
         self.cleanDir = cleanDir
         self.login=login
         self.passwd=passwd
+        self._repo = None
 
-        if cleanDir or not j.system.fs.exists(self.baseDir):
-            if cleanDir:
-                j.system.fs.removeDirTree(baseDir)
-                j.system.fs.createDir(baseDir)
+        if cleanDir:
+            j.system.fs.removeDirTree(baseDir)
+            j.system.fs.createDir(baseDir)
             self._clone()
-        else:
-            self.repo = git.Repo(self.baseDir)
-            # self.repo=Gittle.init(self.baseDir)  
-            # self.repo=Gittle(self.baseDir, origin_uri=self.remoteUrl)          
 
         if branchName != 'master':
             self.switchBranch(branchName)
 
-    def _clone(self):        
-        self.repo=git.Repo.clone_from(self.remoteUrl, self.baseDir)
+    @property
+    def repo(self):
+        if not self._repo:
+            if not j.system.fs.exists(self.baseDir):
+                self._clone()
+            else:
+                self._repo = git.Repo(self.baseDir)
+        return self._repo
 
-        # auth = GittleAuth(username=self.login, password=self.passwd)  
-        # self.repo = Gittle.init(self.baseDir)
-        
-        # Gittle.clone(self.remoteUrl, self.baseDir,auth=auth)  
-        # self.repo = Gittle(self.baseDir, origin_uri=self.remoteUrl)
-        # repo.auth(username=self.login, password=self.passwd)
-        # repo.pull()
+
+    def _clone(self):
+        self._repo = git.Repo.clone_from(self.remoteUrl, self.baseDir)
 
     def switchBranch(self, branchName):
         self.repo.git.checkout(branchName)
