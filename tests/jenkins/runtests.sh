@@ -146,7 +146,7 @@ jpackage install -n workers
 
 pip install nose
 
-nosetests -v --with-xunit --xunit-file=/opt/tests.xml  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/osis/tests/*  /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/agentcontroller/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/apps/processmanager/tests/* /opt/code/jumpscale/${BRANCH}__jumpscale_grid/test/*
+nosetests -v --with-xunit --xunit-file=/opt/tests.xml  /opt/code/github/jumpscale/jumpscale_core/apps/osis/tests/*  /opt/code/github/jumpscale/jumpscale_core/apps/agentcontroller/tests/* /opt/code/github/jumpscale/jumpscale_core/apps/processmanager/tests/* /opt/code/github/jumpscale/jumpscale_core/test/*
 
 EOF
 
