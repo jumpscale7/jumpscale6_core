@@ -529,6 +529,10 @@ class StartupManager:
         self.processdefs={}
         self.__init=False
         j.system.fs.createDir(StartupManager.LOGDIR)        
+        upstartkey = "processmanager.upstart"
+        self.upstart = True
+        if j.application.config.exists(upstartkey):
+            self.upstart = j.application.config.getInt(upstartkey)==1            
 
     def reset(self):
         self.load()
@@ -539,16 +543,9 @@ class StartupManager:
 
     def _init(self):
         if self.__init==False:
-            upstartkey = "processmanager.upstart"
-            self.upstart = True
-            if j.application.config.exists(upstartkey):
-                self.upstart = j.application.config.getInt(upstartkey)==1            
             self.load()
-
             if not j.system.net.tcpPortConnectionTest("localhost",7766):
-
                 j.system.process.killProcessByName("redis-server 127.0.0.1:7766")
-
                 pd = self.getProcessDef('redis', 'redis_system', True)
                 with j.logger.nostdout():
                     pd.start()
