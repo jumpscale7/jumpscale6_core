@@ -529,10 +529,16 @@ class StartupManager:
         self.processdefs={}
         self.__init=False
         j.system.fs.createDir(StartupManager.LOGDIR)        
+        self._upstart = None
+
+    @property
+    def upstart(self):
         upstartkey = "processmanager.upstart"
-        self.upstart = True
-        if j.application.config.exists(upstartkey):
-            self.upstart = j.application.config.getInt(upstartkey)==1            
+        if self._upstart is None:
+            self._upstart = True
+            if j.application.config.exists(upstartkey):
+                self._upstart = j.application.config.getInt(upstartkey)==1
+        return self._upstart
 
     def reset(self):
         self.load()
