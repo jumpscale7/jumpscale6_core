@@ -543,16 +543,15 @@ class StartupManager:
             self.upstart = True
             if j.application.config.exists(upstartkey):
                 self.upstart = j.application.config.getInt(upstartkey)==1            
-
             self.load()
 
             if not j.system.net.tcpPortConnectionTest("localhost",7766):
 
                 j.system.process.killProcessByName("redis-server 127.0.0.1:7766")
 
-                key=self._getKey('redis', 'redis_system')
+                pd = self.getProcessDef('redis', 'redis_system', True)
                 with j.logger.nostdout():
-                    self.processdefs[key].start()
+                    pd.start()
                 j.application.connectRedis()
 
             self.__init=True
@@ -638,7 +637,7 @@ class StartupManager:
         j.system.fs.writeFile(filename=self._getHRDPath(domain, name),contents=hrd)
 
         self.load()
-        pd= self.getProcessDef(domain,name)
+        pd = self.getProcessDef(domain, name, True)
 
         self._upstartDel(domain,name)
 
@@ -648,7 +647,7 @@ class StartupManager:
         return pd
 
     def _upstartDel(self,domain,name):
-        pd= self.getProcessDef(domain,name)
+        pd= self.getProcessDef(domain,name,True)
         for name in [pd.name,pd.procname]:
             for item in j.system.fs.listFilesInDir("/etc/init.d"):
                 itembase=j.system.fs.getBaseName(item)
@@ -678,7 +677,10 @@ class StartupManager:
             key=self._getKey(domain,name)
             self.processdefs[key]=ProcessDef(j.core.hrd.getHRD(path),path=path)
 
-    def getProcessDef(self,domain,name):
+    def getProcessDef(self,domain,name, fromkey=False):
+        if domain and name and fromkey:
+            key = self._getKey(domain, name)
+            return self.processdefs[key]
         pds=self.getProcessDefs(domain,name)
         if len(pds)>1:
             raise RuntimeError("Found more than 1 process def for %s:%s"%(domain,name))
