@@ -7,7 +7,7 @@ class mainclass(parentclass):
     """
     """
 
-    def set(self, key, value, waitIndex=False):
+    def set(self, key, value, waitIndex=False, session=None):
         guid, new, changed = super(parentclass, self).set(key, value, waitIndex)
 
         if changed:

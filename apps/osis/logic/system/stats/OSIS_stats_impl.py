@@ -8,7 +8,7 @@ class mainclass(OSISStore):
     """
     """
 
-    def set(self,key,value,waitIndex=False):
+    def set(self,key,value,waitIndex=False, session=None):
         out = ""
         if isinstance(value, list):
             for key,val in value:
@@ -17,28 +17,28 @@ class mainclass(OSISStore):
         j.clients.graphite.send(out)
         return [key, False, False]
 
-    def delete(self, key):
+    def delete(self, key, session=None):
         path = '/opt/graphite/storage/whisper/n%s' % key
         if j.system.fs.exists(path):
             j.system.fs.removeDirTree(path)
             return True
         return False
 
-    def find(self,query, start=0, size =100):
+    def find(self,query, start=0, size =100, session=None):
         #@todo disabled for now untill we have better solution
         return ""
         return j.clients.graphite.query(query)
 
-    def destroyindex(self):
+    def destroyindex(self, session=None):
         raise RuntimeError("osis 'destroyindex' for stat not implemented")
 
     def getIndexName(self):
         return "system_stats"
 
-    def get(self,key):
+    def get(self,key, session=None):
         raise RuntimeError("osis 'get' for stat not implemented")
 
-    def exists(self,key):
+    def exists(self,key, session=None):
         raise RuntimeError("osis exists for stat not implemented")
         #work with elastic search only
 

@@ -18,7 +18,7 @@ class OSISStoreES(OSISStore):
         """
         self.initall(path, namespace,categoryname,db=False)
 
-    def set(self, key, value,waitIndex=False):
+    def set(self, key, value,waitIndex=False, session=None):
         """
         value can be a dict or a raw value (seen as string)
         if raw value then will not try to index
@@ -58,19 +58,19 @@ class OSISStoreES(OSISStore):
         changed=True            
         return (key,new,changed)
 
-    def get(self, key):
+    def get(self, key, session=None):
         """
         get dict value
         """
         return self.elasticsearch.get(index=self.getIndexName(), doc_type='json', id=key)['_source']
 
-    def exists(self, key):
+    def exists(self, key, session=None):
         """
         get dict value
         """
         return self.existsIndex(key,timeout=0)
 
-    def delete(self, key=None):
+    def delete(self, key=None, session=None):
         if isinstance(key, dict):
             try:
                 return self.elasticsearch.delete_by_query(index=self.getIndexName(), query=key, doc_type='json')
@@ -79,7 +79,7 @@ class OSISStoreES(OSISStore):
         else:
             return self.removeFromIndex(key)
 
-    def list(self, prefix="", withcontent=False):
+    def list(self, prefix="", withcontent=False, session=None):
         """
         return all object id's stored in DB
         """

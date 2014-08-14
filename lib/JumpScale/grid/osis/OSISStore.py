@@ -66,13 +66,13 @@ class OSISStore(object):
         if self.auth==None and authparent<>None:
             self.auth=authparent
 
-    def get(self, key):
+    def get(self, key, session=None):
         """
         get dict value
         """
         return self.db.get(self.dbprefix, key)
 
-    def exists(self, key):
+    def exists(self, key, session=None):
         """
         get dict value
         """
@@ -148,7 +148,7 @@ class OSISStore(object):
                 self.db.set(self.dbprefix_incr, ukey, json)
             return (new,changed,obj)
 
-    def set(self, key, value,waitIndex=False):
+    def set(self, key, value,waitIndex=False, session=None):
         """
         value can be a dict or a raw value (seen as string)
         if raw value then will not try to index
@@ -278,11 +278,11 @@ class OSISStore(object):
                 ok=True
         return ok
 
-    def delete(self, key):
+    def delete(self, key, session=None):
         self.db.delete(self.dbprefix, key)
         self.removeFromIndex(key)
 
-    def deleteIndex(self, key,waitIndex=False,timeout=1):
+    def deleteIndex(self, key,waitIndex=False,timeout=1, session=None):
         self.removeFromIndex(key)
         if waitIndex and timeout>0:
             now=time.time()
@@ -303,7 +303,7 @@ class OSISStore(object):
             result=None
         return result
 
-    def find(self, query, start=0, size=None):
+    def find(self, query, start=0, size=None, session=None):
     
         if not isinstance(query, dict):
             query = self.json.loads(query)
@@ -329,7 +329,7 @@ class OSISStore(object):
             if i.find(self.dbprefix) == 0:
                 self.elasticsearch.delete_index(i)
 
-    def destroy(self):
+    def destroy(self, session=None):
         """
         delete objects as well as index (all)
         """
@@ -339,7 +339,7 @@ class OSISStore(object):
         self.db.destroy(category=self.dbprefix_incr)
         self.db.incrementReset(self.dbprefix_incr)
 
-    def list(self, prefix="", withcontent=False):
+    def list(self, prefix="", withcontent=False, session=None):
         """
         return all object id's stored in DB
         """
@@ -355,7 +355,7 @@ class OSISStore(object):
             obj = self.get(id)
             self.index(obj)
 
-    def export(self, outputpath):
+    def export(self, outputpath, session=None):
         """
         export all objects of a category to json format.
         Placed in outputpath
@@ -370,7 +370,7 @@ class OSISStore(object):
                 obj = json.dumps(obj)
             j.system.fs.writeFile(filename, obj)
 
-    def importFromPath(self, path):
+    def importFromPath(self, path, session=None):
         '''Imports OSIS category from file system'''
         if not j.system.fs.exists(path):
             raise RuntimeError("Can't find the specified path: %s" % path)

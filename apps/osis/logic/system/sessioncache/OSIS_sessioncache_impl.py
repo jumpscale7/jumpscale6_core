@@ -3,7 +3,7 @@ from JumpScale.grid.osis.OSISStoreMongo import OSISStoreMongo
 import JumpScale.grid.grid
 
 class mainclass(OSISStoreMongo):
-    def set(self,key,value,waitIndex=True):
+    def set(self,key,value,waitIndex=True, session=None):
         dbvalue = self.db.find_one({'guid': key})
         if dbvalue is not None:
              dbvalue.update(value)

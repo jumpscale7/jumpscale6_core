@@ -61,7 +61,7 @@ class OSISStoreMongo(OSISStore):
     def setPreSave(self, value):
         return value
 
-    def set(self, key, value,*args,**kwargs):
+    def set(self, key, value, session=None, *args,**kwargs):
         """
         value can be a dict or a raw value (seen as string)
         """
@@ -119,7 +119,7 @@ class OSISStoreMongo(OSISStore):
         else:
             raise RuntimeError("value can only be dict")
 
-    def get(self, key, full=False):
+    def get(self, key, full=False, session=None):
         if j.basetype.string.check(key):
             key=key.replace("-","")
             res=self.db.find_one({"guid":key})
@@ -136,7 +136,7 @@ class OSISStoreMongo(OSISStore):
             res.pop("_id")
         return res
         
-    def exists(self, key):
+    def exists(self, key, session=None):
         """
         get dict value
         """
@@ -150,7 +150,7 @@ class OSISStoreMongo(OSISStore):
         #NOT RELEVANT FOR THIS TYPE OF DB
         return
 
-    def delete(self, key):
+    def delete(self, key, session=None):
         try:
             res = self.get(key, True)
             self.db.remove(res["_id"])
@@ -165,7 +165,7 @@ class OSISStoreMongo(OSISStore):
         #NOT RELEVANT FOR THIS TYPE OF DB
         pass
 
-    def find(self, query, start=0, size=200):  
+    def find(self, query, start=0, size=200, session=None):  
         """
         query can be a dict or a string
 
@@ -313,10 +313,10 @@ class OSISStoreMongo(OSISStore):
                 result.append(item)
             return result
 
-    def destroyindex(self):
+    def destroyindex(self, session=None):
         self.db.drop()
 
-    def deleteSearch(self,query):
+    def deleteSearch(self,query, session=None):
         if not j.basetype.string.check(update):
             raise RuntimeError("not implemented")
         query+=' @fields:guid'
@@ -326,7 +326,7 @@ class OSISStoreMongo(OSISStore):
             counter+=1
         return counter
         
-    def updateSearch(self,query,update):
+    def updateSearch(self,query,update, session=None):
         """
         update is dict or text
         dict e.g. {"name":aname,nr:1}  these fields will be updated then
@@ -347,21 +347,21 @@ class OSISStoreMongo(OSISStore):
             
         return counter
 
-    def destroy(self):
+    def destroy(self, session=None):
         """
         delete objects as well as index (all)
         """
         self.db.drop()
         self.rebuildindex()
 
-    def demodata(self):
+    def demodata(self, session=None):
         import JumpScale.baselib.redisworker
         path=j.system.fs.joinPaths(self.path,"demodata.py")
         if j.system.fs.exists(path):
             module = imp.load_source("%s_%s_demodata"%(self.namespace,self.categoryname), path)    
             job=j.clients.redisworker.execFunction(module.populate,_organization=self.namespace,_category=self.categoryname,_timeout=60,_queue="io",_log=True,_sync=False)
 
-    def list(self, prefix="", withcontent=False):
+    def list(self, prefix="", withcontent=False, session=None):
         """
         return all object id's stored in DB
         """
@@ -383,7 +383,7 @@ class OSISStoreMongo(OSISStore):
             module = imp.load_source("%s_%sindex"%(self.namespace,self.categoryname), path)
             module.index(self.db)
 
-    def export(self, outputpath,query=""):
+    def export(self, outputpath,query="", session=None):
         """
         export all objects of a category to json format, optional query
         Placed in outputpath
@@ -398,7 +398,7 @@ class OSISStoreMongo(OSISStore):
                 obj = json.dumps(obj)
             j.system.fs.writeFile(filename, obj)
 
-    def importFromPath(self, path):
+    def importFromPath(self, path, session=None):
         '''Imports OSIS category from file system'''
         if not j.system.fs.exists(path):
             raise RuntimeError("Can't find the specified path: %s" % path)

@@ -7,7 +7,7 @@ class mainclass(parentclass):
     """
     """
 
-    def set(self,key,value,waitIndex=False):
+    def set(self,key,value,waitIndex=False, session=None):
         if 'passwd' in value:
             passwd = j.core.osis.encrypt(value['passwd'] or '')
             value['passwd'] = bson.Binary(passwd)
@@ -34,7 +34,7 @@ class mainclass(parentclass):
         
         return guid, new, changed
 
-    def get(self, key):
+    def get(self, key, session=None):
         """
         @return as json encoded
         """

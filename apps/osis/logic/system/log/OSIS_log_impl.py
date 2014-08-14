@@ -10,7 +10,7 @@ class mainclass(OSISStoreES):
     """
     """
 
-    def set(self,key,value,waitIndex=False):
+    def set(self,key,value,waitIndex=False, session=None):
         ##no manipulation so no longer needed
         # docs = []
         # for logobject in value:            
@@ -24,7 +24,7 @@ class mainclass(OSISStoreES):
             self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=value, id_field="guid")
         return ["",True,True]
 
-    def find(self, query, start=0, size=100):
+    def find(self, query, start=0, size=100, session=None):
         kwargs = dict()
         if start:
             kwargs['es_from'] = start
@@ -44,11 +44,11 @@ class mainclass(OSISStoreES):
     def getIndexName(self):
         return "system_log"
 
-    def get(self,key):
+    def get(self,key, session=None):
         j.errorconditionhandler.raiseBug(message="osis get for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 
-    def exists(self,key):
+    def exists(self,key, session=None):
         j.errorconditionhandler.raiseBug(message="osis exists for log not implemented",category="osis.notimplemented")
         #work with elastic search only
 

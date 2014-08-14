@@ -36,52 +36,51 @@ class OSISCMDS(object):
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"get",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.get(key)
+        return oi.get(key, session=session)
 
     def exists(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"get",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on exists %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.exists(key)
+        return oi.exists(key, session)
 
     def existsIndex(self, namespace, categoryname, key, timeout=1,session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"get",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on exists %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.existsIndex(key,timeout=timeout)
+        return oi.existsIndex(key,timeout=timeout, session=session)
 
 
     def set(self, namespace, categoryname, key=None, value=None, waitIndex=False,session=None):
-        
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         # print "WAITINDEXCMDS:%s"%waitIndex
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"set",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.set(key=key, value=value,waitIndex=waitIndex)
+        return oi.set(key=key, value=value,waitIndex=waitIndex, session=session)
 
     def delete(self, namespace, categoryname, key, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"delete",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on delete %s_%s for user %s"%(namespace,categoryname,session.user))        
-        return oi.delete(key=key)
+        return oi.delete(key=key, session=session)
 
     def destroy(self, namespace, categoryname,session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"destroy",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on destroy %s_%s for user %s"%(namespace,categoryname,session.user))        
-        return oi.destroy()
+        return oi.destroy(session)
 
     def demodata(self, namespace, categoryname,session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"demodata",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on demodata %s_%s for user %s"%(namespace,categoryname,session.user))        
-        return oi.demodata()
+        return oi.demodata(session)
 
     def search(self, namespace, categoryname, query, start=0, size=None, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
@@ -89,7 +88,7 @@ class OSISCMDS(object):
             if oi.auth.authenticate(oi,"search",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
               
-        result = oi.find(query, start, size)
+        result = oi.find(query, start, size, session)
         return result
 
     def deleteSearch(self,namespace, categoryname,query, session=None):
@@ -97,7 +96,7 @@ class OSISCMDS(object):
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"deleteSearch",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on deleteSearch %s_%s for user %s"%(namespace,categoryname,session.user))        
-        return oi.deleteSearch(query=query)  
+        return oi.deleteSearch(query=query, session=session)
         
     def updateSearch(self,namespace, categoryname,query,update, session=None):
         """
@@ -109,7 +108,7 @@ class OSISCMDS(object):
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"updateSearch",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on updateSearch %s_%s for user %s"%(namespace,categoryname,session.user))        
-        return oi.updateSearch(query=query,update=update)  
+        return oi.updateSearch(query=query,update=update, session=session)  
 
 
     def list(self, namespace, categoryname, prefix=None, session=None):
@@ -119,7 +118,7 @@ class OSISCMDS(object):
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))        
         if prefix==None:
             return oi.list()
-        return oi.list(prefix)
+        return oi.list(prefix, session=session)
 
     def checkChangeLog(self):
         rediscl=None
@@ -138,7 +137,7 @@ class OSISCMDS(object):
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"rebuildindex",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.rebuildindex()
+        return oi.rebuildindex(session)
 
     def rebuildindex(self, namespace=None, categoryname=None, session=None):
         if not namespace and not categoryname:
@@ -156,14 +155,14 @@ class OSISCMDS(object):
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"export",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.export(outputpath)
+        return oi.export(outputpath, session)
 
     def importFromPath(self, namespace, categoryname, path, session=None):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
         if oi.auth<>None:
             if oi.auth.authenticate(oi,"import",session.user,session.passwd)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
-        return oi.importFromPath(path)
+        return oi.importFromPath(path, session)
 
     def echo(self, msg="", session=None):
         return msg
