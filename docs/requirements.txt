@@ -1,6 +1,1 @@
-apt-get update
-apt-get upgrade
-apt-get install mercurial ssh mc curl -y
-#install jumpscale
-curl http://install.jumpscale.org:85/cmds/jsbox_stable.sh > /tmp/init.sh;sh /tmp/init.sh
-source /opt/jsbox/activate
+JumpScale
