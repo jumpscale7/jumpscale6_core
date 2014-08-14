@@ -709,6 +709,7 @@ class PortalServer:
 
         fformat = ctx.fformat
         if '_jsonp' in ctx.params:
+            result = {'httpStatus': ctx.httpStatus, 'httpMessage': ctx.httpMessage, 'body': result}
             return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], j.db.serializers.getSerializerType('j').dumps(result))
 
 

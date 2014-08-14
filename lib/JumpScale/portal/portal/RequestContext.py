@@ -1,3 +1,7 @@
+import re
+
+REC = re.compile("(?P<code>\d+)\s+(?P<message>.*)")
+
 class RequestContext(object):
 
     """
@@ -16,14 +20,23 @@ class RequestContext(object):
         self.application = application
         self.method = method
         self._response_started = False
+        self.httpStatus = 200
+        self.httpMessage = "OK"
         self.fformat = fformat.strip().lower()
 
-    def start_response(self, *args, **kwargs):
+    def start_response(self, status, *args, **kwargs):
         if self._response_started:
             print 'RESPONSE Already started ignoring'
             return
         self._response_started = True
-        return self._start_response(*args, **kwargs)
+        statusm = REC.match(status)
+        if statusm:
+            self.httpStatus = int(statusm.group('code'))
+            self.httpMessage = statusm.group('message')
+        self.status = status
+        if '_jsonp' in self.params:
+            status = '200 OK'
+        return self._start_response(status, *args, **kwargs)
 
     def checkFormat(self):
         if self.fformat == "" or self.fformat == None:
