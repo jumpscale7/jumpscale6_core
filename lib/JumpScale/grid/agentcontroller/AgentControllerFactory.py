@@ -12,6 +12,8 @@ class AgentControllerFactory(object):
         """
         @if None will be same as master
         """
+        if agentControllerIP is None:
+            agentControllerIP, port = self.getInstanceConfig('main')
         connection = (agentControllerIP, port)
         if connection not in self._agentControllerClients:
             self._agentControllerClients[connection]=AgentControllerClient(agentControllerIP, port)
@@ -35,7 +37,7 @@ class AgentControllerFactory(object):
         key="%s_%s"%(category,agentControllerIP)
         if not self._agentControllerProxyClients.has_key(key):
             self._agentControllerProxyClients[key]=AgentControllerProxyClient(category,agentControllerIP)
-        return self._agentControllerProxyClients[key]        
+        return self._agentControllerProxyClients[key]
 
 class AgentControllerProxyClient():
     def __init__(self,category,agentControllerIP):
@@ -50,7 +52,7 @@ class AgentControllerProxyClient():
         else:
             self.ipaddr=agentControllerIP
         passwd=j.application.config.get("grid.master.superadminpasswd")
-        login=j.application.config.get("system.superadmin.login")
+        login = 'root'
         client= j.servers.geventws.getClient(self.ipaddr, PORT, user=login, passwd=passwd,category="processmanager_%s"%category)
         self.__dict__.update(client.__dict__)
 
@@ -58,18 +60,17 @@ class AgentControllerClient():
     def __init__(self,agentControllerIP, port=PORT):
         import JumpScale.grid.geventws
 
-        if agentControllerIP:
+        if isinstance(agentControllerIP, basestring):
             self.ipaddr = agentControllerIP
             connections = [ (agentControllerIP, port) ]
-        elif j.application.config.exists('grid.agentcontroller.ip'):
-            connections = [ (ip, port) for ip in j.application.config.getList('grid.agentcontroller.ip') ]
+        elif isinstance(agentControllerIP, (tuple, list)):
+            connections = [ (ip, port) for ip in agentControllerIP ]
         else:
-            connections = [ (j.application.config.get("grid.master.ip"), port) ]
+            raise ValueError("AgentControllerIP shoudl be either string or iterable")
         passwd=j.application.config.get("grid.master.superadminpasswd")
-        login=j.application.config.get("system.superadmin.login")
+        login= 'root'
         client= j.servers.geventws.getHAClient(connections, user=login, passwd=passwd,category="agent")
         self.__dict__.update(client.__dict__)
-
 
     def execute(self,organization,name,role=None,nid=None,timeout=60,wait=True,queue="",dieOnFailure=True,errorreport=True,**kwargs):
         """
