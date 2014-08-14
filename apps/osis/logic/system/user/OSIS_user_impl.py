@@ -30,7 +30,7 @@ class mainclass(parentclass):
                     gr=g.get(grkey)
                     if value['id'] not in gr['users']:
                          gr['users'].append(value['id'])
-                         g.set(gr['guid'],gr)
+                         g.set(gr['guid'],gr, session=session)
         
         return guid, new, changed
 
@@ -38,7 +38,7 @@ class mainclass(parentclass):
         """
         @return as json encoded
         """
-        val = parentclass.get(self, key)
+        val = parentclass.get(self, key, session=session)
         if val is not None and 'passwd' in val:
             val['passwd'] = j.core.osis.decrypt(val['passwd'])
         return val
