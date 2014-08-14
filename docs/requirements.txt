@@ -1,1 +1,1 @@
-JumpScale
+https://bitbucket.org/jumpscale/jumpscale_core/get/default.zip
