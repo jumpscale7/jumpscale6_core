@@ -2,15 +2,21 @@ from JumpScale import j
 
 class AUTH():
 
-    def load(self,osis):
-        for key in osis.list():
-            obj=osis.get(key)
-            j.core.osis.nodeguids[str(obj["machineguid"])]=obj["id"]
+    def __init__(self):
+        self.nodeguids = dict()
 
-    def authenticate(self,osis,method,user,passwd):
+    def load(self,osis):
+        pass
+
+    def authenticate(self,osis,method,user,passwd, session):
         if j.core.osis.cmds._authenticateAdmin(user=user,passwd=passwd):
             return True
         if user=="node" and method in ["set","get"]:
-            if j.core.osis.nodeguids.has_key(passwd):
+            if passwd in self.nodeguids:
                 return True
+            else:
+                nodes = osis.find({'machineguid': passwd}, session)
+                if nodes:
+                    self.nodeguids[passwd] = nodes[0]['id']
+                    return True
         return False
