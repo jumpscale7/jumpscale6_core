@@ -1,0 +1,18 @@
+@usedefaults
+{{vdisk: id:$$id}}
+
+h2. VDisk
+
+|*ID*|$$id|
+|*Node*|[$$nid|node?id=$$nid]|
+|*Grid ID*|[$$gid|grid?id=$$gid]|
+|*Name*|$$devicename|
+|*Machine ID*|[$$machineid|machine?id=$$machineid]|
+|*Active*|$$active|
+|*Path*|$$path|
+|*Backing Path*|$$backingpath|
+|*File Size*|$$sizeondisk|
+|*Full Size*|$$size|
+|*Free Size*|$$free|
+|*Last Checked*|$$lastcheck|
+|*Type*|$$type|

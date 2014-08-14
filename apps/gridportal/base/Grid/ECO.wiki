@@ -1,0 +1,28 @@
+@usedefaults
+
+{{eco: id:$$id}}
+
+h3. Details
+
+|*Application Name*|$$appname|
+|*Category*|$$category|
+|*Job*|[$$jid|job?id=$$jid]|
+|*level*|$$level|
+|*Process ID*|[$$pid|process?id=$$pid]|
+|*Function Name*|$$funcname|
+|*Function Line Number*|$$funclinenr|
+|*Function File Name*|$$funcfilename|
+|*Time*|$$epoch|
+|*Error Message Pub*|$$errormessagepub|
+|*Error Message*|$$errormessage|
+|*Master Job*|[$$masterjid|job?id=$$masterjid]|
+|*Node*|[$$nid|node?id=$$nid]|
+|*Grid*|[$$gid|grid?id=$$gid]|
+|*Type*|$$type|
+|*Tags*|$$tags|
+
+*Code*
+{{code: $$code}}
+
+*BackTrace*
+{{code: $$backtrace}}

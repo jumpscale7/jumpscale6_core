@@ -1,0 +1,24 @@
+
+{{title:JSPortal}}
+
+{{find}}
+
+{{menu:
+$$$spaces
+Help:/Help
+}}
+
+{{menuspaces: class:brand name:JPackages marker:$$$spaces}}
+{{grid.menuadmin_grid}}
+
+@block
+@row
+
+
+@col 10
+
+{content}
+
+@divend
+@divend
+

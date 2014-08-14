@@ -1,0 +1,4 @@
+@usedefaults
+
+h2. Logs
+{{logs: id:$$id appname:$$appname category:$$category message:$$message jid:$$jid level:$$level parentjid:$$parentjid pid:$$pid nid:$$nid order:$$order masterjid:$$masterjid epoch:$$epoch gid:$$gid private:$$private aid:$$aid tags:$$tags}}

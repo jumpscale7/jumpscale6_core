@@ -1,0 +1,4 @@
+execute in shell
+jsdevel
+
+will install all required

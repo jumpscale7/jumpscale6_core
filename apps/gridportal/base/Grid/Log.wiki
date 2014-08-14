@@ -1,0 +1,22 @@
+@usedefaults
+{{Grid.log: id:$$id}}
+
+h2. Log
+
+h3. Details
+|*Log ID*|$$guid|
+|*Application Name*|$$appname|
+|*Category*|$$category|
+|*Message*|$$message|
+|*Time*|$$epoch|
+|*Job ID*|[$$jid|job?id=$$jid]|
+|*Level*|$$level|
+|*Parent Job ID*|[$$parentjid|job?id=$$parentjid]|
+|*Process ID*|[$$pid|process?id=$$pid]|
+|*Node ID*|[$$nid|node?id=$$nid]|
+|*Order*|$$order|
+|*Master Job ID*|[$$masterjid|job?id=$$masterjid]|
+|*Grid ID*|[$$gid|grid?id=$$gid]|
+|*Private*|$$private|
+|*Application ID*|$$aid|
+|*Tags*|$$tags|

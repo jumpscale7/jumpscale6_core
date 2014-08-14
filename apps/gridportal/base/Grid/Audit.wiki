@@ -1,0 +1,24 @@
+@usedefaults
+{{audit: id:$$id}}
+
+h2. Audit:
+
+|*Time*|${time}|
+|*User*|${user}|
+|*Call*|${call}|
+|*Statuscode*|${statuscode}|
+
+h3. Arguments:
+{{code: 
+${args}
+}}
+
+h3. Keyword Arguments:
+{{code: 
+${kwargs}
+}}
+
+h3. Result:
+{{code: 
+${result}
+}}

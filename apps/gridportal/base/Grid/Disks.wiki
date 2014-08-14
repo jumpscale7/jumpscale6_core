@@ -1,0 +1,5 @@
+@usedefault
+
+h2. Disks used in grid
+
+{{disks id:$$id nid:$$nid active:$$active ssd:$$ssd model:$$model path:$$path size:$$size free:$$free fs:$$fs mounted:$$mounted name:$$name description:$$description type:$$type mountpoint:$$mountpoint}}

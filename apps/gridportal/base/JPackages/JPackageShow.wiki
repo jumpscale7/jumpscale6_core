@@ -1,0 +1,4 @@
+@usedefault
+
+{{jpackageshow: domain:$$domain name:$$name version:$$version show:explorers,actions,description}}
+
