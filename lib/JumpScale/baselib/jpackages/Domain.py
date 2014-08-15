@@ -101,8 +101,9 @@ class Domain():
             raise NotImplementedError("Getting the metadata dir for a tar-gz "
                     "based domain is not yet supported")
         else:
-            qualitylevel = qualitylevel or self.qualitylevel
-            return j.system.fs.joinPaths(self._sourcePath, qualitylevel)
+            # qualitylevel = qualitylevel or self.qualitylevel
+            # return j.system.fs.joinPaths(self._sourcePath, qualitylevel)
+            return j.system.fs.joinPaths(self._sourcePath, "jpackages")
 
     def getQualityLevels(self):
         """
