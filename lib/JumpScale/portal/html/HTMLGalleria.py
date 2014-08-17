@@ -9,9 +9,8 @@ class HTMLGalleria:
             self.liblocation = "https://bitbucket.org/incubaid/jumpscale-core-6.0/raw/default/extensions/html/lib"
         else:
             # self.liblocation=j.system.fs.joinPaths(j.tools.docgenerator.pm_extensionpath,"lib/datatables/")
-            self.liblocation = "/lib"
+            self.liblocation = "/jslib"
 
-        # self.page.addJS("%s/jquery-latest.js"% self.liblocation)
         self.page.addBootstrap()
 
     def addImagesFromBucket(self, bucketname, subfolder="lowdef   "):
@@ -59,9 +58,6 @@ $fields
         return self.page
 
     def prepare4DataTables(self):
-        # self.page.addCSS("%s/datatables/dataTables.bootstrap.css"% self.liblocation)
-        # self.page.addJS("%s/datatables/TableTools.min.js"% self.liblocation)
-        # self.page.addJS("%s/datatables/dataTables.bootstrap.js"% self.liblocation)
 
         self.page.addDocumentReadyJSfunction("$('.dataTable').dataTable();")
         self.page.functionsAdded["datatables"] = True

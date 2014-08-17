@@ -2,19 +2,19 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     actors = args.tags.tagGet('actors', '')
 
-    page.addCSS('/lib/swagger/css/hightlight.default.css')
-    page.addCSS('/lib/swagger/css/screen.css')
+    page.addCSS('/jslib/old/swagger/css/hightlight.default.css')
+    page.addCSS('/jslib/old/swagger/css/screen.css')
 
-    page.addJS('/lib/swagger/lib/jquery-1.8.0.min.js')
-    page.addJS('/lib/swagger/lib/jquery.slideto.min.js')
-    page.addJS('/lib/swagger/lib/jquery.wiggle.min.js')
-    page.addJS('/lib/swagger/lib/jquery.ba-bbq.min.js')
-    page.addJS('/lib/swagger/lib/handlebars-1.0.rc.1.js')
-    page.addJS('/lib/swagger/lib/underscore-min.js')
-    page.addJS('/lib/swagger/lib/backbone-min.js')
-    page.addJS('/lib/swagger/lib/swagger.js')
-    page.addJS('/lib/swagger/swagger-ui.js')
-    page.addJS('/lib/swagger/lib/highlight.7.3.pack.js')
+    page.addJS('/jslib/old/swagger/lib/jquery-1.8.0.min.js')
+    page.addJS('/jslib/old/swagger/lib/jquery.slideto.min.js')
+    page.addJS('/jslib/old/swagger/lib/jquery.wiggle.min.js')
+    page.addJS('/jslib/old/swagger/lib/jquery.ba-bbq.min.js')
+    page.addJS('/jslib/old/swagger/lib/handlebars-1.0.rc.1.js')
+    page.addJS('/jslib/old/swagger/lib/underscore-min.js')
+    page.addJS('/jslib/old/swagger/lib/backbone-min.js')
+    page.addJS('/jslib/old/swagger/lib/swagger.js')
+    page.addJS('/jslib/old/swagger/swagger-ui.js')
+    page.addJS('/jslib/old/swagger/lib/highlight.7.3.pack.js')
 
     head = """
     <title>Swagger UI</title>

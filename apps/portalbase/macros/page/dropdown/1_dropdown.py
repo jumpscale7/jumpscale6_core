@@ -22,8 +22,8 @@ def main(j, args, params, tags, tasklet):
     else:
         attributes = []
     if multiple_selection:
-        page.addJS(jsLink='/lib/multiple_selection/multiple_selection.js')
-        page.addCSS('/lib/multiple_selection/multiple_selection.css')
+        page.addJS(jsLink='/jslib/old/multiple_selection/multiple_selection.js')
+        page.addCSS('/jslib/old/multiple_selection/multiple_selection.css')
 
     current_option = 0
     options = []

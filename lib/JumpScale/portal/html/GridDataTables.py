@@ -10,9 +10,9 @@ class GridDataTables:
         else:
             # extpath=inspect.getfile(self.__init__)
             # extpath=j.system.fs.getDirName(extpath)
-            self.liblocation = "/lib"
+            self.liblocation = "/jslib"
 
-        self.page.addJS("%s/datatables/jquery.dataTables.min.js" % self.liblocation)
+        self.page.addJS("%s/old/datatables/jquery.dataTables.min.js" % self.liblocation)
         self.page.addBootstrap()
 
     def makeTime(self, row, field):
@@ -38,11 +38,8 @@ class GridDataTables:
         import random
         tableid = 'table%s' % random.randint(0, 1000)
 
-        self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
-        # self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
-        self.page.addJS("%s/datatables/dataTables.bootstrap.js" % self.liblocation)
-        # self.page.addCSS("%s/datatables/demo_page.css"% self.liblocation)
-        # self.page.addCSS("%s/datatables/demo_table.css"% self.liblocation)
+        self.page.addCSS("%s/old/datatables/DT_bootstrap.css" % self.liblocation)
+        self.page.addJS("%s/old/datatables/dataTables.bootstrap.js" % self.liblocation)
         
         C = """
 $(document).ready(function() {
@@ -90,12 +87,8 @@ $fields
         import random
         tableid = 'table%s' % random.randint(0, 1000)
 
-        self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
-        # self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
-        self.page.addJS("%s/datatables/dataTables.bootstrap.js" % self.liblocation)
-        # self.page.addCSS("%s/datatables/demo_page.css"% self.liblocation)
-        # self.page.addCSS("%s/datatables/demo_table.css"% self.liblocation)
-
+        self.page.addCSS("%s/old/datatables/DT_bootstrap.css" % self.liblocation)
+        self.page.addJS("%s/old/datatables/dataTables.bootstrap.js" % self.liblocation)
         C = """
 $(document).ready(function() {
     $('#$tableid').dataTable( {
@@ -171,8 +164,8 @@ $fields
         , header=False)
 
     def prepare4DataTables(self):
-        self.page.addCSS("%s/datatables/DT_bootstrap.css" % self.liblocation)
-        self.page.addJS("%s/datatables/DT_bootstrap.js"% self.liblocation)
+        self.page.addCSS("%s/old/datatables/DT_bootstrap.css" % self.liblocation)
+        self.page.addJS("%s/old/datatables/DT_bootstrap.js"% self.liblocation)
         C = """
          $(document).ready(function() {
          $('.JSdataTable').dataTable( {

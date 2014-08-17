@@ -129,8 +129,8 @@ def main(j, args, params, tags, tasklet):
     tree = not args.tags.labelExists('no-tree')
 
     if tree:
-        page.addJS(jsLink='/lib/pagetree/pagetree.js')
-        page.addCSS('/lib/pagetree/pagetree.css')
+        page.addJS(jsLink='/jslib/old/pagetree/pagetree.js')
+        page.addCSS('/jslib/old/pagetree/pagetree.css')
         js_content = '$(function(){$(".tree").pagetree()});'
         if js_content not in page.head:
             page.addJS(jsContent=js_content)

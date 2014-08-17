@@ -46,7 +46,7 @@ def main(j, args, params, tags, tasklet):
     else:
         subject = 'About the website'
 
-    page.addJS(jsLink='/lib/jquery.form/jquery.form.js')
+    page.addJS(jsLink='/jslib/old/jquery.form/jquery.form.js')
     js_content = '''
         $(function(){
             $('.contact_form').ajaxForm({

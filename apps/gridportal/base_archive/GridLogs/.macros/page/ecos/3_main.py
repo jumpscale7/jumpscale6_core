@@ -1,9 +1,9 @@
 def main(j, args, params, tags, tasklet):
     page = args.page
 
-    page.addCSS("/lib/jquery-ui.css")
-    page.addJS("/lib/jquery-ui.js")
-    page.addJS("/lib/jquery.facetview.js")
+    page.addCSS("/jslib/old/jquery-ui.css")
+    page.addJS("/jslib/old/jquery-ui.js")
+    page.addJS("/jslib/old/jquery.facetview.js")
     C = r"""
 <script type="text/javascript">
 jQuery(document).ready(function($) {

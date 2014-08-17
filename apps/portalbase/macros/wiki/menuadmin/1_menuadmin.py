@@ -34,7 +34,7 @@ Pull latest changes & update:javascript:pullUpdate('$$space');void 0;
 
     C+='''
     {{htmlhead:
-    <script type="text/javascript" src="/lib/adminmenu/adminmenu.js"></script>
+    <script type="text/javascript" src="/jslib/old/adminmenu/adminmenu.js"></script>
     }}
     '''
 

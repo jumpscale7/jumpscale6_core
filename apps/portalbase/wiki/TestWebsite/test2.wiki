@@ -3,10 +3,10 @@
 {{html:
 <head>
     <title>QWiki</title>
-    <script  src='/lib/jquery-latest.js' type='text/javascript'></script>
-    <script  src='/lib/bootstrap/js/bootstrap.js' type='text/javascript'></script>
-    <script  src='/lib/jquery.cookie.js' type='text/javascript'></script>
-    <link  href='/lib/bootstrap/css/bootstrap.min.css' type='text/css' rel='Stylesheet'/>
+    <script  src='/jslib/old/jquery-latest.js' type='text/javascript'></script>
+    <script  src='/jslib/old/bootstrap/js/bootstrap.js' type='text/javascript'></script>
+    <script  src='/jslib/old/jquery.cookie.js' type='text/javascript'></script>
+    <link  href='/jslib/old/bootstrap/css/bootstrap.min.css' type='text/css' rel='Stylesheet'/>
     <style type='text/css'> body {padding-top: 60px; padding-bottom: 40px;}</style> 
     <style type='text/css'> body.sidebar-nav {padding: 9px 0;} </style> 
 </head>

@@ -8,7 +8,7 @@ def main(j, args, params, *other_args):
     except:
         macro_params = {}
     id = 'toc_' + str(random.randint(0, 9999))
-    page.addJS(jsLink='/lib/tableofcontents/jquery.tableofcontents.min.js')
+    page.addJS(jsLink='/jslib/old/tableofcontents/jquery.tableofcontents.min.js')
     page.addJS(jsContent='''
                         $(document).ready(function(){{ 
                           $("#{0}").tableOfContents(

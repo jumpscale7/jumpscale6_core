@@ -4,12 +4,12 @@ def main(j, args, params, tags, tasklet):
     page = args.page
 
     # page.addBootstrap()
-    page.addJS("/lib/jquery-latest.js")
+    page.addJS("/jslib/old/jquery-latest.js")
     # the javascript & css files need to be put int c:/qb61/lib/pylabsextensions/core/html/
-    page.addJS("/lib/jgauge/excanvas.min.js")
-    page.addJS("/lib/jgauge/jQueryRotate.min.js")
-    page.addJS("/lib/jgauge/jgauge-0.3.0.a3.min.js")
-    page.addCSS("/lib/jgauge/jgauge.css")
+    page.addJS("/jslib/old/jgauge/excanvas.min.js")
+    page.addJS("/jslib/old/jgauge/jQueryRotate.min.js")
+    page.addJS("/jslib/old/jgauge/jgauge-0.3.0.a3.min.js")
+    page.addCSS("/jslib/old/jgauge/jgauge.css")
     # page.addCSS("/lib/jgauge/page.css")
 
     params=args.expandParams()

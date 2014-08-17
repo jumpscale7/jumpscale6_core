@@ -67,10 +67,10 @@ class DocgeneratorFactory:
         # page=PageAlkira(pagename,content="",parent=parent)
         # return page
 
-    def pageNewHTML(self, pagename):
+    def pageNewHTML(self, pagename, htmllibPath=None):
         from JumpScale.portal.docgenerator.PageHTML import PageHTML
         page = PageHTML(pagename, htmllibPath=htmllibPath)
-        return page        
+        return page
 
     def pageNewRST(self, pagename, htmllibPath=None):
         from JumpScale.portal.docgenerator.PageRST import PageRST
