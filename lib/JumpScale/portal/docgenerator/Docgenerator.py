@@ -51,6 +51,16 @@ class DocgeneratorFactory:
             print "dest:%s"%dest3
             j.system.fs.writeFile(filename=dest3,contents=str(C2))
 
+        for path in j.system.fs.listFilesInDir(src,True,filter="*.rst"):
+            indest=j.system.fs.pathRemoveDirPart(path,src)
+            dest2="%s/%s"%(dest,indest)
+            C=j.system.fs.fileGetContents(path)
+            ddir=j.system.fs.getDirName(dest2)
+            j.system.fs.createDir(ddir)            
+            basename=j.system.fs.getBaseName(path)
+            dest3=j.system.fs.joinPaths(ddir,basename)
+            j.system.fs.writeFile(filename=dest3,contents=str(C))
+
     def getConfluence2htmlConvertor(self):
         return Confluence2HTML()
 
