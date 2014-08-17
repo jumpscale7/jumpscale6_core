@@ -29,7 +29,7 @@ class CloudRobotFactory(object):
     def startMailServer(self,robots={}):
         self._init()
         from .MailRobot import MailRobot
-        robot = MailRobot(('0.0.0.0', 25))
+        robot = MailRobot(('0.0.0.0', 25),hrd_instance=self.hrd)
         robot.robots=robots
         print "start server on port:25"
         robot.serve_forever()

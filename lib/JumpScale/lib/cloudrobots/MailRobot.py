@@ -21,10 +21,12 @@ class MailRobot(SMTPServer):
         self.emailparser = email.Parser.Parser()
         # self.acl = j.clients.agentcontroller.get()
         self.templatefolder = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'mailrobot', 'templates')
+        self.hrd=kwargs.pop("hrd_instance")
         SMTPServer.__init__(self, *args, **kwargs)
-        self.domain=j.application.config.get("mailrobot.mailserver")
+        
+        self.domain=self.hrd.get("cloudrobot.mail.domain")
         self.robots={}    
-        self.mailserver = j.application.config.get('mailrobot.mailserver')
+        self.mailserver = self.hrd.get('cloudrobot.mail.domain.in')
         self.archivefolder="%s/mailarchive/in"%j.dirs.varDir
         j.system.fs.createDir(self.archivefolder)
 
