@@ -305,7 +305,7 @@ class PortalServer:
 
 ##################### process pages, get docs
     def getpage(self):
-        page = j.tools.docgenerator.pageNewHTML("index.html", htmllibPath="/lib")
+        page = j.tools.docgenerator.pageNewHTML("index.html", htmllibPath="/jslib")
         return page
 
     def sendpage(self, page, start_response):
@@ -375,6 +375,7 @@ class PortalServer:
                 if name == "pagenotfound":
                     # means the nofound page does not exist
                     doc, params = self.getDoc("system", "pagenotfound", ctx, params)
+                    ctx.start_response("404 Not found", [])
                     return doc, params
                 if name == "":
                     if space in spacedocgen.name2doc:
@@ -395,6 +396,9 @@ class PortalServer:
 
         ctx.params["rights"] = right
         doc.loadFromDisk()
+
+        if name == "pagenotfound":
+            ctx.start_response("404 Not found", [])
 
         return doc, params
 
@@ -423,11 +427,10 @@ class PortalServer:
         if "todestruct" in doc.__dict__:
             doc.destructed = True
 
-        start_response('200 OK', [('Content-Type', "text/html"), ])
+        ctx.start_response('200 OK', [('Content-Type', "text/html"), ])
         return page
 
     def processor_page(self, environ, start_response, wwwroot, path, prefix="", webprefix="", index=False):
-
         def indexignore(item):
             ext = item.split(".")[-1].lower()
             if ext in ["pyc", "pyo", "bak"]:

@@ -2,7 +2,7 @@
 from JumpScale import j
 
 
-class Page():
+class Page(object):
 
     def __init__(self, name, content, parent="Home"):
         self.name = name

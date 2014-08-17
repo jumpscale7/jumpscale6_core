@@ -316,12 +316,12 @@ class PageHTML(Page):
 
         if edit:
             self.processparameters['postprocess'] = False
-        self.addJS("%s/codemirror/lib/codemirror.js" % self.liblocation)
-        self.addCSS("%s/codemirror/lib/codemirror.css" % self.liblocation)
-        self.addJS("%s/codemirror/mode/javascript/javascript.js" % self.liblocation)
-        self.addCSS("%s/codemirror/theme/%s.css" % (self.liblocation, theme))
+        self.addJS("%s/old/codemirror/lib/codemirror.js" % self.liblocation)
+        self.addCSS("%s/old/codemirror/lib/codemirror.css" % self.liblocation)
+        self.addJS("%s/old/codemirror/mode/javascript/javascript.js" % self.liblocation)
+        self.addCSS("%s/old/codemirror/theme/%s.css" % (self.liblocation, theme))
         #self.addCSS("%s/codemirror/doc/docs.css"% self.liblocation)
-        self.addJS("%s/codemirror/mode/%s/%s.js" % (self.liblocation, template, template))
+        self.addJS("%s/old/codemirror/mode/%s/%s.js" % (self.liblocation, template, template))
         CSS = """
 <style type="text/css">
     .CodeMirror {
@@ -675,13 +675,13 @@ function copyText$id() {
         if self._hasCharts:
             return
 
-        self.addJS("%s/rgraph/RGraph.common.core.js" % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.bar.js" % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.pie.js" % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.line.js" % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.common.key.js" % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.common.effects.js" % self.liblocation)
-        self.addJS("%s/rgraph/RGraph.common.dynamic.js" % self.liblocation)
+        self.addJS("%s/old/rgraph/RGraph.common.core.js" % self.liblocation)
+        self.addJS("%s/old/rgraph/RGraph.bar.js" % self.liblocation)
+        self.addJS("%s/old/rgraph/RGraph.pie.js" % self.liblocation)
+        self.addJS("%s/old/rgraph/RGraph.line.js" % self.liblocation)
+        self.addJS("%s/old/rgraph/RGraph.common.key.js" % self.liblocation)
+        self.addJS("%s/old/rgraph/RGraph.common.effects.js" % self.liblocation)
+        self.addJS("%s/old/rgraph/RGraph.common.dynamic.js" % self.liblocation)
 
         self._hasCharts = True
 
@@ -690,17 +690,17 @@ function copyText$id() {
             return
 
         if jquery and not self._hasJQuery:
-            self.addJS("%s/jquery-latest.js" % self.liblocation)
+            self.addJS("%s/old/jquery-latest.js" % self.liblocation)
             self._hasJQuery = True
 
         if not self._hasBootstrapJS:
-            self.addJS("%s/bootstrap/js/bootstrap.js" % self.liblocation)
-            self.addJS("%s/jquery.cookie.js" % self.liblocation)
+            self.addJS("%s/old/bootstrap/js/bootstrap.js" % self.liblocation)
+            self.addJS("%s/old/jquery.cookie.js" % self.liblocation)
             self._hasBootstrapJS = True
 
         if not self._hasBootstrapCSS:
-            self.addCSS("%s/bootstrap/css/bootstrap.css" % self.liblocation)
-            self.addCSS("%s/bootstrap/css/bootstrap-responsive.css" % self.liblocation)
+            self.addCSS("%s/old/bootstrap/css/bootstrap.css" % self.liblocation)
+            self.addCSS("%s/old/bootstrap/css/bootstrap-responsive.css" % self.liblocation)
             self._hasBootstrapCSS = True
 
         self._hasBootstrap = True
@@ -741,21 +741,21 @@ function copyText$id() {
 
     def addExplorer(self, path="", dockey=None, height=500, width=750, readonly=False, tree=False):
 
-        self.addJS("%s/lib/elfinder/jquery.min.js" % self.liblocation)
-        self.addJS("%s/lib/elfinder/jquery-ui.min.js" % self.liblocation)
-        self.addCSS("%s/lib/elfinder/jquery-ui.css" % self.liblocation)
-        self.addCSS("%s/elfinder/css/elfinder.min.css" % self.liblocation)
-        self.addCSS("%s/elfinder/css/theme.css" % self.liblocation)
-        self.addJS("%s/elfinder/js/elfinder.min.js" % self.liblocation)
-        self.addJS("%s/elfinder/js/proxy/elFinderSupportVer1.js" % self.liblocation)
+        self.addJS("%s/old/lib/elfinder/jquery.min.js" % self.liblocation)
+        self.addJS("%s/old/lib/elfinder/jquery-ui.min.js" % self.liblocation)
+        self.addCSS("%s/old/lib/elfinder/jquery-ui.css" % self.liblocation)
+        self.addCSS("%s/old/elfinder/css/elfinder.min.css" % self.liblocation)
+        self.addCSS("%s/old/elfinder/css/theme.css" % self.liblocation)
+        self.addJS("%s/old/elfinder/js/elfinder.min.js" % self.liblocation)
+        self.addJS("%s/old/elfinder/js/proxy/elFinderSupportVer1.js" % self.liblocation)
         #codemirror resources
-        self.addCSS('%s/codemirror/lib/codemirror.css' % self.liblocation)
-        self.addCSS('%s/codemirror/addon/hint/show-hint.css' % self.liblocation)
-        self.addCSS('%s/codemirror/theme/elegant.css' % self.liblocation)
-        self.addJS('%s/codemirror/lib/codemirror.js' % self.liblocation)
-        self.addJS('%s/codemirror/addon/hint/show-hint.js' % self.liblocation)
-        self.addJS('%s/codemirror/addon/hint/python-hint.js' % self.liblocation)
-        self.addJS('%s/codemirror/mode/python/python.js' % self.liblocation)
+        self.addCSS('%s/old/codemirror/lib/codemirror.css' % self.liblocation)
+        self.addCSS('%s/old/codemirror/addon/hint/show-hint.css' % self.liblocation)
+        self.addCSS('%s/old/codemirror/theme/elegant.css' % self.liblocation)
+        self.addJS('%s/old/codemirror/lib/codemirror.js' % self.liblocation)
+        self.addJS('%s/old/codemirror/addon/hint/show-hint.js' % self.liblocation)
+        self.addJS('%s/old/codemirror/addon/hint/python-hint.js' % self.liblocation)
+        self.addJS('%s/old/codemirror/mode/python/python.js' % self.liblocation)
 
         if readonly:
             commands = """

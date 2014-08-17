@@ -1,4 +1,5 @@
 from JumpScale import j
+from JumpScale.portal.docgenerator.Page import Page
 import traceback
 
 
@@ -178,7 +179,7 @@ class MacroExecutorPage(MacroExecutorBase):
         a doc is a document in final phase whichere the final result is generated
         """
 
-        if not str(type(page)) == "<type 'instance'>" or "body" not in page.__dict__:
+        if not isinstance(page, Page):
             raise RuntimeError("Page was no page object. Was for macro:%s on doc:%s" % (macrostr, doc.name))
 
         macrospace, macro, tags, cmdstr = self.parseMacroStr(macrostr)
@@ -193,7 +194,7 @@ class MacroExecutorPage(MacroExecutorBase):
         else:
             page.addMessage("***error***: could not find macro %s" % macro)
 
-        if not str(type(page)) == "<type 'instance'>" or "body" not in page.__dict__:
+        if not isinstance(page, Page):
             raise RuntimeError("params.page object which came back from macro's does not represent a page. Was for macro:%s on doc:%s" % (macro, doc.name))
 
         page.body = page.body.replace("\{", "{")
