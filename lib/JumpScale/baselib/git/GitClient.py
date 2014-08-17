@@ -21,7 +21,7 @@ class GitClient(object):
 
     @property
     def repo(self):
-        # Load get when we absolutly need it cause it does not work in gevent mode
+        # Load git when we absolutly need it cause it does not work in gevent mode
         import git
         if not self._repo:
             if not j.system.fs.exists(self.baseDir):
@@ -30,9 +30,11 @@ class GitClient(object):
                 self._repo = git.Repo(self.baseDir)
         return self._repo
 
+    def init(self):
+        self.repo
 
     def _clone(self):
-        # Load get when we absolutly need it cause it does not work in gevent mode
+        # Load git when we absolutly need it cause it does not work in gevent mode
         import git
         self._repo = git.Repo.clone_from(self.remoteUrl, self.baseDir)
 

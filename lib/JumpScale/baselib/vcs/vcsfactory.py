@@ -68,6 +68,12 @@ class VCSClient(object):
     def push(self, force=False):
         raise NotImplementedError()
 
+    def init(self):
+        """
+        Make sure repo exist clone if not existing
+        """
+        raise NotImplementedError()
+
 class VCSGITClient(VCSClient):
     def __init__(self, client):
         self.client = client
@@ -82,6 +88,9 @@ class VCSGITClient(VCSClient):
     def push(self, force=False):
         self.client.push(force)
 
+    def init(self):
+        self.client.init()
+
 class VCSHGClient(VCSClient):
     def __init__(self, client):
         self.client = client
@@ -95,3 +104,7 @@ class VCSHGClient(VCSClient):
 
     def push(self, force=False):
         self.client.push()
+
+
+    def init(self):
+        pass # mercurial repos are initialized at contruction time
