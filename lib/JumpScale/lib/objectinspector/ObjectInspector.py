@@ -68,8 +68,33 @@ class ClassDoc():
             if method.comments<>None:
                 out+="%s\n\n"%method.comments
 
-        j.system.fs.createDir( j.system.fs.getDirName(dest2))
+        destdir= j.system.fs.getDirName(dest2)
+        j.system.fs.createDir(destdir)
         j.system.fs.writeFile(filename=dest2,contents=out)
+
+        catname=destdir.strip("/").split("/")[-1]
+        C="""
+h2. j.$name
+
+{{rst:
+.. toctree::
+   :maxdepth: 2
+   :glob:  
+
+$names
+}}
+
+"""        
+        names=""
+        for item in j.system.fs.listFilesInDir(destdir,False,"j.*.wiki"):
+            n=j.system.fs.getBaseName(item)[:-5]
+            names+="   %s\n"%n
+
+        C=C.replace("$names",names)
+        C=C.replace("$name",catname)
+        j.system.fs.writeFile(filename=j.system.fs.joinPaths(destdir,"%s.wiki"%catname),contents=C)
+        
+
 
 
 
@@ -184,3 +209,25 @@ class ObjectInspector():
     def writeDocs(self,path):
         for key,doc in self.classDocs.iteritems():
             doc.write(path)
+
+        C="""
+h2. Lib docs
+
+{{rst:
+.. toctree::
+   :maxdepth: 2
+   :glob:  
+
+$names
+}}
+
+"""        
+        names=""
+        for item in j.system.fs.listDirsInDir(path,False,True):
+            names+="   %s/%s\n"%(item,item)
+
+        C=C.replace("$names",names)
+
+        j.system.fs.writeFile(filename=j.system.fs.joinPaths(path,"index.wiki"),contents=C)
+        
+

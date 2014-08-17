@@ -91,9 +91,15 @@ class Confluence2RST():
         if macro.find("code:")==0:
             page.addNewLine()
             macro=macro[5:].strip()
+            
             page.addCodeBlock(macro)
             page.addNewLine()
                 
+        if macro.find("rst:")==0:
+            page.addNewLine()
+            macro=macro[4:].strip()
+            page.addMessage(macro)
+
 
     def convert(self, content, page=None, doc=None, requestContext=None, paramsExtra={}):
 
@@ -192,7 +198,7 @@ class Confluence2RST():
                 line = ''
                 continue
 
-            if line.strip() =="":
+            if line.strip() =="" and state == "start":
                 page.addNewLine()
                 line = ''
                 continue                
