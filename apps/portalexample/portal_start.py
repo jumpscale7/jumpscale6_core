@@ -11,19 +11,21 @@ import JumpScale.portal
 
 import sys
 
-args=sys.argv
-instance=args[1]
+if __name__ == '__main__':
 
-jp = j.packages.findNewest('jumpscale', 'portal')
-jp = jp.load(instance=instance)
-j.application.instanceconfig = jp.hrd_instance
+	args=sys.argv
+	instance=args[1]
 
-j.application.start("portal")
+	jp = j.packages.findNewest('jumpscale', 'portal')
+	jp = jp.load(instance=instance)
+	j.application.instanceconfig = jp.hrd_instance
 
-j.logger.disable()
+	j.application.start("portal")
 
-server=j.core.portal.getServer()
-server.start()
+	j.logger.disable()
+
+	server=j.core.portal.getServer()
+	server.start()
 
 
-j.application.stop()
+	j.application.stop()

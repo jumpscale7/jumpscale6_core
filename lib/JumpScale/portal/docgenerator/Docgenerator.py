@@ -1,6 +1,7 @@
 
 from JumpScale import j
 from Confluence2HTML import Confluence2HTML
+from Confluence2RST import Confluence2RST
 
 
 class DocgeneratorFactory:
@@ -25,8 +26,36 @@ class DocgeneratorFactory:
         #from core.Docgenerator.WikiClientAlkira import WikiClientAlkira
         # return WikiClientAlkira(spacename,erasespace,erasepages)
 
+    def convertConfluenceToRST(self,src,dest):
+        convertor=self.getConfluence2rstConvertor()
+        # j.system.fs.removeDirTree(dest)
+        for path in j.system.fs.listFilesInDir(src,True,filter="*.wiki"):
+            if path.find(".space")<>-1 or path.find(".files")<>-1:
+                continue
+            if j.system.fs.getBaseName(path)[0]=="_":
+                continue
+            print "process:%s"%path
+            indest=j.system.fs.pathRemoveDirPart(path,src)
+            dest2="%s/%s"%(dest,indest)
+            C=j.system.fs.fileGetContents(path)
+            C2=convertor.convert(C)
+            if C2=="":
+                continue
+            ddir=j.system.fs.getDirName(dest2)
+            j.system.fs.createDir(ddir)
+            
+            basename=j.system.fs.getBaseName(path)
+            basename=basename.replace(".wiki",".rst")
+
+            dest3=j.system.fs.joinPaths(ddir,basename)
+            print "dest:%s"%dest3
+            j.system.fs.writeFile(filename=dest3,contents=str(C2))
+
     def getConfluence2htmlConvertor(self):
         return Confluence2HTML()
+
+    def getConfluence2rstConvertor(self):
+        return Confluence2RST()        
 
     def pageNewConfluence(self, pagename, parent="Home"):
         from core.docgenerator.PageConfluence import PageConfluence
@@ -38,9 +67,14 @@ class DocgeneratorFactory:
         # page=PageAlkira(pagename,content="",parent=parent)
         # return page
 
-    def pageNewHTML(self, pagename, htmllibPath=None):
+    def pageNewHTML(self, pagename):
         from JumpScale.portal.docgenerator.PageHTML import PageHTML
         page = PageHTML(pagename, htmllibPath=htmllibPath)
+        return page        
+
+    def pageNewRST(self, pagename, htmllibPath=None):
+        from JumpScale.portal.docgenerator.PageRST import PageRST
+        page = PageRST(pagename)
         return page
 
     def pageGroupNew(self, pages={}):

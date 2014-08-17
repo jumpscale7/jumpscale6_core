@@ -1,3 +1,3 @@
 from JumpScale import j
-from  btrfs import BtrfsExtension
+from  BtrfsExtension import BtrfsExtension
 j.system.btrfs = BtrfsExtension()

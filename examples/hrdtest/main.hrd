@@ -1,0 +1,5 @@
+jp.domain=jumpscale
+jp.name=1.0
+jp.version=1.0
+jp.askint=5
+jp.askfloat=5.5

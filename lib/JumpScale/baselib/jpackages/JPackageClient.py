@@ -18,6 +18,11 @@ class JPackageClient():
         self.__init=False
         self.redis=j.application.redis
 
+    def __getChildObjectsExamples(self):
+        res={}
+        res["j.packages._object.jpackage"]=self.findByName("core")
+        return res        
+
     def _init(self):
         if self.__init:
             return

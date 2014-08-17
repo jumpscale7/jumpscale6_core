@@ -1,7 +1,7 @@
 from JumpScale import j
 
 from ZRedisGWClient import *
-from ZRedisGWServer import *
+# from ZRedisGWServer import *
 
 
 import JumpScale.baselib.credis

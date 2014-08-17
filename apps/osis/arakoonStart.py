@@ -2,31 +2,33 @@ from JumpScale import j
 
 j.application.start("arakoonstarttest")
 
-arakoonInstance = q.manage.servers.arakoon.new("anInstanceName")
+if __name__ == '__main__':
 
-# the following needs to be done on each node
-arakoonInstance.clusterConfigSet("192.168.1.1:5000,192.168.1.2:5000,192.168.1.3:5000")  # means cluster with 3 on port 5000
+	arakoonInstance = q.manage.servers.arakoon.new("anInstanceName")
 
-# REMARKS
-# no pylabs specific config files are created, only config files directly from arakoon
+	# the following needs to be done on each node
+	arakoonInstance.clusterConfigSet("192.168.1.1:5000,192.168.1.2:5000,192.168.1.3:5000")  # means cluster with 3 on port 5000
 
-arakoonInstance.clusterConfigGet()  # returns something like "192.168.1.1:5000,192.168.1.2:5000,192.168.1.3:5000"
+	# REMARKS
+	# no pylabs specific config files are created, only config files directly from arakoon
 
-# also add other commands to check health of cluster...
+	arakoonInstance.clusterConfigGet()  # returns something like "192.168.1.1:5000,192.168.1.2:5000,192.168.1.3:5000"
 
-arakoonInstance.start()
-# will block so next lines not executed
+	# also add other commands to check health of cluster...
 
-arakoonInstance.stop()
-arakoonInstance.isrunning()
+	arakoonInstance.start()
+	# will block so next lines not executed
 
-
-# when starting from empty situation
-q.manage.servers.arakoon.get("anInstanceName")
-arakoonInstance.stop()
+	arakoonInstance.stop()
+	arakoonInstance.isrunning()
 
 
-j.application.stop()
+	# when starting from empty situation
+	q.manage.servers.arakoon.get("anInstanceName")
+	arakoonInstance.stop()
 
 
-#@todo (P3) implement better arakoon mgmt class
+	j.application.stop()
+
+
+	#@todo (P3) implement better arakoon mgmt class
