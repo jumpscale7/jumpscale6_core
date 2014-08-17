@@ -552,7 +552,10 @@ class StartupManager:
             self.load()
             if not j.system.net.tcpPortConnectionTest("localhost",7766):
                 j.system.process.killProcessByName("redis-server 127.0.0.1:7766")
-                pd = self.getProcessDef('redis', 'redis_system', True)
+                try:
+                    pd = self.getProcessDef('redis', 'redis_system', True)
+                except KeyError:
+                    raise RuntimeError("Redis system is not installed. Please install via 'jpackage install -n base'")
                 with j.logger.nostdout():
                     pd.start()
                 j.application.connectRedis()

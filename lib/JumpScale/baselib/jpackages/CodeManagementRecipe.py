@@ -214,7 +214,6 @@ class CodeManagementRecipe:
         self.hrd=j.core.hrd.getHRD(hrdpath)
         self.items = []
         self.jp=jp
-        self._getRepoConnection()
         self._process()
 
     def _getSource(self,source):
@@ -230,6 +229,7 @@ class CodeManagementRecipe:
         return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo, source)
 
     def _process(self):
+        self.repoconnection.init()
         content=j.system.fs.fileGetContents(self.configpath)
         for line in content.split("\n"):
             line=line.strip()
@@ -300,33 +300,28 @@ class CodeManagementRecipe:
         for item in self.items:
             item.codeToFiles(jpackage)
 
-        
     def push(self):
-        repoconnection = self._getRepoConnection()
-        if repoconnection:
-            repoconnection.push()
-            
-    def update(self,force=False):        
-        repoconnection = self._getRepoConnection()
-        if repoconnection:
-            return repoconnection.update(force=force)
+        if self.repoconnection:
+            self.repoconnection.push()
+
+    def update(self,force=False):
+        if self.repoconnection:
+            return self.repoconnection.update(force=force)
     
     def pullupdate(self,force=False):
-        repoconnection = self._getRepoConnection()
-        if repoconnection:
-            repoconnection.update()
+        if self.repoconnection:
+            self.repoconnection.update()
 
     def pullmerge(self):
-        repoconnection = self._getRepoConnection()
-        if repoconnection:
-            repoconnection.update()        
-            
-    def commit(self):
-        repoconnection = self._getRepoConnection()
-        if repoconnection:
-            repoconnection.commit()                
+        if self.repoconnection:
+            self.repoconnection.update()
 
-    def _getRepoConnection(self):
+    def commit(self):
+        if self.repoconnection:
+            self.repoconnection.commit()
+
+    @property
+    def repoconnection(self):
         if self._repoconnection:
             return self._repoconnection
         account=self.hrd.get("jp.code.account")
