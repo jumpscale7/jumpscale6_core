@@ -75,14 +75,11 @@ class XMPPRobot(sleekxmpp.ClientXMPP):
         self.send_presence()
         print "get roster"
         self.get_roster()
-
-
         
         self.scheduler.add("checkback",0.1,self.checkReturn,repeat=True)
 
         # sleekxmpp.xmlstream.scheduler.Task(name, seconds, callback, args=None, kwargs=None, repeat=False, qpointer=None)[source]
         
-
         # for i in range(10):
         #     self.send_message(mto="despiegk@jabb3r.net",mbody="test",mtype='chat')
 
