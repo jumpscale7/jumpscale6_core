@@ -96,6 +96,8 @@ class OSISCMDS(object):
 
     def checkChangeLog(self):
         rediscl=None
+        if not j.application.config.exists("rediskvs.master.addr"):
+            return
         while True:
             if j.system.net.tcpPortConnectionTest('127.0.0.1',port=7771):
                 try:

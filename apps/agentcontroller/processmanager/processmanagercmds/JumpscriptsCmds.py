@@ -27,14 +27,6 @@ class JumpscriptsCmds():
 
         self.redis = Redis("127.0.0.1", 7768, password=None)
 
-        # self.q_i = Queue(name="io",connection=self.redis)
-        # self.q_h = Queue(name="hypervisor",connection=self.redis)
-        # self.q_d = Queue(name="default",connection=self.redis)
-
-        self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
-        self.adminuser = "root"
-        self.osis_jumpscriptclient = j.core.osis.getClientForCategory(self.daemon.osis, 'system', 'jumpscript') 
-
     def _init(self):
         self.loadJumpscripts(init=True)
 

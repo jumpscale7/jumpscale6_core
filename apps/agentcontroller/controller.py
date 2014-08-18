@@ -1,6 +1,5 @@
 #this must be in the beginning so things are patched before ever imported by other libraries
 from gevent import monkey
-# monkey.patch_all()
 monkey.patch_socket()
 monkey.patch_thread()
 monkey.patch_time()
@@ -49,12 +48,10 @@ class ControllerCMDS():
         j.application.initGrid()
 
         self.daemon = daemon
+        self.acuniquekey = j.application.getUniqueMachineId()
         self.jumpscripts = {}
         self.jumpscriptsFromKeys = {}
         self.jumpscriptsId={}
-
-        self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
-        self.adminuser = "root"
 
         self.osisclient = j.core.osis.getClientByInstance(gevent=True)
         self.jobclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'job')
@@ -70,6 +67,7 @@ class ControllerCMDS():
         j.logger.setLogTargetLogForwarder()
 
     def _adminAuth(self,user,passwd):
+        return True # todo authenticate against osis
         if user != self.adminuser or passwd != self.adminpasswd:
             raise RuntimeError("permission denied")
 
@@ -123,7 +121,7 @@ class ControllerCMDS():
     def restartProcessmanagerWorkers(self,session=None):
         for item in self.osisclient.list("system","node"):
             gid,nid=item.split("_")
-            if int(gid)==j.application.whoAmI.gid:
+            if int(gid)==session.gid:
                 cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="stop",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
 
     def reloadjumpscripts(self,session=None):
@@ -134,21 +132,21 @@ class ControllerCMDS():
         print "want processmanagers to reload js:",
         for item in self.osisclient.list("system","node"):
             gid,nid=item.split("_")
-            if int(gid)==j.application.whoAmI.gid:
+            if int(gid)==session.gid:
                 cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
         print "OK"            
 
     def restartWorkers(self,session=None):
         for item in self.osisclient.list("system","node"):
             gid,nid=item.split("_")
-            if int(gid)==j.application.whoAmI.gid:
+            if int(gid)==session.gid:
                 cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="restartWorkers",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
 
     def _setJob(self, job, osis=False):
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")  
         # job guid needs to be unique accoress grid, structure $ac_gid _ $ac_nid _ $executor_gid _ $jobenum
-        job["guid"]="%s_%s_%s_%s"%(j.application.whoAmI.gid, j.application.whoAmI.nid, job["gid"],job["id"])
+        job["guid"]="%s_%s_%s"%(self.acuniquekey, job["gid"],job["id"])
         if 'result' in job and not isinstance(job["result"],str):
             job['result'] = json.dumps(job['result'])
         jobs=json.dumps(job)            
@@ -231,7 +229,8 @@ class ControllerCMDS():
         self._updateNetInfo(session.netinfo, node)
         guid, new, changed = self.nodeclient.set(node)
         node = self.nodeclient.get(guid)
-        return node.dump()
+        result = {'node': node.dump(), 'webdiskey': j.tools.jumpscriptsManager.secret}
+        return result
 
     def register(self,session):
         self._log("new agent:")
@@ -288,7 +287,7 @@ class ControllerCMDS():
             self._log("found jumpscript:%s " %("id:%s %s_%s" % (t.id,t.organization, t.name)))
 
             key0 = "%s_%s" % (t.gid,t.id)
-            key = "%s_%s_%s" % (t.gid,t.organization, t.name)
+            key = "%s_%s" % (t.organization, t.name)
             self.jumpscripts[key] = t
             self.jumpscriptsId[key0] = t
         print "OK"
@@ -297,14 +296,12 @@ class ControllerCMDS():
     def getJumpScript(self, organization, name,gid=None,reload=False, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-            
+
         if gid==None and session <> None:
             gid = session.gid
-        elif id==None and session == None:
-            gid=j.application.whoAmI.gid
 
-        key = "%s_%s_%s" % (gid,organization, name)
-        
+        key = "%s_%s" % (organization, name)
+
         if key in self.jumpscripts:
             if reload:
                 from IPython import embed
@@ -319,11 +316,8 @@ class ControllerCMDS():
     def getJumpScriptFromId(self,id,gid=None,session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
-        else:
-            if gid==None and session <> None:
-                gid = session.gid
-            elif id==None and session == None:
-                gid=j.application.whoAmI.gid
+        if gid==None and session <> None:
+            gid = session.gid
 
         key = "%s_%s" % (gid,id)
         
@@ -336,9 +330,6 @@ class ControllerCMDS():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
             gid = session.gid
-        else:
-            if gid==None:
-                gid=j.application.whoAmI.gid
 
         key = "%s_%s_%s" % (gid,organization, name)
         if key in self.jumpscripts:
@@ -376,7 +367,7 @@ class ControllerCMDS():
             job=self._setJob(job.__dict__, osis=True)
             return job.__dict__
 
-        gid = gid or j.application.whoAmI.gid
+        gid = gid or session.gid
         self._adminAuth(session.user,session.passwd)
         self._log("AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid))
         action = self.getJumpScript(organization, name, session=session)
@@ -518,7 +509,7 @@ class ControllerCMDS():
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         jobs = list()
-        qname = 'queues:commands:queue:%s:%s' % (j.application.whoAmI.gid, agentid)
+        qname = 'queues:commands:queue:%s:%s' % (session.gid, agentid)
         jobstrings = self.redis.lrange(qname, 0, -1)
         for jobstring in jobstrings:
             jobs.append(json.loads(jobstring))

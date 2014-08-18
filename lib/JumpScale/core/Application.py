@@ -279,8 +279,9 @@ class Application:
         will look for network interface and return a hash calculated from lowest mac address from all physical nics
         """
         # if unique machine id is set in grid.hrd, then return it
-        if j.application.config.exists('grid.node.machineguid'):
-            machineguid = j.application.config.get('grid.node.machineguid')
+        uniquekey = 'grid.node.machineguid'
+        if j.application.config.exists(uniquekey):
+            machineguid = j.application.config.get(uniquekey)
             if machineguid:
                 return machineguid
 
@@ -299,6 +300,9 @@ class Application:
         macaddr.sort()
         if len(macaddr) < 1:
             raise RuntimeError("Cannot find macaddress of nics in machine.")
+
+        if j.application.config.exists(uniquekey):
+            j.application.config.set(uniquekey, macaddr[0])
         return macaddr[0]
 
     def _setWriteExitcodeOnExit(self, value):

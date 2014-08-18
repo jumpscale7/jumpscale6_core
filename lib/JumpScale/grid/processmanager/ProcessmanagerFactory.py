@@ -21,6 +21,7 @@ class DummyDaemon():
 
     @property
     def osis(self):
+        return
         if not self._osis:
             self._osis = j.core.osis.getClientByInstance()
         return self._osis
@@ -144,7 +145,7 @@ class ProcessmanagerFactory:
                 self.daemon.addCMDsInterface(classs, category=tmp._name)
 
         self.cmds=Dummy()
-        self.loadMonitorObjectTypes()
+        #self.loadMonitorObjectTypes()
 
         def sort(item):
             key,cmd=item

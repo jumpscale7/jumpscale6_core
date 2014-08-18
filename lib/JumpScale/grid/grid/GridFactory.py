@@ -32,8 +32,8 @@ class GridFactory():
         if self.config == None:
             raise RuntimeWarning("Grid/Broker is not configured please run configureBroker/configureNode first and restart jshell")
 
-        self.id = self.config.getInt("grid.id")
-        self.nid = self.config.getInt("grid.node.id")
+        self.id = j.application.whoAmI.gid
+        self.nid = j.application.whoAmI.nid
 
         if test:
 

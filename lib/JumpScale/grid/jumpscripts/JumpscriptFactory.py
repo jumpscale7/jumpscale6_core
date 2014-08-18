@@ -140,11 +140,10 @@ class JumpscriptFactory:
     """
     def __init__(self):
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
-        if j.application.config.exists("grid_watchdog_secret")==False or j.application.config.get("grid_watchdog_secret")=="":
-            # raise RuntimeError("please configure grid.watchdog.secret")
-            self.secret=""
-        else:
-            self.secret=j.application.config.get("grid_watchdog_secret")
+        secretkey = "agentcontroller.webdiskey"
+        if j.application.config.exists(secretkey)==False or j.application.config.get(secretkey)=="":
+            raise RuntimeError("please configure %s" % secretkey)
+        self.secret=j.application.config.get(secretkey)
 
     def getJSClass(self):
         return JumpScript
