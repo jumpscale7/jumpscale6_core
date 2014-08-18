@@ -148,8 +148,6 @@ for account,reponame,branch,client,path in repos:
         lrev="?"
         remotelastrevision="?"
 
-
-
         if nrmods>0:
             reposync="N"            
 
@@ -184,11 +182,15 @@ for account,reponame,branch,client,path in repos:
 
 
     if opts.action in ['commit','push','update']:
-        if opts.message==None and nrmods>0:
-            opts.message=j.console.askString("commit message")    
+
         if nrmods>0:
+            if opts.message==None:
+                message=j.console.askString("commit message")    
+            else:
+                message=opts.message
+
             print "ADD/REMOVE/COMMIT"
-            client.commit(message=opts.message, addremove=True)
+            client.commit(message=message, addremove=True)
 
     if opts.update or opts.action =='update' or opts.action =='push':
         print "PULL"
