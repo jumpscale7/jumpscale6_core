@@ -84,7 +84,7 @@ def getJPackage(args, installed=None,debug=None,update=False,expandInstances=Tru
         j.application.stop(1)
     elif len(packages) > 1 and args.name.find("*")<>-1:
         pass #no need to ask interactive
-    elif len(packages) > 1:
+    elif len(packages) > 1 and args.name.find(",")==-1:
         if not j.application.shellconfig.interactive:
             print "Found multiple packages %s" % (packages)
             j.application.stop(1)

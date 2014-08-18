@@ -537,7 +537,7 @@ class JPackageClient():
         """ 
         @domain, if none will ask for domain
 
-        """
+        """        
 
         def raiseError(msg,domain,name,version,platform,installed,instance):
             msg2="Jpackage find failed for following arguments\n"

@@ -199,7 +199,7 @@ elif args.action == 'install':
     if args.instance==None:
         args.instance=0      
         
-    if args.instance<>None and len(packages)>1:
+    if args.instance<>0 and len(packages)>1:        
         j.events.inputerror_critical("Cannot find more jpackages if instance is given.")
 
     if args.instance<>None:
