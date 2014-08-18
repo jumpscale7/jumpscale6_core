@@ -16,7 +16,11 @@ class OSISCMDS(object):
         """
         authenticates a user and returns the groups in which the user is
         """
-        if namespace<>"system" and categoryname<>"user":
+        if namespace == "system" and categoryname == "node":
+            oi = self._getOsisInstanceForCat("system", "node")
+            return oi.auth.authenticate(oi, 'auth', name, passwd, session)
+
+        if namespace<>"system" or categoryname<>"user":
             raise RuntimeError("Cannot process, only supported for system/user namespace")
         oi = self._getOsisInstanceForCat("system", "user")
 
@@ -145,7 +149,7 @@ class OSISCMDS(object):
             message="cannot find osis local instance for namespace:%s & category:%s" % (namespace, category), die=False, \
             category="osis.valueerror")
 
-    def _authenticateAdmin(self,session=None,user=None,passwd=None):
+    def _authenticateAdmin(self,session=None,user=None,passwd=None, die=True):
         if session<>None:
             user=session.user
             passwd=session.passwd
@@ -155,15 +159,17 @@ class OSISCMDS(object):
                 j.application.loadConfig()
                 j.core.osis.superadminpasswd=j.application.config.get("osis.superadmin.passwd")
                 if j.core.osis.superadminpasswd=="":
-
-                    raise RuntimeError("grid.master.superadminpasswd cannot be empty in hrd")
+                    raise RuntimeError("osis.superadmin.passwd cannot be empty in hrd")
 
             if passwd==j.core.osis.superadminpasswd:
                 return True
             if j.tools.hash.md5_string(passwd)==j.core.osis.superadminpasswd:
                 return True
         else:
-            raise RuntimeError("Could not authenticate for admin usage, user login was %s"%user)
+            if die:
+                raise RuntimeError("Could not authenticate for admin usage, user login was %s"%user)
+            else:
+                return False
 
     def createNamespace(self, name=None, incrementName=False, template=None,session=None):
         """

@@ -67,9 +67,7 @@ class ControllerCMDS():
         j.logger.setLogTargetLogForwarder()
 
     def _adminAuth(self,user,passwd):
-        return True # todo authenticate against osis
-        if user != self.adminuser or passwd != self.adminpasswd:
-            raise RuntimeError("permission denied")
+        return self.nodeclient.authenticate(user, passwd)
 
     def authenticate(self, session):
         return False  # to make sure we dont use it
@@ -221,6 +219,8 @@ class ControllerCMDS():
                 node.ipaddr.append(netinfo[1])
 
     def registerNode(self, hostname, machineguid, session):
+        if session.user != 'root' or not self._adminAuth(session.user, session.passwd):
+            raise RuntimeError("Only admin can register new nodes")
         node = self.nodeclient.new()
         node.roles = session.roles
         node.gid = session.gid

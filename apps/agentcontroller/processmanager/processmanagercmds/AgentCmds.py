@@ -26,9 +26,6 @@ class AgentCmds():
         self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
         self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
         self.queue["monitoring"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:monitoring")
-        self.adminpasswd = j.application.config.get('grid.master.superadminpasswd')
-        self.adminuser = "root"
-        self.acport = 4444
 
     def _init(self):
         self.init()
@@ -39,25 +36,26 @@ class AgentCmds():
 
         self._killGreenLets()
         acinstance = j.application.instanceconfig.get('agentcontroller.connection')
-        ipaddr, port = j.clients.agentcontroller.getInstanceConfig(acinstance)
+        config = j.clients.agentcontroller.getInstanceConfig(acinstance)
+        ipaddr = config.pop('addr')
         for acip in ipaddr.split(','):
-            j.core.processmanager.daemon.schedule("agent", self.loop, acip)
+            j.core.processmanager.daemon.schedule("agent", self.loop, acip, config)
 
-    def reconnect(self, acip):
+    def reconnect(self, acip, config):
         while True:
             try:
-                client = j.clients.agentcontroller.get(acip, self.acport)
+                client = j.clients.agentcontroller.get(acip, **config)
                 client.register()
                 return client
             except Exception:
                 print "Failed to connect to agentcontroller %s" % acip
                 gevent.sleep(5)
 
-    def loop(self, acip):
+    def loop(self, acip, config):
         """
         fetch work from agentcontroller & put on redis queue
         """
-        client = self.reconnect(acip)
+        client = self.reconnect(acip, config)
         gevent.sleep(2)
         print "start loop to fetch work"
         while True:

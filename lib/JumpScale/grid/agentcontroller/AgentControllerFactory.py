@@ -8,15 +8,19 @@ class AgentControllerFactory(object):
         self._agentControllerClients={}
         self._agentControllerProxyClients={}
 
-    def get(self,agentControllerIP=None, port=PORT):
+    def get(self,addr=None, port=PORT, login='root', passwd=None):
         """
         @if None will be same as master
         """
-        if agentControllerIP is None:
-            agentControllerIP, port = self.getInstanceConfig('main')
-        connection = (agentControllerIP, port)
+        if addr is None:
+            config = self.getInstanceConfig('main')
+            addr = config['addr']
+            port = config['port']
+            login = config.get('login')
+            passwd = config.get('passwd')
+        connection = (addr, port, login, passwd)
         if connection not in self._agentControllerClients:
-            self._agentControllerClients[connection]=AgentControllerClient(agentControllerIP, port)
+            self._agentControllerClients[connection]=AgentControllerClient(addr, port, login, passwd)
         return self._agentControllerClients[connection]
 
     def getInstanceConfig(self, instance=None):
@@ -25,13 +29,19 @@ class AgentControllerFactory(object):
         accljp = j.packages.findNewest(name="agentcontroller_client",domain="jumpscale")
         accljp = accljp.load(instance=instance)
         hrd = accljp.hrd_instance
-        ipaddr = hrd.get("agentcontroller.client.addr")
-        port = int(hrd.get("agentcontroller.client.port"))
-        return ipaddr, port
+        prefix = 'agentcontroller.client.'
+        result = dict()
+        for key in hrd.prefix(prefix):
+            attrib = key[len(prefix):]
+            value = hrd.get(key)
+            if attrib == 'port':
+                value = int(value)
+            result[attrib] = value
+        return result
 
     def getByInstance(self, instance=None):
-        ipaddr, port = self.getInstanceConfig(instance)
-        return self.get(ipaddr, port)
+        config = self.getInstanceConfig(instance)
+        return self.get(**config)
 
     def getClientProxy(self,category="jpackages",agentControllerIP=None):
         key="%s_%s"%(category,agentControllerIP)
@@ -57,18 +67,20 @@ class AgentControllerProxyClient():
         self.__dict__.update(client.__dict__)
 
 class AgentControllerClient():
-    def __init__(self,agentControllerIP, port=PORT):
+    def __init__(self,addr, port=PORT, login='root', passwd=None):
         import JumpScale.grid.geventws
 
-        if isinstance(agentControllerIP, basestring):
-            self.ipaddr = agentControllerIP
-            connections = [ (agentControllerIP, port) ]
-        elif isinstance(agentControllerIP, (tuple, list)):
-            connections = [ (ip, port) for ip in agentControllerIP ]
+        if isinstance(addr, basestring):
+            self.ipaddr = addr
+            connections = [ (addr, port) ]
+        elif isinstance(addr, (tuple, list)):
+            connections = [ (ip, port) for ip in addr ]
         else:
             raise ValueError("AgentControllerIP shoudl be either string or iterable")
-        passwd=j.application.config.get("grid.master.superadminpasswd")
-        login= 'root'
+        if login == 'root' and passwd is None:
+            passwd = j.application.config.get("grid.master.superadminpasswd")
+        if login == 'node' and passwd is None:
+            passwd = j.application.getUniqueMachineId()
         client= j.servers.geventws.getHAClient(connections, user=login, passwd=passwd,category="agent")
         self.__dict__.update(client.__dict__)
 
