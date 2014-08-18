@@ -42,18 +42,24 @@ class Worker(object):
         self.queuename=queuename
         self.name=name
         self.clients = dict()
-        self.acclient = j.clients.agentcontroller.getByInstance('main')
+
+
+        self.acclient = None
 
         self.init()
 
     def getClient(self, job):
         ipaddr = getattr(job, 'achost', None)
+        if ipaddr==None:
+            return None
         client = self.clients.get(ipaddr)
         if not client:
             if ipaddr:
                 client = j.clients.agentcontroller.get(ipaddr)
                 self.clients[ipaddr] = client
             else:
+                if self.acclient==None:
+                    self.acclient=j.clients.agentcontroller.getByInstance('main')
                 return self.acclient
         return client
 
@@ -294,7 +300,8 @@ if __name__ == '__main__':
 
     j.application.start("jumpscale:worker")
 
-    j.application.initGrid()
+    if j.application.config.exists("grid.id"):
+        j.application.initGrid()
 
     j.logger.consoleloglevel = 2
     j.logger.maxlevel=7
