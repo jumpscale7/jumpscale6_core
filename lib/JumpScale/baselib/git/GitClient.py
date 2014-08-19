@@ -54,7 +54,7 @@ class GitClient(object):
             elif diff.new_file:
                 result["N"].append(path)
             elif diff.renamed:
-                result["R"].append(path)
+                result["R"].append(path)            
             result["M"].append(path)
         return result
 
