@@ -5,7 +5,7 @@ def main(j, args, params, tags, tasklet):
     id = args.getTag('id')
     width = args.getTag('width')
     height = args.getTag('height')
-    result = "{{jgauge width:%(width)s height:%(height)s val:%(running)s start:0 end:%(total)s}}"
+    result = "{{jgauge width:%(width)s id:%(id)s height:%(height)s val:%(running)s start:0 end:%(total)s}}"
     cl = j.core.osis.getClient(user='root')
     vmcl = j.core.osis.getClientForCategory(cl, 'system', 'machine')
     running = len(vmcl.simpleSearch({'state': 'RUNNING'}))
@@ -13,6 +13,7 @@ def main(j, args, params, tags, tasklet):
     result = result % {'height': height,
                        'width': width,
                        'running': running,
+                       'id': id,
                        'total': total}
     params.result = (result, doc)
     return params

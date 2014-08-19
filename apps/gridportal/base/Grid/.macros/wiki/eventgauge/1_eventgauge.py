@@ -6,7 +6,7 @@ def main(j, args, params, tags, tasklet):
     id = args.getTag('id')
     width = args.getTag('width')
     height = args.getTag('height')
-    result = "{{jgauge width:%(width)s height:%(height)s val:%(last24h)s start:0 end:%(total)s}}"
+    result = "{{jgauge width:%(width)s id:%(id)s height:%(height)s val:%(last24h)s start:0 end:%(total)s}}"
     cl = j.core.osis.getClient(user='root')
     now = datetime.datetime.now()
     aweekago = j.base.time.getEpochAgo('-7d')
@@ -30,6 +30,7 @@ def main(j, args, params, tags, tasklet):
 
     result = result % {'height': height,
                        'width': width,
+                       'id': id,
                        'last24h': current,
                        'total': average}
     params.result = (result, doc)
