@@ -165,7 +165,7 @@ class OSISStoreMongo(OSISStore):
     def delete(self, key, session=None):
         db, counter = self._getMongoDB(session)
         try:
-            res = self.get(key, True)
+            res = self.get(key, True, session=session)
             db.remove(res["_id"])
         except KeyError:
             pass

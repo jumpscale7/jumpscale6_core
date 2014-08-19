@@ -33,11 +33,11 @@ class mainclass(parentclass):
         
         return guid, new, changed
 
-    def get(self, key, session=None):
+    def get(self, key, full=False, session=None):
         """
         @return as json encoded
         """
-        val = parentclass.get(self, key, session=session)
+        val = parentclass.get(self, key, full, session=session)
         if val is not None and 'passwd' in val:
             val['passwd'] = j.core.osis.decrypt(val['passwd'])
         return val
