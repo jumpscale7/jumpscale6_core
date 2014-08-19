@@ -47,6 +47,15 @@ class GitClient(object):
         result["N"]=[]
         result["M"]=[]
         result["R"]=[]
+
+        cmd="cd %s;git status --porcelain"%self.baseDir
+        rc,out=j.system.process.execute(cmd)
+        for item in out.split("\n"):
+            if item.strip()=="":
+                continue
+            item2=item.split(" ",1)[1]
+            result["N"].append(item2)
+        
         for diff in self.repo.index.diff(None):
             path=diff.a_blob.path
             if diff.deleted_file:
@@ -55,7 +64,8 @@ class GitClient(object):
                 result["N"].append(path)
             elif diff.renamed:
                 result["R"].append(path)
-            result["M"].append(path)
+            else:                
+                result["M"].append(path)
         return result
 
     def addRemoveFiles(self):
