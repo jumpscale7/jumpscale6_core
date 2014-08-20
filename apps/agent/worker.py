@@ -50,8 +50,6 @@ class Worker(object):
 
     def getClient(self, job):
         ipaddr = getattr(job, 'achost', None)
-        if ipaddr==None:
-            return None
         client = self.clients.get(ipaddr)
         if not client:
             if ipaddr:
@@ -225,7 +223,7 @@ class Worker(object):
 
 
     def notifyWorkCompleted(self,job):
-        acclient = self.getClient(job) 
+        acclient = self.getClient(job)
         w=j.clients.redisworker
         job.timeStop=int(time.time())
 

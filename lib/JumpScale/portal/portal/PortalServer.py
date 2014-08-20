@@ -762,7 +762,7 @@ class PortalServer:
                     ctx.start_response('419 Authentication Timeout', [])
                     return False, [str(self.returnDoc(ctx, ctx.start_response, "system", "accessdenied", extraParams={"path": path}))]
 
-        if "user_logoff_" in ctx.params:
+        if "user_logoff_" in ctx.params and not "user_login_" in ctx.params:
             session.delete()
             return False, [str(self.returnDoc(ctx, ctx.start_response, "system", "login", extraParams={"path": path}))]
 

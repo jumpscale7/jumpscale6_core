@@ -10,6 +10,7 @@ import JumpScale.grid.geventws
 import JumpScale.grid.osis
 import importlib
 import sys
+import copy
 try:
     import ujson as json
 except:
@@ -105,8 +106,9 @@ class ControllerCMDS():
         self._log("save 2 osis")
 
         saveinosis = True if nid and log else False
-        job=self._setJob(job.__dict__, osis=saveinosis)
-        jobs=json.dumps(job)
+        jobdict = job.dump()
+        self._setJob(jobdict, osis=saveinosis)
+        jobs=json.dumps(jobdict)
         
         self._log("getqueue")
         role = roles[0] if roles else None
@@ -114,7 +116,7 @@ class ControllerCMDS():
         self._log("put on queue")
         q.put(jobs)
         self._log("schedule done")
-        return job
+        return jobdict
 
     def restartProcessmanagerWorkers(self,session=None):
         for item in self.osisclient.list("system","node"):
@@ -145,15 +147,15 @@ class ControllerCMDS():
             raise RuntimeError("job needs to be dict")  
         # job guid needs to be unique accoress grid, structure $ac_gid _ $ac_nid _ $executor_gid _ $jobenum
         job["guid"]="%s_%s_%s"%(self.acuniquekey, job["gid"],job["id"])
-        if 'result' in job and not isinstance(job["result"],str):
-            job['result'] = json.dumps(job['result'])
         jobs=json.dumps(job)            
         self.redis.hset("jobs:%s"%job["gid"],job["id"],jobs)
         if osis:
             # we need to make sure that job['result'] is always of the same type hence we serialize
             # otherwise elasticsearch will have issues
+            job = copy.deepcopy(job)
+            if 'result' in job and not isinstance(job["result"],str):
+                job['result'] = json.dumps(job['result'])
             self.jobclient.set(job)
-        return job
 
     def _deleteJobFromCache(self, job):
         self.redis.hdel("jobs:%s"%job["gid"],job["id"])
@@ -364,7 +366,7 @@ class ControllerCMDS():
             self._log("nothingtodo")
             job.state="NOWORK"
             job.timeStop=job.timeStart
-            job=self._setJob(job.__dict__, osis=True)
+            self._setJob(job.__dict__, osis=True)
             return job.__dict__
 
         gid = gid or session.gid
@@ -401,7 +403,6 @@ class ControllerCMDS():
         """
         @return job as dict
         """
-        
         if job==None:
             if jobguid==None:
                 raise RuntimeError("job or jobid need to be given as argument")
@@ -427,7 +428,7 @@ class ControllerCMDS():
         else:
             job["resultcode"]=1
             job["state"]="TIMEOUT"
-            job=self._setJob(job, osis=True)
+            self._setJob(job, osis=True)
             self._log("timeout on execution")
             return job
 
@@ -447,7 +448,7 @@ class ControllerCMDS():
             job['nid'] = session.nid
             saveinosis = job['log']
             job['state'] = 'STARTED'
-            job=self._setJob(job, saveinosis)
+            self._setJob(job, saveinosis)
             self._log("getwork found for node:%s for jsid:%s"%(session.nid,job["jscriptid"]))
             return job
 
@@ -460,7 +461,7 @@ class ControllerCMDS():
             raise RuntimeError("job needs to be dict")            
         self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         saveinosis = job['log'] or job['state'] != 'OK'
-        job=self._setJob(job, osis=saveinosis)
+        self._setJob(job, osis=saveinosis)
         if job['wait']:
             q=self._getJobQueue(job["guid"])
             q.put(json.dumps(job))

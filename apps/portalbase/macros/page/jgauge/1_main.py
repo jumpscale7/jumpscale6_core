@@ -71,13 +71,13 @@ $gid.ticks.end = $end;
         C = C.replace("$height", str(170))
         C = C.replace("$width", str(170))
         C += """
-$gid.imagePath = '/lib/jgauge/img/jgauge_face_taco.png';
+$gid.imagePath = '/jslib/old/jgauge/img/jgauge_face_taco.png';
 $gid.segmentStart = -225
 $gid.segmentEnd = 45
 $gid.needle.xOffset = 0;
 $gid.needle.yOffset = 0;
 $gid.label.yOffset = 50;
-$gid.needle.imagePath = '/lib/jgauge/img/jgauge_needle_taco.png';
+$gid.needle.imagePath = '/jslib/old/jgauge/img/jgauge_needle_taco.png';
 $gid.label.color = '#0ce';  
 $gid.autoPrefix = autoPrefix.si; // Use SI prefixing (i.e. 1k = 1000).
 $gid.label.precision = 0; // 0 decimals (whole numbers).
@@ -90,8 +90,8 @@ $gid.range.color = 'rgba(0, 0, 0, 0)';
 """
         C = C.replace("$gid", "myGauge%s" % gaugeid)
     else:
-        C += "myGauge%s.imagePath='/lib/jgauge/img/jgauge_face_default.png'\n" % (gaugeid)
-        C += "myGauge%s.needle.imagePath='/lib/jgauge/img/jgauge_needle_default.png'\n" % (gaugeid)
+        C += "myGauge%s.imagePath='/jslib/old/jgauge/img/jgauge_face_default.png'\n" % (gaugeid)
+        C += "myGauge%s.needle.imagePath='/jslib/old/jgauge/img/jgauge_needle_default.png'\n" % (gaugeid)
 
     cmds = ["segmentStart", "segmentEnd", "needle.limitAction ", "needle.xOffset", "needle.yOffset",
             "label.xOffset", "label.yOffset", "label.prefix", "label.suffix", "label.precision", "ticks.count", "ticks.start", "ticks.end",
