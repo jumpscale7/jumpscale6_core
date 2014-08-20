@@ -10,6 +10,7 @@ parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['add','set','delete','list','auth','addgroup','delgroup','passwd'], help='Command to perform')
 
 parser.add_argument("-d",'--data', help='add user as username:passwd:group1,group2:email1,email2:domain')
+parser.add_argument('--hrd', help='give hrd as input for new user')
 
 group = parser.add_argument_group(title="Authentication")
 group.add_argument("-ul",'--userlogin', help='username to do check,edit')
@@ -33,6 +34,11 @@ import JumpScale.grid.osis
 osis=j.core.osis.getClient(opts.addr,5544,opts.login,opts.passwd)
 userclient=j.core.osis.getClientForCategory(osis,"system","user")
 groupclient=j.core.osis.getClientForCategory(osis,"system","group")
+
+xmpp=[]
+mobile=[]
+description=""
+authkeys=[]
 
 def getPasswd(password):
     if len(password) != 32:
@@ -83,6 +89,30 @@ if opts.action =='add' or opts.action =='set':
         name,passwd,groups,emails,domain=splitted
         groups=groups.split(",")
         emails=emails.split(",")
+    elif opts.hrd<>None:
+        hrd=j.core.hrd.getHRD(content=opts.hrd.replace("#","\n"))
+        if hrd.exists("user.name"):
+            name=hrd.get("user.name")
+        if hrd.exists("user.domain"):
+            domain=hrd.get("user.domain")
+        if hrd.exists("user.mobile"):
+            mobile=hrd.getList("user.mobile")
+        if hrd.exists("user.emails"):
+            emails=hrd.getList("user.emails")
+        if hrd.exists("user.groups"):
+            groups=hrd.getList("user.groups")
+        if hrd.exists("user.roles"):
+            roles=hrd.getList("user.roles")
+        if hrd.exists("user.xmpp"):
+            xmpp=hrd.getList("user.xmpp")
+        if hrd.exists("user.passwd"):
+            passwd=hrd.get("user.passwd")
+        if hrd.exists("user.mobile"):
+            mobile=hrd.getList("user.mobile")
+        if hrd.exists("user.description"):
+            description=hrd.getList("user.description")
+        if hrd.exists("user.authkeys"):
+            authkeys=hrd.getList("user.authkeys")        
     else:
         name = opts.userlogin or j.console.askString("name")
         passwd = opts.userpasswd or j.console.askPassword("passwd")
@@ -107,6 +137,10 @@ if opts.action =='add' or opts.action =='set':
     user.emails=emails
     user.domain=domain
     user.passwd=getPasswd(passwd)
+    user.mobile=mobile
+    user.xmpp=xmpp
+    user.description=description
+    user.authkeys=authkeys
 
     guid,a,b=userclient.set(user)
 

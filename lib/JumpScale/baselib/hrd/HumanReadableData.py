@@ -67,7 +67,6 @@ class HumanReadableDataFactory:
                 out+="%s\n"%(line)
         return self.getHRDFromContent(out)        
 
-
         
 
 class HRDPos():

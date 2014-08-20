@@ -733,6 +733,7 @@ class Admin():
         node=self.getNode()
         node.connectSSH()
         keyloc="/root/.ssh/id_dsa.pub"
+        
         if not j.system.fs.exists(path=keyloc):
             if j.console.askYesNo("do you want to generate new local ssh key, if you have one please put it there manually!"):
                 do=j.system.process.executeWithoutPipe
