@@ -65,13 +65,13 @@ class Application:
         else:
             self.redis=None
 
-    def initWhoAmI(self):
+    def initWhoAmI(self, reload=False):
         """
         when in grid:
             is gid,nid,pid
         """
 
-        if not self.whoAmIBytestr:
+        if not self.whoAmIBytestr or reload:
 
             self.loadConfig()
             
