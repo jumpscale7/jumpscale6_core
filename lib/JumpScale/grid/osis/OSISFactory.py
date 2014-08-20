@@ -170,7 +170,7 @@ class OSISFactory:
         if instance is None:
             instance = j.application.instanceconfig.get('osis.connection')
         osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
-        osisjp=osisjp.load(instance=instance)
+        osisjp.load(instance=instance)
         hrd=osisjp.hrd_instance
         ipaddr=hrd.get("osis.client.addr")
         port=int(hrd.get("osis.client.port"))
