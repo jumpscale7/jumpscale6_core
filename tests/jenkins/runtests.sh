@@ -52,15 +52,6 @@ pip install .
 mkdir -p /opt/jumpscale/cfg/hrd/
 mkdir -p /opt/jumpscale/cfg/jsconfig
 
-echo 'elasticsearch.cluster.name=$BUILD_TAG' > /opt/jumpscale/cfg/hrd/elasticsearch.hrd
-echo '
-grid.id=13
-grid.node.id=1
-grid.watchdog.secret=rooter
-grid.master.superadminpasswd=rooter
-system_superadmin_login=root
-' > /opt/jumpscale/cfg/hrd/grid.hrd
-
 echo '[jumpscale]
 passwd = 
 login = 
@@ -78,71 +69,7 @@ mail.relay.ssl=1 #\
 mail.relay.username=support@mothersip1.com #\
 mail.relay.passwd=RVPrWxhyFF7I1s0GGtxt9Q"
 
-#install mongodb (if local install)
-jpackage install -n mongodb -i main -r --data="\
-mongodb.host=127.0.0.1 #\
-mongodb.port=27017 #\
-mongodb.name=main"
-
-#install mongodb client
-jpackage install -n mongodb_client -i main -r --data="\
-mongodb.client.addr=localhost #\
-mongodb.client.port=27017 #\
-mongodb.client.login= #\
-mongodb.client.passwd="
-
-#install influxdb (if local install)
-jpackage install -n influxdb -i main -r --data="influxdb.seedservers:"
-
-#install influxdb client
-jpackage install -n influxdb_client -i main -r --data="\
-influxdb.client.addr=localhost #\
-influxdb.client.port=8086 #\
-influxdb.client.login=root #\
-influxdb.client.passwd=root"
-
-#install osis (if local install)
-jpackage install -n osis -i main -r --data="\
-osis.key= #\
-osis.connection=mongodb:main influxdb:main #\
-osis.superadmin.passwd=rooter"
-
-#install osis client (if remote install, then no mongodb client nor server required)
-jpackage install -n osis_client -i main -r --data="\
-osis.client.addr=localhost #\
-osis.client.port=5544 #\
-osis.client.login=root #\
-osis.client.passwd=rooter"
-
-#create admin user for e.g. portal
-jsuser set -d admin:admin:admin:fakeemail.com:incubaid
-
-
-#install webdis
-jpackage install -n webdis -i main
-
-#install webdis_client
-jpackage install -n webdis_client -i main --data="\
-addr=127.0.0.1 #\
-port=7779"
-
-#agentcontroller
-jpackage install -n agentcontroller -i main --data="\
-osis.connection=main #\
-webdis.connection=main"
-
-#agentcontrolller client
-jpackage install -n agentcontroller_client -i main --data="\
-agentcontroller.client.addr=127.0.0.1 #\
-agentcontroller.client.port=4444"
-
-#processmanager
-jpackage install -n processmanager -i main --data="\
-agentcontroller.connection=main #\
-webdis.connection=main"
-
-#workers
-jpackage install -n workers
+jpackage install -n grid_master_singlenode
 
 pip install nose
 

@@ -21,10 +21,14 @@ class User(OsisBaseObject):
             self.active = True
             self.description=""
             self.emails=[]
+            self.xmpp=[]
+            self.mobile=[]
             self.lastcheck=0 #epoch of last time the info updated
             self.guid=""
             self.groups=[]
             self.authkey=""
+            self.data=""
+            self.authkeys=[]
          
 
     def getSetGuid(self):

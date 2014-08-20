@@ -18,7 +18,6 @@ class GridHealthChecker(object):
         self._errors = dict()
         self._status = dict()
         self._tostdout = True
-        self.masternid = 0
         with j.logger.nostdout():
             self.getNodes(activecheck=False)
 
@@ -120,17 +119,12 @@ class GridHealthChecker(object):
         nodes = self._nodecl.simpleSearch({})
         self._nids = []
         self._nidsNonActive=[]
-        gridmasterip = j.application.config.get('grid.master.ip')
         for node in nodes:
             self._nodenames[node['id']] = node['name']
             if node["active"]==True:
                 self._nids.append(node['id'])
-                if gridmasterip in node['ipaddr']:
-                    self.masternid = node['id'] 
             else:
                 self._nidsNonActive.append(node['id'])
-        if gridmasterip == '127.0.0.1':
-            self.masternid = j.application.whoAmI.nid
         if activecheck:
             self.pingAllNodesSync(clean=True)
             self._checkRunningNIDsFromPing()
@@ -185,6 +179,7 @@ class GridHealthChecker(object):
 
 
     def checkElasticSearch(self, clean=True):
+        return True
         if self._nids==[]:
             self.getNodes()
         if clean:

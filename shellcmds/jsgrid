@@ -14,8 +14,7 @@ j.application.start("jsgrid")
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['reconfigure', 'healthcheck', 'purgeall', 'purgelogs', 'purgejobs', \
-        'purgeecos', 'restartprocessmgrs',\
-        'reloadjumpscripts','resetlocks'],
+        'purgeecos', 'restartprocessmgrs', 'reloadjumpscripts','resetlocks', 'restartworkers'],
     help='Command to perform')
 # parser.add_argument("-n", '--nr', help='desktop nr')
 # parser.add_argument("-d", '--desktop', action='store_true', help='opendesktop')
@@ -124,6 +123,15 @@ if opts.action == 'restartprocessmgrs':
     import JumpScale.grid.agentcontroller
     ac=j.clients.agentcontroller.get()
     ac.restartProcessmanagerWorkers()
+
+if opts.action == 'restartworkers':
+    import JumpScale.baselib.redis
+    rcl = j.clients.redis.getRedisClient('127.0.0.1', 7766)
+    for proc in j.tools.startupmanager.getProcessDefs('workers'):
+        for num in xrange(1, proc.numprocesses +1):
+            name = "%s_%s" % (proc.name, num)
+            print "Sending command to %s" % name
+            rcl.set("workers:action:%s" % name,"STOP")
 
 if opts.action == 'reloadjumpscripts':
     import JumpScale.grid.jumpscripts
