@@ -36,12 +36,25 @@ class RedisDict(dict):
             result[key] = json.loads(value)
         return result
 
+    def pop(self, key):
+        value = self._client.hget(self._key, key)
+        self._client.hdel(self._key, key)
+        return json.loads(value)
+
+    def keys(self):
+        return self._client.hkeys(self._key)
+
+    def iteritems(self):
+        allkeys = self._client.hgetalldict(self._key)
+        for key, value in allkeys.iteritems():
+            yield key, json.loads(value)
+
 class Redis(redis.Redis):
+    hgetalldict = redis.Redis.hgetall
     def getDict(self, key):
         return RedisDict(self, key)
 
 class GeventRedis(Redis):
-    hgetalldict = Redis.hgetall
     def hgetall(self, name):
         "Return a Python dict of the hash's name/value pairs"
         d = self.execute_command('HGETALL', name)

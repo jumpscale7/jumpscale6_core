@@ -208,7 +208,7 @@ class Worker(object):
                     if job.id<1000000 and job.errorreport==True:
                         j.errorconditionhandler.processErrorConditionObject(eco)
                     else:
-                        print eco.errormessage
+                        print eco
                     # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                     # self.loghandler.logECO(eco)
                     job.state="ERROR"

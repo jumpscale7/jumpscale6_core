@@ -1,10 +1,11 @@
-
 from JumpScale import j
+import JumpScale.baselib.redis
 
 import time
 
 class Stat():
     def __init__(self,period=3600,memonly=False,percent=False):
+        self._type = 'Stat'
         self.results={}
         self.result=0
         self.period=period
@@ -21,6 +22,12 @@ class Stat():
         else:
             self.results[0]=self.result            
         return self.result
+
+    def dump(self):
+        return self.__dict__
+
+    def load(self, data):
+        self.__dict__ = data
 
     def getAvgMax(self):
         """
@@ -50,6 +57,7 @@ class Stat():
 class StatDiffPerSec(Stat):
     def __init__(self,period=3600,memonly=False,percent=False):
         Stat.__init__(self,period,memonly=memonly)
+        self._type = 'StatDiffPerSec'
         self.lastPoll=0
         self.lastVal=0
         self.percent=percent
@@ -102,7 +110,8 @@ class StatDiffPerSec(Stat):
 class StatAggregator():
 
     def __init__(self):
-        self.stats={}
+        redis = j.clients.redis.getRedisClient('127.0.0.1', 7768)
+        self.stats = redis.getDict("stataggregator")
         self.log=False
         if self.log:
             self.logdir=j.system.fs.joinPaths(j.dirs.logDir,"stats_aggregator")
@@ -135,29 +144,39 @@ class StatAggregator():
             path2="%s_%s"%(path2,j.base.time.getDayId())
 
             j.system.fs.writeFile(path2,"%s %-100s %s\n"%(self.getTime(),key,val),True)
-                
-
+               
+    def loadStat(self, key=None, data=None):
+        if key is not None:
+            data = self.stats[key]
+        if data['_type'] == 'Stat':
+            stat = Stat()
+        else:
+            stat = StatDiffPerSec()
+        stat.load(data)
+        return stat
 
     def set(self,key,val,ttype="N",remember=True,memonly=False,percent=False):
-        
         val=float(val)
-        if not self.stats.has_key(key):
-            self.registerStats(key,ttype,memonly,percent=percent)
-        result=self.stats[key].set(self.getTime(),val,remember=remember)
+        if key not in self.stats:
+            stat = self.registerStats(key,ttype,memonly,percent=percent)
+        else:
+            stat = self.loadStat(key)
+        result = stat.set(self.getTime(),val,remember=remember)
+        self.stats[key] = stat.dump()
         self.send2log("stats_aggregator",key,val)
         
         # print "set:%s:%s result:%s"%(key,val,result)
         return result
 
     def get(self,key):
-        if not self.stats.has_key(key):
+        if key not in self.stats:
             raise RuntimeError("Could not find stat with key:%s"%key)
-        return self.stats[key].result
+        return self.loadStat(key).result
 
     def getAvgMax(self,key):
-        if not self.stats.has_key(key):
+        if key not in self.stats:
             raise RuntimeError("Could not find stat with key:%s"%key)
-        return self.stats[key].getAvgMax()
+        return self.loadStat(key).getAvgMax()
 
     def registerStats(self,key,ttype="N",memonly=False,percent=False):
         """
@@ -165,29 +184,29 @@ class StatAggregator():
         """
 
         if ttype=="N":
-            self.stats[key]=Stat(memonly=memonly,percent=percent)
+            stat = Stat(memonly=memonly,percent=percent)
         else:            
-            self.stats[key]=StatDiffPerSec(memonly=memonly,percent=percent)
+            stat = StatDiffPerSec(memonly=memonly,percent=percent)
+        self.stats[key] = stat.dump()
+        return stat
 
     def clean(self):
         for key in self.stats:
-            stat=self.stats[key]
+            stat=self.loadStat(key)
             stat.clean(self.getTime())
 
     def delete(self,prefix):
         for key in self.stats.keys():
-            if key.find(prefix)==0:
+            if key.startswith(prefix):
                 self.stats.pop(key)
                 print "DELETE:%s"%key
                 
 
     def list(self,prefix="",memonly=False,avgmax=False):
-        out=""
         result={}
-        
         for key in self.stats.keys():
-            stat=self.stats[key]
-            if prefix=="" or key.find(prefix)==0:
+            stat=self.loadStat(key)
+            if prefix=="" or key.startswith(prefix):
                 if memonly==None or stat.memonly==memonly:
                     if stat.__dict__.has_key("lastPoll"):
                         ttype="D"
@@ -198,7 +217,6 @@ class StatAggregator():
                         result[key]=[ttype,stat.result,a,m]
                     else:
                         result[key]=[ttype,stat.result]
-
         return result
 
     def send2carbon(self):

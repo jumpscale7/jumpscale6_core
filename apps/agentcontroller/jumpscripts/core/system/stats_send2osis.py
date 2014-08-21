@@ -18,7 +18,8 @@ roles = []
 
 def action():
     stats = list()
-    for key, stat in j.system.stataggregator.stats.iteritems():
+    for key, data in j.system.stataggregator.stats.iteritems():
+        stat = j.system.stataggregator.loadStat(data=data) 
         if stat.memonly:
             continue
         avg, mag = stat.getAvgMax()
@@ -28,7 +29,8 @@ def action():
         try:
             OSISclientStat=j.core.osis.getClientForCategory(OSISclient,"system","stats")
             OSISclientStat.set(stats)
+            j.system.stataggregator.stats.clean()
         except Exception,e:
             j.errorconditionhandler.processPythonExceptionObject(e)
             if str(e).find("Connection refused")<>-1:
-                j.events.opserror_critical("cannot forward stats to osis, there is probably no carbon running on osis", category='processmanager.send2osis.stats', e=None)
+                j.events.opserror_critical("cannot forward stats to osis, there is probably no carbon running on osis", category='processmanager.send2osis.stats')
