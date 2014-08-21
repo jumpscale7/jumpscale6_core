@@ -71,7 +71,7 @@ class AgentCmds():
                         continue
                 except Exception,e:
                     j.errorconditionhandler.processPythonExceptionObject(e)
-                    client = self.reconnect(acip)
+                    client = self.reconnect(acip, config)
                     continue
 
                 job['achost'] = client.ipaddr

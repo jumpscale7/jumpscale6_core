@@ -21,9 +21,6 @@ log=False
 def action():
     import JumpScale.baselib.redis
     ports = [7768, 7766, 7767]
-    masterip = j.application.config.get('grid.master.ip')
-    if j.system.net.isIpLocal(masterip):
-        ports.append(7769)
     result = dict()
     for port in ports:
         pids = j.system.process.getPidsByPort(port)

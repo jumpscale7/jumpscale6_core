@@ -18,6 +18,7 @@ import JumpScale.baselib.graphite
 import JumpScale.lib.diskmanager
 import JumpScale.baselib.stataggregator
 import JumpScale.grid.agentcontroller
+import JumpScale.grid.osis
 import JumpScale.baselib.redis
 import JumpScale.baselib.redisworker
 import JumpScale.grid.jumpscripts
@@ -267,13 +268,23 @@ class Worker(object):
 if __name__ == '__main__':
     parser = cmdutils.ArgumentParser()
     parser.add_argument("-wn", '--workername', help='Worker name')
+    parser.add_argument("-i", '--instance', help='Worker instance', required=True)
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
     parser.add_argument("-pw", '--auth', help='Authentication of redis')
     parser.add_argument("-a", '--addr', help='Address of redis',default="127.0.0.1")
     parser.add_argument("-p", '--port', type=int, help='Port of redis',default=7768)
     parser.add_argument('--nodeid', type=int, help='nodeid, is just to recognise the command in ps ax',default=0)
 
+
     opts = parser.parse_args()
+
+    jp = j.packages.findNewest('jumpscale', 'workers')
+    jp.load(opts.instance)
+    j.application.instanceconfig = jp.hrd_instance
+    try:
+        j.core.osis.client = j.core.osis.getClientByInstance()
+    except KeyError:
+        j.core.osis.client = None
 
     wait=1
     while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
