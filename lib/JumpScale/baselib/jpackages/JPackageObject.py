@@ -972,8 +972,8 @@ class JPackageObject():
 
         if walkinstances:
             for iname in self.getInstanceNames():
-                jp.load(iname)
-                jp.stop(walkinstances=False)
+                self.load(iname)
+                self.stop(walkinstances=False)
         else:
             if self.isInstalled():
                 self.load()        
@@ -1287,11 +1287,11 @@ class JPackageObject():
             for dep in deps:
                 dep.configure(dependencies=False)
 
-        if instance==None:
+        if instance==None and self.instance is None:
             for instanceName in self.getInstanceNames():
+                self.instance=instanceName
                 self.configure(dependencies=False,instance=instanceName)
             return
-        self.instance=instance
 
         self._copyMetadataToActive(hrddata=hrddata)
 

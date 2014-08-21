@@ -30,7 +30,7 @@ class WebdisFactory:
         if instance is None:
             instance = j.application.instanceconfig.get('webdis.connection')
         webdiscljp = j.packages.findNewest(name="webdis_client",domain="jumpscale")
-        webdiscljp = webdiscljp.load(instance)
+        webdiscljp.load(instance)
         hrd = webdiscljp.hrd_instance
         ipaddr = hrd.get("addr")
         port = int(hrd.get("port"))

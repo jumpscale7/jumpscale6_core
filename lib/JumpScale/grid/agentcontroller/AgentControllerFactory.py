@@ -27,7 +27,7 @@ class AgentControllerFactory(object):
         if instance is None:
             instance = j.application.instanceconfig.get('agentcontroller.connection')
         accljp = j.packages.findNewest(name="agentcontroller_client",domain="jumpscale")
-        accljp = accljp.load(instance=instance)
+        accljp.load(instance=instance)
         hrd = accljp.hrd_instance
         prefix = 'agentcontroller.client.'
         result = dict()
