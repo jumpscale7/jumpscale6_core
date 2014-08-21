@@ -88,9 +88,9 @@ class BlobStorWorker:
         self.blobstor.getNodesDisks() #load all known nodes & disks of grid for blobstor
         self.redis=self.blobstor.redis
 
-        from IPython import embed
-        print "DEBUG NOW kkkk"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW kkkk"
+        # embed()
         
 
 

@@ -69,9 +69,9 @@ def action():
         if  int(lastactive)<agoOK :
             if lastactive==0:
                 raise RuntimeError("BUG: lastactive cannot be 0.")
-            from IPython import embed
-            print "DEBUG NOW yyyyyyy"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW yyyyyyy"
+            # embed()
             
             j.events.opserror('Worker %s seems to have timed out' % workername, 'monitoring') #is not critical
             timedout.append(workername)
@@ -97,9 +97,9 @@ def action():
             pid=int(line.split(" ")[0])
             if workerNameFound in timedout:                
                 print "kill ",
-                from IPython import embed
-                print "DEBUG NOW kill"
-                embed()
+                # from IPython import embed
+                # print "DEBUG NOW kill"
+                # embed()
                 
                 j.system.process.kill(pid)
                 j.events.opserror_critical("had to kill worker, there was timeout on:%s"%workerNameFound)

@@ -110,9 +110,11 @@ class Webdis(object):
                 print "Unknown status code webdis:%s"%r.status_code
                 raise RuntimeError("Webdis not available for url:'%s',unknown status code:'%s'."%(url2,r.status_code))
             else:
-                from IPython import embed
-                print "DEBUG NOW wedis.execute, check errorcondition"
-                embed()
+                # from IPython import embed
+                # print "DEBUG NOW wedis.execute, check errorcondition"
+                # embed()
+                ##TODO
+                pass
                 
         # eco=j.errorconditionhandler.parsePythonErrorObject(e)
         j.errorconditionhandler.raiseOperationalCritical(message='Webdis is down on port %s'%self.port, category='webdis.down', \

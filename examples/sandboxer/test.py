@@ -12,9 +12,9 @@ from IPython import embed
 
 if __name__ == '__main__':
 
-    j.application.start("shell")
-    j.console.echo("test")
-    print sys.path
-    embed()
+    # j.application.start("shell")
+    # j.console.echo("test")
+    # print sys.path
+    # embed()
 
     j.application.stop()

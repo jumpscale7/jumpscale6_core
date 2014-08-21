@@ -44,9 +44,9 @@ class StatManager():
     def reset(self):
         # self.models.infotable.destroy()
         # self.models.history.destroy()
-        from IPython import embed
-        print "DEBUG NOW osis destroy"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW osis destroy"
+        # embed()
         
         self.historyObjs = {}
         self.historyObjsMod = {}
@@ -124,9 +124,10 @@ class StatManager():
                     self.historyObjsLastSave.pop(key)
                     self.historyObjsMod.pop(key)
         except Exception as e:
-            from IPython import embed
-            print "DEBUG NOW error in clean cache for StatManager"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW error in clean cache for StatManager"
+            # embed()
+            pass
 
     def getEpoch(self):
         if self.now<>None:
@@ -138,9 +139,9 @@ class StatManager():
         if self.historyObjs.has_key(id):
             return self.historyObjs[id]
         # now = self.getEpoch()
-        from IPython import embed
-        print "DEBUG NOW getmodel"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW getmodel"
+        # embed()
         
         data = self.models.history.get(guid=id, createIfNeeded=True)
         obj = self._deserialize(data)

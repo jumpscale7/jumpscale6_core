@@ -50,9 +50,11 @@ class ClassDoc():
         elif self.path.find("python.zip")<>-1:
             path="python.zip/%s"%self.path.split("python.zip",1)[1]
         else:
-            from IPython import embed
-            print "DEBUG NOW write objectinspector, found new location"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW write objectinspector, found new location"
+            # embed()
+            ##TODO
+            pass
             
         out+="* path: %s\n\n"%path
         if self.comments<>None:

@@ -774,9 +774,9 @@ class JPackageClient():
         if domain<>"":
             j.logger.log("Switch metadata quality level for jpackages domain %s" % domain, 1)
             d=self.getDomainObject(domain)
-            from IPython import embed
-            print "DEBUG NOW switchMetaData"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW switchMetaData"
+            # embed()
             
         else:
             domainnames=self.getDomainNames()            
@@ -1008,9 +1008,9 @@ class JPackageClient():
 
     def runConfigurationPending(self):
         #@todo prob need to redo this and use redis or so, this is completely reloading all
-        from IPython import embed
-        print "DEBUG NOW runConfigurationPending"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW runConfigurationPending"
+        # embed()
         
         if not self._hasPackagesPendingConfiguration():
             return

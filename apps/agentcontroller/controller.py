@@ -306,9 +306,10 @@ class ControllerCMDS():
 
         if key in self.jumpscripts:
             if reload:
-                from IPython import embed
-                print "DEBUG NOW getJumpScript reload"
-                embed()
+                # from IPython import embed
+                # print "DEBUG NOW getJumpScript reload"
+                # embed()
+                pass
             else:                
                 return self.jumpscripts[key]
         else:

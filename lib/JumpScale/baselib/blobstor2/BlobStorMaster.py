@@ -165,9 +165,7 @@ class BlobstorMasterCMDS():
         return None
           
     def getNamespaceFromId(self,nsid,session=None):
-        from IPython import embed
-        print "DEBUG NOW getNamespaceFromId"
-        embed()
+        ##TODO
         return  ns
 
     def newNamespace(self,domain,name,session=None):
@@ -191,15 +189,13 @@ class BlobstorMasterCMDS():
         """
         @return key of the mdset (metadata set)
         """
-        from IPython import embed
-        print "DEBUG NOW oooo"
-        embed()
+        ##TODO
+        pass
         
 
     def setMDSet(self,mdset_key):
-        from IPython import embed
-        print "DEBUG NOW oooo"
-        embed()
+        ##TODO
+        pass
         
 
 class OsisGroup():

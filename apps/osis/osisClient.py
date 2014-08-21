@@ -41,9 +41,9 @@ if __name__ == '__main__':
 
     test1()
 
-    from IPython import embed
-    print "DEBUG NOW main in test script osis"
-    embed()
+    # from IPython import embed
+    # print "DEBUG NOW main in test script osis"
+    # embed()
 
 
 

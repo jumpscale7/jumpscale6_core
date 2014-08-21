@@ -69,9 +69,10 @@ class system_gridmanager(j.code.classGetBase()):
         try:
             stats = client.listStatKeys('n%s.system.' % nid)
         except Exception,e:
-            from IPython import embed
-            print "DEBUG NOW getNodeSystemStats"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW getNodeSystemStats"
+            # embed()
+            pass
             
 
         cpupercent = [ stats['n%s.system.cpu.percent' % nid][-1] ]

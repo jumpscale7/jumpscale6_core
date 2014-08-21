@@ -281,9 +281,9 @@ class JNode():
         if not j.system.fs.exists(path=source):
             self.raiseError("upload","could not find path:%s"%source)
         self.log("upload","upload %s to %s"%(source,dest))
-        from IPython import embed
-        print "DEBUG NOW implement upload in Admin"  #@todo
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW implement upload in Admin"  #@todo
+        # embed()
     
         for item in items:
             partpath=j.system.fs.pathRemoveDirPart(item,cfgdir)

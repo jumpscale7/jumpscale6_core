@@ -57,10 +57,10 @@ class MySQLClient():
         if len(result)==0:
             return None
         else:
-            from IPython import embed
-            print "DEBUG NOW select1"
-            embed()
-        
+            # from IPython import embed
+            # print "DEBUG NOW select1"
+            # embed()
+            
             return result
 
     def queryToListDict(self,query):

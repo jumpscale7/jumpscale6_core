@@ -288,13 +288,8 @@ diskinfo.description=
         find disks which are mounted
         @return [[$partid,$size,$free]]
         """
-        from IPython import embed
-        print "DEBUG NOW iiiiii"
-        embed()
-        
-
-
-        from IPython import embed
-        print "DEBUG NOW partitionsGet_Ext4Data"
-        embed()
- 
+        # from IPython import embed
+        # print "DEBUG NOW partitionsGet_Ext4Data"
+        # embed()
+        ##TODO
+        pass

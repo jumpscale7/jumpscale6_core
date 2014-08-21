@@ -15,9 +15,9 @@ roles = []
 
 def action():
     
-    from IPython import embed
-    print "DEBUG NOW clean kvs"
-    embed()
+    # from IPython import embed
+    # print "DEBUG NOW clean kvs"
+    # embed()
     
     return "done"
 

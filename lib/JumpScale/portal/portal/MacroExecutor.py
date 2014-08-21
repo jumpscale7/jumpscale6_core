@@ -214,9 +214,11 @@ class MacroExecutorPage(MacroExecutorBase):
 
     def processMacrosInWikiContent(self, content):
         for macrostr, macrocmd in self.findMacros(content):
-            print "DEBUG NOW macro in wiki  content (e.g. for table)"
-            from IPython import embed
-            embed()
+            # print "DEBUG NOW macro in wiki  content (e.g. for table)"
+            # from IPython import embed
+            # embed()
+            ##TODO
+            pass
         return content
 
 

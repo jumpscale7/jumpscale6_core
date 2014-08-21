@@ -70,9 +70,9 @@ class MD():
 
             walker.walk(src,callbackFunctions)
 
-            from IPython import embed
-            print "DEBUG NOW ooo"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW ooo"
+            # embed()
             
 class MD2():
     def __init__(self):
@@ -211,9 +211,9 @@ class Passthrough(Operations):
             path2=self._getTmpPath(path)
             self.log("mkdir.readonly",path2)
             j.system.fs.createDir(path2)
-            from IPython import embed
-            print "DEBUG NOW oo"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW oo"
+            # embed()
             
         else:
             path2=self._full_path(path)

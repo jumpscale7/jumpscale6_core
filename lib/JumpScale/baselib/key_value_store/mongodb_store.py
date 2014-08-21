@@ -41,9 +41,9 @@ class MongoDBKeyValueStore(KeyValueStoreBase):
                 value["_id"]=guid
             # value = json.dumps(value)
             categoryKey = self._getCategoryKey(category, key)
-            from IPython import embed
-            print "DEBUG NOW set"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW set"
+            # embed()
             
             self.redisclient.set(categoryKey, value)
         else:

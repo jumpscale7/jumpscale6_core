@@ -177,9 +177,9 @@ class PageRST(Page):
             self.addNewLine()
             self._inBlockType="list"        
         return
-        from IPython import embed
-        print "DEBUG NOW addlist (pagerst)"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW addlist (pagerst)"
+        # embed()
         
         if rows==[[]]:
             return 
@@ -228,9 +228,9 @@ class PageRST(Page):
         """
         @params aliases is dict with mapping between name in dict and name to use
         """
-        from IPython import embed
-        print "DEBUG NOW addDict (pagerst)"
-        embed()        
+        # from IPython import embed
+        # print "DEBUG NOW addDict (pagerst)"
+        # embed()        
         if keystoshow == []:
             keystoshow = dictobject.keys()
         self.addMessage(description)
@@ -297,9 +297,9 @@ class PageRST(Page):
         @param height height of the image
         @param styles a list of tuples, containing CSS attributes for the image, e.g. [("background-color", "green), ("border", "1px solid green")]
         """
-        from IPython import embed
-        print "DEBUG NOW add image page2rst"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW add image page2rst"
+        # embed()
         
         width_n_height = ''
         if width:
@@ -315,9 +315,9 @@ class PageRST(Page):
         @param columnsWidth = Array with each element a nr, when None then HTML does the formatting, otherwise relative to each other
         @param colContents = array with each element HTML code
         """
-        from IPython import embed
-        print "DEBUG NOW addTableWithContent (page2rst)"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW addTableWithContent (page2rst)"
+        # embed()
         
         table = "<table><thead><tr>"
         for colWidth, colContent in zip(columnsWidth, colContents):

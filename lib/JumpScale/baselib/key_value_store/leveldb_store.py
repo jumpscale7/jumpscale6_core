@@ -106,9 +106,9 @@ class LevelDBKeyValueStore(KeyValueStoreBase):
         fullKeys = self.dbclient.prefix(categoryKey)
         if fullKeys==None:
             return []
-        from IPython import embed
-        print "DEBUG NOW list"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW list"
+        # embed()
         
         return self._stripCategory(fullKeys, category)
 

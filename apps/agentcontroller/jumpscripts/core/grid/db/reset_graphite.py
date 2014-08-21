@@ -14,9 +14,9 @@ roles = []
 
 def action():
     
-    from IPython import embed
-    print "DEBUG NOW clean graphite"
-    embed()
+    # from IPython import embed
+    # print "DEBUG NOW clean graphite"
+    # embed()
     
     return "done"
 

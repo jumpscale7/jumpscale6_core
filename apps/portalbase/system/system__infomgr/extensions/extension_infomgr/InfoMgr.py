@@ -101,9 +101,10 @@ class InfoMgr():
                     self.historyObjsLastSave.pop(key)
                     self.historyObjsMod.pop(key)
         except Exception as e:
-            from IPython import embed
-            print "DEBUG NOW error in clean cache for infomgr"
-            embed()
+            pass
+            # from IPython import embed
+            # print "DEBUG NOW error in clean cache for infomgr"
+            # embed()
 
     def now(self):
         return j.core.portal.active.epoch

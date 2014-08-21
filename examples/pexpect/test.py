@@ -16,9 +16,9 @@ do("cd /etc")
 print do("ls")
 
 
-from IPython import embed
-print "DEBUG NOW main"
-embed()
+# from IPython import embed
+# print "DEBUG NOW main"
+# embed()
 
 
 j.application.stop()

@@ -29,11 +29,6 @@ def main(j, args, params, tags, tasklet):
     #get queue per node
     
 
-    from IPython import embed
-    print "DEBUG NOW popopop"
-    embed()
-    
-
     params.result = (out, args.doc)
     return params
 

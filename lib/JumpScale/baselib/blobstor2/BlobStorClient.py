@@ -280,9 +280,8 @@ class BlobStorClient:
                     
                     self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
                 else:
-                    from IPython import embed
-                    print "DEBUG NOW could not download in batch"
-                    embed()
+                    ##TODO
+                    pass
 
         self._downloadbatchSize=0
         self._downloadbatch={}

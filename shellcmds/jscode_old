@@ -127,9 +127,9 @@ for bitbucket,account,reponame,branch,client,path in repos:
         try:
             remotelastrevision=changesets["changesets"][0]["revision"]
         except Exception,e:
-            from IPython import embed
-            print "DEBUG NOW jscode check error from changeset pull"
-            embed()
+            
+            ##TODO
+            pass
             
         rid=changesets["changesets"][0]["raw_node"] #remoteid
 

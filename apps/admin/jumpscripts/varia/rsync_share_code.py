@@ -37,8 +37,8 @@ strict modes = false
    strict modes = false
    hosts allow = 
     """
-    from IPython import embed
-    print "DEBUG NOW yyy"
-    embed()
+    # from IPython import embed
+    # print "DEBUG NOW yyy"
+    # embed()
     raise RuntimeError("not finished yet")
             

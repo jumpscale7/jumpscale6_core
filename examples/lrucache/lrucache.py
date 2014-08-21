@@ -27,8 +27,8 @@ for i in range(10000):
 
 cache.flush()
 
-from IPython import embed
-print "main shell"
-embed()
+# from IPython import embed
+# print "main shell"
+# embed()
 
 j.application.stop()

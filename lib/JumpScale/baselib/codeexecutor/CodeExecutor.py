@@ -60,8 +60,8 @@ class CodeExecutor:
 
 
 
-        from IPython import embed
-        print "DEBUG NOW macroeval"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW macroeval"
+        # embed()
         
 

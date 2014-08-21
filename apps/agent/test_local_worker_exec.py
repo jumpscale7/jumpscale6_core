@@ -15,9 +15,9 @@ job=j.clients.redisworker.execFunction(atest,name="aname",_category="unknown", _
 
 print job
 
-from IPython import embed
-print "main"
-embed()
+# from IPython import embed
+# print "main"
+# embed()
 
 
 

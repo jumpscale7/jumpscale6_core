@@ -707,7 +707,7 @@ class PortalServer:
             "yaml": {"content_type": CONTENT_TYPE_YAML, "serializer": self._resultyamlSerializer}
         }
 
-       if '_jsonp' in ctx.params:
+        if '_jsonp' in ctx.params:
            result = {'httpStatus': ctx.httpStatus, 'httpMessage': ctx.httpMessage, 'body': result}
            return CONTENT_TYPE_JS, "%s(%s);" % (ctx.params['_jsonp'], j.db.serializers.getSerializerType('j').dumps(result))
 

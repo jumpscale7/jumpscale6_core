@@ -190,9 +190,9 @@ class Domain():
         if self.packages.has_key(key):
             prevjp=self.packages[key]
             newer=False
-            from IPython import embed
-            print "DEBUG NOW check previous jpackage, only when newer put"
-            embed()
+            # from IPython import embed
+            # print "DEBUG NOW check previous jpackage, only when newer put"
+            # embed()
             if newer==False:
                 return prevjp
             

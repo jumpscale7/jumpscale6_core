@@ -14,6 +14,5 @@ class ZDaemonAgent(ZDaemonCmdClient):
         ZDaemonCmdClient.__init__(self, ipaddr=ipaddr, port=port, user=user, passwd=passwd, ssl=ssl, reset=reset, roles=roles)
 
     def start(self):
-        from IPython import embed
-        print "DEBUG NOW start"
-        embed()
+        ##TODO
+        pass

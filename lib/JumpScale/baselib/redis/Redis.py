@@ -160,9 +160,9 @@ class RedisFactory:
 
     def stopInstance(self, name):
         j.logger.log("start redis:%s" % name, level=5, category="")
-        from IPython import embed
-        print "DEBUG NOW id"
-        embed()
+        # from IPython import embed
+        # print "DEBUG NOW id"
+        # embed()
         
 
     def startInstance(self, name):
