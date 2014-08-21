@@ -177,7 +177,12 @@ class Dirs(object):
         return txt
 
     def replaceFilesDirVars(self,path,recursive=True, filter=None,additionalArgs={}):
-        for path in j.system.fs.listFilesInDir(path,recursive,filter):
+        if j.system.fs.isFile(path):
+            paths=[path]
+        else:
+            paths=j.system.fs.listFilesInDir(path,recursive,filter)
+            
+        for path in paths:
             content=j.system.fs.fileGetContents(path)
             content2=self.replaceTxtDirVars(content,additionalArgs)
             if content2<>content:
