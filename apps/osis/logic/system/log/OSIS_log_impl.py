@@ -1,39 +1,24 @@
 from JumpScale import j
-from JumpScale.grid.osis.OSISStoreES import OSISStoreES
+from JumpScale.grid.osis.OSISStoreMongo import OSISStoreMongo
 import JumpScale.grid.grid
 import uuid
+import datetime
 
 ujson = j.db.serializers.getSerializerType('j')
 
-class mainclass(OSISStoreES):
-    TTL = '5d'
+class mainclass(OSISStoreMongo):
+    TTL = 3600 * 24 * 5 # 5 days
     """
     """
 
     def set(self,key,value,waitIndex=False, session=None):
-        ##no manipulation so no longer needed
-        # docs = []
-        # for logobject in value:            
-        #     docs.append(logobject)
-
-        # print "batch log:%s"%len(value)            
-        #self.elasticsearch.bulk_index(index="clusterlog_%s_%s"%(logobject["bid"],logobject["gid"]), doc_type="json", docs=docs, id_field="id")                                                    
+        db, counter = self._getMongoDB(session)
+        ttl = datetime.datetime.utcnow()
         if len(value)>0:
             for log in value:
-                log['_ttl'] = self.TTL
-            self.elasticsearch.bulk_index(index="system_log", doc_type="json", docs=value, id_field="guid")
+                log['_ttl'] = ttl
+        db.insert(value)
         return ["",True,True]
-
-    def find(self, query, start=0, size=100, session=None):
-        kwargs = dict()
-        if start:
-            kwargs['es_from'] = start
-        if size:
-            kwargs['size'] = size
-        try:
-            return self.elasticsearch.search(index='system_log', query=query, **kwargs)
-        except:
-            return {'hits': {'hits': list(), 'total': 0}}
 
     def destroyindex(self):
         raise NotImplementedError()

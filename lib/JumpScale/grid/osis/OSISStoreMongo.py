@@ -146,6 +146,7 @@ class OSISStoreMongo(OSISStore):
 
         if not full:
             res.pop("_id")
+            res.pop("_ttl", None)
         return res
         
     def exists(self, key, session=None):
@@ -273,6 +274,7 @@ class OSISStoreMongo(OSISStore):
             result=[]
             for item in db.find(params,limit=size,skip=start,fields=fields,sort=sortlist):
                 item.pop("_id")
+                item.pop("_ttl", None)
                 result.append(item)
             return result
         else:
@@ -324,6 +326,7 @@ class OSISStoreMongo(OSISStore):
             result = [count, ]
             for item in resultdata:
                 item.pop("_id")
+                item.pop("_ttl", None)
                 result.append(item)
             return result
 
