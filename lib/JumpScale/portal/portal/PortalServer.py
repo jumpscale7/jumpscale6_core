@@ -616,7 +616,7 @@ class PortalServer:
             else:
                 eco = j.errorconditionhandler.getErrorConditionObject()
 
-        scriptName = ctx.env["SCRIPT_NAME"]
+        method = ctx.env["PATH_INFO"]
         remoteAddress = ctx.env["REMOTE_ADDR"]
         queryString = ctx.env["QUERY_STRING"]
 
@@ -660,7 +660,7 @@ class PortalServer:
         ctx.start_response(httpcode, [('Content-Type', 'text/html')])
 
         j.console.echo("***ERROR***:%s : method %s from ip %s with params %s" % (
-            msg, scriptName, remoteAddress, queryString), 2)
+            eco, method, remoteAddress, queryString), 2)
         if j.application.debug:
             return msg
         else:
