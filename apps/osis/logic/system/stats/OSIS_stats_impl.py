@@ -2,32 +2,25 @@ from JumpScale import j
 from JumpScale.grid.osis.OSISStore import OSISStore
 
 ujson = j.db.serializers.getSerializerType('j')
-import JumpScale.baselib.graphite
+
+MONITORING_DB_NAME = 'monitoring'
 
 class mainclass(OSISStore):
-    """
-    """
 
-    def set(self,key,value,waitIndex=False, session=None):
-        out = ""
-        if isinstance(value, list):
-            for key,val in value:
-                out += "%s %s\n" % (key, val)
-            key = None
-        j.clients.graphite.send(out)
-        return [key, False, False]
+    def __init__(self, dbconnections):
+        self.dbclient = dbconnections['influxdb_main']
+        databases = [db['name'] for db in self.dbclient.get_database_list()]
+        if MONITORING_DB_NAME not in databases:
+            self.dbclient.create_database(MONITORING_DB_NAME)
 
-    def delete(self, key, session=None):
-        path = '/opt/graphite/storage/whisper/n%s' % key
-        if j.system.fs.exists(path):
-            j.system.fs.removeDirTree(path)
-            return True
-        return False
+    def set(self, data, waitIndex=False, session=None):
+        self.dbclient.write_points(data)
 
-    def find(self,query, start=0, size =100, session=None):
-        #@todo disabled for now untill we have better solution
-        return ""
-        return j.clients.graphite.query(query)
+    def delete(self, seriesName, session=None):
+        self.dbclient.delete_series(seriesName)
+
+    def find(self, query, start=0, size =100, session=None):
+        return self.dbclient.query(query)
 
     def destroyindex(self, session=None):
         raise RuntimeError("osis 'destroyindex' for stat not implemented")
