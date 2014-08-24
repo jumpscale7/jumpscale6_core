@@ -13,15 +13,9 @@ def main(q, args, params, tags, tasklet):
     if log.epoch==0:
         log.epoch=int(time.time())
 
-    if log.pid<>0:
-        # hincrby(name, key, amount=1)
-        incrkey="%s_%s"%(log.gid,log.pid)
-        log.order=redis.incr("logs:incr:%s"%incrkey,1)
-        log.guid = "%s_%s_%s"%(log.gid,log.pid,log.order)
-    else:
-        incrkey="%s_%s_%s"%(log.gid,log.nid,log.epoch)
-        log.order=redis.incr("logs:incr:%s"%incrkey,1)
-        log.guid = "%s_%s_%s_%s"%(log.gid,log.nid,log.epoch,log.order)
+    incrkey="%s_%s"%(log.gid,log.nid)
+    log.order=redis.incr("logs:incr:%s"%incrkey,1)
+    log.guid = "%s_%s_%s"%(log.gid,log.nid,log.order)
 
     params.result=log
 
