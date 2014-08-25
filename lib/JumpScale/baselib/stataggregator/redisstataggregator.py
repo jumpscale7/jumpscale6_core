@@ -15,10 +15,10 @@ class RedisStatAggregator(object):
         self.redis.rpush(key, ujson.dumps(data))
 
     def popStats(self, key):
-        pipeline = self.redis.pipeline()
-        pipeline.lrange(key, 0, -1)
-        pipeline.delete(key)
-        stats = pipeline.execute()[0]
+        with self.redis.pipeline() as pipeline:
+            pipeline.lrange(key, 0, -1)
+            pipeline.delete(key)
+            stats = pipeline.execute()[0]
         result = list()
         for stat in stats:
             result.append(ujson.loads(stat))

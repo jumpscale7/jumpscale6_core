@@ -3,17 +3,11 @@ from JumpScale.grid.osis.OSISStore import OSISStore
 
 ujson = j.db.serializers.getSerializerType('j')
 
-MONITORING_DB_NAME = 'monitoring'
-
 class mainclass(OSISStore):
 
     def __init__(self, dbconnections):
         self.elasticsearch = None
         self.dbclient = dbconnections['influxdb_main']
-        databases = [db['name'] for db in self.dbclient.get_database_list()]
-        if MONITORING_DB_NAME not in databases:
-            self.dbclient.create_database(MONITORING_DB_NAME)
-        self.dbclient.switch_db(MONITORING_DB_NAME)
 
     def set(self, key, value, waitIndex=False, session=None):
         stats = value

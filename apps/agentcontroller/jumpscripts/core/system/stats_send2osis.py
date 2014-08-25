@@ -18,13 +18,12 @@ roles = []
 
 def action():
     statskeys = ('system', 'disk', 'nic')
+    OSISclient=j.core.osis.getClientForNamespace("system")
     for key in statskeys:
         stats = j.system.redisstataggregator.popStats(key)
-        OSISclient = j.core.osis.client
         if stats:
             try:
-                OSISclientStat=j.core.osis.getClientForCategory(OSISclient,"system","stats")
-                OSISclientStat.set(stats, key)
+                OSISclient.stats.set(stats, key)
             except Exception,e:
                 j.errorconditionhandler.processPythonExceptionObject(e)
                 if str(e).find("Connection refused")<>-1:

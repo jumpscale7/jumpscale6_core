@@ -83,6 +83,9 @@ if __name__ == '__main__':
                 print "cannot connect to influxdb, will keep on trying forever, please start (%s:%s)"%(ipaddr,port)
 
             client=j.clients.influxdb.get(host=ipaddr, port=port,username=login, password=passwd, database="main")
+            databases = [db['name'] for db in client.get_database_list()]
+            if 'main' not in databases:
+                client.create_database('main')
 
         client.hrd=hrd #remember hrd as well
         
