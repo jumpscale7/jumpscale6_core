@@ -13,8 +13,13 @@ class mainclass(OSISStore):
         if MONITORING_DB_NAME not in databases:
             self.dbclient.create_database(MONITORING_DB_NAME)
 
-    def set(self, data, waitIndex=False, session=None):
-        self.dbclient.write_points(data)
+    def set(self, key, stats, waitIndex=False, session=None):
+        data = {'name': key, 'points': []}
+        for stat in stats:
+            if 'columns' not in data:
+                data['columns'] = stat.keys()
+            data['points'].append(stat.values())
+        self.dbclient.write_points([data])
 
     def delete(self, seriesName, session=None):
         self.dbclient.delete_series(seriesName)
