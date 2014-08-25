@@ -8,6 +8,7 @@ MONITORING_DB_NAME = 'monitoring'
 class mainclass(OSISStore):
 
     def __init__(self, dbconnections):
+        self.elasticsearch = None
         self.dbclient = dbconnections['influxdb_main']
         databases = [db['name'] for db in self.dbclient.get_database_list()]
         if MONITORING_DB_NAME not in databases:
