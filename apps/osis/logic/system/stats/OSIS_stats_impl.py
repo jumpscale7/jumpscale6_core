@@ -13,8 +13,10 @@ class mainclass(OSISStore):
         databases = [db['name'] for db in self.dbclient.get_database_list()]
         if MONITORING_DB_NAME not in databases:
             self.dbclient.create_database(MONITORING_DB_NAME)
+        self.dbclient.switch_db(MONITORING_DB_NAME)
 
-    def set(self, key, stats, waitIndex=False, session=None):
+    def set(self, key, value, waitIndex=False, session=None):
+        stats = value
         data = {'name': key, 'points': []}
         for stat in stats:
             if 'columns' not in data:
@@ -22,7 +24,8 @@ class mainclass(OSISStore):
             data['points'].append(stat.values())
         self.dbclient.write_points([data])
 
-    def delete(self, seriesName, session=None):
+    def delete(self, key, session=None):
+        seriesName = key
         self.dbclient.delete_series(seriesName)
 
     def find(self, query, start=0, size =100, session=None):

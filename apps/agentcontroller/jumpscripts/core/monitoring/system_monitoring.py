@@ -65,19 +65,20 @@ def action():
     num_ctx_switches = int(stats['ctxt'])
 
     results["cpu.num_ctx_switches"]=num_ctx_switches
+    j.system.redisstataggregator.pushStats('system', results)
 
-    result2={}
-    for key in results.keys():
-        if key.find("percent")<>-1 or key.find("time")<>-1:
-            percent=True
-        else:
-            percent=False
-        if any([ x in key for x in ['network.', 'time', 'cpu.num'] ]):
-            ttype="D"
-        else:
-            ttype="N"
+    # result2={}
+    # for key in results.keys():
+    #     if key.find("percent")<>-1 or key.find("time")<>-1:
+    #         percent=True
+    #     else:
+    #         percent=False
+    #     if any([ x in key for x in ['network.', 'time', 'cpu.num'] ]):
+    #         ttype="D"
+    #     else:
+    #         ttype="N"
 
-        result2[key]=j.system.stataggregator.set("n%s.system.%s"%(j.application.whoAmI.nid,key),results[key],remember=True,memonly=False,percent=percent,ttype=ttype)
+    #     result2[key]=j.system.stataggregator.set("n%s.system.%s"%(j.application.whoAmI.nid,key),results[key],remember=True,memonly=False,percent=percent,ttype=ttype)
 
     return results
 

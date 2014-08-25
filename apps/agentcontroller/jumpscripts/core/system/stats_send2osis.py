@@ -17,20 +17,15 @@ log = False
 roles = []
 
 def action():
-    stats = list()
-    for key, data in j.system.stataggregator.stats.iteritems():
-        stat = j.system.stataggregator.loadStat(data=data) 
-        if stat.memonly:
-            continue
-        avg, mag = stat.getAvgMax()
-        stats.append([key,avg])
-    OSISclient = j.core.osis.client
-    if stats:
-        try:
-            OSISclientStat=j.core.osis.getClientForCategory(OSISclient,"system","stats")
-            OSISclientStat.set(stats)
-            j.system.stataggregator.stats.clean()
-        except Exception,e:
-            j.errorconditionhandler.processPythonExceptionObject(e)
-            if str(e).find("Connection refused")<>-1:
-                j.events.opserror_critical("cannot forward stats to osis, there is probably no carbon running on osis", category='processmanager.send2osis.stats')
+    statskeys = ('system', 'disk', 'nic')
+    for key in statskeys:
+        stats = j.system.redisstataggregator.popStats(key)
+        OSISclient = j.core.osis.client
+        if stats:
+            try:
+                OSISclientStat=j.core.osis.getClientForCategory(OSISclient,"system","stats")
+                OSISclientStat.set(stats, key)
+            except Exception,e:
+                j.errorconditionhandler.processPythonExceptionObject(e)
+                if str(e).find("Connection refused")<>-1:
+                    j.events.opserror_critical("cannot forward stats to osis, there is probably no influxdb running on osis", category='processmanager.send2osis.stats')
