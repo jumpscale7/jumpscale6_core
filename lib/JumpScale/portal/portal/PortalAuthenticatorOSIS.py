@@ -3,8 +3,9 @@ import time
 class PortalAuthenticatorOSIS():
 
     def __init__(self):
-
-        osis =j.core.portal.active.osis
+        self.hrd=j.application.instanceconfig
+        osisinstance=self.hrd.get("portal.osis.connection")
+        osis = j.core.osis.getClientByInstance(osisinstance)
         self.osis=j.core.osis.getClientForCategory(osis,"system","user")
         self.osisgroups=j.core.osis.getClientForCategory(osis,"system","group")
         self.key2user={}
