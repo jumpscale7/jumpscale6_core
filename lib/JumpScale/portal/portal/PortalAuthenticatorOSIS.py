@@ -2,10 +2,7 @@ from JumpScale import j
 import time
 class PortalAuthenticatorOSIS():
 
-    def __init__(self):
-        self.hrd=j.application.instanceconfig
-        osisinstance=self.hrd.get("portal.osis.connection")
-        osis = j.core.osis.getClientByInstance(osisinstance)
+    def __init__(self, osis):
         self.osis=j.core.osis.getClientForCategory(osis,"system","user")
         self.osisgroups=j.core.osis.getClientForCategory(osis,"system","group")
         self.key2user={}

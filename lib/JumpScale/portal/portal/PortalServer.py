@@ -47,9 +47,7 @@ class PortalServer:
 
         j.core.portal.active=self
 
-        osisinstance=self.hrd.get("portal.osis.connection")
-
-        self.osis =j.core.osis.getClientByInstance(osisinstance)
+        self.osis = j.core.osis.getClientByInstance()
 
         self.pageKey2doc = {}
         self.routes = {}
@@ -94,11 +92,11 @@ class PortalServer:
 
         self.jslibroot=j.system.fs.joinPaths(j.dirs.baseDir,"apps","portals","jslib")
 
-        self.auth=PortalAuthenticatorOSIS()
+        self.auth=PortalAuthenticatorOSIS(self.osis)
 
         self.loadSpaces()
 
-        self.rest=PortalRest(self)        
+        self.rest=PortalRest(self)
 
     def loadConfig(self):
 
