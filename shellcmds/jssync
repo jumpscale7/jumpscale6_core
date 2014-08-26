@@ -143,12 +143,12 @@ def upload(category,path="",data=False):
             print "RETRY"
 
 def finddomain(name):
-    for cat in j.system.fs.listDirsInDir("/opt/code/", recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
-        for dname in j.system.fs.listDirsInDir("/opt/code/%s"%cat, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
-            if dname.find("__jp_")<>-1:
-                dname2=dname.split("__jp_",1)[1]
+    for cat in j.system.fs.listDirsInDir("/opt/code/github/", recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+        for dname in j.system.fs.listDirsInDir("/opt/code/github/%s"%cat, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+            if dname.find("jp_")<>-1:
+                dname2=dname.split("jp_",1)[1]
                 if dname2.lower().strip()==name.lower().strip():
-                    return "/opt/code/%s/%s"%(cat,dname)
+                    return "/opt/code/github/%s/%s"%(cat,dname)
     raise RuntimeError("could not find domain for name:'%s'"%name)
 
 opts.category=opts.category.split(",")
@@ -201,23 +201,22 @@ if opts.action.find('sync2sb')==0 and checkcat("libs"):
     j.system.fs.createDir("%s/libjs/JumpScale/"%opts.sbpath)    
 
     for item in ["base","baselib","core"]:
-        sync("/opt/code/jumpscale/%s__jumpscale_core/lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
+        sync("/opt/code/github/jumpscale/jumpscale_core/lib/JumpScale/%s/"%(item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
     item="grid"
-    sync("/opt/code/jumpscale/%s__jumpscale_grid/lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
+    sync("/opt/code/github/jumpscale/jumpscale_core/lib/JumpScale/%s/"%(item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
     item="lib"
-    sync("/opt/code/jumpscale/%s__jumpscale_lib/JumpScale/%s/"%(opts.branch,item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
+    sync("/opt/code/github/jumpscale/jumpscale_core/lib/JumpScale/%s/"%(item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
 
     #grid apps
-    sync("/opt/code/jumpscale/%s__jumpscale_grid/apps/agent/"%opts.branch,"%s/apps/agent/"%opts.sbpath)
-    sync("/opt/code/jumpscale/%s__jumpscale_core/apps/blobserver/"%opts.branch,"%s/apps/blobserver/"%opts.sbpath)
-    sync("/opt/code/jumpscale/%s__jumpscale_grid/apps/processmanager/"%opts.branch,"%s/apps/processmanager/"%opts.sbpath)
+    sync("/opt/code/github/jumpscale/jumpscale_core/apps/agent/","%s/apps/agent/"%opts.sbpath)
+    sync("/opt/code/github/jumpscale/jumpscale_core/apps/blobserver/","%s/apps/blobserver/"%opts.sbpath)
+    sync("/opt/code/github/jumpscale/jumpscale_core/apps/processmanager/","%s/apps/processmanager/"%opts.sbpath)
 
     #tools
-    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/tools/"%opts.branch,"%s/tools/"%opts.sbpath)
-    #sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/cfg/"%opts.branch,"/opt/jsbox/cfg/")
-    sync("/opt/code/jumpscale/%s__jumpscale_core/shellcmds/"%opts.branch,"%s/tools/"%opts.sbpath,delete=False)
-    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/libjs/"%opts.branch,"%s/libjs/"%opts.sbpath,delete=False)
-    sync("/opt/code/jumpscale/%s__jumpscale_core/jsbox/activate"%opts.branch,"%s/activate"%opts.sbpath,delete=False)
+    sync("/opt/code/github/jumpscale/jumpscale_core/jsbox/tools/","%s/tools/"%opts.sbpath)
+    sync("/opt/code/github/jumpscale/jumpscale_core/shellcmds/","%s/tools/"%opts.sbpath,delete=False)
+    sync("/opt/code/github/jumpscale/jumpscale_core/jsbox/libjs/","%s/libjs/"%opts.sbpath,delete=False)
+    sync("/opt/code/github/jumpscale/jumpscale_core/jsbox/activate","%s/activate"%opts.sbpath,delete=False)
 
 
 #COPY FROM SYSTEM TO SANDBOX for CFG
