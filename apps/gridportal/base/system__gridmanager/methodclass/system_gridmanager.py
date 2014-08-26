@@ -499,7 +499,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'to_closetime': {'name': 'closetime', 'eq': 'gte', 'value': to_closetime},
                   'descrpub': descrpub,
                   'nid': getInt(nid),
-                  'gid': getIntgid),
+                  'gid': getInt(gid),
                   'category': category,
                   'tags': tags,
                   'state': state,
