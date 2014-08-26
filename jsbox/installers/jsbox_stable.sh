@@ -1,7 +1,7 @@
 #!/bin/sh
 
 RSYNCSERVER=install.jumpscale.org
-if [ -n $1 ]; then
+if [ -n "$1" ]; then
     RSYNCSERVER=$1
 fi
 
