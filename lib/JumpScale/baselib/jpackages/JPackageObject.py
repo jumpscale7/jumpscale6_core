@@ -302,9 +302,6 @@ class JPackageObject():
         if j.system.fs.exists(path=hrdtemplatesPath):
             for item in j.system.fs.listFilesInDir(hrdtemplatesPath):
                 base=j.system.fs.getBaseName(item)
-                if j.system.fs.exists(j.system.fs.joinPaths(j.dirs.cfgDir,"hrd",base)):
-                    j.system.fs.remove(j.system.fs.joinPaths(j.dirs.cfgDir,"hrd",base))
-                   
                 if base[0]<>"_":
                     templ=j.system.fs.fileGetContents(item)                
                     actbasepath=j.system.fs.joinPaths(self.getPathInstance(),"hrdinstance",base)
