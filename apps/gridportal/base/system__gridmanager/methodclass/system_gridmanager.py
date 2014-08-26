@@ -10,6 +10,11 @@ def mbToKB(value):
         return value
     return value * 1024
 
+def getInt(val):
+    if val is not None:
+        return int(val)
+    return val
+
 class system_gridmanager(j.code.classGetBase()):
     """
     gateway to grid
@@ -24,7 +29,7 @@ class system_gridmanager(j.code.classGetBase()):
 
         self.passwd = j.application.config.get("grid.master.superadminpasswd")
 
-        osis = j.core.osis.getClient(j.application.config.get("grid.master.ip"), passwd=self.passwd, user='root')
+        osis = j.core.portal.active.osis
         self.osis_node = j.core.osis.getClientForCategory(osis,"system","node")
         self.osis_job = j.core.osis.getClientForCategory(osis,"system","job")
         self.osis_eco = j.core.osis.getClientForCategory(osis,"system","eco")
@@ -85,7 +90,7 @@ class system_gridmanager(j.code.classGetBase()):
         return result
 
     def _getNode(self, nid):
-        node=self.osis_node.get(nid)
+        node=self.osis_node.get(getInt(nid))
         r = dict()
         r["id"]=node.id
         r["roles"]=node.roles
@@ -114,7 +119,7 @@ class system_gridmanager(j.code.classGetBase()):
         """
         lastcheckFrom = self._getEpoch(lastcheckFrom)
         lastcheckTo = self._getEpoch(lastcheckTo)
-        params = {'gid': gid,
+        params = {'gid': getInt(gid),
                   'name': name,
                   'guid': guid,
                   'active': active,
@@ -123,7 +128,7 @@ class system_gridmanager(j.code.classGetBase()):
                   'peer_stats': peer_stats,
                   'peer_log': peer_log,
                   'peer_backup': peer_backup,
-                  'id': id,
+                  'id': getInt(id),
                   }
         results = self.osis_node.simpleSearch(params)
         def myfilter(node):
@@ -261,7 +266,7 @@ class system_gridmanager(j.code.classGetBase()):
         """
         from_ = self._getEpoch(from_)
         to = self._getEpoch(to)
-        params = {'id': id,
+        params = {'id': getInt(id),
                   'guid': guid,
                   'level': {'name': 'level', 'value': level, 'eq': 'lte'},
                   'category': category,
@@ -269,8 +274,8 @@ class system_gridmanager(j.code.classGetBase()):
                   'from_': {'name': 'epoch', 'value': from_, 'eq': 'gte'},
                   'to': {'name': 'epoch', 'value': to, 'eq': 'lte'},
                   'jid': jid,
-                  'nid': nid,
-                  'gid': gid,
+                  'nid': getInt(nid),
+                  'gid': getInt(gid),
                   'pid': pid,
                   'tags': tags,
                   }
@@ -297,8 +302,8 @@ class system_gridmanager(j.code.classGetBase()):
         to = self._getEpoch(to)
         params = {'ffrom': {'name': 'timeStart', 'value': from_, 'eq': 'gte'},
                   'to': {'name': 'timeStart', 'value': to, 'eq': 'lte'},
-                  'nid': nid,
-                  'gid': gid,
+                  'nid': getInt(nid),
+                  'gid': getInt(gid),
                   'id': id,
                   'guid': guid,
                   'description': description,
@@ -333,14 +338,14 @@ class system_gridmanager(j.code.classGetBase()):
         to = self._getEpoch(to)
         params = {'ffrom': {'name': 'epoch', 'value': from_, 'eq': 'gte'},
                   'to': {'name':'epoch','value': to, 'eq': 'lte'},
-                  'nid': nid,
-                  'level': level,
+                  'nid': getInt(nid),
+                  'level': getInt(level),
                   'descr': descr,
                   'descrpub': descrpub,
                   'category': category,
                   'tags': tags,
                   'type': type,
-                  'gid': gid,
+                  'gid': getInt(gid),
                   'jid': jid,
                   'jidparent': jidparent,
                   'id': id,
@@ -375,8 +380,8 @@ class system_gridmanager(j.code.classGetBase()):
                   'to': {'name': 'epochstart', 'value': to, 'eq': 'lte'},
                   'lastcheckFrom': {'name': 'lastcheck', 'value': lastcheckFrom, 'eq': 'gte'},
                   'lastcheckTo': {'name': 'lastcheck', 'value': lastcheckTo, 'eq': 'lte'},
-                  'nid': nid,
-                  'gid': gid,
+                  'nid': getInt(nid),
+                  'gid': getInt(gid),
                   'active': active,
                   'id': id,
                   'systempid': systempid,
@@ -493,8 +498,8 @@ class system_gridmanager(j.code.classGetBase()):
                   'from_closetime': {'name': 'closetime', 'eq': 'lte', 'value': from_closetime},
                   'to_closetime': {'name': 'closetime', 'eq': 'gte', 'value': to_closetime},
                   'descrpub': descrpub,
-                  'nid': nid,
-                  'gid': gid,
+                  'nid': getInt(nid),
+                  'gid': getIntgid),
                   'category': category,
                   'tags': tags,
                   'state': state,
@@ -541,8 +546,8 @@ class system_gridmanager(j.code.classGetBase()):
         params = {'id': id,
                   'machineid': machineid,
                   'guid': guid,
-                  'gid': gid,
-                  'nid': nid,
+                  'gid': getInt(gid),
+                  'nid': getInt(nid),
                   'disk_id': disk_id,
                   'fs': fs,
                   'sizeFrom': {'name': 'size', 'eq': 'lte', 'value': mbToKB(sizeFrom)},
@@ -596,8 +601,8 @@ class system_gridmanager(j.code.classGetBase()):
         params = {'id': id,
                   'guid': guid,
                   'otherid': otherid,
-                  'gid': gid,
-                  'nid': nid,
+                  'gid': getInt(gid),
+                  'nid': getInt(nid),
                   'lastcheckFrom': {'name': 'lastcheck', 'value': lastcheckFrom, 'eq': 'gte'},
                   'lastcheckTo': {'name': 'lastcheck', 'value': lastcheckTo, 'eq': 'lte'},
                   'name': name,
@@ -650,8 +655,8 @@ class system_gridmanager(j.code.classGetBase()):
         lastcheckTo = self._getEpoch(lastcheckTo)
         params = {'id': id,
                   'guid': guid,
-                  'gid': gid,
-                  'nid': nid,
+                  'gid': getInt(gid),
+                  'nid': getInt(nid),
                   'fs': fs,
                   'sizeFrom': {'name': 'size', 'eq': 'lte', 'value': mbToKB(sizeFrom)},
                   'sizeTo': {'name': 'size', 'eq': 'gte', 'value': mbToKB(sizeTo)},
@@ -687,8 +692,8 @@ class system_gridmanager(j.code.classGetBase()):
         """
         params = {'id': id,
                   'guid': guid,
-                  'gid': gid,
-                  'nid': nid,
+                  'gid': getInt(gid),
+                  'nid': getInt(nid),
                   'lastcheck': lastcheck,
                   'mac': mac,
                   'name': name,

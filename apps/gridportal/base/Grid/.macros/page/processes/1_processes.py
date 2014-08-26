@@ -8,7 +8,7 @@ def main(j, args, params, tags, tasklet):
 
     filters = dict()
     if nid:
-        filters['nid'] = nid
+        filters['nid'] = int(nid)
     filters['active'] = True
 
     fieldids = ["sname", "nid", "jpname", "jpdomain", "epochstart"]

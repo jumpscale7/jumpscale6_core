@@ -627,8 +627,8 @@ class PortalServer:
             eco.errormessage += "\msginfo was:\n%s" % msginfo
         if queryString != "":
             eco.errormessage += "\nquerystr was:%s" % queryString
-        if scriptName != "":
-            eco.errormessage += "\nscriptname was:%s" % scriptName
+        if method != "":
+            eco.errormessage += "\nmethod was:%s" % method
 
         j.errorconditionhandler.processErrorConditionObject(eco)
 
