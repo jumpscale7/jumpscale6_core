@@ -6,7 +6,12 @@ h2. Node $$id $$name
 
 {{toc: start=3}}
 
-{{nodestat: nid:$$id cpustats}}
+h3. CPU Statistics
+{{html:
+
+<iframe width="1000px" height="300px" src="/jslib/grafana/index.html#/dashboard/script/CPUStats.js?nid=$$id&gid=$$gid" frameborder="0"></iframe>
+
+}}
 
 h3. Info
 
