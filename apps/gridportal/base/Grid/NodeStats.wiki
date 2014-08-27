@@ -4,7 +4,7 @@ h2. Statistics of node $$id
 
 {{html:
 
-<iframe height="900px" frameborder="0" width="1000px" src="/jslib/grafana/index.html#/dashboard/script/NodeStats.js?nid=$$id&gid=$$gid"></iframe>
+<iframe height="810px" frameborder="0" width="1000px" src="/jslib/grafana/iframe.html#/dashboard/script/NodeStats.js?nid=$$id&gid=$$gid"></iframe>
 
 }}
 
