@@ -13,15 +13,19 @@ class AgentControllerFactory(object):
         @if None will be same as master
         """
         if addr is None:
-            config = self.getInstanceConfig('main')
-            addr = config['addr']
-            port = config['port']
-            login = config.get('login')
-            passwd = config.get('passwd')
+            addr, port, login, passwd = self._getConnectionTuple('main')
         connection = (addr, port, login, passwd)
         if connection not in self._agentControllerClients:
             self._agentControllerClients[connection]=AgentControllerClient(addr, port, login, passwd)
         return self._agentControllerClients[connection]
+
+    def _getConnectionTuple(self, instance):
+        config = self.getInstanceConfig(instance)
+        addr = config['addr']
+        port = config['port']
+        login = config.get('login')
+        passwd = config.get('passwd')
+        return addr, port, login, passwd
 
     def getInstanceConfig(self, instance=None):
         if instance is None:
@@ -43,14 +47,16 @@ class AgentControllerFactory(object):
         config = self.getInstanceConfig(instance)
         return self.get(**config)
 
-    def getClientProxy(self,category="jpackages",agentControllerIP=None):
-        key="%s_%s"%(category,agentControllerIP)
-        if not self._agentControllerProxyClients.has_key(key):
-            self._agentControllerProxyClients[key]=AgentControllerProxyClient(category,agentControllerIP)
-        return self._agentControllerProxyClients[key]
+    def getClientProxy(self,category="jpackages", addr=None, port=PORT, login='root', passwd=None):
+        if addr is None:
+            addr, port, login, passwd = self._getConnectionTuple('main')
+        connection = (addr, port, login, passwd)
+        if connection not in self._agentControllerProxyClients:
+            self._agentControllerProxyClients[connection]=AgentControllerProxyClient(category,addr, port, login, passwd)
+        return self._agentControllerProxyClients[connection]
 
 class AgentControllerProxyClient():
-    def __init__(self,category,agentControllerIP):
+    def __init__(self,category,agentControllerIP, port, login, passwd):
         self.category=category
         import JumpScale.grid.geventws
         if agentControllerIP==None:
