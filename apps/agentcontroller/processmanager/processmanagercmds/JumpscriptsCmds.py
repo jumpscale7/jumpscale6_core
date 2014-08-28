@@ -4,6 +4,7 @@ import ujson
 from redis import Redis
 # from rq import Queue
 import JumpScale.baselib.redisworker
+import crontab
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
 class JumpscriptsCmds():
@@ -85,8 +86,7 @@ class JumpscriptsCmds():
             # self.jumpscripts["%s_%s" % (organization, name)] = jumpscript
             period = jumpscript.period
             if period<>None:
-                period=int(period)
-                if period>0:
+                if period:
                     if period not in self.jumpscriptsByPeriod:
                         self.jumpscriptsByPeriod[period]=[]
                     print "schedule jumpscript %s on period:%s"%(jumpscript.name,period)
@@ -132,11 +132,14 @@ class JumpscriptsCmds():
                 action.execute()
 
     def _loop(self, period):
+        if isinstance(period, basestring):
+            wait = crontab.CronTab(period).next
+        else:
+            wait = lambda : period
         while True:
-            gevent.sleep(period)
+            gevent.sleep(wait())
             self._run(period)
 
     def _configureScheduling(self):
         for period in self.jumpscriptsByPeriod.keys():
-            period=int(period)
             j.core.processmanager.daemon.schedule("loop%s"%period, self._loop, period=period)
