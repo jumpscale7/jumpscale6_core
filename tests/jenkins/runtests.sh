@@ -59,6 +59,11 @@ login =
 passwd = 
 login = ' > /opt/jumpscale/cfg/jsconfig/github.cfg
 
+echo '
+grid.master.superadminpasswd=rooter
+grid.id=666
+' >> /opt/jumpscale/cfg/hrd/grid.hrd
+
 jpackage mdupdate
 jpackage install -n base
 
