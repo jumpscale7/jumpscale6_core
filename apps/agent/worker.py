@@ -131,10 +131,9 @@ class Worker(object):
                 if self.actions.has_key(job.jscriptid):
                     jscript=self.actions[job.jscriptid]
                 else:
-                    print "JSCRIPT CACHEMISS"
-                    try:
+                    print "JSCRIPT CACHEMISS"                                                            
+                    try:                        
                         jscript=w.getJumpscriptFromId(job.jscriptid)
-
                         if jscript==None:
                             msg="cannot find jumpscript with id:%s"%job.jscriptid
                             print "ERROR:%s"%msg
@@ -155,9 +154,12 @@ class Worker(object):
 
                         self.actions[job.jscriptid]=jscript
 
-                    except Exception,e:
+                    except Exception,e:                                                
                         agentid=j.application.getAgentId()
-                        msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
+                        if jscript<>None:
+                            msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
+                        else:
+                            msg="could not compile jscriptid:%s on agent:%s.\nError:%s"%(job.jscriptid,agentid,e)
                         eco=j.errorconditionhandler.parsePythonErrorObject(e)
                         eco.errormessage = msg
                         eco.code=jscript.source
@@ -219,12 +221,10 @@ class Worker(object):
                 #ok or not ok, need to remove from queue test
                 #thisin queue test is done to now execute script multiple time
                 self.redis.hdel("workers:inqueuetest",jscript.getKey())
-
                 self.notifyWorkCompleted(job)
 
 
     def notifyWorkCompleted(self,job):
-        acclient = self.getClient(job)
         w=j.clients.redisworker
         job.timeStop=int(time.time())
 
@@ -238,6 +238,7 @@ class Worker(object):
             self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
             w.redis.rpush("workers:return:%s"%job.id,time.time())            
         else:
+            acclient = self.getClient(job)
             #jumpscripts coming from AC
             if job.state<>"OK":
                 try:
@@ -281,10 +282,8 @@ if __name__ == '__main__':
     jp = j.packages.findNewest('jumpscale', 'workers')
     jp.load(opts.instance)
     j.application.instanceconfig = jp.hrd_instance
-    try:
-        j.core.osis.client = j.core.osis.getClientByInstance()
-    except KeyError:
-        j.core.osis.client = None
+
+    j.core.osis.client = j.core.osis.getClientByInstance(die=False)
 
     wait=1
     while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:

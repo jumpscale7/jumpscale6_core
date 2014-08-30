@@ -40,6 +40,7 @@ class ProcessDefEmpty:
         self.jpackage_domain=""
         self.jpackage_name=""
         self.jpackage_version=""
+        self.jpackage_instance=""
         self.lastCheck=int(time.time())
         self.upstart = False
         self.processfilterstr=""
@@ -131,6 +132,10 @@ class ProcessDef:
         self.jpackage_domain=hrd.get("process.jpackage.domain")
         self.jpackage_name=hrd.get("process.jpackage.name")
         self.jpackage_version=hrd.get("process.jpackage.version")
+        if hrd.exists("process.jpackage.instance"):
+            self.jpackage_instance=hrd.get("process.jpackage.instance")
+        else:
+            self.jpackage_instance="0"
 
         self.upstart = self.hrd.getBool("process.upstart",default=False)
 
@@ -634,10 +639,12 @@ class StartupManager:
         if jpackage==None:
             hrd+="process.jpackage.domain=\n"
             hrd+="process.jpackage.name=\n"
+            hrd+="process.jpackage.instance=\n"
             hrd+="process.jpackage.version=\n"
         else:
             hrd+="process.jpackage.domain=%s\n"%jpackage.domain
             hrd+="process.jpackage.name=%s\n"%jpackage.name
+            hrd+="process.jpackage.instance=%s\n"%jpackage.instance
             hrd+="process.jpackage.version=%s\n"%jpackage.version
 
         j.system.fs.writeFile(filename=self._getHRDPath(domain, name),contents=hrd)
@@ -747,7 +754,7 @@ class StartupManager:
     def getProcessDefs4JPackage(self,jpackage):
         result=[]
         for pd in self.getProcessDefs():
-            if pd.jpackage_name==jpackage.name and pd.jpackage_domain==jpackage.domain:
+            if pd.jpackage_name==jpackage.name and pd.jpackage_domain==jpackage.domain and pd.jpackage_instance==jpackage.instance:
                 result.append(pd)
         return result
 
@@ -791,7 +798,7 @@ class StartupManager:
     def getStatus4JPackage(self,jpackage):
         result=True
         for pd in self.getProcessDefs4JPackage(jpackage):
-            result=result and self.getStatus(pd.domain,pd.name)
+            result=result and self.getStatus(pd.domain,pd.name)                
         return result
 
     def getStatus(self, domain, name):

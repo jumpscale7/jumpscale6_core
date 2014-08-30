@@ -142,8 +142,10 @@ class JumpscriptFactory:
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
         secretkey = "agentcontroller.webdiskey"
         if j.application.config.exists(secretkey)==False or j.application.config.get(secretkey)=="":
-            raise RuntimeError("please configure %s" % secretkey)
-        self.secret=j.application.config.get(secretkey)
+            pass
+            # raise RuntimeError("please configure %s" % secretkey)
+        else:
+            self.secret=j.application.config.get(secretkey)
 
     def getJSClass(self):
         return JumpScript

@@ -11,11 +11,11 @@ OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 import time
 import inspect
 
-if j.application.config.exists("agentcontroller.webdiskey"):
-    import JumpScale.grid.jumpscripts
-    Jumpscript=j.tools.jumpscriptsManager.getJSClass()
-else:
-    Jumpscript=None
+# if j.application.config.exists("agentcontroller.webdiskey"):
+import JumpScale.grid.jumpscripts
+Jumpscript=j.tools.jumpscriptsManager.getJSClass()
+# else:
+    # Jumpscript=None
 
 class Job(OsisBaseObject):
 

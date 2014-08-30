@@ -166,17 +166,20 @@ class OSISFactory:
         self.osisConnections[key] = client
         return client
 
-    def getClientByInstance(self, instance=None, ssl=False, gevent=False):
+    def getClientByInstance(self, instance=None, ssl=False, gevent=False,die=True):
         if instance is None:
             instance = j.application.instanceconfig.get('osis.connection')
         osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
         osisjp.load(instance=instance)
-        hrd=osisjp.hrd_instance
-        ipaddr=hrd.get("osis.client.addr")
-        port=int(hrd.get("osis.client.port"))
-        user=hrd.get("osis.client.login")
-        passwd=hrd.get("osis.client.passwd")
-        return self.getClient(ipaddr=ipaddr, port=port, user=user, passwd=passwd, ssl=ssl, gevent=gevent)
+        if osisjp.isInstalled():
+            hrd=osisjp.hrd_instance
+            ipaddr=hrd.get("osis.client.addr")
+            port=int(hrd.get("osis.client.port"))
+            user=hrd.get("osis.client.login")
+            passwd=hrd.get("osis.client.passwd")
+            return self.getClient(ipaddr=ipaddr, port=port, user=user, passwd=passwd, ssl=ssl, gevent=gevent)
+        if die:
+            j.events.inputerror_critical("Could not find osis_client with instance:%s, could not load osis,"%instance)
 
     def getClientForNamespace(self, namespace, client=None):
         if client==None:

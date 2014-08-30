@@ -12,7 +12,7 @@ class ActionManager:
         # print "init actions for %s"%jp
         self._jpackage=jp
         self._actions={}
-        self._done={}        
+        self._done={}                
 
         def load(path):
             name=j.system.fs.getBaseName(path)
@@ -21,6 +21,10 @@ class ActionManager:
             md5 = j.tools.hash.md5_string(path)
             modname = "JumpScale.baselib.jpackages.%s" % md5
             # print path
+
+            if not j.system.fs.exists(path=path):
+                raise RuntimeError("Could not find path:%s for actionmanager."%path)
+            
             module = imp.load_source(modname, path)
             self._actions[name]= module.main
 
@@ -32,8 +36,8 @@ class ActionManager:
             path=j.system.fs.joinPaths(classpath,"actions","%s.py"%actionname)
             load(path)
 
-        if jp.instance<>None:
-            instancepath=jp.getPathInstance()
+        instancepath=jp.getPathInstance()
+        if jp.instance<>None and j.system.fs.exists(path=j.system.fs.joinPaths(instancepath,"actions")):
             if j.system.fs.exists(instancepath):
                 for actionname in j.packages.getActionNamesInstance():
                     path=j.system.fs.joinPaths(instancepath,"actions","%s.py"%actionname)
