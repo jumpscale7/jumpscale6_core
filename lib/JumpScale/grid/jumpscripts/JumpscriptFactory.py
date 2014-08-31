@@ -19,6 +19,7 @@ class JumpScript(object):
         self.id = None
         self.startatboot = False
         self.path = path
+        self.debug=False
         self.timeout=60
         if ddict:
             ddict.pop('path', None)
@@ -45,6 +46,8 @@ from JumpScale import j
         modulename = 'JumpScale.jumpscript_%s' % md5sum
         linecache.checkcache(self.path)
         self.module = imp.load_source(modulename, self.path)
+        if self.source.find("DEBUG NOW")<>-1:
+            self.debug=True
 
     def getDict(self):
         result = dict()
@@ -86,15 +89,19 @@ from JumpScale import j
         if not self._loaded:
             self.load()
 
-        def helper(pipe):
+        if self.debug:
             result = self.executeInProcess(*args, **kwargs)
-            pipe.send(result)
+            return result
+        else:
+            def helper(pipe):
+                result = self.executeInProcess(*args, **kwargs)
+                pipe.send(result)
 
-        ppipe, cpipe = multiprocessing.Pipe()
-        proc = multiprocessing.Process(target=helper, args=(cpipe,))
-        proc.start()
-        proc.join()
-        return ppipe.recv()
+            ppipe, cpipe = multiprocessing.Pipe()
+            proc = multiprocessing.Process(target=helper, args=(cpipe,))
+            proc.start()
+            proc.join()
+            return ppipe.recv()
 
     def executeInProcess(self, *args, **kwargs):
         try:

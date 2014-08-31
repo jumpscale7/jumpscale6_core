@@ -168,11 +168,21 @@ class RedisWorkerFactory:
         @return job
         """
         source=inspect.getsource(method)
-        methodstr=source.split("\n")[0].split(" ")[1]
-        name,remainder=methodstr.split("(",1)
-        name=name.strip()
-        lines=["def action(%s"%(remainder)]
-        lines=lines+source.split("\n")[1:]
+        first=True
+        for line in source.split("\n"):
+            if first:
+                orglen=len(line)
+                line=line.lstrip()
+                newlen=len(line)
+                removeNrChars=orglen-newlen                
+                methodstr=line.split(" ")[1]                
+                name,remainder=methodstr.split("(",1)
+                name=name.strip()
+                lines=["def action(%s"%(remainder)]
+                first=False
+            else:        
+                line=line[removeNrChars:]
+                lines.append(line)
         source="\n".join(lines)
 
         js=Jumpscript()
@@ -182,8 +192,8 @@ class RedisWorkerFactory:
         key=j.tools.hash.md5_string(source)
 
         if self.redis.hexists("workers:jumpscripthashes",key):
-            jumpscript_data=self.redis.hget("workers:jumpscripthashes",key)
-            js=Jumpscript(ddict=json.loads(jumpscript_data))
+            js.id=self.redis.hget("workers:jumpscripthashes",key)
+            # js=Jumpscript(ddict=json.loads(jumpscript_data))
         else:
             #jumpscript does not exist yet
             js.id=self.redis.incr("workers:jumpscriptlastid")
@@ -191,7 +201,7 @@ class RedisWorkerFactory:
             self.redis.hset("workers:jumpscripts:id",js.id, jumpscript_data)
             if js.organization<>"" and js.name<>"":
                 self.redis.hset("workers:jumpscripts:name","%s__%s"%(js.organization,js.name), jumpscript_data)            
-            self.redis.hset("workers:jumpscripthashes",key,jumpscript_data)
+            self.redis.hset("workers:jumpscripthashes",key,js.id)
 
         job=self._getJob(js.id,args=args,timeout=_timeout,log=_log,queue=_queue)
         job.cmd=js.name
