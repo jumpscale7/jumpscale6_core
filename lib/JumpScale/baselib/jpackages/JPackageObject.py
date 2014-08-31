@@ -363,6 +363,15 @@ class JPackageObject():
 
         if self.blobstorRemote ==None or   self.blobstorLocal==None:
             self._raiseError("DEBUG NOW blobstorremote or blobstorlocal needs to be available")
+
+    def getAppPath(self):
+        path = self.hrd.get("jp.app.path")
+        if path is None:
+            j.events.inputerror_critical("Could not find 'jp.app.path' in main hrd of jpackage:%s"%jp)
+        path = j.dirs.replaceTxtDirVars(path)
+        if path is None:
+            j.events.inputerror_critical("Could not find data for 'jp.app.path' in main hrd of jpackage:%s"%jp)
+        return self.hrd_instance.applyOnContent(path)
         
     def getDebugMode(self):
         return self.state.debugMode
