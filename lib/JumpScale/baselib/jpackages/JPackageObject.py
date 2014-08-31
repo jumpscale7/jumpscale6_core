@@ -732,7 +732,9 @@ class JPackageObject():
 
     def getInstanceNames(self):
         root=j.system.fs.joinPaths(j.dirs.packageDir, "instance", self.domain,self.name)
-        return j.system.fs.listDirsInDir(root,False,True)
+        if j.system.fs.exists(root):
+            return j.system.fs.listDirsInDir(root,False,True)
+        return list()
 
     def _getPackageInteractive(self,platform):
 
@@ -897,11 +899,16 @@ class JPackageObject():
 
         if hrdcheck:
             if instance<>None:
-                hrdinstancepath=j.system.fs.joinPaths(j.packages.getJPActiveInstancePath(self.domain, self.name, instance),"hrdinstance")
+                hrdinstancepath = j.packages.getJPActiveInstancePath(self.domain, self.name, instance)
+            elif self.instance is None:
+                instances = self.getInstanceNames()
+                if instances:
+                    hrdinstancepath = j.packages.getJPActiveInstancePath(self.domain, self.name, instances[0])
+                else:
+                    hrdinstancepath = None
             else:
-                hrdinstancepath=j.system.fs.joinPaths(self.getPathInstance(),"hrdinstance")
-
-            if not j.system.fs.exists(path=hrdinstancepath):
+                hrdinstancepath = self.getPathInstance()
+            if hrdinstancepath is not None and not j.system.fs.exists(path=hrdinstancepath):
                 installed=False
 
         if checkAndDie and installed==False:
@@ -1165,7 +1172,7 @@ class JPackageObject():
             j.system.fs.copyDirTree(path, destination,keepsymlinks=True,skipProtectedDirs=True)
 
     @JPLock
-    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False,instance=0,hrddata={}):
+    def install(self, dependencies=True, download=True, reinstall=False,reinstalldeps=False,update=False,instance=None,hrddata={}):
         """
         Install the JPackage
 
@@ -1198,6 +1205,8 @@ class JPackageObject():
             return # Nothing to do
 
         j.packages.inInstall.append(key)
+        if instance is None:
+            instance = 0
 
         self.instance=instance
 
