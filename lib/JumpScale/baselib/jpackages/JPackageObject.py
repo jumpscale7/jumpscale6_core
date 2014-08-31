@@ -208,7 +208,7 @@ class JPackageObject():
     # @JPLock
     def load(self,instance=None,force=False,hrddata={},findDefaultInstance=True):
 
-        if self._loaded and force==False:
+        if self._loaded and force==False and (instance is None or instance == self.instance):
             return
 
         #TRY AND FIND INSTANCE
@@ -267,6 +267,7 @@ class JPackageObject():
     # @JPLock
     def getCodeMgmtRecipe(self):
         self._init()
+        self.load()
 
         hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
         if not j.system.fs.exists(path=hrdpath):
