@@ -42,14 +42,17 @@ class AmazonProvider(object):
             result.append(data)
         return result
 
-    def create_machine(self, name, image, size, aws_ssh_key):
-        return self._client.create_node(name=name, image=image, size=size, ex_keyname=aws_ssh_key)
+    def create_machine(self, name, image, size, ssh_key_name, ssh_key_file):
+        self.import_keypair(ssh_key_name, ssh_key_file)
+        return self._client.create_node(name=name, image=image, size=size, ex_keyname=ssh_key_name)
 
     def execute_command(self, machine_name, command, sudo=False):
         machines = self.list_machines()
         host = None
         for machine in machines:
             if machine['name'] == machine_name:
+                if machine['status'] != 'running':
+                    raise RuntimeError('Machine "%s" is not running' % machine_name)
                 host = machine['public_ips'][0]
                 break
 
@@ -60,3 +63,6 @@ class AmazonProvider(object):
         if sudo:
             return rapi.sudo(command)
         return rapi.run(command)
+
+    def import_keypair(self, name, key_file):
+        self._client.ex_import_keypair(name, key_file)
