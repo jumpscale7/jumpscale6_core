@@ -1,5 +1,5 @@
-    
 from JumpScale import j
+from JumpScale.core.system.fs import FileLock
 
 json=j.db.serializers.getSerializerType("j")
 
@@ -15,13 +15,16 @@ class OSISClientForCat():
         if self.objectclass==None:
             retcode,content=self.client.getOsisObjectClassCodeOrSpec(self.namespace,self.cat)
             if retcode==1:
-                pathdir=j.system.fs.joinPaths(j.dirs.varDir,"code","osis",self.namespace)
-                path=j.system.fs.joinPaths(pathdir,"model.spec")
-                j.system.fs.removeDirTree(pathdir)
-                j.system.fs.createDir(pathdir)
-                j.system.fs.writeFile(filename=path,contents=content)
-                j.core.osis.generateOsisModelDefaults(self.namespace,path)
-                resultclass=j.core.osis.getOsisModelClass(self.namespace,self.cat,specpath=path)
+                with FileLock("osis_model_%s_%s" % (self.namespace, self.cat)):
+                    pathdir=j.system.fs.joinPaths(j.dirs.varDir,"code","osis",self.namespace)
+                    path=j.system.fs.joinPaths(pathdir,"model.spec")
+                    if j.system.fs.exists(path):
+                        if j.tools.hash.md5_string(content) != j.tools.hash.md5(path):
+                            j.system.fs.removeDirTree(pathdir)
+                            j.system.fs.createDir(pathdir)
+                            j.system.fs.writeFile(filename=path,contents=content)
+                    j.core.osis.generateOsisModelDefaults(self.namespace,path)
+                    resultclass=j.core.osis.getOsisModelClass(self.namespace,self.cat,specpath=path)
                 self.objectclass=resultclass
             elif retcode==2:
                 klass=content

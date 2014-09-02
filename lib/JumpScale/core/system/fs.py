@@ -99,7 +99,6 @@ def lock_(lockname, locktimeout=60, reentry=False):
             if not locked:
                 break
             else:
-                j.console.echo('waiting for lock... (%s)'%i)
                 time.sleep(1)
 
         if not locked:
