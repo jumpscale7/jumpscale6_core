@@ -429,6 +429,8 @@ class ControllerCMDS():
         else:
             job["resultcode"]=1
             job["state"]="TIMEOUT"
+            if job['nid'] is None:
+                job['nid'] = 0
             self._setJob(job, osis=True)
             self._log("timeout on execution")
             return job

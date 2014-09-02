@@ -75,6 +75,7 @@ class AgentCmds():
                     continue
 
                 job['achost'] = client.ipaddr
+                job['nid'] = j.application.whoAmI.nid
                 if job["queue"]=="internal":
                     #cmd needs to be executed internally (is for proxy functionality)
                    
