@@ -406,9 +406,9 @@ class Confluence2RST():
             # check params
             if state == "start" and line.find("@params") == 0:
                 params = line.replace("@params", "").strip()
-                from JumpScale.core.Shell import ipshell
-                print "DEBUG NOW params, not implemented"
-                ipshell()
+                #from JumpScale.core.Shell import ipshell
+                #print "DEBUG NOW params, not implemented"
+                #ipshell()
 
             if state == "start" and line.find("||") == 0:
                 # beginning of table
