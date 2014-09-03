@@ -90,12 +90,16 @@ def action():
                 vdisk.db.machineid = machine.db.id
                 vdisk.db.active = j.system.fs.exists(path)
                 if vdisk.db.active:
-                    diskinfo = j.system.platform.qemu_img.info(path)
-                    vdisk.db.size = diskinfo['virtual size']
-                    vdisk.db.sizeondisk = diskinfo['disk size']
-                    vdisk.db.backingpath = diskinfo.get('backing file', '')
-
-
+                    try:
+                        diskinfo = j.system.platform.qemu_img.info(path)
+                        vdisk.db.size = diskinfo['virtual size']
+                        vdisk.db.sizeondisk = diskinfo['disk size']
+                        vdisk.db.backingpath = diskinfo.get('backing file', '')
+                    except Exception:
+                        # failed to get disk information
+                        vdisk.db.size = -1
+                        vdisk.db.sizeondisk = -1
+                        vdisk.db.backingpath = ''
 
                 if vdisk.ckeyOld != vdisk.db.getContentKey():
                     #obj changed
@@ -110,6 +114,5 @@ def action():
                 machine.send2osis()
             except Exception:
                 pass
-                
         con.close()
 
