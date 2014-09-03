@@ -1,31 +1,24 @@
 from libcloud.compute.providers import get_driver
 from JumpScale import j
 import JumpScale.baselib.remote
+import time
 
-class AmazonProvider(object):
+class DigitalOcean(object):
 
     def __init__(self):
-        self._region = None
         self._client = None
 
-    @property
-    def region(self):
-        return self._region
+    def connect(self, client_id, api_key):
+        self._client = get_driver('digitalocean')(client_id, api_key)
 
-    @region.setter
-    def region(self, value):
-        self._region = 'ec2_%s' % value
+    def find_size(self, size_name):
+        return [s for s in self._client.list_sizes() if s.name.lower().find(size_name.lower()) != -1]
 
-    def connect(self, access_key_id, secret_access_key):
-        if not self.region:
-            raise RuntimeError('Region must be set first')
-        self._client = get_driver(self.region)(access_key_id, secret_access_key)
+    def find_image(self, image_name):
+        return [i for i in self._client.list_images() if i.name.lower().find(image_name.lower()) != -1 or i.extra['distribution'].lower().find(image_name.lower()) != -1]
 
-    def find_size(self, size_id):
-        return [s for s in self._client.list_sizes(self.region) if s.id.lower().find(size_id.lower()) != -1]
-
-    def find_image(self, image_id):
-        return [i for i in self._client.list_images(self.region) if i.id.lower().find(image_id.lower()) != -1]
+    def find_location(self, location_name):
+        return [l for l in self._client.list_locations() if l.name.lower().find(location_name.lower()) != -1]
 
     def list_machines(self):
         result = list()
@@ -37,32 +30,32 @@ class AmazonProvider(object):
             data['public_ips'] = machine.public_ips
             data['private_ips'] = machine.private_ips
             data['image_id'] = machine.extra.get('image_id', None)
-            data['status'] = machine.extra.get('status', None)
             data['size_id'] = machine.extra.get('instance_type', None)
             result.append(data)
         return result
 
-    def create_machine(self, name, image, size, ssh_key_name, ssh_key_file):
+    def create_machine(self, name, image, size, location, ssh_key_name, ssh_key_file):
         self.import_keypair(ssh_key_name, ssh_key_file)
-        return self._client.create_node(name=name, image=image, size=size, ex_keyname=ssh_key_name)
+        time.sleep(5)
+        return self._client.create_node(name=name, image=image, size=size, location=location, ex_ssh_key_ids=[ssh_key_name,])
 
     def execute_command(self, machine_name, command, sudo=False):
         machines = self.list_machines()
         host = None
         for machine in machines:
             if machine['name'] == machine_name:
-                if machine['status'] != 'running':
-                    raise RuntimeError('Machine "%s" is not running' % machine_name)
                 host = machine['public_ips'][0]
                 break
 
         if not host:
             raise RuntimeError('Could not find machine: %s' % machine_name)
         rapi = j.remote.cuisine.api
-        rapi.connect(host, user='ubuntu')
+        rapi.connect(host)
         if sudo:
             return rapi.sudo(command)
         return rapi.run(command)
 
     def import_keypair(self, name, key_file):
-        self._client.ex_import_keypair(name, key_file)
+        with open(key_file) as f:
+            ssh_key = f.read()
+        self._client.ex_create_ssh_key(name, ssh_key)
