@@ -18,7 +18,7 @@ class mainclass(OSISStoreMongo):
         else:
             changed = False
             new = True
-        dbval = {"id": key, "value": bson.Binary(value)}
+        dbval = {"id": key, "guid": key, "value": bson.Binary(value)}
         db.save(dbval)
         return [key, new, changed]
 
