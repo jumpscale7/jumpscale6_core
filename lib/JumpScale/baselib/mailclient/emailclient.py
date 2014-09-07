@@ -31,8 +31,20 @@ class EmailClient(object):
 
     __repr__=__str__
 
-    def send(self, recipients, sender, subject, message, files=None):
+    def send(self, recipients, sender, subject, message, files=None, mimetype=None):
         """
+        @param recipients: Recipients of the message
+        @type recipients: mixed, string or list
+        @param sender: Sender of the email
+        @type sender: string
+        @param subject: Subject of the email
+        @type subject: string
+        @param message: Body of the email
+        @type message: string
+        @param files: List of paths to files to attach
+        @type files: list of strings
+        @param mimetype: Type of the body plain, html or None for autodetection
+        @type mimetype: string
         """
         if isinstance(recipients, basestring):
             recipients = [ recipients ]
@@ -43,8 +55,13 @@ class EmailClient(object):
         if self._username:
             server.login(self._username, self._password)
 
-        # msg = MIMEText(message, 'html')
-        msg = MIMEText(message, 'plain')
+        if mimetype is None:
+            if '<html>' in message:
+                mimetype = 'html'
+            else:
+                mimetype = 'plain'
+
+        msg = MIMEText(message, mimetype)
         
         msg['Subject'] = subject
         msg['From'] = sender
