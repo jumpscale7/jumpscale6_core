@@ -1,21 +1,28 @@
 from JumpScale import j
-from JumpScale.grid.osis.OSISStore import OSISStore
+from JumpScale.grid.osis.OSISStoreMongo import OSISStoreMongo
 ujson = j.db.serializers.getSerializerType('j')
 
 
-class mainclass(OSISStore):
+class mainclass(OSISStoreMongo):
 
     """
     Defeault object implementation
     """
 
-    def set(self, key, value, waitIndex=False):
-        if self.db.exists(self.dbprefix, key):
+    def set(self, key, value, waitIndex=False, session=None):
+        import bson
+        db, counter = self._getMongoDB(session)
+        if self.exists(key, session=session):
             changed = True
             new = False
         else:
             changed = False
             new = True
-        self.db.set(self.dbprefix, key=key, value=value)
+        dbval = {"id": key, "value": bson.Binary(value)}
+        db.save(dbval)
         return [key, new, changed]
+
+    def get(self, key, full=False, session=None):
+        val = OSISStoreMongo.get(self, key, full, session=session)
+        return val['value']
 
