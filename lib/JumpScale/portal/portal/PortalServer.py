@@ -146,9 +146,7 @@ class PortalServer:
         self.logdir= j.system.fs.joinPaths(j.dirs.logDir,"portal",str(self.port))
         j.system.fs.createDir(self.logdir)
 
-
-
-        # self.secret = ini.getValue("main", "secret")
+        self.secret = ini.getValue("main", "secret")
         self.admingroups = ini.getValue("main", "admingroups").split(",")
 
         self.filesroot = replaceVar(ini.getValue("main", "filesroot"))
