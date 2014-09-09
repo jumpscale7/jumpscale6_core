@@ -54,7 +54,7 @@ class Worker(object):
         client = self.clients.get(ipaddr)
         if not client:
             if ipaddr:
-                client = j.clients.agentcontroller.get(ipaddr)
+                client = j.clients.agentcontroller.get(ipaddr, login='node')
                 self.clients[ipaddr] = client
             else:
                 if self.acclient==None:
