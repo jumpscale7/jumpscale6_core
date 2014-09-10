@@ -155,6 +155,7 @@ class OSISStoreMongo(OSISStore):
         """
         db, counter = self._getMongoDB(session)
         if j.basetype.string.check(key):
+            key = key.replace('-', '')
             return not db.find_one({"guid":key})==None
         else:
             return not db.find_one({"id":key})==None
