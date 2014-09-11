@@ -44,6 +44,7 @@ def main(j, args, params,  tags, tasklet):
             return params
 
     doc2.content = doc2.source  # make sure we restart from original source when doing the includes (only for include we do this)
+    doc2.loadFromDisk()
     doc2.preprocess()
 
     if headinglevel != None:
