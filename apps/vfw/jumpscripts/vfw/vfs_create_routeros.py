@@ -22,23 +22,6 @@ def action(networkid, publicip, publicgwip, publiccidr, password):
     import JumpScale.lib.ovsnetconfig
     import time
     import netaddr
-    gws = j.application.config.getDict('vfw.public.gw')
-    cidders = j.application.config.getDict('vfw.public.cidrs')
-    networks = []
-    for c in cidders:
-        networks.append(netaddr.IPNetwork('%s/%s' % (c, cidders[c])))
-
-    ipaddress = netaddr.IPAddress(publicip)
-    subnet = None
-    for net in networks:
-        if ipaddress in net:
-            subnet = str(net.network)
-    if not subnet:
-         raise RuntimeError("Couldn't find a correct subnet for %s" % publicip)
-
-
-    PUBLICCDR = cidders[subnet]
-    PUBLICGW = gws[subnet]
 
     DEFAULTGWIP = j.application.config.get("vfw.default.ip")
     BACKPLANE = 'vxbackend'
