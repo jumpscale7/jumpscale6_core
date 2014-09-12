@@ -106,9 +106,11 @@ from JumpScale import j
     def executeInProcess(self, *args, **kwargs):
         try:
             return True, self.module.action(*args, **kwargs)
-        except Exception, e:
+        except Exception, e:            
+            print "error in jumpscript factory: execute in process."            
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.tb = None
+            print eco
             return False, eco
 
 
