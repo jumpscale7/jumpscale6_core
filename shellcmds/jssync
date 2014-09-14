@@ -143,12 +143,13 @@ def upload(category,path="",data=False):
             print "RETRY"
 
 def finddomain(name):
-    for cat in j.system.fs.listDirsInDir("/opt/code/github/", recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
-        for dname in j.system.fs.listDirsInDir("/opt/code/github/%s"%cat, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
-            if dname.find("jp_")<>-1:
-                dname2=dname.split("jp_",1)[1]
-                if dname2.lower().strip()==name.lower().strip():
-                    return "/opt/code/github/%s/%s"%(cat,dname)
+    for provider in j.system.fs.listDirsInDir("/opt/code/"):
+        for cat in j.system.fs.listDirsInDir(provider, recursive=False, findDirectorySymlinks=True):
+            for dname in j.system.fs.listDirsInDir(cat, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+                if dname.find("jp_")<>-1:
+                    dname2=dname.split("jp_",1)[1]
+                    if dname2.lower().strip()==name.lower().strip():
+                        return "%s/%s"%(cat,dname)
     raise RuntimeError("could not find domain for name:'%s'"%name)
 
 opts.category=opts.category.split(",")
