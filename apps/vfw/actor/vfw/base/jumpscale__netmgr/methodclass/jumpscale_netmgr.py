@@ -167,11 +167,11 @@ class jumpscale_netmgr(j.code.classGetBase()):
         result = list()
         filter = dict()
         if domain:
-            filter['domain'] = domain
+            filter['domain'] = str(domain)
         if gid:
             filter['gid'] = gid
         fields = ('domain', 'name', 'gid', 'nid', 'guid')
-        vfws = self.osisvfw.simpleSearch(filter)
+        vfws = self.osisvfw.search(filter)[1:]
         for vfw in vfws:
             vfwdict = {}
             for field in fields:

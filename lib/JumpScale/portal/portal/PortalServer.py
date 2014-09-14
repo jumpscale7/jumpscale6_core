@@ -146,9 +146,7 @@ class PortalServer:
         self.logdir= j.system.fs.joinPaths(j.dirs.logDir,"portal",str(self.port))
         j.system.fs.createDir(self.logdir)
 
-
-
-        # self.secret = ini.getValue("main", "secret")
+        self.secret = ini.getValue("main", "secret")
         self.admingroups = ini.getValue("main", "admingroups").split(",")
 
         self.filesroot = replaceVar(ini.getValue("main", "filesroot"))
@@ -358,8 +356,8 @@ class PortalServer:
         else:
             spaceObject = self.spacesloader.getLoaderFromId(space)
 
-            if spaceObject.docprocessor == None:
-                spaceObject.loadDocProcessor(force=True)  # dynamic load of space
+            # Always load the doc processor & discover new pages
+            spaceObject.loadDocProcessor(force=True)  # dynamic load of space
 
             spacedocgen = spaceObject.docprocessor
 

@@ -52,6 +52,16 @@ class PortalFactory():
         #     except Exception,e:
         #         print "*ERROR*: Could not load actor %s %s" % (appname,actorname)
 
+    def getClientByInstance(self, instance=None):
+        if not instance:
+            instance = j.application.hrdinstance.get('portal.connection')
+        jp = j.packages.findNewest('jumpscale', 'portal_client')
+        jp.load(instance)
+        addr = jp.hrd_instance.get('addr')
+        port = jp.hrd_instance.getInt('port')
+        secret = jp.hrd_instance.getInt('secret')
+        return self.getClient(addr, port, secret)
+
     def getClient(self, ip="localhost", port=9900, secret=None):
         """
         return client to manipulate & access a running application server (out of process)

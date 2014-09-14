@@ -21,8 +21,9 @@ class OSISClientForCat():
                     if j.system.fs.exists(path):
                         if j.tools.hash.md5_string(content) != j.tools.hash.md5(path):
                             j.system.fs.removeDirTree(pathdir)
-                            j.system.fs.createDir(pathdir)
-                            j.system.fs.writeFile(filename=path,contents=content)
+                    if not j.system.fs.exists(path):
+                        j.system.fs.createDir(pathdir)
+                        j.system.fs.writeFile(filename=path,contents=content)
                     j.core.osis.generateOsisModelDefaults(self.namespace,path)
                     resultclass=j.core.osis.getOsisModelClass(self.namespace,self.cat,specpath=path)
                 self.objectclass=resultclass
