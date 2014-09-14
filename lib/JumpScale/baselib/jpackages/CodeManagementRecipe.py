@@ -229,7 +229,8 @@ class CodeManagementRecipe:
         return j.system.fs.joinPaths(j.dirs.codeDir,provider,account,repo, source)
 
     def _process(self):
-        self.repoconnection.init()
+        if self.repoconnection:
+            self.repoconnection.init()
         content=j.system.fs.fileGetContents(self.configpath)
         for line in content.split("\n"):
             line=line.strip()
@@ -328,7 +329,7 @@ class CodeManagementRecipe:
         repo=self.hrd.get("jp.code.repo")
         if repo=="":
             print "repo not filled in, so coderecipe probably not used for %s"%self
-            return 
+            return
 
         branch=self.hrd.get("jp.code.branch") or None
         ttype=self.hrd.get("jp.code.type")
