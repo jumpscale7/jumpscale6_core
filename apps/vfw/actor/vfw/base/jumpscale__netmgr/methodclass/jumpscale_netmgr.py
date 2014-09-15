@@ -34,7 +34,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         import JumpScale.lib.routeros
         return j.clients.routeros.get(fwobj.host, fwobj.username, fwobj.password)
 
-    def fw_create(self, domain, login, password, publicip, type, networkid, publicgwip, publiccidr, **kwargs):
+    def fw_create(self, gid, domain, login, password, publicip, type, networkid, publicgwip, publiccidr, **kwargs):
         """
         param:domain needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
         param:gid grid id
@@ -48,7 +48,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         fwobj = self.osisvfw.new()
         fwobj.domain = domain
         fwobj.id = networkid
-        fwobj.gid = j.application.whoAmI.gid
+        fwobj.gid = gid
         fwobj.pubips.append(publicip)
         fwobj.type =  type
         key = self.osisvfw.set(fwobj)[0]
