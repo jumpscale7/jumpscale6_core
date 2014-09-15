@@ -5,6 +5,7 @@
     method:fw_create @noauth
         """     
         """
+        var:gid int,,grid id
         var:domain str,,needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
         var:login str,,Admin login to the firewall
         var:password str,, Admin password to the firewall
