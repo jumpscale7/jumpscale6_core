@@ -44,7 +44,7 @@ class ClassDoc():
 
     def write(self,dest):
         dest2=j.system.fs.joinPaths(dest, self.location.split(".")[1],"%s.wiki"%self.location)
-        out="h3. %s         "%self.location
+        out="h3. %s\n"%self.location
         if self.path.find("JumpScale")<>-1:        
             path=self.path.split("JumpScale",1)[1]
         elif self.path.find("python.zip")<>-1:
@@ -55,10 +55,9 @@ class ClassDoc():
             # embed()
             ##TODO
             pass
-        out += "`Source <https://github.com/Jumpscale/jumpscale_core/tree/master/lib/JumpScale%s>`_\n" % (path) 
-        out+="* path: %s\n\n"%path
+        out += " `Source <https://github.com/Jumpscale/jumpscale_core/tree/master/lib/JumpScale%s>`_  \n\n" % (path)
         if self.comments<>None:
-            out+="%s\n\n"%self.comments
+            out+="\n%s\n\n"%self.comments
 
         keys=self.methods.keys()
         keys.sort()
