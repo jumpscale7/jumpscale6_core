@@ -29,7 +29,8 @@ class whmcstickets():
                     )
         
         response = self._call_whmcs_api(create_ticket_request_params)
-        return response.ok
+        ticketid = response.ticketid
+        return ticketid
 
 
     def update_ticket(self, ticketid, deptid, subject, priority, status, userid, email, cc, flag):
@@ -51,6 +52,41 @@ class whmcstickets():
         
         response = self._call_whmcs_api(ticket_request_params)
         return response.ok
+
+    def close_ticket(self, ticketid):
+        print 'Closing %s' % ticketid
+        ticket_request_params = dict(
+
+                    action = 'updateclient',
+                    responsetype = 'json',
+                    ticketid = ticketid,
+                    status = 'Closed',
+                    noemail = True,
+                    skipvalidation= True
+
+                    )
+        
+        response = self._call_whmcs_api(ticket_request_params)
+        return response.ok
+
+
+    def get_ticket(self, ticketid):
+        import xml.etree.cElementTree as et
+        print 'Closing %s' % ticketid
+        ticket_request_params = dict(
+
+                    action = 'updateclient',
+                    responsetype = 'json',
+                    ticketid = ticketid,
+                    status = 'Closed',
+                    noemail = True,
+                    skipvalidation= True
+
+                    )
+        
+        xs = self._call_whmcs_api(ticket_request_params)
+        ticket = dict((attr.tag, attr.text) for attr in et.fromstring(xs))
+        return ticket
 
 
 
