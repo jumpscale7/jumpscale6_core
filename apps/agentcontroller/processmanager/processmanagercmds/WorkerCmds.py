@@ -16,7 +16,6 @@ class WorkerCmds():
             return
         self.daemon=daemon
         self._adminAuth=daemon._adminAuth
-        self.acclient = j.clients.agentcontroller.getByInstance()
         self.redis=j.clients.redisworker.redis
 
     def getQueuedJobs(self, queue="default", format="json", session=None):
@@ -94,33 +93,6 @@ class WorkerCmds():
         job = j.clients.redisworker.getJob(jobid)
         j.clients.redisworker.scheduleJob(job)
 
-
-    def notifyWorkCompleted(self,job):
-
-        w=j.clients.redisworker
-        job["timeStop"]=int(time.time())
-
-        if job["jscriptid"]<10000:
-            #jumpscripts coming from AC
-            if job["state"]<>"OK":
-                try:
-                    self.acclient.notifyWorkCompleted(job)
-                except Exception,e:
-                    j.events.opserror("could not report job in error to agentcontroller", category='workers.errorreporting', e=e)
-                    return
-                #lets keep the errors
-                # self.redis.hdel("workers:jobs",job.id)
-            else:
-                if job["log"]:
-                    try:
-                        self.acclient.notifyWorkCompleted(job)
-                    except Exception,e:
-                        j.events.opserror("could not report job result to agentcontroller", category='workers.jobreporting', e=e)
-                        return
-                    # job.state=="OKR" #means ok reported
-                    #we don't have to keep status of local job result, has been forwarded to AC
-            j.clients.redisworker.redis.hdel("workers:jobs",job["id"])
-
     def getJob(self, jobid, session=None):
         """
         """
@@ -128,14 +100,4 @@ class WorkerCmds():
             self._adminAuth(session.user,session.passwd)  
 
         return j.clients.redisworker.getJob(jobid)
-
-    def getWorkerStatus(self, session=None):
-        """
-        """
-        if session<>None:
-            self._adminAuth(session.user,session.passwd) 
-        nid = j.application.whoAmI.nid
-        
-        result = self.acclient.executeJumpScript('jumpscale', 'workerstatus', nid, timeout=5)
-        return result
 
