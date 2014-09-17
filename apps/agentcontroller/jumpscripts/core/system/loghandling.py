@@ -1,4 +1,3 @@
-
 from JumpScale import j
 
 descr = """
@@ -17,7 +16,7 @@ enable = True
 async = True
 queue ='process'
 log = False
-roles = ["*"]
+roles = []
 
 try:
     import ujson as json
@@ -26,6 +25,7 @@ except:
 
 import time
 import JumpScale.baselib.redis
+import JumpScale.grid.osis
 
 REDISIP = '127.0.0.1'
 REDISPORT = 7768
@@ -81,3 +81,7 @@ def action():
             eco4.__dict__.pop("tb")        
         OSISclientEco.set(eco4.__dict__)
         eco=redisqueueEco.get_nowait()
+
+if __name__ == '__main__':
+    j.core.osis.client = j.core.osis.getClient(user='root')
+    action()

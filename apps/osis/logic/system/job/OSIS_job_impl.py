@@ -1,5 +1,5 @@
 from JumpScale import j
-from JumpScale.grid.osis.OSISStoreES import OSISStoreES
+from JumpScale.grid.osis.OSISStoreMongo import OSISStoreMongo
 
-class mainclass(OSISStoreES):
-    TTL = '5d'
+class mainclass(OSISStoreMongo):
+    TTL = 3600 * 24 * 5 # 5 days
