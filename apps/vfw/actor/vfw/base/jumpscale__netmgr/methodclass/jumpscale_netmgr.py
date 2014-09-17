@@ -27,7 +27,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
-        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, args=args)['result']
+        return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, gid=fwobj.gid, args=args)['result']
 
     def fw_getapi(self, fwid, **kwargs):
         fwobj = self.osisvfw.get(fwid)
@@ -60,7 +60,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                     'publicgwip': publicgwip,
                     'publiccidr': publiccidr,
                     }
-            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', args=args, queue='hypervisor')
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create_routeros', role='fw', gid=gid, args=args, queue='hypervisor')
             if result['state'] != 'OK':
                 self.osisvfw.delete(key)
                 raise RuntimeError("Failed to create create fw for domain %s job was %s" % (domain, result['id']))
@@ -71,7 +71,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
             fwobj.nid = data['nid']
             self.osisvfw.set(fwobj)
         else:
-            return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', role='fw', args=args)['result']
+            return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', role='fw', gid=gid, args=args)['result']
 
     def fw_delete(self, fwid, gid, **kwargs):
         """
@@ -82,22 +82,22 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         if fwobj.type == 'routeros':
             args = {'networkid': fwobj.id}
-            job = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_destroy_routeros', nid=fwobj.nid, args=args)
+            job = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_destroy_routeros', nid=fwobj.nid, gid=fwobj.gid, args=args)
             if job['state'] != 'OK':
                 raise RuntimeError("Failed to remove vfw with id %s" % fwid)
             else:
                 self.osisvfw.delete(fwid)
         else:
-            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, args=args)['result']
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_delete', nid=fwobj.nid, gid=fwobj.gid, args=args)['result']
             if result:
                 self.osisvfw.delete(fwid)
             return result
 
-    def _applyconfig(self, nid, args):
+    def _applyconfig(self, gid, nid, args):
         if args['fwobject']['type'] == 'routeros':
-            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig_routeros', nid=nid, args=args)['result']
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig_routeros', gid=gid, nid=nid, args=args)['result']
         else:
-            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=nid, args=args)['result']
+            result = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', gid=gid, nid=nid, args=args)['result']
         return result
 
 
@@ -118,7 +118,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.toPort = destport
         rule.protocol = protocol
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': fwobj.obj2dict()}
-        result = self._applyconfig(fwobj.nid, args)
+        result = self._applyconfig(fwobj.gid, fwobj.nid, args)
         if result:
             self.osisvfw.set(fwobj)
         return result
@@ -139,7 +139,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                     continue
                 fwobj.tcpForwardRules.remove(rule)
                 args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'fwobject': fwobj.obj2dict()}
-                result = self._applyconfig(fwobj.nid, args)
+                result = self._applyconfig(fwobj.gid, fwobj.nid, args)
                 if result:
                     self.osisvfw.set(fwobj)
         return result
@@ -186,7 +186,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'start'}
-        return self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args)['result']
+        return self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', gid=fwobj.gid, nid=fwobj.nid, args=args)['result']
 
     def fw_stop(self, fwid, gid, **kwargs):
         """
@@ -195,7 +195,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         """
         fwobj = self.osisvfw.get(fwid)
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name), 'action': 'stop'}
-        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', nid=fwobj.nid, args=args, wait=False)
+        self.agentcontroller.executeJumpScript('jumpscale', 'fw_action', gid=fwobj.gid, nid=fwobj.nid, args=args, wait=False)
         return True
 
 
@@ -211,7 +211,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         rule.url = sourceurl
         rule.toUrls = desturls
         self.osisvfw.set(wsfobj)
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=wsfobj.nid, args={'name': wsfobj.name, 'fwobject': wsfobj.obj2dict()}, wait=False)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', gid=wsfobj.gid, nid=wsfobj.nid, args={'name': wsfobj.name, 'fwobject': wsfobj.obj2dict()}, wait=False)
         return True
 
 
@@ -235,7 +235,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
                 if len(urls) == 0:
                     wsfr.remove(rule)
         args = {'name': '%s_%s' % (vfws.domain, vfws.name), 'action': 'start'}
-        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', nid=vfws.nid, args={'name': vfws.name, 'fwobject': vfws.obj2dict()}, wait=False)
+        self.agentcontroller.executeJumpScript('jumpscale', 'vfs_applyconfig', gid=vfws.gid, nid=vfws.nid, args={'name': vfws.name, 'fwobject': vfws.obj2dict()}, wait=False)
         return True
 
 
