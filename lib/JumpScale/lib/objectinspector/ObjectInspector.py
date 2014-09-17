@@ -23,7 +23,11 @@ class ClassDoc():
         self.path=inspect.getabsfile(module)
 
     def addMethod(self,name,method):
-        source = inspect.getsource(method)
+        try:
+            source = inspect.getsource(method)
+        except:
+            self.errors += 'h5. Error trying to add %s source in %s.\n' % (name, self.location)
+            
         inspected = inspect.getargspec(method)
         comments=inspect.getdoc(method)
             
@@ -134,9 +138,9 @@ class ObjectInspector():
 
 
     def generateDocs(self,dest,ignore=[]):
-        errors=self.importAllLibs(ignore=ignore)
-        j.system.fs.writeFile(filename="%s/errors.wiki"%dest,contents=errors)
+        self.errors=self.importAllLibs(ignore=ignore)
         self.inspect()
+        j.system.fs.writeFile(filename="%s/errors.wiki"%dest,contents=self.errors)
         self.writeDocs(dest)
 
 
