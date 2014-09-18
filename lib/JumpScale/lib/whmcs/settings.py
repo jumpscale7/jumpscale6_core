@@ -9,3 +9,5 @@ authenticationparams = dict(
 WHMCS_API_ENDPOINT = 'http://whmcsdev/whmcs/includes/api.php'
 
 CLOUDSPACE_PRODUCT_ID = 34
+OPERATIONS_USER_ID = '1318'
+MOTHERSHIP1_OPERATIONS_DEPARTMENT_ID = '1'

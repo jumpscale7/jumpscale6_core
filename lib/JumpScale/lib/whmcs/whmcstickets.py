@@ -1,5 +1,7 @@
 import requests, base64, phpserialize
-from settings import authenticationparams, WHMCS_API_ENDPOINT
+from settings import authenticationparams, WHMCS_API_ENDPOINT, OPERATIONS_USER_ID, MOTHERSHIP1_OPERATIONS_DEPARTMENT_ID
+import json
+import xml.etree.cElementTree as et
 
 
 class whmcstickets():
@@ -13,7 +15,13 @@ class whmcstickets():
         response = requests.post(WHMCS_API_ENDPOINT, data=actualrequestparams)
         return response
 
-    def create_ticket(self, clientid, deptid, subject, message, priority):
+    def list_deps(self):        
+        params = dict(action='getsupportdepartments')
+        response = self._call_whmcs_api(params)
+        result = dict((attr.tag, attr.text) for attr in et.fromstring(response.content))
+        return result
+
+    def create_ticket(self, subject, message, priority, clientid=OPERATIONS_USER_ID, deptid=MOTHERSHIP1_OPERATIONS_DEPARTMENT_ID):
         print 'Creating %s' % subject
         create_ticket_request_params = dict(
 
@@ -29,11 +37,11 @@ class whmcstickets():
                     )
         
         response = self._call_whmcs_api(create_ticket_request_params)
-        ticketid = response.ticketid
+        ticketid = json.loads(response.content)['tid']
         return ticketid
 
 
-    def update_ticket(self, ticketid, deptid, subject, priority, status, userid, email, cc, flag):
+    def update_ticket(self, ticketid, subject, priority, status, email, cc, flag, userid=OPERATIONS_USER_ID, deptid=MOTHERSHIP1_OPERATIONS_DEPARTMENT_ID):
         print 'Updating %s' % ticketid
         ticket_request_params = dict(
 
@@ -71,7 +79,6 @@ class whmcstickets():
 
 
     def get_ticket(self, ticketid):
-        import xml.etree.cElementTree as et
         print 'Closing %s' % ticketid
         ticket_request_params = dict(
 
