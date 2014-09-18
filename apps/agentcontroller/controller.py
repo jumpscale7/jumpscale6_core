@@ -370,7 +370,6 @@ class ControllerCMDS():
             self._setJob(job.__dict__, osis=True)
             return job.__dict__
 
-        gid = gid or session.gid
         self._adminAuth(session.user,session.passwd)
         self._log("AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid))
         action = self.getJumpScript(organization, name, session=session)
@@ -385,14 +384,16 @@ class ControllerCMDS():
                 for node_guid in self.roles2agents[role]:
                     if len(node_guid.split("_"))<>2:
                         raise RuntimeError("node_guid needs to be of format: '$gid_$nid' ")
-                    gid,nid=node_guid.split("_")
-                    job=self.scheduleCmd(gid=gid,nid=nid,cmdcategory=organization,cmdname=name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait,errorreport=errorreport)
-                    if wait:
-                        return self.waitJumpscript(job=job,session=session)
-                    return job
+                    ngid,nid=node_guid.split("_")
+                    if gid is None or int(gid) == ngid:
+                        job=self.scheduleCmd(gid=ngid,nid=nid,cmdcategory=organization,cmdname=name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait,errorreport=errorreport)
+                        if wait:
+                            return self.waitJumpscript(job=job,session=session)
+                        return job
             return noWork()
         elif nid<>None:
             self._log("NID KNOWN")
+            gid = gid or session.gid
             job=self.scheduleCmd(gid,nid,organization,name,args=args,queue=queue,log=action.log,timeout=timeout,session=session,jscriptid=action.id,wait=wait)
             if wait:
                 return self.waitJumpscript(job=job,session=session)
