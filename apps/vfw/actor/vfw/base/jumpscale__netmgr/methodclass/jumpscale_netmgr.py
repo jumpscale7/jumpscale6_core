@@ -29,11 +29,6 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_checkstatus', nid=fwobj.nid, gid=fwobj.gid, args=args)['result']
 
-    def fw_getapi(self, fwid, **kwargs):
-        fwobj = self.osisvfw.get(fwid)
-        import JumpScale.lib.routeros
-        return j.clients.routeros.get(fwobj.host, fwobj.username, fwobj.password)
-
     def fw_create(self, gid, domain, login, password, publicip, type, networkid, publicgwip, publiccidr, **kwargs):
         """
         param:domain needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
@@ -72,6 +67,22 @@ class jumpscale_netmgr(j.code.classGetBase()):
             self.osisvfw.set(fwobj)
         else:
             return self.agentcontroller.executeJumpScript('jumpscale', 'vfs_create', role='fw', gid=gid, args=args)['result']
+
+    def fw_get_ipaddress(self, fwid, macaddress):
+        fwobj = self.osisvfw.get(fwid)
+        args = {'fwobject': fwobj.obj2dict(), 'macaddress': macaddress}
+        job = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_get_ipaddress_routeros', gid=fwobj.gid, nid=fwobj.nid, args=args)
+        if job['state'] != 'OK':
+            raise RuntimeError("Failed to retreive IPAddress for macaddress %s. Error: %s" % (macaddress, job['result']['errormessage']))
+        return job['result']
+
+    def fw_set_password(self, fwid, username, password):
+        fwobj = self.osisvfw.get(fwid)
+        args = {'fwobject': fwobj.obj2dict(), 'username': username, 'password': password}
+        job = self.agentcontroller.executeJumpScript('jumpscale', 'vfs_set_password_routeros', gid=fwobj.gid, nid=fwobj.nid, args=args)
+        if job['state'] != 'OK':
+            raise RuntimeError("Failed to set password. Error: %s" % (job['result']['errormessage']))
+        return job['result']
 
     def fw_delete(self, fwid, gid, **kwargs):
         """

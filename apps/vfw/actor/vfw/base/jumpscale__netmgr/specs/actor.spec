@@ -29,6 +29,21 @@
         var:fwid int,,firewall id
         var:gid int,,grid id
 
+
+    method:fw_get_ipaddress @noauth
+        """     
+        """
+        var:fwid str,,firewall id
+        var:macaddress str,,macaddress to retrieve ip for
+        result:str #ipaddess
+
+    method:fw_set_password @noauth
+        """     
+        """
+        var:fwid str,,firewall id
+        var:username str,,username to set password for
+        var:password str,,password to set
+
     method:fw_check @noauth
         """     
         will do some checks on firewall to see is running, is reachable over ssh, is connected to right interfaces

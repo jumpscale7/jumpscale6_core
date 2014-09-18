@@ -1,6 +1,8 @@
 from JumpScale import j
 # import JumpScale.baselib.remote
 import time
+from netaddr import EUI
+
 class RouterOSFactory(object):
 
     def get(self, host, login,password):
@@ -162,70 +164,6 @@ class RouterOS(object):
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.varDir,"routeros"))
         inputsentence = []
 
-    ##cant get it to work because of ansi
-    # def initExpect(self):
-    #     e = j.tools.expect.new("ssh %s@%s"%(self.login,self.host))
-    #     # e = j.tools.expect.new("telnet %s"%(self.host))
-    #     # e.pexpect.delaybeforesend = 0
-    #     e.pexpect.logfile = sys.stdout
-    #     # r=e.expect("login:",2)
-    #     # if r<>"E":
-    #     #     #passwd found
-    #     #     e.send(self.login+"\n")
-
-    #     r=e.expect("password:",2)
-    #     if r<>"E":
-    #         #passwd found
-    #         e.send(self.password+"\n")
-    #     # r=e.expect(" >",1)
-    #     # if r=="E":
-    #     print "expect enter"        
-
-    #     r=e.pexpect.expect(["Enter"," >"],2)
-    #     if r==0:
-    #         #means we need to press enter
-    #         # e.pexpect.sendcontrol('m')
-    #         e.pexpect.send("\r")
-    #     elif r==1:
-    #         #we are in
-    #         return
-
-    #     r=e.expect(" >",2)
-    #     print r
-
-    #     from IPython import embed
-    #     print "DEBUG NOW lll"
-    #     embed()
-        
-    #     if e.expect("Enter",2)<>"E":
-    #         print "found enter"
-    #         # e.send("\r\n",newline=False)
-    #         e.pexpect.sendcontrol('m')
-    #         time.sleep(2)
-    #         for i in range(10):
-    #             # e.send("\r\n",newline=False)
-    #             r=e.expect(" >",0.5)
-    #             if r<>"E":
-    #                 break
-    #             print e.receive()
-    #         # time.sleep(1)
-    #         # r=e.expect(" >",2)
-    #         # if r=="E":
-    #         #     raise RuntimeError("could not login to routeros")
-
-    #     from IPython import embed
-    #     print "DEBUG NOW error"
-    #     embed()
-
-            
-
-    #     # password:
-
-    #     from IPython import embed
-    #     print "DEBUG NOW ooo"
-    #     embed()
-      
-
     def do(self,cmd,args={}):
         cmds=[]
         cmds.append(cmd)
@@ -238,8 +176,26 @@ class RouterOS(object):
         print cmds
         r=self.api.talk(cmds)
         return self._parse_result(r)
- 
 
+    def leaseExists(self, macaddress):
+        if self.getLease(macaddress):
+            return True
+        else:
+            return False
+
+    def getLease(self, macaddress):
+        leases = self.do('/ip/dhcp-server/lease/print')
+        for lease in leases:
+             if 'mac-address' in lease and EUI(lease['mac-address'])== EUI(macaddress):
+                 return lease
+        return None
+
+    def getIpaddress(self, macaddress):
+        lease = self.getLease(macaddress)
+        if lease and 'address' in lease.keys():
+            return lease['address']
+        return None
+ 
     def _parse_result(self, talk_result):
         result3=[]
         r = talk_result
@@ -283,7 +239,6 @@ class RouterOS(object):
             cmds.append(f)
         result = self.api.talk(cmds)
         return self._parse_result(result)
-        
 
     def ipaddr_getall(self):
         r=self.do("/ip/address/getall")
