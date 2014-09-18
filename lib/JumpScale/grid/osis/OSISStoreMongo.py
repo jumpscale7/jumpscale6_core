@@ -85,8 +85,10 @@ class OSISStoreMongo(OSISStore):
         def update(value):
             if isinstance(value['guid'], basestring):
                 value['guid'] = value['guid'].replace('-', '')
-            if self.TTL != 0:
-                value['_ttl'] = datetime.datetime.utcnow()
+        def updateTTL(value):
+                if self.TTL != 0:
+                    value['_ttl'] = datetime.datetime.utcnow()
+
 
         if j.basetype.dictionary.check(value):
             objInDB=None
@@ -109,6 +111,7 @@ class OSISStoreMongo(OSISStore):
                 value.pop('guid', None)
                 objInDB.update(value)
                 update(objInDB)
+                updateTTL(objInDB)
                 objInDB = self.setPreSave(objInDB)
                 changed = oldckey != obj.getContentKey()
                 if changed:
@@ -121,6 +124,7 @@ class OSISStoreMongo(OSISStore):
                 obj = self.getObject(value)
                 obj.getSetGuid()
                 value = obj.dump()
+            updateTTL(value)
 
             value['_id'] = value['guid'] if ukey is None else ukey
             value = self.setPreSave(value)

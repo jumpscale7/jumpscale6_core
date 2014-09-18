@@ -18,7 +18,7 @@ class vfw_virtualfirewall(OsisBaseObject,vfw_virtualfirewall_osismodelbase):
             self.load(ddict)
 
     def getSetGuid(self):
-        self.guid = "%s_%s"%(j.application.whoAmI.gid,self.id)
+        self.guid = "%s_%s"%(self.gid,self.id)
         self.moddate=j.base.time.getTimeEpoch() 
         return self.guid
 

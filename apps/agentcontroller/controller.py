@@ -385,7 +385,7 @@ class ControllerCMDS():
                     if len(node_guid.split("_"))<>2:
                         raise RuntimeError("node_guid needs to be of format: '$gid_$nid' ")
                     ngid,nid=node_guid.split("_")
-                    if gid is None or int(gid) == ngid:
+                    if gid is None or int(gid) == int(ngid):
                         job=self.scheduleCmd(gid=ngid,nid=nid,cmdcategory=organization,cmdname=name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait,errorreport=errorreport)
                         if wait:
                             return self.waitJumpscript(job=job,session=session)
