@@ -93,7 +93,7 @@ class InstallTools():
             return True
         return False
 
-    def execute(self, command , dieOnNonZeroExitCode=True, outputToStdout=False, useShell = False, ignoreErrorOutput=False):
+    def execute(self, command , dieOnNonZeroExitCode=True, outputToStdout=True, useShell = False, ignoreErrorOutput=False):
         """Executes a command, returns the exitcode and the output
         @param command: command to execute
         @param dieOnNonZeroExitCode: boolean to die if got non zero exitcode

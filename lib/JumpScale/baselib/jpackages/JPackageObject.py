@@ -791,6 +791,7 @@ class JPackageObject():
         """
         @return [[platform,ttype],...]
         """
+        #@TODO this is plain wrong !!!!
         result=[]
         path = self._blobfolder if not active else self._activeblobfolder
         if not j.system.fs.exists(path=path):
@@ -803,7 +804,7 @@ class JPackageObject():
             platform,ttype=item.split("___")
             ttype=ttype.replace(".info","")
             if ttype<>"":
-                result.append([platform,ttype])
+                result.append([platform,ttype])        
         return result
 
     def getCodeLocationsFromRecipe(self):
@@ -1102,7 +1103,8 @@ class JPackageObject():
             if platform not in j.system.platformtype.getMyRelevantPlatforms():
                 continue
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
-            for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
+            entries=j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True)                    
+            for ttype in entries:
                 if ttype == 'debs':
                     fullpath = j.system.fs.joinPaths(pathplatform, ttype)
                     for file_ in sorted(j.system.fs.listFilesInDir(fullpath)):
@@ -1123,7 +1125,6 @@ class JPackageObject():
                 if doCodeRecipe==False and ttype.find("cr_")==0:
                     print "DO NOT COPY, because debug "
                     continue #skip the coderecipe folders
-
                 else:
                     pathttype=j.system.fs.joinPaths(pathplatform,ttype)
                     j.system.fs.removeIrrelevantFiles(pathttype)
@@ -1146,8 +1147,11 @@ class JPackageObject():
             else:
                 blobkey, keys = self.getBlobInfo(platform, ttype, active=True)
                 for md5, relativefile in keys:
+                    # print "1:'%s' '%s'"%(md5,relativefile)
                     blobpath, localpath = self.getBlobItemPaths(platform, ttype, relativefile)
-                    j.system.fs.remove(localpath)
+                    # print "2:'%s' '%s'"%(blobpath,localpath)
+                    if localpath<>"/tmp":
+                        j.system.fs.remove(localpath)
 
     def __copyFiles(self, path,destination,applyhrd=False):
         """

@@ -91,6 +91,9 @@ class Confluence2RST():
         if macro.find("code:")==0:
             page.addNewLine()
             macro=macro[5:].strip()
+            if macro.startswith('template:'):
+                macrolines = macro.splitlines()
+                macro = '\n'.join(macrolines[1:])
             
             page.addCodeBlock(macro)
             page.addNewLine()

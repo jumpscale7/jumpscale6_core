@@ -23,7 +23,11 @@ class ClassDoc():
         self.path=inspect.getabsfile(module)
 
     def addMethod(self,name,method):
-        source = inspect.getsource(method)
+        try:
+            source = inspect.getsource(method)
+        except:
+            self.errors += 'h5. Error trying to add %s source in %s.\n' % (name, self.location)
+            
         inspected = inspect.getargspec(method)
         comments=inspect.getdoc(method)
             
@@ -44,7 +48,7 @@ class ClassDoc():
 
     def write(self,dest):
         dest2=j.system.fs.joinPaths(dest, self.location.split(".")[1],"%s.wiki"%self.location)
-        out="h3. %s         "%self.location
+        out="h3. %s\n"%self.location
         if self.path.find("JumpScale")<>-1:        
             path=self.path.split("JumpScale",1)[1]
         elif self.path.find("python.zip")<>-1:
@@ -55,10 +59,9 @@ class ClassDoc():
             # embed()
             ##TODO
             pass
-        out += "`Source <https://github.com/Jumpscale/jumpscale_core/tree/master/lib/JumpScale%s>`_\n" % (path) 
-        out+="* path: %s\n\n"%path
+        out += " `Source <https://github.com/Jumpscale/jumpscale_core/tree/master/lib/JumpScale%s>`_  \n\n" % (path)
         if self.comments<>None:
-            out+="%s\n\n"%self.comments
+            out+="\n%s\n\n"%self.comments
 
         keys=self.methods.keys()
         keys.sort()
@@ -135,9 +138,9 @@ class ObjectInspector():
 
 
     def generateDocs(self,dest,ignore=[]):
-        errors=self.importAllLibs(ignore=ignore)
-        j.system.fs.writeFile(filename="%s/errors.wiki"%dest,contents=errors)
+        self.errors=self.importAllLibs(ignore=ignore)
         self.inspect()
+        j.system.fs.writeFile(filename="%s/errors.wiki"%dest,contents=self.errors)
         self.writeDocs(dest)
 
 

@@ -5,6 +5,7 @@
     method:fw_create @noauth
         """     
         """
+        var:gid int,,grid id
         var:domain str,,needs to be unique name of a domain,e.g. a group, space, ... (just to find the FW back)
         var:login str,,Admin login to the firewall
         var:password str,, Admin password to the firewall
@@ -27,6 +28,21 @@
         """
         var:fwid int,,firewall id
         var:gid int,,grid id
+
+
+    method:fw_get_ipaddress @noauth
+        """     
+        """
+        var:fwid str,,firewall id
+        var:macaddress str,,macaddress to retrieve ip for
+        result:str #ipaddess
+
+    method:fw_set_password @noauth
+        """     
+        """
+        var:fwid str,,firewall id
+        var:username str,,username to set password for
+        var:password str,,password to set
 
     method:fw_check @noauth
         """     

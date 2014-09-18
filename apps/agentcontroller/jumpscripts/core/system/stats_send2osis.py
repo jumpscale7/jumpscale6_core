@@ -19,12 +19,15 @@ roles = []
 def action():
     statskeys = ('system', 'disk', 'nic')
     OSISclient=j.core.osis.getClientForNamespace("system")
+    allstats = dict()
     for key in statskeys:
         stats = j.system.redisstataggregator.popStats(key)
         if stats:
-            try:
-                OSISclient.stats.set(stats, key)
-            except Exception,e:
-                j.errorconditionhandler.processPythonExceptionObject(e)
-                if str(e).find("Connection refused")<>-1:
-                    j.events.opserror_critical("cannot forward stats to osis, there is probably no influxdb running on osis", category='processmanager.send2osis.stats')
+            allstats[key] = stats
+    if allstats:
+        try:
+            OSISclient.stats.set(allstats)
+        except Exception,e:
+            j.errorconditionhandler.processPythonExceptionObject(e)
+            if str(e).find("Connection refused")<>-1:
+                j.events.opserror_critical("cannot forward stats to osis, there is probably no influxdb running on osis", category='processmanager.send2osis.stats')

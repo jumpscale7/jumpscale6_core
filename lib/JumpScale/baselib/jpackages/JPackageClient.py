@@ -251,7 +251,7 @@ class JPackageClient():
         elif ttype=="opt":
             base="/opt"
             systemdest = j.system.fs.joinPaths(base, relativepath)
-        elif ttype=="deb":
+        elif ttype=="debs":
             systemdest = "/tmp"
         elif ttype=="etc":
             base="/etc"
@@ -266,7 +266,7 @@ class JPackageClient():
         else:
             base=j.application.config.applyOnContent(ttype)
             if base==ttype:
-                raise RuntimeError("Could not find ttype:%s for %s, needs to be root,base,etc,bin,deb"%(ttype,self))
+                raise RuntimeError("Could not find ttype:%s for %s, needs to be root,base,etc,bin,debs"%(ttype,self))
             systemdest = j.system.fs.joinPaths(base, relativepath)
         return systemdest
 

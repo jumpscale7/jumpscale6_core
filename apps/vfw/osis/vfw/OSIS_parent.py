@@ -8,5 +8,3 @@ class mainclass(OSISStoreMongo):
     """
     Default object implementation
     """
-    MULTIGRID = False
-

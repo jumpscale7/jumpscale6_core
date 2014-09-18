@@ -179,6 +179,7 @@ class Worker(object):
                 self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
 
                 j.logger.enabled = job.log
+
                 status, result=jscript.executeInWorker(**job.args)
                 j.logger.enabled = True
                 if status:

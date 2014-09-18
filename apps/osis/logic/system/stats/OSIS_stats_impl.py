@@ -11,12 +11,15 @@ class mainclass(OSISStore):
 
     def set(self, key, value, waitIndex=False, session=None):
         stats = value
-        data = {'name': key, 'points': []}
-        for stat in stats:
-            if 'columns' not in data:
-                data['columns'] = stat.keys()
-            data['points'].append(stat.values())
-        self.dbclient.write_points([data])
+        series = list()
+        for key, stats in value.iteritems():
+            data = {'name': key, 'points': []}
+            for stat in stats:
+                if 'columns' not in data:
+                    data['columns'] = stat.keys()
+                data['points'].append(stat.values())
+            series.append(data)
+        self.dbclient.write_points(series)
 
     def delete(self, key, session=None):
         seriesName = key

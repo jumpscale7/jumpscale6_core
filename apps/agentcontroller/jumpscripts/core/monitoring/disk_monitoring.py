@@ -32,7 +32,9 @@ def action():
     counters=psutil.disk_io_counters(True)
 
     for disk in disks:
-        results = dict()
+        results = {'time_read': 0, 'time_write': 0, 'count_read': 0, 'count_write': 0,
+                   'kbytes_read': 0, 'kbytes_write': 0, 
+                   'space_free_mb': 0, 'space_used_mb': 0, 'space_percent': 0}
         path=disk.path.replace("/dev/","")
 
         disk_key=path

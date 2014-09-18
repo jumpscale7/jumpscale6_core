@@ -107,8 +107,10 @@ from JumpScale import j
         try:
             return True, self.module.action(*args, **kwargs)
         except Exception, e:
+            print "error in jumpscript factory: execute in process."
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.tb = None
+            print eco
             return False, eco
 
 
