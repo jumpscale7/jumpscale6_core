@@ -283,6 +283,23 @@ class PageHTML(Page):
     def addPageBreak(self,):
         self.addMessage("<hr style='page-break-after: always;'/>")
 
+    def addComboBox(self, items):
+        """
+        @items is a dict {'text to show':'value'}
+        """
+        import random
+        if items:
+            id = ('dropdown%s' % random.random()).replace('.', '')
+            html = '<select id=%s>\n' % (id)
+            for text, value in items.iteritems():
+                html += '<option value="%s">%s</option>\n' % (value, text)
+            html += '</select>'
+            self.addHTML(html)
+            return id
+        else:
+            return ''
+
+
     def addActionBox(self, actions):
         """
         @actions is array of array, [[$actionname1,$params1],[$actionname2,$params2]]
