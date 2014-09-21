@@ -2,7 +2,15 @@ from JumpScale import j
 import re
 import os
 import jinja2
+from watchdog.events import FileSystemEventHandler
+# The default Observer on Linux (InotifyObserver) hangs in the call to `observer.schedule` because the observer uses `threading.Lock`, which is
+# monkeypatched by `gevent`. To work around this, I use `PollingObserver`. It's more CPU consuming than `InotifyObserver`, but still better than
+# reloading the doc processor
+#
+#from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver as Observer
 
+fs = j.system.fs
 
 class HeaderTools():
 
@@ -104,7 +112,7 @@ class Doc(object):
         stat = os.stat(self.path)
         if stat.st_mtime > self._mtime:
             self._mtime = stat.st_mtime
-            self.source = j.system.fs.fileGetTextContents(self.path)
+            self.source = fs.fileGetTextContents(self.path)
 
         self.source = self.source.replace("\r\n", "\n")
         self.source = self.source.replace("\n\r", "\n")
@@ -124,11 +132,11 @@ class Doc(object):
             template_name = None
 
         if template_name:
-            template_path = j.system.fs.joinPaths(self.preprocessor.space_path, ".space", template_name + '.wiki')
-            template = j.system.fs.fileGetContents(template_path)
+            template_path = fs.joinPaths(self.preprocessor.space_path, ".space", template_name + '.wiki')
+            template = fs.fileGetContents(template_path)
             self.content = template.replace('{content}', self.source)
         elif self.defaultPath and self.usedefault:
-            default = j.system.fs.fileGetTextContents(self.defaultPath)
+            default = fs.fileGetTextContents(self.defaultPath)
             self.content = default.replace("{content}", self.source)
 
         if preprocess and self.source.strip() != "":
@@ -261,15 +269,15 @@ class Doc(object):
 
     def generate2disk(self, outpath):
         if self.generate and self.visible:
-            dirpath = j.system.fs.joinPaths(outpath, self.pagename)
-            filepath = j.system.fs.joinPaths(dirpath, "%s.txt" % self.pagename)
-            j.system.fs.createDir(dirpath)
+            dirpath = fs.joinPaths(outpath, self.pagename)
+            filepath = fs.joinPaths(dirpath, "%s.txt" % self.pagename)
+            fs.createDir(dirpath)
             for image in self.images:
                 if image in self.preprocessor.images:
                     filename = "%s_%s" % (self.pagename, image)
                 self.content = self.content.replace("!%s" % image, "!%s" % filename)
-                j.system.fs.copyFile(self.preprocessor.images[image], j.system.fs.joinPaths(dirpath, filename))
-            j.system.fs.writeFile(filepath, self.content)
+                fs.copyFile(self.preprocessor.images[image], fs.joinPaths(dirpath, filename))
+            fs.writeFile(filepath, self.content)
             for doc in self.children:
                 doc.generate(dirpath)
 
@@ -327,6 +335,23 @@ class Doc(object):
     def __repr__(self):
         return self.__str__()
 
+class DocHandler(FileSystemEventHandler):
+    def __init__(self, doc_processor):
+        self.doc_processor = doc_processor
+
+    def on_created(self, event):
+        print 'Document {} added'.format(event.src_path)
+        path = os.path.dirname(event.src_path)
+        pathItem = event.src_path
+        docs = []
+        if pathItem:
+            lastDefaultPath = os.path.join(self.doc_processor.space_path, '.space', 'default.wiki')
+            self.doc_processor.add_doc(pathItem, path, docs=docs, lastDefaultPath=lastDefaultPath)
+            self.doc_processor.docs[-1].loadFromDisk()
+            self.doc_processor.docs[-1].preprocess()
+
+    on_moved = on_created
+
 
 class DocPreprocessor():
 
@@ -355,8 +380,8 @@ class DocPreprocessor():
         self._errors = []
         self.params = {}
         self._parsed = {}
-        if self.varsPath != "" and j.system.fs.exists(self.varsPath):
-            lines = j.system.fs.fileGetContents(self.varsPath).split("\n")
+        if self.varsPath != "" and fs.exists(self.varsPath):
+            lines = fs.fileGetContents(self.varsPath).split("\n")
             for line in lines:
                 if line.strip() != "":
                     if line.strip()[0] != "#":
@@ -365,9 +390,20 @@ class DocPreprocessor():
                             self.params[paramname.lower()] = value.strip()
         self.images = {}
 
+        self.file_observers = []
+        self.doc_handler = DocHandler(self)
+
         if contentDirs != []:
             for contentdir in contentDirs:
                 self.scan(contentdir)
+
+                # Watch the contentdir for changes
+                observer = Observer()
+                self.file_observers.append(observer)
+                print 'Monitoring', contentdir
+                observer.schedule(self.doc_handler, contentdir, recursive=True)
+                observer.start()
+            
 
     def docNew(self):
         return Doc(self)
@@ -401,10 +437,10 @@ class DocPreprocessor():
         return docname.lower() in self.name2doc
 
     def _pathIgnoreCheck(self, path):
-        base = j.system.fs.getBaseName(path)
+        base = fs.getBaseName(path)
         if base.strip() == "":
             return False
-        dirname = j.system.fs.getDirName(path, True)
+        dirname = fs.getDirName(path, True)
         if dirname.find(".") == 0:
             return True
         if base.find(".tmb") == 0:
@@ -487,22 +523,22 @@ class DocPreprocessor():
         print "DOCPREPROCESSOR SCAN space:%s" % path
         self.space_path = path
 
-        spaceconfigdir = j.system.fs.getDirName(path + "/" + ".space" + "/")
-        if j.system.fs.exists(spaceconfigdir):
+        spaceconfigdir = fs.getDirName(path + "/" + ".space" + "/")
+        if fs.exists(spaceconfigdir):
             lastDefaultPath = spaceconfigdir + "/default.wiki"
             defaultdir = path
             lastparamsdir = ""
             lastparams = {}
-            paramscfgfile = j.system.fs.joinPaths(spaceconfigdir, "params.cfg")
-            if j.system.fs.exists(paramscfgfile):
-                paramsfile = j.system.fs.fileGetContents(paramscfgfile)
+            paramscfgfile = fs.joinPaths(spaceconfigdir, "params.cfg")
+            if fs.exists(paramscfgfile):
+                paramsfile = fs.fileGetContents(paramscfgfile)
                 lastparamsdir = path
                 for line in paramsfile.split("\n"):
                     if line.strip() != "" and line[0] != "#":
                         param1, val1 = line.split("=", 1)
                         lastparams[param1.strip().lower()] = val1.strip()
             lastnavdir = path
-            lastnav = j.system.fs.fileGetTextContents(spaceconfigdir + "/nav.wiki")
+            lastnav = fs.fileGetTextContents(spaceconfigdir + "/nav.wiki")
         else:
             raise RuntimeError("space dir needs to have a dir .space for %s" % path)
         docs = self._scan(path, defaultdir, lastDefaultPath, lastparams, lastparamsdir, lastnav, lastnavdir)
@@ -511,13 +547,22 @@ class DocPreprocessor():
             doc.loadFromDisk()
 
         self.findChildren()
-        self.spacename = j.system.fs.getDirName(path, True).lower()
+        self.spacename = fs.getDirName(path, True).lower()
 
     def parseHtmlDoc(self, path):
-        subject = j.system.fs.fileGetTextContents(path)
+        subject = fs.fileGetTextContents(path)
         head = j.codetools.regex.findHtmlBlock(subject, "head", path, False)
         body = j.codetools.regex.findHtmlBlock(subject, "body", path, True)
         return head, body
+
+    @staticmethod
+    def is_image(img):
+        return img.lower().endswith((".jpg", ".jpeg", ".png", ".gif"))
+
+    def add_image(self, img):
+        img = img.strip()
+        img = fs.getBaseName(img.replace("\\", "/"))
+        self.images[img] = img
 
     def _scan(self, path, defaultdir="", lastDefaultPath="", lastparams={}, lastparamsdir="",
               lastnav="", lastnavdir="", parent="", docs=[]):
@@ -525,147 +570,29 @@ class DocPreprocessor():
         directory to walk over and find story, task, ... statements
         """
 
-        images = j.system.fs.listFilesInDir(path, True)
+        images = fs.listFilesInDir(path, True)
         for image in images:
-            image2 = image.lower()
-            if image2.find(".jpg") != -1 or image2.find(".jpeg") != -1 or image2.find(".png") != -1 or image2.find(".gif") != -1:
-                image2 = image2.strip()
-                image2 = j.system.fs.getBaseName(image2.replace("\\", "/"))
-                self.images[image2] = image
+            if DocPreprocessor.is_image(image):
+                self.add_image(image)
 
-        files = j.system.fs.listFilesInDir(path, False)
-        parent2 = j.system.fs.getDirName(path + "/", True).lower()
+        files = fs.listFilesInDir(path, False)
+        parent2 = fs.getDirName(path + "/", True).lower()
         files.sort()
-
-        def checkDefault(path, name):
-            name2 = j.system.fs.getDirName(path, True).lower()
-            if name == name2:
-                return True
-            dirpath = j.system.fs.getDirName(path)
-            return j.system.fs.exists(j.system.fs.joinPaths(dirpath, ".usedefault"))
 
         def isRootDir(path):
             "check if dir is a bucket, actor or space dir, if yes should not descend"
-            dirname = j.system.fs.getDirName(path + "/", True).lower()
+            dirname = fs.getDirName(path + "/", True).lower()
             if dirname[0] == ".":
                 return True
             # check if .space or .bucket or .actor in directory (subdir) if so return False
-            for item in [".space", ".bucket", ".actor"]:
-                if j.system.fs.exists(j.system.fs.joinPaths(path, item)):
-                    return True
-            return False
+            return any(fs.exists(fs.joinPaths(path, item)) for item in [".space", ".bucket", ".actor"])
+
         lastBaseNameHtmlLower = ""
         for pathItem in files:
-            if not self._pathIgnoreCheck(pathItem):
-                basename = j.system.fs.getBaseName(pathItem).lower()
-                # print "basename:%s" % basename
+            defaultdir, lastDefaultPath, lastparams, lastparamsdir, lastnav, lastnavdir, lastBaseNameHtmlLower = self.add_doc(pathItem, path, docs, defaultdir, lastDefaultPath, lastparams, lastparamsdir,
+                lastnav, lastnavdir, parent, lastBaseNameHtmlLower)
 
-                # DEAL WITH DEFAULTS & NAVIGATIONS
-                if pathItem.find(lastparamsdir) != 0:
-                    # previous default does not count
-                    lastparamsdir = ""
-                    lastparams = {}
-                if pathItem.find(defaultdir) != 0:
-                    # previous default does not count
-                    defaultdir = ""
-                    lastDefaultPath = ""
-                if pathItem.find(lastnavdir) != 0:
-                    print "CANCEL lastnav %s cancel" % lastnavdir
-                    lastnavdir = ""
-                    lastnav = ""
-                if basename == ".nav.wiki" or basename == "nav.wiki":
-                    lastnav = j.system.fs.fileGetTextContents(pathItem)
-                    lastnavdir = j.system.fs.getDirName(pathItem)
-                    continue
-                if basename == ".default.wiki" or basename == "default.wiki":
-                    lastDefaultPath = pathItem
-                    defaultdir = j.system.fs.getDirName(pathItem)
-                    continue
-                if basename == "params.cfg" or basename == ".params.cfg" or basename == "params" or basename == ".params":
-                    paramsfile = j.system.fs.fileGetContents(pathItem)
-                    lastparamsdir = j.system.fs.getDirName(pathItem)
-
-                    for line in paramsfile.split("\n"):
-                        if line.strip() != "" and line[0] != "#":
-                            param1, val1 = line.split("=", 1)
-                            paramskey = os.path.normpath(lastparamsdir)
-                            if paramskey in lastparams:
-                                newparams = lastparams[paramskey]
-                                newparams[param1.strip().lower()] = val1.strip()
-                            else:
-                                newparams = {param1.strip().lower(): val1.strip()}
-                            lastparams[paramskey] = newparams
-                    continue
-
-                # print pathItem
-                # print "lastnav %s" % lastnavdir
-
-                # path2 is relative part of path
-                if pathItem.find(path) == 0:
-                    path2 = pathItem[len(path):]
-                else:
-                    path2 = pathItem
-
-                # print "parse %s" % path2
-                # normalize relative path call path3
-                if path2[0] == "/" or path2[0] == "\\":
-                    path3 = path2[1:]
-                else:
-                    path3 = path2
-
-                # process the html docs
-                if j.system.fs.getFileExtension(pathItem) == "html":
-                    # because of sorting html doc should always come first
-                    lastBaseNameHtml = j.system.fs.getBaseName(pathItem).replace(".html", "")
-                    if lastBaseNameHtml[0] not in ["_", "."]:
-                        lastDirHtml = j.system.fs.getDirName(pathItem)
-                        wikiCorrespondingPath = j.system.fs.joinPaths(lastDirHtml, lastBaseNameHtml + ".wiki")
-                        if not j.system.fs.exists(wikiCorrespondingPath):
-                            C = "@usedefault\n\n{{htmlloadheader}}\n\n{{htmlloadbody}}\n"
-                            j.system.fs.writeFile(wikiCorrespondingPath, C)
-                        lastHeaderHtml, lastBodyHtml = self.parseHtmlDoc(pathItem)
-                        lastBaseNameHtmlLower = lastBaseNameHtml.lower()
-
-                if j.system.fs.getFileExtension(pathItem) == "wiki":
-
-                    # print "lastdefaultpath:%s" % lastDefaultPath
-                    doc = self.docNew()
-                    doc.original_name = j.system.fs.getBaseName(pathItem).replace(".wiki", "")
-                    doc.name = doc.original_name.lower()
-                    print "doc:%s path:%s" % (doc.name, pathItem)
-                    if checkDefault(pathItem, doc.name):
-                        # print "default %s" %lastDefaultPath
-                        doc.parent = parent
-                        doc.usedefault = True
-                    else:
-                        doc.parent = parent2
-
-                    doc.defaultPath = lastDefaultPath
-
-                    if doc.name == lastBaseNameHtmlLower:
-                        # found corresponding wiki doc
-                        doc.htmlHeadersCustom.append(lastHeaderHtml)
-                        doc.htmlBodiesCustom.append(lastBodyHtml)
-
-                    docdir = os.path.normpath(j.system.fs.getDirName(pathItem))
-                    while(docdir != ''):
-                        if docdir in lastparams:
-                            newparams = lastparams[docdir]
-                            if doc.docparams:
-                                doc.docparams = newparams.update(doc.docparams)
-                            else:
-                                doc.docparams = newparams
-                        docdir = j.system.fs.getParent(docdir)
-                    # print "**********lastnav"
-                    # print lastnav
-                    # print "**********lastnavend"
-                    doc.navigation = lastnav
-                    doc.path = pathItem  # .replace("\\","/")
-                    doc.shortpath = path3
-                    self.docAdd(doc)
-                    docs.append(doc)
-
-        ddirs = j.system.fs.listDirsInDir(path, False)
+        ddirs = fs.listDirsInDir(path, False)
         # print "dirs:%s" % ddirs
         for ddir in ddirs:
             if not isRootDir(ddir):
@@ -673,6 +600,128 @@ class DocPreprocessor():
                            lastnav, lastnavdir, parent=parent2)
 
         return docs
+
+    def add_doc(self, pathItem, path, docs, defaultdir="", lastDefaultPath="", lastparams={}, lastparamsdir="",
+              lastnav="", lastnavdir="", parent="", lastBaseNameHtmlLower=''):
+
+        def checkDefault(path, name):
+            name2 = fs.getDirName(path, True).lower()
+            if name == name2:
+                return True
+            dirpath = fs.getDirName(path)
+            return fs.exists(fs.joinPaths(dirpath, ".usedefault"))
+
+        parent2 = fs.getDirName(path + "/", True).lower()
+        
+        if self._pathIgnoreCheck(pathItem):
+            return defaultdir, lastDefaultPath, lastparams, lastparamsdir, lastnav, lastnavdir, lastBaseNameHtmlLower
+
+        basename = fs.getBaseName(pathItem).lower()
+        # print "basename:%s" % basename
+
+        # DEAL WITH DEFAULTS & NAVIGATIONS
+        if pathItem.find(lastparamsdir) != 0:
+            # previous default does not count
+            lastparamsdir = ""
+            lastparams = {}
+        if pathItem.find(defaultdir) != 0:
+            # previous default does not count
+            defaultdir = ""
+            lastDefaultPath = ""
+        if pathItem.find(lastnavdir) != 0:
+            print "CANCEL lastnav %s cancel" % lastnavdir
+            lastnavdir = ""
+            lastnav = ""
+        if basename == ".nav.wiki" or basename == "nav.wiki":
+            lastnav = fs.fileGetTextContents(pathItem)
+            lastnavdir = fs.getDirName(pathItem)
+            return defaultdir, lastDefaultPath, lastparams, lastparamsdir, lastnav, lastnavdir, lastBaseNameHtmlLower
+        if basename == ".default.wiki" or basename == "default.wiki":
+            lastDefaultPath = pathItem
+            defaultdir = fs.getDirName(pathItem)
+            return defaultdir, lastDefaultPath, lastparams, lastparamsdir, lastnav, lastnavdir, lastBaseNameHtmlLower
+        if basename == "params.cfg" or basename == ".params.cfg" or basename == "params" or basename == ".params":
+            paramsfile = fs.fileGetContents(pathItem)
+            lastparamsdir = fs.getDirName(pathItem)
+
+            for line in paramsfile.split("\n"):
+                if line.strip() != "" and line[0] != "#":
+                    param1, val1 = line.split("=", 1)
+                    paramskey = os.path.normpath(lastparamsdir)
+                    if paramskey in lastparams:
+                        newparams = lastparams[paramskey]
+                        newparams[param1.strip().lower()] = val1.strip()
+                    else:
+                        newparams = {param1.strip().lower(): val1.strip()}
+                    lastparams[paramskey] = newparams
+            return defaultdir, lastDefaultPath, lastparams, lastparamsdir, lastnav, lastnavdir, lastBaseNameHtmlLower
+
+        # print pathItem
+        # print "lastnav %s" % lastnavdir
+
+        # path2 is relative part of path
+        if pathItem.find(path) == 0:
+            path2 = pathItem[len(path):]
+        else:
+            path2 = pathItem
+
+        # print "parse %s" % path2
+        # normalize relative path call path3
+        path3 = path2.lstrip("/").lstrip("\\")
+
+        # process the html docs
+        if fs.getFileExtension(pathItem) == "html":
+            # because of sorting html doc should always come first
+            lastBaseNameHtml = fs.getBaseName(pathItem).replace(".html", "")
+            if lastBaseNameHtml[0] not in ["_", "."]:
+                lastDirHtml = fs.getDirName(pathItem)
+                wikiCorrespondingPath = fs.joinPaths(lastDirHtml, lastBaseNameHtml + ".wiki")
+                if not fs.exists(wikiCorrespondingPath):
+                    C = "@usedefault\n\n{{htmlloadheader}}\n\n{{htmlloadbody}}\n"
+                    fs.writeFile(wikiCorrespondingPath, C)
+                lastHeaderHtml, lastBodyHtml = self.parseHtmlDoc(pathItem)
+                lastBaseNameHtmlLower = lastBaseNameHtml.lower()
+
+        if fs.getFileExtension(pathItem) == "wiki":
+
+            # print "lastdefaultpath:%s" % lastDefaultPath
+            doc = self.docNew()
+            doc.original_name = fs.getBaseName(pathItem).replace(".wiki", "")
+            doc.name = doc.original_name.lower()
+            print "doc:%s path:%s" % (doc.name, pathItem)
+            if checkDefault(pathItem, doc.name):
+                # print "default %s" %lastDefaultPath
+                doc.parent = parent
+                doc.usedefault = True
+            else:
+                doc.parent = parent2
+
+            doc.defaultPath = lastDefaultPath
+
+            if doc.name == lastBaseNameHtmlLower:
+                # found corresponding wiki doc
+                doc.htmlHeadersCustom.append(lastHeaderHtml)
+                doc.htmlBodiesCustom.append(lastBodyHtml)
+
+            docdir = os.path.normpath(fs.getDirName(pathItem))
+            while(docdir != ''):
+                if docdir in lastparams:
+                    newparams = lastparams[docdir]
+                    if doc.docparams:
+                        doc.docparams = newparams.update(doc.docparams)
+                    else:
+                        doc.docparams = newparams
+                docdir = fs.getParent(docdir)
+            # print "**********lastnav"
+            # print lastnav
+            # print "**********lastnavend"
+            doc.navigation = lastnav
+            doc.path = pathItem  # .replace("\\","/")
+            doc.shortpath = path3
+            self.docAdd(doc)
+            docs.append(doc)
+
+        return defaultdir, lastDefaultPath, lastparams, lastparamsdir, lastnav, lastnavdir, lastBaseNameHtmlLower
 
     def findChildren(self):
         for doc in self.docs:

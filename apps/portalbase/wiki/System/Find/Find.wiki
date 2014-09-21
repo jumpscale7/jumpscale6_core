@@ -1,4 +1,6 @@
 
-h2. a title
+h2. Search
 
 #{{pageexplorer}}
+
+{{finder}}
