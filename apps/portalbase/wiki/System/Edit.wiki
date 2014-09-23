@@ -16,18 +16,19 @@ Help:/Help
 
 
 
-@block
+@block container-fluid
 @row
-
-@col 0
-@divend
 
 @col 12
 
 [Information about our wiki syntax & available macros|http://portals.incubaid.com/doc_jumpscale_portal|||target='_blank'|]
+
+
+@colend
+@rowend
+
+@row
 {{edit: app:$$app actor:$$actor space:$$space bucket:$$bucket path:$$path page:$$page}}
-
-
-@divend
-@divend
+@rowend
+@blockend
 

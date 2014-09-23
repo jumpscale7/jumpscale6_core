@@ -55,7 +55,27 @@ def main(j, args, params, tags, tasklet):
         return params
     content = j.system.fs.fileGetContents(path)
 
+    page.addMessage('<div class="span4">')
     page.addCodeBlock(content, path=path, exitpage=False, edit=args["edit"], spacename=args["space"], pagename=page_name, querystr=querystr)
+    page.addMessage('</div>')
+    page.addMessage('<div class="span8"><iframe space="$space" doc="$doc" id="preview$id" src="/render" width="100%" height="600px"></iframe></div>'.replace('$id', str(page._codeblockid))
+                    .replace('$space', args["space"]).replace('$doc', page_name))
+
+    # This macro should be added _only once_ to a page
+    page.addJS('/jslib/underscore/underscore.js')
+    page.addJS(jsContent='''
+    $(function() {
+        var render = _.debounce(function() {
+            var content = editor1.getValue();
+            console.log('Changed');
+            var space = $('#preview1').attr('space');
+            var doc = $('#preview1').attr('doc');
+            $('#preview1').attr('src', '/render?render_space=' + space + '&render_doc=' + doc + '&content=' + encodeURIComponent(content));
+        }, 300);
+        render();
+        editor1.on('change', render);
+    });''')
+
 
     params.result = page
     return params

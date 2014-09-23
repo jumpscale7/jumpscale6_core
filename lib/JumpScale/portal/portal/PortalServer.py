@@ -19,6 +19,8 @@ import time
 
 import mimeparse
 import mimetypes
+import urllib
+import cgi
 import JumpScale.grid.agentcontroller
 
 BLOCK_SIZE = 4096
@@ -360,7 +362,6 @@ class PortalServer:
                 spaceObject.loadDocProcessor(force=True)  # dynamic load of space
 
             spacedocgen = spaceObject.docprocessor
-
             if name != "" and name in spacedocgen.name2doc:
                 doc = spacedocgen.name2doc[name]
             else:
@@ -932,12 +933,63 @@ class PortalServer:
             # print self.libpath
             return self.processor_page(environ, start_response, self.libpath, path, prefix="lib")
 
+        elif match == 'render':
+            return self.render(environ, start_response)
+
         else:
             path = '/'.join(pathparts)
             ctx.params["path"] = '/'.join(pathparts)
             space, pagename = self.path2spacePagename(path)
             self.log(ctx, user, path, space, pagename)
             return [str(self.returnDoc(ctx, start_response, space, pagename, {}))]
+
+    def render(self, environ, start_response):
+        path = environ["PATH_INFO"].lstrip("/")
+        query_string = environ["QUERY_STRING"].lstrip("/")
+        params = cgi.parse_qs(query_string)
+        content = params.get('content', [''])[0]
+        space = params.get('render_space', None)
+        if space:
+            space = space[0]
+        else:
+            start_response('200 OK', [('Content-Type', "text/html")])
+            return 'Parameter "space" not supplied'
+
+        doc = params.get('render_doc', None)
+        if doc:
+            doc = doc[0]
+        else:
+            start_response('200 OK', [('Content-Type', "text/html")])
+            return 'Parameter "doc" not supplied'
+
+        ctx = RequestContext(application="", actor="", method="", env=environ,
+                     start_response=start_response, path=path, params=None)
+        ctx.params = self._getParamsFromEnv(environ, ctx)
+
+        doc, _ = self.getDoc(space, doc, ctx)
+
+        doc = doc.copy()
+        doc.source = content
+        doc.loadFromSource()
+        doc.preprocess()
+
+        content, doc = doc.executeMacrosDynamicWiki(ctx=ctx)
+
+        page = self.confluence2htmlconvertor.convert(content, doc=doc, requestContext=ctx, page=self.getpage(), paramsExtra=ctx.params)
+
+        if not 'postprocess' in page.processparameters or page.processparameters['postprocess']:
+            page.body = page.body.replace("$$space", space)
+            page.body = page.body.replace("$$page", doc.original_name)
+            page.body = page.body.replace("$$path", doc.path)
+            page.body = page.body.replace("$$querystr", ctx.env['QUERY_STRING'])
+
+        page.body = page.body.replace("$$$menuright", "")
+
+        if "todestruct" in doc.__dict__:
+            doc.destructed = True
+
+        start_response('200 OK', [('Content-Type', "text/html")])
+        return str(page)
     
     def addRoute(self, function, appname, actor, method, paramvalidation={}, paramdescription={}, \
         paramoptional={}, description="", auth=True, returnformat=None):
