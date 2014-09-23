@@ -94,7 +94,7 @@ class ControllerCMDS():
         # if session<>None:
         #     # jobid=self.redis.hincrby("jobs:last",str(session.gid),1) 
         # else:
-        jobid=self.redis.hincrby("jobs:last",str(gid),1) 
+        jobid=self.redis.hincrby("jobs:last", str(gid), 1) 
         self._log("jobid found (incr done):%s"%jobid)
         job.id=int(jobid)
 
@@ -148,7 +148,7 @@ class ControllerCMDS():
         # job guid needs to be unique accoress grid, structure $ac_gid _ $ac_nid _ $executor_gid _ $jobenum
         job["guid"]="%s_%s_%s"%(self.acuniquekey, job["gid"],job["id"])
         jobs=json.dumps(job)            
-        self.redis.hset("jobs:%s"%job["gid"],job["id"],jobs)
+        self.redis.hset("jobs:%s"%job["gid"], job["guid"], jobs)
         if osis:
             # we need to make sure that job['result'] is always of the same type hence we serialize
             # otherwise elasticsearch will have issues
@@ -158,10 +158,13 @@ class ControllerCMDS():
             self.jobclient.set(job)
 
     def _deleteJobFromCache(self, job):
-        self.redis.hdel("jobs:%s"%job["gid"],job["id"])
+        self.redis.hdel("jobs:%s"%job["gid"], job["guid"])
 
-    def _getJobFromRedis(self, gid, jid):
-        jobstring = self.redis.hget("jobs:%s"%gid, jid)
+    def _getJobFromRedis(self, jobguid):
+        if not len(jobguid.split("_")) == 3:
+            raise RuntimeError("Jobguid needs to be of format: '$acuniquekey_$gid_$jobid' ")
+        gid = jobguid.split("_")[1]
+        jobstring = self.redis.hget("jobs:%s" % gid, jobguid)
         if jobstring:
             return json.loads(jobstring)
         else:
@@ -385,7 +388,7 @@ class ControllerCMDS():
                     if len(node_guid.split("_"))<>2:
                         raise RuntimeError("node_guid needs to be of format: '$gid_$nid' ")
                     ngid,nid=node_guid.split("_")
-                    if gid is None or int(gid) == ngid:
+                    if gid is None or int(gid) == int(ngid):
                         job=self.scheduleCmd(gid=ngid,nid=nid,cmdcategory=organization,cmdname=name,args=args,queue=queue,log=action.log,timeout=timeout,roles=[role],session=session,jscriptid=action.id, wait=wait,errorreport=errorreport)
                         if wait:
                             return self.waitJumpscript(job=job,session=session)
@@ -408,10 +411,7 @@ class ControllerCMDS():
         if job==None:
             if jobguid==None:
                 raise RuntimeError("job or jobid need to be given as argument")
-            if len(jobguid.split("_"))<>2:
-                raise RuntimeError("Jobguid needs to be of format: '$gid_$jobid' ")
-            gid,jid=jobguid.split("_")
-            job = self._getJobFromRedis(gid,jid)
+            job = self._getJobFromRedis(jobguid)
             if not job:
                 # job = self.jobclient.get(jobguid).__dict__
                 # job['result'] = json.loads(job['result'])
@@ -546,13 +546,10 @@ class ControllerCMDS():
     def getJobInfo(self, jobguid, session=None):
         if jobguid==None:
             raise RuntimeError("job or jobid need to be given as argument")
-        if jobguid.split("_")<>1:
-            raise RuntimeError("Jobguid needs to be of format: '$gid_$jobid' ")
-        gid,jid=jobguid.split("_")
-        job = self._getJobFromRedis(gid,jid)
+        job = self._getJobFromRedis(jobguid)
         if not job:
             job = self.jobclient.get(jobguid).__dict__
-        return job.db.__dict__
+        return job
 
     def listJobs(self, session=None):
         """
