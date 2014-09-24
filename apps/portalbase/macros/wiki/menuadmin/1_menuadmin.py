@@ -19,6 +19,7 @@ def main(j, args, params, tags, tasklet):
 {{menudropdown: name:Portal
 New:/system/create
 Edit:/system/edit?space=$$space&page=$$page$$querystr
+Create Space:/system/createspace
 --------------
 Files:/system/files?space=$$space
 --------------
