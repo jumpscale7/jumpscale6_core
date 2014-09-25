@@ -95,6 +95,16 @@ class whmcstickets():
         ticket = dict((attr.tag, attr.text) for attr in et.fromstring(xs))
         return ticket
 
+    def add_note(self, ticketid, message):
+        print "Adding note to ticket %s" % ticketid
+        ticket_request_params = dict(
+            action = 'addticketnote',
+            ticketid = ticketid,
+            message = message
+            )
+
+        response = self._call_whmcs_api(ticket_request_params)
+        return response.ok
 
 
 
