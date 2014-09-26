@@ -3,7 +3,7 @@ from gevent import monkey
 monkey.patch_socket()
 monkey.patch_thread()
 monkey.patch_time()
-
+monkey.patch_ssl()
 from JumpScale import j
 from gevent.pywsgi import WSGIServer
 import JumpScale.grid.serverbase
