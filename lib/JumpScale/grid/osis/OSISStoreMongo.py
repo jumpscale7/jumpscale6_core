@@ -225,6 +225,7 @@ class OSISStoreMongo(OSISStore):
 
         """      
         db, counter = self._getMongoDB(session)
+        fields = None
         if size==None:
             size=200
         sortlist=[]
@@ -315,6 +316,7 @@ class OSISStoreMongo(OSISStore):
                 if not mongoquery['$or']:
                     mongoquery.pop('$or')
             else:
+                fields = query.pop('$fields', None)
                 mongoquery = query
             start = int(start)
             size = int(size)
@@ -323,9 +325,9 @@ class OSISStoreMongo(OSISStore):
                 for field in query['sort']:
                     sorting.append((field.keys()[0], 1 if field.values()[0] == 'asc' else -1))
                 mongoquery.pop('sort', None)
-                resultdata = db.find(mongoquery).sort(sorting).skip(start).limit(size)
+                resultdata = db.find(mongoquery, fields=fields).sort(sorting).skip(start).limit(size)
             else:
-                resultdata = db.find(mongoquery).skip(start).limit(size)
+                resultdata = db.find(mongoquery, fields=fields).skip(start).limit(size)
 
             count = db.find(mongoquery).count()
             result = [count, ]
