@@ -7,7 +7,8 @@ j.application.start("jsnode")
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['delete', 'list', 'enable', 'disable', 'addrole', 'deleterole'], help='Command to perform')
 
-parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=str, help='ex: -nid=1(note the = sign)')
+parser.add_argument('-nid', '--nodeid', dest='nid', required=False, type=int, help='ex: -nid=1(note the = sign)')
+parser.add_argument('-gid', '--gridid', dest='gid', required=False, type=int, help='Filter on grid used for list')
 parser.add_argument('--roles', dest='roles', required=False, type=str, help='Used with addrole or deleterole. ex: --roles=node, computenode.kvm(note the = sign). List is comma seperated')
 
 
@@ -56,12 +57,15 @@ if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole
 
 
     if opts.action == 'list':
-        form = '%(nid)-8s %(name)-11s %(ips)-60s %(active)-8s %(roles)-25s'
-        print form % {'nid': 'NODE ID', 'name': 'NAME', 'ips': 'IP ADDRESS', 'active': 'ACTIVE', \
+        form = '%(gid)-8s %(nid)-8s %(name)-11s %(ips)-60s %(active)-8s %(roles)-25s'
+        print form % {'gid': 'GRID ID', 'nid': 'NODE ID', 'name': 'NAME', 'ips': 'IP ADDRESS', 'active': 'ACTIVE', \
             'roles':'ROLES'}
         print '=' * 100
         print ''
-        for node in sorted(ncl.simpleSearch({}, size=0), key=lambda n: n['id']):
+        query = dict()
+        if opts.gid:
+            query['gid'] = opts.gid
+        for node in sorted(ncl.simpleSearch(query, size=0), key=lambda n: n['gid'] * 1000 + n['id']):
 
             name=node['name'].strip()
             if len(name)>10:
@@ -69,13 +73,16 @@ if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole
             ips=', '.join(node['ipaddr'])
             if len(ips)>60:
                 ips=ips[:51]
-            noded={'nid': node['id'], 'name': name, 'ips': ips, 'active': node['active'], 'roles': ', '.join(node['roles'])}
+            noded={'gid': node['gid'], 'nid': node['id'], 'name': name, 'ips': ips, 'active': node['active'], 'roles': ', '.join(node['roles'])}
             print form % noded
 
     else:
         nodes = dict()
         if not opts.nid:
-            for node in ncl.simpleSearch({}, size=0):
+            query = {}
+            if opts.gid:
+                query['gid'] = opts.gid
+            for node in ncl.simpleSearch(query, size=0):
                 nodes[node['name']] = node
             choicearray = nodes.keys()
             items = j.console.askChoiceMultiple(choicearray,"Select node")
