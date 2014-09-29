@@ -35,6 +35,8 @@ class Item():
 
     __str__=__repr__
 
+from .BlobStorClientFake import BlobStorClientFake
+
 class JSFileMgr():
     def __init__(self, MDPath,backupname,blobstorAccount,blobstorNamespace,repoid=0,compress=True,fullcheck=False,servercheck=True,storpath="/mnt/STOR"):
         self.errors=[]
@@ -54,10 +56,15 @@ class JSFileMgr():
         login="root"
         # blobstor2 client
         # self.blobstor = j.servers.zdaemon.getZDaemonClient("127.0.0.1",port=2345,user=login,passwd=passwd,ssl=False,sendformat='m', returnformat='m',category="blobserver")
-        self.blobstor=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace=blobstorNamespace)
+        if blobstorAccount==None:
+            self.blobstor=BlobStorClientFake()
+            self.blobstorMD=BlobStorClientFake()
+        else:
+            self.blobstor=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace=blobstorNamespace)
+            self.blobstorMD=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace="md_%s"%blobstorNamespace)
+
         self.blobstor.cachepath="/mnt/BLOBCACHEC"
-        j.system.fs.createDir(self.blobstor.cachepath)
-        self.blobstorMD=j.clients.blobstor2.getClient(name=blobstorAccount,domain="backups",namespace="md_%s"%blobstorNamespace)
+        j.system.fs.createDir(self.blobstor.cachepath)        
         
         self.namespace=blobstorNamespace
         self.backupname=backupname

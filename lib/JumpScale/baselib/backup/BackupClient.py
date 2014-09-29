@@ -12,6 +12,7 @@ class BackupClient:
     def __init__(self,backupname,blobstorAccount,blobstorNamespace,gitlabAccount,compress=True,fullcheck=False,servercheck=True,storpath="/mnt/STOR"):
      
         self.backupname=backupname
+
         self.blobstorAccount=blobstorAccount
         self.blobstorNamespace=blobstorNamespace
         self.gitlabAccount=gitlabAccount
