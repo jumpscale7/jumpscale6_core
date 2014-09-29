@@ -16,8 +16,9 @@ default_wiki = '''
     {{menu:
     }}
     {{menuloggedin:
-    Home:/System
+    Home:Home
     }}
+    {{menuadmin}}
 
     @block
     @row
