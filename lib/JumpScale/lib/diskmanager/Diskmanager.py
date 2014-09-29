@@ -35,25 +35,6 @@ def get_open_blks(pid):
         os.stat('/proc/%s' % pid)
     return retlist
 
-try:
-    import parted
-except:
-    j.system.platform.ubuntu.install("python-parted")
-    import parted
-
-#patch parted
-_orig_getAllDevices = parted.getAllDevices
-def _patchedGetAllDevices():
-    pid = os.getpid()
-    fds = get_open_blks(pid)
-    try:
-        return _orig_getAllDevices()
-    finally:
-        afds = get_open_blks(pid)
-        for fd in afds.difference(fds):
-            os.close(fd)
-
-parted.getAllDevices = _patchedGetAllDevices
 
 class Disk():
     """
@@ -79,7 +60,38 @@ class Disk():
     __repr__=__str__
 
 class Diskmanager(): 
-    def partitionAdd(self,disk, free, align=None, length=None, fs_type=None, type=parted.PARTITION_NORMAL):
+    def __init__(self):
+        self.parted=None
+
+    def _init(self):
+        if self.self.parted==None:
+            try:
+                import parted
+            except:
+                j.system.platform.ubuntu.install("python-self.parted")
+                import parted
+
+            #patch self.parted
+            _orig_getAllDevices = parted.getAllDevices
+
+            def _patchedGetAllDevices():
+                pid = os.getpid()
+                fds = get_open_blks(pid)
+                try:
+                    return _orig_getAllDevices()
+                finally:
+                    afds = get_open_blks(pid)
+                    for fd in afds.difference(fds):
+                        os.close(fd)
+
+            parted.getAllDevices = _patchedGetAllDevices
+            self.parted=parted
+
+
+    def partitionAdd(self,disk, free, align=None, length=None, fs_type=None, type=None):
+        self._init()
+        if type==None:
+            type=self.parted.PARTITION_NORMAL
         start = free.start
         if length:
             end = start + length - 1
@@ -93,17 +105,17 @@ class Diskmanager():
         if not align.isAligned(free, start):
             start = align.alignNearest(free, start)
      
-        end_align = parted.Alignment(offset=align.offset - 1, grainSize=align.grainSize)
+        end_align = self.parted.Alignment(offset=align.offset - 1, grainSize=align.grainSize)
         if not end_align.isAligned(free, end):
             end = end_align.alignNearest(free, end)
      
-        geometry = parted.Geometry(disk.device, start=start, end=end)
+        geometry = self.parted.Geometry(disk.device, start=start, end=end)
         if fs_type:
-            fs = parted.FileSystem(type=fs_type, geometry=geometry)
+            fs = self.parted.FileSystem(type=fs_type, geometry=geometry)
         else:
             fs = None
-        partition = parted.Partition(disk, type=type, geometry=geometry, fs=fs)
-        constraint = parted.Constraint(exactGeom=partition.geometry)
+        partition = self.parted.Partition(disk, type=type, geometry=geometry, fs=fs)
+        constraint = self.parted.Constraint(exactGeom=partition.geometry)
         disk.addPartition(partition, constraint)
         return partition
      
@@ -117,7 +129,7 @@ class Diskmanager():
         return new_regions
      
     def _kib_to_sectors(self,device, kib):
-        return parted.sizeToSectors(kib, 'KiB', device.sectorSize)
+        return self.parted.sizeToSectors(kib, 'KiB', device.sectorSize)
 
     def mirrorsFind(self):
         cmd="cat /proc/mdstat"
@@ -131,7 +143,8 @@ class Diskmanager():
         return [[$partpath,$size,$free,$ssd]]
         @param ssd if None then ssd and other
         """
-        import parted
+        self._init()
+        import self.parted
         import JumpScale.grid.osis
         import psutil
         result=[]
@@ -143,7 +156,7 @@ class Diskmanager():
                     return part
             return None
 
-        for dev in parted.getAllDevices():
+        for dev in self.parted.getAllDevices():
             path=dev.path
             #ssize = dev.sectorSize;
             # size = (geom[0] * geom[1] * geom[2] * ssize) / 1000 / 1000 / 1000;
@@ -152,9 +165,9 @@ class Diskmanager():
             if devbusy==None or dev.busy==devbusy:
                 if path.startswith("/dev/%s"%prefix):
                     try:
-                        disk = parted.Disk(dev)
+                        disk = self.parted.Disk(dev)
                         partitions = disk.partitions
-                    except parted.DiskLabelException:
+                    except self.parted.DiskLabelException:
                         partitions = list()
                     for partition in partitions:
                         disko=Disk()
@@ -164,7 +177,7 @@ class Diskmanager():
                         disko.free = 0
                         print "partition:%s %s"%(disko.path,disko.size)
                         try:
-                            fs = parted.probeFileSystem(partition.geometry)
+                            fs = self.parted.probeFileSystem(partition.geometry)
                         except:
                             fs = "unknown"
 
