@@ -14,9 +14,8 @@ class Docker():
         self._basepath = "/mnt/vmstor/docker"
         self._prefix=""
         self.client = docker.Client(base_url='unix://var/run/docker.sock',
-                  version='1.12',
+                  # version='1.12',
                   timeout=10)
-
 
     def execute(self, command):
         env = os.environ.copy()
@@ -73,6 +72,7 @@ class Docker():
         for item in self.ps():
             if "/%s"%name in item["Names"]:
                 return item
+        raise RuntimeError("Could not find info from '%s' (docker)"%name)
 
     def getProcessList(self, name, stdout=True):
         """
@@ -235,7 +235,7 @@ class Docker():
         cmd="cd %s;tar xzvf %s -C ."%(path,bpath)        
         j.system.process.executeWithoutPipe(cmd)
 
-    def create(self,name="",ports="",vols="",volsro="",stdout=True,base="despiegk/js",nameserver="8.8.8.8",replace=True,cpu=None,mem=0):
+    def create(self,name="",ports="",vols="",volsro="",stdout=True,base="despiegk/mc",nameserver="8.8.8.8",replace=True,cpu=None,mem=0):
         """
         @param ports in format as follows  "22:8022 80:8080"  the first arg e.g. 22 is the port in the container
         @param vols in format as follows "/var/insidemachine:/var/inhost # /var/1:/var/1 # ..."   '#' is separator
@@ -282,8 +282,8 @@ class Docker():
                 key,val=item.split(":",1)
                 volsdictro[str(key).strip()]=str(val).strip()
                 
-        volsdict["/var/js/%s/"%name]="/opt/jsbox_data/var/data/"
-        volsdict["/var/js/all/jpfiles/"]="/opt/jsbox_data/var/jpackages/files/"
+        # volsdict["/var/js/%s/"%name]="/opt/jsbox_data/var/data/"
+        # volsdict["/var/js/all/jpfiles/"]="/opt/jsbox_data/var/jpackages/files/"
 
         binds={}
 
@@ -297,22 +297,45 @@ class Docker():
 
         volskeys=volsdict.keys()+volsdictro.keys()
 
+
+        if base not in self.getImages():
+            print "download docker"
+            cmd="docker pull %s"%base
+            j.system.process.executeWithoutPipe(cmd)
+
         cmd="sh -c \"chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""        
 
         # mem=1000000
+        print "install docker with name '%s'"%base
 
-        res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
-            detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
-            network_disabled=False, name=name, entrypoint=None, cpu_shares=cpu, working_dir=None, domainname=None, memswap_limit=0)
+        try:
+            res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
+                detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
+                network_disabled=False, name=name, entrypoint=None, cpu_shares=cpu, working_dir=None, domainname=None, memswap_limit=0)
+        except Exception,e:
+            if str(e).find("is already assigned to")<>-1:
+                print "remove docker before creation"
+                cmd="docker rm kds"
+                j.system.process.executeWithoutPipe(cmd)
+                res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
+                    detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
+                    network_disabled=False, name=name, entrypoint=None, cpu_shares=cpu, working_dir=None, domainname=None, memswap_limit=0)
+                raise RuntimeError("Error when creating docker:%s"%e)
         
         id=res["Id"]
         
-        self.client.start(container=id, binds=binds, port_bindings=portsdict, lxc_conf=None, \
+        res=self.client.start(container=id, binds=binds, port_bindings=portsdict, lxc_conf=None, \
             publish_all_ports=False, links=None, privileged=False, dns=nameserver, dns_search=None, volumes_from=None, network_mode=None)
+
+        print res
          
         self.pushSSHKey(name)
 
         # return self.getIp(name)
+
+    def getImages(self):
+        images=[str(item["RepoTags"][0]).replace(":latest","") for item in self.client.images()]
+        return images
 
     def setHostName(self,name):
         raise RuntimeError("not implemented")
@@ -382,7 +405,8 @@ class Docker():
         #             print j.system.process.execute(command, dieOnNonZeroExitCode=False, outputToStdout=False, useShell=False, ignoreErrorOutput=False)
 
     def destroy(self,name):        
-        running=self.list()        
+        running=self.list()
+                  
         if name in running.keys():
             idd=running[name]    
             self.client.kill(idd)

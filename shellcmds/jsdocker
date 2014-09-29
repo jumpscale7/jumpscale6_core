@@ -52,7 +52,7 @@ if opts.action =='list':
 
 if opts.action =='new':
     if opts.base==None:
-        opts.base="despiegk/js"
+        opts.base="despiegk/mc"
     l.create(name=opts.name,stdout=True,base=opts.base,ports=opts.ports,vols=opts.vols,volsro=opts.volsro,cpu=opts.cpu,mem=opts.mem)
 
 if opts.action =='getip':
@@ -144,7 +144,6 @@ if opts.action =='rdp':
     j.system.net.waitConnectionTest(ip,3389,2)
     j.system.installtools.execute("rmachine %s -g 1600x900 -e & 2>&1 > /dev/null"%ip)
 
-
 if opts.action =='destroyall':
     l.destroyall()
 
@@ -168,13 +167,13 @@ if opts.action =='restart':
         raise RuntimeError("specify machine name")
     l.stop(opts.name)
     l.start(opts.name)
+#
+#if opts.action =="mountdisks":
+#    j.system.platform.diskmanager.partitionsFind()
+#    j.system.platform.diskmanager.partitionsMount_Ext4Data()
 
-if opts.action =="mountdisks":
-    j.system.platform.diskmanager.partitionsFind()
-    j.system.platform.diskmanager.partitionsMount_Ext4Data()
-
-if opts.action =="unmountdisks":
-    j.system.platform.diskmanager.partitionsUnmount_Ext4Data()
+#if opts.action =="unmountdisks":
+#    j.system.platform.diskmanager.partitionsUnmount_Ext4Data()
 
 
 j.application.stop()

@@ -1179,10 +1179,8 @@ def calculateEnvironment(values, source=None):
 
 class SystemProcess:
 
-    def executeWithoutPipe(self, command, dieOnNonZeroExitCode = True, printCommandToStdout = False, outputToStdout = "deprecatedArgument"):
+    def executeWithoutPipe(self, command, dieOnNonZeroExitCode = True, printCommandToStdout = False):
         """
-
-        DEPRECATED, use system.process.executeAsync() instead, and call the wait() method of the returned object.
 
         Execute command without opening pipes, returns only the exitcode
         This is platform independent
@@ -1193,10 +1191,6 @@ class SystemProcess:
         @rtype: integer represents the exitcode
         if exitcode is not zero then the executed command returned with errors
         """
-        j.logger.log("Using DEPRECATED method system.process.executeWithoutPipe(). Please use system.process.executeAsync() instead, and call the wait() method of the returned object.", 3)
-        if not (outputToStdout == "deprecatedArgument"):
-            j.logger.log("system.process.executeWithoutPipe called with deprecated argument 'outputToStdout'. This paramater is deprecated because it is confusing: printing the output to StdOut is impossible when executing a command without piping. The argument indicates if the command itself should be written on screen and is therefore renamed to 'printCommandToStdout'. Use this argument instead.", 3)
-            printCommandToStdout = outputToStdout
 
         if printCommandToStdout:
             j.logger.log("system.process.executeWithoutPipe [%s]" % command, 8)
