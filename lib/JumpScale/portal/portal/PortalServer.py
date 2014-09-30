@@ -862,9 +862,11 @@ class PortalServer:
             space, image = pathparts[1:3]
             spaceObject = self.getSpace(space)
             image = image.lower()
+            
             if image in spaceObject.docprocessor.images:
-                path = spaceObject.docprocessor.images[image]
-                return self.processor_page(environ, start_response, j.system.fs.getDirName(path), j.system.fs.getBaseName(path), prefix="images")
+                path2 = spaceObject.docprocessor.images[image]
+
+                return self.processor_page(environ, start_response, j.system.fs.getDirName(path2), j.system.fs.getBaseName(path2), prefix="images")
             ctx.start_response('404', [])
 
         if path.find("files/specs/") == 0:

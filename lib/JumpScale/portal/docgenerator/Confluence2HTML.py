@@ -294,6 +294,7 @@ class Confluence2HTML():
                         styles = [attr.split('=') for attr in styles.split(',')]
                     else:
                         styles = []
+
                     if image.startswith('/') or image.startswith('http://'):
                         imagePath = image
                     else:
@@ -303,12 +304,26 @@ class Confluence2HTML():
                         # result=th.getValues(width=800,height=600,border=True)
                         #page.addImage(image, image, result["width"], result["height"])
                         #page.addImage(image, imagePath, styles=styles)
-                        line = line.replace(match, self.createImage(image, imagePath, styles=styles))
+
+                        width=None
+                        height=None
+
+                        for item in styles:
+                            
+                            if len(item)==1 and item[0].find(":")<>-1: #can be tag
+                                tags=j.core.tags.getObject(item[0])
+                                if tags.tagExists("width"):
+                                    width=tags.tagGet("width")
+                                    
+                                if tags.tagExists("height"):
+                                    height=tags.tagGet("height")
+                        
+                        line = line.replace(match, self.createImage(image, imagePath, width=width, height=height, styles=styles))
                         # continue
                     else:
-                        imagePath, tags, _ = doc.images[image]
+                        imagePath, tags, _ = doc.images[image]                        
                         th = j.core.tags.getObject(tags)
-                        result = th.getValues(width=None, height=None, border=True)
+                        result = th.getValues(width=None, height=None, border=True)                        
                         imagePath = "/images/%s/%s" % (doc.getSpaceName(), image)
                         #page.addImage(image, imagePath, result["width"], result["height"], styles)
                         line = line.replace(match, self.createImage(image, imagePath, result["width"], result["height"], styles))

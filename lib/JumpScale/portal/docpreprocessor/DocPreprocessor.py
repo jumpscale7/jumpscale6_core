@@ -227,8 +227,8 @@ class DocPreprocessor():
 
     def add_image(self, img):
         img = img.strip()
-        img = fs.getBaseName(img.replace("\\", "/"))
-        self.images[img] = img
+        img2 = fs.getBaseName(img.replace("\\", "/")).lower()
+        self.images[img2] = img
 
     def _scan(self, path, defaultdir="", lastDefaultPath="", lastparams={}, lastparamsdir="",
               lastnav="", lastnavdir="", parent="", docs=[]):
@@ -236,7 +236,7 @@ class DocPreprocessor():
         directory to walk over and find story, task, ... statements
         """
 
-        images = fs.listFilesInDir(path, True)
+        images = fs.listFilesInDir(path, True)        
         for image in images:
             if DocPreprocessor.is_image(image):
                 self.add_image(image)
@@ -345,8 +345,6 @@ class DocPreprocessor():
                 if not fs.exists(wikiCorrespondingPath):
                     C = "@usedefault\n\n{{htmlloadheader}}\n\n{{htmlloadbody}}\n"
                     fs.writeFile(wikiCorrespondingPath, C)
-                lastHeaderHtml, lastBodyHtml = self.parseHtmlDoc(pathItem)
-                lastBaseNameHtmlLower = lastBaseNameHtml.lower()
 
         if fs.getFileExtension(pathItem) == "wiki":
 
@@ -364,8 +362,9 @@ class DocPreprocessor():
 
             doc.defaultPath = lastDefaultPath
 
-            if doc.name == lastBaseNameHtmlLower:
-                # found corresponding wiki doc
+            htmlpath=j.system.fs.joinPaths(fs.getDirName(path),"%s.html"%doc.original_name)
+            if j.system.fs.exists(path=htmlpath):                
+                lastHeaderHtml, lastBodyHtml = self.parseHtmlDoc(htmlpath)           
                 doc.htmlHeadersCustom.append(lastHeaderHtml)
                 doc.htmlBodiesCustom.append(lastBodyHtml)
 
