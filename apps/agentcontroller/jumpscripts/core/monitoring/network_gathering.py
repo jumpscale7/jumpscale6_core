@@ -28,7 +28,7 @@ def action():
     for mac,val in netinfo.iteritems():
 
         name,ipaddr=val
-        if ipaddr.find(",")<>-1:
+        if ipaddr:
             ipaddr=ipaddr.split(",")
             if ipaddr==['']:
                 ipaddr=[]
@@ -87,3 +87,5 @@ def action():
 
     j.core.processmanager.monObjects.nicobject.monitorobjects=result
 
+if __name__ == '__main__':
+    action()

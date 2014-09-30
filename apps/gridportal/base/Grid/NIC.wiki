@@ -12,14 +12,14 @@ h3. Details
 |*MAC Address*|$$mac|
 |*IP Address*|$$ipaddr|
 |*Last Checked*|$$lastcheck|
-|*Node*|[$$nid|node?id=$$nid]|
+|*Node*|[$$nid|node?id=$$nid&gid=$$gid]|
 
 h3. Statistics
 
-{{stat key:n$$nid.nic.$$nic.kbytes_recv,n$$nid.nic.$$nic.kbytes_sent title=KBytes}}
-{{stat key:n$$nid.nic.$$nic.packets_recv,n$$nid.nic.$$nic.packets_sent title=Packets}}
 
-{{stat key:n$$nid.nic.$$nic.dropin,n$$nid.nic.$$nic.dropout title=Drop}}
-{{stat key:n$$nid.nic.$$nic.errin,n$$nid.nic.$$nic.errout title=Error}}
+{{html:
 
+<iframe height="275px" frameborder="0" width="1000px" src="/jslib/grafana/iframe.html#/dashboard/script/NicStats.js?nid=$$nid&gid=$$gid&name=$$name"></iframe>
+
+}}
 

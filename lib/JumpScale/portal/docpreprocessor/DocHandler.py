@@ -1,7 +1,7 @@
 from JumpScale import j
 
 # import re
-# import os
+import os
 # import jinja2
 
 from watchdog.events import FileSystemEventHandler
