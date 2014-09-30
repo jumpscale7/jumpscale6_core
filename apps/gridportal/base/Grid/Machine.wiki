@@ -1,5 +1,5 @@
 @usedefaults
-{{machine: id:$$id}}
+{{machine: id:$$id gid:$$gid}}
 
 h2. Machine
 |*Machine ID*|$$id|
