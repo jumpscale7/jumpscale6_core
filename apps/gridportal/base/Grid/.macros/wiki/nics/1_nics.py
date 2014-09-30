@@ -22,12 +22,11 @@ def main(j, args, params, tags, tasklet):
         return params
 
     for nic in nics:
-        _data = {'nid': nic['nid'], 'id':nic['id'], 'name':nic['name']}
         for field in fields:
             if field == 'lastcheck':
                 data = datetime.datetime.fromtimestamp(nic[field]).strftime('%m-%d %H:%M:%S') or ''
             elif field == 'name':
-                data = '[%(name)s|/grid/nic?id=%(id)s&nic=%(name)s&nid=%(nid)s]' % _data
+                data = '[%(name)s|/grid/nic?id=%(guid)s&nic=%(name)s&nid=%(nid)s]' %  nic
             elif isinstance(nic[field], list):
                 data = ', '.join(nic[field])
             else:

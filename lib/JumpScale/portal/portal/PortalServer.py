@@ -38,7 +38,7 @@ class PortalServer:
 ##################### INIT
     def __init__(self):
 
-        self.hrd=j.application.instanceconfig
+        self.hrd = j.application.instanceconfig
 
         self.contentdirs = list()
         self.libpath = j.html.getHtmllibDir()
@@ -54,7 +54,7 @@ class PortalServer:
         self.pageKey2doc = {}
         self.routes = {}
 
-        self.loadConfig()        
+        self.loadConfig()
 
         macroPathsPreprocessor = ["macros/preprocess"]
         macroPathsWiki = ["macros/wiki"]

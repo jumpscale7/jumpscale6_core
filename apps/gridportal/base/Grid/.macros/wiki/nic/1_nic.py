@@ -1,22 +1,21 @@
 import datetime
 
 def main(j, args, params, tags, tasklet):
-    id = args.getTag('id')
-    if not id:
-        out = 'Missing NIC id param "id"'
+    guid = args.getTag('id')
+    if not guid:
+        out = 'Missing NIC guid param "guid"'
         params.result = (out, args.doc)
         return params
 
-    nics = j.apps.system.gridmanager.getNics(id=id)
-    if not nics:
-        params.result = ('NIC with id %s not found' % id, args.doc)
+    nic = j.core.portal.active.osis.get('system', 'nic', guid)
+    if not nic:
+        params.result = ('NIC with guid %s not found' % guid, args.doc)
         return params
 
     def objFetchManipulate(id):
-        obj = nics[0]
-        obj['lastcheck'] = datetime.datetime.fromtimestamp(obj['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
-        obj['ipaddr'] = ', '.join([str(x) for x in obj['ipaddr']])
-        return obj
+        nic['lastcheck'] = datetime.datetime.fromtimestamp(nic['lastcheck']).strftime('%Y-%m-%d %H:%M:%S')
+        nic['ipaddr'] = ', '.join([str(x) for x in nic['ipaddr']])
+        return nic
 
     push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
 

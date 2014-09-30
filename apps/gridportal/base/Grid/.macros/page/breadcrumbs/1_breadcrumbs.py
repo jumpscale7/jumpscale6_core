@@ -11,7 +11,7 @@ def main(j, args, inparams, tags, tasklet):
     if pagename == 'nic':
         nid = doc.appliedparams.get('nid')
         breadcrumbs.append(('nics?nid=%s' % nid, 'NICs'))
-        breadcrumbs.append(('nic?id=%(id)s&nic=%(nic)s&nid=%(nid)s' % params, params['nic']))
+        breadcrumbs.append(('nic?id=%(id)s' % params, params['nic']))
         params['id'] = params['nid']
         pagename = 'node'
     elif pagename == 'job':

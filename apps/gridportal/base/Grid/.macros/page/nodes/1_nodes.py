@@ -3,13 +3,16 @@ def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
 
-    fieldnames = ['Name', 'Node ID', 'IP Address', 'Roles']
-    def makeLink(row, field):
-        return '[%s|/grid/node?id=%s]' % (row['name'], row['id'])
+    fieldnames = ['GID', 'Name', 'Node ID', 'IP Address', 'Roles']
+    filters = dict()
+    for tag, val in args.tags.tags.iteritems():
+        if tag in ('gid', ) and val and not val.startswith("$$"):
+            filters['gid'] = int(val)
 
-    fieldvalues = [makeLink, 'id','ipaddr', 'roles']
-    fieldids = ['name', 'id', 'ipaddr', 'roles']
-    tableid = modifier.addTableForModel('system', 'node', fieldids, fieldnames, fieldvalues)
+    namelink = '[%(name)s|/grid/node?id=%(id)s&gid=%(gid)s]'
+    fieldvalues = ['gid', namelink, 'id','ipaddr', 'roles']
+    fieldids = ['gid', 'name', 'id', 'ipaddr', 'roles']
+    tableid = modifier.addTableForModel('system', 'node', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
 
     params.result = page
