@@ -14,7 +14,7 @@ h3. Details
 |*Stopped*| $$epochstop|
 |*JPackage*| $$jpname|
 |*Node*| [$$nid|node?id=$$nid|]|
-|*Statistics*| [Go to statistics page|ProcessStats?id=$$id]|
+# |*Statistics*| [Go to statistics page|ProcessStats?id=$$id]|
 
 h3. logs from last 1h
 {{logs: pid:$$id from:-1h}}

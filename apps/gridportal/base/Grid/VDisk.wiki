@@ -1,5 +1,5 @@
 @usedefaults
-{{vdisk: id:$$id}}
+{{vdisk: id:$$id gid:$$gid}}
 
 h2. VDisk
 

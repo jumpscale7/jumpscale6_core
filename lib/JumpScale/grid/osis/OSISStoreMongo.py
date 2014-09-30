@@ -295,7 +295,7 @@ class OSISStoreMongo(OSISStore):
                             mongoquery[k] = v
                     if 'range' in queryitem:
                         for k, v in queryitem['range'].iteritems():
-                            operatormap = {'from':'$gte', 'to':'$lte', 'gt': '$gt'}
+                            operatormap = {'from':'$gte', 'to':'$lte', 'gt': '$gt', 'gte': '$gte'}
                             for operator, val in v.iteritems():
                                 mongoquery[k] = {operatormap[operator]: val}
                     if 'wildcard' in queryitem:

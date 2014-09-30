@@ -4,18 +4,19 @@ def main(j, args, params, tags, tasklet):
     import JumpScale.baselib.units
 
     id = args.getTag('id')
-    if not id:
+    gid = args.getTag('gid')
+    if not id or not gid:
         out = 'Missing vdisk id param "id"'
         params.result = (out, args.doc)
         return params
 
-    vdisks = j.apps.system.gridmanager.getVDisks(id=id)
-    if not vdisks:
+    vdisk = j.core.portal.active.osis.get('system', 'vdisk', '%s_%s' % (gid, id))
+    if not vdisk:
         params.result = ('VDisk with id %s not found' % id, args.doc)
         return params
 
     def objFetchManipulate(id):
-        obj = vdisks[0]
+        obj = vdisk
         for attr in ['lastcheck', 'expiration', 'backuptime']:
             value = obj.get(attr)
             if value: 

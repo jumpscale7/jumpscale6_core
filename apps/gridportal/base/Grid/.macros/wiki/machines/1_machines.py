@@ -28,9 +28,9 @@ def main(j, args, params, tags, tasklet):
         for field in fields:
         # add links
             if field == 'name':
-                line.append('[%s|/grid/machine?id=%s]' % (str(machine['name']), str(machine['id'])))
+                line.append('[%(name)s|/grid/machine?id=%(id)s&gid=%(gid)s]' % machine)
             elif field == 'nid':
-                line.append('[%s|/grid/node?id=%s]' % (str(machine[field]), str(machine[field])))
+                line.append('[%(nid)s|/grid/node?id=%(nid)s&gid=%(gid)s]' % machine)
             elif field == 'netaddr':
                 netaddr = machine[field]
                 macs = list()
