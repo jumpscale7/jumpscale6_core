@@ -2,18 +2,19 @@ import datetime
 
 def main(j, args, params, tags, tasklet):
     id = args.getTag('id')
+    gid = args.getTag('gid')
     if not id:
         out = 'Missing machine id param "id"'
         params.result = (out, args.doc)
         return params
 
-    machines = j.apps.system.gridmanager.getMachines(id=id)
-    if not machines:
+    machine = j.core.portal.active.osis.get('system', 'machine', "%s_%s" % (gid, id))
+    if not machine:
         params.result = ('Machine with id %s not found' % id, args.doc)
         return params
 
     def objFetchManipulate(id):
-        obj = machines[0]
+        obj = machine
         for attr in ['roles', 'ipaddr']:
             obj[attr] = ', '.join([str(x) for x in obj[attr]]) 
 

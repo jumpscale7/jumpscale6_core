@@ -10,7 +10,7 @@ h2. Machine
 |*Memory*|$$mem|
 |*Net Address*|$$netaddr|
 |*IP Adress*|$$ipaddr|
-|*Node ID*|[$$nid|node?id=$$nid]|
+|*Node ID*|[$$nid|node?id=$$nid&gid=$$gid]|
 |*Last Checked*|$$lastcheck|
 |*State*|$$state|
 |*Grid ID*|[$$gid|grid?id=$$gid]|
@@ -20,4 +20,4 @@ h2. Machine
 
 
 h3. Virtual Disks
-{{vdisks: machineid:$$id}}
+{{vdisks: machineid:$$id gid:$$gid}}
