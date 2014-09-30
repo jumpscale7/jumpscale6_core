@@ -116,7 +116,7 @@ class Tmux:
             return self.createSession(session, [name])
         windows = self.listWindows(session)
         if name not in windows.values():
-            j.system.process.execute("tmux new-window -t '%s' -n '%s'" % (session, name))
+            j.system.process.execute("tmux new-window -t '%s:' -n '%s'" % (session, name))
 
     def logWindow(self, session, name, filename):
         pane = self._getPane(session, name)
