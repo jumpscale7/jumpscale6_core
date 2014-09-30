@@ -758,9 +758,9 @@ function copyText$id() {
 
     def addExplorer(self, path="", dockey=None, height=500, width=750, readonly=False, tree=False):
 
-        self.addJS("%s/old/lib/elfinder/jquery.min.js" % self.liblocation)
-        self.addJS("%s/old/lib/elfinder/jquery-ui.min.js" % self.liblocation)
-        self.addCSS("%s/old/lib/elfinder/jquery-ui.css" % self.liblocation)
+        self.addJS("%s/old/elfinder/jquery.min.js" % self.liblocation)
+        self.addJS("%s/old/elfinder/jquery-ui.min.js" % self.liblocation)
+        self.addCSS("%s/old/elfinder/jquery-ui.css" % self.liblocation)
         self.addCSS("%s/old/elfinder/css/elfinder.min.css" % self.liblocation)
         self.addCSS("%s/old/elfinder/css/theme.css" % self.liblocation)
         self.addJS("%s/old/elfinder/js/elfinder.min.js" % self.liblocation)
