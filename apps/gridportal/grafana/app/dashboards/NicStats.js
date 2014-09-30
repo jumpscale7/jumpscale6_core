@@ -1,4 +1,4 @@
-var filter = ARGS.nid + " and gid = " + ARGS.gid + " and nic_id = " + ARGS.name;
+var filter = ARGS.nid + " and gid = " + ARGS.gid + " and nic_id = " + "'" + ARGS.name + "'";
 
 return {
   "title": "Grafana",
