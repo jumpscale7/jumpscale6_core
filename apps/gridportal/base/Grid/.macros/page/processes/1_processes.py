@@ -14,12 +14,13 @@ def main(j, args, params, tags, tasklet):
     fieldids = ["sname", "nid", "jpname", "jpdomain", "epochstart"]
     fieldnames = ['Name', 'Node', 'Process Name', 'Process Domain', 'Start']
     def pidFormat(row, field):
-        return '[%s|/grid/process?id=%s]' % (row['sname'] or row['pname'], row['id'])
+        name = row['sname'] or row['pname']
+        return '[%s|/grid/process?id=%s&name=%s]' % (name, row['id'], name)
 
     def makeTime(row, field):
         return datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S')
 
-    nidstr = '[%(nid)s|/grid/node?id=%(nid)s]'
+    nidstr = '[%(nid)s|/grid/node?id=%(nid)s&%(gid)s]'
     fieldvalues = [pidFormat, nidstr, 'jpname', 'jpdomain', makeTime]
     tableid = modifier.addTableForModel('system', 'process', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
