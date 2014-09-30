@@ -168,7 +168,7 @@ class OSISFactory:
 
     def getClientByInstance(self, instance=None, ssl=False, gevent=False,die=True):
         if instance is None:
-            instance = j.application.instanceconfig.get('osis.connection')
+            raise RuntimeError("please specify instance name.")
         osisjp=j.packages.findNewest(name="osis_client",domain="jumpscale")
         osisjp.load(instance=instance)
         if osisjp.isInstalled():

@@ -20,12 +20,12 @@ class PortalFactory():
         self.inprocess = False
         self._portalClients = {}
 
-    def getServer(self):
-        return PortalServer()
+    def getServer(self,hrd):
+        return PortalServer(hrd)
 
-    def getPortalConfig(self, appname):
-        cfg = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', appname, 'cfg', 'portal')
-        return j.config.getConfig(cfg)
+    # def getPortalConfig(self, appname):
+    #     cfg = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', appname, 'cfg', 'portal')
+    #     return j.config.getConfig(cfg)
 
     def loadActorsInProcess(self):
         """

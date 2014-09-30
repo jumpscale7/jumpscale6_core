@@ -13,19 +13,19 @@ import sys
 
 if __name__ == '__main__':
 
-	args=sys.argv
-	instance=args[1]
+    args=sys.argv
+    instance=args[1]
 
-	jp = j.packages.findNewest('jumpscale', 'portal')
-	jp = jp.load(instance=instance)
-	j.application.instanceconfig = jp.hrd_instance
+    jp = j.packages.findNewest('jumpscale', 'portal')
+    jp = jp.load(instance=instance)
+    j.application.instanceconfig = None #no longer use this
 
-	j.application.start("portal")
+    j.application.start("portal")
 
-	j.logger.disable()
+    j.logger.disable()
 
-	server=j.core.portal.getServer()
-	server.start()
+    server=j.core.portal.getServer(hrd=jp.hrd_instance)
+    server.start()
 
 
-	j.application.stop()
+    j.application.stop()

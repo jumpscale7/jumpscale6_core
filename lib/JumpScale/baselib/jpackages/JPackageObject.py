@@ -965,7 +965,7 @@ class JPackageObject():
         """
         Start the JPackage, run the start tasklet(s)
         """
-        self.isInstalled(checkAndDie=True)
+        # self.isInstalled(checkAndDie=True)
         
         if dependencies:
             deps = self.getDependencies()
