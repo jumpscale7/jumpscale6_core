@@ -4,23 +4,28 @@
 
 h2. Job $$id
 
-* *Grid ID*: $$gid
-* *Node ID*: $$nid
-* *Roles*: $$roles
-* *Jumpscript*: [$$organization:$$cmd|jumpscript?organization=$$organization&name=$$cmd]
-* *Start*: $$timestart (*Timeout*: $$timeout)
-* *Queue*: $$queue
-* *State*: $$state
-* {{tableforarg title:Args data:$$args }}
+* *Grid ID*: ${gid}
+* *Node ID*: ${nid}
+* *Roles*: ${roles}
+* *Jumpscript*: [${organization}:${cmd}|jumpscript?organization=${organization}&name=${cmd}]
+* *Start*: ${timestart} (*Timeout*: ${timeout})
+* *Queue*: ${queue}
+* *State*: ${state}
+* {{tableforarg title:Args data:${args} }}
 
 h3. Result
-{{$$includemacro}}
+${resultline}
+{% if backtrace %}
+h4. Backtrace
+{{code:
+${backtrace}
+}}
+{% endif %}
 
 h4. Logs
 {{Grid.logs: jid:$$id astext}}
 
 h3. Additional Info
-|*Job Completed*|$$timestop|
-|*Category*|$$category|
-|*Parent*|$$parent|
-|*Result Code*|$$result|
+|*Job Completed*| ${timestop}|
+|*Category*|${category}|
+|*Parent*|${parent}|

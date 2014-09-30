@@ -18,13 +18,13 @@ if __name__ == '__main__':
 
     jp = j.packages.findNewest('jumpscale', 'portal')
     jp = jp.load(instance=instance)
-    j.application.instanceconfig = None #no longer use this
+    j.application.instanceconfig = jp.hrd_instance
 
     j.application.start("portal")
 
     j.logger.disable()
 
-    server=j.core.portal.getServer(hrd=jp.hrd_instance)
+    server=j.core.portal.getServer()
     server.start()
 
 

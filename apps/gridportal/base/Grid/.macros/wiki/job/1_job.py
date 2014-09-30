@@ -18,41 +18,45 @@ def main(j, args, params, tags, tasklet):
         params.result = ('Job with id %s not found' % id, args.doc)
         return params
 
-    def objFetchManipulate(id):
-        obj = job[0]
-        for attr in ['timeStop', 'timeStart']:
-            if obj[attr] != 0:
-                obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
-            else:
-                obj[attr] = 'N/A'
-
-        obj['nid'] = obj.get('nid', 0)
-        obj['roles'] = ', '.join(obj['roles'])
-        obj['args'] = urllib.quote(json.dumps(obj['args']))
-
-        if obj["state"] == "ERROR":
-            obj['state'] = "FAILED"
-            eco = json.loads(obj['result'])
-            obj['includemacro'] = 'errorresult ecoguid:%s' % eco['guid']
-            obj['result'] = eco['errormessage'].replace('\n', '$LF')
+    obj = job[0]
+    for attr in ['timeStop', 'timeStart']:
+        if obj[attr] != 0:
+            obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
         else:
-            try:
-                result = json.loads(obj['result'])
-            except:
-                result = obj['result']
-            obj['result'] = j.html.escape(str(result))
+            obj[attr] = 'N/A'
 
-        if not obj.get('includemacro', None):
-            obj['includemacro'] = 'successfulresult result:%s' % urllib.quote(obj['result'])
-        if '/' in obj['cmd']:
-            obj['organization'], obj['cmd'] = obj['cmd'].split('/')
+    obj['nid'] = obj.get('nid', 0)
+    obj['roles'] = ', '.join(obj['roles'])
+    obj['args'] = urllib.quote(json.dumps(obj['args']))
+
+    if obj["state"] == "ERROR":
+        obj['state'] = "FAILED"
+        eco = json.loads(obj['result'])
+        if j.core.portal.active.osis.exists('system', 'eco', eco['guid']):
+            obj['resultline'] = '{{errorresult ecoguid:%s}}' % eco['guid']
         else:
-            obj['organization'] = obj['category']
-        return obj
+            obj['resultline'] = "ECO: Is not available anymore"
+        obj['backtrace'] = eco['backtrace']
 
-    push2doc=j.apps.system.contentmanager.extensions.macrohelper.push2doc
+        obj['result'] = eco['errormessage'].replace('\n', '$LF')
+    else:
+        try:
+            result = json.loads(obj['result'])
+        except:
+            result = obj['result']
+        obj['result'] = j.html.escape(str(result))
+        obj['resultline'] = '{{successfulresult result:%s}}' % urllib.quote(obj['result'])
 
-    return push2doc(args,params,objFetchManipulate)
+    if '/' in obj['cmd']:
+        obj['organization'], obj['cmd'] = obj['cmd'].split('/')
+    else:
+        obj['organization'] = obj['category']
+    
+    args.doc.applyTemplate(obj)
+
+    params.result = (args.doc, args.doc)
+    return params
+
 
 def match(j, args, params, tags, tasklet):
     return True
