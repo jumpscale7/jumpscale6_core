@@ -169,7 +169,7 @@ class OSISClientForCat():
             return True
 
         if isEmpty(boolq):
-            query = dict()
+            query = nativequery or dict()
         if sort:
             query['sort'] = [ {x:v} for x,v in sort.iteritems() ]
 
