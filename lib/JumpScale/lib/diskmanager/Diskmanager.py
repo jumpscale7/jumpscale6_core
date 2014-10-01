@@ -64,7 +64,7 @@ class Diskmanager():
         self.parted=None
 
     def _init(self):
-        if self.self.parted==None:
+        if self.parted==None:
             try:
                 import parted
             except:
@@ -144,7 +144,7 @@ class Diskmanager():
         @param ssd if None then ssd and other
         """
         self._init()
-        import self.parted
+        import parted
         import JumpScale.grid.osis
         import psutil
         result=[]
@@ -200,8 +200,11 @@ class Diskmanager():
                             disko.mounted=True
 
                         pathssdcheck="/sys/block/%s/queue/rotational"%dev.path.replace("/dev/","").strip()
-                        ssd0=int(j.system.fs.fileGetContents(pathssdcheck))==0
-                        disko.ssd=ssd0   
+                        if j.system.fs.exists(pathssdcheck):
+                            ssd0=int(j.system.fs.fileGetContents(pathssdcheck))==0
+                        else:
+                            ssd0 = False
+                        disko.ssd=ssd0
                         result.append(disko)
 
                         if mountpoint<>None:

@@ -161,7 +161,7 @@ class OSISClientForCat():
             query['query']['bool']['must'].append({'range': {key: value}})
         if partials:
             query['query']['bool']['must'].append({'wildcard': partials})
-        boolq = query['query']['bool']
+        boolq = query.get('query', {}).get('bool', {})
         def isEmpty(inputquery):
             for key, value in inputquery.iteritems():
                 if value:

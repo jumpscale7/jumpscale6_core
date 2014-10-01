@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
                 runningstring = '{color:green}*RUNNING*{color}'
             status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             link = '[Details|nodestatus?nid=%s]' % nid if status['state'] == 'RUNNING' else ''
-            out.append('|[%s|node?id=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker.getName(nid), runningstring, link))
+            out.append('|[%s|node?id=%s&gid=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker.getGID(nid), j.core.grid.healthchecker.getName(nid), runningstring, link))
 
     if len(errors) > 0:
         for nid, checks in errors.iteritems():

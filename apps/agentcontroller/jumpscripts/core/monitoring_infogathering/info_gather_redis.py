@@ -20,7 +20,13 @@ log=False
 
 def action():
     import JumpScale.baselib.redis
-    ports = [7768, 7766, 7767]
+    ports = []
+    redisdefs = j.tools.startupmanager.getProcessDefs('redis')
+    for redisdef in redisdefs:
+        for redisport in redisdef.ports:
+            if redisport and j.basetype.integer.checkString(redisport):
+                ports.append(int(redisport))
+
     result = dict()
     for port in ports:
         pids = j.system.process.getPidsByPort(port)

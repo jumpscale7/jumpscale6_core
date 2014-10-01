@@ -138,6 +138,18 @@ class OSISCMDS(object):
     def echo(self, msg="", session=None):
         return msg
 
+    def getStatus(self, session=None):
+        status = dict()
+        for conntype, conn in self.dbconnections.iteritems():
+            if conntype.startswith('mongodb'):
+                status['mongodb'] = conn.alive()
+            elif conntype.startswith('influxdb'):
+                try:
+                    status['influxdb'] = True
+                except Exception:
+                    status['influxdb'] = False
+        return status
+
     #################################################3
 
     def _getOsisInstanceForCat(self, namespace, category):
@@ -310,7 +322,6 @@ class OSISCMDS(object):
             specpath=j.system.fs.joinPaths(path, namespacename, "model.spec")
 
             j.core.osis.generateOsisModelDefaults(namespacename,specpath)
-
 
             for catname in j.system.fs.listDirsInDir(namespacepath, dirNameOnly=True):
                 catpath = j.system.fs.joinPaths(namespacepath, catname)

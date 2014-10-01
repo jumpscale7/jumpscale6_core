@@ -5,45 +5,27 @@ import ujson
 def main(j, args, params, tags, tasklet):
     doc = args.doc
 
-    esdata = None
+    dbdata = j.core.grid.healthchecker.checkDBs() 
     out = list()
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
-    nidstr = str(j.application.whoAmI.nid)
 
-    esdata = rediscl.hget('healthcheck:monitoring', 'results')
-    errors = rediscl.hget('healthcheck:monitoring', 'errors')
-    esdata = ujson.loads(esdata) if esdata else dict()
-    errors = ujson.loads(errors) if errors else dict()
+    results = dbdata[0]
+    errors = dbdata[1]
 
     if errors:
         errors = errors.values()
         for error in errors:
-            if error.get('elasticsearch', [{}])[0].get('state', '') == 'TIMEOUT':
-                out.append('{color:red}*ElasticSearch unreachable, likely ProcessManager on Master Node is not running.*{color}')
-                out = '\n'.join(out)
-                params.result = (out, doc)
-                return params
+            for dbtype, status in error.iteritems():
+                out.append('{color:red}*%s is not alive.*{color}' % dbtype.capitalize())
 
-    for message, data in {'OK': esdata, 'HALTED': errors}.iteritems():
-        if nidstr in data:
-            if 'elasticsearch' in data.get(nidstr, dict()):
-                data = data[nidstr].get('elasticsearch', [{}])[0]
-                out.append('|Status|{color:%s}*%s*{color}|' % ('green' if message=='OK' else 'red', message))
-                out.append('|%s|%s|' % ('Size', data.get('size', 'N/A')))
-                out.append('|%s|%s|' % ('Memory Usage', data.get('memory_usage', 'N/A')))
-
-                for k, v in data.get('health', dict()).iteritems():
-                    if k == 'status':
-                        out.append('|%s|{color:%s}*%s*{color}|' % (k.title(), v, v.upper()))
-                        continue
-                    k = k.replace('_', ' ')
-                    out.append('|%s|%s|' % (k.title(), v))
-
+    if results:
+        results = results.values()
+        for db in results:
+            for dbtype, status in db.iteritems():
+                out.append('{color:green}*%s is alive.*{color}' % dbtype.capitalize())
+    
     out = '\n'.join(out)
-
     params.result = (out, doc)
     return params
-
 
 def match(j, args, params, tags, tasklet):
     return True
