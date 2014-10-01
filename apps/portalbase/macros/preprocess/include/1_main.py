@@ -43,20 +43,19 @@ def main(j, args, params,  tags, tasklet):
             params.result = (msg, doc)
             return params
 
-    doc2.content = doc2.source  # make sure we restart from original source when doing the includes (only for include we do this)
     doc2.loadFromDisk()
-    doc2.preprocess()
 
     if headinglevel != None:
         doc2.fixMinHeadingLevel(headinglevel)
 
     if doc2.visible:
-        params.result = (doc2.content, doc)
+        # make sure we restart from original source when doing the includes (only for include we do this)
+        params.result = (doc2.source, doc)
         if params.tags.labelExists("title"):
             if headinglevel == None:
                 headinglevel = 2
 
-            params.result = ("h%s. %s\n%s" % (headinglevel, doc2.title, doc2.content), doc)
+            params.result = ("h%s. %s\n%s" % (headinglevel, doc2.title, doc2.source), doc)
     else:
         params.result = ("", doc)
     
