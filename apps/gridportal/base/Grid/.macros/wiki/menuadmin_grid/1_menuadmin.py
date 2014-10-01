@@ -31,7 +31,6 @@ JumpScripts:/grid/JumpScripts
 Logs:/grid/Logs
 Nodes:/grid/Nodes
 Processes:/grid/Processes
-Stats:/grid/stat
 Status Check:/grid/checkstatus
 """
     # C+=spacestxt

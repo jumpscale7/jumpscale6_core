@@ -23,7 +23,6 @@ def main(j, args, params, tags, tasklet):
             obj[attr] = obj[attr].replace('\n', '<br>')
         for attr in ['jid', 'masterjid']:
             obj['jid'] = '[%(jid)s|job?id=%(jid)s]|' % obj if obj[attr] != 0 else 'N/A'
-        obj['pid'] = '[%(pid)s|process?id=%(pid)s]|' % obj if obj['pid'] != 0 else 'N/A'
         obj['id'] = id
         return obj
 
