@@ -186,7 +186,7 @@ class GridHealthChecker(object):
                     defaultvalue = 'processmanager is unreachable by ping' if category == 'processmanager' else ''
                     errormessage = error.get('errormessage', defaultvalue)
                     for message in errormessage.split(','):
-                        nodedata={'nid': '', 'name': '', 'status': '', 'issues': '- %s' % message}
+                        nodedata={'gid': '', 'nid': '', 'name': '', 'status': '', 'issues': '- %s' % message}
                         print form % nodedata
 
 
