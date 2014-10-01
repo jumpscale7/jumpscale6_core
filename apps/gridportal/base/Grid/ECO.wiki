@@ -6,7 +6,7 @@ h3. Details
 
 |*Application Name*|$$appname|
 |*Category*|$$category|
-|*Job*|[$$jid|job?id=$$jid]|
+|*Job*|$$jid|
 |*level*|$$level|
 |*Process ID*|[$$pid|process?id=$$pid]|
 |*Function Name*|$$funcname|
@@ -15,8 +15,8 @@ h3. Details
 |*Time*|$$epoch|
 |*Error Message Pub*|$$errormessagepub|
 |*Error Message*|$$errormessage|
-|*Master Job*|[$$masterjid|job?id=$$masterjid]|
-|*Node*|[$$nid|node?id=$$nid]|
+|*Master Job*|$$masterjid|
+|*Node*|[$$nid|node?id=$$nid&gid=$$gid]|
 |*Grid*|[$$gid|grid?id=$$gid]|
 |*Type*|$$type|
 |*Tags*|$$tags|

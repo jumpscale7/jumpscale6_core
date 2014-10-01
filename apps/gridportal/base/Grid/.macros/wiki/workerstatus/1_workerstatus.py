@@ -24,8 +24,6 @@ def main(j, args, params, tags, tasklet):
                 wdata = data[nidstr].get('workers', list())
                 for stat in wdata:
                     if 'mem' not in stat:
-                        status = '{color:orange}UNKNOWN{color}'
-                        out.append('|%s|%s %%|%s|%s|%s|' % (stat.get('name', ''), '0', '0', status, 'UKNOWN'))
                         continue
                     size, unit = stat['mem'].split(' ')
                     size = j.tools.units.bytes.toSize(float(size), unit.replace('B', ''), 'M')

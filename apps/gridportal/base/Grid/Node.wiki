@@ -25,7 +25,7 @@ h3. Info
 h3. Statistics
 
 * [*Statistics*|NodeStats?id=$$id&gid=$$gid]
-* [*Real Time Statistics*|RealTimeStatsNode?nid=$$id]
+#* [*Real Time Statistics*|RealTimeStatsNode?nid=$$id]
 
 h3. NICs
 {{nics: nid:$$id}}

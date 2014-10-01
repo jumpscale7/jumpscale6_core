@@ -13,7 +13,7 @@ def main(j, args, params, tags, tasklet):
             filters['to'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
         elif val:
             filters[tag] = val
-    fieldnames = ["Time", 'Node ID', 'App Name', 'Category', 'Error Message', 'Job ID']
+    fieldnames = ['Time', 'Grid ID', 'Node ID', 'App Name', 'Category', 'Error Message', 'Job ID']
 
     def errormessage(row, field):
         return row[field].replace('\n', '<br>')
@@ -22,11 +22,14 @@ def main(j, args, params, tags, tasklet):
         time = datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or ''
         return '[%s|eco?id=%s]' % (time, row['guid'])
 
-    nidstr = '[%(nid)s|node?id=%(nid)s]'
-    jidstr = '[%(jid)s|job?id=%(jid)s]'
+    def makeJob(row, field):
+        return '[%(jid)s|job?id=%(jid)s]' if (not row[field] == 0) else 'N/A'
 
-    fieldids = ["epoch", "nid", "appname", "category", "errormessage", "jid"]
-    fieldvalues = [makeTime, nidstr, 'appname', 'category', errormessage, jidstr]
+
+    nidstr = '[%(nid)s|node?id=%(nid)s&gid=%(gid)s]'
+
+    fieldids = ["epoch", "gid", "nid", "appname", "category", "errormessage", "jid"]
+    fieldvalues = [makeTime, 'gid', nidstr, 'appname', 'category', errormessage, makeJob]
     tableid = modifier.addTableForModel('system', 'eco', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
     modifier.addSorting('#%s' % tableid, 0, 'desc')

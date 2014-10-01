@@ -21,7 +21,9 @@ def main(j, args, params, tags, tasklet):
             if 'disks' in data.get(nidstr, dict()):
                 ddata = data[nidstr].get('disks', list())
                 for diskstat in ddata:
-                    state = j.core.grid.healthchecker.getWikiStatus(diskstat['state'])
+                    if 'state' not in diskstat:
+                        continue
+                    state = j.core.grid.healthchecker.getWikiStatus(diskstat.get('state', 'UNKNOWN'))
                     out.append('|%s|%s|%s|' % (diskstat.get('path', ''), diskstat.get('message', ''), state))
                 out.append('\n')
 
