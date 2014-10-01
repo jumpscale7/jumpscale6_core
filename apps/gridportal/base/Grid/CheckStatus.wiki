@@ -1,7 +1,7 @@
 @usedefault
 
-h3. ElasticSearch Status
-{{escheck}}
+h3. Databases' Status
+{{dbcheck}}
 
 h3. Process Status
 {{processchecks}}

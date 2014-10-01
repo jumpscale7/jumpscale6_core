@@ -75,7 +75,7 @@ class GridHealthChecker(object):
     def _checkRunningNIDs(self):
         print 'CHECKING HEARTBEATS...'
         self._runningnids = list()
-        print "\tget all heartbeats (just query from ES):",
+        print "\tget all heartbeats (just query from OSIS):",
         heartbeats = self._heartbeatcl.simpleSearch({})
         print "OK"
         for heartbeat in heartbeats:
@@ -136,6 +136,7 @@ class GridHealthChecker(object):
         self.checkHeartbeatsAllNodes(clean=False)
         self.checkProcessManagerAllNodes(clean=False)
         print '\n**Running tests on %s node(s). %s node(s) have not responded to ping**\n' % (len(self._runningnids), len(self._nids)-len(self._runningnids))
+        self.checkDBs()
         if self._runningnids:
             self.pingAllNodesAsync(clean=False)
             self.checkElasticSearch(clean=False)
@@ -216,6 +217,34 @@ class GridHealthChecker(object):
             self._addError(self.masternid, errormessage, 'elasticsearch')
         if clean:
             return self._status, self._errors
+
+    def checkDBs(self, clean=True):
+        if clean:
+            self._clean()
+        if self._nids==[]:
+            self.getNodes()
+        if self._runningnids == []:
+            self.getNodes()
+        errormessage = ''
+        if not self._runningnids:
+            errormessage = 'No running nodes'
+        else:
+            dbhealth = self._client.executeJumpScript('jumpscale', 'info_gather_db', nid=self._runningnids[0], timeout=5)
+            dbhealth = dbhealth['result']
+            if dbhealth == None:
+                self._addError(self._runningnids[0], {'state': 'UNKNOWN'}, 'databases')
+                errormessage = 'Database statuses UNKNOWN'
+            for dbname, status in dbhealth.iteritems():
+                if status:
+                    self._addResult(self._runningnids[0], status, dbname)
+                else:
+                    self._addError(self._runningnids[0], {'state': 'UNKNOWN'}, dbname)
+                    errormessage = '%s status UNKNOWN' % dbname.capitalize()
+        if errormessage:
+            self._addError(self.masternid, errormessage, 'databases')
+        if clean:
+            return self._status, self._errors
+
 
     def checkRedisAllNodes(self, clean=True):
         if clean:
@@ -322,7 +351,7 @@ class GridHealthChecker(object):
         if self._nids==[]:
             self.getNodes()
         print 'CHECKING HEARTBEATS...'
-        print "\tget all heartbeats (just query from ES):",
+        print "\tget all heartbeats (just query from OSIS):",
         print "OK"
         heartbeats = self._heartbeatcl.simpleSearch({})
         for heartbeat in heartbeats:
@@ -335,7 +364,7 @@ class GridHealthChecker(object):
                 if nid in nid2hb:
                     lastchecked = nid2hb[nid]
                     if not j.base.time.getEpochAgo('-2m') < lastchecked:
-                        hago= round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
+                        hago = round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
                         self._addError(nid, "Last heartbeat %s hours ago" % hago,"heartbeat")    
                 else:
                     self._addError(nid, "found heartbeat node when not in grid nodes.","heartbeat")

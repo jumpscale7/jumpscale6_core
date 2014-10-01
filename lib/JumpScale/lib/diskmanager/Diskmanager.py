@@ -64,7 +64,7 @@ class Diskmanager():
         self.parted=None
 
     def _init(self):
-        if self.self.parted==None:
+        if self.parted==None:
             try:
                 import parted
             except:
@@ -144,7 +144,7 @@ class Diskmanager():
         @param ssd if None then ssd and other
         """
         self._init()
-        import self.parted
+        import parted
         import JumpScale.grid.osis
         import psutil
         result=[]
