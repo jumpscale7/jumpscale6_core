@@ -200,8 +200,11 @@ class Diskmanager():
                             disko.mounted=True
 
                         pathssdcheck="/sys/block/%s/queue/rotational"%dev.path.replace("/dev/","").strip()
-                        ssd0=int(j.system.fs.fileGetContents(pathssdcheck))==0
-                        disko.ssd=ssd0   
+                        if j.system.fs.exists(pathssdcheck):
+                            ssd0=int(j.system.fs.fileGetContents(pathssdcheck))==0
+                        else:
+                            ssd0 = False
+                        disko.ssd=ssd0
                         result.append(disko)
 
                         if mountpoint<>None:
