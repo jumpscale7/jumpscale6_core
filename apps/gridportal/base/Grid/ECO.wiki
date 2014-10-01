@@ -6,9 +6,9 @@ h3. Details
 
 |*Application Name*|$$appname|
 |*Category*|$$category|
-|*Job*|[$$jid|job?id=$$jid]|
+|*Job*|$$jid|
 |*level*|$$level|
-|*Process ID*|[$$pid|process?id=$$pid]|
+|*Process ID*|$$pid|
 |*Function Name*|$$funcname|
 |*Function Line Number*|$$funclinenr|
 |*Function File Name*|$$funcfilename|

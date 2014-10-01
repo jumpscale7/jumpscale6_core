@@ -147,7 +147,7 @@ class GridHealthChecker(object):
         self.checkHeartbeatsAllNodes(clean=False)
         self.checkProcessManagerAllNodes(clean=False)
         print '\n**Running tests on %s node(s). %s node(s) have not responded to ping**\n' % (len(self._runningnids), len(self._nids)-len(self._runningnids))
-        self.checkDBs()
+        self.checkDBs(clean=False)
         if self._runningnids:
             self.pingAllNodesAsync(clean=False)
             self.checkElasticSearch(clean=False)
