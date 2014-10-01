@@ -15,6 +15,7 @@ class GridHealthChecker(object):
         self._runningnids = list()
         self._nids = list()
         self._nodenames = dict()
+        self._nodegids = dict()
         self._errors = dict()
         self._status = dict()
         self._tostdout = True
@@ -40,6 +41,14 @@ class GridHealthChecker(object):
         else:
             self.getNodes(activecheck=False)
             return self._nodenames.get(id, 'UNKNOWN')
+
+    def getGID(self, id):
+        id = int(id)
+        if id in self._nodegids:
+            return self._nodegids[id]
+        else:
+            self.getNodes(activecheck=False)
+            return self._nodegids.get(id, 'UNKNOWN')
 
     def _addResult(self, nid, result, category):
         self._status.setdefault(nid, {})
@@ -91,9 +100,10 @@ class GridHealthChecker(object):
                         # print "%s"%nid,
                         self._runningnids.append(nid)
                     else:                        
-                        hago= round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
-                        name=self._nodenames[nid]
-                        self._addError(nid,"On node:'%s' (%s). Processmanager is not responding, last heartbeat %s hours ago"%(name,nid,hago),"heartbeat")    
+                        hago = round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
+                        name = self._nodenames[nid]
+                        gid = self._nodegids[nid]
+                        self._addError(nid, "On node:'%s' (%s) on grid %s. Processmanager is not responding, last heartbeat %s hours ago" % (name, nid, gid, hago), "heartbeat")    
                 else:
                     self._addError(nid,"found heartbeat node '%s' which is not in grid nodes." % (nid),"heartbeat")
 
@@ -121,6 +131,7 @@ class GridHealthChecker(object):
         self._nidsNonActive=[]
         for node in nodes:
             self._nodenames[node['id']] = node['name']
+            self._nodegids[node['id']] = node['gid']
             if node["active"]==True:
                 self._nids.append(node['id'])
             else:
@@ -158,17 +169,17 @@ class GridHealthChecker(object):
             self._printResults()
 
     def _printResults(self):
-        form = '%(nid)-8s %(name)-10s %(status)-8s %(issues)s'
-        print form % {'nid': 'NODE ID', 'name': 'NAME', 'status': 'STATUS', 'issues':'ISSUES'}
+        form = '%(gid)-8s %(nid)-8s %(name)-10s %(status)-8s %(issues)s'
+        print form % {'gid': 'Grid ID', 'nid': 'NODE ID', 'name': 'NAME', 'status': 'STATUS', 'issues':'ISSUES'}
         print '=' * 80
         print ''
         for nid, checks in self._status.iteritems():
             if not self._errors.has_key(nid):
-                nodedata={'nid': nid, 'name': self.getName(nid), 'status': 'OK', 'issues': ''}
+                nodedata={'gid': self.getGID(nid), 'nid': nid, 'name': self.getName(nid), 'status': 'OK', 'issues': ''}
                 print form % nodedata
 
         for nid, checks in self._errors.iteritems():
-            nodedata={'nid': nid, 'name': self.getName(nid), 'status': 'ERROR', 'issues': ''}
+            nodedata={'gid': self.getGID(nid), 'nid': nid, 'name': self.getName(nid), 'status': 'ERROR', 'issues': ''}
             print form % nodedata
             for category, errors in checks.iteritems():
                 for error in errors:
@@ -373,7 +384,7 @@ class GridHealthChecker(object):
         """
         if clean:
             self._clean()
-        gid = j.application.whoAmI.gid
+        gid = self.getGID(nid)
         if self._heartbeatcl.exists('%s_%s' % (gid, nid)):
             heartbeat = self._heartbeatcl.get('%s_%s' % (gid, nid))
             lastchecked = heartbeat.lastcheck
