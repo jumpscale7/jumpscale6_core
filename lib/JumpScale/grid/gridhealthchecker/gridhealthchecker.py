@@ -219,27 +219,23 @@ class GridHealthChecker(object):
             return self._status, self._errors
 
     def checkDBs(self, clean=True):
-        if clean:
-            self._clean()
         if self._nids==[]:
             self.getNodes()
-        if self._runningnids == []:
-            self.getNodes()
+        if clean:
+            self._clean()
         errormessage = ''
-        if not self._runningnids:
-            errormessage = 'No running nodes'
-        else:
-            dbhealth = self._client.executeJumpScript('jumpscale', 'info_gather_db', nid=self._runningnids[0], timeout=5)
-            dbhealth = dbhealth['result']
-            if dbhealth == None:
-                self._addError(self._runningnids[0], {'state': 'UNKNOWN'}, 'databases')
-                errormessage = 'Database statuses UNKNOWN'
-            for dbname, status in dbhealth.iteritems():
-                if status:
-                    self._addResult(self._runningnids[0], status, dbname)
-                else:
-                    self._addError(self._runningnids[0], {'state': 'UNKNOWN'}, dbname)
-                    errormessage = '%s status UNKNOWN' % dbname.capitalize()
+        nid = j.application.whoAmI.nid
+        dbhealth = self._client.executeJumpScript('jumpscale', 'info_gather_db', nid=nid, timeout=5)
+        dbhealth = dbhealth['result']
+        if dbhealth == None:
+            self._addError(nid, {'state': 'UNKNOWN'}, 'databases')
+            errormessage = 'Database statuses UNKNOWN'
+        for dbname, status in dbhealth.iteritems():
+            if status:
+                self._addResult(nid, status, dbname)
+            else:
+                self._addError(nid, {'state': 'UNKNOWN'}, dbname)
+                errormessage = '%s status UNKNOWN' % dbname.capitalize()
         if errormessage:
             self._addError(self.masternid, errormessage, 'databases')
         if clean:
