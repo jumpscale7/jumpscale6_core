@@ -20,6 +20,7 @@ period=0
 log=False
 
 def action():
+    import JumpScale.lib.diskmanager
     result = dict()
     disks = j.system.platform.diskmanager.partitionsFind(mounted=True, prefix='', minsize=0, maxsize=None)
     for disk in disks:
