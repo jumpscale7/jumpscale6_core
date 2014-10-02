@@ -82,7 +82,11 @@ class BlobStorClientFake:
         """
         #use ledis & weedfs
         #key is md5, use ledis to have link between md5 & key on weedfs
-        pass
+        wv = WeedVolume(self.host, self.port)
+        chunks_md5sum = self.redis.lrange('files.%s' % key, 1, -1)
+        for chunk_md5sum in chunks_md5sum:
+            #get file is not really working
+            wv.get_file(chunk_md5sum)
 
     def existsBatch(self,keys,repoid=0,replicaCheck=False):
         #do multiple times exists
