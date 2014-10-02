@@ -26,7 +26,7 @@ def main(j, args, params, tags, tasklet):
 		.comparison-footer button{
 			margin-top: 8px;
 		}
-		.tex-center{
+		.text-center{
 			text-align: center;
 		}
 		.title{
@@ -104,11 +104,11 @@ def main(j, args, params, tags, tasklet):
 		block['i'] = 12 / len(blocks)
 		page.addMessage('''
 				<div class="span{i} comparison-block">
-					<div class="title tex-center {TitleSize}">
+					<div class="title text-center {TitleSize}">
 						<p>{Title}</p>
 						<small>{SubtitleText}</small>
 					</div>
-					<div class="price tex-center">
+					<div class="price text-center">
 						<p><small class="currency">{currency}</small>{Price}</p>
 						<small>{PriceSubtitle}</small>
 					</div>
@@ -116,34 +116,34 @@ def main(j, args, params, tags, tasklet):
 
 		if(block['Property1']):
 			page.addMessage('''
-				<div class="property property1">
+				<div class="property">
 					{Property1}
 				</div>
-			'''.format(currency=currency, **block))
+			'''.format(**block))
 
 		if(block['Property2']):
 			page.addMessage('''
 				<div class="property">
 					{Property2}
 				</div>
-			'''.format(currency=currency, **block))
+			'''.format(**block))
 
 		if(block['Property3']):
 			page.addMessage('''
 				<div class="property">
 					{Property3}
 				</div>
-			'''.format(currency=currency, **block))
+			'''.format(**block))
 
 		if(block['Property4']):
 			page.addMessage('''
 				<div class="property">
 					{Property4}
 				</div>
-			'''.format(currency=currency, **block))
+			'''.format(**block))
 
 		page.addMessage('''
-					<div class="comparison-footer tex-center">
+					<div class="comparison-footer text-center">
 						<small>{OrderButtonSubtext}</small>
 						<br/>
 						<button href="{OrderButtonSubLink}" class="btn btn-{OrderButtonStyle}" type="button">{OrderButtonText}</button>
