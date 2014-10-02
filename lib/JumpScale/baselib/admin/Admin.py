@@ -224,15 +224,12 @@ class JNode():
         return self._connectCuapi()
 
     def _connectCuapi(self):
-        if self.args.remote<>"":
+        if self.ip == "":
             if j.system.net.pingMachine(self.args.remote,1):
                 self.ip=self.args.remote
             else:
-                j.events.opserror_critical("Could not find node:'%s'"%name)
+                j.events.opserror_critical("Could not ping node:'%s'"% self.args.remote)
 
-        if self.ip=="":
-            raise RuntimeError("ip cannot be empty")
-        
         self.cuapi.connect(self.ip)
 
         if self.args.passwd<>"":
