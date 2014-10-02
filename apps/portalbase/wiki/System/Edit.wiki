@@ -16,7 +16,7 @@ Help:/Help
 
 
 
-@block container-fluid
+@block
 @row
 
 @col 12

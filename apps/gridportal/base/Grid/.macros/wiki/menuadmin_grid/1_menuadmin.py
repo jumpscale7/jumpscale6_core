@@ -23,10 +23,6 @@ New:/system/create?space=$$space
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
 --------------
-Admin JumpScripts:/grid/AdminJumpScripts
-Admin Nodes:/grid/AdminNodes
-Admin Watchdogs:/grid/AdminWatchdogs
-Alerts:/grid/Alerts
 Audits:/grid/Audits
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs
@@ -35,7 +31,6 @@ JumpScripts:/grid/JumpScripts
 Logs:/grid/Logs
 Nodes:/grid/Nodes
 Processes:/grid/Processes
-Stats:/grid/stat
 Status Check:/grid/checkstatus
 """
     # C+=spacestxt

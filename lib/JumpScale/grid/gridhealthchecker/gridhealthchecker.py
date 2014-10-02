@@ -28,7 +28,7 @@ class GridHealthChecker(object):
 
     def _addError(self, nid, result, category=""):
         self._errors.setdefault(nid, {})
-        self._errors[nid].update({category:list()})
+        self._errors[nid].setdefault(category, list())
         if isinstance(result, basestring):
             self._errors[nid][category].append({'errormessage': result})
         else:
@@ -147,7 +147,7 @@ class GridHealthChecker(object):
         self.checkHeartbeatsAllNodes(clean=False)
         self.checkProcessManagerAllNodes(clean=False)
         print '\n**Running tests on %s node(s). %s node(s) have not responded to ping**\n' % (len(self._runningnids), len(self._nids)-len(self._runningnids))
-        self.checkDBs()
+        self.checkDBs(clean=False)
         if self._runningnids:
             self.pingAllNodesAsync(clean=False)
             self.checkElasticSearch(clean=False)
@@ -183,8 +183,10 @@ class GridHealthChecker(object):
             print form % nodedata
             for category, errors in checks.iteritems():
                 for error in errors:
-                    defaultvalue = 'processmanager is unreachable by ping' if category == 'processmanager' else ''
+                    defaultvalue = 'processmanager is unreachable by ping' if category == 'processmanager' else None
                     errormessage = error.get('errormessage', defaultvalue)
+                    if errormessage is None:
+                        continue
                     for message in errormessage.split(','):
                         nodedata={'gid': '', 'nid': '', 'name': '', 'status': '', 'issues': '- %s' % message}
                         print form % nodedata

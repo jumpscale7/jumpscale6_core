@@ -35,7 +35,7 @@ def main(j, args, inparams, tags, tasklet):
     elif pagename == 'process':
         nid = doc.appliedparams.get('nid')
         breadcrumbs.append(('processes?nid=%s' % nid, 'Processes'))
-        breadcrumbs.append(('process?id=%(id)s' % params, doc.appliedparams['name']))
+        breadcrumbs.append(('process?id=%(id)s' % params, doc.appliedparams.get('name', '')))
         params['id'] = nid
         pagename = 'node'
     elif pagename == 'log':
@@ -55,6 +55,12 @@ def main(j, args, inparams, tags, tasklet):
         breadcrumbs.append(('%s?nid=%s' % (pagename, nid), doc.original_name))
         params['id'] = nid
         pagename = 'node'
+    elif pagename == 'checkstatus':
+        breadcrumbs.append(('checkstatus', 'Check Status'))
+    elif pagename == 'nodestatus':
+        nid = doc.appliedparams.get('nid')
+        breadcrumbs.append(('checkstatus', 'Check Status'))
+        breadcrumbs.append(('nodestatus?nid=%s' % nid, 'Node Status'))
 
     if pagename == 'node' and params.get('id'):
         nid = params.get('id')

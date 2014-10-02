@@ -2,10 +2,10 @@
 
 {{job: id:$$id }}
 
-h2. Job $$id
+h2. Job Details
 
 * *Grid ID*: ${gid}
-* *Node ID*: ${nid}
+* *Node ID*: [${nid}|/grid/node?id=${nid}&gid=${gid}]
 * *Roles*: ${roles}
 * *Jumpscript*: [${organization}:${cmd}|jumpscript?organization=${organization}&name=${cmd}]
 * *Start*: ${timestart} (*Timeout*: ${timeout})
