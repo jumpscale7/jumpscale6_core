@@ -821,7 +821,7 @@ class SystemFS:
         else:
             raise RuntimeError("Specified path: %s does not exist in system.fs.listDir"% path)
 
-    def listFilesInDir(self, path, recursive=False, filter=None, minmtime=None, maxmtime=None,depth=None, case_sensitivity='os',exclude=[],followSymlinks=True):
+    def listFilesInDir(self, path, recursive=False, filter=None, minmtime=None, maxmtime=None,depth=None, case_sensitivity='os',exclude=[],followSymlinks=True,listSymlinks=False):
         """Retrieves list of files found in the specified directory
         @param path:       directory path to search in
         @type  path:       string
@@ -844,10 +844,10 @@ class SystemFS:
             depth=None
         # if depth<>None:
         #     depth+=1
-        filesreturn,depth=self._listAllInDir(path, recursive, filter, minmtime, maxmtime,depth,type="f", case_sensitivity=case_sensitivity,exclude=exclude,followSymlinks=followSymlinks,listSymlinks=False)
+        filesreturn,depth=self._listAllInDir(path, recursive, filter, minmtime, maxmtime,depth,type="f", case_sensitivity=case_sensitivity,exclude=exclude,followSymlinks=followSymlinks,listSymlinks=listSymlinks)
         return filesreturn
 
-    def listFilesAndDirsInDir(self, path, recursive=False, filter=None, minmtime=None, maxmtime=None,depth=None,type="fd"):
+    def listFilesAndDirsInDir(self, path, recursive=False, filter=None, minmtime=None, maxmtime=None,depth=None,type="fd",followSymlinks=True,listSymlinks=False):
         """Retrieves list of files found in the specified directory
         @param path:       directory path to search in
         @type  path:       string
@@ -870,7 +870,7 @@ class SystemFS:
             depth=None
         # if depth<>None:
         #     depth+=1
-        filesreturn,depth=self._listAllInDir(path, recursive, filter, minmtime, maxmtime,depth,type=type)
+        filesreturn,depth=self._listAllInDir(path, recursive, filter, minmtime, maxmtime,depth,type=type,followSymlinks=followSymlinks,listSymlinks=listSymlinks)
         return filesreturn
 
 
@@ -881,6 +881,7 @@ class SystemFS:
         # 2. `sensitive`: case-sensitive comparison
         # 3. `insensitive`: case-insensitive comparison
         """
+
         dircontent = self._listInDir(path)
         filesreturn = []
 
@@ -894,6 +895,11 @@ class SystemFS:
 
         for direntry in dircontent:
             fullpath = self.joinPaths(path, direntry)
+                
+
+            if followSymlinks:
+                if self.isLink(fullpath):
+                    fullpath=self.readlink(fullpath)
 
             if self.isFile(fullpath) and "f" in type:
                 includeFile = False
@@ -913,7 +919,7 @@ class SystemFS:
                     if includeFile:
                         filesreturn.append(fullpath)                    
             elif self.isDir(fullpath):
-                if "d" in type:                        
+                if "d" in type:                                                                 
                     if not(listSymlinks==False and self.isLink(fullpath)):
                         filesreturn.append(fullpath)
                 if recursive:
@@ -930,7 +936,8 @@ class SystemFS:
                                 r,depth = self._listAllInDir(fullpath, recursive, filter, minmtime, maxmtime,depth=depth,type=type,exclude=exclude,followSymlinks=followSymlinks,listSymlinks=listSymlinks)
                                 if len(r) > 0: 
                                     filesreturn.extend(r)
-
+            elif self.isLink(fullpath) and followSymlinks==False and listSymlinks:
+                filesreturn.append(fullpath)                
 
         return filesreturn,depth
 
@@ -1856,25 +1863,28 @@ class SystemFS:
                 destpath=j.system.fs.joinPaths(destInTar,j.system.fs.pathRemoveDirPart(path, sourcepath))
                 if j.system.fs.isLink(path) and followlinks:
                     path=j.system.fs.readlink(path)
-                self.log("fstar: add file %s to tar" % path,7)
+                self.log("fs.tar: add file %s to tar" % path,7)
+                # print "fstar: add file %s to tar" % path
                 if not (j.system.platformtype.isWindows() and j.system.windows.checkFileToIgnore(path)):
-                    if self.isFile(path):
+                    if self.isFile(path) or  self.isLink(path):
                         tarfile.add(path,destpath)
                     else:
                         raise RuntimeError("Cannot add file %s to destpath"%destpath)
             params={}
             params["t"]=t
             params["destintar"]=destInTar
-            j.system.fswalker.walk(sourcepath, addToTar, params,\
-                                          True, False, \
-                                          pathRegexIncludes, pathRegexExcludes, contentRegexIncludes, \
-                                          contentRegexExcludes, depths)
+            j.system.fswalker.walk(root=sourcepath, callback=addToTar, arg=params,\
+                                          recursive=True, includeFolders=False, \
+                                          pathRegexIncludes=pathRegexIncludes, pathRegexExcludes=pathRegexExcludes, contentRegexIncludes=contentRegexIncludes, \
+                                          contentRegexExcludes=contentRegexExcludes, depths=depths,followlinks=False)
+
             if extrafiles<>[]:
                 for extrafile in extrafiles:
                     source=extrafile[0]
                     destpath=extrafile[1]
                     t.add(source,j.system.fs.joinPaths(destInTar,destpath))
         t.close()
+
 
     def gzip(self,sourceFile,destFile):
         import gzip

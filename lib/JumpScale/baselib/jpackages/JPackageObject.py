@@ -1513,7 +1513,7 @@ class JPackageObject():
             pathplatform=j.system.fs.joinPaths(self.getPathFiles(),platform)
             for ttype in j.system.fs.listDirsInDir(pathplatform,dirNameOnly=True):
                 pathttype=j.system.fs.joinPaths(pathplatform,ttype)
-                j.system.fs.removeIrrelevantFiles(pathttype)
+                j.system.fs.removeIrrelevantFiles(pathttype,followSymlinks=False)
                 md5,llist=j.tools.hash.hashDir(pathttype)
                 if llist=="":
                     continue
@@ -1788,7 +1788,6 @@ class JPackageObject():
     def _upload(self, remote=True, local=True,onlycode=False):
         """
         Upload jpackages to Blobstor, default remote and local
-        Does always a jp.package() first
         """
 
         self.load(instance=None,findDefaultInstance=False)
