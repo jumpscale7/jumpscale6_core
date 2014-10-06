@@ -19,14 +19,16 @@ class JailFactory(object):
         j.system.process.execute("chmod -R o-rwx /home")
         j.system.process.execute("chmod o-rwx /mnt")
         j.system.fs.chmod("/opt/code", 0o700)
-        j.system.fs.chmod("/opt/code/jumpscale", 0o777)
+        # j.system.fs.chmod("/opt/code/jumpscale", 0o777)
         j.system.fs.chown("/opt", "root")
         j.system.process.execute("chmod 777 /opt")
-        j.system.process.execute("chmod 777 /opt/jumpscale")
-        j.system.process.execute("chmod -R 777 /opt/jumpscale/bin")
-        j.system.process.execute("chmod -R 777 /opt/jumpscale/lib")
-        j.system.process.execute("chmod -R 777 /opt/jumpscale/libext")
-        j.system.process.execute("chmod 777 /opt/code")
+        # j.system.process.execute("chmod 777 /opt/jumpscale")
+        # j.system.process.execute("chmod -R 777 /opt/jumpscale/bin")
+        # j.system.process.execute("chmod -R 777 /opt/jumpscale/lib")
+        # j.system.process.execute("chmod -R 777 /opt/jumpscale/libext")
+        # j.system.process.execute("chmod 777 /opt/code")
+
+        j.system.process.execute("chmod 777 /opt/jsbox")
         j.system.process.execute("chmod 777 /home")
 
 
@@ -43,21 +45,21 @@ class JailFactory(object):
         j.system.fs.symlink("/opt/jumpscale/lib","/home/%s/jumpscale/lib"%user)
         j.system.fs.symlink("/opt/jumpscale/libext","/home/%s/jumpscale/libext"%user)
         j.system.fs.createDir("/home/%s/jumpscale/apps"%user)
-        j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_examples/examples/","/home/%s/jumpscale/apps/examples"%user)
-        j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_examples/prototypes/","/home/%s/jumpscale/apps/prototypes"%user)
+        # j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_examples/examples/","/home/%s/jumpscale/apps/examples"%user)
+        # j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_examples/prototypes/","/home/%s/jumpscale/apps/prototypes"%user)
         
-        def portals():
-            j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_portal/apps/portalbase/","/home/%s/jumpscale/apps/portalbase"%user)
-            j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_portal/apps/portalexample/","/home/%s/jumpscale/apps/portalexample"%user)
-            src="/opt/code/jumpscale/default__jumpscale_grid/apps/incubaidportals/"
-            j.system.fs.copyDirTree(src,"/home/%s/jumpscale/apps/incubaidportals"%user)
-        portals()
+        # def portals():
+        #     j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_portal/apps/portalbase/","/home/%s/jumpscale/apps/portalbase"%user)
+        #     j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_portal/apps/portalexample/","/home/%s/jumpscale/apps/portalexample"%user)
+        #     src="/opt/code/jumpscale/default__jumpscale_grid/apps/incubaidportals/"
+        #     j.system.fs.copyDirTree(src,"/home/%s/jumpscale/apps/incubaidportals"%user)
+        # portals()
 
-        src="/opt/code/jumpscale/default__jumpscale_lib/apps/cloudrobot/"
-        j.system.fs.copyDirTree(src,"/home/%s/jumpscale/apps/cloudrobot"%user)
+        # src="/opt/code/jumpscale/default__jumpscale_lib/apps/cloudrobot/"
+        # j.system.fs.copyDirTree(src,"/home/%s/jumpscale/apps/cloudrobot"%user)
 
-        src="/opt/code/jumpscale/default__jumpscale_core/apps/admin/"
-        j.system.fs.copyDirTree(src,"/home/%s/jumpscale/apps/admin"%user)
+        # src="/opt/code/jumpscale/default__jumpscale_core/apps/admin/"
+        # j.system.fs.copyDirTree(src,"/home/%s/jumpscale/apps/admin"%user)
 
         j.system.process.execute("chmod -R ug+rw /home/%s"%user)
         j.system.fs.chown("/home/%s"%user, user)
