@@ -427,7 +427,7 @@ class PortalServer:
         ctx.start_response('200 OK', [('Content-Type', "text/html"), ])
         return page
 
-    def processor_page(self, environ, start_response, wwwroot, path, prefix="", webprefix="", index=False):
+    def processor_page(self, environ, start_response, wwwroot, path, prefix="", webprefix="", index=False,includedocs=False,ctx=None,space=None):
         def indexignore(item):
             ext = item.split(".")[-1].lower()
             if ext in ["pyc", "pyo", "bak"]:
@@ -444,6 +444,31 @@ class PortalServer:
             page.addCodeBlock(content, template, edit=True)
             start_response('200 OK', [('Content-Type', contenttype), ])
             return [str(page)]
+
+        def processHtml(contenttype, path, start_response,ctx,space):
+            content = j.system.fs.fileGetContents(path)
+            r = r"\[\[.*\]\]"  #@todo does not seem right to me            
+            for match in j.codetools.regex.yieldRegexMatches(r, content):
+                docname = match.founditem.replace("[", "").replace("]", "")
+                doc, params = self.getDoc(space, docname, ctx, params=ctx.params)
+
+                if doc.name=='pagenotfound':
+                    content=content.replace(match.founditem,"*****CONTENT '%s' NOT FOUND******"%docname)
+                else:
+                    content2,doc = doc.executeMacrosDynamicWiki(paramsExtra={}, ctx=ctx)
+
+                    page = self.confluence2htmlconvertor.convert(content2, doc=doc, requestContext=ctx, page=self.getpage(), paramsExtra=ctx.params)
+
+                    page.body = page.body.replace("$$space", space)
+                    page.body = page.body.replace("$$page", doc.original_name)
+                    page.body = page.body.replace("$$path", doc.path)
+                    page.body = page.body.replace("$$querystr", ctx.env['QUERY_STRING'])
+                    page.body = page.body.replace("$$$menuright", "")                
+
+                    content=content.replace(match.founditem,page.body)
+            
+            start_response('200 OK', [('Content-Type', "text/html"), ])
+            return [content]
 
         def removePrefixes(path):
             path = path.replace("\\", "/")
@@ -490,24 +515,26 @@ class PortalServer:
 
         if path == "favicon.ico":
             pathfull = "wiki/System/favicon.ico"
-
-        if not j.system.fs.exists(pathfull) and j.system.fs.exists(pathfull + '.gz') and 'gzip' in environ.get('HTTP_ACCEPT_ENCODING'):
-            pathfull += ".gz"
-            headers.append(('Vary', 'Accept-Encoding'))
-            headers.append(('Content-Encoding', 'gzip'))
-
+    
         if not j.system.fs.exists(pathfull):
-            print "error"
-            headers = [('Content-Type', contenttype), ]
-            start_response("404 Not found", headers)
-            return ["path %s not found" % path]
+            if j.system.fs.exists(pathfull + '.gz') and 'gzip' in environ.get('HTTP_ACCEPT_ENCODING'):
+                pathfull += ".gz"
+                headers.append(('Vary', 'Accept-Encoding'))
+                headers.append(('Content-Encoding', 'gzip'))
+            else:
+                print "error"
+                headers = [('Content-Type', contenttype), ]
+                start_response("404 Not found", headers)
+                return ["path %s not found" % path]
 
         size = os.path.getsize(pathfull)
 
-        if ext == "wiki":
+        if ext == "html":
+            return processHtml(contenttype, pathfull, start_response,ctx,space)
+        elif ext == "wiki":
             contenttype = "text/html"
             # return formatWikiContent(pathfull,start_response)
-            return formatContent(contenttype, pathfull, "python", start_response)
+            return formatContent(contenttype, pathfull, "python", start_response)            
         elif ext == "py":
             contenttype = "text/html"
             return formatContent(contenttype, pathfull, "python", start_response)
@@ -883,6 +910,17 @@ class PortalServer:
             sploader = self.spacesloader.getSpaceFromId(space)
             filesroot = j.system.fs.joinPaths(sploader.model.path, ".files")
             return self.processor_page(environ, start_response, filesroot, path, prefix="")
+
+        if path.find(".static") != -1:
+            user = "None"
+            self.log(ctx, user, path)
+            space, pagename = self.path2spacePagename(path)
+            space = pathparts[0].lower()
+            path = "/".join(pathparts[2:])
+            sploader = self.spacesloader.getSpaceFromId(space)
+            filesroot = j.system.fs.joinPaths(sploader.model.path, ".static")
+
+            return self.processor_page(environ, start_response, filesroot, path, prefix="",includedocs=True,ctx=ctx,space=space)
 
         # user is logged in now
         is_session, session = self.startSession(ctx, path)
