@@ -1,0 +1,6 @@
+#can always make this dynamic depending platform
+
+python.paths.local.sitepackages=/usr/local/lib/python2.7/site-packages/
+python.paths.local.distpackages=/usr/local/lib/python2.7/dist-packages/
+python.paths.shared=
+python.paths.distpackages=
