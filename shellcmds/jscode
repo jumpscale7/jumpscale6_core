@@ -40,27 +40,39 @@ if opts.accounts==None and opts.repos==None:
 if opts.branch<>None and opts.action in ['status']: 
     raise RuntimeError("Cannot specify branch when asking status")
 
+
 def getRepos():
     result=[]
 
+    accounts=["github_%s"%item for item in j.system.fs.listDirsInDir("/opt/code/github", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
+    accounts+=["bitbucket_%s"%item for item in j.system.fs.listDirsInDir("/opt/code/bitbucket", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
+    accounts.sort()
+
+    opts.accounts="*"
     if opts.accounts=="*":
-        accounts=j.system.fs.listDirsInDir("/opt/code/github", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+        pass        
     elif opts.accounts<>None:
         accounts=[item.strip() for item in opts.accounts.split(",")]
     else:
-        accounts=j.system.fs.listDirsInDir("/opt/code/github", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
-                        
-        accounts=j.console.askChoiceMultiple(accounts,"select github accounts")
+        accounts=j.console.askChoiceMultiple(accounts,"select accounts")
 
     for account in accounts:
-        accountdir="/opt/code/github/%s"%account
+        provider,account = account.split("_",1)
+        accountdir="/opt/code/%s/%s"%(provider,account)
         if j.system.fs.exists(accountdir):
-            if opts.repos==None:
-                reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+            reponames=[]
+            reponames0=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+            for reponame in reponames0:
+                repodir="/opt/code/%s/%s/%s"%(provider,account,reponame)
+                if j.system.fs.exists(path="%s/.git"%repodir):
+                    reponames.append(reponame)                
+            reponames.sort()
+
+            if opts.repos==None:                
                 if  not opts.action in ['status']:                    
                     reponames=j.console.askChoiceMultiple(reponames,"select repos")
             elif opts.repos=="*":
-                reponames=j.system.fs.listDirsInDir(accountdir,recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
+                pass
             else:
                 reponames=[item.strip() for item in opts.repos.split(",")]
 
@@ -79,7 +91,7 @@ def getRepos():
                     raise RuntimeError("Could not find mercurial repo on %s"%repodir)
 
                 cl=j.clients.git.getClient(repodir)
-                result.append((account,reponame,branch,cl,repodir))
+                result.append((provider,account,reponame,branch,cl,repodir))
     return result
 
 repos=getRepos()
@@ -89,10 +101,10 @@ if opts.action == "status":
     print "========================================================================================================================="
 
 
-for account,reponame,branch,client,path in repos:
+for provider,account,reponame,branch,client,path in repos:
 
     if opts.action == "update" and opts.deletechanges:
-        print "force update %s/%s"%(account,reponame)
+        print "force update %s/%s/%s"%(provider,account,reponame)
         client.pull()
         client.update(force=True)
         continue
