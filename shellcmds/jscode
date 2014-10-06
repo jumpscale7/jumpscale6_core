@@ -45,7 +45,8 @@ def getRepos():
     result=[]
 
     accounts=["github_%s"%item for item in j.system.fs.listDirsInDir("/opt/code/github", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
-    accounts+=["bitbucket_%s"%item for item in j.system.fs.listDirsInDir("/opt/code/bitbucket", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
+    if j.system.fs.exists(path="/opt/code/bitbucket"):
+        accounts+=["bitbucket_%s"%item for item in j.system.fs.listDirsInDir("/opt/code/bitbucket", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
     accounts.sort()
 
     opts.accounts="*"
