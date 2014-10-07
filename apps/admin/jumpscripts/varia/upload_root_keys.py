@@ -47,9 +47,7 @@ def action(node):
                 j.system.fs.chmod("/root/.ssh/%s"%name,384)
     else:
         # Fetch keys from repo
-        for u in j.system.fs.listDirsInDir(d):
-
-            filename = j.system.fs.joinPaths(u, 'id.hrd')
+        for filename in j.system.fs.listFilesInDir(d, recursive=True, filter='*id.hrd'):
             hrd=j.core.hrd.getHRD(filename)
             pkey=hrd.get("id.key.dsa.pub")
             keys.append(pkey)

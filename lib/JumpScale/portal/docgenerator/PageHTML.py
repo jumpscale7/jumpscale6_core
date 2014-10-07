@@ -95,7 +95,7 @@ class PageHTML(Page):
         message = message.replace("text:u", "")
         message.strip("'")
         message = message.strip()
-        message = message.replace("\r", "")
+        message = message.replace("\r", "")        
         if message != '' and isElement:
             message = "%s" % message
         elif newline and message != '':
@@ -106,6 +106,8 @@ class PageHTML(Page):
             pass
         else:
             message = "<p>%s</p>" % message
+
+        message=message.replace("&lt;br&gt;","<br />")
 
         if message != "":
             self.body = "%s%s\n" % (self.body, message)
@@ -176,8 +178,9 @@ class PageHTML(Page):
             self.addMessage("", True, isElement=True)
 
     def addHeading(self, message, level=1):
-        message = str(message)
-        heading = "<h%s>%s</h%s>" % (level, message, level)
+        message = str(message)        
+
+        heading = "<h%s class=\"title\">%s</h%s>" % (level, message, level)
         self.addMessage(heading, isElement=True)
 
     def addList(self, rows, headers="", showcolumns=[], columnAliases={}, classparams="table-condensed table-hover", linkcolumns=[]):

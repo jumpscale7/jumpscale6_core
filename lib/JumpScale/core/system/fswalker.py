@@ -98,9 +98,9 @@ class FSWalker:
         root = os.path.abspath(root)
 
         # print "ROOT OF WALKER:%s"%root
-
+        # print "followlinks:%s"%followlinks
         j.system.fswalker._walk(root,callback,arg, includeFolders, pathRegexIncludes,pathRegexExcludes,\
-            contentRegexIncludes, contentRegexExcludes, depths,followlinks)
+            contentRegexIncludes, contentRegexExcludes, depths,followlinks=followlinks)
 
         # #if recursive:
         # for dirpath, dirnames, filenames in os.walk(root,followlinks=followlinks):
@@ -124,7 +124,9 @@ class FSWalker:
     def _walk(path, callback, arg="", includeFolders=False, \
         pathRegexIncludes=[".*"],pathRegexExcludes=[], contentRegexIncludes=[], contentRegexExcludes=[],\
         depths=[],followlinks=True):
-        for path2 in j.system.fs.listFilesAndDirsInDir(path):
+        
+        for path2 in j.system.fs.listFilesAndDirsInDir(path,followSymlinks=followlinks,listSymlinks=True):
+
             if j.system.fs.isDir(path2, followlinks):
                 if includeFolders:
                     result=True
@@ -192,7 +194,7 @@ class FSWalker:
 
     @staticmethod
     def _walkFunctional(path,callbackFunctionFile=None, callbackFunctionDir=None,arg="", callbackForMatchDir=None,callbackForMatchFile=None):
-        for path2 in j.system.fs.listFilesAndDirsInDir(path):
+        for path2 in j.system.fs.listFilesAndDirsInDir(path,listSymlinks=True):
             # print "walker path:%s"% path2
             if j.system.fs.isDir(path2, True):
                 # print "walker dirpath:%s"% path2

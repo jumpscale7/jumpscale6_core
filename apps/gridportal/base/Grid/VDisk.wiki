@@ -4,7 +4,7 @@
 h2. VDisk
 
 |*ID*|$$id|
-|*Node*|[$$nid|node?id=$$nid]|
+|*Node*|[$$nid|node?id=$$nid&gid=$$gid]|
 |*Grid ID*|[$$gid|grid?id=$$gid]|
 |*Name*|$$devicename|
 |*Machine ID*|[$$machineid|machine?id=$$machineid]|

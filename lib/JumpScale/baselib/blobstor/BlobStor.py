@@ -264,7 +264,7 @@ class BlobStor:
         if not self.config["type"]=="local":
             j.clients.blobstor.log("Path:'%s' Hash:%s" % (path,hashh),category="upload",level=5)
 
-        tmpfile = j.system.fs.getTempFileName()
+        tmpfile = j.system.fs.getTempFileName()+".tar.gz"
 
         if filetype == "file":
             # @TODO: Check what realpath should be.
@@ -274,7 +274,7 @@ class BlobStor:
         else:
             print "compress:%s"%path,
             j.system.fs.targzCompress(path, tmpfile, followlinks=False)
-            print "ok."
+            print "ok."            
 
         hashFromCompressed = j.tools.hash.md5(tmpfile)
         descr = ""

@@ -6,7 +6,7 @@ class HashTool:
         """
         walk over all files, calculate md5 and of sorted list also calc md5 this is the resulting hash for the dir independant from time and other metadata (appart from path)
         """
-        paths=j.system.fs.listFilesInDir(rootpath,recursive=True)
+        paths=j.system.fs.listFilesInDir(rootpath,recursive=True,followSymlinks=False)        
         if paths==[]:
             return "",""
         paths2=[]
