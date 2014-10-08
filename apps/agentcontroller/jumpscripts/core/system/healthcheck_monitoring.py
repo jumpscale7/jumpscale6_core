@@ -14,7 +14,7 @@ category = "monitor.healthcheck"
 period = 600 #always in sec
 enable = True
 async = True
-# roles = ["master"]
+roles = ["master"]
 log=False
 queue = "hypervisor"
 
