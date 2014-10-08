@@ -2,10 +2,9 @@ from itertools import count
 
 def main(j, args, params, tags, tasklet):
 	page = args.page
-	page.addBootstrap()
 	page.addCSS(cssContent=''' 
 		.comparison-block{
-			border: 1px solid #C9D4FA;
+			border: 1px solid #CCE4E2;
 			margin-bottom: 10px;
 		}
 		.comparison-block:hover{
@@ -20,7 +19,7 @@ def main(j, args, params, tags, tasklet):
 		}
 		.comparison-footer{
 			padding: 10px 0;
-			border-top: 1px solid #C9D4FA;
+			border-top: 1px solid #CCE4E2;
 			margin-top: 10px;
 		}
 		.comparison-footer button{
@@ -29,43 +28,51 @@ def main(j, args, params, tags, tasklet):
 		.text-center{
 			text-align: center;
 		}
-		.title{
+		.comparison-block .title{
 			background: #C7E1E0;
 			padding: 15px;
 		}
-		.title small, .price small, .comparison-footer small{
+		.comparison-block .title small, .price small, .comparison-footer small{
 			color: #8D8A8A;
 		}
-		.title p{
+		.comparison-block .title p{
 			margin-bottom: 5px;
 			color: #4F918D;
 			font-weight: bold;
+		}
+		.comparison-block .title p.small{
+			font-size: 95%;
+		}
+		.comparison-block .title p.medium{
 			font-size: 18px;
 		}
-		.price{
+		.comparison-block .title p.large{
+			font-size: 180%;
+		}
+		.comparison-block .price{
 			padding-top: 15px;
-			background-color: #E5E5E5;
-			border-top: 1px solid #C9D4FA;
-			border-bottom: 1px solid #C9D4FA;
+			background-color: #F1F0F0;
+			border-top: 1px solid #CCE4E2;
+			border-bottom: 1px solid #CCE4E2;
 			margin-bottom: 10px;
 			padding-bottom: 10px;
 		}
-		.price p{
+		.comparison-block .price p{
 			font-size: 30px;
 			color: #767677;
 			margin-bottom: 0;
 		}
-		.property{
+		.comparison-block .property{
 			padding: 3px;
 			font-size: 90%;
 			padding-left: 8px;
 			cursor: default;
 		}
-		.property:hover{
+		.comparison-block .property:hover{
 			background-color: #62a29e;
 			color: #fff;
 		}
-		.currency{
+		.comparison-block .currency{
 			font-size: 60%;
 		}
 	 ''')
@@ -77,19 +84,19 @@ def main(j, args, params, tags, tasklet):
 	for i in count(1):
 		try:
 		    block = {}
-		    block['Title'] = getattr(hrd, 'block_{}_title_text'.format(i), '')
+		    block['Title'] = getattr(hrd, 'block_{}_title_text'.format(i), '').replace(r'\n', '<br />')
 		    block['TitleSize'] = getattr(hrd, 'block_{}_title_size'.format(i), '')
-		    block['SubtitleText'] = getattr(hrd, 'block_{}_subtitle_text'.format(i), '')
+		    block['SubtitleText'] = getattr(hrd, 'block_{}_subtitle_text'.format(i), '').replace(r'\n', '<br />')
 		    block['SubtitleSize'] = getattr(hrd, 'block_{}_subtitle_size'.format(i), '')
 		    block['Price'] = getattr(hrd, 'block_{}_price'.format(i))
-		    block['PriceSubtitle'] = getattr(hrd, 'block_{}_price_subtitle'.format(i), '')
-		    block['Property1'] = getattr(hrd, 'block_{}_property_1'.format(i), '')
-		    block['Property2'] = getattr(hrd, 'block_{}_property_2'.format(i), '')
-		    block['Property3'] = getattr(hrd, 'block_{}_property_3'.format(i), '')
-		    block['Property4'] = getattr(hrd, 'block_{}_property_4'.format(i), '')
-		    block['OrderButtonText'] = getattr(hrd, 'block_{}_order_button_text'.format(i), '')
+		    block['PriceSubtitle'] = getattr(hrd, 'block_{}_price_subtitle'.format(i), '').replace(r'\n', '<br />')
+		    block['Property1'] = getattr(hrd, 'block_{}_property_1'.format(i), '').replace(r'\n', '<br />')
+		    block['Property2'] = getattr(hrd, 'block_{}_property_2'.format(i), '').replace(r'\n', '<br />')
+		    block['Property3'] = getattr(hrd, 'block_{}_property_3'.format(i), '').replace(r'\n', '<br />')
+		    block['Property4'] = getattr(hrd, 'block_{}_property_4'.format(i), '').replace(r'\n', '<br />')
+		    block['OrderButtonText'] = getattr(hrd, 'block_{}_order_button_text'.format(i), '').replace(r'\n', '<br />')
 		    block['OrderButtonStyle'] = getattr(hrd, 'block_{}_order_button_style'.format(i), '').lower()
-		    block['OrderButtonSubtext'] = getattr(hrd, 'block_{}_order_button_subtext'.format(i), '')
+		    block['OrderButtonSubtext'] = getattr(hrd, 'block_{}_order_button_subtext'.format(i), '').replace(r'\n', '<br />')
 		    block['OrderButtonSubLink'] = getattr(hrd, 'block_{}_order_button_link'.format(i), '')
 		    blocks.append(block)
 		except AttributeError:
@@ -97,21 +104,21 @@ def main(j, args, params, tags, tasklet):
 
 	page.addMessage('''
 		<div class="container">
-			<div class="row">
 		''')
 
 	for block in blocks:
 		block['i'] = 12 / len(blocks)
 		page.addMessage('''
 				<div class="span{i} comparison-block">
-					<div class="title text-center {TitleSize}">
-						<p>{Title}</p>
+					<div class="title text-center">
+						<p class="{TitleSize}">{Title}</p>
 						<small>{SubtitleText}</small>
 					</div>
 					<div class="price text-center">
 						<p><small class="currency">{currency}</small>{Price}</p>
 						<small>{PriceSubtitle}</small>
 					</div>
+					<div class="property-container">
 		'''.format(currency=currency, **block))
 
 		if(block['Property1']):
@@ -143,15 +150,16 @@ def main(j, args, params, tags, tasklet):
 			'''.format(**block))
 
 		page.addMessage('''
+					</div>
 					<div class="comparison-footer text-center">
 						<small>{OrderButtonSubtext}</small>
 						<br/>
-						<button href="{OrderButtonSubLink}" class="btn btn-{OrderButtonStyle}" type="button">{OrderButtonText}</button>
+						<a href="{OrderButtonSubLink}" class="btn btn-{OrderButtonStyle}">{OrderButtonText}</a>
 					</div>
 				</div>
 		'''.format(**block))
 
-	page.addMessage('''</div></div>''');
+	page.addMessage('''</div>''');
 	params.result = page
 	return params
 
