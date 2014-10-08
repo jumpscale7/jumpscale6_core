@@ -18,9 +18,9 @@ def action(fwobject, username, password):
     from JumpScale.lib.routeros.RouterOS import RouterOS
 
     host = fwobject['host']
-    username = fwobject['username']
-    password = fwobject['password']
+    api_username = fwobject['username']
+    api_password = fwobject['password']
 
-    ro = RouterOS(host, username, password)
+    ro = RouterOS(host, api_username, api_password)
     ro.executeScript('/user set %s password=%s' %  (username, password))
     return True
