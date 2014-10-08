@@ -6,7 +6,7 @@ class Tmux:
     def __init__(self):
         self.screencmd="tmux"
     
-    def createSession(self,sessionname,screens):
+    def createSession(self,sessionname,screens,user=None):
         """
         @param name is name of session
         @screens is list with nr of screens required in session and their names (is [$screenname,...])
@@ -18,13 +18,19 @@ class Tmux:
 
         env = os.environ.copy()
         env.pop('TMUX', None)
-        j.system.process.run("%s new-session -d -s %s -n %s" % (self.screencmd, sessionname, screens[0]), env=env)
+        cmd="%s new-session -d -s %s -n %s" % (self.screencmd, sessionname, screens[0])
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
+        j.system.process.run(cmd, env=env)
         # now add the other screens to it
         if len(screens) > 1:
             for screen in screens[1:]:
-                j.system.process.execute("tmux new-window -t '%s' -n '%s'" % (sessionname, screen))
+                cmd="tmux new-window -t '%s' -n '%s'" % (sessionname, screen)
+                if user<>None:
+                    cmd = "sudo -u %s -i %s"%(user,cmd)
+                j.system.process.execute(cmd)
 
-    def executeInScreen(self,sessionname,screenname,cmd,wait=0, cwd=None, env=None,user="root"):
+    def executeInScreen(self,sessionname,screenname,cmd,wait=0, cwd=None, env=None,user="root",tmuxuser=None):
         """
         @param sessionname Name of the tmux session
         @type sessionname str
@@ -44,26 +50,33 @@ class Tmux:
         for name, value in env.iteritems():
             envstr += "export %s=%s\n" % (name, value)
 
-        self.createWindow(sessionname, screenname)
-        pane = self._getPane(sessionname, screenname)
+        self.createWindow(sessionname, screenname,user=tmuxuser)
+        pane = self._getPane(sessionname, screenname,user=tmuxuser)
         env = os.environ.copy()
         env.pop('TMUX', None)
 
         if envstr<>"":
             cmd2="tmux send-keys -t '%s' '%s\n'" % (pane,envstr)
-        #go to right directory
-        j.system.process.run(cmd2, env=env)
+            if tmuxuser<>None:
+                cmd2 = "sudo -u %s -i %s"%(tmuxuser,cmd2)        
+            j.system.process.run(cmd2, env=env)
+
 
         if user<>"root":
             cmd="cd %s;%s"%(cwd,cmd)
             sudocmd="su -c \"%s\" %s"%(cmd,user)
             cmd2="tmux send-keys -t '%s' '%s' ENTER" % (pane,sudocmd)
         else:
-            if cmd.find("'")<>-1:
-                cmd=cmd.replace("'","\'")
-            cmd2="tmux send-keys -t '%s' '%s;%s' ENTER" % (pane,"cd %s"%cwd,cmd)
-        
+            # if cmd.find("'")<>-1:
+            #     cmd=cmd.replace("'","\\\'")  
+            if cmd.find("$")<>-1:
+                cmd=cmd.replace("$","\\$")                              
+            cmd2="tmux send-keys -t '%s' \"%s;%s\" ENTER" % (pane,"cd %s"%cwd,cmd)
+            print cmd2
+        if tmuxuser<>None:
+            cmd2 = "sudo -u %s -i %s"%(tmuxuser,cmd2)
         j.system.process.run(cmd2, env=env)
+
         time.sleep(wait)
         if wait and j.system.fs.exists(ppath):
             resultcode=j.system.fs.fileGetContents(ppath).strip()
@@ -73,18 +86,19 @@ class Tmux:
         elif wait:
             j.console.echo("Execution of %s  did not return, maybe interactive, in screen %s:%s." % (cmd,sessionname,screenname))
 
-    def getSessions(self):
+    def getSessions(self,user=None):
         cmd = 'tmux list-sessions -F "#{session_name}"'
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
         exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
         if exitcode != 0:
             output = ""
-        return [ (None, name) for name in output.split() ]
+        return [ name.strip() for name in output.split() ]
 
-    def getSessionNames(self):
-        return [ x[1] for x in self.getSessions() ]
-
-    def getPid(self, session, name):
+    def getPid(self, session, name,user=None):
         cmd = 'tmux list-panes -t "%s" -F "#{pane_pid};#{window_name}" -a' % session
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
         exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
         if exitcode>0:
             return None
@@ -95,14 +109,12 @@ class Tmux:
                 return int(pid)
         return None
 
-    def listSessions(self):
-        sessions=self.getSessions()
-        for pid,name in sessions:
-            print "%s %s" % (pid,name)
-
-    def listWindows(self, session, attemps=5):
+    def getWindows(self, session, attemps=5,user=None):
         result = dict()
+        
         cmd = 'tmux list-windows -F "#{window_index}:#{window_name}" -t "%s"' % session
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
         exitcode, output = j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
         if exitcode != 0:
             return result
@@ -111,50 +123,65 @@ class Tmux:
             result[int(idx)] = name
         return result
 
-    def createWindow(self, session, name):
-        if session not in self.getSessionNames():
-            return self.createSession(session, [name])
-        windows = self.listWindows(session)
+    def createWindow(self, session, name,user=None):
+        if session not in self.getSessions(user=user):
+            return self.createSession(session, [name],user=user)
+        windows = self.getWindows(session,user=user)
         if name not in windows.values():
-            j.system.process.execute("tmux new-window -t '%s:' -n '%s'" % (session, name))
+            cmd="tmux new-window -t '%s:' -n '%s'" % (session, name)
+            if user<>None:
+                cmd = "sudo -u %s -i %s"%(user,cmd)
+            j.system.process.execute(cmd)
 
-    def logWindow(self, session, name, filename):
-        pane = self._getPane(session, name)
+    def logWindow(self, session, name, filename,user=None):
+        pane = self._getPane(session, name,user=user)        
         cmd = "tmux pipe-pane -t '%s' 'cat >> \"%s\"'" % (pane, filename)
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
         j.system.process.execute(cmd)
 
-    def windowExists(self, session, name):
-        if session in self.getSessionNames():
-            if name in self.listWindows(session).values():
+    def windowExists(self, session, name,user=None):
+        if session in self.getSessions(user=user):
+            if name in self.getWindows(session,user=user).values():
                 return True
         return False
 
-    def _getPane(self, session, name):
-        windows = self.listWindows(session)
+    def _getPane(self, session, name,user=None):
+        windows = self.getWindows(session,user=user)
         remap = dict([ (win, idx) for idx, win in windows.iteritems() ])
         result = "%s:%s" % (session, remap[name])
         return result
 
-    def killWindow(self, session, name):
+    def killWindow(self, session, name,user=None):
         try:
-            pane = self._getPane(session, name)
+            pane = self._getPane(session, name,user=user)
         except KeyError:
             return # window does nt exist
         cmd = "tmux kill-window -t '%s'" % pane
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
         j.system.process.execute(cmd, dieOnNonZeroExitCode=False)
 
-    def killSessions(self):
+    def killSessions(self,user=None):
         cmd="tmux kill-server"
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
         j.system.process.execute(cmd,dieOnNonZeroExitCode=False) #todo checking
         
-    def killSession(self,sessionname):
+    def killSession(self,sessionname,user=None):
         cmd="tmux kill-session -t '%s'"  % sessionname
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
         j.system.process.execute(cmd,dieOnNonZeroExitCode=False) #todo checking
 
-    def attachSession(self,sessionname, windowname=None):
+    def attachSession(self,sessionname, windowname=None,user=None):
         if windowname:
-            pane = self._getPane(sessionname, windowname)
+            pane = self._getPane(sessionname, windowname,user=user)
             cmd="tmux select-window -t '%s'"  % pane
+            if user<>None:
+                cmd = "sudo -u %s -i %s"%(user,cmd)
             j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
-
-        j.system.process.executeWithoutPipe("tmux attach -t %s" % (sessionname))
+        cmd="tmux attach -t %s" % (sessionname)
+        if user<>None:
+            cmd = "sudo -u %s -i %s"%(user,cmd)
+        j.system.process.executeWithoutPipe(cmd)

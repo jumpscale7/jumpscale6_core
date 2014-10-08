@@ -243,15 +243,15 @@ class ProcessDef:
             j.system.process.executeIndependant(cmd2)            
 
         elif not self.upstart or j.tools.startupmanager.upstart==False:
-            
+
             for i in range(1, self.numprocesses+1):
                 name="%s_%s"%(self.name,i)
-                for tmuxkey,tmuxname in j.system.platform.screen.listWindows(self.domain).iteritems():
+                for tmuxkey,tmuxname in j.system.platform.screen.getWindows(self.domain).iteritems():
                     if tmuxname==name:
                         j.system.platform.screen.killWindow(self.domain,name)
                 tcmd = cmd.replace("$numprocess", str(i))
                 targs = args.replace("$numprocess", str(i))
-                
+
                 j.system.platform.screen.executeInScreen(self.domain,name,tcmd+" "+targs,cwd=self.workingdir, env=self.env,user=self.user)#, newscr=True)
 
                 if self.plog:

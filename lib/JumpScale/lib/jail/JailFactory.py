@@ -1,11 +1,15 @@
 from JumpScale import j
 import JumpScale.baselib.redis
 import ujson as json
+import JumpScale.baselib.screen
 
 class JailFactory(object):
 
     def __init__(self):
         self.redis=j.clients.redis.getRedisClient("127.0.0.1", 7768)
+        self.base="/opt/jsbox"
+        if not j.system.fs.exists(path=self.base):
+            raise RuntimeError("Please install jsbox (sandbox install for jumpscale)")
 
     def prepareJSJail(self):
         """
@@ -18,21 +22,30 @@ class JailFactory(object):
         j.system.process.execute("chmod -R o-w /etc")
         j.system.process.execute("chmod -R o-rwx /home")
         j.system.process.execute("chmod o-rwx /mnt")
-        j.system.fs.chmod("/opt/code", 0o700)
+        
         # j.system.fs.chmod("/opt/code/jumpscale", 0o777)
         j.system.fs.chown("/opt", "root")
         j.system.process.execute("chmod 777 /opt")
+
+        #SHOULD WE ALSO DO NEXT?
+        # j.system.fs.chmod("/opt/code", 0o700)
+        j.system.process.execute("chmod 700 /opt/code")
+        
         # j.system.process.execute("chmod 777 /opt/jumpscale")
         # j.system.process.execute("chmod -R 777 /opt/jumpscale/bin")
         # j.system.process.execute("chmod -R 777 /opt/jumpscale/lib")
         # j.system.process.execute("chmod -R 777 /opt/jumpscale/libext")
         # j.system.process.execute("chmod 777 /opt/code")
 
-        j.system.process.execute("chmod 777 /opt/jsbox")
+        j.system.process.execute("chmod 777 %s"%self.base)
         j.system.process.execute("chmod 777 /home")
 
+        logdir="/tmp/tmuxsessions"
+        j.system.fs.createDir(logdir)
+        j.system.process.execute("chmod 777 %s"%logdir)
 
-    def createJSJail(self,user,secret):
+
+    def _createJSJailEnv(self,user,secret):
         """
         create jumpscale jail environment for 1 user
         """
@@ -40,10 +53,10 @@ class JailFactory(object):
 
         j.system.unix.addSystemUser(user,None,"/bin/bash","/home/%s"%user)
         j.system.unix.setUnixUserPassword(user,secret)
-        j.system.fs.copyDirTree("/opt/jumpscale/apps/jail/defaultenv","/home/%s"%user)
-        j.system.fs.symlink("/opt/jumpscale/bin","/home/%s/jumpscale/bin"%user)
-        j.system.fs.symlink("/opt/jumpscale/lib","/home/%s/jumpscale/lib"%user)
-        j.system.fs.symlink("/opt/jumpscale/libext","/home/%s/jumpscale/libext"%user)
+        j.system.fs.copyDirTree("%s/apps/jail/defaultenv"%self.base,"/home/%s"%(user))
+        j.system.fs.symlink("%s/bin"%self.base,"/home/%s/jumpscale/bin"%(user))
+        j.system.fs.symlink("%s/lib"%self.base,"/home/%s/jumpscale/lib"%(user))
+        j.system.fs.symlink("%s/libext"%self.base,"/home/%s/jumpscale/libext"%(user))
         j.system.fs.createDir("/home/%s/jumpscale/apps"%user)
         # j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_examples/examples/","/home/%s/jumpscale/apps/examples"%user)
         # j.system.fs.symlink("/opt/code/jumpscale/default__jumpscale_examples/prototypes/","/home/%s/jumpscale/apps/prototypes"%user)
@@ -72,15 +85,22 @@ class JailFactory(object):
         
 
     def listSessions(self,user):
-        res=[]
-        rc,out=j.system.process.execute("sudo -P -u %s tmux list-sessions"%user)
-        for line in out.split("\n"):
-            if line.strip()=="":
-                continue
-            if line.find(":")<>-1:
-                name=line.split(":",1)[0].strip()
-                res.append(name)
-        return res
+        return j.system.platform.screen.getSessions(user="user1")
+        # res=[]
+        # try:
+        #     rc,out=j.system.process.execute("sudo -i -u %s tmux list-sessions"%user)
+        # except Exception,e:
+        #     if str(e).find("Connection refused")<>-1:
+        #         return []
+        #     print "Exception in listsessions:%s"%e
+        #     return []
+        # for line in out.split("\n"):
+        #     if line.strip()=="":
+        #         continue
+        #     if line.find(":")<>-1:
+        #         name=line.split(":",1)[0].strip()
+        #         res.append(name)
+        # return res
 
     def killSessions(self,user):
         j.system.process.killUserProcesses(user)
@@ -109,22 +129,22 @@ class JailFactory(object):
         j.system.process.execute(cmd)
 
     def send2session(self,user,session,cmd):
-        j.system.process.execute("sudo -P -u %s tmux send -t %s %s ENTER"%(user,session,cmd))
+        j.system.process.execute("sudo -u %s -i tmux send -t %s %s ENTER"%(user,session,cmd))
 
-    def createJSJailSession(self,user,session,cmd=None):
-        secrpath="/home/%s/.secret"%user
+    def createJSJailSession(self,user,secret,session,cmd=None):
+        self._createJSJailEnv(user,secret)
+        # secrpath="/home/%s/.secret"%user
         # secret=j.system.fs.fileGetContents(secrpath).strip()
 
         #check session exists
         sessions=self.listSessions(user)
         if not session in sessions:
             #need to create session
+            cmd="sudo -u %s -i tmux new-session -d -s %s"%(user,session)
+            
+            j.system.process.execute(cmd)
+            j.system.process.execute("sudo -u %s -i tmux set-option -t %s status off"%(user,session))
             if cmd<>None:
-                j.system.process.execute("sudo -P -u %s tmux new-session -d -s %s %s"%(user,session,cmd))
-            else:
-                j.system.process.execute("sudo -P -u %s tmux new-session -d -s %s"%(user,session))
-            j.system.process.execute("sudo -P -u %s tmux set-option -t %s status off"%(user,session))
-            if cmd=="js":
                 self.send2session(user,session,"clear")  
 
 

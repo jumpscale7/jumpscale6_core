@@ -31,6 +31,9 @@ class Screen:
 
     def executeInScreen(self,sessionname,screenname,cmd,wait=0):
 
+        from IPython import embed
+        print "DEBUG NOW ooo"
+        embed()
         
         ppath=j.system.fs.getTmpFilePath()
         ppathscript=j.system.fs.getTmpFilePath()
@@ -60,6 +63,8 @@ rm -f %s
             
         else:
             cmd2="%s -S %s -p %s -X stuff '%s\n'" % (self.screencmd,sessionname,screenname,cmd)
+
+        print cmd2
 
         j.system.process.execute(cmd2)  
         time.sleep(wait)

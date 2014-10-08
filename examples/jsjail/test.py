@@ -11,11 +11,6 @@ import JumpScale.lib.jail
 #make sure all security settings are set properly
 # j.tools.jail.prepareJSJail()
 
-j.tools.jail.createJSJail(user="user1",secret="1234")
-
-from IPython import embed
-print "DEBUG NOW ooo"
-embed()
-
+j.tools.jail.createJSJailSession(user="user1",secret="1234",session="mysession")
 
 j.application.stop()
