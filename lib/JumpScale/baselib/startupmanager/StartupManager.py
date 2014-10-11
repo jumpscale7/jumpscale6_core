@@ -753,9 +753,14 @@ class StartupManager:
 
     def getProcessDefs4JPackage(self,jpackage):
         result=[]
+        
         for pd in self.getProcessDefs():
-            if pd.jpackage_name==jpackage.name and pd.jpackage_domain==jpackage.domain and pd.jpackage_instance==jpackage.instance:
+            if pd.jpackage_name==jpackage.name and pd.jpackage_domain==jpackage.domain:# and pd.jpackage_instance==jpackage.instance:
                 result.append(pd)
+
+        if len(result)>1:
+            result=[item for item in result if item.jpackage_domain==jpackage.domain]
+
         return result
 
     def startAll(self):
@@ -797,6 +802,7 @@ class StartupManager:
 
     def getStatus4JPackage(self,jpackage):
         result=True
+
         for pd in self.getProcessDefs4JPackage(jpackage):
             result=result and self.getStatus(pd.domain,pd.name)                
         return result
@@ -805,7 +811,7 @@ class StartupManager:
         """
         get status of process, True if status ok
         """
-        result=True
+        result=True        
         for processdef in self.getProcessDefs(domain, name):            
             result=result & processdef.isRunning()            
         return result

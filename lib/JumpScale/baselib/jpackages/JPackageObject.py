@@ -971,7 +971,7 @@ class JPackageObject():
             deps = self.getDependencies()
             for dep in deps:
                 dep.start(False)
-        self.load()        
+        self.load()      
         self.actions.process_start()
         self.log('start')
 
