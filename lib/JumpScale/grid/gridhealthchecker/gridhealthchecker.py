@@ -243,12 +243,13 @@ class GridHealthChecker(object):
         if dbhealth == None:
             self._addError(nid, {'state': 'UNKNOWN'}, 'databases')
             errormessage = 'Database statuses UNKNOWN'
-        for dbname, status in dbhealth.iteritems():
-            if status:
-                self._addResult(nid, status, dbname)
-            else:
-                self._addError(nid, {'state': 'UNKNOWN'}, dbname)
-                errormessage = '%s status UNKNOWN' % dbname.capitalize()
+        else:
+            for dbname, status in dbhealth.iteritems():
+                if status:
+                    self._addResult(nid, status, dbname)
+                else:
+                    self._addError(nid, {'state': 'UNKNOWN'}, dbname)
+                    errormessage = '%s status UNKNOWN' % dbname.capitalize()
         if errormessage:
             self._addError(self.masternid, errormessage, 'databases')
         if clean:
