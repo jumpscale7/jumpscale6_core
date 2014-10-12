@@ -1,6 +1,8 @@
 @usedefaults
 
-h2. Node '$$nid'
+{{node_getdata: gid:$$gid id:$$nid}}
+
+h2. $$gridname: $$name ($$gid:$$id)
 
 h3. Redis Status
 {{redisstatus nid:$$nid}}
