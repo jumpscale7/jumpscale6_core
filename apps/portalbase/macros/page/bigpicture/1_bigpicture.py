@@ -7,7 +7,7 @@ def main(j, args, params, tags, tasklet):
 		.bigpicture{
 			margin: 10px 0 15px 0;
 		}
-		.bigpicture-container h1, .bigpicture-container .subtitle-container{
+		.bigpicture-container{
 			text-align: center;
 		}
 		.subtitle{
@@ -41,7 +41,7 @@ def main(j, args, params, tags, tasklet):
 	 ''')
 	hrd = j.core.hrd.getHRD(content=args.cmdstr)
 	bigpicture = {}
-	bigpicture['picturePath'] = getattr(hrd, 'picture_path', '')
+	bigpicture['picturePath'] = ""
 	bigpicture['titleText'] = getattr(hrd, 'title_text', '')
 	bigpicture['titleSize'] = getattr(hrd, 'title_size', 'medium')
 	bigpicture['subtitleText'] = getattr(hrd, 'subtitle_text', '')
@@ -55,16 +55,11 @@ def main(j, args, params, tags, tasklet):
 	# check if can find image under .files/img by the given name
 	space = j.core.portal.active.spacesloader.spaces[args.doc.getSpaceName()]
 	imagedir = j.system.fs.joinPaths(space.model.path, '.files', 'img/')
-	if os.path.isfile(imagedir + bigpicture['picturePath']):
-		bigpicture['picturePath'] = '/$$space/.files/img/' + bigpicture['picturePath']
+	if os.path.isfile(imagedir + getattr(hrd, 'picture_path', '')):
+		bigpicture['picturePath'] = '/$$space/.files/img/' + getattr(hrd, 'picture_path', '')
 	else:
-		try:
-			picturePublicPath = requests.head(bigpicture['picturePath'])
-			# check if cann't find image in a public url by the given path
-			if picturePublicPath.status_code != requests.codes.ok:
-				bigpicture['picturePath'] = ''
-		except:
-			bigpicture['picturePath'] = ''
+		# image from full url
+		bigpicture['picturePath'] = getattr(hrd, 'picture_path', '')
 
 	page.addMessage('''
 		<div class="bigpicture-container">
