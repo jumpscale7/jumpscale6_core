@@ -29,11 +29,17 @@ def action():
             timeout = timemap.get(processdef.name.split('_')[1])
             pids = j.system.process.getProcessPid(worker)
             stats = {'cpu': 0, 'mem': 0, 'lastactive': lastactive, 'state': 'HALTED'}
+            error = False
             for pid in pids:
-                processobj = j.system.process.getProcessObject(pid)
-                stats['cpu'] += processobj.get_cpu_percent()
-                stats['mem'] += processobj.get_memory_info()[0]
+                try:
+                    processobj = j.system.process.getProcessObject(pid)
+                    stats['cpu'] += processobj.get_cpu_percent()
+                    stats['mem'] += processobj.get_memory_info()[0]
+                except:
+                    error = True
             if j.base.time.getEpochAgo(timeout) < lastactive and pids:
                 stats['state'] = 'RUNNING'
+            if error:
+                stats['state'] = 'HALTED'
             result[worker] = stats
     return result
