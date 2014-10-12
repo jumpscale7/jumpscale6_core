@@ -3,12 +3,6 @@
 
 @col 4
 #{{html:<center>}}
-h5. Total Used Capacity of Environment
-{{jgauge: id:1 width:200 height:114 val:20 style:black start:0 end:10 end:100 labelsuffix:%}}
-#{{html:</center>}}
-@divend 
-@col 4
-#{{html:<center>}}
 h5. No. of Events in Last 24hours
 {{eventgauge: id:4 width:200 height:114}}
 #   {{html:</center>}}
