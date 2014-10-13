@@ -228,6 +228,14 @@ class OSISCMDS(object):
         else:
             return 3,""
 
+    def getOsisSpecModel(self,namespace,session=None):
+        result={}
+        for ttype in j.core.specparser.getModelNames("osismodel",namespace):
+            obj=j.core.specparser.getModelSpec("osismodel",namespace,ttype)
+            result[ttype]=obj.obj2dict()
+        return result
+        
+
     def listNamespaces(self, prefix="",session=None):
         ddirs = j.system.fs.listDirsInDir(self.path, dirNameOnly=True)
 
