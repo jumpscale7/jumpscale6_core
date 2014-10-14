@@ -251,7 +251,7 @@ class GridHealthChecker(object):
                     self._addError(nid, {'state': 'UNKNOWN'}, dbname)
                     errormessage = '%s status UNKNOWN' % dbname.capitalize()
         if errormessage:
-            self._addError(self.masternid, errormessage, 'databases')
+            self._addError(nid, errormessage, 'databases')
         if clean:
             return self._status, self._errors
 
@@ -463,6 +463,11 @@ class GridHealthChecker(object):
             errors.append((nid, {'state': 'UNKNOWN'}, 'disks'))
             errormessage.append('Disks status UNKNOWN.')
             disks = dict()
+        else:
+            if not disks:
+                errors.append((nid, {'state': 'UNKNOWN'}, 'disks'))
+                errormessage.append('No disks detected.')
+                disks = dict()
         for path, disk in disks.iteritems():
             disk['path'] = path
             if (disk['free'] and disk['size']) and (disk['free'] / float(disk['size'])) * 100 < 10:
