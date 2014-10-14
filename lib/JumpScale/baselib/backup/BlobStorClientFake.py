@@ -80,7 +80,7 @@ class BlobStorClientFake:
             pass
             #self.exists...
 
-    def exists(self,key,parent,repoid=0,replicaCheck=False):
+    def _exists(self,key,parent,repoid=0,replicaCheck=False):
         """
         Checks if the blobstor contains an entry for the given key
         @param key: key to Check
@@ -124,7 +124,7 @@ class BlobStorClientFake:
             serialization=""
         if parent:
             self.redis.rpush('files:%s' % parent, key)
-        if not self.exists(key, parent):
+        if not self._exists(key, parent):
             self.set(key=key, data=data,repoid=repoid,serialization=serialization,sync=False)
         else:
             print 'Chunk %s already exists on weedfs' % key
