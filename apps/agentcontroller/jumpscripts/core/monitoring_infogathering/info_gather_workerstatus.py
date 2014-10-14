@@ -32,9 +32,12 @@ def action():
             error = False
             for pid in pids:
                 try:
-                    processobj = j.system.process.getProcessObject(pid)
-                    stats['cpu'] += processobj.get_cpu_percent()
-                    stats['mem'] += processobj.get_memory_info()[0]
+                    if j.system.process.isPidAlive(pid):
+                        processobj = j.system.process.getProcessObject(pid)
+                        stats['cpu'] += processobj.get_cpu_percent()
+                        stats['mem'] += processobj.get_memory_info()[0]
+                    else:
+                        error = True
                 except:
                     error = True
             if j.base.time.getEpochAgo(timeout) < lastactive and pids:

@@ -1,6 +1,7 @@
 #from ActorsLoaderRemote import ActorsLoaderRemote
 from PortalServer import PortalServer
 from PortalClient import PortalClient
+import time
 #from ActorLoaderLocal import *
 
 import JumpScale.baselib.redis
@@ -27,30 +28,46 @@ class PortalFactory():
         cfg = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', appname, 'cfg', 'portal')
         return j.config.getConfig(cfg)
 
-    def loadActorsInProcess(self):
+    def loadActorsInProcess(self, name='main'):
         """
         make sure all actors are loaded on j.apps...
         """
-        raise RuntimeError("not implemented, need to fix")
+        class FakeServer(object):
+            def __init__(self):
+                import JumpScale.grid
+                self.actors = dict()
+                self.osis = j.core.osis.getClient(user='root')
+                self.epoch = time.time()
+                self.actorsloader = j.core.portalloader.getActorsLoader()
+                self.spacesloader = j.core.portalloader.getSpacesLoader()
+
+            def addRoute(self, *args, **kwargs):
+                pass
+
+            def addSchedule1MinPeriod(self, *args, **kwargs):
+                pass
+
+            addSchedule15MinPeriod = addSchedule1MinPeriod
+
         self.inprocess = True
         # self._inited = False
         j.apps = Group()
-        j.db.keyvaluestore
-        ini = j.tools.inifile.open("cfg/appserver.cfg")
+        basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'portals', name)
+        ini = j.tools.inifile.open("%s/cfg/portal.cfg" % basedir)
         appdir = ini.getValue("main", "appdir")
         appdir=appdir.replace("$base",j.dirs.baseDir)
-        cfgdir = j.system.fs.joinPaths(j.system.fs.getcwd(), "cfg")
-        curdir = j.system.fs.getcwd()
         j.system.fs.changeDir(appdir)
-        server = PortalProcess(cfgdir=cfgdir, startdir=curdir)
+        server = FakeServer()
+        j.core.portal.active = server
+        server.actorsloader.scan(appdir)
+        server.actorsloader.scan(basedir + "/base")
 
-        # for actor in server.actorsloader.actors.keys():
-        #     appname,actorname=actor.split("__",1)
-        #     print "get actor: %s %s" % (appname,actorname)
-        #     try:
-        #         server.actorsloader.getActor(appname, actorname)
-        #     except Exception,e:
-        #         print "*ERROR*: Could not load actor %s %s" % (appname,actorname)
+        for actor in server.actorsloader.actors.keys():
+            appname,actorname=actor.split("__",1)
+            try:
+                server.actorsloader.getActor(appname, actorname)
+            except Exception,e:
+                print "*ERROR*: Could not load actor %s %s:\n%s" % (appname,actorname, e)
 
     def getClientByInstance(self, instance=None):
         if not instance:
