@@ -44,18 +44,15 @@ if opts.branch<>None and opts.action in ['status']:
 def getRepos():
     result=[]
 
-    accounts=["github_%s"%item for item in j.system.fs.listDirsInDir("/opt/code/github", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
-    if j.system.fs.exists(path="/opt/code/bitbucket"):
-        accounts+=["bitbucket_%s"%item for item in j.system.fs.listDirsInDir("/opt/code/bitbucket", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
-    accounts.sort()
+    accounts=[]
+    for top in j.system.fs.listDirsInDir("/opt/code/", recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+        accounts+=["%s_%s"%(top,item) for item in j.system.fs.listDirsInDir("/opt/code/%s"%top, recursive=False, dirNameOnly=True, findDirectorySymlinks=True)]
+        accounts.sort()
 
-    opts.accounts="*"
-    if opts.accounts=="*":
-        pass        
-    elif opts.accounts<>None:
-        accounts=[item.strip() for item in opts.accounts.split(",")]
-    else:
-        accounts=j.console.askChoiceMultiple(accounts,"select accounts")
+    from IPython import embed
+    print "DEBUG NOW ooo"
+    embed()
+    
 
     for account in accounts:
         provider,account = account.split("_",1)
