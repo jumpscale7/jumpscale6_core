@@ -176,63 +176,12 @@ class BlobStorClientFake:
         return key
 
     def downloadFile(self,key,dest,link=False,repoid=0, chmod=0,chownuid=0,chowngid=0,sync=False,size=0):
-
-        if self.cachepath<>"":
-            blob_path = self._getBlobCachePath(key)
-            if j.system.fs.exists(blob_path):
-                # Blob exists in cache, we can get it from there!
-                print "Blob FOUND in cache: %s" % blob_path
-                if link:
-                    self._link(blob_path,dest)
-                else:
-                    j.system.fs.copyFile(blob_path, dest)
-                    os.chmod(dest, chmod)
-                    os.chown(dest, chownuid, chowngid)
-                return
-
-        if self._downloadbatchSize>self.maxqueuedatasize or len(self._downloadbatch)>200:
-            self.downloadBatch()
-
-        #now normally on server we should have results ready
-
-        if size<>0 and sync==False:
-            jid=self.get( key,repoid=repoid,sync=False)
-            # print [jid,key,dest,link,repoid,chmod,chownuid,chowngid]
-            self._downloadbatch[jid]=(jid,key,dest,link,repoid,chmod,chownuid,chowngid)
-            self._downloadbatchSize+=int(size)
-        else:
-            # Get blob from blobstor2 
-            if key<>"":
-                key,serialization,blob = self.get( key,repoid=repoid,sync=True)
-                self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
-
-
-    # def downloadBatch(self):
-    #     self._send()        
-    #     jids=self._downloadbatch.keys()
-    #     self.blobstor._cmdchannel.send_multipart([msgpack.dumps([[0,"getresults",{},jids]]),"S",str(60),self.blobstor.sessionkey])
-    #     res= self.blobstor._cmdchannel.recv_multipart()
-       
-    #     for item in res:
-    #         if item=="":
-    #             continue
-    #         else:                
-    #             jid,rcode,result=msgpack.loads(item)
-    #             if rcode==0:
-    #                 jid,key,dest,link,repoid,chmod,chownuid,chowngid=self._downloadbatch[jid]
-    #                 key2=result[0]
-    #                 if key2<>key:
-    #                     raise RuntimeError("Keys need to be the same")
-    #                 blob=result[2]
-    #                 serialization=result[1]
-                    
-    #                 self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
-    #             else:
-    #                 ##TODO
-    #                 pass
-
-    #     self._downloadbatchSize=0
-    #     self._downloadbatch={}
+        chunks_keys = self.redis.lrange('files:%s' % key, 0, -1)
+        j.system.fs.touch(dest)
+        for chunk_key in chunks_keys:
+            wv = self.weed_master.get_volume(chunk_key)
+            chunk_data = wv.get_file(chunk_key)
+            j.system.fs.writeFile(dest, chunk_data, True)
             
     def _downloadFilePhase2(self,blob,dest,key,chmod,chownuid,chowngid,link,serialization):
         if key=="":
