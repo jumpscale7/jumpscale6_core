@@ -12,6 +12,8 @@ def main(j, args, params, tags, tasklet):
         elif tag == 'to' and val:
             filters['to'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
         elif val:
+            if j.basetype.integer.checkString(val):
+                val = j.basetype.integer.fromString(val)
             filters[tag] = val
     fieldnames = ['Time', 'Grid ID', 'Node ID', 'App Name', 'Category', 'Error Message', 'Job ID']
 
