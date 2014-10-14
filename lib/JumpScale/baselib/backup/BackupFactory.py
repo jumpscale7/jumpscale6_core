@@ -1,7 +1,7 @@
 from JumpScale import j
 
 
-from .BackupClient import BackupClient
+from .BlobStorClientFake import BlobStorClientFake
 
 
 class BackupFactory:
@@ -28,8 +28,7 @@ class BackupFactory:
         name="%s_%s_%s_%s"%(backupname,"ledis_weedfs",blobstorNamespace,"")
         if self._cache.has_key(name):
             return self._cache[name]
-        self._cache[name]= BackupClient(backupname=backupname,blobstorAccount=None,blobstorNamespace=blobstorNamespace, \
-            gitlabAccount=None,compress=compress,servercheck=servercheck,fullcheck=fullcheck,storpath=storpath)
+        self._cache[name]= BlobStorClientFake(namespace=blobstorNamespace)
         return self._cache[name]
 
     def _log(self,msg,category="",level=5):
