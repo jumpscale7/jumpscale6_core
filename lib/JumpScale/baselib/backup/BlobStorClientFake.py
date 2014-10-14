@@ -156,15 +156,11 @@ class BlobStorClientFake:
         return key
 
     def downloadDir(self,key,dest,repoid=0,compress=None):
+        tarpath = "/tmp/%s.tar" % key
+        self.downloadFile(key, tarpath)
         j.system.fs.removeDirTree(dest)
         j.system.fs.createDir(dest)
-        name="backup_md_%s"%j.base.idgenerator.generateRandomInt(1,100000)
-        tarpath="/tmp/%s.tar"%name
-        self.downloadFile(key,tarpath,False,repoid=repoid)
-        if compress:
-            cmd="cd %s;tar xzf %s"%(dest,tarpath)
-        else:
-            cmd="cd %s;tar xf %s"%(dest,tarpath)
+        cmd = "cd %s; tar xf %s" % (dest, tarpath)
         j.system.process.execute(cmd)
         j.system.fs.remove(tarpath)
 
