@@ -58,6 +58,7 @@ class BlobStorClientFake:
         file_id = ','.join([volume_id, key])
         files = {'file': (key, data)}
         r = requests.post('http://%s/%s' % (assign_key['publicUrl'], file_id), files=files)
+        return file_id
 
     def sync(self):
         """
@@ -122,12 +123,13 @@ class BlobStorClientFake:
             serialization="L"
         else:
             serialization=""
-        if parent:
-            self.redis.rpush('files:%s' % parent, key)
+        file_id = None
         if not self._exists(key, parent):
-            self.set(key=key, data=data,repoid=repoid,serialization=serialization,sync=False)
+            file_id = self.set(key=key, data=data,repoid=repoid,serialization=serialization,sync=False)
         else:
             print 'Chunk %s already exists on weedfs' % key
+        if parent and file_id:
+            self.redis.rpush('files:%s' % parent, file_id)
         return key
 
     def _read_file(self,path, block_size=0):
