@@ -88,12 +88,17 @@ class BlobStorClientFake:
         @replicaCheck if True will check that there are enough replicas (not implemented)
         the normal check is just against the metadata stor on the server, so can be data is lost
         """
-        for l in [k for k in self.redis.keys('files:*') if parent != k.split(':')[1]]:
+        for l in (k for k in self.redis.keys('files:*') if parent != k.split(':')[1]):
             if key in self.redis.lrange(l, 0, -1):
                 return True
         return False
 
-
+    def exists(self, key):
+        '''Checks if a file or dir exists'''
+        for l in (k for k in self.redis.keys('files:*')):
+            if key == l.split(':')[1]:
+                return True
+        return False
 
     def getMD(self,key):
         #not sure what this is
@@ -167,8 +172,11 @@ class BlobStorClientFake:
     def uploadFile(self,path,key="",repoid=0,compress=None):        
         if key=="":
             key=j.tools.hash.md5(path)
-        for data in self._read_file(path):
-            self._dump2stor(data,repoid=repoid,compress=compress,parent=key)
+        if not self.exists(key):
+            for data in self._read_file(path):
+                self._dump2stor(data,repoid=repoid,compress=compress,parent=key)
+        else:
+            print 'Key: %s already exists' % key
         return key
 
     def downloadFile(self,key,dest,link=False,repoid=0, chmod=0,chownuid=0,chowngid=0,sync=False,size=0):
