@@ -1,6 +1,5 @@
 from JumpScale import j
 import JumpScale.baselib.gitlab
-import JumpScale.baselib.blobstor2
 import os
 
 from JSFileMgr import JSFileMgr

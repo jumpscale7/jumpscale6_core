@@ -1,5 +1,4 @@
 import os
-import requests
 
 def main(j, args, params, tags, tasklet):
 	page = args.page

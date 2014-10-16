@@ -126,103 +126,105 @@ class Worker(object):
                 continue
 
             if job:
-                j.application.jid=job.id
+                j.application.jid=job.guid
+                try:
+                    if self.actions.has_key(job.jscriptid):
+                        jscript=self.actions[job.jscriptid]
+                    else:
+                        print "JSCRIPT CACHEMISS"                                                            
+                        try:                        
+                            jscript=w.getJumpscriptFromId(job.jscriptid)
+                            if jscript==None:
+                                msg="cannot find jumpscript with id:%s"%job.jscriptid
+                                print "ERROR:%s"%msg
+                                j.events.bug_warning(msg,category="worker.jscript.notfound")
+                                job.result=msg
+                                job.state="ERROR"
+                                self.notifyWorkCompleted(job)
+                                continue
 
-                if self.actions.has_key(job.jscriptid):
-                    jscript=self.actions[job.jscriptid]
-                else:
-                    print "JSCRIPT CACHEMISS"                                                            
-                    try:                        
-                        jscript=w.getJumpscriptFromId(job.jscriptid)
-                        if jscript==None:
-                            msg="cannot find jumpscript with id:%s"%job.jscriptid
-                            print "ERROR:%s"%msg
-                            j.events.bug_warning(msg,category="worker.jscript.notfound")
-                            job.result=msg
+                            if jscript.organization<>"" and jscript.name<>"" and jscript.id<1000000:
+                                #this is to make sure when there is a new version of script since we launched this original script we take the newest one
+                                jscript=w.getJumpscriptFromName(jscript.organization,jscript.name)
+                                job.jscriptid=jscript.id
+                                #result is method action
+
+                            jscript.write()
+                            jscript.load()
+
+                            self.actions[job.jscriptid]=jscript
+
+                        except Exception,e:                                                
+                            agentid=j.application.getAgentId()
+                            if jscript<>None:
+                                msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
+                            else:
+                                msg="could not compile jscriptid:%s on agent:%s.\nError:%s"%(job.jscriptid,agentid,e)
+                            eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                            eco.errormessage = msg
+                            eco.code=jscript.source
+                            eco.jid = job.guid
+                            eco.category = 'workers.compilescript'
+                            j.errorconditionhandler.processErrorConditionObject(eco)
                             job.state="ERROR"
+                            eco.tb = None
+                            job.result=eco.__dict__
+                            # j.events.bug_warning(msg,category="worker.jscript.notcompile")
+                            # self.loghandler.logECO(eco)
                             self.notifyWorkCompleted(job)
                             continue
 
-                        if jscript.organization<>"" and jscript.name<>"" and jscript.id<1000000:
-                            #this is to make sure when there is a new version of script since we launched this original script we take the newest one
-                            jscript=w.getJumpscriptFromName(jscript.organization,jscript.name)
-                            job.jscriptid=jscript.id
-                            #result is method action
-
-                        jscript.write()
-                        jscript.load()
-
                         self.actions[job.jscriptid]=jscript
 
-                    except Exception,e:                                                
+                    self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
+
+                    j.logger.enabled = job.log
+
+                    status, result=jscript.executeInWorker(**job.args)
+                    j.logger.enabled = True
+                    if status:
+                        job.result=result
+                        job.state="OK"
+                        job.resultcode=0
+                    else:
+                        eco = result
                         agentid=j.application.getAgentId()
-                        if jscript<>None:
-                            msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
-                        else:
-                            msg="could not compile jscriptid:%s on agent:%s.\nError:%s"%(job.jscriptid,agentid,e)
-                        eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                        msg="Could not execute jscript:%s %s_%s on agent:%s\nError: %s"%(jscript.id,jscript.organization,jscript.name,agentid, eco.errormessage)
                         eco.errormessage = msg
+                        eco.jid = job.guid
                         eco.code=jscript.source
-                        eco.jid = job.id
-                        eco.category = 'workers.compilescript'
-                        j.errorconditionhandler.processErrorConditionObject(eco)
+                        eco.category = "workers.executejob"
+
+                        out=""
+                        tocheck=["\"worker.py\"","jscript.executeInWorker","return self.module.action","JumpscriptFactory.py"]
+                        for line in eco.backtrace.split("\n"):
+                            found=False
+                            for check in tocheck:
+                                if line.find(check)<>-1:
+                                    found=True
+                                    break
+                            if found==False:
+                                out+="%s\n"%line
+
+                        eco.backtrace=out
+
+                        if job.id<1000000 and job.errorreport==True:
+                            j.errorconditionhandler.processErrorConditionObject(eco)
+                        else:
+                            print eco
+                        # j.events.bug_warning(msg,category="worker.jscript.notexecute")
+                        # self.loghandler.logECO(eco)
                         job.state="ERROR"
                         eco.tb = None
                         job.result=eco.__dict__
-                        # j.events.bug_warning(msg,category="worker.jscript.notcompile")
-                        # self.loghandler.logECO(eco)
-                        self.notifyWorkCompleted(job)
-                        continue
+                        job.resultcode=1
 
-                    self.actions[job.jscriptid]=jscript
-
-                self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
-
-                j.logger.enabled = job.log
-
-                status, result=jscript.executeInWorker(**job.args)
-                j.logger.enabled = True
-                if status:
-                    job.result=result
-                    job.state="OK"
-                    job.resultcode=0
-                else:
-                    eco = result
-                    agentid=j.application.getAgentId()
-                    msg="Could not execute jscript:%s %s_%s on agent:%s\nError: %s"%(jscript.id,jscript.organization,jscript.name,agentid, eco.errormessage)
-                    eco.errormessage = msg
-                    eco.jid = job.id
-                    eco.code=jscript.source
-                    eco.category = "workers.executejob"
-
-                    out=""
-                    tocheck=["\"worker.py\"","jscript.executeInWorker","return self.module.action","JumpscriptFactory.py"]
-                    for line in eco.backtrace.split("\n"):
-                        found=False
-                        for check in tocheck:
-                            if line.find(check)<>-1:
-                                found=True
-                                break
-                        if found==False:
-                            out+="%s\n"%line
-
-                    eco.backtrace=out
-
-                    if job.id<1000000 and job.errorreport==True:
-                        j.errorconditionhandler.processErrorConditionObject(eco)
-                    else:
-                        print eco
-                    # j.events.bug_warning(msg,category="worker.jscript.notexecute")
-                    # self.loghandler.logECO(eco)
-                    job.state="ERROR"
-                    eco.tb = None
-                    job.result=eco.__dict__
-                    job.resultcode=1
-
-                #ok or not ok, need to remove from queue test
-                #thisin queue test is done to now execute script multiple time
-                self.redis.hdel("workers:inqueuetest",jscript.getKey())
-                self.notifyWorkCompleted(job)
+                    #ok or not ok, need to remove from queue test
+                    #thisin queue test is done to now execute script multiple time
+                    self.redis.hdel("workers:inqueuetest",jscript.getKey())
+                    self.notifyWorkCompleted(job)
+                finally:
+                    j.application.jid = 0
 
 
     def notifyWorkCompleted(self,job):

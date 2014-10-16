@@ -11,6 +11,8 @@ def main(j, args, params, tags, tasklet):
             filters['from_'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'gte'}
         elif tag == 'to' and val:
             filters['to'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
+        elif tag in ('gid', 'nid') and val:
+            filters[tag] = int(val)
         elif val:
             filters[tag] = val
 
@@ -23,11 +25,17 @@ def main(j, args, params, tags, tasklet):
     def cleanUp(row, field):
         return j.html.escape(row[field])
 
-    nidstr = '[%(nid)s|/grid/node?id=%(nid)s]'
-    pidstr = '[%(pid)s|/grid/process?id=%(pid)s]'
+    def pidStr(row, field):
+        if row[field]:
+            return '[%(pid)s|/grid/process?id=%(pid)s]' % row
+        else:
+            return ''
+
+
+    nidstr = '[%(nid)s|/grid/node?id=%(nid)s&gid=%(gid)s]'
     jidstr = '[%(jid)s|/grid/job?id=%(jid)s]'
     fieldids = ['epoch', 'appname', 'category', 'message', 'level', 'pid', 'nid', 'jid']
-    fieldvalues = [makeTime, 'appname', 'category', cleanUp, 'level', pidstr, nidstr, jidstr]
+    fieldvalues = [makeTime, 'appname', 'category', cleanUp, 'level', pidStr, nidstr, jidstr]
     tableid = modifier.addTableForModel('system', 'log', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
     modifier.addSorting('#%s' % tableid, 0, 'desc')

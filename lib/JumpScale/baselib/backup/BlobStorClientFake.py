@@ -2,6 +2,9 @@ from JumpScale import j
 import lzma
 import msgpack
 import os
+import requests
+import JumpScale.baselib.redis
+from weed.master import WeedMaster
 try:
     import ujson as json
 except:
@@ -14,7 +17,7 @@ class BlobStorClientFake:
     client to blobstormaster
     """
 
-    def __init__(self, master,domain,namespace):        
+    def __init__(self, master='',domain='',namespace=''):
         self.master=master
         self.domain=domain
         self.namespace=namespace
@@ -35,6 +38,11 @@ class BlobStorClientFake:
 
         self.errors=[]
 
+        self.redis = j.clients.redis.getRedisClient('localhost', 7766)
+        #weedfs_host = j.application.config.get('weedfs.host', default='127.0.0.1')
+        #weedfs_port = j.application.config.get('weedfs.port', default=9333)
+        self.weed_master = WeedMaster()
+
     def _normalize(self, path):
         path=path.replace("'","\\'")
         path=path.replace("[","\\[")
@@ -45,9 +53,12 @@ class BlobStorClientFake:
     def set(self,key, data,repoid=0,sync=True,timeout=60,serialization=""):
         """
         """
-        #use ledis & weedfs
-        #key is md5, use ledis to have link between md5 & key on weedfs
-        pass
+        assign_key = self.weed_master.get_assign_key()
+        volume_id, _ = assign_key['fid'].split(',')
+        file_id = ','.join([volume_id, key])
+        files = {'file': (key, data)}
+        r = requests.post('http://%s/%s' % (assign_key['publicUrl'], file_id), files=files)
+        return file_id
 
     def sync(self):
         """
@@ -70,34 +81,45 @@ class BlobStorClientFake:
             pass
             #self.exists...
 
-    def exists(self,key,repoid=0,replicaCheck=False):
+    def _exists(self,key,parent,repoid=0,replicaCheck=False):
         """
         Checks if the blobstor contains an entry for the given key
         @param key: key to Check
         @replicaCheck if True will check that there are enough replicas (not implemented)
         the normal check is just against the metadata stor on the server, so can be data is lost
         """
-        #check against ledis
+        for l in (k for k in self.redis.keys('files:*') if parent != k.split(':')[1]):
+            if key in self.redis.lrange(l, 0, -1):
+                return True
+        return False
 
+    def exists(self, key):
+        '''Checks if a file or dir exists'''
+        for l in (k for k in self.redis.keys('files:*')):
+            if key == l.split(':')[1]:
+                return True
+        return False
 
     def getMD(self,key):
         #not sure what this is
+        pass
 
     def delete(self,key, repoid=0,force=False):
         #mark in table in ledis
         ##as hset: bloblstor:todelete:$repoid:$key and inside the webdisk key
         ##this will allow us to delete later
         #delete in ledis, do not delete in weedfs
+        pass
 
 
     def deleteNamespace(self):
         pass
 
-    def _dump2stor(self, data,key="",repoid=0,compress=None):
+    def _dump2stor(self, data,key="",repoid=0,compress=None,parent=None):
         if len(data)==0:
             return ""
         if key=="":
-            key = j.tools.hash.md5_string(data)
+            key = j.tools.hash.sha1_string(data)
         if compress==True or (len(data)>self._compressMin and self.compress):
             compress=self.compress
             # print "compress"
@@ -106,7 +128,13 @@ class BlobStorClientFake:
             serialization="L"
         else:
             serialization=""
-        self.set(key=key, data=data,repoid=repoid,serialization=serialization,sync=False)
+        file_id = None
+        if not self._exists(key, parent):
+            file_id = self.set(key=key, data=data,repoid=repoid,serialization=serialization,sync=False)
+        else:
+            print 'Chunk %s already exists on weedfs' % key
+        if parent and file_id:
+            self.redis.rpush('files:%s' % parent, file_id)
         return key
 
     def _read_file(self,path, block_size=0):
@@ -133,99 +161,31 @@ class BlobStorClientFake:
         return key
 
     def downloadDir(self,key,dest,repoid=0,compress=None):
+        tarpath = "/tmp/%s.tar" % key
+        self.downloadFile(key, tarpath)
         j.system.fs.removeDirTree(dest)
         j.system.fs.createDir(dest)
-        name="backup_md_%s"%j.base.idgenerator.generateRandomInt(1,100000)
-        tarpath="/tmp/%s.tar"%name
-        self.downloadFile(key,tarpath,False,repoid=repoid)
-        if compress:
-            cmd="cd %s;tar xzf %s"%(dest,tarpath)
-        else:
-            cmd="cd %s;tar xf %s"%(dest,tarpath)
+        cmd = "cd %s; tar xf %s" % (dest, tarpath)
         j.system.process.execute(cmd)
         j.system.fs.remove(tarpath)
 
     def uploadFile(self,path,key="",repoid=0,compress=None):        
         if key=="":
             key=j.tools.hash.md5(path)
-        if j.system.fs.statPath(path).st_size>self._MB4:
-            hashes=[]
-            # print "upload file (>4MB) %s"%(path)
+        if not self.exists(key):
             for data in self._read_file(path):
-                hashes.append(self._dump2stor(data,repoid=repoid,compress=compress))
-            if len(hashes)>1:
-                out = "##HASHLIST##\n"
-                hashparts = "\n".join(hashes)
-                out += hashparts
-                # Store in blobstor
-                # out_hash = self._dump2stor(out,key=md5) #hashlist is stored on md5 location of file
-                self.set(key=key, data=out,repoid=repoid)   
-            else:
-                raise RuntimeError("hashist needs to be more than 1.")
+                self._dump2stor(data,repoid=repoid,compress=compress,parent=key)
         else:
-            # print "upload file (<4MB) %s"%(path)
-            for data in self._read_file(path):
-                self._dump2stor(data,key=key,repoid=repoid,compress=compress)
+            print 'Key: %s already exists' % key
         return key
 
     def downloadFile(self,key,dest,link=False,repoid=0, chmod=0,chownuid=0,chowngid=0,sync=False,size=0):
-
-        if self.cachepath<>"":
-            blob_path = self._getBlobCachePath(key)
-            if j.system.fs.exists(blob_path):
-                # Blob exists in cache, we can get it from there!
-                print "Blob FOUND in cache: %s" % blob_path
-                if link:
-                    self._link(blob_path,dest)
-                else:
-                    j.system.fs.copyFile(blob_path, dest)
-                    os.chmod(dest, chmod)
-                    os.chown(dest, chownuid, chowngid)
-                return
-
-        if self._downloadbatchSize>self.maxqueuedatasize or len(self._downloadbatch)>200:
-            self.downloadBatch()
-
-        #now normally on server we should have results ready
-
-        if size<>0 and sync==False:
-            jid=self.get( key,repoid=repoid,sync=False)
-            # print [jid,key,dest,link,repoid,chmod,chownuid,chowngid]
-            self._downloadbatch[jid]=(jid,key,dest,link,repoid,chmod,chownuid,chowngid)
-            self._downloadbatchSize+=int(size)
-        else:
-            # Get blob from blobstor2 
-            if key<>"":
-                key,serialization,blob = self.get( key,repoid=repoid,sync=True)
-                self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
-
-
-    # def downloadBatch(self):
-    #     self._send()        
-    #     jids=self._downloadbatch.keys()
-    #     self.blobstor._cmdchannel.send_multipart([msgpack.dumps([[0,"getresults",{},jids]]),"S",str(60),self.blobstor.sessionkey])
-    #     res= self.blobstor._cmdchannel.recv_multipart()
-       
-    #     for item in res:
-    #         if item=="":
-    #             continue
-    #         else:                
-    #             jid,rcode,result=msgpack.loads(item)
-    #             if rcode==0:
-    #                 jid,key,dest,link,repoid,chmod,chownuid,chowngid=self._downloadbatch[jid]
-    #                 key2=result[0]
-    #                 if key2<>key:
-    #                     raise RuntimeError("Keys need to be the same")
-    #                 blob=result[2]
-    #                 serialization=result[1]
-                    
-    #                 self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
-    #             else:
-    #                 ##TODO
-    #                 pass
-
-    #     self._downloadbatchSize=0
-    #     self._downloadbatch={}
+        chunks_keys = self.redis.lrange('files:%s' % key, 0, -1)
+        j.system.fs.touch(dest)
+        for chunk_key in chunks_keys:
+            wv = self.weed_master.get_volume(chunk_key)
+            chunk_data = wv.get_file(chunk_key)
+            j.system.fs.writeFile(dest, chunk_data, True)
             
     def _downloadFilePhase2(self,blob,dest,key,chmod,chownuid,chowngid,link,serialization):
         if key=="":

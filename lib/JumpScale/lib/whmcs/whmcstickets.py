@@ -79,13 +79,12 @@ class whmcstickets():
 
 
     def get_ticket(self, ticketid):
-        print 'Closing %s' % ticketid
+        print 'Getting %s' % ticketid
         ticket_request_params = dict(
 
-                    action = 'updateclient',
+                    action = 'getticket',
                     responsetype = 'json',
                     ticketid = ticketid,
-                    status = 'Closed',
                     noemail = True,
                     skipvalidation= True
 

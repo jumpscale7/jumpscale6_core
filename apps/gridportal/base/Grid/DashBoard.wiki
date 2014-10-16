@@ -20,7 +20,7 @@ h4. Links
 
 
 |Performance Dashboard|Events Dashboard|
-|[Grid Nodes|/grid/nodes]|[Failed Jobs|/grid/jobs?state=error]|
+|[Grid Nodes|/grid/nodes]|[Failed Jobs|/grid/jobs?state=ERROR]|
 @divend 
 @col 6
 @divend 
