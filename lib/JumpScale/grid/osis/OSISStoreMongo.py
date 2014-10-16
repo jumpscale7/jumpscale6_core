@@ -301,7 +301,7 @@ class OSISStoreMongo(OSISStore):
                                 mongoquery[k] = {operatormap[operator]: val}
                     if 'wildcard' in queryitem:
                         for k, v in queryitem['wildcard'].iteritems():
-                            mongoquery[k] = {'$regex': '.*%s.*' % str(v).replace('*', '')}
+                            mongoquery[k] = {'$regex': '.*%s.*' % str(v).replace('*', ''), '$options':'i'}
                     if 'terms' in queryitem:
                         for k, v in queryitem['terms'].iteritems():
                             mongoquery[k] = {'$in': v}

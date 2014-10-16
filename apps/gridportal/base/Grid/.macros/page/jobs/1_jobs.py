@@ -24,6 +24,8 @@ def main(j, args, params, tags, tasklet):
             filters['category'] = val
         elif tag == 'name':
             filters['cmd'] = val
+        elif tag in ('nid', 'gid') and val:
+            filters[tag] = int(val)
         elif val:
             filters[tag] = val
 

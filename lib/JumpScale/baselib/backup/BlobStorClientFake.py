@@ -88,12 +88,17 @@ class BlobStorClientFake:
         @replicaCheck if True will check that there are enough replicas (not implemented)
         the normal check is just against the metadata stor on the server, so can be data is lost
         """
-        for l in [k for k in self.redis.keys('files:*') if parent != k.split(':')[1]]:
+        for l in (k for k in self.redis.keys('files:*') if parent != k.split(':')[1]):
             if key in self.redis.lrange(l, 0, -1):
                 return True
         return False
 
-
+    def exists(self, key):
+        '''Checks if a file or dir exists'''
+        for l in (k for k in self.redis.keys('files:*')):
+            if key == l.split(':')[1]:
+                return True
+        return False
 
     def getMD(self,key):
         #not sure what this is
@@ -156,83 +161,31 @@ class BlobStorClientFake:
         return key
 
     def downloadDir(self,key,dest,repoid=0,compress=None):
+        tarpath = "/tmp/%s.tar" % key
+        self.downloadFile(key, tarpath)
         j.system.fs.removeDirTree(dest)
         j.system.fs.createDir(dest)
-        name="backup_md_%s"%j.base.idgenerator.generateRandomInt(1,100000)
-        tarpath="/tmp/%s.tar"%name
-        self.downloadFile(key,tarpath,False,repoid=repoid)
-        if compress:
-            cmd="cd %s;tar xzf %s"%(dest,tarpath)
-        else:
-            cmd="cd %s;tar xf %s"%(dest,tarpath)
+        cmd = "cd %s; tar xf %s" % (dest, tarpath)
         j.system.process.execute(cmd)
         j.system.fs.remove(tarpath)
 
     def uploadFile(self,path,key="",repoid=0,compress=None):        
         if key=="":
             key=j.tools.hash.md5(path)
-        for data in self._read_file(path):
-            self._dump2stor(data,repoid=repoid,compress=compress,parent=key)
+        if not self.exists(key):
+            for data in self._read_file(path):
+                self._dump2stor(data,repoid=repoid,compress=compress,parent=key)
+        else:
+            print 'Key: %s already exists' % key
         return key
 
     def downloadFile(self,key,dest,link=False,repoid=0, chmod=0,chownuid=0,chowngid=0,sync=False,size=0):
-
-        if self.cachepath<>"":
-            blob_path = self._getBlobCachePath(key)
-            if j.system.fs.exists(blob_path):
-                # Blob exists in cache, we can get it from there!
-                print "Blob FOUND in cache: %s" % blob_path
-                if link:
-                    self._link(blob_path,dest)
-                else:
-                    j.system.fs.copyFile(blob_path, dest)
-                    os.chmod(dest, chmod)
-                    os.chown(dest, chownuid, chowngid)
-                return
-
-        if self._downloadbatchSize>self.maxqueuedatasize or len(self._downloadbatch)>200:
-            self.downloadBatch()
-
-        #now normally on server we should have results ready
-
-        if size<>0 and sync==False:
-            jid=self.get( key,repoid=repoid,sync=False)
-            # print [jid,key,dest,link,repoid,chmod,chownuid,chowngid]
-            self._downloadbatch[jid]=(jid,key,dest,link,repoid,chmod,chownuid,chowngid)
-            self._downloadbatchSize+=int(size)
-        else:
-            # Get blob from blobstor2 
-            if key<>"":
-                key,serialization,blob = self.get( key,repoid=repoid,sync=True)
-                self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
-
-
-    # def downloadBatch(self):
-    #     self._send()        
-    #     jids=self._downloadbatch.keys()
-    #     self.blobstor._cmdchannel.send_multipart([msgpack.dumps([[0,"getresults",{},jids]]),"S",str(60),self.blobstor.sessionkey])
-    #     res= self.blobstor._cmdchannel.recv_multipart()
-       
-    #     for item in res:
-    #         if item=="":
-    #             continue
-    #         else:                
-    #             jid,rcode,result=msgpack.loads(item)
-    #             if rcode==0:
-    #                 jid,key,dest,link,repoid,chmod,chownuid,chowngid=self._downloadbatch[jid]
-    #                 key2=result[0]
-    #                 if key2<>key:
-    #                     raise RuntimeError("Keys need to be the same")
-    #                 blob=result[2]
-    #                 serialization=result[1]
-                    
-    #                 self._downloadFilePhase2(blob,dest,key,chmod,chownuid,chowngid,link,serialization)
-    #             else:
-    #                 ##TODO
-    #                 pass
-
-    #     self._downloadbatchSize=0
-    #     self._downloadbatch={}
+        chunks_keys = self.redis.lrange('files:%s' % key, 0, -1)
+        j.system.fs.touch(dest)
+        for chunk_key in chunks_keys:
+            wv = self.weed_master.get_volume(chunk_key)
+            chunk_data = wv.get_file(chunk_key)
+            j.system.fs.writeFile(dest, chunk_data, True)
             
     def _downloadFilePhase2(self,blob,dest,key,chmod,chownuid,chowngid,link,serialization):
         if key=="":
