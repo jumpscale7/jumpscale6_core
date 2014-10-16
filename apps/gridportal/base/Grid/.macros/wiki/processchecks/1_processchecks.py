@@ -9,7 +9,7 @@ def main(j, args, params, tags, tasklet):
     out = list()
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7768)
 
-    out.append('||Node ID||Node Name||Process Manager Status||Details||')
+    out.append('||Grid ID||Node ID||Node Name||Process Manager Status||Details||')
     data = rediscl.hget('healthcheck:monitoring', 'results')
     errors = rediscl.hget('healthcheck:monitoring', 'errors')
     data = ujson.loads(data) if data else dict()
@@ -23,8 +23,9 @@ def main(j, args, params, tags, tasklet):
             else:
                 runningstring = '{color:green}*RUNNING*{color}'
             status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
-            link = '[Details|nodestatus?nid=%s&gid=%s]' % (nid, j.core.grid.healthchecker.getGID(nid)) if status['state'] == 'RUNNING' else ''
-            out.append('|[%s|node?id=%s&gid=%s]|%s|%s|%s|' % (nid, nid, j.core.grid.healthchecker.getGID(nid), j.core.grid.healthchecker.getName(nid), runningstring, link))
+            gid = j.core.grid.healthchecker.getGID(nid)
+            link = '[Details|nodestatus?nid=%s&gid=%s]' % (nid, gid) if status['state'] == 'RUNNING' else ''
+            out.append('|%s|[%s|node?id=%s&gid=%s]|%s|%s|%s|' % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid), runningstring, link))
 
     if len(errors) > 0:
         for nid, checks in errors.iteritems():
@@ -32,7 +33,8 @@ def main(j, args, params, tags, tasklet):
                 continue
             status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             if status and status['state'] != 'RUNNING':
-                out.append("|[%s|node?id=%sgid=%s]|%s|{color:red}*HALTED*{color}| |" % (nid, nid, j.core.grid.healthchecker.getGID(nid), j.core.grid.healthchecker.getName(nid)))
+                gid = j.core.grid.healthchecker.getGID(nid)
+                out.append("|%s|[%s|node?id=%sgid=%s]|%s|{color:red}*HALTED*{color}| |" % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid)))
 
     out = '\n'.join(out)
     params.result = (out, doc)
