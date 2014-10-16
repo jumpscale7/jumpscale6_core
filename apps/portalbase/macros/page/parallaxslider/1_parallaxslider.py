@@ -1,6 +1,5 @@
 from itertools import count
 import os
-import requests
 
 def main(j, args, params, *other_args):
     params.result = page = args.page
@@ -9,8 +8,6 @@ def main(j, args, params, *other_args):
             position: relative;
         }
         .parallax-container .title{
-            font-family:"Beau Sans Pro Book", Verdana, sans-serif;
-            font-size-adjust:0.531;
             font-weight:500;
             font-style:normal;
         }
@@ -34,8 +31,6 @@ def main(j, args, params, *other_args):
         }
         .parallax-container .textblock-body{
             margin: 0 0 20px 0; 
-            font-family:"Proxima Nova Light", 'Helvetica Neue', Arial, Helvetica, sans-serif;
-            font-size-adjust:0.488;
             font-weight:200;
             font-style:normal;
         }

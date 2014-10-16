@@ -1,6 +1,5 @@
 from itertools import count
 import os
-import requests
 
 def main(j, args, params, *other_args):
     params.result = page = args.page
