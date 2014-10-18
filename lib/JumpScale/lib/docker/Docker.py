@@ -315,17 +315,18 @@ class Docker():
         if res["Warnings"]<>None:
             raise RuntimeError("Could not create docker, res:'%s'"%res)
 
-        from IPython import embed
-        print "DEBUG NOW uuu"
-        embed()
-        
-        
         id=res["Id"]
         
         res=self.client.start(container=id, binds=binds, port_bindings=portsdict, lxc_conf=None, \
             publish_all_ports=False, links=None, privileged=False, dns=nameserver, dns_search=None, volumes_from=None, network_mode=None)
 
-        print res
+        for internalport,extport in portsdict.iteritems():
+            if internalport==22:
+                print "test docker internal port:22 on ext port:%s"%extport
+                if j.system.net.waitConnectionTest("loclhost",extport,timeout=2)==False:
+                    cmd="docker logs %s"%name
+                    rc,log=j.system.process.execute(cmd)
+                    j.events.opserror_critical("Could not connect to external port on docker:'%s', docker prob not running.\nStartuplog:\n%s\n"%(extport,log),category="docker.create")            
          
         self.pushSSHKey(name)
 
