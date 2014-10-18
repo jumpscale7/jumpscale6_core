@@ -89,18 +89,10 @@ class JPackageObject():
         self.export = self.hrd.getBool("jp.export")
         self.autobuild = self.hrd.getBool("jp.autobuild")
         self.taskletsChecksum = self.hrd.get("jp.taskletschecksum")
-        try:
-            self.descrChecksum = self.hrd.get("jp.descrchecksum")
-        except:
-            hrd = self.hrd.getHrd("").getHRD("jp.name")
-            hrd.set("jp.descrchecksum","")
-            self.descrChecksum = self.hrd.get("jp.descrchecksum")
-        try:
-            self.hrdChecksum = self.hrd.get("jp.hrdchecksum")
-        except:
-            hrd = self.hrd.getHrd("").getHRD("jp.name")
-            hrd.set("jp.hrdchecksum","")
-            self.hrdChecksum = self.hrd.get("jp.hrdchecksum")
+
+        self.descrChecksum = self.hrd.get("jp.descrchecksum",default="")
+
+        self.hrdChecksum = self.hrd.get("jp.hrdchecksum",default="")
 
         self.supportedPlatforms = self.hrd.getList("jp.supportedplatforms")
 

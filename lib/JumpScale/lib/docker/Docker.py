@@ -308,19 +308,17 @@ class Docker():
         # mem=1000000
         print "install docker with name '%s'"%base
 
-        try:
-            res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
+        res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
                 detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
                 network_disabled=False, name=name, entrypoint=None, cpu_shares=cpu, working_dir=None, domainname=None, memswap_limit=0)
-        except Exception,e:
-            if str(e).find("is already assigned to")<>-1:
-                print "remove docker before creation"
-                cmd="docker rm kds"
-                j.system.process.executeWithoutPipe(cmd)
-                res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
-                    detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
-                    network_disabled=False, name=name, entrypoint=None, cpu_shares=cpu, working_dir=None, domainname=None, memswap_limit=0)
-                raise RuntimeError("Error when creating docker:%s"%e)
+
+        if res["Warnings"]<>None:
+            raise RuntimeError("Could not create docker, res:'%s'"%res)
+
+        from IPython import embed
+        print "DEBUG NOW uuu"
+        embed()
+        
         
         id=res["Id"]
         
@@ -411,6 +409,9 @@ class Docker():
             idd=running[name]    
             self.client.kill(idd)
             self.client.remove_container(idd)
+
+        cmd="docker rm %s"%name
+        j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
 
     def stop(self,name):
         running=self.list()        
