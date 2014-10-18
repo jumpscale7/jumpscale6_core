@@ -241,7 +241,11 @@ class Worker(object):
             self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
             w.redis.rpush("workers:return:%s"%job.id,time.time())            
         else:
-            acclient = self.getClient(job)
+            try:
+                acclient = self.getClient(job)
+            except Exception,e:
+                j.events.opserror("could not report job in error to agentcontroller", category='workers.errorreporting', e=e)
+                return
             #jumpscripts coming from AC
             if job.state<>"OK":
                 try:
