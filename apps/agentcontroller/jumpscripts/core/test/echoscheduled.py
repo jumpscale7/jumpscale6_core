@@ -4,7 +4,7 @@ descr = """
 This jumpscript echos back (test)
 """
 
-name = "echo"
+name = "echo_scheduled"
 category = "test"
 organization = "jumpscale"
 author = "kristof@incubaid.com"
