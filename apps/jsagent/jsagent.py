@@ -175,7 +175,6 @@ class ProcessManager():
             j.application.config.set("grid.master.ip",acip)
             if aclogin=="root":
                 j.application.config.set("grid.master.superadminpasswd",acpasswd)
-            self.acclient=j.clients.agentcontroller.getByInstance('main')
 
             jp=j.packages.findNewest("jumpscale","webdis_client")
             if reset or not jp.isInstalled(instance="main"):                
@@ -189,6 +188,7 @@ class ProcessManager():
             jp=j.packages.findNewest("jumpscale","agentcontroller_client")
             if reset or not jp.isInstalled(instance="main"):
                 jp.install(hrddata={"agentcontroller.client.addr":acip,"agentcontroller.client.port":4444,"agentcontroller.client.login":aclogin},instance="main",reinstall=reset)
+            self.acclient=j.clients.agentcontroller.getByInstance('main')
         
     def start(self):
 
