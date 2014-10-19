@@ -3,7 +3,6 @@
 from JumpScale import j
 
 j.application.start("jumpscale:workertest")
-# j.application.initGrid()
 
 import JumpScale.baselib.redisworker
 
@@ -24,6 +23,5 @@ def test1():
 print w.getQueuedJobs()
 
 test1()
-
 
 j.application.stop()
