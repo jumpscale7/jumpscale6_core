@@ -3,12 +3,11 @@ import gevent
 import ujson
 from redis import Redis
 # from rq import Queue
-import JumpScale.baselib.redisworker
+# import JumpScale.baselib.redisworker
 import crontab
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
-class JumpscriptsCmds():
-    
+class JumpscriptsCmds():    
 
     def __init__(self,daemon=None):
         self.ORDER = 1
@@ -55,7 +54,7 @@ class JumpscriptsCmds():
             self._configureScheduling()
             self._startAtBoot()
 
-        j.core.processmanager.restartWorkers()
+        # j.core.processmanager.restartWorkers() #no longer relevant
 
         return "ok"
 

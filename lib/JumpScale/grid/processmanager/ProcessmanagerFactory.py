@@ -41,19 +41,23 @@ class ProcessmanagerFactory:
         self.daemon = DummyDaemon()
         self.basedir = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager')
         j.system.platform.psutil = psutil
-        self._redisprocessmanager = None
+
+        if j.__dict__.has_key("processmanager") and j.processmanager.__dict__.has_key("redis_queues"):
+            self.redis=j.processmanager.redis_mem
+        else:
+            self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 9999)
 
         #check we are not running yet, if so kill the other guy
         #make sure no service running with processmanager
         # j.system.process.checkstop("sudo stop processmanager","processmanager.py",nrinstances=1) #@todo
     
-    @property
-    def redisprocessmanager(self):
-        if not self._redisprocessmanager:
-            if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-                raise RuntimeError("Could not start processmanager, redis not found on 7766")
-            self._redisprocessmanager = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
-        return self._redisprocessmanager
+    # @property
+    # def redisprocessmanager(self):
+    #     if not self._redisprocessmanager:
+    #         if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+    #             raise RuntimeError("Could not start processmanager, redis not found on 7766")
+    #         self._redisprocessmanager = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+    #     return self._redisprocessmanager
 
     def start(self):
         # #check redis is there if not try to start
@@ -61,25 +65,26 @@ class ProcessmanagerFactory:
         #     j.packages.findNewest(name="redis").install()
         #     j.packages.findNewest(name="redis").start()
 
-        wait=1
-        while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-            msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 7766)"    
-            print msg
-            j.events.opserror(msg, category='processmanager.startup')    
-            if wait<60:
-                wait+=1
-            time.sleep(wait)
+        # wait=1
+        # while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+        #     msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 7766)"    
+        #     print msg
+        #     j.events.opserror(msg, category='processmanager.startup')    
+        #     if wait<60:
+        #         wait+=1
+        #     time.sleep(wait)
 
-        wait=1
-        while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
-            msg= "cannot connect to redis main, will keep on trying forever, please start redis production (port 7768)"    
-            print msg
-            j.events.opserror(msg, category='processmanager.startup')    
-            if wait<60:
-                wait+=1
-            time.sleep(wait)
+        # wait=1
+        # while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+        #     msg= "cannot connect to redis main, will keep on trying forever, please start redis production (port 7768)"    
+        #     print msg
+        #     j.events.opserror(msg, category='processmanager.startup')    
+        #     if wait<60:
+        #         wait+=1
+        #     time.sleep(wait)
 
-        self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+        # self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", 9999)
+        # self.redis=j.processmanager.redis_mem
 
         wait=1
 
@@ -95,7 +100,7 @@ class ProcessmanagerFactory:
         j.clients.redisworker.deleteProcessQueue()
         # j.clients.redisworker.deleteJumpscripts() #CANNOT DO NOW BECAUSE ARE STILL RELYING ON ID's so could be someone still wants to execute
 
-        self.redisprocessmanager.set("processmanager:startuptime",str(int(time.time())))
+        self.redis.set("processmanager:startuptime",str(int(time.time())))
 
         self.starttime=j.base.time.getTimeEpoch()
 
@@ -115,16 +120,16 @@ class ProcessmanagerFactory:
                 found=True
         return found
 
-    def restartWorkers(self):
+    # def restartWorkers(self):
 
-        for worker in [item for item in j.tools.startupmanager.listProcesses() if item.find("workers")==0]:
-            domain,name=worker.split("__")
-            pdef=j.tools.startupmanager.getProcessDef(domain,name)
-            for nr in range(1,pdef.numprocesses+1):
-                workername="%s_%s"%(pdef.name,nr)
-                self.redisprocessmanager.set("workers:action:%s"%workername,"STOP")
-                if not self.redisprocessmanager.hexists("workers:watchdog",workername):
-                    self.redisprocessmanager.hset("workers:watchdog",workername,0)
+    #     for worker in [item for item in j.tools.startupmanager.listProcesses() if item.find("workers")==0]:
+    #         domain,name=worker.split("__")
+    #         pdef=j.tools.startupmanager.getProcessDef(domain,name)
+    #         for nr in range(1,pdef.numprocesses+1):
+    #             workername="%s_%s"%(pdef.name,nr)
+    #             self.redisprocessmanager.set("workers:action:%s"%workername,"STOP")
+    #             if not self.redisprocessmanager.hexists("workers:watchdog",workername):
+    #                 self.redisprocessmanager.hset("workers:watchdog",workername,0)
 
     def getCmdsObject(self,category):
         if self.cmds.has_key(category):
@@ -175,7 +180,7 @@ class ProcessmanagerFactory:
                 self.monObjects.__dict__[name.lower()]=factory   
 
     def getStartupTime(self):
-        val=self.redisprocessmanager.get("processmanager:startuptime")
+        val=self.redis.get("processmanager:startuptime")
         return int(val)
 
     def checkStartupOlderThan(self,secago):

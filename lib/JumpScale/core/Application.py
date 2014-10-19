@@ -202,15 +202,16 @@ class Application:
 
         #@todo this SHOULD BE WORKING AGAIN, now processes are never removed
 
-        if self.gridInitialized:
-            client=j.core.osis.getClient(user='root')            
-            clientprocess=j.core.osis.getClientForCategory(client,"system","process")
-            key = "%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.pid)
-            if clientprocess.exists(key):
-                obj=clientprocess.get(key)
-                obj.epochstop=j.base.time.getTimeEpoch()
-                obj.active=False
-                clientprocess.set(obj)
+        # if self.gridInitialized:
+        #     client=j.core.osis.getClient(user='root')            
+        #     clientprocess=j.core.osis.getClientForCategory(client,"system","process")
+        #     key = "%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.pid)
+        #     if clientprocess.exists(key):
+        #         obj=clientprocess.get(key)
+        #         obj.epochstop=j.base.time.getTimeEpoch()
+        #         obj.active=False
+        #         clientprocess.set(obj)
+
         sys.exit(exitcode)
 
     def _exithandler(self):

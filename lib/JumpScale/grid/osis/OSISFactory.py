@@ -140,6 +140,9 @@ class OSISFactory:
                     passwd=hrd.get("osis.client.passwd")
                 port=int(hrd.get("osis.client.port"))
 
+        if passwd=="EMPTY":
+            passwd=""
+
         if ipaddr<>None:
             ips = [ipaddr]
         elif j.application.config.exists('osis.ip'):
@@ -179,7 +182,7 @@ class OSISFactory:
             ipaddr=hrd.get("osis.client.addr")
             port=int(hrd.get("osis.client.port"))
             user=hrd.get("osis.client.login")
-            passwd=hrd.get("osis.client.passwd")
+            passwd=hrd.get("osis.client.passwd")            
             return self.getClient(ipaddr=ipaddr, port=port, user=user, passwd=passwd, ssl=ssl, gevent=gevent)
         if die:
             j.events.inputerror_critical("Could not find osis_client with instance:%s, could not load osis,"%instance)
