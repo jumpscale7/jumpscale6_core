@@ -171,6 +171,10 @@ class ProcessManager():
             j.application.config.set("grid.node.id",nid)
             j.application.config.set("grid.id",res["node"]["gid"])
             j.application.config.set("grid.node.machineguid",j.application.getUniqueMachineId())
+            j.application.config.set("grid.master.ip",acip)
+            if aclogin=="root":
+                j.application.config.set("grid.master.superadminpasswd",acpasswd)
+            
             self.aclient=j.clients.agentcontroller.getByInstance('main')
 
             jp=j.packages.findNewest("jumpscale","webdis_client")
