@@ -16,6 +16,7 @@ class ProcessDefEmpty:
         self.autostart=False
         self.path=""
         self.pids=[]
+        self.parentpid=0
         self.procname=name
         if name.find(":")<>-1:
             domain,name=name.split(":")
@@ -43,6 +44,7 @@ class ProcessDefEmpty:
         self.jpackage_instance=""
         self.lastCheck=int(time.time())
         self.upstart = False
+        self.inprocessmanager=False #mans will be dealt with by our own processmanager
         self.processfilterstr=""
         self.system=True
         self.isRunning()
@@ -739,7 +741,7 @@ class StartupManager:
                 result.append(pd.domain)
         return result
 
-    def startJPackage(self,jpackage):
+    def startJPackage(self,jpackage):        
         for pd in self.getProcessDefs4JPackage(jpackage):
             pd.start()
 
@@ -755,7 +757,12 @@ class StartupManager:
         result=[]
         
         for pd in self.getProcessDefs():
-            if pd.jpackage_name==jpackage.name and pd.jpackage_domain==jpackage.domain:# and pd.jpackage_instance==jpackage.instance:
+            if pd.jpackage_name==jpackage.name and pd.jpackage_domain==jpackage.domain:
+                #@todo this is bug need to fix (despiegk)
+                # if jpackage.instance<>None:
+                #     if pd.jpackage_instance==jpackage.instance:
+                #         result.append(pd)
+                # else:
                 result.append(pd)
 
         if len(result)>1:
@@ -802,7 +809,7 @@ class StartupManager:
 
     def getStatus4JPackage(self,jpackage):
         result=True
-
+        
         for pd in self.getProcessDefs4JPackage(jpackage):
             result=result and self.getStatus(pd.domain,pd.name)                
         return result
@@ -813,7 +820,8 @@ class StartupManager:
         """
         result=True        
         for processdef in self.getProcessDefs(domain, name):            
-            result=result & processdef.isRunning()            
+            result=result & processdef.isRunning()
+     
         return result
 
     def listProcesses(self):

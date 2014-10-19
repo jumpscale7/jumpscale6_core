@@ -1,5 +1,6 @@
 #this must be in the beginning so things are patched before ever imported by other libraries
 from gevent import monkey
+import gevent
 monkey.patch_socket()
 monkey.patch_thread()
 monkey.patch_time()
@@ -66,6 +67,7 @@ class ControllerCMDS():
         self.agents2roles = dict()
 
         j.logger.setLogTargetLogForwarder()
+        gevent.spawn(self._cleanScheduledJobs, 3600*24)
 
     def _adminAuth(self,user,passwd):
         return self.nodeclient.authenticate(user, passwd)
@@ -117,6 +119,25 @@ class ControllerCMDS():
         q.put(jobs)
         self._log("schedule done")
         return jobdict
+
+    def _cleanScheduledJobs(self, expiretime):
+        while True:
+            self.cleanScheduledJobs(expiretime)
+            time.sleep(3600)
+
+    def cleanScheduledJobs(self, expiretime):
+        queues = self.redis.keys('queues:commands:queue*')
+        count = 0
+        now = time.time()
+        for qname in queues:
+            jobstrings = self.redis.lrange(qname, 0, -1)
+            for jobstring in jobstrings:
+                job = json.loads(jobstring)
+                timeout = job['timeout'] or expiretime
+                if job['state'] == 'SCHEDULED' and job['timeStart'] + timeout < now:
+                    self.redis.lrem(qname, jobstring)
+                    count += 1
+        return count
 
     def restartProcessmanagerWorkers(self,session=None):
         for item in self.osisclient.list("system","node"):
@@ -224,8 +245,8 @@ class ControllerCMDS():
                 node.ipaddr.append(netinfo[1])
 
     def registerNode(self, hostname, machineguid, session):
-        if session.user != 'root' or not self._adminAuth(session.user, session.passwd):
-            raise RuntimeError("Only admin can register new nodes")
+        # if session.user != 'root' or not self._adminAuth(session.user, session.passwd):
+        #     raise RuntimeError("Only admin can register new nodes")
         node = self.nodeclient.new()
         node.roles = session.roles
         node.gid = session.gid
@@ -432,9 +453,20 @@ class ControllerCMDS():
             job["state"]="TIMEOUT"
             if job['nid'] is None:
                 job['nid'] = 0
+            else:
+                self._deletelJobFromQueue(job)
+
             self._setJob(job, osis=True)
             self._log("timeout on execution")
             return job
+
+    def _deletelJobFromQueue(self, job):
+        cmdqueue = self._getCmdQueue(job['gid'], job['nid'])
+        for jobqueue in self.redis.lrange(cmdqueue.key, 0, -1):
+            qjob = json.loads(jobqueue)
+            if qjob['guid'] == job['guid']:
+                self.redis.lrem(cmdqueue.key, jobqueue)
+                return
 
     def getWork(self, session=None):
         """

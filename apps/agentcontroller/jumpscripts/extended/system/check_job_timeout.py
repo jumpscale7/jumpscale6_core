@@ -23,7 +23,7 @@ def action():
     if job failed and on queue, remove put to jobs
     """
     acclient = j.clients.agentcontroller.get()
-    j.clients.redisworker.useCRedis()
+    #j.clients.redisworker.useCRedis()
     jobs = j.clients.redisworker.getQueuedJobs(asWikiTable=False)
     result = list()
     for job in jobs:

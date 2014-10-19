@@ -7,6 +7,7 @@ import os
 import netaddr
 import JumpScale.baselib.remote
 import docker
+import time
 
 class Docker():
 
@@ -303,32 +304,36 @@ class Docker():
             cmd="docker pull %s"%base
             j.system.process.executeWithoutPipe(cmd)
 
-        cmd="sh -c \"chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""        
+        cmd="sh -c \"mkdir -p /var/run/screen;chmod 777 /var/run/screen; /var/run/screen;exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""        
+        cmd="sh -c \" /sbin/my_init -- bash -l\""
+        #echo -e 'rooter\nrooter' | passwd root;
+        # cmd="sh -c \"exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""        
 
         # mem=1000000
         print "install docker with name '%s'"%base
 
-        try:
-            res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
+        res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
                 detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
                 network_disabled=False, name=name, entrypoint=None, cpu_shares=cpu, working_dir=None, domainname=None, memswap_limit=0)
-        except Exception,e:
-            if str(e).find("is already assigned to")<>-1:
-                print "remove docker before creation"
-                cmd="docker rm kds"
-                j.system.process.executeWithoutPipe(cmd)
-                res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
-                    detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
-                    network_disabled=False, name=name, entrypoint=None, cpu_shares=cpu, working_dir=None, domainname=None, memswap_limit=0)
-                raise RuntimeError("Error when creating docker:%s"%e)
-        
+
+        if res["Warnings"]<>None:
+            raise RuntimeError("Could not create docker, res:'%s'"%res)
+
         id=res["Id"]
         
         res=self.client.start(container=id, binds=binds, port_bindings=portsdict, lxc_conf=None, \
             publish_all_ports=False, links=None, privileged=False, dns=nameserver, dns_search=None, volumes_from=None, network_mode=None)
 
-        print res
+        for internalport,extport in portsdict.iteritems():
+            if internalport==22:
+                print "test docker internal port:22 on ext port:%s"%extport
+                if j.system.net.waitConnectionTest("localhost",extport,timeout=2)==False:
+                    cmd="docker logs %s"%name
+                    rc,log=j.system.process.execute(cmd)
+                    j.events.opserror_critical("Could not connect to external port on docker:'%s', docker prob not running.\nStartuplog:\n%s\n"%(extport,log),category="docker.create")            
          
+        time.sleep(0.5)
+
         self.pushSSHKey(name)
 
         # return self.getIp(name)
@@ -367,12 +372,12 @@ class Docker():
         # j.system.fs.writeFile(filename=path,contents="")
 
         c=j.remote.cuisine.api
-        c.fabric.api.env['password'] = "js007js"
+        c.fabric.api.env['password'] = "rooter"
         c.fabric.api.env['connection_attempts'] = 5
 
         ssh_port=self.getPubPortForInternalPort(name,22)
         if ssh_port==None:
-            j.events.opserror_critical("cannot find pub port ssh")
+            j.events.opserror_critical("cannot find pub port ssh")        
 
         c.connect('%s:%s' % ("localhost", ssh_port), u"root")
 
@@ -411,6 +416,9 @@ class Docker():
             idd=running[name]    
             self.client.kill(idd)
             self.client.remove_container(idd)
+
+        cmd="docker rm %s"%name
+        j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
 
     def stop(self,name):
         running=self.list()        

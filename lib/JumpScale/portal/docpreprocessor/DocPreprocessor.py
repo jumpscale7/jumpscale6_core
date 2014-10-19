@@ -6,7 +6,6 @@ import os
 fs = j.system.fs
 
 from Doc import *
-from DocHandler import DocHandler
 
 class DocPreprocessor():
 
@@ -45,6 +44,7 @@ class DocPreprocessor():
                             self.params[paramname.lower()] = value.strip()
         self.images = {}
 
+        from DocHandler import DocHandler
         self.file_observers = []
         self.doc_handler = DocHandler(self)
 

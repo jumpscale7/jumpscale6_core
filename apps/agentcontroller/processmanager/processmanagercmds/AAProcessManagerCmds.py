@@ -17,7 +17,6 @@ class AAProcessManagerCmds():
         self._name="pm"
 
         self.daemon = daemon
-        j.processmanager=self
 
         if daemon<>None:
             self.daemon._adminAuth=self._adminAuth
@@ -48,13 +47,6 @@ class AAProcessManagerCmds():
         s=self.daemon.cmdsInterfaces["jumpscripts"]
         s.loadJumpscripts(None)
 
-
-    # def restartWorkers(self,session=None):
-    #     print "RESTART WORKERS\n\n\n\n\n"
-    #     if session<>None:
-    #         self._adminAuth(session.user,session.passwd)
-    #     s=self.daemon.cmdsInterfaces["worker"] #this will make sure workers reload
-    #     s.stopWorkers()            
 
     def _init(self):
         self.childrenPidsFound={} #children already found, to not double count

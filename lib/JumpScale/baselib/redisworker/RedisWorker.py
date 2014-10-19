@@ -86,8 +86,12 @@ class RedisWorkerFactory:
     """
     """
 
-    def __init__(self):
-        self.redis=j.clients.redis.getGeventRedisClient("127.0.0.1", 7768)
+    def init(self):
+        if j.__dict__.has_key("processmanager") and j.processmanager.__dict__.has_key("redis_mem"):
+            self.redis=j.processmanager.redis_mem
+        else:
+            print "REDIS FOR REDIS WORKER NEW INSTANCE"
+            self.redis=j.clients.redis.getGeventRedisClient("127.0.0.1", 9999)
         random = j.base.idgenerator.generateGUID()
         self.sessionid="%s_%s_%s_%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid,j.application.whoAmI.pid, random)
 
@@ -108,14 +112,19 @@ class RedisWorkerFactory:
         if self.redis.get("workers:joblastid")==None or int(self.redis.get("workers:joblastid"))>500000:
             self.redis.set("workers:joblastid",1)
 
-        self.queue={}
-        self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
-        self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
-        self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
-        self.queue["process"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:process")
-        # self.returnqueue=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%self.sessionid)
+        if j.__dict__.has_key("processmanager") and j.processmanager.__dict__.has_key("redis_queues"):
+            self.queue=j.processmanager.redis_queues
+        else:
+            print "REDISQUEUES FOR REDIS WORKER NEW INSTANCE"
+            self.queue={}
+            self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:io")
+            self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:hypervisor")
+            self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:default")
+            self.queue["process"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:process")
+            # self.returnqueue=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%self.sessionid)
 
     def useCRedis(self):
+        print "USE Credis"
         self.redis=j.clients.credis.getRedisClient("127.0.0.1", 7768)
 
     def _getJob(self, jscriptid=None,args={}, timeout=60,log=True, queue="default",ddict={}):
@@ -236,8 +245,12 @@ class RedisWorkerFactory:
         js=jumpscript
         if js==None:
             js=self.getJumpscriptFromId(jumpscriptid)
+            if js==None:
+                raise RuntimeError("Cannot find jumpscript with id:'%s' on worker."%jumpscriptid)
         else:
             js = jumpscript
+
+        
         if self.checkJumpscriptQueue(js,_queue):
             return None
         job=self._getJob(js.id,args=args,timeout=_timeout,log=_log,queue=_queue)
@@ -314,6 +327,7 @@ class RedisWorkerFactory:
         # if not self.jobExistsInQueue(qname,job):
             # self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
         queue.put(job)
+
 
     def scheduleJob(self, job):
         jobobj = Job(ddict=job)
