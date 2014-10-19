@@ -21,7 +21,7 @@ processes={}
 
 import JumpScale.baselib.redis
 
-from lib.web import PMWSServer
+#from lib.web import PMWSServer
 
 import JumpScale.grid.processmanager
 
@@ -164,8 +164,8 @@ class ProcessManager():
                 print "cannot connect to agentcontroller, will retry forever: '%s:%s'"%(acip,acport)
 
             #now register to agentcontroller
-            self.aclient=j.clients.agentcontroller.getByInstance('main')            
-            res=self.aclient.registerNode(hostname=socket.gethostname(), machineguid=j.application.getUniqueMachineId())
+            self.acclient=j.clients.agentcontroller.getByInstance('main')            
+            res=self.acclient.registerNode(hostname=socket.gethostname(), machineguid=j.application.getUniqueMachineId())
             nid=res["node"]["id"]
             gid=res["node"]["gid"]
             j.application.config.set("grid.node.id",nid)
@@ -174,8 +174,7 @@ class ProcessManager():
             j.application.config.set("grid.master.ip",acip)
             if aclogin=="root":
                 j.application.config.set("grid.master.superadminpasswd",acpasswd)
-            
-            self.aclient=j.clients.agentcontroller.getByInstance('main')
+            self.acclient=j.clients.agentcontroller.getByInstance('main')
 
             jp=j.packages.findNewest("jumpscale","webdis_client")
             if reset or not jp.isInstalled(instance="main"):                
@@ -280,12 +279,10 @@ def kill_subprocesses():
 
 
 parser = cmdutils.ArgumentParser()
-parser.add_argument("-i", '--instance', help='jsagent instance', required=False)
+parser.add_argument("-i", '--instance', default="0", help='jsagent instance', required=False)
 parser.add_argument("-r", '--reset', action='store_true',help='jsagent reset', required=False,default=False)
 
 opts = parser.parse_args()
-
-opts.instance="0"
 
 jp=j.packages.findNewest("jumpscale","jsagent")
 if opts.reset or not jp.isInstalled(instance=opts.instance):
@@ -300,7 +297,7 @@ pm=ProcessManager(reset=opts.reset)
 processes=pm.processes
 
 
-from lib.worker import *
+from lib.worker import Worker
 
 pm.start()
 
