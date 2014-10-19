@@ -164,11 +164,12 @@ class ProcessManager():
                 print "cannot connect to agentcontroller, will retry forever: '%s:%s'"%(acip,acport)
 
             #now register to agentcontroller
-            self.acclient=j.clients.agentcontroller.getByInstance('main')            
+            self.acclient = j.clients.agentcontroller.get(acip, login=aclogin, passwd=acpasswd)
             res=self.acclient.registerNode(hostname=socket.gethostname(), machineguid=j.application.getUniqueMachineId())
             nid=res["node"]["id"]
-            gid=res["node"]["gid"]
+            webdiskey=res["webdiskey"]
             j.application.config.set("grid.node.id",nid)
+            j.application.config.set("agentcontroller.webdiskey",webdiskey)
             j.application.config.set("grid.id",res["node"]["gid"])
             j.application.config.set("grid.node.machineguid",j.application.getUniqueMachineId())
             j.application.config.set("grid.master.ip",acip)
