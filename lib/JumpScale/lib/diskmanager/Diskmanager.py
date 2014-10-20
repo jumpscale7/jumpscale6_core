@@ -59,16 +59,17 @@ class Disk():
 
     __repr__=__str__
 
-class Diskmanager(): 
+class Diskmanager():
     def __init__(self):
-        self.parted=None
+        self._parted=None
 
-    def _init(self):
+    @property
+    def parted(self):
         if self.parted==None:
             try:
                 import parted
             except:
-                j.system.platform.ubuntu.install("python-self.parted")
+                j.system.platform.ubuntu.install("python-parted")
                 import parted
 
             #patch self.parted
@@ -86,10 +87,10 @@ class Diskmanager():
 
             parted.getAllDevices = _patchedGetAllDevices
             self.parted=parted
+        return self.parted
 
 
     def partitionAdd(self,disk, free, align=None, length=None, fs_type=None, type=None):
-        self._init()
         if type==None:
             type=self.parted.PARTITION_NORMAL
         start = free.start
@@ -143,8 +144,6 @@ class Diskmanager():
         return [[$partpath,$size,$free,$ssd]]
         @param ssd if None then ssd and other
         """
-        self._init()
-        import parted
         import JumpScale.grid.osis
         import psutil
         result=[]
