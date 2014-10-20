@@ -1,13 +1,11 @@
 import gevent
 import gevent.monkey
-gevent.monkey.patch_socket()
-gevent.monkey.patch_ssl()
-gevent.monkey.patch_dns()
-gevent.monkey.patch_time()
+gevent.monkey.patch_all()
 from JumpScale import j
 
 j.application.start("jsagent")
 import time
+import sys
 import atexit
 import psutil
 import os
@@ -75,12 +73,18 @@ class Process():
         if self.logpath==None:
             self.logpath=j.system.fs.joinPaths(j.dirs.logDir,"processmanager","logs","%s_%s_%s.log"%(self.domain,self.name,self.instance))
             j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.logDir,"processmanager","logs"))
-            f = open(self.logpath,'w')
+            stdout = open(self.logpath,'w')
         else:
-            f=None
+            stdout=None
+
+        stderr = subprocess.STDOUT
+        stdin = subprocess.PIPE
+        if opts.debug:
+            stdout = sys.stdout
+            stderr = sys.stderr
 
         try:            
-            self.p = psutil.Popen(self.cmds, env=self.env,cwd=self.workingdir,stdin=subprocess.PIPE,stdout=f, stderr=subprocess.STDOUT,bufsize=0,shell=False) #f was: subprocess.PIPE
+            self.p = psutil.Popen(self.cmds, env=self.env,cwd=self.workingdir,stdin=stdin, stdout=stdout, stderr=stderr,bufsize=0,shell=False) #f was: subprocess.PIPE
             self.pid=self.p.pid
         except Exception,e:
             print "could not execute:%s\nError:\n%s"%(self,e)
@@ -90,17 +94,6 @@ class Process():
             print "could not execute:%s\n"%(self)
             log=j.system.fs.fileGetContents(self.logpath)
             print "log:\n%s"%log
-        
-        # while(True):
-        #     # retcode = self.p.poll() #returns None while subprocess is running
-        #     # if select.select([self.p.stdout],[],[],0)[0]!=[]:
-        #     #     line = self.p.stdout.read(1)
-        #     #     print line,
-        #     # if(retcode is not None):
-        #     #     break
-        #     time.sleep(1)
-
-        # print "subprocess stopped"        
 
     def do(self):
         print 'A new child %s' % self.name,  os.getpid()
@@ -198,7 +191,7 @@ class ProcessManager():
 
         # self._webserverStart()        
         self._workerStart()
-        self._processManagerStart()
+        gevent.spawn(self._processManagerStart)
 
         self.mainloop()
 
@@ -229,39 +222,31 @@ class ProcessManager():
         p.start()
         self.processes.append(p)
 
-    def _worker(self,qname):
-        worker=Worker(qname)
-        worker.run()
-
     def _workerStart(self):
-    
-        j.core.osis.client = j.core.osis.getClientByInstance(die=True)
-
-        if j.application.config.exists("grid.id"):
-            j.application.initGrid()
-
-        j.logger.consoleloglevel = 2
-        j.logger.maxlevel=7
-
         #below should be non blocking because of redis but does not seem the case?
+        pwd = '/opt/jumpscale/apps/jsagent/lib'
         for qname in ["default","io","process","hypervisor"]:
-            gevent.spawn(self._worker,qname)
-            # worker=Worker(qname)
-            # worker.run()            
- 
+            p = Process()
+            p.domain = 'workers'
+            p.name = '%s' % qname
+            p.instance = 'main'
+            p.workingdir = pwd
+            p.cmds = ['python', 'worker.py', '-qn', qname, '-i', opts.instance]
+            p.restart = True
+            p.start()
+            self.processes.append(p)
 
     def mainloop(self):
         i=0
         while True:
             i+=1
             # print "NEXT:%s\n"%i    
-            toremove=[]        
             for p in self.processes[:]:
                 # p.refresh()        
                 if p.p<>None:        
                     if not p.is_running():
                         if p.restart:
-                            print "%s was stopped restarting" % p.name
+                            print "%s:%s was stopped restarting" % (p.domain, p.name)
                             p.start()
                         else:
                             p.kill()
@@ -271,8 +256,6 @@ class ProcessManager():
             if len(self.processes)==0:
                 print "no more children"
                 # return
-            print len(self.processes)
-        
 
 @atexit.register
 def kill_subprocesses():
@@ -283,6 +266,7 @@ def kill_subprocesses():
 parser = cmdutils.ArgumentParser()
 parser.add_argument("-i", '--instance', default="0", help='jsagent instance', required=False)
 parser.add_argument("-r", '--reset', action='store_true',help='jsagent reset', required=False,default=False)
+parser.add_argument("-d", '--debug', action='store_true',help='Put JSAgent in debug mode', required=False,default=False)
 
 opts = parser.parse_args()
 

@@ -7,8 +7,6 @@ try:
 except:
     import json
 import psutil
-import imp
-import random
 import JumpScale.baselib.taskletengine
 from JumpScale.baselib import cmdutils
 
@@ -16,11 +14,11 @@ from JumpScale.baselib import cmdutils
 j.system.platform.psutil=psutil
 # import JumpScale.baselib.graphite
 import JumpScale.lib.diskmanager
-# import JumpScale.baselib.stataggregator
+import JumpScale.baselib.stataggregator
 import JumpScale.grid.agentcontroller
 import JumpScale.grid.osis
 import JumpScale.baselib.redis
-import JumpScale.baselib.redisworker
+from JumpScale.baselib.redisworker.RedisWorker import RedisWorkerFactory
 import JumpScale.grid.jumpscripts
 
 import sys
@@ -40,9 +38,7 @@ class Worker(object):
         self.actions={}
         self.clients = dict()
         self.acclient = None
-        self.redis = j.processmanager.redis_mem
-        
-        self.redisprocessmanager = j.processmanager.redis_mem
+        self.redisw = RedisWorkerFactory()
         self.queuename=queuename
         self.init()
 
@@ -55,8 +51,7 @@ class Worker(object):
                 self.clients[ipaddr] = client
             else:
                 if self.acclient==None:
-                    self.acclient=j.processmanager.acclient
-                    #j.clients.agentcontroller.getByInstance('main')
+                    self.acclient = j.clients.agentcontroller.getByInstance()
                 return self.acclient
         return client
 
@@ -69,8 +64,6 @@ class Worker(object):
 
     def run(self):
         self.log("STARTED")
-        w=j.clients.redisworker
-        # w.useCRedis()
         while True:
 
             # ############# PROCESSMANAGER RELATED 
@@ -92,7 +85,7 @@ class Worker(object):
 
             try:
                 self.log("check if work")
-                job=w._getWork(self.queuename,timeout=10)
+                job=self.redisw._getWork(self.queuename,timeout=10)
             except Exception,e:
                 if str(e).find("Could not find queue to execute job")<>-1:
                     #create queue
@@ -111,7 +104,7 @@ class Worker(object):
                     else:
                         self.log("JSCRIPT CACHEMISS")
                         try:
-                            jscript=w.getJumpscriptFromId(job.jscriptid)
+                            jscript=self.redisw.getJumpscriptFromId(job.jscriptid)
                             if jscript==None:
                                 msg="cannot find jumpscript with id:%s"%job.jscriptid
                                 self.log("ERROR:%s"%msg)
@@ -123,7 +116,7 @@ class Worker(object):
 
                             if jscript.organization<>"" and jscript.name<>"" and jscript.id<1000000:
                                 #this is to make sure when there is a new version of script since we launched this original script we take the newest one
-                                jscript=w.getJumpscriptFromName(jscript.organization,jscript.name)
+                                jscript=self.redisw.getJumpscriptFromName(jscript.organization,jscript.name)
                                 job.jscriptid=jscript.id
                                 #result is method action
 
@@ -159,6 +152,7 @@ class Worker(object):
                     j.logger.enabled = job.log
 
                     status, result=jscript.executeInWorker(**job.args)
+                    self.redisw.redis.hdel("workers:inqueuetest",jscript.getKey())
                     j.logger.enabled = True
                     if status:
                         job.result=result
@@ -199,14 +193,12 @@ class Worker(object):
 
                     #ok or not ok, need to remove from queue test
                     #thisin queue test is done to now execute script multiple time
-                    self.redis.hdel("workers:inqueuetest",jscript.getKey())
                     self.notifyWorkCompleted(job)
                 finally:
                     j.application.jid = 0
 
 
     def notifyWorkCompleted(self,job):
-        w=j.clients.redisworker
         job.timeStop=int(time.time())
 
         # if job.state[0:2]<>"OK":
@@ -216,8 +208,8 @@ class Worker(object):
         if job.jscriptid>1000000:
             #means is internal job
             # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
-            self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
-            w.redis.rpush("workers:return:%s"%job.id,time.time())            
+            self.redisw.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
+            self.redisw.redis.rpush("workers:return:%s"%job.id,time.time())            
         else:
             try:
                 acclient = self.getClient(job)
@@ -242,11 +234,36 @@ class Worker(object):
                         return
                     # job.state=="OKR" #means ok reported
                     #we don't have to keep status of local job result, has been forwarded to AC
-                self.redis.hdel("workers:jobs",job.id)
+                self.redisw.redis.hdel("workers:jobs",job.id)
 
 
     def log(self, message, category='',level=5):
         #queue saving logs        
         # j.logger.log(message,category=category,level=level)
         print "worker:%s:%s" % (self.queuename, message)
+
+if __name__ == '__main__':
+    parser = cmdutils.ArgumentParser()
+    parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
+    parser.add_argument("-i", '--instance', help='JSAgent instance', required=True)
+
+    opts = parser.parse_args()
+
+    jp = j.packages.findNewest('jumpscale', 'jsagent')
+    jp.load(opts.instance)
+    j.application.instanceconfig = jp.hrd_instance
+
+    j.core.osis.client = j.core.osis.getClientByInstance(die=False)
+
+    j.application.start("jumpscale:worker:%s" % opts.queuename)
+
+    if j.application.config.exists("grid.id"):
+        j.application.initGrid()
+
+    j.logger.consoleloglevel = 2
+    j.logger.maxlevel=7
+
+    worker=Worker(opts.queuename)
+    worker.run()
+
 
