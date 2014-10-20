@@ -25,7 +25,7 @@ class JumpscriptsCmds():
         # self.lastMonitorResult=None
         self.lastMonitorTime=None
 
-        self.redis = Redis("127.0.0.1", 7768, password=None)
+        self.redis = Redis("127.0.0.1", 9999, password=None)
 
     def _init(self):
         self.loadJumpscripts(init=True)

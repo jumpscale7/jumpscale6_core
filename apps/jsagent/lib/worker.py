@@ -59,7 +59,7 @@ class Worker(object):
                 self.clients[ipaddr] = client
             else:
                 if self.acclient==None:
-                    self.acclient=j.processmanager.aclient
+                    self.acclient=j.processmanager.acclient
                     #j.clients.agentcontroller.getByInstance('main')
                 return self.acclient
         return client
@@ -113,8 +113,8 @@ class Worker(object):
                     if self.actions.has_key(job.jscriptid):
                         jscript=self.actions[job.jscriptid]
                     else:
-                        print "JSCRIPT CACHEMISS"                                                            
-                        try:                        
+                        print "JSCRIPT CACHEMISS"
+                        try:
                             jscript=w.getJumpscriptFromId(job.jscriptid)
                             if jscript==None:
                                 msg="cannot find jumpscript with id:%s"%job.jscriptid
@@ -137,10 +137,6 @@ class Worker(object):
                             self.actions[job.jscriptid]=jscript
 
                         except Exception,e:                
-                            from IPython import embed
-                            print "DEBUG NOW ooo"
-                            embed()
-                                                                                            
                             agentid=j.application.getAgentId()
                             if jscript<>None:
                                 msg="could not compile jscript:%s %s_%s on agent:%s.\nError:%s"%(jscript.id,jscript.organization,jscript.name,agentid,e)
@@ -257,56 +253,4 @@ class Worker(object):
         #queue saving logs        
         # j.logger.log(message,category=category,level=level)
         print message
-
-
-# if __name__ == '__main__':
-#     parser = cmdutils.ArgumentParser()
-#     parser.add_argument("-wn", '--workername', help='Worker name')
-#     parser.add_argument("-i", '--instance', help='Worker instance', required=True)
-#     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
-#     parser.add_argument("-pw", '--auth', help='Authentication of redis')
-#     parser.add_argument("-a", '--addr', help='Address of redis',default="127.0.0.1")
-#     parser.add_argument("-p", '--port', type=int, help='Port of redis',default=7768)
-#     parser.add_argument('--nodeid', type=int, help='nodeid, is just to recognise the command in ps ax',default=0)
-
-
-#     opts = parser.parse_args()
-
-#     jp = j.packages.findNewest('jumpscale', 'workers')
-#     jp.load(opts.instance)
-#     j.application.instanceconfig = jp.hrd_instance
-
-#     j.core.osis.client = j.core.osis.getClientByInstance(die=False)
-
-#     wait=1
-#     while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-#         msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 7766)"    
-#         print msg
-#         j.events.opserror(msg, category='worker.startup')    
-#         if wait<60:
-#             wait+=1
-#         time.sleep(wait)
-
-#     rediscl = j.clients.credis.getRedisClient('127.0.0.1', 7766)
-#     rediscl.hset("workers:watchdog",opts.workername,0) #now the process manager knows we got started but maybe waiting on other requirements
-
-#     wait=1
-#     while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
-#         time.sleep(wait)
-#         msg= "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
-#         print msg
-#         j.events.opserror(msg, category='worker.startup')        
-#         if wait<60:
-#             wait+=1
-
-#     j.application.start("jumpscale:worker")
-
-#     if j.application.config.exists("grid.id"):
-#         j.application.initGrid()
-
-#     j.logger.consoleloglevel = 2
-#     j.logger.maxlevel=7
-
-#     worker=Worker(opts.addr, opts.port, opts.queuename,name=opts.workername)
-#     worker.run()
 
