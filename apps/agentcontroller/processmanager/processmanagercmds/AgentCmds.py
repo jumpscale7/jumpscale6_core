@@ -30,6 +30,9 @@ class AgentCmds():
     def _init(self):
         self.init()
 
+    def log(self, msg):
+        print "processmanager:%s" % msg
+
     def init(self, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
@@ -48,7 +51,7 @@ class AgentCmds():
                 client.register()
                 return client
             except Exception:
-                print "Failed to connect to agentcontroller %s" % acip
+                self.log("Failed to connect to agentcontroller %s" % acip)
                 gevent.sleep(5)
 
     def loop(self, acip, config):
@@ -57,17 +60,15 @@ class AgentCmds():
         """
         client = self.reconnect(acip, config)
         gevent.sleep(2)
-        print "start loop to fetch work"
+        self.log("start loop to fetch work")
         while True:
             try:
                 try:
-                    print "check if work"
+                    self.log("check if work")
                     job=client.getWork()
-                    print "check work returns"
                     if job<>None:
-                        print "WORK FOUND: jobid:%s"%job["id"]
+                        self.log("WORK FOUND: jobid:%s"%job["id"])
                     else:
-                        print "no work"
                         continue
                 except Exception,e:
                     j.errorconditionhandler.processPythonExceptionObject(e)
