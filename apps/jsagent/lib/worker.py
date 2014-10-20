@@ -72,7 +72,7 @@ class Worker(object):
         # self.queue=j.clients.credis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
 
     def run(self):
-        print "WORKER STARTED: %s"%self.queuename
+        self.log("STARTED")
         w=j.clients.redisworker
         # w.useCRedis()
         while True:
@@ -95,12 +95,12 @@ class Worker(object):
             # ################ END PROCESS MANAGER
 
             try:
-                print "check if work, comes from redis queue:%s"%self.queuename
+                self.log("check if work")
                 job=w._getWork(self.queuename,timeout=10)
             except Exception,e:
                 if str(e).find("Could not find queue to execute job")<>-1:
                     #create queue
-                    print "could not find queue:%s"%self.queuename
+                    self.log("could not find queue")
                 else:
                     j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
                 time.sleep(10)
@@ -113,12 +113,12 @@ class Worker(object):
                     if self.actions.has_key(job.jscriptid):
                         jscript=self.actions[job.jscriptid]
                     else:
-                        print "JSCRIPT CACHEMISS"
+                        self.log("JSCRIPT CACHEMISS")
                         try:
                             jscript=w.getJumpscriptFromId(job.jscriptid)
                             if jscript==None:
                                 msg="cannot find jumpscript with id:%s"%job.jscriptid
-                                print "ERROR:%s"%msg
+                                self.log("ERROR:%s"%msg)
                                 j.events.bug_warning(msg,category="worker.jscript.notfound")
                                 job.result=msg
                                 job.state="ERROR"
@@ -158,7 +158,7 @@ class Worker(object):
 
                         self.actions[job.jscriptid]=jscript
 
-                    self.log("Job started:%s script: %s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
+                    self.log("Job started:%s script:%s %s/%s"%(job.id, jscript.id,jscript.organization,jscript.name))
 
                     j.logger.enabled = job.log
 
@@ -193,7 +193,7 @@ class Worker(object):
                         if job.id<1000000 and job.errorreport==True:
                             j.errorconditionhandler.processErrorConditionObject(eco)
                         else:
-                            print eco
+                            self.log(eco)
                         # j.events.bug_warning(msg,category="worker.jscript.notexecute")
                         # self.loghandler.logECO(eco)
                         job.state="ERROR"
@@ -252,5 +252,5 @@ class Worker(object):
     def log(self, message, category='',level=5):
         #queue saving logs        
         # j.logger.log(message,category=category,level=level)
-        print message
+        print "worker:%s:%s" % (self.queuename, message)
 
