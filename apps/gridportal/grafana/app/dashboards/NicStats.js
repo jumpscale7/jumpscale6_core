@@ -1,4 +1,4 @@
-var filter = ARGS.nid + " and gid = " + ARGS.gid + " and nic_id = " + "'" + ARGS.name + "'";
+var filter = "nid = " + ARGS.nid + " and gid = " + ARGS.gid + " and nic_id = " + "'" + ARGS.name + "'";
 
 return {
   "title": "Grafana",
@@ -69,25 +69,16 @@ return {
               "function": "difference",
               "column": "kbytes_recv * 1024",
               "series": "nic",
-              "query": "",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "1m",
+              "query": filter,
+              "interval": "6m",
               "alias": "Received"
             },
             {
-              "target": "",
               "function": "difference",
-              "column": "kbytes_send * 1024",
+              "column": "kbytes_sent * 1024",
               "series": "nic",
-              "query": "",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "1m",
+              "query": filter,
+              "interval": "6m",
               "alias": "Sent"
             }
           ],
@@ -151,22 +142,14 @@ return {
               "function": "mean",
               "column": "errin",
               "series": "nic",
-              "query": "",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
+              "query": filter,
               "alias": "In"
             },
             {
               "function": "mean",
               "column": "errout",
               "series": "nic",
-              "query": "",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
+              "query": filter,
               "alias": "Out"
             }
           ],
