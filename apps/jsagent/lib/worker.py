@@ -21,10 +21,6 @@ import JumpScale.grid.agentcontroller
 import JumpScale.grid.osis
 import JumpScale.baselib.redis
 import JumpScale.baselib.redisworker
-
-
-j.clients.redisworker.init()
-
 import JumpScale.grid.jumpscripts
 
 import sys
