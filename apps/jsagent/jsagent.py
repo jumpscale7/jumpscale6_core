@@ -1,3 +1,9 @@
+import gevent
+import gevent.monkey
+gevent.monkey.patch_socket()
+gevent.monkey.patch_ssl()
+gevent.monkey.patch_dns()
+gevent.monkey.patch_time()
 from JumpScale import j
 
 j.application.start("jsagent")
@@ -9,13 +15,9 @@ import select
 import subprocess
 from JumpScale.baselib import cmdutils
 import JumpScale.grid.agentcontroller
-import gevent
-import gevent.monkey
 from gevent.pywsgi import WSGIServer
 import socket
 
-gevent.monkey.patch_socket()
-gevent.monkey.patch_time()
 
 processes={}
 
