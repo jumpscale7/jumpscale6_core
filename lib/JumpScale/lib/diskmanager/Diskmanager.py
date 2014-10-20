@@ -65,7 +65,7 @@ class Diskmanager():
 
     @property
     def parted(self):
-        if self.parted==None:
+        if self._parted==None:
             try:
                 import parted
             except:
@@ -86,8 +86,8 @@ class Diskmanager():
                         os.close(fd)
 
             parted.getAllDevices = _patchedGetAllDevices
-            self.parted=parted
-        return self.parted
+            self._parted=parted
+        return self._parted
 
 
     def partitionAdd(self,disk, free, align=None, length=None, fs_type=None, type=None):
