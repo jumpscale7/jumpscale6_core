@@ -8,7 +8,7 @@ class Alert(OsisBaseObject):
     alert object
     """
 
-    def __init__(self, ddict={},id=0,guid="",description="",descriptionpub="",level=1,category="",tags="",transactionsinfo=""   ):
+    def __init__(self, ddict={},id=0, gid=0, nid=0, guid="",description="",descriptionpub="",level=1,category="",tags="",transactionsinfo=""   ):
         if ddict <> {}:
             self.load(ddict)
         else:
@@ -17,6 +17,8 @@ class Alert(OsisBaseObject):
                 self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes
             else:
                 self.guid=guid
+            self.gid = gid
+            self.nid = nid
             self.description=description
             self.descriptionpub=descriptionpub
             self.level=level #1:critical, 2:warning, 3:info

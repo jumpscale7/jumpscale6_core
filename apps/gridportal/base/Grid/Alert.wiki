@@ -1,5 +1,22 @@
 @usedefaults
-
+{{alert: guid:$$guid}}
 
 h3. Details
-{{alert: gguid:$$gguid key:$$key}}
+
+|*Description*|${description}|
+|*Description Pub*|${descriptionpub}|
+|*Grid ID*|[${gid}|grid?id=${gid}]|
+|*Node ID*|[${nid}|node?id=${nid}&gid=${gid}]|
+|*State*|${state}|
+|*Category*|${category}|
+|*Tags*|${tags}|
+|*Initilization Time*|${inittime}|
+|*Last Time*|${lasttime}|
+|*Close Time*|${closetime}|
+|*Level*|${level}|
+|*Number of ECOs*|${nrerrorconditions}|
+
+h5. ECOs
+{% for eco in errorconditions -%}
+[${eco}|eco?id=${eco}}]
+{% endfor %}

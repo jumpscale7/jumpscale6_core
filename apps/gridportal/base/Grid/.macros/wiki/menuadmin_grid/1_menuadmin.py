@@ -23,6 +23,7 @@ New:/system/create?space=$$space
 Logout:/system/login?user_logoff_=1
 Access:/system/OverviewAccess?space=$$space
 --------------
+Alerts:/grid/Alerts
 Audits:/grid/Audits
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs

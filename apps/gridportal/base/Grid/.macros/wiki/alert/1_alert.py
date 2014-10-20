@@ -1,61 +1,27 @@
-import JumpScale.baselib.webdis
-import json
+import JumpScale.grid.osis
 
 def main(j, args, params, tags, tasklet):
-
-    key = args.getTag('key')
-    gguid = args.getTag('gguid')
-
-    for name, param in {'key':key, 'gguid':gguid}.iteritems():
-        if not param:
-            out = 'Missing alert param "%s"' % name
-            params.result = (out, args.doc)
-            return params            
-
-    webdisaddr = j.application.config.get('grid.watchdog.addr')
-    
-    webdiscl = j.clients.webdis.get(webdisaddr, 7779,timeout=1)
-
-    if not webdiscl.ping()[1]=="PONG":
-        out = "could not contact webdis on: %s"%webdisaddr
+    guid = args.getTag('guid')
+    if not guid:
+        out = 'Missing alert param "id"'
         params.result = (out, args.doc)
-        return params        
+        return params            
 
-
-    # if not webdiscl.hexists('alerts:%s' % gguid, key):
-    #     params.result = ('Alert with gguid %s and key %s not found' % (gguid, key), args.doc)
-    #     return params        
-
-    alert = webdiscl.hget('alerts:%s' % gguid, key)
+    syscl = j.core.osis.getClientForNamespace('system')
+    alert = syscl.alert.get(guid)
+    alert = alert.dump()
 
     if alert==None:
-        params.result = ('Alert with gguid %s and key %s not found' % (gguid, key), args.doc)
+        params.result = ('Alert with guid %s not found' % guid, args.doc)
         return params
 
-    out = list()
+    for field in ['inittime', 'lasttime', 'closetime']:
+        alert[field] = j.base.time.epoch2HRDateTime(alert[field])
+    color = 'green' if alert['state'] == 'OK' else ('red' if alert['state'] == 'ERROR' else 'orange')
+    alert['state'] = '{color:%s}%s{color}' % (color, alert['state'])
 
-    links = {'gid': 'grid', 'nid': 'node', 'ecoguid': 'eco'}
-    properties = [('state', 'State'), ('category', 'Category'), ('value', 'Value'),
-                  ('epoch', 'Initilization Time'), ('escalationepoch', 'Escalation Time'), 
-                  ('escalationstate', 'Escalation State'), ('ecoguid', 'ECO ID'), ('log', 'Log'), 
-                  ('gid', 'Grid ID'), ('nid', 'Node ID'), ('message_id', 'Message ID')]
+    args.doc.applyTemplate(alert)
 
-    alert = json.loads(alert)
-    for field in properties:
-        v = alert[field[0]]
-        if isinstance(v, list):
-            v = ' ,'.join(v)
-        elif field[0] in ['epoch', 'escalationepoch']:
-            v = j.base.time.epoch2HRDateTime(v)
-        elif field[0] in ['gid', 'nid', 'ecoguid']:
-            v = '[%s|%s?id=%s]' % (v, links[field[0]], v)
-        elif field[0] in ['state']:
-            color = 'green' if v == 'OK' else ('red' if v == 'ERROR' else 'orange')
-            v = '{color:%s}%s{color}' % (color, v)
-        out.append("|*%s*|%s|" % (field[1], v))
-
-    out = '\n'.join(out)
-
-    params.result = (out, args.doc)
+    params.result = (args.doc, args.doc)
     return params
     
