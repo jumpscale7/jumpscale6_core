@@ -19,7 +19,7 @@ from gevent.pywsgi import WSGIServer
 import socket
 
 
-processes={}
+processes = list()
 
 import JumpScale.baselib.redis
 
@@ -44,6 +44,7 @@ class Process():
         self.ports=[]
         self.psstring=""
         self.sync=False
+        self.restart=False
         self.p=None
 
     def start(self):
@@ -102,7 +103,7 @@ class Process():
         # print "subprocess stopped"        
 
     def do(self):
-        print 'A new child ',  os.getpid( )
+        print 'A new child %s' % self.name,  os.getpid()
         if self.pythonCode<>None:
             exec(self.pythonCode)
 
@@ -116,7 +117,7 @@ class Process():
 
 class ProcessManager():
     def __init__(self,reset=False):
-        self.processes={}
+        self.processes = list()
 
         #check there is a redis on port 9998 & 9999 (the new port for all)
         for port in [9999,9998,8001]:
@@ -138,7 +139,7 @@ class ProcessManager():
             p.cmds=[j.dirs.replaceTxtDirVars("$base/apps/redis/redis-server"),j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.conf"%name)]
             p.logpath=j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.log"%name)
             p.start()
-            self.processes[p.pid]=p
+            self.processes.append(p)
 
         if j.system.net.waitConnectionTest("localhost",9999,2)==False or j.system.net.waitConnectionTest("localhost",9998,2)==False:
             j.events.opserror_critical("could not start redis on port 9998 or 9999 inside processmanager",category="processmanager.redis.start")
@@ -159,6 +160,7 @@ class ProcessManager():
         acport=self.hrd.getInt("ac.port")
         aclogin=self.hrd.get("ac.login",default="node")
         acpasswd=self.hrd.get("ac.passwd",default="")
+        acclientinstancename = self.hrd.get('agentcontroller.connection')
 
         if self.hrd.get("ac.ipaddress")<>"":
             #processmanager enabled
@@ -189,8 +191,8 @@ class ProcessManager():
 
             jp=j.packages.findNewest("jumpscale","agentcontroller_client")
             if reset or not jp.isInstalled(instance="main"):
-                jp.install(hrddata={"agentcontroller.client.addr":acip,"agentcontroller.client.port":4444,"agentcontroller.client.login":aclogin},instance="main",reinstall=reset)
-            self.acclient=j.clients.agentcontroller.getByInstance('main')
+                jp.install(hrddata={"agentcontroller.client.addr":acip,"agentcontroller.client.port":4444,"agentcontroller.client.login":aclogin},instance=acclientinstancename,reinstall=reset)
+        self.acclient=j.clients.agentcontroller.getByInstance(acclientinstancename)
         
     def start(self):
 
@@ -213,7 +215,7 @@ class ProcessManager():
         p.pythonObj=server
         p.pythonCode="self.pythonObj.start()"
         p.start()
-        self.processes[p.pid]=p
+        self.processes.append(p)
 
     def _processManagerStart(self):
         p=Process()
@@ -225,7 +227,7 @@ class ProcessManager():
         p.pythonCode="self.pythonObj.start()"
         p.sync=True
         p.start()
-        self.processes[p.pid]=p
+        self.processes.append(p)
 
     def _worker(self,qname):
         worker=Worker(qname)
@@ -254,30 +256,27 @@ class ProcessManager():
             i+=1
             # print "NEXT:%s\n"%i    
             toremove=[]        
-            for pid,p in self.processes.iteritems():
+            for p in self.processes[:]:
                 # p.refresh()        
                 if p.p<>None:        
-                    if p.is_running():
-                        pass
-                    else:
-                        toremove.append(pid)
-                        pass
-                        # print "STOPPED:%s"%p
-            for item in toremove:
-                p=self.processes[item]
-                #make sure you kill
-                p.kill()
-                self.processes.pop(item)
+                    if not p.is_running():
+                        if p.restart:
+                            print "%s was stopped restarting" % p.name
+                            p.start()
+                        else:
+                            p.kill()
+                            self.process.remove(p)
+
             time.sleep(1)
-            if len(self.processes.keys())==0:
+            if len(self.processes)==0:
                 print "no more children"
                 # return
-            print len(self.processes.keys())
+            print len(self.processes)
         
 
 @atexit.register
 def kill_subprocesses():
-    for pid,p in processes.iteritems():
+    for p in processes:
         p.kill()        
 
 
