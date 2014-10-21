@@ -48,8 +48,8 @@ def action():
 
             bytes_sent, bytes_recv, packets_sent, packets_recv, errin, errout, dropin, dropout=counter
 
-            result['kbytes_sent'] = cacheobj.db.__dict__['kbytes_sent'] = int(round(bytes_sent/1024,0))
-            result['kbytes_recv'] = cacheobj.db.__dict__['kbytes_recv'] = int(round(bytes_recv/1024,0))
+            result['kbytes_sent'] = cacheobj.db.__dict__['kbytes_sent'] = int(round(bytes_sent/1024.0,0))
+            result['kbytes_recv'] = cacheobj.db.__dict__['kbytes_recv'] = int(round(bytes_recv/1024.0,0))
             result['packets_sent'] = cacheobj.db.__dict__['packets_sent'] = packets_sent
             result['packets_recv'] = cacheobj.db.__dict__['packets_recv'] = packets_recv
             result['errin'] = cacheobj.db.__dict__['errin'] = errin
