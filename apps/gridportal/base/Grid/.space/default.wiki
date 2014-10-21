@@ -7,9 +7,9 @@
 
 
 {{menu:
-$$$pages
-System:/System
-Dashboard:/grid/
+StatusOverview:/grid/checkstatus
+GridPortal:/grid
+MS1Portal:/cbgrid
 }}
 
 {{menuspaces: name:GRID class:brand marker:$$$pages}}

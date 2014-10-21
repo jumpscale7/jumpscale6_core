@@ -96,39 +96,24 @@ class RedisWorkerFactory(object):
     @property
     def redis(self):
         if self._redis is None:
-            if j.__dict__.has_key("processmanager") and j.processmanager.__dict__.has_key("redis_mem"):
-                self._redis=j.processmanager.redis_mem
-            else:
-                print "REDIS FOR REDIS WORKER NEW INSTANCE"
-                self._redis=j.clients.redis.getGeventRedisClient("127.0.0.1", 9999)
-
+            self._redis=j.clients.redis.getGeventRedisClient("127.0.0.1", 9999, False)
             self._redis.delete("workers:sessions")
             #local jumpscripts start at 10000
             if not self._redis.exists("workers:jumpscriptlastid") or int(self._redis.get("workers:jumpscriptlastid"))<1000000:
                 self._redis.set("workers:jumpscriptlastid",1000000)
-
             if self._redis.get("workers:joblastid")==None or int(self._redis.get("workers:joblastid"))>500000:
                 self._redis.set("workers:joblastid",1)
         return self._redis
 
-
     @property
     def queue(self):
         if self._queue is None:
-            if j.__dict__.has_key("processmanager") and j.processmanager.__dict__.has_key("redis_queues"):
-                self._queue=j.processmanager.redis_queues
-            else:
-                print "REDISQUEUES FOR REDIS WORKER NEW INSTANCE"
-                self._queue={}
-                self._queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:io")
-                self._queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:hypervisor")
-                self._queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:default")
-                self._queue["process"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:process")
+            self._queue={}
+            self._queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:io", fromcache=False)
+            self._queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:hypervisor", fromcache=False)
+            self._queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:default", fromcache=False)
+            self._queue["process"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:process", fromcache=False)
         return self._queue
-
-    def useCRedis(self):
-        print "USE Credis"
-        self.redis=j.clients.credis.getRedisClient("127.0.0.1", 7768)
 
     def _getJob(self, jscriptid=None,args={}, timeout=60,log=True, queue="default",ddict={}):
         job=Job(ddict=ddict, args=args, timeout=timeout, sessionid=self.sessionid, jscriptid=jscriptid,log=log, queue=queue)
@@ -232,8 +217,8 @@ class RedisWorkerFactory(object):
         if jumpscript.period>0:
             #check of already in queue
             if self.redis.hexists("workers:inqueuetest",jumpscript.getKey()):
-                inserttime=int(self.redis.hget("workers:inqueuetest",jumpscript.getKey()))
-                if inserttime<(int(time.time())-3600): #when older than 1h remove no matter what
+                inserttime=self.redis.hget("workers:inqueuetest",jumpscript.getKey())
+                if inserttime is not None and int(inserttime)<(int(time.time())-3600): #when older than 1h remove no matter what
                     self.redis.hdel("workers:inqueuetest",jumpscript.getKey())
                     self.checkQueue()                
                     return False
@@ -260,8 +245,8 @@ class RedisWorkerFactory(object):
         job.cmd="%s/%s"%(js.organization,js.name)
         job.category="jumpscript"
         job.log=js.log
-        self._scheduleJob(job)
         self.redis.hset("workers:inqueuetest",js.getKey(),int(time.time()))
+        self._scheduleJob(job)
         if _sync:
             job=self.waitJob(job,timeout=_timeout)
         return job   
@@ -286,16 +271,23 @@ class RedisWorkerFactory(object):
     def _getWork(self,qname,timeout=0):
         if not self.queue.has_key(qname):
             raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
+
         queue=self.queue[qname]
+        actionqueue = "workers:action:%s" % qname
 
         if timeout<>0:
-            jobdict=queue.get(timeout=timeout)
+            result = self.redis.blpop([queue.key, actionqueue], timeout=timeout)
         else:
-            jobdict=queue.get()
-        if jobdict<>None:   
-            jobdict=json.loads(jobdict)         
-            return Job(ddict=jobdict)
-        return None
+            result = self.redis.blpop([queue.key, actionqueue])
+        if result is None:
+            return None, None
+
+        if result[0] == actionqueue:
+            return "action", result[1]
+        else:
+            jobdict = result[1]
+            jobdict=json.loads(jobdict)
+            return "job", Job(ddict=jobdict)
 
     def waitJob(self,job,timeout=600):
         result=self.redis.blpop("workers:return:%s"%job.id, timeout=timeout)        

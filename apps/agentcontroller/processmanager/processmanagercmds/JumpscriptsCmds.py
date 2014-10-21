@@ -4,6 +4,7 @@ import ujson
 from redis import Redis
 # from rq import Queue
 # import JumpScale.baselib.redisworker
+from JumpScale.baselib.redisworker.RedisWorker import RedisWorkerFactory
 import crontab
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
@@ -50,11 +51,11 @@ class JumpscriptsCmds():
 
         self._killGreenLets()
 
-        if init==False:            
+        if init==False:
             self._configureScheduling()
             self._startAtBoot()
 
-        # j.core.processmanager.restartWorkers() #no longer relevant
+        j.core.processmanager.restartWorkers()
 
         return "ok"
 
@@ -120,24 +121,25 @@ class JumpscriptsCmds():
         for jumpscript in self.startatboot:
             jumpscript.execute()
 
-    def _run(self,period=None):
+    def _run(self,period=None, redisw=None):
         if period==None:
-            for period in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod.keys():
+            for period in self.jumpscriptsByPeriod.keys():
                 self._run(period)
 
-        if j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod.has_key(period):
-            for action in j.core.processmanager.cmds.jumpscripts.jumpscriptsByPeriod[period]:
-                # print "execute:%s"%action.name
-                action.execute()
+        if self.jumpscriptsByPeriod.has_key(period):
+            for action in self.jumpscriptsByPeriod[period]:
+                action.execute(_redisw=redisw)
 
     def _loop(self, period):
+        redisw = RedisWorkerFactory()
         if isinstance(period, basestring):
             wait = crontab.CronTab(period).next
         else:
             wait = lambda : period
         while True:
-            gevent.sleep(wait())
-            self._run(period)
+            waittime = wait()
+            gevent.sleep(waittime)
+            self._run(period, redisw)
 
     def _configureScheduling(self):
         for period in self.jumpscriptsByPeriod.keys():

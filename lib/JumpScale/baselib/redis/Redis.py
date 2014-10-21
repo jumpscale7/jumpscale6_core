@@ -81,13 +81,17 @@ class RedisFactory:
             self.gredis[key] = GeventRedis(ipaddr, port,password=password)
         return self.gredis[key]
 
-    def getRedisClient(self, ipaddr, port, password=""):
+    def getRedisClient(self, ipaddr, port, password="", fromcache=True):
         key = "%s_%s" % (ipaddr, port)
+        if not fromcache:
+            return Redis(ipaddr, port, password=password)
         if not self.redis.has_key(key):
             self.redis[key] = Redis(ipaddr, port, password=password)
         return self.redis[key]
 
-    def getRedisQueue(self, ipaddr, port, name, namespace="queues"):
+    def getRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=True):
+        if not fromcache:
+            return CRedisQueue(self.getRedisClient(ipaddr, port, fromcache=False), name, namespace=namespace)
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.redisq.has_key(key):
             self.redisq[key] = CRedisQueue(self.getRedisClient(ipaddr, port), name, namespace=namespace)

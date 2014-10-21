@@ -110,6 +110,13 @@ from JumpScale import j
             print "error in jumpscript factory: execute in process."
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.tb = None
+            eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
+                    j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
+            eco.tags="jscategory:%s"%self.category
+            eco.jid = j.application.jid
+            eco.tags+=" jsorganization:%s"%self.organization
+            eco.tags+=" jsname:%s"%self.name
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
             print eco
             return False, eco
 
@@ -118,24 +125,20 @@ from JumpScale import j
         """
         """
         result = None, None
+        redisw = kwargs.pop('_redisw', j.clients.redisworker)
+
         if not self.enable:
             return
         if not self.async:
             result = list(self.executeInProcess(*args, **kwargs))
             if not result[0]:
                 eco = result[1]
-                eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
-                        j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
-                eco.tags="jscategory:%s"%self.category
-                eco.tags+=" jsorganization:%s"%self.organization
-                eco.tags+=" jsname:%s"%self.name
-                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
                 eco.type = str(eco.type)
                 result[1] = eco.__dict__
         else:
             #make sure this gets executed by worker
             queue = getattr(self, 'queue', 'default') #fall back to default queue if none specified
-            result=j.clients.redisworker.execJumpscript(self.id,_timeout=self.timeout,_queue=queue,_log=self.log,_sync=False)
+            result=redisw.execJumpscript(self.id,_timeout=self.timeout,_queue=queue,_log=self.log,_sync=False)
 
         self.lastrun = time.time()
         if result<>None:
