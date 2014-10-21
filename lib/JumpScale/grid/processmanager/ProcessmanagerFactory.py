@@ -120,16 +120,9 @@ class ProcessmanagerFactory:
                 found=True
         return found
 
-    # def restartWorkers(self):
-
-    #     for worker in [item for item in j.tools.startupmanager.listProcesses() if item.find("workers")==0]:
-    #         domain,name=worker.split("__")
-    #         pdef=j.tools.startupmanager.getProcessDef(domain,name)
-    #         for nr in range(1,pdef.numprocesses+1):
-    #             workername="%s_%s"%(pdef.name,nr)
-    #             self.redisprocessmanager.set("workers:action:%s"%workername,"STOP")
-    #             if not self.redisprocessmanager.hexists("workers:watchdog",workername):
-    #                 self.redisprocessmanager.hset("workers:watchdog",workername,0)
+    def restartWorkers(self):
+        for queuename in ('default', 'io', 'hypervisor', 'process'):
+            j.clients.redisworker.redis.lpush("workers:action:%s"%queuename,"RESTART")
 
     def getCmdsObject(self,category):
         if self.cmds.has_key(category):

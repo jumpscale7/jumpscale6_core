@@ -24,12 +24,12 @@ import JumpScale.grid.jumpscripts
 import sys
 import os
 
-# def restart_program():
-#     """Restarts the current program.
-#     Note: this function does not return. Any cleanup action (like
-#     saving data) must be done before calling this function."""
-#     python = sys.executable
-#     os.execl(python, python, * sys.argv)
+def restart_program():
+    """Restarts the current program.
+    Note: this function does not return. Any cleanup action (like
+    saving data) must be done before calling this function."""
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
 
 
 class Worker(object):
@@ -58,34 +58,26 @@ class Worker(object):
     def init(self):
 
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
+        self.redisw.redis.delete("workers:action:%s"%self.queuename)
 
-        # self.redisprocessmanager.delete("workers:action:%s"%self.name)
-        # self.queue=j.clients.credis.getRedisQueue(opts.addr, opts.port, "workers:work:%s" % self.queuename)
+    def processAction(self, action):
+        self.redisw.redis.delete("workers:action:%s"%self.queuename)
+        if action == "RESTART":
+            print "RESTART ASKED"
+            restart_program()
+            j.application.stop()
+
+        if action=="RELOAD":
+            print "RELOAD ASKED"
+            self.actions={}
 
     def run(self):
         self.log("STARTED")
         while True:
 
-            # ############# PROCESSMANAGER RELATED 
-            # #check if we need to restart
-            # if self.redisprocessmanager.exists("workers:action:%s"%self.name):
-            #     if self.redisprocessmanager.get("workers:action:%s"%self.name)=="STOP":
-            #         print "RESTART ASKED"
-            #         self.redisprocessmanager.delete("workers:action:%s"%self.name)
-            #         restart_program()
-            #         j.application.stop()
-
-            #     if self.redis.get("workers:action:%s"%self.name)=="RELOAD":
-            #         print "RELOAD ASKED"
-            #         self.redisprocessmanager.delete("workers:action:%s"%self.name)
-            #         self.actions={}
-
-            # self.redisprocessmanager.hset("workers:watchdog",self.name,int(time.time()))
-            # ################ END PROCESS MANAGER
-
             try:
                 self.log("check if work")
-                job=self.redisw._getWork(self.queuename,timeout=10)
+                jtype, job = self.redisw._getWork(self.queuename,timeout=10)
             except Exception,e:
                 if str(e).find("Could not find queue to execute job")<>-1:
                     #create queue
@@ -94,7 +86,9 @@ class Worker(object):
                     j.events.opserror("Could not get work from redis, is redis running?","workers.getwork",e)
                 time.sleep(10)
                 continue
-
+            if jtype == "action":
+                self.processAction(job)
+                continue
             if job:
                 
                 j.application.jid=job.guid

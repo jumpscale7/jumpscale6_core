@@ -21,7 +21,7 @@ def main(j, args, params, tags, tasklet):
         obj['epoch'] = datetime.datetime.fromtimestamp(obj['epoch']).strftime('%Y-%m-%d %H:%M:%S')
         for attr in ['errormessage', 'errormessagePub']:
             obj[attr] = obj[attr].replace('\n', '<br>')
-        for attr in ['jid', 'masterjid']:
+        for attr in ['jid']:
             obj['jid'] = '[%(jid)s|job?id=%(jid)s]|' % obj if obj[attr] != 0 else 'N/A'
         obj['id'] = id
         return obj

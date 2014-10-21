@@ -11,6 +11,7 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 roles = []
+log = True
 
 
 def action(msg):

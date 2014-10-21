@@ -51,11 +51,11 @@ class JumpscriptsCmds():
 
         self._killGreenLets()
 
-        if init==False:            
+        if init==False:
             self._configureScheduling()
             self._startAtBoot()
 
-        # j.core.processmanager.restartWorkers() #no longer relevant
+        j.core.processmanager.restartWorkers()
 
         return "ok"
 

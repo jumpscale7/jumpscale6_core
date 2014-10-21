@@ -110,6 +110,13 @@ from JumpScale import j
             print "error in jumpscript factory: execute in process."
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.tb = None
+            eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
+                    j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
+            eco.tags="jscategory:%s"%self.category
+            eco.jid = j.application.jid
+            eco.tags+=" jsorganization:%s"%self.organization
+            eco.tags+=" jsname:%s"%self.name
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
             print eco
             return False, eco
 
@@ -126,12 +133,6 @@ from JumpScale import j
             result = list(self.executeInProcess(*args, **kwargs))
             if not result[0]:
                 eco = result[1]
-                eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
-                        j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
-                eco.tags="jscategory:%s"%self.category
-                eco.tags+=" jsorganization:%s"%self.organization
-                eco.tags+=" jsname:%s"%self.name
-                j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
                 eco.type = str(eco.type)
                 result[1] = eco.__dict__
         else:

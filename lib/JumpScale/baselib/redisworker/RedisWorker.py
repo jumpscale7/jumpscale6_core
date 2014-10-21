@@ -271,16 +271,23 @@ class RedisWorkerFactory(object):
     def _getWork(self,qname,timeout=0):
         if not self.queue.has_key(qname):
             raise RuntimeError("Could not find queue to execute job:%s ((ops:workers.schedulework L:1))"%qname)
+
         queue=self.queue[qname]
+        actionqueue = "workers:action:%s" % qname
 
         if timeout<>0:
-            jobdict=queue.get(timeout=timeout)
+            result = self.redis.blpop([queue.key, actionqueue], timeout=timeout)
         else:
-            jobdict=queue.get()
-        if jobdict<>None:   
-            jobdict=json.loads(jobdict)         
-            return Job(ddict=jobdict)
-        return None
+            result = self.redis.blpop([queue.key, actionqueue])
+        if result is None:
+            return None, None
+
+        if result[0] == actionqueue:
+            return "action", result[1]
+        else:
+            jobdict = result[1]
+            jobdict=json.loads(jobdict)
+            return "job", Job(ddict=jobdict)
 
     def waitJob(self,job,timeout=600):
         result=self.redis.blpop("workers:return:%s"%job.id, timeout=timeout)        
