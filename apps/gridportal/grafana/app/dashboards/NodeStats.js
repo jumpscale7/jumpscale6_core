@@ -1,4 +1,4 @@
-var filter = "nid = " + ARGS.nid + " and gid = " + ARGS.gid;
+var filter = ARGS.nid + " and gid = " + ARGS.gid + " ";
 
 return {
   "title": "Grafana",
@@ -77,7 +77,7 @@ return {
               "condition_filter": true,
               "condition_key": "nid",
               "condition_op": "=",
-              "condition_value": ARGS.nid + " and gid = " + ARGS.gid
+              "condition_value": filter
             }
           ],
           "aliasColors": {},
@@ -147,7 +147,11 @@ return {
               "function": "mean",
               "column": "cpu.time.system",
               "series": "system",
-              "query": filter,
+              "query": "",
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
               "alias": "System",
               "interval": "5m"
             },
@@ -155,7 +159,11 @@ return {
               "function": "mean",
               "column": "cpu.time.user",
               "series": "system",
-              "query": filter,
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
               "alias": "User",
               "interval": "5m"
             },
@@ -163,7 +171,11 @@ return {
               "function": "mean",
               "column": "cpu.time.idle",
               "series": "system",
-              "query": filter,
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
               "alias": "Idle",
               "interval": "5m"
             },
@@ -171,7 +183,11 @@ return {
               "function": "mean",
               "column": "cpu.time.iowait",
               "series": "system",
-              "query": filter,
+              "query": "",
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
               "alias": "IO Wait",
               "interval": "5m"
             }
@@ -245,7 +261,11 @@ return {
               "function": "mean",
               "column": "memory.free * 1024 * 1024",
               "series": "system",
-              "query": filter,
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
               "alias": "Free",
               "hide": false,
               "interval": "1m"
@@ -254,7 +274,11 @@ return {
               "function": "mean",
               "column": "memory.used * 1024 * 1024",
               "series": "system",
-              "query": filter,
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
               "alias": "Used",
               "interval": "1m"
             }
@@ -328,7 +352,11 @@ return {
               "function": "difference",
               "column": "network.kbytes.recv * 1024",
               "series": "system",
-              "query": filter,
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
               "interval": "1m",
               "alias": "Received"
             },
@@ -336,7 +364,11 @@ return {
               "function": "difference",
               "column": "network.kbytes.send * 1024",
               "series": "system",
-              "query": filter,
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
               "interval": "1m",
               "alias": "Sent"
             }
@@ -401,7 +433,11 @@ return {
               "function": "mean",
               "column": "network.error.in",
               "series": "system",
-              "query": filter,
+              "query": "",
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
               "interval": "1m",
               "alias": "In"
             },
@@ -409,7 +445,11 @@ return {
               "function": "mean",
               "column": "network.error.out",
               "series": "system",
-              "query": filter,
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
               "interval": "1m",
               "alias": "Out"
             }
