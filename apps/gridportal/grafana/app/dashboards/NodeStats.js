@@ -402,6 +402,7 @@ return {
               "column": "network.error.in",
               "series": "system",
               "query": filter,
+              "interval": "1m",
               "alias": "In"
             },
             {
@@ -409,6 +410,7 @@ return {
               "column": "network.error.out",
               "series": "system",
               "query": filter,
+              "interval": "1m",
               "alias": "Out"
             }
           ],
