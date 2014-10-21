@@ -70,7 +70,7 @@ return {
               "column": "kbytes_recv * 1024",
               "series": "nic",
               "query": filter,
-              "interval": "6m",
+              "interval": "5m",
               "alias": "Received"
             },
             {
@@ -78,7 +78,7 @@ return {
               "column": "kbytes_sent * 1024",
               "series": "nic",
               "query": filter,
-              "interval": "6m",
+              "interval": "5m",
               "alias": "Sent"
             }
           ],
@@ -143,6 +143,7 @@ return {
               "column": "errin",
               "series": "nic",
               "query": filter,
+              "interval": "1m",
               "alias": "In"
             },
             {
@@ -150,6 +151,7 @@ return {
               "column": "errout",
               "series": "nic",
               "query": filter,
+              "interval": "1m",
               "alias": "Out"
             }
           ],
