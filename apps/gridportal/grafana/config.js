@@ -1,7 +1,7 @@
 define(['settings'],
 function (Settings) {
   
-  var serverip = $serverip;
+  var serverip = 'cpu03.bracknell1.vscalers.com';
 
   return new Settings({
 

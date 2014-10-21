@@ -465,8 +465,6 @@ class GridHealthChecker(object):
             disks = dict()
         else:
             if not disks:
-                errors.append((nid, {'state': 'UNKNOWN'}, 'disks'))
-                errormessage.append('No disks detected.')
                 disks = dict()
         for path, disk in disks.iteritems():
             disk['path'] = path
