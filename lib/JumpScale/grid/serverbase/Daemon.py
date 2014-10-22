@@ -1,6 +1,7 @@
 from JumpScale import j
 import JumpScale.baselib.serializers
 from JumpScale.grid.serverbase import returnCodes
+from JumpScale.core.errorhandling.ErrorConditionHandler import BaseException
 import inspect
 import copy
 import time
@@ -193,7 +194,8 @@ class Daemon(object):
         except Exception, e:
             # if str(e)=="STOP APPLICATION 112299":  #needs to be cryptic otherwise smart developers can fake this
             #     j.application.stop()
-            
+            if isinstance(e, BaseException):
+                return returnCodes.ERROR, returnformat, e.eco
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco

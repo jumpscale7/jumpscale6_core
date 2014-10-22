@@ -385,6 +385,9 @@ class ControllerCMDS():
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
+        # validate params
+        if not nid and not gid and not role:
+            j.events.inputerror_critical("executeJumpScript requires either nid and gid or role")
         def noWork():
             sessionid = session.id
             job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)

@@ -8,6 +8,13 @@ from JumpScale import j
 
 from ErrorConditionObject import ErrorConditionObject
 
+class BaseException(Exception):
+    def __init__(self, message, eco=None):
+        self.message = message
+        self.eco = eco
+
+class HaltException(BaseException):
+    pass
 
 class ErrorConditionHandler():
     
@@ -67,7 +74,7 @@ class ErrorConditionHandler():
         type = j.enumerators.ErrorConditionType.BUG
         eco = self._handleRaise(type, level, message, category, pythonExceptionObject, pythonTraceBack, msgpub, tags)
         if die:                     
-            self.halt(eco.errormessage)
+            self.halt(eco.errormessage, eco)
 
     raiseCritical = raiseBug
 
@@ -117,7 +124,7 @@ class ErrorConditionHandler():
         print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg
         print 
         if die:
-            self.halt(str(eco))
+            self.halt(str(eco), eco)
 
     def raiseRuntimeErrorWithEco(self,eco,tostdout=False):
         message=""
@@ -159,7 +166,7 @@ class ErrorConditionHandler():
             print message
 
         if die:
-            self.halt(eco.errormessage)
+            self.halt(eco.errormessage, eco)
         
     def raiseMonitoringError(self, message, category="",msgpub="",die=False,tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
@@ -167,14 +174,14 @@ class ErrorConditionHandler():
         eco.tags=tags
         self.processErrorConditionObject(eco)
         if die:
-            self.halt(eco.description)
+            self.halt(eco.description, eco)
         
     def raisePerformanceError(self, message, category="",msgpub="",tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
                                          level=1,type=j.enumerators.ErrorConditionType.PERFORMANCE)
         eco.tags=tags
         if die:
-            self.halt(eco.description)
+            self.halt(eco.description, eco)
         
     def getErrorConditionObject(self,ddict={},msg="",msgpub="",category="",level=1,type=0,tb=None):
         """
@@ -226,6 +233,9 @@ class ErrorConditionHandler():
         
         @return a ErrorConditionObject object as used by jumpscale (should be the only type of object we send around)
         """
+        if isinstance(pythonExceptionObject, BaseException):
+            return self.getErrorConditionObject(pythonExceptionObject.eco)
+
         if tb==None:
             ttype, exc_value, tb=sys.exc_info()
         try:
@@ -727,5 +737,5 @@ class ErrorConditionHandler():
             #j.console.echo( "Tracefile in %s" % tracefile)
             j.application.stop(1)
 
-    def halt(self,msg):
-        raise RuntimeError("**halt**\n%s"%msg)
+    def halt(self,msg, eco=None):
+        raise HaltException(msg, eco.__dict__)
