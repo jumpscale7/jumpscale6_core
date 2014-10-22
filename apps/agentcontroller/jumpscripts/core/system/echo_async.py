@@ -1,17 +1,18 @@
 from JumpScale import j
 
 descr = """
-This jumpscript returns network info
+echo (return mesg)
 """
 
-name = "getnetworkinfo"
-category = "monitoring"
 organization = "jumpscale"
+name = "echo_async"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
+category = "tools.echo.async"
+async=True
 roles = []
+log=False
 
-
-def action():
-    return j.system.net.getNetworkInfo()
+def action(msg=""):
+    return msg

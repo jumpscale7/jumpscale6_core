@@ -1,6 +1,6 @@
 from JumpScale import j
 import JumpScale.baselib.serializers
-from JumpScale.grid.serverbase.Exceptions import AuthenticationError, MethodNotFoundException
+from JumpScale.grid.serverbase.Exceptions import AuthenticationError, MethodNotFoundException, RemoteException
 from JumpScale.grid.serverbase import returnCodes
 import time
 import uuid
@@ -186,15 +186,8 @@ class DaemonClient(object):
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % ecodict)
 
             if ecodict["errormessage"].find("Authentication error")<>-1:
-                raise RuntimeError("Could not authenticate to %s for user:%s"%(self.transport,self.user))
-            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
-            # frames= j.errorconditionhandler.getFrames()            
-            # s = j.db.serializers.getMessagePack()  # get messagepack serializer
-            # ddict = s.loads(returndata)
-            # eco = j.errorconditionhandler.getErrorConditionObject(ddict)
-            # eco.category="rpc.exec"
-            # eco.frames=frames
-            # msg = "execution error on server  %s:%s" % (gid,nid,ecoid,cmd,category)
+                raise AuthenticationError("Could not authenticate to %s for user:%s"%(self.transport,self.user), ecodict)
+            raise RemoteException("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]), ecodict)
 
         if returnformat <> "":
             ser = j.db.serializers.get(rreturnformat, key=self.key)

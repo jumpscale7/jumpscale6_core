@@ -21,8 +21,9 @@ import JumpScale.baselib.redis
 from JumpScale.baselib.redisworker.RedisWorker import RedisWorkerFactory
 import JumpScale.grid.jumpscripts
 
-import sys
 import os
+
+RUNTIME = 24 * 3600
 
 def restart_program():
     """Restarts the current program.
@@ -41,6 +42,7 @@ class Worker(object):
         self.redisw = RedisWorkerFactory()
         self.queuename=queuename
         self.init()
+        self.starttime = time.time()
 
     def getClient(self, job):
         ipaddr = getattr(job, 'achost', None)
@@ -74,6 +76,9 @@ class Worker(object):
     def run(self):
         self.log("STARTED")
         while True:
+            if self.starttime + RUNTIME < time.time():
+                print "Running for %s seconds restarting" % RUNTIME
+                restart_program()
 
             try:
                 self.log("check if work")

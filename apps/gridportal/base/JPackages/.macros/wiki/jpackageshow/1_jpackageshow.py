@@ -55,8 +55,8 @@ h3. Explorers
 h3. Actions
 
 |[Start|/jpackages/JPackageAction?action=start&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-[Stop|/jpackages/JPackageAction?action=stop&domain=%(domain)s&name=%(name)s&version=%(version)s]|
-[Restart|/jpackages/JPackageAction?action=restart&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+|[Stop|/jpackages/JPackageAction?action=stop&domain=%(domain)s&name=%(name)s&version=%(version)s]|
+|[Restart|/jpackages/JPackageAction?action=restart&domain=%(domain)s&name=%(name)s&version=%(version)s]|
 |[Update|/jpackages/JPackageAction?action=update&domain=%(domain)s&name=%(name)s&version=%(version)s]|
 |[Package|/jpackages/JPackageAction?action=package&domain=%(domain)s&name=%(name)s&version=%(version)s]|
 |[Upload|/jpackages/JPackageAction?action=upload&domain=%(domain)s&name=%(name)s&version=%(version)s]|

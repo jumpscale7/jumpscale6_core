@@ -149,13 +149,16 @@ class ProcessManager():
         j.processmanager=self
 
         self.hrd=j.application.instanceconfig
-        acip=self.hrd.get("ac.ipaddress")
-        acport=self.hrd.getInt("ac.port")
-        aclogin=self.hrd.get("ac.login",default="node")
-        acpasswd=self.hrd.get("ac.passwd",default="")
-        acclientinstancename = self.hrd.get('agentcontroller.connection')
 
-        if self.hrd.get("ac.ipaddress")<>"":
+        acip=self.hrd.get("ac.ipaddress",default="")
+
+        if acip<>"":
+
+            acport=self.hrd.getInt("ac.port")
+            aclogin=self.hrd.get("ac.login",default="node")
+            acpasswd=self.hrd.get("ac.passwd",default="")
+            acclientinstancename = self.hrd.get('agentcontroller.connection')
+
             #processmanager enabled
             while j.system.net.waitConnectionTest(acip,acport,2)==False:
                 print "cannot connect to agentcontroller, will retry forever: '%s:%s'"%(acip,acport)
@@ -163,6 +166,7 @@ class ProcessManager():
             #now register to agentcontroller
             self.acclient = j.clients.agentcontroller.get(acip, login=aclogin, passwd=acpasswd)
             res=self.acclient.registerNode(hostname=socket.gethostname(), machineguid=j.application.getUniqueMachineId())
+
             nid=res["node"]["id"]
             webdiskey=res["webdiskey"]
             j.application.config.set("grid.node.id",nid)
@@ -185,7 +189,10 @@ class ProcessManager():
             jp=j.packages.findNewest("jumpscale","agentcontroller_client")
             if reset or not jp.isInstalled(instance="main"):
                 jp.install(hrddata={"agentcontroller.client.addr":acip,"agentcontroller.client.port":4444,"agentcontroller.client.login":aclogin},instance=acclientinstancename,reinstall=reset)
-        self.acclient=j.clients.agentcontroller.getByInstance(acclientinstancename)
+            
+            self.acclient=j.clients.agentcontroller.getByInstance(acclientinstancename)
+        else:
+            self.acclient=None
         
     def start(self):
 

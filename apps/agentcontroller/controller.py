@@ -12,6 +12,7 @@ import JumpScale.grid.osis
 import importlib
 import sys
 import copy
+import os
 try:
     import ujson as json
 except:
@@ -42,6 +43,17 @@ import JumpScale.baselib.redis
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
 
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers.polling import PollingObserver as Observer
+
+class JumpScriptHandler(FileSystemEventHandler):
+    def __init__(self, agentcontroller):
+        self.agentcontroller = agentcontroller
+
+    def on_any_event(self, event):
+        if event.src_path and not event.is_directory and event.src_path.endswith('.py'):
+            self.agentcontroller.reloadjumpscripts()
+
 class ControllerCMDS():
 
     def __init__(self, daemon):
@@ -67,7 +79,14 @@ class ControllerCMDS():
         self.agents2roles = dict()
 
         j.logger.setLogTargetLogForwarder()
+        self.start()
+
+    def start(self):
         gevent.spawn(self._cleanScheduledJobs, 3600*24)
+        observer = Observer()
+        handler = JumpScriptHandler(self)
+        observer.schedule(handler, "jumpscripts", recursive=True)
+        observer.start()
 
     def _adminAuth(self,user,passwd):
         return self.nodeclient.authenticate(user, passwd)
@@ -153,8 +172,7 @@ class ControllerCMDS():
         print "want processmanagers to reload js:",
         for item in self.osisclient.list("system","node"):
             gid,nid=item.split("_")
-            if int(gid)==session.gid:
-                cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
+            cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
         print "OK"            
 
     def restartWorkers(self,session=None):
@@ -385,6 +403,9 @@ class ControllerCMDS():
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
+        # validate params
+        if not nid and not gid and not role:
+            j.events.inputerror_critical("executeJumpScript requires either nid and gid or role")
         def noWork():
             sessionid = session.id
             job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
@@ -637,7 +658,7 @@ for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filte
 # j.system.fs.changeDir("..")
 
 cmds=daemon.daemon.cmdsInterfaces["agent"]
-cmds.loadJumpscripts()
+cmds.reloadjumpscripts()
 # cmds.restartProcessmanagerWorkers()
 
 daemon.start()

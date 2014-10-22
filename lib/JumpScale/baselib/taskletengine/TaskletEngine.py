@@ -199,6 +199,9 @@ class TaskletEngine():
                 tasklet.path = ppath
                 self.tasklets.append(tasklet)
 
+    def reloadTasklet(self, tasklet):
+        tasklet.module = self._loadModule(tasklet.path)
+
     def execute(self, params, service=None, tags=None):
         """
         @param params is params object like from j.core.params.get() or a dict
