@@ -14,7 +14,7 @@ class Popup(object):
         template = self.jinja.from_string('''
             <div class="form-group">
                 <label class="sr-only" for="${name}">${label}</label>
-                <input type="text" class="form-control" id="${name}" {% if required %}required{% endif %}>
+                <input type="text" class="form-control" name="${name}" {% if required %}required{% endif %}>
               </div>
         ''')
         content = template.render(label=label, name=name)
@@ -24,7 +24,7 @@ class Popup(object):
         template = self.jinja.from_string('''
             <div class="form-group">
                 <label class="sr-only" for="${name}">${label}</label>
-                <textarea class="form-control" id="${name}" {% if required %}required{% endif %}>
+                <textarea class="form-control" name="${name}" {% if required %}required{% endif %}>
               </div>
         ''')
         content = template.render(label=label, name=name)
@@ -34,7 +34,7 @@ class Popup(object):
         template = self.jinja.from_string('''
             <div class="form-group">
                 <label class="sr-only" for="${name}">${label}</label>
-                <input type="number" class="form-control" id="${name}" {% if required %}required{% endif %}>
+                <input type="number" class="form-control" name="${name}" {% if required %}required{% endif %}>
               </div>
         ''')
         content = template.render(label=label, name=name)
@@ -44,7 +44,7 @@ class Popup(object):
         template = self.jinja.from_string('''
             <div class="form-group">
                 <label class="sr-only" for="${name}">${label}</label>
-                <select class="form-control" id="${name}" {% if required %}required{% endif %}>
+                <select class="form-control" name="${name}" {% if required %}required{% endif %}>
                     {% for title, value in options %}
                         <option value="${value}">${title}</option>
                     {% endfor %}
@@ -76,7 +76,7 @@ class Popup(object):
                 <label class="sr-only">${label}</label>
                 {% for title, value in options %}
                     <label class="checkbox">
-                      <input type="checkbox" id="${name}_${loop.index}" value="${value}" />
+                      <input type="checkbox" name="${name}_${loop.index}" value="${value}" />
                       ${title}
                     </label>
                 {% endfor %}
@@ -87,7 +87,7 @@ class Popup(object):
 
     def to_html(self):
         template = self.jinja.from_string('''
-            <form role="form" method="post" target="${submit_url}" class="popup_form">
+            <form role="form" method="post" action="${submit_url}" class="popup_form">
             <div id="${id}" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="${id}Label" aria-hidden="true">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
@@ -129,6 +129,11 @@ class Popup(object):
                     $('.popup_form').find('.modal-body').hide();
                     $('.popup_form').find('.modal-body-error').show();
                 }
+            });
+            $('#${id}').on('hidden', function() {
+                $(this).modal('hide');
+                $('.popup_form').find('.modal-body').hide();
+                $('.popup_form').find('.modal-body-form').show();
             });
         });
         </script>
