@@ -1,5 +1,10 @@
-class AuthenticationError(Exception):
+from JumpScale.core.errorhandling.ErrorConditionHandler import BaseException
+
+class AuthenticationError(BaseException):
     pass
 
-class MethodNotFoundException(Exception):
+class MethodNotFoundException(BaseException):
+    pass
+
+class RemoteException(BaseException):
     pass

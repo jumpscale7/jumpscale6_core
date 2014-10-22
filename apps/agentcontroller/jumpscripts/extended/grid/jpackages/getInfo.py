@@ -30,15 +30,17 @@ def action(domain, pname, version):
               'taskletsChecksum', 'tcpPorts', 'version','tags','version')
 
     for field in fields:
-        result[field] = getattr(package, field)
+        if hasattr(package, field):
+            result[field] = getattr(package, field)
 
     result['isInstalled'] = package.isInstalled()
     result['codeLocations'] = package.getCodeLocationsFromRecipe()
     result['metadataPath'] = package.getPathMetadata()
     result['filesPath'] = package.getPathFiles()
-    recipe=package.getCodeMgmtRecipe()            
-    lines=[line for line in j.system.fs.fileGetContents(recipe.configpath).split("\n") if (line.strip()<>"" and line.strip()[0]<>"#")]
-    result['coderecipe']="\n".join(lines)
+    recipe=package.getCodeMgmtRecipe() 
+    if j.system.fs.exists(recipe.configpath):
+        lines=[line for line in j.system.fs.fileGetContents(recipe.configpath).split("\n") if (line.strip()<>"" and line.strip()[0]<>"#")]
+        result['coderecipe']="\n".join(lines)
     result['description'] = j.system.fs.fileGetContents("%s/description.wiki"%package.getPathMetadata())
     result["buildNrInstalled"]=package.getHighestInstalledBuildNr()
 
