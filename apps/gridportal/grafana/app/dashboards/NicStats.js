@@ -1,5 +1,4 @@
-var filter = "nid = " + ARGS.nid + " and gid = " + ARGS.gid + " and nic_id = " + "'" + ARGS.name + "'";
-
+var filter = ARGS.nid + " and gid = " + ARGS.gid + " and nic_id = '" + ARGS.name + "' ";
 return {
   "title": "Grafana",
   "tags": [],
@@ -69,16 +68,24 @@ return {
               "function": "difference",
               "column": "kbytes_recv * 1024",
               "series": "nic",
-              "query": filter,
-              "interval": "5m",
+              "query": "",
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "interval": "10m",
               "alias": "Received"
             },
             {
               "function": "difference",
               "column": "kbytes_sent * 1024",
               "series": "nic",
-              "query": filter,
-              "interval": "5m",
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
+              "query": "",
+              "interval": "10m",
               "alias": "Sent"
             }
           ],
@@ -142,7 +149,11 @@ return {
               "function": "mean",
               "column": "errin",
               "series": "nic",
-              "query": filter,
+              "query": "",
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
               "interval": "1m",
               "alias": "In"
             },
@@ -150,7 +161,11 @@ return {
               "function": "mean",
               "column": "errout",
               "series": "nic",
-              "query": filter,
+              "query": "",
+              "condition_filter": true,
+              "condition_key": "nid",
+              "condition_op": "=",
+              "condition_value": filter,
               "interval": "1m",
               "alias": "Out"
             }
