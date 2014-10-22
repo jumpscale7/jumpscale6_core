@@ -90,7 +90,7 @@ class RedisFactory:
         return self.redis[key]
 
     def getGeventRedisClientByInstanceName(self, instance):
-        jp_redis = j.packages.findByName('redis')
+        jp_redis = j.packages.findNewest('jumpscale','redis')
         if instance not in jp_redis.getInstanceNames():
             raise RuntimeError('Redis instance %s is not installed' % instance)
         jp_redis_config = jp_redis.load(instance=instance).hrd_instance
