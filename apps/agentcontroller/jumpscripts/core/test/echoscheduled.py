@@ -18,8 +18,8 @@ enable=True
 async=True
 queue='process'
 log=False
+debug=True
 
 def action():
     msg="alive"
     print msg
-
