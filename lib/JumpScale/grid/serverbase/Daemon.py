@@ -200,7 +200,15 @@ class Daemon(object):
             # eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
             if len(str(data))>1024:
                 data="too much data to show."
-            eco.errormessage = "ERROR IN RPC CALL %s: %s\nData:%s\n"%(cmdkey,eco.errormessage ,data)
+
+            data2=data
+            try:
+                if data2.has_key("session"):
+                    data2.pop("session")
+            except:
+                pass
+            
+            eco.errormessage = "ERROR IN RPC CALL %s: %s. (from:%s/%s)\nData:%s\n"%(cmdkey,eco.errormessage , session.gid, session.nid,data2)
             j.errorconditionhandler.processErrorConditionObject(eco)
             eco.__dict__.pop("tb")
             eco.tb=None

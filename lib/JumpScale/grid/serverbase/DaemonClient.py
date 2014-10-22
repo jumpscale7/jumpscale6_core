@@ -187,7 +187,7 @@ class DaemonClient(object):
 
             if ecodict["errormessage"].find("Authentication error")<>-1:
                 raise RuntimeError("Could not authenticate to %s for user:%s"%(self.transport,self.user))
-            raise RuntimeError("Cannot execute cmd:%s/%s on server:'%s:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
+            raise RuntimeError("Cannot execute cmd:%s/%s on server:'gid:%s/nid:%s' error:'%s' ((ECOID:%s))" %(category,cmd,ecodict["gid"],ecodict["nid"],ecodict["errormessage"],ecodict["guid"]))
             # frames= j.errorconditionhandler.getFrames()            
             # s = j.db.serializers.getMessagePack()  # get messagepack serializer
             # ddict = s.loads(returndata)
