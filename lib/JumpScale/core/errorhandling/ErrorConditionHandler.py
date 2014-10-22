@@ -738,4 +738,6 @@ class ErrorConditionHandler():
             j.application.stop(1)
 
     def halt(self,msg, eco=None):
-        raise HaltException(msg, eco.__dict__)
+        if eco is not None:
+            eco = eco.__dict__
+        raise HaltException(msg, eco)
