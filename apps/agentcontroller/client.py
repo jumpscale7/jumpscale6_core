@@ -14,20 +14,18 @@ j.application.initGrid()
 j.logger.consoleloglevel = 5
 
 
-
 client=j.clients.agentcontroller.get("127.0.0.1")
 
-# ac=client.get("127.0.0.1")
+#execute something on own node
+res= client.executeJumpScript(organization='jumpscale', name='getnetworkinfo', gid=j.application.whoAmI.gid,nid=j.application.whoAmI.nid, \
+    role=None, args={}, all=False, timeout=600, wait=True, queue='', errorreport=True)
 
-jpclient=j.clients.agentcontroller.getClientProxy(category="jpackages",agentControllerIP="127.0.0.1")
+print  client.executeJumpScript(organization='jumpscale', name='error',gid=j.application.whoAmI.gid,nid=j.application.whoAmI.nid)
 
-print jpclient.listJPackages(_agentid=1)
+res= client.executeJumpScript(organization='jumpscale', name='echo',args={"msg":"something"},role="role1")
 
-#job=client.execute("opencode","wait","node",msg="test:%s"%0,timeout=5,wait=True,lock="")
-# jp= client.execute('jumpscale', 'error', 'node', timeout=10)
-#jp= client.execute('jumpscale', 'jpackage_info', role="master", domain="jumpscale", pname="osis", version="1.0",timeout=10)
-
-# print jp
+print "return based on role this time"
+print res
 
 j.application.stop()
 

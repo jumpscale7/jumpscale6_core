@@ -92,6 +92,7 @@ class AgentControllerClient():
         client= j.servers.geventws.getHAClient(connections, user=login, passwd=passwd,category="agent")
         self.__dict__.update(client.__dict__)
 
+
     def execute(self,organization,name,role=None,nid=None,timeout=60,wait=True,queue="",dieOnFailure=True,errorreport=True,**kwargs):
         """
         the arguments just put at end like executeWait("test",myarg=111,something=222)
@@ -105,6 +106,7 @@ class AgentControllerClient():
             if result['state'] == 'NOWORK' and dieOnFailure:
                 raise RuntimeError('Could not find agent with role:%s' %  role)
             if result['result']<>"":
+
                 ecodict=json.loads(result['result'])
                 eco=j.errorconditionhandler.getErrorConditionObject(ddict=ecodict)
                 # eco.gid=result["gid"]
