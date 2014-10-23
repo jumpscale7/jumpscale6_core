@@ -7,13 +7,10 @@ category = "jpackages"
 organization = "jumpscale"
 author = "khamisr@incubaid.com"
 version = "1.0"
-
-gid, nid, _ = j.application.whoAmI
 roles = []
 
-
 def action(domain, pname, version):
-    
+    gid, nid, _ = j.application.whoAmI
     if version and domain and pname:
         package = j.packages.find(domain, pname, version)[0]
     else:
