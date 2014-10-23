@@ -324,8 +324,6 @@ class GridHealthChecker(object):
             workers = dict()
 
         for worker, stats in workers.iteritems():
-            size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
-            stats['mem'] = '%.2f %sB' % (size, unit)
             stats['name'] = worker
             if stats['state'] == 'RUNNING':
                 results.append((nid, stats, 'workers'))
