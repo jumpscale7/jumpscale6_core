@@ -131,18 +131,19 @@ class Popup(object):
         js = '''$(function(){
             $('.popup_form').ajaxForm({
                 clearForm: true,
-                beforeSubmit: function(formData, jqForm, options) {
-                    $(jqForm).find('.modal-body').hide();
-                    $(jqForm).find('.modal-body-sending').show();
+                beforeSubmit: function(formData, $form, options) {
+                    this.popup = $form;
+                    $form.find('.modal-body').hide();
+                    $form.find('.modal-body-sending').show();
                 },
-                success: function(responseText, statusText, $form) {
-                    $($form).find('.modal').modal('hide');
-                    $($form).find('.modal-body').hide();
-                    $($form).find('.modal-body-form').show();
+                success: function(responseText, statusText, xhr) {
+                    this.popup.find('.modal').modal('hide');
+                    this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-body-form').show();
                 },
-                error: function(responseText, statusText, $form) {
-                    $('.popup_form').find('.modal-body').hide();
-                    $('.popup_form').find('.modal-body-error').show();
+                error: function(responseText, statusText, xhr, $form) {
+                    this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-body-error').show();
                 }
             });
             $('.modal').on('hidden', function() {
