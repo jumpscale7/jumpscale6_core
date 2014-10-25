@@ -69,6 +69,12 @@ class DocPreprocessor():
                 print 'Monitoring', contentdir
                 observer.schedule(self.doc_handler, contentdir, recursive=True)
                 observer.start()
+
+            # add observer for system macros
+            observer = Observer()
+            self.file_observers.append(observer)
+            observer.schedule(self.doc_handler, 'macros', recursive=True)
+            observer.start()
             
 
     def docNew(self):

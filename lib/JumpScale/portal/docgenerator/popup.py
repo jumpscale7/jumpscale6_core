@@ -20,6 +20,13 @@ class Popup(object):
         content = template.render(label=label, name=name)
         self.widgets.append(content)
 
+    def addHiddenField(self, name, value):
+        template = self.jinja.from_string('''
+            <input type="hidden" class="form-control" name="${name}" value="${value}">
+        ''')
+        content = template.render(value=value, name=name)
+        self.widgets.append(content)
+
     def addTextArea(self, label, name, required=False):
         template = self.jinja.from_string('''
             <div class="form-group">
@@ -85,7 +92,7 @@ class Popup(object):
         content = template.render(label=label, name=name, options=options)
         self.widgets.append(content)
 
-    def to_html(self):
+    def write_html(self, page):
         template = self.jinja.from_string('''
             <form role="form" method="post" action="${submit_url}" class="popup_form">
             <div id="${id}" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="${id}Label" aria-hidden="true">
@@ -108,38 +115,45 @@ class Popup(object):
               </div>
             </div>
         </form>
-        <style>
-            .modal-body-sending, .modal-body-error { display: none }
-        </style>
-        <script src="/jslib/old/jquery.form/jquery.form.js"></script>
-        <script type="text/javascript">
-        $(function(){
-            $('.popup_form').ajaxForm({
-                clearForm: true,
-                beforeSubmit: function() {
-                    $('.popup_form').find('.modal-body').hide();
-                    $('.popup_form').find('.modal-body-sending').show();
-                },
-                success: function(data) {
-                    $('#${id}').modal('hide');
-                    $('.popup_form').find('.modal-body').hide();
-                    $('.popup_form').find('.modal-body-form').show();
-                },
-                error: function() {
-                    $('.popup_form').find('.modal-body').hide();
-                    $('.popup_form').find('.modal-body-error').show();
-                }
-            });
-            $('#${id}').on('hidden', function() {
-                $(this).modal('hide');
-                $('.popup_form').find('.modal-body').hide();
-                $('.popup_form').find('.modal-body-form').show();
-            });
-        });
-        </script>
         ''')
+        
         content = template.render(id=self.id, header=self.header, action_button=self.action_button, form_layout=self.form_layout, 
                                 widgets=self.widgets, submit_url=self.submit_url)
-        return content
 
+        css = '.modal-body-sending, .modal-body-error { display: none }'
+        if css not in page.head:
+            page.addCSS(cssContent=css)
 
+        jsLink = '/jslib/old/jquery.form/jquery.form.js'
+        if jsLink not in page.head:
+            page.addJS(jsLink)
+
+        js = '''$(function(){
+            $('.popup_form').ajaxForm({
+                clearForm: true,
+                beforeSubmit: function(formData, $form, options) {
+                    this.popup = $form;
+                    $form.find('.modal-body').hide();
+                    $form.find('.modal-body-sending').show();
+                },
+                success: function(responseText, statusText, xhr) {
+                    this.popup.find('.modal').modal('hide');
+                    this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-body-form').show();
+                },
+                error: function(responseText, statusText, xhr, $form) {
+                    this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-body-error').show();
+                }
+            });
+            $('.modal').on('hidden', function() {
+                $(this).modal('hide');
+                $(this).find('.modal-body').hide();
+                $(this).find('.modal-body-form').show();
+            });
+        });'''
+
+        if js not in page.head:
+            page.addJS(jsContent=js)
+        
+        page.addMessage(content)

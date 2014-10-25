@@ -182,7 +182,7 @@ class DaemonClient(object):
             # print "*** error in client to zdaemon ***"
             s = j.db.serializers.get(rreturnformat)
             ecodict = s.loads(returndata)
-            if cmsd == "logeco":
+            if cmd == "logeco":
                 raise RuntimeError("Could not forward errorcondition object to logserver, error was %s" % ecodict)
 
             if ecodict["errormessage"].find("Authentication error")<>-1:

@@ -15,6 +15,7 @@ class JumpScript(object):
         self.period = 0
         self.lastrun = 0
         self.source=""
+        self.debug = False
         self.path=path
         self.id = None
         self.startatboot = False
@@ -68,6 +69,7 @@ from JumpScale import j
         self.category=getattr(self.module, 'category', "unknown")
         self.license=getattr(self.module, 'license', "unknown")
         self.version=getattr(self.module, 'version', "1.0")
+        self.debug=getattr(self.module, 'debug', False)
         self.roles=getattr(self.module, 'roles', [])
         self.source=source
         self.descr=self.module.descr
