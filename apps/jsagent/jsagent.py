@@ -112,6 +112,11 @@ class ProcessManager():
     def __init__(self,reset=False):
         self.processes = list()
 
+        self.dir_data=j.system.fs.joinPaths(j.dirs.base,"jsagent_data")
+        self.dir_hekadconfig=j.system.fs.joinPaths(self.dir_data,"dir_hekadconfig")
+        self.dir_actions=j.system.fs.joinPaths(self.dir_data,"actions")
+        j.system.fs.createDir(self.datadir)
+
         #check there is a redis on port 9998 & 9999 (the new port for all)
         for port in [9999,9998,8001]:
             if j.system.net.tcpPortConnectionTest("localhost",port):
@@ -162,7 +167,7 @@ class ProcessManager():
             p.name="hekad"
             p.instance=name
             p.workingdir="/opt/heka"
-            p.cmds=["bin/hekad","--config=hekad.toml"]
+            p.cmds=["bin/hekad","--config=%s"%self.dir_hekadconfig]
             p.start()
             self.processes.append(p)
 
