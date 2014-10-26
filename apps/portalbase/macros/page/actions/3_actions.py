@@ -1,22 +1,32 @@
 def main(j, args, params, tags, tasklet):
     from JumpScale.portal.docgenerator.popup import Popup
     import json
-    import yaml
+    try:
+        import toml
+    except Exception, e:
+        out = "toml is not set up. Please update base."
+        params.result = (out, args.doc)
+        return params
+
+
     def _showexample():
         out = """Actions must be in yaml form.
 eg:
 {{actions:
-- display: Start
-  input: 
-  - reason
-  - spacename
-  action: /restmachine/cloudbroker/machine/start
-  data: 
-   machineId: $$id
-   accountName: $$accountname
 
-- display: Stop
-  action: /restmachine/cloudbroker/machine/stop?machineId=$$id&reason=ops&accountName=$$accountname&spaceName=$$spacename
+[[actions]]
+action = "\/restmachine\/cloudbroker\/account\/disable"
+input = [ "reason",]
+display = "Disable"
+[actions.data]
+accountname = "${name}"
+
+[[actions]]
+action = "\/restmachine\/cloudbroker\/account\/enable"
+input = [ "reason",]
+display = "Enable"
+[actions.data]
+accountname = "${name}"
 }}
 """
         params.result = (out, args.doc)
@@ -30,7 +40,7 @@ eg:
         return _showexample()
 
     actionoptions = dict()
-    actions = yaml.load(content)
+    actions = toml.loads(content).get('actions')
     if actions == content:
         return _showexample()
 
