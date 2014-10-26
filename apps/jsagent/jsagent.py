@@ -239,6 +239,7 @@ class ProcessManager():
         self.processes.append(p)
 
     def _processManagerStart(self):
+        j.core.grid.init()
         p=Process()
         p.domain="jumpscale"
         p.name="processmanager"
