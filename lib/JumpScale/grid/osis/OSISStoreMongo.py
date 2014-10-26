@@ -184,6 +184,16 @@ class OSISStoreMongo(OSISStore):
         #NOT RELEVANT FOR THIS TYPE OF DB
         pass
 
+    def count(self, query, session=None):
+        db, counter = self._getMongoDB(session)
+        return db.find(query).count()
+
+    def native(self, methodname, kwargs, session):
+        db, counter = self._getMongoDB(session)
+        method = getattr(db, methodname)
+        kwargs = kwargs or {}
+        return method(**kwargs)
+
     def find(self, query, start=0, size=200, session=None):  
         """
         query can be a dict or a string

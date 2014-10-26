@@ -54,11 +54,15 @@ class OSISClientForCat():
         return  self.client.authenticate(namespace=self.namespace, categoryname=self.cat,name=name,passwd=passwd,**args)     
 
     def new(self,**args):
-        
         obj=self._getModelClass()(**args)
         obj.init(self.namespace,self.cat,1)
         return obj
 
+    def native(self, methodname, kwargs):
+        return self.client.native(namespace=self.namespace, categoryname=self.cat, methodname=methodname, kwargs=kwargs)
+
+    def count(self, query=None):
+        return self.client.count(namespace=self.namespace, categoryname=self.cat, query=query)
 
     def demodata(self):
         """

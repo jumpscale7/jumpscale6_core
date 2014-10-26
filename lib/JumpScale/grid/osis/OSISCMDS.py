@@ -98,6 +98,15 @@ class OSISCMDS(object):
             return oi.list(session=session)
         return oi.list(prefix, session=session)
 
+    def count(self, namespace, categoryname, query=None, session=None):
+        oi = self._doAuth(namespace, categoryname, session)
+        return oi.count(query, session=session)
+
+    def native(self, namespace, categoryname, methodname, kwargs=None, session=None):
+        oi = self._doAuth(namespace, categoryname, session)
+        return oi.native(methodname=methodname, session=session, kwargs=kwargs)
+
+
     def checkChangeLog(self):
         rediscl=None
         if not j.application.config.exists("rediskvs.master.addr"):
