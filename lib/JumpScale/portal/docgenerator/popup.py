@@ -103,7 +103,7 @@ class Popup(object):
               <div class="modal-body modal-body-sending">
                 Sending...
               </div>
-              <div class="modal-body modal-body-error">
+              <div class="modal-body modal-body-error alert alert-error">
                 Error happened on the server
               </div>
               <div class="modal-body modal-body-form">
@@ -142,6 +142,9 @@ class Popup(object):
                     this.popup.find('.modal-body-form').show();
                 },
                 error: function(responseText, statusText, xhr, $form) {
+                    if (responseText) {
+                        this.popup.find('.modal-body-error').text(responseText.responseText);
+                    }
                     this.popup.find('.modal-body').hide();
                     this.popup.find('.modal-body-error').show();
                 }
