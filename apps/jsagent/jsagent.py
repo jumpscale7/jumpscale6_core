@@ -112,7 +112,7 @@ class ProcessManager():
     def __init__(self,reset=False):
         self.processes = list()
 
-        self.dir_data=j.system.fs.joinPaths(j.dirs.base,"jsagent_data")
+        self.dir_data=j.system.fs.joinPaths(j.dirs.baseDir,"jsagent_data")
         self.dir_hekadconfig=j.system.fs.joinPaths(self.dir_data,"dir_hekadconfig")
         self.dir_actions=j.system.fs.joinPaths(self.dir_data,"actions")
         j.system.fs.createDir(self.datadir)
