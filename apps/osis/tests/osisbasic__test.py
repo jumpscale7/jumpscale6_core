@@ -30,7 +30,7 @@ class TEST(unittest.TestCase):
         return j.base.idgenerator.generateGUID().replace("-","")
 
     def setUp(self):
-        self.client = j.core.osis.getClient(user='root')
+        self.client = j.core.osis.getClientByInstance('main')
         self.osisclient =j.core.osis.getClientForCategory(self.client, 'system', 'fake4test')
         self.prefix = time.time()
         

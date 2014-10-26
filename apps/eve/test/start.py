@@ -19,7 +19,7 @@ my_settings = {
 
 import JumpScale.grid.osis
 
-client = j.core.osis.getClient(user='root')
+client = j.core.osis.getClientByInstance('main')
 json=client.getOsisSpecModel("oss")
 
 from generators.MongoEngineGenerator import *

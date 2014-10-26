@@ -7,7 +7,7 @@ import JumpScale.grid.osis
 
 import time
 
-client = j.core.osis.getClient(user='root')
+client = j.core.osis.getClientByInstance('main')
 
 
 def testHB():
