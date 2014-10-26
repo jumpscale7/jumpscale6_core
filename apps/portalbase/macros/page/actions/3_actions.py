@@ -1,16 +1,17 @@
 def main(j, args, params, tags, tasklet):
+    page = args.page
     from JumpScale.portal.docgenerator.popup import Popup
     import json
     try:
         import toml
     except Exception, e:
-        out = "toml is not set up. Please update base."
-        params.result = (out, args.doc)
+        page.addMessage("toml is not set up. Please update base.")
+        params.result = page
         return params
 
 
     def _showexample():
-        out = """Actions must be in yaml form.
+        page.addMessage("""Actions must be in yaml form.
 eg:
 {{actions:
 
@@ -28,11 +29,10 @@ display = "Enable"
 [actions.data]
 accountname = "${name}"
 }}
-"""
-        params.result = (out, args.doc)
+""")
+        params.result = page
         return params
 
-    page = args.page
     macrostr = args.macrostr.strip()
     content = "\n".join(macrostr.split("\n")[1:-1])
 
