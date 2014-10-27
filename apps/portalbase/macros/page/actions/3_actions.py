@@ -30,7 +30,7 @@ eg:
         return _showexample()
 
     actionoptions = dict()
-    actions = yaml.loads(content)
+    actions = yaml.load(content)
     if actions == content:
         return _showexample()
 
