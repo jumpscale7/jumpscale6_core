@@ -11,7 +11,7 @@ def main(j, args, params, tags, tasklet):
 
     out = list()
 
-    out.append('||Worker||CPU Percent||Memory Used||Status||Last Active||')
+    out.append('||Worker||Status||Last Active||')
 
     workers = rediscl.hget('healthcheck:monitoring', 'results')
     errors = rediscl.hget('healthcheck:monitoring', 'errors')
@@ -23,15 +23,8 @@ def main(j, args, params, tags, tasklet):
             if 'workers' in data.get(nidstr, dict()):
                 wdata = data[nidstr].get('workers', list())
                 for stat in wdata:
-                    if 'mem' not in stat:
-                        continue
-                    size, unit = stat['mem'].split(' ')
-                    size = j.tools.units.bytes.toSize(float(size), unit.replace('B', ''), 'M')
-                    if size > 100:
-                        status = '{color:orange}*RUNNING**{color}'
-                    else:
-                        status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
-                    out.append('|%s|%s %%|%s|%s|%s|' % (stat.get('name', ''), stat.get('cpu', 0), stat.get('mem', 0), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
+                    status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
+                    out.append('|%s|%s|%s|' % (stat.get('name', ''), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
 
     out = '\n'.join(out)
     params.result = (out, doc)

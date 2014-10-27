@@ -111,6 +111,12 @@ class Process():
 class ProcessManager():
     def __init__(self,reset=False):
         self.processes = list()
+        self.services = list()
+
+        self.dir_data=j.system.fs.joinPaths(j.dirs.baseDir,"jsagent_data")
+        self.dir_hekadconfig=j.system.fs.joinPaths(self.dir_data,"dir_hekadconfig")
+        self.dir_actions=j.system.fs.joinPaths(self.dir_data,"actions")
+        j.system.fs.createDir(self.dir_data)
 
         #check there is a redis on port 9998 & 9999 (the new port for all)
         for port in [9999,9998,8001]:
@@ -151,6 +157,21 @@ class ProcessManager():
         self.hrd=j.application.instanceconfig
 
         acip=self.hrd.get("ac.ipaddress",default="")
+
+        if "hekad" in self.services:
+            jp=j.packages.findNewest("jumpscale","hekad")
+            if not jp.isInstalled(instance="0"):
+                jp.install(hrddata={},instance="hekad")
+
+            p=Process()
+            p.domain="jumpscale"
+            p.name="hekad"
+            p.instance=name
+            p.workingdir="/opt/heka"
+            p.cmds=["bin/hekad","--config=%s"%self.dir_hekadconfig]
+            p.start()
+            self.processes.append(p)
+
 
         if acip<>"":
 
@@ -218,6 +239,7 @@ class ProcessManager():
         self.processes.append(p)
 
     def _processManagerStart(self):
+        j.core.grid.init()
         p=Process()
         p.domain="jumpscale"
         p.name="processmanager"
@@ -274,6 +296,7 @@ parser = cmdutils.ArgumentParser()
 parser.add_argument("-i", '--instance', default="0", help='jsagent instance', required=False)
 parser.add_argument("-r", '--reset', action='store_true',help='jsagent reset', required=False,default=False)
 parser.add_argument("-d", '--debug', action='store_true',help='Put JSAgent in debug mode', required=False,default=False)
+parser.add_argument("-s", '--services', help='list of services to run e.g heka, agentcontroller,web', required=False,default="")
 
 opts = parser.parse_args()
 
@@ -288,6 +311,7 @@ j.application.instanceconfig = jp.hrd_instance
 #first start processmanager with all required stuff
 pm=ProcessManager(reset=opts.reset)
 processes=pm.processes
+pm.services=[item.strip().lower() for item in opts.services.split(",")]
 
 
 from lib.worker import Worker

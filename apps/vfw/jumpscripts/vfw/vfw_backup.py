@@ -29,7 +29,7 @@ def action():
         if j.system.fs.exists(backuppath):
             j.system.fs.removeDirTree(backuppath)
 
-        osiscl = j.core.osis.getClient(user='root')
+        osiscl = j.core.osis.getClientByInstance('main')
         vfwcl = j.core.osis.getClientForCategory(osiscl, 'vfw', 'virtualfirewall')
         cscl = j.core.osis.getClientForCategory(osiscl, 'cloudbroker', 'cloudspace')
 

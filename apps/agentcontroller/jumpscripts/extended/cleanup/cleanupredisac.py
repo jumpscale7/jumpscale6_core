@@ -26,7 +26,7 @@ def action():
         import ujson as json
     except:
         import json
-    ocl = j.core.osis.getClient(user='root')
+    ocl = j.core.osis.getClientByInstance('main')
     jcl = j.core.osis.getClientForCategory(ocl, 'system', 'job')
     rcl = j.clients.credis.getRedisClient('127.0.0.1', 7769)
     jobkey = 'jobs:%s' % j.application.whoAmI.gid

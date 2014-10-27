@@ -76,6 +76,7 @@ class Worker(object):
     def run(self):
         self.log("STARTED")
         while True:
+            self.redisw.redis.hset("workers:heartbeat",self.queuename,int(time.time()))
             if self.starttime + RUNTIME < time.time():
                 print "Running for %s seconds restarting" % RUNTIME
                 restart_program()

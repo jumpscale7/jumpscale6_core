@@ -83,5 +83,5 @@ def action():
         eco=redisqueueEco.get_nowait()
 
 if __name__ == '__main__':
-    j.core.osis.client = j.core.osis.getClient(user='root')
+    j.core.osis.client = j.core.osis.getClientByInstance('main')
     action()

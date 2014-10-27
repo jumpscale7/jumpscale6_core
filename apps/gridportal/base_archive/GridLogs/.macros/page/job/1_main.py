@@ -8,7 +8,7 @@ def main(j, args, params, tags, tasklet):
     except:
         import json
     import JumpScale.grid.osis
-    osiscl = j.core.osis.getClient(user='root')
+    osiscl = j.core.osis.getClientByInstance('main')
     client = j.core.osis.getClientForCategory(osiscl, 'system', 'job')
     page = args.page
     p = args.requestContext.params

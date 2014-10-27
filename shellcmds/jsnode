@@ -52,7 +52,7 @@ def _deleteNode(nid):
 if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole']:
     import JumpScale.grid.osis
 
-    oscl = j.core.osis.getClient(user='root')
+    oscl = j.core.osis.getClientByInstance('main')
     ncl = j.core.osis.getClientForCategory(oscl, 'system', 'node')
 
 

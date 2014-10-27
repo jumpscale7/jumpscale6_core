@@ -92,7 +92,6 @@ class Worker(object):
     def run(self):
         print "STARTED"
         w=j.clients.redisworker
-        w.useCRedis()
         while True:
 
             ############# PROCESSMANAGER RELATED 

@@ -243,8 +243,7 @@ diskinfo.description=
                                         hrd.set("diskinfo.epoch",j.base.time.getTimeEpoch())
 
 
-                                        masterip=j.application.config.get("grid.master.ip")
-                                        client = j.core.osis.getClient(masterip,user="root")
+                                        client = j.core.osis.getClientByInstance('main')
                                         client_disk=j.core.osis.getClientForCategory(client,"system","disk")
 
                                         disk=client_disk.new()

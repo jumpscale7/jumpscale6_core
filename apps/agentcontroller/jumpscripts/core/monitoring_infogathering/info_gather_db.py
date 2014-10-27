@@ -20,6 +20,6 @@ log=False
 
 def action():
     import JumpScale.grid.osis
-    osiscl = j.core.osis.getClient(user='root')
+    osiscl = j.core.osis.getClientByInstance('main')
     status = osiscl.getStatus()
     return status

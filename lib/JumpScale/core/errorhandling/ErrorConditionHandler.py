@@ -13,6 +13,13 @@ class BaseException(Exception):
         self.message = message
         self.eco = eco
 
+    def __str__(self):
+        if self.eco:
+            return str(j.errorconditionhandler.getErrorConditionObject(self.eco))
+        return "Unexpected Error Happened"
+
+    __repr__ = __str__
+
 class HaltException(BaseException):
     pass
 
