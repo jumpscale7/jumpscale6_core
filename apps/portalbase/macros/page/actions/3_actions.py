@@ -29,7 +29,7 @@ eg:
     if not content:
         return _showexample()
 
-    actionoptions = dict()
+    actionoptions = [('Choose Action', '#')]
     actions = yaml.load(content)
     if actions == content:
         return _showexample()
@@ -39,8 +39,12 @@ eg:
         display = actiondata['display']
         inputs = actiondata.get('input', '')
         data = actiondata.get('data', {})
-        actionid = "action-%s" % display.replace(' ', '')
-        actionoptions.update({display: actionid})
+        if actionurl.startswith("#"):
+            actionoptions.append((display, actionurl[1:]))
+            continue
+        else:
+            actionid = "action-%s" % display.replace(' ', '')
+            actionoptions.append((display, actionid))
 
         popup = Popup(id=actionid, header="Confirm Action %s" % display, submit_url=actionurl)
         if inputs:
@@ -52,7 +56,7 @@ eg:
 
         popup.write_html(page)
 
-    id = page.addComboBox(actionoptions, {'#': 'Choose Action'})
+    id = page.addComboBox(actionoptions)
     page.addJS(None, """
         $(document).ready(function() {
             $("#%(id)s").change(function () {
