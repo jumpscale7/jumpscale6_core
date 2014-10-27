@@ -15,7 +15,7 @@ class system_logs(j.code.classGetBase()):
         nip = 'localhost'
         if args.get('nip'):
             nip = args.get('nip')
-        osiscl = j.core.osis.getClient(nip, user='root')
+        osiscl = j.core.osis.getClientByInstance('main')
         client = j.core.osis.getClientForCategory(osiscl, 'system', 'job')
 
         params = {'ffrom': '', 'to': '', 'nid': '', 'gid': '',
