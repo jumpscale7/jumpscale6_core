@@ -673,6 +673,7 @@ exec $cmd >>/var/log/$name.log 2>&1
                 j.system.fs.createDir("/etc/service/%s"%name)
                 j.system.fs.writeFile(filename=ppath,contents=cmdfile)
                 j.system.fs.chmod(ppath,0o700)
+                time.sleep(2)
             else:
                 j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir,env=pd.env,reload=True)
 
