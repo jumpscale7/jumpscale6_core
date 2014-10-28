@@ -325,7 +325,10 @@ elif args.action == 'mdupdate':
         cmd="jssync download -c jpackages -d"
         j.system.process.executeWithoutPipe(cmd)
     else:
-        j.packages.updateMetaData(force=args.force)
+        if args.domain<>None:
+            j.packages.updateMetaData(force=args.force,domain=args.domain)
+        else:        
+            j.packages.updateMetaData(force=args.force)
 
 elif args.action == 'mdswitch':
     if args.qualitylevel==None:
