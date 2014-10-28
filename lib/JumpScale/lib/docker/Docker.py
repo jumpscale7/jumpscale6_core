@@ -255,7 +255,9 @@ class Docker():
             vols=""
         if volsro==None:
             volsro=""
-
+        if ports==None:
+            ports=""
+                
         if mem==None:
             mem=0
 
@@ -269,12 +271,27 @@ class Docker():
                 key,val=item.split(":",1)
                 portsdict[int(key)]=int(val)
 
+        if not portsdict.has_key(22):
+            for port in range(9022,9190):
+                if not j.system.net.tcpPortConnectionTest("localhost", port):
+                    portsdict[22]=port
+                    print "SSH PORT WILL BE ON:%s"%port
+                    break                
+
         volsdict={}
         if len(vols)>0:
             items=vols.split("#")
             for item in items:
                 key,val=item.split(":",1)
                 volsdict[str(key).strip()]=str(val).strip()
+
+        if j.system.fs.exists(path="/var/jumpscale/"):
+            if not volsdict.has_key("/var/jumpscale"):
+                volsdict["/var/jumpscale"]="/var/jumpscale"
+
+        tmppath="/tmp/dockertmp/%s"%name
+        j.system.fs.createDir(tmppath)
+        volsdict[tmppath]="/tmp"
 
         volsdictro={}
         if len(volsro)>0:
@@ -357,6 +374,8 @@ class Docker():
         info=self.getInfo(name)
         for port2 in info["Ports"]:
             if int(port2["PrivatePort"])==int(port):
+                if not port2.has_key("PublicPort"):
+                    j.events.inputerror_critical("cannot find publicport for ssh?")
                 return port2["PublicPort"]
 
     def pushSSHKey(self,name):

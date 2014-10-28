@@ -15,12 +15,18 @@ class RsyncServer:
     """
     """
 
-    def __init__(self,root,port=873):
+    def __init__(self,root,port=873,distrdir=""):
         self.root=root
         self.port=port
         self.pathsecrets="%s/secrets.cfg"%self.root
         self.pathusers="%s/users.cfg"%self.root
-        self.distrdir="/opt/jumpscale/apps/agentcontroller/distrdir/"
+        if distrdir=="":
+            self.distrdir="/opt/jumpscale/apps/agentcontroller2/distrdir/"
+        else:
+            self.distrdir=distrdir
+
+        self.rolesdir=j.system.fs.joinPaths(self.root,"roles")
+
         j.system.fs.createDir("/etc/rsync")
 
         if j.system.fs.exists(path=self.pathsecrets):
@@ -136,7 +142,7 @@ list = no
 
     def start(self,background=True):
         self.saveConfig()
-        self.prepare()
+        self.prepareroles()
         
         j.system.process.killProcessByPort(self.port)
 
@@ -148,34 +154,33 @@ list = no
 
         j.system.process.executeWithoutPipe(cmd)
      
-    def prepare(self):
-
-        pathRegexExcludes = {}
-        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"]
-
-        def processdir(path,stat,arg):
-            print "%s"%path
-            from IPython import embed
-            print "DEBUG NOW id"
-            embed()
-            
-
-        callbackFunctions={}
-        callbackFunctions["D"]=processdir
-
-        fswalker = j.base.fswalker.get()
-
-        callbackMatchFunctions=fswalker.getCallBackMatchFunctions({},pathRegexExcludes,False,False)
-        args={}
-
-        fswalker.walk(self.distrdir,callbackFunctions,args,
-                          callbackMatchFunctions,childrenRegexExcludes, 
-                          [],pathRegexExcludes)
+    def prepareroles(self):
+        for category in j.system.fs.listDirsInDir(self.distrdir, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+            catpath=j.system.fs.joinPaths(self.distrdir,category)
+            for path in j.system.fs.listDirsInDir(catpath, recursive=True, dirNameOnly=False, findDirectorySymlinks=True):
+                rolepath=j.system.fs.joinPaths(path,".roles")
+                if j.system.fs.exists(path=rolepath):
+                    #found dir with role
+                    dirname=j.system.fs.getDirName(path+"/", lastOnly=False)
+                    relpath=j.system.fs.pathRemoveDirPart(path,catpath)
+                    roles=j.system.fs.fileGetContents(rolepath).strip()
+                    roles=[item.strip() for item in roles.split(",")]
+                    for role in roles:
+                        destdir=j.system.fs.joinPaths(self.rolesdir,role,category,relpath)
+                        print "link: %s->%s"%(path,destdir)
+                        j.system.fs.symlink(path,destdir, overwriteTarget=True)
+                        # j.system.fs.createDir(destdir)
+                        # for item in j.system.fs.listFilesInDir(path, recursive=False, exclude=["*.pyc",".roles"], followSymlinks=False, listSymlinks=False):
+                        #     relpath=j.system.fs.pathRemoveDirPart(item,path)
+                        #     destpathfile=j.system.fs.joinPaths(destdir,relpath)
+                        #     j.system.fs.createDir(j.system.fs.getDirName(destpathfile))
+                        #     j.system.fs.symlink(item, destpathfile, overwriteTarget=True)
+                                        
 
         from IPython import embed
         print "DEBUG NOW kkk"
         embed()
-        
+        p        
 
 
 
