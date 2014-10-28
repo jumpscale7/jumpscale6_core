@@ -1,35 +1,35 @@
 def main(j, args, params, tags, tasklet):
+    page = args.page
     from JumpScale.portal.docgenerator.popup import Popup
-    import json
     import yaml
-    def _showexample():
-        out = """Actions must be in yaml form.
-eg:
-{{actions:
-- display: Start
-  input: 
-  - reason
-  - spacename
-  action: /restmachine/cloudbroker/machine/start
-  data: 
-   machineId: $$id
-   accountName: $$accountname
 
+
+    def _showexample():
+        page.addMessage("""Actions must be in yaml form.
+eg:
+- display: Start       
+  input:       
+  - reason     
+  - spacename      
+  action: /restmachine/cloudbroker/machine/start       
+  data:        
+   machineId: $$id     
+   accountName: $$accountname      
+         
 - display: Stop
   action: /restmachine/cloudbroker/machine/stop?machineId=$$id&reason=ops&accountName=$$accountname&spaceName=$$spacename
 }}
-"""
-        params.result = (out, args.doc)
+""")
+        params.result = page
         return params
 
-    page = args.page
     macrostr = args.macrostr.strip()
     content = "\n".join(macrostr.split("\n")[1:-1])
 
     if not content:
         return _showexample()
 
-    actionoptions = dict()
+    actionoptions = [('Choose Action', '#')]
     actions = yaml.load(content)
     if actions == content:
         return _showexample()
@@ -39,8 +39,12 @@ eg:
         display = actiondata['display']
         inputs = actiondata.get('input', '')
         data = actiondata.get('data', {})
-        actionid = "action-%s" % display.replace(' ', '')
-        actionoptions.update({display: actionid})
+        if actionurl.startswith("#"):
+            actionoptions.append((display, actionurl[1:]))
+            continue
+        else:
+            actionid = "action-%s" % display.replace(' ', '')
+            actionoptions.append((display, actionid))
 
         popup = Popup(id=actionid, header="Confirm Action %s" % display, submit_url=actionurl)
         if inputs:
@@ -52,7 +56,7 @@ eg:
 
         popup.write_html(page)
 
-    id = page.addComboBox(actionoptions, {'#': 'Choose Action'})
+    id = page.addComboBox(actionoptions)
     page.addJS(None, """
         $(document).ready(function() {
             $("#%(id)s").change(function () {

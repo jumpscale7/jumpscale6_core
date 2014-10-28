@@ -98,12 +98,12 @@ class Popup(object):
             <div id="${id}" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="${id}Label" aria-hidden="true">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                <h3 id="${id}Label">${header}</h3>
+                <div id="${id}Label" class="modal-header-text">${header}</div>
               </div>
               <div class="modal-body modal-body-sending">
                 Sending...
               </div>
-              <div class="modal-body modal-body-error">
+              <div class="modal-body modal-body-error alert alert-error">
                 Error happened on the server
               </div>
               <div class="modal-body modal-body-form">
@@ -120,7 +120,7 @@ class Popup(object):
         content = template.render(id=self.id, header=self.header, action_button=self.action_button, form_layout=self.form_layout, 
                                 widgets=self.widgets, submit_url=self.submit_url)
 
-        css = '.modal-body-sending, .modal-body-error { display: none }'
+        css = '.modal-body-sending, .modal-body-error { display: none } .modal-header-text { font-weight: bold; font-size: 24.5px; line-height: 30px; }'
         if css not in page.head:
             page.addCSS(cssContent=css)
 
@@ -142,6 +142,9 @@ class Popup(object):
                     this.popup.find('.modal-body-form').show();
                 },
                 error: function(responseText, statusText, xhr, $form) {
+                    if (responseText) {
+                        this.popup.find('.modal-body-error').text(responseText.responseText);
+                    }
                     this.popup.find('.modal-body').hide();
                     this.popup.find('.modal-body-error').show();
                 }

@@ -57,7 +57,7 @@ class ZLogger(ZDaemon):
         # j.application.initGrid()
 
         #OSIS INit
-        OSISclient = j.core.osis.getClient(user='root')
+        OSISclient = j.core.osis.getClientByInstance('main')
 
         #make sure system namespace exists
         # OSISclient.createNamespace(name="system",template="coreobjects",incrementName=False)

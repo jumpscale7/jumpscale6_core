@@ -24,11 +24,12 @@ class OSISCMDS(object):
             raise RuntimeError("Cannot process, only supported for system/user namespace")
         oi = self._getOsisInstanceForCat("system", "user")
 
-        results = oi.find({'query': {'bool': {'must': [{'term': {'id': name}}]}}}, session=session)
-        if not results[0]:
+        query = {'id': name, 'active': True}
+        results = oi.find(query, session=session)[1:]
+        if not results:
             return {"authenticated":False,"exists":False}
 
-        userguid = results[1]['guid']
+        userguid = results[0]['guid']
         user = oi.get(userguid, session=session)
 
         if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:
@@ -97,6 +98,15 @@ class OSISCMDS(object):
         if prefix==None:
             return oi.list(session=session)
         return oi.list(prefix, session=session)
+
+    def count(self, namespace, categoryname, query=None, session=None):
+        oi = self._doAuth(namespace, categoryname, session)
+        return oi.count(query, session=session)
+
+    def native(self, namespace, categoryname, methodname, kwargs=None, session=None):
+        oi = self._doAuth(namespace, categoryname, session)
+        return oi.native(methodname=methodname, session=session, kwargs=kwargs)
+
 
     def checkChangeLog(self):
         rediscl=None

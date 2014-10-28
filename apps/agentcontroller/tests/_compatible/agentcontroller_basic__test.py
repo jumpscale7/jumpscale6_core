@@ -22,7 +22,7 @@ class TEST(unittest.TestCase):
     def setUp(self):
         import JumpScale.grid.agentcontroller
         self.client=j.clients.agentcontroller.get()
-        self.osisclient = j.core.osis.getClient(user='root')
+        self.osisclient = j.core.osis.getClientByInstance('main')
         self.nid = j.application.whoAmI.nid
 
     def test_basic_execution(self):

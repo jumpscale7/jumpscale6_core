@@ -111,11 +111,12 @@ class Process():
 class ProcessManager():
     def __init__(self,reset=False):
         self.processes = list()
+        self.services = list()
 
-        self.dir_data=j.system.fs.joinPaths(j.dirs.base,"jsagent_data")
+        self.dir_data=j.system.fs.joinPaths(j.dirs.baseDir,"jsagent_data")
         self.dir_hekadconfig=j.system.fs.joinPaths(self.dir_data,"dir_hekadconfig")
         self.dir_actions=j.system.fs.joinPaths(self.dir_data,"actions")
-        j.system.fs.createDir(self.datadir)
+        j.system.fs.createDir(self.dir_data)
 
         #check there is a redis on port 9998 & 9999 (the new port for all)
         for port in [9999,9998,8001]:
@@ -238,6 +239,7 @@ class ProcessManager():
         self.processes.append(p)
 
     def _processManagerStart(self):
+        j.core.grid.init()
         p=Process()
         p.domain="jumpscale"
         p.name="processmanager"
