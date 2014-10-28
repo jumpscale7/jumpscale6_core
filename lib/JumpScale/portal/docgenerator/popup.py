@@ -117,7 +117,7 @@ class Popup(object):
         content = template.render(id=self.id, header=self.header, action_button=self.action_button, form_layout=self.form_layout, 
                                 widgets=self.widgets, submit_url=self.submit_url)
 
-        css = '.modal-body-sending, .modal-body-error { display: none } .modal-header-text { font-weight: bold; font-size: 24.5px; line-height: 30px; }'
+        css = '.modal-body-error { display: none } .modal-header-text { font-weight: bold; font-size: 24.5px; line-height: 30px; }'
         if css not in page.head:
             page.addCSS(cssContent=css)
 
@@ -131,9 +131,13 @@ class Popup(object):
                 beforeSubmit: function(formData, $form, options) {
                     this.popup = $form;
                     $form.find('.modal-footer > .btn-primary').button('loading');
-                    $form.find("input").prop("disabled", true)
+                    $form.find("input,select,textarea").prop("disabled", true)
                 },
                 success: function(responseText, statusText, xhr) {
+                    this.popup.find('.modal').modal('hide');
+                    this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-body-form').show();
+
                 },
                 error: function(responseText, statusText, xhr, $form) {
                     if (responseText) {
@@ -145,9 +149,9 @@ class Popup(object):
                 }
             });
             $('.modal').on('hidden', function() {
+                $(this).find("input,select,textarea").prop("disabled", false)
                 $(this).find('.modal-footer > .btn-primary').button('reset').show();
                 $(this).find('.modal-body').hide();
-                $(this).find("input").prop("disabled", false)
                 $(this).find('.modal-body-form').show();
             });
         });'''
