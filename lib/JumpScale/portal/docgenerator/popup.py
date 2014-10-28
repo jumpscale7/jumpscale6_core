@@ -100,9 +100,6 @@ class Popup(object):
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
                 <div id="${id}Label" class="modal-header-text">${header}</div>
               </div>
-              <div class="modal-body modal-body-sending">
-                Sending...
-              </div>
               <div class="modal-body modal-body-error alert alert-error">
                 Error happened on the server
               </div>
@@ -111,7 +108,7 @@ class Popup(object):
               </div>
               <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-                <button class="btn btn-primary">${action_button}</button>
+                <button class="btn btn-primary" data-loading-text="Loading...">${action_button}</button>
               </div>
             </div>
         </form>
@@ -133,25 +130,24 @@ class Popup(object):
                 clearForm: true,
                 beforeSubmit: function(formData, $form, options) {
                     this.popup = $form;
-                    $form.find('.modal-body').hide();
-                    $form.find('.modal-body-sending').show();
+                    $form.find('.modal-footer > .btn-primary').button('loading');
+                    $form.find("input").prop("disabled", true)
                 },
                 success: function(responseText, statusText, xhr) {
-                    this.popup.find('.modal').modal('hide');
-                    this.popup.find('.modal-body').hide();
-                    this.popup.find('.modal-body-form').show();
                 },
                 error: function(responseText, statusText, xhr, $form) {
                     if (responseText) {
                         this.popup.find('.modal-body-error').text(responseText.responseText);
                     }
                     this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-footer > .btn-primary').hide();
                     this.popup.find('.modal-body-error').show();
                 }
             });
             $('.modal').on('hidden', function() {
-                $(this).modal('hide');
+                $(this).find('.modal-footer > .btn-primary').button('reset').show();
                 $(this).find('.modal-body').hide();
+                $(this).find("input").prop("disabled", false)
                 $(this).find('.modal-body-form').show();
             });
         });'''
