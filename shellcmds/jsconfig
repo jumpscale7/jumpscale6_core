@@ -4,7 +4,12 @@ from JumpScale.baselib import cmdutils
 
 import sys,time
 
-j.application.start("jstest")
+j.application.start("jsconfig")
+
+from IPython import embed
+print "DEBUG NOW debug in jsconfig"
+embed()
+
 
 parser = cmdutils.ArgumentParser()
 parser.add_argument("action", choices=['hrdset','hrdget','configset','configget'], help='Command to perform')
