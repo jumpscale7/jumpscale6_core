@@ -174,14 +174,12 @@ class JumpscriptFactory:
         import tarfile
         ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_upload.tar")
         with tarfile.open(ppath, "w:bz2") as tar:
-            for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/processmanager"%j.dirs.baseDir,True):
-                if j.system.fs.getFileExtension(path)<>"pyc":
-                    arcpath="processmanager/%s"%path.split("/processmanager/")[1]
-                    tar.add(path,arcpath)
-            for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/jumpscripts"%j.dirs.baseDir,True):
-                if j.system.fs.getFileExtension(path)<>"pyc":
-                    arcpath="jumpscripts/%s"%path.split("/jumpscripts/")[1]
-                    tar.add(path,arcpath)
+            for path in j.system.fs.walkExtended("%s/apps/agentcontroller/processmanager"%j.dirs.baseDir, recurse=1, filePattern="*.py", dirs=False):
+                arcpath="processmanager/%s"%path.split("/processmanager/")[1]
+                tar.add(path,arcpath)
+            for path in j.system.fs.walkExtended("%s/apps/agentcontroller/jumpscripts"%j.dirs.baseDir, recurse=1, filePattern="*.py", dirs=False):
+	        arcpath="jumpscripts/%s"%path.split("/jumpscripts/")[1]
+                tar.add(path,arcpath)
         data=j.system.fs.fileGetContents(ppath)       
         webdis.set("%s:scripts"%(self.secret),data)  
         # scripttgz=webdis.get("%s:scripts"%(self.secret))      
