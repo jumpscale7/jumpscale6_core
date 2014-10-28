@@ -657,7 +657,22 @@ class StartupManager:
         self._upstartDel(domain,name)
 
         if pd.upstart:
-            j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir,env=pd.env,reload=True)
+            if j.system.fs.exists(path="/etc/my_init.d"):
+                #we are in docker
+                cmdfile="""#!/bin/sh
+exec $cmd >>/var/log/$name.log 2>&1
+"""
+                cmdfile=cmdfile.replace("$name","%s_%s"%(domain,name))
+                cmdfile=cmdfile.replace("$cmd","cd %s;%s %s"%(workingdir,cmd,args))
+                # nname="%s_%s"%(domain,name)
+                ppath="/etc/service/%s/run"%name
+                j.system.fs.createDir("/etc/service/%s"%name)
+                j.system.fs.writeFile(filename=ppath,contents=cmdfile)
+                j.system.fs.chmod(ppath,0o700)
+                # j.system.process.execute("sudo service start %s"%name)
+
+            else:
+                j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir,env=pd.env,reload=True)
 
         return pd
 
