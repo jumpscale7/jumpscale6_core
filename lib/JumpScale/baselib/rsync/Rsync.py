@@ -20,6 +20,7 @@ class RsyncServer:
         self.port=port
         self.pathsecrets="%s/secrets.cfg"%self.root
         self.pathusers="%s/users.cfg"%self.root
+        self.distrdir="/opt/jumpscale/apps/agentcontroller/distrdir/"
         j.system.fs.createDir("/etc/rsync")
 
         if j.system.fs.exists(path=self.pathsecrets):
@@ -55,7 +56,7 @@ class RsyncServer:
 #motd file = /etc/rsync/rsyncd.motd
 port = $port
 log file=/var/log/rsync
-max verbosity = 4
+max verbosity = 1
 
 [upload]
 exclude = *.pyc .git
@@ -135,6 +136,7 @@ list = no
 
     def start(self,background=True):
         self.saveConfig()
+        self.prepare()
         
         j.system.process.killProcessByPort(self.port)
 
@@ -146,6 +148,34 @@ list = no
 
         j.system.process.executeWithoutPipe(cmd)
      
+    def prepare(self):
+
+        pathRegexExcludes = {}
+        childrenRegexExcludes=[".*/log/.*","/dev/.*","/proc/.*"]
+
+        def processdir(path,stat,arg):
+            print "%s"%path
+            from IPython import embed
+            print "DEBUG NOW id"
+            embed()
+            
+
+        callbackFunctions={}
+        callbackFunctions["D"]=processdir
+
+        fswalker = j.base.fswalker.get()
+
+        callbackMatchFunctions=fswalker.getCallBackMatchFunctions({},pathRegexExcludes,False,False)
+        args={}
+
+        fswalker.walk(self.distrdir,callbackFunctions,args,
+                          callbackMatchFunctions,childrenRegexExcludes, 
+                          [],pathRegexExcludes)
+
+        from IPython import embed
+        print "DEBUG NOW kkk"
+        embed()
+        
 
 
 
