@@ -261,7 +261,11 @@ class ProcessDef:
                     j.system.platform.screen.logWindow(self.domain,name,logfile)
 
         else:
-            j.system.platform.ubuntu.startService(self.name)
+            if j.system.fs.exists(path="/etc/my_init.d"):
+                #docker
+                pass
+            else:
+                j.system.platform.ubuntu.startService(self.name)
 
         isrunning=self.isRunning(wait=True)
 
@@ -663,14 +667,12 @@ class StartupManager:
 exec $cmd >>/var/log/$name.log 2>&1
 """
                 cmdfile=cmdfile.replace("$name","%s_%s"%(domain,name))
-                cmdfile=cmdfile.replace("$cmd","cd %s;%s %s"%(workingdir,cmd,args))
+                cmdfile=cmdfile.replace("$cmd","%s %s"%(cmd,args))
                 # nname="%s_%s"%(domain,name)
                 ppath="/etc/service/%s/run"%name
                 j.system.fs.createDir("/etc/service/%s"%name)
                 j.system.fs.writeFile(filename=ppath,contents=cmdfile)
                 j.system.fs.chmod(ppath,0o700)
-                # j.system.process.execute("sudo service start %s"%name)
-
             else:
                 j.system.platform.ubuntu.serviceInstall(pd.name, pd.cmd, pd.args, pwd=pd.workingdir,env=pd.env,reload=True)
 
