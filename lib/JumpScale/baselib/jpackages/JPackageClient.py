@@ -37,8 +37,6 @@ class JPackageClient():
         from JumpScale.baselib import platforms
 
         import JumpScale.baselib.actions
-        import JumpScale.baselib.bitbucket
-        import JumpScale.baselib.mercurial
         import JumpScale.baselib.taskletengine
         import JumpScale.baselib.blobstor
         import JumpScale.baselib.cloudsystemfs            
