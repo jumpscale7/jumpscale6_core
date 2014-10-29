@@ -11,13 +11,13 @@ def main(j, args, params, tags, tasklet):
     title = args.getTag('title')
 
     out = "*%s*\n" % title
-    if data:
+    try:    
         objargs = json.loads(data)
         for key,value in objargs.iteritems():
             if not value:
                 value = ''
             out += "|%s|%s|\n"%(str(key),j.html.escape(str(value)))
-    else:
+    except Exception:
         out = ''
     params.result = (out, doc)
     return params

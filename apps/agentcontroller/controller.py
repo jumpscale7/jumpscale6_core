@@ -101,7 +101,7 @@ class ControllerCMDS():
         """
         self._log("schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname))
         if nid==None or nid==False:
-            raise RuntimeError("Nid can never be empty")
+            raise RuntimeError("NID can never be empty")
 
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 

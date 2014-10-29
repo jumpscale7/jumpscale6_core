@@ -9,10 +9,10 @@ author = "khamisr@codescalers.com"
 license = "bsd"
 version = "1.0"
 category = "vfw.backup.config"
-period = 60*60*24
+period = "3 1 * * *"
 enable = True
 async = True
-roles = ["admin"]
+roles = ["fw"]
 queue ='io'
 
 def action():
@@ -29,18 +29,13 @@ def action():
         if j.system.fs.exists(backuppath):
             j.system.fs.removeDirTree(backuppath)
 
-        osiscl = j.core.osis.getClientByInstance('main')
+        osiscl = j.core.osis.getClient(user='root')
         vfwcl = j.core.osis.getClientForCategory(osiscl, 'vfw', 'virtualfirewall')
-        cscl = j.core.osis.getClientForCategory(osiscl, 'cloudbroker', 'cloudspace')
 
         routeros_password = j.application.config.get('vfw.admin.passwd')
 
-        notdestroyed = {'query': {'bool': {'must_not': [{'term': {'status': 'destroyed'}}]}}}
-        cloudspaces = cscl.simpleSearch({}, nativequery=notdestroyed)
-        cloudspaceids = [cloudspace['id'] for cloudspace in cloudspaces]
-
-        alivevfws = {'query': {'bool': {'must': [{'terms': {'domain': cloudspaceids}}]}}}
-        vfws = vfwcl.simpleSearch({}, nativequery=alivevfws)
+        alivevfws = {'nid': j.application.whoAmI.nid, 'gid': j.application.whoAmI.gid}
+        vfws = vfwcl.search(alivevfws)[1:]
 
         for vfw in vfws:
             try:
