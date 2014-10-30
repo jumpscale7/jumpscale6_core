@@ -4,6 +4,7 @@ import importlib
 import sys
 import fcntl
 import os
+import time
 
 class Empty():
     pass
@@ -17,6 +18,8 @@ class AAProcessManagerCmds():
         self._name="pm"
 
         self.daemon = daemon
+        self._reloadtime = time.time()
+
 
         if daemon<>None:
             self.daemon._adminAuth=self._adminAuth
@@ -40,6 +43,9 @@ class AAProcessManagerCmds():
         os.execv(sys.executable, args)
 
     def reloadjumpscripts (self,session=None):
+        if self._reloadtime + 5 > time.time():
+            print "Not reloading"
+            return
         print "RELOAD JUMPSCRIPTS\n\n\n\n\n"
         if session<>None:
             self._adminAuth(session.user,session.passwd)
