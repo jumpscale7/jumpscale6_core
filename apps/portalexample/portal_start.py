@@ -22,8 +22,6 @@ if __name__ == '__main__':
 
     j.application.start("portal")
 
-    j.logger.disable()
-
     server=j.core.portal.getServer()
     server.start()
 

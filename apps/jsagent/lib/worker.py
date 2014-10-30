@@ -58,7 +58,6 @@ class Worker(object):
         return client
 
     def init(self):
-
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
         self.redisw.redis.delete("workers:action:%s"%self.queuename)
 
