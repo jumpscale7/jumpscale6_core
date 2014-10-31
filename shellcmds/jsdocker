@@ -8,7 +8,7 @@ j.application.start("jsmachine_docker")
 
 parser = cmdutils.ArgumentParser()
 #'mountdisks','unmountdisks'
-parser.add_argument("action", choices=['ps','new','list','destroyall','destroy','cmd','rdp','ssh','start','stop','restart','getip','exportTGZ','importTGZ','exportR','importR'], help='Command to perform')
+parser.add_argument("action", choices=['ps','new','list','destroyall','destroy','cmd','ssh','start','stop','restart','getip','exportTGZ','importTGZ','exportR','importR'], help='Command to perform')
 parser.add_argument("-n", '--name', help='machine name')
 parser.add_argument("-m", '--bname', help='name of backup (used for import/export)')
 parser.add_argument("-b", '--base', help='base to clone from')
@@ -42,6 +42,7 @@ if opts.action =='ps':
 
 ##########NEW
 if opts.action =='list':
+    #@todo bug list is not working on jsdocker
     running,stopped=l.list()
     print "## running:"
     for item in running:

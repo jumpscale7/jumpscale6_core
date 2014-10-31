@@ -15,7 +15,7 @@ import time
 @queue("default")
 @log(5)
 @nojob()
-def log(self):
+def log():
     """
     this is a logging function not doing anything but logging
     the @log makes sure all happening gets logged to the job & central logging system, std logging is off !!!
@@ -24,7 +24,7 @@ def log(self):
     j.logger.log(logmsg, level=5, category="test_category")
 
 @queue("io")
-def error(self):
+def error():
     """
     this error will be done in queue io
     """
@@ -32,7 +32,7 @@ def error(self):
 
 @recurring(60)
 @queue("io")
-@nojo
+@nojob()
 def msg_scheduled():
     """
     this will print a message each 60 seconds on worker queue io
@@ -48,7 +48,7 @@ def wait(ttime=5):
     time.sleep(ttime)
 
 @debug
-def error(self):
+def error():
     """
     be careful when debugging because will be done in mother process of agent, DO NEVER DO THIS IN PRODUCTION
     """
