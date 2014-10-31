@@ -41,7 +41,7 @@ class OSISCMDS(object):
 
     def _doAuth(self, namespace, categoryname, session):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
+        if hasattr(oi, 'auth') and oi.auth<>None:
             if oi.auth.authenticate(oi,"get",session.user,session.passwd, session=session)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
         return oi

@@ -25,7 +25,8 @@ def main(j, args, params, tags, tasklet):
         return '[%s|eco?id=%s]' % (time, row['guid'])
 
     def makeJob(row, field):
-        return '[%(jid)s|job?id=%(jid)s]' if (not row[field] == 0) else 'N/A'
+        jid = row[field]
+        return '[%s|job?id=%s]' % (jid, jid) if (not jid == 0) else 'N/A'
 
 
     nidstr = '[%(nid)s|node?id=%(nid)s&gid=%(gid)s]'

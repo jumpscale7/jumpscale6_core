@@ -8,16 +8,16 @@ def main(j, args, params, tags, tasklet):
 
     activejobs = acclient.getActiveJobs()
 
-    out = ['||Default||HyperVisor||IO||Internal||||']
+    out = ['||Default||HyperVisor||IO||Internal||Process||||']
 
-    cnt = {'default': 0, 'io': 0, 'hypervisor': 0, 'internal':0}
+    cnt = {'default': 0, 'io': 0, 'hypervisor': 0, 'internal':0, 'process':0}
     for job in activejobs:
         if job['queue'] in cnt:
             cnt[job['queue']] += 1
         if job['queue'] == '':
             cnt['default'] += 1
 
-    out.append('|%(default)s|%(hypervisor)s|%(io)s|%(internal)s|[Details|acjobs]|' % (cnt))
+    out.append('|%(default)s|%(hypervisor)s|%(io)s|%(internal)s|%(process)s|[Details|acjobs]|' % (cnt))
     out = '\n'.join(out)
 
     params.result = (out, doc)

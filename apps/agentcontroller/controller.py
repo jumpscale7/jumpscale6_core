@@ -101,7 +101,7 @@ class ControllerCMDS():
         """
         self._log("schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname))
         if nid==None or nid==False:
-            raise RuntimeError("Nid can never be empty")
+            raise RuntimeError("NID can never be empty")
 
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
@@ -408,7 +408,8 @@ class ControllerCMDS():
             j.events.inputerror_critical("executeJumpScript requires either nid and gid or role")
         def noWork():
             sessionid = session.id
-            job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
+            ngid = gid or j.application.whoAmI.gid
+            job=self.jobclient.new(sessionid=sessionid,gid=ngid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
             self._log("nothingtodo")
             job.state="NOWORK"
             job.timeStop=job.timeStart

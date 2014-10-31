@@ -357,14 +357,9 @@ class OSISStoreMongo(OSISStore):
         db.drop()
 
     def deleteSearch(self,query, session=None):
-        if not j.basetype.string.check(query):
-            raise RuntimeError("not implemented")
-        query+=' @fields:guid'
-        counter=0
-        for item in self.find(query=query, session=session):
-            self.delete(item["guid"], session=session)
-            counter+=1
-        return counter
+        db, _ = self._getMongoDB(session)
+        count = db.remove(query)['n']
+        return count
         
     def updateSearch(self,query,update, session=None):
         """
