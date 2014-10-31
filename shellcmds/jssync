@@ -15,7 +15,7 @@ parser.add_argument("-c", '--category', help='what to sync2sb,upload,download op
 parser.add_argument("-b", '--branch', help='branch of jumpscale, only required for sync2sb', default="unstable")
 #parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable, only required for sync2sb', default="")
 parser.add_argument("-k", '--key', help='secret key (can have ql inside or anything), only required for upload/download', default="")
-parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
+parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox2")
 parser.add_argument("-j", '--jpdomains', help='specify add domains to look for when syncing/uploading jpackages.', default="")
 parser.add_argument("-nd", help='no longer used.', default=True,action='store_true')
 parser.add_argument("-d", '--delete', help='will delete files after upload or download.', default=False,action='store_true')
@@ -193,7 +193,7 @@ if opts.action.find('sync2sb')==0 and checkcat("jpackages"):
             # print "JPACKAGEDOM:%s"%path
             sync("%s/%s/"%(path,opts.qualitylevel),"%s/jpackages/%s/"%(opts.sbpath,dom))
 
-            dpath=j.system.fs.joinPaths("/opt","jsbox","jpackages",dom)
+            dpath=j.system.fs.joinPaths(opts.sbpath,"jpackages",dom)
             for path in j.system.fs.listFilesInDir(dpath,True,"main.hrd"):
                 hrd=j.core.hrd.getHRD(path)
                 hrd.set("jp.debug",0)
@@ -215,10 +215,11 @@ if opts.action.find('sync2sb')==0 and checkcat("libs"):
     item="lib"
     sync("/opt/code/github/jumpscale/jumpscale_core/lib/JumpScale/%s/"%(item),"%s/libjs/JumpScale/%s/"%(opts.sbpath,item))
 
-    #grid apps
-    sync("/opt/code/github/jumpscale/jumpscale_core/apps/agent/","%s/apps/agent/"%opts.sbpath)
-    sync("/opt/code/github/jumpscale/jumpscale_core/apps/blobserver/","%s/apps/blobserver/"%opts.sbpath)
-    sync("/opt/code/github/jumpscale/jumpscale_core/apps/processmanager/","%s/apps/processmanager/"%opts.sbpath)
+    # #grid apps
+    # sync("/opt/code/github/jumpscale/jumpscale_core/apps/agent/","%s/apps/agent/"%opts.sbpath)
+    # sync("/opt/code/github/jumpscale/jumpscale_core/apps/blobserver/","%s/apps/blobserver/"%opts.sbpath)
+    # sync("/opt/code/github/jumpscale/jumpscale_core/apps/processmanager/","%s/apps/processmanager/"%opts.sbpath)
+    sync("/opt/code/github/jumpscale/jumpscale_core/apps/jsagent/","%s/apps/jsagent/"%opts.sbpath)
 
     #tools
     sync("/opt/code/github/jumpscale/jumpscale_core/jsbox/tools/","%s/tools/"%opts.sbpath)
@@ -248,6 +249,15 @@ if opts.action.find('sync2sb')==0 and checkcat("base"):
     # sync("%s/apps/redis/"%src,"%s/apps/redis/"%opts.sbpath,delete=True)
 
 
+#cleanup
+if opts.action.find("upload")<>-1:
+    j.system.fs.removeDirTree("%s/apps/redis"%(opts.sbpath))
+    j.system.fs.removeDirTree("%s/libext/raven"%(opts.sbpath))
+    j.system.fs.removeDirTree("%s/libext/raven-4.0.3.egg-info"%(opts.sbpath))
+    j.system.fs.removeDirTree("%s/libjs/JumpScale/portal/"%(opts.sbpath))
+    for item in ["flask_bootstrap","lxml"]:
+        j.system.fs.removeDirTree("%s/libjs/lib/%s/"%(opts.sbpath,item))
+
 #UPLOAD JPACKAGES
 if opts.action.find("upload")<>-1 and checkcat("jpackages"):
     upload("jsbox","jpackages")
@@ -255,10 +265,10 @@ if opts.action.find("upload")<>-1 and checkcat("jpackages"):
 if opts.action.find("upload")<>-1 and checkcat("cfg",True):
     upload("jsbox","cfg",data=True)
 
-if opts.action=="upload" and checkcat("installer"):
-    
-    path="/opt/code/jumpscale/%s__jumpscale_core/jsbox/installers/"%opts.branch    
-    cmd="rsync -azvPh %s %s::www/cmds/ --modify-window=60 --compress --progress  "%(path,ipaddr)
+if opts.action=="upload" and checkcat("installer"):    
+    path="/opt/code/github/jumpscale/jumpscale_core/jsbox/installers/"
+    user,passwd=getUserPasswd()
+    cmd="export RSYNC_PASSWORD=%s;rsync -azvPh %s %s@%s::www/cmds/ --modify-window=60 --progress  "%(passwd,path,user,ipaddr)
     print cmd
     j.system.process.executeWithoutPipe(cmd)   
 
@@ -271,9 +281,10 @@ if opts.action.find("upload")<>-1 and checkcat("libs"):
     # upload("jsbox","libjs/JumpScale/grid")
     # upload("jsbox","libjs/JumpScale/lib")
     upload("jsbox","libext")
-    upload("jsbox","apps/agent")
-    upload("jsbox","apps/blobserver")
-    upload("jsbox","apps/processmanager")
+    upload("jsbox","apps/jsagent")
+    # upload("jsbox","apps/agent")
+    # upload("jsbox","apps/blobserver")
+    # upload("jsbox","apps/processmanager")
     upload("jsbox","tools")
 
 if opts.action.find("upload")<>-1 and checkcat("base"):  
