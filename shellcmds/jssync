@@ -13,7 +13,7 @@ parser.add_argument("action", choices=['upload','download','sync2sb','sync2sbUpl
 
 parser.add_argument("-c", '--category', help='what to sync2sb,upload,download options: all,allnocfg,jpackages,libs,libjs,cfg,base,installer (comma separated)', default="jpackages,libs")
 parser.add_argument("-b", '--branch', help='branch of jumpscale, only required for sync2sb', default="unstable")
-parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable, only required for sync2sb', default="")
+#parser.add_argument("-q",'--qualitylevel', help='qualitylevel of jpackages e.g. unstable,test,stable, only required for sync2sb', default="")
 parser.add_argument("-k", '--key', help='secret key (can have ql inside or anything), only required for upload/download', default="")
 parser.add_argument("-s", '--sbpath', help='sandbox path', default="/opt/jsbox")
 parser.add_argument("-j", '--jpdomains', help='specify add domains to look for when syncing/uploading jpackages.', default="")
@@ -21,6 +21,8 @@ parser.add_argument("-nd", help='no longer used.', default=True,action='store_tr
 parser.add_argument("-d", '--delete', help='will delete files after upload or download.', default=False,action='store_true')
 
 opts = parser.parse_args()
+
+opts.qualitylevel="jpackages"
 
 ipaddr=j.application.config.get("jssync.addr")
 
@@ -96,6 +98,9 @@ def createdir(path):
         cmd="rsync /tmp/empty/ %s"%item
         j.system.process.execute(cmd)
 
+def getUserPasswd():
+    return j.application.config.get("jssync.login"),j.application.config.get("jssync.passwd")    
+
 def uploadfile(category,path="",data=False):
     print "UPLOAD: %s %s"%(category,path)
     key=getkey()
@@ -105,7 +110,8 @@ def uploadfile(category,path="",data=False):
     base=opts.sbpath
     pathfs="%s/%s"%(base,path)
 
-    cmd="rsync -azvPh %s %s::upload/%s/%s/%s --delete-after --modify-window=60 --compress --progress  "%(pathfs,\
+    user,passwd=getUserPasswd()
+    cmd="export RSYNC_PASSWORD=%s;rsync -azvPh %s %s@%s::upload/%s/%s/%s --delete-after --modify-window=60 --progress  "%(passwd,pathfs,user,\
         ipaddr,key,category,path)
     print cmd
     j.system.process.execute(cmd)    
@@ -129,7 +135,8 @@ def upload(category,path="",data=False):
     if not data and j.system.fs.isDir(pathfs):
         j.system.fs.removeIrrelevantFiles(pathfs)
 
-    cmd="rsync -azvPh %s %s::upload/%s/%s%s --delete-after --modify-window=60 --compress --progress  "%(pathfs,\
+    user,passwd=getUserPasswd()
+    cmd="export RSYNC_PASSWORD=%s;rsync -azvPh %s %s@%s::upload/%s/%s%s --delete-after --modify-window=60 --progress  "%(passwd,pathfs,user,\
         ipaddr,key,category,path)
     for i in range(100):
         try:
