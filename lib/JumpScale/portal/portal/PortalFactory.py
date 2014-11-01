@@ -103,7 +103,7 @@ class PortalFactory():
     #     get actor (works in process as well as out of process running appserver)
     #     """
     #     self._init()
-    #     dbtype=j.enumerators.KeyValueStoreType.FILE_SYSTEM
+    #     dbtype="FILE_SYSTEM"
     #     key="%s_%s" %(appName,actorName)
     #     if self._actors.has_key(key):
     #         return self._actors[key]

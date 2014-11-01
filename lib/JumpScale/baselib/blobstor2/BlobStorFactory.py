@@ -108,7 +108,7 @@ class BlobStorFactory:
         self.loglevel=5
         self._blobstorMasterCache={}
         self._blobstorCache={}
-        self.redis = j.clients.credis.getRedisClient("127.0.0.1", 7767,timeout=2)
+        self.redis = j.clients.credis.getRedisClient("127.0.0.1", 9999,timeout=2)
         self.nodes={}
         self.disks={}
         self.replicaMaxSize=256*1024

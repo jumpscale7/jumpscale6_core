@@ -26,7 +26,7 @@ class TEST(unittest.TestCase):
         import JumpScale.grid.agentcontroller
         import JumpScale.baselib.redis
         self.workercmds = j.clients.agentcontroller.getClientProxy('worker', '127.0.0.1')
-        redisport=7768
+        redisport=9999
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", redisport)
 
     def test_1_getQueuedJobs(self):

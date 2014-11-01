@@ -78,8 +78,8 @@ print "DEBUG NOW db init"
 ipshell()
 
 actorObject.dbfs=self.dbclientFactory.get(self.appName,actorName,self.dbtype)
-actorObject.dbmem=self.dbclientFactory.get(self.appName,actorName,j.enumerators.KeyValueStoreType.MEMORY)
-actorObject.dbredis=self.dbclientFactory.get(self.appName,actorName,j.enumerators.KeyValueStoreType.REDIS)
+actorObject.dbmem=self.dbclientFactory.get(self.appName,actorName,"MEMORY")
+actorObject.dbredis=self.dbclientFactory.get(self.appName,actorName,"REDIS")
 actorObject.name=actorName
 actorObject.appname=self.appName
 """

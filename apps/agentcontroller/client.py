@@ -44,7 +44,7 @@ for i in range(1):
 
     # if job["resultcode"]>0:
     #     eco= j.errorconditionhandler.getErrorConditionObject(ddict=job["result"])
-    #     j.errorconditionhandler.processErrorConditionObject(eco)
+    #     eco.process()
     # else:
     #     print "result:%s"%job["result"]
 
@@ -61,7 +61,7 @@ for i in range(1):
 
 if job["resultcode"]>0:
     eco= j.errorconditionhandler.getErrorConditionObject(ddict=job["result"])
-    j.errorconditionhandler.processErrorConditionObject(eco)
+    eco.process()
 else:
     print "result:%s"%job["result"]
 

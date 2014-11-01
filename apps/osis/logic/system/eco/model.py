@@ -50,13 +50,24 @@ class ECO(OsisBaseObject):
             else:
                 self.epoch=epoch
 
-            self.type=int(type) #j.enumerators.ErrorConditionType                       
+            self.type=str(type)
+
+            self.state="NEW" #["NEW","ALERT","CLOSED"]
+
+            self.lasttime=0 #last time there was an error condition linked to this alert
+            self.closetime=0  #alert is closed, no longer active
+
+            self.occurrences=1 #nr of times this error condition happened
+       
 
     def getUniqueKey(self):
         """
         return unique key for object, is used to define unique id
         """
-        C= "%s_%s_%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.errormessage,self.level,self.category,self.funcname,self.funcfilename,self.appname,self.pid,self.jid)
+        if self.category<>"":
+            C= "%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.category,self.level,self.funcname,self.funcfilename,self.appname,self.type)
+        else:
+            C= "%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.errormessage,self.level,self.funcname,self.funcfilename,self.appname,self.type)
         return j.tools.hash.md5_string(C)
 
     def getSetGuid(self):

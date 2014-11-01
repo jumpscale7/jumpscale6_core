@@ -89,8 +89,8 @@ class PortalServer:
         self.schedule15min = {}
         self.schedule60min = {}
 
-        self.rediscache=redis.StrictRedis(host='localhost', port=7767, db=0)
-        self.redisprod=redis.StrictRedis(host='localhost', port=7768, db=0)
+        self.rediscache=redis.StrictRedis(host='localhost', port=9999, db=0)
+        self.redisprod=redis.StrictRedis(host='localhost', port=9999, db=0)
 
         self.jslibroot=j.system.fs.joinPaths(j.dirs.baseDir,"apps","portals","jslib")
 
@@ -126,13 +126,13 @@ class PortalServer:
 
         # dbtype = ini.getValue("main", "dbtype").lower().strip()
         # if dbtype == "fs":
-        #     self.dbtype = j.enumerators.KeyValueStoreType.FILE_SYSTEM
+        #     self.dbtype = "FILE_SYSTEM"
         # elif dbtype == "mem":
-        #     self.dbtype = j.enumerators.KeyValueStoreType.MEMORY
+        #     self.dbtype = "MEMORY"
         # elif dbtype == "redis":
-        #     self.dbtype = j.enumerators.KeyValueStoreType.REDIS
+        #     self.dbtype = "REDIS"
         # elif dbtype == "arakoon":
-        #     self.dbtype = j.enumerators.KeyValueStoreType.ARAKOON
+        #     self.dbtype = "ARAKOON"
         # else:
         #     raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon, used here'%s'"%dbtype)
 
@@ -632,7 +632,7 @@ class PortalServer:
             # error in format
             eco = j.errorconditionhandler.getErrorConditionObject()
             eco.errormessage = "only format supported = human or json, format is put with param &format=..."
-            eco.type = j.enumerators.ErrorConditionType.INPUT
+            eco.type = "INPUT"
             print "WRONG FORMAT"
         else:
             if errorObject != None:
@@ -656,7 +656,7 @@ class PortalServer:
         if method != "":
             eco.errormessage += "\nmethod was:%s" % method
 
-        j.errorconditionhandler.processErrorConditionObject(eco)
+        eco.process()
 
         if ctx.fformat == "human" or ctx.fformat == "text":
             if msginfo != None and msginfo != "":

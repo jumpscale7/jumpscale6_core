@@ -221,8 +221,8 @@ from . import enumerators
 j.application=Application()
 from . import base
 from . import baseclasses
-from JumpScale.core.baseclasses.BaseEnumeration import enumerations
-j.enumerators=enumerations
+# from JumpScale.core.baseclasses.BaseEnumeration import enumerations
+# j.enumerators=enumerations
 
 from PlatformTypes import PlatformTypes
 j.system.platformtype=PlatformTypes()

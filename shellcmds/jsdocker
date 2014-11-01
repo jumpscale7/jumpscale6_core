@@ -3,6 +3,7 @@ from JumpScale import j
 from JumpScale.baselib import cmdutils
 import JumpScale.lib.docker
 import JumpScale.lib.diskmanager
+import sys
 
 j.application.start("jsmachine_docker")
 
@@ -60,10 +61,10 @@ if opts.action =='pull':
 if opts.action =='commit':
     if opts.name==None:
         print "specify name of machine with -n"
-        sys.exit()
+        sys.exit(1)
     if opts.base==None:
         print "specify name of image to commit to with -b"
-        sys.exit()
+        sys.exit(1)
     cmd="docker rmi %s"%opts.base
     print cmd
     j.system.process.executeWithoutPipe(cmd,dieOnNonZeroExitCode=False)

@@ -65,7 +65,7 @@ class ZRedisGWFactory:
         self.logenable=True
         self.loglevel=5
         self._redisCache={}
-        self.redis = j.clients.credis.getRedisClient("127.0.0.1", 7767,timeout=2)
+        self.redis = j.clients.credis.getRedisClient("127.0.0.1", 9999,timeout=2)
 
     def getZRedisGWConnection(self,ipaddr,port,login,passwd):
         key="%s_%s"%(ipaddr,port)

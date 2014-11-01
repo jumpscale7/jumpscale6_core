@@ -197,7 +197,10 @@ class ProcessDef:
             self.start()
             j.application.connectRedis()
             return
-            
+        
+        if j.application.redis==None:
+            j.events.opserror_critical("Cannot find running redis on port 9999, cannot register %s"%self)
+
         if j.application.redis.hexists("application",self.procname):
             pids=json.loads(j.application.redis.hget("application",self.procname))
         else:
@@ -361,7 +364,7 @@ class ProcessDef:
             timeout=2 #should not be 0 otherwise dont go in while loop
 
         if self.isJSapp:
-            if not j.system.net.tcpPortConnectionTest("localhost",7766):
+            if not j.system.net.tcpPortConnectionTest("localhost",9999):
                 return []
             while len(pids) <> self.numprocesses and now<timeout:
 
@@ -426,7 +429,7 @@ class ProcessDef:
 
     def stop(self):
         if self.name=="redis_system":
-            print "will not shut down application redis (port 7766)"
+            print "will not shut down application redis (port 9999)"
             return
 
         if self.upstart:
@@ -558,17 +561,39 @@ class StartupManager:
             cmd="killall %s"%item
             j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
 
+    def installRedisSystem(self):
+
+        for item in j.system.fs.listFilesInDir("/etc/init",filter="redis*"):
+            j.system.fs.remove(item)
+
+        for item in j.system.fs.listFilesInDir("/etc/init.d",filter="redis*"):
+            j.system.fs.remove(item)
+
+        cmd="initctl reload-configuration"
+        j.system.process.execute(cmd)
+
+        j.system.process.killProcessByName("redis-server")
+
+        redis=j.packages.findNewest("jumpscale","redis")
+        redis.instance="system"        
+                   
+        redis.install(reinstall=True,hrddata={"redis.name":"system","redis.port":"9999","redis.disk":"0","redis.mem":20},instance="system")
+        redis.instance="system"
+        redis.start()
+
     def _init(self):
         if self.__init==False:
             self.load()
-            if not j.system.net.tcpPortConnectionTest("localhost",7766):
-                j.system.process.killProcessByName("redis-server 127.0.0.1:7766")
-                try:
-                    pd = self.getProcessDef('redis', 'redis_system', True)
-                except KeyError:
-                    raise RuntimeError("Redis system is not installed. Please install via 'jpackage install -n base'")
-                with j.logger.nostdout():
-                    pd.start()
+            if not j.system.net.tcpPortConnectionTest("localhost",9999):
+                j.system.process.killProcessByName("redis-server 127.0.0.1:9999")
+                self.installRedisSystem()
+                # try:
+                #     pd = self.getProcessDef('redis', 'redis_system', True)
+                # except KeyError:
+                #     self.installRedisSystem()
+                #     # raise RuntimeError("Redis system is not installed. Please install via 'jpackage install -n base'")
+                # with j.logger.nostdout():
+                #     pd.start()
                 j.application.connectRedis()
 
             self.__init=True
@@ -722,7 +747,8 @@ exec $cmd >>/var/log/$name.log 2>&1
         return pds[0]
 
     def getProcessDefs(self,domain=None,name=None,system=False):
-        self._init()
+        if self.__init==False:
+            self._init()
         def processFilter(process):
             if domain and process.domain != domain:
                 return False

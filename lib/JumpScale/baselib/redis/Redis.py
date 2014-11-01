@@ -1,7 +1,7 @@
 from JumpScale import j
 import redis
-from JumpScale.baselib.credis.CRedis import CRedis
-from JumpScale.baselib.credis.CRedisQueue import CRedisQueue
+# from JumpScale.baselib.credis.CRedis import CRedis
+from RedisQueue import RedisQueue
 import itertools
 
 try:
@@ -98,19 +98,19 @@ class RedisFactory:
 
     def getRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=True):
         if not fromcache:
-            return CRedisQueue(self.getRedisClient(ipaddr, port, fromcache=False), name, namespace=namespace)
+            return RedisQueue(self.getRedisClient(ipaddr, port, fromcache=False), name, namespace=namespace)
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.redisq.has_key(key):
-            self.redisq[key] = CRedisQueue(self.getRedisClient(ipaddr, port), name, namespace=namespace)
+            self.redisq[key] = RedisQueue(self.getRedisClient(ipaddr, port), name, namespace=namespace)
         return self.redisq[key]
 
     def getGeventRedisQueue(self, ipaddr, port, name, namespace="queues", fromcache=False):
         fromcache = False  # @todo remove
         if not fromcache:
-            return CRedisQueue(self.getGeventRedisClient(ipaddr, port, False), name, namespace=namespace)
+            return RedisQueue(self.getGeventRedisClient(ipaddr, port, False), name, namespace=namespace)
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if not self.gredisq.has_key(key):
-            self.gredisq[key] = CRedisQueue(self.getGeventRedisClient(ipaddr, port), name, namespace=namespace)
+            self.gredisq[key] = RedisQueue(self.getGeventRedisClient(ipaddr, port), name, namespace=namespace)
         return self.gredisq[key]
 
     def checkAllInstances(self):

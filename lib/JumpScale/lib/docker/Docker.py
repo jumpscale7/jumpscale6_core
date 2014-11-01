@@ -8,6 +8,7 @@ import netaddr
 import JumpScale.baselib.remote
 import docker
 import time
+import json
 
 class Docker():
 
@@ -69,11 +70,21 @@ class Docker():
         """
         return self.client.containers()        
 
-    def getInfo(self,name):
+    def inspect(self,name):
+        cmd="docker inspect %s"%name
+        rc,jsondata=j.system.process.execute(cmd)
+        obj=json.loads(jsondata)
+        return obj[0]
+
+    def getInfo(self,name):        
         for item in self.ps():
             if "/%s"%name in item["Names"]:
                 return item
         raise RuntimeError("Could not find info from '%s' (docker)"%name)
+
+    def getIp(self,name):
+        res=self.inspect(name)
+        return res['NetworkSettings']['IPAddress']
 
     def getProcessList(self, name, stdout=True):
         """
@@ -304,16 +315,19 @@ class Docker():
         # volsdict["/var/js/all/jpfiles/"]="/opt/jsbox_data/var/jpackages/files/"
 
         binds={}
+        volskeys=[] #is location in docker
 
         for key,path in volsdict.iteritems():
             j.system.fs.createDir(path) #create the path on hostname
-            binds[key]={"bind":path,"ro":False}
+            binds[path]={"bind":key,"ro":False}
+            volskeys.append(key)
 
         for key,path in volsdictro.iteritems():
             j.system.fs.createDir(path) #create the path on hostname
-            binds[key]={"bind":path,"ro":True}
+            binds[path]={"bind":key,"ro":True}
+            volskeys.append(key)
 
-        volskeys=volsdict.keys()+volsdictro.keys()
+        # volskeys=volsdict.keys()+volsdictro.keys()
 
 
         if base not in self.getImages():
@@ -327,7 +341,7 @@ class Docker():
         # cmd="sh -c \"exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""        
 
         # mem=1000000
-        print "install docker with name '%s'"%base
+        print "install docker with name '%s'"%base     
 
         res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
                 detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
@@ -352,6 +366,8 @@ class Docker():
         time.sleep(0.5)
 
         self.pushSSHKey(name)
+
+        return extport
 
         # return self.getIp(name)
 

@@ -113,8 +113,7 @@ class AgentControllerClient():
                 # eco.jid=result["id"]
 
                 if errorreport:
-                    j.errorconditionhandler.processErrorConditionObject(eco,tostdout=False,sentry=True,\
-                        modulename="agent", centralsentry=True)
+                    eco.process()
 
                 msg="%s\n\nCould not execute %s %s for role:%s, jobid was:%s\n"%(eco,organization,name,role,result["id"])
 

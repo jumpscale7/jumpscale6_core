@@ -16,7 +16,7 @@ import JumpScale.baselib.webdis
 from fabric.api import hide
 import time
 
-redis=j.clients.redis.getRedisClient("127.0.0.1", 7768)
+redis=j.clients.redis.getRedisClient("127.0.0.1", 9999)
 
 class ScriptRun():
     def __init__(self):
@@ -354,7 +354,7 @@ class Admin():
         self.sysadminPasswd=""
         self.js={}        
         # DO NOT USE CREDIS IN THIS CONTEXT, NOT THREAD SAFE
-        self.redis = j.clients.redis.getRedisClient("127.0.0.1", 7768)
+        self.redis = j.clients.redis.getRedisClient("127.0.0.1", 9999)
         # self.nodes={}
         self.hrd= j.core.hrd.getHRD(self._getPath("cfg/","superadmin.hrd"))
         self.rootpasswds=self.hrd.getList("superadmin.passwds")

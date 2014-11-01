@@ -6,7 +6,7 @@ import ujson
 class RedisStatAggregator(object):
 
     def __init__(self):
-        self.redis = j.clients.redis.getRedisClient('127.0.0.1', 7768)
+        self.redis = j.clients.redis.getRedisClient('127.0.0.1', 9999)
 
     def pushStats(self, key, data):
         data['time'] = time.time()

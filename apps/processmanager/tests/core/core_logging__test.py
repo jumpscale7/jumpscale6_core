@@ -26,17 +26,17 @@ class TEST():
         if not j.system.net.tcpPortConnectionTest(self.serverip,4445) == True:
             j.errorconditionhandler.raiseOperationalCritical("could not connect to processmanager, is it running?", category="processmanager.test.setup")
         print "check redis active"
-        if not j.system.net.tcpPortConnectionTest(self.serverip,7767) or not j.system.net.tcpPortConnectionTest(self.serverip,7768):
-            j.errorconditionhandler.raiseOperationalCritical("could not connect to redis, is it running? (port 7767 and 7768)", category="processmanager.test.setup")
+        if not j.system.net.tcpPortConnectionTest(self.serverip,9999):
+            j.errorconditionhandler.raiseOperationalCritical("could not connect to redis, is it running? (port 9999)", category="processmanager.test.setup")
         print "check port elasticsearch"
         if not  j.system.net.tcpPortConnectionTest(self.serverip,9200):
             j.errorconditionhandler.raiseOperationalCritical("could not connect to elasticsearch, is it running? (port 9200)", category="processmanager.test.setup")
             
         self.client= j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user=j.application.config.get('system.superadmin.login'), \
             passwd=j.application.config.get('grid.master.superadminpasswd'),category="jpackages")
-        self.logqueue=j.clients.redis.getRedisQueue("127.0.0.1",7768,"logs")
-        self.logqueueEco=j.clients.redis.getRedisQueue("127.0.0.1",7768,"eco")
-        self.redis=j.clients.redis.getRedisClient("127.0.0.1",7768)
+        self.logqueue=j.clients.redis.getRedisQueue("127.0.0.1",9999,"logs")
+        self.logqueueEco=j.clients.redis.getRedisQueue("127.0.0.1",9999,"eco")
+        self.redis=j.clients.redis.getRedisClient("127.0.0.1",9999)
         j.logger.setLogTargetLogForwarder()
 
 

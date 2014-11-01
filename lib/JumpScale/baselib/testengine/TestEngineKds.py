@@ -53,7 +53,7 @@ class Test():
                     eco=j.errorconditionhandler.parsePythonErrorObject(e)
                     eco.tags="testrunner testrun:%s org:%s testgroup:%s testname:%s testpath:%s" % (self.db.testrun,\
                             self.db.organization, self.db.name,name,self.db.path)
-                    j.errorconditionhandler.processErrorConditionObject(eco)                    
+                    eco.process()                    
                     if debug:
                         sys.exit()
                 sys.stdout =j.tools.testengineKds.sysstdout

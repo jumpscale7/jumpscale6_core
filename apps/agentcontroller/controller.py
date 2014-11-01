@@ -26,18 +26,14 @@ jp = j.packages.findNewest('jumpscale', 'agentcontroller')
 jp = jp.load(instance=opts.instance)
 j.application.instanceconfig = jp.hrd_instance
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
     time.sleep(0.1)
-    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
+    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 9999)"
 
 j.application.start("jumpscale:agentcontroller")
 j.application.initGrid()
 
 j.logger.consoleloglevel = 2
-
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
-    time.sleep(0.1)
-    print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
 
 import JumpScale.baselib.redis
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
@@ -72,7 +68,7 @@ class ControllerCMDS():
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
 
-        self.redisport=7769
+        self.redisport=9999
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
         self.roles2agents = dict()
         self.sessionsUpdateTime = dict()
@@ -292,7 +288,7 @@ class ControllerCMDS():
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
             eco = j.errorconditionhandler.getErrorConditionObject(eco)
-        j.errorconditionhandler.processErrorConditionObject(eco)
+        eco.process()
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:

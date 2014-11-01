@@ -1,9 +1,9 @@
 
 
-class CRedisQueue(object):
+class RedisQueue(object):
     """Simple Queue with Redis Backend"""
     def __init__(self, redis,name, namespace='queue'):
-        """The default connection parameters are: host='localhost', port=7768, db=0"""
+        """The default connection parameters are: host='localhost', port=9999, db=0"""
         self.__db= redis
         self.key = '%s:%s' %(namespace, name)
 

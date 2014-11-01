@@ -122,7 +122,7 @@ class Test():
                     eco=j.errorconditionhandler.parsePythonErrorObject(error[1], error[0], error[2])
                     eco.tags="testrunner testrun:%s org:%s testgroup:%s testname:%s testpath:%s" % (self.db.testrun,\
                         self.db.organization, self.db.name,name,self.db.path)
-                    j.errorconditionhandler.processErrorConditionObject(eco)
+                    eco.process()
                     self.db.result[name] = eco.guid
                 print "Fail in test %s" % name
                 print self.db.output[name]

@@ -211,7 +211,7 @@ class Daemon(object):
                 pass
             
             eco.errormessage = "ERROR IN RPC CALL %s: %s. (from:%s/%s)\nData:%s\n"%(cmdkey,eco.errormessage , session.gid, session.nid,data2)
-            j.errorconditionhandler.processErrorConditionObject(eco)
+            eco.process()
             eco.__dict__.pop("tb")
             eco.tb=None
             errorres = eco.__dict__

@@ -212,7 +212,7 @@ class BlobStorMaster:
     def start(self):
 
         #check redis is there if not try to start
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
             j.packages.findNewest(name="redis").install()
             j.packages.findNewest(name="redis").start()
 

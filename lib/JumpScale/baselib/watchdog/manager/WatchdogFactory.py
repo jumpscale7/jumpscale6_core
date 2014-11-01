@@ -60,10 +60,10 @@ class AlertType():
 
 class WatchdogFactory:
     def __init__(self):
-        while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+        while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
             time.sleep(0.1)
-            print "cannot connect to redis production, will keep on trying forever, please start redis production (port 7768)"        
-        self.redis=j.clients.credis.getRedisClient("localhost",7768)
+            print "cannot connect to redis production, will keep on trying forever, please start redis production (port 9999)"        
+        self.redis=j.clients.credis.getRedisClient("localhost",9999)
         self.watchdogTypes={}
         self.alertTypes={}
         self._getWatchDogTypes()

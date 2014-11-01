@@ -8,7 +8,7 @@ class CeleryFactory:
         self.actors={}
         self.app=None
 
-    def flowerStart(self,url="redis://localhost:7768/0"):
+    def flowerStart(self,url="redis://localhost:9999/0"):
         from flower.command import FlowerCommand
         from flower.utils import bugreport
 
@@ -61,7 +61,7 @@ class CeleryFactory:
         return code
 
 
-    def celeryStart(self,url="redis://localhost:7768/0",concurrency=4,actorsPath="actors"):
+    def celeryStart(self,url="redis://localhost:9999/0",concurrency=4,actorsPath="actors"):
 
         from celery import Celery
 
@@ -86,7 +86,7 @@ class CeleryFactory:
 
         app.worker_main()
 
-    def celeryClient(self,actorName,url="redis://localhost:7768/0",actorsPath="actors",local=False):
+    def celeryClient(self,actorName,url="redis://localhost:9999/0",actorsPath="actors",local=False):
         if self.actors.has_key(actorName):
             return self.actors[actorName]
 

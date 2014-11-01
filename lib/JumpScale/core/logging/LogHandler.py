@@ -1,11 +1,9 @@
 import itertools
 import functools
 from JumpScale import j
-from .logtargets.LogTargetFS import LogTargetFS
-from .logtargets.LogTargetStdOut import LogTargetStdOut
 import re
 import sys
-import traceback
+
 import time
 from datetime import datetime
 
@@ -17,12 +15,11 @@ except ImportError:
     except:
         from io import StringIO
 
+import ujson as json
 
-# from logtargets.LogTargetFS import LogTargetFS
-# from logtargets.LogTargetStdOut import LogTargetStdOut
-#@todo P3 low prio, to get log handlers back working
+import JumpScale.baselib.redis
 
-SAFE_CHARS_REGEX = re.compile("[^ -~\n]")
+# SAFE_CHARS_REGEX = re.compile("[^ -~\n]")
 
 
 def toolStripNonAsciFromText(text):
@@ -116,10 +113,7 @@ class LogItem(object):
         self.parentjid = str(parentjid)
         self.masterjid = str(masterjid)
         self.epoch = int(epoch) or j.base.time.getTimeEpoch()
-        j.logger.order += 1
-        # if j.logger.order > 10000:
-        #     j.logger.order = 1
-        self.order = j.logger.order
+        self.order = 0 #will be set by app which gets logs out of redis
         if private == True or int(private) == 1:
             self.private = 1
         else:
@@ -138,7 +132,7 @@ class LogItem(object):
         return self.guid
 
     def toJson(self):
-        return j.db.serializers.ujson.dumps(self.__dict__)
+        return json.dumps(self.__dict__)
 
     def __str__(self):
         if self.category!="":
@@ -160,7 +154,24 @@ class LogHandler(object):
         This empties the log targets
         '''
         self.utils = LogUtils()
-        self.reset()        
+        self.reset()     
+        self.redis=None
+
+    def init(self):
+        self.connectRedis()
+
+    def connectRedis(self):
+        if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):    
+            self.redis=j.clients.redis.getRedisClient("127.0.0.1",9999)
+            lua=j.system.fs.fileGetContents("%s/core/logging/logs.lua"%j.dirs.jsLibDir)
+            self.redislogging=self.redis.register_script(lua)    
+
+    def _send2Redis(self,obj):
+        if self.redis<>None:
+            data=obj.toJson()
+            return self.redislogging(keys=["logs.queue"],args=[data])
+        else:
+            return None
 
     def getLogObjectFromDict(self, ddict):
         return LogItemFromDict(ddict)
@@ -209,78 +220,15 @@ class LogHandler(object):
         self.consolelogCategories=[]
         self.lastmessage = ""
         # self.lastloglevel=0
-        self.logs = []
+
         self.nolog = False
-
-        self._lastcleanuptime = 0
-        self._lastinittime = 9999999999  # every 5 seconds want to reinit the logger to make sure all targets which are available are connected
-
-        self.logTargets = []
-        self.inlog = False
         self.enabled = True
-        self.logTargetLogForwarder = False
-        self.order = 0
-
-    def addConsoleLogCategory(self,category):
-        category=category.lower()
-        if category not in self.consolelogCategories:
-            self.consolelogCategories.append(category)
-
-    def addLogTargetStdOut(self):
-        self.logTargetAdd(LogTargetStdOut())
-
-    def addLogTargetLocalFS(self):
-        self.logTargetAdd(LogTargetFS())
-
-    def setLogTargetLogForwarder(self, serverip="127.0.0.1",port=7768):
-        """
-        there will be only logging to stdout (if q.loghandler.consoleloglevel set properly)
-        & to the LogForwarder
-        """
-        from logtargets.LogTargetLogForwarder import LogTargetLogForwarder
-        self.logs=[]
-        self.inlog=False
-        self.order=0
-        self.logTargetLogForwarder = LogTargetLogForwarder(serverip=serverip, port=port)
 
     def disable(self):
         self.enabled = False
-        for t in self.logTargets:
-            t.close()
-        self.logTargets = []
-
         if "console" in self.__dict__:
             self.console.disconnect()
             self.console = None
-
-    def _init(self):
-        """
-        called by jumpscale
-        """
-        return  # need to rewrite logging
-        self._lastinittime = 0
-        self.nolog = True
-        inifile = j.config.getInifile("main")
-        if inifile.checkParam("main", "lastlogcleanup") == False:
-            inifile.setParam("main", "lastlogcleanup", 0)
-        self._lastcleanuptime = int(inifile.getValue("main", "lastlogcleanup"))
-        self.nolog = False
-        from logtargets.LogTargetToJumpScaleLogConsole import LogTargetToJumpScaleLogConsole
-        self.logTargetAdd(LogTargetToJumpScaleLogConsole())
-
-    def checktargets(self):
-        """
-        only execute this every 120 secs
-        """
-
-        # check which loggers are not working
-        for target in self.logTargets:
-            if target.enabled == False:
-                try:
-                    target.open()
-                except:
-                    target.enabled = False
-        self.cleanup()
 
     def log(self, message, level=5, category="", tags="", jid="", parentjid="",masterjid="", private=False):
         """
@@ -307,80 +255,12 @@ class LogHandler(object):
             else:
                 j.console.echo(str(log), log=False)
         
-        if self.logTargetLogForwarder != False and self.logTargetLogForwarder.enabled:
-            self.logTargetLogForwarder.log(log)
-
-        else:
-            # print "level:%s %s" % (level,message)
-
-            if self.nolog:
-                return
-            # if message<>"" and message[-1]<>"\n":
-            #    message+="\n"
-
-            if level < self.maxlevel+1:
-                if "transaction" in j.__dict__ and j.transaction.activeTransaction != None:
-                    if len(j.transaction.activeTransaction.logs) > 250:
-                        j.transaction.activeTransaction.logs = j.transaction.activeTransaction.logs[-200:]
-                    j.transaction.activeTransaction.logs.append(log)
-
-                self.logs.append(log)
-                if len(self.logs) > 100:
-                    self.logs = self.logs[-50:]
-
-                # log to logtargets                
-                for logtarget in self.logTargets:
-                    if (hasattr(logtarget, 'maxlevel') and level > logtarget.maxlevel):
-                        continue
-                    if (hasattr(logtarget, 'enabled') and not logtarget.enabled):
-                        continue
-                    logtarget.log(log)
-
-    def exception(self, message, level=5):
-        """
-        Log `message` and the current exception traceback
-
-        The current exception is retrieved automatically. There is no need to pass it.
-
-        @param message: The message to log
-        @type message: string
-        @param level: The log level
-        @type level: int
-        """
-        ei = sys.exc_info()
-        sio = StringIO()
-        traceback.print_exception(ei[0], ei[1], ei[2], None, sio)
-        s = sio.getvalue()
-        sio.close()
-        self.log(message, level)
-        self.log(s, level)
-
-    def clear(self):
-        self.logs = []
-
-    def close(self):
-        # for old logtargets
-        for logtarget in self.logTargets:
-            logtarget.close()
-
-    def cleanup(self):
-        """
-        Cleanup your logs
-        """
-        if hasattr(self, '_fallbackLogger') and hasattr(self._fallbackLogger, 'cleanup'):
-            self._fallbackLogger.cleanup()
-
-        for logtarget in self.logTargets:
-            if hasattr(logtarget, 'cleanup'):
-                logtarget.cleanup()
-
-    def logTargetAdd(self, logtarget):
-        """
-        Add a LogTarget object
-        """
-        count = self.logTargets.count(logtarget)
-        if count > 0:
+        if self.nolog:
             return
-        self.logTargets.append(logtarget)
 
+        if level < self.maxlevel+1:
+            #SEND TO REDIS
+            return self._send2Redis(log)
+
+        return None
 

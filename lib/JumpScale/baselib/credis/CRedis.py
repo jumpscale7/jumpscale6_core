@@ -5,7 +5,8 @@ import time
 from JumpScale import j
 # import JumpScale.baselib.redis
 
-from .CRedisQueue import CRedisQueue
+
+from JumpScale.baselib.redis.RedisQueue import RedisQueue as CRedisQueue
 
 #code https://github.com/yihuang/credis/blob/master/credis/base.pyx
 
@@ -38,7 +39,7 @@ class CRedis():
      self.execute_pipeline(('SET',"test","This Should Return"),('GET',"test"))
     """
 
-    def __init__(self, addr="127.0.0.1",port=7768,timeout=None):
+    def __init__(self, addr="127.0.0.1",port=9999,timeout=None):
         self.port=port
         self.redis=credis.Connection(host=addr,port=port,socket_timeout=timeout)
         self.connect()    

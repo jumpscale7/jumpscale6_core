@@ -11,7 +11,7 @@ critical alert
 organization = "jumpscale"
 enable = True
 
-REDIS_PORT = 7768
+REDIS_PORT = 9999
 # API_KEY = j.application.config.get('rogerthat.apikey')
 
 redis_client = j.clients.credis.getRedisClient('127.0.0.1', REDIS_PORT)

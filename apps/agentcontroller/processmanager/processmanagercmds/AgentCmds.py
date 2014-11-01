@@ -6,7 +6,7 @@ from JumpScale.grid.serverbase import returnCodes
 import time
 
 REDISIP = '127.0.0.1'
-REDISPORT = 7768
+REDISPORT = 9999
 
 
 class AgentCmds():
@@ -22,10 +22,10 @@ class AgentCmds():
 
         self.redis = j.clients.redis.getGeventRedisClient(REDISIP, REDISPORT)
         self.queue={}
-        self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:io")
-        self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:hypervisor")
-        self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:default")
-        self.queue["monitoring"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:work:monitoring")
+        self.queue["io"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:io")
+        self.queue["hypervisor"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:hypervisor")
+        self.queue["default"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:default")
+        self.queue["monitoring"] = j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:work:monitoring")
 
     def _init(self):
         self.init()
