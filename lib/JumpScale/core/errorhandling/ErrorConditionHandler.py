@@ -3,7 +3,13 @@ import traceback
 import string
 import inspect
 import imp
-import ujson as json
+
+try:
+    import ujson as json
+except ImportError:
+    import json
+
+
 
 from JumpScale import j
 

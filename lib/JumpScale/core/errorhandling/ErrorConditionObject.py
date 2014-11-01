@@ -2,7 +2,13 @@ import copy
 import unicodedata
 from JumpScale import j
 import traceback
-import ujson as json
+
+try:
+    import ujson as json
+except ImportError:
+    import json
+
+
 
 import JumpScale.baselib.hash
 

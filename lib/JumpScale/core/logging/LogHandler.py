@@ -15,7 +15,11 @@ except ImportError:
     except:
         from io import StringIO
 
-import ujson as json
+try:
+    import ujson as json
+except ImportError:
+    import json
+
 
 import JumpScale.baselib.redis
 
