@@ -9,15 +9,9 @@ try:
 except ImportError:
     import json
 
-
-
 from JumpScale import j
-
 from ErrorConditionObject import ErrorConditionObject
 
-
-
-import JumpScale.baselib.redis
 
 class BaseException(Exception):
     def __init__(self, message="", eco=None):
@@ -50,6 +44,7 @@ class ErrorConditionHandler():
     def _send2Redis(self,eco):
         if self.redis==None:
             if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):    
+                import JumpScale.baselib.redis
                 self.redis=j.clients.redis.getRedisClient("127.0.0.1",9999)
                 luapath="%s/core/errorhandling/eco.lua"%j.dirs.jsLibDir
                 if j.system.fs.exists(path=luapath):
