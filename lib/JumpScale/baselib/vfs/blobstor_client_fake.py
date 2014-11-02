@@ -37,7 +37,7 @@ class BlobStorClientFake:
         self.results={}
 
         self.errors=[]
-        self.redis = j.clients.redis.getRedisClient(port=7766)
+        self.redis = j.clients.redis.getRedisClient(port=9999)
 
     def _normalize(self, path):
         path=path.replace("'","\\'")

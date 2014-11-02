@@ -25,8 +25,8 @@ class BlobStorServer():
         self.adminuser = "root"
 
         #check redis is there if not try to start
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",7767):
-            raise RuntimeError("looking for redis on port 7767, could not find")
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
+            raise RuntimeError("looking for redis on port 9999, could not find")
 
         def checkblobstormaster():
             masterip=j.application.config.get("grid.master.ip")

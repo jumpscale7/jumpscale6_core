@@ -77,8 +77,6 @@ def processErrorConditionObject(eco):
 
 def main():
 
-    # j.errorconditationhandler.processErrorConditionObject=processErrorConditionObject
-
     # Instantiate a dummy authorizer for managing 'virtual' users
     authorizer = Authorizer()
     authorizer.usermanager = usermanager

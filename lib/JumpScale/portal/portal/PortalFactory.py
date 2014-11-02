@@ -36,7 +36,7 @@ class PortalFactory():
             def __init__(self):
                 import JumpScale.grid
                 self.actors = dict()
-                self.osis = j.core.osis.getClient(user='root')
+                self.osis = j.core.osis.getClientByInstance('main')
                 self.epoch = time.time()
                 self.actorsloader = j.core.portalloader.getActorsLoader()
                 self.spacesloader = j.core.portalloader.getSpacesLoader()
@@ -103,7 +103,7 @@ class PortalFactory():
     #     get actor (works in process as well as out of process running appserver)
     #     """
     #     self._init()
-    #     dbtype=j.enumerators.KeyValueStoreType.FILE_SYSTEM
+    #     dbtype="FILE_SYSTEM"
     #     key="%s_%s" %(appName,actorName)
     #     if self._actors.has_key(key):
     #         return self._actors[key]

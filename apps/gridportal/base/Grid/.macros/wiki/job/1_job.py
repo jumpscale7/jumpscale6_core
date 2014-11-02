@@ -31,13 +31,15 @@ def main(j, args, params, tags, tasklet):
 
     if obj["state"] == "ERROR":
         obj['state'] = "FAILED"
-        eco = json.loads(obj['result'])
-        if j.core.portal.active.osis.exists('system', 'eco', eco['guid']):
-            obj['resultline'] = '{{errorresult ecoguid:%s}}' % eco['guid']
-        else:
-            obj['resultline'] = "ECO: Is not available anymore"
-        obj['backtrace'] = eco['backtrace']
-
+        try:
+            eco = json.loads(obj['result'])
+            if j.core.portal.active.osis.exists('system', 'eco', eco['guid']):
+                obj['resultline'] = '{{errorresult ecoguid:%s}}' % eco['guid']
+            else:
+                obj['resultline'] = "ECO: Is not available anymore"
+            obj['backtrace'] = eco['backtrace']
+        except Exception:
+            eco = {'errormessage': obj['result']}
         obj['result'] = eco['errormessage'].replace('\n', '$LF')
     else:
         try:

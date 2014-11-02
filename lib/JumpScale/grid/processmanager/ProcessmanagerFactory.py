@@ -54,20 +54,20 @@ class ProcessmanagerFactory:
     # @property
     # def redisprocessmanager(self):
     #     if not self._redisprocessmanager:
-    #         if j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-    #             raise RuntimeError("Could not start processmanager, redis not found on 7766")
-    #         self._redisprocessmanager = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+    #         if j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
+    #             raise RuntimeError("Could not start processmanager, redis not found on 9999")
+    #         self._redisprocessmanager = j.clients.redis.getGeventRedisClient('127.0.0.1', 9999)
     #     return self._redisprocessmanager
 
     def start(self):
         # #check redis is there if not try to start
-        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+        # if not j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
         #     j.packages.findNewest(name="redis").install()
         #     j.packages.findNewest(name="redis").start()
 
         # wait=1
-        # while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-        #     msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 7766)"    
+        # while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
+        #     msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 9999)"    
         #     print msg
         #     j.events.opserror(msg, category='processmanager.startup')    
         #     if wait<60:
@@ -75,8 +75,8 @@ class ProcessmanagerFactory:
         #     time.sleep(wait)
 
         # wait=1
-        # while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
-        #     msg= "cannot connect to redis main, will keep on trying forever, please start redis production (port 7768)"    
+        # while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
+        #     msg= "cannot connect to redis main, will keep on trying forever, please start redis production (port 9999)"    
         #     print msg
         #     j.events.opserror(msg, category='processmanager.startup')    
         #     if wait<60:

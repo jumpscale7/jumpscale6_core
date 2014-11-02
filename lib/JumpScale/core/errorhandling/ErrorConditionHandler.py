@@ -4,9 +4,30 @@ import string
 import inspect
 import imp
 
-from JumpScale import j
+try:
+    import ujson as json
+except ImportError:
+    import json
 
+from JumpScale import j
 from ErrorConditionObject import ErrorConditionObject
+
+
+class BaseException(Exception):
+    def __init__(self, message="", eco=None):
+        self.message = message
+        self.eco = eco
+
+    def __str__(self):
+        if self.eco<>None:
+            return str(j.errorconditionhandler.getErrorConditionObject(self.eco))
+        return "Unexpected Error Happened"
+
+    __repr__ = __str__
+
+class HaltException(BaseException):
+    pass
+
 
 
 class ErrorConditionHandler():
@@ -17,6 +38,27 @@ class ErrorConditionHandler():
         self.haltOnError=haltOnError     
         self.setExceptHook()
         self.lastEco=None
+        self.redis=None
+        self.escalateToRedis=None
+
+    def _send2Redis(self,eco):
+        if self.redis==None:
+            if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):    
+                import JumpScale.baselib.redis
+                self.redis=j.clients.redis.getRedisClient("127.0.0.1",9999)
+                luapath="%s/core/errorhandling/eco.lua"%j.dirs.jsLibDir
+                if j.system.fs.exists(path=luapath):
+                    lua=j.system.fs.fileGetContents(luapath)
+                    self.escalateToRedis=self.redis.register_script(lua)    
+
+        if self.redis<>None and self.escalateToRedis<>None:
+            eco.getSetGuid()
+            key=eco.getUniqueKey()
+            
+            data=eco.toJson()
+            return json.decode(self.escalateToRedis(keys=["eco.queue","eco.incr","eco.occurrences","eco.objects","eco.last"],args=[key,data]))
+        else:
+            return None
 
     @property
     def blacklist(self):
@@ -46,10 +88,10 @@ class ErrorConditionHandler():
 
         eco.tags=tags
         eco.type=int(type)
-        self.processErrorConditionObject(eco, centralsentry=True)
+        eco.process()
         return eco
 
-    def raiseBug(self, message,category="", pythonExceptionObject=None,pythonTraceBack=None,msgpub="",die=True,tags="", level=j.enumerators.ErrorConditionLevel.CRITICAL):
+    def raiseBug(self, message,category="", pythonExceptionObject=None,pythonTraceBack=None,msgpub="",die=True,tags="", level="CRITICAL"):
         """
         use this to raise a bug in the code, this is the only time that a stacktrace will be asked for
         level will be Critical
@@ -64,10 +106,10 @@ class ErrorConditionHandler():
             j.errorconditionhandler.raiseBug("an error",category="exceptions.init",e)
         
         """
-        type = j.enumerators.ErrorConditionType.BUG
+        type = "BUG"
         eco = self._handleRaise(type, level, message, category, pythonExceptionObject, pythonTraceBack, msgpub, tags)
         if die:                     
-            self.halt(eco.errormessage)
+            self.halt(eco.errormessage, eco)
 
     raiseCritical = raiseBug
 
@@ -85,7 +127,7 @@ class ErrorConditionHandler():
             j.errorconditionhandler.raiseBug("an error",category="exceptions.init",e)
         
         """
-        level = j.enumerators.ErrorConditionLevel.WARNING
+        level = "WARNING"
         self.raiseBug(message, category, pythonExceptionObject, pythonTraceBack, msgpub, False, tags, level)
         
     def raiseOperationalCritical(self, message="", category="",msgpub="",die=True,tags="",eco=None,extra=None):
@@ -97,10 +139,10 @@ class ErrorConditionHandler():
         """
         if not eco:
             eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=1,\
-                                         type=j.enumerators.ErrorConditionType.OPERATIONS)
+                                         type="OPERATIONS")
             eco.tags=tags
         else:
-            eco.type=int(j.enumerators.ErrorConditionType.OPERATIONS)
+            eco.type="OPERATIONS"
             eco.level=1
 
         if eco<>None:
@@ -108,8 +150,10 @@ class ErrorConditionHandler():
         if extra<>None:
             eco.extra=extra
         
-        self.processErrorConditionObject(eco,tostdout=False, centralsentry=True)
-     
+        eco.type="OPERATIONS"
+
+        eco.process()
+        
         msg = eco.errormessage 
         if j.application.debug:
             msg=str(eco)
@@ -117,7 +161,7 @@ class ErrorConditionHandler():
         print "\n#########   Operational Critical Error    #################\n%s\n###########################################################\n"% msg
         print 
         if die:
-            self.halt(str(eco))
+            self.halt(msg,eco)
 
     def raiseRuntimeErrorWithEco(self,eco,tostdout=False):
         message=""
@@ -132,23 +176,22 @@ class ErrorConditionHandler():
         raise RuntimeError(message)
 
     def raiseOperationalWarning(self, message="", category="",msgpub="",tags="",eco=None):
-        level = j.enumerators.ErrorConditionLevel.WARNING.level
         if not eco:
-            eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=level,\
-                                         type=j.enumerators.ErrorConditionType.OPERATIONS)
+            eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=3,\
+                                         type="OPERATIONS")
             eco.tags=tags
         else:
-            eco.type=int(j.enumerators.ErrorConditionType.OPERATIONS)
-            eco.level=level
-        self.processErrorConditionObject(eco, centralsentry=True)
+            eco.type="OPERATIONS"
+            eco.level=3
+        eco.process()
         
     def raiseInputError(self, message="", category="input",msgpub="",die=True ,backtrace="",tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
-                                         level=1,type=j.enumerators.ErrorConditionType.INPUT)
+                                         level=1,type="INPUT")
         eco.tags=tags
         if backtrace:
             eco.backtrace=backtrace
-        self.processErrorConditionObject(eco,tostdout=False)
+        eco.process()
    
         if j.application.debug:
             print eco
@@ -159,24 +202,25 @@ class ErrorConditionHandler():
             print message
 
         if die:
-            self.halt(eco.errormessage)
+            self.halt(eco.errormessage, eco)
         
     def raiseMonitoringError(self, message, category="",msgpub="",die=False,tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
-                                         level=1,type=j.enumerators.ErrorConditionType.MONITORING)
+                                         level=1,type="MONITORING")
         eco.tags=tags
-        self.processErrorConditionObject(eco)
+        eco.process()
         if die:
-            self.halt(eco.description)
+            self.halt(eco.description, eco)
         
     def raisePerformanceError(self, message, category="",msgpub="",tags=""):
         eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,\
-                                         level=1,type=j.enumerators.ErrorConditionType.PERFORMANCE)
+                                         level=1,type="PERFORMANCE")
         eco.tags=tags
+        eco.process()
         if die:
-            self.halt(eco.description)
+            self.halt(eco.description, eco)
         
-    def getErrorConditionObject(self,ddict={},msg="",msgpub="",category="",level=1,type=0,tb=None):
+    def getErrorConditionObject(self,ddict={},msg="",msgpub="",category="",level=1,type="UNKNOWN",tb=None):
         """
         @data is dict with fields of errorcondition obj
         returns only ErrorConditionObject which should be used in jumpscale to define an errorcondition (or potential error condition)
@@ -201,11 +245,9 @@ class ErrorConditionHandler():
         @return [ecsource,ecid,ecguid]
         
         the errorcondition is then also processed e.g. send to local logserver and/or stored locally in errordb
-        see j.errorconditionhandler.processErrorConditionObject how to use this and overrule the behaviour
         """        
-        obj=self.parsePythonErrorObject(pythonExceptionObject,ttype, tb,level,message)
-
-        return self.processErrorConditionObject(obj,sentry=sentry)
+        eco=self.parsePythonErrorObject(pythonExceptionObject,ttype, tb,level,message)
+        eco.process()
         
     def parsePythonErrorObject(self,pythonExceptionObject,ttype=None, tb=None,level=1,message=""):
         
@@ -218,7 +260,7 @@ class ErrorConditionHandler():
             eco=j.errorconditionhandler.parsePythonErrorObject(e)
 
         eco is jumpscale internal format for an error 
-        next step could be to process the error objecect (eco) e.g. by j.errorconditionhandler.processErrorConditionObject(eco)
+        next step could be to process the error objecect (eco) e.g. by eco.process()
             
         @param pythonExceptionObject is errorobject thrown by python when there is an exception
         @param ttype : is the description of the error, can be None
@@ -226,6 +268,9 @@ class ErrorConditionHandler():
         
         @return a ErrorConditionObject object as used by jumpscale (should be the only type of object we send around)
         """
+        if isinstance(pythonExceptionObject, BaseException):
+            return self.getErrorConditionObject(pythonExceptionObject.eco)
+
         if tb==None:
             ttype, exc_value, tb=sys.exc_info()
         try:
@@ -254,7 +299,7 @@ class ErrorConditionHandler():
             message="%s: %s" % (type_str,message)
         
 
-        errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
+        errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)      
 
         try:
             import ujson as json
@@ -311,9 +356,15 @@ class ErrorConditionHandler():
         This routine will create an errorobject & escalate to the infoserver
         @ttype : is the description of the error
         @tb : can be a python data object or a Event
-        """        
+        """           
+        if pythonExceptionObject.__dict__.has_key("eco"):
+            eco=pythonExceptionObject.eco
+            
+            # if str(eco["type"])<>str("BUG") and str(eco["type"])<>str("UNKNOWN"):
+            j.application.stop(1)    
+
         if str(pythonExceptionObject).find("**halt**")<>-1:
-            j.application.stop()
+            j.application.stop(1)
 
         # print "jumpscale EXCEPTIONHOOK"
         if self.inException:
@@ -322,19 +373,20 @@ class ErrorConditionHandler():
             return 
 
         self.inException=True
-        print "ERROR"
-        print pythonExceptionObject
 
-        errorobject=self.parsePythonErrorObject(pythonExceptionObject,ttype=ttype,tb=tb)
+        eco=self.parsePythonErrorObject(pythonExceptionObject,ttype=ttype,tb=tb)
 
         if self.lastAction<>"":
             j.logger.log("Last action done before error was %s" % self.lastAction)
         self._dealWithRunningAction()      
         self.inException=False             
-        self.processErrorConditionObject(errorobject,sentry=True)
+        eco.process()
+        print eco
 
-        if j.application.shellconfig.interactive:
-            return self.escalateBugToDeveloper(errorobject,tb)
+        #from IPython import embed
+        #print "DEBUG NOW ooo"
+        #embed()
+        
 
     def checkErrorIgnore(self,eco):
         if j.application.debug:
@@ -416,208 +468,6 @@ class ErrorConditionHandler():
                 func0=finfo.function
 
         return out,filename0,linenr0,func0
-
-    def processErrorConditionObject(self,errorConditionObject,tostdout=True,sentry=True,modulename=None, centralsentry=False):
-        """
-        a errorObject gets processed which means stored locally or forwarded to a logserver or both
-        @return [ecsource,ecid,ecguid]
-
-        you can overrule this behaviour by changing at rutime this function with a new one e.g. following code could work
-
-        ### code:
-        def myProcessErrorConditionObject(eco):
-            print eco
-
-        j.errorconditionhandler.processErrorConditionObject=myProcessErrorConditionObject
-        ###
-
-        now there would be no further processing appart from priting the errorcondition object (eco)
-
-        """
-        eco=errorConditionObject
-
-        eco.toAscii()
-
-        if self.checkErrorIgnore(eco):
-            return
-
-        if j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
-            if len(eco.guid)>30:
-                #means is guid, will try to make more meaningfull guid
-                import JumpScale.baselib.redis
-                redis=j.clients.redis.getRedisClient("127.0.0.1",7768)
-                incrkey="%s_%s"%(eco.gid,eco.nid)
-                eco.id=redis.incr("eco:incr:%s"%incrkey,1)
-                eco.guid = "%s_%s_%s"%(eco.gid,eco.nid,eco.id)
-
-        if len(eco.guid)>30:
-            pass
-            #@todo debug
-            
-
-        if j.logger.logTargetLogForwarder and j.logger.logTargetLogForwarder.enabled:
-            j.logger.logTargetLogForwarder.logECO(eco)
-
-        if tostdout:
-            print eco
-
-        if sentry and j.application.config.exists("sentry.server"):
-            self.sendEcoToSentry(eco, modulename)
-        if centralsentry:
-            keys = set( key.split('.')[0] for key in j.application.config.prefix('sentry') )
-            keys.discard('sentry')
-            for othersentry in keys:
-                self.sendEcoToSentry(eco, modulename, othersentry)
-
-        return eco
-
-    def sendEcoToSentry(self, eco, modulename=None, hrdprefix='sentry'):
-        extra={}
-        tb=eco.tb
-
-        if eco.__dict__.has_key("frames"):
-            frames=eco.frames
-        else:
-            frames=[]
-        if eco.backtrace<>"":
-            extra["tb"]=eco.backtrace
-
-        if eco.backtraceDetailed<>"":
-            extra["tb_detail"]=eco.backtraceDetailed
-
-        if hasattr(eco,"extra") and eco.extra<>None:
-            extra["details"]=eco.extra
-
-        extra["category"]=eco.category
-        try:
-            ttype = str(j.enumerators.ErrorConditionType.getByLevel(int(eco.type)))
-        except Exception,e:
-            ttype=j.enumerators.ErrorConditionType.UNKNOWN
-        try:
-            level = str(j.enumerators.ErrorConditionLevel.getByLevel(int(eco.level)))
-        except Exception,e:
-            level=j.enumerators.ErrorConditionLevel.UNKNOWN
-        
-        self.sendMessageToSentry(modulename=modulename,message=eco.errormessage,ttype=ttype,frames=frames,tags=None,\
-            extra=extra,level=level,tb=tb, hrdprefix=hrdprefix)
-
-    def sendMessageToSentry(self,modulename,message,ttype="bug",tags=None,extra={},level="error",tb=None,frames=[],backtrace="", hrdprefix="sentry"):
-        """
-        @param level
-            fatal
-            error
-            warning
-            info
-            debug
-
-        """
-
-        if j.application.config.exists("%s.server" % hrdprefix):
-            import requests
-            try:
-                import ujson as json
-            except:
-                import json
-            import uuid
-            import datetime
-            server=j.application.config.get("%s.server" %hrdprefix)
-            pub=j.application.config.get("%s.public.key" % hrdprefix)
-            secret=j.application.config.get("%s.secret.key" % hrdprefix)
-            port=j.application.config.getInt("%s.port" % hrdprefix)
-            default=j.application.config.get("%s.project" % hrdprefix)
-            url='http://%s:%s/'%(server,port)
-            exc={}
-            exc["type"]=ttype
-            exc["value"]=message
-
-            def ignore(modulename):
-                if modulename.strip()=="":
-                    return True
-                toignore=["errorhandling"]
-                for check in toignore:
-                    if modulename.find(check)<>-1:
-                        return True
-                return False
-                
-
-            if modulename==None:
-                modulename="appname:%s"%(j.application.appname)
-                try:
-                    if frames==[]:
-                        frames=self.getFrames(tb)
-                    frame=frames.pop()[0]
-                    modulename=""
-                    while ignore(modulename):                    
-                        modulename=inspect.getmodule(frame)
-                        if modulename==None or str(modulename).strip()=="":
-                            modulename=inspect.getmodulename(frame.f_code.co_filename)
-                        modulename=str(modulename)
-                        modulename=modulename.replace("<module ","").replace("'","").replace(".pyc","").replace(">","")
-                        try:
-                            modulename=modulename.split("from")[0].strip()
-                        except:
-                            pass
-                        if len(frames)>0:
-                            frame=frames.pop()[0]
-                        else:
-                            modulename="appname:%s"%(j.application.appname)
-                    if modulename.find("appname")==-1:
-                        modulename="appname:%s / %s"%(j.application.appname,modulename)
-                except Exception,e:
-                    modulename="appname:%s"%(j.application.appname)  
-
-                
-            exc["module"]=modulename
-            exc=[exc]
-            if tags==None:
-                tags={}
-            else:
-                tags=j.core.tags.getObject(tags)
-                tags=tags.getDict()
-            tags['type'] = ttype
-
-            data={}
-            data["event_id"]=uuid.uuid4().hex
-            data["culprit"]=modulename
-            data["timestamp"]=str(datetime.datetime.utcnow())
-            data["message"]="%s" %(message)
-            data["tags"]=tags
-            data["exception"]=exc
-            data["level"]=level
-            data["logger"]=j.application.appname
-            data["platform"]="python"
-            data["server_name"]="g%s.n%s"%(j.application.whoAmI.gid,j.application.whoAmI.nid)  
-            data["extra"]=extra
-
-            if tb<>None:
-                from stacks import iter_traceback_frames,get_stack_info
-                frames=iter_traceback_frames(tb)
-                data.update({
-                    'sentry.interfaces.Stacktrace': {
-                        'frames': get_stack_info(frames)
-                    },
-                })
-            else:
-                data.update({
-                    'sentry.interfaces.Stacktrace': {
-                        'frames': backtrace
-                    },
-                })
-
-
-            url2="%s/api/%s/store/"%(url,default)
-
-            auth="Sentry sentry_version=5, sentry_timestamp=%s,"%j.base.time.getTimeEpoch()
-            auth+="sentry_key=%s, sentry_client=raven-python/1.0,"%pub
-            auth+="sentry_secret=%s"%secret
-
-            headers = {'X-Sentry-Auth': auth}
-
-            try:
-                r = requests.post(url2,data=json.dumps(data), headers=headers, timeout=1)
-            except Exception,e:  
-                pass              
-                # print "COULD NOT SEND \n%s \nTO SENTRY.\nReason:%s"%(data,e)
              
     def _dealWithRunningAction(self):
         """Function that deals with the error/resolution messages generated by j.action.start() and j.action.stop()
@@ -727,5 +577,7 @@ class ErrorConditionHandler():
             #j.console.echo( "Tracefile in %s" % tracefile)
             j.application.stop(1)
 
-    def halt(self,msg):
-        raise RuntimeError("**halt**\n%s"%msg)
+    def halt(self,msg, eco):
+        if eco <> None:
+            eco = eco.__dict__
+        raise HaltException(msg, eco)

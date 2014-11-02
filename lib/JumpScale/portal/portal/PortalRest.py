@@ -195,7 +195,7 @@ class PortalRest():
             eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
             if ctx == False:
                 print "NO webserver context yet, serious error"
-                j.errorconditionhandler.processErrorConditionObject(eco)
+                eco.process()
                 print eco
             else:
                 return self.ws.raiseError(ctx, errorObject=eco)
@@ -297,7 +297,7 @@ class PortalRest():
             eco = j.errorconditionhandler.parsePythonErrorObject(errorObject)
             if ctx == False:
                 print "NO webserver context yet, serious error"
-                j.errorconditionhandler.processErrorConditionObject(eco)
+                eco.process()
                 print eco
             else:
                 return self.ws.raiseError(ctx, errorObject=eco)
@@ -309,7 +309,7 @@ class PortalRest():
                 result = self.ws.actorsloader.getActor(appname, actor)
             except Exception, e:
                 eco = j.errorconditionhandler.parsePythonErrorObject(e)
-                j.errorconditionhandler.processErrorConditionObject(eco)
+                eco.process()
                 print e
                 return False
             if result == None:

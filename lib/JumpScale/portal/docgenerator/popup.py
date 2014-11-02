@@ -20,6 +20,13 @@ class Popup(object):
         content = template.render(label=label, name=name)
         self.widgets.append(content)
 
+    def addHiddenField(self, name, value):
+        template = self.jinja.from_string('''
+            <input type="hidden" class="form-control" name="${name}" value="${value}">
+        ''')
+        content = template.render(value=value, name=name)
+        self.widgets.append(content)
+
     def addTextArea(self, label, name, required=False):
         template = self.jinja.from_string('''
             <div class="form-group">
@@ -85,18 +92,15 @@ class Popup(object):
         content = template.render(label=label, name=name, options=options)
         self.widgets.append(content)
 
-    def to_html(self):
+    def write_html(self, page):
         template = self.jinja.from_string('''
             <form role="form" method="post" action="${submit_url}" class="popup_form">
             <div id="${id}" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="${id}Label" aria-hidden="true">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                <h3 id="${id}Label">${header}</h3>
+                <div id="${id}Label" class="modal-header-text">${header}</div>
               </div>
-              <div class="modal-body modal-body-sending">
-                Sending...
-              </div>
-              <div class="modal-body modal-body-error">
+              <div class="modal-body modal-body-error alert alert-error">
                 Error happened on the server
               </div>
               <div class="modal-body modal-body-form">
@@ -104,42 +108,55 @@ class Popup(object):
               </div>
               <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-                <button class="btn btn-primary">${action_button}</button>
+                <button class="btn btn-primary" data-loading-text="Loading...">${action_button}</button>
               </div>
             </div>
         </form>
-        <style>
-            .modal-body-sending, .modal-body-error { display: none }
-        </style>
-        <script src="/jslib/old/jquery.form/jquery.form.js"></script>
-        <script type="text/javascript">
-        $(function(){
-            $('.popup_form').ajaxForm({
-                clearForm: true,
-                beforeSubmit: function() {
-                    $('.popup_form').find('.modal-body').hide();
-                    $('.popup_form').find('.modal-body-sending').show();
-                },
-                success: function(data) {
-                    $('#${id}').modal('hide');
-                    $('.popup_form').find('.modal-body').hide();
-                    $('.popup_form').find('.modal-body-form').show();
-                },
-                error: function() {
-                    $('.popup_form').find('.modal-body').hide();
-                    $('.popup_form').find('.modal-body-error').show();
-                }
-            });
-            $('#${id}').on('hidden', function() {
-                $(this).modal('hide');
-                $('.popup_form').find('.modal-body').hide();
-                $('.popup_form').find('.modal-body-form').show();
-            });
-        });
-        </script>
         ''')
+        
         content = template.render(id=self.id, header=self.header, action_button=self.action_button, form_layout=self.form_layout, 
                                 widgets=self.widgets, submit_url=self.submit_url)
-        return content
 
+        css = '.modal-body-error { display: none } .modal-header-text { font-weight: bold; font-size: 24.5px; line-height: 30px; }'
+        if css not in page.head:
+            page.addCSS(cssContent=css)
 
+        jsLink = '/jslib/old/jquery.form/jquery.form.js'
+        if jsLink not in page.head:
+            page.addJS(jsLink)
+
+        js = '''$(function(){
+            $('.popup_form').ajaxForm({
+                clearForm: true,
+                beforeSubmit: function(formData, $form, options) {
+                    this.popup = $form;
+                    $form.find('.modal-footer > .btn-primary').button('loading');
+                    $form.find("input,select,textarea").prop("disabled", true)
+                },
+                success: function(responseText, statusText, xhr) {
+                    this.popup.find('.modal').modal('hide');
+                    this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-body-form').show();
+
+                },
+                error: function(responseText, statusText, xhr, $form) {
+                    if (responseText) {
+                        this.popup.find('.modal-body-error').text(responseText.responseText);
+                    }
+                    this.popup.find('.modal-body').hide();
+                    this.popup.find('.modal-footer > .btn-primary').hide();
+                    this.popup.find('.modal-body-error').show();
+                }
+            });
+            $('.modal').on('hidden', function() {
+                $(this).find("input,select,textarea").prop("disabled", false)
+                $(this).find('.modal-footer > .btn-primary').button('reset').show();
+                $(this).find('.modal-body').hide();
+                $(this).find('.modal-body-form').show();
+            });
+        });'''
+
+        if js not in page.head:
+            page.addJS(jsContent=js)
+        
+        page.addMessage(content)

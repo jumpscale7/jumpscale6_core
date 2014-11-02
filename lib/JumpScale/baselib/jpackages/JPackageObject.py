@@ -971,7 +971,11 @@ class JPackageObject():
     def stop(self,dependencies=False,walkinstances=False):
         """
         Stop the JPackage, run the stop tasklet(s)
-        """        
+        """ 
+        if self.name=="redis" and self.instance=="system":
+            #this is required during bootstrap
+            return
+                      
         if dependencies:
             deps = self.getDependencies()
             for dep in deps:

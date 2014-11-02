@@ -6,7 +6,7 @@ This jumpscript returns network info
 
 name = "getnetworkinfo"
 category = "monitoring"
-organization = "opencode"
+organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"

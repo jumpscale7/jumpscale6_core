@@ -271,15 +271,18 @@ class IniFile(object):
 
         try:
             if not fp:
+                j.system.fs.lock(filePath)
                 fp = open(filePath, 'w') # Completely overwrite the file.
             self.__configParser.write(fp)
             fp.flush()
             if closeFileHandler:
                 fp.close()
+                j.system.fs.unlock_(filePath)
 
         except Exception, err:
             if fp and closeFileHandler and not fp.closed:
                 fp.close()
+                j.system.fs.unlock_(filePath)
             raise RuntimeError("Failed to update the inifile at '%s'\nERROR: %s\n" % (filePath, str(err)))
 
     def getContent(self):

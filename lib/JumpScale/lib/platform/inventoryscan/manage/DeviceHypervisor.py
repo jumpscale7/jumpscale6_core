@@ -44,7 +44,7 @@ class DeviceHypervisor(CMDBSubObject):
     """
     j.cloud.cmdtools.inventoryScan
     type = j.basetype.enumeration(j.enumerators.HypervisorsType, doc='type of hypervisor', allow_none=True, flag_dirty=True)
-    #, default = j.enumerators.HypervisorsType.XEN)
+    #, default = "XEN")
     vmSatistics = j.basetype.dictionary(
         doc='vmName with CPU Load percentage, memory Usage percentage', flag_dirty=True, allow_none=False, default=dict())
     timeStamp = j.basetype.string(doc='time of data collection', flag_dirty=True, allow_none=False, default='')
@@ -52,7 +52,7 @@ class DeviceHypervisor(CMDBSubObject):
 
     def __init__(self):
         CMDBSubObject.__init__(self)
-        self.type = j.enumerators.HypervisorsType.NOHYPERVISOR
+        self.type = "NOHYPERVISOR"
 
     def __repr__(self):
         return str({'type': self.type, 'vmSatistics': self.vmSatistics, 'timeStamp': self.timeStamp, 'nicStatistics': self.vmNicSatistics})

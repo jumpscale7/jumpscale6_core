@@ -13,7 +13,7 @@ parser.add_argument('--roles', dest='roles', required=False, type=str, help='Use
 
 
 #check redis is there if not try to start
-if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+if not j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
     j.packages.findNewest(name="redis").install()
     j.packages.findNewest(name="redis").start()
 
@@ -52,7 +52,7 @@ def _deleteNode(nid):
 if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole']:
     import JumpScale.grid.osis
 
-    oscl = j.core.osis.getClient(user='root')
+    oscl = j.core.osis.getClientByInstance('main')
     ncl = j.core.osis.getClientForCategory(oscl, 'system', 'node')
 
 

@@ -50,22 +50,12 @@ class GridFactory():
         print "init grid"
         self._loadConfig(test=False)
 
-        # make sure we only log to stdout
-        j.logger.logTargets = []
-
-        j.logger.consoleloglevel = 6
-
         roles = list()
         if self.config.exists("grid.node.roles"):
             roles = j.application.config.getList('grid.node.roles')
         roles = [ role.lower() for role in roles ]
         self.roles = roles
-
         j.logger.consoleloglevel = 5
-
-        if j.application.appname<>"logger":
-            print "set logtarget forwarder"
-            j.logger.setLogTargetLogForwarder()
 
     def getLocalIPAccessibleByGridMaster(self):
         return j.system.net.getReachableIpAddress(self.config.get("grid.master.ip"), 5544)

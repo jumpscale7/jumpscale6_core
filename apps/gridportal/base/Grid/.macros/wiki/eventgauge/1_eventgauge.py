@@ -7,7 +7,7 @@ def main(j, args, params, tags, tasklet):
     width = args.getTag('width')
     height = args.getTag('height')
     result = "{{jgauge width:%(width)s id:%(id)s height:%(height)s val:%(last24h)s start:0 end:%(total)s}}"
-    cl = j.core.osis.getClient(user='root')
+    cl = j.core.osis.getClientByInstance('main')
     now = datetime.datetime.now()
     aweekago = j.base.time.getEpochAgo('-7d')
     ecl = j.core.osis.getClientForCategory(cl, 'system', 'eco')

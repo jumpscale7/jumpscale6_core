@@ -45,6 +45,8 @@ class Application:
 
         self.connectRedis()
 
+        j.logger.init()
+
     @property
     def debug(self):
         if self._debug != None:
@@ -59,9 +61,9 @@ class Application:
 
     def connectRedis(self):
 
-        if j.system.net.tcpPortConnectionTest("127.0.0.1",7766):
+        if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
             import JumpScale.baselib.credis # leave import here to make bootrap work
-            self.redis=j.clients.credis.getRedisClient("127.0.0.1",7766)
+            self.redis=j.clients.credis.getRedisClient("127.0.0.1",9999)
         else:
             self.redis=None
 
@@ -189,9 +191,6 @@ class Application:
         #     j.logger.log("Writing exitcode to %s" % exitcodefilename, 5)
         #     j.system.fs.writeFile(exitcodefilename, str(exitcode))
 
-        # Closing the LogTargets
-        j.logger.close()
-
         # was probably done like this so we dont end up in the _exithandler
         # os._exit(exitcode) Exit to the system with status n, without calling cleanup handlers, flushing stdio buffers, etc. Availability: Unix, Windows.
 
@@ -222,7 +221,6 @@ class Application:
         #@todo can we get the line of code which called sys.exit here?
         
         #j.logger.log("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED j.application.stop()", 4)
-        j.logger.close()
         if not self._calledexit:
             self.stop(1)
 

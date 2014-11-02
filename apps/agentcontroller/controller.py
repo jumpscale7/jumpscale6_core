@@ -12,6 +12,7 @@ import JumpScale.grid.osis
 import importlib
 import sys
 import copy
+import os
 try:
     import ujson as json
 except:
@@ -25,22 +26,29 @@ jp = j.packages.findNewest('jumpscale', 'agentcontroller')
 jp = jp.load(instance=opts.instance)
 j.application.instanceconfig = jp.hrd_instance
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
     time.sleep(0.1)
-    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
+    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 9999)"
 
 j.application.start("jumpscale:agentcontroller")
 j.application.initGrid()
 
 j.logger.consoleloglevel = 2
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
-    time.sleep(0.1)
-    print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
-
 import JumpScale.baselib.redis
 from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
 
+
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers.polling import PollingObserver as Observer
+
+class JumpScriptHandler(FileSystemEventHandler):
+    def __init__(self, agentcontroller):
+        self.agentcontroller = agentcontroller
+
+    def on_any_event(self, event):
+        if event.src_path and not event.is_directory and event.src_path.endswith('.py'):
+            self.agentcontroller.reloadjumpscripts()
 
 class ControllerCMDS():
 
@@ -60,14 +68,20 @@ class ControllerCMDS():
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
 
-        self.redisport=7769
+        self.redisport=9999
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
         self.roles2agents = dict()
         self.sessionsUpdateTime = dict()
         self.agents2roles = dict()
 
-        j.logger.setLogTargetLogForwarder()
+        self.start()
+
+    def start(self):
         gevent.spawn(self._cleanScheduledJobs, 3600*24)
+        observer = Observer()
+        handler = JumpScriptHandler(self)
+        observer.schedule(handler, "jumpscripts", recursive=True)
+        observer.start()
 
     def _adminAuth(self,user,passwd):
         return self.nodeclient.authenticate(user, passwd)
@@ -82,7 +96,7 @@ class ControllerCMDS():
         """
         self._log("schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname))
         if nid==None or nid==False:
-            raise RuntimeError("Nid can never be empty")
+            raise RuntimeError("NID can never be empty")
 
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
@@ -153,8 +167,7 @@ class ControllerCMDS():
         print "want processmanagers to reload js:",
         for item in self.osisclient.list("system","node"):
             gid,nid=item.split("_")
-            if int(gid)==session.gid:
-                cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
+            cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
         print "OK"            
 
     def restartWorkers(self,session=None):
@@ -274,7 +287,7 @@ class ControllerCMDS():
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
             eco = j.errorconditionhandler.getErrorConditionObject(eco)
-        j.errorconditionhandler.processErrorConditionObject(eco)
+        eco.process()
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
@@ -385,9 +398,13 @@ class ControllerCMDS():
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
+        # validate params
+        if not nid and not gid and not role:
+            j.events.inputerror_critical("executeJumpScript requires either nid and gid or role")
         def noWork():
             sessionid = session.id
-            job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
+            ngid = gid or j.application.whoAmI.gid
+            job=self.jobclient.new(sessionid=sessionid,gid=ngid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
             self._log("nothingtodo")
             job.state="NOWORK"
             job.timeStop=job.timeStart
@@ -637,7 +654,7 @@ for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filte
 # j.system.fs.changeDir("..")
 
 cmds=daemon.daemon.cmdsInterfaces["agent"]
-cmds.loadJumpscripts()
+cmds.reloadjumpscripts()
 # cmds.restartProcessmanagerWorkers()
 
 daemon.start()

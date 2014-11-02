@@ -1,6 +1,8 @@
+# gevent monkey patching should be done as soon as possible dont move!
 import gevent
 import gevent.monkey
 gevent.monkey.patch_all()
+
 from JumpScale import j
 
 j.application.start("jsagent")
@@ -13,7 +15,8 @@ import select
 import subprocess
 from JumpScale.baselib import cmdutils
 import JumpScale.grid.agentcontroller
-from gevent.pywsgi import WSGIServer
+
+
 import socket
 
 
@@ -92,8 +95,9 @@ class Process():
         time.sleep(0.1)
         if self.is_running()==False:
             print "could not execute:%s\n"%(self)
-            log=j.system.fs.fileGetContents(self.logpath)
-            print "log:\n%s"%log
+            if j.system.fs.exists(path=self.logpath):
+                log=j.system.fs.fileGetContents(self.logpath)
+                print "log:\n%s"%log
 
     def do(self):
         print 'A new child %s' % self.name,  os.getpid()
@@ -110,35 +114,40 @@ class Process():
 
 class ProcessManager():
     def __init__(self,reset=False):
+
         self.processes = list()
+        self.services = list()
+
+        self.dir_data=j.system.fs.joinPaths(j.dirs.baseDir,"jsagent_data")
+        self.dir_hekadconfig=j.system.fs.joinPaths(self.dir_data,"dir_hekadconfig")
+        self.dir_actions=j.system.fs.joinPaths(self.dir_data,"actions")
+        j.system.fs.createDir(self.dir_data)
 
         #check there is a redis on port 9998 & 9999 (the new port for all)
-        for port in [9999,9998,8001]:
+        for port in [9998,8001]:
             if j.system.net.tcpPortConnectionTest("localhost",port):
                 j.system.process.killProcessByPort(port)
 
-        jp=j.packages.findNewest("jumpscale","redis")
-        if not jp.isInstalled(instance="mem"):
-            jp.install(hrddata={"redis.name":"mem","redis.port":9999,"redis.disk":"0","redis.mem":20},instance="mem")
-        if not jp.isInstalled(instance="disk"):
-            jp.install(hrddata={"redis.name":"disk","redis.port":9998,"redis.disk":"1","redis.mem":20},instance="disk")
 
-        for name in ["mem","disk"]:
-            p=Process()
-            p.domain="jumpscale"
-            p.name="redis_%s"%name
-            p.instance=name
-            p.workingdir="/"
-            p.cmds=[j.dirs.replaceTxtDirVars("$base/apps/redis/redis-server"),j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.conf"%name)]
-            p.logpath=j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.log"%name)
-            p.start()
-            self.processes.append(p)
-
-        if j.system.net.waitConnectionTest("localhost",9999,2)==False or j.system.net.waitConnectionTest("localhost",9998,2)==False:
-            j.events.opserror_critical("could not start redis on port 9998 or 9999 inside processmanager",category="processmanager.redis.start")
+        if j.system.net.tcpPortConnectionTest("localhost",9999)==False:
+            jp=j.packages.findNewest("jumpscale","redis")
+            if not jp.isInstalled(instance="mem") and not j.system.net.tcpPortConnectionTest("localhost",9999):
+                jp.install(hrddata={"redis.name":"mem","redis.port":9999,"redis.disk":"0","redis.mem":40},instance="mem")
+            for name in ["mem"]:
+                p=Process()
+                p.domain="jumpscale"
+                p.name="redis_%s"%name
+                p.instance=name
+                p.workingdir="/"
+                p.cmds=[j.dirs.replaceTxtDirVars("$base/apps/redis/redis-server"),j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.conf"%name)]
+                p.logpath=j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.log"%name)
+                p.start()
+                self.processes.append(p)
+            if j.system.net.waitConnectionTest("localhost",9999,10)==False:
+                j.events.opserror_critical("could not start redis on port 9999 inside processmanager",category="processmanager.redis.start")
 
         self.redis_mem=j.clients.redis.getGeventRedisClient("localhost",9999)
-        self.redis_disk=j.clients.redis.getGeventRedisClient("localhost",9998)
+        # self.redis_disk=j.clients.redis.getGeventRedisClient("localhost",9998)
 
         self.redis_queues={}
         self.redis_queues["io"] = j.clients.redis.getGeventRedisQueue("localhost",9999,"workers:work:io")
@@ -149,13 +158,35 @@ class ProcessManager():
         j.processmanager=self
 
         self.hrd=j.application.instanceconfig
-        acip=self.hrd.get("ac.ipaddress")
-        acport=self.hrd.getInt("ac.port")
-        aclogin=self.hrd.get("ac.login",default="node")
-        acpasswd=self.hrd.get("ac.passwd",default="")
-        acclientinstancename = self.hrd.get('agentcontroller.connection')
 
-        if self.hrd.get("ac.ipaddress")<>"":
+        acip=self.hrd.get("ac.ipaddress",default="")
+
+        if "hekad" in self.services:
+            jp=j.packages.findNewest("jumpscale","hekad")
+            if not jp.isInstalled(instance="0"):
+                jp.install(hrddata={},instance="hekad")
+
+            p=Process()
+            p.domain="jumpscale"
+            p.name="hekad"
+            p.instance=name
+            p.workingdir="/opt/heka"
+            p.cmds=["bin/hekad","--config=%s"%self.dir_hekadconfig]
+            p.start()
+            self.processes.append(p)
+
+
+        if acip<>"":
+
+            if j.application.config.exists("grid.id"):
+                if j.application.config.get("grid.id")=="" or j.application.config.getInt("grid.id")==0:
+                    j.application.config.set("grid.id",self.hrd.get("grid.id"))
+
+            acport=self.hrd.getInt("ac.port")
+            aclogin=self.hrd.get("ac.login",default="node")
+            acpasswd=self.hrd.get("ac.passwd",default="")
+            acclientinstancename = self.hrd.get('agentcontroller.connection')
+
             #processmanager enabled
             while j.system.net.waitConnectionTest(acip,acport,2)==False:
                 print "cannot connect to agentcontroller, will retry forever: '%s:%s'"%(acip,acport)
@@ -163,9 +194,13 @@ class ProcessManager():
             #now register to agentcontroller
             self.acclient = j.clients.agentcontroller.get(acip, login=aclogin, passwd=acpasswd)
             res=self.acclient.registerNode(hostname=socket.gethostname(), machineguid=j.application.getUniqueMachineId())
+
             nid=res["node"]["id"]
             webdiskey=res["webdiskey"]
             j.application.config.set("grid.node.id",nid)
+            
+            j.application.loadConfig()
+
             j.application.config.set("agentcontroller.webdiskey",webdiskey)
             j.application.config.set("grid.id",res["node"]["gid"])
             j.application.config.set("grid.node.machineguid",j.application.getUniqueMachineId())
@@ -185,12 +220,20 @@ class ProcessManager():
             jp=j.packages.findNewest("jumpscale","agentcontroller_client")
             if reset or not jp.isInstalled(instance="main"):
                 jp.install(hrddata={"agentcontroller.client.addr":acip,"agentcontroller.client.port":4444,"agentcontroller.client.login":aclogin},instance=acclientinstancename,reinstall=reset)
-        self.acclient=j.clients.agentcontroller.getByInstance(acclientinstancename)
+            
+            self.acclient=j.clients.agentcontroller.getByInstance(acclientinstancename)
+        else:
+            self.acclient=None
         
     def start(self):
 
         # self._webserverStart()        
         self._workerStart()
+
+        j.core.grid.init()
+
+        processmanagerGevent=True
+
         gevent.spawn(self._processManagerStart)
 
         self.mainloop()
@@ -211,19 +254,9 @@ class ProcessManager():
         self.processes.append(p)
 
     def _processManagerStart(self):
-        p=Process()
-        p.domain="jumpscale"
-        p.name="processmanager"
-        p.instance="main"
-        p.workingdir="/"
-        p.pythonObj=j.core.processmanager
-        p.pythonCode="self.pythonObj.start()"
-        p.sync=True
-        p.start()
-        self.processes.append(p)
+        j.core.processmanager.start()
 
     def _workerStart(self):
-        #below should be non blocking because of redis but does not seem the case?
         pwd = '/opt/jumpscale/apps/jsagent/lib'
         for qname in ["default","io","process","hypervisor"]:
             p = Process()
@@ -249,8 +282,9 @@ class ProcessManager():
                             print "%s:%s was stopped restarting" % (p.domain, p.name)
                             p.start()
                         else:
+                            print "Process %s has stopped" % p
                             p.kill()
-                            self.process.remove(p)
+                            self.processes.remove(p)
 
             time.sleep(1)
             if len(self.processes)==0:
@@ -267,6 +301,7 @@ parser = cmdutils.ArgumentParser()
 parser.add_argument("-i", '--instance', default="0", help='jsagent instance', required=False)
 parser.add_argument("-r", '--reset', action='store_true',help='jsagent reset', required=False,default=False)
 parser.add_argument("-d", '--debug', action='store_true',help='Put JSAgent in debug mode', required=False,default=False)
+parser.add_argument("-s", '--services', help='list of services to run e.g heka, agentcontroller,web', required=False,default="")
 
 opts = parser.parse_args()
 
@@ -281,9 +316,15 @@ j.application.instanceconfig = jp.hrd_instance
 #first start processmanager with all required stuff
 pm=ProcessManager(reset=opts.reset)
 processes=pm.processes
+pm.services=[item.strip().lower() for item in opts.services.split(",")]
 
 
 from lib.worker import Worker
+
+#I had to do this in mother process otherwise weird issues caused by gevent !!!!!!!
+j.core.osis.client = j.core.osis.getClientByInstance()
+
+from gevent.pywsgi import WSGIServer
 
 pm.start()
 

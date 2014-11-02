@@ -66,7 +66,7 @@ class Worker(object):
 
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
 
-        self.redisprocessmanager=j.clients.credis.getRedisClient('127.0.0.1', 7766)
+        self.redisprocessmanager=j.clients.credis.getRedisClient('127.0.0.1', 9999)
 
         def checkredis():
             success=False
@@ -92,7 +92,6 @@ class Worker(object):
     def run(self):
         print "STARTED"
         w=j.clients.redisworker
-        w.useCRedis()
         while True:
 
             ############# PROCESSMANAGER RELATED 
@@ -165,7 +164,7 @@ class Worker(object):
                             eco.code=jscript.source
                             eco.jid = job.guid
                             eco.category = 'workers.compilescript'
-                            j.errorconditionhandler.processErrorConditionObject(eco)
+                            eco.process()
                             job.state="ERROR"
                             eco.tb = None
                             job.result=eco.__dict__
@@ -209,7 +208,7 @@ class Worker(object):
                         eco.backtrace=out
 
                         if job.id<1000000 and job.errorreport==True:
-                            j.errorconditionhandler.processErrorConditionObject(eco)
+                            eco.process()
                         else:
                             print eco
                         # j.events.bug_warning(msg,category="worker.jscript.notexecute")
@@ -237,7 +236,7 @@ class Worker(object):
 
         if job.jscriptid>1000000:
             #means is internal job
-            # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
+            # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:return:%s"%jobid)
             self.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
             w.redis.rpush("workers:return:%s"%job.id,time.time())            
         else:
@@ -280,7 +279,7 @@ if __name__ == '__main__':
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
     parser.add_argument("-pw", '--auth', help='Authentication of redis')
     parser.add_argument("-a", '--addr', help='Address of redis',default="127.0.0.1")
-    parser.add_argument("-p", '--port', type=int, help='Port of redis',default=7768)
+    parser.add_argument("-p", '--port', type=int, help='Port of redis',default=9999)
     parser.add_argument('--nodeid', type=int, help='nodeid, is just to recognise the command in ps ax',default=0)
 
 
@@ -293,21 +292,21 @@ if __name__ == '__main__':
     j.core.osis.client = j.core.osis.getClientByInstance(die=False)
 
     wait=1
-    while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
-        msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 7766)"    
+    while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
+        msg= "cannot connect to redis main, will keep on trying forever, please start redis process manager (port 9999)"    
         print msg
         j.events.opserror(msg, category='worker.startup')    
         if wait<60:
             wait+=1
         time.sleep(wait)
 
-    rediscl = j.clients.credis.getRedisClient('127.0.0.1', 7766)
+    rediscl = j.clients.credis.getRedisClient('127.0.0.1', 9999)
     rediscl.hset("workers:watchdog",opts.workername,0) #now the process manager knows we got started but maybe waiting on other requirements
 
     wait=1
-    while j.system.net.tcpPortConnectionTest("127.0.0.1",7768)==False:
+    while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
         time.sleep(wait)
-        msg= "cannot connect to redis, will keep on trying forever, please start redis production (port 7768)"
+        msg= "cannot connect to redis, will keep on trying forever, please start redis production (port 9999)"
         print msg
         j.events.opserror(msg, category='worker.startup')        
         if wait<60:

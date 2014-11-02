@@ -9,7 +9,7 @@ class GridHealthChecker(object):
     def __init__(self):
         with j.logger.nostdout():
             self._client = j.clients.agentcontroller.get()
-            self._osiscl = j.core.osis.getClient(user='root')
+            self._osiscl = j.core.osis.getClientByInstance('main')
         self._heartbeatcl = j.core.osis.getClientForCategory(self._osiscl, 'system', 'heartbeat')
         self._nodecl = j.core.osis.getClientForCategory(self._osiscl, 'system', 'node')
         self._runningnids = list()
@@ -324,8 +324,6 @@ class GridHealthChecker(object):
             workers = dict()
 
         for worker, stats in workers.iteritems():
-            size, unit = j.tools.units.bytes.converToBestUnit(stats['mem'])
-            stats['mem'] = '%.2f %sB' % (size, unit)
             stats['name'] = worker
             if stats['state'] == 'RUNNING':
                 results.append((nid, stats, 'workers'))

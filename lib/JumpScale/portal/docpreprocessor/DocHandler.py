@@ -23,10 +23,27 @@ class DocHandler(FileSystemEventHandler):
         pathItem = event.src_path
         docs = []
         if pathItem:
-            lastDefaultPath = os.path.join(self.doc_processor.space_path, '.space', 'default.wiki')
-            self.doc_processor.add_doc(pathItem, path, docs=docs, lastDefaultPath=lastDefaultPath)
-            self.doc_processor.docs[-1].loadFromDisk()
-            self.doc_processor.docs[-1].preprocess()
+            if pathItem.endswith('.wiki'):
+                lastDefaultPath = os.path.join(self.doc_processor.space_path, '.space', 'default.wiki')
+                self.doc_processor.add_doc(pathItem, path, docs=docs, lastDefaultPath=lastDefaultPath)
+                self.doc_processor.docs[-1].loadFromDisk()
+                self.doc_processor.docs[-1].preprocess()
+            elif pathItem.endswith('.py'):
+                self.reloadMacro(event)
+        
+
+    def on_modified(self, event):
+        if event.src_path and not event.is_directory and event.src_path.endswith(".py"):
+            self.reloadMacro(event)
+
+    def reloadMacro(self, event):
+        for macroexecute in (self.doc_processor.macroexecutorPreprocessor, self.doc_processor.macroexecutorWiki, self.doc_processor.macroexecutorPage):
+            for groupname, taskletenginegroup in macroexecute.taskletsgroup.iteritems():
+                for group, taskletengine in taskletenginegroup.taskletEngines.iteritems():
+                    for tasklet in taskletengine.tasklets:
+                        if tasklet.path == event.src_path:
+                            taskletengine.reloadTasklet(tasklet)
+                            return
 
     on_moved = on_created
 

@@ -1,6 +1,7 @@
 from JumpScale import j
 import JumpScale.baselib.serializers
 from JumpScale.grid.serverbase import returnCodes
+from JumpScale.core.errorhandling.ErrorConditionHandler import BaseException
 import inspect
 import copy
 import time
@@ -193,15 +194,24 @@ class Daemon(object):
         except Exception, e:
             # if str(e)=="STOP APPLICATION 112299":  #needs to be cryptic otherwise smart developers can fake this
             #     j.application.stop()
-            
+            if isinstance(e, BaseException):
+                return returnCodes.ERROR, returnformat, e.eco
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco
             # eco.errormessage += "\nfunction arguments were:%s\n" % str(inspect.getargspec(ffunction).args)
             if len(str(data))>1024:
                 data="too much data to show."
-            eco.errormessage = "ERROR IN RPC CALL %s: %s\nData:%s\n"%(cmdkey,eco.errormessage ,data)
-            j.errorconditionhandler.processErrorConditionObject(eco)
+
+            data2=data
+            try:
+                if data2.has_key("session"):
+                    data2.pop("session")
+            except:
+                pass
+            
+            eco.errormessage = "ERROR IN RPC CALL %s: %s. (from:%s/%s)\nData:%s\n"%(cmdkey,eco.errormessage , session.gid, session.nid,data2)
+            eco.process()
             eco.__dict__.pop("tb")
             eco.tb=None
             errorres = eco.__dict__

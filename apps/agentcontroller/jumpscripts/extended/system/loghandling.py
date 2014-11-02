@@ -28,13 +28,13 @@ import JumpScale.baselib.redis
 import JumpScale.grid.osis
 
 REDISIP = '127.0.0.1'
-REDISPORT = 7768
+REDISPORT = 9999
 
 
 def action():
 
-    redisqueue = j.clients.credis.getRedisQueue("127.0.0.1", 7768, "logs")
-    redisqueueEco = j.clients.credis.getRedisQueue("127.0.0.1", 7768, "eco")
+    redisqueue = j.clients.credis.getRedisQueue("127.0.0.1", 9999, "logs")
+    redisqueueEco = j.clients.credis.getRedisQueue("127.0.0.1", 9999, "eco")
 
     OSISclient = j.core.osis.client
 
@@ -83,5 +83,5 @@ def action():
         eco=redisqueueEco.get_nowait()
 
 if __name__ == '__main__':
-    j.core.osis.client = j.core.osis.getClient(user='root')
+    j.core.osis.client = j.core.osis.getClientByInstance('main')
     action()

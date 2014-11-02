@@ -162,7 +162,7 @@ class BlobStor:
                 if self.config['type'] == 'local':
                     metadata = self.getMetadata(key)                    
                     hashh = metadata.hash
-                    targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])
+                    targetDirName = j.system.fs.joinPaths(self._getDestination(), hashh[0:2], hashh[2:4])                    
                     if metadata.filetype == "file":
                         targetFileNameTgz = j.system.fs.joinPaths(targetDirName, hashh + ".gz")
                     else:
@@ -173,7 +173,7 @@ class BlobStor:
                         raise RuntimeError("source file not ok, hash error: %s"%targetFileNameTgz)
                     self._put(blobstor, metadata, targetFileNameTgz)
                 else:                
-                    tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)
+                    tmpfile, metadata = self._download(key, destination="", uncompress=False, keepTempFile=True)                    
                     self._put(blobstor, metadata, tmpfile)
                     j.system.fs.remove(tmpfile)
             else:

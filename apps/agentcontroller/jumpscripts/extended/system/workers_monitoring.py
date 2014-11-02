@@ -22,7 +22,7 @@ def action():
     import JumpScale.baselib.redis
     import time
 
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 7766)
+    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 9999)
     timemap = {'default': '-1m', 'io': '-2h', 'hypervisor': '-10m','process':'-15m'}
 
     # prefix = 'workers__worker_'

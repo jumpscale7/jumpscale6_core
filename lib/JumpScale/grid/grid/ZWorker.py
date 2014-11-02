@@ -88,7 +88,7 @@ class ZWorker(GeventLoop):
                 eco = j.errorconditionhandler.parsePythonErrorObject(e)
                 eco.descriptionpub = "Syntax error probably in def, check the code & try again. Could not import, action id = %s" % action.id
                 eco.code = action.code
-                j.errorconditionhandler.processErrorConditionObject(eco)
+                eco.process()
                 jobobj.state = "error"
                 jobobj.errordescr = "%s Error was:\n%s" % (eco.descriptionpub, e)
                 return jobobj
@@ -100,7 +100,7 @@ class ZWorker(GeventLoop):
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.errormessagePub = "Execution error, check the code, action id = %s" % action.id
             eco.code = action.code
-            j.errorconditionhandler.processErrorConditionObject(eco)
+            eco.process()
             jobobj.ecid = eco.guid
             jobobj.state = "error"
             jobobj.errordescr = "%s Error was:\n%s" % (eco.errormessagePub, e)

@@ -37,6 +37,7 @@ class Sandboxer():
 
     def __init__(self):
         self._done=[]
+        self.exclude=["libpthread.so","libltdl.so","libm.so","libresolv.so"]
 
     def _ldd(self,path,result={}):
         cmd="ldd %s"%path
@@ -55,9 +56,14 @@ class Sandboxer():
                 continue
             if name.find("libc.so")<>0 and name.lower().find("libx")<>0 and name not in self._done \
                 and name.find("libdl.so")<>0:
-                print "found:%s"%name
-                result[name]=Dep(name,lpath)
-                self._done.append(name)
+                excl=False
+                for toexeclude in self.exclude:
+                    if name.find(toexeclude)==0:
+                        excl=True 
+                if not excl:
+                    print "found:%s"%name
+                    result[name]=Dep(name,lpath)
+                    self._done.append(name)
             result=self._ldd(lpath,result)
 
         return result
@@ -66,9 +72,16 @@ class Sandboxer():
         result=self._ldd(path)
         return result
 
-    def copyLibsTo(self,path,dest):
-        result=self.findLibs(path)
-        for name,deb in result.iteritems():
-            deb.copyTo(dest)
+    def copyLibsTo(self,path,dest,recursive=False):
+        if j.system.fs.isDir(path):
+            #do all files in dir
+            for item in j.system.fs.listFilesInDir( path, recursive=recursive, followSymlinks=True, listSymlinks=False):
+                if j.system.fs.isExecutable(item) or j.system.fs.getFileExtension(item)=="so":
+                    self.copyLibsTo(item,dest,recursive=recursive)                
+        else:     
+            result=self.findLibs(path)
+            print "copy libs for %s"%path
+            for name,deb in result.iteritems():
+                deb.copyTo(dest)
         
 
