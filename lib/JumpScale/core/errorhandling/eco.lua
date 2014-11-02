@@ -1,7 +1,7 @@
 local eco=cjson.decode(ARGV[2])
 
-if redis.call("HEXISTS", "eco.objects",ARGV[1])==1 then
-    local ecoraw=redis.call("HGET", "eco.objects",ARGV[1])
+if redis.call("HEXISTS", "eco:objects",ARGV[1])==1 then
+    local ecoraw=redis.call("HGET", "eco:objects",ARGV[1])
     local ecodb=cjson.decode(ecoraw)
     ecodb["occurrences"]=ecodb["occurrences"]+1
     eco["occurrences"]=ecodb["occurrences"]
@@ -11,33 +11,33 @@ if redis.call("HEXISTS", "eco.objects",ARGV[1])==1 then
 else
     eco["occurrences"]=1
     eco["lasttime"]=eco["epoch"]
-    eco["id"]=redis.call("INCR","eco.incr")
+    eco["id"]=redis.call("INCR","eco:incr")
 end
 
 eco["guid"]=eco["gid"].."_"..eco["nid"].."_"..eco["id"]
 
 local ecoraw=cjson.encode(eco)
 
-redis.call("HSET", "eco.objects",ARGV[1],ecoraw)
+redis.call("HSET", "eco:objects",ARGV[1],ecoraw)
 
-if redis.call("HEXISTS", "eco.last",ARGV[1])==0 then
+if redis.call("HEXISTS", "eco:last",ARGV[1])==0 then
     -- does not exist yet make sure queue knows about it
-    redis.call("HSET", "eco.last",ARGV[1],eco["lasttime"])
-    redis.call("RPUSH", "eco.queue",ARGV[1])
+    redis.call("HSET", "eco:last",ARGV[1],eco["lasttime"])
+    redis.call("RPUSH", "queues:eco",ARGV[1])
 else
     -- is already in queue lets checked when last time escalated, if more than 5 min put on queue
     local last=tonumber(redis.call("HGET", "eco.last",ARGV[1]))
     if last<(eco["lasttime"]-300) then
         --more than 5 min ago
-        redis.call("RPUSH", "eco.queue",ARGV[1])
-        redis.call("HSET", "eco.last",ARGV[1],eco["lasttime"])
+        redis.call("RPUSH", "queues:eco",ARGV[1])
+        redis.call("HSET", "eco:last",ARGV[1],eco["lasttime"])
     end
 end
 
-if redis.call("LLEN", "eco.queue") > 1000 then
+if redis.call("LLEN", "queues:eco") > 1000 then
     local todelete = redis.call("LPOP", "eco.queue")
-    redis.call("HDEL","eco.objects",todelete)
-    redis.call("HDEL","eco.last",todelete)
+    redis.call("HDEL","eco:objects",todelete)
+    redis.call("HDEL","eco:last",todelete)
 end
 
 return ecoraw
