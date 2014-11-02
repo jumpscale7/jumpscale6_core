@@ -14,8 +14,10 @@ except ImportError:
 from JumpScale import j
 
 from ErrorConditionObject import ErrorConditionObject
-import JumpScale.baselib.redis
 
+
+
+import JumpScale.baselib.redis
 
 class BaseException(Exception):
     def __init__(self, message="", eco=None):
