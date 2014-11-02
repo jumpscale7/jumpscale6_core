@@ -124,10 +124,6 @@ class ErrorConditionObject():
         if res<>None:
             self.__dict__=res
 
-        #@todo is temp
-        print self
-
-
 
     def toJson(self):
         data = self.__dict__.copy()
@@ -305,16 +301,6 @@ class ErrorConditionObject():
 
     def getCategory(self):
         return "eco"
-
-    def getSetGuid(self):
-        """
-        use osis to define & set unique guid (sometimes also id)
-        """
-        self.gid=int(self.gid)
-        self.nid=int(self.nid)
-        self.id=int(self.id)
-        self.guid="%s_%s_%s"%(self.gid,self.nid,self.id)
-        return self.guid
 
     def getObjectType(self):
         return 3

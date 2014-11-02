@@ -52,11 +52,14 @@ class ErrorConditionHandler():
                     self.escalateToRedis=self.redis.register_script(lua)    
 
         if self.redis<>None and self.escalateToRedis<>None:
-            eco.getSetGuid()
             key=eco.getUniqueKey()
             
             data=eco.toJson()
-            return json.decode(self.escalateToRedis(keys=["eco.queue","eco.incr","eco.occurrences","eco.objects","eco.last"],args=[key,data]))
+            res=self.escalateToRedis(keys=["eco.queue","eco.incr","eco.occurrences","eco.objects","eco.last"],args=[key,data])
+            # print "redisreturn: '%s'"%res
+            # j.application.stop()
+            res= json.decode(res)            
+            return res
         else:
             return None
 
@@ -108,8 +111,13 @@ class ErrorConditionHandler():
         """
         type = "BUG"
         eco = self._handleRaise(type, level, message, category, pythonExceptionObject, pythonTraceBack, msgpub, tags)
+        
+        print eco
+
         if die:                     
             self.halt(eco.errormessage, eco)
+
+
 
     raiseCritical = raiseBug
 
@@ -218,6 +226,7 @@ class ErrorConditionHandler():
         eco.tags=tags
         eco.process()
         if die:
+            print eco
             self.halt(eco.description, eco)
         
     def getErrorConditionObject(self,ddict={},msg="",msgpub="",category="",level=1,type="UNKNOWN",tb=None):
@@ -359,8 +368,6 @@ class ErrorConditionHandler():
         """           
         if pythonExceptionObject.__dict__.has_key("eco"):
             eco=pythonExceptionObject.eco
-            
-            # if str(eco["type"])<>str("BUG") and str(eco["type"])<>str("UNKNOWN"):
             j.application.stop(1)    
 
         if str(pythonExceptionObject).find("**halt**")<>-1:

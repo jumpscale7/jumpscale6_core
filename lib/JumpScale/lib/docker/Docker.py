@@ -460,3 +460,13 @@ class Docker():
         if name in running.keys():
             idd=running[name]    
             self.client.kill(idd)
+
+    def commit(self,name,imagename):
+        cmd="docker rmi %s"%imagename
+        j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
+        cmd="docker commit %s %s"%(name,imagename)
+        j.system.process.executeWithoutPipe(cmd)
+
+    def pull(self,imagename):
+        cmd="docker pull %s"%imagename
+        j.system.process.executeWithoutPipe(cmd)

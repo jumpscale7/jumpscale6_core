@@ -14,6 +14,17 @@ class Cuisine():
         self.fabric = j.remote.fabric.api
         j.remote.fabric.setHost()
 
+    def connect(self,addr,port):
+
+        cmd="ssh-keygen -f \"/root/.ssh/known_hosts\" -R [%s]:%s"%(addr,port)
+        j.system.process.execute(cmd)
+        # if j.system.net.tcpPortConnectionTest(addr,port)==False:
+
+        #     if j.system.net.tcpPortConnectionTest(addr,port)==False:
+        #         j.events.opserror_critical("Cannot connect to %s:%s, port does not answer on tcp test."%(addr,port))
+        self.api.connect('%s:%s' % (addr,port), "root")
+        return self.api
+
     def help(self):
         C = """
 import JumpScale.baselib.remote.cuisine        

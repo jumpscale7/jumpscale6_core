@@ -8,7 +8,6 @@ if redis.call("HEXISTS", "eco:objects",ARGV[1])==1 then
     eco["lasttime"]=eco["epoch"]
     eco["epoch"]=ecodb["epoch"]
     eco["guid"]=ecodb["guid"]
-]
 else
     eco["occurrences"]=1
     eco["lasttime"]=eco["epoch"]
@@ -25,7 +24,7 @@ if redis.call("HEXISTS", "eco:last",ARGV[1])==0 then
     redis.call("RPUSH", "queues:eco",ARGV[1])
 else
     -- is already in queue lets checked when last time escalated, if more than 5 min put on queue
-    local last=tonumber(redis.call("HGET", "eco.last",ARGV[1]))
+    local last=tonumber(redis.call("HGET", "eco:last",ARGV[1]))
     if last<(eco["lasttime"]-300) then
         --more than 5 min ago
         redis.call("RPUSH", "queues:eco",ARGV[1])
