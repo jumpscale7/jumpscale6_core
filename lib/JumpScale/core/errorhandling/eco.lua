@@ -35,7 +35,7 @@ else
 end
 
 if redis.call("LLEN", "queues:eco") > 1000 then
-    local todelete = redis.call("LPOP", "eco.queue")
+    local todelete = redis.call("LPOP", "queues:eco")
     redis.call("HDEL","eco:objects",todelete)
     redis.call("HDEL","eco:last",todelete)
 end

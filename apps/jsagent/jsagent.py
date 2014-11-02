@@ -1,3 +1,8 @@
+# gevent monkey patching should be done as soon as possible dont move!
+import gevent
+import gevent.monkey
+gevent.monkey.patch_all()
+
 from JumpScale import j
 
 j.application.start("jsagent")
@@ -302,11 +307,8 @@ pm.services=[item.strip().lower() for item in opts.services.split(",")]
 from lib.worker import Worker
 
 #I had to do this in mother process otherwise weird issues caused by gevent !!!!!!!
-j.core.osis.getClientByInstance()
+j.core.osis.client = j.core.osis.getClientByInstance()
 
-import gevent
-import gevent.monkey
-gevent.monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 
 pm.start()
