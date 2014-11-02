@@ -128,8 +128,23 @@ class ProcessManager():
             if j.system.net.tcpPortConnectionTest("localhost",port):
                 j.system.process.killProcessByPort(port)
 
-        if j.system.net.waitConnectionTest("localhost",9999,10)==False:
-            j.events.opserror_critical("could not start redis on port 9999 inside processmanager",category="processmanager.redis.start")
+
+        if j.system.net.tcpPortConnectionTest("localhost",9999)==False:
+            jp=j.packages.findNewest("jumpscale","redis")
+            if not jp.isInstalled(instance="mem") and not j.system.net.tcpPortConnectionTest("localhost",9999):
+                jp.install(hrddata={"redis.name":"mem","redis.port":9999,"redis.disk":"0","redis.mem":40},instance="mem")
+            for name in ["mem"]:
+                p=Process()
+                p.domain="jumpscale"
+                p.name="redis_%s"%name
+                p.instance=name
+                p.workingdir="/"
+                p.cmds=[j.dirs.replaceTxtDirVars("$base/apps/redis/redis-server"),j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.conf"%name)]
+                p.logpath=j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.log"%name)
+                p.start()
+                self.processes.append(p)
+            if j.system.net.waitConnectionTest("localhost",9999,10)==False:
+                j.events.opserror_critical("could not start redis on port 9999 inside processmanager",category="processmanager.redis.start")
 
         self.redis_mem=j.clients.redis.getGeventRedisClient("localhost",9999)
         # self.redis_disk=j.clients.redis.getGeventRedisClient("localhost",9998)
