@@ -74,7 +74,6 @@ class ControllerCMDS():
         self.sessionsUpdateTime = dict()
         self.agents2roles = dict()
 
-        j.logger.setLogTargetLogForwarder()
         self.start()
 
     def start(self):
