@@ -129,7 +129,9 @@ class ErrorConditionObject():
 
 
     def toJson(self):
-        return json.dumps(self.__dict__)
+        data = self.__dict__.copy()
+        data.pop('tb')
+        return json.dumps(data)
 
 
     def __str__(self):

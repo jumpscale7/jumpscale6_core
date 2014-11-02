@@ -383,9 +383,9 @@ class ErrorConditionHandler():
         eco.process()
         print eco
 
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
+        #from IPython import embed
+        #print "DEBUG NOW ooo"
+        #embed()
         
 
     def checkErrorIgnore(self,eco):

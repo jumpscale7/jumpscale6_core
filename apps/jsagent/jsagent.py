@@ -119,30 +119,9 @@ class ProcessManager():
         j.system.fs.createDir(self.dir_data)
 
         #check there is a redis on port 9998 & 9999 (the new port for all)
-        for port in [9999,9998,8001]:
+        for port in [9998,8001]:
             if j.system.net.tcpPortConnectionTest("localhost",port):
                 j.system.process.killProcessByPort(port)
-
-        jp=j.packages.findNewest("jumpscale","redis")
-        if not jp.isInstalled(instance="mem") and not j.system.net.tcpPortConnectionTest("localhost",9999):
-            jp.install(hrddata={"redis.name":"mem","redis.port":9999,"redis.disk":"0","redis.mem":40},instance="mem")
-        # if not jp.isInstalled(instance="disk"):
-        #     jp.install(hrddata={"redis.name":"disk","redis.port":9998,"redis.disk":"1","redis.mem":20},instance="disk")
-
-        # for name in ["mem","disk"]:
-        for name in ["mem"]:
-            p=Process()
-            p.domain="jumpscale"
-            p.name="redis_%s"%name
-            p.instance=name
-            p.workingdir="/"
-            p.cmds=[j.dirs.replaceTxtDirVars("$base/apps/redis/redis-server"),j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.conf"%name)]
-            p.logpath=j.dirs.replaceTxtDirVars("$vardir/redis/%s/redis.log"%name)
-            p.start()
-            self.processes.append(p)
-
-        # if j.system.net.waitConnectionTest("localhost",9999,10)==False or j.system.net.waitConnectionTest("localhost",9998,10)==False:
-        #     j.events.opserror_critical("could not start redis on port 9998 or 9999 inside processmanager",category="processmanager.redis.start")
 
         if j.system.net.waitConnectionTest("localhost",9999,10)==False:
             j.events.opserror_critical("could not start redis on port 9999 inside processmanager",category="processmanager.redis.start")
@@ -283,8 +262,9 @@ class ProcessManager():
                             print "%s:%s was stopped restarting" % (p.domain, p.name)
                             p.start()
                         else:
+                            print "Process %s has stopped" % p
                             p.kill()
-                            self.process.remove(p)
+                            self.processes.remove(p)
 
             time.sleep(1)
             if len(self.processes)==0:
