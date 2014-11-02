@@ -260,7 +260,7 @@
         result:list(list)
 
 
-    method:getJumpScripts
+    method:getJumpscripts
         """
         calls internally the agentcontroller
         return: lists the jumpscripts with main fields (organization, name, category, descr)
@@ -268,7 +268,7 @@
         var:organization str,,find jumpscripts @tags: optional
         var:active bool,,is session active or not @tags: optional
         
-    method:getJumpScript
+    method:getJumpscript
         """
         calls internally the agentcontroller to fetch detail for 1 jumpscript
         """

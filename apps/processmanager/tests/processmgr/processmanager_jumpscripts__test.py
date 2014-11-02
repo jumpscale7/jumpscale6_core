@@ -41,15 +41,15 @@ class TEST():
 
 
     def test_listJumpscripts(self):
-        result=self.client.listJumpScripts()
+        result=self.client.listJumpscripts()
 
         if len(result)<4:
             raise RuntimeError("needs to have more than 4 scripts")
 
-        result=self.client.listJumpScripts(cat="startupmanager.check")
+        result=self.client.listJumpscripts(cat="startupmanager.check")
         if len(result)>1:
             raise RuntimeError("only 1 answer on this cat")
 
-        result=self.client.listJumpScripts(organization="jumpscale")
+        result=self.client.listJumpscripts(organization="jumpscale")
         if len(result)<4:
             raise RuntimeError("need more than 4")

@@ -92,11 +92,11 @@ class ErrorConditionHandler():
             eco.getBacktrace()
 
         eco.tags=tags
-        eco.type=int(type)
+        eco.type=str(type)
         eco.process()
         return eco
 
-    def raiseBug(self, message,category="", pythonExceptionObject=None,pythonTraceBack=None,msgpub="",die=True,tags="", level="CRITICAL"):
+    def raiseBug(self, message,category="", pythonExceptionObject=None,pythonTraceBack=None,msgpub="",die=True,tags="", level=1):
         """
         use this to raise a bug in the code, this is the only time that a stacktrace will be asked for
         level will be Critical

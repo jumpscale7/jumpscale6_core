@@ -16,7 +16,7 @@ def main(j, args, params, tags, tasklet):
 
     out.append('||Name||Organization||Category||Description||')
 
-    for jscript in actor.getJumpScripts():
+    for jscript in actor.getJumpscripts():
 
         line = [""]
 

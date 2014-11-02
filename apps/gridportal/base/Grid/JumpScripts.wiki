@@ -1,4 +1,4 @@
 @usedefaults
 
-h2. JumpScripts
+h2. Jumpscripts
 {{jumpscripts jsorganization:$$jsorganization jsname:$$jsname category:$$category descr:$$descr}}

@@ -7,14 +7,12 @@ if redis.call("HEXISTS", "eco.objects",ARGV[1])==1 then
     eco["occurrences"]=ecodb["occurrences"]
     eco["lasttime"]=eco["epoch"]
     eco["epoch"]=ecodb["epoch"]
-    eco["id"]=ecodb["id"]
+    eco["guid"]=ecodb["guid"]
+]
 else
     eco["occurrences"]=1
     eco["lasttime"]=eco["epoch"]
-    eco["id"]=redis.call("INCR","eco.incr")
 end
-
-eco["guid"]=eco["gid"].."_"..eco["nid"].."_"..eco["id"]
 
 local ecoraw=cjson.encode(eco)
 

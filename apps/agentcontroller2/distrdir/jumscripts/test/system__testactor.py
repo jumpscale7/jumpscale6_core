@@ -8,14 +8,13 @@ some actions doing tests
 organization = "jumpscale"
 author = "kristof@incubaid.com"
 license = "bsd"
-version = "1.0"
 
 import time
 
 @queue("default")
 @log(5)
 @nojob()
-def log():
+def log(logmsg):
     """
     this is a logging function not doing anything but logging
     the @log makes sure all happening gets logged to the job & central logging system, std logging is off !!!
@@ -30,17 +29,25 @@ def error():
     """
     return 5/0
 
+@errorignore
+def error2():
+    """
+    this error will be done in queue io
+    """
+    return 5/0
+
+
 @recurring(60)
 @queue("io")
 @nojob()
-def msg_scheduled():
+def msg_scheduled(msg):
     """
     this will print a message each 60 seconds on worker queue io
     """
     msg="alive"
     print msg
 
-@timeout(10)
+@timeout(50)
 def wait(ttime=5):
     """
     this will fail when ttime>10
@@ -48,7 +55,7 @@ def wait(ttime=5):
     time.sleep(ttime)
 
 @debug
-def error():
+def debug():
     """
     be careful when debugging because will be done in mother process of agent, DO NEVER DO THIS IN PRODUCTION
     """

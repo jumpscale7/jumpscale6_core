@@ -100,7 +100,7 @@ class AgentControllerClient():
         errorReportOnServer=errorreport
         if wait==True:
             errorReportOnServer=False
-        result = self.executeJumpScript(organization,name,gid=gid,nid=nid,role=role,args=args,timeout=timeout,\
+        result = self.executeJumpscript(organization,name,gid=gid,nid=nid,role=role,args=args,timeout=timeout,\
             wait=wait,queue=queue,transporttimeout=timeout,errorreport=errorReportOnServer)
         if wait and result['state'] != 'OK':
             if result['state'] == 'NOWORK' and dieOnFailure:

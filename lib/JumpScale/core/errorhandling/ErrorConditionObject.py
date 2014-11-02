@@ -22,7 +22,6 @@ class ErrorConditionObject():
         if ddict<>{}:
             self.__dict__=ddict
         else:
-            self.id=0
             self.backtrace=""
             self.backtraceDetailed=""
             btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS(tb=tb)
@@ -98,14 +97,14 @@ class ErrorConditionObject():
     def process(self):
         self.toAscii()
 
-        if self.type<>"BUG" and self.type<>"UNKNOWN":
+        if self.type in ["INPUT","MONITORING","OPERATIONS","PERFORMANCE"]:
             self.tb=""
             self.code=""
             self.backtrace=""
             self.backtraceDetailed=""
 
-        types=["BUG","INPUT","MONITORING","OPERATIONS","PERFORMANCE","UNKNOWN"]
-        if self.type not in types:
+        types=["INPUT","MONITORING","OPERATIONS","PERFORMANCE","BUG","UNKNOWN"]
+        if self.type in types:
             j.events.inputerror_warning("Errorcondition was thrown with wrong type.\n%s"%str(self),"eco.check.type")
 
         if not j.basetype.integer.check(self.level):
@@ -125,6 +124,8 @@ class ErrorConditionObject():
         if res<>None:
             self.__dict__=res
 
+        #@todo is temp
+        print self
 
     def toJson(self):
         return json.dumps(self.__dict__)
@@ -134,7 +135,7 @@ class ErrorConditionObject():
         content="\n\n***ERROR***\n"
         if self.backtrace<>"":
             content="%s\n" % self.backtrace
-        content+="type/level: %s/%s\n" % (self.ttype,self.level)
+        content+="type/level: %s/%s\n" % (self.type,self.level)
         content+="%s\n" % self.errormessage
         if self.errormessagePub<>"":
             content+="errorpub: %s\n" % self.errormessagePub        

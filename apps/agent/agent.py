@@ -128,7 +128,7 @@ class Agent(Greenlet):
                 action,jscript=self.actions[jscriptid]
             else:
                 # print "CACHEMISS"
-                jscript=self.client.getJumpScript(organization, name)
+                jscript=self.client.getJumpscript(organization, name)
             try:
                 self.log("Load script:%s %s"%(jscript["organization"],jscript["name"]))
                 exec(jscript["source"])

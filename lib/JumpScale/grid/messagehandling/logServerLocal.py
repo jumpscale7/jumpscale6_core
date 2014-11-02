@@ -217,7 +217,7 @@ class MessageServer(object):
         dtype, length, epoch, gid, nid, pid, data = j.core.messagehandler.unPackMessage(message)
         eco = j.errorconditionhandler.getErrorConditionObject(data=j.tools.json.decode(data))
 
-        content = "source/id/level: %s/%s/%s\n" % (eco.getSource(), eco.id, eco.level)
+        content = "source/id/level: %s/%s/%s\n" % (eco.getSource(), eco.guid, eco.level)
         content += "error: %s\n" % eco.errormessage
         print content
 

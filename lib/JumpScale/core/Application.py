@@ -173,7 +173,6 @@ class Application:
         if self.state == AppStatusType.UNKNOWN:
             # Consider this a normal exit
             self.state = AppStatusType.HALTED
-            j.logger.close()
             sys.exit(exitcode)
 
         # Since we call os._exit, the exithandler of IPython is not called.
