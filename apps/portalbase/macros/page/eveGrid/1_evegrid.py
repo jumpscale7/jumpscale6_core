@@ -171,7 +171,7 @@ def main(j, args, params, tags, tasklet):
 	                var data = $scope.dataTable.row(tr).data();
 	                $.ajax({
 	                    type: 'POST',
-	                    url: data._links.self.href,
+	                    url: "http://${schemaURL}/${entityName}/"+ data._id,
 	                    headers: {
 	                        'X-HTTP-Method-Override': 'DELETE',
 	                        'If-Match': data._etag
