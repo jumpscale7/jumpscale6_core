@@ -225,7 +225,7 @@ class ErrorConditionHandler():
         if die:
             self.halt(eco.description, eco)
         
-    def getErrorConditionObject(self,ddict={},msg="",msgpub="",category="",level=1,type=0,tb=None):
+    def getErrorConditionObject(self,ddict={},msg="",msgpub="",category="",level=1,type="UNKNOWN",tb=None):
         """
         @data is dict with fields of errorcondition obj
         returns only ErrorConditionObject which should be used in jumpscale to define an errorcondition (or potential error condition)
@@ -304,7 +304,7 @@ class ErrorConditionHandler():
             message="%s: %s" % (type_str,message)
         
 
-        errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)
+        errorobject=self.getErrorConditionObject(msg=message,msgpub="",level=level,tb=tb)      
 
         try:
             import ujson as json
@@ -365,8 +365,8 @@ class ErrorConditionHandler():
         if pythonExceptionObject.__dict__.has_key("eco"):
             eco=pythonExceptionObject.eco
             
-            if str(eco["type"])<>str("BUG") and str(eco["type"])<>str("UNKNOWN"):
-                j.application.stop(1)    
+            # if str(eco["type"])<>str("BUG") and str(eco["type"])<>str("UNKNOWN"):
+            j.application.stop(1)    
 
         if str(pythonExceptionObject).find("**halt**")<>-1:
             j.application.stop(1)
@@ -378,8 +378,6 @@ class ErrorConditionHandler():
             return 
 
         self.inException=True
-        print "ERROR"
-        print pythonExceptionObject
 
         eco=self.parsePythonErrorObject(pythonExceptionObject,ttype=ttype,tb=tb)
 
@@ -388,9 +386,12 @@ class ErrorConditionHandler():
         self._dealWithRunningAction()      
         self.inException=False             
         eco.process()
+        print eco
 
-        if j.application.shellconfig.interactive:
-            return self.escalateBugToDeveloper(eco,tb)
+        from IPython import embed
+        print "DEBUG NOW ooo"
+        embed()
+        
 
     def checkErrorIgnore(self,eco):
         if j.application.debug:

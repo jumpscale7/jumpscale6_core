@@ -98,15 +98,15 @@ class ErrorConditionObject():
     def process(self):
         self.toAscii()
 
-        if self.type<>"BUG" and self.type<>"UNKNOWN":
+        if self.type in ["INPUT","MONITORING","OPERATIONS","PERFORMANCE"]:
             self.tb=""
             self.code=""
             self.backtrace=""
             self.backtraceDetailed=""
 
-        types=["BUG","INPUT","MONITORING","OPERATIONS","PERFORMANCE","UNKNOWN"]
-        if self.type not in types:
-            j.events.inputerror_warning("Errorcondition was thrown with wrong type.\n%s"%str(self),"eco.check.type")
+        # types=["BUG","INPUT","MONITORING","OPERATIONS","PERFORMANCE","UNKNOWN"]
+        # if self.type not in types:
+        #     j.events.inputerror_warning("Errorcondition was thrown with wrong type.\n%s"%str(self),"eco.check.type")
 
         if not j.basetype.integer.check(self.level):
             try:
@@ -124,6 +124,8 @@ class ErrorConditionObject():
         res=j.errorconditionhandler._send2Redis(self)
         if res<>None:
             self.__dict__=res
+
+
 
 
     def toJson(self):
