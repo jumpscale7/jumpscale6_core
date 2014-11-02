@@ -134,7 +134,7 @@ class ErrorConditionObject():
         content="\n\n***ERROR***\n"
         if self.backtrace<>"":
             content="%s\n" % self.backtrace
-        content+="type/level: %s/%s\n" % (self.ttype,self.level)
+        content+="type/level: %s/%s\n" % (self.type,self.level)
         content+="%s\n" % self.errormessage
         if self.errormessagePub<>"":
             content+="errorpub: %s\n" % self.errormessagePub        
