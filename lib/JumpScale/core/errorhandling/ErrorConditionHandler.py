@@ -14,8 +14,10 @@ except ImportError:
 from JumpScale import j
 
 from ErrorConditionObject import ErrorConditionObject
-import JumpScale.baselib.redis
 
+
+
+import JumpScale.baselib.redis
 
 class BaseException(Exception):
     def __init__(self, message="", eco=None):
@@ -43,15 +45,18 @@ class ErrorConditionHandler():
         self.setExceptHook()
         self.lastEco=None
         self.redis=None
+        self.escalateToRedis=None
 
     def _send2Redis(self,eco):
         if self.redis==None:
             if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):    
                 self.redis=j.clients.redis.getRedisClient("127.0.0.1",9999)
-                lua=j.system.fs.fileGetContents("%s/core/errorhandling/eco.lua"%j.dirs.jsLibDir)
-                self.escalateToRedis=self.redis.register_script(lua)    
+                luapath="%s/core/errorhandling/eco.lua"%j.dirs.jsLibDir
+                if j.system.fs.exists(path=luapath):
+                    lua=j.system.fs.fileGetContents(luapath)
+                    self.escalateToRedis=self.redis.register_script(lua)    
 
-        if self.redis<>None:
+        if self.redis<>None and self.escalateToRedis<>None:
             eco.getSetGuid()
             key=eco.getUniqueKey()
             

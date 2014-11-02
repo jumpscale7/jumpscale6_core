@@ -160,6 +160,7 @@ class LogHandler(object):
         self.utils = LogUtils()
         self.reset()     
         self.redis=None
+        self.redislogging=None
 
     def init(self):
         self.connectRedis()
@@ -167,11 +168,13 @@ class LogHandler(object):
     def connectRedis(self):
         if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):    
             self.redis=j.clients.redis.getRedisClient("127.0.0.1",9999)
-            lua=j.system.fs.fileGetContents("%s/core/logging/logs.lua"%j.dirs.jsLibDir)
-            self.redislogging=self.redis.register_script(lua)    
+            luapath="%s/core/logging/logs.lua"%j.dirs.jsLibDir
+            if j.system.fs.exists(path=luapath):
+                lua=j.system.fs.fileGetContents(luapath)
+                self.redislogging=self.redis.register_script(lua)    
 
     def _send2Redis(self,obj):
-        if self.redis<>None:
+        if self.redis<>None and self.redislogging<>None:
             data=obj.toJson()
             return self.redislogging(keys=["logs.queue"],args=[data])
         else:
