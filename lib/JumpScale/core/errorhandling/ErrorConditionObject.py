@@ -103,9 +103,9 @@ class ErrorConditionObject():
             self.backtrace=""
             self.backtraceDetailed=""
 
-        types=["INPUT","MONITORING","OPERATIONS","PERFORMANCE","BUG","UNKNOWN"]
-        if self.type in types:
-            j.events.inputerror_warning("Errorcondition was thrown with wrong type.\n%s"%str(self),"eco.check.type")
+        # types=["INPUT","MONITORING","OPERATIONS","PERFORMANCE","BUG","UNKNOWN"]
+        # if not self.type in types:
+        #     j.events.inputerror_warning("Errorcondition was thrown with wrong type.\n%s"%str(self),"eco.check.type")
 
         if not j.basetype.integer.check(self.level):
             try:
@@ -127,8 +127,12 @@ class ErrorConditionObject():
         #@todo is temp
         print self
 
+
+
     def toJson(self):
-        return json.dumps(self.__dict__)
+        data = self.__dict__.copy()
+        data.pop('tb')
+        return json.dumps(data)
 
 
     def __str__(self):

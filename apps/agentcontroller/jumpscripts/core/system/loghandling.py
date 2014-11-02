@@ -35,6 +35,7 @@ def action():
 
     redisqueue = j.clients.credis.getRedisQueue("127.0.0.1", 9999, "logs")
     redisqueueEco = j.clients.credis.getRedisQueue("127.0.0.1", 9999, "eco")
+    redisEco = j.clients.credis.getRedisClient("127.0.0.1", 9999, "eco")
 
     OSISclient = j.core.osis.client
 
@@ -50,11 +51,11 @@ def action():
     else:
         loghandlingTE = None
 
-    eco = None
+    ecoguid = None
     path = "%s/apps/processmanager/eventhandling"%j.dirs.baseDir
     if j.system.fs.exists(path=path):
         eventhandlingTE = j.core.taskletengine.get(path)
-        eco=redisqueueEco.get_nowait()
+        ecoguid=redisqueueEco.get_nowait()
     else:
         eventhandlingTE = None
 
@@ -72,15 +73,16 @@ def action():
     if len(out)>0:
         OSISclientLogger.set(out)
 
-    while eco<>None:
-        eco2=json.decode(eco)
-        eco2["epoch"] = int(time.time())
-        eco3 = j.errorconditionhandler.getErrorConditionObject(ddict=eco2)        
-        eco4= eventhandlingTE.executeV2(eco=eco3)
-        if hasattr(eco4,"tb"):
-            eco4.__dict__.pop("tb")        
-        OSISclientEco.set(eco4.__dict__)
-        eco=redisqueueEco.get_nowait()
+    while ecoguid<>None:
+        eco = json.loads(redisEco.hget('eco:objects', ecoguid))
+        if not eco.get('epoch'):
+            eco["epoch"] = int(time.time())
+        ecoobj = j.errorconditionhandler.getErrorConditionObject(ddict=eco)        
+        ecores= eventhandlingTE.executeV2(eco=ecoobj)
+        if hasattr(ecores,"tb"):
+            ecores.__dict__.pop("tb")        
+        OSISclientEco.set(ecores.__dict__)
+        ecoguid=redisqueueEco.get_nowait()
 
 if __name__ == '__main__':
     j.core.osis.client = j.core.osis.getClientByInstance('main')

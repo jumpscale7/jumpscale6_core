@@ -1,7 +1,7 @@
-if redis.call("LLEN", "logs.queue") > 2000 then
-    redis.call("LPOP", "logs.queue")
+if redis.call("LLEN", "queues:logs") > 2000 then
+    redis.call("LPOP", "qeues:logs")
 end
 
-redis.call("RPUSH", "logs.queue",ARGV[1])
+redis.call("RPUSH", "queues:logs",ARGV[1])
 return "OK"
 

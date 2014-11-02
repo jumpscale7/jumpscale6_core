@@ -21,7 +21,6 @@ except ImportError:
     import json
 
 
-import JumpScale.baselib.redis
 
 # SAFE_CHARS_REGEX = re.compile("[^ -~\n]")
 
@@ -167,6 +166,7 @@ class LogHandler(object):
 
     def connectRedis(self):
         if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):    
+            import JumpScale.baselib.redis
             self.redis=j.clients.redis.getRedisClient("127.0.0.1",9999)
             luapath="%s/core/logging/logs.lua"%j.dirs.jsLibDir
             if j.system.fs.exists(path=luapath):
