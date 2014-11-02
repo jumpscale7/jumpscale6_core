@@ -17,7 +17,7 @@ class Cuisine():
     def connect(self,addr,port):
 
         cmd="ssh-keygen -f \"/root/.ssh/known_hosts\" -R [%s]:%s"%(addr,port)
-        j.system.process.execute(cmd)
+        j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
         # if j.system.net.tcpPortConnectionTest(addr,port)==False:
 
         #     if j.system.net.tcpPortConnectionTest(addr,port)==False:
