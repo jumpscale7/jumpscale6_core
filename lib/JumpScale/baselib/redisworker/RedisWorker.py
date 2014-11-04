@@ -13,7 +13,7 @@ import inspect
 
 # if j.application.config.exists("agentcontroller.webdiskey"):
 import JumpScale.grid.jumpscripts
-Jumpscript=j.tools.jumpscriptsManager.getJSClass()
+Jumpscript=j.core.jumpscripts.getJSClass()
 # else:
     # Jumpscript=None
 
