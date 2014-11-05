@@ -229,10 +229,13 @@ class OSISCMDS(object):
         """
 
         path=j.system.fs.joinPaths(self.path, namespace,categoryname,"model.py")
-        osismodelpath=j.system.fs.joinPaths(self.path, namespace,categoryname,"%s_%s_osismodelbase.py"%(namespace,categoryname))
+        genclassname = "%s_%s_osismodelbase"%(namespace,categoryname)
+        osismodelpath=j.system.fs.joinPaths(self.path, namespace,categoryname,"%s.py"%(genclassname))
         if j.system.fs.exists(path):
-            return 2,j.system.fs.fileGetContents(path)
-        elif j.system.fs.exists(osismodelpath):
+            model = j.system.fs.fileGetContents(path)
+            if genclassname not in model:
+                return 2, model
+        if j.system.fs.exists(osismodelpath):
             osismodelpathSpec=j.system.fs.joinPaths(self.path, namespace,"model.spec")
             return 1,j.system.fs.fileGetContents(osismodelpathSpec)
         else:
