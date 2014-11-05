@@ -317,7 +317,8 @@ class ControllerCMDS():
                 name=j.system.fs.getBaseName(path2)
                 name=name.replace(".py","").lower()
 
-            t=self.jumpscriptclient.new(name=script.name, action=script.module.action)
+            t=self.jumpscriptclient.new()
+            t.name = name
             t.__dict__.update(script.getDict())
 
             guid,r,r=self.jumpscriptclient.set(t)

@@ -134,6 +134,7 @@
 
 [rootmodel:jumpscript] @index
     prop:id int,,    
+    prop:gid int,,    
     prop:name str,,
     prop:descr str,,
     prop:category str,,
@@ -145,6 +146,7 @@
     prop:action str,,
     prop:source str,,
     prop:path str,,
+    prop:args list(str),,
     prop:enabled bool,,
     prop:async bool,,
     prop:period int,,
