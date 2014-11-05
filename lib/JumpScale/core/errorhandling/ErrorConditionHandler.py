@@ -360,11 +360,7 @@ class ErrorConditionHandler():
         @ttype : is the description of the error
         @tb : can be a python data object or a Event
         """           
-        if pythonExceptionObject.__dict__.has_key("eco"):
-            eco=pythonExceptionObject.eco
-            j.application.stop(1)    
-
-        if str(pythonExceptionObject).find("**halt**")<>-1:
+        if isinstance(pythonExceptionObject, HaltException):
             j.application.stop(1)
 
         # print "jumpscale EXCEPTIONHOOK"
