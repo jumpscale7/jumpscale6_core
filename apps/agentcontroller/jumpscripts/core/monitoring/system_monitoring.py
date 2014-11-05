@@ -20,11 +20,11 @@ log=False
 roles = []
 
 def action():
+    import psutil
     import statsd
     stats = statsd.StatsClient()
     pipe = stats.pipeline()
 
-    psutil=j.system.platform.psutil
     results={}
     val=psutil.cpu_percent(0)
     results["cpu.percent"]=val
