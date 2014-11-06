@@ -398,9 +398,10 @@ class Docker():
 
     def pushSSHKey(self,name):
         # path=j.system.fs.joinPaths(self._get_rootpath(name),"root",".ssh","authorized_keys")
-        keyloc="/root/.ssh/id_dsa.pub"
+        privkeyloc="/root/.ssh/id_dsa"
+        keyloc=privkeyloc + ".pub"
         if not j.system.fs.exists(path=keyloc):
-            j.system.process.executeWithoutPipe("ssh-keygen -t dsa")            
+            j.system.process.executeWithoutPipe("ssh-keygen -t dsa -f %s -N ''" % privkeyloc)
             if not j.system.fs.exists(path=keyloc):
                 raise RuntimeError("cannot find path for key %s, was keygen well executed"%keyloc)            
         key=j.system.fs.fileGetContents(keyloc)
