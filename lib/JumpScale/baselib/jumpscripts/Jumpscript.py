@@ -38,7 +38,7 @@ class Jumpscript(object):
 
     def _preprocess(self,txt):
         state="start"
-        tagstempl={"debug":False,"nojob":False,"queue":"default","recurring":0,"timeout":10,"log":2,"errorignore"=False}
+        tagstempl={"debug":False,"nojob":False,"queue":"default","recurring":0,"timeout":10,"log":2,"errorignore":False}
         tags=copy.copy(tagstempl)
         result={}
         out=""
@@ -124,7 +124,7 @@ class Jumpscript(object):
 
     def executeSubprocess(self, action, *args, **kwargs):
 
-        if if self.tags[action]["debug"]:
+        if self.tags[action]["debug"]:
             result = self.execute(action,*args, **kwargs)
             return result
         else:

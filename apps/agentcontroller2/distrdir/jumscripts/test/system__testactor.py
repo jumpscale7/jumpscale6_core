@@ -11,6 +11,10 @@ license = "bsd"
 
 import time
 
+@nojob()
+def echo(msg):
+    return msg
+
 @queue("default")
 @log(5)
 @nojob()
