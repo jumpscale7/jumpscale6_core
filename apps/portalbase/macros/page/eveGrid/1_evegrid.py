@@ -203,7 +203,10 @@ def main(j, args, params, tags, tasklet):
 			      },
 			      template:'<table id="example" class="table table-striped" cellspacing="0" width="100%"><tfoot><tr><td><button class="delete btn btn-primary">Delete</button></td></tr></tfoot></table>'
 		    }
-		    });
+		    })
+			.config(['$interpolateProvider', function($interpolateProvider) {
+			    $interpolateProvider.startSymbol('{[').endSymbol(']}');
+			}]);
 		'''
 
 		content = template
