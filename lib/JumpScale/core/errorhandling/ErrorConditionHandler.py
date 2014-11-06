@@ -55,7 +55,7 @@ class ErrorConditionHandler():
             key=eco.getUniqueKey()
             
             data=eco.toJson()
-            res=self.escalateToRedis(keys=["eco.queue","eco.incr","eco.occurrences","eco.objects","eco.last"],args=[key,data])
+            res=self.escalateToRedis(keys=["queues:eco","eco:incr","eco:occurrences","eco:objects","eco:last"],args=[key,data])
             # print "redisreturn: '%s'"%res
             # j.application.stop()
             res= json.decode(res)            
@@ -111,13 +111,8 @@ class ErrorConditionHandler():
         """
         type = "BUG"
         eco = self._handleRaise(type, level, message, category, pythonExceptionObject, pythonTraceBack, msgpub, tags)
-        
-        print eco
-
         if die:                     
             self.halt(eco.errormessage, eco)
-
-
 
     raiseCritical = raiseBug
 
@@ -226,7 +221,6 @@ class ErrorConditionHandler():
         eco.tags=tags
         eco.process()
         if die:
-            print eco
             self.halt(eco.description, eco)
         
     def getErrorConditionObject(self,ddict={},msg="",msgpub="",category="",level=1,type="UNKNOWN",tb=None):
@@ -366,11 +360,7 @@ class ErrorConditionHandler():
         @ttype : is the description of the error
         @tb : can be a python data object or a Event
         """           
-        if pythonExceptionObject.__dict__.has_key("eco"):
-            eco=pythonExceptionObject.eco
-            j.application.stop(1)    
-
-        if str(pythonExceptionObject).find("**halt**")<>-1:
+        if isinstance(pythonExceptionObject, HaltException):
             j.application.stop(1)
 
         # print "jumpscale EXCEPTIONHOOK"

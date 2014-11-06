@@ -18,6 +18,7 @@ class mainclass(OSISStoreMongo):
         else:
             changed = False
             new = True
+        key = key.replace('-', '')
         dbval = {"_id": key, "guid": key, "value": bson.Binary(value)}
         db.save(dbval)
         return [key, new, changed]

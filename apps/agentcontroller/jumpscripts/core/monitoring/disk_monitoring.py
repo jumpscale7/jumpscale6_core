@@ -20,6 +20,9 @@ log=False
 roles = []
 
 def action():
+    import statsd
+    stats = statsd.StatsClient()
+    pipe = stats.pipeline()
     if not hasattr(j.core, 'processmanager'):
         import JumpScale.grid.processmanager
         j.core.processmanager.loadMonitorObjectTypes()
@@ -38,7 +41,6 @@ def action():
         path=disk.path.replace("/dev/","")
 
         disk_key=path
-        results['disk_id'] = disk_key
         cacheobj=j.core.processmanager.monObjects.diskobject.get(id=disk_key)
         cacheobj.ckeyOld=cacheobj.db.getContentKey()
         disk.nid = j.application.whoAmI.nid
@@ -46,18 +48,18 @@ def action():
         if counters.has_key(path):
             counter=counters[path]
             read_count, write_count, read_bytes, write_bytes, read_time, write_time=counter
-            results['time_read'] = cacheobj.db.__dict__['time_read'] = read_time
-            results['time_write'] = cacheobj.db.__dict__['time_write'] = write_time
-            results['count_read'] = cacheobj.db.__dict__['count_read'] = read_count
-            results['count_write'] = cacheobj.db.__dict__['count_write'] = write_count
+            results['time_read'] = read_time
+            results['time_write'] = write_time
+            results['count_read'] = read_count
+            results['count_write'] = write_count
 
             read_bytes=int(round(read_bytes/1024,0))
             write_bytes=int(round(write_bytes/1024,0))
-            results['kbytes_read'] = cacheobj.db.__dict__['kbytes_read'] = read_bytes
-            results['kbytes_write'] = cacheobj.db.__dict__['kbytes_write'] = write_bytes
-            results['space_free_mb'] = cacheobj.db.__dict__['space_free_mb'] = disk.free
-            results['space_used_mb'] = cacheobj.db.__dict__['space_used_mb'] = disk.size-disk.free
-            results['space_percent'] = cacheobj.db.__dict__['space_percent'] = round((float(disk.size-disk.free)/float(disk.size)),2)
+            results['kbytes_read'] = read_bytes
+            results['kbytes_write'] = write_bytes
+            results['space_free_mb'] = disk.free
+            results['space_used_mb'] = disk.size-disk.free
+            results['space_percent'] = round((float(disk.size-disk.free)/float(disk.size)),2)
 
         if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
             j.events.opserror('Disk %s has less then 10%% free space' % disk.path, 'monitoring')
@@ -70,4 +72,7 @@ def action():
             print "SEND DISK INFO TO OSIS"
             cacheobj.send2osis()
 
-        j.system.redisstataggregator.pushStats('disk', results)
+        for key, value in results.iteritems():
+            pipe.gauge("%s_%s_disk_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, path, key), value)
+
+    pipe.send()

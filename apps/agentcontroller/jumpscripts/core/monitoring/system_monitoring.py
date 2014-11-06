@@ -20,12 +20,12 @@ log=False
 roles = []
 
 def action():
-    if not hasattr(j.core, 'processmanager'):
-        import JumpScale.grid.processmanager
-        j.core.processmanager.loadMonitorObjectTypes()
-    psutil=j.system.platform.psutil
+    import psutil
+    import statsd
+    stats = statsd.StatsClient()
+    pipe = stats.pipeline()
+
     results={}
-    nr=0
     val=psutil.cpu_percent(0)
     results["cpu.percent"]=val
     cput= psutil.cpu_times()
@@ -65,21 +65,11 @@ def action():
     num_ctx_switches = int(stats['ctxt'])
 
     results["cpu.num_ctx_switches"]=num_ctx_switches
-    j.system.redisstataggregator.pushStats('system', results)
 
-    # result2={}
-    # for key in results.keys():
-    #     if key.find("percent")<>-1 or key.find("time")<>-1:
-    #         percent=True
-    #     else:
-    #         percent=False
-    #     if any([ x in key for x in ['network.', 'time', 'cpu.num'] ]):
-    #         ttype="D"
-    #     else:
-    #         ttype="N"
+    for key, value in results.iteritems():
+        pipe.gauge("%s_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, key), value)
 
-    #     result2[key]=j.system.stataggregator.set("n%s.system.%s"%(j.application.whoAmI.nid,key),results[key],remember=True,memonly=False,percent=percent,ttype=ttype)
-
+    pipe.send()
     return results
 
 
