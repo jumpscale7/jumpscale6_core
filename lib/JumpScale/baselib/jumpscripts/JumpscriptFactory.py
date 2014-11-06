@@ -31,9 +31,9 @@ class JumpscriptFactory:
 
     def execute(self,organization,actor,name,**args):
         from IPython import embed
-        print "DEBUG NOW execute"
+        print "DEBUG NOW id"
         embed()
-        
+            
 
 
         

@@ -7,7 +7,7 @@ import JumpScale.baselib.webdis
 import JumpScale.baselib.redis
 import multiprocessing
 
-class JumpScript(object):
+class Jumpscript(object):
     def __init__(self, ddict=None, path=None):
         self._loaded = False
         self.name=""
@@ -162,7 +162,7 @@ class JumpscriptFactory:
             self.secret=j.application.config.get(secretkey)
 
     def getJSClass(self):
-        return JumpScript
+        return Jumpscript
 
     def _getWebdisConnection(self):
         return j.clients.webdis.getByInstance()

@@ -9,7 +9,7 @@ class GeventWSFactory():
     def getServer(self, port, sslorg=None, ssluser=None, sslkeyvaluestor=None):
         """
         HOW TO USE:
-        daemon=j.servers.tornado.getServer(port=4444)
+        daemon=j.servers.geventws.getServer(port=4444)
 
         class MyCommands():
             def __init__(self,daemon):
