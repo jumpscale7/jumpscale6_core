@@ -25,21 +25,15 @@ def _deleteNode(nid):
 
     print "Starting delete of node %s" % nid
     categories = oscl.listNamespaceCategories('system')
+    categories.remove('info')
 
     for category in categories:
         print "  * Deleting %s..." % category
         catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
         if category == 'stats':
-            catclient.delete(nid)
+            # TODO catclient.delete(nid)
             continue
-        if category in ['job', 'eco', 'log']:
-            catclient.delete({"term":{"nid":nid}})
-            continue
-        total, results = catclient.simpleSearch({'nid':nid}, size=0, withguid=True, withtotal=True)
-        results = catclient.simpleSearch({'nid':nid}, size=total, withguid=True)
-        for result in results:
-            guid = result['guid']
-            catclient.delete(guid)
+        catclient.deleteSearch({"nid":nid})
 
     try:
         ncl.delete(nodeguid)
@@ -78,7 +72,7 @@ if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole
 
     else:
         nodes = dict()
-        if not opts.nid:
+        if opts.nid is None:
             query = {}
             if opts.gid:
                 query['gid'] = opts.gid
