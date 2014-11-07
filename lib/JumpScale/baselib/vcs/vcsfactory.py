@@ -42,7 +42,7 @@ class VCSFactory(object):
         passwd = userconfig.passwd
         if type in ["git"]:
             from JumpScale.baselib import git
-            if user == 'git': # This is ssh
+            if user in ('git', 'ssh'): # This is ssh
                 url = "%s@%s:%s/%s.git" % (user, BASEURLS[provider], account, reponame)
             else:
                 url = "https://%s:%s@%s/%s/%s.git" % (user, passwd, BASEURLS[provider], account, reponame)
