@@ -33,9 +33,13 @@ prefix2.multiline=
     line2: endline
     line3 'test' endline
 
+empty.something2 =
 prefix.int=5
 prefix.askfloat=@ASK descr:'this a description about float to ask for' type:float
 prefix.askdropdown=@ASK descr:'this a description about float to ask for' type:dropdown dropdownvals:'nr 1,2,3,nrr 4'
+
+empty.something=
+
 
 prefix.multiline=
     line1, endline

@@ -7,6 +7,8 @@ anewkey =
     key3:astring,
     new:yes
 
+empty.something =  
+empty.something2 =  
 jp.domain = @ASK name:name descr:'give name of jpackage' type:dropdown dropdownvals:'{{j.packages.getDomainNames()}}'
 jp.name = @ASK name:name descr:'give name of jpackage' type:str default:1.0 regex:.*
 prefix.askdropdown = @ASK descr:'this a description about float to ask for' type:dropdown dropdownvals:'nr 1,2,3,nrr 4'

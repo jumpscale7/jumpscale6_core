@@ -490,9 +490,9 @@ class Text:
         return value
 
     @staticmethod
-    def getInt(text):
-        text=text.strip()
+    def getInt(text):        
         if j.basetype.string.check(text):
+            text=text.strip()
             if text.lower()=="none":
                 return 0
             elif text==None:

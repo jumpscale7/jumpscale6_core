@@ -83,9 +83,8 @@ class ProcessDef:
         self.user=hrd.get("process.user",default=False)
         if self.user==False:
             self.user="root"
-        self.cmd=self._replaceSysVars(hrd.get("process.cmd"))
-        self.args=self._replaceSysVars(hrd.get("process.args"))
-
+        self.cmd=self._replaceSysVars(hrd.getStr("process.cmd"))
+        self.args=self._replaceSysVars(hrd.getStr("process.args"))
 
         self.env=hrd.getDict("process.env")
         self.procname="%s:%s"%(self.domain,self.name)

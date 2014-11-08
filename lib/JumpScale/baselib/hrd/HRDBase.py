@@ -2,13 +2,7 @@ from JumpScale import j
 
 class HRDBase():
 
-    def set(self,key,value,persistent=True,comments=""):
-        """
-        """
-        key=key.lower()
-        if not self.items.has_key(key):
-            self.items[key]=HRDItem(name=key,hrd=self,ttype="base",data=value,comments="")    
-        self.items[key].set(value,persistent=persistent,comments=comments)
+
 
     def prefix(self, key):
         result=[]
@@ -19,13 +13,12 @@ class HRDBase():
         result.sort()                
         return result
 
-
-
     def getBool(self,key,default=None):
         res=self.get(key,default=default)
         if res==None:
             return False
-        if res==True or res=="1" or res.lower()=="true":
+        res2=str(res)
+        if res==True or res2=="1" or res2.lower()=="true":
             return True
         else:
             return False            
@@ -36,6 +29,14 @@ class HRDBase():
         res=self.get(key,default=default)
         return j.tools.text.getInt(res)
 
+    def getStr(self,key,default=None):
+        if default<>None:
+            default=str(default)        
+        res=self.get(key,default=default)
+        res=j.tools.text.pythonObjToStr(res,multiline=False)
+        return res
+
+
     def getFloat(self,key):
         res=self.get(key)
         return j.tools.text.getFloat(res)
@@ -43,6 +44,23 @@ class HRDBase():
     def exists(self,key):
         key=key.lower()
         return self.items.has_key(key)
+
+    def getList(self,key):
+        lst=self.get(key)
+        if j.basetype.list.check(lst):
+            return lst
+        lst=str(lst)
+        if j.basetype.string.check(lst):
+            return [item.strip() for item in lst.split(",")]        
+        raise RuntimeError("no list for %s"%key)
+
+    def getDict(self,key):
+        lst=self.get(key)
+        if j.basetype.dictionary.check(lst):
+            return lst
+        if lst.strip()=="":
+            return {}        
+        raise RuntimeError("no dict for %s"%key)
 
     def getListFromPrefix(self, prefix):
         """
@@ -140,6 +158,7 @@ class HRDBase():
         return content          
 
     def __repr__(self):
+        
         parts=[]
         keys=self.items.keys()
         keys.sort()

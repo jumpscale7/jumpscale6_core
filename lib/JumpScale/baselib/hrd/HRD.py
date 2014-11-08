@@ -118,6 +118,7 @@ class HRD(HRDBase):
         self.items[key].set(value,persistent=persistent,comments=comments)
 
     def get(self,key,default=None,):
+        key=key.lower()
         if not self.items.has_key(key):
             if default==None:
                 j.events.inputerror_critical("Cannot find value with key %s in tree %s."%(key,self.path),"hrd.get.notexist")
@@ -227,7 +228,15 @@ class HRD(HRDBase):
                         if j.system.fs.exists(path=tpath):
                             self.template=tpath
 
-        for line in content.split("\n"):
+        splitted=content.split("\n")
+        x=-1
+        go=True
+        while go:
+            x+=1
+            if x==len(splitted):
+                go=False
+                continue
+            line=splitted[x]
             line2=line.strip()
             
             if line2=="":
@@ -242,6 +251,9 @@ class HRD(HRDBase):
 
             if state=="multiline":
                 if line[0]<>" ":
+                    #if post was empty then we need to process current line again
+                    if post.strip()=="":
+                        x=x-1
                     #end of multiline var needs to be processed
                     state="var"
 
