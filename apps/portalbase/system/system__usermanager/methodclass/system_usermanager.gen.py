@@ -3,17 +3,15 @@ from JumpScale import j
 class system_usermanager(j.code.classGetBase()):
     """
     register a user (can be done by user itself, no existing key or login/passwd is needed)
-    
     """
     def __init__(self):
+        pass
         
         self._te={}
         self.actorname="usermanager"
         self.appname="system"
         #system_usermanager_osis.__init__(self)
-    
 
-        pass
 
     def authenticate(self, name, secret, **kwargs):
         """
@@ -25,7 +23,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method authenticate")
-    
 
     def groupadduser(self, group, user, **kwargs):
         """
@@ -36,7 +33,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method groupadduser")
-    
 
     def groupcreate(self, name, groups, **kwargs):
         """
@@ -47,7 +43,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method groupcreate")
-    
 
     def groupdeluser(self, group, user, **kwargs):
         """
@@ -58,7 +53,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method groupdeluser")
-    
 
     def usercreate(self, name, passwd, key, groups, emails, config, userid=0, reference="''", remarks="''", **kwargs):
         """
@@ -76,7 +70,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method usercreate")
-    
 
     def userexists(self, name, **kwargs):
         """
@@ -85,7 +78,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method userexists")
-    
 
     def userget(self, name, **kwargs):
         """
@@ -94,7 +86,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method userget")
-    
 
     def usergroupsget(self, user, **kwargs):
         """
@@ -104,7 +95,6 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method usergroupsget")
-    
 
     def userregister(self, name, passwd, emails, config, reference="''", remarks="''", **kwargs):
         """
@@ -118,4 +108,3 @@ class system_usermanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method userregister")
-    
