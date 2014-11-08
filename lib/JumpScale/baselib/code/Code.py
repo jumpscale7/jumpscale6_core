@@ -285,12 +285,11 @@ class Code():
             return content
         if content[-1]=="\n":
             content=content[:-1]
-        for i in range(0,level):
-            content2=""
-            for line in content.split("\n"):
-                content2+="    %s\n"%line
-            content=content2
-        return content
+        lines = list()
+        for line in content.splitlines():
+            indent = " " * 4 * level
+            lines.append("%s%s\n" % (indent, line))
+        return "".join(lines)
 
     def _deIndent(self,content):
         #remove garbage & fix identation
