@@ -1,7 +1,0 @@
-jp.domain=@ASK name:name descr:give__name__of__jpackage type:dropdown dropdownvals:{{[item.domainname for item in j.packages.domains]}}
-jp.name=@ASK name:name descr:give__name__of__jpackage type:str default:1.0 regex:.*
-jp.version=@ASK name:version descr:give__version__of__jpackage__e.g.__1.0.0 type:str default:1.0
-jp.askint=@ASK type:int default:5
-jp.askfloat=@ASK type:float default:5.5
-
-

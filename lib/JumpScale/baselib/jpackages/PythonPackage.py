@@ -15,7 +15,7 @@ class PythonPackage(object):
     def _getPythonPathNames(self):
         if self._pythonPathCache==[]:
             j.logger.log("getpython path names and cache.",level=5,category="python.package")
-            for path in j.application.config.getItemsFromPrefix("python.paths"):
+            for path in j.application.config.getListFromPrefix("python.paths"):
                 if not path:
                     continue
                 for item in j.system.fs.listFilesAndDirsInDir(path,recursive=True):
@@ -28,7 +28,7 @@ class PythonPackage(object):
         
         if self._usrPathCache==[]:
             j.logger.log("get /usr path names and cache.",level=5,category="python.package")
-            for path in j.application.config.getItemsFromPrefix("python.paths"):
+            for path in j.application.config.getListFromPrefix("python.paths"):
                 if not path:
                     continue
                 for item in j.system.fs.listFilesAndDirsInDir(path,recursive=True):

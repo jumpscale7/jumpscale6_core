@@ -27,7 +27,7 @@ class Application:
         self.agentid = "starting"
         self._calledexit = False
         self.skipTraceback = False
-        self._debug = None
+        self.debug = True
 
         self.whoAmIBytestr = None
         self.whoAmI = WhoAmI(0,0,0)
@@ -46,18 +46,6 @@ class Application:
         self.connectRedis()
 
         j.logger.init()
-
-    @property
-    def debug(self):
-        if self._debug != None:
-            return self._debug
-        else:
-            if hasattr(self, 'config'):
-                debug = j.application.config.get('system.debug', checkExists=True, default='0') == '1'
-                self._debug = debug
-                return debug
-            else:
-                return False
 
     def connectRedis(self):
 
@@ -139,10 +127,12 @@ class Application:
         # Register exit handler for sys.exit and for script termination
         atexit.register(self._exithandler)
 
-
         j.dirs.appDir=appdir
 
         j.dirs.init(reinit=True)
+
+        if hasattr(self, 'config'):
+            self.debug = j.application.config.getBool('system.debug', default=True)
 
         if self.redis<>None:
             if self.redis.hexists("application",self.appname):

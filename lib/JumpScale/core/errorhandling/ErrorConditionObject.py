@@ -97,7 +97,7 @@ class ErrorConditionObject():
     def process(self):
         self.toAscii()
 
-        if self.type in ["INPUT","MONITORING","OPERATIONS","PERFORMANCE"]:
+        if self.type in ["INPUT","MONITORING","OPERATIONS","PERFORMANCE"] and j.application.debug==False:
             self.tb=""
             self.code=""
             self.backtrace=""
