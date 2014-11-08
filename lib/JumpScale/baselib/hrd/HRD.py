@@ -238,6 +238,11 @@ class HRD(HRDBase):
                 continue
             line=splitted[x]
             line2=line.strip()
+
+            if len(line)>0 and line.find("#")<>-1:
+                line,comment0=line.split("#",1)
+                line2=line.strip()
+                comments+="#%s\n"%comment0
             
             if line2=="":
                 if state=="multiline":
@@ -267,12 +272,9 @@ class HRD(HRDBase):
 
             if state=="look4var":
                 # print "%s:%s"%(state,line)
+
                 if line.find("=")<>-1:
-                    if line.find("#")<>-1:
-                        line,comment0=line.split("#",1)
-                        line2=line.strip()
-                        comments+="#%s\n"%comment0
-                    pre,post=line2.split("=",1)
+                    pre,post=line2.split("=",1)                        
                     vartype="unknown"
                     name=pre.strip()
                     if post.strip()=="" or post.strip().lower()=="@ask":

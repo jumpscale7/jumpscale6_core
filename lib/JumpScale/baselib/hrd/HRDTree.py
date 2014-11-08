@@ -3,7 +3,7 @@ import JumpScale.baselib.codeexecutor
 
 from HRDBase import HRDBase
 
-from HRD import *
+from HRD import HRD
 
 
 class HRDTree(HRDBase):
@@ -14,6 +14,8 @@ class HRDTree(HRDBase):
             self.add2tree(path)
         self.changed=False
         self.commentblock=""
+        self.name="tree"
+        self.path="tree"
 
     def add2treeFromContent(self,content):
         hrd=HRD("",treeposition,self)

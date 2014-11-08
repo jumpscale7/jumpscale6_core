@@ -1,6 +1,3 @@
-#this is comments on top of
-#this is comments on top of 2
-
 anewkey = 
     key1:1,
     key2:'this is longer, :string',
@@ -9,6 +6,9 @@ anewkey =
 
 empty.something =  
 empty.something2 =  
+
+#this is comments on top of
+#this is comments on top of 2
 jp.domain = @ASK name:name descr:'give name of jpackage' type:dropdown dropdownvals:'{{j.packages.getDomainNames()}}'
 jp.name = @ASK name:name descr:'give name of jpackage' type:str default:1.0 regex:.*
 prefix.askdropdown = @ASK descr:'this a description about float to ask for' type:dropdown dropdownvals:'nr 1,2,3,nrr 4'

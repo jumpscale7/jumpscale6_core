@@ -2,8 +2,6 @@ from JumpScale import j
 
 class HRDBase():
 
-
-
     def prefix(self, key):
         result=[]
         for knownkey in self.items.keys():
@@ -85,7 +83,7 @@ class HRDBase():
         @param template is example hrd content block, which will be used to check against, 
         if params not found will be added to existing hrd 
         """      
-
+        from HRD import HRD
         hrdtemplate=HRD(content=template)
         for key in hrdtemplate.items.keys():
             if not self.items.has_key(key):
@@ -108,24 +106,24 @@ class HRDBase():
         """
         look for $(name) and replace with hrd value
         """
-        j.core.hrd.log("hrd:%s apply on dir:%s in position:%s"%(self.path,path,position),category="apply")
+        j.core.hrd.log("hrd %s apply on dir:%s"%(self.name,path),category="apply")
         
         items=j.system.fs.listFilesInDir( path, recursive=True, filter=filter, minmtime=minmtime, maxmtime=maxmtime, depth=depth)
         for item in items:
             if changeFileName:
-                item2=self._.replaceVarsInText(item,additionalArgs=additionalArgs)
+                item2=self._replaceVarsInText(item,additionalArgs=additionalArgs)
                 if item2<>item:
                      j.system.fs.renameFile(item,item2)
                     
             if changeContent:
-                self.applyOnFile(item2,position=position,additionalArgs=additionalArgs)
+                self.applyOnFile(item2,additionalArgs=additionalArgs)
 
     def applyOnFile(self,path,additionalArgs={}):
         """
         look for $(name) and replace with hrd value
         """
 
-        j.core.hrd.log("hrd:%s apply on file:%s in position:%s"%(self.path,path,position),category="apply")
+        j.core.hrd.log("hrd:%s apply on file:%s"%(self.path,path),category="apply")
         content=j.system.fs.fileGetContents(path)
         content=self._replaceVarsInText(content,additionalArgs=additionalArgs)
         j.system.fs.writeFile(path,content)
@@ -143,7 +141,7 @@ class HRDBase():
             return content
             
         items=j.codetools.regex.findAll(r"\$\([\w.]*\)",content)
-        j.core.hrd.log("replace vars in hrd:%s"%hrdtree.path,"replacevar",7)
+        j.core.hrd.log("replace vars in hrd:%s"%self.path,"replacevar",7)
         if len(items)>0:
             for item in items:
                 # print "look for : %s"%item
@@ -154,7 +152,8 @@ class HRDBase():
                     content=content.replace(item,newcontent)
                 else:
                     if self.exists(item2):
-                        content=content.replace(item,self.getStr1Line(item2))                
+                        replacewith=j.tools.text.pythonObjToStr(self.get(item2),multiline=True)
+                        content=content.replace(item,replacewith)            
         return content          
 
     def __repr__(self):

@@ -88,11 +88,11 @@ class JPackageObject():
 
         self.export = self.hrd.getBool("jp.export")
         self.autobuild = self.hrd.getBool("jp.autobuild")
-        self.taskletsChecksum = self.hrd.get("jp.taskletschecksum")
+        self.taskletsChecksum = self.hrd.getStr("jp.taskletschecksum")
 
-        self.descrChecksum = self.hrd.get("jp.descrchecksum",default="")
+        self.descrChecksum = self.hrd.getStr("jp.descrchecksum",default="")
 
-        self.hrdChecksum = self.hrd.get("jp.hrdchecksum",default="")
+        self.hrdChecksum = self.hrd.getStr("jp.hrdchecksum",default="")
 
         self.supportedPlatforms = self.hrd.getList("jp.supportedplatforms")
 
@@ -107,7 +107,7 @@ class JPackageObject():
         self.debug=self.state.debugMode
 
         if (self.debug==False or self.debug==0) and self.hrd.exists("jp.debug"):
-            if int(self.hrd.get("jp.debug"))==1:
+            if int(self.hrd.getStr("jp.debug"))==1:
                 self.debug=1
             #DO NOT SET 0, 0 means we don't count the stat from the hrd
       
@@ -150,24 +150,24 @@ class JPackageObject():
 
         self.hrd=j.core.hrd.getHRD(path=j.system.fs.joinPaths(hrddir,"main.hrd"))
 
-        if self.hrd.get("jp.domain")<>self.domain:
+        if self.hrd.getStr("jp.domain")<>self.domain:
             try:
                 self.hrd.set("jp.domain",self.domain)
             except:
                 print "WARNING: domain in jpackage is not same as name of directory."
-        if self.hrd.get("jp.name")<>self.name:
+        if self.hrd.getStr("jp.name")<>self.name:
             try:
                 self.hrd.set("jp.name",self.name)
             except:
                 print "WARNING: name in jpackage is not same as name of directory."
             
-        if self.hrd.get("jp.version")<>self.version:                
+        if self.hrd.getStr("jp.version")<>self.version:                
             try:
                 self.hrd.set("jp.version",self.version)
             except:
                 print "WARNING: version in jpackage is not same as name of directory."
 
-        descr=self.hrd.get("jp.description")
+        descr=self.hrd.getStr("jp.description")
         if descr<>False and descr<>"":
             self.description=descr
         if descr<>self.description:                
@@ -357,7 +357,7 @@ class JPackageObject():
             self._raiseError("DEBUG NOW blobstorremote or blobstorlocal needs to be available")
 
     def getAppPath(self):
-        path = self.hrd.get("jp.app.path")
+        path = self.hrd.getStr("jp.app.path")
         if path is None:
             j.events.inputerror_critical("Could not find 'jp.app.path' in main hrd of jpackage:%s"%jp)
         path = j.dirs.replaceTxtDirVars(path)
@@ -370,7 +370,7 @@ class JPackageObject():
 
     def getDebugModeInJpackage(self):
         if self.hrd.exists("jp.debug"):
-            if int(self.hrd.get("jp.debug"))==1:
+            if int(self.hrd.getStr("jp.debug"))==1:
                 return True
         return False
 
@@ -506,10 +506,10 @@ class JPackageObject():
                 if not self.hrd.exists(key % 'maxversion'):
                     self.hrd.set(key % 'maxversion',"")
                    
-                name=self.hrd.get(key % 'name')
-                domain=self.hrd.get(key % 'domain')
-                minversion=self.hrd.get(key % 'minversion')
-                maxversion=self.hrd.get(key % 'maxversion')
+                name=self.hrd.getStr(key % 'name')
+                domain=self.hrd.getStr(key % 'domain')
+                minversion=self.hrd.getStr(key % 'minversion')
+                maxversion=self.hrd.getStr(key % 'maxversion')
 
                 deppack=j.packages.findNewest(domain,name,\
                     minversion=minversion,maxversion=maxversion,returnNoneIfNotFound=not(errorIfNotFound)) #,platform=j.system.platformtype.myplatformdeppack.loadDependencies()
@@ -1418,8 +1418,8 @@ class JPackageObject():
 
         hrdpath=j.system.fs.joinPaths(self.getPathMetadata(),"hrd","code.hrd")
         codehrd=j.core.hrd.getHRD(hrdpath)
-        account=codehrd.get("jp.code.account")
-        repo=codehrd.get("jp.code.repo")
+        account=codehrd.getStr("jp.code.account")
+        repo=codehrd.getStr("jp.code.repo")
         if account=="" or repo=="":
             return
 
