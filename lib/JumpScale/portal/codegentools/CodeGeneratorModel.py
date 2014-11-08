@@ -24,7 +24,7 @@ if not isinstance(value, %(type)s) and value is not None:
         value = j.basetype.%(fulltype)s.fromString(value)
     else:
         msg="property %(name)s input error, needs to be %(type)s, specfile: %(specfile)s, name model: %(modelname)s, value was:" + str(value)
-        raise RuntimeError(msg)
+        raise TypeError(msg)
 """ % {'name': name, 'fulltype': typemap.get(type, type), 'type': type,
        'specfile': self.spec.specpath.replace("\\", "/"), 'modelname': self.spec.name}
 
@@ -44,13 +44,15 @@ if not isinstance(value, %(type)s) and value is not None:
                 type = "enumerator:%s or int" % type
                 value = "int(value)"
             elif specfound.type == "model":
-                pre = "classs=j.core.codegenerator.getClassJSModel(\"%s\",\"%s\",\"%s\")\n" % (specfound.appname, specfound.actorname, specfound.name)
+                subgen = CodeGeneratorModel(specfound)
+                self.content = subgen.generate() + self.content
+                pre = "classs= %s\n" % (specfound.getClassName())
                 s = "isinstance(value, classs)"
                 init = pre
                 init += "self._P_%s=classs()" % name
             else:
                 s = ""
-        s = j.code.indent(s, indent)
+        s = j.code.indent(s[1:], indent)
         self.initprops += j.code.indent(init, 2)
         return s, value
 
@@ -60,10 +62,12 @@ if not isinstance(value, %(type)s) and value is not None:
     @property
     def {name}(self):
         return self._P_{name}
+
     @{name}.setter
     def {name}(self, value):
 {optionalvalidation}
         self._P_{name}={value}
+
     @{name}.deleter
     def {name}(self):
         del self._P_{name}
@@ -75,7 +79,7 @@ if not isinstance(value, %(type)s) and value is not None:
             value = "value"
         s = s.replace("{optionalvalidation}", validation)
         s = s.replace("{value}", value)
-        self.content += s
+        self.content += s[1:]
 
     def addNewObjectMethod(self, propname, rtype, spec):
         if propname[-1] == "s":
@@ -90,7 +94,9 @@ if not isinstance(value, %(type)s) and value is not None:
         s = ""
 
         if spec not in ["int", "bool", "float", "str", "list", "dict"]:
-            classstr = "j.core.codegenerator.getClassJSModel(\"%s\",\"%s\",\"%s\")()" % (spec.appname, spec.actorname, spec.name)
+            gen = CodeGeneratorModel(spec)
+            self.content = gen.generate() + self.content
+            classstr = "%s()" % (gen.getClassName())
         else:
             if spec == "int":
                 classstr = "0"
@@ -118,7 +124,7 @@ if self._P_{name}[-1].__dict__.has_key("_P_id"):
 return self._P_{name}[-1]\n
 """
             ssss = ssss.replace("{name}", propname)
-            s += ssss
+            s += ssss[1:]
         else:
             s += "self._P_%s[key]=value2\n" % propname
             s += "return self._P_%s[key]\n" % propname

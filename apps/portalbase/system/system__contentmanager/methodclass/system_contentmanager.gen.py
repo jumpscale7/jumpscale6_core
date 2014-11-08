@@ -4,17 +4,15 @@ class system_contentmanager(j.code.classGetBase()):
     """
     this actor manages all content on the wiki
     can e.g. notify wiki/appserver of updates of content
-    
     """
     def __init__(self):
+        pass
         
         self._te={}
         self.actorname="contentmanager"
         self.appname="system"
         #system_contentmanager_osis.__init__(self)
-    
 
-        pass
 
     def bitbucketreload(self, spacename, **kwargs):
         """
@@ -24,7 +22,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method bitbucketreload")
-    
 
     def getActors(self, **kwargs):
         """
@@ -32,7 +29,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getActors")
-    
 
     def getActorsWithPaths(self, **kwargs):
         """
@@ -40,7 +36,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getActorsWithPaths")
-    
 
     def getBuckets(self, **kwargs):
         """
@@ -48,7 +43,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getBuckets")
-    
 
     def getBucketsWithPaths(self, **kwargs):
         """
@@ -56,7 +50,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getBucketsWithPaths")
-    
 
     def getContentDirsWithPaths(self, **kwargs):
         """
@@ -65,7 +58,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getContentDirsWithPaths")
-    
 
     def getSpaces(self, **kwargs):
         """
@@ -73,7 +65,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getSpaces")
-    
 
     def getSpacesWithPaths(self, **kwargs):
         """
@@ -81,7 +72,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getSpacesWithPaths")
-    
 
     def modelobjectlist(self, namespace, category, key, **kwargs):
         """
@@ -93,7 +83,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method modelobjectlist")
-    
 
     def modelobjectupdate(self, appname, actorname, key, **kwargs):
         """
@@ -105,7 +94,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method modelobjectupdate")
-    
 
     def notifyActorDelete(self, id, **kwargs):
         """
@@ -114,7 +102,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorDelete")
-    
 
     def notifyActorModification(self, id, **kwargs):
         """
@@ -123,7 +110,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorModification")
-    
 
     def notifyActorNew(self, path, name, **kwargs):
         """
@@ -133,7 +119,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorNew")
-    
 
     def notifyActorNewDir(self, actorname, path, actorpath='', **kwargs):
         """
@@ -143,7 +128,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyActorNewDir")
-    
 
     def notifyBucketDelete(self, id, **kwargs):
         """
@@ -152,7 +136,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyBucketDelete")
-    
 
     def notifyBucketModification(self, id, **kwargs):
         """
@@ -161,7 +144,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyBucketModification")
-    
 
     def notifyBucketNew(self, path, name, **kwargs):
         """
@@ -171,7 +153,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyBucketNew")
-    
 
     def notifyFiledir(self, path, **kwargs):
         """
@@ -180,7 +161,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifyFiledir")
-    
 
     def notifySpaceDelete(self, id, **kwargs):
         """
@@ -189,7 +169,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifySpaceDelete")
-    
 
     def notifySpaceModification(self, id, **kwargs):
         """
@@ -198,7 +177,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifySpaceModification")
-    
 
     def notifySpaceNew(self, path, name, **kwargs):
         """
@@ -208,7 +186,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method notifySpaceNew")
-    
 
     def notifySpaceNewDir(self, spacename, path, spacepath='', **kwargs):
         """
@@ -221,7 +198,6 @@ class system_contentmanager(j.code.classGetBase()):
         args["spacepath"]=spacepath
         args["path"]=path
         return self._te["notifySpaceNewDir"].execute4method(args,params={},actor=self)
-    
 
     def prepareActorSpecs(self, app, actor, **kwargs):
         """
@@ -232,7 +208,6 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method prepareActorSpecs")
-    
 
     def wikisave(self, cachekey, text, **kwargs):
         """
@@ -242,4 +217,3 @@ class system_contentmanager(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method wikisave")
-    
