@@ -5,46 +5,50 @@ from JumpScale.core.system.fs import FileLock
 
 json=j.db.serializers.getSerializerType("j")
 
+OBJECTCLASSES = dict()
+
 class OSISClientForCat():
 
     def __init__(self, client, namespace, cat):
         self.client = client
         self.namespace = namespace
         self.cat = cat
-        self.objectclass=None
 
     def _getModelClass(self):
-        if self.objectclass==None:
-            retcode,content=self.client.getOsisObjectClassCodeOrSpec(self.namespace,self.cat)
-            if retcode==2 or retcode == 1:
-                def getModelClass(module):
-                    classes = inspect.getmembers(module, inspect.isclass)
-                    complexbase = j.core.osis.getOSISBaseObjectComplexType()
-                    simplebase = j.core.osis.getOsisBaseObjectClass()
-                    for name, klass in classes:
-                        if name != "OsisBaseObject" and issubclass(klass, (complexbase, simplebase)):
-                            return klass
-                    raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
+        key = "%s_%s" % (self.namespace, self.cat)
+        if key not in OBJECTCLASSES:
+            with FileLock("osis_model_%s_%s" % (self.namespace, self.cat)):
+                # if we waited for the lock objectclass might be available now lets check
+                if key in OBJECTCLASSES:
+                    return OBJECTCLASSES[key]
+                retcode,content=self.client.getOsisObjectClassCodeOrSpec(self.namespace,self.cat)
+                if retcode==2 or retcode == 1:
+                    def getModelClass(module):
+                        classes = inspect.getmembers(module, inspect.isclass)
+                        complexbase = j.core.osis.getOSISBaseObjectComplexType()
+                        simplebase = j.core.osis.getOsisBaseObjectClass()
+                        for name, klass in classes:
+                            if name != "OsisBaseObject" and issubclass(klass, (complexbase, simplebase)):
+                                return klass
+                        raise RuntimeError("could not find: class $modelname(OsisBaseObject) in model class file, should always be there")
 
-                pathdir=j.system.fs.joinPaths(j.dirs.varDir,"code","osis",self.namespace)
-                path=j.system.fs.joinPaths(pathdir,"%s.py" % self.cat)
-                with FileLock("osis_model_%s_%s" % (self.namespace, self.cat)):
+                    pathdir=j.system.fs.joinPaths(j.dirs.varDir,"code","osis",self.namespace)
+                    path=j.system.fs.joinPaths(pathdir,"%s.py" % self.cat)
                     if j.system.fs.exists(path):
                         if j.tools.hash.md5_string(content) != j.tools.hash.md5(path):
                             j.system.fs.remove(path)
                     if not j.system.fs.exists(path):
                         j.system.fs.createDir(pathdir)
                         j.system.fs.writeFile(filename=path,contents=content)
-                try:
-                    module = imp.load_source('osis_model_%s_%s' % (self.namespace, self.cat), path)
-                except Exception, e:
-                    raise RuntimeError("Could not import osis: %s_%s error:%s"%(self.namespace,self.cat,e))
-                self.objectclass = getModelClass(module)
+                    try:
+                        module = imp.load_source('osis_model_%s_%s' % (self.namespace, self.cat), path)
+                    except Exception, e:
+                        raise RuntimeError("Could not import osis: %s_%s error:%s"%(self.namespace,self.cat,e))
+                    OBJECTCLASSES[key] = getModelClass(module)
+                else:
+                    raise RuntimeError("Could not find spec or class code for %s_%s on osis"%(self.namespace,self.cat))
 
-            else:
-                raise RuntimeError("Could not find spec or class code for %s_%s on osis"%(self.namespace,self.cat))
-
-        return self.objectclass
+        return OBJECTCLASSES[key]
 
     def authenticate(self, name,passwd,**args):
         """
