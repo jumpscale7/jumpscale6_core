@@ -1,5 +1,6 @@
 from JumpScale import j
-import JumpScale.baselib.codeexecutor
+# import JumpScale.baselib.codeexecutor
+from HRDBase import HRDBase
 
 class HRDItem():
     def __init__(self,name,hrd,ttype,data,comments):
@@ -91,7 +92,7 @@ class HRDItem():
 
     __repr__=__str__
 
-class HRD():
+class HRD(HRDBase):
     def __init__(self,path="",tree=None,content=""):
         self.path=path
         self.name=".".join(j.system.fs.getBaseName(self.path).split(".")[:-1])
@@ -108,11 +109,6 @@ class HRD():
         else:
             self.read()
 
-    def _markChanged(self):
-        self.changed=True
-        if self.tree<>None:
-            self.tree.changed=True
-
     def set(self,key,value,persistent=True,comments=""):
         """
         """
@@ -121,8 +117,28 @@ class HRD():
             self.items[key]=HRDItem(name=key,hrd=self,ttype="base",data=value,comments="")    
         self.items[key].set(value,persistent=persistent,comments=comments)
 
+    def get(self,key,default=None,):
+        if not self.items.has_key(key):
+            if default==None:
+                j.events.inputerror_critical("Cannot find value with key %s in tree %s."%(key,self.path),"hrd.get.notexist")
+            else:
+                self.set(key,default)
+                return default
+        val= self.items[key].get()
+        j.core.hrd.log("hrd get '%s':'%s'"%(key,val))
+        return val
+
+    def _markChanged(self):
+        self.changed=True
+        if self.tree<>None:
+            self.tree.changed=True
+
     def save(self):   
         j.system.fs.writeFile(self.path,str(self))
+
+    def getHrd(self,key):
+        #to keep common functions working
+        return self
 
     def delete(self,key):
         if self.items.has_key(key):
@@ -155,107 +171,10 @@ class HRD():
 
         j.system.fs.writeFile(self.path,out)
 
-    def prefix(self, key):
-        result=[]
-        for knownkey in self.items.keys():
-            # print "prefix: %s - %s"%(knownkey,key)
-            if knownkey.startswith(key):
-                result.append(knownkey)
-        result.sort()                
-        return result
-
-    def get(self,key,default=None,):
-
-        if not self.items.has_key(key):
-            if default==None:
-                j.events.inputerror_critical("Cannot find value with key %s in tree %s."%(key,self.path),"hrd.get.notexist")
-            else:
-                self.set(key,default)
-                return default
-        val= self.items[key].get()
-        j.core.hrd.log("hrd:%s get '%s':'%s'"%(self.path,key,val))
-        return val
-
-    def getBool(self,key,default=None):
-        res=self.get(key,default=default)
-        if res=="1" or res.lower()=="true":
-            return True
-        else:
-            return False            
-
-    # def getList(self,key,default=None,deserialize=False):
-    #     res=self.get(key,default=default)
-    #     return j.tools.text.getList(res,deserialize=deserialize)
-
-    # def getDict(self,key,default=None,deserialize=False):
-    #     res=self.get(key,default=default)
-    #     return j.tools.text.getDict(res,deserialize=deserialize)
-
-    def setDict(self,key,ddict):        
-        out=""
-        for key2,value in ddict.iteritems():
-            out+="%s:%s,"%(key2,value)
-        out=out.rstrip(",")
-        self.set(key,out)        
-
-    def getInt(self,key,default=None):
-        if default<>None:
-            default=int(default)        
-        res=self.get(key,default=default)
-        return j.tools.text.getInt(res)
-
-    def getFloat(self,key):
-        res=self.get(key)
-        return j.tools.text.getFloat(res)
-
-    def exists(self,key):
-        key=key.lower()
-        return self.items.has_key(key)
-
-    def getListFromPrefix(self, prefix):
-        """
-        returns values from prefix return as list
-        """
-        result=[]
-        for key in self.prepend(prefix):
-            result.append(self.get(key))
-        return result
-  
-    def getDictFromPrefix(self, prefix):
-        """
-        returns values from prefix return as list
-        """
-        result={}
-        for key in self.prepend(prefix):
-            result[key]=self.get(key)
-        return result
 
     def read(self):
         content=j.system.fs.fileGetContents(self.path)
         self.process(content)
-
-    def checkValidity(self,template,hrddata={}):
-        """
-        @param template is example hrd which will be used to check against, 
-        if params not found will be added to existing hrd 
-        """            
-        for line in template.split("\n"):
-            line=line.strip()
-            if line=="" or line[0]=="#":
-                continue
-            if line.find("=") != -1:
-                items=line.split("=", 1)
-                key=items[0].strip()
-                defvalue=items[1].strip()
-                # print "key:%s "%key
-                if hrddata.has_key(key):
-                    # print "set:%s"%hrddata[key]
-                    self.set(key,hrddata[key])
-                    self.changed = True
-                elif not self.exists(key):
-                    self.set(key,defvalue)
-                    self.changed = True
-                    # self.process()
 
     def _recognizeType(self,content):        
         content=j.tools.text.replaceQuotes(content,"something")
@@ -393,56 +312,4 @@ class HRD():
                 vartype="unknown"
 
         self.applytemplate()
-
-    def processall(self):
-        for key,hrditem in self.items.iteritems():
-            hrditem._process()
-
-    def pop(self,key):
-        if self.has_key(key):
-            self.items.pop(key)
-
-    def has_key(self, key):
-        return self.items.has_key(key)
-
-    def _replaceVarsInText(self,content,additionalArgs={}):
-        if content=="":
-            return content
-            
-        items=j.codetools.regex.findAll(r"\$\([\w.]*\)",content)
-        j.core.hrd.log("replace vars in hrdtree:%s"%hrdtree.path,"replacevar",7)
-        if len(items)>0:
-            for item in items:
-                # print "look for : %s"%item
-                item2=item.strip(" ").strip("$").strip(" ").strip("(").strip(")")
-
-                if additionalArgs.has_key(item2.lower()):
-                    newcontent=additionalArgs[item2.lower()]
-                else:
-                    newcontent=self.get(item2,checkExists=True)
-                # print "nc:%s"%newcontent
-                content=content.replace(item,newcontent)                 
-        return content          
-
-    # def setDict(self,dictObject):
-    #     self.items.update(dictObject)
-
-
-    def __repr__(self):
-        parts=[]
-        keys=self.items.keys()
-        keys.sort()
-        if self.commentblock<>"":
-            out=self.commentblock+"\n"
-        else:
-            out=""
-        for key in keys:
-            hrditem=self.items[key]            
-            if hrditem.comments<>"":
-                out+="\n%s\n" % (hrditem.comments.strip())
-            out+="%s = %s\n" % (key, hrditem.getValOrDataAsStr())
-        return out
-
-    def __str__(self):
-        return self.__repr__()
 

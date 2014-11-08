@@ -80,7 +80,7 @@ class ProcessDef:
         self.path=path
         self.name=hrd.get("process.name")
         self.domain=hrd.get("process.domain")
-        self.user=hrd.get("process.user",checkExists=True)
+        self.user=hrd.get("process.user",default=False)
         if self.user==False:
             self.user="root"
         self.cmd=self._replaceSysVars(hrd.get("process.cmd"))
