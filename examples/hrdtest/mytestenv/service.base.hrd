@@ -1,0 +1,9 @@
+
+
+name= base
+steps = 
+    jumpscale.deployssh.base,
+    jumpscale.deployssh.clean,
+    jumpscale.deployssh.jumpscale_devel
+
+@prepend $name

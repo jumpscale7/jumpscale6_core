@@ -1,0 +1,8 @@
+
+name = kristof de spiegeleer
+email = kristof@incubaid.com
+login = despiegk
+mypasswd = @ASK
+
+@prepend whoami
+

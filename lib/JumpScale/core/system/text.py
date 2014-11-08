@@ -130,6 +130,11 @@ class Text:
 
         """
         content=Text.eval(content)
+        if content.strip()=="":
+            return content
+
+        endlf=content[-1]=="\n"
+        
         out=""
         for line in content.split("\n"):
             if line.find("@ASK")==-1:
@@ -139,7 +144,7 @@ class Text:
             result="ERROR:UNKNOWN VAL FROM ASK"
 
             prefix,end=line.split("@ASK",1)
-            tags=j.core.tags.getObject(end)
+            tags=j.core.tags.getObject(end.strip())
 
             if tags.tagExists("name"):
                 name=tags.tagGet("name")
@@ -155,7 +160,7 @@ class Text:
             else:
                 descr="Please provide value for %s"%name
 
-            name=name.replace("__"," ")
+            # name=name.replace("__"," ")
 
             descr=descr.replace("__"," ")
             descr=descr.replace("\\n","\n")
@@ -216,13 +221,15 @@ class Text:
                     dropdownvals=tags.tagGet("dropdownvals")
                 else:
                     j.events.inputerror_critical("When type is dropdown in ask, then dropdownvals needs to be specified as well.")
-                choicearray=dropdownvals.split(",")
+                choicearray=[item.strip() for item in dropdownvals.split(",")]
                 result=j.console.askChoice(choicearray, descr=descr, sort=True)
-
             else:
                 j.events.inputerror_critical("Input type:%s is invalid (only: bool,int,str,string,dropdown,float)")
 
             out+="%s%s\n"%(prefix,result)
+
+        # if endlf==False:
+        out=out[:-1]
 
         return out
 
@@ -271,7 +278,7 @@ class Text:
     def str2var(string):
         """
         convert list, dict of strings 
-        or convert 1 string
+        or convert 1 string to python objects
         """
         try:
             if j.basetype.list.check(string):
@@ -280,14 +287,16 @@ class Text:
                     ttype,val=Text._str2var(item)
                     if ttype not in ttypes:
                         ttypes.append(ttype)
-                if "f" in ttypes and "b" not in ttypes:
+                if "s" in ttypes:
+                    result=[str(Text.machinetext2hrd(item))  for item in string]
+                elif "f" in ttypes and "b" not in ttypes:
                     result=[Text.getFloat(item) for item in string]
                 elif "i" in ttypes and "b" not in ttypes:
                     result=[Text.getInt(item) for item in string]
                 elif "b" == ttypes:
                     result=[Text.getBool(item) for item in string]                
                 else:
-                    result=[str(item) for item in string]
+                    result=[str(Text.machinetext2hrd(item)) for item in string]
             elif j.basetype.dictionary.check(string):
                 ttypes=[]
                 result={}
@@ -295,7 +304,10 @@ class Text:
                     ttype,val=Text._str2var(item)
                     if ttype not in ttypes:
                         ttypes.append(ttype)
-                if "f" in ttypes and "b" not in ttypes:
+                if "s" in ttypes:                        
+                    for key,item in string.iteritems():
+                        result[key]=str(Text.machinetext2hrd(item)) 
+                elif "f" in ttypes and "b" not in ttypes:
                     for key,item in string.iteritems():
                         result[key]=Text.getFloat(item)
                 elif "i" in ttypes and "b" not in ttypes:
@@ -306,7 +318,7 @@ class Text:
                         result[key]=Text.getBool(item)
                 else:
                     for key,item in string.iteritems():
-                        result[key]=str(item)
+                        result[key]=str(Text.machinetext2hrd(item)) 
             else:
                 ttype,result=Text._str2var(string)
             return result
@@ -326,7 +338,7 @@ class Text:
                 result=eval(item)
             except Exception,e:
                 raise RuntimeError("Could not execute code in j.tools.text,%s\n%s,Error was:%s"%(item,code,e))
-            result=Text.pythonObjToStr(result)
+            result=Text.pythonObjToStr(result,multiline=False).strip()
             code=code.replace(itemfull,result)
         return code        
 
@@ -335,24 +347,23 @@ class Text:
         pass
 
     @staticmethod
-    def pythonObjToStr1line(text):
+    def pythonObjToStr1line(text,quote=True):
         if text==None:
             return ""
         elif j.basetype.boolean.check(text):
             if text==True:
-                text=1
+                text="true"
             else:
-                text=0
+                text="false"
             return text
         elif j.basetype.string.check(text):
-
-            return text
+            return Text.machinetext2hrd(text,quote)
         elif j.basetype.integer.check(text) or j.basetype.float.check(text):
             return str(text)
 
 
     @staticmethod
-    def pythonObjToStr(text):
+    def pythonObjToStr(text,multiline=True):
         """
         try to convert a python object to string representation works for None, bool, integer, float, dict, list
         """
@@ -365,7 +376,7 @@ class Text:
                 text=0
             return text
         elif j.basetype.string.check(text):
-            if text.find("\n")<>-1:
+            if text.find("\n")<>-1 and multiline:
                 text="\n%s"%Text.prefix("    ",text.strip())
             return text
         elif j.basetype.integer.check(text) or j.basetype.float.check(text):
@@ -375,7 +386,7 @@ class Text:
             for item in text:
                 resout+="%s, "%Text.pythonObjToStr1line(item)
             resout=resout.strip().strip(",")            
-            if len(resout)>30:
+            if len(resout)>30 and multiline:
                 resout="\n"
                 for item in text:
                     resout+="    %s,\n"%Text.pythonObjToStr1line(item)
@@ -384,14 +395,17 @@ class Text:
 
         elif j.basetype.dictionary.check(text):
             resout=""
-            for key in text.keys():
+            keys=text.keys()
+            keys.sort()
+            for key in keys:
                 val=text[key]
                 val=Text.pythonObjToStr1line(val)
                 resout+="%s:%s, "%(key,val)
             resout=resout.strip().strip(",")
-            if len(resout)>30:
+            if len(resout)>30 and multiline:
                 resout="\n"
-                for key,val in text.iteritems():
+                for key in keys:
+                    val=text[key]
                     resout+="    %s:%s,\n"%(key,Text.pythonObjToStr1line(val))
                 resout=resout.rstrip().strip(",")+"\n"
             return resout
@@ -427,7 +441,7 @@ class Text:
         return value
 
     @staticmethod
-    def machinetext2hrd(value):
+    def machinetext2hrd(value,quote=False):
         """
         do reverse of:
              SPACE -> \S
@@ -442,17 +456,20 @@ class Text:
         value2=value2.replace("\\D",":")
         value2=value2.replace("\\N","\n")
         value2=value2.replace("\\n","\n")
-        if value<>value2:
-            change=True
-        if change==False:
-            if value.find("'")<>-1 or value.find("\n")<>-1 or value.find(":")<>-1 or value.find(",")<>-1 or value.find(" ")<>-1:
+        if quote:
+            change=False
+            if value<>value2:
                 change=True
+            if change==False:
+                if value.find("'")<>-1 or value.find("\n")<>-1 or value.find(":")<>-1 or value.find(",")<>-1 or value.find(" ")<>-1:
+                    change=True
 
-        if change:
-            value2=value2.replace("\n","\\n")
-            value="'%s'"%value2
-        return value
-
+            if change:
+                value2=value2.replace("\n","\\n")
+                value="'%s'"%value2
+            return value
+        else:
+            return value2
 
     @staticmethod
     def machinetext2str(value):

@@ -60,16 +60,9 @@ class HRDTree():
     def get(self,key,default=None):
         if default<>None and self.items.has_key(key)==False:
             return default
-        hrd=self.getHrd(key)
-        if checkExists:
-            if hrd==False:
-                return False
-
-        val=hrd.get(key,checkExists=checkExists)
-        if checkExists:
-            if val==False:
-                return False
-        return val
+        if not self.items.has_key(key):
+            j.events.inputerror_critical("Cannot find %s in hrdtree."%key,"hrdtree.get.cannotfind")        
+        return self.items[key].get()
 
     def getInt(self,key,default=None):
         if default<>None and self.items.has_key(key)==False:
@@ -108,7 +101,7 @@ class HRDTree():
     def getHrd(self,key):
         if not self.items.has_key(key):
             j.events.inputerror_critical("Cannot find key:'%s' in tree"%key,"hrdtree.gethrd.notfound")
-        return self.items[key]
+        return self.items[key].hrd
 
     def set(self,key,val,persistent=True):
         hrd=self.getHrd(key)
@@ -168,13 +161,15 @@ class HRDTree():
         return content        
 
     def __repr__(self):
+        parts=[]
         keys=self.items.keys()
         keys.sort()
         out=""
         for key in keys:
-            hrd=self.getHrd(key)
-            value=hrd.get(key)
-            out+="%s = %s\n" % (key, self._serialize(value))
+            hrditem=self.items[key]            
+            if hrditem.comments<>"":
+                out+="\n%s\n" % (hrditem.comments.strip())
+            out+="%s = %s\n" % (key, hrditem.getValOrDataAsStr())
         return out
 
     def __str__(self):
