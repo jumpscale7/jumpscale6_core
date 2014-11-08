@@ -1,12 +1,6 @@
 #this is comments on top of
 #this is comments on top of 2
 
-anewkey = 
-    key1:1,
-    key2:'this is longer, :string',
-    key3:astring,
-    new:yes
-
 jp.domain = @ASK name:name descr:'give name of jpackage' type:dropdown dropdownvals:'{{j.packages.getDomainNames()}}'
 jp.name = @ASK name:name descr:'give name of jpackage' type:str default:1.0 regex:.*
 prefix.askdropdown = @ASK descr:'this a description about float to ask for' type:dropdown dropdownvals:'nr 1,2,3,nrr 4'
@@ -21,7 +15,7 @@ prefix.multiline =
     line2: endline
     line3 test endline
 
-prefix.string = jumpscale
+prefix.string =  jumpscale
 
 #comment on this line
 prefix2.deeper.dict = color:green, time:now
@@ -31,10 +25,9 @@ prefix2.deeper.list =
     astring
 
 prefix2.dict = 
-    key1:1,
-    key2:'this is longer, :string',
     key3:astring,
-    new:yes
+    key2:'this is longer, :string',
+    key1:1
 
 prefix2.list = 
     1,

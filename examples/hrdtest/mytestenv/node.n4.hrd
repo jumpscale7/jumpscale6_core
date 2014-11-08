@@ -1,0 +1,13 @@
+
+name     = n4
+roles    = node
+ip       = 192.198.94.15
+port     = 4444
+passwd   = yor02T8IB
+host     = None
+remark   = a test node
+enabled  = true
+servicestoinstall = base,
+servicesinstalled = ,
+
+@prepend $name
