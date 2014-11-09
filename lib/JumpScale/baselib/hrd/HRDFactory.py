@@ -12,16 +12,16 @@ class HRDFactory:
         if level<self.loglevel+1 and self.logenable:
             j.logger.log(msg,category="hrd.%s"%category,level=level)
 
-    def getHRD(self,path="",content=""):
+    def getHRD(self,path="",content="",prefixWithName=False,keepformat=True):
         """
         @param path
         """        
         if j.system.fs.isDir(path):
             if content<>"":
                 j.events.inputerror_critical("HRD of directory cannot be build with as input content (should be empty)")
-            return HRDTree(path)
+            return HRDTree(path,prefixWithName=prefixWithName,keepformat=keepformat)
         else:
-            return HRD(path=path,content=content)            
+            return HRD(path=path,content=content,prefixWithName=prefixWithName,keepformat=keepformat)
 
 
     def getHRDFromOsisObject(self,osisobj,prefixRootObjectType=True):

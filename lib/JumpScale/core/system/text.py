@@ -5,6 +5,7 @@ import re
 matchquote = re.compile(ur'\'[^\']*\'')
 re_nondigit= re.compile(ur'\D')
 re_float = re.compile(ur'[0-9]*\.[0-9]+')
+re_digit = re.compile(ur'[0-9]*')
 
 
 class Text:
@@ -109,6 +110,10 @@ class Text:
                 line=Text.addTimeHR(line,val)
             out+="%s\n"%line
         return out
+
+    @staticmethod
+    def isNumeric(txt):        
+        return re_nondigit.search(txt)==None
 
     @staticmethod
     def ask(content):

@@ -12,15 +12,14 @@ class Jumpscript(object):
     """
     a jumpscript can have more than 1 action (methods in the script)
     """
-    def __init__(self, ddict={}, path=None,actor="",name=""):
+    def __init__(self, ddict={}, path=None,organization="",actor=""):
         if ddict<>{}:
             self.__dict__.update(ddict)
         else:
             if path==None:
                 j.events.inputerror_critical("need to specify path when creating jumpscript object","jumpscript.init.path.empty")
-            self.name=name
             self.actor=actor
-            self.organization=""
+            self.organization=organization
             self.period = 0
             self.source=""
             self.debug = False
@@ -28,13 +27,15 @@ class Jumpscript(object):
             self.queue=""
             self.log=3              #is loglevel, 0 is nothing
             self.logjob=True
-            self.load(path)
             self.modtime=0          #set by central system
             self.version=0          #set by central system
 
             self.module=None
             self.actions={}
             self.tags={}
+
+            self.load(path)
+
 
     def _preprocess(self,txt):
         state="start"

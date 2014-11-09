@@ -6,6 +6,7 @@ j.application.appname = "jumpscale:jsadmin2"
 j.application.start()
 
 from JumpScale.baselib import cmdutils
+import JumpScale.baselib.jumpscripts
 
 import sys
 
@@ -18,6 +19,7 @@ parser.add_argument("action", choices=commands, help='Command to perform')
 group = parser.add_argument_group(title="all")
 # group.add_argument('-r', '--remote', help='Ip address of node',default="")
 # group.add_argument('-l', '--local', action='store_true', help='To execute locally.')
+group.add_argument('-n','--name',required=False, help='Name of node, if not specified then all for which it is not done yet')
 group.add_argument('-p', '--passwd', help='Root password to use, if any.',default="")
 
 group = parser.add_argument_group(title="sshfs")
@@ -38,71 +40,21 @@ group = parser.add_argument_group(title="sshfs")
 # parser.add_argument('-t','--timeout', required=False, type=int, default=0, help='Time to wait to if connection is not available')
 
 args = parser.parse_args()
-# args.local=False
-# args.g=False
-# import pytoml
-import toml
-import pystache
+args.local=False
+args.g=False
+
 import JumpScale.baselib.git
 
-class jsadmin2():
-    def __init__(self):
-        start=j.system.fs.getcwd()
-        self.startdir=j.system.fs.getcwd()
-        while not j.system.fs.exists(path="%s/.git"%start):
-            start1up=start
-            start=j.system.fs.getParent(start)
-            if start.strip("/")=="":
-                j.events.inputerror_critical("Cannot find git root directory from %s"%j.system.fs.getcwd())
-        self.root=start
-        self.name=j.system.fs.getDirName("%s/"%start1up,lastOnly=True)
-        
-        self.git=j.clients.git.getClient(self.root)
-        self.git.pull()
+import JumpScale.baselib.admin2
 
-        self.tmpdir=j.system.fs.getTmpDirPath()
-
-        j.system.fs.copyDirTree("%s/jumpscripts"%self.root,"%s/jumpscripts"%self.tmpdir)
-        j.system.fs.copyDirTree("%s/%s"%(self.root,self.name),"%s/%s"%(self.tmpdir,self.name))
-
-        tomlfiles=j.system.fs.listFilesInDir(self.startdir, recursive=False, filter="*.toml")
-        tomlcontent=""
-        for item in tomlfiles:
-            tomlcontent+=j.system.fs.fileGetContents(item)
-        
-        args=toml.loads(tomlcontent)
-
-        for i in range(2):
-            tomlcontent=pystache.render(tomlcontent,args)
-            args=toml.loads(tomlcontent)
-
-        for item in j.system.fs.listFilesInDir(self.tmpdir, recursive=True):
-            content=pystache.render(j.system.fs.fileGetContents(item),args)
-            j.system.fs.writeFile(filename=item,contents=content)
-        
-
-
-        from IPython import embed
-        print "DEBUG NOW o"
-        embed()
-        p
-            
-
-
-    def run():
-        last=self.git.repo.head.log()[-1]
-        last.newhexsha
-        from IPython import embed
-        print "DEBUG NOW ooo"
-        embed()
-        
-
-
-jsadmin=jsadmin2()
+admin=j.tools.admin.get(j.system.fs.getcwd(), args, failWhenNotExist=False)
 
 
 if args.action == "do":
     admin.createidentity()
+
+elif args.action == "run":
+    admin.run()
 
 elif args.action == "createidentity":
     admin.createidentity()
@@ -131,11 +83,13 @@ elif args.action == "sshfsoff":
     admin.sshfsumount(args.gridname,args.remote)
 
 elif args.action == "deployssh":
-    if args.remote=="":
-        j.events.inputerror_critical("please specify remote server with -r")
-    if args.passwd=="":
-        j.events.inputerror_critical("please specify passwd with -p")        
-    admin.deployssh()#args.gridname,args.remote)
+    if args.name==None:
+        for name in admin.getNodeNames():
+            node=admin.getNode(name)
+            node.deployssh()
+    else:
+        node=admin.getNode(args.name)
+        node.deployssh()
 
 
 elif args.action == "applyconfig":

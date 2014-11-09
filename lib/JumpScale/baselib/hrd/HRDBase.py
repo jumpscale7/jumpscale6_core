@@ -2,14 +2,28 @@ from JumpScale import j
 
 class HRDBase():
 
-    def prefix(self, key):
+    def prefix(self, key,depth=0):
+        """
+        @param depth means prefix level to return
+        """
         result=[]
         for knownkey in self.items.keys():
             # print "prefix: %s - %s"%(knownkey,key)
             if knownkey.startswith(key):
-                result.append(knownkey)
-        result.sort()                
+                if depth>0:                    
+                    knownkey=".".join(knownkey.split(".")[0:depth])
+                if knownkey not in result:                    
+                    result.append(knownkey)
+        result.sort()
         return result
+
+    def prefixexists(self,key):
+        result=[]
+        for knownkey in self.items.keys():
+            # print "prefix: %s - %s"%(knownkey,key)
+            if knownkey.startswith(key):
+                return True
+
 
     def getBool(self,key,default=None):
         res=self.get(key,default=default)
@@ -32,8 +46,14 @@ class HRDBase():
             default=str(default)        
         res=self.get(key,default=default)
         res=j.tools.text.pythonObjToStr(res,multiline=False)
+        res=res.strip()
         return res
 
+    def listAdd(self,key,item):
+        arg=self.get(key)
+        if item not in arg:
+            arg.append(item)
+        self.set(key,arg)
 
     def getFloat(self,key):
         res=self.get(key)
@@ -74,8 +94,10 @@ class HRDBase():
         returns values from prefix return as list
         """
         result={}
+        l=len(prefix)
         for key in self.prefix(prefix):
-            result[key]=self.get(key)
+            key2=key[l+1:]
+            result[key2]=self.get(key)
         return result
 
     def checkValidity(self,template,hrddata={}):
@@ -162,14 +184,29 @@ class HRDBase():
         keys=self.items.keys()
         keys.sort()
         if self.commentblock<>"":
-            out=self.commentblock+"\n"
+            out=[self.commentblock]
         else:
-            out=""
+            out=[""]
+        keylast=[]
         for key in keys:
-            hrditem=self.items[key]            
+            keynew=key.split(".")
+            
+            #see how many newlines in between
+            if keylast<>[] and keynew[0]<>keylast[0]:
+                out.append("")
+            else:
+                if len(keynew)>1 and len(keylast)>1 and len(keylast[1])>0 and j.tools.text.isNumeric(keylast[1][-1]) and keynew[1]<>keylast[1]:
+                    out.append("")   
+
+            hrditem=self.items[key]   
+
             if hrditem.comments<>"":
-                out+="\n%s\n" % (hrditem.comments.strip())
-            out+="%s = %s\n" % (key, hrditem.getValOrDataAsStr())
+                out.append("")
+                out.append("%s" % (hrditem.comments.strip()))
+            out.append("%-30s = %s" % (key, hrditem.getAsString()))
+            keylast=key.split(".")
+        out=out[1:]
+        out="\n".join(out).replace("\n\n\n","\n\n")
         return out
 
     def __str__(self):

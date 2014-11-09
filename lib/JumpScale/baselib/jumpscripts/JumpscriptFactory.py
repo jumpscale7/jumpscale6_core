@@ -24,16 +24,18 @@ class JumpscriptFactory:
             if basename[0]=="_":
                 continue
             basename=basename.replace(".py","")
-            actor,name=basename.split("__",1)
-            js=Jumpscript(path=item,name=name,actor=actor)
-            key="%s_%s_%s"%(js.organization,js.actor,js.name)
+            organization,actor=basename.split("__",1)
+            js=Jumpscript(path=item,organization=organization,actor=actor)
+            key="%s__%s"%(js.organization,js.actor)
             self.jumpscripts[key]=js
 
-    def execute(self,organization,actor,name,**args):
-        from IPython import embed
-        print "DEBUG NOW id"
-        embed()
-            
+    def execute(self,organization,actor,action,args):
+        key="%s__%s"%(organization,actor)
+        if not self.jumpscripts.has_key(key):
+            j.events.inputerror_critical("Cannot find jumpscript:'%s/%s'"%(organization,actor))
+        js= self.jumpscripts[key]
+        js.execute(action, **args)
+
 
 
         

@@ -20,26 +20,51 @@ class HRDItem():
             self._process()
         return self.value
 
-    def getValOrDataAsStr(self):
-        if self.value<>None:
-            return j.tools.text.pythonObjToStr(self.value)
-        elif self.data.lower().find("@ask")==-1:
-            self._process()
-            return j.tools.text.pythonObjToStr(self.value)
+    def getAsString(self):
+        data=self.data.strip()
+
+        if self.data.lower().find("@ask")==-1:
+            if self.value==None:
+                self._process()
         else:
-            return self.data.strip()
+            return data        
+
+        if self.value<>None:
+            data=j.tools.text.pythonObjToStr(self.value)
+
+        if self.ttype=="dict":
+            data=data.strip(":")
+            if data.find("\n")==-1:
+                data+=":"
+        if self.ttype=="list":
+            data=data.strip(",")
+            if data.find("\n")==-1:
+                data+=","
+            
+        return data
 
     def set(self,value,persistent=True,comments=""):
+        """
+        @persistency always happens when format is kept
+        """
+        if self.hrd.prefixWithName:
+            name=self.name[len(self.hrd.name)+1:]
+        else:
+            name=self.name
+        
         self.value=value
+
         if comments<>"":
             self.comments=comments
+
         self.hrd._markChanged()
+
         if self.hrd.keepformat:
             state="start"
             out=""
             found=False
             for line in j.system.fs.fileGetContents(self.hrd.path).split("\n"):
-                if line.strip().startswith(self.name):                        
+                if line.strip().startswith(name):                        
                     state="found"
                     continue
 
@@ -52,17 +77,16 @@ class HRDItem():
                     found=True
                     if self.comments<>"":
                         out+="%s\n" % (self.comments)
-                    out+="%s = %s\n" % (self.name, self.getValOrDataAsStr())
+                    out+="%s = %s\n" % (name, self.getAsString())
 
                 out+="%s\n"%line
 
             if found==False:
                 if self.comments<>"":
                     out+="%s\n" % (self.comments)
-                out+="%s = %s\n" % (self.name, self.getValOrDataAsStr())
+                out+="%s = %s\n" % (name, self.getAsString())
 
-            if persistent:
-                j.system.fs.writeFile(filename=self.hrd.path,contents=out)
+            j.system.fs.writeFile(filename=self.hrd.path,contents=out)
 
         else:
             if persistent:
@@ -73,17 +97,23 @@ class HRDItem():
         self.value=j.tools.text.hrd2machinetext(value2)
         if self.ttype=="dict":
             currentobj={}
-            self.value=self.value.rstrip(",")
-            for item in self.value.split(","):
-                key,post2=item.split(":",1)                                    
-                currentobj[key.strip()]=post2.strip()
-            self.value=j.tools.text.str2var(currentobj)
+            self.value=self.value.strip(",")
+            if self.value.strip()==":":
+                self.value={}
+            else:
+                for item in self.value.split(","):
+                    key,post2=item.split(":",1)                                    
+                    currentobj[key.strip()]=post2.strip()
+                self.value=j.tools.text.str2var(currentobj)
         elif self.ttype=="list":
-            self.value=self.value.rstrip(",")
+            self.value=self.value.strip(",")
             currentobj=[]
-            for item in self.value.split(","):
-                currentobj.append(item.strip())
-            self.value=j.tools.text.str2var(currentobj)
+            if self.value.strip()=="":
+                self.value=[]
+            else:
+                for item in self.value.split(","):
+                    currentobj.append(item.strip())
+                self.value=j.tools.text.str2var(currentobj)
         else:
             self.value=j.tools.text.str2var(self.value)
 
@@ -93,16 +123,16 @@ class HRDItem():
     __repr__=__str__
 
 class HRD(HRDBase):
-    def __init__(self,path="",tree=None,content=""):
+    def __init__(self,path="",tree=None,content="",prefixWithName=False,keepformat=True):
         self.path=path
         self.name=".".join(j.system.fs.getBaseName(self.path).split(".")[:-1])
         self.tree=tree
         self.changed=False
         self.items={}
         self.commentblock=""  #at top of file
-        self.keepformat=True
-        self.prepend=""
-        self.template=""
+        self.keepformat=keepformat
+        self.prefixWithName=prefixWithName
+        self.template=""        
 
         if content<>"":
             self.process(content)
@@ -134,8 +164,20 @@ class HRD(HRDBase):
         if self.tree<>None:
             self.tree.changed=True
 
-    def save(self):   
-        j.system.fs.writeFile(self.path,str(self))
+    def save(self):
+        if self.prefixWithName:
+            #remove prefix from mem representation
+            out=""
+            l=len(self.name)+1
+            for line in str(self).split("\n"):
+                if line.startswith(self.name):
+                    line=line[l:]
+                out+="%s\n"%line
+        else:
+            out=str(self)
+
+        
+        j.system.fs.writeFile(self.path,out)
 
     def getHrd(self,key):
         #to keep common functions working
@@ -171,7 +213,6 @@ class HRD(HRDBase):
         out = out.strip('\n') + '\n'
 
         j.system.fs.writeFile(self.path,out)
-
 
     def read(self):
         content=j.system.fs.fileGetContents(self.path)
@@ -210,23 +251,24 @@ class HRD(HRDBase):
         multiline=""
         self.content=content
 
-        #find instructions
-        for line in content.split("\n"):
-            line2=line.strip()
-            if line2=="":
-                continue
-            if line2.startswith("@"):
-                #found instruction
-                if line2.startswith("@prepend"):
-                    arg=line2.replace("@prepend","").strip()
-                    arg=arg.replace("$name",self.name)
-                    self.prepend=arg.strip().strip(".")
-                if line2.startswith("@template"):
-                    arg=line2.replace("@template","").strip()
-                    ddir=j.system.fs.getDirName(self.path)
-                    for tpath in [arg,arg+".hrdt","%s/%s"%(ddir,arg),"%s/%s.hrdt"%(ddir,arg)]:
-                        if j.system.fs.exists(path=tpath):
-                            self.template=tpath
+        #NO LONGER RELEVANT
+        # #find instructions
+        # for line in content.split("\n"):
+        #     line2=line.strip()
+        #     if line2=="":
+        #         continue
+        #     if line2.startswith("@"):
+        #         #found instruction
+        #         if line2.startswith("@prefixWithName"):
+        #             arg=line2.replace("@prefixWithName","").strip()
+        #             arg=arg.replace("$name",self.name)
+        #             self.prefixWithName=arg.strip().strip(".")
+        #         if line2.startswith("@template"):
+        #             arg=line2.replace("@template","").strip()
+        #             ddir=j.system.fs.getDirName(self.path)
+        #             for tpath in [arg,arg+".hrdt","%s/%s"%(ddir,arg),"%s/%s.hrdt"%(ddir,arg)]:
+        #                 if j.system.fs.exists(path=tpath):
+        #                     self.template=tpath
 
         splitted=content.split("\n")
         x=-1
@@ -285,6 +327,8 @@ class HRD(HRDBase):
                         continue
                     else:
                         vartype=self._recognizeType(post)
+                        post=post.strip(",").strip(":")
+                        # print "%s vartype:%s"%(line,vartype)
                         post=post.strip()
                         state="var"
 
@@ -315,8 +359,9 @@ class HRD(HRDBase):
                 #now we have 1 liners and we know type
                 if vartype=="ask":
                     vartype="base" #ask was temporary type, is really a string
-                if self.prepend<>"":
-                    name="%s.%s"%(self.prepend,name)
+                
+                if self.prefixWithName:
+                    name="%s.%s"%(self.name,name)
                 self.items[name]=HRDItem(name,self,vartype,post,comments)
                 if self.tree<>None:
                     self.tree.items[name]=self.items[name]

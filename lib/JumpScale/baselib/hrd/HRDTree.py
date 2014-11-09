@@ -7,18 +7,20 @@ from HRD import HRD
 
 
 class HRDTree(HRDBase):
-    def __init__(self,path=""):
+    def __init__(self,path="",prefixWithName=False,keepformat=True):
         self.items={} #link between key & hrd storing the key
         self.hrds=[] #all hrd's in tree
-        if path<>"":
-            self.add2tree(path)
         self.changed=False
         self.commentblock=""
         self.name="tree"
         self.path="tree"
+        self.prefixWithName=prefixWithName
+        self.keepformat=keepformat
+        if path<>"":
+            self.add2tree(path)
 
     def add2treeFromContent(self,content):
-        hrd=HRD("",treeposition,self)
+        hrd=HRD("",treeposition,self,prefixWithName=self.prefixWithName,keepformat=self.keepformat)
         self.hrds.append(hrd)
         hrdpos=len(self.hrds)-1        
         hrd.process(content)
@@ -29,7 +31,7 @@ class HRDTree(HRDBase):
         
         for pathfound in paths:
             j.core.hrd.log("Add hrd %s" % (pathfound), level=7, category="load")                        
-            hrd=HRD(pathfound,self)
+            hrd=HRD(pathfound,self,prefixWithName=self.prefixWithName,keepformat=self.keepformat)
             self.hrds.append(hrd)
 
     def getHrd(self,key):
