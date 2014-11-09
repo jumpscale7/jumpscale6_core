@@ -2,11 +2,12 @@
 def main(j, args, params, tags, tasklet):
 	page = args.page
 
-	hrd = j.core.hrd.getHRD(content=args.cmdstr)
+	pars = (line.split('=') for line in args.cmdstr.strip().splitlines())
+	pars = dict((p[0].strip(), p[1].strip()) for p in pars)
 	eveGrid = {
-		'specJsonPath': getattr(hrd, 'spec_json_path', '/docs/spec.json'),
-		'schemaURL': getattr(hrd, 'schema_url', ''),
-		'entityName': getattr(hrd, 'entity_name', '')
+		'specJsonPath': pars.get('spec.json.path', '/docs/spec.json'),
+		'schemaURL': pars.get('schema.url', ''),
+		'entityName': pars.get('entity.name', '')
 	}
 
 	# Add our static resources only once to the page

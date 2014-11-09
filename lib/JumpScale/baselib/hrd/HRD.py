@@ -123,9 +123,12 @@ class HRDItem():
     __repr__=__str__
 
 class HRD(HRDBase):
-    def __init__(self,path="",tree=None,content="",prefixWithName=False,keepformat=True):
+    def __init__(self,path=None,tree=None,content="",prefixWithName=False,keepformat=True):
         self.path=path
-        self.name=".".join(j.system.fs.getBaseName(self.path).split(".")[:-1])
+        if self.path is not None:
+            self.name=".".join(j.system.fs.getBaseName(self.path).split(".")[:-1])
+        else:
+            self.name = ""
         self.tree=tree
         self.changed=False
         self.items={}
@@ -153,7 +156,6 @@ class HRD(HRDBase):
             if default==None:
                 j.events.inputerror_critical("Cannot find value with key %s in tree %s."%(key,self.path),"hrd.get.notexist")
             else:
-                self.set(key,default)
                 return default
         val= self.items[key].get()
         j.core.hrd.log("hrd get '%s':'%s'"%(key,val))
