@@ -44,7 +44,9 @@ class Tags():
                 key = tag.split(':',1)[0]
                 value = tag.split(':',1)[1]
                 key=unquote(key)
-                self.tags[key.lower()] = unquote(j.tools.text.machinetext2hrd(value))
+                value = unquote(j.tools.text.machinetext2hrd(value))
+                self.tags[key.lower()] = value
+                self.tags[key] = value
             else:
                 self.labels.add(unquote(j.tools.text.machinetext2hrd(tag)))
 
