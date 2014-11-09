@@ -57,8 +57,8 @@ class DaemonClient(object):
         self.ssl = ssl
 
         if roles==[] and j.application.config.exists("grid.node.roles"):
-            roles=j.application.config.get("grid.node.roles").split(",")
-            roles=[item.strip().lower() for item in roles]            
+            roles=j.application.config.get("grid.node.roles")
+            roles=[item.strip().lower() for item in roles]
 
         # WARNING: Do not put this back this makes it impossible to register a node
         #if j.application.whoAmI.gid==0 or j.application.whoAmI.nid==0:

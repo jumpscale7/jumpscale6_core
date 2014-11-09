@@ -19,9 +19,9 @@ class Tags():
         """
         self.tags = dict()
         self.labels = set()
-        self.tagstring=tagstring
-        if tagstring<>"":
-            self.fromString(tagstring)
+        self.tagstring=tagstring or ''
+        if self.tagstring<>"":
+            self.fromString(self.tagstring)
         self._setFunction4Tagstring=setFunction4Tagstring
         
     def fromString(self, tagstring):
