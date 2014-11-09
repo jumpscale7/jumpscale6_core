@@ -45,7 +45,7 @@ class QemuImg(object):
         command = '%(command)s -f %(diskImageFormat)s %(fileName)s' % {'command': command, 'diskImageFormat': diskImageFormat, 'fileName': fileName}
 
         if size != None:
-            command = '%(command)s %(size)s' % {'command': command, 'size': size}
+            command = '%(command)s %(size)sK' % {'command': command, 'size': size}
 
         if size == None and not baseImage:
             raise ValueError('Size can only be None if baseImage is specified')
