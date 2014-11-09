@@ -512,8 +512,8 @@ class Text:
     
     @staticmethod
     def getFloat(text):
-        text=text.strip()
         if j.basetype.string.check(text):
+            text=text.strip()
             if text.lower()=="none":
                 return 0.0
             elif text==None:
