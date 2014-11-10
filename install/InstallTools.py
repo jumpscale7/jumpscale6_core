@@ -627,6 +627,7 @@ class InstallTools():
         for cmd in cmdstr.split("\n"):
             if cmd.strip()=="" or cmd[0]=="#":
                 continue
+            print "exec:%s"%cmd
             self.execute(cmd,dieOnNonZeroExitCode=dieOnNonZeroExitCode, outputToStdout=outputToStdout, useShell = useShell, ignoreErrorOutput=ignoreErrorOutput)
 
     def execute(self, command , dieOnNonZeroExitCode=True, outputToStdout=True, useShell = False, ignoreErrorOutput=False):
