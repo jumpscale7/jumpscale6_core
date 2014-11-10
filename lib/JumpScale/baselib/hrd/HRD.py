@@ -21,9 +21,9 @@ class HRDItem():
         return self.value
 
     def getAsString(self):
-        data=self.data.strip()
+        data=str(self.data).strip()
 
-        if self.data.lower().find("@ask")==-1:
+        if data.lower().find("@ask")==-1:
             if self.value==None:
                 self._process()
         else:
@@ -41,7 +41,7 @@ class HRDItem():
             if data.find("\n")==-1:
                 data+=","
             
-        return data
+        return data.strip()
 
     def set(self,value,persistent=True,comments=""):
         """
