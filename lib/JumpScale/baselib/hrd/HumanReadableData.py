@@ -796,6 +796,8 @@ class HumanReadableDataTree():
                 result.append(newkey)
         return result        
 
+    getListFromPrefix = getItemsFromPrefix
+
     def get(self,key,position="",checkExists=False,default=None):
         hrd=self.getHrd(position,checkExists=checkExists)
         if checkExists:
