@@ -129,7 +129,7 @@ for pd in pds:
         else:
             syst=" "
 
-        ports =",".join(pd.ports)
+        ports =",".join([ str(port) for port in pd.ports ])
         print FORMAT % (pd.domain, pd.name, pd.priority, status, active,syst,pd.numprocesses,pids,ports)
     else:
         getattr(pd, opts.action)()
