@@ -911,7 +911,6 @@ rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale/
 rm -rf /opt/jumpscale
 rm /usr/local/bin/js*
 rm /usr/local/bin/jpack*
-killall python
 rm -rf /opt/sentry/
 sudo stop redisac
 sudo stop redisp
