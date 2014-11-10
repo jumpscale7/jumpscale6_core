@@ -393,7 +393,8 @@ class HRD():
         val=str(content).strip()
         j.core.hrd.log("hrd:%s get '%s':'%s'"%(self._path,key,val))
         return val
-
+    
+    getStr=get
 
     def getBool(self,key,default=None):
         if default<>None:
@@ -795,6 +796,8 @@ class HumanReadableDataTree():
                 result.append(newkey)
         return result        
 
+    getListFromPrefix = getItemsFromPrefix
+
     def get(self,key,position="",checkExists=False,default=None):
         hrd=self.getHrd(position,checkExists=checkExists)
         if checkExists:
@@ -807,23 +810,27 @@ class HumanReadableDataTree():
                 return False
         return val
 
-    def getInt(self,key,position=""):
+    getStr=get
+
+    def getInt(self,key,position="",default=None):
         hrd=self.getHrd(position)
         return hrd.getInt(key)
 
-    def getFloat(self,key,position=""):
+    def getFloat(self,key,default=None,position=""):
         hrd=self.getHrd(position)
         return hrd.getFloat(key)
 
-    def getBool(self,key,position=""):
+    def getBool(self,key,default=None,position=""):
+        if self.exists(key)==False and default<>None:
+            return default
         hrd=self.getHrd(position)
         return hrd.getBool(key)
 
-    def getList(self,key,position=""):
+    def getList(self,key,position="",default=None):
         hrd=self.getHrd(position)
         return hrd.getList(key)
 
-    def getDict(self,key,position=""):
+    def getDict(self,key,position="",default=None):
         hrd=self.getHrd(position)
         return hrd.getDict(key)
 
