@@ -73,24 +73,23 @@ def main(j, args, params, *other_args):
         
     slides = []
     for i in count(1):
-        try:
-            slide = {}
-            slide['Title'] = getattr(hrd, 'slide_{}_title_text'.format(i)).replace(r'\n', '<br />')
-            slide['TitleSize'] = getattr(hrd, 'slide_{}_title_text_size'.format(i), 'medium')
-            if os.path.isfile(imagedir + getattr(hrd, 'slide_{}_image_path'.format(i), '')):
-                # check if can find image under .files/img by the given name
-                slide['ImagePath'] = '/$$space/.files/img/' + getattr(hrd, 'slide_{}_image_path'.format(i), '')
-            else:
-                # image from full url
-                slide['ImagePath'] = getattr(hrd, 'slide_{}_image_path'.format(i), '')
-            slide['ImageHeight'] = getattr(hrd, 'slide_{}_image_height'.format(i), '800')
-            slide['TextBlockPosition'] = getattr(hrd, 'slide_{}_textblock_position'.format(i), '')
-            slide['TextBlockBody'] = getattr(hrd, 'slide_{}_textblock_body'.format(i), '').replace(r'\n', '<br />')
-            slide['TextBlockBodySize'] = getattr(hrd, 'slide_{}_textblock_body_size'.format(i), 'medium')
-            slide['ScrollSpeed'] = getattr(hrd, 'slide_{}_scroll_speed'.format(i), '0.3')
-            slides.append(slide)
-        except AttributeError:
+        slide = {}
+        slide['Title'] = hrd.get('slide.{}.title.text'.format(i)).replace(r'\n', '<br />')
+        if not slide['Title']:
             break
+        slide['TitleSize'] = hrd.get('slide.{}.title.text.size'.format(i), 'medium')
+        if os.path.isfile(imagedir + hrd.get('slide.{}.image.path'.format(i), '')):
+            # check if can find image under .files/img by the given name
+            slide['ImagePath'] = '/$$space/.files/img/' + hrd.get('slide.{}.image.path'.format(i), '')
+        else:
+            # image from full url
+            slide['ImagePath'] = hrd.get('slide.{}.image.path'.format(i), '')
+        slide['ImageHeight'] = hrd.get('slide.{}.image.height'.format(i), '800')
+        slide['TextBlockPosition'] = hrd.get('slide.{}.textblock.position'.format(i), '')
+        slide['TextBlockBody'] = hrd.get('slide.{}.textblock.body'.format(i), '').replace(r'\n', '<br />')
+        slide['TextBlockBodySize'] = hrd.get('slide.{}.textblock.body.size'.format(i), 'medium')
+        slide['ScrollSpeed'] = hrd.get('slide.{}.scroll.speed'.format(i), '0.3')
+        slides.append(slide)
         
     page.addMessage('''
         <div class="container">

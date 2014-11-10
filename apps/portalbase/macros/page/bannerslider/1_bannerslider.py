@@ -41,26 +41,26 @@ def main(j, args, params, *other_args):
         
     slides = []
     for i in count(1):
-        try:
-            slide = {}
-            slide['Title'] = getattr(hrd, 'slide_{}_title_text'.format(i)).replace(r'\n', '<br />')
-            slide['TitleSize'] = getattr(hrd, 'slide_{}_title_text_size'.format(i), 'medium')
-            slide['BackgroundColor'] = getattr(hrd, 'slide_{}_background_color'.format(i), '')
-            if os.path.isfile(imagedir + getattr(hrd, 'slide_{}_image_path'.format(i), '')):
-                # check if can find image under .files/img by the given name
-                slide['ImagePath'] = '/$$space/.files/img/' + getattr(hrd, 'slide_{}_image_path'.format(i), '')
-            else:
-                # image from full url
-                slide['ImagePath'] = getattr(hrd, 'slide_{}_image_path'.format(i), '')
-            
-            slide['BodyText'] = getattr(hrd, 'slide_{}_body_text'.format(i), '').replace(r'\n', '<br />')
-            slide['BodyTextSize'] = getattr(hrd, 'slide_{}_body_text_size'.format(i), 'small')
-            slide['ButtonText'] = getattr(hrd, 'slide_{}_button_text'.format(i), '')
-            slide['ButtonLink'] = getattr(hrd, 'slide_{}_button_link'.format(i), '')
-            slide['ButtonStyle'] = getattr(hrd, 'slide_{}_button_style'.format(i), '').lower()
-            slides.append(slide)
-        except AttributeError:
+        slide = {}
+
+        slide['Title'] = hrd.getStr('slide.{}.title.text'.format(i), '').replace(r'\n', '<br />')
+        if not slide['Title']:
             break
+        slide['TitleSize'] = hrd.getStr('slide.{}.title.text.size'.format(i), 'medium')
+        slide['BackgroundColor'] = hrd.getStr('slide.{}.background.color'.format(i), '')
+        if os.path.isfile(imagedir + hrd.getStr('slide.{}.image.path'.format(i), '')):
+            # check if can find image under .files/img by the given name
+            slide['ImagePath'] = '/$$space/.files/img/' + hrd.getStr('slide.{}.image.path'.format(i), '')
+        else:
+            # image from full url
+            slide['ImagePath'] = hrd.getStr('slide.{}.image.path'.format(i), '')
+        
+        slide['BodyText'] = hrd.getStr('slide.{}.body.text'.format(i), '').replace(r'\n', '<br />')
+        slide['BodyTextSize'] = hrd.getStr('slide.{}.body.text.size'.format(i), 'small')
+        slide['ButtonText'] = hrd.getStr('slide.{}.button.text'.format(i), '')
+        slide['ButtonLink'] = hrd.getStr('slide.{}.button.link'.format(i), '')
+        slide['ButtonStyle'] = hrd.getStr('slide.{}.button.style'.format(i), '').lower()
+        slides.append(slide)
 
 
     page.addMessage('''

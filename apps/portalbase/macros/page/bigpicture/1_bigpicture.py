@@ -41,24 +41,24 @@ def main(j, args, params, tags, tasklet):
 	hrd = j.core.hrd.getHRD(content=args.cmdstr)
 	bigpicture = {}
 	bigpicture['picturePath'] = ""
-	bigpicture['titleText'] = getattr(hrd, 'title_text', '')
-	bigpicture['titleSize'] = getattr(hrd, 'title_size', 'medium')
-	bigpicture['subtitleText'] = getattr(hrd, 'subtitle_text', '')
-	bigpicture['subtitleSize'] = getattr(hrd, 'subtitle_size', 'medium')
-	bigpicture['paragraphText'] = getattr(hrd, 'paragraph_text', '')
-	bigpicture['paragraphSize'] = getattr(hrd, 'paragraph_size', 'medium')
-	bigpicture['subtitleLink'] = getattr(hrd, 'subtitle_link', '')
-	bigpicture['subtitleLinkText'] = getattr(hrd, 'subtitle_link_text', '')
-	bigpicture['subtitleLinkSize'] = getattr(hrd, 'subtitle_link_size', 'medium')
+	bigpicture['titleText'] = hrd.get('title.text', '')
+	bigpicture['titleSize'] = hrd.get('title.size', 'medium')
+	bigpicture['subtitleText'] = hrd.get('subtitle.text', '')
+	bigpicture['subtitleSize'] = hrd.get('subtitle.size', 'medium')
+	bigpicture['paragraphText'] = hrd.get('paragraph.text', '')
+	bigpicture['paragraphSize'] = hrd.get('paragraph.size', 'medium')
+	bigpicture['subtitleLink'] = hrd.get('subtitle.link', '')
+	bigpicture['subtitleLinkText'] = hrd.get('subtitle.link.text', '')
+	bigpicture['subtitleLinkSize'] = hrd.get('subtitle.link.size', 'medium')
 
 	# check if can find image under .files/img by the given name
 	space = j.core.portal.active.spacesloader.spaces[args.doc.getSpaceName()]
 	imagedir = j.system.fs.joinPaths(space.model.path, '.files', 'img/')
-	if os.path.isfile(imagedir + getattr(hrd, 'picture_path', '')):
-		bigpicture['picturePath'] = '/$$space/.files/img/' + getattr(hrd, 'picture_path', '')
+	if os.path.isfile(imagedir + hrd.get('picture.path', '')):
+		bigpicture['picturePath'] = '/$$space/.files/img/' + hrd.get('picture.path', '')
 	else:
 		# image from full url
-		bigpicture['picturePath'] = getattr(hrd, 'picture_path', '')
+		bigpicture['picturePath'] = hrd.get('picture.path', '')
 
 	page.addMessage('''
 		<div class="bigpicture-container">
