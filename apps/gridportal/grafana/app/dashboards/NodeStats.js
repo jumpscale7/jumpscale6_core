@@ -114,12 +114,12 @@ return {
             "enable": false
           },
           "resolution": 100,
-          "lines": false,
-          "fill": 2,
+          "lines": true,
+          "fill": 100,
           "linewidth": 1,
           "points": false,
           "pointradius": 5,
-          "bars": true,
+          "bars": false,
           "stack": true,
           "legend": {
             "show": true,
