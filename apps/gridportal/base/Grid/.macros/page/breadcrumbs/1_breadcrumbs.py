@@ -6,13 +6,15 @@ def main(j, args, inparams, tags, tasklet):
     pagename = doc.original_name.lower()
     breadcrumbs = [('/grid/', 'Grid'), ]
     params = args.requestContext.params.copy()
-
+    params.update(doc.appliedparams)
 
     if pagename == 'nic':
-        nid = doc.appliedparams.get('nid')
-        breadcrumbs.append(('nics?nid=%s' % nid, 'NICs'))
+        breadcrumbs.append(('nics?nid=%(nid)s&gid=%(gid)s' % params, 'Nics'))
         breadcrumbs.append(('nic?id=%(id)s' % params, params['nic']))
         params['id'] = params['nid']
+        pagename = 'node'
+    elif pagename == 'nodestats':
+        breadcrumbs.append(('#' % params, 'Node Stats'))
         pagename = 'node'
     elif pagename == 'job':
         nid = doc.appliedparams.get('nid')
@@ -62,10 +64,9 @@ def main(j, args, inparams, tags, tasklet):
         breadcrumbs.append(('checkstatus', 'Check Status'))
         breadcrumbs.append(('nodestatus?nid=%s' % nid, 'Node Status'))
 
-    if pagename == 'node' and params.get('id'):
-        nid = params.get('id')
+    if pagename == 'node' and params.get('id') and params.get('gid'):
         breadcrumbs.insert(1, ('Nodes', 'Nodes'))
-        breadcrumbs.insert(2, ('node?id=%s' % nid, 'Node %s' % nid))
+        breadcrumbs.insert(2, ('node?id=%(id)s&gid=%(gid)s' % params, 'Node %(gid)s:%(id)s' % params))
 
     if pagename == 'nodes':
         breadcrumbs.insert(1, ('Nodes', 'Nodes'))

@@ -234,6 +234,7 @@ class Doc(object):
         return content
 
     def applyTemplate(self, params):
+        self.appliedparams.update(params)
         template = self.jenv.from_string(self.content)
         self.content = template.render(**params)
 
