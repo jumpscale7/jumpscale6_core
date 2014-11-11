@@ -1,6 +1,7 @@
 
 [StatAccumInput]
 emit_in_fields = true
+percent_threshold = 100
 delete_idle_stats = true
 
 [StatsdInput]

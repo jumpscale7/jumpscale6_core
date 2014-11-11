@@ -1,10 +1,12 @@
 @usedefaults
 
-h2. Statistics of node $$id
+{{node_getdata: gid:$$gid id:$$id}}
+
+h2. Statistics $$gridname: $$name ($$gid:$$id)
 
 {{html:
 
-<iframe height="810px" frameborder="0" width="1000px" src="/jslib/grafana/iframe.html#/dashboard/script/NodeStats.js?nid=$$id&gid=$$gid"></iframe>
+<iframe height="865px" frameborder="0" width="1000px" src="/jslib/grafana/iframe2.html#/dashboard/script/NodeStats.js?nid=$$id&gid=$$gid"></iframe>
 
 }}
 
