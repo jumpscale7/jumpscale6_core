@@ -387,14 +387,14 @@ return {
           },
           "targets": [
             {
-              "function": "mean",
+              "function": "difference",
               "series": prefix + "network.error.in",
               "column": "value",
               "interval": "20s",
               "alias": "In"
             },
             {
-              "function": "mean",
+              "function": "difference",
               "series": prefix + "network.error.out",
               "column": "value",
               "interval": "20s",

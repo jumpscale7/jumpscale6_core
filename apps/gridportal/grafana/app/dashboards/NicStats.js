@@ -1,4 +1,4 @@
-var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_" + ARGS.name + "_";
+var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_nic_" + ARGS.name + "_";
 return {
   "title": "Grafana",
   "tags": [],
@@ -136,14 +136,14 @@ return {
           },
           "targets": [
             {
-              "function": "mean",
+              "function": "difference",
               "series": prefix + "errin",
               "column": "value",
               "interval": "20s",
               "alias": "In"
             },
             {
-              "function": "mean",
+              "function": "difference",
               "series": prefix + "errout",
               "column": "value",
               "interval": "20s",
