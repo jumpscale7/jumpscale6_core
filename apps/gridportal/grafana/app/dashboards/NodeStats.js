@@ -71,7 +71,7 @@ return {
             {
               "function": "mean",
               "series": prefix + "cpu.promile",
-              "column": "value / 10",
+              "column": "value / 10.0",
               "query": "",
               "alias": "CPU",
               "interval": "10s"

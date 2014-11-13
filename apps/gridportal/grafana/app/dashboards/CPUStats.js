@@ -71,7 +71,7 @@ return {
             {
               "target": "randomWalk('random walk')",
               "function": "mean",
-              "column": "value / 10",
+              "column": "value / 10.0",
               "series": prefix + "cpu.promile",
               "query": "",
               "alias": "CPU",
