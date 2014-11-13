@@ -3,17 +3,15 @@ from JumpScale import j
 class system_emailsender(j.code.classGetBase()):
     """
     Email sender
-    
     """
     def __init__(self):
+        pass
         
         self._te={}
         self.actorname="emailsender"
         self.appname="system"
         #system_emailsender_osis.__init__(self)
-    
 
-        pass
 
     def send(self, sender_name, sender_email, receiver_email, subject, body, smtp_key, **kwargs):
         """
@@ -27,4 +25,3 @@ class system_emailsender(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method send")
-    
