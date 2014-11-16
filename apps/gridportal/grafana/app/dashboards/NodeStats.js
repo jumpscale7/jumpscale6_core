@@ -1,4 +1,13 @@
-var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_";
+if (ARGS.nid != undefined && ARGS.nid != "$$id") {
+    var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_";
+    var suffix = "";
+    var alias = "";
+} else {
+    var prefix = "/stats.gauges." + ARGS.gid + "_\\d+_";
+    var suffix = "/";
+    var alias = "$2.$3";
+}
+
 
 return {
   "title": "Grafana",
@@ -70,10 +79,10 @@ return {
           "targets": [
             {
               "function": "mean",
-              "series": prefix + "cpu.promile",
+              "series": prefix + "cpu.promile" + suffix,
               "column": "value / 10.0",
               "query": "",
-              "alias": "CPU",
+              "alias": alias || "CPU",
               "interval": "10s"
             }
           ],
@@ -142,30 +151,30 @@ return {
           "targets": [
             {
               "function": "mean",
-              "series": prefix + "cpu.time.system",
+              "series": prefix + "cpu.time.system" + suffix,
               "column": "value",
-              "alias": "System",
+              "alias": alias || "System",
               "interval": "1m"
             },
             {
               "function": "mean",
-              "series": prefix + "cpu.time.user",
+              "series": prefix + "cpu.time.user" + suffix,
               "column": "value",
-              "alias": "User",
+              "alias": alias || "User",
               "interval": "1m"
             },
             {
               "function": "mean",
-              "series": prefix + "cpu.time.idle",
+              "series": prefix + "cpu.time.idle" + suffix,
               "column": "value",
-              "alias": "Idle",
+              "alias": alias || "Idle",
               "interval": "1m"
             },
             {
               "function": "mean",
-              "series": prefix + "cpu.time.iowait",
+              "series": prefix + "cpu.time.iowait" + suffix,
               "column": "value",
-              "alias": "IO Wait",
+              "alias": alias || "IO Wait",
               "interval": "1m"
             }
           ],
@@ -236,17 +245,17 @@ return {
           "targets": [
             {
               "function": "mean",
-              "series": prefix + "memory.free",
+              "series": prefix + "memory.free" + suffix,
               "column": "value * 1024 * 1024",
-              "alias": "Free",
+              "alias": alias || "Free",
               "hide": false,
               "interval": "10s"
             },
             {
               "function": "mean",
-              "series": prefix + "memory.used",
+              "series": prefix + "memory.used" + suffix,
               "column": "value *1024 * 1024",
-              "alias": "Used",
+              "alias": alias || "Used",
               "interval": "10s"
             }
           ],
@@ -317,17 +326,17 @@ return {
           "targets": [
             {
               "function": "difference",
-              "series": prefix + "network.kbytes.recv",
+              "series": prefix + "network.kbytes.recv" + suffix,
               "column": "value * 1024",
               "interval": "20s",
-              "alias": "Received"
+              "alias": alias || "Received"
             },
             {
               "function": "difference",
-              "series": prefix + "network.kbytes.send",
+              "series": prefix + "network.kbytes.send" + suffix,
               "column": "value * 1024",
               "interval": "20s",
-              "alias": "Sent"
+              "alias": alias || "Sent"
             }
           ],
           "aliasColors": {},
@@ -388,17 +397,17 @@ return {
           "targets": [
             {
               "function": "difference",
-              "series": prefix + "network.error.in",
+              "series": prefix + "network.error.in" + suffix,
               "column": "value",
               "interval": "20s",
-              "alias": "In"
+              "alias": alias || "In"
             },
             {
               "function": "difference",
-              "series": prefix + "network.error.out",
+              "series": prefix + "network.error.out" + suffix,
               "column": "value",
               "interval": "20s",
-              "alias": "Out"
+              "alias": alias || "Out"
             }
           ],
           "aliasColors": {},
