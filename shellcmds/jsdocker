@@ -44,12 +44,9 @@ if opts.action =='ps':
 ##########NEW
 if opts.action =='list':
     #@todo bug list is not working on jsdocker
-    running,stopped=l.list()
+    containers=l.list()
     print "## running:"
-    for item in running:
-        print "  machine: %-25s %s"%(item,l.getIp(item))
-    print "## stopped:"
-    for item in stopped:
+    for item in containers:
         print "  machine: %-25s %s"%(item,l.getIp(item))
 
 if opts.action =='pull':
