@@ -42,22 +42,32 @@ if opts.branch<>None and opts.action in ['status']:
 
 
 def getRepos():
+    account_list = list()
+    if opts.accounts:
+        account_list.extend(opts.accounts.split(','))
+    repo_list = list()
+    if opts.repos:
+        repo_list.extend(opts.repos.split(','))
     result=[]
 
     repos=[]
     for top in j.system.fs.listDirsInDir("/opt/code/", recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
         for account in j.system.fs.listDirsInDir("/opt/code/%s"%top, recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+            if account_list and account not in account_list:
+                continue
             accountdir="/opt/code/%s/%s"%(top,account)
             if j.system.fs.exists(path="%s/.git"%accountdir):
                 repos.append([account,accountdir])        #is for when repo is one level higher as usual        
             else:
                 for reponame in j.system.fs.listDirsInDir("/opt/code/%s/%s"%(top,account), recursive=False, dirNameOnly=True, findDirectorySymlinks=True):
+                    if repo_list and reponame not in repo_list:
+                        continue
                     repodir="/opt/code/%s/%s/%s"%(top,account,reponame)
                     if j.system.fs.exists(path="%s/.git"%repodir):
                         repos.append([reponame,repodir])                
 
 
-    for repodir in j.console.askArrayRow(repos,returncol=1):
+    for _, repodir in repos:
         splitted=repodir.strip("/").split("/")
         if len(splitted)==5:
             account=splitted[3]

@@ -130,7 +130,7 @@ class ErrorConditionHandler():
             j.errorconditionhandler.raiseBug("an error",category="exceptions.init",e)
         
         """
-        level = "WARNING"
+        level = 2
         self.raiseBug(message, category, pythonExceptionObject, pythonTraceBack, msgpub, False, tags, level)
         
     def raiseOperationalCritical(self, message="", category="",msgpub="",die=True,tags="",eco=None,extra=None):

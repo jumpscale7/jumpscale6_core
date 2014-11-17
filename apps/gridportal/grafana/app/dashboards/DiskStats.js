@@ -1,33 +1,31 @@
-var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_";
-
+var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_disk_" + ARGS.name  +"_";
 return {
-  "title": "Grafana",
+  "title": "Disk Statistics",
   "tags": [],
   "style": "light",
   "timezone": "browser",
   "editable": false,
   "rows": [
     {
-      "title": "CPU Information",
+      "title": "New row",
       "height": "250px",
       "editable": false,
       "collapse": false,
-      "collapsable": true,
       "panels": [
         {
-          "span": 6,
-          "editable": false,
+          "span": 12,
+          "editable": true,
           "type": "graph",
+          "datasource": null,
+          "renderer": "flot",
           "x-axis": true,
           "y-axis": true,
           "scale": 1,
           "y_formats": [
-            "short",
+            "bytes",
             "short"
           ],
           "grid": {
-            "max": null,
-            "min": null,
             "leftMax": null,
             "rightMax": null,
             "leftMin": null,
@@ -37,16 +35,17 @@ return {
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
             "threshold2Color": "rgba(234, 112, 112, 0.22)"
           },
+          "annotate": {
+            "enable": false
+          },
           "resolution": 100,
           "lines": true,
-          "fill": 1,
-          "linewidth": 2,
+          "fill": 0,
+          "linewidth": 1,
           "points": false,
           "pointradius": 5,
           "bars": false,
-          "stack": true,
-          "spyable": true,
-          "options": false,
+          "stack": false,
           "legend": {
             "show": true,
             "values": false,
@@ -56,9 +55,6 @@ return {
             "total": false,
             "avg": false
           },
-          "interactive": true,
-          "legend_counts": true,
-          "timezone": "browser",
           "percentage": false,
           "zerofill": true,
           "nullPointMode": "connected",
@@ -69,35 +65,46 @@ return {
           },
           "targets": [
             {
-              "target": "randomWalk('random walk')",
-              "function": "mean",
-              "column": "value / 10.0",
-              "series": prefix + "cpu.promile",
-              "query": "",
-              "alias": "CPU",
-              "interval": "10s"
+              "function": "difference",
+              "column": "value * 1024 / 600.",
+              "series": prefix + "kbytes_read",
+              "alias": "Read",
+              "interval": "10m",
+              "rawQuery": false
+            },
+            {
+              "target": "",
+              "function": "difference",
+              "column": "value * 1024 / 600.",
+              "series": prefix + "kbytes_write",
+              "alias": "Write",
+              "interval": "10m"
             }
           ],
           "aliasColors": {},
           "aliasYAxis": {},
-          "title": "CPU Percent",
-          "datasource": null,
-          "renderer": "flot",
-          "annotate": {
-            "enable": false
-          }
-        },
+          "title": "Disk Stats"
+        }
+      ]
+    },
+    {
+      "title": "New row",
+      "height": "250px",
+      "editable": false,
+      "collapse": false,
+      "panels": [
         {
-          "span": 6,
-          "editable": false,
+          "span": 12,
+          "editable": true,
           "type": "graph",
+          "loadingEditor": false,
           "datasource": null,
           "renderer": "flot",
           "x-axis": true,
           "y-axis": true,
           "scale": 1,
           "y_formats": [
-            "none",
+            "bytes",
             "short"
           ],
           "grid": {
@@ -108,15 +115,14 @@ return {
             "threshold1": null,
             "threshold2": null,
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2Color": "rgba(234, 112, 112, 0.22)",
-            "thresholdLine": false
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
           },
           "annotate": {
             "enable": false
           },
           "resolution": 100,
           "lines": true,
-          "fill": 100,
+          "fill": 5,
           "linewidth": 1,
           "points": false,
           "pointradius": 5,
@@ -129,10 +135,9 @@ return {
             "max": false,
             "current": false,
             "total": false,
-            "avg": false,
-            "alignAsTable": false
+            "avg": false
           },
-          "percentage": true,
+          "percentage": false,
           "zerofill": true,
           "nullPointMode": "connected",
           "steppedLine": false,
@@ -143,51 +148,28 @@ return {
           "targets": [
             {
               "function": "mean",
-              "series": prefix + "cpu.time.system",
-              "column": "value",
-              "query": "",
-              "alias": "System",
-              "interval": "1m"
+              "column": "value * 1024 * 1024",
+              "series": prefix + "space_free_mb",
+              "alias": "Free"
             },
             {
+              "target": "",
               "function": "mean",
-              "series": prefix + "cpu.time.user",
-              "column": "value",
-              "query": "",
-              "alias": "User",
-              "interval": "1m"
-            },
-            {
-              "function": "mean",
-              "series": prefix + "cpu.time.idle",
-              "alias": "IDLE Time",
-              "column": "value",
-              "query": "",
-              "alias": "Idle",
-              "interval": "1m"
-            },
-            {
-              "function": "mean",
-              "series": prefix + "cpu.time.iowait",
-              "column": "value",
-              "query": "",
-              "alias": "IO Wait",
-              "interval": "1m"
+              "column": "value * 1024 * 1024",
+              "series": prefix + "space_used_mb",
+              "alias": "Used"
             }
           ],
           "aliasColors": {},
           "aliasYAxis": {},
-          "title": "CPU Time"
+          "title": "Disk Usage"
         }
-      ],
-      "notice": false
+      ]
     }
   ],
   "pulldowns": [
     {
       "type": "filtering",
-      "collapse": false,
-      "notice": false,
       "enable": false
     },
     {
@@ -229,7 +211,7 @@ return {
     }
   ],
   "time": {
-    "from": "now-1h",
+    "from": "now-6h",
     "to": "now"
   },
   "templating": {
@@ -237,4 +219,3 @@ return {
   },
   "version": 2
 }
-

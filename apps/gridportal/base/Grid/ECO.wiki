@@ -7,18 +7,20 @@ h3. Details
 |*Application Name*|$$appname|
 |*Category*|$$category|
 |*Job*|$$jid|
-|*level*|$$level|
+|*Type*|$$type|
+|*Level*|$$level|
 |*Process ID*|[$$pid|process?id=$$pid]|
+|*Creation Time*|$$epoch|
+|*Last Time*|$$lasttime|
+|*Occurrences*|$$occurrences|
+|*Error Message Pub*|$$errormessagepub|
+|*Error Message*|$$errormessage|
 |*Function Name*|$$funcname|
 |*Function Line Number*|$$funclinenr|
 |*Function File Name*|$$funcfilename|
-|*Time*|$$epoch|
-|*Error Message Pub*|$$errormessagepub|
-|*Error Message*|$$errormessage|
 |*Master Job*|$$masterjid|
 |*Node*|[$$nid|node?id=$$nid&gid=$$gid]|
 |*Grid*|[$$gid|grid?id=$$gid]|
-|*Type*|$$type|
 |*Tags*|$$tags|
 
 *Code*

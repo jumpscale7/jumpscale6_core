@@ -1,4 +1,4 @@
 @usedefaults
 
 h3. NICs
-{{nics: nid:$$nid}}
+{{nics: nid:$$nid gid:$$gid}}

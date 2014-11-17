@@ -20,6 +20,7 @@ log=False
 roles = []
 
 def action():
+    import JumpScale.lib.diskmanager
     import statsd
     stats = statsd.StatsClient()
     pipe = stats.pipeline()
@@ -57,9 +58,9 @@ def action():
             write_bytes=int(round(write_bytes/1024,0))
             results['kbytes_read'] = read_bytes
             results['kbytes_write'] = write_bytes
-            results['space_free_mb'] = disk.free
-            results['space_used_mb'] = disk.size-disk.free
-            results['space_percent'] = round((float(disk.size-disk.free)/float(disk.size)),2)
+            results['space_free_mb'] = int(round(disk.free))
+            results['space_used_mb'] = int(round(disk.size-disk.free))
+            results['space_percent'] = int(round((float(disk.size-disk.free)/float(disk.size)),2))
 
         if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
             j.events.opserror('Disk %s has less then 10%% free space' % disk.path, 'monitoring')
@@ -76,3 +77,7 @@ def action():
             pipe.gauge("%s_%s_disk_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, path, key), value)
 
     pipe.send()
+
+
+if __name__ == '__main__':
+    action()

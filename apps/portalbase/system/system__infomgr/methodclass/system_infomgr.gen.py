@@ -3,17 +3,15 @@ from JumpScale import j
 class system_infomgr(j.code.classGetBase()):
     """
     this is an example actor
-    
     """
     def __init__(self):
+        pass
         
         self._te={}
         self.actorname="infomgr"
         self.appname="system"
         #system_infomgr_osis.__init__(self)
-    
 
-        pass
 
     def addInfo(self, info, **kwargs):
         """
@@ -23,7 +21,6 @@ class system_infomgr(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method addInfo")
-    
 
     def getInfo1h(self, id, start=0, stop=0, **kwargs):
         """
@@ -35,7 +32,6 @@ class system_infomgr(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo1h")
-    
 
     def getInfo1hFromTo(self, id, start, stop, **kwargs):
         """
@@ -47,7 +43,6 @@ class system_infomgr(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo1hFromTo")
-    
 
     def getInfo5Min(self, id, start=0, stop=0, **kwargs):
         """
@@ -59,7 +54,6 @@ class system_infomgr(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo5Min")
-    
 
     def getInfo5MinFromTo(self, id, start, stop, **kwargs):
         """
@@ -71,7 +65,6 @@ class system_infomgr(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfo5MinFromTo")
-    
 
     def getInfoWithHeaders(self, id, start, stop, maxvalues=360, **kwargs):
         """
@@ -83,7 +76,6 @@ class system_infomgr(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method getInfoWithHeaders")
-    
 
     def reset(self, **kwargs):
         """
@@ -92,4 +84,3 @@ class system_infomgr(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method reset")
-    

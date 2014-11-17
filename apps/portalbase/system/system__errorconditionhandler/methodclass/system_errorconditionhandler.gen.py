@@ -3,17 +3,15 @@ from JumpScale import j
 class system_errorconditionhandler(j.code.classGetBase()):
     """
     errorcondition handling
-    
     """
     def __init__(self):
+        pass
         
         self._te={}
         self.actorname="errorconditionhandler"
         self.appname="system"
         #system_errorconditionhandler_osis.__init__(self)
-    
 
-        pass
 
     def describeCategory(self, category, language, description, resolution_user, resolution_ops, **kwargs):
         """
@@ -29,4 +27,3 @@ class system_errorconditionhandler(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method describeCategory")
-    

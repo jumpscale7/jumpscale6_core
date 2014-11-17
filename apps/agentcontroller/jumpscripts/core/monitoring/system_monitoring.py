@@ -11,7 +11,7 @@ author = "kristof@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "monitoring.processes"
-period = 30 #always in sec
+period = 10 #always in sec
 enable=True
 async=True
 queue='process'
@@ -22,12 +22,13 @@ roles = []
 def action():
     import psutil
     import statsd
-    stats = statsd.StatsClient()
-    pipe = stats.pipeline()
+    statscl = statsd.StatsClient()
+    pipe = statscl.pipeline()
 
     results={}
     val=psutil.cpu_percent(0)
     results["cpu.percent"]=val
+    results["cpu.promile"]=val * 10 # we store promile to have more percision
     cput= psutil.cpu_times()
     for key in cput.__dict__.keys():
         val=cput.__dict__[key]
@@ -67,9 +68,12 @@ def action():
     results["cpu.num_ctx_switches"]=num_ctx_switches
 
     for key, value in results.iteritems():
-        pipe.gauge("%s_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, key), value)
+        pipe.gauge("%s_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, key), int(round(value)))
 
     pipe.send()
     return results
 
-
+if __name__ == '__main__':
+    results = action()
+    import yaml
+    print yaml.dump(results)
