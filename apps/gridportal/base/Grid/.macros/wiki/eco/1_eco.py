@@ -19,6 +19,7 @@ def main(j, args, params, tags, tasklet):
 
     def objFetchManipulate(id):
         obj['epoch'] = datetime.datetime.fromtimestamp(obj['epoch']).strftime('%Y-%m-%d %H:%M:%S')
+        obj['lasttime'] = datetime.datetime.fromtimestamp(obj['lasttime']).strftime('%Y-%m-%d %H:%M:%S')
         for attr in ['errormessage', 'errormessagePub']:
             obj[attr] = obj[attr].replace('\n', '<br>')
         for attr in ['jid']:

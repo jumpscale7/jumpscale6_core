@@ -49,4 +49,4 @@ h3. ECOs
 
 
 h3. Disks
-{{disks: nid:$$id}}
+{{disks: nid:$$id gid:$$gid}}

@@ -8,14 +8,14 @@ def main(j, args, params, tags, tasklet):
     for tag, val in args.tags.tags.iteritems():
         val = args.getTag(tag)
         if tag == 'from' and val:
-            filters['from_'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'gte'}
+            filters['from_'] = {'name': 'lasttime', 'value': j.base.time.getEpochAgo(val), 'eq': 'gte'}
         elif tag == 'to' and val:
-            filters['to'] = {'name': 'epoch', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
+            filters['to'] = {'name': 'lasttime', 'value': j.base.time.getEpochAgo(val), 'eq': 'lte'}
         elif val:
             if j.basetype.integer.checkString(val):
                 val = j.basetype.integer.fromString(val)
             filters[tag] = val
-    fieldnames = ['Time', 'Grid ID', 'Node ID', 'App Name', 'Category', 'Error Message', 'Job ID']
+    fieldnames = ['Time', 'Grid ID', 'Node ID', 'App Name', 'Error Message', 'Type', 'Level', 'Occurences', 'Job ID']
 
     def errormessage(row, field):
         return row[field].replace('\n', '<br>')
@@ -26,13 +26,16 @@ def main(j, args, params, tags, tasklet):
 
     def makeJob(row, field):
         jid = row[field]
-        return '[%s|job?id=%s]' % (jid, jid) if (not jid == 0) else 'N/A'
+        return '[details|job?id=%s]' % (jid, jid) if (not jid == 0) else 'N/A'
+
+    def appName(row, field):
+        return row[field].split(':')[-1]
 
 
     nidstr = '[%(nid)s|node?id=%(nid)s&gid=%(gid)s]'
 
-    fieldids = ["epoch", "gid", "nid", "appname", "category", "errormessage", "jid"]
-    fieldvalues = [makeTime, 'gid', nidstr, 'appname', 'category', errormessage, makeJob]
+    fieldids = ["lasttime", "gid", "nid", "appname", "errormessage", 'type', 'level', 'occurrences', "jid"]
+    fieldvalues = [makeTime, 'gid', nidstr, appName, errormessage, 'type', 'level', 'occurrences', makeJob]
     tableid = modifier.addTableForModel('system', 'eco', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
     modifier.addSorting('#%s' % tableid, 0, 'desc')

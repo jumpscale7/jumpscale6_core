@@ -7,7 +7,10 @@ def main(j, args, params, tags, tasklet):
     for tag, val in args.tags.tags.iteritems():
         val = args.getTag(tag)
         if val:
-            filters[tag] = val
+            if val.isdigit():
+                filters[tag] = int(val)
+            else:
+                filters[tag] = val
 
     def _getDiskUsage(disk, field):
         diskfree = disk[field]
@@ -22,7 +25,7 @@ def main(j, args, params, tags, tasklet):
         return "%.2f %siB" % j.tools.units.bytes.converToBestUnit(disk[field], 'M')
 
     fieldnames = ["Path", "Size", "Mount Point", "SSD", "Free", "Mounted"]
-    path = '[%(path)s|/grid/disk?id=%(id)s&nid=%(nid)s]'
+    path = '[%(path)s|/grid/disk?id=%(id)s&nid=%(nid)s&gid=%(gid)s]'
     fieldids = ['path', 'size', 'mountpoint', 'ssd', 'free', 'mounted']
     fieldvalues = [path, _diskSize, 'mountpoint', 'ssd', _getDiskUsage, 'mounted']
     tableid = modifier.addTableForModel('system', 'disk', fieldids, fieldnames, fieldvalues, filters)
