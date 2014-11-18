@@ -68,17 +68,8 @@ if __name__ == '__main__':
             client=j.clients.redis.getGeventRedisClient(ipaddr, port, fromcache=True, password=passwd)
 
         elif dbname=="influxdb":
-            hrd = getConnectionHRD(dbname, instancename, 'serverapps')
             import JumpScale.baselib.influxdb
-            ipaddr=hrd.get("influxdb.client.addr")
-            port=hrd.getInt("influxdb.client.port")        
-            login=hrd.get("influxdb.client.login")
-            passwd=hrd.get("influxdb.client.passwd")
-            while j.system.net.tcpPortConnectionTest(ipaddr,port)==False:
-                time.sleep(0.1)
-                print "cannot connect to influxdb, will keep on trying forever, please start (%s:%s)"%(ipaddr,port)
-
-            client=j.clients.influxdb.get(host=ipaddr, port=port,username=login, password=passwd, database="main")
+            client = j.clients.influxdb.getByInstance(instancename)
             databases = [db['name'] for db in client.get_database_list()]
             if 'main' not in databases:
                 client.create_database('main')
