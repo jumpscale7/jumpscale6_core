@@ -2,6 +2,8 @@
 
 from JumpScale import j
 from urllib import unquote, quote
+import re
+matchquote = re.compile(ur'\'[^\']*\'')
 
 class Tags():
     """
@@ -17,9 +19,9 @@ class Tags():
         """
         self.tags = dict()
         self.labels = set()
-        self.tagstring=tagstring
-        if tagstring<>"":
-            self.fromString(tagstring)
+        self.tagstring=tagstring or ''
+        if self.tagstring<>"":
+            self.fromString(self.tagstring)
         self._setFunction4Tagstring=setFunction4Tagstring
         
     def fromString(self, tagstring):
@@ -29,15 +31,12 @@ class Tags():
         @param tagstring: example "important customer:kristof"
         @type tagstring: string        
         """
-        
+
+        tagstring=j.tools.text.hrd2machinetext(tagstring)
+
         if not tagstring:
             return
 
-        if tagstring.find("'")<>-1:
-            #special more complex processing required
-            # r=j.codetools.regex.replace("'[\w\-_=? !]*'","","-_-",tagstring,nonRegexSubsetToReplace=" ")
-            tagstring=j.codetools.regex.replace("'[\w\-_=? .!]*'"," ","-|-",tagstring)
-            tagstring=tagstring.replace("'","")
 
         tags = tagstring.split()
         for tag in tags:                
@@ -45,12 +44,11 @@ class Tags():
                 key = tag.split(':',1)[0]
                 value = tag.split(':',1)[1]
                 key=unquote(key)
-                value=unquote(value).replace("-|-"," ")
-                self.tags[key] = value
+                value = unquote(j.tools.text.machinetext2hrd(value))
                 self.tags[key.lower()] = value
-
+                self.tags[key] = value
             else:
-                self.labels.add(unquote(tag))
+                self.labels.add(unquote(j.tools.text.machinetext2hrd(tag)))
 
         self.tagstring=tagstring
         

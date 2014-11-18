@@ -18,7 +18,7 @@ def main(j, args, params, tags, tasklet):
             missing = True
 
     if not missing:
-        obj = actor.getJumpScript(organization=organization, name=name)
+        obj = actor.getJumpscript(organization=organization, name=name)
 
         out = ['||Property||Value||']
 

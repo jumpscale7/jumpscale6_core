@@ -1,0 +1,3 @@
+[TcpOutput]
+address = "$(heka.master):5565"
+message_matcher = "Type == 'heka.statmetric'"

@@ -42,12 +42,12 @@ class CodeGeneratorBase:
 class %s({baseclass}):
 {descr}
     def __init__(self):
-{initprops}
         pass
+{initprops}
 """ % className
         self.content = self.content.replace("{baseclass}", baseclass)
         if self.spec.description != "":
-            self.content = self.content.replace("{descr}\n", j.code.indent("\"\"\"\n%s\n\"\"\"\n" % self.spec.description, 1))
+            self.content = self.content.replace("{descr}\n", j.code.indent('"""\n%s"""\n' % self.spec.description, 1))
         else:
             self.content = self.content.replace("{descr}\n", "")
 

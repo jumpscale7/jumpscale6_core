@@ -22,17 +22,17 @@ class TEST(unittest.TestCase):
     def setUp(self):
         import JumpScale.grid.agentcontroller
         self.client=j.clients.agentcontroller.get()
-        self.osisclient = j.core.osis.getClient(user='root')
+        self.osisclient = j.core.osis.getClientByInstance('main')
         self.nid = j.application.whoAmI.nid
 
     def test_basic_execution(self):
         kwargs = {'msg': 'test msg'}
-        result1 = self.client.executeJumpScript('jumpscale', 'echo', self.nid, ROLE, args=kwargs, wait=True)
+        result1 = self.client.executeJumpscript('jumpscale', 'echo', self.nid, ROLE, args=kwargs, wait=True)
         self.assertEqual(result1['result'], kwargs['msg'])
 
     def test_log(self):
         kwargs = {'logmsg': 'test log msg'}
-        job = self.client.executeJumpScript('jumpscale', 'log', self.nid, ROLE, args=kwargs, wait=True)
+        job = self.client.executeJumpscript('jumpscale', 'log', self.nid, ROLE, args=kwargs, wait=True)
         self.assertIsInstance(job, dict)
         self.assertEqual(job['state'], 'OK')
         query = {"query":{"bool":{"must":[{"term":{"category":"test_category"}}]}}}

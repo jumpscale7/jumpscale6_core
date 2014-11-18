@@ -7,7 +7,7 @@ import JumpScale.baselib.webdis
 import JumpScale.baselib.redis
 import multiprocessing
 
-class JumpScript(object):
+class Jumpscript(object):
     def __init__(self, ddict=None, path=None):
         self._loaded = False
         self.name=""
@@ -15,6 +15,7 @@ class JumpScript(object):
         self.period = 0
         self.lastrun = 0
         self.source=""
+        self.debug = False
         self.path=path
         self.id = None
         self.startatboot = False
@@ -68,6 +69,7 @@ from JumpScale import j
         self.category=getattr(self.module, 'category', "unknown")
         self.license=getattr(self.module, 'license', "unknown")
         self.version=getattr(self.module, 'version', "1.0")
+        self.debug=getattr(self.module, 'debug', False)
         self.roles=getattr(self.module, 'roles', [])
         self.source=source
         self.descr=self.module.descr
@@ -160,7 +162,7 @@ class JumpscriptFactory:
             self.secret=j.application.config.get(secretkey)
 
     def getJSClass(self):
-        return JumpScript
+        return Jumpscript
 
     def _getWebdisConnection(self):
         return j.clients.webdis.getByInstance()
@@ -172,14 +174,12 @@ class JumpscriptFactory:
         import tarfile
         ppath=j.system.fs.joinPaths(j.dirs.tmpDir,"processMgrScripts_upload.tar")
         with tarfile.open(ppath, "w:bz2") as tar:
-            for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/processmanager"%j.dirs.baseDir,True):
-                if j.system.fs.getFileExtension(path)<>"pyc":
-                    arcpath="processmanager/%s"%path.split("/processmanager/")[1]
-                    tar.add(path,arcpath)
-            for path in j.system.fs.listFilesInDir("%s/apps/agentcontroller/jumpscripts"%j.dirs.baseDir,True):
-                if j.system.fs.getFileExtension(path)<>"pyc":
-                    arcpath="jumpscripts/%s"%path.split("/jumpscripts/")[1]
-                    tar.add(path,arcpath)
+            for path in j.system.fs.walkExtended("%s/apps/agentcontroller/processmanager"%j.dirs.baseDir, recurse=1, filePattern="*.py", dirs=False):
+                arcpath="processmanager/%s"%path.split("/processmanager/")[1]
+                tar.add(path,arcpath)
+            for path in j.system.fs.walkExtended("%s/apps/agentcontroller/jumpscripts"%j.dirs.baseDir, recurse=1, filePattern="*.py", dirs=False):
+	        arcpath="jumpscripts/%s"%path.split("/jumpscripts/")[1]
+                tar.add(path,arcpath)
         data=j.system.fs.fileGetContents(ppath)       
         webdis.set("%s:scripts"%(self.secret),data)  
         # scripttgz=webdis.get("%s:scripts"%(self.secret))      

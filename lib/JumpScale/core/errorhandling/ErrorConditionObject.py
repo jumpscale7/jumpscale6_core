@@ -3,71 +3,38 @@ import unicodedata
 from JumpScale import j
 import traceback
 
-# class Base():
-    
-#     def __str__(self):
-#         return str(self.object2dict())
-            
-#     __repr__=__str__
-    
-#     def obj2dict(self):
-#         data={}
-#         def todict(obj,data):
-#             for key, value in obj.__dict__.iteritems():
-#                 try:
-#                     data[key] = todict(value,data)
-#                 except AttributeError:
-#                     data[key] = value
-#             return data   
-#         return todict(self,data)    
+try:
+    import ujson as json
+except ImportError:
+    import json
 
-class AlertObject():
-    def __init__(self):
-        self.id=0  #is unique where alert has been created
-        self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes
-        self.description=""
-        self.descriptionpub=""
-        self.level=1 #1:critical, 2:warning, 3:info
-        self.errorconditions=[]
-        self.category="" #dot notation e.g. machine.start.failed
-        self.tags="" #e.g. machine:2323
-        self.state="NEW" #["NEW","ALERT","CLOSED"]
-        self.inittime=0 #first time there was an error condition linked to this alert
-        self.lasttime=0 #last time there was an error condition linked to this alert
-        self.closetime=0  #alert is closed, no longer active
-        self.nrerrorconditions=1 #nr of times this error condition happened
-        self.transactionsinfo="" 
-        self.extra=""
-        
-    def getLastECO(self):
-        pass #@todo
-        
+
+
+import JumpScale.baselib.hash
+
 
 class ErrorConditionObject():
     """
-    used enumerators:
-    - j.enumerators.ErrorConditionLevel.
-    - j.enumerators.ErrorConditionType.
+    @param type #BUG,INPUT,MONITORING,OPERATIONS,PERFORMANCE,UNKNOWN  
+    @param level #1:critical, 2:warning, 3:info see j.enumerators.ErrorConditionLevel
     """
-    def __init__(self,ddict={},msg="",msgpub="",category="",level=1,type=0,tb=None):
+    def __init__(self,ddict={},msg="",msgpub="",category="",level=1,type="UNKNOWN",tb=None):
         if ddict<>{}:
             self.__dict__=ddict
         else:
-            self.id=""
             self.backtrace=""
             self.backtraceDetailed=""
             btkis,filename0,linenr0,func0=j.errorconditionhandler.getErrorTraceKIS(tb=tb)
             if len(btkis)>1:
                 self.backtrace=self.getBacktrace(btkis,filename0,linenr0,func0)
                 
-            self.guid=j.base.idgenerator.generateGUID()
+            self.guid=j.base.idgenerator.generateGUID() #is for default case where there is no redis
             self.category=category #is category in dot notation
             self.errormessage=msg
             self.errormessagePub=msgpub
             self.level=int(level) #1:critical, 2:warning, 3:info see j.enumerators.ErrorConditionLevel.
             
-            if len(btkis)>1:
-                
+            if len(btkis)>1:                
                 self.code=btkis[-1][0]
                 self.funcname=func0
                 self.funcfilename=filename0
@@ -88,10 +55,30 @@ class ErrorConditionObject():
             self.masterjid = 0
 
             self.epoch= j.base.time.getTimeEpoch()
-            self.tags=""
-            self.type=int(type) #j.enumerators.ErrorConditionType  
-            self.tb=tb          
+            self.type=str(type) #BUG,INPUT,MONITORING,OPERATIONS,PERFORMANCE,UNKNOWN  
+            self.tb=tb  
 
+            self.tags="" #e.g. machine:2323
+            self.state="NEW" #["NEW","ALERT","CLOSED"]
+
+            self.lasttime=0 #last time there was an error condition linked to this alert
+            self.closetime=0  #alert is closed, no longer active
+
+            self.occurrences=1 #nr of times this error condition happened
+
+            self.uniquekey=""
+
+
+    def getUniqueKey(self):
+        """
+        return unique key for object, is used to define unique id
+        """
+        if self.category<>"":
+            C= "%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.category,self.level,self.funcname,self.funcfilename,self.appname,self.type)
+        else:
+            C= "%s_%s_%s_%s_%s_%s_%s_%s"%(self.gid,self.nid,self.errormessage,self.level,self.funcname,self.funcfilename,self.appname,self.type)
+        self.uniquekey=j.tools.hash.md5_string(C)
+        return self.uniquekey
 
     def toAscii(self):
         def _toAscii(s):
@@ -107,17 +94,48 @@ class ErrorConditionObject():
         self.errormessagePub=_toAscii(self.errormessagePub)
         self.backtraceDetailed=_toAscii(self.backtraceDetailed)
 
+    def process(self):
+        self.toAscii()
+
+        if self.type in ["INPUT","MONITORING","OPERATIONS","PERFORMANCE"] and j.application.debug==False:
+            self.tb=""
+            self.code=""
+            self.backtrace=""
+            self.backtraceDetailed=""
+
+        # types=["INPUT","MONITORING","OPERATIONS","PERFORMANCE","BUG","UNKNOWN"]
+        # if not self.type in types:
+        #     j.events.inputerror_warning("Errorcondition was thrown with wrong type.\n%s"%str(self),"eco.check.type")
+
+        if not j.basetype.integer.check(self.level):
+            try:
+                self.level=int(self.level)
+            except:
+                pass
+            if not j.basetype.integer.check(param.level):
+                self.level=1
+                j.events.inputerror_warning("Errorcondition was thrown with wrong level, needs to be int.\n%s"%str(self),"eco.check.level")
+
+        if self.level>3:
+            j.events.inputerror_warning("Errorcondition was thrown with wrong level, needs to be max 3.\n%s"%str(self),"eco.check.level")
+            self.level=3
+
+        res=j.errorconditionhandler._send2Redis(self)
+        if res<>None:
+            self.__dict__=res
+
+
+    def toJson(self):
+        data = self.__dict__.copy()
+        data.pop('tb', None)
+        return json.dumps(data)
+
 
     def __str__(self):
-        if j.basetype.integer.check(self.type):
-            ttype=str(j.enumerators.ErrorConditionType.getByLevel(int(self.type)))
-        else:
-            ttype=str(self.type)
-        level=str(j.enumerators.ErrorConditionLevel.getByLevel(int(self.level)))
         content="\n\n***ERROR***\n"
         if self.backtrace<>"":
             content="%s\n" % self.backtrace
-        content+="type/level: %s/%s\n" % (ttype,level)
+        content+="type/level: %s/%s\n" % (self.type,self.level)
         content+="%s\n" % self.errormessage
         if self.errormessagePub<>"":
             content+="errorpub: %s\n" % self.errormessagePub        
@@ -281,18 +299,8 @@ class ErrorConditionObject():
                 ##        result += "    %s : %s\n" % (str(k), str(v))
         self.backtrace=result
 
-
     def getCategory(self):
         return "eco"
-
-    def getSetGuid(self):
-        """
-        use osis to define & set unique guid (sometimes also id)
-        """
-        self.gid=int(self.gid)
-        self.bid=int(self.bid)
-        self.id=int(self.id)
-        return self.guid
 
     def getObjectType(self):
         return 3
@@ -319,11 +327,3 @@ class ErrorConditionObject():
         if dd.has_key("sguid"):
             dd.pop("sguid")
         return j.base.byteprocessor.hashMd5(str(dd))
-        
-    def getUniqueKey(self):
-        """
-        return unique key for object, is used to define unique id
-        """
-        return self.getContentKey()
-
-    

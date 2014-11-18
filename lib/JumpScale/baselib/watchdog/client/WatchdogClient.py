@@ -12,11 +12,11 @@ except:
 class WatchdogClient:
     def __init__(self):
 
-        addr=j.application.config.get("grid.watchdog.addr", checkExists=True)
+        addr=j.application.config.get("grid.watchdog.addr", default=False)
         if addr==False or addr=="":
             raise RuntimeError("please configure grid.watchdog.addr in hrdconfig")
 
-        secret=j.application.config.get("grid.watchdog.secret", checkExists=True)
+        secret=j.application.config.get("grid.watchdog.secret", default=False)
         if secret==False or secret=="":
             raise RuntimeError("please configure grid.watchdog.secret in hrdconfig")
         self.secret=secret

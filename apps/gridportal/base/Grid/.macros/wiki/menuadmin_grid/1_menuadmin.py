@@ -27,7 +27,7 @@ Audits:/grid/Audits
 ECOs:/grid/ECOs
 Jobs:/grid/Jobs
 Job Queues:/grid/jobqueues
-JumpScripts:/grid/JumpScripts
+Jumpscripts:/grid/Jumpscripts
 Logs:/grid/Logs
 Nodes:/grid/Nodes
 Processes:/grid/Processes

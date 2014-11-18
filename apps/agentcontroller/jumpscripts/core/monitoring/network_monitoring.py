@@ -1,0 +1,41 @@
+from JumpScale import j
+import psutil
+
+descr = """
+gather network statistics
+"""
+
+organization = "jumpscale"
+author = "deboeckj@codescalers.com"
+license = "bsd"
+version = "1.0"
+category = "info.gather.nic"
+period = 10 #always in sec
+enable=True
+async=True
+queue='process'
+roles = []
+log=False
+
+def action():
+    import statsd
+    stats = statsd.StatsClient()
+    pipe = stats.pipeline()
+    counters=psutil.network_io_counters(True)
+    for nic, stat in counters.iteritems():
+        result = dict()
+        bytes_sent, bytes_recv, packets_sent, packets_recv, errin, errout, dropin, dropout = stat
+        result['kbytes_sent'] = int(round(bytes_sent/1024.0,0))
+        result['kbytes_recv'] = int(round(bytes_recv/1024.0,0))
+        result['packets_sent'] = packets_sent
+        result['packets_recv'] = packets_recv
+        result['errin'] = errin
+        result['errout'] = errout
+        result['dropin'] = dropin
+        result['dropout'] = dropout
+        for key, value in result.iteritems():
+            pipe.gauge("%s_%s_nic_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, nic, key), value)
+    pipe.send()
+
+if __name__ == '__main__':
+    action()

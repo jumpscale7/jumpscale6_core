@@ -12,6 +12,7 @@ import JumpScale.grid.osis
 import importlib
 import sys
 import copy
+import os
 try:
     import ujson as json
 except:
@@ -25,22 +26,29 @@ jp = j.packages.findNewest('jumpscale', 'agentcontroller')
 jp = jp.load(instance=opts.instance)
 j.application.instanceconfig = jp.hrd_instance
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7766)==False:
+while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
     time.sleep(0.1)
-    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 7766)"
+    print "cannot connect to redis main, will keep on trying forever, please start redis production (port 9999)"
 
 j.application.start("jumpscale:agentcontroller")
 j.application.initGrid()
 
 j.logger.consoleloglevel = 2
 
-while j.system.net.tcpPortConnectionTest("127.0.0.1",7769)==False:
-    time.sleep(0.1)
-    print "cannot connect to redis, will keep on trying forever, please start redis agentcontroller (port 7769)"
-
 import JumpScale.baselib.redis
-from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
+from JumpScale.grid.jumpscripts.JumpscriptFactory import Jumpscript
 
+
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers.polling import PollingObserver as Observer
+
+class JumpscriptHandler(FileSystemEventHandler):
+    def __init__(self, agentcontroller):
+        self.agentcontroller = agentcontroller
+
+    def on_any_event(self, event):
+        if event.src_path and not event.is_directory and event.src_path.endswith('.py'):
+            self.agentcontroller.reloadjumpscripts()
 
 class ControllerCMDS():
 
@@ -60,14 +68,20 @@ class ControllerCMDS():
         self.nodeclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'node')
         self.jumpscriptclient = j.core.osis.getClientForCategory(self.osisclient, 'system', 'jumpscript')
 
-        self.redisport=7769
+        self.redisport=9999
         self.redis = j.clients.redis.getGeventRedisClient("127.0.0.1", self.redisport)
         self.roles2agents = dict()
         self.sessionsUpdateTime = dict()
         self.agents2roles = dict()
 
-        j.logger.setLogTargetLogForwarder()
+        self.start()
+
+    def start(self):
         gevent.spawn(self._cleanScheduledJobs, 3600*24)
+        observer = Observer()
+        handler = JumpscriptHandler(self)
+        observer.schedule(handler, "jumpscripts", recursive=True)
+        observer.start()
 
     def _adminAuth(self,user,passwd):
         return self.nodeclient.authenticate(user, passwd)
@@ -82,7 +96,7 @@ class ControllerCMDS():
         """
         self._log("schedule cmd:%s_%s %s %s"%(gid,nid,cmdcategory,cmdname))
         if nid==None or nid==False:
-            raise RuntimeError("Nid can never be empty")
+            raise RuntimeError("NID can never be empty")
 
         if session<>None: 
             self._adminAuth(session.user,session.passwd) 
@@ -101,7 +115,7 @@ class ControllerCMDS():
         job.id=int(jobid)
 
         if jscriptid is None and session<>None:
-            action = self.getJumpScript(cmdcategory, cmdname, session=session)
+            action = self.getJumpscript(cmdcategory, cmdname, session=session)
             jscriptid = action.id
         job.jscriptid = jscriptid
 
@@ -153,8 +167,7 @@ class ControllerCMDS():
         print "want processmanagers to reload js:",
         for item in self.osisclient.list("system","node"):
             gid,nid=item.split("_")
-            if int(gid)==session.gid:
-                cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
+            cmds.scheduleCmd(gid,nid,cmdcategory="pm",jscriptid=0,cmdname="reloadjumpscripts",args={},queue="internal",log=False,timeout=60,roles=[],session=session)
         print "OK"            
 
     def restartWorkers(self,session=None):
@@ -176,6 +189,9 @@ class ControllerCMDS():
             job = copy.deepcopy(job)
             if 'result' in job and not isinstance(job["result"],str):
                 job['result'] = json.dumps(job['result'])
+            for key in ('args', 'kwargs'):
+                if key in job:
+                    job[key] = json.dumps(job[key])
             self.jobclient.set(job)
 
     def _deleteJobFromCache(self, job):
@@ -255,7 +271,7 @@ class ControllerCMDS():
         self._updateNetInfo(session.netinfo, node)
         guid, new, changed = self.nodeclient.set(node)
         node = self.nodeclient.get(guid)
-        result = {'node': node.dump(), 'webdiskey': j.tools.jumpscriptsManager.secret}
+        result = {'node': node.dump(), 'webdiskey': j.core.jumpscripts.secret}
         return result
 
     def register(self,session):
@@ -274,14 +290,14 @@ class ControllerCMDS():
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
             eco = j.errorconditionhandler.getErrorConditionObject(eco)
-        j.errorconditionhandler.processErrorConditionObject(eco)
+        eco.process()
 
     def loadJumpscripts(self, path="jumpscripts", session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
         print "PUSHJUMPSCRIPTS TO WEBDIS"
-        j.tools.jumpscriptsManager.pushToGridMaster()
+        j.core.jumpscripts.pushToGridMaster()
         print "OK"
         print "LOADJUMPSCRIPTS in AC & OSIS"
         for path2 in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
@@ -290,7 +306,7 @@ class ControllerCMDS():
                 continue
 
             try:
-                script = JumpScript(path=path2)
+                script = Jumpscript(path=path2)
             except Exception as e:
                 msg="Could not load jumpscript:%s\n" % path2
                 msg+="Error was:%s\n" % e
@@ -304,7 +320,7 @@ class ControllerCMDS():
                 name=j.system.fs.getBaseName(path2)
                 name=name.replace(".py","").lower()
 
-            t=self.jumpscriptclient.new(name=script.name, action=script.module.action)
+            t=self.jumpscriptclient.new(name=name, action=script.module.action)
             t.__dict__.update(script.getDict())
 
             guid,r,r=self.jumpscriptclient.set(t)
@@ -319,7 +335,7 @@ class ControllerCMDS():
         print "OK"
 
        
-    def getJumpScript(self, organization, name,gid=None,reload=False, session=None):
+    def getJumpscript(self, organization, name,gid=None,reload=False, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
 
@@ -331,7 +347,7 @@ class ControllerCMDS():
         if key in self.jumpscripts:
             if reload:
                 # from IPython import embed
-                # print "DEBUG NOW getJumpScript reload"
+                # print "DEBUG NOW getJumpscript reload"
                 # embed()
                 pass
             else:                
@@ -340,7 +356,7 @@ class ControllerCMDS():
             j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s:%s" % (organization, name), category="action.notfound", die=False)
             return ""
 
-    def getJumpScriptFromId(self,id,gid=None,session=None):
+    def getJumpscriptFromId(self,id,gid=None,session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
         if gid==None and session <> None:
@@ -353,7 +369,7 @@ class ControllerCMDS():
         else:
             j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s" % (key), category="action.notfound", die=False)
 
-    def existsJumpScript(self, organization, name,gid=None, session=None):
+    def existsJumpscript(self, organization, name,gid=None, session=None):
         if session<>None:
             self._adminAuth(session.user,session.passwd)
             gid = session.gid
@@ -364,7 +380,7 @@ class ControllerCMDS():
         else:
             j.errorconditionhandler.raiseOperationalCritical("Cannot find jumpscript %s:%s" % (organization, name), category="action.notfound", die=False)
 
-    def listJumpScripts(self, organization=None, cat=None, session=None):
+    def listJumpscripts(self, organization=None, cat=None, session=None):
         """
         @return [[org,name,category,descr],...]
         """
@@ -379,15 +395,19 @@ class ControllerCMDS():
             return True
         return [[t.id,t.organization, t.name, t.category, t.descr] for t in filter(myfilter, self.jumpscripts.values()) ]
 
-    def executeJumpScript(self, organization, name, nid=None, role=None, args={},all=False, \
+    def executeJumpscript(self, organization, name, nid=None, role=None, args={},all=False, \
         timeout=600,wait=True,queue="", gid=None,errorreport=True, session=None):
         """
         @param roles defines which of the agents which need to execute this action
         @all if False will be executed only once by the first found agent, if True will be executed by all matched agents
         """
+        # validate params
+        if not nid and not gid and not role:
+            j.events.inputerror_critical("executeJumpscript requires either nid and gid or role")
         def noWork():
             sessionid = session.id
-            job=self.jobclient.new(sessionid=sessionid,gid=gid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
+            ngid = gid or j.application.whoAmI.gid
+            job=self.jobclient.new(sessionid=sessionid,gid=ngid,nid=nid,category=organization,cmd=name,queue=queue,args=args,log=True,timeout=timeout,roles=[role],wait=wait,errorreport=errorreport)
             self._log("nothingtodo")
             job.state="NOWORK"
             job.timeStop=job.timeStart
@@ -396,7 +416,7 @@ class ControllerCMDS():
 
         self._adminAuth(session.user,session.passwd)
         self._log("AC:get request to exec JS:%s %s on node:%s"%(organization,name,nid))
-        action = self.getJumpScript(organization, name, session=session)
+        action = self.getJumpscript(organization, name, session=session)
         if action==None or str(action).strip()=="":
             raise RuntimeError("Cannot find jumpscript %s %s"%(organization,name))
         if not queue:
@@ -637,7 +657,7 @@ for item in j.system.fs.listFilesInDir("processmanager/processmanagercmds",filte
 # j.system.fs.changeDir("..")
 
 cmds=daemon.daemon.cmdsInterfaces["agent"]
-cmds.loadJumpscripts()
+cmds.reloadjumpscripts()
 # cmds.restartProcessmanagerWorkers()
 
 daemon.start()

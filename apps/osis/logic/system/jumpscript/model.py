@@ -29,8 +29,7 @@ class Jumpscript(OsisBaseObject):
             if action<>None:
                 self.setArgs(action)
             else:
-                pass
-                # self.args=[]
+                self.args=[]
                 # self.argsDefaults = args.defaults
                 # self.argsVarArgs = args.varargs
                 # self.argsKeywords = args.keywords
@@ -76,7 +75,7 @@ class Jumpscript(OsisBaseObject):
         """
         out=""
         for item in ["gid","args","roles","source"]:
-            out+=str(self.__dict__[item])
+            out+=str(self.__dict__.get(item))
         return j.tools.hash.md5_string(out)
             
 

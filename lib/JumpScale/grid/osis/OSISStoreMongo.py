@@ -184,6 +184,16 @@ class OSISStoreMongo(OSISStore):
         #NOT RELEVANT FOR THIS TYPE OF DB
         pass
 
+    def count(self, query, session=None):
+        db, counter = self._getMongoDB(session)
+        return db.find(query).count()
+
+    def native(self, methodname, kwargs, session):
+        db, counter = self._getMongoDB(session)
+        method = getattr(db, methodname)
+        kwargs = kwargs or {}
+        return method(**kwargs)
+
     def find(self, query, start=0, size=200, session=None):  
         """
         query can be a dict or a string
@@ -347,14 +357,9 @@ class OSISStoreMongo(OSISStore):
         db.drop()
 
     def deleteSearch(self,query, session=None):
-        if not j.basetype.string.check(query):
-            raise RuntimeError("not implemented")
-        query+=' @fields:guid'
-        counter=0
-        for item in self.find(query=query, session=session):
-            self.delete(item["guid"], session=session)
-            counter+=1
-        return counter
+        db, _ = self._getMongoDB(session)
+        count = db.remove(query)['n']
+        return count
         
     def updateSearch(self,query,update, session=None):
         """

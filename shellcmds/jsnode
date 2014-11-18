@@ -13,7 +13,7 @@ parser.add_argument('--roles', dest='roles', required=False, type=str, help='Use
 
 
 #check redis is there if not try to start
-if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+if not j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
     j.packages.findNewest(name="redis").install()
     j.packages.findNewest(name="redis").start()
 
@@ -25,21 +25,15 @@ def _deleteNode(nid):
 
     print "Starting delete of node %s" % nid
     categories = oscl.listNamespaceCategories('system')
+    categories.remove('info')
 
     for category in categories:
         print "  * Deleting %s..." % category
         catclient = j.core.osis.getClientForCategory(oscl, 'system', category)
         if category == 'stats':
-            catclient.delete(nid)
+            # TODO catclient.delete(nid)
             continue
-        if category in ['job', 'eco', 'log']:
-            catclient.delete({"term":{"nid":nid}})
-            continue
-        total, results = catclient.simpleSearch({'nid':nid}, size=0, withguid=True, withtotal=True)
-        results = catclient.simpleSearch({'nid':nid}, size=total, withguid=True)
-        for result in results:
-            guid = result['guid']
-            catclient.delete(guid)
+        catclient.deleteSearch({"nid":nid})
 
     try:
         ncl.delete(nodeguid)
@@ -52,7 +46,7 @@ def _deleteNode(nid):
 if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole']:
     import JumpScale.grid.osis
 
-    oscl = j.core.osis.getClient(user='root')
+    oscl = j.core.osis.getClientByInstance('main')
     ncl = j.core.osis.getClientForCategory(oscl, 'system', 'node')
 
 
@@ -78,7 +72,7 @@ if opts.action in ['delete', 'enable', 'disable', 'addrole', 'list', 'deleterole
 
     else:
         nodes = dict()
-        if not opts.nid:
+        if opts.nid is None:
             query = {}
             if opts.gid:
                 query['gid'] = opts.gid

@@ -2,7 +2,7 @@ from JumpScale import j
 
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 
-class Job(OsisBaseObject):
+class Info(OsisBaseObject):
 
     """
     identifies a piece of info of the env

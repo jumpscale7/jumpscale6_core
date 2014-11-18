@@ -1,0 +1,10 @@
+[hekad]
+#maxprocs = 2
+share_dir = "/opt/heka/share"
+
+[TcpInput]
+address = "localhost:999"
+parser_type = "token"
+delimiter = "\n"
+
+

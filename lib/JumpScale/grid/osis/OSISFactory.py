@@ -196,7 +196,7 @@ class OSISFactory:
         """
         how to use
 
-        client=j.core.osis.getClient("localhost",port=5544,user="root",passwd="rooter",ssl=False)
+        client=j.core.osis.getClientByInstance('main')
         client4node=j.core.osis.getClientForCategory(client,"system","node")
         """
         if client==None:

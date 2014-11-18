@@ -397,7 +397,7 @@ class system_gridmanager(j.code.classGetBase()):
         """
         return self.osis_grid.simpleSearch({})
 
-    def getJumpScript(self, organization, name, **kwargs):
+    def getJumpscript(self, organization, name, **kwargs):
         """
         calls internally the agentcontroller to fetch detail for 1 jumpscript
         param:jsorganization
@@ -405,7 +405,7 @@ class system_gridmanager(j.code.classGetBase()):
         """
         return self.osis_jumpscript.simpleSearch({'organization': organization, 'name': name})[0]
 
-    def getJumpScripts(self, organization=None, **kwargs):
+    def getJumpscripts(self, organization=None, **kwargs):
         """
         calls internally the agentcontroller
         return: lists the jumpscripts with main fields (organization, name, category, descr)

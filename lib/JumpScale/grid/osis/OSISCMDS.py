@@ -24,11 +24,12 @@ class OSISCMDS(object):
             raise RuntimeError("Cannot process, only supported for system/user namespace")
         oi = self._getOsisInstanceForCat("system", "user")
 
-        results = oi.find({'query': {'bool': {'must': [{'term': {'id': name}}]}}}, session=session)
-        if not results[0]:
+        query = {'id': name, 'active': True}
+        results = oi.find(query, session=session)[1:]
+        if not results:
             return {"authenticated":False,"exists":False}
 
-        userguid = results[1]['guid']
+        userguid = results[0]['guid']
         user = oi.get(userguid, session=session)
 
         if user["passwd"]==j.tools.hash.md5_string(passwd) or user["passwd"]==passwd:
@@ -40,7 +41,7 @@ class OSISCMDS(object):
 
     def _doAuth(self, namespace, categoryname, session):
         oi = self._getOsisInstanceForCat(namespace, categoryname)
-        if oi.auth<>None:
+        if hasattr(oi, 'auth') and oi.auth<>None:
             if oi.auth.authenticate(oi,"get",session.user,session.passwd, session=session)==False:
                 raise RuntimeError("Authentication error on get %s_%s for user %s"%(namespace,categoryname,session.user))
         return oi
@@ -97,6 +98,15 @@ class OSISCMDS(object):
         if prefix==None:
             return oi.list(session=session)
         return oi.list(prefix, session=session)
+
+    def count(self, namespace, categoryname, query=None, session=None):
+        oi = self._doAuth(namespace, categoryname, session)
+        return oi.count(query, session=session)
+
+    def native(self, namespace, categoryname, methodname, kwargs=None, session=None):
+        oi = self._doAuth(namespace, categoryname, session)
+        return oi.native(methodname=methodname, session=session, kwargs=kwargs)
+
 
     def checkChangeLog(self):
         rediscl=None
@@ -219,12 +229,14 @@ class OSISCMDS(object):
         """
 
         path=j.system.fs.joinPaths(self.path, namespace,categoryname,"model.py")
-        osismodelpath=j.system.fs.joinPaths(self.path, namespace,categoryname,"%s_%s_osismodelbase.py"%(namespace,categoryname))
-        if j.system.fs.exists(osismodelpath):
-            osismodelpathSpec=j.system.fs.joinPaths(self.path, namespace,"model.spec")
-            return 1,j.system.fs.fileGetContents(osismodelpathSpec)
-        elif j.system.fs.exists(path):
-            return 2,j.system.fs.fileGetContents(path)
+        genclassname = "%s_%s_osismodelbase"%(namespace,categoryname)
+        osismodelpath=j.system.fs.joinPaths(self.path, namespace,categoryname,"%s.py"%(genclassname))
+        if j.system.fs.exists(path):
+            model = j.system.fs.fileGetContents(path)
+            if j.system.fs.exists(osismodelpath):
+                model = j.system.fs.fileGetContents(osismodelpath) + model
+                model = model.replace("from %s import %s" % (genclassname, genclassname), "")
+            return 2, model
         else:
             return 3,""
 

@@ -1,4 +1,4 @@
-var filter = ARGS.nid + " and gid = " + ARGS.gid;
+var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_";
 
 return {
   "title": "Grafana",
@@ -71,14 +71,11 @@ return {
             {
               "target": "randomWalk('random walk')",
               "function": "mean",
-              "column": "cpu.percent",
-              "series": "system",
+              "column": "value / 10.0",
+              "series": prefix + "cpu.promile",
               "query": "",
               "alias": "CPU",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
+              "interval": "10s"
             }
           ],
           "aliasColors": {},
@@ -118,12 +115,12 @@ return {
             "enable": false
           },
           "resolution": 100,
-          "lines": false,
-          "fill": 2,
+          "lines": true,
+          "fill": 100,
           "linewidth": 1,
           "points": false,
           "pointradius": 5,
-          "bars": true,
+          "bars": false,
           "stack": true,
           "legend": {
             "show": true,
@@ -146,51 +143,36 @@ return {
           "targets": [
             {
               "function": "mean",
-              "column": "cpu.time.system",
-              "series": "system",
+              "series": prefix + "cpu.time.system",
+              "column": "value",
               "query": "",
               "alias": "System",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "5m"
+              "interval": "1m"
             },
             {
               "function": "mean",
-              "column": "cpu.time.user",
-              "series": "system",
+              "series": prefix + "cpu.time.user",
+              "column": "value",
               "query": "",
               "alias": "User",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "5m"
+              "interval": "1m"
             },
             {
               "function": "mean",
-              "column": "cpu.time.idle",
-              "series": "system",
+              "series": prefix + "cpu.time.idle",
+              "alias": "IDLE Time",
+              "column": "value",
               "query": "",
               "alias": "Idle",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "5m"
+              "interval": "1m"
             },
             {
               "function": "mean",
-              "column": "cpu.time.iowait",
-              "series": "system",
+              "series": prefix + "cpu.time.iowait",
+              "column": "value",
               "query": "",
               "alias": "IO Wait",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "5m"
+              "interval": "1m"
             }
           ],
           "aliasColors": {},

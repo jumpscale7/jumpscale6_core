@@ -80,14 +80,19 @@ class MacroExecutorBase(object):
 
         return space, macro, tags, cmdstr
 
-    def findMacros(self, doc):
+    def findMacros(self, doc, content=None):
         """
-        @returns list of list with macrostrwithtags,withouttags
         """
-        text = doc.content.strip()
+        content = content or doc.content
+        text = content.strip()
         if text == "":
             return []
-        return self.getMacroCandidates(text)
+        result = []
+        for macrostr in self.getMacroCandidates(text):  # make unique
+            macrospace, macro, tags, cmd = self.parseMacroStr(macrostr)
+            if self._getTaskletGroup(doc, macrospace, macro):
+                result.append((macrostr, macrospace, macro, tags, cmd))
+        return result
 
 
 class MacroExecutorPreprocess(MacroExecutorBase):
@@ -112,7 +117,7 @@ class MacroExecutorPreprocess(MacroExecutorBase):
                     prio, macroname = line.split(":")
                     priority[macroname] = int(prio)
 
-    def _executeMacroOnDoc(self, macrospace, macro, tags, cmdstr, macrostr, doc, paramsExtra=None):
+    def _executeMacroOnDoc(self, macrostr, macrospace, macro, tags, cmdstr, doc, paramsExtra=None):
         """
         find macro's in a doc & execute the macro
         a doc is a document in preprocessor phase
@@ -140,32 +145,36 @@ class MacroExecutorPreprocess(MacroExecutorBase):
             space = entry[0] or spacename
             return self.priority.get(space, dict()).get(entry[1], 9999)
 
-        macrostrs = self.findMacros(doc)
-        if len(macrostrs) > 0:
-            macros = list()
-            for macrostr in macrostrs:
-                macrospace, macro, tags, cmdstr = self.parseMacroStr(macrostr)
+        macros = self.findMacros(doc)
+        while macros:
+            for macroitem in macros[:]:
+                macrostr, macrospace, macro, tags, cmd = macroitem
                 macro = macro.lower().strip()
                 # check which macro's are params
                 if macro in paramsExtra:
                     doc.content = doc.content.replace(macrostr, paramsExtra[macro])
+                    macros.remove(macroitem)
                     continue
                 if macro in doc.preprocessor.params:
                     doc.content = doc.content.replace(macrostr, self.params[macro])
+                    macros.remove(macroitem)
                     continue
                 if macro == "author":
                     doc.content = doc.content.replace(macrostr, ','.join(doc.author))
+                    macros.remove(macroitem)
                     continue
                 if macro == "docpathshort":
                     doc.content = doc.content.replace(macrostr, doc.shortpath)
+                    macros.remove(macroitem)
                     continue
                 if macro == "docpath":
                     doc.content = doc.content.replace(macrostr, doc.path)
+                    macros.remove(macroitem)
                     continue
-                macros.append((macrospace, macro, tags, cmdstr, macrostr, doc))
 
             for macroentry in sorted(macros, key=macrosorter):
-                doc = self._executeMacroOnDoc(*macroentry)
+                doc = self._executeMacroOnDoc(*macroentry, doc=doc)
+            macros = self.findMacros(doc)
         return doc
 
 
@@ -212,16 +221,6 @@ class MacroExecutorPage(MacroExecutorBase):
         page0 = self.executeMacroAdd2Page(macrostr, page0, doc, requestContext, paramsExtra)
         return page0.body
 
-    def processMacrosInWikiContent(self, content):
-        for macrostr, macrocmd in self.findMacros(content):
-            # print "DEBUG NOW macro in wiki  content (e.g. for table)"
-            # from IPython import embed
-            # embed()
-            ##TODO
-            pass
-        return content
-
-
 class MacroExecutorWiki(MacroExecutorBase):
 
     def execMacrosOnContent(self, content, doc, paramsExtra={}, ctx=None):
@@ -233,25 +232,25 @@ class MacroExecutorWiki(MacroExecutorBase):
                 content = doc.applyParams(paramsExtra, findfresh=True, content=content)
             return content, self.findMacros(doc, content)
 
-        content, macrostrs = process(content)
-        while macrostrs:
+        content, macros = process(content)
+        while macros:
             recursivedepth += 1
             if recursivedepth > 20:
                 content += 'ERROR: recursive error in executing macros'
                 return content, doc
 
-            for macrostr in macrostrs:
-                content, doc = self.executeMacroOnContent(content, macrostr, doc, paramsExtra, ctx=ctx)
+            for macroitem in macros:
+                content, doc = self.executeMacroOnContent(content, macroitem, doc, paramsExtra, ctx=ctx)
 
-            content, macrostrs = process(content)
+            content, macros = process(content)
         return content, doc
 
-    def executeMacroOnContent(self, content, macrostr, doc, paramsExtra=None, ctx=None):
+    def executeMacroOnContent(self, content, macroitem, doc, paramsExtra=None, ctx=None):
         """
         find macro's in a doc & execute the macro
         a doc is a document in preprocessor phase
         """
-        macrospace, macro, tags, cmdstr = self.parseMacroStr(macrostr)
+        macrostr, macrospace, macro, tags, cmdstr = macroitem
         taskletgroup = self._getTaskletGroup(doc, macrospace, macro)
         if taskletgroup:
             try:
@@ -280,27 +279,3 @@ class MacroExecutorWiki(MacroExecutorBase):
 
         return content,doc
 
-    def findMacros(self, doc, content=None):
-        """
-        """
-        content = content or doc.content
-        text = content.strip()
-        if text == "":
-            return []
-        result = []
-        for item in self.getMacroCandidates(text):  # make unique
-            macrospace, macro, tags, cmd = self.parseMacroStr(item)
-            # print "macro2:%s" % macro
-            if self._getTaskletGroup(doc, macrospace, macro):
-                result.append(item)
-
-        return result
-
-
-    def existsMacros(self, doc):
-        macrostrs = self.findMacros(doc)
-        for macrostr in macrostrs:
-            macrospace, macro, tags, cmd = self.parseMacroStr(macrostr)
-            if not self._getTaskletGroup(doc, macrospace, macro):
-                return False
-        return False

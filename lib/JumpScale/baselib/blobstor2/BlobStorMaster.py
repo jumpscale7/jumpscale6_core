@@ -212,13 +212,12 @@ class BlobStorMaster:
     def start(self):
 
         #check redis is there if not try to start
-        if not j.system.net.tcpPortConnectionTest("127.0.0.1",7768):
+        if not j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
             j.packages.findNewest(name="redis").install()
             j.packages.findNewest(name="redis").start()
 
         def checkosis():
-            masterip=j.application.config.get("grid.master.ip")
-            self.osis = j.core.osis.getClient(masterip, user='root')
+            self.osis = j.core.osis.getClientByInstance('main')
 
         if 'jumpscale__osis' in j.tools.startupmanager.listProcesses():
             j.tools.startupmanager.startProcess("jumpscale","osis")

@@ -10,6 +10,7 @@ import errno
 import tempfile
 import codecs
 import cPickle as pickle
+import stat
 from stat import ST_MTIME
 
 
@@ -1172,6 +1173,11 @@ class SystemFS:
             return False
         except:
             raise RuntimeError('Failed to check if the specified path: %s is a file...in system.fs.isFile'% path)
+
+
+    def isExecutable(self, path):
+        statobj=self.statPath(path)
+        return not (stat.S_IXUSR & statobj.st_mode==0)
 
     def isLink(self, path,checkJunction=False):
         """Check if the specified path is a link

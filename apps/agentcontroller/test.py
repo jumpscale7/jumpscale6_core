@@ -23,7 +23,7 @@ res=ac.execute("jumpscale","echo",role="node",queue="io")
 print res
 
 
-ac.listJumpScripts()
+ac.listJumpscripts()
 
 j.application.stop()
 

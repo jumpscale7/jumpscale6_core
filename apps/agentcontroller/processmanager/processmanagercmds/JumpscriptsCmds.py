@@ -6,7 +6,7 @@ from redis import Redis
 # import JumpScale.baselib.redisworker
 from JumpScale.baselib.redisworker.RedisWorker import RedisWorkerFactory
 import crontab
-from JumpScale.grid.jumpscripts.JumpscriptFactory import JumpScript
+from JumpScale.grid.jumpscripts.JumpscriptFactory import Jumpscript
 
 class JumpscriptsCmds():    
 
@@ -42,7 +42,7 @@ class JumpscriptsCmds():
         self.jumpscripts={}
 
         import JumpScale.grid.jumpscripts
-        j.tools.jumpscriptsManager.loadFromGridMaster()
+        j.core.jumpscripts.loadFromGridMaster()
 
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'processmanager', 'jumpscripts')
         if not j.system.fs.exists(path=jspath):
@@ -65,15 +65,15 @@ class JumpscriptsCmds():
 
     def _loadFromPath(self, path):
         self.startatboot = list()
-        jumpscripts = self.agentcontroller_client.listJumpScripts()
+        jumpscripts = self.agentcontroller_client.listJumpscripts()
         iddict = { (org, name): jsid for jsid, org, name, _,_ in jumpscripts }
         for jscriptpath in j.system.fs.listFilesInDir(path=path, recursive=True, filter="*.py", followSymlinks=True):
-            js = JumpScript(path=jscriptpath)
+            js = Jumpscript(path=jscriptpath)
             js.id = iddict[(js.organization, js.name)]
             # print "from local:",
-            self._processJumpScript(js, self.startatboot)
+            self._processJumpscript(js, self.startatboot)
 
-    def _processJumpScript(self, jumpscript, startatboot):
+    def _processJumpscript(self, jumpscript, startatboot):
         roles = set(j.core.grid.roles)
         if '*' in jumpscript.roles:
             jumpscript.roles.remove('*')

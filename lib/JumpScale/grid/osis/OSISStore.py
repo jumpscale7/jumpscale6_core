@@ -255,7 +255,8 @@ class OSISStore(object):
                     return
                 j.errorconditionhandler.raiseOperationalCritical(msg, category='osis.index.parse', msgpub='', die=False, tags='', eco=None,extra=data)
             else:
-                j.errorconditionhandler.processErrorConditionObject(j.errorconditionhandler.parsePythonErrorObject(e))
+                eco=j.errorconditionhandler.parsePythonErrorObject(e)
+                eco.process()
 
     def existsIndex(self,key,timeout=0):
         if key==None:

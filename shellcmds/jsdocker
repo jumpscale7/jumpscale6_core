@@ -3,12 +3,13 @@ from JumpScale import j
 from JumpScale.baselib import cmdutils
 import JumpScale.lib.docker
 import JumpScale.lib.diskmanager
+import sys
 
 j.application.start("jsmachine_docker")
 
 parser = cmdutils.ArgumentParser()
 #'mountdisks','unmountdisks'
-parser.add_argument("action", choices=['ps','new','list','destroyall','destroy','cmd','rdp','ssh','start','stop','restart','getip','exportTGZ','importTGZ','exportR','importR'], help='Command to perform')
+parser.add_argument("action", choices=['ps','new','pull','commit','list','destroyall','destroy','cmd','ssh','start','stop','restart','getip','exportTGZ','importTGZ','exportR','importR'], help='Command to perform')
 parser.add_argument("-n", '--name', help='machine name')
 parser.add_argument("-m", '--bname', help='name of backup (used for import/export)')
 parser.add_argument("-b", '--base', help='base to clone from')
@@ -42,18 +43,37 @@ if opts.action =='ps':
 
 ##########NEW
 if opts.action =='list':
-    running,stopped=l.list()
+    #@todo bug list is not working on jsdocker
+    containers=l.list()
     print "## running:"
-    for item in running:
+    for item in containers:
         print "  machine: %-25s %s"%(item,l.getIp(item))
-    print "## stopped:"
-    for item in stopped:
-        print "  machine: %-25s %s"%(item,l.getIp(item))
+
+if opts.action =='pull':
+    if opts.base==None:
+        opts.base="despiegk/mc"
+    cmd="docker pull %s"%opts.base
+    j.system.process.executeWithoutPipe(cmd)
+
+if opts.action =='commit':
+    if opts.name==None:
+        print "specify name of machine with -n"
+        sys.exit(1)
+    if opts.base==None:
+        print "specify name of image to commit to with -b"
+        sys.exit(1)
+    cmd="docker rmi %s"%opts.base
+    print cmd
+    j.system.process.executeWithoutPipe(cmd,dieOnNonZeroExitCode=False)
+    cmd="docker commit %s %s"%(opts.name,opts.base)
+    print cmd
+    j.system.process.executeWithoutPipe(cmd)
 
 if opts.action =='new':
     if opts.base==None:
         opts.base="despiegk/mc"
     l.create(name=opts.name,stdout=True,base=opts.base,ports=opts.ports,vols=opts.vols,volsro=opts.volsro,cpu=opts.cpu,mem=opts.mem)
+
 
 if opts.action =='getip':
     if opts.name==None:

@@ -70,13 +70,13 @@ class PortalProcess():
 
         dbtype = ini.getValue("main", "dbtype").lower().strip()
         if dbtype == "fs":
-            self.dbtype = j.enumerators.KeyValueStoreType.FILE_SYSTEM
+            self.dbtype = "FILE_SYSTEM"
         elif dbtype == "mem":
-            self.dbtype = j.enumerators.KeyValueStoreType.MEMORY
+            self.dbtype = "MEMORY"
         elif dbtype == "redis":
-            self.dbtype = j.enumerators.KeyValueStoreType.REDIS
+            self.dbtype = "REDIS"
         elif dbtype == "arakoon":
-            self.dbtype = j.enumerators.KeyValueStoreType.ARAKOON
+            self.dbtype = "ARAKOON"
         else:
             raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon, used here'%s'"%dbtype)
 
@@ -389,11 +389,7 @@ class PortalProcess():
             self.webserver.start(reset=reset)
 
     def processErrorConditionObject(self, eco):
-        print eco
-        #@todo need to forward to logger
-
-    def redirectErrors(self):
-        j.errorconditionhandler.processErrorConditionObject = self.processErrorConditionObject  # @todo kds redirect
+        eco.process()
 
     def restartInProcess(self, app):
         args = sys.argv[:]

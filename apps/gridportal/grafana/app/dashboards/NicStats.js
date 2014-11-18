@@ -1,4 +1,4 @@
-var filter = ARGS.nid + " and gid = " + ARGS.gid + " and nic_id = '" + ARGS.name + "' ";
+var prefix = "stats.gauges." + ARGS.gid + "_" + ARGS.nid + "_nic_" + ARGS.name + "_";
 return {
   "title": "Grafana",
   "tags": [],
@@ -66,26 +66,16 @@ return {
           "targets": [
             {
               "function": "difference",
-              "column": "kbytes_recv * 1024",
-              "series": "nic",
-              "query": "",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "10m",
+              "series": prefix + "kbytes_recv",
+              "column": "value * 1024",
+              "interval": "20s",
               "alias": "Received"
             },
             {
               "function": "difference",
-              "column": "kbytes_sent * 1024",
-              "series": "nic",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "query": "",
-              "interval": "10m",
+              "series": prefix + "kbytes_sent",
+              "column": "value * 1024",
+              "interval": "20s",
               "alias": "Sent"
             }
           ],
@@ -146,27 +136,17 @@ return {
           },
           "targets": [
             {
-              "function": "mean",
-              "column": "errin",
-              "series": "nic",
-              "query": "",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "1m",
+              "function": "difference",
+              "series": prefix + "errin",
+              "column": "value",
+              "interval": "20s",
               "alias": "In"
             },
             {
-              "function": "mean",
-              "column": "errout",
-              "series": "nic",
-              "query": "",
-              "condition_filter": true,
-              "condition_key": "nid",
-              "condition_op": "=",
-              "condition_value": filter,
-              "interval": "1m",
+              "function": "difference",
+              "series": prefix + "errout",
+              "column": "value",
+              "interval": "20s",
               "alias": "Out"
             }
           ],

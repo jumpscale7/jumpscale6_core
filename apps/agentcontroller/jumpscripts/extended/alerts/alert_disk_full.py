@@ -25,7 +25,7 @@ def action():
     except Exception:
         return
     import JumpScale.grid.osis
-    ocl = j.core.osis.getClient(user='root')
+    ocl = j.core.osis.getClientByInstance('main')
     scl = j.core.osis.getClientForCategory(ocl, 'system', 'stats')
     results = scl.search({'target':'smartSummarize(n*.disk.*.space_percent, "15min", "avg")', 'from': '-15min'})
     for noderesult in results:

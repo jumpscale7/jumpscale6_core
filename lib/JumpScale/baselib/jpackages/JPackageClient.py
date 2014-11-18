@@ -37,8 +37,6 @@ class JPackageClient():
         from JumpScale.baselib import platforms
 
         import JumpScale.baselib.actions
-        import JumpScale.baselib.bitbucket
-        import JumpScale.baselib.mercurial
         import JumpScale.baselib.taskletengine
         import JumpScale.baselib.blobstor
         import JumpScale.baselib.cloudsystemfs            
@@ -485,6 +483,8 @@ class JPackageClient():
 
         namefound=""
         domainfound=""
+        minversion=minversion.strip()
+        maxversion=maxversion.strip()
         if minversion=="":
             minversion="0"
         if maxversion=="" or maxversion=="0":
@@ -512,7 +512,7 @@ class JPackageClient():
         if not result:
             if returnNoneIfNotFound:
                 return None
-            raise RuntimeError("Did not find jpackages with criteria domain:%s, name:%s, minversion:%s, maxversion:%s, platform:%s" % (domain,name,minversion,maxversion,platform))
+            j.events.inputerror_critical("Did not find jpackages with criteria domain:%s, name:%s, minversion:%s, maxversion:%s, platform:%s" % (domain,name,minversion,maxversion,platform),"jpackages.findfirst")
         return result[0]
 
 
@@ -1057,6 +1057,7 @@ class JPackageClient():
         """
         @param version is string
         """
+        version=version.strip()
         if version.find(",")<>-1:
             raise RuntimeError("version string can only contain numbers and . e.g. 1.1.1")
         if version=="":
@@ -1075,7 +1076,7 @@ class JPackageClient():
             level=len(versions)-counter-1
             if versions[counter]=="":
                 versions[counter]="0"
-            result=int(result+(math.pow(1000,level)*int(versions[counter].strip())))
+            result=int(result+(math.pow(1000,level)*int(versions[counter].strip())))                
         return result
 
     def pm_getJPackageConfig(self, jpackagesMDPath):

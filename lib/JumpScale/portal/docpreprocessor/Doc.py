@@ -62,7 +62,6 @@ class Doc(object):
         self.docparams = {}
         self.defaultPath = ""
         self.usedefault = False
-        self.hasMacros = False
         self.navigation = ""
         self.key = j.base.idgenerator.generateGUID()
         self.htmlHeadersCustom = []  # are extra html elements to be used which do not come from wiki
@@ -235,16 +234,14 @@ class Doc(object):
         return content
 
     def applyTemplate(self, params):
+        self.appliedparams.update(params)
         template = self.jenv.from_string(self.content)
         self.content = template.render(**params)
 
     def executeMacrosPreprocess(self):
         if self.source == "":
             self.loadFromDisk()
-        
         self.preprocessor.macroexecutorPreprocessor.execMacrosOnDoc(self)
-
-        self.hasMacros = self.preprocessor.macroexecutorWiki.existsMacros(self)  # find the macro tags on the doc
 
     def executeMacrosDynamicWiki(self, paramsExtra={}, ctx=None):
         # print "execute dynamic %s" % self.name

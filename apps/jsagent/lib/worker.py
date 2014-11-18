@@ -21,8 +21,9 @@ import JumpScale.baselib.redis
 from JumpScale.baselib.redisworker.RedisWorker import RedisWorkerFactory
 import JumpScale.grid.jumpscripts
 
-import sys
 import os
+
+RUNTIME = 24 * 3600
 
 def restart_program():
     """Restarts the current program.
@@ -41,6 +42,7 @@ class Worker(object):
         self.redisw = RedisWorkerFactory()
         self.queuename=queuename
         self.init()
+        self.starttime = time.time()
 
     def getClient(self, job):
         ipaddr = getattr(job, 'achost', None)
@@ -56,7 +58,6 @@ class Worker(object):
         return client
 
     def init(self):
-
         j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.tmpDir,"jumpscripts"))
         self.redisw.redis.delete("workers:action:%s"%self.queuename)
 
@@ -74,6 +75,10 @@ class Worker(object):
     def run(self):
         self.log("STARTED")
         while True:
+            self.redisw.redis.hset("workers:heartbeat",self.queuename,int(time.time()))
+            if self.starttime + RUNTIME < time.time():
+                print "Running for %s seconds restarting" % RUNTIME
+                restart_program()
 
             try:
                 self.log("check if work")
@@ -130,7 +135,7 @@ class Worker(object):
                             eco.code=jscript.source
                             eco.jid = job.guid
                             eco.category = 'workers.compilescript'
-                            j.errorconditionhandler.processErrorConditionObject(eco)
+                            eco.process()
                             job.state="ERROR"
                             eco.tb = None
                             job.result=eco.__dict__
@@ -175,7 +180,7 @@ class Worker(object):
                         eco.backtrace=out
 
                         if job.id<1000000 and job.errorreport==True:
-                            j.errorconditionhandler.processErrorConditionObject(eco)
+                            eco.process()
                         else:
                             self.log(eco)
                         # j.events.bug_warning(msg,category="worker.jscript.notexecute")
@@ -201,7 +206,7 @@ class Worker(object):
 
         if job.jscriptid>1000000:
             #means is internal job
-            # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",7768,"workers:return:%s"%jobid)
+            # q=j.clients.redis.getGeventRedisQueue("127.0.0.1",9999,"workers:return:%s"%jobid)
             self.redisw.redis.hset("workers:jobs",job.id, json.dumps(job.__dict__))
             self.redisw.redis.rpush("workers:return:%s"%job.id,time.time())            
         else:

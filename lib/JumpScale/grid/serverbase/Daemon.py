@@ -1,6 +1,7 @@
 from JumpScale import j
 import JumpScale.baselib.serializers
 from JumpScale.grid.serverbase import returnCodes
+from JumpScale.core.errorhandling.ErrorConditionHandler import BaseException
 import inspect
 import copy
 import time
@@ -193,7 +194,8 @@ class Daemon(object):
         except Exception, e:
             # if str(e)=="STOP APPLICATION 112299":  #needs to be cryptic otherwise smart developers can fake this
             #     j.application.stop()
-            
+            if isinstance(e, BaseException):
+                return returnCodes.ERROR, returnformat, e.eco
             eco = j.errorconditionhandler.parsePythonErrorObject(e)
             eco.level = 2
             # print eco
@@ -209,8 +211,8 @@ class Daemon(object):
                 pass
             
             eco.errormessage = "ERROR IN RPC CALL %s: %s. (from:%s/%s)\nData:%s\n"%(cmdkey,eco.errormessage , session.gid, session.nid,data2)
-            j.errorconditionhandler.processErrorConditionObject(eco)
-            eco.__dict__.pop("tb")
+            eco.process()
+            eco.__dict__.pop("tb", None)
             eco.tb=None
             errorres = eco.__dict__
             return returnCodes.ERROR, returnformat, errorres 

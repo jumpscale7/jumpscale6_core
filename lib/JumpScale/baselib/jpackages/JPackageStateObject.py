@@ -18,7 +18,7 @@ class JPackageStateObject():
             self.currentaction=""
             self.currenttag=""
             self.currentactiontime=0
-            #self.state=j.enumerators.JPackageState4.OK
+            #self.state="OK"
             self.retry=0 #nr of times we tried to repair last broken state
             self.prepared=0
             self.isPendingReconfiguration=0
@@ -159,7 +159,7 @@ class JPackageStateObject():
         current action is succesfully completed
         """
         self.setCurrentAction("","")
-        self.state=j.enumerators.JPackageState4.OK
+        self.state="OK"
         self._save()
 
     def setPrepared(self, prepared):
@@ -173,7 +173,7 @@ class JPackageStateObject():
         """
         if no current action return True
         """
-        if self.state==j.enumerators.JPackageState4.OK and self.currentaction=="":
+        if self.state=="OK" and self.currentaction=="":
             return True
         return False
     

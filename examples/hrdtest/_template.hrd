@@ -1,0 +1,47 @@
+
+#this is comments on top of
+#this is comments on top of 2
+
+
+jp.domain=@ASK name:name descr:'give name of jpackage' type:dropdown dropdownvals:'{{j.packages.getDomainNames()}}'
+
+jp.name=@ASK 
+    name:name
+    descr:'give name of jpackage'
+    type:str
+    default:1.0 regex:.*
+
+prefix.string=jumpscale
+prefix.float=1.0 #comment inline
+prefix.list=1,2,3,4
+prefix2.deeper.list=1,'this is longer, :string' , astring
+prefix2.list=
+    1,
+    'this is longer, :string',
+    astring
+
+prefix2.dict=
+    key1:1,
+    key2:'this is longer, :string',
+    key3:astring
+
+#comment on this line
+prefix2.deeper.dict=color:green,time:now
+#comment before the line
+prefix2.multiline=
+    line1, endline
+    line2: endline
+    line3 'test' endline
+
+empty.something2 =
+prefix.int=5
+prefix.askfloat=@ASK descr:'this a description about float to ask for' type:float
+prefix.askdropdown=@ASK descr:'this a description about float to ask for' type:dropdown dropdownvals:'nr 1,2,3,nrr 4'
+
+empty.something=
+
+
+prefix.multiline=
+    line1, endline
+    line2: endline
+    line3 'test' endline

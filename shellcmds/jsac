@@ -23,7 +23,7 @@ with j.logger.nostdout():
     ac = j.clients.agentcontroller.getByInstance('main')
 
 if opts.action == 'reload':
-    print 'Reloading JumpScripts'
+    print 'Reloading Jumpscripts'
     ac.reloadjumpscripts()
 elif opts.action == 'listsessions':
     import yaml
@@ -39,11 +39,11 @@ elif opts.action == 'exec':
             if value.isdigit():
                 value = int(value)
             args[key] = value
-    job = ac.executeJumpScript(opts.organization, opts.name, nid=opts.nid, gid=opts.gid, role=opts.role, args=args, queue=opts.queue)
+    job = ac.executeJumpscript(opts.organization, opts.name, nid=opts.nid, gid=opts.gid, role=opts.role, args=args, queue=opts.queue)
     print "Job:\n\n:", yaml.dump(job)
 elif opts.action == 'pushjs':
     import JumpScale.grid.jumpscripts
-    print 'Pushing JumpScripts to webdis'
-    j.tools.jumpscriptsManager.pushToGridMaster()
+    print 'Pushing Jumpscripts to webdis'
+    j.core.jumpscripts.pushToGridMaster()
 
 j.application.stop()

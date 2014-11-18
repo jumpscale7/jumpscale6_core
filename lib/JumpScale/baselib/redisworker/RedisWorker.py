@@ -13,7 +13,7 @@ import inspect
 
 # if j.application.config.exists("agentcontroller.webdiskey"):
 import JumpScale.grid.jumpscripts
-Jumpscript=j.tools.jumpscriptsManager.getJSClass()
+Jumpscript=j.core.jumpscripts.getJSClass()
 # else:
     # Jumpscript=None
 
@@ -302,7 +302,7 @@ class RedisWorkerFactory(object):
         job=Job(ddict=job)
         if job.state<>"OK":
             eco=j.errorconditionhandler.getErrorConditionObject(ddict=job.result)
-            # j.errorconditionhandler.processErrorConditionObject(eco)
+            # eco.process()
             raise RuntimeError("Could not execute job, error:\n%s"%str(eco))  #@todo is printing too much
         return job
 

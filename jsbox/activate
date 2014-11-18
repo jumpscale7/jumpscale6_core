@@ -18,7 +18,7 @@ deactivate_jsbox() {
     unset -f deactivate_jsbox
 }
 
-export JSBASE=/opt/jsbox
+export JSBASE=/opt/jsbox2
 export PATH=$JSBASE/tools:$JSBASE/bin:$PATH
 export PS1="(JSBOX)$PS1"
 export PYTHONPATH=$JSBASE/lib:$JSBASE/python.zip:$JSBASE/libjs

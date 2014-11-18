@@ -37,9 +37,10 @@ class FS:
         else:
             return os.path.isdir(path)
 
-    @staticmethod       
-    def isLink( path):
-        return os.path.islink(path)
+    def isExecutable(path):
+         stat.S_IXUSR & statobj.st_mode
+
+
 
     @staticmethod
     def readLink(path):

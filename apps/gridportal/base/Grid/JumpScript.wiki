@@ -1,8 +1,8 @@
 @usedefaults
 
-h5. JumpScript Details
+h5. Jumpscript Details
 {{jumpscript: organization:$$organization name:$$name}}
 
 
-h5. Jobs that have executed this JumpScript
+h5. Jobs that have executed this Jumpscript
 {{jobs: organization:$$organization name:$$name}}

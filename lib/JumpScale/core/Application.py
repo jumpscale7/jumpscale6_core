@@ -27,7 +27,7 @@ class Application:
         self.agentid = "starting"
         self._calledexit = False
         self.skipTraceback = False
-        self._debug = None
+        self.debug = True
 
         self.whoAmIBytestr = None
         self.whoAmI = WhoAmI(0,0,0)
@@ -45,23 +45,13 @@ class Application:
 
         self.connectRedis()
 
-    @property
-    def debug(self):
-        if self._debug != None:
-            return self._debug
-        else:
-            if hasattr(self, 'config'):
-                debug = j.application.config.get('system.debug', checkExists=True, default='0') == '1'
-                self._debug = debug
-                return debug
-            else:
-                return False
+        j.logger.init()
 
     def connectRedis(self):
 
-        if j.system.net.tcpPortConnectionTest("127.0.0.1",7766):
+        if j.system.net.tcpPortConnectionTest("127.0.0.1",9999):
             import JumpScale.baselib.credis # leave import here to make bootrap work
-            self.redis=j.clients.credis.getRedisClient("127.0.0.1",7766)
+            self.redis=j.clients.credis.getRedisClient("127.0.0.1",9999)
         else:
             self.redis=None
 
@@ -137,10 +127,12 @@ class Application:
         # Register exit handler for sys.exit and for script termination
         atexit.register(self._exithandler)
 
-
         j.dirs.appDir=appdir
 
         j.dirs.init(reinit=True)
+
+        if hasattr(self, 'config'):
+            self.debug = j.application.config.getBool('system.debug', default=True)
 
         if self.redis<>None:
             if self.redis.hexists("application",self.appname):
@@ -171,7 +163,6 @@ class Application:
         if self.state == AppStatusType.UNKNOWN:
             # Consider this a normal exit
             self.state = AppStatusType.HALTED
-            j.logger.close()
             sys.exit(exitcode)
 
         # Since we call os._exit, the exithandler of IPython is not called.
@@ -188,9 +179,6 @@ class Application:
         #     exitcodefilename = j.system.fs.joinPaths(j.dirs.tmpDir, 'qapplication.%d.exitcode'%os.getpid())
         #     j.logger.log("Writing exitcode to %s" % exitcodefilename, 5)
         #     j.system.fs.writeFile(exitcodefilename, str(exitcode))
-
-        # Closing the LogTargets
-        j.logger.close()
 
         # was probably done like this so we dont end up in the _exithandler
         # os._exit(exitcode) Exit to the system with status n, without calling cleanup handlers, flushing stdio buffers, etc. Availability: Unix, Windows.
@@ -222,7 +210,6 @@ class Application:
         #@todo can we get the line of code which called sys.exit here?
         
         #j.logger.log("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED j.application.stop()", 4)
-        j.logger.close()
         if not self._calledexit:
             self.stop(1)
 

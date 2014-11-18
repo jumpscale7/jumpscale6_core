@@ -2,6 +2,7 @@
 from gevent import monkey
 # monkey.patch_all()
 monkey.patch_socket()
+monkey.patch_ssl()
 monkey.patch_thread()
 monkey.patch_time()
 
@@ -21,8 +22,6 @@ if __name__ == '__main__':
     j.application.instanceconfig = jp.hrd_instance
 
     j.application.start("portal")
-
-    j.logger.disable()
 
     server=j.core.portal.getServer()
     server.start()

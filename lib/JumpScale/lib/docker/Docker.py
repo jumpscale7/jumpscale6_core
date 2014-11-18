@@ -8,6 +8,7 @@ import netaddr
 import JumpScale.baselib.remote
 import docker
 import time
+import json
 
 class Docker():
 
@@ -69,11 +70,21 @@ class Docker():
         """
         return self.client.containers()        
 
-    def getInfo(self,name):
+    def inspect(self,name):
+        cmd="docker inspect %s"%name
+        rc,jsondata=j.system.process.execute(cmd)
+        obj=json.loads(jsondata)
+        return obj[0]
+
+    def getInfo(self,name):        
         for item in self.ps():
             if "/%s"%name in item["Names"]:
                 return item
         raise RuntimeError("Could not find info from '%s' (docker)"%name)
+
+    def getIp(self,name):
+        res=self.inspect(name)
+        return res['NetworkSettings']['IPAddress']
 
     def getProcessList(self, name, stdout=True):
         """
@@ -255,7 +266,9 @@ class Docker():
             vols=""
         if volsro==None:
             volsro=""
-
+        if ports==None:
+            ports=""
+                
         if mem==None:
             mem=0
 
@@ -269,12 +282,27 @@ class Docker():
                 key,val=item.split(":",1)
                 portsdict[int(key)]=int(val)
 
+        if not portsdict.has_key(22):
+            for port in range(9022,9190):
+                if not j.system.net.tcpPortConnectionTest("localhost", port):
+                    portsdict[22]=port
+                    print "SSH PORT WILL BE ON:%s"%port
+                    break                
+
         volsdict={}
         if len(vols)>0:
             items=vols.split("#")
             for item in items:
                 key,val=item.split(":",1)
                 volsdict[str(key).strip()]=str(val).strip()
+
+        if j.system.fs.exists(path="/var/jumpscale/"):
+            if not volsdict.has_key("/var/jumpscale"):
+                volsdict["/var/jumpscale"]="/var/jumpscale"
+
+        tmppath="/tmp/dockertmp/%s"%name
+        j.system.fs.createDir(tmppath)
+        volsdict[tmppath]="/tmp"
 
         volsdictro={}
         if len(volsro)>0:
@@ -287,16 +315,19 @@ class Docker():
         # volsdict["/var/js/all/jpfiles/"]="/opt/jsbox_data/var/jpackages/files/"
 
         binds={}
+        volskeys=[] #is location in docker
 
         for key,path in volsdict.iteritems():
             j.system.fs.createDir(path) #create the path on hostname
-            binds[key]={"bind":path,"ro":False}
+            binds[path]={"bind":key,"ro":False}
+            volskeys.append(key)
 
         for key,path in volsdictro.iteritems():
             j.system.fs.createDir(path) #create the path on hostname
-            binds[key]={"bind":path,"ro":True}
+            binds[path]={"bind":key,"ro":True}
+            volskeys.append(key)
 
-        volskeys=volsdict.keys()+volsdictro.keys()
+        # volskeys=volsdict.keys()+volsdictro.keys()
 
 
         if base not in self.getImages():
@@ -310,7 +341,7 @@ class Docker():
         # cmd="sh -c \"exec >/dev/tty 2>/dev/tty </dev/tty && /sbin/my_init -- /usr/bin/screen -s bash\""        
 
         # mem=1000000
-        print "install docker with name '%s'"%base
+        print "install docker with name '%s'"%base     
 
         res=self.client.create_container(image=base, command=cmd, hostname=name, user="root", \
                 detach=False, stdin_open=False, tty=True, mem_limit=mem, ports=portsdict.keys(), environment=None, volumes=volskeys,  \
@@ -324,17 +355,21 @@ class Docker():
         res=self.client.start(container=id, binds=binds, port_bindings=portsdict, lxc_conf=None, \
             publish_all_ports=False, links=None, privileged=False, dns=nameserver, dns_search=None, volumes_from=None, network_mode=None)
 
+        portfound=0
         for internalport,extport in portsdict.iteritems():
             if internalport==22:
                 print "test docker internal port:22 on ext port:%s"%extport
+                portfound=extport
                 if j.system.net.waitConnectionTest("localhost",extport,timeout=2)==False:
                     cmd="docker logs %s"%name
                     rc,log=j.system.process.execute(cmd)
                     j.events.opserror_critical("Could not connect to external port on docker:'%s', docker prob not running.\nStartuplog:\n%s\n"%(extport,log),category="docker.create")            
-         
+
         time.sleep(0.5)
 
         self.pushSSHKey(name)
+
+        return portfound
 
         # return self.getIp(name)
 
@@ -357,13 +392,16 @@ class Docker():
         info=self.getInfo(name)
         for port2 in info["Ports"]:
             if int(port2["PrivatePort"])==int(port):
+                if not port2.has_key("PublicPort"):
+                    j.events.inputerror_critical("cannot find publicport for ssh?")
                 return port2["PublicPort"]
 
     def pushSSHKey(self,name):
         # path=j.system.fs.joinPaths(self._get_rootpath(name),"root",".ssh","authorized_keys")
-        keyloc="/root/.ssh/id_dsa.pub"
+        privkeyloc="/root/.ssh/id_dsa"
+        keyloc=privkeyloc + ".pub"
         if not j.system.fs.exists(path=keyloc):
-            j.system.process.executeWithoutPipe("ssh-keygen -t dsa")            
+            j.system.process.executeWithoutPipe("ssh-keygen -t dsa -f %s -N ''" % privkeyloc)
             if not j.system.fs.exists(path=keyloc):
                 raise RuntimeError("cannot find path for key %s, was keygen well executed"%keyloc)            
         key=j.system.fs.fileGetContents(keyloc)
@@ -425,3 +463,13 @@ class Docker():
         if name in running.keys():
             idd=running[name]    
             self.client.kill(idd)
+
+    def commit(self,name,imagename):
+        cmd="docker rmi %s"%imagename
+        j.system.process.execute(cmd,dieOnNonZeroExitCode=False)
+        cmd="docker commit %s %s"%(name,imagename)
+        j.system.process.executeWithoutPipe(cmd)
+
+    def pull(self,imagename):
+        cmd="docker pull %s"%imagename
+        j.system.process.executeWithoutPipe(cmd)

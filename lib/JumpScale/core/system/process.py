@@ -1814,7 +1814,7 @@ class SystemProcess:
 
     def appsGetNames(self):
         if j.application.redis==None:
-            raise RuntimeError("Make sure redis is running for port 7766")
+            raise RuntimeError("Make sure redis is running for port 9999")
         return j.application.redis.hkeys("application")
 
     def getDefunctProcesses(self):
