@@ -26,16 +26,21 @@ def main(j, args, params, tags, tasklet):
 
     def makeJob(row, field):
         jid = row[field]
-        return '[details|job?id=%s]' % (jid, jid) if (not jid == 0) else 'N/A'
+        if not jid:
+            return 'N/A'
+        return '[Details|job?id=%s]' % (jid)
+
+    def level(row, field):
+        value = row[field]
+        return "%s (%s)" % (j.errorconditionhandler.getLevelName(value), value)
 
     def appName(row, field):
         return row[field].split(':')[-1]
 
-
     nidstr = '[%(nid)s|node?id=%(nid)s&gid=%(gid)s]'
 
     fieldids = ["lasttime", "gid", "nid", "appname", "errormessage", 'type', 'level', 'occurrences', "jid"]
-    fieldvalues = [makeTime, 'gid', nidstr, appName, errormessage, 'type', 'level', 'occurrences', makeJob]
+    fieldvalues = [makeTime, 'gid', nidstr, appName, errormessage, 'type', level, 'occurrences', makeJob]
     tableid = modifier.addTableForModel('system', 'eco', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
     modifier.addSorting('#%s' % tableid, 0, 'desc')
