@@ -7,18 +7,15 @@ import JumpScale.grid.osis
 
 import time
 
-client = j.core.osis.getClient(user='root')
+client = j.core.osis.getClientByInstance('main')
 
-json=client.getOsisSpecModel("oss")
+json=client.getOsisSpecModel("system")
 
 from generators.MongoEngineGenerator import *
 
-gen=MongoEngineGenerator("generated/oss.py")
-gen.generate(json)
+gen=MongoEngineGenerator("generated/system.py")
+print gen.generate(json)
 
-from IPython import embed
-print "DEBUG NOW ooo"
-embed()
 
 
 
