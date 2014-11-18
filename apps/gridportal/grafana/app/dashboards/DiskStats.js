@@ -110,7 +110,7 @@ return {
           "grid": {
             "leftMax": null,
             "rightMax": null,
-            "leftMin": null,
+            "leftMin": 0,
             "rightMin": null,
             "threshold1": null,
             "threshold2": null,
@@ -149,15 +149,15 @@ return {
             {
               "function": "mean",
               "column": "value * 1024 * 1024",
-              "series": prefix + "space_free_mb",
-              "alias": "Free"
+              "series": prefix + "space_used_mb",
+              "alias": "Used"
             },
             {
               "target": "",
               "function": "mean",
               "column": "value * 1024 * 1024",
-              "series": prefix + "space_used_mb",
-              "alias": "Used"
+              "series": prefix + "space_free_mb",
+              "alias": "Free"
             }
           ],
           "aliasColors": {},
