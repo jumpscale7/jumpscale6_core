@@ -1,0 +1,27 @@
+.center, table.dataTable td, table.dataTable th{
+    text-align: center !important;
+}
+table.dataTable tbody tr.selected td{
+    /*background-color: #b0bed9;*/
+    background-color: #E4F1FE;
+}
+.dataTables_filter, .dataTables_info { 
+    display: none; 
+}
+input.searchInput{
+    height: 25px;
+	line-height: 15px;
+	margin-right: 3%;
+	width: 60px;
+	font-size: 90%;
+}
+.ui-datepicker{
+	z-index: 2 !important;
+	font-size: 90% !important;
+}
+.ui-datepicker select{
+	width: 100%;
+	height: 70%;
+	font-size: 11px;
+}
+[eve-grid] { position: relative; }
