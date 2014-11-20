@@ -10,7 +10,7 @@ except ImportError:
     import json
 
 from JumpScale import j
-from ErrorConditionObject import ErrorConditionObject
+from ErrorConditionObject import ErrorConditionObject, LEVELMAP
 
 
 class BaseException(Exception):
@@ -180,12 +180,12 @@ class ErrorConditionHandler():
 
     def raiseOperationalWarning(self, message="", category="",msgpub="",tags="",eco=None):
         if not eco:
-            eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=3,\
+            eco=self.getErrorConditionObject(msg=message,msgpub=msgpub,category=category,level=2,\
                                          type="OPERATIONS")
             eco.tags=tags
         else:
             eco.type="OPERATIONS"
-            eco.level=3
+            eco.level=2
         eco.process()
         
     def raiseInputError(self, message="", category="input",msgpub="",die=True ,backtrace="",tags=""):
@@ -396,6 +396,9 @@ class ErrorConditionHandler():
         if j.application.appname in self.blacklist:
             return True
         return False
+
+    def getLevelName(self, level):
+        return LEVELMAP.get(level, 'UNKNOWN')
 
     def getFrames(self,tb=None):
 

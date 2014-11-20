@@ -12,11 +12,12 @@ except ImportError:
 
 import JumpScale.baselib.hash
 
+LEVELMAP = {1: 'CRITICAL', 2: 'WARNING', 3: 'INFO'}
 
 class ErrorConditionObject():
     """
     @param type #BUG,INPUT,MONITORING,OPERATIONS,PERFORMANCE,UNKNOWN  
-    @param level #1:critical, 2:warning, 3:info see j.enumerators.ErrorConditionLevel
+    @param level #1:critical, 2:warning, 3:info
     """
     def __init__(self,ddict={},msg="",msgpub="",category="",level=1,type="UNKNOWN",tb=None):
         if ddict<>{}:
