@@ -28,11 +28,11 @@ def main(j, args, params, tags, tasklet):
 
 
 	# Add our static resources only once to the page
-	if '/jslib/jquery/jqueryDataTable/css/eve-grid.css' not in str(page):
+	if '/system/.files/lib/evegrid/css/eve-grid.css' not in str(page):
 		page.addCSS('/jslib/bootstrap/css/bootstrap.css')
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/dataTables.bootstrap.css')
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/bootstrap-theme.min.css')
-		page.addCSS('/jslib/jquery/jqueryDataTable/css/eve-grid.css')
+		page.addCSS('/system/.files/lib/evegrid/css/eve-grid.css')
 		page.addCSS('/jslib/jquery/jquery-ui.structure.min.css')
 		page.addCSS('//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.theme.min.css')
 
@@ -45,7 +45,7 @@ def main(j, args, params, tags, tasklet):
 		page.addJS('/jslib/jquery/jquery-ui.min.js')
 		page.addJS('/jslib/jquery/jquery-ui-sliderAccess.js')		
 		page.addJS('/jslib/jquery/jquery-ui-timepicker-addon.min.js')
-		page.addJS('/jslib/jquery/jqueryDataTable/js/eve-grid.js')
+		page.addJS('/system/.files/lib/evegrid/js/eve-grid.js')
 	
 	page.addMessage('''
 		<div class="container eve-grid-container">
