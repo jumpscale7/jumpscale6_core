@@ -39,7 +39,7 @@ if opts.accounts==None and opts.repos==None:
         opts.accounts=j.system.fs.getBaseName(j.system.fs.getParent(j.system.fs.getcwd()))
 
 
-if opts.branch<>None and opts.action in ['status']: 
+if opts.branch!=None and opts.action in ['status']: 
     raise RuntimeError("Cannot specify branch when asking status")
 
 def getRepos():
@@ -47,7 +47,7 @@ def getRepos():
 
     if opts.accounts=="*":
         accounts=j.system.fs.listDirsInDir("/opt/code", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
-    elif opts.accounts<>None:
+    elif opts.accounts!=None:
         accounts=[item.strip() for item in opts.accounts.split(",")]
     else:
         accounts=j.system.fs.listDirsInDir("/opt/code", recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
@@ -67,7 +67,7 @@ def getRepos():
 
             for reponame in reponames:
 
-                if reponame.find("__")<>-1:
+                if reponame.find("__")!=-1:
                     branch,reponame=reponame.split("__",1)
 
                     repodir="%s/%s__%s"%(accountdir,branch,reponame)
@@ -88,14 +88,14 @@ def getRepos():
 repos=getRepos()
 
 if opts.action == "status":
-    print "\n\nSTATUS: account reponame                  branch added:modified:deleted   insyncwithremote?   localrev       remoterev"
-    print "========================================================================================================================="
+    print("\n\nSTATUS: account reponame                  branch added:modified:deleted   insyncwithremote?   localrev       remoterev")
+    print("=========================================================================================================================")
 
 
 for bitbucket,account,reponame,branch,client,path in repos:
 
     if opts.action == "update" and opts.deletechanges:
-        print "force update %s/%s"%(account,reponame)
+        print("force update %s/%s"%(account,reponame))
         client.pull()
         client.update(force=True)
         continue
@@ -107,26 +107,26 @@ for bitbucket,account,reponame,branch,client,path in repos:
         lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
         branch=client.getbranchname()
 
-        if opts.branch<>None:
-            if branch<>opts.branch:
-                print "set branch:%s"%opts.branch
+        if opts.branch!=None:
+            if branch!=opts.branch:
+                print("set branch:%s"%opts.branch)
                 cmd="cd %s;hg branch %s"%(path,opts.branch)
                 j.system.process.execute(cmd,dieOnNonZeroExitCode=False, outputToStdout=True, useShell=True, ignoreErrorOutput=False)                
                 cmd="cd %s;hg update %s"%(path,opts.branch)
                 j.system.process.execute(cmd)
-                print "updated to branch:%s"%opts.branch
+                print("updated to branch:%s"%opts.branch)
                 lrev,lid,ttype,branch,user,msg,ddate=client.client.tip()
                 branch=client.getbranchname()
 
 
         changesets=bitbucket.getChangeSets(reponame=reponame,limit=1)
-        if changesets.has_key("error"):
-            print "could not process repo: %s %s error:%s"%(account,reponame,changesets["error"]["message"])
+        if "error" in changesets:
+            print("could not process repo: %s %s error:%s"%(account,reponame,changesets["error"]["message"]))
             # print changesets            
             continue
         try:
             remotelastrevision=changesets["changesets"][0]["revision"]
-        except Exception,e:
+        except Exception as e:
             
             ##TODO
             pass
@@ -143,24 +143,24 @@ for bitbucket,account,reponame,branch,client,path in repos:
         if nrmods>0:
             reposync="N"            
 
-        print "%-15s %-25s %-10s a%-3s:m%-3s:d%-9s reposync:%-9s  lrev:%-9s rrev:%-5s" %(account,reponame,client.branchname,\
+        print("%-15s %-25s %-10s a%-3s:m%-3s:d%-9s reposync:%-9s  lrev:%-9s rrev:%-5s" %(account,reponame,client.branchname,\
             len(mods["added"])+len(mods["nottracked"]),len(mods["modified"]),len(mods["missing"])+len(mods["removed"]),\
             reposync,\
-            lrev,remotelastrevision)
+            lrev,remotelastrevision))
 
     if opts.action in ['push']:
         if nrmods==0 and reposync=="Y":
-            print "no need to push, repo is in sync"
+            print("no need to push, repo is in sync")
             continue
 
     if opts.action in ['update']:
         if nrmods==0 and reposync=="Y":
-            print "no need to update, repo is in sync"
+            print("no need to update, repo is in sync")
             continue
 
     if opts.action in ['commit']:        
         if nrmods==0:
-            print "no need to commit, no mods"
+            print("no need to commit, no mods")
             continue
 
     if opts.action in ['commit','push','update']:
@@ -170,24 +170,24 @@ for bitbucket,account,reponame,branch,client,path in repos:
 
 
     if opts.update or opts.action =='update' or opts.action =='push':
-        print "PULL ",
+        print("PULL ", end=' ')
         client.pull()
-        print "UPDATE ",
+        print("UPDATE ", end=' ')
         client.updatemerge(commitMessage=opts.message, addRemoveUntrackedFiles=True, pull=False,force=opts.force)        
     
     if opts.action =='commit' or opts.action =='push':        
-        print "COMMIT ",
+        print("COMMIT ", end=' ')
         client.commit(message=opts.message, addremove=True, checkStatus=True, force=False)
 
         if opts.action =='push':
-            print "PUSH ",
-            if opts.branch<>None:
+            print("PUSH ", end=' ')
+            if opts.branch!=None:
                 client.push(branch=[opts.branch],newbranch=True)
             else:
                 client.push(branch=None,newbranch=False)
 
     if opts.action in ['commit','push','update']:
-        print
+        print()
 
 
 
