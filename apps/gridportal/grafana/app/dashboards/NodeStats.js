@@ -192,7 +192,87 @@ return {
       "collapse": false,
       "panels": [
         {
-          "span": 12,
+          "span": 6,
+          "editable": false,
+          "type": "graph",
+          "datasource": null,
+          "renderer": "flot",
+          "x-axis": true,
+          "y-axis": true,
+          "scale": 1,
+          "y_formats": [
+            "short",
+            "short"
+          ],
+          "grid": {
+            "leftMax": null,
+            "rightMax": null,
+            "leftMin": 0,
+            "rightMin": null,
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "annotate": {
+            "enable": false
+          },
+          "resolution": 100,
+          "lines": true,
+          "fill": 0,
+          "linewidth": 2,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": false,
+          "legend": {
+            "show": true,
+            "values": false,
+            "min": false,
+            "max": false,
+            "current": false,
+            "total": false,
+            "avg": false
+          },
+          "percentage": false,
+          "zerofill": true,
+          "nullPointMode": "connected",
+          "steppedLine": false,
+          "tooltip": {
+            "value_type": "cumulative",
+            "query_as_alias": true
+          },
+          "targets": [
+            {
+              "function": "mean",
+              "series": prefix + "load.avg1min" + suffix,
+              "column": "value / 100.",
+              "alias": alias || "Avg 1 Min",
+              "hide": false,
+              "interval": "10s"
+            },
+            {
+              "function": "mean",
+              "series": prefix + "load.avg5min" + suffix,
+              "column": "value / 100.",
+              "alias": alias || "Avg 5 min",
+              "interval": "10s"
+            },
+            {
+              "function": "mean",
+              "series": prefix + "load.avg15min" + suffix,
+              "column": "value / 100.",
+              "alias": alias || "Avg 15 min",
+              "interval": "10s"
+            }
+          ],
+          "aliasColors": {},
+          "aliasYAxis": {},
+          "title": "CPU Load",
+          "leftYAxisLabel": ""
+        },
+        {
+          "span": 6,
           "editable": false,
           "type": "graph",
           "datasource": null,

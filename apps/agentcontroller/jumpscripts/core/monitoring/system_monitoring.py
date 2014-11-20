@@ -21,6 +21,7 @@ roles = []
 
 def action():
     import psutil
+    import os
     import statsd
     statscl = statsd.StatsClient()
     pipe = statscl.pipeline()
@@ -45,6 +46,10 @@ def action():
     results["network.drop.in"]=dropin
     results["network.drop.out"]=dropout
 
+    avg1min, avg5min, avg15min = os.getloadavg()
+    results["load.avg1min"] = int(avg1min * 100)
+    results["load.avg5min"] = int(avg5min * 100)
+    results["load.avg15min"] = int(avg15min * 100)
 
     total,used,free,percent=psutil.phymem_usage()
     results["memory.free"]=round(free/1024.0/1024.0,2)
