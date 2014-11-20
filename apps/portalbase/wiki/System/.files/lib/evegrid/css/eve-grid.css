@@ -18,6 +18,7 @@ input.searchInput{
 .ui-datepicker{
 	z-index: 2 !important;
 	font-size: 90% !important;
+	margin-left: -28px;
 }
 .ui-datepicker select{
 	width: 100%;

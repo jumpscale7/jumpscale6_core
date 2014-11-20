@@ -48,13 +48,14 @@ class MongoEngineGenerator():
                     ttypestr="StringField"
                 elif ttype=="int":
                     ttypestr="IntField"
+                elif ttype=="float":
+                    ttypestr="FloatField"
                 elif ttype=="bool":
                     ttypestr="BooleanField"
                 else:
                     from IPython import embed
                     print "DEBUG NOW unknown in MongoEngineGenerator type2typestr"
                     embed()
-                    p                    
                 return ttypestr
 
             if ttype.find("list")==0:

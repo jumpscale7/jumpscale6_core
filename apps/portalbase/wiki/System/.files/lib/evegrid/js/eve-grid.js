@@ -203,7 +203,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
             angular.element('.searchInput').live('focus', function() {
                 $(this).animate({ width: 116 }, 'medium');
             }).live('blur', function() {
-                console.log($(this));
                 $(this).animate({ width: 60 }, 'medium');
             });
 
