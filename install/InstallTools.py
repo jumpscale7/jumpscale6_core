@@ -922,10 +922,10 @@ rm -rf /opt/redis/
         self.executeCmds(CMDS,dieOnNonZeroExitCode=False, outputToStdout=True, useShell = False, ignoreErrorOutput=False)
 
         CMDS="""
-apt-get update
-apt-get autoremove
-apt-get -f install -y
-apt-get upgrade -y
+#apt-get update
+#apt-get autoremove
+#apt-get -f install -y
+#apt-get upgrade -y
 apt-get install mc python-git git ssh python2.7 python-requests python-apt openssl ca-certificates ipython -y
 cd /tmp;wget https://raw.github.com/pypa/pip/master/contrib/get-pip.py
 cd /tmp;python get-pip.py
