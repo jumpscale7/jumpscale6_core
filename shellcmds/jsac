@@ -40,7 +40,7 @@ elif opts.action == 'exec':
                 value = int(value)
             args[key] = value
     job = ac.executeJumpscript(opts.organization, opts.name, nid=opts.nid, gid=opts.gid, role=opts.role, args=args, queue=opts.queue)
-    print("Job:\n\n:", yaml.dump(job))
+    print("Job:\n\n:" + yaml.dump(job))
 elif opts.action == 'pushjs':
     import JumpScale.grid.jumpscripts
     print('Pushing Jumpscripts to webdis')
