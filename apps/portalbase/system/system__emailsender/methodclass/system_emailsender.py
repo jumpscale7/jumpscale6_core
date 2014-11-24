@@ -78,8 +78,7 @@ class system_emailsender(j.code.classGetBase()):
             body = body + '<br /><table border=1>{0}</table>'.format(''.join(other_params))
 
         self.save_emails(sender_name, sender_email, receiver_email, subject, body, *args, **kwargs)
-        j.clients.email.send(receivers, sender, subject, body)
-
+        j.clients.email.send(receivers, sender, subject, body,mimetype='html')
         return 'Success'
 
     def save_emails(self, sender_name, sender_email, receiver_email, subject, body, *args, **kwargs):
