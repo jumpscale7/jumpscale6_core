@@ -20,7 +20,11 @@ def main(j, args, params, tags, tasklet):
         nodedata = data.get(nidstr, dict())
         wdata = nodedata.get('heartbeat', list())
         for stat in wdata:
-            out.append("{color:%s}*%s*{color}" % (color,stat))
+            if isinstance(stat, dict):
+                msg = stat.get('errormessage', 'UNKNOWN')
+            else:
+                msg = stat
+            out.append("{color:%s}*%s*{color}" % (color,msg))
 
     render(workers, 'green')
     render(errors, 'red')

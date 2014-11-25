@@ -371,11 +371,11 @@ class GridHealthChecker(object):
             if nid not in self._nidsNonActive:
                 if nid in nid2hb:
                     lastchecked = nid2hb[nid]
-                    hago = round(float(j.base.time.getTimeEpoch()-lastchecked)/3600,1)
+                    hago = j.base.time.getSecondsInHR(j.base.time.getTimeEpoch()-lastchecked)
                     if not j.base.time.getEpochAgo('-2m') < lastchecked:
-                        self._addError(nid, "Last heartbeat %s hours ago" % hago,"heartbeat")
+                        self._addError(nid, "Last heartbeat %s ago" % hago,"heartbeat")
                     else:
-                        self._addResult(nid, "Last heartbeat %s hours ago" % hago,"heartbeat")
+                        self._addResult(nid, "Last heartbeat %s ago" % hago,"heartbeat")
                 else:
                     self._addError(nid, "found heartbeat node when not in grid nodes.","heartbeat")
         if clean:

@@ -20,6 +20,15 @@ class Time:
         timestamp = int(time.time())
         return timestamp
 
+    def getSecondsInHR(self, seconds):
+        if seconds < 60:
+            return "%s seconds" % seconds
+        elif seconds < 3600:
+            return "%s minutes" % round((seconds/60.), 1)
+        else:
+            return "%s hours" % round((seconds/3600.), 1)
+
+
     def getTimeEpochBin(self):
         '''
         Get epoch timestamp (number of seconds passed since January 1, 1970)
