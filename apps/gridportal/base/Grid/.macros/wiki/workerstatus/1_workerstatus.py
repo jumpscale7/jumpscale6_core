@@ -19,12 +19,11 @@ def main(j, args, params, tags, tasklet):
     errors = ujson.loads(errors) if errors else dict()
 
     for data in [workers, errors]:
-        if nidstr in data:
-            if 'workers' in data.get(nidstr, dict()):
-                wdata = data[nidstr].get('workers', list())
-                for stat in wdata:
-                    status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
-                    out.append('|%s|%s|%s|' % (stat.get('name', ''), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
+        nodedata = data.get(nidstr, dict())
+        wdata = nodedata.get('workers', list())
+        for stat in wdata:
+            status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
+            out.append('|%s|%s|%s|' % (stat.get('name', ''), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
 
     out = '\n'.join(out)
     params.result = (out, doc)
