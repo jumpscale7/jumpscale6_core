@@ -28,7 +28,7 @@ if opts.action == 'reload':
 elif opts.action == 'listsessions':
     import yaml
     sessions = ac.listSessions()
-    print('Sessions:\n\n', yaml.dump(sessions))
+    print('Sessions:\n\n' + yaml.dump(sessions))
 elif opts.action == 'exec':
     import yaml
     args = dict()
