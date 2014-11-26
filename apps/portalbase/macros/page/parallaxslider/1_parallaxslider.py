@@ -74,21 +74,21 @@ def main(j, args, params, *other_args):
     slides = []
     for i in count(1):
         slide = {}
-        slide['Title'] = hrd.get('slide.{}.title.text'.format(i)).replace(r'\n', '<br />')
+        slide['Title'] = hrd.get('slide.{}.title.text'.format(i), default='').replace(r'\n', '<br />')
         if not slide['Title']:
             break
-        slide['TitleSize'] = hrd.get('slide.{}.title.text.size'.format(i), 'medium')
-        if os.path.isfile(imagedir + hrd.get('slide.{}.image.path'.format(i), '')):
+        slide['TitleSize'] = hrd.get('slide.{}.title.text.size'.format(i), default='medium')
+        if os.path.isfile(imagedir + hrd.get('slide.{}.image.path'.format(i), default='')):
             # check if can find image under .files/img by the given name
-            slide['ImagePath'] = '/$$space/.files/img/' + hrd.get('slide.{}.image.path'.format(i), '')
+            slide['ImagePath'] = '/$$space/.files/img/' + hrd.get('slide.{}.image.path'.format(i), default='')
         else:
             # image from full url
-            slide['ImagePath'] = hrd.get('slide.{}.image.path'.format(i), '')
-        slide['ImageHeight'] = hrd.get('slide.{}.image.height'.format(i), '800')
-        slide['TextBlockPosition'] = hrd.get('slide.{}.textblock.position'.format(i), '')
-        slide['TextBlockBody'] = hrd.get('slide.{}.textblock.body'.format(i), '').replace(r'\n', '<br />')
-        slide['TextBlockBodySize'] = hrd.get('slide.{}.textblock.body.size'.format(i), 'medium')
-        slide['ScrollSpeed'] = hrd.get('slide.{}.scroll.speed'.format(i), '0.3')
+            slide['ImagePath'] = hrd.get('slide.{}.image.path'.format(i), default='')
+        slide['ImageHeight'] = hrd.get('slide.{}.image.height'.format(i), default='800')
+        slide['TextBlockPosition'] = hrd.get('slide.{}.textblock.position'.format(i), default='')
+        slide['TextBlockBody'] = hrd.get('slide.{}.textblock.body'.format(i), default='').replace(r'\n', '<br />')
+        slide['TextBlockBodySize'] = hrd.get('slide.{}.textblock.body.size'.format(i), default='medium')
+        slide['ScrollSpeed'] = hrd.get('slide.{}.scroll.speed'.format(i), default='0.3')
         slides.append(slide)
         
     page.addMessage('''

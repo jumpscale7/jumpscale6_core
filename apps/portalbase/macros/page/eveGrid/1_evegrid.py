@@ -29,7 +29,6 @@ def main(j, args, params, tags, tasklet):
 
 	# Add our static resources only once to the page
 	if '/system/.files/lib/evegrid/css/eve-grid.css' not in str(page):
-		page.addCSS('/jslib/bootstrap/css/bootstrap.css')
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/dataTables.bootstrap.css')
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/bootstrap-theme.min.css')
 		page.addCSS('/system/.files/lib/evegrid/css/eve-grid.css')

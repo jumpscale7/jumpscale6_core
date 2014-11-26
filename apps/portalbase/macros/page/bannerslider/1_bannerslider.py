@@ -35,7 +35,7 @@ def main(j, args, params, *other_args):
     page.addJS('/jslib/titledcontentslideshow/js/modernizr.custom.js')
     page.addJS('/jslib/titledcontentslideshow/js/tiltSlider.js')
     hrd = j.core.hrd.getHRD(content=args.cmdstr)
-    
+
     space = j.core.portal.active.spacesloader.spaces[args.doc.getSpaceName()]
     imagedir = j.system.fs.joinPaths(space.model.path, '.files', 'img/')
         
@@ -43,23 +43,23 @@ def main(j, args, params, *other_args):
     for i in count(1):
         slide = {}
 
-        slide['Title'] = hrd.getStr('slide.{}.title.text'.format(i), '').replace(r'\n', '<br />')
+        slide['Title'] = hrd.get('slide.{}.title.text'.format(i), default='').replace(r'\n', '<br />')
         if not slide['Title']:
             break
-        slide['TitleSize'] = hrd.getStr('slide.{}.title.text.size'.format(i), 'medium')
-        slide['BackgroundColor'] = hrd.getStr('slide.{}.background.color'.format(i), '')
-        if os.path.isfile(imagedir + hrd.getStr('slide.{}.image.path'.format(i), '')):
+        slide['TitleSize'] = hrd.get('slide.{}.title.text.size'.format(i), default='medium')
+        slide['BackgroundColor'] = hrd.get('slide.{}.background.color'.format(i), default='')
+        if os.path.isfile(imagedir + hrd.get('slide.{}.image.path'.format(i), default='')):
             # check if can find image under .files/img by the given name
-            slide['ImagePath'] = '/$$space/.files/img/' + hrd.getStr('slide.{}.image.path'.format(i), '')
+            slide['ImagePath'] = '/$$space/.files/img/' + hrd.get('slide.{}.image.path'.format(i), default='')
         else:
             # image from full url
-            slide['ImagePath'] = hrd.getStr('slide.{}.image.path'.format(i), '')
+            slide['ImagePath'] = hrd.get('slide.{}.image.path'.format(i), default='')
         
-        slide['BodyText'] = hrd.getStr('slide.{}.body.text'.format(i), '').replace(r'\n', '<br />')
-        slide['BodyTextSize'] = hrd.getStr('slide.{}.body.text.size'.format(i), 'small')
-        slide['ButtonText'] = hrd.getStr('slide.{}.button.text'.format(i), '')
-        slide['ButtonLink'] = hrd.getStr('slide.{}.button.link'.format(i), '')
-        slide['ButtonStyle'] = hrd.getStr('slide.{}.button.style'.format(i), '').lower()
+        slide['BodyText'] = hrd.get('slide.{}.body.text'.format(i), default='').replace(r'\n', '<br />')
+        slide['BodyTextSize'] = hrd.get('slide.{}.body.text.size'.format(i), default='small')
+        slide['ButtonText'] = hrd.get('slide.{}.button.text'.format(i), default='')
+        slide['ButtonLink'] = hrd.get('slide.{}.button.link'.format(i), default='')
+        slide['ButtonStyle'] = hrd.get('slide.{}.button.style'.format(i), default='').lower()
         slides.append(slide)
 
 

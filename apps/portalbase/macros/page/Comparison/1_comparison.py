@@ -83,22 +83,22 @@ def main(j, args, params, tags, tasklet):
 	blocks = []
 	for i in count(1):
 	    block = {}
-	    block['Title'] =  hrd.getStr('block.{}.title.text'.format(i), '').replace(r'\n', '<br />')
+	    block['Title'] =  hrd.getStr('block.{}.title.text'.format(i), default='').replace(r'\n', '<br />')
 	    if not block['Title']:
 	    	break
-	    block['TitleSize'] = hrd.getStr('block.{}.title.size'.format(i), '')
-	    block['SubtitleText'] = hrd.getStr('block.{}.subtitle.text'.format(i), '').replace(r'\n', '<br />')
-	    block['SubtitleSize'] = hrd.getStr('block.{}.subtitle.size'.format(i), '')
-	    block['Price'] = hrd.getStr('block.{}.price'.format(i), '')
-	    block['PriceSubtitle'] = hrd.getStr('block.{}.price.subtitle'.format(i), '').replace(r'\n', '<br />')
-	    block['Property1'] = hrd.getStr('block.{}.property.1'.format(i), '').replace(r'\n', '<br />')
-	    block['Property2'] = hrd.getStr('block.{}.property.2'.format(i), '').replace(r'\n', '<br />')
-	    block['Property3'] = hrd.getStr('block.{}.property.3'.format(i), '').replace(r'\n', '<br />')
-	    block['Property4'] = hrd.getStr('block.{}.property.4'.format(i), '').replace(r'\n', '<br />')
-	    block['OrderButtonText'] = hrd.getStr('block.{}.order.button.text'.format(i), '').replace(r'\n', '<br />')
-	    block['OrderButtonStyle'] = hrd.getStr('block.{}.order.button.style'.format(i), '').lower()
-	    block['OrderButtonSubtext'] = hrd.getStr('block.{}.order.button.subtext'.format(i), '').replace(r'\n', '<br />')
-	    block['OrderButtonSubLink'] = hrd.getStr('block.{}.order.button.link'.format(i), '')
+	    block['TitleSize'] = hrd.getStr('block.{}.title.size'.format(i), default='')
+	    block['SubtitleText'] = hrd.getStr('block.{}.subtitle.text'.format(i), default='').replace(r'\n', '<br />')
+	    block['SubtitleSize'] = hrd.getStr('block.{}.subtitle.size'.format(i), default='')
+	    block['Price'] = hrd.getStr('block.{}.price'.format(i), default='')
+	    block['PriceSubtitle'] = hrd.getStr('block.{}.price.subtitle'.format(i), default='').replace(r'\n', '<br />')
+	    block['Property1'] = hrd.getStr('block.{}.property.1'.format(i), default='').replace(r'\n', '<br />')
+	    block['Property2'] = hrd.getStr('block.{}.property.2'.format(i), default='').replace(r'\n', '<br />')
+	    block['Property3'] = hrd.getStr('block.{}.property.3'.format(i), default='').replace(r'\n', '<br />')
+	    block['Property4'] = hrd.getStr('block.{}.property.4'.format(i), default='').replace(r'\n', '<br />')
+	    block['OrderButtonText'] = hrd.getStr('block.{}.order.button.text'.format(i), default='').replace(r'\n', '<br />')
+	    block['OrderButtonStyle'] = hrd.getStr('block.{}.order.button.style'.format(i), default='').lower()
+	    block['OrderButtonSubtext'] = hrd.getStr('block.{}.order.button.subtext'.format(i), default='').replace(r'\n', '<br />')
+	    block['OrderButtonSubLink'] = hrd.getStr('block.{}.order.button.link'.format(i), default='')
 	    blocks.append(block)
 
 	page.addMessage('''
