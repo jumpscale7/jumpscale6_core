@@ -97,31 +97,30 @@ return {
           "y-axis": true,
           "scale": 1,
           "y_formats": [
-            "none",
+            "short",
             "short"
           ],
           "grid": {
             "leftMax": null,
             "rightMax": null,
-            "leftMin": null,
+            "leftMin": 0,
             "rightMin": null,
             "threshold1": null,
             "threshold2": null,
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2Color": "rgba(234, 112, 112, 0.22)",
-            "thresholdLine": false
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
           },
           "annotate": {
             "enable": false
           },
           "resolution": 100,
           "lines": true,
-          "fill": 100,
-          "linewidth": 1,
+          "fill": 0,
+          "linewidth": 2,
           "points": false,
           "pointradius": 5,
           "bars": false,
-          "stack": true,
+          "stack": false,
           "legend": {
             "show": true,
             "values": false,
@@ -129,10 +128,9 @@ return {
             "max": false,
             "current": false,
             "total": false,
-            "avg": false,
-            "alignAsTable": false
+            "avg": false
           },
-          "percentage": true,
+          "percentage": false,
           "zerofill": true,
           "nullPointMode": "connected",
           "steppedLine": false,
@@ -143,41 +141,31 @@ return {
           "targets": [
             {
               "function": "mean",
-              "series": prefix + "cpu.time.system",
-              "column": "value",
-              "query": "",
-              "alias": "System",
-              "interval": "1m"
+              "series": prefix + "load.avg1min",
+              "column": "value / 100.",
+              "alias": "Avg 1 Min",
+              "hide": false,
+              "interval": "10s"
             },
             {
               "function": "mean",
-              "series": prefix + "cpu.time.user",
-              "column": "value",
-              "query": "",
-              "alias": "User",
-              "interval": "1m"
+              "series": prefix + "load.avg5min",
+              "column": "value / 100.",
+              "alias": "Avg 5 min",
+              "interval": "10s"
             },
             {
               "function": "mean",
-              "series": prefix + "cpu.time.idle",
-              "alias": "IDLE Time",
-              "column": "value",
-              "query": "",
-              "alias": "Idle",
-              "interval": "1m"
-            },
-            {
-              "function": "mean",
-              "series": prefix + "cpu.time.iowait",
-              "column": "value",
-              "query": "",
-              "alias": "IO Wait",
-              "interval": "1m"
+              "series": prefix + "load.avg15min",
+              "column": "value / 100.",
+              "alias": "Avg 15 min",
+              "interval": "10s"
             }
           ],
           "aliasColors": {},
           "aliasYAxis": {},
-          "title": "CPU Time"
+          "title": "CPU Load",
+          "leftYAxisLabel": ""
         }
       ],
       "notice": false
