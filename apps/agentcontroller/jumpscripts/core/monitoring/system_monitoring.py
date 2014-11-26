@@ -27,7 +27,7 @@ def action():
     pipe = statscl.pipeline()
 
     results={}
-    val=psutil.cpu_percent(0)
+    val=psutil.cpu_percent()
     results["cpu.percent"]=val
     results["cpu.promile"]=val * 10 # we store promile to have more percision
     cput= psutil.cpu_times()
@@ -51,10 +51,11 @@ def action():
     results["load.avg5min"] = int(avg5min * 100)
     results["load.avg15min"] = int(avg15min * 100)
 
-    total,used,free,percent=psutil.phymem_usage()
-    results["memory.free"]=round(free/1024.0/1024.0,2)
-    results["memory.used"]=round(used/1024.0/1024.0,2)
-    results["memory.percent"]=percent
+    memory=psutil.virtual_memory()
+    results["memory.used"]=round((memory.used - memory.cached)/1024.0/1024.0,2)
+    results["memory.cached"]=round(memory.cached/1024.0/1024.0,2)
+    results["memory.free"]=round(memory.total/1024.0/1024.0,2) - results['memory.used'] - results['memory.cached']
+    results["memory.percent"]=memory.percent
 
     total,used,free,percent,sin,sout=psutil.virtmem_usage()
     results["swap.free"]=round(free/1024.0/1024.0,2)

@@ -11,19 +11,23 @@ def main(j, args, params, tags, tasklet):
 
     out = list()
 
-    out.append('||Worker||Status||Last Active||')
-
     workers = rediscl.hget('healthcheck:monitoring', 'results')
     errors = rediscl.hget('healthcheck:monitoring', 'errors')
     workers = ujson.loads(workers) if workers else dict()
     errors = ujson.loads(errors) if errors else dict()
 
-    for data in [workers, errors]:
+    def render(data, color):
         nodedata = data.get(nidstr, dict())
-        wdata = nodedata.get('workers', list())
+        wdata = nodedata.get('heartbeat', list())
         for stat in wdata:
-            status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
-            out.append('|%s|%s|%s|' % (stat.get('name', ''), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
+            if isinstance(stat, dict):
+                msg = stat.get('errormessage', 'UNKNOWN')
+            else:
+                msg = stat
+            out.append("{color:%s}*%s*{color}" % (color,msg))
+
+    render(workers, 'green')
+    render(errors, 'red')
 
     out = '\n'.join(out)
     params.result = (out, doc)

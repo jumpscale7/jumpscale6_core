@@ -299,12 +299,12 @@ return {
           },
           "resolution": 100,
           "lines": true,
-          "fill": 0,
+          "fill": 3,
           "linewidth": 2,
           "points": false,
           "pointradius": 5,
           "bars": false,
-          "stack": false,
+          "stack": true,
           "legend": {
             "show": true,
             "values": false,
@@ -325,17 +325,24 @@ return {
           "targets": [
             {
               "function": "mean",
-              "series": prefix + "memory.free" + suffix,
-              "column": "value * 1024 * 1024",
-              "alias": alias || "Free",
-              "hide": false,
+              "series": prefix + "memory.used" + suffix,
+              "column": "value *1024 * 1024",
+              "alias": alias || "Used",
               "interval": "10s"
             },
             {
               "function": "mean",
-              "series": prefix + "memory.used" + suffix,
+              "series": prefix + "memory.cached" + suffix,
               "column": "value *1024 * 1024",
-              "alias": alias || "Used",
+              "alias": alias || "Cached",
+              "interval": "10s"
+            },
+            {
+              "function": "mean",
+              "series": prefix + "memory.free" + suffix,
+              "column": "value * 1024 * 1024",
+              "alias": alias || "Free",
+              "hide": false,
               "interval": "10s"
             }
           ],
