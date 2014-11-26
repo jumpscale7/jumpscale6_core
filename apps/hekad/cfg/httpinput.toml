@@ -1,6 +1,6 @@
 [StatsToFieldsDecoder]
 
 [HttpListenInput]
-address = "0.0.0.0:5565"
+address = "0.0.0.0:8325"
 decoder = "StatsToFieldsDecoder"
 
