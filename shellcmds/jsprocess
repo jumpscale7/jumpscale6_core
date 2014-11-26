@@ -17,7 +17,7 @@ opts = parser.parse_args()
 if opts.action in ('list', 'status'):
     print(FORMAT % ('DOMAIN', 'NAME', 'PRIORITY', 'STATUS', 'AUTOSTART','S','#','PIDS','PORTS'))
     print('-'* 100)
-    print()
+    print("")
 
 if opts.domain==None and  opts.name==None and  opts.action=="start" and not opts.carefull:
     j.tools.startupmanager.startAll()
