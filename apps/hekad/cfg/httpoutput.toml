@@ -1,3 +1,5 @@
+[PayloadEncoder]
+
 [HttpOutput]
 address = "http://$(heka.master):8325"
 message_matcher = "Type == 'heka.statmetric'"
