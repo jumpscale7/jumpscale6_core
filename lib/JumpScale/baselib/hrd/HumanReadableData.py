@@ -577,38 +577,26 @@ class HRD():
             content=j.system.fs.fileGetContents(self._path)
         content=j.codetools.executor.eval(content)
         state='start'
-        valblock=""
         for line in content.split("\n"):
             line=line.strip()
             if line=="" or line[0]=="#":
                 continue
-            if state=="getval":
-                if line.find("=") != -1:
-                    state="start"
-                    self.set(key,valblock,persistent=False)
-                else:
-                    valblock+="%s\\n"%line
-
             if line.find("=") != -1:
                 #found line
                 if line.find("#")<>-1:
                     line=line.split("#")[0]
-                key,value=line.split("=",1)                
+                key,value=line.split("=",1)
                 key=key.strip().lower()
                 value=value.strip()
                 self.changed = True
-                if value=="":
-                    state="getval"
-                    valblock=""
-                else:                    
-                    if value.find("@ASK")<>-1:
-                        if not j.application.shellconfig.interactive:
-                            raise RuntimeError("Can ask key %s interactively. Config file was not complete, please change the default values of config file at location %s"% (key, self._path))
+                if value.find("@ASK")<>-1:
+                    if not j.application.shellconfig.interactive:
+                        raise RuntimeError("Can ask key %s interactively. Config file was not complete, please change the default values of config file at location %s"% (key, self._path))
 
-                        value=self._ask(key,value)
-                        self.set(key,value,persistent=True)
-                    else:
-                        self.set(key,value,persistent=False)
+                    value=self._ask(key,value)
+                    self.set(key,value,persistent=True)
+                else:
+                    self.set(key,value,persistent=False)
 
 
     def getPath(self,key):
