@@ -83,7 +83,7 @@ return {
               "column": "value / 10.0",
               "query": "",
               "alias": alias || "CPU",
-              "interval": "10s"
+              "interval": "1m"
             }
           ],
           "aliasColors": {},
@@ -153,21 +153,21 @@ return {
               "column": "value / 100.",
               "alias": alias || "Avg 1 Min",
               "hide": false,
-              "interval": "10s"
+              "interval": "1m"
             },
             {
               "function": "mean",
               "series": prefix + "load.avg5min" + suffix,
               "column": "value / 100.",
               "alias": alias || "Avg 5 min",
-              "interval": "10s"
+              "interval": "1m"
             },
             {
               "function": "mean",
               "series": prefix + "load.avg15min" + suffix,
               "column": "value / 100.",
               "alias": alias || "Avg 15 min",
-              "interval": "10s"
+              "interval": "1m"
             }
           ],
           "aliasColors": {},
@@ -328,14 +328,14 @@ return {
               "series": prefix + "memory.used" + suffix,
               "column": "value *1024 * 1024",
               "alias": alias || "Used",
-              "interval": "10s"
+              "interval": "1m"
             },
             {
               "function": "mean",
               "series": prefix + "memory.cached" + suffix,
               "column": "value *1024 * 1024",
               "alias": alias || "Cached",
-              "interval": "10s"
+              "interval": "1m"
             },
             {
               "function": "mean",
@@ -343,7 +343,7 @@ return {
               "column": "value * 1024 * 1024",
               "alias": alias || "Free",
               "hide": false,
-              "interval": "10s"
+              "interval": "1m"
             }
           ],
           "aliasColors": {},
@@ -415,14 +415,14 @@ return {
               "function": "difference",
               "series": prefix + "network.kbytes.recv" + suffix,
               "column": "value * 1024",
-              "interval": "20s",
+              "interval": "2m",
               "alias": alias || "Received"
             },
             {
               "function": "difference",
               "series": prefix + "network.kbytes.send" + suffix,
               "column": "value * 1024",
-              "interval": "20s",
+              "interval": "2m",
               "alias": alias || "Sent"
             }
           ],
@@ -486,14 +486,14 @@ return {
               "function": "difference",
               "series": prefix + "network.error.in" + suffix,
               "column": "value",
-              "interval": "20s",
+              "interval": "2m",
               "alias": alias || "In"
             },
             {
               "function": "difference",
               "series": prefix + "network.error.out" + suffix,
               "column": "value",
-              "interval": "20s",
+              "interval": "2m",
               "alias": alias || "Out"
             }
           ],

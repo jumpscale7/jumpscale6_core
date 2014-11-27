@@ -68,14 +68,14 @@ return {
               "function": "difference",
               "series": prefix + "kbytes_recv",
               "column": "value * 1024",
-              "interval": "20s",
+              "interval": "2m",
               "alias": "Received"
             },
             {
               "function": "difference",
               "series": prefix + "kbytes_sent",
               "column": "value * 1024",
-              "interval": "20s",
+              "interval": "2m",
               "alias": "Sent"
             }
           ],
@@ -139,14 +139,14 @@ return {
               "function": "difference",
               "series": prefix + "errin",
               "column": "value",
-              "interval": "20s",
+              "interval": "2m",
               "alias": "In"
             },
             {
               "function": "difference",
               "series": prefix + "errout",
               "column": "value",
-              "interval": "20s",
+              "interval": "2m",
               "alias": "Out"
             }
           ],

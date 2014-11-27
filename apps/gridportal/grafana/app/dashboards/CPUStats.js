@@ -75,7 +75,7 @@ return {
               "series": prefix + "cpu.promile",
               "query": "",
               "alias": "CPU",
-              "interval": "10s"
+              "interval": "1m"
             }
           ],
           "aliasColors": {},
@@ -145,21 +145,21 @@ return {
               "column": "value / 100.",
               "alias": "Avg 1 Min",
               "hide": false,
-              "interval": "10s"
+              "interval": "1m"
             },
             {
               "function": "mean",
               "series": prefix + "load.avg5min",
               "column": "value / 100.",
               "alias": "Avg 5 min",
-              "interval": "10s"
+              "interval": "1m"
             },
             {
               "function": "mean",
               "series": prefix + "load.avg15min",
               "column": "value / 100.",
               "alias": "Avg 15 min",
-              "interval": "10s"
+              "interval": "1m"
             }
           ],
           "aliasColors": {},
