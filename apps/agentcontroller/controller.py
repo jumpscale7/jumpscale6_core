@@ -180,7 +180,8 @@ class ControllerCMDS():
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")  
         # job guid needs to be unique accoress grid, structure $ac_gid _ $ac_nid _ $executor_gid _ $jobenum
-        job["guid"]="%s_%s_%s"%(self.acuniquekey, job["gid"],job["id"])
+        if not job['guid']:
+            job["guid"]="%s_%s_%s"%(self.acuniquekey, job["gid"],job["id"])
         jobs=json.dumps(job)            
         self.redis.hset("jobs:%s"%job["gid"], job["guid"], jobs)
         if osis:
@@ -285,7 +286,7 @@ class ControllerCMDS():
             self._updateNetInfo(session.netinfo, node)
             self.nodeclient.set(node)
             return node.dump()
-        raise RuntimeError("Node is not registered properly please call registerNode")
+        raise RuntimeError("Node is not registered properly please call registerNode.\n Session: %s" % session )
 
     def escalateError(self, eco, session=None):
         if isinstance(eco, dict):
