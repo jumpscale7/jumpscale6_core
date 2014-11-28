@@ -164,7 +164,7 @@ return {
           ],
           "aliasColors": {},
           "aliasYAxis": {},
-          "title": "CPU Load",
+          "title": "System Load",
           "leftYAxisLabel": ""
         }
       ],
