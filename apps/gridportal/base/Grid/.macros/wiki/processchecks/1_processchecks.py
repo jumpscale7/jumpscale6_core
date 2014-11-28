@@ -34,7 +34,7 @@ def main(j, args, params, tags, tasklet):
             status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             if status and status['state'] != 'RUNNING':
                 gid = j.core.grid.healthchecker.getGID(nid)
-                out.append("|%s|[%s|node?id=%sgid=%s]|%s|{color:red}*HALTED*{color}| |" % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid)))
+                out.append("|%s|[%s|node?id=%s&gid=%s]|%s|{color:red}*HALTED*{color}| |" % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid)))
 
     out = '\n'.join(out)
     params.result = (out, doc)
