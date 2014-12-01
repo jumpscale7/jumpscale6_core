@@ -19,7 +19,7 @@ priority=5
 class TEST():
 
     def setUp(self):
-        self.client= j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user=j.application.config.get('system.superadmin.login'), \
+        self.client= j.servers.geventws.getClient("127.0.0.1", 4446, org="myorg", user=j.application.config.get('system.superadmin.login'), \
     passwd=j.application.config.get('grid.master.superadminpasswd'),category="jpackages")
 
 

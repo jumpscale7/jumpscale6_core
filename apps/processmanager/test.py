@@ -5,7 +5,7 @@ import JumpScale.grid.geventws
 j.application.start("reload")
 j.application.initGrid()
 
-client = j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user="root", \
+client = j.servers.geventws.getClient("127.0.0.1", 4446, org="myorg", user="root", \
 	passwd=j.application.config.get('grid.master.superadminpasswd'),category="stats")
 
 print client.listStatKeys(prefix="",memonly=False,avgmax=True)

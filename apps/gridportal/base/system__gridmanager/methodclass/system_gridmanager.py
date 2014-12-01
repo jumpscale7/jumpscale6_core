@@ -50,9 +50,9 @@ class system_gridmanager(j.code.classGetBase()):
             if nid not in self._nodeMap:
                 raise RuntimeError('Could not get client for node %s!' % nid)
             for ip in self._nodeMap[nid]['ipaddr']:
-                if j.system.net.tcpPortConnectionTest(ip, 4445):
+                if j.system.net.tcpPortConnectionTest(ip, 4446):
                     user="root"#j.application.config.get('system.superadmin.login')
-                    self.clients[nid] = j.servers.geventws.getClient(ip, 4445, org="myorg", user=user, passwd='fake',category=category)
+                    self.clients[nid] = j.servers.geventws.getClient(ip, 4446, org="myorg", user=user, passwd='fake',category=category)
                     self.clientsIp[nid] = ip
                     return self.clients[nid]
             raise RuntimeError('Could not get client for node %s!' % nid)
