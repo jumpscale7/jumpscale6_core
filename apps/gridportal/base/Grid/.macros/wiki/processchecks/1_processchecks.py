@@ -14,18 +14,24 @@ def main(j, args, params, tags, tasklet):
     errors = rediscl.hget('healthcheck:monitoring', 'errors')
     data = ujson.loads(data) if data else dict()
     errors = ujson.loads(errors) if errors else dict()
+    rows = list()
 
     if len(data) > 0:
         for nid, checks in data.iteritems():
+            level = 0
             if nid in errors:
+                level = -1
                 categories = errors.get(nid, {}).keys()
                 runningstring = '{color:orange}*RUNNING** (issues in %s){color}' % ', '.join(categories)
             else:
+                level = 0
                 runningstring = '{color:green}*RUNNING*{color}'
             status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             gid = j.core.grid.healthchecker.getGID(nid)
             link = '[Details|nodestatus?nid=%s&gid=%s]' % (nid, gid) if status['state'] == 'RUNNING' else ''
-            out.append('|%s|[%s|node?id=%s&gid=%s]|%s|%s|%s|' % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid), runningstring, link))
+            row = {'level': level, 'gid': gid, 'nid': nid}
+            row['message'] = '|%s|[%s|node?id=%s&gid=%s]|%s|%s|%s|' % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid), runningstring, link)
+            rows.append(row)
 
     if len(errors) > 0:
         for nid, checks in errors.iteritems():
@@ -33,10 +39,18 @@ def main(j, args, params, tags, tasklet):
                 continue
             status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             if status and status['state'] != 'RUNNING':
+                level = -2
                 gid = j.core.grid.healthchecker.getGID(nid)
-                out.append("|%s|[%s|node?id=%s&gid=%s]|%s|{color:red}*HALTED*{color}| |" % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid)))
+                row = {'level': level, 'gid': gid, 'nid': nid}
+                row['message'] = "|%s|[%s|node?id=%s&gid=%s]|%s|{color:red}*HALTED*{color}| |" % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid))
+                rows.append(row)
 
-    out = '\n'.join(out)
+    def sorter(row1, row2):
+        for sortkey in ('level', 'gid', 'nid'):
+            if row1[sortkey] != row2[sortkey] or sortkey == 'nid':
+                return cmp(row1[sortkey], row2[sortkey] )
+
+    out = '\n'.join((x['message'] for x in sorted(rows, cmp=sorter)))
     params.result = (out, doc)
     return params
 
