@@ -9,7 +9,7 @@ def main(j, args, params, tags, tasklet):
     out = list()
     rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 9999)
 
-    out.append('||Grid ID||Node ID||Node Name||Process Manager Status||Details||')
+    out = '||Grid ID||Node ID||Node Name||Process Manager Status||Details||\n'
     data = rediscl.hget('healthcheck:monitoring', 'results')
     errors = rediscl.hget('healthcheck:monitoring', 'errors')
     data = ujson.loads(data) if data else dict()
@@ -50,7 +50,7 @@ def main(j, args, params, tags, tasklet):
             if row1[sortkey] != row2[sortkey] or sortkey == 'nid':
                 return cmp(row1[sortkey], row2[sortkey] )
 
-    out = '\n'.join((x['message'] for x in sorted(rows, cmp=sorter)))
+    out += '\n'.join((x['message'] for x in sorted(rows, cmp=sorter)))
     params.result = (out, doc)
     return params
 
