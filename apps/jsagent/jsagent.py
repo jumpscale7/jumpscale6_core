@@ -198,8 +198,8 @@ class ProcessManager():
             nid=res["node"]["id"]
             webdiskey=res["webdiskey"]
             j.application.config.set("grid.node.id",nid)
-            
             j.application.loadConfig()
+            j.application.initWhoAmI(True)
 
             j.application.config.set("agentcontroller.webdiskey",webdiskey)
             j.application.config.set("grid.id",res["node"]["gid"])
@@ -221,7 +221,7 @@ class ProcessManager():
             if reset or not jp.isInstalled(instance="main"):
                 jp.install(hrddata={"agentcontroller.client.addr":acip,"agentcontroller.client.port":4444,"agentcontroller.client.login":aclogin},instance=acclientinstancename,reinstall=reset)
             
-            self.acclient=j.clients.agentcontroller.getByInstance(acclientinstancename)
+            self.acclient=j.clients.agentcontroller.getByInstance(acclientinstancename, new=True)
         else:
             self.acclient=None
         
@@ -231,9 +231,6 @@ class ProcessManager():
         self._workerStart()
 
         j.core.grid.init()
-
-        processmanagerGevent=True
-
         gevent.spawn(self._processManagerStart)
 
         self.mainloop()
