@@ -23,7 +23,7 @@ class TEST():
         #make sure logging happens
         self.serverip="127.0.0.1"
         print "check process manager active"
-        if not j.system.net.tcpPortConnectionTest(self.serverip,4445) == True:
+        if not j.system.net.tcpPortConnectionTest(self.serverip,4446) == True:
             j.errorconditionhandler.raiseOperationalCritical("could not connect to processmanager, is it running?", category="processmanager.test.setup")
         print "check redis active"
         if not j.system.net.tcpPortConnectionTest(self.serverip,9999):
@@ -32,7 +32,7 @@ class TEST():
         if not  j.system.net.tcpPortConnectionTest(self.serverip,9200):
             j.errorconditionhandler.raiseOperationalCritical("could not connect to elasticsearch, is it running? (port 9200)", category="processmanager.test.setup")
             
-        self.client= j.servers.geventws.getClient("127.0.0.1", 4445, org="myorg", user=j.application.config.get('system.superadmin.login'), \
+        self.client= j.servers.geventws.getClient("127.0.0.1", 4446, org="myorg", user=j.application.config.get('system.superadmin.login'), \
             passwd=j.application.config.get('grid.master.superadminpasswd'),category="jpackages")
         self.logqueue=j.clients.redis.getRedisQueue("127.0.0.1",9999,"logs")
         self.logqueueEco=j.clients.redis.getRedisQueue("127.0.0.1",9999,"eco")

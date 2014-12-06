@@ -91,7 +91,7 @@ class ProcessmanagerFactory:
         j.core.jumpscripts.loadFromGridMaster()
 
         osis = self.daemon.osis
-        self.daemon = j.servers.geventws.getServer(port=4445)  #@todo no longer needed I think, it should not longer be a socket server, lets check first
+        self.daemon = j.servers.geventws.getServer(port=4446)  #@todo no longer needed I think, it should not longer be a socket server, lets check first
         self.daemon.osis = osis
         self.daemon.daemon.osis = osis
 
