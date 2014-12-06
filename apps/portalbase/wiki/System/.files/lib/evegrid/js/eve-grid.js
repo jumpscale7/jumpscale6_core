@@ -5,6 +5,8 @@ eveModule.directive('eveGrid', function($http, $filter) {
         scope: true,
         template:'<table class="table table-striped" cellspacing="0" width="100%"><tfoot><tr><td><button class="delete btn btn-primary" style="padding: 2px 12px;">Delete</button></td></tr></tfoot></table>',
         link: function (scope, element, attrs, ctrl) {
+            var selected = [];
+            var checkedRows = [];
             $http({
                 url: 'http://' + attrs['eveUrl'] + attrs['eveSpecPath'],
                 method: 'GET',
@@ -95,6 +97,12 @@ eveModule.directive('eveGrid', function($http, $filter) {
                     "columnDefs": [
                         { className: "center", "targets": [ 0 ] }
                     ],
+                    "rowCallback": function(row, data) {
+                        if ($.inArray(data._id, selected) !== -1) {
+                            $(row).addClass('selected');
+                            $(row).find('.rowCheck').prop('checked', true);
+                        }
+                    },
                     "columns": scope.columns,
                     ajax: function (requestData, callback, settings) {
                         requestData.page = requestData.start / requestData.length + 1;
@@ -138,6 +146,8 @@ eveModule.directive('eveGrid', function($http, $filter) {
                         });
                     },
                 } );
+                
+                
 
                 for (var i = 1; i < scope.columns.length; i++) {
                     var datetimeFields = attrs["datetimeFields"].split(',');
@@ -177,20 +187,46 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                     .search( angular.element(this).find('input').val() )
                                     .draw();
                             } );
-                    }
-
-                    
+                    }     
                 };
                 $('.datetimeInput').datetimepicker({
                     dateFormat: "dd/mm/yy",
                     timeFormat: "hh:mm:ss",
                     controlType: 'select'
                 });
+
+                angular.element('.eve-grid-container .rowCheck').live('click' , function() {
+                    var currentRow = $(this).parents('tr');
+                    var id = scope.dataTable.row(currentRow).data()._id;
+                    var index = $.inArray(id, selected);
+                    if (index === -1) {
+                        selected.push(id);
+                    } else {
+                        selected.splice(index, 1);
+                    }
+                    $(currentRow).toggleClass('selected');
+
+                    var checkedBoxes = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck:checked').length;
+                    var totalRowsOnPage = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck').length;
+                    if(totalRowsOnPage == checkedBoxes){
+                        angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', true);
+                    }else{
+                        angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', false);
+                    }
+                });
             });
 
             angular.element('#' + attrs["eveEntity"] + '-container table').on('click', '.allCheck', function() {
                 var allCheck = this;
                 angular.element(this).parents('table').find('.rowCheck').each(function() {
+                    var currentRow = angular.element(this).parents('tr');
+                    var id = scope.dataTable.row(currentRow).data()._id;
+                    var index = $.inArray(id, selected);
+                    if (index === -1) {
+                        selected.push(id);
+                    } else {
+                        selected.splice(index, 1);
+                    }
                     this.checked = allCheck.checked;
                     if (this.checked)
                         angular.element(this).parents('tr').addClass('selected');
@@ -199,33 +235,46 @@ eveModule.directive('eveGrid', function($http, $filter) {
                 });
             });
 
-
             angular.element('.searchInput').live('focus', function() {
                 $(this).animate({ width: 116 }, 'medium');
             }).live('blur', function() {
                 $(this).animate({ width: 60 }, 'medium');
             });
-
+            
             angular.element('#' + attrs["eveEntity"] + '-container table .delete').on('click', function() {
                 var trs = angular.element('#' + attrs["eveEntity"] + '-container table input[type=checkbox]:checked').parents('tr');
                 var finishedRequests = 0;
                 trs.each(function(i, tr) {
                     var data = scope.dataTable.row(tr).data();
-                    $http({
-                        url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data._id,
-                        type: 'POST',
-                        headers: {
-                            'X-HTTP-Method-Override': 'DELETE',
-                            'If-Match': data._etag
-                        }
-                    }).then(function() {
-                        finishedRequests++;
-                        if (finishedRequests == trs.length) {
-                            scope.dataTable.draw();
-                        }
-                    });
+                    if(data){
+                        $http({
+                            url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data._id,
+                            type: 'POST',
+                            headers: {
+                                'X-HTTP-Method-Override': 'DELETE',
+                                'If-Match': data._etag
+                            }
+                        }).then(function() {
+                            finishedRequests++;
+                            if (finishedRequests == trs.length) {
+                                scope.dataTable.draw();
+                            }
+                        });
+                    }
                 });
             });
+
+            angular.element('#' + attrs["eveEntity"] + '-container table').on( 'processing.dt', function (e, settings, processing ) {
+                var checkedBoxes = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck:checked').length;
+                var totalRowsOnPage = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck').length;
+                if(checkedBoxes == totalRowsOnPage && checkedBoxes > 0 && processing == false){
+                    angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', true);
+                }else{
+                    angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', false);
+                }
+
+            } );
+
         }
     }
 });
