@@ -507,6 +507,8 @@ class ControllerCMDS():
         is for agent to ask for work
         returns job as dict
         """
+        nodeid = "%s_%s" % (session.gid, session.nid)
+        self.sessionsUpdateTime[nodeid]=j.base.time.getTimeEpoch()
         self._log("getwork %s" % session)
         q = self._getWorkQueue(session)
         jobstr=q.get(timeout=30)
@@ -529,7 +531,6 @@ class ControllerCMDS():
         self._log("NOTIFY WORK COMPLETED: jobid:%s"%job["id"])
         if not j.basetype.dictionary.check(job):
             raise RuntimeError("job needs to be dict")            
-        self.sessionsUpdateTime[session.id]=j.base.time.getTimeEpoch()
         saveinosis = job['log'] or job['state'] != 'OK'
         self._setJob(job, osis=saveinosis)
         if job['wait']:
@@ -607,7 +608,11 @@ class ControllerCMDS():
             print msg
 
     def listSessions(self,session=None):
-        return self.roles2agents.copy()
+        agents = self.agents2roles.copy()
+        times = self.sessionsUpdateTime.copy()
+        for key, value in times.iteritems():
+            times[key] = [value] + agents.get(key, list())
+        return times
 
     def getJobInfo(self, jobguid, session=None):
         if jobguid==None:

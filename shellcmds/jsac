@@ -26,9 +26,13 @@ if opts.action == 'reload':
     print('Reloading Jumpscripts')
     ac.reloadjumpscripts()
 elif opts.action == 'listsessions':
-    import yaml
+    print('Sessions:\n')
     sessions = ac.listSessions()
-    print('Sessions:\n\n' + yaml.dump(sessions))
+    for node, roles in sessions.iteritems():
+        ctime = j.base.time.formatTime(roles[0])
+        print("- %s: %s" % (node, ctime))
+        for role in roles[1:]:
+            print("  %s" % role)
 elif opts.action == 'exec':
     import yaml
     args = dict()
