@@ -62,9 +62,6 @@ def action():
             results['space_used_mb'] = int(round(disk.size-disk.free))
             results['space_percent'] = int(round((float(disk.size-disk.free)/float(disk.size)),2))
 
-        if (disk.free and disk.size) and (disk.free / float(disk.size)) * 100 < 10:
-            j.events.opserror('Disk %s has less then 10%% free space' % disk.path, 'monitoring')
-
         for key,value in disk.__dict__.iteritems():
             cacheobj.db.__dict__[key]=value
 
