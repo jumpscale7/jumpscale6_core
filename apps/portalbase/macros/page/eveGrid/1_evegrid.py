@@ -32,8 +32,7 @@ def main(j, args, params, tags, tasklet):
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/dataTables.bootstrap.css')
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/bootstrap-theme.min.css')
 		page.addCSS('/system/.files/lib/evegrid/css/eve-grid.css')
-		page.addCSS('/jslib/jquery/jquery-ui.structure.min.css')
-		page.addCSS('//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.theme.min.css')
+		page.addCSS('https://rawgit.com/Eonasdan/bootstrap-datetimepicker/master/build/css/bootstrap-datetimepicker.min.css')
 
 		page.addJS('/jslib/jquery/jqueryDataTable/js/jquery.dataTables.js')
 		page.addJS('/jslib/angular/angular1-3-0.min.js')
@@ -41,9 +40,8 @@ def main(j, args, params, tags, tasklet):
 		page.addJS('/jslib/underscore/underscore-min.js')
 		page.addJS('/jslib/jquery/jqueryDataTable/js/dataTables.bootstrap.js')
 		page.addJS('/jslib/moment.js')
-		page.addJS('/jslib/jquery/jquery-ui.min.js')
-		page.addJS('/jslib/jquery/jquery-ui-sliderAccess.js')		
-		page.addJS('/jslib/jquery/jquery-ui-timepicker-addon.min.js')
+		page.addJS('https://rawgit.com/Eonasdan/bootstrap-datetimepicker/master/src/js/bootstrap-datetimepicker.js')
+
 		page.addJS('/system/.files/lib/evegrid/js/eve-grid.js')
 	
 	page.addMessage('''
@@ -51,6 +49,7 @@ def main(j, args, params, tags, tasklet):
 	        <div id="{entityName}-container" eve-grid eve-url="{schemaURL}" eve-entity="{entityName}" eve-spec-path="{specJsonPath}" datetime-fields={datetimeFields} columns='{columns}'>
 	       	</div>
     	</div>
+
 	 '''.format(**eveGrid))
 	params.result = page
 	return params

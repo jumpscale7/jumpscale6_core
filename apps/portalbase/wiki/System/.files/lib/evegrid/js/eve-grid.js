@@ -3,7 +3,7 @@ eveModule.directive('eveGrid', function($http, $filter) {
     return {
         restrict: 'EA',
         scope: true,
-        template:'<table class="table table-striped" cellspacing="0" width="100%"><tfoot><tr><td><button class="delete btn btn-primary" style="padding: 2px 12px;">Delete</button></td></tr></tfoot></table>',
+        template:'<table class="table table-striped" cellspacing="0" width="100%"><tfoot><tr><td><button class="delete btn btn-danger" style="padding: 2px 12px;">Delete</button><button class="search btn btn-primary" style="padding: 2px 12px; margin-left: 3px;">Search</button></td></tr></tfoot></table>',
         link: function (scope, element, attrs, ctrl) {
             var selected = [];
             var checkedRows = [];
@@ -109,15 +109,36 @@ eveModule.directive('eveGrid', function($http, $filter) {
                         requestData.max_results = requestData.length;
                         var where = [];
 
-                        for (var i = 1; i < scope.columns.length; i++){
-                            var val = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:first' ).val();
-                            var val2 = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:nth(1)' ).val();
-                            where.push(scope.columns[i].getFilter(val, val2));
-                        };
-
-                        if (where.length > 0){
-                            requestData.where = "{" + where.filter(function(s) {return s.length > 0; }).join(', ') + "}";
-                        }
+                        angular.element('#' + attrs["eveEntity"] + '-container table .search').click(function() {
+                            where.length = 0;
+                            for (var i = 1; i < scope.columns.length; i++){
+                                var val = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:first' ).val();
+                                var val2 = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:nth(1)' ).val();
+                                where.push(scope.columns[i].getFilter(val, val2));
+                            };
+                            if (where.length > 0){
+                                requestData.where = "{" + where.filter(function(s) {return s.length > 0; }).join(', ') + "}";
+                                $http({
+                                    url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
+                                    method: 'GET',
+                                    cache: false,
+                                    params: requestData
+                                }).then(function(data) {
+                                    data = data.data;
+                                    if (data['_meta']) {
+                                        data['recordsTotal'] = data['_meta']['total'];
+                                        data['iTotalRecords'] = data['_meta']['total'];
+                                        data['iTotalDisplayRecords'] = data['_meta']['total'];
+                                    } else {
+                                        data['recordsTotal'] = 0;
+                                        data['iTotalRecords'] = 0;
+                                        data['iTotalDisplayRecords'] = 0;
+                                    }
+                                    data['data'] = data['_items'];
+                                    callback(data);
+                                });
+                            }
+                        });
 
                         if (requestData.order && requestData.order.length > 0) {
                             sort_field = scope.columns[requestData.order[0].column].data;
@@ -125,25 +146,29 @@ eveModule.directive('eveGrid', function($http, $filter) {
                             requestData.sort = '[("' + sort_field + '",' + sort_dir + ')]';
                         }
 
-                        $http({
-                            url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
-                            method: 'GET',
-                            cache: false,
-                            params: requestData
-                        }).then(function(data) {
-                            data = data.data;
-                            if (data['_meta']) {
-                                data['recordsTotal'] = data['_meta']['total'];
-                                data['iTotalRecords'] = data['_meta']['total'];
-                                data['iTotalDisplayRecords'] = data['_meta']['total'];
-                            } else {
-                                data['recordsTotal'] = 0;
-                                data['iTotalRecords'] = 0;
-                                data['iTotalDisplayRecords'] = 0;
-                            }
-                            data['data'] = data['_items'];
-                            callback(data);
-                        });
+                        if(requestData.draw == 1){
+
+                            $http({
+                                url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
+                                method: 'GET',
+                                cache: false,
+                                params: requestData
+                            }).then(function(data) {
+                                data = data.data;
+                                if (data['_meta']) {
+                                    data['recordsTotal'] = data['_meta']['total'];
+                                    data['iTotalRecords'] = data['_meta']['total'];
+                                    data['iTotalDisplayRecords'] = data['_meta']['total'];
+                                } else {
+                                    data['recordsTotal'] = 0;
+                                    data['iTotalRecords'] = 0;
+                                    data['iTotalDisplayRecords'] = 0;
+                                }
+                                data['data'] = data['_items'];
+                                callback(data);
+                            });
+
+                        }
                     },
                 } );
                 
@@ -154,8 +179,8 @@ eveModule.directive('eveGrid', function($http, $filter) {
                     if(scope.columns[i].sType == "integer" || scope.columns[i].sType == "float"){
                         if( datetimeFields.indexOf(scope.columns[i].data) > -1 ){
                             angular.element('<td style="padding-left: 0;">' +
-                                '<input type="text" class="searchInput datetimeInput" placeholder=">=" />' +
-                                '<input type="text" class="searchInput datetimeInput" placeholder="<=" />' +
+                                '<input type="text" class="searchInput datetimeInput" placeholder=">=" data-date-format="DD/MM/YYYY hh:mm:ss"/>' +
+                                '<input type="text" class="searchInput datetimeInput" placeholder="<=" data-date-format="DD/MM/YYYY hh:mm:ss"/>' +
                                 '</td>')
                                 .appendTo('#' + attrs["eveEntity"] + '-container table tfoot tr')
                                 .on( 'keyup change', function () {
@@ -189,11 +214,8 @@ eveModule.directive('eveGrid', function($http, $filter) {
                             } );
                     }     
                 };
-                $('.datetimeInput').datetimepicker({
-                    dateFormat: "dd/mm/yy",
-                    timeFormat: "hh:mm:ss",
-                    controlType: 'select'
-                });
+
+                $('.datetimeInput').datetimepicker();
 
                 angular.element('.eve-grid-container .rowCheck').live('click' , function() {
                     var currentRow = $(this).parents('tr');
@@ -263,7 +285,7 @@ eveModule.directive('eveGrid', function($http, $filter) {
                     }
                 });
             });
-
+            
             angular.element('#' + attrs["eveEntity"] + '-container table').on( 'processing.dt', function (e, settings, processing ) {
                 var checkedBoxes = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck:checked').length;
                 var totalRowsOnPage = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck').length;

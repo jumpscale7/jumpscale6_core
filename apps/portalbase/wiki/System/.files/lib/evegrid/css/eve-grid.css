@@ -25,4 +25,7 @@ input.searchInput{
 	height: 70%;
 	font-size: 11px;
 }
+.dataTables_processing{
+	display: none !important;
+}
 [eve-grid] { position: relative; }
