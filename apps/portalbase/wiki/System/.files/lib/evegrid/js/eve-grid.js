@@ -104,12 +104,12 @@ eveModule.directive('eveGrid', function($http, $filter) {
                         }
                     },
                     "columns": scope.columns,
-                    ajax: function (requestData, callback, settings) {
+                    ajax: function(requestData, callback, settings) {
                         requestData.page = requestData.start / requestData.length + 1;
                         requestData.max_results = requestData.length;
                         var where = [];
 
-                        angular.element('#' + attrs["eveEntity"] + '-container table .search').click(function() {
+                        function getData (argument) {
                             where.length = 0;
                             for (var i = 1; i < scope.columns.length; i++){
                                 var val = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:first' ).val();
@@ -138,6 +138,9 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                     callback(data);
                                 });
                             }
+                        }
+                        angular.element('#' + attrs["eveEntity"] + '-container table .search').click(function() {
+                            getData();
                         });
 
                         if (requestData.order && requestData.order.length > 0) {
@@ -147,7 +150,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
                         }
 
                         if(requestData.draw == 1){
-
                             $http({
                                 url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
                                 method: 'GET',
@@ -167,8 +169,56 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                 data['data'] = data['_items'];
                                 callback(data);
                             });
-
                         }
+
+                        angular.element('.paginate_button').live('click', function() {
+                            getData();
+                        });
+
+                        angular.element('.eve-grid-container select').live('change', function() {
+                            getData();
+                        });
+                        angular.element('#' + attrs["eveEntity"] + '-container table .delete').on('click', function() {
+                            var trs = angular.element('#' + attrs["eveEntity"] + '-container table input[type=checkbox]:checked').parents('tr');
+                                for (var i = 0; i < selected.length; i++) {
+                                    $http({
+                                        url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/' + selected[i],
+                                        method: 'GET',
+                                        cache: false,
+                                        params: requestData
+                                    }).then(function(data) {
+                                        $http({
+                                            url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data.data._id,
+                                            type: 'POST',
+                                            headers: {
+                                                'X-HTTP-Method-Override': 'DELETE',
+                                                'If-Match': data.data._etag
+                                            }
+                                        }).then(function() {
+                                               $http({
+                                                    url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
+                                                    method: 'GET',
+                                                    cache: false,
+                                                    params: requestData
+                                                }).then(function(data) {
+                                                    data = data.data;
+                                                    if (data['_meta']) {
+                                                        data['recordsTotal'] = data['_meta']['total'];
+                                                        data['iTotalRecords'] = data['_meta']['total'];
+                                                        data['iTotalDisplayRecords'] = data['_meta']['total'];
+                                                    } else {
+                                                        data['recordsTotal'] = 0;
+                                                        data['iTotalRecords'] = 0;
+                                                        data['iTotalDisplayRecords'] = 0;
+                                                    }
+                                                    data['data'] = data['_items'];
+                                                    callback(data);
+                                                });
+                                        });
+                                        
+                                    });
+                                };
+                        });
                     },
                 } );
                 
@@ -262,30 +312,7 @@ eveModule.directive('eveGrid', function($http, $filter) {
             }).live('blur', function() {
                 $(this).animate({ width: 60 }, 'medium');
             });
-            
-            angular.element('#' + attrs["eveEntity"] + '-container table .delete').on('click', function() {
-                var trs = angular.element('#' + attrs["eveEntity"] + '-container table input[type=checkbox]:checked').parents('tr');
-                var finishedRequests = 0;
-                trs.each(function(i, tr) {
-                    var data = scope.dataTable.row(tr).data();
-                    if(data){
-                        $http({
-                            url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data._id,
-                            type: 'POST',
-                            headers: {
-                                'X-HTTP-Method-Override': 'DELETE',
-                                'If-Match': data._etag
-                            }
-                        }).then(function() {
-                            finishedRequests++;
-                            if (finishedRequests == trs.length) {
-                                scope.dataTable.draw();
-                            }
-                        });
-                    }
-                });
-            });
-            
+                        
             angular.element('#' + attrs["eveEntity"] + '-container table').on( 'processing.dt', function (e, settings, processing ) {
                 var checkedBoxes = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck:checked').length;
                 var totalRowsOnPage = angular.element('#' + attrs["eveEntity"] + '-container table').find('tbody tr .rowCheck').length;
