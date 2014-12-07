@@ -195,6 +195,9 @@ class ControllerCMDS():
                     job[key] = json.dumps(job[key])
             self.jobclient.set(job)
 
+    def saveJob(self, job, session=None):
+        self.jobclient.set(job)
+
     def _deleteJobFromCache(self, job):
         self.redis.hdel("jobs:%s"%job["gid"], job["guid"])
 
