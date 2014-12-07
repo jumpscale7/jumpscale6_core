@@ -8,9 +8,9 @@ class OsisBeaker(NamespaceManager):
 
     def __getitem__(self, key):
         key = "%s_%s" % (self.namespace, key)
-        try:
+        if self._client.exists(categoryname=self._category, namespace=self._namespace, key=key):
             return self._client.get(categoryname=self._category, namespace=self._namespace, key=key)
-        except:
+        else:
             raise KeyError(key)
 
     def __setitem__(self, key, value):
