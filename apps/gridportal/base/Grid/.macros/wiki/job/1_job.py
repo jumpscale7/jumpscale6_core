@@ -27,7 +27,7 @@ def main(j, args, params, tags, tasklet):
 
     obj['nid'] = obj.get('nid', 0)
     obj['roles'] = ', '.join(obj['roles'])
-    obj['args'] = urllib.quote(json.dumps(obj['args']))
+    obj['args'] = urllib.quote(obj['args'])
 
     if obj["state"] == "ERROR":
         obj['state'] = "FAILED"
