@@ -187,15 +187,15 @@ class ControllerCMDS():
         if osis:
             # we need to make sure that job['result'] is always of the same type hence we serialize
             # otherwise elasticsearch will have issues
-            job = copy.deepcopy(job)
-            if 'result' in job and not isinstance(job["result"],str):
-                job['result'] = json.dumps(job['result'])
-            for key in ('args', 'kwargs'):
-                if key in job:
-                    job[key] = json.dumps(job[key])
-            self.jobclient.set(job)
+            self.saveJob(job)
 
     def saveJob(self, job, session=None):
+        job = copy.deepcopy(job)
+        if 'result' in job and not isinstance(job["result"],str):
+            job['result'] = json.dumps(job['result'])
+        for key in ('args', 'kwargs'):
+            if key in job:
+                job[key] = json.dumps(job[key])
         self.jobclient.set(job)
 
     def _deleteJobFromCache(self, job):
