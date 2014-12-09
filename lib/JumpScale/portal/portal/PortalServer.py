@@ -1200,8 +1200,11 @@ class PortalServer:
     def restartInProcess(self, app):
         import fcntl
         args = sys.argv[:]
+        import ipdb;ipdb.set_trace()
         args.insert(0, sys.executable)
         apppath = j.system.fs.joinPaths(j.dirs.appDir, app)
+        if apppath == '.':
+            apppath = os.getcwd()
         max_fd = 1024
         for fd in range(3, max_fd):
             try:
