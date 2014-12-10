@@ -76,7 +76,7 @@ class PortalFactory():
         jp.load(instance)
         addr = jp.hrd_instance.get('addr')
         port = jp.hrd_instance.getInt('port')
-        secret = jp.hrd_instance.getInt('secret')
+        secret = jp.hrd_instance.getStr('secret')
         return self.getClient(addr, port, secret)
 
     def getClient(self, ip="localhost", port=9900, secret=None):
