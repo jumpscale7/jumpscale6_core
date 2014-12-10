@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
 
     try:
         os.chdir(space_path)
-        process = subprocess.Popen(['hg', 'pull'],
+        process = subprocess.Popen(['git', 'pull'],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
@@ -20,19 +20,7 @@ def main(j, args, params, tags, tasklet):
             page.addMessage(error)
             return params
         else:
-            page.addMessage('Pulled')
-
-        process = subprocess.Popen(['hg', 'update', '--clean'],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        output, error = process.communicate()
-        if error:
-            page.addMessage(error)
-            return params
-        else:
-            page.addMessage('Updated')
+            page.addMessage('Pulled and Updated')
         
     finally:
         os.chdir(current_dir)
