@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
 import re
 import os
 import glob
-import sys
 
-scripts = glob.glob('shellcmds/*')
+from setuptools import setup, find_packages
+from setuptools.command.install import install
 
 def get_version(package):
     """
@@ -17,47 +16,51 @@ def get_version(package):
     return re.match("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
 
 version = get_version('lib/JumpScale')
-
-
-def clean():
-    print "CLEAN"
-    for r,d,f in os.walk("/usr"):
-      for path in f:
-          match=False
-          if path.startswith("jscode") or path.startswith("jpackage") or path.startswith("jspackage") or path.startswith("jsdevelop")\
-              or path.startswith("jsreinstall") or path.startswith("jsprocess") or path.startswith("jslog") or path.startswith("jsshell") or path.startswith("osis"):
-              match=True
-          if path in ["js"]:
-              match=True      
-          if match:
-              print "remove:%s" % os.path.join(r,path)
-              os.remove(os.path.join(r,path))
-    cmds="""
-killall tmux
-rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale*
-rm -rf /usr/local/lib/python2.7/site-packages/jumpscale*
-rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale*
-rm -rf /usr/local/lib/python2.7/site-packages/JumpScale*
-rm -rf /usr/local/lib/python2.7/site-packages/JumpScale/
-rm -rf /usr/local/lib/python2.7/site-packages/jumpscale/
-rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale/
-rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale/
-rm /usr/local/bin/js*
-rm /usr/local/bin/jpack*
-"""    
-    for cmd in cmds.split("\n"):
-      if cmd.strip()<>"":
-          rc=os.system("%s 2>&1 > /dev/null; echo"%cmd)
-clean()
+scripts = glob.glob('shellcmds/*')
 
 def list_files(basedir='.', subdir='.'):
+    """
+    Used by setup function to list some needed data files in specific directories
+    """
     package_data = []
     basedir_length = len(basedir)
-    for dirpath, dirs, files in os.walk(os.path.join(basedir,subdir)):
-        for file in files:
-            package_data.append(os.path.join(dirpath[basedir_length+1:],file))
+    for dirpath, _, files in os.walk(os.path.join(basedir,subdir)):
+        for f in files:
+            package_data.append(os.path.join(dirpath[basedir_length+1:],f))
     return package_data
-            
+
+class Clean(install):
+    """cleans environment before installation"""
+    
+    def run(self):
+        print "\n**CLEANING PREVIOUS JUMPSCALE INSTALLATIONS**\n"
+
+        for r,_,f in os.walk("/usr"):
+            for path in f:
+                if path.startswith("jscode") or\
+                        path.startswith("jpackage") or\
+                        path.startswith("jspackage") or\
+                        path.startswith("jsdevelop") or\
+                        path.startswith("jsreinstall") or\
+                        path.startswith("jsprocess") or\
+                        path.startswith("jslog") or\
+                        path.startswith("jsshell") or\
+                        path.startswith("osis") or\
+                        path.startswith("js"):
+                    
+                    os.remove(os.path.join(r,path))
+                    print "removed:%s" % os.path.join(r,path)
+
+        cmds=['rm -rf /usr/local/lib/python2.7/dist-packages/jumpscale/',
+              'rm -rf /usr/local/lib/python2.7/dist-packages/JumpScale_core-6.0.0.egg-info/',
+              'killall tmux']
+
+        for cmd in cmds:
+            os.system("%s 2>&1 > /dev/null; echo" % cmd)
+            if cmd.startswith('rm'):
+                print "removed:%s" % cmd.split(' ')[-1]
+
+        install.run(self)
 
 setup(name='JumpScale-core',
       version=version,
@@ -81,5 +84,6 @@ setup(name='JumpScale-core',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'License :: OSI Approved :: BSD License',
-    ]
+    ],
+    cmdclass={'install': Clean}
 )
