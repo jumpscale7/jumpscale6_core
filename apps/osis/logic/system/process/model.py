@@ -28,7 +28,7 @@ class Process(OsisBaseObject):
                 self.systempids=[]
             self.guid = ""
             # self.sguid = None
-            self.epochstart = j.base.time.getTimeEpoch()
+            self.epochstart = 0
             self.epochstop = 0
             self.active = True
             self.lastcheck=0 #epoch of last time the info was checked from reality

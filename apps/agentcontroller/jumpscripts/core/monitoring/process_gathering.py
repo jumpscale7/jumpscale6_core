@@ -24,6 +24,8 @@ def action():
 
     import time
     import psutil
+    rediscl = j.clients.redis.getByInstanceName('system')
+
     result={}
     
     def processStopped(cacheobj):
@@ -165,8 +167,7 @@ def action():
 
         cacheobj=j.core.processmanager.monObjects.processobject.get(id=process_key)
 
-        if cacheobj.ckeyOld=="":
-            cacheobj.ckeyOld=cacheobj.db.getContentKey()
+        cacheobj.ckeyOld = rediscl.hget('processes', process_key)
 
         processOsisObject=cacheobj.db
 
@@ -184,8 +185,8 @@ def action():
         processOsisObject.systempids = sprocess.getPids()
 
 
-        if pid:            
-            loadFromSystemProcessInfo(process_key,cacheobj,pid)
+        if processOsisObject.systempids:            
+            loadFromSystemProcessInfo(process_key,cacheobj,processOsisObject.systempids[0])
             cacheobj.getTotalsChildren()
         else:
             processStopped(cacheobj)
@@ -193,96 +194,16 @@ def action():
         result[process_key]=cacheobj
 
 
-    # # plist=psutil.get_process_list()
-    # initprocess=j.system.process.getProcessObject(1)  #find init process
-
-    # for process in initprocess.get_children():
-
-
-    #     pname=process.name
-    #     if pname.find(" ")<>-1:
-    #         pname=pname.split(" ")[0]
-    #     if pname.find(":")<>-1:
-    #         pname=pname.split(":")[0]
-    #     pname=pname.lower().strip()
-
-    #     if pname in ["getty"]:
-    #         continue
-    #     pid = process.pid
-    #     if pid == 0:
-    #         continue
-
-    #     print "systemprocess:%s %s"%(pname, pid)
-
-    #     if j.core.processmanager.monObjects.processobject.pid2name.has_key(pid):
-    #         domain0,name0=j.core.processmanager.monObjects.processobject.pid2name[pid]
-    #         if domain0==None:
-    #             process_key="%s"%(name0)
-    #         else:
-    #             process_key="%s_%s"%(domain0,name0)
-    #     else:
-    #         process_key=pname
-
-    #     if result.has_key(process_key):
-    #         #process with same name does already exist, lets first create temp getProcessObject, which will be done by pid
-    #         cacheobj=j.core.processmanager.monObjects.processobject.get(id=pid)
-    #     else:
-    #         cacheobj=j.core.processmanager.monObjects.processobject.get(id=process_key)
-
-    #     rootCacheObj=j.core.processmanager.monObjects.processobject.get(id=process_key)
-    #     if rootCacheObj.ckeyOld=="":
-    #         rootCacheObj.ckeyOld=rootCacheObj.db.getContentKey() #get from prev version the content key
-
-    #     processOsisObject=cacheobj.db
-
-    #     processOsisObject.active=True #process.is_running()
-
-    #     processOsisObject.pname=pname
-    #     processOsisObject.sname=pname
-
-    #     processOsisObject.getSetGuid()
-
-    #     processOsisObject.workingdir = process.getcwd()
-    #     processOsisObject.cmd = process.exe
-
-    #     loadFromSystemProcessInfo(process_key,cacheobj,pid)
-
-    #     processOsisObject.pname=pname #need to reset because loadfromsystem does not clean
-    #     processOsisObject.sname=pname
- 
-    #     processOsisObject.type="childreninit" #init children
-
-    #     cacheobj.getTotalsChildren()
-
-    #     if result.has_key(process_key):
-    #         #was double process, need to aggregate
-    #         cacheobjNow=cacheobj
-    #         cacheobjPrev=result[process_key]
-    #         #cacheobj+=...  aggregate with prev obj
-    #         for item in j.core.processmanager.monObjects.processobject.getProcessStatProps():
-    #             cacheobjPrev.db.__dict__[item]+=float(cacheobjNow.db.__dict__[item])    
-    #         #copy ports
-    #         for systempid in cacheobjNow.db.systempids:
-    #             if systempid not in cacheobjPrev.db.systempids:
-    #                 cacheobjPrev.db.systempids.append(systempid)
-
-    #         cacheobj=cacheobjPrev
-
-    #         #@todo NEED TO SEE FOR OTHER RELEVANT ITEMS TOO TO AGGREGATE
-
-    #     cacheobj.db.statkey=process_key
-    #     result[process_key]=cacheobj    
 
         # exists=j.core.processmanager.monObjects.processobject.exists(process_key)
     for process_key,cacheobj in result.iteritems():
         if j.basetype.string.check(process_key):
             cacheobj.db.systempids.sort()
             newKey=cacheobj.db.getContentKey()
-            if newKey<>cacheobj.ckeyOld:                    
-                #need to store when fundamental change
+            if newKey != cacheobj.ckeyOld:                    
                 print "STORE IN OSIS#########%s%s"%(cacheobj.db.pname,cacheobj.db.sname)
                 cacheobj.send2osis()
-            cacheobj.ckeyOld=newKey
+                rediscl.hset('processes', process_key, newKey)
 
 
     #find deleted processes
@@ -307,3 +228,8 @@ def action():
             
     j.core.processmanager.monObjects.processobject.monitorobjects=result
 
+
+if __name__ == '__main__':
+    import JumpScale.grid.osis
+    j.core.osis.client = j.core.osis.getClientByInstance('processmanager')
+    action()
