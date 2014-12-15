@@ -24,7 +24,7 @@ def action():
     results = dict()
     pattern = None
     if j.application.config.exists('nic.pattern'):
-        pattern = j.application.config.getStr('nicpattern')
+        pattern = j.application.config.getStr('nic.pattern')
     
     for mac,val in netinfo.iteritems():
         name,ipaddr=val
