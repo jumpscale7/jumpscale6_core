@@ -7,7 +7,7 @@ def main(j, args, params, tags, tasklet):
 
     status = None
     out = list()
-    rediscl = j.clients.redis.getByInstance('system', gevent=True)
+    rediscl = j.clients.redis.getByInstanceName('system', gevent=True)
 
     out = '||Grid ID||Node ID||Node Name||JSAgent Status||Details||\n'
     data = rediscl.hget('healthcheck:monitoring', 'results')
