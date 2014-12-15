@@ -27,3 +27,15 @@ class system_errorconditionhandler(j.code.classGetBase()):
         """
         #put your code here to implement this method
         raise NotImplementedError ("not implemented method describeCategory")
+
+    def updateEco(self, username, state, eco, comment, **kwargs):
+        """
+        update eco state and history
+        param:username username
+        param:state state ["NEW","ALERT", 'ACCEPTED',  'RESOLVED',  'UNRESOLVED', 'CLOSED']
+        param:eco eco ID
+        param:comment comment
+        result bool
+        """
+        #put your code here to implement this method
+        raise NotImplementedError ("not implemented method updateEco")

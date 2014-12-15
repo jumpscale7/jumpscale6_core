@@ -15,3 +15,12 @@
         var:resolution_ops str,,describe this errorcondition solution that the operator can do himself to try and recover from the situation
 		result:bool    
 
+    method:updateEco
+		"""	
+		update eco state and history
+		"""
+		var:username str,,username @tags: optional
+		var:state str,,state ["NEW","ALERT", 'ACCEPTED',  'RESOLVED',  'UNRESOLVED', 'CLOSED']
+		var:eco str,,eco ID
+        var:comment str,,comment @tags: optional
+        result:bool	

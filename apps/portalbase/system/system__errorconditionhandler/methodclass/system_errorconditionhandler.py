@@ -12,8 +12,7 @@ class system_errorconditionhandler(j.code.classGetBase()):
         self._te = {}
         self.actorname = "errorconditionhandler"
         self.appname = "system"
-
-        pass
+        self.scl = j.core.osis.getClientForNamespace('system', j.core.portal.active.osis)
 
     def describeCategory(self, category, language, description, resolution_user, resolution_ops, **args):
         """
@@ -64,3 +63,40 @@ class system_errorconditionhandler(j.code.classGetBase()):
             # no previous found
             self.dbmem.cacheSet(key, eco, expirationInSecondsFromNow=3600)
             return self.model_errorcondition_set(eco)
+
+    def updateEco(self, state, eco, comment=None, username=None, **kwargs):
+        """
+        process eco 
+        first find duplicates for eco (errorcondition obj of style as used in this actor)
+        the store in db
+        """
+        if not self.scl.eco.exists(eco):
+            raise RuntimeError('Invalid ECO')
+        
+        ecoobj =  self.scl.eco.get(eco)
+        
+        if username and not self.scl.user.search({'id':username})[0]:
+            raise RuntimeError('User %s does not exist' % username)
+
+        # only state ACCEPT can have username passed
+        if username and state != 'ACCEPTED':
+            raise RuntimeError('Invalid operation')
+
+        username = username or kwargs['ctx'].env['beaker.session']['user']
+        comment = comment or ''
+        epoch = j.base.time.getTimeEpoch()
+        
+        history = {'user':username,
+                   'state':state,
+                   'comment':comment,
+                   'epoch':epoch}
+        
+        ecoobj.update_state(state)
+        
+        if not hasattr(ecoobj, 'history'):
+            ecoobj.history = []
+        
+        ecoobj.update_history(history)
+        self.scl.eco.set(ecoobj)
+
+        return True

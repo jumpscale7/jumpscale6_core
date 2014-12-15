@@ -6,10 +6,14 @@ class ECO(OsisBaseObject):
 
     """
     error condition object
+    
+    history = [{'user':'hamdy', 'state':'ACCEPTED', 'epoch':123, 'comment':''}, {'user':'hamdy', 'state':'RESOLVED', 'epoch':123, 'comment':''}]
     """
 
+    ALLOWED_STATES = ["NEW","ALERT", 'ACCEPTED',  'RESOLVED',  'UNRESOLVED', 'CLOSED']
+    
     def __init__(self, ddict={},id=0,guid="",errormessage="",errormessagePub="",level=1,category="",tags="",transactionsinfo="",\
-                    gid=0,nid=0,pid=0,aid=0,jid=0,masterjid=0,epoch=0,type=0):
+                    gid=0,nid=0,pid=0,aid=0,jid=0,masterjid=0,epoch=0,type=0, slabreach=0, history=[], state='NEW', assigned_user=None):
         if ddict <> {}:
             self.load(ddict)
         else:
@@ -36,6 +40,7 @@ class ECO(OsisBaseObject):
             self.aid = aid
             self.pid = pid
             self.jid = jid
+            self.assigned_user = assigned_user
 
             if self.gid==None or self.nid==None:
                 raise RuntimeError("cannot create osis object for eco if no gid or nid specified")            
@@ -52,13 +57,37 @@ class ECO(OsisBaseObject):
 
             self.type=str(type)
 
-            self.state="NEW" #["NEW","ALERT","CLOSED"]
+            self.update_state(state) #["NEW","ALERT", 'ACCEPTED',  'RESOLVED',  'UNRESOLVED', 'CLOSED']
 
             self.lasttime=0 #last time there was an error condition linked to this alert
             self.closetime=0  #alert is closed, no longer active
 
             self.occurrences=1 #nr of times this error condition happened
-       
+            self.slabrach = slabreach
+            self.history = history
+    
+    def _check_state(self, state):
+        if not state in self.ALLOWED_STATES:
+            raise RuntimeError('Invalid state -- allowed states are %s' % self.ALLOWED_STATES)
+
+    def _check_history_item(self, history_item):
+        for item in ['user', 'state', 'epoch', 'comment']:
+            if not item in history_item:
+                raise RuntimeError('Invalid history item -- missing %s' % item)
+
+    def update_state(self, state):
+        self._check_state(state)
+        self.state = state
+
+    def update_history(self, history_item):
+        self._check_history_item(history_item)
+        self.history.insert(0, history_item)
+        self.assigned_user = history_item['user']
+
+    def pprint_history(self):
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(self.history)
 
     def getUniqueKey(self):
         """

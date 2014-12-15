@@ -2,28 +2,97 @@
 
 {{eco: id:$$id}}
 
+h3. Actions
+
+  {{actions:
+
+- display: Accept
+  action: /restmachine/system/errorconditionhandler/updateEco
+  data:
+   eco: $$id
+   state : 'ACCEPTED'
+  input:
+  - comment
+  
+- display: Assign
+  action: /restmachine/system/errorconditionhandler/updateEco
+  data:
+   eco: $$id
+   state : 'ACCEPTED'
+   
+  input:
+  - username
+  
+- display: Resolve
+  action: /restmachine/system/errorconditionhandler/updateEco
+  data:
+   eco: $$id
+   state : 'RESOLVED'
+  input:
+  - comment
+  
+- display: Mark unresolved
+  action: /restmachine/system/errorconditionhandler/updateEco
+  data:
+   eco: $$id
+   state : 'UNRESOLVED'
+  input:
+  - comment
+    
+
+- display: Close
+  action: /restmachine/system/errorconditionhandler/updateEco
+  data:
+   eco: $$id
+   state : 'CLOSED'
+  input:
+  - comment
+
+- display: Re-Open
+  action: /restmachine/system/errorconditionhandler/updateEco
+  data:
+   eco: $$id
+   state : 'ALERT'
+  input:
+  - comment
+    
+
+}}
+
+
 h3. Details
+|*State*|${state}|
+|*Assigned user*|{% if assigned_user %} ${assigned_user}{%endif%}|
+|*Application Name*|${appname}|
+|*Category*|${category}|
+|*Job*|${jid}|
+|*Type*|${type}|
+|*Level*|${level}|
+|*Process ID*|[${pid}|process?id=${pid}]|
+|*Creation Time*|${epoch}|
+|*Last Time*|${lasttime}|
+|*Occurrences*|${occurrences}|
+|*Error Message Pub*|${errormessagepub}|
+|*Error Message*|${errormessage}|
+|*Function Name*|${funcname}|
+|*Function Line Number*|${funclinenr}|
+|*Function File Name*|${funcfilename}|
+|*Master Job*|${masterjid}|
+|*Node*|[${nid}|node?id=${nid}&gid=${gid}]|
+|*Grid*|[${gid}|grid?id=${gid}]|
+|*Tags*|${tags}|
 
-|*Application Name*|$$appname|
-|*Category*|$$category|
-|*Job*|$$jid|
-|*Type*|$$type|
-|*Level*|$$level|
-|*Process ID*|[$$pid|process?id=$$pid]|
-|*Creation Time*|$$epoch|
-|*Last Time*|$$lasttime|
-|*Occurrences*|$$occurrences|
-|*Error Message Pub*|$$errormessagepub|
-|*Error Message*|$$errormessage|
-|*Function Name*|$$funcname|
-|*Function Line Number*|$$funclinenr|
-|*Function File Name*|$$funcfilename|
-|*Master Job*|$$masterjid|
-|*Node*|[$$nid|node?id=$$nid&gid=$$gid]|
-|*Grid*|[$$gid|grid?id=$$gid]|
-|*Tags*|$$tags|
+h3. History
+{% if history %}
+||User||Comment||State||
+{% else %}
+|NO HISTORY|
+{%- endif %}
+{% for h in history -%}
+| ${h.user} | ${h.comment} | ${h.state} |
+{% endfor %}
 
-*Code*
+*Code* 
 {{code: $$code}}
 
 *BackTrace*
