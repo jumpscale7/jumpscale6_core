@@ -83,13 +83,11 @@ h3. Details
 |*Tags*|${tags}|
 
 h3. History
-{% if history %}
-||User||Comment||State||
-{% else %}
+{% if history %}||User||Comment||State||Time||{% else -%}
 |NO HISTORY|
-{%- endif %}
+{% endif %}
 {% for h in history -%}
-| ${h.user} | ${h.comment} | ${h.state} |
+| ${h.user} | ${h.comment} | ${h.state} | ${h._timestamp} |
 {% endfor %}
 
 *Code* 

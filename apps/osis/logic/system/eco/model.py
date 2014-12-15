@@ -1,4 +1,5 @@
 from JumpScale import j
+import datetime
 
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 
@@ -81,6 +82,7 @@ class ECO(OsisBaseObject):
 
     def update_history(self, history_item):
         self._check_history_item(history_item)
+        history_item.update({'_timestamp':datetime.datetime.fromtimestamp(history_item['epoch']).strftime('%Y-%m-%d %H:%M:%S')})
         self.history.insert(0, history_item)
         self.assigned_user = history_item['user']
 
