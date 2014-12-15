@@ -1,5 +1,6 @@
 from JumpScale import j
 import datetime
+import json
 
 class GridDataTables:
 
@@ -163,21 +164,25 @@ $fields
             } );''' % (tableid, columnindx, order)
         , header=False)
 
-    def prepare4DataTables(self):
+    def prepare4DataTables(self, autosort=True, displaylength=None):
         self.page.addCSS("%s/old/datatables/DT_bootstrap.css" % self.liblocation)
         self.page.addJS("%s/old/datatables/DT_bootstrap.js"% self.liblocation)
-        C = """
-         $(document).ready(function() {
-         $('.JSdataTable').dataTable( {
-                "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
+        data = {"sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6'p>>",
                 "sPaginationType": "bootstrap",
-                "bDestroy": true,
+                "bDestroy": True,
                 "oLanguage": {
                         "sLengthMenu": "_MENU_ records per page"
                 }
-        } );
+        }
+        if not autosort:
+            data['aaSorting'] = []
+        if displaylength:
+            data['iDisplayLength'] = displaylength
+        C = """
+         $(document).ready(function() {
+         $('.JSdataTable').dataTable(%s);
 } );
-"""
+""" % json.dumps(data)
         self.page.addJS(jsContent=C, header=False)
         self.page.functionsAdded["datatables"] = True
         return self.page

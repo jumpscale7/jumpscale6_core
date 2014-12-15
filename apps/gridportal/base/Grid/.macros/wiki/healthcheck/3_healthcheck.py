@@ -8,7 +8,7 @@ def main(j, args, params, tags, tasklet):
     doc = args.doc
     
     out = list()
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 9999)
+    rediscl = j.clients.redis.getByInstance('system', gevent=True)
 
     out.append('||Node ID||Node Name||Process Manager Status||Details||')
     data = rediscl.hget('healthcheck:monitoring', 'results')
