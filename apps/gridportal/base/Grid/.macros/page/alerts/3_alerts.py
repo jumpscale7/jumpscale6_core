@@ -7,10 +7,6 @@ def main(j, args, params, tags, tasklet):
         link = '<a href=alert?guid=%s>%s</a>' % (alert['guid'], alert['id'])
         return link
 
-    def makeTime(alert, field):
-        epoch = j.base.time.epoch2HRDateTime(alert[field])
-        return epoch
-
     def makeGrid(alert, field):
         return '<a href=grid?id=%s>%s</a>' % (alert['gid'], alert['gid'])
 
@@ -20,7 +16,7 @@ def main(j, args, params, tags, tasklet):
 
     fieldnames = ('Link to Alert', 'Grid ID', 'Node ID', 'Category', 'Raise Time','Last Time', 'Close Time', 'State', 'Value')
     fieldids = ['id', 'gid', 'nid', 'category', 'inittime', 'lasttime', 'closetime', 'state', 'value']
-    fieldvalues = (makeLink, makeGrid, makeNode, 'category', makeTime, makeTime, makeTime, 'state', 'value')
+    fieldvalues = (makeLink, makeGrid, makeNode, 'category', modifier.makeTime, modifier.makeTime, modifier.makeTime, 'state', 'value')
 
     tableid = modifier.addTableForModel('system', 'alert', fieldids, fieldnames, fieldvalues)
     modifier.addSearchOptions('#%s' % tableid)

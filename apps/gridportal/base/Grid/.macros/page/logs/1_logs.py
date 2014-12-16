@@ -19,7 +19,7 @@ def main(j, args, params, tags, tasklet):
     fieldnames = ['Start Time', 'App Name', 'Category', 'Message', 'Level', 'Process ID', 'Node ID', 'Job ID']
 
     def makeTime(row, field):
-        time = datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or 'N/A'
+        time = modifier.makeTime(row, field)
         return '[%s|log?id=%s]' % (time, row['guid'])
 
     def cleanUp(row, field):
