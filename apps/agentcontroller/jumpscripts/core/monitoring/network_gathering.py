@@ -20,11 +20,17 @@ log=False
 def action():
     ncl = j.core.osis.getClientForCategory(j.core.osis.client, "system", "nic")
     rediscl = j.clients.redis.getByInstanceName('system')
-
     netinfo=j.system.net.getNetworkInfo()
     results = dict()
+    pattern = None
+    if j.application.config.exists('nic.pattern'):
+        pattern = j.application.config.getStr('nic.pattern')
+    
     for mac,val in netinfo.iteritems():
         name,ipaddr=val
+        if pattern and j.codetools.regex.match(pattern,name) == False:
+                continue
+
         if ipaddr:
             ipaddr=ipaddr.split(",")
             if ipaddr==['']:

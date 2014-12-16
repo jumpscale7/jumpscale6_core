@@ -22,7 +22,14 @@ def action():
     stats = statsd.StatsClient()
     pipe = stats.pipeline()
     counters=psutil.network_io_counters(True)
+    pattern = None
+    if j.application.config.exists('nic.pattern'):
+        pattern = j.application.config.getStr('nic.pattern')
+    
     for nic, stat in counters.iteritems():
+        if pattern and j.codetools.regex.match(pattern,nic) == False:
+            continue
+
         result = dict()
         bytes_sent, bytes_recv, packets_sent, packets_recv, errin, errout, dropin, dropout = stat
         result['kbytes_sent'] = int(round(bytes_sent/1024.0,0))
