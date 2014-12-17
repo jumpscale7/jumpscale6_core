@@ -45,7 +45,7 @@ class Worker(object):
         self.starttime = time.time()
         self.logpath = logpath
         self.logFile = None
-        if self.logpath<>"":
+        if self.logpath != None:
             self.logFile = open(self.logpath,'w',0)
 
     def getClient(self, job):
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     parser = cmdutils.ArgumentParser()
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
     parser.add_argument("-i", '--instance', help='JSAgent instance', required=True)
-    parser.add_argument("-lp", '--logpath', help='Logging file path', required=False, default="")
+    parser.add_argument("-lp", '--logpath', help='Logging file path', required=False, default=None)
 
     opts = parser.parse_args()
 
