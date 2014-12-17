@@ -124,20 +124,6 @@ class PortalServer:
         self.getContentDirs() #contentdirs need to be loaded before we go to other dir of base server
         j.system.fs.changeDir(self.appdir)            
 
-        # dbtype = ini.getValue("main", "dbtype").lower().strip()
-        # if dbtype == "fs":
-        #     self.dbtype = "FILE_SYSTEM"
-        # elif dbtype == "mem":
-        #     self.dbtype = "MEMORY"
-        # elif dbtype == "redis":
-        #     self.dbtype = "REDIS"
-        # elif dbtype == "arakoon":
-        #     self.dbtype = "ARAKOON"
-        # else:
-        #     raise RuntimeError("could not find appropriate core db, supported are: fs,mem,redis,arakoon, used here'%s'"%dbtype)
-
-        # self.systemdb=j.db.keyvaluestore.getFileSystemStore("appserversystem",baseDir=replaceVar(ini.getValue("systemdb","dbdpath")))
-
         self.listenip = '0.0.0.0'
         if ini.checkSection('main') and ini.checkParam('main', 'listenip'):
             self.listenip = ini.getValue('main', 'listenip')
@@ -150,10 +136,17 @@ class PortalServer:
 
         self.secret = ini.getValue("main", "secret")
         self.admingroups = ini.getValue("main", "admingroups").split(",")
-
         self.filesroot = replaceVar(ini.getValue("main", "filesroot"))
-
         j.system.fs.createDir(self.filesroot)
+
+        if ini.checkParam('main', 'defaultspace'):
+            self.defaultspace = ini.getValue('main', 'defaultspace') or 'system'
+        else:
+            self.defaultspace = 'system'
+        if ini.checkParam('main', 'defaulpage'):
+            self.defaultpage = ini.getValue('main', 'defaultpage') or ""
+        else:
+            self.defaultpage = ""
 
         self.getContentDirs()
 
@@ -316,19 +309,19 @@ class PortalServer:
         space = space.lower()
         name = name.lower()
 
-        username, right = self.getUserRight(ctx, space)
-
         if name in ["login", "error", "accessdenied", "pagenotfound"]:
             right = "r"
 
+        if space == "" and name == "":
+            space = self.defaultspace
+            name = self.defaultpage
+
+        username, right = self.getUserRight(ctx, space)
         print "# space:%s name:%s user:%s right:%s" % (space, name, username, right)
 
-        if space == "" and name == "":
-            space = "system"
-            if not "r" in right:
-                name = "accessdenied"
-            else:
-                name = "spaces"
+        if "r" not in right:
+            space = 'system'
+            name = "accessdenied"
 
         if name != "accessdenied" and name != "pagenotfound":
             # check security
@@ -340,11 +333,7 @@ class PortalServer:
         else:
             right = "r"
 
-        # print "find space:%s page:%s" % (space,name)
-        if space == "":
-            doc, params = self.getDoc("system", "spaces", ctx, params)
-            # ctx.params["error"]="Could not find space, space was empty, please specify space.\n"
-        elif space not in self.spacesloader.spaces:
+        if space not in self.spacesloader.spaces:
             if space == "system":
                 raise RuntimeError("wiki has not loaded system space, cannot continue")
             print "could not find space %s" % space

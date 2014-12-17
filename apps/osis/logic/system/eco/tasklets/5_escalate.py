@@ -1,27 +1,31 @@
-BREACHTIME = 3600
-
 def main(j, params, service, tags, tasklet):
+    """
+    Create or update Alert object
+    """
+
     import time
     eco = params.value
     session = params.session
-    now = time.time()
-
-    def raiseEvent():
-        eco['lastalert'] = now
-        print eco
-
-    if eco['state'] in ('NEW', 'ALERT'):
-        eco['state'] = 'ALERT'
-        if service.exists(eco['guid'], session=session):
-            ecodb = service.get(eco['guid'], session=session)
-            if ecodb['state'] == 'ALERT':
-                if ecodb['lastalert'] + BREACHTIME > now:
-                    eco['slabreach'] = ecodb.get('slabreach', 0) + 1
-                    raiseEvent()
-            else:
-                raiseEvent()
-        else:
-            raiseEvent()
-
+    alertservice = j.core.osis.cmds._getOsisInstanceForCat('system', 'alert')
+    
+    alerts = alertservice.search({'eco':eco['guid']}, session=session)[1:]
+    alert = {'eco': eco['guid'],
+                'errormessage': eco['errormessage'],
+                'errormessagePub': eco['errormessagePub'],
+                'category': eco['category'],
+                'lasttime': eco['epoch']}
+    if not alerts:
+        alert['inittime'] = eco['epoch']
+        alert['description'] = eco['description']
+        alert['state'] = 'ALERT'
+        alert['descriptionpub'] = eco['descriptionpub']
+    else:
+        alertdata = alerts[0]
+        if alertdata['state'] in ['RESOLVED', 'CLOSED']:
+            alertdata['state'] = 'ALERT'
+        alertdata.update(alert)		
+        alert = alertdata
+    alertservice.set(alert, session=session)
+    
 def match(j, params, service, tags, tasklet):
     return params.action == 'set'

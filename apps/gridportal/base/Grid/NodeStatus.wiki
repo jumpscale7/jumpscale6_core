@@ -1,6 +1,7 @@
 @usedefaults
 
 {{node_getdata: gid:$$gid id:$$nid}}
+{{timestamp}}
 
 h2. $$gridname: $$name ($$gid:$$id)
 

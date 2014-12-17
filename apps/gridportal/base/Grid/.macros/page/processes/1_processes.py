@@ -17,11 +17,8 @@ def main(j, args, params, tags, tasklet):
         name = row['sname'] or row['pname']
         return '[%s|/grid/process?id=%s&name=%s]' % (name, row['id'], name)
 
-    def makeTime(row, field):
-        return datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S')
-
     nidstr = '[%(nid)s|/grid/node?id=%(nid)s&%(gid)s]'
-    fieldvalues = [pidFormat, nidstr, 'jpname', 'jpdomain', makeTime]
+    fieldvalues = [pidFormat, nidstr, 'jpname', 'jpdomain', modifier.makeTime]
     tableid = modifier.addTableForModel('system', 'process', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
     params.result = page

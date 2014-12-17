@@ -2,27 +2,22 @@
 def main(j, args, params, tags, tasklet):
     page = args.page
     modifier = j.html.getPageModifierGridDataTables(page)
+    ecofilter = args.getTag('eco')
+    filters = None
+    if ecofilter:
+        filters = {'eco':ecofilter}
+    
+    makeLink = '<a href=alert?guid=%(guid)s>%(id)s</a>' 
+    makeGrid = '<a href=grid?id=%(gid)s>%(gid)s</a>'
+    makeNode = '<a href=node?id=%(nid)s&gid=%(gid)s>%(nid)s</a>'
+    makeECO = '<a href=eco?id=%(eco)s>%(eco)s</a>'
 
-    def makeLink(alert, field):
-        link = '<a href=alert?guid=%s>%s</a>' % (alert['guid'], alert['id'])
-        return link
+    fieldnames = ('Link to Alert', 'Grid ID', 'Node ID', 'ECO', 'Category', 'Raise Time','Last Time', 'Close Time', 'State', 'Assignee')
+    fieldids = ['id', 'gid', 'nid', 'eco', 'category', 'inittime', 'lasttime', 'closetime', 'state', 'assigned_user']
+    fieldvalues = (makeLink, makeGrid, makeNode, makeECO, 'category', modifier.makeTime, modifier.makeTime, modifier.makeTime, 'state', 'assigned_user')
 
-    def makeTime(alert, field):
-        epoch = j.base.time.epoch2HRDateTime(alert[field])
-        return epoch
+    tableid = modifier.addTableForModel('system', 'alert', fieldids, fieldnames, fieldvalues, filters)
 
-    def makeGrid(alert, field):
-        return '<a href=grid?id=%s>%s</a>' % (alert['gid'], alert['gid'])
-
-    def makeNode(alert, field):
-        return '<a href=node?id=%s&gid=%s>%s</a>' % (alert['nid'], alert['nid'], alert['gid'])
-
-
-    fieldnames = ('Link to Alert', 'Grid ID', 'Node ID', 'Category', 'Raise Time','Last Time', 'Close Time', 'State', 'Value')
-    fieldids = ['id', 'gid', 'nid', 'category', 'inittime', 'lasttime', 'closetime', 'state', 'value']
-    fieldvalues = (makeLink, makeGrid, makeNode, 'category', makeTime, makeTime, makeTime, 'state', 'value')
-
-    tableid = modifier.addTableForModel('system', 'alert', fieldids, fieldnames, fieldvalues)
     modifier.addSearchOptions('#%s' % tableid)
     modifier.addSorting('#%s' % tableid, 0, 'desc')
 

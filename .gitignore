@@ -13,6 +13,15 @@ sdist
 develop-eggs
 .installed.cfg
 
+#eclipse
+.project
+.pydevproject
+
+# generated
+*.gen.py
+*_osismodelbase.py
+apps/osis/logic/system/model_template.py
+
 # Installer logs
 pip-log.txt
 
@@ -29,4 +38,4 @@ pip-log.txt
 #Vim swap
 *.swp
 
-**/methodclass/*.gen.py
+*/methodclass/*.gen.py

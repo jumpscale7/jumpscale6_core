@@ -21,7 +21,7 @@ def main(j, args, params, tags, tasklet):
         return row[field].replace('\n', '<br>')
 
     def makeTime(row, field):
-        time = datetime.datetime.fromtimestamp(row[field]).strftime('%m-%d %H:%M:%S') or ''
+        time = modifier.makeTime(row, field) 
         return '[%s|eco?id=%s]' % (time, row['guid'])
 
     def makeJob(row, field):
