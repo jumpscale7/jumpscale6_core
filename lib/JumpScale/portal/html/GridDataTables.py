@@ -20,7 +20,7 @@ class GridDataTables:
     def makeTime(self, row, field):
         if row[field] == 0:
             return ''
-        return '<div class="jstimestamp">%s</div>' % row[field]
+        return '<div class="jstimestamp" data-ts="%s"></div>' % row[field]
 
     def addTableForModel(self, namespace, category, fieldids, fieldnames=None, fieldvalues=None, filters=None, nativequery=None):
         """

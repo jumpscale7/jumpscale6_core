@@ -677,7 +677,7 @@ function copyText$id() {
             var updateTime = function () {
                 $(".%s").each(function() {
                     var $this = $(this);
-                    var timestmp = parseFloat($this.html());
+                    var timestmp = parseFloat($this.data('ts'));
                     if (timestmp > 0)
                         var time = new Date(timestmp * 1000).toLocaleString();
                     else

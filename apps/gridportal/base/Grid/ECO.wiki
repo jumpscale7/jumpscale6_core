@@ -1,5 +1,7 @@
 @usedefaults
 
+{{timestamp}}
+
 {{eco: id:$$id}}
 
   {{actions:

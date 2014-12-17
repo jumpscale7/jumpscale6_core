@@ -26,10 +26,10 @@ def main(j, args, params, tags, tasklet):
 
     if rediscl.hexists('healthcheck:monitoring', 'lastcheck'):
         lastchecked = j.basetype.float.fromString(rediscl.hget('healthcheck:monitoring', 'lastcheck'))
-        lastchecked = datetime.datetime.fromtimestamp(lastchecked).strftime('%Y-%m-%d %H:%M:%S')
+        lastchecked = '{{span: class=jstimestamp|data-js=%s}}{{span}}' % lastchecked
     else:
         lastchecked = 'N/A'
-    out.append('Grid was last checked at: *%s*.' % lastchecked)
+    out.append('Grid was last checked at: %s.' % lastchecked)
 
     out = '\n'.join(out)
 
