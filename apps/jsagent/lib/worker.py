@@ -255,7 +255,7 @@ if __name__ == '__main__':
     parser = cmdutils.ArgumentParser()
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
     parser.add_argument("-i", '--instance', help='JSAgent instance', required=True)
-    parser.add_argument("-lp", '--logpath', help='Log path', required=False, default="")
+    parser.add_argument("-lp", '--logpath', help='Logging file path', required=False, default="")
 
     opts = parser.parse_args()
 
