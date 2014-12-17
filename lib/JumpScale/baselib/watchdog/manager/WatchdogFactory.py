@@ -60,41 +60,39 @@ class AlertType():
 
 class WatchdogFactory:
     def __init__(self):
-        while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
-            time.sleep(0.1)
-            print "cannot connect to redis production, will keep on trying forever, please start redis production (port 9999)"        
-        self.redis=j.clients.credis.getRedisClient("localhost",9999)
+        # while j.system.net.tcpPortConnectionTest("127.0.0.1",9999)==False:
+        #     time.sleep(0.1)
+        #     print "cannot connect to redis production, will keep on trying forever, please start redis production (port 9999)"        
+        self.redis = j.clients.redis.getByInstanceName('system')
         self.watchdogTypes={}
         self.alertTypes={}
         self._getWatchDogTypes()
         self._getAlertTypes()
-        self._now=time.time()
-        self.localgguid="dfsdfadsfasdffg"  #temp
+        # self.localgguid="dfsdfadsfasdffg"  #temp
 
-    def getWatchDogEventObj(self,gid=0,nid=0,category="",state="",value=0,gguid="",ecoguid="",ddict={}):
-        return WatchdogEvent(gid,nid,category,state,value,ecoguid,gguid=gguid,ddict=ddict)
+    # def getWatchDogEventObj(self,gid=0,nid=0,category="",state="",value=0,gguid="",ecoguid="",ddict={}):
+    #     return WatchdogEvent(gid,nid,category,state,value,ecoguid,gguid=gguid,ddict=ddict)
 
-    def getWatchdogType(self,category="",alertperiod=17*60,ddict={}):
-        return WatchdogType(category,alertperiod,ddict)
+    # def getWatchdogType(self,category="",alertperiod=17*60,ddict={}):
+    #     return WatchdogType(category,alertperiod,ddict)
 
-    def setWatchdogEvent(self,wde,pprint=True):
-        obj=json.dumps(wde.__dict__)
-        self.redis.hset(watchdog.getHSetKey(wde.gguid),"%s_%s"%(wde.nid,wde.category),obj)
+    def setWatchdogEvent(self, alert, pprint=True):
+        res = self.rediscl.hset(watchdog.getHSetKey(alert.gid), "%s_%s" % (alert.nid, alert.category), alert)
         if pprint:
-            print wde
+            print alert
+        return res
 
-    def _getAlertHSetKey(self,gguid):
-        return "alerts:%s"%gguid
+    def _getAlertHSetKey(self, gid):
+        return "alerts:%s" % gid
 
     def _getWatchDogTypes(self):
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'watchdogmanager', 'watchdogtypes')
         if j.system.fs.exists(jspath):
             for jscriptpath in j.system.fs.listFilesInDir(path=jspath, recursive=True, filter="*.py", followSymlinks=True):
                 wdt = WatchdogType(path=jscriptpath)
-                self.watchdogTypes[wdt.category]=wdt
+                self.watchdogTypes[wdt.category] = wdt
         else:
-            raise RuntimeError("could not find:%s"%jspath)  
-
+            raise RuntimeError("could not find:%s" % jspath)  
 
     def _getAlertTypes(self):
         jspath = j.system.fs.joinPaths(j.dirs.baseDir, 'apps', 'watchdogmanager', 'alerttypes')
@@ -103,57 +101,51 @@ class WatchdogFactory:
                 if j.system.fs.getBaseName(jscriptpath)[0]=="_":
                     continue
                 at = AlertType(path=jscriptpath)
-                self.alertTypes[at.name]=at
+                self.alertTypes[at.name] = at
         else:
-            raise RuntimeError("could not find:%s"%jspath)  
+            raise RuntimeError("could not find:%s" % spath)  
 
-    def getWatchdogType(self,category):
-        if not self.watchdogTypes.has_key(category):
+    def getWatchdogType(self, category):
+        if category not self.watchdogTypes:
             self.alert("bug in watchdogmanager: could not find watchdogtype:%s"%category,"critical")
         return self.watchdogTypes[category]
 
-    def getAlertType(self,name):
+    def getAlertType(self, name):
         if not self.alertTypes.has_key(name):
             self.alert("bug in watchdogmanager: could not find alerttype:%s"%name,"critical")
         return self.alertTypes[name]
 
-    def checkWatchdogEvent(self,wde):
-        wdt=self.getWatchdogType(wde.category)
-        # print wde
-        # print wdt
+    def checkWatchdogEvent(self, alert):
+        wdt = self.getWatchdogType(alert.category)
         try:
-            wdt.checkfunction(wde)
+            wdt.checkfunction(alert)
         except Exception,e:
             self.alert("bug in watchdogmanager: could not process watchdogcheck:%s, error %s"%(wdt,e),"critical")
-        if wde.state<>"OK":
-            self.alert("STATE","critical",wde)
-        if wde.epoch<(self._now-wdt.maxperiod):
-            wde.state="TIMEOUT"
-            self.setAlert(wde)
-            self.alert("TIMEOUT","critical",wde)
+        if alert.state != "OK":
+            self.alert("STATE","critical",alert)
+        if alert.epoch<(time.time() - wdt.maxperiod):
+            alert.state="TIMEOUT"
+            self.setAlert(alert)
+            self.alert("TIMEOUT","critical",alert)
 
-    def alert(self,msg,alerttype,wde=None):
+    def alert(self, alerttype, alert):
         at=self.getAlertType(alerttype)
-        if wde==None:
-            wde=self.getWatchDogEventObj(gid=j.application.whoAmI.gid,nid=j.application.whoAmI.nid,\
-                category="critical.error",state="ERROR",value=msg,gguid=self.localgguid)
-        if self.inAlert(wde):
+        if self.inAlert(alert):
             return
-        at.escalateL1(wde)
+        at.escalateL1(alert)
 
     def checkWatchdogEvents(self):
-        self._now=time.time()
         for gguid in self.getGGUIDS():
             for wde in self.iterateWatchdogEvents(gguid):
                 self.checkWatchdogEvent(wde)
 
-    def inAlert(self,wde):
-        key="%s_%s"%(wde.nid,wde.category)
-        return self.redis.hexists(self._getAlertHSetKey(wde.gguid),key)
+    def inAlert(self, alert):
+        key = "%s_%s" % (alert.nid, alert.category)
+        return self.redis.hexists(self._getAlertHSetKey(alert.gid), key)
 
-    def setAlert(self,wde):
-        key="%s_%s"%(wde.nid,wde.category)
-        wde.escalationepoch=self._now
+    def setAlert(self, alert):
+        key = "%s_%s" % (alert.nid, alert.category)
+        wde.escalationepoch=time.time()
         self.setWatchdogEvent(wde)
         return self.redis.hset(self._getAlertHSetKey(wde.gguid),key, json.dumps(wde.__dict__))
 
