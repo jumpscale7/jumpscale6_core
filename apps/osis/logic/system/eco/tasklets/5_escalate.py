@@ -23,5 +23,7 @@ def main(j, params, service, tags, tasklet):
         else:
             raiseEvent()
 
+    return params
+
 def match(j, params, service, tags, tasklet):
     return params.action == 'set'
