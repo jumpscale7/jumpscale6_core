@@ -13,14 +13,11 @@
 		var:description str,,describe this errorcondition category
         var:resolution_user str,,describe this errorcondition solution that the user can do himself
         var:resolution_ops str,,describe this errorcondition solution that the operator can do himself to try and recover from the situation
-		result:bool    
-
-    method:updateEco
+		result:bool
+		
+    method:delete
 		"""	
-		update eco state and history
+		delete alert
 		"""
-		var:username str,,username @tags: optional
-		var:state str,,state ["NEW","ALERT", 'ACCEPTED',  'RESOLVED',  'UNRESOLVED', 'CLOSED']
 		var:eco str,,eco ID
-        var:comment str,,comment @tags: optional
-        result:bool	
+        result:bool

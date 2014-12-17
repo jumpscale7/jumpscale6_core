@@ -2,67 +2,15 @@
 
 {{eco: id:$$id}}
 
-h3. Actions
-
   {{actions:
 
-- display: Accept
-  action: /restmachine/system/errorconditionhandler/updateEco
+- display: Delete
+  action: /restmachine/system/errorconditionhandler/delete
   data:
-   eco: $$id
-   state : 'ACCEPTED'
-  input:
-  - comment
-  
-- display: Assign
-  action: /restmachine/system/errorconditionhandler/updateEco
-  data:
-   eco: $$id
-   state : 'ACCEPTED'
-   
-  input:
-  - username
-  
-- display: Resolve
-  action: /restmachine/system/errorconditionhandler/updateEco
-  data:
-   eco: $$id
-   state : 'RESOLVED'
-  input:
-  - comment
-  
-- display: Mark unresolved
-  action: /restmachine/system/errorconditionhandler/updateEco
-  data:
-   eco: $$id
-   state : 'UNRESOLVED'
-  input:
-  - comment
-    
-
-- display: Close
-  action: /restmachine/system/errorconditionhandler/updateEco
-  data:
-   eco: $$id
-   state : 'CLOSED'
-  input:
-  - comment
-
-- display: Re-Open
-  action: /restmachine/system/errorconditionhandler/updateEco
-  data:
-   eco: $$id
-   state : 'ALERT'
-  input:
-  - comment
-    
-
+   eco: '$$id'
 }}
 
-
 h3. Details
-|*State*|${state}|
-|*Assigned user*|{% if assigned_user %} ${assigned_user}{%endif%}|
 |*Application Name*|${appname}|
 |*Category*|${category}|
 |*Job*|${jid}|
@@ -81,14 +29,7 @@ h3. Details
 |*Node*|[${nid}|node?id=${nid}&gid=${gid}]|
 |*Grid*|[${gid}|grid?id=${gid}]|
 |*Tags*|${tags}|
-
-h3. History
-{% if history %}||User||Comment||State||Time||{% else -%}
-|NO HISTORY|
-{% endif %}
-{% for h in history -%}
-| ${h.user} | ${h.comment} | ${h.state} | ${h._timestamp} |
-{% endfor %}
+|*Alerts*|[show | alerts?eco=${id}]|
 
 *Code* 
 {{code: $$code}}

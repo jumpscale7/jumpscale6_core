@@ -15,8 +15,6 @@ def main(j, args, params, tags, tasklet):
         params.result = ('Alert with guid %s not found' % guid, args.doc)
         return params
 
-    for field in ['inittime', 'lasttime', 'closetime']:
-        alert[field] = j.base.time.epoch2HRDateTime(alert[field])
     color = 'green' if alert['state'] == 'OK' else ('red' if alert['state'] == 'ERROR' else 'orange')
     alert['state'] = '{color:%s}%s{color}' % (color, alert['state'])
 
@@ -24,4 +22,3 @@ def main(j, args, params, tags, tasklet):
 
     params.result = (args.doc, args.doc)
     return params
-    

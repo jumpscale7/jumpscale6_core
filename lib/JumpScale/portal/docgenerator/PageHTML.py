@@ -678,7 +678,10 @@ function copyText$id() {
                 $(".%s").each(function() {
                     var $this = $(this);
                     var timestmp = parseFloat($this.html());
-                    var time = new Date(timestmp * 1000).toLocaleString();
+                    if (timestmp > 0)
+                        var time = new Date(timestmp * 1000).toLocaleString();
+                    else
+                        var time = "";
                     $this.html(time);
                 });
             };
