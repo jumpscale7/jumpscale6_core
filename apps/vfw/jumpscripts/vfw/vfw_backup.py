@@ -29,7 +29,7 @@ def action():
         if j.system.fs.exists(backuppath):
             j.system.fs.removeDirTree(backuppath)
 
-        osiscl = j.core.osis.getClient(user='root')
+        osiscl = j.core.osis.client
         vfwcl = j.core.osis.getClientForCategory(osiscl, 'vfw', 'virtualfirewall')
 
         routeros_password = j.application.config.get('vfw.admin.passwd')
@@ -66,8 +66,8 @@ Exception:
 -----------------------------
 %s
 -----------------------------
-    ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, error)
-        j.clients.email.send('support@mothership1.com', 'monitor@mothership1.com', 'VFW backup failed', message)
+    ''' % (timestamp, backuppath, error)
+        j.errorconditionhandler.raiseOperationalWarning(message, 'monitoring')
     finally:
         if vfwerrors:
             message = '''
@@ -78,7 +78,11 @@ These vfws have failed to backup:
 -----------------------------
 %s
 -----------------------------
-        ''' % (j.base.time.epoch2HRDateTime(timestamp), backuppath, '\n'.join(vfwerrors))
-            message = message.replace('\n', '<br/>')
-            j.clients.email.send('support@mothership1.com', 'smtp@incubaid.com', 'VFW backup incomplete', message)
+        ''' % (timestamp, backuppath, '\n'.join(vfwerrors))
+            j.errorconditionhandler.raiseOperationalWarning(message, 'monitoring')
 
+
+if __name__ == '__main__':
+    import JumpScale.grid.osis
+    j.core.osis.client = j.core.osis.getClientByInstance('processmanager')
+    action()
