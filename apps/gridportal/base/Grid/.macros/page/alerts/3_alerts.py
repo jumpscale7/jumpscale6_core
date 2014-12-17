@@ -10,11 +10,10 @@ def main(j, args, params, tags, tasklet):
     makeLink = '<a href=alert?guid=%(guid)s>%(id)s</a>' 
     makeGrid = '<a href=grid?id=%(gid)s>%(gid)s</a>'
     makeNode = '<a href=node?id=%(nid)s&gid=%(gid)s>%(nid)s</a>'
-    makeECO = '<a href=eco?id=%(eco)s>%(eco)s</a>'
 
-    fieldnames = ('Link to Alert', 'Grid ID', 'Node ID', 'ECO', 'Category', 'Raise Time','Last Time', 'Close Time', 'State', 'Assignee')
-    fieldids = ['id', 'gid', 'nid', 'eco', 'category', 'inittime', 'lasttime', 'closetime', 'state', 'assigned_user']
-    fieldvalues = (makeLink, makeGrid, makeNode, makeECO, 'category', modifier.makeTime, modifier.makeTime, modifier.makeTime, 'state', 'assigned_user')
+    fieldnames = ('Link to Alert', 'Grid ID', 'Node ID',  'Category', 'Raise Time','Last Time', 'Close Time', 'State', 'Assignee')
+    fieldids = ['id', 'gid', 'nid',  'category', 'inittime', 'lasttime', 'closetime', 'state', 'assigned_user']
+    fieldvalues = (makeLink, makeGrid, makeNode, 'category', modifier.makeTime, modifier.makeTime, modifier.makeTime, 'state', 'assigned_user')
 
     tableid = modifier.addTableForModel('system', 'alert', fieldids, fieldnames, fieldvalues, filters)
 

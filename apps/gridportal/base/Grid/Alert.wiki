@@ -3,7 +3,8 @@
 {{timestamp}}
 
 h3. Details
-|*ECO*|${eco}|
+|*State*|${state}|
+|*ECO*|{% if eco %} [${eco}|/grid/eco?id=${eco}] {% else %} NO MORE EXISTS {%endif%}|
 |*Raise time*|{{div: class=jstimestamp}}${inittime}{{div}}||
 |*Last time*|{{div: class=jstimestamp}}${lasttime}{{div}}|
 
