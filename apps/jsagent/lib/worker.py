@@ -240,14 +240,12 @@ class Worker(object):
                 self.redisw.redis.hdel("workers:jobs",job.id)
 
 
-    def log(self, message, category='',level=5, time=''):
-        #queue saving logs        
-        # j.logger.log(message,category=category,level=level)
-        if time == '':
+    def log(self, message, category='',level=5, time=None):
+        if time == None:
             time = j.base.time.getLocalTimeHR()
         msg = "%s:worker:%s:%s" % (time, self.queuename, message)
         print msg
-        if self.logFile<>None:
+        if self.logFile != None:
             msg = msg+"\n"
             self.logFile.write(msg)
 
