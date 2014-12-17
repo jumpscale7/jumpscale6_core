@@ -76,15 +76,11 @@ class Process():
         if self.logpath==None:
             self.logpath=j.system.fs.joinPaths(j.dirs.logDir,"processmanager","logs","%s_%s_%s.log"%(self.domain,self.name,self.instance))
             j.system.fs.createDir(j.system.fs.joinPaths(j.dirs.logDir,"processmanager","logs"))
-            stdout = open(self.logpath,'w')
-        else:
-            stdout=None
 
-        stderr = subprocess.STDOUT
         stdin = subprocess.PIPE
-        if opts.debug:
-            stdout = sys.stdout
-            stderr = sys.stderr
+        stdout = sys.stdout
+        stderr = sys.stderr
+        self.cmds.extend(['-lp',self.logpath])
 
         try:            
             self.p = psutil.Popen(self.cmds, env=self.env,cwd=self.workingdir,stdin=stdin, stdout=stdout, stderr=stderr,bufsize=0,shell=False) #f was: subprocess.PIPE
@@ -297,7 +293,6 @@ def kill_subprocesses():
 parser = cmdutils.ArgumentParser()
 parser.add_argument("-i", '--instance', default="0", help='jsagent instance', required=False)
 parser.add_argument("-r", '--reset', action='store_true',help='jsagent reset', required=False,default=False)
-parser.add_argument("-d", '--debug', action='store_true',help='Put JSAgent in debug mode', required=False,default=False)
 parser.add_argument("-s", '--services', help='list of services to run e.g heka, agentcontroller,web', required=False,default="")
 
 opts = parser.parse_args()
