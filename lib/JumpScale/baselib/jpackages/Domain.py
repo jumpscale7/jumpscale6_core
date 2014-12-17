@@ -1,7 +1,6 @@
 from JumpScale import j
 import os
 import JumpScale.baselib.vcs
-from IPython.core.debugger import Pdb
 
 class Domain(): 
 
