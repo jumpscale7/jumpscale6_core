@@ -22,8 +22,9 @@ def main(j, args, params, tags, tasklet):
         nodedata = data.get(nidstr, dict())
         wdata = nodedata.get('workers', list())
         for stat in wdata:
-            status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
-            out.append('|%s|%s|%s|' % (stat.get('name', ''), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
+            if 'state' in stat:
+                status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
+                out.append('|%s|%s|%s|' % (stat.get('name', ''), status, j.base.time.epoch2HRDateTime(stat.get('lastactive', 0))))
 
     out = '\n'.join(out)
     params.result = (out, doc)
