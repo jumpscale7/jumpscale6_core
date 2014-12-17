@@ -17,8 +17,8 @@ def main(j, args, params, tags, tasklet):
         params.result = (out, args.doc)
         return params
 
-    obj['epoch'] = datetime.datetime.fromtimestamp(obj['epoch']).strftime('%Y-%m-%d %H:%M:%S')
-    obj['lasttime'] = datetime.datetime.fromtimestamp(obj['lasttime']).strftime('%Y-%m-%d %H:%M:%S')
+    obj['epoch'] = "{{div: class=jstimestamp|data-ts=%s}}{{div}}" % obj['epoch']
+    obj['lasttime'] = "{{div: class=jstimestamp data-ts=%s}}{{div}}" % obj['lasttime']
     for attr in ['errormessage', 'errormessagePub']:
         obj[attr] = obj[attr].replace('\n', '<br>')
     for attr in ['jid']:

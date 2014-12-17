@@ -19,11 +19,6 @@ def main(j, args, params, tags, tasklet):
         return params
 
     obj = job[0]
-    for attr in ['timeStop', 'timeStart']:
-        if obj[attr] != 0:
-            obj[attr] = datetime.datetime.fromtimestamp(obj[attr]).strftime('%Y-%m-%d %H:%M:%S')
-        else:
-            obj[attr] = 'N/A'
 
     obj['nid'] = obj.get('nid', 0)
     obj['roles'] = ', '.join(obj['roles'])
@@ -53,7 +48,8 @@ def main(j, args, params, tags, tasklet):
         obj['organization'], obj['cmd'] = obj['cmd'].split('/')
     else:
         obj['organization'] = obj['category']
-    
+   
+
     args.doc.applyTemplate(obj)
 
     params.result = (args.doc, args.doc)

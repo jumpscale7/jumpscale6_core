@@ -24,7 +24,7 @@ def main(j, args, params, tags, tasklet):
         for stat in wdata:
             if 'state' in stat:
                 status = j.core.grid.healthchecker.getWikiStatus(stat['state'])
-                out.append('|%s|%s|{{div: class=jstimestamp}}%s{{div}}|' % (stat.get('name', ''), status, stat.get('lastactive', 0)))
+                out.append('|%s|%s|{{div: class=jstimestamp|data-ts=%s}}{{div}}|' % (stat.get('name', ''), status, stat.get('lastactive', 0)))
 
     out = '\n'.join(out)
     params.result = (out, doc)
