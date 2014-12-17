@@ -236,11 +236,13 @@ class Worker(object):
                 self.redisw.redis.hdel("workers:jobs",job.id)
 
 
-    def log(self, message, category='',level=5):
+    def log(self, message, category='',level=5, time=''):
         #queue saving logs        
         # j.logger.log(message,category=category,level=level)
-        print "worker:%s:%s" % (self.queuename, message)
-
+        if time == '':
+            time = j.base.time.getLocalTimeHR()
+        print "%s:worker:%s:%s" % (time, self.queuename, message)
+        
 if __name__ == '__main__':
     parser = cmdutils.ArgumentParser()
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
