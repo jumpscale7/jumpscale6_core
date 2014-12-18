@@ -4,6 +4,7 @@
 
 h3. Details
 |*State*|${state}|
+|*Assignee*|${assigned_user}|
 |*ECO*|{% if eco %} [${eco}|/grid/eco?id=${eco}] {% else %} NO MORE EXISTS {%endif%}|
 |*Raise time*|{{div: class=jstimestamp|data-ts=${inittime}}}{{div}}||
 |*Last time*|{{div: class=jstimestamp|data-ts=${lasttime}}}{{div}}|
@@ -68,5 +69,5 @@ h3. History
 |NO HISTORY|
 {% endif %}
 {% for h in history -%}
-| ${h.user} | ${h.comment} | ${h.state} | {{div: class=jstimestamp|data-ts=${h.ecpoh}}}{{div}} |
+| ${h.user} | ${h.comment} | ${h.state} | {{div: class=jstimestamp|data-ts=${h.epoch}}}{{div}} |
 {% endfor %}
