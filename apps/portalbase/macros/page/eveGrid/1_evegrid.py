@@ -41,13 +41,30 @@ def main(j, args, params, tags, tasklet):
 		page.addJS('/jslib/jquery/jqueryDataTable/js/dataTables.bootstrap.js')
 		page.addJS('/jslib/moment.js')
 		page.addJS('https://rawgit.com/Eonasdan/bootstrap-datetimepicker/master/src/js/bootstrap-datetimepicker.js')
-
+		page.addJS('/jslib/spin.min.js')
 		page.addJS('/system/.files/lib/evegrid/js/eve-grid.js')
 	
 	page.addMessage('''
 		<div class="container eve-grid-container">
 	        <div id="{entityName}-container" eve-grid eve-url="{schemaURL}" eve-entity="{entityName}" eve-spec-path="{specJsonPath}" datetime-fields={datetimeFields} columns='{columns}'>
 	       	</div>
+	    	<div id="confirmModal" class="modal fade">
+			    <div class="modal-dialog">
+			        <div class="modal-content">
+			            <div class="modal-header">
+			                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			                <h4 class="modal-title">Confirmation</h4>
+			            </div>
+			            <div class="modal-body">
+			                <p>Are you sure you want to delete?</p>
+			            </div>
+			            <div class="modal-footer">
+			                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			                <button type="button" class="btn btn-danger confirmDelete">Delete</button>
+			            </div>
+			        </div>
+			    </div>
+			</div>
     	</div>
 
 	 '''.format(**eveGrid))
