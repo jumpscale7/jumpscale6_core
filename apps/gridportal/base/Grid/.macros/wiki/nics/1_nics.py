@@ -16,7 +16,7 @@ def main(j, args, params, tags, tasklet):
 
     nid = args.tags.getDict().get("nid") if not args.tags.getDict().get("nid", "").startswith('$$') else None
 
-    nics = actor.getNics(nid=nid)
+    nics = actor.getNics(nid=nid,size=2000)
     if not nics:
         params.result = ('No NICs found', doc)
         return params
