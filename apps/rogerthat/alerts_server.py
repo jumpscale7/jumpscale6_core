@@ -149,6 +149,7 @@ See http://cpu01.bracknell1.vscalers.com:8282/grid/alert?id=%(guid)s for more de
             alertid = self.alertqueue.get()
             alert = self.getAlert(alertid) 
             oldalert = self.rediscl.hget('alerts', alertid)
+            self.rediscl.hset('alerts', alert['guid'], json.dumps(alert))
             print 'Got alertid', alertid
             if alert['state'] == 'ALERT':
                 self.escalate(alert=alert)
