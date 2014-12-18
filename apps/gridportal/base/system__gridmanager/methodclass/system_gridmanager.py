@@ -697,10 +697,6 @@ class system_gridmanager(j.code.classGetBase()):
                   'ipaddr': ipaddr,
                   'active': active
                  }
-        if "size" in kwargs:
-            size = int(kwargs["size"])
-            return self.osis_nic.simpleSearch(params,size=size)
-        else:
-            return self.osis_nic.simpleSearch(params)
+        return self.osis_nic.simpleSearch(params)
 
 
