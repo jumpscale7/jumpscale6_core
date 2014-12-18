@@ -43,13 +43,12 @@ def jsonrpc(func):
     return wrapper
 
 class GeventWSServer(object):
+    SERVICEKEY = j.application.config.get('rogerthat.servicekey')
 
-    def __init__(self, addr, port):
+    def __init__(self, addr, port, handler):
         self.port = port
         self.addr = addr
-        self.redis_client = j.clients.redis.getByInstanceName('system')
-        self.api_key = j.application.config.get('rogerthat.apikey')
-        self.rogerthat_client = j.clients.rogerthat.get(self.api_key)
+        self.handler = handler
         self.server = WSGIServer((self.addr, self.port), self.rpcRequest)
         
     def invalidRequest(self):
@@ -57,33 +56,24 @@ class GeventWSServer(object):
         return msg
 
     def _authenticateRequest(self, service_key):
-        return service_key == j.application.config.get('rogerthat.servicekey')
+        return service_key == self.SERVICEKEY
         
     @jsonrpc
     def rpcRequest(self, method, **params):
         if method == 'test.test':
             return self.process_test(**params)
 
-        elif method == 'messaging.update':
-            return self.process_update(**params)
+        methodname = method.replace('.', '_')
+        return getattr(self.handler, methodname)(params)
 
     def process_test(self, value):
         return value
 
-    def send_message(self, message, contacts, answers, parent_message_key, alert_flags=6):
-        result = self.rogerthat_client.send_message(message, contacts, answers=answers, alert_flags=alert_flags, parent_message_key=parent_message_key)
-        if result:
-            if result['error']:
-                j.logger.log('Could not send rogerthat message')
-                return
-            else:
-                message_id = result['result']
-                return message_id
-
     def process_update(self, status=None, answer_id=None, received_timestamp=None, member=None, user_details=None, message_key=None, parent_message_key=None, tag=None, acked_timestamp=None, service_identity=None, result_key=None):
         message_key = parent_message_key if parent_message_key else message_key
 
-        alert = None
+
+        # return
         for al in j.tools.watchdog.manager.fetchAllAlerts():
             if al['message_id'] == message_key:
                 alert = al
