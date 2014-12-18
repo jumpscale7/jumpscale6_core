@@ -13,5 +13,11 @@
 		var:description str,,describe this errorcondition category
         var:resolution_user str,,describe this errorcondition solution that the user can do himself
         var:resolution_ops str,,describe this errorcondition solution that the operator can do himself to try and recover from the situation
-		result:bool    
-
+		result:bool
+		
+    method:delete
+		"""	
+		delete alert
+		"""
+		var:eco str,,eco ID
+        result:bool

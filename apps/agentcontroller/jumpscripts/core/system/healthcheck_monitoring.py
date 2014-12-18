@@ -39,3 +39,7 @@ def action():
                 msg='%s on node %s seems to be having issues' % (cat, nid)
                 print msg
                 # j.events.opserror(msg, 'monitoring')
+
+if __name__ == '__main__':
+    action()
+

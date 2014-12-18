@@ -7,5 +7,5 @@ h3. Databases' Status
 
 h3. Process Status
 
-{{datatables_use}}
+{{datatables_use: displaylength:100 autosort:false}}
 {{processchecks}}

@@ -22,13 +22,12 @@ roles = []
 def action():
     import JumpScale.lib.diskmanager
     import statsd
+    import psutil
+
+    dcl = j.core.osis.getClientForCategory(j.core.osis.client, "system", "disk")
+    rediscl = j.clients.redis.getByInstanceName('system')
     stats = statsd.StatsClient()
     pipe = stats.pipeline()
-    if not hasattr(j.core, 'processmanager'):
-        import JumpScale.grid.processmanager
-        j.core.processmanager.loadMonitorObjectTypes()
-
-    psutil=j.system.platform.psutil
 
     disks = j.system.platform.diskmanager.partitionsFind(mounted=True, prefix='', minsize=0, maxsize=None)
 
@@ -41,10 +40,10 @@ def action():
                    'space_free_mb': 0, 'space_used_mb': 0, 'space_percent': 0}
         path=disk.path.replace("/dev/","")
 
-        disk_key=path
-        cacheobj=j.core.processmanager.monObjects.diskobject.get(id=disk_key)
-        cacheobj.ckeyOld=cacheobj.db.getContentKey()
-        disk.nid = j.application.whoAmI.nid
+        odisk = dcl.new()
+        oldkey = rediscl.hget('disks', path)
+        odisk.nid = j.application.whoAmI.nid
+        odisk.gid = j.application.whoAmI.gid
 
         if counters.has_key(path):
             counter=counters[path]
@@ -63,12 +62,13 @@ def action():
             results['space_percent'] = int(round((float(disk.size-disk.free)/float(disk.size)),2))
 
         for key,value in disk.__dict__.iteritems():
-            cacheobj.db.__dict__[key]=value
+            odisk.__dict__[key]=value
 
-        if cacheobj.ckeyOld<>cacheobj.db.getContentKey():
-            #obj changed
-            print "SEND DISK INFO TO OSIS"
-            cacheobj.send2osis()
+        ckey = odisk.getContentKey()
+        if ckey != oldkey:
+            print("Disk %s changed" % (path))
+            dcl.set(odisk)
+            rediscl.hset('disks', path, ckey)
 
         for key, value in results.iteritems():
             pipe.gauge("%s_%s_disk_%s_%s" % (j.application.whoAmI.gid, j.application.whoAmI.nid, path, key), value)
@@ -77,4 +77,6 @@ def action():
 
 
 if __name__ == '__main__':
+    import JumpScale.grid.osis
+    j.core.osis.client = j.core.osis.getClientByInstance('processmanager')
     action()

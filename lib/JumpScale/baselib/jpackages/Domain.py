@@ -185,27 +185,28 @@ class Domain():
         return list(changedPackages)
 
     def getJPackageTuplesWithNewMetadata(self):
-        hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
-        changedFiles = hg.getModifiedFiles()
+
+#         hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+        changedFiles = self.vcsclient.client.getModifiedFiles()
         
         #changedFiles = self.hgclient.getModifiedFiles()
-        changedFiles = changedFiles["added"] + changedFiles["nottracked"]
+        changedFiles = changedFiles["N"] + self.vcsclient.client.getUntrackedFiles()
         return self._mercurialLinesToPackageTuples(changedFiles)
 
     def getJPackageTuplesWithModifiedMetadata(self):
-        hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
-        changedFiles = hg.getModifiedFiles()
+#         hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+        changedFiles = self.vcsclient.client.getModifiedFiles()
         
         #changedFiles = self.hgclient.getModifiedFiles()
-        changedFiles = changedFiles["modified"]
+        changedFiles = changedFiles["M"]
         return self._mercurialLinesToPackageTuples(changedFiles)
 
     def getJPackageTuplesWithDeletedMetadata(self):
-        hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
-        changedFiles = hg.getModifiedFiles()      
+#         hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+        changedFiles = self.vcsclient.client.getModifiedFiles()      
         
         #changedFiles = self.hgclient.getModifiedFiles()
-        changedFiles = changedFiles["removed"] + changedFiles['missing']
+        changedFiles = changedFiles["R"] + changedFiles['D']
         return self._mercurialLinesToPackageTuples(changedFiles)
 
     # Packages that have been deleted will never have modified files
@@ -238,9 +239,9 @@ class Domain():
         """
         j.logger.log("Publish metadata for domain %s" % self.domainname,2)
         if not self.metadataFromTgz:
-            hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
-            hg.commit(message=commitMessage,force=force)
-            hg.push()
+#             hg = self.bitbucketclient.getMercurialClient(self.bitbucketreponame)
+            self.vcsclient.client.commit(message=commitMessage)
+            self.vcsclient.client.push()
         else:
             raise RuntimeError('Meta data is comming from tar for domain ' + self.domainname + ', cannot publish modified metadata.')
 
@@ -279,7 +280,7 @@ class Domain():
                 j.system.fs.removeDirTree(j.packages.getDataPath(*jpackagesActive))
             else:
             #if jpackagesActive in newPackagesMetaData or jpackagesActive in modifiedPackagesMetaData:
-                jpackagesActiveObject = j.packages.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2])
+                jpackagesActiveObject = j.packages.get(jpackagesActive[0], jpackagesActive[1], jpackagesActive[2] or '1.0')
                 j.logger.log("For jpackages: " + str(jpackagesActiveObject), 1)
                 j.logger.log("current numbers : " + jpackagesActiveObject.reportNumbers(), 1)
                 # Update build number
@@ -323,9 +324,8 @@ class Domain():
         deletedPackagesMetaData  = self.getJPackageTuplesWithDeletedMetadata()
         modifiedPackagesFiles    = self.getJPackageTuplesWithModifiedFiles()
         modifiedPackages         = list(set(newPackagesMetaData + modifiedPackagesMetaData + deletedPackagesMetaData + modifiedPackagesFiles))
-
         # If there are no packages to do something with don't bother the user
-        # with annoying questions
+        # with annoying questions_mercurialLinesToPackageTuples
         if not modifiedPackages:
             j.logger.log("There where no modified packages for domain: %s " % self.domainname , 1)
             return modifiedPackages, ''  #debug

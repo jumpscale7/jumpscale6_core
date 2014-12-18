@@ -11,10 +11,8 @@ critical alert
 organization = "jumpscale"
 enable = True
 
-REDIS_PORT = int(j.application.config.getInt('redis.alerts.port'))
 API_KEY = j.application.config.get('rogerthat.apikey')
-
-redis_client = j.clients.credis.getRedisClient('127.0.0.1', REDIS_PORT)
+redis_client = j.clients.redis.getByInstanceName('system')
 rogerthat_client = j.clients.rogerthat.get(API_KEY)
 
 ANSWERS = [{'id': 'yes', 'caption': 'Take', 'action': '', 'type': 'button'},]

@@ -35,7 +35,7 @@ def restart_program():
 
 class Worker(object):
 
-    def __init__(self,queuename):
+    def __init__(self,queuename, logpath):
         self.actions={}
         self.clients = dict()
         self.acclient = None
@@ -43,6 +43,10 @@ class Worker(object):
         self.queuename=queuename
         self.init()
         self.starttime = time.time()
+        self.logpath = logpath
+        self.logFile = None
+        if self.logpath != None:
+            self.logFile = open(self.logpath,'w',0)
 
     def getClient(self, job):
         ipaddr = getattr(job, 'achost', None)
@@ -236,15 +240,20 @@ class Worker(object):
                 self.redisw.redis.hdel("workers:jobs",job.id)
 
 
-    def log(self, message, category='',level=5):
-        #queue saving logs        
-        # j.logger.log(message,category=category,level=level)
-        print "worker:%s:%s" % (self.queuename, message)
+    def log(self, message, category='',level=5, time=None):
+        if time == None:
+            time = j.base.time.getLocalTimeHR()
+        msg = "%s:worker:%s:%s" % (time, self.queuename, message)
+        print msg
+        if self.logFile != None:
+            msg = msg+"\n"
+            self.logFile.write(msg)
 
 if __name__ == '__main__':
     parser = cmdutils.ArgumentParser()
     parser.add_argument("-qn", '--queuename', help='Queue name', required=True)
     parser.add_argument("-i", '--instance', help='JSAgent instance', required=True)
+    parser.add_argument("-lp", '--logpath', help='Logging file path', required=False, default=None)
 
     opts = parser.parse_args()
 
@@ -262,7 +271,7 @@ if __name__ == '__main__':
     j.logger.consoleloglevel = 2
     j.logger.maxlevel=7
 
-    worker=Worker(opts.queuename)
+    worker=Worker(opts.queuename, opts.logpath)
     worker.run()
 
 

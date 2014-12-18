@@ -12,11 +12,10 @@ import gevent
 
 j.application.start("alerts_server")
 
-REDIS_PORT = int(j.application.config.getInt('redis.alerts.port'))
 API_KEY = j.application.config.get('rogerthat.apikey')
 
-redis_client = j.clients.credis.getRedisClient('127.0.0.1', REDIS_PORT)
-alerts_queue = j.clients.credis.getRedisQueue('127.0.0.1', REDIS_PORT, 'alerts')
+redis_client = j.clients.redis.getByInstanceName('system')
+alerts_queue = redis_client.getQueue('alerts')
 rogerthat_client = j.clients.rogerthat.get(API_KEY)
 
 ANSWERS = [{'id': 'yes', 'caption': 'Take', 'action': '', 'type': 'button'},]
@@ -67,11 +66,8 @@ while True:
     alert_json = alerts_queue.get()
     alert = json.loads(alert_json)
     if alert['state'] == 'CRITICAL':
-        message = ''
-        for k, v in alert.iteritems():
-            message += '%s: %s\n' % (k, v)
         # escalate L1
-        message_id = escalate_L1(message)
+        message_id = escalate_L1(alert['errormessage'])
 
         # escalate L2 after 5 mins
         #gevent.spawn_later(escalate_L2, 300.0, message=message, message_id=message_id)

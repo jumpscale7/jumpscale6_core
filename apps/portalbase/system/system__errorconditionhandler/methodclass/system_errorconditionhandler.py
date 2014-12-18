@@ -12,8 +12,7 @@ class system_errorconditionhandler(j.code.classGetBase()):
         self._te = {}
         self.actorname = "errorconditionhandler"
         self.appname = "system"
-
-        pass
+        self.scl = j.core.osis.getClientForNamespace('system', j.core.portal.active.osis)
 
     def describeCategory(self, category, language, description, resolution_user, resolution_ops, **args):
         """
@@ -64,3 +63,12 @@ class system_errorconditionhandler(j.code.classGetBase()):
             # no previous found
             self.dbmem.cacheSet(key, eco, expirationInSecondsFromNow=3600)
             return self.model_errorcondition_set(eco)
+    
+    def delete(self, eco, **kwargs):
+        """
+       delete alert
+        """
+        if self.scl.eco.exists(eco):
+            self.scl.eco.delete(eco)
+            return True
+        return False

@@ -47,8 +47,7 @@ class GeventWSServer(object):
     def __init__(self, addr, port):
         self.port = port
         self.addr = addr
-        self.redis_port = int(j.application.config.get('redis.alerts.port', default=6379))
-        self.redis_client = j.clients.credis.getRedisClient('127.0.0.1', self.redis_port)
+        self.redis_client = j.clients.redis.getByInstanceName('system')
         self.api_key = j.application.config.get('rogerthat.apikey')
         self.rogerthat_client = j.clients.rogerthat.get(self.api_key)
         self.server = WSGIServer((self.addr, self.port), self.rpcRequest)
@@ -123,4 +122,5 @@ class GeventWSServer(object):
         print 'started on %s' % self.port
         self.server.serve_forever()
 
-GeventWSServer('0.0.0.0', 5005).start()
+if __name__ == '__main__':
+    GeventWSServer('0.0.0.0', 5005).start()

@@ -7,9 +7,9 @@ def main(j, args, params, tags, tasklet):
 
     status = None
     out = list()
-    rediscl = j.clients.redis.getGeventRedisClient('127.0.0.1', 9999)
+    rediscl = j.clients.redis.getByInstanceName('system', gevent=True)
 
-    out = '||Grid ID||Node ID||Node Name||Process Manager Status||Details||\n'
+    out = '||Grid ID||Node ID||Node Name||JSAgent Status||Details||\n'
     data = rediscl.hget('healthcheck:monitoring', 'results')
     errors = rediscl.hget('healthcheck:monitoring', 'errors')
     data = ujson.loads(data) if data else dict()
@@ -22,7 +22,7 @@ def main(j, args, params, tags, tasklet):
             if nid in errors:
                 level = -1
                 categories = errors.get(nid, {}).keys()
-                runningstring = '{color:orange}*RUNNING** (issues in %s){color}' % ', '.join(categories)
+                runningstring = '{color:orange}*DEGRADED** (issues in %s){color}' % ', '.join(categories)
             else:
                 level = 0
                 runningstring = '{color:green}*RUNNING*{color}'

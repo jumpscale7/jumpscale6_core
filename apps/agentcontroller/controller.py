@@ -89,7 +89,7 @@ class ControllerCMDS():
     def authenticate(self, session):
         return False  # to make sure we dont use it
 
-    def scheduleCmd(self,gid,nid,cmdcategory,cmdname,args={},jscriptid=None,queue="",log=True,timeout=0,roles=[],wait=False,errorreport=False, session=None): 
+    def scheduleCmd(self,gid,nid,cmdcategory,cmdname,args={},jscriptid=None,queue="",log=True,timeout=None,roles=[],wait=False,errorreport=False, session=None): 
         """ 
         new preferred method for scheduling work
         @name is name of cmdserver method or name of jumpscript 
@@ -187,15 +187,15 @@ class ControllerCMDS():
         if osis:
             # we need to make sure that job['result'] is always of the same type hence we serialize
             # otherwise elasticsearch will have issues
-            job = copy.deepcopy(job)
-            if 'result' in job and not isinstance(job["result"],str):
-                job['result'] = json.dumps(job['result'])
-            for key in ('args', 'kwargs'):
-                if key in job:
-                    job[key] = json.dumps(job[key])
-            self.jobclient.set(job)
+            self.saveJob(job)
 
     def saveJob(self, job, session=None):
+        job = copy.deepcopy(job)
+        if 'result' in job and not isinstance(job["result"],str):
+            job['result'] = json.dumps(job['result'])
+        for key in ('args', 'kwargs'):
+            if key in job:
+                job[key] = json.dumps(job[key])
         self.jobclient.set(job)
 
     def _deleteJobFromCache(self, job):
@@ -459,8 +459,10 @@ class ControllerCMDS():
         else:
             return noWork()
 
-    def waitJumpscript(self,jobguid=None,job=None,session=None):
+    def waitJumpscript(self,jobguid=None,job=None, timeout=None, session=None):
         """
+        @param timeout: if given overules job.timeout makes it possible to wait for 0 seconds
+        @type timeout: int
         @return job as dict
         """
         if job==None:
@@ -474,8 +476,12 @@ class ControllerCMDS():
         if job['state'] != 'SCHEDULED':
             return job
         q = self._getJobQueue(job["guid"])
-        if job["timeout"]<>0:
-            res = q.fetch(timeout=job["timeout"])
+        if timeout is None:
+            timeout = job['timeout']
+        if timeout == 0:
+            res = q.fetch(False)
+        elif timeout is not None:
+            res = q.fetch(timeout=timeout)
         else:
             res = q.fetch()
         self._deleteJobFromCache(job)

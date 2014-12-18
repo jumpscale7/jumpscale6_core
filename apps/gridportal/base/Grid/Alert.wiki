@@ -1,22 +1,72 @@
 @usedefaults
 {{alert: guid:$$guid}}
+{{timestamp}}
 
 h3. Details
-
-|*Description*|${description}|
-|*Description Pub*|${descriptionpub}|
-|*Grid ID*|[${gid}|grid?id=${gid}]|
-|*Node ID*|[${nid}|node?id=${nid}&gid=${gid}]|
 |*State*|${state}|
-|*Category*|${category}|
-|*Tags*|${tags}|
-|*Initilization Time*|${inittime}|
-|*Last Time*|${lasttime}|
-|*Close Time*|${closetime}|
-|*Level*|${level}|
-|*Number of ECOs*|${nrerrorconditions}|
+|*ECO*|{% if eco %} [${eco}|/grid/eco?id=${eco}] {% else %} NO MORE EXISTS {%endif%}|
+|*Raise time*|{{div: class=jstimestamp|data-ts=${inittime}}}{{div}}||
+|*Last time*|{{div: class=jstimestamp|data-ts=${lasttime}}}{{div}}|
 
-h5. ECOs
-{% for eco in errorconditions -%}
-[${eco}|eco?id=${eco}}]
+h3. Actions
+
+  {{actions:
+
+- display: Accept
+  action: /restmachine/system/alerts/update
+  data:
+   alert: '$$guid'
+   state : 'ACCEPTED'
+  input:
+  - comment
+  
+- display: Assign
+  action: /restmachine/system/alerts/update
+  data:
+   alert: '$$guid'
+   state : 'ACCEPTED'
+   
+  input:
+  - username
+  
+- display: Resolve
+  action: /restmachine/system/alerts/update
+  data:
+   alert: '$$guid'
+   state : 'RESOLVED'
+  input:
+  - comment
+  
+- display: Mark unresolved
+  action: /restmachine/system/alerts/update
+  data:
+   alert: '$$guid'
+   state : 'UNRESOLVED'
+  input:
+  - comment
+    
+
+- display: Close
+  action: /restmachine/system/alerts/update
+  data:
+   alert: '$$guid'
+   state : 'CLOSED'
+  input:
+  - comment
+
+- display: Re-Open
+  action: /restmachine/system/alerts/update
+  data:
+   alert: '$$guid'
+   state : 'ALERT'
+  input:
+  - comment
+}}
+
+h3. History
+{% if history %}||User||Comment||State||Time||{% else -%}
+|NO HISTORY|
+{% endif %}
+{% for h in history -%}
+| ${h.user} | ${h.comment} | ${h.state} | {{div: class=jstimestamp|data-ts=${h.ecpoh}}}{{div}} |
 {% endfor %}

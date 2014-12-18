@@ -12,7 +12,7 @@ version = "1.0"
 category = "tools"
 async=True
 roles = []
-log=False
+log=True
 
 def action(cmd="hostname -a"):
     return j.system.process.execute(cmd, dieOnNonZeroExitCode=False)

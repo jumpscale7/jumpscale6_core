@@ -32,6 +32,7 @@ class PageHTML(Page):
         self.jscsslinks = {}
         self.login = False
         self.divlevel = []
+        self._timestampsAdded = set()
         self._inBlock = False
         self._inBlockType = ""
         self._inBlockClosingStatement = ""
@@ -669,6 +670,30 @@ function copyText$id() {
         else:
             css = "<link  href='%s' type='text/css' rel='Stylesheet'/>\n" % cssLink
         self.head += css
+
+    def addTimeStamp(self, classname='jstimestamp'):
+        js = """
+        $(function() {
+            var updateTime = function () {
+                $(".%s").each(function() {
+                    var $this = $(this);
+                    var timestmp = parseFloat($this.data('ts'));
+                    if (timestmp > 0)
+                        var time = new Date(timestmp * 1000).toLocaleString();
+                    else
+                        var time = "";
+                    $this.html(time);
+                });
+            };
+            updateTime()
+            window.updateTime = updateTime;
+            $(document).ajaxComplete(updateTime);
+        });
+        """ % classname
+        if classname not in self._timestampsAdded:
+            self.addJS(jsContent=js)
+            self._timestampsAdded.add(classname)
+
 
     def addJS(self, jsLink=None, jsContent=None, header=True):
         if self.pagemirror4jscss != None:

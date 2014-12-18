@@ -1,29 +1,39 @@
 @usedefaults
 
+{{timestamp}}
+
 {{eco: id:$$id}}
 
+  {{actions:
+
+- display: Delete
+  action: /restmachine/system/errorconditionhandler/delete
+  data:
+   eco: '$$id'
+}}
+
 h3. Details
+|*Application Name*|${appname}|
+|*Category*|${category}|
+|*Job*|${jid}|
+|*Type*|${type}|
+|*Level*|${level}|
+|*Process ID*|[${pid}|process?id=${pid}]|
+|*Creation Time*|${epoch}|
+|*Last Time*|${lasttime}|
+|*Occurrences*|${occurrences}|
+|*Error Message Pub*|${errormessagepub}|
+|*Error Message*|${errormessage}|
+|*Function Name*|${funcname}|
+|*Function Line Number*|${funclinenr}|
+|*Function File Name*|${funcfilename}|
+|*Master Job*|${masterjid}|
+|*Node*|[${nid}|node?id=${nid}&gid=${gid}]|
+|*Grid*|[${gid}|grid?id=${gid}]|
+|*Tags*|${tags}|
+|*Alerts*|[show | alerts?eco=${id}]|
 
-|*Application Name*|$$appname|
-|*Category*|$$category|
-|*Job*|$$jid|
-|*Type*|$$type|
-|*Level*|$$level|
-|*Process ID*|[$$pid|process?id=$$pid]|
-|*Creation Time*|$$epoch|
-|*Last Time*|$$lasttime|
-|*Occurrences*|$$occurrences|
-|*Error Message Pub*|$$errormessagepub|
-|*Error Message*|$$errormessage|
-|*Function Name*|$$funcname|
-|*Function Line Number*|$$funclinenr|
-|*Function File Name*|$$funcfilename|
-|*Master Job*|$$masterjid|
-|*Node*|[$$nid|node?id=$$nid&gid=$$gid]|
-|*Grid*|[$$gid|grid?id=$$gid]|
-|*Tags*|$$tags|
-
-*Code*
+*Code* 
 {{code: $$code}}
 
 *BackTrace*

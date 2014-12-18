@@ -4,14 +4,16 @@
 
 h2. Job Details
 
-* *Grid ID*: ${gid}
-* *Node ID*: [${nid}|/grid/node?id=${nid}&gid=${gid}]
-* *Roles*: ${roles}
-* *Jumpscript*: [${organization}:${cmd}|jumpscript?organization=${organization}&name=${cmd}]
-* *Start*: ${timestart} (*Timeout*: ${timeout})
-* *Queue*: ${queue}
-* *State*: ${state}
-* {{tableforarg title:Args data:${args} }}
+| *Grid ID* | ${gid} |
+| *Node ID* | [${nid}|/grid/node?id=${nid}&gid=${gid}] |
+| *Roles* | ${roles} | 
+| *Jumpscript* | [${organization}:${cmd}|jumpscript?organization=${organization}&name=${cmd}] | 
+| *Start* | {{div: data-ts=${timeStart}|class=jstimestamp}}{{div}} (*Timeout*: ${timeout}) |
+| *Stop* | {{div: data-ts=${timeStop}|class=jstimestamp}}{{div}} |
+| *Queue* | ${queue} |
+| *State* | ${state} |
+
+| {{tableforarg title:Args data:${args} }}
 
 h3. Result
 ${resultline}

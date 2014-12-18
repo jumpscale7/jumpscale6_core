@@ -9,7 +9,7 @@ author = "deboeckj@incubaid.com"
 license = "bsd"
 version = "1.0"
 category = "monitoring.machine"
-period = 60*2 #always in sec
+period = 60*60 #always in sec
 order = 1
 enable=True
 async=True
@@ -26,9 +26,8 @@ except:
     enable=False
 
 def action():
-    if not hasattr(j.core, 'processmanager'):
-        import JumpScale.grid.processmanager
-        j.core.processmanager.loadMonitorObjectTypes()
+    syscl = j.core.osis.getClientForNamespace("system")
+    rediscl = j.clients.redis.getByInstanceName('system')
 
     con = libvirt.open('qemu:///system')
     #con = libvirt.open('qemu+ssh://10.101.190.24/system')
@@ -36,22 +35,19 @@ def action():
                 libvirt.VIR_DOMAIN_NOSTATE: 'NOSTATE',
                 libvirt.VIR_DOMAIN_PAUSED: 'PAUSED'}
 
-
-
-    systemcl = j.core.osis.getClientForNamespace('system')
-    allmachines = systemcl.machine.simpleSearch({})
+    allmachines = syscl.machine.search({'nid': j.application.whoAmI.nid, 'gid': j.application.whoAmI.gid})[1:]
     allmachines = { machine['id']: machine for machine in allmachines }
     domainmachines = list()
     try:
         domains = con.listAllDomains()
         for domain in domains:
-            machine = j.core.processmanager.monObjects.machineobject.get(id=domain.ID())
             domainmachines.append(domain.ID())
-            machine.ckeyOld = machine.db.getContentKey()
-            machine.db.name = domain.name()
-            machine.db.nid = j.application.whoAmI.nid
-            machine.db.gid = j.application.whoAmI.gid
-            machine.db.type = 'KVM'
+            machine = syscl.machine.new()
+            machine.id = domain.ID()
+            machine.name = domain.name()
+            machine.nid = j.application.whoAmI.nid
+            machine.gid = j.application.whoAmI.gid
+            machine.type = 'KVM'
             xml = ElementTree.fromstring(domain.XMLDesc())
             netaddr = dict()
             for interface in xml.findall('devices/interface'):
@@ -62,57 +58,55 @@ def action():
                     name = alias.attrib['name']
                 netaddr[mac] = [ name, None ]
 
-            machine.db.mem = int(xml.find('memory').text)
+            machine.mem = int(xml.find('memory').text)
 
-            machine.db.netaddr = netaddr
-            machine.db.lastcheck = j.base.time.getTimeEpoch()
-            machine.db.state = stateMap.get(domain.state()[0], 'STOPPED')
-            machine.db.cpucore = int(xml.find('vcpu').text)
+            machine.netaddr = netaddr
+            machine.lastcheck = j.base.time.getTimeEpoch()
+            machine.state = stateMap.get(domain.state()[0], 'STOPPED')
+            machine.cpucore = int(xml.find('vcpu').text)
 
-
-            # if machine.ckeyOld != machine.db.getContentKey():
-            #     #obj changed
-            try:
-                machine.send2osis()
-            except Exception:
-                pass
+            ckeyOld = rediscl.hget('machines', domain.ID())
+            if ckeyOld != machine.getContentKey():
+                rediscl.hset('machines', domain.ID(), machine.getContentKey())
+                syscl.machine.set(machine)
 
             for disk in xml.findall('devices/disk'):
                 if disk.attrib['device'] != 'disk':
                     continue
                 diskattrib = disk.find('source').attrib
                 path = diskattrib.get('dev', diskattrib.get('file'))
-                vdisk = j.core.processmanager.monObjects.vdiskobject.get(id=path)
-                vdisk.ckeyOld = vdisk.db.getContentKey()
-                vdisk.db.path = path
-                vdisk.db.type = disk.find('driver').attrib['type']
-                vdisk.db.devicename = disk.find('target').attrib['dev']
-                vdisk.db.machineid = machine.db.id
-                vdisk.db.active = j.system.fs.exists(path)
-                if vdisk.db.active:
+                vdisk = syscl.vdisk.new()
+                ckeyOld = rediscl.hget('vdisks', path)
+                vdisk.path = path
+                vdisk.type = disk.find('driver').attrib['type']
+                vdisk.devicename = disk.find('target').attrib['dev']
+                vdisk.machineid = machine.id
+                vdisk.active = j.system.fs.exists(path)
+                if vdisk.active:
                     try:
                         diskinfo = j.system.platform.qemu_img.info(path)
-                        vdisk.db.size = diskinfo['virtual size']
-                        vdisk.db.sizeondisk = diskinfo['disk size']
-                        vdisk.db.backingpath = diskinfo.get('backing file', '')
+                        vdisk.size = diskinfo['virtual size']
+                        vdisk.sizeondisk = diskinfo['disk size']
+                        vdisk.backingpath = diskinfo.get('backing file', '')
                     except Exception:
                         # failed to get disk information
-                        vdisk.db.size = -1
-                        vdisk.db.sizeondisk = -1
-                        vdisk.db.backingpath = ''
+                        vdisk.size = -1
+                        vdisk.sizeondisk = -1
+                        vdisk.backingpath = ''
 
-                if vdisk.ckeyOld != vdisk.db.getContentKey():
+                if ckeyOld != vdisk.getContentKey():
                     #obj changed
-                    print "SEND VDISK INFO TO OSIS"
-                    vdisk.send2osis()
+                    rediscl.hset('vdisks', path, vdisk.getContentKey())
+                    syscl.vdisk.set(vdisk)
     finally:
         deletedmachines = set(allmachines.keys()) - set(domainmachines)
         for deletedmachine in deletedmachines:
             machine = allmachines[deletedmachine]
             machine['state'] = 'DELETED'
-            try:
-                machine.send2osis()
-            except Exception:
-                pass
+            syscl.machine.set(machine)
         con.close()
 
+if __name__ == '__main__':
+    import JumpScale.grid.osis
+    j.core.osis.client = j.core.osis.getClientByInstance('processmanager')
+    action()

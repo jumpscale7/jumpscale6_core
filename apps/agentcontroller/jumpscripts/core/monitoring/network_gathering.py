@@ -18,14 +18,19 @@ roles = []
 log=False
 
 def action():
-    if not hasattr(j.core, 'processmanager'):
-        import JumpScale.grid.processmanager
-        j.core.processmanager.loadMonitorObjectTypes()
-
+    ncl = j.core.osis.getClientForCategory(j.core.osis.client, "system", "nic")
+    rediscl = j.clients.redis.getByInstanceName('system')
     netinfo=j.system.net.getNetworkInfo()
     results = dict()
+    pattern = None
+    if j.application.config.exists('nic.pattern'):
+        pattern = j.application.config.getStr('nic.pattern')
+    
     for mac,val in netinfo.iteritems():
         name,ipaddr=val
+        if pattern and j.codetools.regex.match(pattern,name) == False:
+                continue
+
         if ipaddr:
             ipaddr=ipaddr.split(",")
             if ipaddr==['']:
@@ -33,30 +38,36 @@ def action():
         else:
             ipaddr=[]
 
-        nic_key=name
-        cacheobj=j.core.processmanager.monObjects.nicobject.get(id=nic_key)
-        results[nic_key] = cacheobj
-        cacheobj.ckeyOld=cacheobj.db.getContentKey()
+        nic = ncl.new()
+        oldkey = rediscl.hget('nics', name)
 
-        cacheobj.db.active=True
-        cacheobj.db.ipaddr=ipaddr
-        cacheobj.db.mac=mac
-        cacheobj.db.name=name
+        nic.name = name
+        results[name] = nic
+        nic.active=True
+        nic.gid = j.application.whoAmI.gid
+        nic.nid = j.application.whoAmI.nid
+        nic.ipaddr=ipaddr
+        nic.mac=mac
+        nic.name=name
 
-        if cacheobj.ckeyOld<>cacheobj.db.getContentKey():
-            #obj changed
-            cacheobj.send2osis()
+        ckey = nic.getContentKey()
+        if oldkey != ckey:
+            print('Nic %s changed ' % name)
+            guid, _, _ = ncl.set(nic)
+            rediscl.hset('nics', name, ckey)
 
-    ncl = j.core.osis.getClientForCategory(j.core.osis.client, "system", "nic")
+
     nics = ncl.search({'nid': j.application.whoAmI.nid, 'gid': j.application.whoAmI.gid})[1:]
     #find deleted nices
     for nic in nics:
-        #result is all found nicobject in this run (needs to be str otherwise child obj)
         if nic['active'] and nic['name'] not in results:
             #no longer active
             print "NO LONGER ACTIVE:%s" % nic['name']
             nic['active'] = False
             ncl.set(nic)
+            rediscl.hdel('nics', nic['name'])
 
 if __name__ == '__main__':
+    import JumpScale.grid.osis
+    j.core.osis.client = j.core.osis.getClientByInstance('processmanager')
     action()

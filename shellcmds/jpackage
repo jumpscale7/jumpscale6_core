@@ -273,14 +273,18 @@ elif args.action == 'package':
         package.package(dependencies=args.deps)
 
 elif args.action == 'publish':
-    packages = cmdutils.getJPackage(args,installed=False,expandInstances=False)
-
-    domains=[]
-    for p in packages:
-        if p.domain not in domains:
-            domains.append(p.domain)
-    for domain in domains:
-        j.packages.publish(args.message,domain)
+    #packages = cmdutils.getJPackage(args,installed=True,expandInstances=False)
+    if args.domain and args.version:
+        package = j.packages.get(domain=args.domain, name=args.name, version=args.version)
+    else:
+        package = j.packages.findByName(args.name)
+    
+#     domains=[]
+#     for p in packages:
+#         if p.domain not in domains:
+#             domains.append(p.domain)
+#     for domain in domains:
+    j.packages.publish(args.message,package.domain)
 
 elif args.action == 'repackage':
     packages = cmdutils.getJPackage(args,expandInstances=False)

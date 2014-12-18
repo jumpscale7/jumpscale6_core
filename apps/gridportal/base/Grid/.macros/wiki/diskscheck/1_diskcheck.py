@@ -16,11 +16,13 @@ def main(j, args, params, tags, tasklet):
     errors = ujson.loads(errors) if errors else dict()
 
     out.append('||Disk||Free Space||Status||')
-    for data in [disks, errors]:
+    for type, data in (('error', errors), ('disk', disks)):
         if nidstr in data:
             if 'disks' in data.get(nidstr, dict()):
                 ddata = data[nidstr].get('disks', list())
                 for diskstat in ddata:
+                    if type == 'error':
+                        diskstat = diskstat.values()[0]
                     if 'state' not in diskstat:
                         continue
                     state = j.core.grid.healthchecker.getWikiStatus(diskstat.get('state', 'UNKNOWN'))

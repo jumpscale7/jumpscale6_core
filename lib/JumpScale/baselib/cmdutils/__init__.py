@@ -39,7 +39,6 @@ def processLogin(parser):
 
 
 def getJPackage(args, installed=None,debug=None,update=False,expandInstances=True):
-
     packages=[]
 
     if args.installed==None and installed<>None:
