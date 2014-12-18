@@ -155,7 +155,8 @@ See http://cpu01.bracknell1.vscalers.com:8282/grid/alert?id=%(guid)s for more de
                 self.escalate(alert=alert)
             elif oldalert:
                 oldalert = json.loads(oldalert)
-                if oldalert['state'] == 'ALERT':
+                if oldalert['state'] == 'ALERT' and alert['state'] == 'ACCEPTED':
+                    self.rediscl.hdel('alerts', alert['guid'])
                     alert['message_id'] = oldalert['message_id']
                     self.updateState(alert)
             #alert = json.loads(alert_json)
