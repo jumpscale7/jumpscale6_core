@@ -65,13 +65,13 @@ def run(port=5000, mongo_host='localhost', mongo_port=27017, pagination_limit=10
 if __name__ == "__main__":
     parser = cmdutils.ArgumentParser()
     parser.add_argument("-p", '--port', help='Port', default=5000, type=int)
-    parser.add_argument("-dh", '--db_host', help='Mongodb hostname', default='localhost')
-    parser.add_argument("-dp", '--db_port', help='Mongodb port', default=27017, type=int)
+    parser.add_argument("-dh", '--mongo_host', help='Mongodb hostname', default='localhost')
+    parser.add_argument("-dp", '--mongo_port', help='Mongodb port', default=27017, type=int)
     parser.add_argument("-pl", '--pagination_limit', help='pagination limit', default=1000000, type=int)
     opts = parser.parse_args()
     port = opts.port
-    mongo_host = opts.db_host
-    mongo_port = opts.db_port
+    mongo_host = opts.mongo_host
+    mongo_port = opts.mongo_port
     pagination_limit = opts.pagination_limit
 
     run(port=port, mongo_host=mongo_host, mongo_port=mongo_port, pagination_limit=pagination_limit)

@@ -1,5 +1,46 @@
 @usedefaults
 
-h2. Events 
 
-{{ecos category:$$category jid:$$jid code:$$code level:$$level backtrace:$$backtrace appname:$$appname pid:$$pid nid:$$nid funcname:$$funcname epoch:$$epoch errormessagePub:$$errormessagePub funclinenr:$$funclinenr gid:$$gid masterjid:$$masterjid errormessage:$$errormessage type:$$type funcfilename:$$funcfilename tags:$$tags}}
+{{html:
+    <div ng-app="eveTestApp">
+}}
+
+{{evegrid:
+    schema.url=172.17.0.3:9000/system
+    spec.json.path=/docs/spec.json
+    entity.name=eco
+    datetime.fields=epoch
+	column.1.data=guid
+    column.1.header=GUID
+    column.1.format=<a href="/grid/eco?id={guid}">{guid}</a>
+    
+    column.2.data=category
+    column.2.header=Category
+    column.3.data=level
+    column.3.header=Level
+    column.4.data=appname
+    column.4.header=App name
+    column.5.data=pid
+    column.5.header=PID
+    column.6.data=nid
+    column.6.header=Node ID
+	column.7.data=epoch
+    column.7.header=Time stamp
+    column.8.data=gid
+    column.8.header=GID
+    column.9.data=masterjid
+    column.9.header=Master JID
+    column.10.data=errormessage
+    column.10.header=Error Message
+    
+}}
+
+{{html:
+    </div>
+    <script>
+    var eveTestApp = angular.module('eveTestApp', ['eveModule']);
+    eveTestApp.config(['$interpolateProvider', function($interpolateProvider) {
+        $interpolateProvider.startSymbol('{[').endSymbol(']}');
+    }]);
+    </script>
+}}
