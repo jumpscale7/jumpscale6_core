@@ -32,7 +32,7 @@ class RogerThatHandler(object):
         result = self.client.send_message(**kwargs)
         if result:
             if result['error']:
-                j.logger.log('Could not send rogerthat message')
+                print('Could not send rogerthat message. Message: %(message)s' % result['error'])
                 return
             else:
                 message_id = result['result']
@@ -43,12 +43,26 @@ class RogerThatHandler(object):
             return
         elif params['status'] & 2 == 2 and params['answer_id'] == 'accept':
             user = params['user_details'][0]
+            useremail = user['email']
+            user = self.getUserByEmail(useremail)
+            self.service.pcl.actors.system.alerts.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
             # TODO call portal to update alert assignee
-            self.send_message(message="User %(name)s has accepted " % user, answers=[], flags=17, parent_message_key=params['parent_message_key'])
+
+
+    def getUserByEmail(self, email):
+        users = self.service.scl.user.search({'emails': email})[1:]
+        if users:
+            return users[0]
+        return None
 
     def friend_invited(self, params):
-        # TODO validate email is in users and has group level*
-        return 'accepted'
+        email = params['user_details'][0]['email']
+        user = self.getUserByEmail(email)
+        if user:
+            for group in user['groups']:
+                if group.startswith('level'):
+                    return 'accepted'
+        return 'declined'
 
     def __getattr__(self, key):
         def wrapper(params):
@@ -68,7 +82,7 @@ class AlertService(object):
         
 
     def makeMessage(self, alert):
-        message = """An event has happend on the Mothership1 cloud please investiage:
+        message = """An event has happend on the Mothership1 cloud please investigate.
 Message: %(errormessage)s
 Level: %(level)s
 
@@ -83,15 +97,20 @@ See http://cpu01.bracknell1.vscalers.com:8282/grid/alert?id=%(guid)s for more de
         return [ u['emails'] for u in users ]
 
 
-    def escalate(self, level, alert):
+    def escalate(self, alert):
+        level = alert['level']
         emails = self.getEmailsForLevel(level)
         message = self.makeMessage(alert)
         answers = self.rogerthathandler.ANSWERS[:]
         url = "http://cpu01.bracknell1.vscalers.com:8282/grid/alert?id=%(guid)s" % alert
         answers.append({'id': 'details', 'caption': 'Details', 'action': url, 'type':'button'})
         message_id = self.rogerthathandler.send_message(message=message, members=emails, answers=answers, tag=alert['guid'])
+        alert['message_id'] = message_id
         self.rediscl.hset('alerts', alert['guid'], json.dumps(alert))
         return message_id
+
+    def updateState(self, alert):
+        self.rogerthathandler.send_message(message="User %(assigned_user)s has accepted " % alert, flags=17, parent_message_key=alert['message_id'], alert_flags=0)
 
     def getAlert(self, id):
         return self.scl.alert.get(id).dump()
@@ -129,8 +148,15 @@ See http://cpu01.bracknell1.vscalers.com:8282/grid/alert?id=%(guid)s for more de
         while True:
             alertid = self.alertqueue.get()
             alert = self.getAlert(alertid) 
+            oldalert = self.rediscl.hget('alerts', alertid)
             print 'Got alertid', alertid
-            self.escalate(level=1, alert=alert)
+            if alert['state'] == 'ALERT':
+                self.escalate(alert=alert)
+            elif oldalert:
+                oldalert = json.loads(oldalert)
+                if oldalert['state'] == 'ALERT':
+                    alert['message_id'] = oldalert['message_id']
+                    self.updateState(alert)
             #alert = json.loads(alert_json)
             #if alert['state'] == 'CRITICAL':
             #    # escalate L1

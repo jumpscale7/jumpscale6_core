@@ -29,6 +29,7 @@ class Rogerthat(object):
 
     def send_message(self, message, members=None, flags=0, parent_message_key=None, answers=None, dismiss_button_ui_flags=0, alert_flags=0, branding=None, tag=None, context=None):
         members = members or list()
+        answers = answers or list()
         params = {'message': message, 'members': members, 'flags': flags}
         params['parent_message_key'] = parent_message_key
         params['answers'] = answers or []
