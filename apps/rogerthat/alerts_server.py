@@ -22,7 +22,7 @@ import gevent
 
 class RogerThatHandler(object):
     API_KEY = j.application.config.get('rogerthat.apikey')
-    ANSWERS = [{'id': 'accept', 'caption': 'Accept', 'action': '', 'type': 'button'},]
+    ANSWERS = [{'id': 'accept', 'caption': 'Accept', 'action': '', 'type': 'button'},{'id': 'escalate', 'caption': 'Escalate', 'action': '', 'type': 'button'}]
 
     def __init__(self, service):
         self.service = service
@@ -41,13 +41,14 @@ class RogerThatHandler(object):
     def messaging_update(self, params):
         if params['status'] == 1: # user received messageS
             return
-        elif params['status'] & 2 == 2 and params['answer_id'] == 'accept':
+        elif params['status'] & 2 == 2:
             user = params['user_details'][0]
             useremail = user['email']
             user = self.getUserByEmail(useremail)
-            self.service.pcl.actors.system.alerts.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
-            # TODO call portal to update alert assignee
-
+            if params['answer_id'] == 'accept':
+                self.service.pcl.actors.system.alerts.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
+            elif params['answer_id'] == 'escalate':
+                self.service.pcl.actors.system.alerts.escalate(alert=params['tag'], comment='Via Rogerthat', username=user['id'])
 
     def getUserByEmail(self, email):
         users = self.service.scl.user.search({'emails': email})[1:]
