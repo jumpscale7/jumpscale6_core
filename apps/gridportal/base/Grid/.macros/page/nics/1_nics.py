@@ -17,12 +17,9 @@ def main(j, args, params, tags, tasklet):
             filters[tag] = val
     fieldnames = ['Name', 'IP Address', 'Mac Address', 'Last Checked']
 
-    def makeTime(row, field):
-        return modifier.makeTime(row, field)
-
     nicstr = '[%(name)s|nic?id=%(guid)s&nic=%(name)s&nid=%(nid)s]'
     fieldids = ['name', 'ipaddr', 'mac', 'lastcheck']
-    fieldvalues = [nicstr,'ipaddr','mac',makeTime]
+    fieldvalues = [nicstr,'ipaddr','mac',modifier.makeTime]
     tableid = modifier.addTableForModel('system', 'nic', fieldids, fieldnames, fieldvalues, filters)
     modifier.addSearchOptions('#%s' % tableid)
     modifier.addSorting('#%s' % tableid, 0, 'desc')
