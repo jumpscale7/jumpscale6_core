@@ -33,7 +33,7 @@ def main(j, args, params, tags, tasklet):
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/bootstrap-theme.min.css')
 		page.addCSS('/system/.files/lib/evegrid/css/eve-grid.css')
 		page.addCSS('https://rawgit.com/Eonasdan/bootstrap-datetimepicker/master/build/css/bootstrap-datetimepicker.min.css')
-
+		page.addCSS('http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css')
 		page.addJS('/jslib/jquery/jqueryDataTable/js/jquery.dataTables.js')
 		page.addJS('/jslib/angular/angular1-3-0.min.js')
 		page.addJS('/jslib/bootstrap/js/bootstrap.min.js')

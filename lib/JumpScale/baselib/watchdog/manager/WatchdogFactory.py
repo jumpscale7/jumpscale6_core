@@ -9,7 +9,7 @@ except:
     import json
 
 import JumpScale.baselib.credis
-from JumpScale.baselib.watchdog import WatchdogEvent
+#from JumpScale.baselib.watchdog import WatchdogEvent
 import JumpScale.baselib.watchdog as watchdog
 
 class WatchdogType():
@@ -106,7 +106,7 @@ class WatchdogFactory:
             raise RuntimeError("could not find:%s" % spath)  
 
     def getWatchdogType(self, category):
-        if category not self.watchdogTypes:
+        if category not in self.watchdogTypes:
             self.alert("bug in watchdogmanager: could not find watchdogtype:%s"%category,"critical")
         return self.watchdogTypes[category]
 

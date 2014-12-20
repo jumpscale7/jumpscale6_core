@@ -25,6 +25,9 @@ def generateModel(modelspec):
             'resource_methods': ['GET', 'POST', 'DELETE'], 
             'url': modelspec['name'],
             'schema': schema}
+    prop = {'type': 'string', 'default':'', 'required': True}
+    schema['guid'] = prop
+    
     for propspec in modelspec["properties"]:
         prop = dict()
         schema[propspec['name']] = prop

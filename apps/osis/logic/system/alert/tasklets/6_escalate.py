@@ -5,8 +5,7 @@ def main(j, params, service, tags, tasklet):
     """
     alert = params.value
     alerts_queue = j.clients.redis.getByInstanceName('system').getQueue('alerts')
-    if alert['state'] == 'ALERT':
-        alerts_queue.put(alert)
+    alerts_queue.put(alert['guid'])
 
 def match(j, params, service, tags, tasklet):
     return params.action == 'set'
