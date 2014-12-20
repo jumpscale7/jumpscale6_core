@@ -28,4 +28,11 @@ input.searchInput{
 .dataTables_processing{
 	display: none !important;
 }
+.modal{
+	left: 50% !important;
+	overflow: visible !important;
+	background-color: transparent !important;
+	border: none !important;
+	box-shadow: 0 0 0 !important;
+}
 [eve-grid] { position: relative; }

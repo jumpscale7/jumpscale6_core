@@ -3,7 +3,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
     return {
         restrict: 'EA',
         scope: true,
-        // <button class="search btn btn-primary" style="padding: 2px 12px; margin-left: 3px;">Search</button>
         template:'<div id="spin"></div><table style="margin-top: 10px;" class="table table-striped" cellspacing="0" width="100%"><tfoot><tr><td><button class="delete btn btn-danger" style="padding: 2px 12px;">Delete</button></td></tr></tfoot></table>',
         link: function (scope, element, attrs, ctrl) {
             var selected = [];
@@ -72,7 +71,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                 column.type = "datetime";
                                 columnText = moment(data * 1000).format('DD/MM/YYYY hh:mm:ss');
                             }
-
                             if(param.format){
                                 columnText = param.format.replace(RegExp('{' + column.data + '}', 'g'), columnText);
                                 for (var i = 0; i < scope.columns.length; i++) {
@@ -132,7 +130,7 @@ eveModule.directive('eveGrid', function($http, $filter) {
                             $(row).removeClass('selected');
                             setTimeout(function() {
                                 $(row).find('.rowCheck').prop('checked', false);
-                            }, 100);
+                            }, 200);
                         }
 
                     },
@@ -141,8 +139,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
                         var allCheckChecked = false;
                         requestData.page = requestData.start / requestData.length + 1;
                         requestData.max_results = requestData.length;
-                        // if (searchInputChanged == true)
-                        // console.log(angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked'));
                         if( angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked') ){
                             setTimeout(function() {
                                 for (var i = 0; i < angular.element('#' + attrs["eveEntity"] + '-container table').find('.rowCheck').length; i++) {
@@ -150,11 +146,9 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                         angular.element('#' + attrs["eveEntity"] + '-container table').find('.rowCheck').eq(i).prop('checked', true).parents('tr').addClass('selected');
                                     }
                                 };
-                            }, 100);
+                            }, 200);
                         }
-
-                        var where = [];
-                        
+                        var where = [];              
                         for (var i = 1; i < scope.columns.length; i++){
                             var val = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:first' ).val();
                             var val2 = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:nth(1)' ).val();
@@ -172,40 +166,37 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                 whereStatment.push(where[i]);
                             }
                         };
-
                         if (whereStatment.length > 0){
-                            // angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', false);
-                            // console.log(whereStatment);
-                                if(searchInputChanged == true){
-                                    selected.length = 0;
-                                    notSelected.length = 0;
+                            if(searchInputChanged == true){
+                                selected.length = 0;
+                                notSelected.length = 0;
+                            }
+                            whereStatment.length = 0;
+                            requestData.where = "{" + where.filter(function(s) {return s.length > 0; }).join(', ') + "}";
+                            var target = document.getElementById('spin');
+                            var spinner = new Spinner(opts).spin(target);
+                            $http({
+                                url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
+                                method: 'GET',
+                                cache: false,
+                                params: requestData
+                            }).then(function(data) {
+                                data = data.data;
+                                if (data['_meta']) {
+                                    data['recordsTotal'] = data['_meta']['total'];
+                                    data['iTotalRecords'] = data['_meta']['total'];
+                                    data['iTotalDisplayRecords'] = data['_meta']['total'];
+                                } else {
+                                    data['recordsTotal'] = 0;
+                                    data['iTotalRecords'] = 0;
+                                    data['iTotalDisplayRecords'] = 0;
                                 }
-                                whereStatment.length = 0;
-                                requestData.where = "{" + where.filter(function(s) {return s.length > 0; }).join(', ') + "}";
-                                var target = document.getElementById('spin');
-                                var spinner = new Spinner(opts).spin(target);
-                                $http({
-                                    url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
-                                    method: 'GET',
-                                    cache: false,
-                                    params: requestData
-                                }).then(function(data) {
-                                    data = data.data;
-                                    if (data['_meta']) {
-                                        data['recordsTotal'] = data['_meta']['total'];
-                                        data['iTotalRecords'] = data['_meta']['total'];
-                                        data['iTotalDisplayRecords'] = data['_meta']['total'];
-                                    } else {
-                                        data['recordsTotal'] = 0;
-                                        data['iTotalRecords'] = 0;
-                                        data['iTotalDisplayRecords'] = 0;
-                                    }
-                                    data['data'] = data['_items'];
-                                    callback(data);
-                                    spinner.stop();
-                                }, function (argument) {
-                                    spinner.stop();
-                                });
+                                data['data'] = data['_items'];
+                                callback(data);
+                                spinner.stop();
+                            }, function (argument) {
+                                spinner.stop();
+                            });
                         }else{
                             var target = document.getElementById('spin');
                             var spinner = new Spinner(opts).spin(target);
@@ -233,9 +224,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
                         publicRequestData = requestData;
                     },
                 } );
-                
-                
-
                 for (var i = 1; i < scope.columns.length; i++) {
                     var datetimeFields = attrs["datetimeFields"].split(',');
                     if(scope.columns[i].sType == "integer" || scope.columns[i].sType == "float"){
@@ -281,35 +269,18 @@ eveModule.directive('eveGrid', function($http, $filter) {
 
                     var elem = $(this);
                     elem.data( 'oldVal', elem.val() );
-                    // console.log(requestData.draw);
                     elem.live("keyup paste", function(event){
-                        // console.log('old:"' + elem.data('oldVal') + '"' + '"' + elem.val() + '"');
                         if (elem.data('oldVal') != elem.val()) {
                             angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', false);
                             searchInputChanged = true;
-                            // for (var i = 0; i < angular.element('#' + attrs["eveEntity"] + '-container table').find('.rowCheck').length; i++) {
-                            //     console.log( angular.element('#' + attrs["eveEntity"] + '-container table').find('.rowCheck').eq(i).prop('checked', false) );
-                            // };
-                            // angular.element('#' + attrs["eveEntity"] + '-container table').find('.rowCheck').prop('checked', false);
                             elem.data('oldVal', elem.val());
                         }else{
                             searchInputChanged = false;
-                            // if( angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked') &&
-                            //     angular.element('#' + attrs["eveEntity"] + '-container table').find('.rowCheck').is(':checked') == false ){
-                            //         angular.element('#' + attrs["eveEntity"] + '-container table').find('.rowCheck').click();
-                            // }
                         }
                     });
                     
                 });
-                
-                // if(requestData.draw == 2 || requestData.draw == 1){
-                //     console.log('fire');
-                //     $('.searchInput').keyup();
-                // }
-
                 $('.datetimeInput').datetimepicker();
-
                 angular.element('.eve-grid-container .rowCheck').live('click' , function() {
                     var currentRow = $(this).parents('tr');
                     var id = scope.dataTable.row(currentRow).data()._id;
@@ -317,143 +288,149 @@ eveModule.directive('eveGrid', function($http, $filter) {
                     var index = $.inArray(id, selected);
                     var notSelectedIndex = $.inArray(id, notSelected);
 
-                    if (index === -1) {
-                        selected.push(id);
-                    } else {
-                        selected.splice(index, 1);
-                    }
-
                     if( angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked') ){
                         if (index === -1) {
                             notSelected.push(id);
                         } else {
                             notSelected.splice(index, 1);
                         }
+                    }else{
+                        if (index === -1) {
+                            selected.push(id);
+                        } else {
+                            selected.splice(index, 1);
+                        }
                     }
-
-
                     $(currentRow).toggleClass('selected');
                 });
                 spinner.stop();
             });
-
             angular.element('#' + attrs["eveEntity"] + '-container table').on('click', '.allCheck', function() {
                 var allCheck = this;
+                selected.length = 0;
+                notSelected.length = 0;
                 if (allCheck.checked){
-                    angular.element('.rowCheck').prop('checked', true).parents('tr').addClass('selected');
+                    setTimeout(function() {
+                        angular.element('.rowCheck').prop('checked', true).parents('tr').addClass('selected');
+                    }, 100);      
                 }else{
-                    angular.element('.rowCheck').prop('checked', false).parents('tr').removeClass('selected');
+                    setTimeout(function() {
+                        angular.element('.rowCheck').prop('checked', false).parents('tr').removeClass('selected');
+                    }, 100);      
                 }
-
-
             });
-
             angular.element('.searchInput').live('focus', function() {
                 $(this).animate({ width: 116 }, 'medium');
             }).live('blur', function() {
                 $(this).animate({ width: 60 }, 'medium');
             });
-            
             angular.element('#' + attrs["eveEntity"] + '-container table .delete').on('click', function() {
-                $("#confirmModal").modal('show');
+                if(angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked') || selected.length > 0 || notSelected.length > 0){
+                    $("#confirmModal").modal('show');
+                }
             });
-
             angular.element('.eve-grid-container .confirmDelete').on('click', function() {
-                // publicRequestData.page = gridPages;
-
-                // $http({
-                //     url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
-                //     method: 'GET',
-                //     cache: false,
-                //     params: publicRequestData
-                // }).then(function(data) {
-                //     data = data.data;
-                //     data['data'] = data['_items'];
-                //     publicRequestData.length = data._meta.total;
-                //     publicRequestData.max_results = data._meta.total;
-                //     $http({
-                //         url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
-                //         method: 'GET',
-                //         cache: false,
-                //         params: publicRequestData
-                //     }).then(function(data) {
-                //         data = data.data;
-                //         if (data['_meta']) {
-                //             data['recordsTotal'] = data['_meta']['total'];
-                //             data['iTotalRecords'] = data['_meta']['total'];
-                //             data['iTotalDisplayRecords'] = data['_meta']['total'];
-                //         } else {
-                //             data['recordsTotal'] = 0;
-                //             data['iTotalRecords'] = 0;
-                //             data['iTotalDisplayRecords'] = 0;
-                //         }
-                //         data['data'] = data['_items'];
-                //         console.log(data);
-                //     });
-
-                // });
-
-
-                // console.log(selected, notSelected);
-                // if(angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked')){
-                //     if(notSelected.length > 0){
-                //         // Delete all but not selected
-                //     }
-                // }else{
-                //     if(selected.length > 0){
-
-                //     }else{
-
-                //     }
-                    
-                // }
-
-
-                for (var i = 0; i < selected.length; i++) {
+                var isAllChecked = angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked');
+                $http({
+                    url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
+                    method: 'GET',
+                    cache: false,
+                    params: publicRequestData
+                }).then(function(data) {
+                    data = data.data;
+                    data['data'] = data['_items'];
+                    publicRequestData.length = data._meta.total;
+                    publicRequestData.max_results = data._meta.total;
+                    publicRequestData.page = "";
                     $http({
-                        url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/' + selected[i],
+                        url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"],
                         method: 'GET',
                         cache: false,
                         params: publicRequestData
                     }).then(function(data) {
-                        $http({
-                            url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data.data._id,
-                            type: 'POST',
-                            headers: {
-                                'X-HTTP-Method-Override': 'DELETE',
-                                'If-Match': data.data._etag
+                        data = data.data;
+                        if (data['_meta']) {
+                            data['recordsTotal'] = data['_meta']['total'];
+                            data['iTotalRecords'] = data['_meta']['total'];
+                            data['iTotalDisplayRecords'] = data['_meta']['total'];
+                        } else {
+                            data['recordsTotal'] = 0;
+                            data['iTotalRecords'] = 0;
+                            data['iTotalDisplayRecords'] = 0;
+                        }
+                        publicRequestData.length = 0;
+                        if(isAllChecked){
+                            if(notSelected.length > 0){
+                                for (var i = 0; i < data._items.length; i++) {
+                                    if( _.where(notSelected,  data._items[i]._id).length == 0 ){
+                                        $http({
+                                            url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data._items[i]._id,
+                                            type: 'POST',
+                                            headers: {
+                                                'X-HTTP-Method-Override': 'DELETE',
+                                                'If-Match': data._items[i]._etag
+                                            }
+                                        }).then(function(data) {
+                                            if(searchInputChanged == true){
+                                                selected.length = 0;
+                                                notSelected.length = 0;
+                                            }
+                                            scope.dataTable.draw();
+                                        });
+                                    }
+                                    
+                                };
+                            }else{
+                                for (var i = 0; i < data._items.length; i++) {
+                                    $http({
+                                        url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data._items[i]._id,
+                                        type: 'POST',
+                                        headers: {
+                                            'X-HTTP-Method-Override': 'DELETE',
+                                            'If-Match': data._items[i]._etag
+                                        }
+                                    }).then(function(data) {
+                                        if(searchInputChanged == true){
+                                            selected.length = 0;
+                                            notSelected.length = 0;
+                                        }
+                                        scope.dataTable.draw();
+                                    });  
+                                };
                             }
-                        }).then(function() {
-                               scope.dataTable.draw();
-                                    // callback(data);
-                              
-                        });
-                        
+                        }else{
+                            if(selected.length > 0){
+                                for (var i = 0; i < selected.length; i++) {
+                                    $http({
+                                        url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/' + selected[i],
+                                        method: 'GET',
+                                        cache: false,
+                                        params: publicRequestData
+                                    }).then(function(data) {
+                                        $http({
+                                            url: 'http://' + attrs['eveUrl'] + '/' + attrs["eveEntity"] + '/'+ data.data._id,
+                                            type: 'POST',
+                                            headers: {
+                                                'X-HTTP-Method-Override': 'DELETE',
+                                                'If-Match': data.data._etag
+                                            }
+                                        }).then(function() {
+                                            if(searchInputChanged == true){
+                                                selected.length = 0;
+                                                notSelected.length = 0;
+                                            }
+                                            scope.dataTable.draw();
+                                        });
+                                        
+                                    });
+                                };
+                            }                            
+                        }
                     });
-                };
-                publicRequestData.length = 0;
-                if(searchInputChanged == true){
-                    selected.length = 0;
-                    notSelected.length = 0;
-                }
+                    angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', false);
+                });                
                 $("#confirmModal").modal('hide');
             });
-
-
-            angular.element('#' + attrs["eveEntity"] + '-container table').on( 'processing.dt', function (e, settings, processing ) {
-                // console.log('checked? ', angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked'), 'processing: ', processing)
-                if( angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').is(':checked') ){
-                }
-
-
-                // if(checkedBoxes == totalRowsOnPage && checkedBoxes > 0 && processing == false){
-                //     angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', true);
-                // }else{
-                //     angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', false);
-                // }
-
-            } );
-
         }
     }
 });
