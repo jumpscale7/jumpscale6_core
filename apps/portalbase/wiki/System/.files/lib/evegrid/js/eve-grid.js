@@ -75,6 +75,14 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                 columnText = param.format.replace(RegExp('{' + column.data + '}', 'g'), columnText);
                                 for (var i = 0; i < scope.columns.length; i++) {
                                     columnText = columnText.replace(RegExp('{' + scope.columns[i].data + '}', 'g'), row[scope.columns[i].data]);
+                                    if( columnText.indexOf("{") > -1 ){
+                                        var fullFormat = columnText.match(/{(.*)}/);
+                                        if (fullFormat != null){
+                                            var fieldToFormat = fullFormat[0].replace(/{(.*)}/, '$1');
+                                        }
+                                        var field = _.findWhere(eveFields, {name: fieldToFormat});
+                                        columnText = columnText.replace(RegExp('{' + field.name + '}', 'g'), row[field.name]);
+                                    }
                                 };
                             }
                             return columnText;
