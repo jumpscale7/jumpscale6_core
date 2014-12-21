@@ -14,19 +14,28 @@ def main(j, args, params, tags, tasklet):
 	}
 
 	eveGrid['columns'] = []
-	for i in count(1):
-		column = {}
-		column['data'] = hrd.get('column.{}.data'.format(i), default='')
-		if not column['data']:
-			break
-		column['header'] = hrd.get('column.{}.header'.format(i), default='')
-		column['format'] = hrd.get('column.{}.format'.format(i), default='')
-		eveGrid['columns'].append(column)
 	
+	hrd_data = sorted(list(hrd.prefix('column')))
+	
+	data = [e for e in hrd_data if e.endswith('data')]
+
+	for e in data:
+		column = {}
+		prefix = e[:-5]
+		
+		data = '%s.data' % prefix
+		header = '%s.header' % prefix
+		format = '%s.format' % prefix
+		
+		column['data'] = hrd.get(data, default='')
+		column['header'] = hrd.get(header, default=prefix)
+		column['format'] = hrd.get(format, default='')
+		
+		eveGrid['columns'].append(column)
+
 	# import ipdb; ipdb.set_trace()
 	eveGrid['columns'] = (json.dumps(eveGrid['columns']))
-
-
+	
 	# Add our static resources only once to the page
 	if '/system/.files/lib/evegrid/css/eve-grid.css' not in str(page):
 		page.addCSS('/jslib/jquery/jqueryDataTable/css/dataTables.bootstrap.css')

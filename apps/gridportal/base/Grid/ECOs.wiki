@@ -1,36 +1,33 @@
 @template defaultbootstrapthree
 
-
 {{html:
     <div ng-app="eveTestApp">
 }}
 
 {{evegrid:
-    schema.url=js.lxc:5000/system
+    schema.url=:5000/system
     spec.json.path=/docs/spec.json
     entity.name=eco
     datetime.fields=epoch
-	column.1.data=guid
-    column.1.header=Time stamp
+	column.1.data=epoch
+    column.1.header=Time Stamp
     column.1.format=<a href="/grid/eco?id={guid}">{epoch}</a>
-    
-    column.2.data=category
-    column.2.header=Category
-    column.3.data=level
-    column.3.header=Level
-    column.4.data=appname
-    column.4.header=App name
-    column.5.data=pid
-    column.5.header=PID
-    column.6.data=nid
-    column.6.header=Node ID
+    column.2.data=errormessage
+    column.2.header=Error Message
+    column.3.data=category
+    column.3.header=Category
+    column.4.data=level
+    column.4.header=Level
+    column.5.data=appname
+    column.5.header=App name
+    column.6.data=pid
+    column.6.header=PID
+    column.7.data=nid
+    column.7.header=Node ID
     column.8.data=gid
     column.8.header=GID
     column.9.data=masterjid
     column.9.header=Master JID
-    column.10.data=errormessage
-    column.10.header=Error Message
-    
 }}
 
 {{html:

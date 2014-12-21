@@ -31,7 +31,7 @@ h3. Details
 |*Node*|[${nid}|node?id=${nid}&gid=${gid}]|
 |*Grid*|[${gid}|grid?id=${gid}]|
 |*Tags*|${tags}|
-|*Alerts*|[show | alerts?eco=${id}]|
+{% if level < 3 %}|*Alerts*|[show | alerts?eco=${id}]|{% endif %}
 
 *Code* 
 {{code: ${code}}}

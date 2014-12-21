@@ -33,4 +33,5 @@ def main(j, params, service, tags, tasklet):
     alertservice.set(None, alert, session=session)
     
 def match(j, params, service, tags, tasklet):
-    return params.action == 'set'
+    eco = params.value
+    return params.action == 'set' and eco['level'] < 3 # only critical and warning
