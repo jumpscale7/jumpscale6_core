@@ -6,14 +6,15 @@ def main(j, args, params, tags, tasklet):
     filters = None
     if ecofilter:
         filters = {'eco':ecofilter}
-    
-    makeLink = '<a href=alert?guid=%(guid)s>%(id)s</a>' 
-    makeGrid = '<a href=grid?id=%(gid)s>%(gid)s</a>'
-    makeNode = '<a href=node?id=%(nid)s&gid=%(gid)s>%(nid)s</a>'
 
-    fieldnames = ('Link to Alert', 'Grid ID', 'Node ID',  'Category', 'Raise Time','Last Time', 'Close Time', 'State', 'Assignee')
-    fieldids = ['id', 'gid', 'nid',  'category', 'inittime', 'lasttime', 'closetime', 'state', 'assigned_user']
-    fieldvalues = (makeLink, makeGrid, makeNode, 'category', modifier.makeTime, modifier.makeTime, modifier.makeTime, 'state', 'assigned_user')
+    def makeDetails(row, field):
+        data = modifier.makeTime(row, field)
+        return '<a href=alert?guid=%s>%s</a>' % (row['guid'], data)
+
+    
+    fieldnames = ('Last Time', 'Message', 'Raise Time','Close Time', 'State', 'Assignee')
+    fieldids = ['lasttime', 'errormessage', 'inittime', 'closetime', 'state', 'assigned_user']
+    fieldvalues = (makeDetails, 'errormessage', modifier.makeTime, modifier.makeTime, 'state', 'assigned_user')
 
     tableid = modifier.addTableForModel('system', 'alert', fieldids, fieldnames, fieldvalues, filters)
 

@@ -13,7 +13,6 @@ class Alert(OsisBaseObject):
 
     def __init__(self,
                 ddict={},
-                id=0,
                 gid=0,
                 nid=0,
                 guid="",
@@ -38,14 +37,15 @@ class Alert(OsisBaseObject):
                 assigned_user=None,
                 eco=None):
 
+        self.guid = None
         if ddict <> {}:
             self.load(ddict)
         else:
-            self.id=id  #is unique where alert has been created
             if guid=="":
-                self.guid=j.base.idgenerator.generateGUID() #can be used for authentication purposes
+                self.guid=j.base.idgenerator.generateGUID()
             else:
                 self.guid=guid
+            self.id = self.guid
             self.gid = gid
             self.nid = nid
             self.description=description
@@ -105,9 +105,9 @@ class Alert(OsisBaseObject):
         """
         use osis to define & set unique guid (sometimes also id)
         """
-        self.gid = int(self.gid)
-        self.id = int(self.id)
-        self.guid = "%s_%s" % (self.gid, self.id)
+        if not self.guid:
+            self.guid = j.base.idgenerator.generateGUID()
+            self.id = self.guid
         return self.guid
 
     
