@@ -93,7 +93,7 @@ class RogerThatHandler(object):
         if user:
             for group in user['groups']:
                 if group.startswith('level'):
-                    self.registeredusers.add(email)
+                    self.service.registeredusers.add(email)
                     return 'accepted'
         return 'declined'
 
