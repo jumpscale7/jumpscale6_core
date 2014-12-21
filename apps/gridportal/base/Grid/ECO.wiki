@@ -34,7 +34,7 @@ h3. Details
 |*Alerts*|[show | alerts?eco=${id}]|
 
 *Code* 
-{{code: $$code}}
+{{code: ${code}}}
 
 *BackTrace*
-{{code: $$backtrace}}
+{{code: ${backtrace}}}
