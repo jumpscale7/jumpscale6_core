@@ -5,6 +5,9 @@ eveModule.directive('eveGrid', function($http, $filter) {
         scope: true,
         template:'<div id="spin"></div><table style="margin-top: 10px;" class="table table-striped" cellspacing="0" width="100%"><tfoot><tr><td><button class="delete btn btn-danger" style="padding: 2px 12px;">Delete</button></td></tr></tfoot></table>',
         link: function (scope, element, attrs, ctrl) {
+            if(attrs['eveUrl'][0] == ":"){
+                attrs['eveUrl'] = window.location.hostname + attrs['eveUrl'];
+            }
             var selected = [];
             var notSelected = [];
             var checkedRows = [];
