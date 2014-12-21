@@ -15,7 +15,19 @@ import inspect
 import gevent
 
 class Handler(object):
-    pass
+    ORDER = 50
+
+    def __init__(self, service):
+        self.service = service
+
+    def start(self):
+        pass
+
+    def updateState(self, alert):
+        pass
+
+    def escalate(self, alert, users):
+        pass
 
 class AlertService(object):
 
@@ -27,10 +39,16 @@ class AlertService(object):
         self.handlers = list()
         self.loadHandlers()
 
-    def getEmailsForLevel(self, level):
+    def getUsersForLevel(self, level):
         groupname = "level%s" % level
         users = self.scl.user.search({'groups': groupname, 'active': True})[1:]
-        return [ u['emails'] for u in users ]
+        return users
+
+    def getUserEmails(self, user):
+        useremails = user['emails']
+        if not isinstance(useremails, list):
+            useremails = [useremails]
+        return useremails
 
     def loadHandlers(self):
         from JumpScale.baselib.alerter import handlers
@@ -38,17 +56,22 @@ class AlertService(object):
             for name, klass in inspect.getmembers(module, inspect.isclass):
                 if issubclass(klass, Handler) and klass is not Handler:
                     self.handlers.append(klass(self))
+        self.handlers.sort(key=lambda s: s.ORDER)
 
     def getUrl(self, alert):
         return "http://cpu01.bracknell1.vscalers.com:8282/grid/alert?id=%(guid)s" % alert
+
     def escalate(self, alert):
         level = alert['level']
-        emails = self.getEmailsForLevel(level)
+        users = self.getUsersForLevel(level)
         for handler in self.handlers:
-            emails = handler.escalate(alert, emails)
+            result = handler.escalate(alert, users)
+            if result is not None:
+                users = result
 
     def updateState(self, alert):
-        self.rogerthathandler.send_message(message="User %(assigned_user)s has accepted " % alert, flags=17, parent_message_key=alert['message_id'], alert_flags=0)
+        for handler in self.handlers:
+            handler.updateState(alert)
 
     def getAlert(self, id):
         return self.scl.alert.get(id).dump()

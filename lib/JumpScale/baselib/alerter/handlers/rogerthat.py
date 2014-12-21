@@ -5,14 +5,29 @@ import json
 import gevent
 
 class RogerThatAlerter(Handler):
+    ORDER = 10
     ANSWERS = [{'id': 'accept', 'caption': 'Accept', 'action': '', 'type': 'button'},{'id': 'escalate', 'caption': 'Escalate', 'action': '', 'type': 'button'}]
 
     def __init__(self, service):
         self.service = service
         self.rogerthathandler = RogerThatHandler(self)
         self.rogerthatserver = GeventWSServer('0.0.0.0', 5005, self.rogerthathandler)
+        self.registeredusers = set()
+        self.loadFriends()
 
-    def escalate(self, alert, emails):
+    def loadFriends(self):
+        for friend in self.rogerthathandler.client.retreive_users():
+            self.registeredusers.add(friend['email'])
+
+    def escalate(self, alert, users):
+        emails = list()
+        users = users[:]
+        for user in users[:]:
+            useremails = self.service.getUserEmails(user)
+            if self.registeredusers.intersection(useremails):
+                emails.append(user['emails'])
+                users.remove(user)
+
         message = self.makeMessage(alert)
         answers = self.ANSWERS[:]
         url = self.service.getUrl(alert)
@@ -20,7 +35,10 @@ class RogerThatAlerter(Handler):
         message_id = self.rogerthathandler.send_message(message=message, members=emails, answers=answers, tag=alert['guid'])
         alert['message_id'] = message_id
         self.service.rediscl.hset('alerts', alert['guid'], json.dumps(alert))
+        return users
 
+    def updateState(self, alert):
+        self.rogerthathandler.send_message(message="User %(assigned_user)s has accepted " % alert, flags=17, parent_message_key=alert['message_id'], alert_flags=0)
 
     def start(self):
         return gevent.spawn(self.rogerthatserver.start)
@@ -37,6 +55,8 @@ class RogerThatHandler(object):
 
     def __init__(self, service):
         self.service = service
+        self.alerter = service.service
+        self.alerts_client = self.alerter.pcl.actors.system.alerts
         self.client = j.clients.rogerthat.get(self.API_KEY)
 
     def send_message(self, **kwargs):
@@ -57,12 +77,12 @@ class RogerThatHandler(object):
             useremail = user['email']
             user = self.getUserByEmail(useremail)
             if params['answer_id'] == 'accept':
-                self.service.pcl.actors.system.alerts.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
+                self.alerts_client.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
             elif params['answer_id'] == 'escalate':
-                self.service.pcl.actors.system.alerts.escalate(alert=params['tag'], comment='Via Rogerthat', username=user['id'])
+                self.alerts_client.escalate(alert=params['tag'], comment='Via Rogerthat', username=user['id'])
 
     def getUserByEmail(self, email):
-        users = self.service.scl.user.search({'emails': email})[1:]
+        users = self.alerter.scl.user.search({'emails': email})[1:]
         if users:
             return users[0]
         return None
@@ -73,6 +93,7 @@ class RogerThatHandler(object):
         if user:
             for group in user['groups']:
                 if group.startswith('level'):
+                    self.registeredusers.add(email)
                     return 'accepted'
         return 'declined'
 
