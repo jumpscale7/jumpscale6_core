@@ -49,10 +49,13 @@ class ClassDoc():
     def write(self,dest):
         dest2=j.system.fs.joinPaths(dest, self.location.split(".")[1],"%s.wiki"%self.location)
         out="h3. %s\n"%self.location
+        
         if self.path.find("JumpScale")<>-1:        
             path=self.path.split("JumpScale",1)[1]
         elif self.path.find("python.zip")<>-1:
             path="python.zip/%s"%self.path.split("python.zip",1)[1]
+        elif self.path.find('jumpscale')  != -1:
+            path=self.path.split("jumpscale",1)[1]
         else:
             # from IPython import embed
             # print "DEBUG NOW write objectinspector, found new location"

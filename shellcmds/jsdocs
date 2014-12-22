@@ -1,21 +1,22 @@
 #!/usr/bin/env jspython
 from JumpScale.baselib import cmdutils
 from JumpScale import j
-from html.parser import HTMLParser
+from HTMLParser import HTMLParser
+
 from xml.etree import cElementTree as etree
 import JumpScale.baselib.git
 j.application.start('jsdocs')
 
 parser = cmdutils.ArgumentParser()
 
-commands = ['generate']
+commands = ['generate', 'markdown']
 parser.add_argument("action", choices=commands, help='Command to perform')
   
 
 class Parser(HTMLParser):
     def __init__(self):
-      HTMLParser.__init__(self)
-      self.tb = etree.TreeBuilder()
+        HTMLParser.__init__(self)
+        self.tb = etree.TreeBuilder()
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -35,26 +36,45 @@ class Parser(HTMLParser):
 args = parser.parse_args()
 if args.action == 'generate':
     print("UPDATING CORE...")
-    corecl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_core/')
+    corecl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_core/', 'https://github.com/Jumpscale/jumpscale_core.git')
     corecl.pull()
     print("UPDATED")
 
     print("\nUPDATING DOCS...")
-    doccl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_docs/')
+    doccl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_docs/', 'https://github.com/Jumpscale/jumpscale_docs.git')
     doccl.pull()
     print("UPDATED")
 
+    gencl = j.clients.git.getClient('/opt/code/github/jumpscale/generated_docs/', 'https://github.com/Jumpscale/generated_docs.git')
     print("\nUPDATING GENERATED DOCS...")
-    gencl = j.clients.git.getClient('/opt/code/github/jumpscale/generated_docs/')
     gencl.pull()
     print("UPDATED")
 
+    ptcl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_prototypes/', 'https://github.com/Jumpscale/jumpscale_prototypes.git')
+    print("\nUPDATING PROTOTYPES...")
+    ptcl.pull()
+    print("UPDATED")
+    
     print("\nConverting Confluence to RST...")
     j.system.process.execute("""cd /opt/code/github/jumpscale/jumpscale_prototypes/prototypes/confluence2rst; python confluence2rst.py""")
     print("Converted")
-
+    
     gencl.addRemoveFiles()
     gencl.commit('auto generated docs')
     gencl.push()
+
+if args.action == 'markdown':
+    print "Trying to install pandoc"
+    j.system.platform.ubuntu.install("pandoc")
+    print "Marking down"
+    files = j.system.fs.listFilesInDir('/opt/code/github/jumpscale/generated_docs/', recursive=True, filter="*.rst")
+    for f in files:
+        out_prefix = f.replace('/opt/code/github/jumpscale/generated_docs/docs/_source/', '')
+        out = '/opt/code/github/jumpscale/jumpscale_docs/%s' % out_prefix
+        parent_dir = j.system.fs.getParent(out)
+        if not j.system.fs.exists(parent_dir):
+            j.system.fs.createDir(parent_dir)
+        out = out.replace('.rst', '.md')
+        j.system.process.execute("pandoc '%s' -f rst -t markdown -o '%s'" % (f, out))
 
 j.application.stop()
