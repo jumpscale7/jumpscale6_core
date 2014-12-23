@@ -39,17 +39,17 @@ if args.action == 'generate':
     corecl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_core/', 'https://github.com/Jumpscale/jumpscale_core.git')
     corecl.pull()
     print("UPDATED")
-
+ 
     print("\nUPDATING DOCS...")
     doccl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_docs/', 'https://github.com/Jumpscale/jumpscale_docs.git')
     doccl.pull()
     print("UPDATED")
-
+ 
     gencl = j.clients.git.getClient('/opt/code/github/jumpscale/generated_docs/', 'https://github.com/Jumpscale/generated_docs.git')
     print("\nUPDATING GENERATED DOCS...")
     gencl.pull()
     print("UPDATED")
-
+ 
     ptcl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_prototypes/', 'https://github.com/Jumpscale/jumpscale_prototypes.git')
     print("\nUPDATING PROTOTYPES...")
     ptcl.pull()
@@ -58,7 +58,7 @@ if args.action == 'generate':
     print("\nConverting Confluence to RST...")
     j.system.process.execute("""cd /opt/code/github/jumpscale/jumpscale_prototypes/prototypes/confluence2rst; python confluence2rst.py""")
     print("Converted")
-    
+     
     gencl.addRemoveFiles()
     gencl.commit('auto generated docs')
     gencl.push()
@@ -67,14 +67,47 @@ if args.action == 'markdown':
     print "Trying to install pandoc"
     j.system.platform.ubuntu.install("pandoc")
     print "Marking down"
-    files = j.system.fs.listFilesInDir('/opt/code/github/jumpscale/generated_docs/', recursive=True, filter="*.rst")
+    files = [f for f in j.system.fs.listFilesInDir('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/', recursive=True, filter="*.rst") if not 'Doc_Jumpscale_Libraries' in f]
+    
+    # get index.rst at the beginning [we rename it later to home]
+    idx = files.remove('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/index.rst')
+    files.insert(0, '/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/index.rst')
+    
+    processed = []
+    
     for f in files:
-        out_prefix = f.replace('/opt/code/github/jumpscale/generated_docs/docs/_source/', '')
+        
+        out_prefix = f.replace('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/Doc_Jumpscale_', '')
+        out_prefix = f.replace('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/', '')
+        
+
+        # we don't want more than home page, as github uses only one as one
+        # we will rename the outer index page to home
+        # other home files should be renamed
+        if out_prefix.endswith('Home.rst'):
+            out_prefix = out_prefix.replace('Home.rst', 'index.rst')
+
+        actual_file_name = out_prefix.split('/')[-1]
+
+        # Handle duplications [Rename]
+        if actual_file_name in processed:
+            new_name = out_prefix.replace('/', '__')
+            print "Duplicate file name %s .. will be renamed to %s" % (actual_file_name, new_name)
+            out_prefix = out_prefix.replace(actual_file_name, new_name)
+            actual_file_name = new_name
+        
+        processed.append(actual_file_name)
+        
+        #rename index page to Home
+        if out_prefix == 'index.rst':
+            out_prefix = 'Home.rst'
+
         out = '/opt/code/github/jumpscale/jumpscale_docs/%s' % out_prefix
         parent_dir = j.system.fs.getParent(out)
         if not j.system.fs.exists(parent_dir):
             j.system.fs.createDir(parent_dir)
         out = out.replace('.rst', '.md')
+        
         j.system.process.execute("pandoc '%s' -f rst -t markdown -o '%s'" % (f, out))
 
 j.application.stop()

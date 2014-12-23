@@ -64,8 +64,10 @@ class Confluence2RST():
                         if len(parts) >= 5:
                             htmlelements = parts[4]
 
+                    # URLS like unix://[user:password]@localhost:5023/0/  will not work
+                    # match.founditem returns inner [user:password]
                     elif match2.find(":") != -1:
-                        descr, link = match2.split(":", 1)[1], match2
+                        descr, link = '', match2
                     else:
                         link = match2
                         descr = link
@@ -78,7 +80,9 @@ class Confluence2RST():
                     link = "/%s/%s" % (space.lower().strip().strip("/"), pagename.strip().strip("/"))
                 # print "match:%s"%match.founditem
                 # print "getlink:%s" %page.getLink(descr,link)
-                linkDest="%s <%s>"%(descr,link)
+                if not descr:
+                    descr = link
+                linkDest = "`%s <%s>`_"%(descr,link)
                 line = line.replace(match.founditem, linkDest)
         return line
 
