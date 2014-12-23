@@ -50,7 +50,6 @@ class system_alerts(j.code.classGetBase()):
         
         alert_obj.update_history(history)
         return alert_obj
-        
 
     def escalate(self, alert, username=None, comment=None, **kwargs):
         alert_obj = self._update('ALERT', alert, comment, username, **kwargs)

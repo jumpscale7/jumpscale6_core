@@ -76,10 +76,13 @@ class RogerThatHandler(object):
             user = params['user_details'][0]
             useremail = user['email']
             user = self.getUserByEmail(useremail)
-            if params['answer_id'] == 'accept':
-                self.alerts_client.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
-            elif params['answer_id'] == 'escalate':
-                self.alerts_client.escalate(alert=params['tag'], comment='Via Rogerthat', username=user['id'])
+            if self.alerter.scl.alert.exists(params['tag']):
+                if params['answer_id'] == 'accept':
+                    self.alerts_client.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
+                elif params['answer_id'] == 'escalate':
+                    self.alerts_client.escalate(alert=params['tag'], comment='Via Rogerthat', username=user['id'])
+            else:
+                self.alerter.log("Callback from %s on not existing alert %s" % (user['id'], params['tag']))
 
     def getUserByEmail(self, email):
         users = self.alerter.scl.user.search({'emails': email})[1:]
@@ -99,6 +102,6 @@ class RogerThatHandler(object):
 
     def __getattr__(self, key):
         def wrapper(params):
-            print "Method %s not implemented" % key
+            self.alerter.log("Method %s not implemented" % key)
             return
         return wrapper

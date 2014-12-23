@@ -51,7 +51,7 @@ class GeventWSServer(object):
         self.addr = addr
         self.handler = handler
         self.server = WSGIServer((self.addr, self.port), self.rpcRequest)
-        
+
     def invalidRequest(self):
         msg = {'error': {'code': -32600, 'message': 'Invalid Request'}, 'id': None, 'jsonrpc': '2.0'}
         return msg
@@ -110,7 +110,7 @@ class GeventWSServer(object):
                 return None
 
     def start(self):
-        print 'started on %s' % self.port
+        j.logger.log('started on %s' % self.port, 2, 'rogerthat')
         self.server.serve_forever()
 
 if __name__ == '__main__':

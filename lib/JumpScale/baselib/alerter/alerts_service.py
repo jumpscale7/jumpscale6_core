@@ -39,6 +39,9 @@ class AlertService(object):
         self.handlers = list()
         self.loadHandlers()
 
+    def log(self, message, level=1):
+        j.logger.log(message, level, 'alerter')
+
     def getUsersForLevel(self, level):
         groupname = "level%s" % level
         users = self.scl.user.search({'groups': groupname, 'active': True})[1:]
@@ -111,7 +114,7 @@ class AlertService(object):
             alert = self.getAlert(alertid) 
             oldalert = self.rediscl.hget('alerts', alertid)
             self.rediscl.hset('alerts', alert['guid'], json.dumps(alert))
-            print 'Got alertid', alertid
+            self.log('Got alertid %s' % alertid)
             if alert['state'] == 'ALERT':
                 self.escalate(alert=alert)
             elif oldalert:

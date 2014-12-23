@@ -12,5 +12,8 @@ from JumpScale.baselib.alerter.alerts_service import AlertService
 
 if __name__ == '__main__':
     j.application.start("alerts_server")
+    j.logger.consolelogCategories.append('alerter')
+    j.logger.consolelogCategories.append('rogerthat')
+    j.logger.consolelogCategories.append('email')
     AlertService().start()
     j.application.stop()
