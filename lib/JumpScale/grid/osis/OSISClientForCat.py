@@ -159,6 +159,9 @@ class OSISClientForCat():
                 if v['name'] not in myranges:
                     myranges = {v['name']: dict()}
                 myranges[v['name']] = {v['eq']: v['value']}
+            elif isinstance(v,list):
+                terms = {'terms': {k: v}}
+                query['query']['bool']['must'].append(terms)
             elif v:
                 if isinstance(v, basestring):
                     # v = v.lower()
@@ -166,10 +169,8 @@ class OSISClientForCat():
                 term = {'term': {k: v}}
                 query['query']['bool']['must'].append(term)
         for key, value in myranges.iteritems():
-            query.setdefault('query', {}).setdefault('bool', {}).setdefault('must', [])
             query['query']['bool']['must'].append({'range': {key: value}})
         if partials:
-            query.setdefault('query', {}).setdefault('bool', {}).setdefault('must', [])
             query['query']['bool']['must'].append({'wildcard': partials})
         boolq = query.get('query', {}).get('bool', {})
         def isEmpty(inputquery):
