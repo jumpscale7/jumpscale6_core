@@ -10,7 +10,7 @@ def main(j, args, params, tags, tasklet):
         if tag in ('gid', ) and val and not val.startswith("$$"):
             filters['gid'] = int(val)
     if args.getTag('roles'):
-        nativequery = {'roles': args.getTag('roles')}
+        filters['roles'] = args.getTag('roles')
 
     namelink = '[%(name)s|/grid/node?id=%(id)s&gid=%(gid)s]'
     fieldvalues = ['gid', namelink, 'id','ipaddr', 'roles']
