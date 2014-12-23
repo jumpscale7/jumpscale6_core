@@ -166,8 +166,10 @@ class OSISClientForCat():
                 term = {'term': {k: v}}
                 query['query']['bool']['must'].append(term)
         for key, value in myranges.iteritems():
+            query.setdefault('query', {}).setdefault('bool', {}).setdefault('must', [])
             query['query']['bool']['must'].append({'range': {key: value}})
         if partials:
+            query.setdefault('query', {}).setdefault('bool', {}).setdefault('must', [])
             query['query']['bool']['must'].append({'wildcard': partials})
         boolq = query.get('query', {}).get('bool', {})
         def isEmpty(inputquery):
