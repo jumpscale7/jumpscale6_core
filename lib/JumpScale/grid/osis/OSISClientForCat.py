@@ -151,7 +151,6 @@ class OSISClientForCat():
             query = nativequery.copy()
         else:
             query = {'query': {'bool': {'must': list()}}}
-        query.setdefault('query', {}).setdefault('bool', {}).setdefault('must', [])
         myranges = {}
         for k, v in params.iteritems():
             if isinstance(v, dict):
@@ -160,6 +159,9 @@ class OSISClientForCat():
                 if v['name'] not in myranges:
                     myranges = {v['name']: dict()}
                 myranges[v['name']] = {v['eq']: v['value']}
+            elif isinstance(v,list):
+                terms = {'terms': {k: v}}
+                query['query']['bool']['must'].append(terms)
             elif v:
                 if isinstance(v, basestring):
                     # v = v.lower()
