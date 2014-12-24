@@ -34,9 +34,10 @@ class AlertService(object):
     def __init__(self):
         self.rediscl = j.clients.redis.getByInstanceName('system')
         self.alertqueue = self.rediscl.getQueue('alerts')
-        self.pcl = j.core.portal.getClientByInstance('main')
+        self.alerts_client = j.core.portal.getClientByInstance('main').actors.system.alerts
         self.scl = j.core.osis.getClientForNamespace('system')
         self.handlers = list()
+        self.timers = dict()
         self.loadHandlers()
 
     def log(self, message, level=1):
@@ -66,6 +67,10 @@ class AlertService(object):
 
     def escalate(self, alert):
         level = alert['level']
+        key = 'alerter.level%s.accept' % level
+        if j.application.config.exists(key):
+            accepttime = j.base.time.getDeltaTime(j.application.config.get(key))
+            self.timers[alert['guid']] = gevent.spawn_later(accepttime, self.escalateHigher, alert)
         users = self.getUsersForLevel(level)
         for handler in self.handlers:
             result = handler.escalate(alert, users)
@@ -73,33 +78,19 @@ class AlertService(object):
                 users = result
 
     def updateState(self, alert):
+        timer = self.timers.pop(alert['guid'], None)
+        if timer:
+            timer.kill()
         for handler in self.handlers:
             handler.updateState(alert)
 
     def getAlert(self, id):
         return self.scl.alert.get(id).dump()
 
-    #def escalate_L2(message, message_id):
-    #    message_data = json.loads(redis_client.hget('messages', message_id))
-    #    if message_data['state'] == 'L1':
-    #        # hash 'contacts' contains keys 1, 2, 3 and all with rogerthat ids
-    #        contact2 = redis_client.hget('contacts', '2')
-    #        contact3 = redis_client.hget('contacts', '3')
-    #        contacts = [contact2, contact3]
-    #        send_message(message, contacts)
-    #        epoch = time.time()
-    #        message_data = {'epoch': epoch, 'state': 'L2', 'log': '%s: %s %s' % (epoch, ', '.join(contacts), 'L2'), 'message': message}
-    #        redis_client.hset('messages', message_id, json.dumps(message_data))
-
-    #def escalate_L3(message, message_id):
-    #    message_data = json.loads(redis_client.hget('messages', message_id))
-    #    if message_data['state'] == 'L2':
-    #        # hash 'contacts' contains keys 1, 2, 3 and all with rogerthat ids
-    #        contacts = json.loads(redis_client.hget('contacts', 'all'))
-    #        send_message(message, contacts)
-    #        epoch = time.time()
-    #        message_data = {'epoch': epoch, 'state': 'L3', 'log': '%s: %s %s' % (epoch, ', '.join(contacts), 'L3'), 'message': message}
-    #        redis_client.hset('messages', message_id, json.dumps(message_data))
+    def escalateHigher(self, alert):
+        message = "Took too long to be Accepted"
+        self.log(message + " %s" % alert['guid'])
+        self.alerts_client.escalate(alert=alert['guid'], comment=message)
 
     def start(self):
         for handler in self.handlers:
@@ -123,13 +114,3 @@ class AlertService(object):
                     self.rediscl.hdel('alerts', alert['guid'])
                     alert['message_id'] = oldalert['message_id']
                     self.updateState(alert)
-            #alert = json.loads(alert_json)
-            #if alert['state'] == 'CRITICAL':
-            #    # escalate L1
-
-            # escalate L2 after 5 mins
-            #gevent.spawn_later(escalate_L2, 300.0, message=message, message_id=message_id)
-
-            # escalate L3 after 15 mins
-            #gevent.spawn_later(escalate_L3, 1200.0, message=message, message_id=message_id)
-
