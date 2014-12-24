@@ -56,7 +56,7 @@ class RogerThatHandler(object):
     def __init__(self, service):
         self.service = service
         self.alerter = service.service
-        self.alerts_client = self.alerter.pcl.actors.system.alerts
+        self.alerts_client = self.alerter.alerts_client
         self.client = j.clients.rogerthat.get(self.API_KEY)
 
     def send_message(self, **kwargs):
@@ -76,7 +76,10 @@ class RogerThatHandler(object):
             user = params['user_details'][0]
             useremail = user['email']
             user = self.getUserByEmail(useremail)
-            if self.alerter.scl.alert.exists(params['tag']):
+            alertguid = params['tag']
+            if not alertguid or params['answer_id'] not in ('accepted', 'escalete'):
+                self.alerter.log("Callback from %s with %s" % (user['id'], params['answer_id']))
+            elif self.alerter.scl.alert.exists(alertguid):
                 if params['answer_id'] == 'accept':
                     self.alerts_client.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
                 elif params['answer_id'] == 'escalate':
