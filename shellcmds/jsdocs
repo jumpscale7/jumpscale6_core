@@ -5,11 +5,12 @@ from HTMLParser import HTMLParser
 
 from xml.etree import cElementTree as etree
 import JumpScale.baselib.git
+import pprint
 j.application.start('jsdocs')
 
 parser = cmdutils.ArgumentParser()
 
-commands = ['generate', 'markdown']
+commands = ['rst', 'markdown']
 parser.add_argument("action", choices=commands, help='Command to perform')
   
 
@@ -34,80 +35,131 @@ class Parser(HTMLParser):
         return self.tb.close()
 
 args = parser.parse_args()
-if args.action == 'generate':
+
+# Generate RST files
+if args.action == 'rst':
+    """
+    Generate RST files from wiki files in jumpscale_docs repo
+    Result files are moved to  generated_docs repo.
+    Push changes to generated_docs repo remotely
+    """
     print("UPDATING CORE...")
     corecl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_core/', 'https://github.com/Jumpscale/jumpscale_core.git')
     corecl.pull()
     print("UPDATED")
- 
+      
     print("\nUPDATING DOCS...")
     doccl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_docs/', 'https://github.com/Jumpscale/jumpscale_docs.git')
     doccl.pull()
     print("UPDATED")
- 
+     
     gencl = j.clients.git.getClient('/opt/code/github/jumpscale/generated_docs/', 'https://github.com/Jumpscale/generated_docs.git')
     print("\nUPDATING GENERATED DOCS...")
     gencl.pull()
     print("UPDATED")
- 
+     
     ptcl = j.clients.git.getClient('/opt/code/github/jumpscale/jumpscale_prototypes/', 'https://github.com/Jumpscale/jumpscale_prototypes.git')
     print("\nUPDATING PROTOTYPES...")
     ptcl.pull()
     print("UPDATED")
-    
+  
     print("\nConverting Confluence to RST...")
     j.system.process.execute("""cd /opt/code/github/jumpscale/jumpscale_prototypes/prototypes/confluence2rst; python confluence2rst.py""")
     print("Converted")
-     
+    
+    print "\nUPDATING REMOTE generated_docs REPO"
     gencl.addRemoveFiles()
-    gencl.commit('auto generated docs')
+    gencl.commit('Updated docs')
     gencl.push()
+    print "\nUPDATED"
 
+# Generate MD files
 if args.action == 'markdown':
-    print "Trying to install pandoc"
+    """
+    Generate Markdown using pandoc ubuntu tool
+    using RST files in generated_docs repo
+    Move result markdown in generated_docs as well as jumpscale_core7/docs
+    """
+    
+    print "\nINSTALLING PANDOC"
     j.system.platform.ubuntu.install("pandoc")
+    print "INSTALLED"
+     
     print "Marking down"
     files = [f for f in j.system.fs.listFilesInDir('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/', recursive=True, filter="*.rst") if not 'Doc_Jumpscale_Libraries' in f]
+     
+    print "\nChecking there's no duplicate files [Other than Home.rst]"
+     
     
-    # get index.rst at the beginning [we rename it later to home]
-    idx = files.remove('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/index.rst')
-    files.insert(0, '/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/index.rst')
-    
-    processed = []
+    processed_page_names = {}
+    homes = []
     
     for f in files:
-        
-        out_prefix = f.replace('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/Doc_Jumpscale_', '')
-        out_prefix = f.replace('/opt/code/github/jumpscale/generated_docs/docs/_source/spaces/', '')
-        
+        page_name = f.split('/')[-1]
+         
+        if page_name.lower() == 'home.rst':
+            homes.append(f)
+            continue
+        elif page_name.lower() == 'install.rst':
+            continue
 
-        # we don't want more than home page, as github uses only one as one
-        # we will rename the outer index page to home
-        # other home files should be renamed
-        if out_prefix.endswith('Home.rst'):
-            out_prefix = out_prefix.replace('Home.rst', 'index.rst')
-
-        actual_file_name = out_prefix.split('/')[-1]
-
-        # Handle duplications [Rename]
-        if actual_file_name in processed:
-            new_name = out_prefix.replace('/', '__')
-            print "Duplicate file name %s .. will be renamed to %s" % (actual_file_name, new_name)
-            out_prefix = out_prefix.replace(actual_file_name, new_name)
-            actual_file_name = new_name
+        if page_name not in processed_page_names:
+            processed_page_names[page_name] = [f]
+        else:
+            processed_page_names[page_name].append(f)
+     
+    duplicates = {}
+     
+    for k, v in processed_page_names.iteritems():
+        if len(v) > 1:
+            duplicates[k] = v 
+     
+    if duplicates:
+        print "\nDuplicates found\n"
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(duplicates)
+        print "\n\n"
+        raise RuntimeError("Please fix Duplication issues before proceeding")
+     
+    print("\nUPDATING DOCS...")
+    doccl = j.clients.git.getClient('/opt/code/github/jumpscale/generated_docs/', 'https://github.com/Jumpscale/generated_docs.git')
+    doccl.pull()
+    print("UPDATED")
+     
+    print "Converting to %s" % '/opt/code/github/jumpscale/generated_docs/docs/markdown'
+    for f in files:
+        out_prefix = f.replace('/opt/code/github/jumpscale/generated_docs/docs/_source/', '')
         
-        processed.append(actual_file_name)
-        
-        #rename index page to Home
-        if out_prefix == 'index.rst':
-            out_prefix = 'Home.rst'
-
-        out = '/opt/code/github/jumpscale/jumpscale_docs/%s' % out_prefix
+        if f in homes:
+            space, actual_name = f.split('spaces/')[1].split('/')
+            suffixed_name = '%s_%s' % (space, actual_name)
+            out_prefix = out_prefix.replace(actual_name, suffixed_name)
+            homes.remove(f)
+            homes.append(suffixed_name)
+    
+        out = '/opt/code/github/jumpscale/generated_docs/docs/markdown/%s' % out_prefix
+         
         parent_dir = j.system.fs.getParent(out)
         if not j.system.fs.exists(parent_dir):
             j.system.fs.createDir(parent_dir)
         out = out.replace('.rst', '.md')
-        
         j.system.process.execute("pandoc '%s' -f rst -t markdown -o '%s'" % (f, out))
+    
+    print "CREATING _Sidebar for github"
+    with open('/opt/code/github/jumpscale/generated_docs/docs/markdown/spaces/_Sidebar.rst', 'w') as f:
+        f.write("JumpScale Core Home\n")
+        f.write("===================\n\n")
+        
+        for n in homes:
+            n = n.replace('.rst', '')
+            anchor = ''.join(n.split('_')[1:])
+            f.write('* `%s <%s>`_\n' % (anchor, n))
+
+    print "\nUPDATING REMOTE generated_docs REPO"
+    
+    doccl.addRemoveFiles()
+    doccl.commit('Updated docs')
+    doccl.push()
+    print "\nUPDATED"
 
 j.application.stop()

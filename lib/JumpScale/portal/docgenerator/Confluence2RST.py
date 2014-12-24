@@ -68,6 +68,9 @@ class Confluence2RST():
                     # match.founditem returns inner [user:password]
                     elif match2.find(":") != -1:
                         descr, link = '', match2
+                    # not working correctly 
+                    #'agent=j.core.zdaemon.getZDaemonAgent(ipaddr="127.0.0.1",port=5651,login="root",passwd="1234",ssl=False,roles=["*"])'
+                    # and for internal pages
                     else:
                         link = match2
                         descr = link
@@ -82,6 +85,13 @@ class Confluence2RST():
                 # print "getlink:%s" %page.getLink(descr,link)
                 if not descr:
                     descr = link
+                
+                # Assuming page names are unique [This part is for github]
+                for item in ['Doc_Jumpscale_Core','Doc_Jumpscale_Devel','Doc_Jumpscale_Grid','Doc_Jumpscale_Howto','Doc_Jumpscale_Portal']:
+                    if item in link:
+                        link = link.split('/')[-1]
+                        break
+                
                 linkDest = "`%s <%s>`_"%(descr,link)
                 line = line.replace(match.founditem, linkDest)
         return line
