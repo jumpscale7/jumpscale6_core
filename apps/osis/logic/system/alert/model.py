@@ -1,4 +1,5 @@
 from JumpScale import j
+import time
 
 OsisBaseObject=j.core.osis.getOsisBaseObjectClass()
 
@@ -90,11 +91,13 @@ class Alert(OsisBaseObject):
     def update_state(self, state):
         self._check_state(state)
         self.state = state
+        self.epoch = time.time()
 
     def update_history(self, history_item):
         self._check_history_item(history_item)
         self.history.insert(0, history_item)
         self.assigned_user = history_item['user']
+        self.epoch = time.time()
 
     def pprint_history(self):
         import pprint

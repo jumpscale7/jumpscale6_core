@@ -19,6 +19,7 @@ def main(j, params, service, tags, tasklet):
     if not alerts:
         alert['inittime'] = eco['epoch']
         alert['state'] = 'ALERT'
+        alert['epoch'] = eco['lasttime']
         alert['level'] = 1
         alertobj = alertservice.new()
         alertobj.load(alert)

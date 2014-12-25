@@ -70,6 +70,7 @@ h3. Details
 |*Assignee*|${assigned_user}|
 |*Level*|${level}|
 |*ECO*|{% if eco %} [Details|/grid/eco?id=${eco}] {% else %} NO MORE EXISTS {%endif%}|
+|*Update time*|{{div: class=jstimestamp|data-ts=${epoch}}}{{div}}||
 |*Raise time*|{{div: class=jstimestamp|data-ts=${inittime}}}{{div}}||
 |*Last time*|{{div: class=jstimestamp|data-ts=${lasttime}}}{{div}}|
 

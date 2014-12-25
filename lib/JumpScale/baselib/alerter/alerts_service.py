@@ -89,6 +89,7 @@ class AlertService(object):
     def start(self):
         for handler in self.handlers:
             handler.start()
+        self.restartTimers()
         greenlet = gevent.spawn(self.receiveAlerts)
         gevent.joinall([greenlet])
 
@@ -112,6 +113,25 @@ class AlertService(object):
             self.log("Schedule escalation in %ss for state %s" % (delay, alert['state']))
             self.timers[alert['guid']] = gevent.spawn_later(delay, self.escalateHigher, alert)
 
+    def restartTimers(self):
+        now = time.time()
+        for key, alert in self.rediscl.hgetall('alerts').iteritems():
+            alert = self.getAlert(key)
+            if alert['state'] in ('RESOLVED', 'UNRESOLVED'):
+                self.rediscl.hdel('alerts', key)
+            else:
+                alerttime = self.getStateTime(alert)
+                if not alerttime:
+                    self.rediscl.hdel('alerts', key)
+                    continue
+                epoch = alert['epoch'] or alert['lasttime']
+                remainingtime = (epoch + alerttime) - now
+                if remainingtime > 0:
+                    self.log("Schedule escalation in %ss for state %s" % (remainingtime, alert['state']))
+                    self.timers[alert['guid']] = gevent.spawn_later(remainingtime, self.escalateHigher, alert)
+                else:
+                    self.escalateHigher(alert)
+
     def receiveAlerts(self):
         while True:
             alertid = self.alertqueue.get()
@@ -124,8 +144,9 @@ class AlertService(object):
             elif oldalert:
                 oldalert = json.loads(oldalert)
                 if oldalert['state'] == 'ALERT' and alert['state'] == 'ACCEPTED':
-                    self.rediscl.hdel('alerts', alert['guid'])
                     alert['message_id'] = oldalert['message_id']
                     self.updateState(alert)
+            if alert['state'] in ('RESOLVED', 'UNRESOLVED'):
+                self.rediscl.hdel('alerts', alert['guid'])
 
             self.makeTimer(alert)
