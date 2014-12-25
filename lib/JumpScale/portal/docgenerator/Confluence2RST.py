@@ -65,24 +65,18 @@ class Confluence2RST():
                             htmlelements = parts[4]
 
                     # URLS like unix://[user:password]@localhost:5023/0/  will not work
-                    # match.founditem returns inner [user:password]
                     elif match2.find(":") != -1:
                         descr, link = '', match2
-                    # not working correctly 
-                    #'agent=j.core.zdaemon.getZDaemonAgent(ipaddr="127.0.0.1",port=5651,login="root",passwd="1234",ssl=False,roles=["*"])'
-                    # and for internal pages
                     else:
                         link = match2
                         descr = link
                 except Exception,e:
                     return line
-                    # if link.find(":")<>-1:  #@todo what was the reason for this, probly have broken something now
-                    #     link=link.replace(":","___")
+
                 if link.find(";") != -1:
                     space, pagename = link.split(";", 1)
                     link = "/%s/%s" % (space.lower().strip().strip("/"), pagename.strip().strip("/"))
-                # print "match:%s"%match.founditem
-                # print "getlink:%s" %page.getLink(descr,link)
+
                 if not descr:
                     descr = link
                 
@@ -188,15 +182,6 @@ class Confluence2RST():
         if page == None:
             page = j.tools.docgenerator.pageNewRST("temp")
 
-        # images=j.system.fs.listFilesInDir(dirpath,False)
-        # images3=[]L
-        # for image in images:
-            # image2=image.lower()
-            # if image2.find(".jpg")<>-1 or image2.find(".png")<>-1:
-                # image2=image2.strip()
-                # image2=j.system.fs.getBaseName(image2.replace("\\","/"))
-                # images3.append(image2)
-
         state = "start"
         macro = ""
         params = ""
@@ -266,11 +251,6 @@ class Confluence2RST():
                         # imagePath = "/images/%s/%s" % (doc.getSpaceName(), image)
                         imagePath = "/images/%s/%s" % ("unknownspace", image)
 
-                    # th=j.core.tags.getObject(tags)
-                    # result=th.getValues(width=800,height=600,border=True)
-                    #page.addImage(image, image, result["width"], result["height"])
-                    #page.addImage(image, imagePath, styles=styles)
-                    # line = line.replace(match, self.createImage(image, imagePath, styles=styles))
                     page.addMessage("unsupported image:%s"%imagePath)
                     continue
             
@@ -284,29 +264,7 @@ class Confluence2RST():
 
             # 1 line macros
             if (state == "start" or state == "table") and line.find("{{") != -1 and line.find("}}") != -1:
-                continue #not supported for now
-                # self.processMacro()
-             #    macros = doc.preprocessor.macroexecutorPage.getMacroCandidates(line)
-             #    for macro in macros:
-             #      raise RuntimeError("macro in table not supported")
-             #        # print "## 1linemacro:%s"%macro
-
-             #        # mtayseer: this condition looks wrong!!
-             #        if line.find("{{") != 0 or len(macros) > 1:
-
-             #            htmlMacro = doc.preprocessor.macroexecutorPage.executeMacroReturnHTML(macro,
-             #                                                                                  doc=doc, requestContext=requestContext, paramsExtra=paramsExtra, pagemirror4jscss=page)
-             #            line = line.replace(macro, htmlMacro)
-             #        else:
-             #            doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc,
-             #                                                                    requestContext=requestContext, paramsExtra=paramsExtra)
-             #            line = ""
-             #    macro = ""
-             #    # print "processed 1 macro line:%s"%line
-             #    if line.strip() == "":
-             #        continue
-
-            # print "after1linemacrostate:%s %s"%(line,state)
+                pass
 
             if state == "start" and line.find("{{") != -1:
                 state = "macro"
@@ -316,14 +274,6 @@ class Confluence2RST():
 
             if state == "macro" and line.find("}}") >= 0:
                 state = "start"
-                # print "macroend:%s"%line
-                # macrostr=macro
-
-                # if doc != None:
-                #     doc.preprocessor.macroexecutorPage.executeMacroAdd2Page(macro, page, doc=doc, requestContext=requestContext, paramsExtra=paramsExtra)
-                #     macro = ""
-                #     # params=""
-                #     continue
                 self.processMacro(macro,page)
                 macro=""
                 continue
@@ -331,7 +281,6 @@ class Confluence2RST():
             if line.strip() == "":
                 continue
 
-            # print "linkcheck: %s" % j.codetools.regex.match("\[[-\\:|_\w\s/]*\]",line)
             # FIND LINKS
             line = self.findLinks(line)
 
@@ -386,46 +335,24 @@ class Confluence2RST():
                 continue
 
             if state == "start" and line.find("@block") == 0:
-                # divlower(divauto,page,"block")
                 arg = line.replace("@block", "").strip()
-                # if arg == "":
-                #     arg = "container"
-                # page.addMessage("<div class=\"%s\">" % arg)
-                # page.divlevel.append("block")
                 continue
 
             if state == "start" and line.find("@row") == 0:
-                # divlower(divauto,page,"row")
                 arg = line.replace("@row", "").strip()
-                # if arg == "":
-                #     arg = "row-fluid"
-                # page.addMessage("<div class=\"%s\">" % arg)
-                # page.divlevel.append("row")
                 continue
 
             if state == "start" and line.find("@col") == 0:
-                # divlower(divauto,page,"col")
                 line = line.replace("@col", "").strip()
-                # arg= line.replace("@col", "").strip()
-                # page.addMessage("<div class=\"span%s\">" % arg)
-                # page.divlevel.append("col")
                 continue
 
             if state == "start" and line.find("@block") == 0:
                 line = line.replace("@block", "").strip()
-                # arg = line.replace("@block", "").strip()
-                # if arg == "":
-                #     arg = "container-fluid"
-                # page.addMessage("<div class=\"%s\">" % arg)
-                # page.divlevel += 1
                 continue
 
             # check params
             if state == "start" and line.find("@params") == 0:
                 params = line.replace("@params", "").strip()
-                #from JumpScale.core.Shell import ipshell
-                #print "DEBUG NOW params, not implemented"
-                #ipshell()
 
             if state == "start" and line.find("||") == 0:
                 # beginning of table
@@ -455,7 +382,6 @@ class Confluence2RST():
                 if line[0] != "@":
                     line = self.processDefs(line, doc, page)
                     page.addMessage(line)
-            
 
         if page.body != "":
             # work on the special includes with [[]]

@@ -100,8 +100,6 @@ if args.action == 'markdown':
         if page_name.lower() == 'home.rst':
             homes.append(f)
             continue
-        elif page_name.lower() == 'install.rst':
-            continue
 
         if page_name not in processed_page_names:
             processed_page_names[page_name] = [f]
@@ -132,13 +130,15 @@ if args.action == 'markdown':
         
         if f in homes:
             space, actual_name = f.split('spaces/')[1].split('/')
-            suffixed_name = '%s_%s' % (space, actual_name)
+            suffixed_name = "%s_%s.rst" % (space.split('_')[-1], 'Home')
+            if suffixed_name.startswith('Core'):
+                suffixed_name = 'Home.rst'
             out_prefix = out_prefix.replace(actual_name, suffixed_name)
             homes.remove(f)
             homes.append(suffixed_name)
     
         out = '/opt/code/github/jumpscale/generated_docs/docs/markdown/%s' % out_prefix
-         
+        out = out.replace('Doc_Jumpscale_', '')
         parent_dir = j.system.fs.getParent(out)
         if not j.system.fs.exists(parent_dir):
             j.system.fs.createDir(parent_dir)
@@ -146,14 +146,16 @@ if args.action == 'markdown':
         j.system.process.execute("pandoc '%s' -f rst -t markdown -o '%s'" % (f, out))
     
     print "CREATING _Sidebar for github"
-    with open('/opt/code/github/jumpscale/generated_docs/docs/markdown/spaces/_Sidebar.rst', 'w') as f:
-        f.write("JumpScale Core Home\n")
+    with open('/opt/code/github/jumpscale/generated_docs/docs/markdown/spaces/_Sidebar.md', 'w') as f:
+        f.write("Modules\n")
         f.write("===================\n\n")
+        
+        homes.sort(key=lambda x:x=='Home.rst', reverse=True)
         
         for n in homes:
             n = n.replace('.rst', '')
-            anchor = ''.join(n.split('_')[1:])
-            f.write('* `%s <%s>`_\n' % (anchor, n))
+            anchor = ''.join(n.split('_')[0] )
+            f.write('* [%s](%s)\n' % (anchor, n))
 
     print "\nUPDATING REMOTE generated_docs REPO"
     
