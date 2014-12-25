@@ -74,9 +74,6 @@ class AlertService(object):
                 users = result
 
     def updateState(self, alert):
-        timer = self.timers.pop(alert['guid'], None)
-        if timer:
-            timer.kill()
         for handler in self.handlers:
             handler.updateState(alert)
 
@@ -84,6 +81,7 @@ class AlertService(object):
         return self.scl.alert.get(id).dump()
 
     def escalateHigher(self, alert):
+        self.timers.pop(alert['guid'], None)
         message = "Took too long to be Accepted"
         self.log(message + " %s" % alert['guid'])
         self.alerts_client.escalate(alert=alert['guid'], comment=message)
@@ -100,12 +98,18 @@ class AlertService(object):
             return j.base.time.getDeltaTime(j.application.config.get(key))
 
     def makeTimer(self, alert):
-        if alert['state'] == 'ALERT'  and alert['guid'] in self.timers:
-            return
+        greenlet = self.timers.get(alert['guid'])
+        if greenlet is not None:
+            scheduledalert = greenlet.args[0]
+            if scheduledalert['state'] != alert['state']:
+                self.log("Removing schedule for alert %s" % scheduledalert['state'])
+                greenlet.kill()
+            else:
+                return
 
         delay = self.getStateTime(alert)
         if delay:
-            self.log("Schedule escalation in %ss" % delay)
+            self.log("Schedule escalation in %ss for state %s" % (delay, alert['state']))
             self.timers[alert['guid']] = gevent.spawn_later(delay, self.escalateHigher, alert)
 
     def receiveAlerts(self):

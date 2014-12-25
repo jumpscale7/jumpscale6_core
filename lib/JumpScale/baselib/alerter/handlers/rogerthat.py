@@ -32,7 +32,10 @@ class RogerThatAlerter(Handler):
         answers = self.ANSWERS[:]
         url = self.service.getUrl(alert)
         answers.append({'id': 'details', 'caption': 'Details', 'action': url, 'type':'button'})
-        message_id = self.rogerthathandler.send_message(message=message, members=emails, answers=answers, tag=alert['guid'])
+        flags = self.rogerthathandler.client.FLAG_SHARED_MEMBERS
+        alertflags = self.rogerthathandler.client.ALERT_FLAG_VIBRATE | self.rogerthathandler.client.ALERT_FLAG_RING_5
+        uiflags = self.rogerthathandler.client.FLAG_WAIT_FOR_NEXT_MESSAGE
+        message_id = self.rogerthathandler.send_message(message=message, members=emails, answers=answers, tag=alert['guid'], flags=flags, alert_flags=alertflags, ui_flags=uiflags)
         alert['message_id'] = message_id
         self.service.rediscl.hset('alerts', alert['guid'], json.dumps(alert))
         return users
@@ -70,9 +73,7 @@ class RogerThatHandler(object):
                 return message_id
 
     def messaging_update(self, params):
-        if params['status'] == 1: # user received messageS
-            return
-        elif params['status'] & 2 == 2:
+        if self.client.checkFlag(params['status'], self.client.STATUS_ACKED):
             user = params['user_details'][0]
             useremail = user['email']
             user = self.getUserByEmail(useremail)
