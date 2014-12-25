@@ -67,10 +67,6 @@ class AlertService(object):
 
     def escalate(self, alert):
         level = alert['level']
-        key = 'alerter.level%s.accept' % level
-        if j.application.config.exists(key):
-            accepttime = j.base.time.getDeltaTime(j.application.config.get(key))
-            self.timers[alert['guid']] = gevent.spawn_later(accepttime, self.escalateHigher, alert)
         users = self.getUsersForLevel(level)
         for handler in self.handlers:
             result = handler.escalate(alert, users)
@@ -98,6 +94,19 @@ class AlertService(object):
         greenlet = gevent.spawn(self.receiveAlerts)
         gevent.joinall([greenlet])
 
+    def getStateTime(self, alert):
+        key = "alerter.level%s.%s" % (alert['level'], alert['state'].lower())
+        if j.application.config.exists(key):
+            return j.base.time.getDeltaTime(j.application.config.get(key))
+
+    def makeTimer(self, alert):
+        if alert['state'] == 'ALERT'  and alert['guid'] in self.timers:
+            return
+
+        delay = self.getStateTime(alert)
+        if delay:
+            self.log("Schedule escalation in %ss" % delay)
+            self.timers[alert['guid']] = gevent.spawn_later(delay, self.escalateHigher, alert)
 
     def receiveAlerts(self):
         while True:
@@ -114,3 +123,5 @@ class AlertService(object):
                     self.rediscl.hdel('alerts', alert['guid'])
                     alert['message_id'] = oldalert['message_id']
                     self.updateState(alert)
+
+            self.makeTimer(alert)

@@ -6,7 +6,7 @@ import gevent
 
 class RogerThatAlerter(Handler):
     ORDER = 10
-    ANSWERS = [{'id': 'accept', 'caption': 'Accept', 'action': '', 'type': 'button'},{'id': 'escalate', 'caption': 'Escalate', 'action': '', 'type': 'button'}]
+    ANSWERS = [{'id': 'accepted', 'caption': 'Accept', 'action': '', 'type': 'button'},{'id': 'escalate', 'caption': 'Escalate', 'action': '', 'type': 'button'}]
 
     def __init__(self, service):
         self.service = service
@@ -80,7 +80,7 @@ class RogerThatHandler(object):
             if not alertguid or params['answer_id'] not in ('accepted', 'escalete'):
                 self.alerter.log("Callback from %s with %s" % (user['id'], params['answer_id']))
             elif self.alerter.scl.alert.exists(alertguid):
-                if params['answer_id'] == 'accept':
+                if params['answer_id'] == 'accepted':
                     self.alerts_client.update(state='ACCEPTED', alert=params['tag'], comment='Via Rogerthat', username=user['id'])
                 elif params['answer_id'] == 'escalate':
                     self.alerts_client.escalate(alert=params['tag'], comment='Via Rogerthat', username=user['id'])
