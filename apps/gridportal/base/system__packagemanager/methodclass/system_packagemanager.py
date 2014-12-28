@@ -11,19 +11,22 @@ class system_packagemanager(j.code.classGetBase()):
         self.gid = j.application.whoAmI.gid
 
 
+    def execute(self, script, nid, gid=None, **kwargs):
+        return self.client.execute('jumpscale', script, nid=nid, gid=gid, args=kwargs)
+
+
     def getJPackages(self, **args):
         nid = args.get('nid')
         domain = args.get('domain', None)
 
-        return self.client.execute('jumpscale', 'jpackage_list', nid=nid, domain=domain, wait=True)
+        return self.execute('jpackage_list', nid=nid, domain=domain)
 
     def getJPackageInfo(self, **args):
         nid = args.get('nid')
         domain = args.get('domain', None)
         name = args.get('pname', None)
         version = args.get('version', None)
-        return self.client.execute('jumpscale', 'jpackage_info', nid=nid, domain=domain, pname=name, version=version,\
-            wait=True)
+        return self.execute('jpackage_info', nid=nid, domain=domain, pname=name, version=version)
 
     def getJPackageFilesInfo(self, **args):
         """
@@ -38,8 +41,7 @@ class system_packagemanager(j.code.classGetBase()):
         domain = args.get('domain', None)
         name = args.get('pname', None)
         version = args.get('version', None)
-        return self.client.execute('jumpscale', 'jpackage_fileinfo', nid=nid, domain=domain, pname=name, version=version,\
-            wait=True)
+        return self.execute('jpackage_fileinfo', nid=nid, domain=domain, pname=name, version=version)
 
     def action(self, **args):
         nid = args.get('nid')
@@ -47,6 +49,5 @@ class system_packagemanager(j.code.classGetBase()):
         name = args.get('pname', None)
         action = args.get('action', None)
         version = args.get('version', None)
-        return self.client.execute('jumpscale', 'jpackage_action', nid=nid, domain=domain, pname=name, version=version,\
-            wait=True, action=action)
+        return self.execute('jpackage_action', nid=nid, domain=domain, pname=name, version=version, action=action)
 
