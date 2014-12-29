@@ -11,6 +11,7 @@ def main(j, args, params, tags, tasklet):
 		'schemaURL': hrd.get('schema_url', default=''),
 		'entityName': hrd.get('entity_name', default=''),
 		'datetimeFields': hrd.get('datetime_fields', default=''),
+		'sort_by':hrd.get('sort_by', default='') # Mongo syntax : [("guid", -1), ("pid", 1),]
 	}
 
 	eveGrid['columns'] = []
@@ -34,6 +35,7 @@ def main(j, args, params, tags, tasklet):
 		eveGrid['columns'].append(column)
 
 	# import ipdb; ipdb.set_trace()
+
 	eveGrid['columns'] = (json.dumps(eveGrid['columns']))
 	
 	# Add our static resources only once to the page
