@@ -63,7 +63,7 @@ h3. Actions
   input:
   - comment
 }}
-  
+
   
 h3. Details
 |*State*|${state}|
@@ -74,6 +74,11 @@ h3. Details
 |*Raise time*|{{div: class=jstimestamp|data-ts=${inittime}}}{{div}}||
 |*Last time*|{{div: class=jstimestamp|data-ts=${lasttime}}}{{div}}|
 
+
+h3. Error Message
+{{code:
+${errormessage}
+}}
 
 h3. History
 {% if history %}||User||Comment||State||Time||{% else -%}
