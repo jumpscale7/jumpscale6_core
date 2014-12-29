@@ -11,9 +11,8 @@ def main(j, args, params, tags, tasklet):
 		'schemaURL': hrd.get('schema_url', default=''),
 		'entityName': hrd.get('entity_name', default=''),
 		'datetimeFields': hrd.get('datetime_fields', default=''),
-		'sort_by':hrd.get('sort_by', default='') # Mongo syntax : [("guid", -1), ("pid", 1),]
+		'sortBy':hrd.get('sortBy', default='') # Mongo syntax : [("guid", -1), ("pid", 1),]
 	}
-
 	eveGrid['columns'] = []
 	
 	hrd_data = sorted(list(hrd.prefix('column')))
@@ -57,7 +56,7 @@ def main(j, args, params, tags, tasklet):
 	
 	page.addMessage('''
 		<div class="container eve-grid-container">
-	        <div id="{entityName}-container" eve-grid eve-url="{schemaURL}" eve-entity="{entityName}" eve-spec-path="{specJsonPath}" datetime-fields={datetimeFields} columns='{columns}'>
+	        <div id="{entityName}-container" eve-grid eve-url="{schemaURL}" eve-entity="{entityName}" eve-spec-path="{specJsonPath}" datetime-fields={datetimeFields} columns='{columns}' sortBy='{sortBy}'>
 	       	</div>
 	    	<div id="confirmModal" class="modal fade">
 			    <div class="modal-dialog">

@@ -165,11 +165,13 @@ eveModule.directive('eveGrid', function($http, $filter) {
                             var val2 = angular.element( '#' + attrs["eveEntity"] + '-container table tfoot td:eq(' + i + ') input:nth(1)' ).val();
                             where.push(scope.columns[i].getFilter(val, val2));
                         };
-                        
                         if(requestData.order && requestData.order.length > 0) {
                             sort_field = scope.columns[requestData.order[0].column].data;
                             sort_dir = requestData.order[0].dir == 'desc' ? -1 : 1
                             requestData.sort = '[("' + sort_field + '",' + sort_dir + ')]';
+                        }
+                        if(requestData.sort.indexOf('null') > -1){
+                            requestData.sort = attrs['sortby'];
                         }
                         var whereStatment = [];
                         for (var i = 0; i < where.length; i++) {

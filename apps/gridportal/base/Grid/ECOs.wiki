@@ -9,6 +9,7 @@
     spec.json.path=/docs/spec.json
     entity.name=eco
     datetime.fields=epoch
+    sortBy=[("guid", -1), ("pid", 1),]
 	column.1.data=epoch
     column.1.header=Time Stamp
     column.1.format=<a href="/grid/eco?id={guid}">{epoch}</a>
