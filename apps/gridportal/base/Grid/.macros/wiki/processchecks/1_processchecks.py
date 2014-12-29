@@ -9,7 +9,15 @@ def main(j, args, params, tags, tasklet):
     out = list()
     rediscl = j.clients.redis.getByInstanceName('system', gevent=True)
 
-    out = '||Grid ID||Node ID||Node Name||JSAgent Status||Details||\n'
+
+    if rediscl.hexists('healthcheck:monitoring', 'lastcheck'):
+        lastchecked = j.basetype.float.fromString(rediscl.hget('healthcheck:monitoring', 'lastcheck'))
+        lastchecked = '{{span: class=jstimestamp|data-ts=%s}}{{span}}' % lastchecked
+    else:
+        lastchecked = 'N/A'
+    out.append('Grid was last checked at: %s.' % lastchecked)
+
+    out.append('||Grid ID||Node ID||Node Name||JSAgent Status||Details||')
     data = rediscl.hget('healthcheck:monitoring', 'results')
     errors = rediscl.hget('healthcheck:monitoring', 'errors')
     data = ujson.loads(data) if data else dict()
@@ -28,7 +36,7 @@ def main(j, args, params, tags, tasklet):
                 runningstring = '{color:green}*RUNNING*{color}'
             status = checks.get('processmanager', [{'state': 'UNKOWN'}])[0]
             gid = j.core.grid.healthchecker.getGID(nid)
-            link = '[Details|nodestatus?nid=%s&gid=%s]' % (nid, gid) if status['state'] == 'RUNNING' else ''
+            link = '[Details|nodestatus?nid=%s&gid=%s]' % (nid, gid) 
             row = {'level': level, 'gid': gid, 'nid': nid}
             row['message'] = '|%s|[%s|node?id=%s&gid=%s]|%s|%s|%s|' % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid), runningstring, link)
             rows.append(row)
@@ -42,7 +50,8 @@ def main(j, args, params, tags, tasklet):
                 level = -2
                 gid = j.core.grid.healthchecker.getGID(nid)
                 row = {'level': level, 'gid': gid, 'nid': nid}
-                row['message'] = "|%s|[%s|node?id=%s&gid=%s]|%s|{color:red}*HALTED*{color}| |" % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid))
+                link = '[Details|nodestatus?nid=%s&gid=%s]' % (nid, gid)
+                row['message'] = "|%s|[%s|node?id=%s&gid=%s]|%s|{color:red}*HALTED*{color}|%s|" % (gid, nid, nid, gid, j.core.grid.healthchecker.getName(nid), link)
                 rows.append(row)
 
     def sorter(row1, row2):
@@ -50,8 +59,8 @@ def main(j, args, params, tags, tasklet):
             if row1[sortkey] != row2[sortkey] or sortkey == 'nid':
                 return cmp(row1[sortkey], row2[sortkey] )
 
-    out += '\n'.join((x['message'] for x in sorted(rows, cmp=sorter)))
-    params.result = (out, doc)
+    out.extend([x['message'] for x in sorted(rows, cmp=sorter)])
+    params.result = ('\n'.join(out), doc)
     return params
 
 def match(j, args, params, tags, tasklet):

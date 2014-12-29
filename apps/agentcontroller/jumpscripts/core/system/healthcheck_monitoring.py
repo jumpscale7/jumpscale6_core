@@ -33,12 +33,14 @@ def action():
     rediscl.hset('healthcheck:monitoring', 'errors', json.dumps(errors))
     rediscl.hset('healthcheck:monitoring', 'lastcheck', time.time())
 
+    msg = "Issues in healtcheck:\n"
     if errors:
         for nid, categories in errors.iteritems():
             for cat, data in categories.iteritems():
-                msg='%s on node %s seems to be having issues' % (cat, nid)
-                print msg
+                msg +='%s on node %s seems to be having issues\n' % (cat, nid)
                 # j.events.opserror(msg, 'monitoring')
+        print msg
+        j.events.opserror_warning(msg, 'monitoring')
 
 if __name__ == '__main__':
     action()
