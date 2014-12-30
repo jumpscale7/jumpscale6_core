@@ -45,7 +45,7 @@ class AlertService(object):
 
     def getUsersForLevel(self, level):
         groupname = "level%s" % level
-        users = self.scl.user.search({'groups': groupname, 'active': True})[1:]
+        users = self.scl.user.search({'groups': {'$all': [groupname, 'alert']}, 'active': True})[1:]
         return users
 
     def getUserEmails(self, user):
