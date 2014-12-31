@@ -88,6 +88,9 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                     }
                                 };
                             }
+                            if( column.type == "string"){
+                                columnText = jQuery('<span>' + columnText + '</span>').text();
+                            }
                             return columnText;
                         },
                         column.getFilter = function(val, val2) {
