@@ -388,10 +388,8 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                                 selected.length = 0;
                                                 notSelected.length = 0;
                                             }
-                                            scope.dataTable.draw();
                                         });
                                     }
-                                    
                                 };
                             }else{
                                 for (var i = 0; i < data._items.length; i++) {
@@ -407,7 +405,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                             selected.length = 0;
                                             notSelected.length = 0;
                                         }
-                                        scope.dataTable.draw();
                                     });  
                                 };
                             }
@@ -432,7 +429,6 @@ eveModule.directive('eveGrid', function($http, $filter) {
                                                 selected.length = 0;
                                                 notSelected.length = 0;
                                             }
-                                            scope.dataTable.draw();
                                         });
                                         
                                     });
@@ -440,6 +436,9 @@ eveModule.directive('eveGrid', function($http, $filter) {
                             }                            
                         }
                     });
+                    setTimeout(function() {
+                        scope.dataTable.draw();
+                    }, 400);
                     angular.element('#' + attrs["eveEntity"] + '-container table').find('.allCheck').prop('checked', false);
                 });                
                 $("#confirmModal").modal('hide');
