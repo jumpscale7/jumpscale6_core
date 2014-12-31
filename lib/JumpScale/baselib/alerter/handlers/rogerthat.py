@@ -21,12 +21,10 @@ class RogerThatAlerter(Handler):
 
     def escalate(self, alert, users):
         emails = list()
-        users = users[:]
-        for user in users[:]:
+        for user in users:
             useremails = self.service.getUserEmails(user)
             if self.registeredusers.intersection(useremails):
                 emails.append(user['emails'])
-                users.remove(user)
 
         message = self.makeMessage(alert)
         answers = self.ANSWERS[:]

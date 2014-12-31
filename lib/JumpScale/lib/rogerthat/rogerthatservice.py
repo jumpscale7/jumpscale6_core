@@ -5,7 +5,6 @@ from gevent.pywsgi import WSGIServer
 import JumpScale.baselib.redis
 import time
 import JumpScale.lib.rogerthat
-import JumpScale.baselib.watchdog.manager
 
 try:
     import ujson as json
