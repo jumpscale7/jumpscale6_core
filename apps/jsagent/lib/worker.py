@@ -162,37 +162,40 @@ class Worker(object):
                         job.state="OK"
                         job.resultcode=0
                     else:
-                        eco = result
-                        agentid=j.application.getAgentId()
-                        msg="Could not execute jscript:%s %s_%s on agent:%s\nError: %s"%(jscript.id,jscript.organization,jscript.name,agentid, eco.errormessage)
-                        eco.errormessage = msg
-                        eco.jid = job.guid
-                        eco.code=jscript.source
-                        eco.category = "workers.executejob"
-
-                        out=""
-                        tocheck=["\"worker.py\"","jscript.executeInWorker","return self.module.action","JumpscriptFactory.py"]
-                        for line in eco.backtrace.split("\n"):
-                            found=False
-                            for check in tocheck:
-                                if line.find(check)<>-1:
-                                    found=True
-                                    break
-                            if found==False:
-                                out+="%s\n"%line
-
-                        eco.backtrace=out
-
-                        if job.id<1000000 and job.errorreport==True:
-                            eco.process()
+                        if isinstance(result, basestring):
+                            job.state = result
                         else:
-                            self.log(eco)
-                        # j.events.bug_warning(msg,category="worker.jscript.notexecute")
-                        # self.loghandler.logECO(eco)
-                        job.state="ERROR"
-                        eco.tb = None
-                        job.result=eco.__dict__
-                        job.resultcode=1
+                            eco = result
+                            agentid=j.application.getAgentId()
+                            msg="Could not execute jscript:%s %s_%s on agent:%s\nError: %s"%(jscript.id,jscript.organization,jscript.name,agentid, eco.errormessage)
+                            eco.errormessage = msg
+                            eco.jid = job.guid
+                            eco.code=jscript.source
+                            eco.category = "workers.executejob"
+
+                            out=""
+                            tocheck=["\"worker.py\"","jscript.executeInWorker","return self.module.action","JumpscriptFactory.py"]
+                            for line in eco.backtrace.split("\n"):
+                                found=False
+                                for check in tocheck:
+                                    if line.find(check)<>-1:
+                                        found=True
+                                        break
+                                if found==False:
+                                    out+="%s\n"%line
+
+                            eco.backtrace=out
+
+                            if job.id<1000000 and job.errorreport==True:
+                                eco.process()
+                            else:
+                                self.log(eco)
+                            # j.events.bug_warning(msg,category="worker.jscript.notexecute")
+                            # self.loghandler.logECO(eco)
+                            job.state="ERROR"
+                            eco.tb = None
+                            job.result=eco.__dict__
+                            job.resultcode=1
 
                     #ok or not ok, need to remove from queue test
                     #thisin queue test is done to now execute script multiple time
