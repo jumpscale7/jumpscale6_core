@@ -11,6 +11,7 @@ license = "bsd"
 version = "1.0"
 category = "redis.cleanup"
 period = 300  # always in sec
+timeout = period * 0.2 # max runtime = 20% of period
 order = 1
 enable = True
 async = True

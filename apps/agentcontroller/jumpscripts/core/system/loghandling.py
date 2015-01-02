@@ -11,6 +11,7 @@ version = "1.0"
 category = "log.handling.init"
 period = 5  # always in sec
 startatboot = True
+timeout = 4
 order = 1
 enable = True
 async = True
