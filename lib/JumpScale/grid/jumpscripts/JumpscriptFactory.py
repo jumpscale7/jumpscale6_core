@@ -21,7 +21,7 @@ class Jumpscript(object):
         self.startatboot = False
         self.path = path
         self.debug=False
-        self.timeout=60
+        self.timeout = None
         if ddict:
             ddict.pop('path', None)
             self.__dict__.update(ddict)
@@ -74,6 +74,7 @@ from JumpScale import j
         self.source=source
         self.descr=self.module.descr
         self.queue=getattr(self.module, 'queue', "")
+        self.timeout=getattr(self.module, 'timeout', None)
         self.async = getattr(self.module, 'async',False)
         self.period=getattr(self.module, 'period',0)
         self.order=getattr(self.module, 'order', 1)
@@ -102,7 +103,10 @@ from JumpScale import j
             ppipe, cpipe = multiprocessing.Pipe()
             proc = multiprocessing.Process(target=helper, args=(cpipe,))
             proc.start()
-            proc.join()
+            proc.join(self.timeout)
+            if proc.is_alive():
+                proc.terminate()
+                return False, "TIMEOUT"
             return ppipe.recv()
 
     def executeInProcess(self, *args, **kwargs):
