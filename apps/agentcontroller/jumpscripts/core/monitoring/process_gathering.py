@@ -228,6 +228,7 @@ def action():
             j.system.stataggregator.delete(prefix=aggrkey)
             
     j.core.processmanager.monObjects.processobject.monitorobjects=result
+    j.system.stataggregator.clean()
 
 
 if __name__ == '__main__':

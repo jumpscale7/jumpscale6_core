@@ -51,7 +51,7 @@ class Stat():
 
     def clean(self,now):
         for key in self.results.keys():
-            if key<now-self.period:
+            if float(key) < now-self.period:
                 self.results.pop(key)
 
 class StatDiffPerSec(Stat):
@@ -191,9 +191,13 @@ class StatAggregator():
         return stat
 
     def clean(self):
-        for key in self.stats:
+        for key in self.stats.keys():
             stat=self.loadStat(key)
             stat.clean(self.getTime())
+            if not stat.results:
+                self.stats.pop(key)
+            else:
+                self.stats[key] = stat.dump()
 
     def delete(self,prefix):
         for key in self.stats.keys():
