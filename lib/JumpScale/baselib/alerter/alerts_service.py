@@ -86,7 +86,14 @@ class AlertService(object):
         self.log(message + " %s" % alert['guid'])
         self.alerts_client.escalate(alert=alert['guid'], comment=message)
 
-    def start(self):
+    def start(self, options):
+        if options.clean:
+            lalerts = self.rediscl.hlen('alerts')
+            self.log("Removing cached alerts: %s" % lalerts)
+            self.rediscl.delete('alerts')
+            self.log("Removing alerts queue: %s" % self.alertqueue.qsize())
+            self.rediscl.delete(self.alertqueue.key)
+
         for handler in self.handlers:
             handler.start()
         self.restartTimers()

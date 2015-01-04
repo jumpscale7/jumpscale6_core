@@ -25,6 +25,8 @@ class RogerThatAlerter(Handler):
             useremails = self.service.getUserEmails(user)
             if self.registeredusers.intersection(useremails):
                 emails.append(user['emails'])
+        if not emails:
+            return users
 
         message = self.makeMessage(alert)
         answers = self.ANSWERS[:]
