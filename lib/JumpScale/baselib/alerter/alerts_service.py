@@ -63,7 +63,7 @@ class AlertService(object):
         self.handlers.sort(key=lambda s: s.ORDER)
 
     def getUrl(self, alert):
-        return "http://cpu01.bracknell1.vscalers.com:8282/grid/alert?id=%(guid)s" % alert
+        return "http://cpu01.bracknell1.vscalers.com:82/grid/alert?id=%(guid)s" % alert
 
     def escalate(self, alert):
         level = alert['level']
