@@ -270,7 +270,7 @@ class GridHealthChecker(object):
 
     def getWikiStatus(self, status):
         colormap = {'RUNNING': 'green', 'HALTED': 'red', 'UNKNOWN': 'orange',
-                    'BROKEN': 'red', 'OK': 'green', 'NOT OK': 'red'}
+                'BROKEN': 'red', 'OK': 'green', 'NOT OK': 'red', 'WARNING': 'orange'}
         return '{color:%s}*%s*{color}' % (colormap.get(status, 'orange'), status)
 
     def checkRedis(self, nid, clean=True):
@@ -288,12 +288,14 @@ class GridHealthChecker(object):
 
         for port, result in redis.iteritems():
             size, unit = j.tools.units.bytes.converToBestUnit(result['memory_usage'])
+            msize, munit = j.tools.units.bytes.converToBestUnit(result['memory_max'])
             result['memory_usage'] = '%.2f %sB' % (size, unit)
+            result['memory_max'] = '%.2f %sB' % (msize, munit)
             result['port'] = port
             if result['state'] == 'RUNNING':
                 results.append((nid, result, 'redis'))
             else:
-                errormessage.append('Redis port "%(port)s" is %(state)s. Memory usage = %(memory_usage)s' % result)
+                errormessage.append('Redis port "%(port)s" is %(state)s. Memory usage = %(memory_usage)s/ %(memory_max)s' % result)
                 errors.append((nid, result, 'redis'))
         if errormessage:
             errors.append((nid, ','.join(errormessage), 'redis'))

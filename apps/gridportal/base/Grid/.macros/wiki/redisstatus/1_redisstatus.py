@@ -25,7 +25,8 @@ def main(j, args, params, tags, tasklet):
                     if 'state' not in stat:
                         continue
                     state = j.core.grid.healthchecker.getWikiStatus(stat.get('state', 'UNKNOWN'))
-                    out.append('|%s|%s|%s|' % (stat.get('port', -1), state, stat.get('memory_usage', '')))
+                    usage = "%s / %s" % (stat.get('memory_usage', ''), stat.get('memory_max', ''))
+                    out.append('|%s|%s|%s|' % (stat.get('port', -1), state, usage))
 
     out = '\n'.join(out)
 
