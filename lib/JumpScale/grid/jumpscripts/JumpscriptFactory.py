@@ -97,8 +97,16 @@ from JumpScale import j
             return result
         else:
             def helper(pipe):
-                result = self.executeInProcess(*args, **kwargs)
-                pipe.send(result)
+                try:
+                    result = self.executeInProcess(*args, **kwargs)
+                    pipe.send(result)
+                except Exception, e:
+                    result = "ERROR"
+                    try:
+                        result = self._getECO(e)
+                    except:
+                        pass
+                    pipe.send((False, result))
 
             ppipe, cpipe = multiprocessing.Pipe()
             proc = multiprocessing.Process(target=helper, args=(cpipe,))
@@ -109,21 +117,25 @@ from JumpScale import j
                 return False, "TIMEOUT"
             return ppipe.recv()
 
+    def _getECO(self, e):
+        eco = j.errorconditionhandler.parsePythonErrorObject(e)
+        eco.tb = None
+        eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
+                j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
+        eco.tags="jscategory:%s"%self.category
+        eco.jid = j.application.jid
+        eco.tags+=" jsorganization:%s"%self.organization
+        eco.tags+=" jsname:%s"%self.name
+        return eco
+
     def executeInProcess(self, *args, **kwargs):
         try:
             return True, self.module.action(*args, **kwargs)
         except Exception, e:
             print "error in jumpscript factory: execute in process."
-            eco = j.errorconditionhandler.parsePythonErrorObject(e)
-            eco.tb = None
-            eco.errormessage='Exec error procmgr jumpscr:%s_%s on node:%s_%s %s'%(self.organization,self.name, \
-                    j.application.whoAmI.gid, j.application.whoAmI.nid,eco.errormessage)
-            eco.tags="jscategory:%s"%self.category
-            eco.jid = j.application.jid
-            eco.tags+=" jsorganization:%s"%self.organization
-            eco.tags+=" jsname:%s"%self.name
-            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
+            eco = self._getECO(e)
             print eco
+            j.errorconditionhandler.raiseOperationalCritical(eco=eco,die=False)
             return False, eco
 
 
