@@ -40,19 +40,20 @@ class VCSFactory(object):
 
         user = userconfig.login
         passwd = userconfig.passwd
+        baseurl = BASEURLS.get(provider, provider)
         if type in ["git"]:
             from JumpScale.baselib import git
             if user in ('git', 'ssh'): # This is ssh
-                url = "git@%s:%s/%s.git" % (BASEURLS[provider], account, reponame)
+                url = "git@%s:%s/%s.git" % (baseurl, account, reponame)
             else:
-                url = "https://%s:%s@%s/%s/%s.git" % (user, passwd, BASEURLS[provider], account, reponame)
+                url = "https://%s:%s@%s/%s/%s.git" % (user, passwd, baseurl, account, reponame)
             return VCSGITClient(j.clients.git.getClient(basepath, url, login=user, passwd=passwd))
         elif type in ['hg']:
             from JumpScale.baselib import mercurial
             if user in ('hg', 'ssh'):
-                url = "ssh://hg@%s/%s/%s" % (BASEURLS[provider], account, reponame)
+                url = "ssh://hg@%s/%s/%s" % (baseurl, account, reponame)
             else:
-                url = "https://%s:%s@%s/%s/%s" % (user, passwd, BASEURLS[provider], account, reponame)
+                url = "https://%s:%s@%s/%s/%s" % (user, passwd, baseurl, account, reponame)
             return VCSHGClient(j.clients.mercurial.getClient(basepath, url))
 
 class VCSClient(object):
