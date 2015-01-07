@@ -1,3 +1,0 @@
-[TcpOutput]
-address = "$(heka.centralhost):5565"
-message_matcher = "Type == 'heka.statmetric'"
