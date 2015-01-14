@@ -72,7 +72,7 @@ eveModule.directive('eveGrid', function($http, $filter) {
                             var datetimeFields = attrs["datetimeFields"].split(',');
                             if( datetimeFields.indexOf(column.data) > -1 ){
                                 column.type = "datetime";
-                                columnText = moment(data * 1000).format('DD/MM/YYYY hh:mm:ss');
+                                columnText = new Date(data * 1000).toLocaleString();
                             }
                             if(param.format){
                                 columnText = param.format.replace(RegExp('{' + column.data + '}', 'g'), columnText);
