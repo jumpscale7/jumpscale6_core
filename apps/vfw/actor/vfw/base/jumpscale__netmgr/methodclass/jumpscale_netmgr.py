@@ -16,6 +16,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         #jumpscale_netmgr_osis.__init__(self)
         self.client = j.core.osis.getClientByInstance('main')
         self.osisvfw = j.core.osis.getClientForCategory(self.client, 'vfw', 'virtualfirewall')
+        self.nodeclient = j.core.osis.getClientForCategory(self.client, 'system', 'node')
         self.agentcontroller = j.clients.agentcontroller.get()
         self.json = j.db.serializers.getSerializerType('j')
 
@@ -68,6 +69,31 @@ class jumpscale_netmgr(j.code.classGetBase()):
         else:
             return self.agentcontroller.executeJumpscript('jumpscale', 'vfs_create', role='fw', gid=gid, args=args)['result']
 
+    def fw_move(self, fwid, targetNid, **kwargs):
+        fwobj = self.osisvfw.get(fwid)
+        srcnode = self.nodeclient.get("%s_%s" % (fwobj.gid, fwobj.nid))
+        trgnode = self.nodeclient.get("%s_%s" % (fwobj.gid, targetNid))
+        def get_backplane_ip(node):
+            for mac, nicinfo in node.netaddr.iteritems():
+                if nicinfo[0] == 'backplane1':
+                    return nicinfo[1]
+        srcip = get_backplane_ip(srcnode)
+        trgip = get_backplane_ip(trgnode)
+        sshkey = None
+        sshpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'id_rsa')
+        if j.system.fs.exists(sshpath):
+            sshkey = j.system.fs.fileGetContents(sshpath)
+        args = {'networkid': fwobj.id,
+                'sourceip': srcip,
+                'targetip': trgip,
+                'sshkey': sshkey}
+        job = self.agentcontroller.executeJumpscript('jumpscale', 'vfs_migrate_routeros', nid=targetNid, gid=fwobj.gid, args=args)
+        if job['state'] != 'OK':
+            raise RuntimeError("Failed to move routeros check job %(guid)s" % job)
+        fwobj.nid = targetNid
+        self.osisvfw.set(fwobj)
+        return True
+
     def fw_get_ipaddress(self, fwid, macaddress):
         fwobj = self.osisvfw.get(fwid)
         args = {'fwobject': fwobj.obj2dict(), 'macaddress': macaddress}
@@ -93,11 +119,11 @@ class jumpscale_netmgr(j.code.classGetBase()):
         args = {'name': '%s_%s' % (fwobj.domain, fwobj.name)}
         if fwobj.type == 'routeros':
             args = {'networkid': fwobj.id}
-            job = self.agentcontroller.executeJumpscript('jumpscale', 'vfs_destroy_routeros', nid=fwobj.nid, gid=fwobj.gid, args=args)
-            if job['state'] != 'OK':
-                raise RuntimeError("Failed to remove vfw with id %s" % fwid)
-            else:
-                self.osisvfw.delete(fwid)
+            if fwobj.nid:
+                job = self.agentcontroller.executeJumpscript('jumpscale', 'vfs_destroy_routeros', nid=fwobj.nid, gid=fwobj.gid, args=args)
+                if job['state'] != 'OK':
+                    raise RuntimeError("Failed to remove vfw with id %s" % fwid)
+            self.osisvfw.delete(fwid)
         else:
             result = self.agentcontroller.executeJumpscript('jumpscale', 'vfs_delete', nid=fwobj.nid, gid=fwobj.gid, args=args)['result']
             if result:

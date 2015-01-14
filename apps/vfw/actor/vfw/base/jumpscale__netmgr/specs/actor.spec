@@ -51,6 +51,12 @@
         var:fwid int,,firewall id
         var:gid int,,grid id
 
+    method:fw_move @noauth
+        """     
+        will do some checks on firewall to see is running, is reachable over ssh, is connected to right interfaces
+        """
+        var:fwid str,,firewall full id
+        var:targetNid int,,Target nid
 
     method:fw_stop @noauth
         """     
