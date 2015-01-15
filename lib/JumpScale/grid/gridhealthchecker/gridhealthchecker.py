@@ -160,6 +160,8 @@ class GridHealthChecker(object):
 
     def runAllOnNode(self, nid):
         self._clean()
+        self._nids = [nid]
+        self.checkHeartbeatsAllNodes(clean=False, nid=nid)
         self.ping(nid=nid, clean=False)
         self.checkRedis(nid, clean=False)
         self.pingasync(nid=nid, clean=False)
@@ -167,6 +169,7 @@ class GridHealthChecker(object):
         self.checkDisks(nid, clean=False)
         if self._tostdout:
             self._printResults()
+        return self._status, self._errors
 
     def _printResults(self):
         form = '%(gid)-8s %(nid)-8s %(name)-10s %(status)-8s %(issues)s'
@@ -355,7 +358,7 @@ class GridHealthChecker(object):
             return self._status, self._errors
 
 
-    def checkHeartbeatsAllNodes(self, clean=True):
+    def checkHeartbeatsAllNodes(self, clean=True, nid=None):
         if clean:
             self._clean()
         if self._nids==[]:
@@ -363,7 +366,10 @@ class GridHealthChecker(object):
         print 'CHECKING HEARTBEATS...'
         print "\tget all heartbeats (just query from OSIS):",
         print "OK"
-        heartbeats = self._heartbeatcl.simpleSearch({})
+        query = {}
+        if nid:
+            query['nid'] = nid
+        heartbeats = self._heartbeatcl.simpleSearch(query)
         for heartbeat in heartbeats:
             if heartbeat['nid'] not in self._nids and  heartbeat['nid']  not in self._nidsNonActive:
                 self._addError(heartbeat['nid'], "found heartbeat node '%s' when not in grid nodes." % heartbeat['nid'],"heartbeat")

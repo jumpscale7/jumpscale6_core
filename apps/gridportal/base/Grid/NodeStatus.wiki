@@ -5,6 +5,16 @@
 
 h2. $$gridname: $$name ($$gid:$$id)
 
+h3. Actions
+
+{{actions:
+
+- display: Refresh Node
+  action: /restmachine/system/health/run
+  data:
+   nid: $$nid
+}}
+
 h3. Redis Status
 {{redisstatus nid:$$nid}}
 

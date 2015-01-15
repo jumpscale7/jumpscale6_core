@@ -8,4 +8,11 @@ h3. Databases' Status
 h3. Process Status
 
 {{datatables_use: displaylength:100 autosort:false}}
+
+{{actions:
+
+- display: Refresh
+  action: /restmachine/system/health/run
+}}
+
 {{processchecks}}
