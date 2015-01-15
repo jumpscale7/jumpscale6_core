@@ -80,7 +80,7 @@ class jumpscale_netmgr(j.code.classGetBase()):
         srcip = get_backplane_ip(srcnode)
         trgip = get_backplane_ip(trgnode)
         sshkey = None
-        sshpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'id_rsa')
+        sshpath = j.system.fs.joinPaths(j.dirs.cfgDir, 'sshkey')
         if j.system.fs.exists(sshpath):
             sshkey = j.system.fs.fileGetContents(sshpath)
         args = {'networkid': fwobj.id,
