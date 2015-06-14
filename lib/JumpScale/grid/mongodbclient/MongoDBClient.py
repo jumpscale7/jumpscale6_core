@@ -21,12 +21,12 @@ class MongoDBClient:
         ipaddr = hrd.get("mongodb.client.addr")
         port = hrd.getInt("mongodb.client.port")    
         ssl = False
-        if j.application.config.exists('mongodb.client.ssl'):
-            ssl = j.application.config.getBool('mongodb.client.ssl')
+        if hrd.exists('mongodb.client.ssl'):
+            ssl = hrd.getBool('mongodb.client.ssl')
         replicaset = ""
-        if j.application.config.exists('mongodb.client.replicaset'):
-            replicaset = j.application.config.get('mongodb.client.replicaset')
+        if hrd.exists('mongodb.client.replicaset'):
+            replicaset = hrd.get('mongodb.client.replicaset')
         if replicaset == "":
             return MongoClient(host=ipaddr, port=port, ssl=ssl)
         else:
-            return MongoReplicaSetClient(host=ipaddr, port=port, ssl=ssl, replicaSet=replicaset)
+            return MongoReplicaSetClient(ipaddr, port=port, ssl=ssl, replicaSet=replicaset)
