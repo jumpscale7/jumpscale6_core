@@ -144,7 +144,10 @@ class OSISFactory:
             passwd=""
 
         if ipaddr<>None:
-            ips = [ipaddr]
+            if not isinstance(ipaddr, list):
+                ips = [ipaddr]
+            else:
+                ips = ipaddr
         elif j.application.config.exists('osis.ip'):
             ips = j.application.config.getList('osis.ip')
         else:
@@ -179,7 +182,7 @@ class OSISFactory:
         osisjp.load(instance=instance)
         if osisjp.isInstalled():
             hrd=osisjp.hrd_instance
-            ipaddr=hrd.get("osis.client.addr")
+            ipaddr=hrd.getList("osis.client.addr")
             port=int(hrd.get("osis.client.port"))
             user=hrd.get("osis.client.login")
             passwd=hrd.get("osis.client.passwd")            
