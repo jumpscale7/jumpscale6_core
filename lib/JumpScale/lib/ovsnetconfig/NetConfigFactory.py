@@ -335,9 +335,8 @@ iface $bondname inet manual
         #@ can do this by investigating self.getConfigFromSystem
 
         print "restarting network, can take a while."
-        j.system.process.executeWithoutPipe("sudo service networking restart")
-
-
+        j.system.process.executeWithoutPipe("/etc/init.d/openvswitch-switch restart")
+        
         print self._exec("ip a", failOnError=True)
         print self._exec("ovs-vsctl show", failOnError=True)
 
